@@ -90,27 +90,31 @@ data/
 # Inbox items awaiting triage
 
 [[items]]
-id = "call-dentist"
+id = "dentist-x9k2"
 type = "action"
-text = "Call dentist for appointment"
+title = "Call dentist for appointment"
+description = "Dr. Smith, 555-0123. Ask for morning slot."
 captured = "2024-01-15T10:30:00"
 
 [[items]]
-id = "productivity-tips"
+id = "tips-p4q5"
 type = "resource"
-text = "https://example.com/productivity-tips"
+title = "Productivity Tips Article"
+description = "https://example.com/productivity-tips"
 captured = "2024-01-15T11:15:00"
 
 [[items]]
-id = "standup-notes"
+id = "standup-m2n3"
 type = "note"
-text = "Meeting notes from standup"
+title = "Standup Notes"
+description = "Meeting notes from standup:\n- J. working on API\n- K. on frontend"
 captured = "2024-01-15T14:20:00"
 
 [[items]]
-id = "review-budget"
+id = "budget-h7j8"
 type = "action"
-text = "Review quarterly budget"
+title = "Review quarterly budget"
+description = ""
 captured = "2024-01-15T16:45:00"
 ```
 
@@ -141,37 +145,42 @@ created = "2024-01-10T00:00:00"
 due_date = "2024-03-15T00:00:00"
 description = "Complete redesign of company website"
 
-[[actions]]
-id = "research-competitors"
-text = "Research competitor websites"
+[[items]]
+id = "competitor-b5v6"
+title = "Research competitor websites"
+description = "Focus on navigation and color schemes."
 status = "todo"
 priority = "medium"
 created = "2024-01-10T00:00:00"
 
-[[actions]]
-id = "create-wireframes"
-text = "Create wireframes"
+[[items]]
+id = "wireframes-x8z9"
+title = "Create wireframes"
+description = "Use Figma. Need 3 variations."
 status = "todo"
 priority = "high"
 created = "2024-01-10T00:00:00"
 
-[[actions]]
-id = "meet-design-team"
-text = "Meet with design team"
+[[items]]
+id = "design-q2w3"
+title = "Meet with design team"
+description = "Discuss initial concepts."
 status = "completed"
 completed = "2024-01-12T14:00:00"
 created = "2024-01-10T00:00:00"
 
-[[actions]]
-id = "review-brand-guidelines"
-text = "Review brand guidelines"
+[[items]]
+id = "brand-r4t5"
+title = "Review brand guidelines"
+description = ""
 status = "todo"
 priority = "medium"
 created = "2024-01-10T00:00:00"
 
-[[actions]]
-id = "draft-content-strategy"
-text = "Draft content strategy"
+[[items]]
+id = "content-u7i8"
+title = "Draft content strategy"
+description = "Coordinate with marketing."
 status = "todo"
 priority = "low"
 created = "2024-01-10T00:00:00"
@@ -298,10 +307,11 @@ All timestamps use ISO 8601 format: `YYYY-MM-DDTHH:MM:SS`
 
 1. Each action belongs to exactly one project
 2. Each project belongs to exactly one area
-3. Completed items retain completion timestamp
-4. Archived items maintain full history
-5. Reviews reference original source files
-6. All text files use UTF-8 encoding
+3. **IDs must be unique across the entire system.** IDs are hybrid strings: a relevant keyword from the title followed by a random 4-character alphanumeric suffix (e.g., "meeting-x74y").
+4. Completed items retain completion timestamp
+5. Archived items maintain full history
+6. Reviews reference original source files
+7. All text files use UTF-8 encoding
 
 ## Implementation Notes
 
