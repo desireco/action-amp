@@ -7,14 +7,16 @@ This document defines the text-based file structure and formats that enable all 
 ```
 data/
 ├── inbox/                    # Unprocessed items
-│   ├── actions.toml
+│   ├── dentist-x9k2.md       # Individual action file
+│   ├── tips-p4q5.md
+│   ├── standup-m2n3.md
 │   ├── meeting-screenshot.png
-│   ├── article-bookmark.url
 │   └── voice-memo.m4a
 ├── areas/                    # Life areas/contexts
 │   ├── home/
 │   │   ├── renovation/               # Project folder
-│   │   │   ├── actions.toml
+│   │   │   ├── act-competitor-b5v6.md # Action file
+│   │   │   ├── act-wireframes-x8z9.md
 │   │   │   ├── budget.xlsx
 │   │   │   ├── contractor-quotes.pdf
 │   │   │   ├── before-photos/
@@ -23,47 +25,35 @@ data/
 │   │   │   ├── permits.pdf
 │   │   │   └── timeline.gantt
 │   │   ├── garden-project/           # Another project folder
-│   │   │   ├── actions.toml
-│   │   │   ├── plant-list.txt
-│   │   │   ├── garden-design.sketch
-│   │   │   └── soil-test-results.pdf
+│   │   │   ├── act-plant-list-j8k9.md
+│   │   │   ├── soil-test-results.pdf
+│   │   │   └── garden-design.sketch
 │   │   ├── archived/
 │   │   │   ├── project-name.toml
 │   │   │   └── project-name-resources.txt
 │   │   └── area.toml
 │   ├── work/
 │   │   ├── website-redesign/         # Project folder
-│   │   │   ├── actions.toml
+│   │   │   ├── act-design-q2w3.md
+│   │   │   ├── act-brand-r4t5.md
 │   │   │   ├── wireframes.fig
 │   │   │   ├── brand-guidelines.pdf
-│   │   │   ├── user-personas.docx
 │   │   │   ├── research/
 │   │   │   │   ├── competitor-analysis.xlsx
-│   │   │   │   ├── user-interviews.mp4
-│   │   │   │   └── analytics-report.pdf
 │   │   │   └── mockups/
 │   │   │       ├── homepage-v1.png
-│   │   │       └── mobile-layout.png
 │   │   ├── archived/
 │   │   │   ├── project-name.toml
 │   │   │   └── project-name-resources.txt
 │   │   └── area.toml
 │   └── personal/
 │       ├── fitness-goals/            # Project folder
-│       │   ├── actions.toml
 │       │   ├── workout-plan.pdf
-│       │   ├── progress-photos/
-│       │   │   ├── week1.jpg
-│       │   │   └── week4.jpg
-│       │   ├── meal-prep-recipes.txt
-│       │   └── gym-membership.pdf
+│       │   ├── gym-membership.pdf
+│       │   └── meal-prep-recipes.txt
 │       ├── vacation-planning/
-│       │   ├── actions.toml
 │       │   ├── flight-confirmations.pdf
-│       │   ├── hotel-bookings.pdf
-│       │   ├── itinerary.docx
-│       │   └── travel-photos/
-│       │       └── destination-inspiration.jpg
+│       │   └── itinerary.docx
 │       ├── archived/
 │       │   ├── project-name.toml
 │       │   └── project-name-resources.txt
@@ -85,44 +75,28 @@ data/
 
 ## File Formats
 
-### Inbox (`inbox/actions.toml`)
-```toml
-# Inbox items awaiting triage
-
-[[items]]
-id = "dentist-x9k2"
-type = "action"
-title = "Call dentist for appointment"
-description = "Dr. Smith, 555-0123. Ask for morning slot."
-captured = "2024-01-15T10:30:00"
-
-[[items]]
-id = "tips-p4q5"
-type = "resource"
-title = "Productivity Tips Article"
-description = "https://example.com/productivity-tips"
-captured = "2024-01-15T11:15:00"
-
-[[items]]
-id = "standup-m2n3"
-type = "note"
-title = "Standup Notes"
-description = "Meeting notes from standup:\n- J. working on API\n- K. on frontend"
-captured = "2024-01-15T14:20:00"
-
-[[items]]
-id = "budget-h7j8"
-type = "action"
-title = "Review quarterly budget"
-description = ""
-captured = "2024-01-15T16:45:00"
+### Inbox Item (`inbox/[id].md`)
+```markdown
+---
+id: "dentist-x9k2"
+type: "action"
+title: "Call dentist for appointment"
+captured: 2024-01-15T10:30:00
+---
+Dr. Smith, 555-0123. Ask for morning slot.
 ```
 
-Inbox folder contains captured items awaiting triage:
-- `meeting-screenshot.png` - Screenshot from video call
-- `article-bookmark.url` - Saved web link
-- `voice-memo.m4a` - Quick voice note
-- `notes/` - Subfolder for related materials
+```markdown
+---
+id: "tips-p4q5"
+type: "resource"
+title: "Productivity Tips Article"
+captured: 2024-01-15T11:15:00
+---
+https://example.com/productivity-tips
+```
+
+Inbox folder contains captured items as individual markdown files.
 
 ### Area Definition (`areas/[area]/area.toml`)
 ```toml
@@ -134,7 +108,7 @@ active = true
 created = "2024-01-01T00:00:00"
 ```
 
-### Project Actions (`areas/[area]/[project-name]/actions.toml`)
+### Project Definition (`areas/[area]/[project-name]/project.toml`)
 ```toml
 [project]
 name = "Website Redesign"
@@ -144,53 +118,40 @@ priority = "high"
 created = "2024-01-10T00:00:00"
 due_date = "2024-03-15T00:00:00"
 description = "Complete redesign of company website"
+```
 
-[[items]]
-id = "competitor-b5v6"
-title = "Research competitor websites"
-description = "Focus on navigation and color schemes."
-status = "todo"
-priority = "medium"
-created = "2024-01-10T00:00:00"
+### Project Action (`areas/[area]/[project-name]/act-[id].md`)
+```markdown
+---
+id: "competitor-b5v6"
+title: "Research competitor websites"
+status: "todo"
+priority: "medium"
+created: 2024-01-10T00:00:00
+---
+Focus on navigation and color schemes.
+```
 
-[[items]]
-id = "wireframes-x8z9"
-title = "Create wireframes"
-description = "Use Figma. Need 3 variations."
-status = "todo"
-priority = "high"
-created = "2024-01-10T00:00:00"
+```markdown
+---
+id: "wireframes-x8z9"
+title: "Create wireframes"
+status: "todo"
+priority: "high"
+created: 2024-01-10T00:00:00
+---
+Use Figma. Need 3 variations.
+```
 
-[[items]]
-id = "design-q2w3"
-title = "Meet with design team"
-description = "Discuss initial concepts."
-status = "completed"
-completed = "2024-01-12T14:00:00"
-created = "2024-01-10T00:00:00"
-
-[[items]]
-id = "brand-r4t5"
-title = "Review brand guidelines"
-description = ""
-status = "todo"
-priority = "medium"
-created = "2024-01-10T00:00:00"
-
-[[items]]
-id = "content-u7i8"
-title = "Draft content strategy"
-description = "Coordinate with marketing."
-status = "todo"
-priority = "low"
-created = "2024-01-10T00:00:00"
-
-[notes]
-content = """
-Design team prefers minimalist approach
-Budget approved for external consultant if needed
-Launch target is Q1 end
-"""
+```markdown
+---
+id: "design-q2w3"
+title: "Meet with design team"
+status: "completed"
+completed: 2024-01-12T14:00:00
+created: 2024-01-10T00:00:00
+---
+Discuss initial concepts.
 ```
 
 ### Project Resources (Multiple files in `areas/[area]/[project-name]/`)
@@ -216,8 +177,8 @@ archived_reason = "completed"
 # Daily Review - 2024-01-15
 
 ## Completed Today
-- [x] Call dentist for appointment (from: work/health-maintenance/actions.toml)
-- [x] Review quarterly budget (from: work/q1-planning/actions.toml)
+- [x] Call dentist for appointment (from: work/health-maintenance/act-dentist-x9k2.md)
+- [x] Review quarterly budget (from: work/q1-planning/act-budget-h7j8.md)
 
 ## Reflection
 What went well: Focused morning work session
@@ -298,6 +259,8 @@ All timestamps use ISO 8601 format: `YYYY-MM-DDTHH:MM:SS`
 
 ## File Naming Conventions
 
+- **Inbox items:** `[keyword]-[suffix].md` (e.g., `dentist-x9k2.md`) - No prefix as type is undecided.
+- **Processed Actions:** `act-[keyword]-[suffix].md` (e.g., `act-meeting-x74y.md`)
 - Project files: lowercase, hyphen-separated (e.g., `website-redesign.txt`)
 - Review files: `YYYY-MM-DD.txt` format
 - Area directories: lowercase, single word preferred
@@ -308,15 +271,68 @@ All timestamps use ISO 8601 format: `YYYY-MM-DDTHH:MM:SS`
 1. Each action belongs to exactly one project
 2. Each project belongs to exactly one area
 3. **IDs must be unique across the entire system.** IDs are hybrid strings: a relevant keyword from the title followed by a random 4-character alphanumeric suffix (e.g., "meeting-x74y").
-4. Completed items retain completion timestamp
-5. Archived items maintain full history
-6. Reviews reference original source files
-7. All text files use UTF-8 encoding
+4. **Context by Location:** An action's location (Inbox vs Project folder) determines its context. Moving the file changes its association.
+5. Completed items retain completion timestamp
+6. Archived items maintain full history
+7. Reviews reference original source files
+8. All text files use UTF-8 encoding
+
+## Web Application Source Layout
+
+This section defines the directory structure for the web application interface (using Astro) and its integration with the data layer.
+
+### Project Root Structure
+
+```
+.
+├── data/                     # User data (Inbox, Areas, Reviews) - The "Database"
+│   ├── inbox/
+│   │   ├── [id].md           # Actions as markdown files
+│   │   └── ...
+│   ├── areas/
+│   └── ...
+├── src/
+│   ├── content/
+│   │   └── config.ts         # Content Collections definition (Zod schemas)
+│   ├── components/           # Reusable UI components
+│   ├── layouts/              # Page layouts
+│   ├── lib/
+│   │   └── data/             # Data Access Layer (DAL) - For WRITES
+│   │       ├── api.ts        # File system interactions (fs/promises)
+│   │       ├── writer.ts     # Logic to update Frontmatter/Move files
+│   │       └── types.ts      # Shared types (inferred from Zod schemas)
+│   ├── pages/
+│   │   ├── index.astro
+│   │   ├── api/              # API Endpoints for data mutation
+│   │   │   ├── actions.ts    # POST/PUT/DELETE actions
+│   │   │   └── ...
+│   │   └── app/              # Authenticated application routes
+│   │       └── ...
+│   └── ...
+├── astro.config.mjs
+├── package.json
+└── tsconfig.json
+```
+
+### Data Integration Strategy
+
+1.  **Local-First Database:** The `data/` directory remains the source of truth.
+2.  **Astro Content Collections (Read Layer):**
+    *   Use **Content Collections** to read and validate data from `data/`.
+    *   **Loaders:** Use a custom loader (Astro 5.0+ Content Layer API) or a configured path to ingest data from the `data/` directory into collections (`inbox`, `projects`, `areas`).
+    *   **Schema Validation:** Use **Zod** in `src/content/config.ts` to strictly enforce the data shape (e.g., ensuring `id`, `title`, `status` fields are correct).
+    *   **Type Safety:** Astro automatically generates TypeScript types for all queried data.
+3.  **Data Access Layer (Write Layer):**
+    *   Since Content Collections are read-optimized, use `src/lib/data/` for **mutations** (Create, Update, Delete).
+    *   This layer directly modifies the Markdown files in `data/` using Node.js `fs` and a frontmatter parser (e.g., `gray-matter`).
+    *   **Moving Items:** To move an item from Inbox to a Project, simply move the `.md` file to the corresponding project directory.
+    *   After a write, the page reload (or server action) triggers a re-read via Content Collections.
+4.  **API Routes:** Used to handle client-side requests for updates (e.g., checking off a task), which then delegate to the Write Layer.
 
 ## Implementation Notes
 
 - Files are human-readable and editable
-- Simple parsing with regex patterns
+- **Markdown Frontmatter** used for metadata
 - Git-friendly for version control
 - Cross-platform compatibility
 - No binary dependencies
