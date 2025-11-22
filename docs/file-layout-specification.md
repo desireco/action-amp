@@ -182,7 +182,7 @@ archived_reason = "completed"
 
 ## Reflection
 What went well: Focused morning work session
-What could improve: Too many interruptions in afternoon
+What was difficult: Too many interruptions in afternoon
 Energy level: 7/10
 
 ## Tomorrow's Focus
@@ -202,15 +202,10 @@ Energy level: 7/10
 
 ## Reflection
 What went well:
-What could improve:
+What was difficult:
 Energy level: /10
 
 ## Tomorrow's Focus
--
--
--
-
-## Gratitude
 -
 -
 -
