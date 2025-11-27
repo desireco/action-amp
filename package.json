@@ -1,5 +1,5 @@
 {
-  "name": "pink-photon",
+  "name": "action-amp",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -11,6 +11,9 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@astrojs/mdx": "^4.3.12",
+    "@astrojs/node": "^9.5.1",
+    "@astrojs/sitemap": "^3.6.0",
     "@tailwindcss/vite": "^4.1.17",
     "astro": "^5.16.2",
     "tailwindcss": "^4.1.17"
