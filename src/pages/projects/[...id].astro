@@ -60,6 +60,29 @@ const statusColors: Record<string, string> = {
     blocked: "text-red-500",
     cancelled: "text-gray-500",
 };
+
+// Get resources (files that are not project.toml or actions)
+import fs from "node:fs/promises";
+import path from "node:path";
+
+const projectPath = path.join(process.cwd(), "data/areas", projectDir);
+let resources: string[] = [];
+
+try {
+    const files = await fs.readdir(projectPath);
+    resources = files.filter(
+        (file) =>
+            file !== "project.toml" &&
+            !file.startsWith("act-") &&
+            !file.startsWith(".") &&
+            !file.endsWith(".DS_Store"),
+    );
+} catch (e) {
+    console.error(
+        `Error reading resources for project ${project.data.name}:`,
+        e,
+    );
+}
 ---
 
 <AppLayout title={`${project.data.name} | Projects`}>
@@ -180,6 +203,42 @@ const statusColors: Record<string, string> = {
                             No actions found for this project.
                         </p>
                     </div>
+                )
+            }
+        </div>
+
+        <div class="mt-8 space-y-4">
+            <h2
+                class="text-xl font-bold text-text-main flex items-center gap-2"
+            >
+                Resources
+                <span
+                    class="text-sm font-normal text-text-muted bg-surface-hover px-2 py-0.5 rounded-full"
+                >
+                    {resources.length}
+                </span>
+            </h2>
+
+            {
+                resources.length > 0 ? (
+                    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                        {resources.map((resource) => (
+                            <div class="bg-surface border border-border rounded-lg p-3 flex items-center gap-3 hover:bg-surface-hover transition-colors">
+                                <div class="h-8 w-8 rounded bg-surface-hover flex items-center justify-center text-text-muted">
+                                    <span class="uppercase text-xs font-bold">
+                                        {resource.split(".").pop()}
+                                    </span>
+                                </div>
+                                <span class="text-sm text-text-main truncate">
+                                    {resource}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p class="text-text-muted text-sm italic">
+                        No resources found.
+                    </p>
                 )
             }
         </div>

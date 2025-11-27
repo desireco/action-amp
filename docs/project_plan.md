@@ -60,8 +60,8 @@ This document outlines the roadmap for building the Action Amplifier application
     *   [x] Show details for selected items.
 
 4.  **Areas & Projects View**
-    *   [ ] Tree view or dashboard for Areas (Home, Work, etc.).
-    *   [ ] Project detail pages listing their Actions and Resources.
+    *   [x] Tree view or dashboard for Areas (Home, Work, etc.).
+    *   [x] Project detail pages listing their Actions and Resources.
 
 ## Phase 3: Write Operations (The "Amplifier")
 **Goal:** Enable data manipulation (Capture, Triage, Organize).
