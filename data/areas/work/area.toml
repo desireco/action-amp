@@ -1,6 +1,5 @@
-[area]
 name = "Work"
 description = "Professional responsibilities and career development"
 priority = "high"
 active = true
-created = "2024-01-01T00:00:00"
+created = 2024-01-01T00:00:00

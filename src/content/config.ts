@@ -7,7 +7,7 @@ const inbox = defineCollection({
     id: z.string(),
     type: z.enum(['action', 'resource', 'note']).optional(), // Optional because spec says type is undecided for some
     title: z.string(),
-    captured: z.date(),
+    captured: z.coerce.date(),
   }),
 });
 
@@ -18,7 +18,7 @@ const areas = defineCollection({
     description: z.string().optional(),
     priority: z.enum(['high', 'medium', 'low']).default('medium'),
     active: z.boolean().default(true),
-    created: z.date(),
+    created: z.coerce.date(),
   }),
 });
 
@@ -29,10 +29,10 @@ const projects = defineCollection({
     area: z.string(),
     status: z.enum(['active', 'archived', 'completed', 'on_hold']).default('active'),
     priority: z.enum(['high', 'medium', 'low']).default('medium'),
-    created: z.date(),
-    due_date: z.date().optional(),
+    created: z.coerce.date(),
+    due_date: z.coerce.date().optional(),
     description: z.string().optional(),
-    archived_date: z.date().optional(),
+    archived_date: z.coerce.date().optional(),
     archived_reason: z.string().optional(),
   }),
 });
@@ -44,8 +44,8 @@ const actions = defineCollection({
     title: z.string(),
     status: z.enum(['todo', 'completed', 'in_progress', 'blocked', 'cancelled']).default('todo'),
     priority: z.enum(['high', 'medium', 'low']).default('medium'),
-    created: z.date(),
-    completed: z.date().optional(),
+    created: z.coerce.date(),
+    completed: z.coerce.date().optional(),
   }),
 });
 
