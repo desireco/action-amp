@@ -47,15 +47,19 @@ This document outlines the roadmap for building the Action Amplifier application
 ## Phase 2: Core UI & Read Views
 **Goal:** Visualize the data in the application.
 
-1.  **Layout & Design System**
+1.  **Public Pages**
+    *   [x] Create E2E tests for Landing and FAQ pages.
+    *   [x] Implement Landing Page (`index.astro`) and FAQ Page (`faq.astro`).
+
+2.  **Layout & Design System**
     *   [ ] Create a responsive application layout (Sidebar navigation, Main content area).
     *   [ ] Implement basic design tokens (colors, typography).
 
-2.  **Inbox View**
+3.  **Inbox View**
     *   [ ] Display a list of all items in `data/inbox/`.
     *   [ ] Show details for selected items.
 
-3.  **Areas & Projects View**
+4.  **Areas & Projects View**
     *   [ ] Tree view or dashboard for Areas (Home, Work, etc.).
     *   [ ] Project detail pages listing their Actions and Resources.
 
