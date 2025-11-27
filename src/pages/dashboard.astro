@@ -1,0 +1,46 @@
+---
+import { getCollection } from "astro:content";
+import "../styles/global.css";
+
+const inboxItems = await getCollection("inbox");
+const areas = await getCollection("areas");
+const projects = await getCollection("projects");
+const actions = await getCollection("actions");
+---
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="generator" content={Astro.generator} />
+        <title>Action Amplifier</title>
+    </head>
+    <body class="bg-slate-900 text-white p-8">
+        <h1 class="text-3xl font-bold mb-4">Action Amplifier</h1>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="p-4 bg-slate-800 rounded">
+                <h2 class="text-xl font-bold">Inbox</h2>
+                <p class="text-4xl">{inboxItems.length}</p>
+            </div>
+            <div class="p-4 bg-slate-800 rounded">
+                <h2 class="text-xl font-bold">Areas</h2>
+                <p class="text-4xl">{areas.length}</p>
+            </div>
+            <div class="p-4 bg-slate-800 rounded">
+                <h2 class="text-xl font-bold">Projects</h2>
+                <p class="text-4xl">{projects.length}</p>
+            </div>
+            <div class="p-4 bg-slate-800 rounded">
+                <h2 class="text-xl font-bold">Actions</h2>
+                <p class="text-4xl">{actions.length}</p>
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold mt-8 mb-4">Debug Data</h2>
+        <pre
+            class="bg-black p-4 rounded overflow-auto h-64">
+            {JSON.stringify({ inboxItems, areas, projects, actions }, null, 2)}
+        </pre>
+    </body>
+</html>
