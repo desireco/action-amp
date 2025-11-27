@@ -51,3 +51,7 @@ This document provides essential context for AI models interacting with this pro
 
 * **Contribution Guidelines:** Follow the `docs/file-layout-specification.md` strictly when proposing file structure changes or generating sample data.
 * **Infrastructure (IaC):** N/A.
+
+## 8. Available Tools
+
+* **Browser Tools:** See `browser-tools/README.md` for a suite of Chrome DevTools Protocol scripts available in the path (e.g., `browser-start.js`, `browser-nav.js`) for agent-assisted web automation.
