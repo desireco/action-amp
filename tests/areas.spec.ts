@@ -9,6 +9,6 @@ test.describe('Areas Feature', () => {
 
         // Expect sample area to be present
         // We know 'Work' area exists in the sample data
-        await expect(page.getByText('Work')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Work' })).toBeVisible();
     });
 });

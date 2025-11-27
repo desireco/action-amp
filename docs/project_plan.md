@@ -3,14 +3,14 @@
 This document outlines the roadmap for building the Action Amplifier application based on the [File Layout Specification](./file-layout-specification.md).
 
 ## Progress
-**Current Status:** Phase 1 Complete. Ready to start Phase 2.
+**Current Status:** Phase 2 Complete. Ready to start Phase 3.
 
 | Phase | Status | Description |
 | :--- | :--- | :--- |
 | **Phase 1: Foundation & Data Layer** | ✅ Completed | Project setup, Data structure, Content Collections. |
 | **Phase 1.5: Testing Infrastructure** | ✅ Completed | Vitest & Playwright setup. |
-| **Phase 2: Core UI & Read Views** | ⏳ Next | Layout, Inbox View, Areas & Projects View. |
-| **Phase 3: Write Operations** | 🔴 Pending | Data Access Layer, API, Interactive UI. |
+| **Phase 2: Core UI & Read Views** | ✅ Completed | Layout, Inbox View, Areas & Projects View. |
+| **Phase 3: Write Operations** | ⏳ Next | Data Access Layer, API, Interactive UI. |
 | **Phase 4: Advanced Features** | 🔴 Pending | Next Action Logic, Reviews, Search. |
 
 ## Phase 1: Foundation & Data Layer
@@ -52,12 +52,12 @@ This document outlines the roadmap for building the Action Amplifier application
     *   [x] Implement Landing Page (`index.astro`) and FAQ Page (`faq.astro`).
 
 2.  **Layout & Design System**
-    *   [ ] Create a responsive application layout (Sidebar navigation, Main content area).
-    *   [ ] Implement basic design tokens (colors, typography).
+    *   [x] Create a responsive application layout (Sidebar navigation, Main content area).
+    *   [x] Implement basic design tokens (colors, typography).
 
 3.  **Inbox View**
-    *   [ ] Display a list of all items in `data/inbox/`.
-    *   [ ] Show details for selected items.
+    *   [x] Display a list of all items in `data/inbox/`.
+    *   [x] Show details for selected items.
 
 4.  **Areas & Projects View**
     *   [ ] Tree view or dashboard for Areas (Home, Work, etc.).

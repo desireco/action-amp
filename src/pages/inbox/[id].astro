@@ -1,0 +1,71 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import { getEntry, render } from "astro:content";
+import { ArrowLeft, Calendar } from "lucide-astro";
+
+const { id } = Astro.params;
+
+if (!id) {
+    return Astro.redirect("/inbox");
+}
+
+const item = await getEntry("inbox", id);
+
+if (!item) {
+    return Astro.redirect("/404");
+}
+
+const { Content } = await render(item);
+---
+
+<AppLayout title={`${item.data.title} | Inbox`}>
+    <div class="max-w-3xl mx-auto">
+        <a
+            href="/inbox"
+            class="inline-flex items-center text-text-muted hover:text-primary transition-colors mb-6 group"
+        >
+            <ArrowLeft
+                class="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform"
+            />
+            Back to Inbox
+        </a>
+
+        <div
+            class="bg-surface border border-border rounded-xl overflow-hidden shadow-sm"
+        >
+            <div class="p-8 border-b border-border">
+                <div class="flex items-center gap-3 mb-4">
+                    <span
+                        class:list={[
+                            "px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider",
+                            item.data.type
+                                ? "bg-primary/10 text-primary"
+                                : "bg-surface-hover text-text-muted",
+                        ]}
+                    >
+                        {item.data.type || "Unsorted"}
+                    </span>
+                    <div class="flex items-center text-text-muted text-sm">
+                        <Calendar class="h-4 w-4 mr-1.5" />
+                        {
+                            item.data.captured.toLocaleDateString(undefined, {
+                                dateStyle: "long",
+                                timeStyle: "short",
+                            })
+                        }
+                    </div>
+                </div>
+
+                <h1 class="text-3xl font-bold text-text-main leading-tight">
+                    {item.data.title}
+                </h1>
+            </div>
+
+            <div
+                class="p-8 prose prose-invert prose-lg max-w-none text-text-muted"
+            >
+                <Content />
+            </div>
+        </div>
+    </div>
+</AppLayout>

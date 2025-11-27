@@ -1,0 +1,139 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import { getEntry, getCollection } from "astro:content";
+import { ArrowLeft, Folder, ChevronRight } from "lucide-astro";
+
+const { id } = Astro.params;
+
+if (!id) {
+    return Astro.redirect("/areas");
+}
+
+const area = await getEntry("areas", id);
+
+if (!area) {
+    return Astro.redirect("/404");
+}
+
+const projects = await getCollection("projects");
+const areaProjects = projects.filter((p) => p.data.area === area.data.name);
+
+const sortedProjects = areaProjects.sort((a, b) => {
+    if (a.data.status === "active" && b.data.status !== "active") return -1;
+    if (a.data.status !== "active" && b.data.status === "active") return 1;
+    return 0;
+});
+---
+
+<AppLayout title={`${area.data.name} | Areas`}>
+    <div class="max-w-4xl mx-auto">
+        <a
+            href="/areas"
+            class="inline-flex items-center text-text-muted hover:text-primary transition-colors mb-6 group"
+        >
+            <ArrowLeft
+                class="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform"
+            />
+            Back to Areas
+        </a>
+
+        <div
+            class="bg-surface border border-border rounded-xl overflow-hidden shadow-sm mb-8"
+        >
+            <div class="p-8 border-b border-border">
+                <div class="flex items-center justify-between mb-4">
+                    <span
+                        class="px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider bg-primary/10 text-primary"
+                    >
+                        Area
+                    </span>
+                    <span
+                        class:list={[
+                            "px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider",
+                            area.data.priority === "high"
+                                ? "bg-red-500/10 text-red-500"
+                                : "bg-surface-hover text-text-muted",
+                        ]}
+                    >
+                        {area.data.priority}
+                    </span>
+                </div>
+
+                <h1
+                    class="text-3xl font-bold text-text-main leading-tight mb-2"
+                >
+                    {area.data.name}
+                </h1>
+                {
+                    area.data.description && (
+                        <p class="text-text-muted text-lg">
+                            {area.data.description}
+                        </p>
+                    )
+                }
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <h2
+                class="text-xl font-bold text-text-main flex items-center gap-2"
+            >
+                Projects
+                <span
+                    class="text-sm font-normal text-text-muted bg-surface-hover px-2 py-0.5 rounded-full"
+                >
+                    {sortedProjects.length}
+                </span>
+            </h2>
+
+            {
+                sortedProjects.length > 0 ? (
+                    <div class="grid gap-4 md:grid-cols-2">
+                        {sortedProjects.map((project) => (
+                            <a
+                                href={`/projects/${project.id}`}
+                                class="bg-surface border border-border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all group flex flex-col h-full"
+                            >
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <Folder class="h-5 w-5 text-primary" />
+                                        <h3 class="text-lg font-semibold text-text-main group-hover:text-primary transition-colors truncate">
+                                            {project.data.name}
+                                        </h3>
+                                    </div>
+                                </div>
+                                {project.data.description && (
+                                    <p class="text-sm text-text-muted line-clamp-2 mb-4 flex-1">
+                                        {project.data.description}
+                                    </p>
+                                )}
+                                <div class="flex items-center justify-between text-xs text-text-muted mt-auto pt-3 border-t border-border/50">
+                                    <span
+                                        class:list={[
+                                            "px-2 py-0.5 rounded font-medium uppercase tracking-wider",
+                                            project.data.status === "active"
+                                                ? "bg-green-500/10 text-green-500"
+                                                : "bg-surface-hover",
+                                        ]}
+                                    >
+                                        {project.data.status}
+                                    </span>
+                                    <span class="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                        View Project{" "}
+                                        <ChevronRight class="h-3 w-3" />
+                                    </span>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                ) : (
+                    <div class="text-center py-12 border-2 border-dashed border-border rounded-xl">
+                        <p class="text-text-muted">
+                            No projects found for this area.
+                        </p>
+                    </div>
+                )
+            }
+        </div>
+    </div>
+</AppLayout>

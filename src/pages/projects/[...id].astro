@@ -1,0 +1,187 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import { getEntry, getCollection } from "astro:content";
+import {
+    ArrowLeft,
+    CheckCircle2,
+    Circle,
+    Clock,
+    AlertCircle,
+    XCircle,
+} from "lucide-astro";
+
+const { id } = Astro.params;
+
+if (!id) {
+    return Astro.redirect("/areas");
+}
+
+const project = await getEntry("projects", id);
+
+if (!project) {
+    return Astro.redirect("/404");
+}
+
+// Get actions for this project
+// Project ID is like "work/website-redesign/project.toml"
+// We need to match actions that start with "work/website-redesign/"
+const projectDir = id.replace("/project.toml", "");
+const actions = await getCollection("actions");
+const projectActions = actions.filter((action) =>
+    action.id.startsWith(projectDir),
+);
+
+// Sort actions by status/priority
+const statusOrder: Record<string, number> = {
+    in_progress: 0,
+    todo: 1,
+    blocked: 2,
+    completed: 3,
+    cancelled: 4,
+};
+const sortedActions = projectActions.sort((a, b) => {
+    return (
+        (statusOrder[a.data.status] ?? 5) - (statusOrder[b.data.status] ?? 5)
+    );
+});
+
+const statusIcons: Record<string, any> = {
+    todo: Circle,
+    in_progress: Clock,
+    completed: CheckCircle2,
+    blocked: AlertCircle,
+    cancelled: XCircle,
+};
+
+const statusColors: Record<string, string> = {
+    todo: "text-text-muted",
+    in_progress: "text-blue-500",
+    completed: "text-green-500",
+    blocked: "text-red-500",
+    cancelled: "text-gray-500",
+};
+---
+
+<AppLayout title={`${project.data.name} | Projects`}>
+    <div class="max-w-4xl mx-auto">
+        <a
+            href="/areas"
+            class="inline-flex items-center text-text-muted hover:text-primary transition-colors mb-6 group"
+        >
+            <ArrowLeft
+                class="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform"
+            />
+            Back to Areas
+        </a>
+
+        <div
+            class="bg-surface border border-border rounded-xl overflow-hidden shadow-sm mb-8"
+        >
+            <div class="p-8 border-b border-border">
+                <div class="flex items-center justify-between mb-4">
+                    <span
+                        class="px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider bg-primary/10 text-primary"
+                    >
+                        Project
+                    </span>
+                    <span
+                        class:list={[
+                            "px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider",
+                            project.data.status === "active"
+                                ? "bg-green-500/10 text-green-500"
+                                : "bg-surface-hover text-text-muted",
+                        ]}
+                    >
+                        {project.data.status}
+                    </span>
+                </div>
+
+                <h1
+                    class="text-3xl font-bold text-text-main leading-tight mb-2"
+                >
+                    {project.data.name}
+                </h1>
+                {
+                    project.data.description && (
+                        <p class="text-text-muted text-lg">
+                            {project.data.description}
+                        </p>
+                    )
+                }
+            </div>
+
+            <div
+                class="px-8 py-4 bg-surface-hover/10 flex gap-6 text-sm text-text-muted"
+            >
+                <div>
+                    <span class="font-medium text-text-main">Area:</span>
+                    {project.data.area}
+                </div>
+                {
+                    project.data.due_date && (
+                        <div>
+                            <span class="font-medium text-text-main">Due:</span>{" "}
+                            {project.data.due_date.toLocaleDateString()}
+                        </div>
+                    )
+                }
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <h2
+                class="text-xl font-bold text-text-main flex items-center gap-2"
+            >
+                Actions
+                <span
+                    class="text-sm font-normal text-text-muted bg-surface-hover px-2 py-0.5 rounded-full"
+                >
+                    {sortedActions.length}
+                </span>
+            </h2>
+
+            {
+                sortedActions.length > 0 ? (
+                    <div class="bg-surface border border-border rounded-xl overflow-hidden">
+                        {sortedActions.map((action) => {
+                            const Icon =
+                                statusIcons[action.data.status] || Circle;
+                            const colorClass =
+                                statusColors[action.data.status] ||
+                                "text-text-muted";
+
+                            return (
+                                <div class="p-4 border-b border-border last:border-0 flex items-center gap-4 hover:bg-surface-hover transition-colors group">
+                                    <Icon class={`h-5 w-5 ${colorClass}`} />
+                                    <div class="flex-1 min-w-0">
+                                        <span
+                                            class={`text-sm font-medium ${action.data.status === "completed" ? "text-text-muted line-through" : "text-text-main"}`}
+                                        >
+                                            {action.data.title}
+                                        </span>
+                                    </div>
+                                    <span
+                                        class:list={[
+                                            "text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity",
+                                            action.data.priority === "high"
+                                                ? "bg-red-500/10 text-red-500"
+                                                : "bg-surface-hover text-text-muted",
+                                        ]}
+                                    >
+                                        {action.data.priority}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div class="text-center py-12 border-2 border-dashed border-border rounded-xl">
+                        <p class="text-text-muted">
+                            No actions found for this project.
+                        </p>
+                    </div>
+                )
+            }
+        </div>
+    </div>
+</AppLayout>

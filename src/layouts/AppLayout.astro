@@ -1,0 +1,97 @@
+---
+import Layout from "./Layout.astro";
+import {
+    Inbox,
+    FolderKanban,
+    LayoutGrid,
+    CalendarCheck,
+    Settings,
+    Zap,
+} from "lucide-astro";
+
+interface Props {
+    title: string;
+    currentPath?: string;
+}
+
+const { title, currentPath = Astro.url.pathname } = Astro.props;
+
+const navItems = [
+    { name: "Inbox", href: "/inbox", icon: Inbox },
+    { name: "Projects", href: "/projects", icon: FolderKanban },
+    { name: "Areas", href: "/areas", icon: LayoutGrid },
+    { name: "Reviews", href: "/reviews", icon: CalendarCheck },
+];
+
+const isActive = (path: string) => {
+    if (path === "/" && currentPath === "/") return true;
+    if (path !== "/" && currentPath.startsWith(path)) return true;
+    return false;
+};
+---
+
+<Layout title={title}>
+    <div class="flex h-screen overflow-hidden bg-background">
+        <!-- Sidebar -->
+        <aside
+            class="w-64 border-r border-border bg-surface hidden md:flex flex-col"
+        >
+            <div class="p-6 flex items-center gap-3">
+                <div
+                    class="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary"
+                >
+                    <Zap class="h-5 w-5" />
+                </div>
+                <h1 class="text-xl font-bold tracking-tight text-text-main">
+                    Action Amp
+                </h1>
+            </div>
+
+            <nav class="flex-1 px-4 space-y-1 mt-4">
+                {
+                    navItems.map((item) => {
+                        const active = isActive(item.href);
+                        return (
+                            <a
+                                href={item.href}
+                                class:list={[
+                                    "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
+                                    active
+                                        ? "bg-primary/10 text-primary"
+                                        : "text-text-muted hover:bg-surface-hover hover:text-text-main",
+                                ]}
+                            >
+                                <item.icon
+                                    class:list={[
+                                        "mr-3 h-5 w-5 transition-colors",
+                                        active
+                                            ? "text-primary"
+                                            : "text-text-muted group-hover:text-text-main",
+                                    ]}
+                                />
+                                {item.name}
+                            </a>
+                        );
+                    })
+                }
+            </nav>
+
+            <div class="p-4 border-t border-border">
+                <a
+                    href="/settings"
+                    class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-text-muted hover:bg-surface-hover hover:text-text-main transition-colors"
+                >
+                    <Settings class="mr-3 h-5 w-5" />
+                    Settings
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto bg-background relative">
+            <div class="max-w-5xl mx-auto p-8">
+                <slot />
+            </div>
+        </main>
+    </div>
+</Layout>

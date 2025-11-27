@@ -1,0 +1,84 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import { getCollection } from "astro:content";
+import { Inbox as InboxIcon } from "lucide-astro";
+
+const inboxItems = await getCollection("inbox");
+const sortedItems = inboxItems.sort(
+    (a, b) => b.data.captured.valueOf() - a.data.captured.valueOf(),
+);
+---
+
+<AppLayout title="Inbox | Action Amp">
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1
+                class="text-3xl font-bold text-text-main flex items-center gap-3"
+            >
+                <InboxIcon class="h-8 w-8 text-primary" />
+                Inbox
+            </h1>
+            <p class="text-text-muted mt-1">
+                Capture everything here. Process it later.
+            </p>
+        </div>
+        <button
+            class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-primary/20 cursor-not-allowed opacity-80"
+            title="Coming in Phase 3"
+        >
+            Capture New
+        </button>
+    </div>
+
+    <div class="grid gap-4">
+        {
+            sortedItems.length === 0 ? (
+                <div class="text-center py-16 border-2 border-dashed border-border rounded-xl bg-surface/50">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface mb-4">
+                        <InboxIcon class="h-8 w-8 text-text-muted" />
+                    </div>
+                    <h3 class="text-lg font-medium text-text-main">
+                        Your inbox is empty
+                    </h3>
+                    <p class="text-text-muted mt-1">
+                        Great job! You've processed everything.
+                    </p>
+                </div>
+            ) : (
+                sortedItems.map((item) => (
+                    <a
+                        href={`/inbox/${item.id}`}
+                        class="block bg-surface border border-border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all group"
+                    >
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-lg font-semibold text-text-main group-hover:text-primary transition-colors truncate">
+                                    {item.data.title}
+                                </h3>
+                                <div class="mt-2 flex items-center gap-3 text-sm text-text-muted">
+                                    <span
+                                        class:list={[
+                                            "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider",
+                                            item.data.type
+                                                ? "bg-primary/10 text-primary"
+                                                : "bg-surface-hover text-text-muted",
+                                        ]}
+                                    >
+                                        {item.data.type || "Unsorted"}
+                                    </span>
+                                    <span>
+                                        Captured{" "}
+                                        {item.data.captured.toLocaleDateString(
+                                            undefined,
+                                            { dateStyle: "medium" },
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                ))
+            )
+        }
+    </div>
+</AppLayout>
