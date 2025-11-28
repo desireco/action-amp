@@ -1,6 +1,6 @@
 ---
 import AppLayout from "../layouts/AppLayout.astro";
-import { Zap } from "lucide-astro";
+import { Zap, Square, StickyNote, Link, Lightbulb } from "lucide-astro";
 ---
 
 <AppLayout title="Capture | Action Amp">
@@ -21,25 +21,6 @@ import { Zap } from "lucide-astro";
             <form id="capture-form" class="space-y-4">
                 <div>
                     <label
-                        for="type"
-                        class="block text-sm font-medium text-text-main mb-2"
-                        >Type</label
-                    >
-                    <select
-                        id="type"
-                        name="type"
-                        class="w-full bg-background border border-border rounded-lg px-4 py-3 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                    >
-                        <option value="action">Action</option>
-                        <option value="note">Note</option>
-                        <option value="link">Link</option>
-                        <option value="idea">Idea</option>
-                        <option value="resource">Resource</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label
                         for="content"
                         class="block text-sm font-medium text-text-main mb-2"
                     >
@@ -55,6 +36,70 @@ import { Zap } from "lucide-astro";
                     <p class="text-xs text-text-muted mt-2">
                         Supports Markdown and URLs.
                     </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-text-main mb-2"
+                        >Type (Optional)</label
+                    >
+                    <div class="flex flex-wrap gap-3">
+                        <label class="cursor-pointer group">
+                            <input
+                                type="radio"
+                                name="type"
+                                value="action"
+                                class="peer sr-only"
+                            />
+                            <div
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background text-text-muted peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary/5 hover:border-primary/50 transition-all"
+                            >
+                                <Square class="w-4 h-4" />
+                                <span class="text-sm">Action</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input
+                                type="radio"
+                                name="type"
+                                value="note"
+                                class="peer sr-only"
+                            />
+                            <div
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background text-text-muted peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary/5 hover:border-primary/50 transition-all"
+                            >
+                                <StickyNote class="w-4 h-4" />
+                                <span class="text-sm">Note</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input
+                                type="radio"
+                                name="type"
+                                value="link"
+                                class="peer sr-only"
+                            />
+                            <div
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background text-text-muted peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary/5 hover:border-primary/50 transition-all"
+                            >
+                                <Link class="w-4 h-4" />
+                                <span class="text-sm">Link</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input
+                                type="radio"
+                                name="type"
+                                value="idea"
+                                class="peer sr-only"
+                            />
+                            <div
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background text-text-muted peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary/5 hover:border-primary/50 transition-all"
+                            >
+                                <Lightbulb class="w-4 h-4" />
+                                <span class="text-sm">Idea</span>
+                            </div>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="flex justify-end">
@@ -98,7 +143,6 @@ import { Zap } from "lucide-astro";
 <script>
     const form = document.getElementById("capture-form") as HTMLFormElement;
     const textarea = document.getElementById("content") as HTMLTextAreaElement;
-    const typeSelect = document.getElementById("type") as HTMLSelectElement;
     const successMessage = document.getElementById("success-message");
 
     async function handleSubmit(e: Event) {
@@ -112,6 +156,12 @@ import { Zap } from "lucide-astro";
         const lines = content.split("\n");
         const title = lines[0];
         const body = lines.slice(1).join("\n");
+
+        // Get selected type
+        const typeInput = form.querySelector(
+            'input[name="type"]:checked',
+        ) as HTMLInputElement;
+        const type = typeInput ? typeInput.value : undefined;
 
         try {
             const submitBtn = form.querySelector(
@@ -127,7 +177,7 @@ import { Zap } from "lucide-astro";
                 body: JSON.stringify({
                     title,
                     content: body,
-                    type: typeSelect.value,
+                    type,
                 }),
             });
 
