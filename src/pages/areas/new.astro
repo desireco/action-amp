@@ -1,0 +1,347 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import {
+    Home,
+    Briefcase,
+    TrendingUp,
+    Target,
+    Lightbulb,
+    Heart,
+    BookOpen,
+    Dumbbell,
+    Users,
+    Palette,
+    Music,
+    Code,
+} from "lucide-astro";
+
+const iconOptions = [
+    { name: "home", label: "Home", component: Home },
+    { name: "briefcase", label: "Work", component: Briefcase },
+    { name: "trending-up", label: "Career", component: TrendingUp },
+    { name: "target", label: "Focus", component: Target },
+    { name: "lightbulb", label: "Ideas", component: Lightbulb },
+    { name: "heart", label: "Health", component: Heart },
+    { name: "book-open", label: "Learning", component: BookOpen },
+    { name: "dumbbell", label: "Fitness", component: Dumbbell },
+    { name: "users", label: "Social", component: Users },
+    { name: "palette", label: "Creative", component: Palette },
+    { name: "music", label: "Music", component: Music },
+    { name: "code", label: "Code", component: Code },
+];
+
+const colorOptions = [
+    { name: "blue", value: "#3b82f6", label: "Blue" },
+    { name: "purple", value: "#a855f7", label: "Purple" },
+    { name: "green", value: "#22c55e", label: "Green" },
+    { name: "orange", value: "#f97316", label: "Orange" },
+    { name: "red", value: "#ef4444", label: "Red" },
+    { name: "pink", value: "#ec4899", label: "Pink" },
+    { name: "yellow", value: "#eab308", label: "Yellow" },
+    { name: "teal", value: "#14b8a6", label: "Teal" },
+    { name: "indigo", value: "#6366f1", label: "Indigo" },
+    { name: "cyan", value: "#06b6d4", label: "Cyan" },
+];
+---
+
+<AppLayout title="Create New Area">
+    <div class="max-w-3xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-text-main mb-2">
+                Create New Area
+            </h1>
+            <p class="text-text-muted">
+                Define a new area of responsibility in your life
+            </p>
+        </div>
+
+        <form id="create-area-form" class="space-y-8">
+            <!-- Name Field -->
+            <div>
+                <label
+                    for="name"
+                    class="block text-sm font-semibold text-zinc-300 mb-2"
+                >
+                    Area Name <span class="text-red-400">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    placeholder="e.g., Personal Development"
+                    class="w-full px-4 py-3 bg-surface text-text-main border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all placeholder:text-text-muted"
+                />
+            </div>
+
+            <!-- Icon Selection -->
+            <div>
+                <label class="block text-sm font-semibold text-zinc-300 mb-3">
+                    Icon <span class="text-red-400">*</span>
+                </label>
+                <div class="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                    {
+                        iconOptions.map((icon, index) => (
+                            <label class="icon-option relative cursor-pointer group">
+                                <input
+                                    type="radio"
+                                    name="icon"
+                                    value={icon.name}
+                                    class="peer sr-only"
+                                />
+                                <div class="flex flex-col items-center justify-center p-4 bg-surface border-2 border-border rounded-lg transition-all hover:border-primary hover:bg-surface-hover peer-checked:border-primary peer-checked:bg-surface-hover peer-checked:shadow-lg">
+                                    <icon.component class="w-6 h-6 text-text-main group-hover:text-primary peer-checked:text-primary" />
+                                    <span class="text-xs mt-2 text-text-main group-hover:text-primary peer-checked:text-primary font-semibold">
+                                        {icon.label}
+                                    </span>
+                                </div>
+                            </label>
+                        ))
+                    }
+                </div>
+                <p class="text-sm text-text-muted mt-2">
+                    Select an icon that represents this area
+                </p>
+            </div>
+
+            <!-- Color Selection -->
+            <div>
+                <label class="block text-sm font-semibold text-zinc-300 mb-3">
+                    Color <span class="text-red-400">*</span>
+                </label>
+                <div class="grid grid-cols-5 sm:grid-cols-10 gap-3">
+                    {
+                        colorOptions.map((color) => (
+                            <label class="color-option relative cursor-pointer group">
+                                <input
+                                    type="radio"
+                                    name="color"
+                                    value={color.name}
+                                    class="peer sr-only"
+                                />
+                                <div
+                                    class="w-12 h-12 rounded-full border-4 border-border transition-all hover:scale-110 hover:border-text-muted peer-checked:border-white peer-checked:scale-110 peer-checked:shadow-xl peer-checked:ring-2 peer-checked:ring-white peer-checked:ring-offset-2 peer-checked:ring-offset-background"
+                                    style={`background-color: ${color.value}`}
+                                    title={color.label}
+                                />
+                            </label>
+                        ))
+                    }
+                </div>
+                <p class="text-sm text-text-muted mt-2">
+                    Choose a color to identify this area
+                </p>
+            </div>
+
+            <!-- Description Field -->
+            <div>
+                <label
+                    for="description"
+                    class="block text-sm font-semibold text-zinc-300 mb-2"
+                >
+                    Description <span class="text-text-muted font-normal"
+                        >(optional)</span
+                    >
+                </label>
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="4"
+                    placeholder="Describe the purpose and scope of this area..."
+                    class="w-full px-4 py-3 bg-surface text-text-main border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all resize-none placeholder:text-text-muted"
+                ></textarea>
+            </div>
+
+            <!-- Preview -->
+            <div
+                id="preview"
+                class="hidden p-6 bg-surface-hover rounded-lg border border-border"
+            >
+                <h3 class="text-sm font-semibold text-text-main mb-3">
+                    Preview
+                </h3>
+                <div
+                    class="flex items-center gap-4 p-4 bg-surface rounded-lg shadow-sm border border-border"
+                >
+                    <div
+                        id="preview-icon"
+                        class="w-12 h-12 rounded-lg flex items-center justify-center"
+                    >
+                    </div>
+                    <div>
+                        <h4
+                            id="preview-name"
+                            class="font-semibold text-text-main"
+                        >
+                        </h4>
+                        <p
+                            id="preview-description"
+                            class="text-sm text-text-muted"
+                        >
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-4 pt-4">
+                <button
+                    type="submit"
+                    class="flex-1 bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-hover focus:ring-4 focus:ring-primary/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Create Area
+                </button>
+                <a
+                    href="/areas"
+                    class="px-6 py-3 border-2 border-border rounded-lg font-semibold text-text-main hover:bg-surface-hover hover:border-text-muted focus:ring-4 focus:ring-border transition-all"
+                >
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById(
+            "create-area-form",
+        ) as HTMLFormElement;
+        const nameInput = document.getElementById("name") as HTMLInputElement;
+        const descriptionInput = document.getElementById(
+            "description",
+        ) as HTMLTextAreaElement;
+        const preview = document.getElementById("preview") as HTMLDivElement;
+        const previewIcon = document.getElementById(
+            "preview-icon",
+        ) as HTMLDivElement;
+        const previewName = document.getElementById(
+            "preview-name",
+        ) as HTMLHeadingElement;
+        const previewDescription = document.getElementById(
+            "preview-description",
+        ) as HTMLParagraphElement;
+
+        const iconMap: Record<string, string> = {
+            home: "🏠",
+            briefcase: "💼",
+            "trending-up": "📈",
+            target: "🎯",
+            lightbulb: "💡",
+            heart: "❤️",
+            "book-open": "📖",
+            dumbbell: "🏋️",
+            users: "👥",
+            palette: "🎨",
+            music: "🎵",
+            code: "💻",
+        };
+
+        const colorMap: Record<string, string> = {
+            blue: "#3b82f6",
+            purple: "#a855f7",
+            green: "#22c55e",
+            orange: "#f97316",
+            red: "#ef4444",
+            pink: "#ec4899",
+            yellow: "#eab308",
+            teal: "#14b8a6",
+            indigo: "#6366f1",
+            cyan: "#06b6d4",
+        };
+
+        function updatePreview() {
+            const name = nameInput.value.trim();
+            const selectedIcon = form.querySelector(
+                'input[name="icon"]:checked',
+            ) as HTMLInputElement;
+            const selectedColor = form.querySelector(
+                'input[name="color"]:checked',
+            ) as HTMLInputElement;
+            const description = descriptionInput.value.trim();
+
+            if (name && selectedIcon && selectedColor) {
+                preview.classList.remove("hidden");
+                previewName.textContent = name;
+                previewDescription.textContent =
+                    description || "No description provided";
+
+                const iconEmoji = iconMap[selectedIcon.value] || "📁";
+                const colorValue = colorMap[selectedColor.value] || "#3b82f6";
+
+                previewIcon.style.backgroundColor = colorValue;
+                previewIcon.textContent = iconEmoji;
+                previewIcon.className =
+                    "w-12 h-12 rounded-lg flex items-center justify-center text-2xl";
+            } else {
+                preview.classList.add("hidden");
+            }
+        }
+
+        // Update preview on input
+        nameInput.addEventListener("input", updatePreview);
+        descriptionInput.addEventListener("input", updatePreview);
+        form.querySelectorAll('input[name="icon"]').forEach((input) => {
+            input.addEventListener("change", updatePreview);
+        });
+        form.querySelectorAll('input[name="color"]').forEach((input) => {
+            input.addEventListener("change", updatePreview);
+        });
+
+        // Form submission
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            // Custom validation
+            const name = nameInput.value.trim();
+            const selectedIcon = form.querySelector(
+                'input[name="icon"]:checked',
+            ) as HTMLInputElement;
+            const selectedColor = form.querySelector(
+                'input[name="color"]:checked',
+            ) as HTMLInputElement;
+
+            if (!name) {
+                alert("Please enter an area name");
+                nameInput.focus();
+                return;
+            }
+
+            if (!selectedIcon) {
+                alert("Please select an icon");
+                return;
+            }
+
+            if (!selectedColor) {
+                alert("Please select a color");
+                return;
+            }
+
+            const submitButton = form.querySelector(
+                'button[type="submit"]',
+            ) as HTMLButtonElement;
+            submitButton.disabled = true;
+            submitButton.textContent = "Creating...";
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch("/api/areas/create", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    window.location.href = "/areas";
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.error || "Failed to create area"}`);
+                    submitButton.disabled = false;
+                    submitButton.textContent = "Create Area";
+                }
+            } catch (error) {
+                console.error("Error creating area:", error);
+                alert("An unexpected error occurred. Please try again.");
+                submitButton.disabled = false;
+                submitButton.textContent = "Create Area";
+            }
+        });
+    </script>
+</AppLayout>

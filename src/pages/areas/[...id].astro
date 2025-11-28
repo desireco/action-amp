@@ -1,7 +1,9 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
 import { getEntry, getCollection } from "astro:content";
-import { ArrowLeft, Folder, ChevronRight } from "lucide-astro";
+import { ArrowLeft, Folder, ChevronRight, Edit } from "lucide-astro";
+
+import { dataReader } from "../../lib/data/reader";
 
 const { id } = Astro.params;
 
@@ -9,7 +11,7 @@ if (!id) {
     return Astro.redirect("/areas");
 }
 
-const area = await getEntry("areas", id);
+const area = await dataReader.getArea(id);
 
 if (!area) {
     return Astro.redirect("/404");
@@ -42,21 +44,30 @@ const sortedProjects = areaProjects.sort((a, b) => {
         >
             <div class="p-4 md:p-8 border-b border-border">
                 <div class="flex items-center justify-between mb-4">
-                    <span
-                        class="px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider bg-primary/10 text-primary"
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider bg-primary/10 text-primary"
+                        >
+                            Area
+                        </span>
+                        <span
+                            class:list={[
+                                "px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider",
+                                area.data.priority === "high"
+                                    ? "bg-red-500/10 text-red-500"
+                                    : "bg-surface-hover text-text-muted",
+                            ]}
+                        >
+                            {area.data.priority}
+                        </span>
+                    </div>
+                    <a
+                        href={`/areas/${id}/edit`}
+                        class="flex items-center gap-2 px-3 py-1.5 bg-surface-hover border border-border rounded-lg text-sm font-medium text-text-main hover:bg-surface hover:border-primary transition-all"
                     >
-                        Area
-                    </span>
-                    <span
-                        class:list={[
-                            "px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider",
-                            area.data.priority === "high"
-                                ? "bg-red-500/10 text-red-500"
-                                : "bg-surface-hover text-text-muted",
-                        ]}
-                    >
-                        {area.data.priority}
-                    </span>
+                        <Edit class="h-4 w-4" />
+                        Edit
+                    </a>
                 </div>
 
                 <h1
@@ -75,16 +86,24 @@ const sortedProjects = areaProjects.sort((a, b) => {
         </div>
 
         <div class="space-y-4">
-            <h2
-                class="text-xl font-bold text-text-main flex items-center gap-2"
-            >
-                Projects
-                <span
-                    class="text-sm font-normal text-text-muted bg-surface-hover px-2 py-0.5 rounded-full"
+            <div class="flex items-center justify-between">
+                <h2
+                    class="text-xl font-bold text-text-main flex items-center gap-2"
                 >
-                    {sortedProjects.length}
-                </span>
-            </h2>
+                    Projects
+                    <span
+                        class="text-sm font-normal text-text-muted bg-surface-hover px-2 py-0.5 rounded-full"
+                    >
+                        {sortedProjects.length}
+                    </span>
+                </h2>
+                <a
+                    href="/new-project"
+                    class="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover transition-colors text-sm"
+                >
+                    + New Project
+                </a>
+            </div>
 
             {
                 sortedProjects.length > 0 ? (
