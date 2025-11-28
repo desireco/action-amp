@@ -26,10 +26,8 @@ if (!project) {
 // Project ID is like "work/website-redesign/project.toml"
 // We need to match actions that start with "work/website-redesign/"
 const projectDir = id.replace("/project.toml", "");
-const actions = await getCollection("actions");
-const projectActions = actions.filter((action) =>
-    action.id.startsWith(projectDir),
-);
+import { dataReader } from "../../lib/data/reader";
+const projectActions = await dataReader.getProjectActions(projectDir);
 
 // Sort actions by status/priority
 const statusOrder: Record<string, number> = {
@@ -100,7 +98,7 @@ try {
         <div
             class="bg-surface border border-border rounded-xl overflow-hidden shadow-sm mb-8"
         >
-            <div class="p-8 border-b border-border">
+            <div class="p-4 md:p-8 border-b border-border">
                 <div class="flex items-center justify-between mb-4">
                     <span
                         class="px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider bg-primary/10 text-primary"
@@ -134,7 +132,7 @@ try {
             </div>
 
             <div
-                class="px-8 py-4 bg-surface-hover/10 flex gap-6 text-sm text-text-muted"
+                class="px-4 md:px-8 py-4 bg-surface-hover/10 flex flex-col md:flex-row gap-2 md:gap-6 text-sm text-text-muted"
             >
                 <div>
                     <span class="font-medium text-text-main">Area:</span>
@@ -198,7 +196,7 @@ try {
                                     </div>
                                     <span
                                         class:list={[
-                                            "text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity",
+                                            "text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity",
                                             action.data.priority === "high"
                                                 ? "bg-red-500/10 text-red-500"
                                                 : "bg-surface-hover text-text-muted",

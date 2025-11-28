@@ -4,54 +4,74 @@ This document provides essential context for AI models interacting with this pro
 
 ## 1. Project Overview & Purpose
 
-* **Primary Goal:** Action Amplifier is a local-first, text-based personal productivity system. It organizes tasks, projects, and resources using a structured file layout (TOML, Markdown, and folders) to enable "Action Amplifier" features.
+* **Primary Goal:** Action Amplifier is a local-first, text-based personal productivity system. It organizes tasks, projects, and resources using a structured file layout (TOML, Markdown, and folders) to enable "Action Amplifier" features. It provides a web interface to manage these files.
 * **Business Domain:** Personal Productivity, Task Management, Knowledge Management (PKM).
 
 ## 2. Core Technologies & Stack
 
-* **Languages:** [Inferred] Likely Python, Rust, or Go for the CLI/Backend tool (Action Amplifier) to parse these files. Currently, only documentation exists.
-* **Frameworks & Runtimes:** [Inferred] TBD.
-* **Databases:** The filesystem is the database. Data is stored in TOML (`actions.toml`, `area.toml`) and plain text files.
-* **Key Libraries/Dependencies:** [Inferred] TOML parsers, file system watchers.
-* **Package Manager(s):** [Inferred] TBD.
+* **Languages:** TypeScript, JavaScript, HTML, CSS.
+* **Frameworks & Runtimes:** Astro v5 (SSR with Node.js adapter), TailwindCSS v4.
+* **Databases:** The filesystem is the database. Data is stored in TOML (`actions.toml`, `area.toml`, `project.toml`) and Markdown files within the `data/` directory.
+* **Key Libraries/Dependencies:** 
+    * `astro:content` (Content Collections) for data access.
+    * `lucide-astro` for icons.
+    * `zod` for schema validation.
+    * `node:fs` for direct file manipulations where Content Collections are insufficient.
+* **Package Manager(s):** npm.
 
 ## 3. Architectural Patterns
 
-* **Overall Architecture:** Local-first, file-centric architecture. The "database" is a directory tree (`data/`) containing structured text files. This allows for version control (Git), human readability, and tool interoperability.
+* **Overall Architecture:** Server-Side Rendered (SSR) Web Application. It runs locally and interacts directly with the filesystem.
 * **Directory Structure Philosophy:**
+    * `src/pages`: Astro pages and API routes.
+    * `src/layouts`: Shared layouts (AppLayout).
+    * `src/components`: Reusable UI components.
+    * `src/content`: Content Collections configuration (`config.ts`).
+    * `src/lib`: Utility functions, specifically `src/lib/data` for filesystem helpers.
+    * `data/`: The root for all user data (Inbox, Areas, Reviews).
     * `docs/`: Documentation and specifications.
-    * `data/`: (Proposed) The root for all user data (Inbox, Areas, Reviews).
-    * `config/`: (Proposed) Configuration files.
 
 ## 4. Coding Conventions & Style Guide
 
 * **Formatting:**
-    * **TOML:** Used for structured data (actions, projects, areas).
-    * **Markdown:** Used for documentation and potentially notes.
-    * **Dates:** ISO 8601 (`YYYY-MM-DDTHH:MM:SS`).
-    * **Naming:** Kebab-case for files and directories (e.g., `website-redesign`, `actions.toml`). No spaces.
+    * **Indentation:** 4 spaces (inferred from existing code).
+    * **Style:** Prettier is likely used.
 * **Naming Conventions:**
-    * Projects: Lowercase, hyphen-separated.
-    * Areas: Lowercase, single word preferred.
-* **API Design:** N/A (File-based API).
-* **Error Handling:** [Inferred] Tools should handle missing files or malformed TOML gracefully.
+    * **Files:** kebab-case (e.g., `project-card.astro`).
+    * **Components:** PascalCase (e.g., `AppLayout.astro`).
+    * **Variables/Functions:** camelCase.
+* **API Design:** 
+    * Internal API routes in `src/pages/api/` handle data mutations (POST/PUT/DELETE).
+    * Data fetching is primarily done via `getCollection` and `getEntry` in Astro frontmatter.
+* **Error Handling:** 
+    * Try/catch blocks in API routes.
+    * UI feedback via alerts (currently) or console errors.
 
 ## 5. Key Files & Entrypoints
 
-* **Main Entrypoint(s):** N/A (Documentation only phase).
-* **Configuration:** `docs/file-layout-specification.md` serves as the current source of truth for the data structure.
+* **Main Entrypoint(s):** `src/pages/index.astro` (Landing), `src/pages/dashboard.astro` (App Dashboard).
+* **Configuration:** 
+    * `astro.config.mjs`: Astro configuration.
+    * `src/content/config.ts`: Data schema definitions.
+    * `tailwind.config.mjs`: Tailwind configuration (if present, otherwise v4 uses CSS).
+* **CI/CD Pipeline:** Playwright and Vitest are configured for testing.
 
 ## 6. Development & Testing Workflow
 
-* **Local Development Environment:** TBD.
-* **Testing:** TBD.
-* **CI/CD Process:** TBD.
+* **Local Development Environment:** `npm run dev` starts the Astro dev server.
+* **Testing:** 
+    * `npm test` runs Vitest (unit/integration).
+    * `npm run test:e2e` runs Playwright (end-to-end).
+* **CI/CD Process:** GitHub Actions (inferred).
 
 ## 7. Specific Instructions for AI Collaboration
 
-* **Contribution Guidelines:** Follow the `docs/file-layout-specification.md` strictly when proposing file structure changes or generating sample data.
+* **Contribution Guidelines:** 
+    * Follow the file layout specification in `docs/`.
+    * Use `fsApi` from `src/lib/data/api.ts` for file operations when possible, or standard `node:fs`.
+    * Ensure `data/` directory structure is respected.
 * **Infrastructure (IaC):** N/A.
 
 ## 8. Available Tools
 
-* **Browser Tools:** See `browser-tools/README.md` for a suite of Chrome DevTools Protocol scripts available in the path (e.g., `browser-start.js`, `browser-nav.js`) for agent-assisted web automation.
+* **Browser Tools:** See `browser-tools/README.md` for a suite of Chrome DevTools Protocol scripts.

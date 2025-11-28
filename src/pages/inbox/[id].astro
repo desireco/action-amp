@@ -74,7 +74,7 @@ const activeProjects = projects.filter((p) => p.data.status === "active");
             <div
                 class="bg-surface border border-border rounded-xl overflow-hidden shadow-sm"
             >
-                <div class="p-8 border-b border-border">
+                <div class="p-4 md:p-8 border-b border-border">
                     <div class="flex items-center gap-3 mb-4">
                         <span
                             class={`px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider ${
@@ -105,7 +105,7 @@ const activeProjects = projects.filter((p) => p.data.status === "active");
                 </div>
 
                 <div
-                    class="p-8 prose prose-invert prose-lg max-w-none text-text-muted"
+                    class="p-4 md:p-8 prose prose-invert prose-lg max-w-none text-text-muted"
                 >
                     {Content ? <Content /> : <div set:html={htmlContent} />}
                 </div>

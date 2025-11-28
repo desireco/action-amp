@@ -31,4 +31,4 @@ pnpm-debug.log*
 /playwright/.auth/
 
 # User data
-data/
+/data/

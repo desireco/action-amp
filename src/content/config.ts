@@ -5,7 +5,7 @@ const inbox = defineCollection({
   loader: glob({ pattern: "*.md", base: "./data/inbox" }),
   schema: z.object({
     id: z.string(),
-    type: z.enum(['action', 'resource', 'note']).optional(), // Optional because spec says type is undecided for some
+    type: z.enum(['action', 'resource', 'note', 'link', 'idea']).optional(), // Optional because spec says type is undecided for some
     title: z.string(),
     captured: z.coerce.date(),
   }),

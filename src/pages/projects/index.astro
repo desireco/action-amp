@@ -42,7 +42,7 @@ const statusColors: Record<string, string> = {
 ---
 
 <AppLayout title="Projects | Action Amp">
-    <div class="mb-8">
+    <div class="mb-4 md:mb-8">
         <h1 class="text-3xl font-bold text-text-main flex items-center gap-3">
             <FolderKanban class="h-8 w-8 text-primary" />
             Projects
@@ -74,8 +74,8 @@ const statusColors: Record<string, string> = {
                     >
                         <div class="flex items-start justify-between">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-3 mb-1">
-                                    <h3 class="text-lg font-semibold text-text-main group-hover:text-primary transition-colors truncate">
+                                <div class="flex flex-wrap items-center gap-3 mb-1">
+                                    <h3 class="text-lg font-semibold text-text-main group-hover:text-primary transition-colors truncate max-w-full">
                                         {project.data.name}
                                     </h3>
                                     <span
