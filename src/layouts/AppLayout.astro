@@ -46,10 +46,13 @@ const navItems = [
         name: "Projects",
         href: "/projects",
         icon: FolderKanban,
-        subitems: contextProjects.map((p) => ({
-            name: p.data.name,
-            href: `/projects/${p.id}`, // p.id is typically "area/project-slug"
-        })),
+        subitems: contextProjects.map((p) => {
+            const cleanId = p.id.replace(/\/project\.toml$/, "");
+            return {
+                name: p.data.name,
+                href: `/projects/${cleanId}`,
+            };
+        }),
     },
     { name: "Areas", href: "/areas", icon: LayoutGrid },
     { name: "Context", href: "/context", icon: Layers },
@@ -155,7 +158,10 @@ const isActive = (path: string) => {
                                     <div class="ml-9 mt-1 space-y-1 border-l border-border pl-2">
                                         {item.subitems.map((sub) => {
                                             const subActive =
-                                                currentPath === sub.href;
+                                                currentPath === sub.href ||
+                                                currentPath.startsWith(
+                                                    sub.href + "/",
+                                                );
                                             return (
                                                 <a
                                                     href={sub.href}

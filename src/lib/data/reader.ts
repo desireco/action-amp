@@ -54,14 +54,24 @@ export class DataReader {
         }
     }
     async getProject(projectId: string): Promise<any | null> {
-        // projectId is like "work/website-redesign/project.toml"
-        const fullPath = fsApi.resolvePath(path.join('data/areas', projectId));
+        // projectId is like "work/website-redesign/project.toml" or "work/website-redesign/project"
+        let relativePath = projectId;
+        if (!relativePath.endsWith('.toml')) {
+            if (relativePath.endsWith('/project')) {
+                relativePath += '.toml';
+            } else {
+                // Try appending /project.toml
+                relativePath = path.join(relativePath, 'project.toml');
+            }
+        }
+
+        const fullPath = fsApi.resolvePath(path.join('data/areas', relativePath));
 
         try {
             const content = await fs.readFile(fullPath, 'utf-8');
             const data = toml.parse(content);
             return {
-                id: projectId,
+                id: projectId, // Keep original ID
                 data: data
             };
         } catch (e) {

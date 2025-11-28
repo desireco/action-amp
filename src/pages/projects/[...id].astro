@@ -28,7 +28,7 @@ if (!project) {
 // Get actions for this project
 // Project ID is like "work/website-redesign/project.toml"
 // We need to match actions that start with "work/website-redesign/"
-const projectDir = id.replace("/project.toml", "");
+const projectDir = id.replace(/\/project(\.toml)?$/, "");
 const projectActions = await dataReader.getProjectActions(projectDir);
 
 // Sort actions by status/priority
