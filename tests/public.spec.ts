@@ -11,7 +11,7 @@ test.describe('Public Pages', () => {
         await expect(page.getByText('Focus on what matters most')).toBeVisible();
 
         // Expect link to Dashboard/App
-        await expect(page.getByRole('link', { name: 'Go to Dashboard' })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Open App' })).toBeVisible();
     });
 
     test('faq page should display questions', async ({ page }) => {

@@ -1,0 +1,138 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import { Zap } from "lucide-astro";
+---
+
+<AppLayout title="Capture | Action Amp">
+    <div class="max-w-2xl mx-auto">
+        <div class="mb-8">
+            <h1
+                class="text-3xl font-bold text-text-main flex items-center gap-3"
+            >
+                <Zap class="h-8 w-8 text-primary" />
+                Capture
+            </h1>
+            <p class="text-text-muted mt-1">
+                Get it out of your head. Process it later.
+            </p>
+        </div>
+
+        <div class="bg-surface border border-border rounded-xl p-6 shadow-sm">
+            <form id="capture-form" class="space-y-4">
+                <div>
+                    <label
+                        for="content"
+                        class="block text-sm font-medium text-text-main mb-2"
+                    >
+                        What's on your mind?
+                    </label>
+                    <textarea
+                        id="content"
+                        name="content"
+                        rows="6"
+                        class="w-full bg-background border border-border rounded-lg px-4 py-3 text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
+                        placeholder="Buy milk, https://example.com/article, Call Mom..."
+                        autofocus></textarea>
+                    <p class="text-xs text-text-muted mt-2">
+                        Supports Markdown and URLs.
+                    </p>
+                </div>
+
+                <div class="flex justify-end">
+                    <button
+                        type="submit"
+                        class="bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                    >
+                        Capture to Inbox
+                        <kbd
+                            class="hidden sm:inline-block px-2 py-0.5 bg-white/20 rounded text-xs font-sans"
+                            >⌘+Enter</kbd
+                        >
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div
+            id="success-message"
+            class="hidden mt-4 p-4 bg-green-500/10 text-green-500 rounded-lg border border-green-500/20"
+        >
+            <div class="flex items-center gap-2">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    ><polyline points="20 6 9 17 4 12"></polyline></svg
+                >
+                Captured successfully!
+            </div>
+        </div>
+    </div>
+</AppLayout>
+
+<script>
+    const form = document.getElementById("capture-form") as HTMLFormElement;
+    const textarea = document.getElementById("content") as HTMLTextAreaElement;
+    const successMessage = document.getElementById("success-message");
+
+    async function handleSubmit(e: Event) {
+        e.preventDefault();
+        const content = textarea.value.trim();
+        if (!content) return;
+
+        // Use the first line as the title, and the rest as body if needed
+        // For now, our API expects 'title' and optional 'content'
+        // We'll split the input: first line is title, rest is content
+        const lines = content.split("\n");
+        const title = lines[0];
+        const body = lines.slice(1).join("\n");
+
+        try {
+            const submitBtn = form.querySelector(
+                'button[type="submit"]',
+            ) as HTMLButtonElement;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = "Capturing...";
+
+            const res = await fetch("/api/inbox", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, content: body }),
+            });
+
+            if (res.ok) {
+                textarea.value = "";
+                successMessage?.classList.remove("hidden");
+                setTimeout(() => {
+                    successMessage?.classList.add("hidden");
+                }, 3000);
+            } else {
+                alert("Failed to capture item");
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            textarea.focus();
+        } catch (err) {
+            console.error(err);
+            alert("Error capturing item");
+        }
+    }
+
+    form?.addEventListener("submit", handleSubmit);
+
+    // Cmd+Enter to submit
+    textarea?.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+            e.preventDefault();
+            form.requestSubmit();
+        }
+    });
+</script>

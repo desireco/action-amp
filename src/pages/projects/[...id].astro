@@ -175,7 +175,20 @@ try {
 
                             return (
                                 <div class="p-4 border-b border-border last:border-0 flex items-center gap-4 hover:bg-surface-hover transition-colors group">
-                                    <Icon class={`h-5 w-5 ${colorClass}`} />
+                                    <button
+                                        class="action-toggle focus:outline-none"
+                                        data-path={`areas/${action.id}`}
+                                        data-status={action.data.status}
+                                        title={
+                                            action.data.status === "completed"
+                                                ? "Mark as Todo"
+                                                : "Mark as Completed"
+                                        }
+                                    >
+                                        <Icon
+                                            class={`h-5 w-5 ${colorClass} hover:scale-110 transition-transform`}
+                                        />
+                                    </button>
                                     <div class="flex-1 min-w-0">
                                         <span
                                             class={`text-sm font-medium ${action.data.status === "completed" ? "text-text-muted line-through" : "text-text-main"}`}
@@ -206,6 +219,46 @@ try {
                 )
             }
         </div>
+
+        <script>
+            const buttons = document.querySelectorAll(".action-toggle");
+            buttons.forEach((btn) => {
+                btn.addEventListener("click", async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent row click if we add one later
+
+                    const button = e.currentTarget as HTMLButtonElement;
+                    const path = button.dataset.path;
+                    const currentStatus = button.dataset.status;
+
+                    const newStatus =
+                        currentStatus === "completed" ? "todo" : "completed";
+
+                    // Visual feedback
+                    button.style.opacity = "0.5";
+
+                    try {
+                        const res = await fetch("/api/actions/status", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ path, status: newStatus }),
+                        });
+
+                        if (res.ok) {
+                            window.location.reload();
+                        } else {
+                            console.error("Failed to update status");
+                            alert("Failed to update status");
+                            button.style.opacity = "1";
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert("Error updating status");
+                        button.style.opacity = "1";
+                    }
+                });
+            });
+        </script>
 
         <div class="mt-8 space-y-4">
             <h2

@@ -7,6 +7,7 @@ import {
     CalendarCheck,
     Settings,
     Zap,
+    Plus,
 } from "lucide-astro";
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 const { title, currentPath = Astro.url.pathname } = Astro.props;
 
 const navItems = [
+    { name: "Capture", href: "/capture", icon: Plus },
     { name: "Inbox", href: "/inbox", icon: Inbox },
     { name: "Projects", href: "/projects", icon: FolderKanban },
     { name: "Areas", href: "/areas", icon: LayoutGrid },
@@ -47,7 +49,23 @@ const isActive = (path: string) => {
                 </h1>
             </div>
 
-            <nav class="flex-1 px-4 space-y-1 mt-4">
+            <div class="px-4 mb-2">
+                <div class="relative">
+                    <input
+                        type="text"
+                        id="quick-capture"
+                        placeholder="Quick Capture..."
+                        class="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-sm text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    />
+                    <div
+                        class="absolute right-3 top-2.5 text-xs text-text-muted pointer-events-none opacity-50"
+                    >
+                        ⏎
+                    </div>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-4 space-y-1 mt-2">
                 {
                     navItems.map((item) => {
                         const active = isActive(item.href);
@@ -94,4 +112,42 @@ const isActive = (path: string) => {
             </div>
         </main>
     </div>
+    <script>
+        const input = document.getElementById(
+            "quick-capture",
+        ) as HTMLInputElement;
+
+        input?.addEventListener("keydown", async (e) => {
+            if (e.key === "Enter") {
+                const title = input.value.trim();
+                if (!title) return;
+
+                try {
+                    input.disabled = true;
+                    const res = await fetch("/api/inbox", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ title }),
+                    });
+
+                    if (res.ok) {
+                        input.value = "";
+                        // If we are on the inbox page, reload to show the new item
+                        if (window.location.pathname === "/inbox") {
+                            window.location.reload();
+                        }
+                    } else {
+                        console.error("Failed to capture");
+                        alert("Failed to capture item");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Error capturing item");
+                } finally {
+                    input.disabled = false;
+                    input.focus();
+                }
+            }
+        });
+    </script>
 </Layout>

@@ -1,9 +1,40 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
-import { getCollection } from "astro:content";
 import { Inbox as InboxIcon } from "lucide-astro";
+import fs from "node:fs/promises";
+import path from "node:path";
+import matter from "gray-matter";
 
-const inboxItems = await getCollection("inbox");
+// Read inbox items directly from filesystem to ensure real-time updates
+const inboxDir = path.join(process.cwd(), "data/inbox");
+let inboxItems: any[] = [];
+
+try {
+    const files = await fs.readdir(inboxDir);
+    const mdFiles = files.filter((f) => f.endsWith(".md"));
+
+    inboxItems = await Promise.all(
+        mdFiles.map(async (file) => {
+            const content = await fs.readFile(
+                path.join(inboxDir, file),
+                "utf-8",
+            );
+            const parsed = matter(content);
+            return {
+                id: file.replace(".md", ""),
+                data: {
+                    ...parsed.data,
+                    captured: parsed.data.captured
+                        ? new Date(parsed.data.captured)
+                        : new Date(),
+                },
+            };
+        }),
+    );
+} catch (e) {
+    console.error("Failed to read inbox:", e);
+}
+
 const sortedItems = inboxItems.sort(
     (a, b) => b.data.captured.valueOf() - a.data.captured.valueOf(),
 );

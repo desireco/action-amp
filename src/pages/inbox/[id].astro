@@ -1,7 +1,11 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
-import { getEntry, render } from "astro:content";
-import { ArrowLeft, Calendar } from "lucide-astro";
+import { getEntry, getCollection, render } from "astro:content";
+import { ArrowLeft, Calendar, FolderInput, Trash2 } from "lucide-astro";
+import fs from "node:fs/promises";
+import path from "node:path";
+import matter from "gray-matter";
+import { marked } from "marked";
 
 const { id } = Astro.params;
 
@@ -9,16 +13,52 @@ if (!id) {
     return Astro.redirect("/inbox");
 }
 
-const item = await getEntry("inbox", id);
+let item: any;
+let Content: any;
+let htmlContent = "";
 
-if (!item) {
-    return Astro.redirect("/404");
+// Try to get from Content Collection first (fastest, pre-built)
+const collectionItem = await getEntry("inbox", id);
+
+if (collectionItem) {
+    item = collectionItem;
+    const rendered = await render(collectionItem);
+    Content = rendered.Content;
+} else {
+    // Fallback: Read directly from disk (for dynamic items)
+    try {
+        const filePath = path.join(process.cwd(), "data/inbox", `${id}.md`);
+
+        const fileContent = await fs.readFile(filePath, "utf-8");
+
+        const parsed = matter(fileContent);
+
+        item = {
+            id,
+            data: {
+                ...parsed.data,
+                // Ensure dates are Date objects
+                captured: parsed.data.captured
+                    ? new Date(parsed.data.captured)
+                    : new Date(),
+            },
+            body: parsed.content,
+        };
+
+        htmlContent = await marked.parse(parsed.content);
+    } catch (e: any) {
+        console.error(`Failed to read inbox item ${id}:`, e);
+        return new Response(`Error loading item: ${e.message}`, {
+            status: 500,
+        });
+    }
 }
 
-const { Content } = await render(item);
+const projects = await getCollection("projects");
+const activeProjects = projects.filter((p) => p.data.status === "active");
 ---
 
-<AppLayout title={`${item.data.title} | Inbox`}>
+<AppLayout title={`${item?.data?.title} | Inbox`}>
     <div class="max-w-3xl mx-auto">
         <a
             href="/inbox"
@@ -30,42 +70,144 @@ const { Content } = await render(item);
             Back to Inbox
         </a>
 
-        <div
-            class="bg-surface border border-border rounded-xl overflow-hidden shadow-sm"
-        >
-            <div class="p-8 border-b border-border">
-                <div class="flex items-center gap-3 mb-4">
-                    <span
-                        class:list={[
-                            "px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider",
-                            item.data.type
-                                ? "bg-primary/10 text-primary"
-                                : "bg-surface-hover text-text-muted",
-                        ]}
-                    >
-                        {item.data.type || "Unsorted"}
-                    </span>
-                    <div class="flex items-center text-text-muted text-sm">
-                        <Calendar class="h-4 w-4 mr-1.5" />
-                        {
-                            item.data.captured.toLocaleDateString(undefined, {
-                                dateStyle: "long",
-                                timeStyle: "short",
-                            })
-                        }
+        <div class="grid gap-8">
+            <div
+                class="bg-surface border border-border rounded-xl overflow-hidden shadow-sm"
+            >
+                <div class="p-8 border-b border-border">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span
+                            class={`px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider ${
+                                item?.data?.type
+                                    ? "bg-primary/10 text-primary"
+                                    : "bg-surface-hover text-text-muted"
+                            }`}
+                        >
+                            {item?.data?.type || "Unsorted"}
+                        </span>
+                        <div class="flex items-center text-text-muted text-sm">
+                            <Calendar class="h-4 w-4 mr-1.5" />
+                            {
+                                item.data.captured instanceof Date &&
+                                !isNaN(item.data.captured.getTime())
+                                    ? item.data.captured
+                                          .toISOString()
+                                          .replace("T", " ")
+                                          .substring(0, 16)
+                                    : "Invalid Date"
+                            }
+                        </div>
                     </div>
+
+                    <h1 class="text-3xl font-bold text-text-main leading-tight">
+                        {item?.data?.title}
+                    </h1>
                 </div>
 
-                <h1 class="text-3xl font-bold text-text-main leading-tight">
-                    {item.data.title}
-                </h1>
+                <div
+                    class="p-8 prose prose-invert prose-lg max-w-none text-text-muted"
+                >
+                    {Content ? <Content /> : <div set:html={htmlContent} />}
+                </div>
             </div>
 
-            <div
-                class="p-8 prose prose-invert prose-lg max-w-none text-text-muted"
-            >
-                <Content />
+            <div class="bg-surface border border-border rounded-xl p-6">
+                <h2
+                    class="text-lg font-semibold text-text-main mb-4 flex items-center gap-2"
+                >
+                    <FolderInput class="h-5 w-5 text-primary" />
+                    Process Item
+                </h2>
+
+                <form id="process-form" class="space-y-4">
+                    <input type="hidden" name="inboxItemId" value={item.id} />
+
+                    <div>
+                        <label
+                            for="project"
+                            class="block text-sm font-medium text-text-muted mb-1"
+                        >
+                            Move to Project
+                        </label>
+                        <select
+                            id="project"
+                            name="projectId"
+                            class="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            required
+                        >
+                            <option value="" disabled selected
+                                >Select a project...</option
+                            >
+                            {
+                                activeProjects.map((project) => (
+                                    <option value={project.id}>
+                                        {project.data.name} ({project.data.area}
+                                        )
+                                    </option>
+                                ))
+                            }
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-3 pt-2">
+                        <button
+                            type="submit"
+                            class="flex-1 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                        >
+                            <FolderInput class="h-4 w-4" />
+                            Convert to Action
+                        </button>
+                        <button
+                            type="button"
+                            class="px-4 py-2 rounded-lg font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+                            title="Delete (Not implemented yet)"
+                        >
+                            <Trash2 class="h-4 w-4" />
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </AppLayout>
+
+<script>
+    const form = document.getElementById("process-form") as HTMLFormElement;
+
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const inboxItemId = formData.get("inboxItemId");
+        const projectId = formData.get("projectId");
+
+        if (!inboxItemId || !projectId) return;
+
+        const submitBtn = form.querySelector(
+            'button[type="submit"]',
+        ) as HTMLButtonElement;
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = "Processing...";
+
+        try {
+            const res = await fetch("/api/actions/move", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ inboxItemId, projectId }),
+            });
+
+            if (res.ok) {
+                window.location.href = "/inbox";
+            } else {
+                alert("Failed to move item");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error moving item");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    });
+</script>

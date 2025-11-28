@@ -1,0 +1,112 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import { getCollection } from "astro:content";
+import {
+    FolderKanban,
+    LayoutGrid,
+    ChevronRight,
+    Clock,
+    CheckCircle2,
+    AlertCircle,
+    XCircle,
+} from "lucide-astro";
+
+const projects = await getCollection("projects");
+
+// Sort projects by status then priority
+const statusOrder: Record<string, number> = {
+    active: 0,
+    on_hold: 1,
+    completed: 2,
+    archived: 3,
+};
+
+const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+
+const sortedProjects = projects.sort((a, b) => {
+    const sA = statusOrder[a.data.status] ?? 4;
+    const sB = statusOrder[b.data.status] ?? 4;
+    if (sA !== sB) return sA - sB;
+
+    const pA = priorityOrder[a.data.priority] ?? 1;
+    const pB = priorityOrder[b.data.priority] ?? 1;
+    return pA - pB;
+});
+
+const statusColors: Record<string, string> = {
+    active: "bg-green-500/10 text-green-500",
+    on_hold: "bg-yellow-500/10 text-yellow-500",
+    completed: "bg-blue-500/10 text-blue-500",
+    archived: "bg-gray-500/10 text-gray-500",
+};
+---
+
+<AppLayout title="Projects | Action Amp">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-text-main flex items-center gap-3">
+            <FolderKanban class="h-8 w-8 text-primary" />
+            Projects
+        </h1>
+        <p class="text-text-muted mt-1">
+            Outcomes requiring multiple steps to complete.
+        </p>
+    </div>
+
+    <div class="grid gap-4">
+        {
+            sortedProjects.length === 0 ? (
+                <div class="text-center py-16 border-2 border-dashed border-border rounded-xl bg-surface/50">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface mb-4">
+                        <FolderKanban class="h-8 w-8 text-text-muted" />
+                    </div>
+                    <h3 class="text-lg font-medium text-text-main">
+                        No projects found
+                    </h3>
+                    <p class="text-text-muted mt-1">
+                        Create a project in an Area to get started.
+                    </p>
+                </div>
+            ) : (
+                sortedProjects.map((project) => (
+                    <a
+                        href={`/projects/${project.id}`}
+                        class="block bg-surface border border-border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all group"
+                    >
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-3 mb-1">
+                                    <h3 class="text-lg font-semibold text-text-main group-hover:text-primary transition-colors truncate">
+                                        {project.data.name}
+                                    </h3>
+                                    <span
+                                        class:list={[
+                                            "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider",
+                                            statusColors[project.data.status] ||
+                                                "bg-surface-hover text-text-muted",
+                                        ]}
+                                    >
+                                        {project.data.status.replace("_", " ")}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-4 text-sm text-text-muted">
+                                    <span class="flex items-center gap-1">
+                                        <LayoutGrid class="h-3 w-3" />
+                                        {project.data.area}
+                                    </span>
+                                    {project.data.due_date && (
+                                        <span class="flex items-center gap-1">
+                                            <Clock class="h-3 w-3" />
+                                            Due{" "}
+                                            {project.data.due_date.toLocaleDateString()}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <ChevronRight class="h-5 w-5 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                    </a>
+                ))
+            )
+        }
+    </div>
+</AppLayout>

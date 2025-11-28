@@ -1,0 +1,31 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import { CalendarCheck } from "lucide-astro";
+---
+
+<AppLayout title="Reviews | Action Amp">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-text-main flex items-center gap-3">
+            <CalendarCheck class="h-8 w-8 text-primary" />
+            Reviews
+        </h1>
+        <p class="text-text-muted mt-1">
+            Reflect on your progress and plan for the future.
+        </p>
+    </div>
+
+    <div
+        class="text-center py-16 border-2 border-dashed border-border rounded-xl bg-surface/50"
+    >
+        <div
+            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface mb-4"
+        >
+            <CalendarCheck class="h-8 w-8 text-text-muted" />
+        </div>
+        <h3 class="text-lg font-medium text-text-main">Coming Soon</h3>
+        <p class="text-text-muted mt-1 max-w-md mx-auto">
+            The Review system will be implemented in Phase 4. It will help you
+            perform daily, weekly, and monthly reviews to stay on track.
+        </p>
+    </div>
+</AppLayout>

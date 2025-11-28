@@ -3,15 +3,15 @@
 This document outlines the roadmap for building the Action Amplifier application based on the [File Layout Specification](./file-layout-specification.md).
 
 ## Progress
-**Current Status:** Phase 2 Complete. Ready to start Phase 3.
+**Current Status:** Phase 3 Complete. Ready to start Phase 4.
 
 | Phase | Status | Description |
 | :--- | :--- | :--- |
 | **Phase 1: Foundation & Data Layer** | ✅ Completed | Project setup, Data structure, Content Collections. |
 | **Phase 1.5: Testing Infrastructure** | ✅ Completed | Vitest & Playwright setup. |
 | **Phase 2: Core UI & Read Views** | ✅ Completed | Layout, Inbox View, Areas & Projects View. |
-| **Phase 3: Write Operations** | ⏳ Next | Data Access Layer, API, Interactive UI. |
-| **Phase 4: Advanced Features** | 🔴 Pending | Next Action Logic, Reviews, Search. |
+| **Phase 3: Write Operations** | ✅ Completed | Data Access Layer, API, Interactive UI. |
+| **Phase 4: Advanced Features** | ⏳ Next | Next Action Logic, Reviews, Search. |
 
 ## Phase 1: Foundation & Data Layer
 **Goal:** Initialize the project and establish the file-based data structure.
@@ -67,19 +67,19 @@ This document outlines the roadmap for building the Action Amplifier application
 **Goal:** Enable data manipulation (Capture, Triage, Organize).
 
 1.  **Data Access Layer (DAL)**
-    *   [ ] Implement `src/lib/data/api.ts` for file system operations.
-    *   [ ] Implement `src/lib/data/writer.ts` for frontmatter updates and file moves.
+    *   [x] Implement `src/lib/data/api.ts` for file system operations.
+    *   [x] Implement `src/lib/data/writer.ts` for frontmatter updates and file moves.
 
 2.  **API Endpoints**
-    *   [ ] Create Astro API routes (`src/pages/api/`) to handle:
-        *   Creating new Inbox items.
-        *   Updating item status (e.g., completing a task).
-        *   Moving items (e.g., Inbox -> Project).
+    *   [x] Create Astro API routes (`src/pages/api/`) to handle:
+        *   [x] Creating new Inbox items.
+        *   [x] Updating item status (e.g., completing a task).
+        *   [x] Moving items (e.g., Inbox -> Project).
 
 3.  **Interactive UI**
-    *   [ ] "Quick Capture" input form.
-    *   [ ] "Triage" interface for processing Inbox items.
-    *   [ ] Task completion toggles.
+    *   [x] "Quick Capture" input form.
+    *   [x] "Triage" interface for processing Inbox items.
+    *   [x] Task completion toggles.
 
 ## Phase 4: Advanced Features & Logic
 **Goal:** Implement the "Smart" features of Action Amplifier.

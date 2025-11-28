@@ -8,15 +8,19 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "seed": "node scripts/seed-data.js"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.12",
     "@astrojs/node": "^9.5.1",
     "@astrojs/sitemap": "^3.6.0",
+    "@iarna/toml": "^2.2.5",
     "@tailwindcss/vite": "^4.1.17",
     "astro": "^5.16.2",
+    "gray-matter": "^4.0.3",
     "lucide-astro": "^0.555.0",
+    "marked": "^17.0.1",
     "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
