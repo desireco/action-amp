@@ -78,7 +78,7 @@ This document outlines the roadmap for building the Action Amplifier application
 
 3.  **Interactive UI**
     *   [x] "Quick Capture" input form.
-    *   [x] "Triage" interface for processing Inbox items.
+    *   [ ] "Triage" interface for processing Inbox items ([Feature Outline](./triage_feature_outline.md)).
     *   [x] Task completion toggles.
 
 ## Phase 4: Advanced Features & Logic
