@@ -16,7 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
         // We need the directory path: "data/areas/work/website-redesign"
         const projectDir = `data/areas/${projectId.replace('/project.toml', '')}`;
 
-        await dataWriter.convertInboxItemToAction(inboxItemId, projectDir);
+        await dataWriter.assignInboxItemToProject(inboxItemId, projectDir);
 
         return new Response(JSON.stringify({ success: true }), {
             status: 200,

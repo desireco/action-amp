@@ -5,7 +5,7 @@ const inbox = defineCollection({
   loader: glob({ pattern: "*.md", base: "./data/inbox" }),
   schema: z.object({
     id: z.string(),
-    type: z.enum(['action', 'resource', 'note', 'link', 'idea']).optional(), // Optional because spec says type is undecided for some
+    type: z.enum(['action', 'note', 'link', 'idea', 'resource']).optional(), // Optional because spec says type is undecided for some
     title: z.string(),
     captured: z.coerce.date(),
   }),
@@ -19,6 +19,8 @@ const areas = defineCollection({
     priority: z.enum(['high', 'medium', 'low']).default('medium'),
     active: z.boolean().default(true),
     created: z.coerce.date(),
+    icon: z.string().default('home'),
+    color: z.string().default('blue'),
   }),
 });
 
