@@ -9,7 +9,12 @@ import {
     Zap,
     Plus,
     ListChecks,
+    Target,
+    Layers,
+    ChevronRight,
 } from "lucide-astro";
+import { getSettings } from "../lib/data/settings";
+import { getCollection } from "astro:content";
 
 interface Props {
     title: string;
@@ -18,12 +23,36 @@ interface Props {
 
 const { title, currentPath = Astro.url.pathname } = Astro.props;
 
+// Fetch Context and Projects
+const settings = await getSettings();
+const currentContext = settings.next_action_context;
+
+let contextProjects: any[] = [];
+if (currentContext) {
+    const allProjects = await getCollection("projects");
+    contextProjects = allProjects
+        .filter(
+            (p) => p.data.area === currentContext && p.data.status === "active",
+        )
+        .sort((a, b) => a.data.name.localeCompare(b.data.name));
+}
+
 const navItems = [
     { name: "Capture", href: "/capture", icon: Plus },
+    { name: "Next Action", href: "/next", icon: Target },
     { name: "Inbox", href: "/inbox", icon: Inbox },
     { name: "Triage", href: "/triage", icon: ListChecks },
-    { name: "Projects", href: "/projects", icon: FolderKanban },
+    {
+        name: "Projects",
+        href: "/projects",
+        icon: FolderKanban,
+        subitems: contextProjects.map((p) => ({
+            name: p.data.name,
+            href: `/projects/${p.id}`, // p.id is typically "area/project-slug"
+        })),
+    },
     { name: "Areas", href: "/areas", icon: LayoutGrid },
+    { name: "Context", href: "/context", icon: Layers },
     { name: "Reviews", href: "/reviews", icon: CalendarCheck },
 ];
 
@@ -88,36 +117,81 @@ const isActive = (path: string) => {
                 </div>
             </div>
 
-            <nav class="flex-1 px-4 space-y-1 mt-2">
+            <nav class="flex-1 px-4 space-y-1 mt-2 overflow-y-auto">
                 {
                     navItems.map((item) => {
                         const active = isActive(item.href);
+                        const hasSubitems =
+                            item.subitems && item.subitems.length > 0;
+
                         return (
-                            <a
-                                href={item.href}
-                                class:list={[
-                                    "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
-                                    active
-                                        ? "bg-primary/10 text-primary"
-                                        : "text-text-muted hover:bg-surface-hover hover:text-text-main",
-                                ]}
-                            >
-                                <item.icon
+                            <div>
+                                <a
+                                    href={item.href}
                                     class:list={[
-                                        "mr-3 h-5 w-5 transition-colors",
+                                        "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
                                         active
-                                            ? "text-primary"
-                                            : "text-text-muted group-hover:text-text-main",
+                                            ? "bg-primary/10 text-primary"
+                                            : "text-text-muted hover:bg-surface-hover hover:text-text-main",
                                     ]}
-                                />
-                                {item.name}
-                            </a>
+                                >
+                                    <item.icon
+                                        class:list={[
+                                            "mr-3 h-5 w-5 transition-colors",
+                                            active
+                                                ? "text-primary"
+                                                : "text-text-muted group-hover:text-text-main",
+                                        ]}
+                                    />
+                                    <span class="flex-1">{item.name}</span>
+                                    {hasSubitems && (
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                            {item.subitems.length}
+                                        </span>
+                                    )}
+                                </a>
+
+                                {hasSubitems && (
+                                    <div class="ml-9 mt-1 space-y-1 border-l border-border pl-2">
+                                        {item.subitems.map((sub) => {
+                                            const subActive =
+                                                currentPath === sub.href;
+                                            return (
+                                                <a
+                                                    href={sub.href}
+                                                    class:list={[
+                                                        "block px-3 py-1.5 text-sm rounded-md transition-colors truncate",
+                                                        subActive
+                                                            ? "text-primary bg-primary/5 font-medium"
+                                                            : "text-text-muted hover:text-text-main hover:bg-surface-hover",
+                                                    ]}
+                                                >
+                                                    {sub.name}
+                                                </a>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         );
                     })
                 }
             </nav>
 
             <div class="p-4 border-t border-border">
+                {
+                    currentContext && (
+                        <div class="mb-4 px-3 py-2 bg-primary/5 rounded-lg border border-primary/10">
+                            <div class="text-xs text-primary font-semibold uppercase tracking-wider mb-1">
+                                Current Context
+                            </div>
+                            <div class="flex items-center text-sm font-medium text-text-main">
+                                <Layers class="w-4 h-4 mr-2 text-primary" />
+                                <span class="capitalize">{currentContext}</span>
+                            </div>
+                        </div>
+                    )
+                }
                 <a
                     href="/settings"
                     class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-text-muted hover:bg-surface-hover hover:text-text-main transition-colors"
@@ -140,25 +214,28 @@ const isActive = (path: string) => {
             class="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-border flex justify-around p-2 z-50 pb-6"
         >
             {
-                navItems.map((item) => {
-                    const active = isActive(item.href);
-                    return (
-                        <a
-                            href={item.href}
-                            class:list={[
-                                "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 w-full",
-                                active
-                                    ? "text-primary"
-                                    : "text-text-muted hover:text-text-main",
-                            ]}
-                        >
-                            <item.icon class="h-5 w-5 mb-1" />
-                            <span class="text-[10px] font-medium">
-                                {item.name}
-                            </span>
-                        </a>
-                    );
-                })
+                navItems
+                    .filter((i) => !["Context", "Settings"].includes(i.name))
+                    .slice(0, 5)
+                    .map((item) => {
+                        const active = isActive(item.href);
+                        return (
+                            <a
+                                href={item.href}
+                                class:list={[
+                                    "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 w-full",
+                                    active
+                                        ? "text-primary"
+                                        : "text-text-muted hover:text-text-main",
+                                ]}
+                            >
+                                <item.icon class="h-5 w-5 mb-1" />
+                                <span class="text-[10px] font-medium">
+                                    {item.name}
+                                </span>
+                            </a>
+                        );
+                    })
             }
         </nav>
     </div>

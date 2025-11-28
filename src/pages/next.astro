@@ -1,0 +1,202 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import { getCollection } from "astro:content";
+import { getSettings } from "../lib/data/settings";
+import { CheckCircle2, AlertCircle, Clock, ArrowRight } from "lucide-astro";
+
+const settings = await getSettings();
+const currentContext = settings.next_action_context;
+
+const allActions = await getCollection("actions");
+const allProjects = await getCollection("projects");
+
+// Helper to get project details
+const getProject = (area: string, projectSlug: string) => {
+    return allProjects.find((p) => p.id === `${area}/${projectSlug}/project`);
+};
+
+// Filter actions
+const nextActions = allActions
+    .filter((action) => {
+        // Parse ID: area/project/filename
+        const parts = action.id.split("/");
+        if (parts.length < 3) return false;
+
+        const [area, projectSlug] = parts;
+
+        // Filter by status
+        if (!["todo", "in_progress"].includes(action.data.status)) return false;
+
+        // Filter by context if set
+        if (currentContext && area !== currentContext) return false;
+
+        // Check if project is active
+        // Note: project ID in collection is "area/project/project" because of the glob pattern in config?
+        // Let's check config again.
+        // projects loader: glob({ pattern: "*/*/project.toml", base: "./data/areas" })
+        // So ID is "area/project/project".
+        const project = allProjects.find(
+            (p) => p.id === `${area}/${projectSlug}/project`,
+        );
+        if (!project || project.data.status !== "active") return false;
+
+        return true;
+    })
+    .sort((a, b) => {
+        // Sort by priority
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        const pA = priorityOrder[a.data.priority] ?? 1;
+        const pB = priorityOrder[b.data.priority] ?? 1;
+        if (pA !== pB) return pA - pB;
+
+        // Then by created date (older first)
+        return a.data.created.getTime() - b.data.created.getTime();
+    });
+
+// Group by project for display? Or flat list?
+// GTD Next Actions is usually a flat list per context.
+// Let's do a flat list but show project name.
+---
+
+<AppLayout title="Next Actions">
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-text-main">Next Actions</h1>
+                <p class="text-text-muted mt-2">
+                    {
+                        currentContext
+                            ? `Focusing on ${currentContext} context.`
+                            : "All next actions across all contexts."
+                    }
+                </p>
+            </div>
+            {
+                currentContext && (
+                    <a
+                        href="/context"
+                        class="text-sm text-primary hover:underline"
+                    >
+                        Change Context
+                    </a>
+                )
+            }
+        </div>
+
+        {
+            nextActions.length === 0 ? (
+                <div class="text-center py-12 bg-surface rounded-xl border border-border border-dashed">
+                    <CheckCircle2 class="w-12 h-12 text-text-muted mx-auto mb-4" />
+                    <h3 class="text-lg font-medium text-text-main">
+                        No Next Actions
+                    </h3>
+                    <p class="text-text-muted">
+                        You're all caught up for this context!
+                    </p>
+                </div>
+            ) : (
+                <div class="space-y-4">
+                    {nextActions.map((action) => {
+                        const [area, projectSlug] = action.id.split("/");
+                        const project = allProjects.find(
+                            (p) => p.id === `${area}/${projectSlug}/project`,
+                        );
+                        const projectName = project?.data.name || projectSlug;
+
+                        return (
+                            <div class="flex items-start gap-4 p-4 bg-surface rounded-lg border border-border hover:border-primary/50 transition-colors group">
+                                <button
+                                    class="mt-1 text-text-muted hover:text-primary transition-colors"
+                                    title="Mark as completed"
+                                    data-action-id={action.id}
+                                >
+                                    <div class="w-5 h-5 rounded-full border-2 border-current" />
+                                </button>
+
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <h3 class="text-lg font-medium text-text-main truncate">
+                                            {action.data.title}
+                                        </h3>
+                                        {action.data.priority === "high" && (
+                                            <AlertCircle class="w-4 h-4 text-red-500" />
+                                        )}
+                                    </div>
+
+                                    <div class="flex items-center gap-4 text-sm text-text-muted">
+                                        <a
+                                            href={`/projects/${area}/${projectSlug}`}
+                                            class="flex items-center hover:text-primary transition-colors"
+                                        >
+                                            <span class="font-medium">
+                                                {projectName}
+                                            </span>
+                                            <ArrowRight class="w-3 h-3 mx-1" />
+                                            <span class="capitalize">
+                                                {area}
+                                            </span>
+                                        </a>
+                                        {action.data.created && (
+                                            <span
+                                                class="flex items-center"
+                                                title={`Created: ${action.data.created.toLocaleDateString()}`}
+                                            >
+                                                <Clock class="w-3 h-3 mr-1" />
+                                                {Math.floor(
+                                                    (new Date().getTime() -
+                                                        action.data.created.getTime()) /
+                                                        (1000 * 60 * 60 * 24),
+                                                )}
+                                                d ago
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )
+        }
+    </div>
+</AppLayout>
+
+<script>
+    // Handle completion
+    const buttons = document.querySelectorAll("button[data-action-id]");
+    buttons.forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+            const id = btn.getAttribute("data-action-id");
+            if (!id) return;
+
+            // Optimistic UI
+            const card = btn.closest("div.group");
+            card?.classList.add("opacity-50", "pointer-events-none");
+
+            try {
+                // Use the correct endpoint for status updates
+                const res = await fetch("/api/actions/status", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    // action.id is relative to data/areas (e.g. "work/project/act-foo.md")
+                    // API expects path relative to data/ (e.g. "areas/work/project/act-foo.md")
+                    body: JSON.stringify({
+                        path: `areas/${id}`,
+                        status: "completed",
+                    }),
+                });
+
+                if (res.ok) {
+                    window.location.reload();
+                } else {
+                    alert("Failed to complete action");
+                    card?.classList.remove("opacity-50", "pointer-events-none");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error completing action");
+                card?.classList.remove("opacity-50", "pointer-events-none");
+            }
+        });
+    });
+</script>

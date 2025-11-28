@@ -85,8 +85,9 @@ This document outlines the roadmap for building the Action Amplifier application
 **Goal:** Implement the "Smart" features of Action Amplifier.
 
 1.  **Next Action Logic**
-    *   [ ] Implement the context-aware selection algorithm.
-    *   [ ] Create the "Next Action" dashboard view.
+    *   [x] Implement the context-aware selection algorithm.
+    *   [x] Create the "Next Action" dashboard view.
+    *   [x] Context Selection Page & Sidebar Integration.
 
 2.  **Review System**
     *   [ ] Implement daily/weekly review workflows.
