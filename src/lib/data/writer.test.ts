@@ -19,9 +19,9 @@ describe('DataWriter', () => {
         vi.clearAllMocks();
     });
 
-    it('should create an inbox item with default type', async () => {
+    it('should create an inbox item with no type by default', async () => {
         const item = await writer.createInboxItem('Test Item');
-        expect(item.type).toBe('action');
+        expect(item.type).toBeUndefined();
         expect(fsApi.writeFile).toHaveBeenCalled();
     });
 

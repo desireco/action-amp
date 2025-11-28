@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import matter from 'gray-matter';
+import toml from '@iarna/toml';
 import { fsApi } from './api';
 
 export interface Action {
@@ -50,6 +51,37 @@ export class DataReader {
         } catch (e) {
             console.error(`Error reading actions for ${projectDir}:`, e);
             return [];
+        }
+    }
+    async getProject(projectId: string): Promise<any | null> {
+        // projectId is like "work/website-redesign/project.toml"
+        const fullPath = fsApi.resolvePath(path.join('data/areas', projectId));
+
+        try {
+            const content = await fs.readFile(fullPath, 'utf-8');
+            const data = toml.parse(content);
+            return {
+                id: projectId,
+                data: data
+            };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async getArea(areaId: string): Promise<any | null> {
+        // areaId is like "work"
+        const fullPath = fsApi.resolvePath(path.join('data/areas', areaId, 'area.toml'));
+
+        try {
+            const content = await fs.readFile(fullPath, 'utf-8');
+            const data = toml.parse(content);
+            return {
+                id: areaId,
+                data: data
+            };
+        } catch (e) {
+            return null;
         }
     }
 }
