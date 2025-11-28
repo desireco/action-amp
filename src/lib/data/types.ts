@@ -1,7 +1,7 @@
 export interface InboxItem {
     id: string;
     title: string;
-    type?: 'action' | 'resource' | 'note';
+    type?: 'action' | 'resource' | 'note' | 'link' | 'idea';
     captured: Date;
     content?: string;
 }

@@ -21,6 +21,25 @@ import { Zap } from "lucide-astro";
             <form id="capture-form" class="space-y-4">
                 <div>
                     <label
+                        for="type"
+                        class="block text-sm font-medium text-text-main mb-2"
+                        >Type</label
+                    >
+                    <select
+                        id="type"
+                        name="type"
+                        class="w-full bg-background border border-border rounded-lg px-4 py-3 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    >
+                        <option value="action">Action</option>
+                        <option value="note">Note</option>
+                        <option value="link">Link</option>
+                        <option value="idea">Idea</option>
+                        <option value="resource">Resource</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label
                         for="content"
                         class="block text-sm font-medium text-text-main mb-2"
                     >
@@ -79,6 +98,7 @@ import { Zap } from "lucide-astro";
 <script>
     const form = document.getElementById("capture-form") as HTMLFormElement;
     const textarea = document.getElementById("content") as HTMLTextAreaElement;
+    const typeSelect = document.getElementById("type") as HTMLSelectElement;
     const successMessage = document.getElementById("success-message");
 
     async function handleSubmit(e: Event) {
@@ -104,7 +124,11 @@ import { Zap } from "lucide-astro";
             const res = await fetch("/api/inbox", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, content: body }),
+                body: JSON.stringify({
+                    title,
+                    content: body,
+                    type: typeSelect.value,
+                }),
             });
 
             if (res.ok) {

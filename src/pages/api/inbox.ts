@@ -12,7 +12,7 @@ export const POST: APIRoute = async ({ request }) => {
             });
         }
 
-        const item = await dataWriter.createInboxItem(data.title, data.content);
+        const item = await dataWriter.createInboxItem(data.title, data.content, data.type);
 
         return new Response(JSON.stringify(item), {
             status: 201,

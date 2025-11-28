@@ -9,13 +9,13 @@ export class DataWriter {
         return `${keyword}-${suffix}`;
     }
 
-    async createInboxItem(title: string, content: string = ''): Promise<InboxItem> {
+    async createInboxItem(title: string, content: string = '', type: InboxItem['type'] = 'action'): Promise<InboxItem> {
         const id = this.generateId(title);
         const item: InboxItem = {
             id,
             title,
             captured: new Date(),
-            type: 'action', // Default
+            type,
             content
         };
 

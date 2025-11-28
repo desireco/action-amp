@@ -1,6 +1,13 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
-import { Inbox as InboxIcon } from "lucide-astro";
+import {
+    Inbox as InboxIcon,
+    Link,
+    Lightbulb,
+    FileText,
+    CheckSquare,
+    BookOpen,
+} from "lucide-astro";
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
@@ -38,6 +45,14 @@ try {
 const sortedItems = inboxItems.sort(
     (a, b) => b.data.captured.valueOf() - a.data.captured.valueOf(),
 );
+
+const typeIcons = {
+    action: CheckSquare,
+    note: FileText,
+    link: Link,
+    idea: Lightbulb,
+    resource: BookOpen,
+};
 ---
 
 <AppLayout title="Inbox | Action Amp">
@@ -85,12 +100,20 @@ const sortedItems = inboxItems.sort(
                                 <div class="mt-2 flex items-center gap-3 text-sm text-text-muted">
                                     <span
                                         class:list={[
-                                            "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider",
+                                            "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider flex items-center gap-1",
                                             item.data.type
                                                 ? "bg-primary/10 text-primary"
                                                 : "bg-surface-hover text-text-muted",
                                         ]}
                                     >
+                                        {(() => {
+                                            const Icon =
+                                                typeIcons[
+                                                    item.data
+                                                        .type as keyof typeof typeIcons
+                                                ] || InboxIcon;
+                                            return <Icon class="h-3 w-3" />;
+                                        })()}
                                         {item.data.type || "Unsorted"}
                                     </span>
                                     <span>

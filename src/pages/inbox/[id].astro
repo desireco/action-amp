@@ -1,7 +1,18 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
 import { getEntry, getCollection, render } from "astro:content";
-import { ArrowLeft, Calendar, FolderInput, Trash2 } from "lucide-astro";
+import {
+    ArrowLeft,
+    Calendar,
+    FolderInput,
+    Trash2,
+    Link,
+    Lightbulb,
+    FileText,
+    CheckSquare,
+    BookOpen,
+    Inbox as InboxIcon,
+} from "lucide-astro";
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
@@ -56,6 +67,14 @@ if (collectionItem) {
 
 const projects = await getCollection("projects");
 const activeProjects = projects.filter((p) => p.data.status === "active");
+
+const typeIcons = {
+    action: CheckSquare,
+    note: FileText,
+    link: Link,
+    idea: Lightbulb,
+    resource: BookOpen,
+};
 ---
 
 <AppLayout title={`${item?.data?.title} | Inbox`}>
@@ -77,12 +96,22 @@ const activeProjects = projects.filter((p) => p.data.status === "active");
                 <div class="p-4 md:p-8 border-b border-border">
                     <div class="flex items-center gap-3 mb-4">
                         <span
-                            class={`px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider ${
+                            class={`px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider flex items-center gap-1 ${
                                 item?.data?.type
                                     ? "bg-primary/10 text-primary"
                                     : "bg-surface-hover text-text-muted"
                             }`}
                         >
+                            {
+                                (() => {
+                                    const Icon =
+                                        typeIcons[
+                                            item?.data
+                                                ?.type as keyof typeof typeIcons
+                                        ] || InboxIcon;
+                                    return <Icon class="h-3.5 w-3.5" />;
+                                })()
+                            }
                             {item?.data?.type || "Unsorted"}
                         </span>
                         <div class="flex items-center text-text-muted text-sm">
