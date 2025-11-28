@@ -8,6 +8,7 @@ import {
     Settings,
     Zap,
     Plus,
+    ListChecks,
 } from "lucide-astro";
 
 interface Props {
@@ -20,6 +21,7 @@ const { title, currentPath = Astro.url.pathname } = Astro.props;
 const navItems = [
     { name: "Capture", href: "/capture", icon: Plus },
     { name: "Inbox", href: "/inbox", icon: Inbox },
+    { name: "Triage", href: "/triage", icon: ListChecks },
     { name: "Projects", href: "/projects", icon: FolderKanban },
     { name: "Areas", href: "/areas", icon: LayoutGrid },
     { name: "Reviews", href: "/reviews", icon: CalendarCheck },
