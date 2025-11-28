@@ -9,6 +9,7 @@ import {
     CheckCircle2,
     AlertCircle,
     XCircle,
+    Plus,
 } from "lucide-astro";
 
 const projects = await getCollection("projects");
@@ -42,14 +43,25 @@ const statusColors: Record<string, string> = {
 ---
 
 <AppLayout title="Projects | Action Amp">
-    <div class="mb-4 md:mb-8">
-        <h1 class="text-3xl font-bold text-text-main flex items-center gap-3">
-            <FolderKanban class="h-8 w-8 text-primary" />
-            Projects
-        </h1>
-        <p class="text-text-muted mt-1">
-            Outcomes requiring multiple steps to complete.
-        </p>
+    <div class="mb-4 md:mb-8 flex items-center justify-between">
+        <div>
+            <h1
+                class="text-3xl font-bold text-text-main flex items-center gap-3"
+            >
+                <FolderKanban class="h-8 w-8 text-primary" />
+                Projects
+            </h1>
+            <p class="text-text-muted mt-1">
+                Outcomes requiring multiple steps to complete.
+            </p>
+        </div>
+        <a
+            href="/new-project"
+            class="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover transition-colors flex items-center gap-2"
+        >
+            <Plus class="h-5 w-5" />
+            New Project
+        </a>
     </div>
 
     <div class="grid gap-4">

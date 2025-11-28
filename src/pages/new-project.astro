@@ -1,0 +1,118 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import { getCollection } from "astro:content";
+
+const areas = await getCollection("areas");
+---
+
+<AppLayout title="New Project | Action Amp">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold text-text-main mb-8">
+            Create New Project
+        </h1>
+
+        <form id="create-project-form" class="space-y-6">
+            <div>
+                <label
+                    for="name"
+                    class="block text-sm font-medium text-text-main mb-1"
+                    >Project Name</label
+                >
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    class="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-text-main"
+                    placeholder="e.g., Q4 Marketing Campaign"
+                />
+            </div>
+
+            <div>
+                <label
+                    for="area"
+                    class="block text-sm font-medium text-text-main mb-1"
+                    >Area</label
+                >
+                <select
+                    id="area"
+                    name="area"
+                    required
+                    class="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-text-main"
+                >
+                    <option value="" disabled selected>Select an Area</option>
+                    {
+                        areas.map((area) => {
+                            const areaSlug = area.id.split("/")[0];
+                            return (
+                                <option value={areaSlug}>
+                                    {area.data.name}
+                                </option>
+                            );
+                        })
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label
+                    for="description"
+                    class="block text-sm font-medium text-text-main mb-1"
+                    >Description</label
+                >
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="4"
+                    class="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-text-main"
+                    placeholder="What is this project about?"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-4">
+                <a
+                    href="/areas"
+                    class="px-6 py-2 text-text-muted hover:text-text-main transition-colors"
+                    >Cancel</a
+                >
+                <button
+                    type="submit"
+                    class="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover transition-colors"
+                >
+                    Create Project
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById("create-project-form");
+        form?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target as HTMLFormElement);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch("/api/projects", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    // Redirect to the new project page
+                    // The result contains { path, slug }
+                    // The URL structure is /projects/[area]/[project-slug]/project.toml
+                    window.location.href = `/projects/${data.area}/${result.slug}/project.toml`;
+                } else {
+                    alert("Failed to create project");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("An error occurred");
+            }
+        });
+    </script>
+</AppLayout>

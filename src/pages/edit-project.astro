@@ -1,0 +1,190 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import { dataReader } from "../lib/data/reader";
+import { Loader2 } from "lucide-astro";
+
+// Get the project ID from query params
+const projectId = Astro.url.searchParams.get("project");
+
+if (!projectId) {
+    return Astro.redirect("/projects");
+}
+
+const project = await dataReader.getProject(projectId);
+
+if (!project) {
+    return Astro.redirect("/404");
+}
+---
+
+<AppLayout title={`Edit ${project.data.name} | Action Amp`}>
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold text-text-main mb-8">Edit Project</h1>
+
+        <form id="edit-project-form" class="space-y-6">
+            <input type="hidden" name="projectId" value={projectId} />
+
+            <div>
+                <label
+                    for="name"
+                    class="block text-sm font-medium text-text-main mb-1"
+                    >Project Name</label
+                >
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    value={project.data.name}
+                    class="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-text-main"
+                    placeholder="e.g., Q4 Marketing Campaign"
+                />
+            </div>
+
+            <div>
+                <label
+                    for="status"
+                    class="block text-sm font-medium text-text-main mb-1"
+                    >Status</label
+                >
+                <select
+                    id="status"
+                    name="status"
+                    class="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-text-main"
+                >
+                    <option
+                        value="active"
+                        selected={project.data.status === "active"}
+                        >Active</option
+                    >
+                    <option
+                        value="on_hold"
+                        selected={project.data.status === "on_hold"}
+                        >On Hold</option
+                    >
+                    <option
+                        value="completed"
+                        selected={project.data.status === "completed"}
+                        >Completed</option
+                    >
+                    <option
+                        value="archived"
+                        selected={project.data.status === "archived"}
+                        >Archived</option
+                    >
+                </select>
+            </div>
+
+            <div>
+                <label
+                    for="priority"
+                    class="block text-sm font-medium text-text-main mb-1"
+                    >Priority</label
+                >
+                <select
+                    id="priority"
+                    name="priority"
+                    class="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-text-main"
+                >
+                    <option
+                        value="high"
+                        selected={project.data.priority === "high"}>High</option
+                    >
+                    <option
+                        value="medium"
+                        selected={project.data.priority === "medium"}
+                        >Medium</option
+                    >
+                    <option
+                        value="low"
+                        selected={project.data.priority === "low"}>Low</option
+                    >
+                </select>
+            </div>
+
+            <div>
+                <label
+                    for="description"
+                    class="block text-sm font-medium text-text-main mb-1"
+                    >Description</label
+                >
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="4"
+                    class="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-text-main"
+                    placeholder="What is this project about?"
+                    >{project.data.description || ""}</textarea
+                >
+            </div>
+
+            <div class="flex justify-end gap-4">
+                <a
+                    href={`/projects/${projectId}`}
+                    class="px-6 py-2 text-text-muted hover:text-text-main transition-colors"
+                    >Cancel</a
+                >
+                <button
+                    type="submit"
+                    id="submit-btn"
+                    class="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    <Loader2
+                        class="w-4 h-4 animate-spin hidden"
+                        id="submit-spinner"
+                    />
+                    <span id="submit-text">Save Changes</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById("edit-project-form");
+        const submitBtn = document.getElementById(
+            "submit-btn",
+        ) as HTMLButtonElement;
+        const spinner = document.getElementById("submit-spinner");
+        const submitText = document.getElementById("submit-text");
+
+        form?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            // Show loading state
+            submitBtn.disabled = true;
+            spinner?.classList.remove("hidden");
+            if (submitText) submitText.textContent = "Saving...";
+
+            const formData = new FormData(e.target as HTMLFormElement);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch("/api/projects", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    // Redirect back to the project page
+                    window.location.href = `/projects/${data.projectId}`;
+                } else {
+                    alert("Failed to update project");
+                    // Reset loading state on error
+                    submitBtn.disabled = false;
+                    spinner?.classList.add("hidden");
+                    if (submitText) submitText.textContent = "Save Changes";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("An error occurred");
+                // Reset loading state on error
+                submitBtn.disabled = false;
+                spinner?.classList.add("hidden");
+                if (submitText) submitText.textContent = "Save Changes";
+            }
+        });
+    </script>
+</AppLayout>

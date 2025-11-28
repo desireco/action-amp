@@ -10,13 +10,16 @@ import {
     XCircle,
 } from "lucide-astro";
 
+import { dataReader } from "../../lib/data/reader";
+
 const { id } = Astro.params;
 
-if (!id) {
+if (!id || id === "new") {
     return Astro.redirect("/areas");
 }
 
-const project = await getEntry("projects", id);
+// Use dataReader to get fresh data from filesystem
+const project = await dataReader.getProject(id);
 
 if (!project) {
     return Astro.redirect("/404");
@@ -26,7 +29,6 @@ if (!project) {
 // Project ID is like "work/website-redesign/project.toml"
 // We need to match actions that start with "work/website-redesign/"
 const projectDir = id.replace("/project.toml", "");
-import { dataReader } from "../../lib/data/reader";
 const projectActions = await dataReader.getProjectActions(projectDir);
 
 // Sort actions by status/priority
@@ -100,21 +102,29 @@ try {
         >
             <div class="p-4 md:p-8 border-b border-border">
                 <div class="flex items-center justify-between mb-4">
-                    <span
-                        class="px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider bg-primary/10 text-primary"
+                    <div class="flex items-center gap-3">
+                        <span
+                            class="px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider bg-primary/10 text-primary"
+                        >
+                            Project
+                        </span>
+                        <span
+                            class:list={[
+                                "px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider",
+                                project.data.status === "active"
+                                    ? "bg-green-500/10 text-green-500"
+                                    : "bg-surface-hover text-text-muted",
+                            ]}
+                        >
+                            {project.data.status}
+                        </span>
+                    </div>
+                    <a
+                        href={`/edit-project?project=${id}`}
+                        class="px-4 py-2 bg-surface-hover hover:bg-surface border border-border rounded-lg text-text-main text-sm font-medium transition-colors"
                     >
-                        Project
-                    </span>
-                    <span
-                        class:list={[
-                            "px-2.5 py-1 rounded-md text-xs font-medium uppercase tracking-wider",
-                            project.data.status === "active"
-                                ? "bg-green-500/10 text-green-500"
-                                : "bg-surface-hover text-text-muted",
-                        ]}
-                    >
-                        {project.data.status}
-                    </span>
+                        Edit Project
+                    </a>
                 </div>
 
                 <h1
