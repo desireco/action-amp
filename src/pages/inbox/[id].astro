@@ -188,7 +188,8 @@ const typeIcons = {
                             type="button"
                             variant="destructive"
                             size="icon"
-                            title="Delete (Not implemented yet)"
+                            id="delete-button"
+                            title="Delete"
                         >
                             <Trash2 class="h-4 w-4" />
                         </Button>
@@ -201,6 +202,7 @@ const typeIcons = {
 
 <script>
     const form = document.getElementById("process-form") as HTMLFormElement;
+    const deleteBtn = document.getElementById("delete-button") as HTMLButtonElement;
 
     form?.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -236,6 +238,27 @@ const typeIcons = {
             alert("Error moving item");
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
+        }
+    });
+
+    deleteBtn?.addEventListener("click", async () => {
+        const inboxItemIdInput = form.querySelector('[name="inboxItemId"]') as HTMLInputElement;
+        const inboxItemId = inboxItemIdInput?.value;
+        if (!inboxItemId) return;
+        const ok = window.confirm("Delete this inbox item?");
+        if (!ok) return;
+        try {
+            deleteBtn.disabled = true;
+            const res = await fetch(`/api/inbox/${inboxItemId}`, { method: "DELETE" });
+            if (res.ok) {
+                window.location.href = "/inbox";
+            } else {
+                alert("Failed to delete item");
+                deleteBtn.disabled = false;
+            }
+        } catch (err) {
+            alert("Error deleting item");
+            deleteBtn.disabled = false;
         }
     });
 </script>
