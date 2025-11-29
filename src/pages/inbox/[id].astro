@@ -17,6 +17,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
+import Input from "../../components/ui/Input.astro";
 
 const { id } = Astro.params;
 
@@ -78,21 +82,20 @@ const typeIcons = {
 ---
 
 <AppLayout title={`${item?.data?.title} | Inbox`}>
-    <div class="max-w-3xl mx-auto">
-        <a
-            href="/inbox"
-            class="inline-flex items-center text-text-muted hover:text-primary transition-colors mb-6 group"
-        >
-            <ArrowLeft
-                class="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform"
-            />
-            Back to Inbox
-        </a>
+    <div class="max-w-3xl mx-auto space-y-6">
+        <div>
+            <Button
+                href="/inbox"
+                variant="ghost"
+                class="pl-0 hover:pl-2 transition-all"
+            >
+                <ArrowLeft class="h-4 w-4 mr-2" />
+                Back to Inbox
+            </Button>
+        </div>
 
         <div class="grid gap-8">
-            <div
-                class="bg-surface border border-border rounded-xl overflow-hidden shadow-sm"
-            >
+            <Card class="overflow-hidden">
                 <div class="p-4 md:p-8 border-b border-border">
                     <div class="flex items-center gap-3 mb-4">
                         <span
@@ -128,9 +131,9 @@ const typeIcons = {
                         </div>
                     </div>
 
-                    <h1 class="text-3xl font-bold text-text-main leading-tight">
+                    <Heading level={1} class="leading-tight">
                         {item?.data?.title}
-                    </h1>
+                    </Heading>
                 </div>
 
                 <div
@@ -138,15 +141,13 @@ const typeIcons = {
                 >
                     {Content ? <Content /> : <div set:html={htmlContent} />}
                 </div>
-            </div>
+            </Card>
 
-            <div class="bg-surface border border-border rounded-xl p-6">
-                <h2
-                    class="text-lg font-semibold text-text-main mb-4 flex items-center gap-2"
-                >
+            <Card class="p-6">
+                <Heading level={2} class="text-lg mb-4 flex items-center gap-2">
                     <FolderInput class="h-5 w-5 text-primary" />
                     Process Item
-                </h2>
+                </Heading>
 
                 <form id="process-form" class="space-y-4">
                     <input type="hidden" name="inboxItemId" value={item.id} />
@@ -161,7 +162,7 @@ const typeIcons = {
                         <select
                             id="project"
                             name="projectId"
-                            class="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            class="flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-main ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             required
                         >
                             <option value="" disabled selected
@@ -179,23 +180,21 @@ const typeIcons = {
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">
-                        <button
-                            type="submit"
-                            class="flex-1 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-                        >
+                        <Button type="submit" class="flex-1 gap-2">
                             <FolderInput class="h-4 w-4" />
                             Convert to Action
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
-                            class="px-4 py-2 rounded-lg font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+                            variant="destructive"
+                            size="icon"
                             title="Delete (Not implemented yet)"
                         >
                             <Trash2 class="h-4 w-4" />
-                        </button>
+                        </Button>
                     </div>
                 </form>
-            </div>
+            </Card>
         </div>
     </div>
 </AppLayout>

@@ -15,6 +15,7 @@ import {
 } from "lucide-astro";
 import { getSettings } from "../lib/data/settings";
 import { getCollection } from "astro:content";
+import Input from "../components/ui/Input.astro";
 
 interface Props {
     title: string;
@@ -105,11 +106,11 @@ const isActive = (path: string) => {
 
             <div class="px-4 mb-2">
                 <div class="relative">
-                    <input
+                    <Input
                         type="text"
                         id="quick-capture"
                         placeholder="Quick Capture..."
-                        class="w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-sm text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        class="bg-surface-hover"
                     />
                     <div
                         class="absolute right-3 top-2.5 text-xs text-text-muted pointer-events-none opacity-50"

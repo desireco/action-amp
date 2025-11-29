@@ -1,23 +1,24 @@
 ---
 import AppLayout from "../layouts/AppLayout.astro";
 import { Zap, Square, StickyNote, Link, Lightbulb } from "lucide-astro";
+import Heading from "../components/ui/Heading.astro";
+import Card from "../components/ui/Card.astro";
+import Button from "../components/ui/Button.astro";
 ---
 
 <AppLayout title="Capture | Action Amp">
     <div class="max-w-2xl mx-auto">
         <div class="mb-4 md:mb-8">
-            <h1
-                class="text-3xl font-bold text-text-main flex items-center gap-3"
-            >
+            <Heading level={1} class="flex items-center gap-3">
                 <Zap class="h-8 w-8 text-primary" />
                 Capture
-            </h1>
+            </Heading>
             <p class="text-text-muted mt-1">
                 Get it out of your head. Process it later.
             </p>
         </div>
 
-        <div class="bg-surface border border-border rounded-xl p-6 shadow-sm">
+        <Card class="p-6">
             <form id="capture-form" class="space-y-4">
                 <div>
                     <label
@@ -103,19 +104,16 @@ import { Zap, Square, StickyNote, Link, Lightbulb } from "lucide-astro";
                 </div>
 
                 <div class="flex justify-end">
-                    <button
-                        type="submit"
-                        class="bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
-                    >
+                    <Button type="submit" class="flex items-center gap-2">
                         Capture to Inbox
                         <kbd
                             class="hidden sm:inline-block px-2 py-0.5 bg-white/20 rounded text-xs font-sans"
                             >⌘+Enter</kbd
                         >
-                    </button>
+                    </Button>
                 </div>
             </form>
-        </div>
+        </Card>
 
         <div
             id="success-message"

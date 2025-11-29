@@ -3,6 +3,9 @@ import AppLayout from "../../layouts/AppLayout.astro";
 import { dataReader } from "../../lib/data/reader";
 import { LayoutGrid, Folder, ChevronRight, Plus } from "lucide-astro";
 import { getSettings } from "../../lib/data/settings";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
 
 const areas = await dataReader.getAreas();
 const projects = await dataReader.getAllProjects();
@@ -33,19 +36,14 @@ const sortedAreas = areas.sort((a, b) => {
 <AppLayout title="Areas | Action Amp">
     <div class="mb-4 md:mb-8">
         <div class="flex items-center justify-between mb-2">
-            <h1
-                class="text-3xl font-bold text-text-main flex items-center gap-3"
-            >
+            <Heading level={1} class="flex items-center gap-3">
                 <LayoutGrid class="h-8 w-8 text-primary" />
                 Areas of Focus
-            </h1>
-            <a
-                href="/areas/new"
-                class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-hover transition-colors shadow-sm hover:shadow-md"
-            >
-                <Plus class="h-5 w-5" />
+            </Heading>
+            <Button href="/areas/new">
+                <Plus class="h-5 w-5 mr-2" />
                 <span class="hidden sm:inline">Create Area</span>
-            </a>
+            </Button>
         </div>
         <p class="text-text-muted mt-1">
             High-level responsibilities and long-term goals.
@@ -60,24 +58,27 @@ const sortedAreas = areas.sort((a, b) => {
                 const isContext = currentContext === areaSlug;
 
                 return (
-                    <div
+                    <Card
                         class:list={[
-                            "bg-surface border rounded-xl overflow-hidden flex flex-col h-full transition-all shadow-sm hover:shadow-md",
+                            "flex flex-col h-full overflow-hidden transition-all hover:shadow-md",
                             isContext
                                 ? "border-primary ring-1 ring-primary"
-                                : "border-border hover:border-primary/50",
+                                : "hover:border-primary/50",
                         ]}
                     >
                         <div class="p-6 border-b border-border bg-surface-hover/30">
                             <div class="flex items-center justify-between mb-2">
-                                <h2 class="text-xl font-bold text-text-main flex items-center gap-2">
+                                <Heading
+                                    level={2}
+                                    class="text-xl font-bold flex items-center gap-2"
+                                >
                                     {area.data.name}
                                     {isContext && (
                                         <span class="px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-wider">
                                             Focus
                                         </span>
                                     )}
-                                </h2>
+                                </Heading>
                                 <span
                                     class:list={[
                                         "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider",
@@ -103,7 +104,7 @@ const sortedAreas = areas.sort((a, b) => {
                             </h3>
                             <div class="space-y-1">
                                 {areaProjects.length > 0 ? (
-                                    areaProjects.map((project) => (
+                                    areaProjects.map((project: any) => (
                                         <a
                                             href={`/projects/${project.id}`}
                                             class="flex items-center justify-between p-2 rounded-lg hover:bg-surface-hover group transition-colors"
@@ -127,24 +128,25 @@ const sortedAreas = areas.sort((a, b) => {
 
                         <div class="p-3 border-t border-border bg-surface-hover/10 flex items-center justify-between gap-2">
                             {!isContext && (
-                                <button
-                                    class="flex-1 text-sm font-medium py-1.5 px-3 rounded-lg transition-colors text-center bg-primary/10 text-primary hover:bg-primary/20"
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    class="flex-1"
                                     data-set-context={areaSlug}
                                 >
                                     Set Context
-                                </button>
+                                </Button>
                             )}
-                            <a
+                            <Button
                                 href={`/areas/${areaSlug}`}
-                                class:list={[
-                                    "text-sm font-medium text-text-muted hover:text-text-main transition-colors px-3 py-1.5",
-                                    isContext ? "w-full text-center" : "",
-                                ]}
+                                variant="ghost"
+                                size="sm"
+                                class:list={[isContext ? "w-full" : ""]}
                             >
                                 Details
-                            </a>
+                            </Button>
                         </div>
-                    </div>
+                    </Card>
                 );
             })
         }

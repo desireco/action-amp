@@ -11,6 +11,9 @@ import {
 } from "lucide-astro";
 
 import { dataReader } from "../../lib/data/reader";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
 
 const { id } = Astro.params;
 
@@ -86,20 +89,19 @@ try {
 ---
 
 <AppLayout title={`${project.data.name} | Projects`}>
-    <div class="max-w-4xl mx-auto">
-        <a
-            href="/areas"
-            class="inline-flex items-center text-text-muted hover:text-primary transition-colors mb-6 group"
-        >
-            <ArrowLeft
-                class="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform"
-            />
-            Back to Areas
-        </a>
+    <div class="max-w-4xl mx-auto space-y-8">
+        <div>
+            <Button
+                href="/areas"
+                variant="ghost"
+                class="pl-0 hover:pl-2 transition-all"
+            >
+                <ArrowLeft class="h-4 w-4 mr-2" />
+                Back to Areas
+            </Button>
+        </div>
 
-        <div
-            class="bg-surface border border-border rounded-xl overflow-hidden shadow-sm mb-8"
-        >
+        <Card class="overflow-hidden">
             <div class="p-4 md:p-8 border-b border-border">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
@@ -119,19 +121,18 @@ try {
                             {project.data.status}
                         </span>
                     </div>
-                    <a
+                    <Button
                         href={`/edit-project?project=${id}`}
-                        class="px-4 py-2 bg-surface-hover hover:bg-surface border border-border rounded-lg text-text-main text-sm font-medium transition-colors"
+                        variant="outline"
+                        size="sm"
                     >
                         Edit Project
-                    </a>
+                    </Button>
                 </div>
 
-                <h1
-                    class="text-3xl font-bold text-text-main leading-tight mb-2"
-                >
+                <Heading level={1} class="leading-tight mb-2">
                     {project.data.name}
-                </h1>
+                </Heading>
                 {
                     project.data.description && (
                         <p class="text-text-muted text-lg">
@@ -157,23 +158,21 @@ try {
                     )
                 }
             </div>
-        </div>
+        </Card>
 
         <div class="space-y-4">
-            <h2
-                class="text-xl font-bold text-text-main flex items-center gap-2"
-            >
+            <Heading level={2} class="flex items-center gap-2">
                 Actions
                 <span
                     class="text-sm font-normal text-text-muted bg-surface-hover px-2 py-0.5 rounded-full"
                 >
                     {sortedActions.length}
                 </span>
-            </h2>
+            </Heading>
 
             {
                 sortedActions.length > 0 ? (
-                    <div class="bg-surface border border-border rounded-xl overflow-hidden">
+                    <Card class="overflow-hidden">
                         {sortedActions.map((action) => {
                             const Icon =
                                 statusIcons[action.data.status] || Circle;
@@ -217,13 +216,13 @@ try {
                                 </div>
                             );
                         })}
-                    </div>
+                    </Card>
                 ) : (
-                    <div class="text-center py-12 border-2 border-dashed border-border rounded-xl">
+                    <Card class="text-center py-12 border-2 border-dashed border-border bg-surface/50">
                         <p class="text-text-muted">
                             No actions found for this project.
                         </p>
-                    </div>
+                    </Card>
                 )
             }
         </div>
@@ -268,23 +267,21 @@ try {
             });
         </script>
 
-        <div class="mt-8 space-y-4">
-            <h2
-                class="text-xl font-bold text-text-main flex items-center gap-2"
-            >
+        <div class="space-y-4">
+            <Heading level={2} class="flex items-center gap-2">
                 Resources
                 <span
                     class="text-sm font-normal text-text-muted bg-surface-hover px-2 py-0.5 rounded-full"
                 >
                     {resources.length}
                 </span>
-            </h2>
+            </Heading>
 
             {
                 resources.length > 0 ? (
                     <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                         {resources.map((resource) => (
-                            <div class="bg-surface border border-border rounded-lg p-3 flex items-center gap-3 hover:bg-surface-hover transition-colors">
+                            <Card class="p-3 flex items-center gap-3 hover:bg-surface-hover transition-colors">
                                 <div class="h-8 w-8 rounded bg-surface-hover flex items-center justify-center text-text-muted">
                                     <span class="uppercase text-xs font-bold">
                                         {resource.split(".").pop()}
@@ -293,7 +290,7 @@ try {
                                 <span class="text-sm text-text-main truncate">
                                     {resource}
                                 </span>
-                            </div>
+                            </Card>
                         ))}
                     </div>
                 ) : (

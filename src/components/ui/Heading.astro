@@ -1,0 +1,27 @@
+---
+interface Props {
+    level?: 1 | 2 | 3 | 4 | 5 | 6;
+    class?: string;
+    [key: string]: any;
+}
+
+const { level = 1, class: className = "", ...rest } = Astro.props;
+
+const Tag = `h${level}` as any;
+
+const sizes = {
+    1: "text-4xl font-bold tracking-tight lg:text-5xl",
+    2: "text-3xl font-semibold tracking-tight first:mt-0",
+    3: "text-2xl font-semibold tracking-tight",
+    4: "text-xl font-semibold tracking-tight",
+    5: "text-lg font-semibold tracking-tight",
+    6: "text-base font-semibold tracking-tight",
+};
+---
+
+<Tag
+    class:list={[sizes[level], "scroll-m-20 text-text-main", className]}
+    {...rest}
+>
+    <slot />
+</Tag>

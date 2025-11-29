@@ -3,6 +3,9 @@ import AppLayout from "../layouts/AppLayout.astro";
 import { getCollection } from "astro:content";
 import { getSettings } from "../lib/data/settings";
 import { CheckCircle2, AlertCircle, Clock, ArrowRight } from "lucide-astro";
+import Heading from "../components/ui/Heading.astro";
+import Card from "../components/ui/Card.astro";
+import Button from "../components/ui/Button.astro";
 
 const settings = await getSettings();
 const currentContext = settings.next_action_context;
@@ -62,7 +65,9 @@ const nextActions = allActions
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-text-main">Next Actions</h1>
+                <Heading level={1} class="text-3xl font-bold text-text-main"
+                    >Next Actions</Heading
+                >
                 <p class="text-text-muted mt-2">
                     {
                         currentContext
@@ -73,27 +78,27 @@ const nextActions = allActions
             </div>
             {
                 currentContext && (
-                    <a
-                        href="/areas"
-                        class="text-sm text-primary hover:underline"
-                    >
+                    <Button href="/areas" variant="link">
                         Change Context
-                    </a>
+                    </Button>
                 )
             }
         </div>
 
         {
             nextActions.length === 0 ? (
-                <div class="text-center py-12 bg-surface rounded-xl border border-border border-dashed">
+                <Card class="text-center py-12 bg-surface rounded-xl border border-border border-dashed">
                     <CheckCircle2 class="w-12 h-12 text-text-muted mx-auto mb-4" />
-                    <h3 class="text-lg font-medium text-text-main">
+                    <Heading
+                        level={3}
+                        class="text-lg font-medium text-text-main"
+                    >
                         No Next Actions
-                    </h3>
+                    </Heading>
                     <p class="text-text-muted">
                         You're all caught up for this context!
                     </p>
-                </div>
+                </Card>
             ) : (
                 <div class="space-y-4">
                     {nextActions.map((action) => {
@@ -104,7 +109,7 @@ const nextActions = allActions
                         const projectName = project?.data.name || projectSlug;
 
                         return (
-                            <div class="flex items-start gap-4 p-4 bg-surface rounded-lg border border-border hover:border-primary/50 transition-colors group">
+                            <Card class="flex items-start gap-4 p-4 bg-surface rounded-lg border border-border hover:border-primary/50 transition-colors group">
                                 <button
                                     class="mt-1 text-text-muted hover:text-primary transition-colors"
                                     title="Mark as completed"
@@ -115,9 +120,12 @@ const nextActions = allActions
 
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <h3 class="text-lg font-medium text-text-main truncate">
+                                        <Heading
+                                            level={3}
+                                            class="text-lg font-medium text-text-main truncate"
+                                        >
                                             {action.data.title}
-                                        </h3>
+                                        </Heading>
                                         {action.data.priority === "high" && (
                                             <AlertCircle class="w-4 h-4 text-red-500" />
                                         )}
@@ -152,7 +160,7 @@ const nextActions = allActions
                                         )}
                                     </div>
                                 </div>
-                            </div>
+                            </Card>
                         );
                     })}
                 </div>

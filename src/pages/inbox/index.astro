@@ -11,6 +11,8 @@ import {
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
 
 // Read inbox items directly from filesystem to ensure real-time updates
 const inboxDir = path.join(process.cwd(), "data/inbox");
@@ -60,12 +62,10 @@ const typeIcons = {
         class="mb-4 md:mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0"
     >
         <div>
-            <h1
-                class="text-3xl font-bold text-text-main flex items-center gap-3"
-            >
+            <Heading level={1} class="flex items-center gap-3">
                 <InboxIcon class="h-8 w-8 text-primary" />
                 Inbox
-            </h1>
+            </Heading>
             <p class="text-text-muted mt-1">
                 Capture everything here. Process it later.
             </p>
@@ -75,57 +75,59 @@ const typeIcons = {
     <div class="grid gap-4">
         {
             sortedItems.length === 0 ? (
-                <div class="text-center py-16 border-2 border-dashed border-border rounded-xl bg-surface/50">
+                <Card class="text-center py-16 border-2 border-dashed border-border bg-surface/50">
                     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface mb-4">
                         <InboxIcon class="h-8 w-8 text-text-muted" />
                     </div>
-                    <h3 class="text-lg font-medium text-text-main">
+                    <Heading level={3} class="text-lg font-medium">
                         Your inbox is empty
-                    </h3>
+                    </Heading>
                     <p class="text-text-muted mt-1">
                         Great job! You've processed everything.
                     </p>
-                </div>
+                </Card>
             ) : (
                 sortedItems.map((item) => (
-                    <a
-                        href={`/inbox/${item.id}`}
-                        class="block bg-surface border border-border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all group"
-                    >
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-semibold text-text-main group-hover:text-primary transition-colors truncate">
-                                    {item.data.title}
-                                </h3>
-                                <div class="mt-2 flex items-center gap-3 text-sm text-text-muted">
-                                    <span
-                                        class:list={[
-                                            "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider flex items-center gap-1",
-                                            item.data.type
-                                                ? "bg-primary/10 text-primary"
-                                                : "bg-surface-hover text-text-muted",
-                                        ]}
+                    <a href={`/inbox/${item.id}`} class="block group">
+                        <Card class="p-5 hover:border-primary/50 hover:shadow-md transition-all">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <Heading
+                                        level={3}
+                                        class="text-lg font-semibold group-hover:text-primary transition-colors truncate"
                                     >
-                                        {(() => {
-                                            const Icon =
-                                                typeIcons[
-                                                    item.data
-                                                        .type as keyof typeof typeIcons
-                                                ] || InboxIcon;
-                                            return <Icon class="h-3 w-3" />;
-                                        })()}
-                                        {item.data.type || "Unsorted"}
-                                    </span>
-                                    <span>
-                                        Captured{" "}
-                                        {item.data.captured.toLocaleDateString(
-                                            undefined,
-                                            { dateStyle: "medium" },
-                                        )}
-                                    </span>
+                                        {item.data.title}
+                                    </Heading>
+                                    <div class="mt-2 flex items-center gap-3 text-sm text-text-muted">
+                                        <span
+                                            class:list={[
+                                                "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider flex items-center gap-1",
+                                                item.data.type
+                                                    ? "bg-primary/10 text-primary"
+                                                    : "bg-surface-hover text-text-muted",
+                                            ]}
+                                        >
+                                            {(() => {
+                                                const Icon =
+                                                    typeIcons[
+                                                        item.data
+                                                            .type as keyof typeof typeIcons
+                                                    ] || InboxIcon;
+                                                return <Icon class="h-3 w-3" />;
+                                            })()}
+                                            {item.data.type || "Unsorted"}
+                                        </span>
+                                        <span>
+                                            Captured{" "}
+                                            {item.data.captured.toLocaleDateString(
+                                                undefined,
+                                                { dateStyle: "medium" },
+                                            )}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </Card>
                     </a>
                 ))
             )

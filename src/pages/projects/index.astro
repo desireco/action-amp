@@ -11,6 +11,9 @@ import {
     XCircle,
     Plus,
 } from "lucide-astro";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
 
 const projects = await getCollection("projects");
 
@@ -45,77 +48,79 @@ const statusColors: Record<string, string> = {
 <AppLayout title="Projects | Action Amp">
     <div class="mb-4 md:mb-8 flex items-center justify-between">
         <div>
-            <h1
-                class="text-3xl font-bold text-text-main flex items-center gap-3"
-            >
+            <Heading level={1} class="flex items-center gap-3">
                 <FolderKanban class="h-8 w-8 text-primary" />
                 Projects
-            </h1>
+            </Heading>
             <p class="text-text-muted mt-1">
                 Outcomes requiring multiple steps to complete.
             </p>
         </div>
-        <a
-            href="/new-project"
-            class="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover transition-colors flex items-center gap-2"
-        >
-            <Plus class="h-5 w-5" />
+        <Button href="/new-project">
+            <Plus class="h-5 w-5 mr-2" />
             New Project
-        </a>
+        </Button>
     </div>
 
     <div class="grid gap-4">
         {
             sortedProjects.length === 0 ? (
-                <div class="text-center py-16 border-2 border-dashed border-border rounded-xl bg-surface/50">
+                <Card class="text-center py-16 border-2 border-dashed border-border bg-surface/50">
                     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface mb-4">
                         <FolderKanban class="h-8 w-8 text-text-muted" />
                     </div>
-                    <h3 class="text-lg font-medium text-text-main">
+                    <Heading level={3} class="text-lg font-medium">
                         No projects found
-                    </h3>
+                    </Heading>
                     <p class="text-text-muted mt-1">
                         Create a project in an Area to get started.
                     </p>
-                </div>
+                </Card>
             ) : (
                 sortedProjects.map((project) => (
-                    <a
-                        href={`/projects/${project.id}`}
-                        class="block bg-surface border border-border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all group"
-                    >
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex flex-wrap items-center gap-3 mb-1">
-                                    <h3 class="text-lg font-semibold text-text-main group-hover:text-primary transition-colors truncate max-w-full">
-                                        {project.data.name}
-                                    </h3>
-                                    <span
-                                        class:list={[
-                                            "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider",
-                                            statusColors[project.data.status] ||
-                                                "bg-surface-hover text-text-muted",
-                                        ]}
-                                    >
-                                        {project.data.status.replace("_", " ")}
-                                    </span>
-                                </div>
-                                <div class="flex items-center gap-4 text-sm text-text-muted">
-                                    <span class="flex items-center gap-1">
-                                        <LayoutGrid class="h-3 w-3" />
-                                        {project.data.area}
-                                    </span>
-                                    {project.data.due_date && (
-                                        <span class="flex items-center gap-1">
-                                            <Clock class="h-3 w-3" />
-                                            Due{" "}
-                                            {project.data.due_date.toLocaleDateString()}
+                    <a href={`/projects/${project.id}`} class="block group">
+                        <Card class="p-5 hover:border-primary/50 hover:shadow-md transition-all">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap items-center gap-3 mb-1">
+                                        <Heading
+                                            level={3}
+                                            class="text-lg font-semibold group-hover:text-primary transition-colors truncate max-w-full"
+                                        >
+                                            {project.data.name}
+                                        </Heading>
+                                        <span
+                                            class:list={[
+                                                "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider",
+                                                statusColors[
+                                                    project.data.status
+                                                ] ||
+                                                    "bg-surface-hover text-text-muted",
+                                            ]}
+                                        >
+                                            {project.data.status.replace(
+                                                "_",
+                                                " ",
+                                            )}
                                         </span>
-                                    )}
+                                    </div>
+                                    <div class="flex items-center gap-4 text-sm text-text-muted">
+                                        <span class="flex items-center gap-1">
+                                            <LayoutGrid class="h-3 w-3" />
+                                            {project.data.area}
+                                        </span>
+                                        {project.data.due_date && (
+                                            <span class="flex items-center gap-1">
+                                                <Clock class="h-3 w-3" />
+                                                Due{" "}
+                                                {project.data.due_date.toLocaleDateString()}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
+                                <ChevronRight class="h-5 w-5 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
-                            <ChevronRight class="h-5 w-5 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
+                        </Card>
                     </a>
                 ))
             )

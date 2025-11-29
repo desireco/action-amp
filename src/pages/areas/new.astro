@@ -14,6 +14,10 @@ import {
     Music,
     Code,
 } from "lucide-astro";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
+import Input from "../../components/ui/Input.astro";
 
 const iconOptions = [
     { name: "home", label: "Home", component: Home },
@@ -47,158 +51,158 @@ const colorOptions = [
 <AppLayout title="Create New Area">
     <div class="max-w-3xl mx-auto">
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-text-main mb-2">
-                Create New Area
-            </h1>
+            <Heading level={1} class="mb-2"> Create New Area </Heading>
             <p class="text-text-muted">
                 Define a new area of responsibility in your life
             </p>
         </div>
 
-        <form id="create-area-form" class="space-y-8">
-            <!-- Name Field -->
-            <div>
-                <label
-                    for="name"
-                    class="block text-sm font-semibold text-zinc-300 mb-2"
-                >
-                    Area Name <span class="text-red-400">*</span>
-                </label>
-                <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    required
-                    placeholder="e.g., Personal Development"
-                    class="w-full px-4 py-3 bg-surface text-text-main border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all placeholder:text-text-muted"
-                />
-            </div>
-
-            <!-- Icon Selection -->
-            <div>
-                <label class="block text-sm font-semibold text-zinc-300 mb-3">
-                    Icon <span class="text-red-400">*</span>
-                </label>
-                <div class="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                    {
-                        iconOptions.map((icon, index) => (
-                            <label class="icon-option relative cursor-pointer group">
-                                <input
-                                    type="radio"
-                                    name="icon"
-                                    value={icon.name}
-                                    class="peer sr-only"
-                                />
-                                <div class="flex flex-col items-center justify-center p-4 bg-surface border-2 border-border rounded-lg transition-all hover:border-primary hover:bg-surface-hover peer-checked:border-primary peer-checked:bg-surface-hover peer-checked:shadow-lg">
-                                    <icon.component class="w-6 h-6 text-text-main group-hover:text-primary peer-checked:text-primary" />
-                                    <span class="text-xs mt-2 text-text-main group-hover:text-primary peer-checked:text-primary font-semibold">
-                                        {icon.label}
-                                    </span>
-                                </div>
-                            </label>
-                        ))
-                    }
-                </div>
-                <p class="text-sm text-text-muted mt-2">
-                    Select an icon that represents this area
-                </p>
-            </div>
-
-            <!-- Color Selection -->
-            <div>
-                <label class="block text-sm font-semibold text-zinc-300 mb-3">
-                    Color <span class="text-red-400">*</span>
-                </label>
-                <div class="grid grid-cols-5 sm:grid-cols-10 gap-3">
-                    {
-                        colorOptions.map((color) => (
-                            <label class="color-option relative cursor-pointer group">
-                                <input
-                                    type="radio"
-                                    name="color"
-                                    value={color.name}
-                                    class="peer sr-only"
-                                />
-                                <div
-                                    class="w-12 h-12 rounded-full border-4 border-border transition-all hover:scale-110 hover:border-text-muted peer-checked:border-white peer-checked:scale-110 peer-checked:shadow-xl peer-checked:ring-2 peer-checked:ring-white peer-checked:ring-offset-2 peer-checked:ring-offset-background"
-                                    style={`background-color: ${color.value}`}
-                                    title={color.label}
-                                />
-                            </label>
-                        ))
-                    }
-                </div>
-                <p class="text-sm text-text-muted mt-2">
-                    Choose a color to identify this area
-                </p>
-            </div>
-
-            <!-- Description Field -->
-            <div>
-                <label
-                    for="description"
-                    class="block text-sm font-semibold text-zinc-300 mb-2"
-                >
-                    Description <span class="text-text-muted font-normal"
-                        >(optional)</span
+        <Card class="p-6">
+            <form id="create-area-form" class="space-y-8">
+                <!-- Name Field -->
+                <div>
+                    <label
+                        for="name"
+                        class="block text-sm font-semibold text-zinc-300 mb-2"
                     >
-                </label>
-                <textarea
-                    id="description"
-                    name="description"
-                    rows="4"
-                    placeholder="Describe the purpose and scope of this area..."
-                    class="w-full px-4 py-3 bg-surface text-text-main border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all resize-none placeholder:text-text-muted"
-                ></textarea>
-            </div>
+                        Area Name <span class="text-red-400">*</span>
+                    </label>
+                    <Input
+                        type="text"
+                        id="name"
+                        name="name"
+                        required
+                        placeholder="e.g., Personal Development"
+                    />
+                </div>
 
-            <!-- Preview -->
-            <div
-                id="preview"
-                class="hidden p-6 bg-surface-hover rounded-lg border border-border"
-            >
-                <h3 class="text-sm font-semibold text-text-main mb-3">
-                    Preview
-                </h3>
+                <!-- Icon Selection -->
+                <div>
+                    <label
+                        class="block text-sm font-semibold text-zinc-300 mb-3"
+                    >
+                        Icon <span class="text-red-400">*</span>
+                    </label>
+                    <div class="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                        {
+                            iconOptions.map((icon, index) => (
+                                <label class="icon-option relative cursor-pointer group">
+                                    <input
+                                        type="radio"
+                                        name="icon"
+                                        value={icon.name}
+                                        class="peer sr-only"
+                                    />
+                                    <div class="flex flex-col items-center justify-center p-4 bg-surface border-2 border-border rounded-lg transition-all hover:border-primary hover:bg-surface-hover peer-checked:border-primary peer-checked:bg-surface-hover peer-checked:shadow-lg">
+                                        <icon.component class="w-6 h-6 text-text-main group-hover:text-primary peer-checked:text-primary" />
+                                        <span class="text-xs mt-2 text-text-main group-hover:text-primary peer-checked:text-primary font-semibold">
+                                            {icon.label}
+                                        </span>
+                                    </div>
+                                </label>
+                            ))
+                        }
+                    </div>
+                    <p class="text-sm text-text-muted mt-2">
+                        Select an icon that represents this area
+                    </p>
+                </div>
+
+                <!-- Color Selection -->
+                <div>
+                    <label
+                        class="block text-sm font-semibold text-zinc-300 mb-3"
+                    >
+                        Color <span class="text-red-400">*</span>
+                    </label>
+                    <div class="grid grid-cols-5 sm:grid-cols-10 gap-3">
+                        {
+                            colorOptions.map((color) => (
+                                <label class="color-option relative cursor-pointer group">
+                                    <input
+                                        type="radio"
+                                        name="color"
+                                        value={color.name}
+                                        class="peer sr-only"
+                                    />
+                                    <div
+                                        class="w-12 h-12 rounded-full border-4 border-border transition-all hover:scale-110 hover:border-text-muted peer-checked:border-white peer-checked:scale-110 peer-checked:shadow-xl peer-checked:ring-2 peer-checked:ring-white peer-checked:ring-offset-2 peer-checked:ring-offset-background"
+                                        style={`background-color: ${color.value}`}
+                                        title={color.label}
+                                    />
+                                </label>
+                            ))
+                        }
+                    </div>
+                    <p class="text-sm text-text-muted mt-2">
+                        Choose a color to identify this area
+                    </p>
+                </div>
+
+                <!-- Description Field -->
+                <div>
+                    <label
+                        for="description"
+                        class="block text-sm font-semibold text-zinc-300 mb-2"
+                    >
+                        Description <span class="text-text-muted font-normal"
+                            >(optional)</span
+                        >
+                    </label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="4"
+                        placeholder="Describe the purpose and scope of this area..."
+                        class="w-full px-4 py-3 bg-surface text-text-main border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all resize-none placeholder:text-text-muted"
+                    ></textarea>
+                </div>
+
+                <!-- Preview -->
                 <div
-                    class="flex items-center gap-4 p-4 bg-surface rounded-lg shadow-sm border border-border"
+                    id="preview"
+                    class="hidden p-6 bg-surface-hover rounded-lg border border-border"
                 >
+                    <h3 class="text-sm font-semibold text-text-main mb-3">
+                        Preview
+                    </h3>
                     <div
-                        id="preview-icon"
-                        class="w-12 h-12 rounded-lg flex items-center justify-center"
+                        class="flex items-center gap-4 p-4 bg-surface rounded-lg shadow-sm border border-border"
                     >
-                    </div>
-                    <div>
-                        <h4
-                            id="preview-name"
-                            class="font-semibold text-text-main"
+                        <div
+                            id="preview-icon"
+                            class="w-12 h-12 rounded-lg flex items-center justify-center"
                         >
-                        </h4>
-                        <p
-                            id="preview-description"
-                            class="text-sm text-text-muted"
-                        >
-                        </p>
+                        </div>
+                        <div>
+                            <h4
+                                id="preview-name"
+                                class="font-semibold text-text-main"
+                            >
+                            </h4>
+                            <p
+                                id="preview-description"
+                                class="text-sm text-text-muted"
+                            >
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Action Buttons -->
-            <div class="flex gap-4 pt-4">
-                <button
-                    type="submit"
-                    class="flex-1 bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-hover focus:ring-4 focus:ring-primary/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Create Area
-                </button>
-                <a
-                    href="/areas"
-                    class="px-6 py-3 border-2 border-border rounded-lg font-semibold text-text-main hover:bg-surface-hover hover:border-text-muted focus:ring-4 focus:ring-border transition-all"
-                >
-                    Cancel
-                </a>
-            </div>
-        </form>
+                <!-- Action Buttons -->
+                <div class="flex gap-4 pt-4">
+                    <Button href="/areas" variant="ghost" class="flex-1">
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        class="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Create Area
+                    </Button>
+                </div>
+            </form>
+        </Card>
     </div>
 
     <script>

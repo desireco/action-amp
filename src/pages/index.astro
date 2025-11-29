@@ -1,48 +1,38 @@
 ---
-import "../styles/global.css";
+import Layout from "../layouts/Layout.astro";
+import Heading from "../components/ui/Heading.astro";
+import Button from "../components/ui/Button.astro";
+import Card from "../components/ui/Card.astro";
 ---
 
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <meta name="viewport" content="width=device-width" />
-        <meta name="generator" content={Astro.generator} />
-        <title>Action Amplifier</title>
-    </head>
-    <body class="bg-slate-900 text-white p-4 md:p-8">
-        <div class="max-w-4xl mx-auto text-center">
-            <h1 class="text-4xl md:text-5xl font-bold mb-6">
-                Action Amplifier
-            </h1>
-            <p class="text-xl md:text-2xl mb-8 text-slate-300">
-                Focus on what matters most
-            </p>
-
-            <div class="flex justify-center gap-4">
-                <a
-                    href="/inbox"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition"
-                >
-                    Open App
-                </a>
-                <a
-                    href="/faq"
-                    class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg transition"
-                >
-                    Read FAQ
-                </a>
+<Layout title="Action Amplifier">
+    <div
+        class="flex flex-col items-center justify-center min-h-screen p-4 md:p-8"
+    >
+        <div class="max-w-4xl mx-auto text-center space-y-8">
+            <div class="space-y-4">
+                <Heading level={1}> Action Amplifier </Heading>
+                <p class="text-xl md:text-2xl text-text-muted">
+                    Focus on what matters most
+                </p>
             </div>
 
-            <div class="mt-16 text-left bg-slate-800 p-6 md:p-8 rounded-xl">
-                <h2 class="text-2xl font-bold mb-4">Features</h2>
-                <ul class="list-disc list-inside space-y-2 text-slate-300">
+            <div class="flex justify-center gap-4">
+                <Button href="/inbox" size="lg"> Open App </Button>
+                <Button href="/faq" variant="secondary" size="lg">
+                    Read FAQ
+                </Button>
+            </div>
+
+            <Card class="mt-16 text-left p-6 md:p-8 bg-surface/50">
+                <Heading level={2} class="mb-4">Features</Heading>
+                <ul class="list-disc list-inside space-y-2 text-text-muted">
                     <li>Local-first data storage</li>
                     <li>GTD-inspired workflow</li>
                     <li>Text-based file format</li>
                     <li>Fast and focused interface</li>
                 </ul>
-            </div>
+            </Card>
         </div>
-    </body>
-</html>
+    </div>
+</Layout>

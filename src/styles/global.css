@@ -14,8 +14,19 @@
     /* Indigo 500 */
     --color-primary-foreground: #ffffff;
 
-    --color-secondary: #a1a1aa;
-    /* Zinc 400 */
+    --color-secondary: #27272a;
+    /* Zinc 800 */
+    --color-secondary-foreground: #fafafa;
+    /* Zinc 50 */
+
+    --color-accent: #27272a;
+    /* Zinc 800 */
+    --color-accent-foreground: #fafafa;
+    /* Zinc 50 */
+
+    --color-destructive: #ef4444;
+    /* Red 500 */
+    --color-destructive-foreground: #ffffff;
 
     --color-border: #27272a;
     /* Zinc 800 */
@@ -24,6 +35,8 @@
     /* Zinc 50 */
     --color-text-muted: #a1a1aa;
     /* Zinc 400 */
+
+    --radius: 0.5rem;
 }
 
 html,

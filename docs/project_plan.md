@@ -11,7 +11,7 @@ This document outlines the roadmap for building the Action Amplifier application
 | **Phase 1.5: Testing Infrastructure** | ✅ Completed | Vitest & Playwright setup. |
 | **Phase 2: Core UI & Read Views** | ✅ Completed | Layout, Inbox View, Areas & Projects View. |
 | **Phase 3: Write Operations** | ✅ Completed | Data Access Layer, API, Interactive UI. |
-| **Phase 4: Advanced Features** | ⏳ Next | Next Action Logic, Reviews, Search. |
+| **Phase 4: Advanced Features** | 🔄 In Progress | Next Action Logic, Reviews, Search. |
 
 ## Phase 1: Foundation & Data Layer
 **Goal:** Initialize the project and establish the file-based data structure.
@@ -90,8 +90,8 @@ This document outlines the roadmap for building the Action Amplifier application
     *   [x] Context Selection Page & Sidebar Integration.
 
 2.  **Review System**
-    *   [ ] Implement daily/weekly review workflows.
-    *   [ ] Auto-generate review files from templates.
+    *   [x] Implement daily/weekly review workflows.
+    *   [x] Auto-generate review files from templates.
 
 3.  **Search & Filtering**
     *   [ ] Global search across all items.

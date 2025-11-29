@@ -51,9 +51,18 @@ const actions = defineCollection({
   }),
 });
 
+const reviews = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./data/reviews" }),
+  schema: z.object({
+    type: z.enum(['daily', 'weekly', 'monthly', 'quarterly']),
+    date: z.coerce.date(),
+  }),
+});
+
 export const collections = {
   inbox,
   areas,
   projects,
   actions,
+  reviews,
 };

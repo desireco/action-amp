@@ -1,31 +1,116 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
-import { CalendarCheck } from "lucide-astro";
+import { getCollection } from "astro:content";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+
+const reviews = await getCollection("reviews");
+// Sort by date desc
+reviews.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const today = new Date().toISOString().split("T")[0];
 ---
 
-<AppLayout title="Reviews | Action Amp">
-    <div class="mb-4 md:mb-8">
-        <h1 class="text-3xl font-bold text-text-main flex items-center gap-3">
-            <CalendarCheck class="h-8 w-8 text-primary" />
-            Reviews
-        </h1>
-        <p class="text-text-muted mt-1">
-            Reflect on your progress and plan for the future.
-        </p>
-    </div>
-
-    <div
-        class="text-center py-16 border-2 border-dashed border-border rounded-xl bg-surface/50"
-    >
-        <div
-            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface mb-4"
-        >
-            <CalendarCheck class="h-8 w-8 text-text-muted" />
+<AppLayout title="Reviews">
+    <div class="space-y-8">
+        <div class="flex justify-between items-center">
+            <Heading level={1}> Reviews </Heading>
         </div>
-        <h3 class="text-lg font-medium text-text-main">Coming Soon</h3>
-        <p class="text-text-muted mt-1 max-w-md mx-auto">
-            The Review system will be implemented in Phase 4. It will help you
-            perform daily, weekly, and monthly reviews to stay on track.
-        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <form action="/api/reviews" method="POST" class="h-full">
+                <input type="hidden" name="type" value="daily" />
+                <input type="hidden" name="date" value={today} />
+                <button
+                    type="submit"
+                    class="w-full h-full p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 transition-colors text-left group flex flex-col"
+                >
+                    <h3
+                        class="font-semibold text-blue-400 group-hover:text-blue-300 transition-colors"
+                    >
+                        Daily Review
+                    </h3>
+                    <p class="text-sm text-blue-400/70 mt-1 flex-1">
+                        Reflect on today and plan tomorrow
+                    </p>
+                </button>
+            </form>
+
+            <form action="/api/reviews" method="POST" class="h-full">
+                <input type="hidden" name="type" value="weekly" />
+                <input type="hidden" name="date" value={today} />
+                <button
+                    type="submit"
+                    class="w-full h-full p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg hover:bg-purple-500/20 transition-colors text-left group flex flex-col"
+                >
+                    <h3
+                        class="font-semibold text-purple-400 group-hover:text-purple-300 transition-colors"
+                    >
+                        Weekly Review
+                    </h3>
+                    <p class="text-sm text-purple-400/70 mt-1 flex-1">
+                        Review the past week and plan ahead
+                    </p>
+                </button>
+            </form>
+
+            <form action="/api/reviews" method="POST" class="h-full">
+                <input type="hidden" name="type" value="monthly" />
+                <input type="hidden" name="date" value={today} />
+                <button
+                    type="submit"
+                    class="w-full h-full p-4 bg-green-500/10 border border-green-500/20 rounded-lg hover:bg-green-500/20 transition-colors text-left group flex flex-col"
+                >
+                    <h3
+                        class="font-semibold text-green-400 group-hover:text-green-300 transition-colors"
+                    >
+                        Monthly Review
+                    </h3>
+                    <p class="text-sm text-green-400/70 mt-1 flex-1">
+                        Big picture planning
+                    </p>
+                </button>
+            </form>
+        </div>
+
+        <Card>
+            <div class="px-4 py-5 sm:px-6 border-b border-border">
+                <Heading level={3} class="text-lg"> Past Reviews </Heading>
+            </div>
+            <ul role="list" class="divide-y divide-border">
+                {
+                    reviews.length === 0 && (
+                        <li class="px-4 py-4 sm:px-6 text-text-muted">
+                            No reviews yet.
+                        </li>
+                    )
+                }
+                {
+                    reviews.map((review) => {
+                        return (
+                            <li>
+                                <a
+                                    href={`/reviews/${review.id}`}
+                                    class="block hover:bg-surface-hover transition duration-150 ease-in-out"
+                                >
+                                    <div class="px-4 py-4 sm:px-6">
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-sm font-medium text-primary truncate capitalize">
+                                                {review.data.type} Review
+                                            </p>
+                                            <div class="ml-2 flex shrink-0">
+                                                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-surface-hover text-text-muted border border-border">
+                                                    {review.data.date.toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        );
+                    })
+                }
+            </ul>
+        </Card>
     </div>
 </AppLayout>

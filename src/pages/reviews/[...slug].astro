@@ -1,0 +1,153 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import { getEntry, render } from "astro:content";
+import fs from "node:fs/promises";
+import path from "node:path";
+import matter from "gray-matter";
+import { marked } from "marked";
+import Button from "../../components/ui/Button.astro";
+import Card from "../../components/ui/Card.astro";
+const { slug } = Astro.params;
+if (!slug) return;
+Astro.redirect("/reviews");
+let entry = await getEntry("reviews", slug);
+let Content;
+let htmlContent;
+if (entry) {
+    const rendered = await render(entry);
+    Content = rendered.Content;
+} else {
+    // Fallback for dynamic content
+    try {
+        // slug might be "daily/2024-11-28"
+        const filePath = path.join(
+            process.cwd(),
+            "data/reviews",
+            slug.endsWith(".md") ? slug : `${slug}.md`,
+        );
+        const fileContent = await fs.readFile(filePath, "utf-8");
+        const parsed = matter(fileContent);
+
+        entry = {
+            id: slug,
+            collection: "reviews",
+            data: {
+                type: parsed.data.type,
+                date: new Date(parsed.data.date),
+                ...parsed.data,
+            },
+            body: parsed.content,
+        } as any;
+
+        htmlContent = await marked.parse(parsed.content);
+    } catch (e) {
+        console.error(`Failed to read review ${slug}:`, e);
+        return Astro.redirect("/404");
+    }
+}
+const rawContent = await fs.readFile(
+    path.join(
+        process.cwd(),
+        "data/reviews",
+        slug.endsWith(".md") ? slug : `${slug}.md`,
+    ),
+    "utf-8",
+);
+---
+
+<AppLayout title={`${entry?.data?.type || "Review"} Review`}>
+    <div class="max-w-3xl mx-auto space-y-6">
+        <div class="flex justify-between items-center">
+            <Button
+                href="/reviews"
+                variant="ghost"
+                class="pl-0 hover:pl-2 transition-all"
+            >
+                ← Back to Reviews
+            </Button>
+            <Button id="edit-btn" variant="outline" size="sm">
+                Edit Review
+            </Button>
+        </div>
+
+        <div id="view-mode">
+            <Card class="p-6 prose prose-invert max-w-none">
+                {Content ? <Content /> : <div set:html={htmlContent} />}
+            </Card>
+        </div>
+
+        <div id="edit-mode" class="hidden">
+            <Card class="p-6">
+                <form id="edit-form" class="space-y-4">
+                    <div>
+                        <label for="content" class="sr-only">Content</label>
+                        <textarea
+                            id="content"
+                            name="content"
+                            rows="20"
+                            class="w-full bg-surface-hover border border-border rounded-lg p-4 font-mono text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            >{rawContent}</textarea
+                        >
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <Button type="button" variant="ghost" id="cancel-btn">
+                            Cancel
+                        </Button>
+                        <Button type="submit"> Save Changes </Button>
+                    </div>
+                </form>
+            </Card>
+        </div>
+    </div>
+</AppLayout>
+
+<script define:vars={{ slug }}>
+    const editBtn = document.getElementById("edit-btn");
+    const cancelBtn = document.getElementById("cancel-btn");
+    const viewMode = document.getElementById("view-mode");
+    const editMode = document.getElementById("edit-mode");
+    const editForm = document.getElementById("edit-form");
+    const submitBtn = editForm?.querySelector('button[type="submit"]');
+
+    function toggleEdit() {
+        viewMode.classList.toggle("hidden");
+        editMode.classList.toggle("hidden");
+        editBtn.classList.toggle("hidden");
+    }
+
+    editBtn?.addEventListener("click", toggleEdit);
+    cancelBtn?.addEventListener("click", toggleEdit);
+
+    editForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(editForm);
+        const content = formData.get("content");
+
+        if (!content) return;
+
+        const originalText = submitBtn.innerText;
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Saving...";
+
+        try {
+            const res = await fetch(`/api/reviews/${slug}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content }),
+            });
+
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert("Failed to save review");
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalText;
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error saving review");
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalText;
+        }
+    });
+</script>

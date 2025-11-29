@@ -1,54 +1,50 @@
 ---
-import "../styles/global.css";
+import Layout from "../layouts/Layout.astro";
+import Heading from "../components/ui/Heading.astro";
+import Card from "../components/ui/Card.astro";
+import Button from "../components/ui/Button.astro";
 ---
 
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <meta name="viewport" content="width=device-width" />
-        <meta name="generator" content={Astro.generator} />
-        <title>FAQ - Action Amplifier</title>
-    </head>
-    <body class="bg-slate-900 text-white p-8">
-        <div class="max-w-3xl mx-auto">
-            <a href="/" class="text-blue-400 hover:underline mb-8 inline-block"
-                >&larr; Back to Home</a
-            >
+<Layout title="FAQ - Action Amplifier">
+    <div class="max-w-3xl mx-auto p-8 min-h-screen">
+        <Button href="/" variant="link" class="mb-8 pl-0">
+            &larr; Back to Home
+        </Button>
 
-            <h1 class="text-4xl font-bold mb-8">Frequently Asked Questions</h1>
+        <Heading level={1} class="mb-8">Frequently Asked Questions</Heading>
 
-            <div class="space-y-8">
-                <div class="bg-slate-800 p-6 rounded-lg">
-                    <h2 class="text-xl font-bold mb-2">
-                        What is Action Amplifier?
-                    </h2>
-                    <p class="text-slate-300">
-                        Action Amplifier is a local-first, text-based personal
-                        productivity system designed to help you organize tasks
-                        and projects using simple files.
-                    </p>
-                </div>
+        <div class="space-y-8">
+            <Card class="p-6 bg-surface/50">
+                <Heading level={2} class="text-xl mb-2">
+                    What is Action Amplifier?
+                </Heading>
+                <p class="text-text-muted">
+                    Action Amplifier is a local-first, text-based personal
+                    productivity system designed to help you organize tasks and
+                    projects using simple files.
+                </p>
+            </Card>
 
-                <div class="bg-slate-800 p-6 rounded-lg">
-                    <h2 class="text-xl font-bold mb-2">
-                        Where is my data stored?
-                    </h2>
-                    <p class="text-slate-300">
-                        All your data is stored in the <code>data/</code> directory
-                        of your project as Markdown and TOML files. You own your
-                        data completely.
-                    </p>
-                </div>
+            <Card class="p-6 bg-surface/50">
+                <Heading level={2} class="text-xl mb-2">
+                    Where is my data stored?
+                </Heading>
+                <p class="text-text-muted">
+                    All your data is stored in the <code
+                        class="bg-surface-hover px-1 py-0.5 rounded text-text-main"
+                        >data/</code
+                    > directory of your project as Markdown and TOML files. You own
+                    your data completely.
+                </p>
+            </Card>
 
-                <div class="bg-slate-800 p-6 rounded-lg">
-                    <h2 class="text-xl font-bold mb-2">Is it free?</h2>
-                    <p class="text-slate-300">
-                        Yes, it is an open-source project that you run locally
-                        on your machine.
-                    </p>
-                </div>
-            </div>
+            <Card class="p-6 bg-surface/50">
+                <Heading level={2} class="text-xl mb-2">Is it free?</Heading>
+                <p class="text-text-muted">
+                    Yes, it is an open-source project that you run locally on
+                    your machine.
+                </p>
+            </Card>
         </div>
-    </body>
-</html>
+    </div>
+</Layout>
