@@ -1,10 +1,16 @@
 import { test, expect } from '@playwright/test';
+import { TestCleaner } from './test-utils';
 
 test.describe('Triage Workflow', () => {
+    const cleaner = new TestCleaner();
     // Create a unique ID for this test run to avoid collisions
     const timestamp = Date.now();
     const itemTitle = `Triage Test Item ${timestamp}`;
     const projectTitle = `Triage Project ${timestamp}`;
+
+    test.afterAll(async () => {
+        await cleaner.cleanup();
+    });
 
     test.beforeAll(async ({ request }) => {
         // 1. Create an Inbox Item
@@ -16,6 +22,10 @@ test.describe('Triage Workflow', () => {
             }
         });
         expect(inboxRes.ok()).toBeTruthy();
+        const item = await inboxRes.json();
+        if (item.id) {
+            cleaner.addFile(`data/inbox/${item.id}.md`);
+        }
 
         // 2. Create a Project (we need one to test moving)
         // We don't have a direct API for creating projects yet, but we can assume one exists 

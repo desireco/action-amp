@@ -1,19 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { TestCleaner } from './test-utils';
 
 test.describe('Create New Area', () => {
-    const testAreaSlug = 'test-area-' + Date.now();
-    const testAreaPath = path.join(process.cwd(), 'data', 'areas', testAreaSlug, 'area.toml');
+    const cleaner = new TestCleaner();
 
     test.afterEach(async () => {
-        // Clean up test area if it exists
-        try {
-            const areaDir = path.dirname(testAreaPath);
-            await fs.rm(areaDir, { recursive: true, force: true });
-        } catch (error) {
-            // Ignore errors if directory doesn't exist
-        }
+        await cleaner.cleanup();
     });
 
     test('should display create area form with all required fields', async ({ page }) => {
@@ -135,6 +127,11 @@ test.describe('Create New Area', () => {
         await page.locator('label:has(input[name="color"][value="green"])').click();
         await page.locator('textarea[name="description"]').fill('A test area for automated testing');
 
+        // Register for cleanup (predicting the slug)
+        // Slug logic: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        const slug = areaName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        cleaner.addDir(`data/areas/${slug}`);
+
         // Submit the form
         await page.locator('button[type="submit"]').click();
 
@@ -153,6 +150,10 @@ test.describe('Create New Area', () => {
         await page.locator('input[name="name"]').fill(areaName);
         await page.locator('label:has(input[name="icon"][value="lightbulb"])').click();
         await page.locator('label:has(input[name="color"][value="yellow"])').click();
+
+        // Register for cleanup
+        const slug = areaName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        cleaner.addDir(`data/areas/${slug}`);
 
         // Submit the form
         await page.locator('button[type="submit"]').click();

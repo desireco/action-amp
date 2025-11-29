@@ -1,10 +1,21 @@
 import { test, expect } from '@playwright/test';
+import { TestCleaner } from './test-utils';
 
 test.describe('Edit Area Feature', () => {
+    const cleaner = new TestCleaner();
+
+    test.afterEach(async () => {
+        await cleaner.cleanup();
+    });
+
     test('should allow editing an existing area', async ({ page }) => {
         // 1. Create a new area first to ensure we have something to edit
-        const areaName = 'Area To Edit';
-        const areaSlug = 'area-to-edit';
+        const areaName = 'Area To Edit ' + Date.now();
+        // Slug logic: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        const areaSlug = areaName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+        // Register for cleanup
+        cleaner.addDir(`data/areas/${areaSlug}`);
 
         // Use the UI to create it to avoid CSRF issues
         await page.goto('/areas/new');

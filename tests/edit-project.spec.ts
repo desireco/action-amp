@@ -1,10 +1,18 @@
 import { test, expect } from '@playwright/test';
+import { TestCleaner } from './test-utils';
 
 test.describe('Edit Project Feature', () => {
+    const cleaner = new TestCleaner();
+
+    test.afterEach(async () => {
+        await cleaner.cleanup();
+    });
+
     test('should allow editing an existing project', async ({ page }) => {
         // 1. Create a new project first to ensure we have something to edit
-        const projectName = 'Project To Edit';
-        const projectSlug = 'project-to-edit';
+        const projectName = 'Project To Edit ' + Date.now();
+        // Slug logic: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        const projectSlug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
         // Use the API to create it directly to speed up the test
         const createResponse = await page.request.post('/api/projects', {
@@ -15,6 +23,14 @@ test.describe('Edit Project Feature', () => {
             }
         });
         expect(createResponse.ok()).toBeTruthy();
+        const createData = await createResponse.json();
+
+        // Register for cleanup
+        if (createData.path) {
+            cleaner.addFile(createData.path);
+            const projectDir = createData.path.split('/').slice(0, -1).join('/');
+            cleaner.addDir(projectDir);
+        }
 
         // 2. Navigate to the project page
         // The path returned by API is the file path, we need to construct the URL

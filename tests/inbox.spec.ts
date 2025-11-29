@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test';
+import { TestCleaner } from './test-utils';
 
 test.describe('Inbox Feature', () => {
+    const cleaner = new TestCleaner();
+
+    test.afterEach(async () => {
+        await cleaner.cleanup();
+    });
+
     test('should display inbox list', async ({ page }) => {
         await page.goto('/inbox');
 
@@ -18,7 +25,16 @@ test.describe('Inbox Feature', () => {
     test('should navigate to item detail', async ({ page, request }) => {
         // Create a new item to ensure it exists and tests the dynamic fallback
         const title = `Detail Test ${Date.now()}`;
-        await request.post('/api/inbox', { data: { title } });
+        const response = await request.post('/api/inbox', { data: { title } });
+        const item = await response.json();
+
+        // Register for cleanup
+        if (item.id) {
+            cleaner.addFile(`data/inbox/${item.id}.md`);
+        }
+
+        // Wait for server to pick up the new file
+        await page.waitForTimeout(1000);
 
         await page.goto('/inbox');
 
