@@ -3,7 +3,7 @@
 This document outlines the roadmap for building the Action Amplifier application based on the [File Layout Specification](./file-layout-specification.md).
 
 ## Progress
-**Current Status:** Phase 3 Complete. Ready to start Phase 4.
+**Current Status:** Phase 4 Complete. All core features implemented!
 
 | Phase | Status | Description |
 | :--- | :--- | :--- |
@@ -11,7 +11,7 @@ This document outlines the roadmap for building the Action Amplifier application
 | **Phase 1.5: Testing Infrastructure** | ✅ Completed | Vitest & Playwright setup. |
 | **Phase 2: Core UI & Read Views** | ✅ Completed | Layout, Inbox View, Areas & Projects View. |
 | **Phase 3: Write Operations** | ✅ Completed | Data Access Layer, API, Interactive UI. |
-| **Phase 4: Advanced Features** | 🔄 In Progress | Next Action Logic, Reviews, Search. |
+| **Phase 4: Advanced Features** | ✅ Completed | Next Action Logic, Reviews, Search. |
 
 ## Phase 1: Foundation & Data Layer
 **Goal:** Initialize the project and establish the file-based data structure.
@@ -94,5 +94,5 @@ This document outlines the roadmap for building the Action Amplifier application
     *   [x] Auto-generate review files from templates.
 
 3.  **Search & Filtering**
-    *   [ ] Global search across all items.
-    *   [ ] Filter by tag, context, or status.
+    *   [x] Global search across all items.
+    *   [x] Filter by tag, context, or status.

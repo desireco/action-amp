@@ -12,6 +12,7 @@ import {
     Target,
     Layers,
     ChevronRight,
+    Search,
 } from "lucide-astro";
 import { getSettings } from "../lib/data/settings";
 import { getCollection } from "astro:content";
@@ -43,6 +44,7 @@ const navItems = [
     { name: "Next Action", href: "/next", icon: Target },
     { name: "Inbox", href: "/inbox", icon: Inbox },
     { name: "Triage", href: "/triage", icon: ListChecks },
+    { name: "Search", href: "/search", icon: Search },
     {
         name: "Projects",
         href: "/projects",
