@@ -1,0 +1,28 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import Heading from "../components/ui/Heading.astro";
+import Button from "../components/ui/Button.astro";
+import Card from "../components/ui/Card.astro";
+import { AlertCircle } from "lucide-astro";
+---
+
+<AppLayout title="Page Not Found | Action Amp">
+    <div class="max-w-md mx-auto mt-20 text-center">
+        <Card class="p-8 flex flex-col items-center">
+            <div class="bg-surface-hover p-4 rounded-full mb-6">
+                <AlertCircle class="w-12 h-12 text-destructive" />
+            </div>
+
+            <Heading level={1} class="mb-2">Page Not Found</Heading>
+
+            <p class="text-text-muted mb-8">
+                The page you are looking for doesn't exist or has been moved.
+            </p>
+
+            <div class="flex gap-4">
+                <Button href="/" variant="outline"> Go Home </Button>
+                <Button href="javascript:history.back()"> Go Back </Button>
+            </div>
+        </Card>
+    </div>
+</AppLayout>

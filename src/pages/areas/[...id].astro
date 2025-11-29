@@ -31,20 +31,19 @@ const sortedProjects = areaProjects.sort((a, b) => {
 ---
 
 <AppLayout title={`${area.data.name} | Areas`}>
-    <div class="max-w-4xl mx-auto">
-        <a
-            href="/areas"
-            class="inline-flex items-center text-text-muted hover:text-primary transition-colors mb-6 group"
-        >
-            <ArrowLeft
-                class="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform"
-            />
-            Back to Areas
-        </a>
+    <div class="max-w-4xl mx-auto space-y-8">
+        <div>
+            <Button
+                href="/areas"
+                variant="ghost"
+                class="pl-0 hover:pl-2 transition-all"
+            >
+                <ArrowLeft class="h-4 w-4 mr-2" />
+                Back to Areas
+            </Button>
+        </div>
 
-        <div
-            class="bg-surface border border-border rounded-xl overflow-hidden shadow-sm mb-8"
-        >
+        <Card class="overflow-hidden">
             <div class="p-4 md:p-8 border-b border-border">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2">
@@ -64,20 +63,19 @@ const sortedProjects = areaProjects.sort((a, b) => {
                             {area.data.priority}
                         </span>
                     </div>
-                    <a
+                    <Button
                         href={`/areas/${id}/edit`}
-                        class="flex items-center gap-2 px-3 py-1.5 bg-surface-hover border border-border rounded-lg text-sm font-medium text-text-main hover:bg-surface hover:border-primary transition-all"
+                        variant="outline"
+                        size="sm"
                     >
-                        <Edit class="h-4 w-4" />
+                        <Edit class="h-4 w-4 mr-2" />
                         Edit
-                    </a>
+                    </Button>
                 </div>
 
-                <h1
-                    class="text-3xl font-bold text-text-main leading-tight mb-2"
-                >
+                <Heading level={1} class="leading-tight mb-2">
                     {area.data.name}
-                </h1>
+                </Heading>
                 {
                     area.data.description && (
                         <p class="text-text-muted text-lg">
@@ -86,42 +84,39 @@ const sortedProjects = areaProjects.sort((a, b) => {
                     )
                 }
             </div>
-        </div>
+        </Card>
 
         <div class="space-y-4">
             <div class="flex items-center justify-between">
-                <h2
-                    class="text-xl font-bold text-text-main flex items-center gap-2"
-                >
+                <Heading level={2} class="flex items-center gap-2">
                     Projects
                     <span
                         class="text-sm font-normal text-text-muted bg-surface-hover px-2 py-0.5 rounded-full"
                     >
                         {sortedProjects.length}
                     </span>
-                </h2>
-                <a
-                    href="/new-project"
-                    class="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover transition-colors text-sm"
-                >
-                    + New Project
-                </a>
+                </Heading>
+                <Button href="/new-project" size="sm"> + New Project </Button>
             </div>
 
             {
                 sortedProjects.length > 0 ? (
                     <div class="grid gap-4 md:grid-cols-2">
                         {sortedProjects.map((project) => (
-                            <a
+                            <Card
                                 href={`/projects/${project.id}`}
-                                class="bg-surface border border-border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all group flex flex-col h-full"
+                                class="p-5 hover:border-primary/50 hover:shadow-md transition-all group flex flex-col h-full cursor-pointer"
+                                onclick={`window.location.href='/projects/${project.id}'`}
                             >
                                 <div class="flex items-start justify-between mb-2">
                                     <div class="flex items-center gap-2">
                                         <Folder class="h-5 w-5 text-primary" />
-                                        <h3 class="text-lg font-semibold text-text-main group-hover:text-primary transition-colors truncate">
+                                        <Heading
+                                            level={3}
+                                            class="text-lg font-semibold text-text-main group-hover:text-primary transition-colors truncate"
+                                        >
                                             {project.data.name}
-                                        </h3>
+                                        </Heading>
                                     </div>
                                 </div>
                                 {project.data.description && (
@@ -145,15 +140,15 @@ const sortedProjects = areaProjects.sort((a, b) => {
                                         <ChevronRight class="h-3 w-3" />
                                     </span>
                                 </div>
-                            </a>
+                            </Card>
                         ))}
                     </div>
                 ) : (
-                    <div class="text-center py-12 border-2 border-dashed border-border rounded-xl">
+                    <Card class="text-center py-12 border-2 border-dashed border-border bg-surface/50">
                         <p class="text-text-muted">
                             No projects found for this area.
                         </p>
-                    </div>
+                    </Card>
                 )
             }
         </div>

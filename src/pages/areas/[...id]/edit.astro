@@ -17,6 +17,10 @@ import {
     ArrowLeft,
     Loader2,
 } from "lucide-astro";
+import Heading from "../../../components/ui/Heading.astro";
+import Card from "../../../components/ui/Card.astro";
+import Button from "../../../components/ui/Button.astro";
+import Input from "../../../components/ui/Input.astro";
 
 const { id } = Astro.params;
 
@@ -66,237 +70,251 @@ const priorityOptions = [
 ---
 
 <AppLayout title={`Edit ${area.data.name} | Areas`}>
-    <div class="max-w-3xl mx-auto">
-        <a
-            href={`/areas/${id}`}
-            class="inline-flex items-center text-text-muted hover:text-primary transition-colors mb-6 group"
-        >
-            <ArrowLeft
-                class="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform"
-            />
-            Back to {area.data.name}
-        </a>
+    <AppLayout title={`Edit ${area.data.name} | Areas`}>
+        <div class="max-w-3xl mx-auto">
+            <Button
+                href={`/areas/${id}`}
+                variant="ghost"
+                class="pl-0 hover:pl-2 transition-all mb-6"
+            >
+                <ArrowLeft class="h-4 w-4 mr-2" />
+                Back to {area.data.name}
+            </Button>
 
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-text-main mb-2">Edit Area</h1>
-            <p class="text-text-muted">Update the details for this area</p>
+            <div class="mb-8">
+                <Heading level={1} class="mb-2">Edit Area</Heading>
+                <p class="text-text-muted">Update the details for this area</p>
+            </div>
+
+            <Card class="p-6">
+                <form id="edit-area-form" class="space-y-8">
+                    <!-- Name Field -->
+                    <div>
+                        <label
+                            for="name"
+                            class="block text-sm font-semibold text-zinc-300 mb-2"
+                        >
+                            Area Name <span class="text-red-400">*</span>
+                        </label>
+                        <Input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value={area.data.name}
+                            required
+                            placeholder="e.g., Personal Development"
+                        />
+                    </div>
+
+                    <!-- Icon Selection -->
+                    <div>
+                        <label
+                            class="block text-sm font-semibold text-zinc-300 mb-3"
+                        >
+                            Icon <span class="text-red-400">*</span>
+                        </label>
+                        <div class="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                            {
+                                iconOptions.map((icon) => (
+                                    <label class="icon-option relative cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            name="icon"
+                                            value={icon.name}
+                                            checked={
+                                                area.data.icon === icon.name
+                                            }
+                                            class="peer sr-only"
+                                        />
+                                        <div class="flex flex-col items-center justify-center p-4 bg-surface border-2 border-border rounded-lg transition-all hover:border-primary hover:bg-surface-hover peer-checked:border-primary peer-checked:bg-surface-hover peer-checked:shadow-lg">
+                                            <icon.component class="w-6 h-6 text-text-main group-hover:text-primary peer-checked:text-primary" />
+                                            <span class="text-xs mt-2 text-text-main group-hover:text-primary peer-checked:text-primary font-semibold">
+                                                {icon.label}
+                                            </span>
+                                        </div>
+                                    </label>
+                                ))
+                            }
+                        </div>
+                        <p class="text-sm text-text-muted mt-2">
+                            Select an icon that represents this area
+                        </p>
+                    </div>
+
+                    <!-- Color Selection -->
+                    <div>
+                        <label
+                            class="block text-sm font-semibold text-zinc-300 mb-3"
+                        >
+                            Color <span class="text-red-400">*</span>
+                        </label>
+                        <div class="grid grid-cols-5 sm:grid-cols-10 gap-3">
+                            {
+                                colorOptions.map((color) => (
+                                    <label class="color-option relative cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            name="color"
+                                            value={color.name}
+                                            checked={
+                                                area.data.color === color.name
+                                            }
+                                            class="peer sr-only"
+                                        />
+                                        <div
+                                            class="w-12 h-12 rounded-full border-4 border-border transition-all hover:scale-110 hover:border-text-muted peer-checked:border-white peer-checked:scale-110 peer-checked:shadow-xl peer-checked:ring-2 peer-checked:ring-white peer-checked:ring-offset-2 peer-checked:ring-offset-background"
+                                            style={`background-color: ${color.value}`}
+                                            title={color.label}
+                                        />
+                                    </label>
+                                ))
+                            }
+                        </div>
+                        <p class="text-sm text-text-muted mt-2">
+                            Choose a color to identify this area
+                        </p>
+                    </div>
+
+                    <!-- Priority Selection -->
+                    <div>
+                        <label
+                            for="priority"
+                            class="block text-sm font-semibold text-zinc-300 mb-2"
+                        >
+                            Priority
+                        </label>
+                        <select
+                            id="priority"
+                            name="priority"
+                            class="flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-main ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {
+                                priorityOptions.map((option) => (
+                                    <option
+                                        value={option.value}
+                                        selected={
+                                            area.data.priority === option.value
+                                        }
+                                    >
+                                        {option.label}
+                                    </option>
+                                ))
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Description Field -->
+                    <div>
+                        <label
+                            for="description"
+                            class="block text-sm font-semibold text-zinc-300 mb-2"
+                        >
+                            Description <span
+                                class="text-text-muted font-normal"
+                                >(optional)</span
+                            >
+                        </label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="4"
+                            placeholder="Describe the purpose and scope of this area..."
+                            class="w-full bg-background border border-border rounded-lg px-4 py-3 text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
+                            >{area.data.description || ""}</textarea
+                        >
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-4 pt-4">
+                        <Button
+                            href={`/areas/${id}`}
+                            variant="ghost"
+                            class="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            id="submit-btn"
+                            class="flex-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Loader2
+                                class="w-4 h-4 animate-spin hidden"
+                                id="submit-spinner"
+                            />
+                            <span id="submit-text">Save Changes</span>
+                        </Button>
+                    </div>
+                </form>
+            </Card>
         </div>
 
-        <form id="edit-area-form" class="space-y-8">
-            <!-- Name Field -->
-            <div>
-                <label
-                    for="name"
-                    class="block text-sm font-semibold text-zinc-300 mb-2"
-                >
-                    Area Name <span class="text-red-400">*</span>
-                </label>
-                <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={area.data.name}
-                    required
-                    placeholder="e.g., Personal Development"
-                    class="w-full px-4 py-3 bg-surface text-text-main border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all placeholder:text-text-muted"
-                />
-            </div>
+        <script define:vars={{ areaId: id }}>
+            const form = document.getElementById("edit-area-form");
+            const nameInput = document.getElementById("name");
+            const submitButton = document.getElementById("submit-btn");
+            const spinner = document.getElementById("submit-spinner");
+            const submitText = document.getElementById("submit-text");
 
-            <!-- Icon Selection -->
-            <div>
-                <label class="block text-sm font-semibold text-zinc-300 mb-3">
-                    Icon <span class="text-red-400">*</span>
-                </label>
-                <div class="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                    {
-                        iconOptions.map((icon) => (
-                            <label class="icon-option relative cursor-pointer group">
-                                <input
-                                    type="radio"
-                                    name="icon"
-                                    value={icon.name}
-                                    checked={area.data.icon === icon.name}
-                                    class="peer sr-only"
-                                />
-                                <div class="flex flex-col items-center justify-center p-4 bg-surface border-2 border-border rounded-lg transition-all hover:border-primary hover:bg-surface-hover peer-checked:border-primary peer-checked:bg-surface-hover peer-checked:shadow-lg">
-                                    <icon.component class="w-6 h-6 text-text-main group-hover:text-primary peer-checked:text-primary" />
-                                    <span class="text-xs mt-2 text-text-main group-hover:text-primary peer-checked:text-primary font-semibold">
-                                        {icon.label}
-                                    </span>
-                                </div>
-                            </label>
-                        ))
+            // Form submission
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                // Custom validation
+                const name = nameInput.value.trim();
+                const selectedIcon = form.querySelector(
+                    'input[name="icon"]:checked',
+                );
+                const selectedColor = form.querySelector(
+                    'input[name="color"]:checked',
+                );
+
+                if (!name) {
+                    alert("Please enter an area name");
+                    nameInput.focus();
+                    return;
+                }
+
+                if (!selectedIcon) {
+                    alert("Please select an icon");
+                    return;
+                }
+
+                if (!selectedColor) {
+                    alert("Please select a color");
+                    return;
+                }
+
+                submitButton.disabled = true;
+                spinner.classList.remove("hidden");
+                submitText.textContent = "Saving...";
+
+                try {
+                    const formData = new FormData(form);
+                    const response = await fetch(`/api/areas/${areaId}`, {
+                        method: "PUT",
+                        body: formData,
+                    });
+
+                    if (response.ok) {
+                        window.location.href = `/areas/${areaId}`;
+                    } else {
+                        const error = await response.json();
+                        alert(
+                            `Error: ${error.error || "Failed to update area"}\n${error.details || ""}`,
+                        );
+                        submitButton.disabled = false;
+                        spinner.classList.add("hidden");
+                        submitText.textContent = "Save Changes";
                     }
-                </div>
-                <p class="text-sm text-text-muted mt-2">
-                    Select an icon that represents this area
-                </p>
-            </div>
-
-            <!-- Color Selection -->
-            <div>
-                <label class="block text-sm font-semibold text-zinc-300 mb-3">
-                    Color <span class="text-red-400">*</span>
-                </label>
-                <div class="grid grid-cols-5 sm:grid-cols-10 gap-3">
-                    {
-                        colorOptions.map((color) => (
-                            <label class="color-option relative cursor-pointer group">
-                                <input
-                                    type="radio"
-                                    name="color"
-                                    value={color.name}
-                                    checked={area.data.color === color.name}
-                                    class="peer sr-only"
-                                />
-                                <div
-                                    class="w-12 h-12 rounded-full border-4 border-border transition-all hover:scale-110 hover:border-text-muted peer-checked:border-white peer-checked:scale-110 peer-checked:shadow-xl peer-checked:ring-2 peer-checked:ring-white peer-checked:ring-offset-2 peer-checked:ring-offset-background"
-                                    style={`background-color: ${color.value}`}
-                                    title={color.label}
-                                />
-                            </label>
-                        ))
-                    }
-                </div>
-                <p class="text-sm text-text-muted mt-2">
-                    Choose a color to identify this area
-                </p>
-            </div>
-
-            <!-- Priority Selection -->
-            <div>
-                <label
-                    for="priority"
-                    class="block text-sm font-semibold text-zinc-300 mb-2"
-                >
-                    Priority
-                </label>
-                <select
-                    id="priority"
-                    name="priority"
-                    class="w-full px-4 py-3 bg-surface text-text-main border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                >
-                    {
-                        priorityOptions.map((option) => (
-                            <option
-                                value={option.value}
-                                selected={area.data.priority === option.value}
-                            >
-                                {option.label}
-                            </option>
-                        ))
-                    }
-                </select>
-            </div>
-
-            <!-- Description Field -->
-            <div>
-                <label
-                    for="description"
-                    class="block text-sm font-semibold text-zinc-300 mb-2"
-                >
-                    Description <span class="text-text-muted font-normal"
-                        >(optional)</span
-                    >
-                </label>
-                <textarea
-                    id="description"
-                    name="description"
-                    rows="4"
-                    placeholder="Describe the purpose and scope of this area..."
-                    class="w-full px-4 py-3 bg-surface text-text-main border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all resize-none placeholder:text-text-muted"
-                    >{area.data.description || ""}</textarea
-                >
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex gap-4 pt-4">
-                <button
-                    type="submit"
-                    id="submit-btn"
-                    class="flex-1 bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-hover focus:ring-4 focus:ring-primary/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                    <Loader2
-                        class="w-4 h-4 animate-spin hidden"
-                        id="submit-spinner"
-                    />
-                    <span id="submit-text">Save Changes</span>
-                </button>
-                <a
-                    href={`/areas/${id}`}
-                    class="px-6 py-3 border-2 border-border rounded-lg font-semibold text-text-main hover:bg-surface-hover hover:border-text-muted focus:ring-4 focus:ring-border transition-all"
-                >
-                    Cancel
-                </a>
-            </div>
-        </form>
-    </div>
-
-    <script define:vars={{ areaId: id }}>
-        const form = document.getElementById("edit-area-form");
-        const nameInput = document.getElementById("name");
-        const submitButton = document.getElementById("submit-btn");
-        const spinner = document.getElementById("submit-spinner");
-        const submitText = document.getElementById("submit-text");
-
-        // Form submission
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            // Custom validation
-            const name = nameInput.value.trim();
-            const selectedIcon = form.querySelector(
-                'input[name="icon"]:checked',
-            );
-            const selectedColor = form.querySelector(
-                'input[name="color"]:checked',
-            );
-
-            if (!name) {
-                alert("Please enter an area name");
-                nameInput.focus();
-                return;
-            }
-
-            if (!selectedIcon) {
-                alert("Please select an icon");
-                return;
-            }
-
-            if (!selectedColor) {
-                alert("Please select a color");
-                return;
-            }
-
-            submitButton.disabled = true;
-            spinner.classList.remove("hidden");
-            submitText.textContent = "Saving...";
-
-            try {
-                const formData = new FormData(form);
-                const response = await fetch(`/api/areas/${areaId}`, {
-                    method: "PUT",
-                    body: formData,
-                });
-
-                if (response.ok) {
-                    window.location.href = `/areas/${areaId}`;
-                } else {
-                    const error = await response.json();
-                    alert(
-                        `Error: ${error.error || "Failed to update area"}\n${error.details || ""}`,
-                    );
+                } catch (error) {
+                    console.error("Error updating area:", error);
+                    alert("An unexpected error occurred. Please try again.");
                     submitButton.disabled = false;
                     spinner.classList.add("hidden");
                     submitText.textContent = "Save Changes";
                 }
-            } catch (error) {
-                console.error("Error updating area:", error);
-                alert("An unexpected error occurred. Please try again.");
-                submitButton.disabled = false;
-                spinner.classList.add("hidden");
-                submitText.textContent = "Save Changes";
-            }
-        });
-    </script>
+            });
+        </script>
+    </AppLayout>
 </AppLayout>
