@@ -1,13 +1,13 @@
 ---
-import { getCollection } from "astro:content";
+import { getCachedCollection } from "../lib/content-cache";
 import AppLayout from "../layouts/AppLayout.astro";
 import Heading from "../components/ui/Heading.astro";
 import Card from "../components/ui/Card.astro";
 
-const inboxItems = await getCollection("inbox");
-const areas = await getCollection("areas");
-const projects = await getCollection("projects");
-const actions = await getCollection("actions");
+const inboxItems = await getCachedCollection("inbox");
+const areas = await getCachedCollection("areas");
+const projects = await getCachedCollection("projects");
+const actions = await getCachedCollection("actions");
 ---
 
 <AppLayout title="Dashboard | Action Amplifier">

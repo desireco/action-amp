@@ -2,14 +2,14 @@
 import AppLayout from "../../layouts/AppLayout.astro";
 import { dataReader } from "../../lib/data/reader";
 import { LayoutGrid, Folder, ChevronRight, Plus } from "lucide-astro";
-import { getSettings } from "../../lib/data/settings";
+import { getCachedSettings } from "../../lib/data/settings";
 import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 import Button from "../../components/ui/Button.astro";
 
 const areas = await dataReader.getAreas();
 const projects = await dataReader.getAllProjects();
-const settings = await getSettings();
+const settings = await getCachedSettings();
 const currentContext = settings.next_action_context;
 
 // Group projects by area

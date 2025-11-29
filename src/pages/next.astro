@@ -1,17 +1,17 @@
 ---
 import AppLayout from "../layouts/AppLayout.astro";
-import { getCollection } from "astro:content";
-import { getSettings } from "../lib/data/settings";
+import { getCachedCollection } from "../lib/content-cache";
+import { getCachedSettings } from "../lib/data/settings";
 import { CheckCircle2, AlertCircle, Clock, ArrowRight } from "lucide-astro";
 import Heading from "../components/ui/Heading.astro";
 import Card from "../components/ui/Card.astro";
 import Button from "../components/ui/Button.astro";
 
-const settings = await getSettings();
+const settings = await getCachedSettings();
 const currentContext = settings.next_action_context;
 
-const allActions = await getCollection("actions");
-const allProjects = await getCollection("projects");
+const allActions = await getCachedCollection("actions");
+const allProjects = await getCachedCollection("projects");
 
 // Helper to get project details
 const getProject = (area: string, projectSlug: string) => {
@@ -59,6 +59,7 @@ const nextActions = allActions
 // Group by project for display? Or flat list?
 // GTD Next Actions is usually a flat list per context.
 // Let's do a flat list but show project name.
+const timer = { measure: () => {} };
 ---
 
 <AppLayout title="Next Actions">

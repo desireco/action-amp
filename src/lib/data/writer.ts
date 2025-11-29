@@ -1,6 +1,7 @@
 import matter from 'gray-matter';
 import toml from '@iarna/toml';
 import { fsApi } from './api';
+import { invalidate, invalidateByPrefix } from '../cache';
 import type { InboxItem, ActionItem } from './types';
 
 export class DataWriter {
@@ -33,6 +34,7 @@ export class DataWriter {
         const fileContent = matter.stringify(content, frontmatter);
 
         await fsApi.writeFile(`data/inbox/${id}.md`, fileContent);
+        invalidateByPrefix('collection:inbox');
         return item;
     }
 
@@ -49,11 +51,13 @@ export class DataWriter {
 
         const updatedContent = matter.stringify(content, parsed.data);
         await fsApi.writeFile(filePath, updatedContent);
+        invalidateByPrefix('collection:inbox');
     }
 
     async deleteInboxItem(id: string): Promise<void> {
         const filePath = `data/inbox/${id}.md`;
         await fsApi.deleteFile(filePath);
+        invalidateByPrefix('collection:inbox');
     }
 
     async updateActionStatus(filePath: string, status: ActionItem['status']): Promise<void> {
@@ -69,6 +73,7 @@ export class DataWriter {
 
         const updatedContent = matter.stringify(parsed.content, parsed.data);
         await fsApi.writeFile(filePath, updatedContent);
+        invalidateByPrefix('collection:actions');
     }
 
     async moveFile(oldPath: string, newPath: string): Promise<void> {
@@ -115,6 +120,8 @@ export class DataWriter {
 
         // Delete old file
         await fsApi.deleteFile(inboxPath);
+        invalidateByPrefix('collection:inbox');
+        invalidateByPrefix('collection:actions');
     }
 
     async createArea(name: string, icon: string, color: string, description?: string): Promise<{ path: string, slug: string }> {
@@ -136,7 +143,9 @@ export class DataWriter {
 
         const tomlContent = toml.stringify(areaData);
         await fsApi.writeFile(areaPath, tomlContent);
-
+        invalidate('areas:list');
+        invalidateByPrefix('collection:areas');
+        
         return { path: areaPath, slug };
     }
 
@@ -160,6 +169,8 @@ export class DataWriter {
 
         const tomlContent = toml.stringify(updatedData);
         await fsApi.writeFile(areaPath, tomlContent);
+        invalidate('areas:list');
+        invalidateByPrefix('collection:areas');
     }
 
     async createProject(name: string, area: string, description?: string): Promise<{ path: string, slug: string }> {
@@ -180,7 +191,9 @@ export class DataWriter {
 
         const tomlContent = toml.stringify(projectData);
         await fsApi.writeFile(projectPath, tomlContent);
-
+        invalidate('projects:list');
+        invalidateByPrefix('collection:projects');
+        
         return { path: projectPath, slug };
     }
 
@@ -209,6 +222,8 @@ export class DataWriter {
         // Write back to file
         const tomlContent = toml.stringify(projectData);
         await fsApi.writeFile(projectPath, tomlContent);
+        invalidate('projects:list');
+        invalidateByPrefix('collection:projects');
     }
 }
 

@@ -1,4 +1,5 @@
 import { fsApi } from './api';
+import { getCached, invalidate } from '../cache';
 
 const SETTINGS_PATH = 'data/config/settings.txt';
 
@@ -37,6 +38,10 @@ export async function getSettings(): Promise<AppSettings> {
     });
 
     return settings;
+}
+
+export function getCachedSettings(ttlMs: number = 5000): Promise<AppSettings> {
+    return getCached<AppSettings>('settings', getSettings, { ttlMs });
 }
 
 export async function updateSettings(updates: Partial<AppSettings>): Promise<void> {

@@ -14,8 +14,8 @@ import {
     ChevronRight,
     Search,
 } from "lucide-astro";
-import { getSettings } from "../lib/data/settings";
-import { getCollection } from "astro:content";
+import { getCachedSettings } from "../lib/data/settings";
+import { getCachedCollection } from "../lib/content-cache";
 import Input from "../components/ui/Input.astro";
 
 interface Props {
@@ -26,12 +26,12 @@ interface Props {
 const { title, currentPath = Astro.url.pathname } = Astro.props;
 
 // Fetch Context and Projects
-const settings = await getSettings();
+const settings = await getCachedSettings();
 const currentContext = settings.next_action_context;
 
 let contextProjects: any[] = [];
 if (currentContext) {
-    const allProjects = await getCollection("projects");
+    const allProjects = await getCachedCollection("projects");
     contextProjects = allProjects
         .filter(
             (p) => p.data.area === currentContext && p.data.status === "active",
@@ -133,6 +133,7 @@ const isActive = (path: string) => {
                             <div>
                                 <a
                                     href={item.href}
+                                    rel="prefetch"
                                     class:list={[
                                         "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
                                         active
@@ -167,6 +168,7 @@ const isActive = (path: string) => {
                                             return (
                                                 <a
                                                     href={sub.href}
+                                                    rel="prefetch"
                                                     class:list={[
                                                         "block px-3 py-1.5 text-sm rounded-md transition-colors truncate",
                                                         subActive
@@ -230,6 +232,7 @@ const isActive = (path: string) => {
                         return (
                             <a
                                 href={item.href}
+                                rel="prefetch"
                                 class:list={[
                                     "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 w-full",
                                     active

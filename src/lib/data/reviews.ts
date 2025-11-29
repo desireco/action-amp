@@ -1,4 +1,5 @@
 import { getCollection } from 'astro:content';
+import { invalidateByPrefix } from '../cache';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -83,5 +84,6 @@ ${template}
     }
 
     await fs.writeFile(filePath, content, 'utf-8');
+    invalidateByPrefix('collection:reviews');
     return filePath;
 }

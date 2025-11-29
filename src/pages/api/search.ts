@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
+import { getCachedCollection } from '../../lib/content-cache';
 
 export const GET: APIRoute = async ({ url }) => {
     const query = url.searchParams.get('q')?.toLowerCase() || '';
@@ -12,7 +12,7 @@ export const GET: APIRoute = async ({ url }) => {
 
         // Search Inbox
         if (!collectionFilter || collectionFilter === 'inbox') {
-            const inboxItems = await getCollection('inbox');
+            const inboxItems = await getCachedCollection('inbox');
             for (const item of inboxItems) {
                 if (matchesFilters(item.data, query, statusFilter, priorityFilter, 'inbox')) {
                     results.push({
@@ -30,7 +30,7 @@ export const GET: APIRoute = async ({ url }) => {
 
         // Search Actions
         if (!collectionFilter || collectionFilter === 'actions') {
-            const actions = await getCollection('actions');
+            const actions = await getCachedCollection('actions');
             for (const action of actions) {
                 if (matchesFilters(action.data, query, statusFilter, priorityFilter, 'actions')) {
                     // Extract area and project from the action ID
@@ -54,7 +54,7 @@ export const GET: APIRoute = async ({ url }) => {
 
         // Search Projects
         if (!collectionFilter || collectionFilter === 'projects') {
-            const projects = await getCollection('projects');
+            const projects = await getCachedCollection('projects');
             for (const project of projects) {
                 if (matchesFilters(project.data, query, statusFilter, priorityFilter, 'projects')) {
                     // Extract area and project name from ID
@@ -78,7 +78,7 @@ export const GET: APIRoute = async ({ url }) => {
 
         // Search Areas
         if (!collectionFilter || collectionFilter === 'areas') {
-            const areas = await getCollection('areas');
+            const areas = await getCachedCollection('areas');
             for (const area of areas) {
                 if (matchesFilters(area.data, query, statusFilter, priorityFilter, 'areas')) {
                     // Extract area name from ID
@@ -100,7 +100,7 @@ export const GET: APIRoute = async ({ url }) => {
 
         // Search Reviews
         if (!collectionFilter || collectionFilter === 'reviews') {
-            const reviews = await getCollection('reviews');
+            const reviews = await getCachedCollection('reviews');
             for (const review of reviews) {
                 if (matchesFilters(review.data, query, statusFilter, priorityFilter, 'reviews')) {
                     // Format the review title

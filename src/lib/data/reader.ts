@@ -3,6 +3,7 @@ import path from 'node:path';
 import matter from 'gray-matter';
 import toml from '@iarna/toml';
 import { fsApi } from './api';
+import { getCached } from '../cache';
 
 export interface Action {
     id: string;
@@ -95,43 +96,47 @@ export class DataReader {
         }
     }
     async getAreas(): Promise<any[]> {
-        const areasDir = fsApi.resolvePath('data/areas');
-        try {
-            const entries = await fs.readdir(areasDir, { withFileTypes: true });
-            const areaDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
+        return getCached<any[]>('areas:list', async () => {
+            const areasDir = fsApi.resolvePath('data/areas');
+            try {
+                const entries = await fs.readdir(areasDir, { withFileTypes: true });
+                const areaDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
 
-            const areas = await Promise.all(areaDirs.map(async (slug) => {
-                const area = await this.getArea(slug);
-                return area;
-            }));
+                const areas = await Promise.all(areaDirs.map(async (slug) => {
+                    const area = await this.getArea(slug);
+                    return area;
+                }));
 
-            return areas.filter(a => a !== null);
-        } catch (e) {
-            console.error('Error reading areas:', e);
-            return [];
-        }
+                return areas.filter(a => a !== null);
+            } catch (e) {
+                console.error('Error reading areas:', e);
+                return [];
+            }
+        }, { ttlMs: 5000 });
     }
 
     async getAllProjects(): Promise<any[]> {
-        const areas = await this.getAreas();
-        const projects = await Promise.all(areas.map(async (area) => {
-            const areaPath = fsApi.resolvePath(path.join('data/areas', area.id));
-            try {
-                const entries = await fs.readdir(areaPath, { withFileTypes: true });
-                const projectDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
+        return getCached<any[]>('projects:list', async () => {
+            const areas = await this.getAreas();
+            const projects = await Promise.all(areas.map(async (area) => {
+                const areaPath = fsApi.resolvePath(path.join('data/areas', area.id));
+                try {
+                    const entries = await fs.readdir(areaPath, { withFileTypes: true });
+                    const projectDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
 
-                const areaProjects = await Promise.all(projectDirs.map(async (slug) => {
-                    const projectId = `${area.id}/${slug}/project.toml`;
-                    return this.getProject(projectId);
-                }));
+                    const areaProjects = await Promise.all(projectDirs.map(async (slug) => {
+                        const projectId = `${area.id}/${slug}/project.toml`;
+                        return this.getProject(projectId);
+                    }));
 
-                return areaProjects.filter(p => p !== null);
-            } catch (e) {
-                return [];
-            }
-        }));
+                    return areaProjects.filter(p => p !== null);
+                } catch (e) {
+                    return [];
+                }
+            }));
 
-        return projects.flat();
+            return projects.flat();
+        }, { ttlMs: 5000 });
     }
 }
 

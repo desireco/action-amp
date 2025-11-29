@@ -1,10 +1,10 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
-import { getCollection } from "astro:content";
+import { getCachedCollection } from "../../lib/content-cache";
 import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 
-const reviews = await getCollection("reviews");
+const reviews = await getCachedCollection("reviews");
 // Sort by date desc
 reviews.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
