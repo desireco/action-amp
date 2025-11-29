@@ -18,8 +18,8 @@ test.describe('Inbox Feature', () => {
         // We know 'Call dentist for appointment' exists in the sample data
         await expect(page.getByText('Call dentist for appointment')).toBeVisible();
 
-        // Expect Nav Search input in sidebar
-        await expect(page.locator('#nav-search')).toBeVisible();
+        // Expect Search link in sidebar
+        await expect(page.locator('a[href="/search"]')).toBeVisible();
     });
 
     test('should navigate to item detail', async ({ page, request }) => {

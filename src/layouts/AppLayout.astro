@@ -106,21 +106,7 @@ const isActive = (path: string) => {
                 </h1>
             </div>
 
-            <div class="px-4 mb-2">
-                <div class="relative">
-                    <Input
-                        type="text"
-                        id="nav-search"
-                        placeholder="Search..."
-                        class="bg-surface-hover"
-                    />
-                    <div
-                        class="absolute right-3 top-2.5 text-xs text-text-muted pointer-events-none opacity-50"
-                    >
-                        ⏎
-                    </div>
-                </div>
-            </div>
+            
 
             <nav class="flex-1 px-4 space-y-1 mt-2 overflow-y-auto">
                 {
@@ -250,18 +236,5 @@ const isActive = (path: string) => {
             }
         </nav>
     </div>
-    <script>
-        const input = document.getElementById(
-            "nav-search",
-        ) as HTMLInputElement;
-
-        input?.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                const q = input.value.trim();
-                if (!q) return;
-                const params = new URLSearchParams({ q });
-                window.location.href = `/search?${params.toString()}`;
-            }
-        });
-    </script>
+    
 </Layout>
