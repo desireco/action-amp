@@ -1,0 +1,33 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import { Settings } from "lucide-astro";
+import Heading from "../components/ui/Heading.astro";
+import Card from "../components/ui/Card.astro";
+---
+
+<AppLayout title="Settings | Action Amp">
+    <div class="max-w-2xl mx-auto">
+        <div class="mb-4 md:mb-8">
+            <Heading level={1} class="flex items-center gap-3">
+                <Settings class="h-8 w-8 text-primary" />
+                Settings
+            </Heading>
+            <p class="text-text-muted mt-1">
+                Work in progress. This page is not ready yet.
+            </p>
+        </div>
+
+        <Card class="p-6">
+            <div class="space-y-3">
+                <p class="text-text-muted">
+                    We’re building a dedicated Settings experience. In the meantime,
+                    key options may be available in other sections.
+                </p>
+                <ul class="list-disc pl-6 text-sm text-text-muted">
+                    <li>Update your current context from the Areas section.</li>
+                    <li>Review projects and areas to adjust organization.</li>
+                </ul>
+            </div>
+        </Card>
+    </div>
+</AppLayout>
