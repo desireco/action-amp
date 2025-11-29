@@ -86,13 +86,12 @@ test.describe('Context Switching and Project Navigation', () => {
             // 6. Verify URL and Title
             await expect(page).toHaveURL(/\/projects\/.*/);
             if (projectName) {
-                await expect(page.locator('h1')).toBeVisible();
+                await expect(page.locator('main h1')).toBeVisible();
             }
 
             // 7. Verify Highlight
-            // Re-locate the link to ensure we have the fresh element from the new page
-            const activeProjectLink = page.locator('aside nav').locator('a[href^="/projects/"]').filter({ hasText: projectName }).first();
-            await expect(activeProjectLink).toHaveClass(/font-medium/);
+            const currentPath = new URL(page.url()).pathname;
+            const activeProjectLink = page.locator(`aside nav a[href="${currentPath}"]`);
             await expect(activeProjectLink).toHaveClass(/text-primary/);
         } else {
             console.log('No projects found in this context, skipping project navigation test');

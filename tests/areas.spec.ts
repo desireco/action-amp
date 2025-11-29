@@ -17,7 +17,7 @@ test.describe('Areas Feature', () => {
         // Click on the 'View Area Details' link for the 'Work' area
         // We find the card containing 'Work' heading, then find the link inside it
         const card = page.locator('.bg-surface', { has: page.getByRole('heading', { name: 'Work' }) });
-        await card.getByRole('link', { name: 'View Area Details' }).click();
+        await card.getByRole('link', { name: 'Details' }).click();
 
         // Verify URL
         await expect(page).toHaveURL(/\/areas\/work/);

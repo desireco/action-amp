@@ -20,12 +20,13 @@ test.describe('Create New Area', () => {
         await page.goto('/areas/new');
 
         // Check page title
-        await expect(page.locator('h1')).toContainText('Create New Area');
+        await expect(page.locator('main h1')).toContainText('Create New Area');
 
         // Check form fields exist
+        // Check form fields exist
         await expect(page.locator('input[name="name"]')).toBeVisible();
-        await expect(page.locator('input[name="icon"]').first()).toBeVisible();
-        await expect(page.locator('input[name="color"]').first()).toBeVisible();
+        await expect(page.locator('.icon-option').first()).toBeVisible();
+        await expect(page.locator('.color-option').first()).toBeVisible();
         await expect(page.locator('textarea[name="description"]')).toBeVisible();
 
         // Check submit button
@@ -40,7 +41,8 @@ test.describe('Create New Area', () => {
             'heart', 'book-open', 'dumbbell', 'users', 'palette', 'music', 'code'];
 
         for (const icon of iconOptions) {
-            await expect(page.locator(`input[name="icon"][value="${icon}"]`)).toBeVisible();
+            // Check label visibility
+            await expect(page.locator(`label:has(input[name="icon"][value="${icon}"])`)).toBeVisible();
         }
     });
 
@@ -52,25 +54,43 @@ test.describe('Create New Area', () => {
             'pink', 'yellow', 'teal', 'indigo', 'cyan'];
 
         for (const color of colorOptions) {
-            await expect(page.locator(`input[name="color"][value="${color}"]`)).toBeVisible();
+            await expect(page.locator(`label:has(input[name="color"][value="${color}"])`)).toBeVisible();
         }
     });
 
     test('should require name, icon, and color fields', async ({ page }) => {
         await page.goto('/areas/new');
 
+        // Setup dialog listener
+        let dialogMessage = '';
+        page.on('dialog', dialog => {
+            dialogMessage = dialog.message();
+            dialog.dismiss();
+        });
+
         // Try to submit without filling required fields
         await page.locator('button[type="submit"]').click();
 
-        // HTML5 validation should prevent submission
+        // HTML5 validation should prevent submission for Name
         const nameInput = page.locator('input[name="name"]');
         await expect(nameInput).toHaveAttribute('required', '');
 
-        const iconInput = page.locator('input[name="icon"]').first();
-        await expect(iconInput).toHaveAttribute('required', '');
+        // For Icon and Color, we need to fill Name first to bypass HTML5 validation and trigger JS validation
+        await nameInput.fill('Test Area');
+        await page.locator('button[type="submit"]').click();
 
-        const colorInput = page.locator('input[name="color"]').first();
-        await expect(colorInput).toHaveAttribute('required', '');
+        // Should show alert for Icon
+        // We need to wait a bit for the alert to trigger
+        await page.waitForTimeout(100);
+        expect(dialogMessage).toContain('Please select an icon');
+
+        // Select Icon
+        await page.locator('label:has(input[name="icon"])').first().click();
+        await page.locator('button[type="submit"]').click();
+
+        // Should show alert for Color
+        await page.waitForTimeout(100);
+        expect(dialogMessage).toContain('Please select a color');
     });
 
     test('should show preview when all required fields are filled', async ({ page }) => {
@@ -81,8 +101,8 @@ test.describe('Create New Area', () => {
 
         // Fill in the form
         await page.locator('input[name="name"]').fill('Test Area');
-        await page.locator('input[name="icon"][value="home"]').click();
-        await page.locator('input[name="color"][value="blue"]').click();
+        await page.locator('label:has(input[name="icon"][value="home"])').click();
+        await page.locator('label:has(input[name="color"][value="blue"])').click();
 
         // Preview should now be visible
         await expect(page.locator('#preview')).not.toHaveClass(/hidden/);
@@ -94,8 +114,8 @@ test.describe('Create New Area', () => {
 
         // Fill in required fields
         await page.locator('input[name="name"]').fill('Test Area');
-        await page.locator('input[name="icon"][value="briefcase"]').click();
-        await page.locator('input[name="color"][value="purple"]').click();
+        await page.locator('label:has(input[name="icon"][value="briefcase"])').click();
+        await page.locator('label:has(input[name="color"][value="purple"])').click();
 
         // Add description
         const description = 'This is a test area description';
@@ -111,8 +131,8 @@ test.describe('Create New Area', () => {
         // Fill in the form
         const areaName = 'Test Area ' + Date.now();
         await page.locator('input[name="name"]').fill(areaName);
-        await page.locator('input[name="icon"][value="target"]').click();
-        await page.locator('input[name="color"][value="green"]').click();
+        await page.locator('label:has(input[name="icon"][value="target"])').click();
+        await page.locator('label:has(input[name="color"][value="green"])').click();
         await page.locator('textarea[name="description"]').fill('A test area for automated testing');
 
         // Submit the form
@@ -131,8 +151,8 @@ test.describe('Create New Area', () => {
         // Fill in only required fields
         const areaName = 'Minimal Area ' + Date.now();
         await page.locator('input[name="name"]').fill(areaName);
-        await page.locator('input[name="icon"][value="lightbulb"]').click();
-        await page.locator('input[name="color"][value="yellow"]').click();
+        await page.locator('label:has(input[name="icon"][value="lightbulb"])').click();
+        await page.locator('label:has(input[name="color"][value="yellow"])').click();
 
         // Submit the form
         await page.locator('button[type="submit"]').click();

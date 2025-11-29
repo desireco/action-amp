@@ -94,6 +94,45 @@ export class DataReader {
             return null;
         }
     }
+    async getAreas(): Promise<any[]> {
+        const areasDir = fsApi.resolvePath('data/areas');
+        try {
+            const entries = await fs.readdir(areasDir, { withFileTypes: true });
+            const areaDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
+
+            const areas = await Promise.all(areaDirs.map(async (slug) => {
+                const area = await this.getArea(slug);
+                return area;
+            }));
+
+            return areas.filter(a => a !== null);
+        } catch (e) {
+            console.error('Error reading areas:', e);
+            return [];
+        }
+    }
+
+    async getAllProjects(): Promise<any[]> {
+        const areas = await this.getAreas();
+        const projects = await Promise.all(areas.map(async (area) => {
+            const areaPath = fsApi.resolvePath(path.join('data/areas', area.id));
+            try {
+                const entries = await fs.readdir(areaPath, { withFileTypes: true });
+                const projectDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
+
+                const areaProjects = await Promise.all(projectDirs.map(async (slug) => {
+                    const projectId = `${area.id}/${slug}/project.toml`;
+                    return this.getProject(projectId);
+                }));
+
+                return areaProjects.filter(p => p !== null);
+            } catch (e) {
+                return [];
+            }
+        }));
+
+        return projects.flat();
+    }
 }
 
 export const dataReader = new DataReader();

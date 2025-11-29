@@ -1,11 +1,11 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
-import { getCollection } from "astro:content";
+import { dataReader } from "../../lib/data/reader";
 import { LayoutGrid, Folder, ChevronRight, Plus } from "lucide-astro";
 import { getSettings } from "../../lib/data/settings";
 
-const areas = await getCollection("areas");
-const projects = await getCollection("projects");
+const areas = await dataReader.getAreas();
+const projects = await dataReader.getAllProjects();
 const settings = await getSettings();
 const currentContext = settings.next_action_context;
 
@@ -109,7 +109,7 @@ const sortedAreas = areas.sort((a, b) => {
                                             class="flex items-center justify-between p-2 rounded-lg hover:bg-surface-hover group transition-colors"
                                         >
                                             <div class="flex items-center gap-2 min-w-0">
-                                                <div class="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                                                <div class="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                                                 <span class="text-sm text-text-main truncate">
                                                     {project.data.name}
                                                 </span>
