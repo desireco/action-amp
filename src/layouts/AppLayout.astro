@@ -110,8 +110,8 @@ const isActive = (path: string) => {
                 <div class="relative">
                     <Input
                         type="text"
-                        id="quick-capture"
-                        placeholder="Quick Capture..."
+                        id="nav-search"
+                        placeholder="Search..."
                         class="bg-surface-hover"
                     />
                     <div
@@ -252,39 +252,15 @@ const isActive = (path: string) => {
     </div>
     <script>
         const input = document.getElementById(
-            "quick-capture",
+            "nav-search",
         ) as HTMLInputElement;
 
-        input?.addEventListener("keydown", async (e) => {
+        input?.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
-                const title = input.value.trim();
-                if (!title) return;
-
-                try {
-                    input.disabled = true;
-                    const res = await fetch("/api/inbox", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ title }),
-                    });
-
-                    if (res.ok) {
-                        input.value = "";
-                        // If we are on the inbox page, reload to show the new item
-                        if (window.location.pathname === "/inbox") {
-                            window.location.reload();
-                        }
-                    } else {
-                        console.error("Failed to capture");
-                        alert("Failed to capture item");
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert("Error capturing item");
-                } finally {
-                    input.disabled = false;
-                    input.focus();
-                }
+                const q = input.value.trim();
+                if (!q) return;
+                const params = new URLSearchParams({ q });
+                window.location.href = `/search?${params.toString()}`;
             }
         });
     </script>

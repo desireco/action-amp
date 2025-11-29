@@ -382,5 +382,13 @@ const title = "Search";
                 searchInput.focus();
             }
         });
+
+        // Initialize from URL query
+        const params = new URLSearchParams(window.location.search);
+        const initialQ = params.get("q") || "";
+        if (initialQ) {
+            searchInput.value = initialQ;
+            performSearch();
+        }
     </script>
 </AppLayout>
