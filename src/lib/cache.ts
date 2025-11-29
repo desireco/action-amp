@@ -10,7 +10,7 @@ type CacheEntry<T> = {
 export function getCached<T>(
   key: string,
   fetcher: () => Promise<T>,
-  opts: { ttlMs: number }
+  opts: { ttlMs: number; staleWhileRevalidate?: boolean }
 ): Promise<T> {
   const now = Date.now();
   let entry: CacheEntry<T> = globalStore.store.get(key);
@@ -24,12 +24,14 @@ export function getCached<T>(
   }
 
   if (entry.inFlight) {
+    if (entry.value !== undefined && (opts.staleWhileRevalidate ?? true)) {
+      return Promise.resolve(entry.value as T);
+    }
     return entry.inFlight;
   }
 
   const p = fetcher().then((val) => {
     if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
       console.log(`[cache miss] ${key}`);
     }
     entry.value = val;
@@ -42,6 +44,9 @@ export function getCached<T>(
   });
 
   entry.inFlight = p;
+  if (entry.value !== undefined && (opts.staleWhileRevalidate ?? true)) {
+    return Promise.resolve(entry.value as T);
+  }
   return p;
 }
 

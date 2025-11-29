@@ -18,15 +18,15 @@ test.describe('Navigation', () => {
         ];
 
         for (const item of navItems) {
-            await expect(page.locator(`a[href="${item.href}"]`)).toBeVisible();
-            await expect(page.locator(`a[href="${item.href}"]`)).toContainText(item.name);
+            await expect(page.locator(`aside a[href="${item.href}"]`)).toBeVisible();
+            await expect(page.locator(`aside a[href="${item.href}"]`)).toContainText(item.name);
         }
     });
 
     test('Capture menu item should navigate to Capture page', async ({ page }) => {
         await page.goto('/inbox');
         await expect(page.locator('aside')).toBeVisible();
-        await page.locator('a[href="/capture"]').click();
+        await page.locator('aside a[href="/capture"]').click();
         await expect(page).toHaveURL(/\/capture/);
     });
 });

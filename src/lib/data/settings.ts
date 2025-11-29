@@ -40,8 +40,8 @@ export async function getSettings(): Promise<AppSettings> {
     return settings;
 }
 
-export function getCachedSettings(ttlMs: number = 5000): Promise<AppSettings> {
-    return getCached<AppSettings>('settings', getSettings, { ttlMs });
+export function getCachedSettings(ttlMs: number = 15000): Promise<AppSettings> {
+    return getCached<AppSettings>('settings', getSettings, { ttlMs, staleWhileRevalidate: true });
 }
 
 export async function updateSettings(updates: Partial<AppSettings>): Promise<void> {

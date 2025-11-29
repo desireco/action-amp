@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { TestCleaner } from './test-utils';
 
 test.describe('Inbox Feature', () => {
+    test.use({ viewport: { width: 1920, height: 1080 } });
     const cleaner = new TestCleaner();
 
     test.afterEach(async () => {
@@ -18,8 +19,9 @@ test.describe('Inbox Feature', () => {
         // We know 'Call dentist for appointment' exists in the sample data
         await expect(page.getByText('Call dentist for appointment')).toBeVisible();
 
-        // Expect Search link in sidebar
+        // Expect Search link and input in sidebar
         await expect(page.locator('a[href="/search"]')).toBeVisible();
+        await expect(page.locator('#nav-search')).toBeVisible();
     });
 
     test('should navigate to item detail', async ({ page, request }) => {
