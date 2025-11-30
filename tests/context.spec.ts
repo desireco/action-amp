@@ -97,4 +97,60 @@ test.describe('Context Switching and Project Navigation', () => {
             console.log('No projects found in this context, skipping project navigation test');
         }
     });
+
+    test('clicking Current Context navigates to Areas page', async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+
+        // Ensure a context is set so the sidebar shows Current Context
+        await page.goto('/areas');
+        const setContextBtn = page.locator('button[data-set-context]').first();
+        if (await setContextBtn.isVisible()) {
+            await setContextBtn.click();
+            await page.waitForLoadState('networkidle');
+        }
+
+        // The Current Context block should now be present and clickable
+        const currentContextBlock = page.getByText('Current Context').first();
+        await expect(currentContextBlock).toBeVisible();
+
+        // Click within the block (wrapped in a link) and verify navigation
+        await currentContextBlock.click();
+        await expect(page).toHaveURL(/\/areas$/);
+        await expect(page.getByRole('heading', { name: 'Areas of Focus' })).toBeVisible();
+    });
+
+    test('Set Context button should update settings and show Focus', async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+        await page.goto('/areas');
+
+        // Pick the first available Set Context button
+        const btn = page.locator('button[data-set-context]').first();
+        await expect(btn).toBeVisible();
+        const targetSlug = await btn.getAttribute('data-set-context');
+
+        // Observe the API call to /api/settings
+        const responsePromise = page.waitForResponse(r => r.url().includes('/api/settings') && r.request().method() === 'POST');
+
+        // Click button
+        await btn.click();
+
+        // Ensure API succeeded
+        const res = await responsePromise;
+        expect(res.ok()).toBeTruthy();
+
+        // Wait for reload to apply context
+        await page.waitForLoadState('networkidle');
+
+        // The button for the same slug should no longer be visible (context is set)
+        if (targetSlug) {
+            await expect(page.locator(`button[data-set-context="${targetSlug}"]`)).toHaveCount(0);
+        }
+
+        // Verify Focus badge appears somewhere
+        await expect(page.locator('span', { hasText: 'Focus' })).toBeVisible();
+
+        // Verify sidebar shows Current Context
+        const sidebar = page.locator('aside');
+        await expect(sidebar.locator('text=Current Context')).toBeVisible();
+    });
 });
