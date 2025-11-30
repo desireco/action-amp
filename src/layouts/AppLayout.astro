@@ -10,9 +10,10 @@ import Input from "../components/ui/Input.astro";
 interface Props {
     title: string;
     currentPath?: string;
+    hideSidebar?: boolean;
 }
 
-const { title, currentPath = Astro.url.pathname } = Astro.props;
+const { title, currentPath = Astro.url.pathname, hideSidebar = false } = Astro.props;
 
 // Fetch Context and Projects from locals (set by global middleware)
 const settings = (Astro.locals as any).settings;
@@ -64,6 +65,7 @@ const isSubActive = (href: string) => {
         </header>
 
         <!-- Sidebar -->
+        { !hideSidebar && (
         <aside
             class="w-64 border-r border-border bg-surface hidden md:flex flex-col"
         >
@@ -176,6 +178,7 @@ const isSubActive = (href: string) => {
                 </a>
             </div>
         </aside>
+        ) }
 
         <!-- Main Content -->
         <main class="flex-1 overflow-y-auto bg-background relative">
@@ -187,6 +190,7 @@ const isSubActive = (href: string) => {
         <!-- Mobile Bottom Nav -->
         <nav
             class="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-border flex justify-around p-2 z-50 pb-6"
+            aria-hidden="true"
         >
             {
                 navItems
@@ -196,7 +200,7 @@ const isSubActive = (href: string) => {
                         const active = isActive(item.href);
                         return (
                                 <a
-                                    href={item.href}
+                                    href={`${item.href}?from=mobile`}
                                     aria-current={active ? 'page' : undefined}
                                     class:list={[
                                         "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 w-full",
@@ -207,7 +211,7 @@ const isSubActive = (href: string) => {
                             >
                                 <item.icon class="h-5 w-5 mb-1" />
                                 <span class="text-[10px] font-medium">
-                                    {item.name}
+                                    {item.name === 'Inbox' ? 'Inbx' : item.name === 'Projects' ? 'Proj' : item.name === 'Actions' ? 'Acts' : item.name === 'Areas' ? 'Areas' : item.name === 'Reviews' ? 'Rev' : item.name}
                                 </span>
                             </a>
                         );

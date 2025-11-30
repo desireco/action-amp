@@ -1,5 +1,9 @@
 import type { APIRoute } from 'astro';
 import { getCachedCollection } from '../../lib/content-cache';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import matter from 'gray-matter';
+import { parse as parseToml } from '@iarna/toml';
 
 export const GET: APIRoute = async ({ url }) => {
     const query = url.searchParams.get('q')?.toLowerCase() || '';
@@ -13,7 +17,9 @@ export const GET: APIRoute = async ({ url }) => {
         // Search Inbox
         if (!collectionFilter || collectionFilter === 'inbox') {
             const inboxItems = await getCachedCollection('inbox');
-            for (const item of inboxItems) {
+            const dynamicInbox = await readDynamicInbox();
+            const combinedInbox = dedupeById([...inboxItems, ...dynamicInbox]);
+            for (const item of combinedInbox) {
                 if (matchesFilters(item.data, query, statusFilter, priorityFilter, 'inbox')) {
                     results.push({
                         collection: 'inbox',
@@ -55,7 +61,9 @@ export const GET: APIRoute = async ({ url }) => {
         // Search Projects
         if (!collectionFilter || collectionFilter === 'projects') {
             const projects = await getCachedCollection('projects');
-            for (const project of projects) {
+            const dynamicProjects = await readDynamicProjects();
+            const combinedProjects = dedupeById([...projects, ...dynamicProjects]);
+            for (const project of combinedProjects) {
                 if (matchesFilters(project.data, query, statusFilter, priorityFilter, 'projects')) {
                     // Extract area and project name from ID
                     // Format: area/project/project.toml
@@ -191,4 +199,75 @@ function matchesFilters(
     }
 
     return true;
+}
+
+function dedupeById(items: any[]) {
+    const seen = new Set<string>();
+    const out: any[] = [];
+    for (const it of items) {
+        const id = String(it.id);
+        if (seen.has(id)) continue;
+        seen.add(id);
+        out.push(it);
+    }
+    return out;
+}
+
+async function readDynamicInbox() {
+    try {
+        const dir = path.join(process.cwd(), 'data/inbox');
+        const files = await fs.readdir(dir);
+        const mdFiles = files.filter((f) => f.endsWith('.md'));
+        const items = await Promise.all(mdFiles.map(async (file) => {
+            const content = await fs.readFile(path.join(dir, file), 'utf-8');
+            const parsed = matter(content);
+            return {
+                id: file,
+                collection: 'inbox',
+                data: {
+                    title: parsed.data.title || (parsed.content.split('\n')[0] || '').trim(),
+                    captured: parsed.data.captured ? new Date(parsed.data.captured) : new Date(),
+                    type: parsed.data.type || undefined,
+                },
+            };
+        }));
+        return items;
+    } catch {
+        return [];
+    }
+}
+
+async function readDynamicProjects() {
+    try {
+        const areasDir = path.join(process.cwd(), 'data/areas');
+        const areaSlugs = await fs.readdir(areasDir);
+        const projects: any[] = [];
+        for (const area of areaSlugs) {
+            const areaPath = path.join(areasDir, area);
+            const stat = await fs.stat(areaPath).catch(() => null);
+            if (!stat || !stat.isDirectory()) continue;
+            const projectDirs = await fs.readdir(areaPath).catch(() => []);
+            for (const proj of projectDirs) {
+                const projPath = path.join(areaPath, proj, 'project.toml');
+                const exists = await fs.access(projPath).then(() => true).catch(() => false);
+                if (!exists) continue;
+                const content = await fs.readFile(projPath, 'utf-8');
+                const data = parseToml(content) as any;
+                projects.push({
+                    id: `${area}/${proj}/project.toml`,
+                    collection: 'projects',
+                    data: {
+                        name: data.name || proj,
+                        description: data.description || '',
+                        status: data.status || 'active',
+                        priority: data.priority || 'medium',
+                        area: data.area || area,
+                    },
+                });
+            }
+        }
+        return projects;
+    } catch {
+        return [];
+    }
 }

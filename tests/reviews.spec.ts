@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { TestCleaner } from './test-utils';
 import path from 'node:path';
 
-test.describe('Reviews', () => {
+test.describe.serial('Reviews', () => {
     const cleaner = new TestCleaner();
 
     test.afterEach(async () => {

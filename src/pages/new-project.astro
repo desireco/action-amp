@@ -7,6 +7,7 @@ import Input from "../components/ui/Input.astro";
 
 const settings = (Astro.locals as any).settings;
 const areas = settings.areas || [];
+const selectedArea = Astro.url.searchParams.get("area") || "";
 ---
 
 <AppLayout title="New Project | Action Amp">
@@ -17,13 +18,13 @@ const areas = settings.areas || [];
             <form id="create-project-form" class="space-y-6">
                 <div>
                     <label
-                        for="name"
+                        for="project-name"
                         class="block text-sm font-medium text-text-main mb-1"
                         >Project Name</label
                     >
                     <Input
                         type="text"
-                        id="name"
+                        id="project-name"
                         name="name"
                         required
                         placeholder="e.g., Q4 Marketing Campaign"
@@ -48,7 +49,7 @@ const areas = settings.areas || [];
                         {
                             areas.length > 0
                                 ? areas.map((area: any) => (
-                                      <option value={area.slug}>
+                                      <option value={area.slug} selected={area.slug === selectedArea}>
                                           {area.name}
                                       </option>
                                   ))
@@ -59,12 +60,12 @@ const areas = settings.areas || [];
 
                 <div>
                     <label
-                        for="description"
+                        for="project-description"
                         class="block text-sm font-medium text-text-main mb-1"
                         >Description</label
                     >
                     <textarea
-                        id="description"
+                        id="project-description"
                         name="description"
                         rows="4"
                         class="w-full bg-background border border-border rounded-lg px-4 py-3 text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"

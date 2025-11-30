@@ -1,11 +1,55 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
 import { getCachedCollection } from "../../lib/content-cache";
+import fs from "node:fs/promises";
+import path from "node:path";
+import matter from "gray-matter";
 import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 
-const reviews = await getCachedCollection("reviews");
-// Sort by date desc
+const fromCollection = await getCachedCollection("reviews");
+
+async function readDynamicReviews() {
+    try {
+        const base = path.join(process.cwd(), "data/reviews");
+        const types = ["daily", "weekly", "monthly", "quarterly"];
+        const items: any[] = [];
+        for (const t of types) {
+            const dir = path.join(base, t);
+            const exists = await fs.stat(dir).then((s) => s.isDirectory()).catch(() => false);
+            if (!exists) continue;
+            const files = await fs.readdir(dir);
+            for (const f of files.filter((f) => f.endsWith(".md"))) {
+                const raw = await fs.readFile(path.join(dir, f), "utf-8");
+                const parsed = matter(raw);
+                items.push({
+                    id: `${t}/${f.replace(/\.md$/, "")}`,
+                    collection: "reviews",
+                    data: {
+                        type: parsed.data.type || t,
+                        date: parsed.data.date ? new Date(parsed.data.date) : new Date(),
+                    },
+                });
+            }
+        }
+        return items;
+    } catch {
+        return [];
+    }
+}
+
+function dedupe(items: any[]) {
+    const seen = new Set<string>();
+    return items.filter((it) => {
+        const id = String(it.id);
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+    });
+}
+
+const dynamic = await readDynamicReviews();
+const reviews = dedupe([...fromCollection, ...dynamic]);
 reviews.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
 const today = new Date().toISOString().split("T")[0];
@@ -95,8 +139,8 @@ const today = new Date().toISOString().split("T")[0];
                                 >
                                     <div class="px-4 py-4 sm:px-6">
                                         <div class="flex items-center justify-between">
-                                            <p class="text-sm font-medium text-primary truncate capitalize">
-                                                {review.data.type} Review
+                                            <p class="text-sm font-medium text-primary truncate">
+                                                {review.data.type.charAt(0).toUpperCase() + review.data.type.slice(1)} Review
                                             </p>
                                             <div class="ml-2 flex shrink-0">
                                                 <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-surface-hover text-text-muted border border-border">

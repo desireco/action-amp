@@ -16,7 +16,7 @@ import Calendar from "~icons/lucide/calendar";
 const title = "Search";
 ---
 
-<AppLayout title={title} currentPath="/search">
+<AppLayout title={title} currentPath="/search" hideSidebar={true}>
     <div class="space-y-6">
         <Heading level={1}>Search</Heading>
 
@@ -67,9 +67,9 @@ const title = "Search";
                             class="w-full px-3 py-2 bg-surface-hover border border-border rounded-lg text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50"
                         >
                             <option value="">All</option>
-                            <option value="inbox">Inbox</option>
+                            <option value="inbox">Inbox Items</option>
                             <option value="actions">Actions</option>
-                            <option value="projects">Projects</option>
+                            <option value="projects">Project Items</option>
                             <option value="areas">Areas</option>
                             <option value="reviews">Reviews</option>
                         </select>

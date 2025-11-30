@@ -42,9 +42,10 @@ test.describe('Search', () => {
         // Wait for results
         await page.waitForSelector('#results-list', { state: 'visible' });
 
-        // Verify the item appears in results
+        // Verify the item appears in results and has the correct collection badge
         await expect(page.getByText(testTitle)).toBeVisible();
-        await expect(page.getByText('inbox', { exact: false })).toBeVisible();
+        const resultCard = page.locator(`a:has-text("${testTitle}")`).first();
+        await expect(resultCard.locator('.text-xs.font-medium.px-2').first()).toContainText(/inbox/i);
     });
 
     test('should search across projects', async ({ page }) => {

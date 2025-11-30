@@ -99,7 +99,7 @@ const sortedProjects = areaProjects.sort((a, b) => {
                         {sortedProjects.length}
                     </span>
                 </Heading>
-                <Button href="/new-project" size="sm"> + New Project </Button>
+                <Button href={`/new-project?area=${id}`} size="sm"> + New Project </Button>
             </div>
 
             {
