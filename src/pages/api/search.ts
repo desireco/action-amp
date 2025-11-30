@@ -24,7 +24,7 @@ export const GET: APIRoute = async ({ url }) => {
                     results.push({
                         collection: 'inbox',
                         title: item.data.title,
-                        description: '',
+                        description: item.data.description || '',
                         url: `/inbox/${item.id.replace(/\.md$/, '')}`,
                         status: null,
                         priority: null,
@@ -228,6 +228,7 @@ async function readDynamicInbox() {
                     title: parsed.data.title || (parsed.content.split('\n')[0] || '').trim(),
                     captured: parsed.data.captured ? new Date(parsed.data.captured) : new Date(),
                     type: parsed.data.type || undefined,
+                    description: parsed.content,
                 },
             };
         }));
