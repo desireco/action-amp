@@ -19,10 +19,24 @@ const settings = (Astro.locals as any).settings;
 const { currentContext, currentContextName, contextProjects } = getContextData(settings);
 const navItems = buildNavItems(contextProjects);
 
+const pathParts = currentPath.split("/");
+const activeCache = new Map<string, boolean>();
 const isActive = (path: string) => {
-    if (path === "/" && currentPath === "/") return true;
-    if (path !== "/" && currentPath.startsWith(path)) return true;
-    return false;
+    const c = activeCache.get(path);
+    if (c !== undefined) return c;
+    let v = false;
+    if (path === "/" && currentPath === "/") v = true;
+    else if (path !== "/" && currentPath.startsWith(path)) v = true;
+    activeCache.set(path, v);
+    return v;
+};
+const isSubActive = (href: string) => {
+    const key = `sub:${href}`;
+    const c = activeCache.get(key);
+    if (c !== undefined) return c;
+    const v = currentPath === href || currentPath.startsWith(href + "/");
+    activeCache.set(key, v);
+    return v;
 };
 ---
 
@@ -115,11 +129,7 @@ const isActive = (path: string) => {
                                 {active && hasSubitems && (
                                     <div class="ml-9 mt-1 space-y-1 border-l border-border pl-2">
                                         {item.subitems.map((sub) => {
-                                            const subActive =
-                                                currentPath === sub.href ||
-                                                currentPath.startsWith(
-                                                    sub.href + "/",
-                                                );
+                                            const subActive = isSubActive(sub.href);
                                             return (
                                                 <a
                                                     href={sub.href}
@@ -205,18 +215,4 @@ const isActive = (path: string) => {
             }
         </nav>
     </div>
-    <script>
-        const input = document.getElementById(
-            "nav-search",
-        ) as HTMLInputElement;
-
-        input?.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                const q = input.value.trim();
-                if (!q) return;
-                const params = new URLSearchParams({ q });
-                window.location.href = `/search?${params.toString()}`;
-            }
-        });
-    </script>
 </Layout>
