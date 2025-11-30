@@ -3,6 +3,7 @@ import toml from '@iarna/toml';
 import { fsApi } from './api';
 import { invalidate, invalidateByPrefix } from '../cache';
 import type { InboxItem, ActionItem } from './types';
+import { syncAreasProjects } from './settings';
 
 export class DataWriter {
     private generateId(title: string): string {
@@ -145,6 +146,7 @@ export class DataWriter {
         await fsApi.writeFile(areaPath, tomlContent);
         invalidate('areas:list');
         invalidateByPrefix('collection:areas');
+        await syncAreasProjects();
         
         return { path: areaPath, slug };
     }
@@ -171,6 +173,7 @@ export class DataWriter {
         await fsApi.writeFile(areaPath, tomlContent);
         invalidate('areas:list');
         invalidateByPrefix('collection:areas');
+        await syncAreasProjects();
     }
 
     async createProject(name: string, area: string, description?: string): Promise<{ path: string, slug: string }> {
@@ -193,6 +196,7 @@ export class DataWriter {
         await fsApi.writeFile(projectPath, tomlContent);
         invalidate('projects:list');
         invalidateByPrefix('collection:projects');
+        await syncAreasProjects();
         
         return { path: projectPath, slug };
     }
@@ -224,6 +228,7 @@ export class DataWriter {
         await fsApi.writeFile(projectPath, tomlContent);
         invalidate('projects:list');
         invalidateByPrefix('collection:projects');
+        await syncAreasProjects();
     }
 }
 

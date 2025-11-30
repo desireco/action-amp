@@ -1,21 +1,10 @@
 ---
 import Layout from "./Layout.astro";
-import {
-    Inbox,
-    FolderKanban,
-    LayoutGrid,
-    CalendarCheck,
-    Settings,
-    Zap,
-    Plus,
-    ListChecks,
-    Target,
-    Layers,
-    ChevronRight,
-    Search,
-} from "lucide-astro";
-import { getCachedSettings } from "../lib/data/settings";
-import { getCachedCollection } from "../lib/content-cache";
+import Settings from "~icons/lucide/settings";
+import Zap from "~icons/lucide/zap";
+import Layers from "~icons/lucide/layers";
+import { getContextData } from "../lib/context";
+import { buildNavItems } from "../lib/navigation";
 import Input from "../components/ui/Input.astro";
 
 interface Props {
@@ -25,41 +14,10 @@ interface Props {
 
 const { title, currentPath = Astro.url.pathname } = Astro.props;
 
-// Fetch Context and Projects
-const settings = await getCachedSettings();
-const currentContext = settings.next_action_context;
-
-let contextProjects: any[] = [];
-if (currentContext) {
-    const allProjects = await getCachedCollection("projects");
-    contextProjects = allProjects
-        .filter(
-            (p) => p.data.area === currentContext && p.data.status === "active",
-        )
-        .sort((a, b) => a.data.name.localeCompare(b.data.name));
-}
-
-const navItems = [
-    { name: "Capture", href: "/capture", icon: Plus },
-    { name: "Next Action", href: "/next", icon: Target },
-    { name: "Inbox", href: "/inbox", icon: Inbox },
-    { name: "Triage", href: "/triage", icon: ListChecks },
-    { name: "Search", href: "/search", icon: Search },
-    {
-        name: "Projects",
-        href: "/projects",
-        icon: FolderKanban,
-        subitems: contextProjects.map((p) => {
-            const cleanId = p.id.replace(/\/project\.toml$/, "");
-            return {
-                name: p.data.name,
-                href: `/projects/${cleanId}`,
-            };
-        }),
-    },
-    { name: "Areas", href: "/areas", icon: LayoutGrid },
-    { name: "Reviews", href: "/reviews", icon: CalendarCheck },
-];
+// Fetch Context and Projects from locals (set by global middleware)
+const settings = (Astro.locals as any).settings;
+const { currentContext, currentContextName, contextProjects } = getContextData(settings);
+const navItems = buildNavItems(contextProjects);
 
 const isActive = (path: string) => {
     if (path === "/" && currentPath === "/") return true;
@@ -107,19 +65,16 @@ const isActive = (path: string) => {
             </div>
 
             <div class="px-4 mb-2">
-                <div class="relative">
+                <form class="relative" action="/search" method="GET">
                     <Input
                         type="text"
                         id="nav-search"
+                        name="q"
                         placeholder="Search..."
                         class="bg-surface-hover"
                     />
-                    <div
-                        class="absolute right-3 top-2.5 text-xs text-text-muted pointer-events-none opacity-50"
-                    >
-                        ⏎
-                    </div>
-                </div>
+                    <div class="absolute right-3 top-2.5 text-xs text-text-muted pointer-events-none opacity-50">⏎</div>
+                </form>
             </div>
 
             <nav class="flex-1 px-4 space-y-1 mt-2 overflow-y-auto">
@@ -133,7 +88,8 @@ const isActive = (path: string) => {
                             <div>
                                 <a
                                     href={item.href}
-                                    rel="prefetch"
+                                    rel={active ? undefined : "prefetch"}
+                                    aria-current={active ? 'page' : undefined}
                                     class:list={[
                                         "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
                                         active
@@ -168,14 +124,15 @@ const isActive = (path: string) => {
                                             return (
                                                 <a
                                                     href={sub.href}
-                                                    rel="prefetch"
+                                                    rel={subActive ? undefined : "prefetch"}
+                                                    aria-current={subActive ? 'page' : undefined}
                                                     class:list={[
                                                         "block px-3 py-1.5 text-sm rounded-md transition-colors truncate",
                                                         subActive
                                                             ? "text-primary bg-primary/5 font-medium"
                                                             : "text-text-muted hover:text-text-main hover:bg-surface-hover",
                                                     ]}
-                                                >
+                                                    >
                                                     {sub.name}
                                                 </a>
                                             );
@@ -191,15 +148,15 @@ const isActive = (path: string) => {
             <div class="p-4 border-t border-border">
                 {
                     currentContext && (
-                        <div class="mb-4 px-3 py-2 bg-primary/5 rounded-lg border border-primary/10">
-                            <div class="text-xs text-primary font-semibold uppercase tracking-wider mb-1">
-                                Current Context
+                            <div class="mb-4 px-3 py-2 bg-primary/5 rounded-lg border border-primary/10">
+                                <div class="text-xs text-primary font-semibold uppercase tracking-wider mb-1">
+                                    Current Context
+                                </div>
+                                <div class="flex items-center text-sm font-medium text-text-main">
+                                    <Layers class="w-4 h-4 mr-2 text-primary" />
+                                    <span>{currentContextName}</span>
+                                </div>
                             </div>
-                            <div class="flex items-center text-sm font-medium text-text-main">
-                                <Layers class="w-4 h-4 mr-2 text-primary" />
-                                <span class="capitalize">{currentContext}</span>
-                            </div>
-                        </div>
                     )
                 }
                 <a
@@ -230,15 +187,16 @@ const isActive = (path: string) => {
                     .map((item) => {
                         const active = isActive(item.href);
                         return (
-                            <a
-                                href={item.href}
-                                rel="prefetch"
-                                class:list={[
-                                    "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 w-full",
-                                    active
-                                        ? "text-primary"
-                                        : "text-text-muted hover:text-text-main",
-                                ]}
+                                <a
+                                    href={item.href}
+                                    rel={active ? undefined : "prefetch"}
+                                    aria-current={active ? 'page' : undefined}
+                                    class:list={[
+                                        "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 w-full",
+                                        active
+                                            ? "text-primary"
+                                            : "text-text-muted hover:text-text-main",
+                                    ]}
                             >
                                 <item.icon class="h-5 w-5 mb-1" />
                                 <span class="text-[10px] font-medium">

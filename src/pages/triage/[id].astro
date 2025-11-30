@@ -1,19 +1,17 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
 import { getCollection } from "astro:content";
-import {
-    ArrowRight,
-    Trash2,
-    FolderInput,
-    Save,
-    SkipForward,
-    CheckSquare,
-    FileText,
-    Link,
-    Lightbulb,
-    BookOpen,
-    Inbox as InboxIcon,
-} from "lucide-astro";
+import ArrowRight from "~icons/lucide/arrow-right";
+import Trash2 from "~icons/lucide/trash-2";
+import FolderInput from "~icons/lucide/folder-input";
+import Save from "~icons/lucide/save";
+import SkipForward from "~icons/lucide/skip-forward";
+import CheckSquare from "~icons/lucide/check-square";
+import FileText from "~icons/lucide/file-text";
+import Link from "~icons/lucide/link";
+import Lightbulb from "~icons/lucide/lightbulb";
+import BookOpen from "~icons/lucide/book-open";
+import InboxIcon from "~icons/lucide/inbox";
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";

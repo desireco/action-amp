@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
+import Icons from 'unplugin-icons/vite';
 
 import mdx from '@astrojs/mdx';
 import node from '@astrojs/node';
@@ -11,7 +12,13 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   output: 'server',
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [
+      tailwindcss(),
+      Icons({
+        compiler: 'astro',
+        autoInstall: false
+      })
+    ]
   },
 
   integrations: [mdx(), sitemap()],

@@ -1,28 +1,27 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
 import { dataReader } from "../../lib/data/reader";
-import { LayoutGrid, Folder, ChevronRight, Plus } from "lucide-astro";
-import { getCachedSettings } from "../../lib/data/settings";
+import LayoutGrid from "~icons/lucide/layout-grid";
+import Folder from "~icons/lucide/folder";
+import ChevronRight from "~icons/lucide/chevron-right";
+import Plus from "~icons/lucide/plus";
 import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 import Button from "../../components/ui/Button.astro";
 
 const areas = await dataReader.getAreas();
-const projects = await dataReader.getAllProjects();
-const settings = await getCachedSettings();
+const settings = (Astro.locals as any).settings;
 const currentContext = settings.next_action_context;
 
-// Group projects by area
-const projectsByArea = projects.reduce(
-    (acc, project) => {
-        const areaName = project.data.area;
-        if (!acc[areaName]) {
-            acc[areaName] = [];
-        }
+// Group projects by area from settings (active projects only)
+const projectsByArea = (settings.projects || []).reduce(
+    (acc: Record<string, any[]>, project: any) => {
+        const areaName = project.area;
+        if (!acc[areaName]) acc[areaName] = [];
         acc[areaName].push(project);
         return acc;
     },
-    {} as Record<string, typeof projects>,
+    {} as Record<string, any[]>,
 );
 
 const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -106,13 +105,13 @@ const sortedAreas = areas.sort((a, b) => {
                                 {areaProjects.length > 0 ? (
                                     areaProjects.map((project: any) => (
                                         <a
-                                            href={`/projects/${project.id}`}
+                                            href={project.permalink}
                                             class="flex items-center justify-between p-2 rounded-lg hover:bg-surface-hover group transition-colors"
                                         >
                                             <div class="flex items-center gap-2 min-w-0">
                                                 <div class="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                                                 <span class="text-sm text-text-main truncate">
-                                                    {project.data.name}
+                                                    {project.name}
                                                 </span>
                                             </div>
                                             <ChevronRight class="h-4 w-4 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />

@@ -19,13 +19,14 @@
     "@tailwindcss/vite": "^4.1.17",
     "astro": "^5.16.2",
     "gray-matter": "^4.0.3",
-    "lucide-astro": "^0.555.0",
     "marked": "^17.0.1",
     "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
+    "@iconify-json/lucide": "^1.2.77",
     "@playwright/test": "^1.57.0",
     "@types/node": "^24.10.1",
+    "unplugin-icons": "^22.5.0",
     "vitest": "^4.0.14"
   }
 }

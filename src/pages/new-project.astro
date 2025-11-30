@@ -1,12 +1,12 @@
 ---
 import AppLayout from "../layouts/AppLayout.astro";
-import { getCollection } from "astro:content";
 import Heading from "../components/ui/Heading.astro";
 import Card from "../components/ui/Card.astro";
 import Button from "../components/ui/Button.astro";
 import Input from "../components/ui/Input.astro";
 
-const areas = await getCollection("areas");
+const settings = (Astro.locals as any).settings;
+const areas = settings.areas || [];
 ---
 
 <AppLayout title="New Project | Action Amp">
@@ -46,14 +46,13 @@ const areas = await getCollection("areas");
                             >Select an Area</option
                         >
                         {
-                            areas.map((area) => {
-                                const areaSlug = area.id.split("/")[0];
-                                return (
-                                    <option value={areaSlug}>
-                                        {area.data.name}
-                                    </option>
-                                );
-                            })
+                            areas.length > 0
+                                ? areas.map((area: any) => (
+                                      <option value={area.slug}>
+                                          {area.name}
+                                      </option>
+                                  ))
+                                : null
                         }
                     </select>
                 </div>
