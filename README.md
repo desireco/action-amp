@@ -53,8 +53,12 @@ When working on this project, follow these rules:
 4. **Task Process**:
    - Pick highest priority ready task from `bd ready`
    - Mark as `in_progress` when starting: `bd update <task-id> --status in_progress`
-   - Update status appropriately when done
+   - Complete the task implementation
+   - **CRITICAL**: Run the full test suite (`npm test` and `npm run test:e2e` when available)
+   - Verify all tests pass before proceeding
+   - Commit changes if tests pass
    - Close task when complete: `bd close <task-id>`
+   - **IMPORTANT**: Tasks cannot be marked complete until ALL tests are passing
 5. **Separate Commits**: Keep different types of changes in separate commits
 
 ### Testing
