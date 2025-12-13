@@ -15,6 +15,12 @@ export default defineConfig({
   testDir: './tests',
   /* Run tests in files in parallel */
   fullyParallel: true,
+  /* Test timeout */
+  timeout: process.env.CI ? 60000 : 30000,
+  /* Expect timeout */
+  expect: {
+    timeout: 5000,
+  },
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
@@ -22,14 +28,23 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'list',
+  reporter: process.env.CI ? [['dot'], ['json', { outputFile: 'test-results/results.json' }]] : 'list',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://127.0.0.1:4322',
+    baseURL: process.env.CI ? 'http://127.0.0.1:4322' : 'http://localhost:4000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: process.env.CI ? 'retain-on-failure' : 'on-first-retry',
+
+    /* Run tests in headless mode on CI */
+    headed: !process.env.CI,
+
+    /* Set timeout for actions */
+    actionTimeout: 10000,
+
+    /* Set timeout for navigation */
+    navigationTimeout: 30000,
   },
 
   /* Configure projects for major browsers */
@@ -61,10 +76,15 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run preview -- --port 4322 --host 127.0.0.1',
+  webServer: process.env.CI ? {
+    command: 'npm run build && npm run preview -- --port 4322 --host 127.0.0.1',
     url: 'http://127.0.0.1:4322',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
+    timeout: 120000,
+  } : {
+    command: 'npm run dev',
+    url: 'http://localhost:4000',
+    reuseExistingServer: true,
+    timeout: 30000,
   },
 });
