@@ -1,0 +1,44 @@
+---
+import Toast from './Toast.astro';
+import { subscribe, type Toast as ToastType } from '../lib/toast.ts';
+
+let toasts: ToastType[] = [];
+
+// Subscribe to toast updates
+subscribe((updatedToasts) => {
+  toasts = updatedToasts;
+});
+---
+
+<div id="toast-container" class="fixed top-0 right-0 z-50 p-4 space-y-2 pointer-events-none">
+  {toasts.map((toast) => (
+    <div class="pointer-events-auto" id={`toast-wrapper-${toast.id}`}>
+      <Toast toast={toast} />
+    </div>
+  ))}
+</div>
+
+<script>
+  // Remove toast elements when they're removed from the array
+  const observer = new MutationObserver(() => {
+    const container = document.getElementById('toast-container');
+    if (container) {
+      const wrapperIds = Array.from(container.children).map(child => child.id);
+
+      wrapperIds.forEach(id => {
+        const toastId = id.replace('toast-wrapper-', '');
+        if (!window.__toasts || !window.__toasts.has(toastId)) {
+          const element = document.getElementById(id);
+          if (element) {
+            element.style.transform = 'translateX(100%)';
+            element.style.opacity = '0';
+            setTimeout(() => element.remove(), 300);
+          }
+        }
+      });
+    }
+  });
+
+  // Store toast IDs globally for cleanup
+  window.__toasts = new Set();
+</script>
