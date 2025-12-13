@@ -32,3 +32,9 @@ pnpm-debug.log*
 
 # User data
 /data/
+
+# Beads runtime files (keep metadata.json and issues.jsonl)
+.beads/.local_version
+.beads/beads.db*
+.beads/daemon.*
+.beads/*.left.*
