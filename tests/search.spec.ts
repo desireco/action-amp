@@ -26,12 +26,18 @@ test.describe('Search', () => {
     });
 
     test('should search across inbox items', async ({ page }) => {
-        // Create a test inbox item
+        // Create a test inbox item via API for better control
         const testTitle = `Test Inbox Item ${Date.now()}`;
-        await page.goto('/capture');
-        await page.fill('#note', testTitle);
-        await page.click('button[type="submit"]');
-        await page.waitForURL('/inbox');
+        const response = await page.request.post('/api/inbox', {
+            data: { title: testTitle }
+        });
+
+        expect(response.ok()).toBeTruthy();
+        const body = await response.json();
+        const itemId = body.id;
+
+        // Register for cleanup
+        cleaner.addFile(`data/inbox/${itemId}.md`);
 
         // Navigate to search
         await page.goto('/search');
@@ -59,7 +65,10 @@ test.describe('Search', () => {
         await page.click('button[type="submit"]');
         await page.waitForURL(/\/projects\/home\//);
 
-        cleaner.addDir(`data/areas/home/${projectName.toLowerCase().replace(/\s+/g, '-')}`);
+        // Get the project ID from URL for cleanup
+        const url = page.url();
+        const projectId = url.split('/').pop();
+        cleaner.addDir(`data/areas/home/${projectId}`);
 
         // Navigate to search
         await page.goto('/search');
