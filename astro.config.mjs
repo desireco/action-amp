@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import path from 'path';
 
 import tailwindcss from '@tailwindcss/vite';
 import Icons from 'unplugin-icons/vite';
@@ -18,7 +19,12 @@ export default defineConfig({
         compiler: 'astro',
         autoInstall: false
       })
-    ]
+    ],
+    resolve: {
+      alias: {
+        "@": path.resolve(process.cwd(), "./src"),
+      },
+    },
   },
 
   integrations: [mdx(), sitemap()],
