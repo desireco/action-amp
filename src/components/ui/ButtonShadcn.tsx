@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import React from "react";
 import { Button as ShadcnButton } from "@/components/ui/button";
 
 export interface ButtonShadcnProps extends React.ComponentProps<typeof ShadcnButton> {

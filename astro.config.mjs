@@ -7,6 +7,7 @@ import Icons from 'unplugin-icons/vite';
 
 import mdx from '@astrojs/mdx';
 import node from '@astrojs/node';
+import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
@@ -27,7 +28,7 @@ export default defineConfig({
     },
   },
 
-  integrations: [mdx(), sitemap()],
+  integrations: [mdx(), react(), sitemap()],
 
   adapter: node({
     mode: 'standalone'
