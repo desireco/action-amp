@@ -22,19 +22,23 @@ async function cleanupTestData() {
     // Directory might not exist, that's OK
   }
 
-  // Clean up test reviews
+  // Clean up test reviews (but preserve fixed test reviews)
   const reviewsDir = path.join(dataDir, 'reviews', 'daily');
   try {
     const files = await fs.readdir(reviewsDir);
     const today = new Date().toISOString().split('T')[0];
     for (const file of files) {
-      // Clean up today's test reviews
+      // Only clean up today's test reviews, preserve our test data
       if (file === `${today}.md`) {
         const content = await fs.readFile(path.join(reviewsDir, file), 'utf-8');
         if (content.includes('## Daily Review -') || content.includes('Test Review')) {
           await fs.rm(path.join(reviewsDir, file), { force: true });
           console.log(`Cleaned up test review: ${file}`);
         }
+      }
+      // Skip test reviews from 2024
+      if (file.startsWith('2024-')) {
+        continue;
       }
     }
   } catch (e) {

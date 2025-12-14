@@ -11,6 +11,16 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
+// Set up test data before running tests
+import { execSync } from 'child_process';
+try {
+  console.log('Setting up E2E test data...');
+  execSync('npx tsx tests/setup-e2e-data.ts', { stdio: 'inherit' });
+} catch (e) {
+  console.error('❌ E2E test data setup failed:', e);
+  process.exit(1);
+}
+
 export default defineConfig({
   testDir: './tests',
   /* Run tests in files in parallel */

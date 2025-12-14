@@ -1,0 +1,7 @@
+name = "Test Area"
+description = "Area for testing"
+priority = "medium"
+active = true
+created = "2024-01-01"
+icon = "test"
+color = "blue"

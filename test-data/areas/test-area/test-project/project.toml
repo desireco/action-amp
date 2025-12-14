@@ -1,0 +1,7 @@
+name = "Test Project"
+area = "test-area"
+status = "active"
+priority = "medium"
+created = "2024-01-01"
+description = "A test project for e2e testing"
+due_date = "2024-12-31"
