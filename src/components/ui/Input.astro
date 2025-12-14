@@ -1,4 +1,6 @@
 ---
+import { Input as ShadcnInput } from '@/components/ui/input';
+
 interface Props {
     class?: string;
     type?: astroHTML.JSX.HTMLInputTypeAttribute;
@@ -8,11 +10,4 @@ interface Props {
 const { class: className = "", type = "text", ...rest } = Astro.props;
 ---
 
-<input
-    type={type}
-    class:list={[
-        "flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-main ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className,
-    ]}
-    {...rest}
-/>
+<ShadcnInput client:idle type={type} class={className} {...rest} />
