@@ -1,0 +1,47 @@
+---
+import Search from "~icons/lucide/search";
+import SearchResultItem, { type SearchResult } from "./SearchResultItem.astro";
+
+export interface Props {
+  state: "empty" | "loading" | "results" | "none";
+  results?: SearchResult[];
+}
+
+const { state, results = [] } = Astro.props;
+---
+
+<div id="results-container" class="space-y-4">
+  <!-- Empty State -->
+  {state === "empty" && (
+    <div class="text-center py-12 text-text-muted">
+      <Search class="h-12 w-12 mx-auto mb-4 opacity-50" />
+      <p class="text-lg">Start typing to search...</p>
+    </div>
+  )}
+
+  <!-- Loading State -->
+  {state === "loading" && (
+    <div class="text-center py-12">
+      <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+      <p class="mt-4 text-text-muted">Searching...</p>
+    </div>
+  )}
+
+  <!-- Results State -->
+  {state === "results" && (
+    <div class="space-y-3">
+      {results.map((result) => (
+        <SearchResultItem result={result} />
+      ))}
+    </div>
+  )}
+
+  <!-- No Results State -->
+  {state === "none" && (
+    <div class="text-center py-12 text-text-muted">
+      <Search class="h-12 w-12 mx-auto mb-4 opacity-50" />
+      <p class="text-lg">No results found</p>
+      <p class="text-sm mt-2">Try adjusting your search or filters</p>
+    </div>
+  )}
+</div>

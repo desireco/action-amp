@@ -1,0 +1,99 @@
+---
+import Input from "../ui/Input.astro";
+import Card from "../ui/Card.astro";
+import Search from "~icons/lucide/search";
+import Filter from "~icons/lucide/filter";
+
+export interface Props {
+  initialQuery?: string;
+}
+
+const { initialQuery = "" } = Astro.props;
+---
+
+<Card>
+  <!-- Search Input -->
+  <div class="relative mb-4">
+    <Search
+      class="absolute left-3 top-3 h-5 w-5 text-text-muted pointer-events-none"
+    />
+    <Input
+      type="text"
+      id="search-input"
+      placeholder="Search across all items..."
+      class="pl-10 text-lg"
+      autofocus
+      value={initialQuery}
+    />
+  </div>
+
+  <!-- Filters Header -->
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-sm font-semibold text-text-main flex items-center gap-2">
+      <Filter class="h-4 w-4" />
+      Filters
+    </h3>
+    <button
+      id="clear-filters"
+      class="text-xs text-text-muted hover:text-text-main transition-colors"
+    >
+      Clear all
+    </button>
+  </div>
+
+  <!-- Filter Options -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Collection Filter -->
+    <div>
+      <label class="block text-xs font-medium text-text-muted mb-2">
+        Collection
+      </label>
+      <select
+        id="filter-collection"
+        class="w-full px-3 py-2 bg-surface-hover border border-border rounded-lg text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50"
+      >
+        <option value="">All</option>
+        <option value="inbox">Inbox Items</option>
+        <option value="actions">Actions</option>
+        <option value="projects">Project Items</option>
+        <option value="areas">Areas</option>
+        <option value="reviews">Reviews</option>
+      </select>
+    </div>
+
+    <!-- Status Filter -->
+    <div>
+      <label class="block text-xs font-medium text-text-muted mb-2">
+        Status
+      </label>
+      <select
+        id="filter-status"
+        class="w-full px-3 py-2 bg-surface-hover border border-border rounded-lg text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50"
+      >
+        <option value="">All</option>
+        <option value="todo">To Do</option>
+        <option value="in_progress">In Progress</option>
+        <option value="completed">Completed</option>
+        <option value="blocked">Blocked</option>
+        <option value="active">Active</option>
+        <option value="archived">Archived</option>
+      </select>
+    </div>
+
+    <!-- Priority Filter -->
+    <div>
+      <label class="block text-xs font-medium text-text-muted mb-2">
+        Priority
+      </label>
+      <select
+        id="filter-priority"
+        class="w-full px-3 py-2 bg-surface-hover border border-border rounded-lg text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50"
+      >
+        <option value="">All</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+  </div>
+</Card>
