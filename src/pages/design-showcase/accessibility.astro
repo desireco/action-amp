@@ -1,0 +1,361 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
+import Input from "../../components/ui/Input.astro";
+import CheckCircle from "~icons/lucide/check-circle";
+import Eye from "~icons/lucide/eye";
+import EyeOff from "~icons/lucide/eye-off";
+import Keyboard from "~icons/lucide/keyboard";
+import Info from "~icons/lucide/info";
+import ExternalLink from "~icons/lucide/external-link";
+import Accessibility from "~icons/lucide/accessibility";
+
+const title = "Accessibility Guidelines | Design Showcase";
+---
+
+<AppLayout title={title} currentPath="/design-showcase/accessibility">
+    <div class="max-w-4xl mx-auto space-y-8">
+        <Heading level={1} class="flex items-center gap-3">
+            <Accessibility class="h-8 w-8 text-primary" />
+            Accessibility Guidelines
+        </Heading>
+
+        <p class="text-lg text-text-muted">
+            ActionAmp is built with accessibility as a core principle. These guidelines demonstrate how we implement WCAG 2.1 AA compliance throughout the application.
+        </p>
+
+        <!-- Keyboard Navigation -->
+        <section>
+            <Heading level={2} class="flex items-center gap-2 mb-6">
+                <Keyboard class="h-5 w-5" />
+                Keyboard Navigation
+            </Heading>
+
+            <div class="grid gap-6 md:grid-cols-2">
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-3">Keyboard Shortcuts</h3>
+                    <p class="text-sm text-text-muted mb-4">
+                        Global shortcuts available throughout the application:
+                    </p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Focus Search</span>
+                            <kbd class="px-2 py-1 bg-surface-hover rounded text-xs">Ctrl + K</kbd>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>New Item</span>
+                            <kbd class="px-2 py-1 bg-surface-hover rounded text-xs">Ctrl + N</kbd>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Go to Inbox</span>
+                            <kbd class="px-2 py-1 bg-surface-hover rounded text-xs">Ctrl + I</kbd>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Show Help</span>
+                            <kbd class="px-2 py-1 bg-surface-hover rounded text-xs">Ctrl + /</kbd>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Close Modal</span>
+                            <kbd class="px-2 py-1 bg-surface-hover rounded text-xs">Esc</kbd>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-3">Tab Navigation</h3>
+                    <p class="text-sm text-text-muted mb-4">
+                        All interactive elements are accessible via Tab key:
+                    </p>
+                    <div class="space-y-3">
+                        <button class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
+                            Primary Button
+                        </button>
+                        <br />
+                        <input
+                            type="text"
+                            placeholder="Tab to this input"
+                            class="px-3 py-2 bg-surface border border-border rounded-lg w-full"
+                        />
+                        <br />
+                        <a href="#" class="text-primary hover:underline">
+                            Link example
+                        </a>
+                    </div>
+                </Card>
+            </div>
+        </section>
+
+        <!-- Focus Management -->
+        <section>
+            <Heading level={2} class="flex items-center gap-2 mb-6">
+                <Eye class="h-5 w-5" />
+                Focus States
+            </Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Focus Indicators</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    All interactive elements have clear, visible focus states that use the primary brand color.
+                </p>
+
+                <div class="grid gap-4 md:grid-cols-3">
+                    <div class="space-y-2">
+                        <h4 class="text-sm font-medium">Buttons</h4>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-primary text-primary-foreground rounded text-sm">
+                                Primary
+                            </button>
+                            <button class="px-3 py-1.5 border border-border rounded text-sm">
+                                Secondary
+                            </button>
+                            <button class="px-3 py-1.5 text-red-500 hover:bg-red-500/10 rounded text-sm">
+                                Destructive
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="text-sm font-medium">Form Inputs</h4>
+                        <Input placeholder="Text input" class="w-full" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="text-sm font-medium">Links</h4>
+                        <a href="#" class="text-primary hover:underline text-sm">
+                            Interactive link
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 bg-surface-hover rounded-lg">
+                    <p class="text-sm">
+                        <strong>High Contrast Mode:</strong> Focus outlines are enhanced for users who prefer higher contrast.
+                    </p>
+                </div>
+            </Card>
+        </section>
+
+        <!-- ARIA Implementation -->
+        <section>
+            <Heading level={2} class="flex items-center gap-2 mb-6">
+                <Info class="h-5 w-5" />
+                ARIA Implementation
+            </Heading>
+
+            <div class="space-y-4">
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-3">Semantic Structure</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <CheckCircle class="h-4 w-4 text-green-500" />
+                            <span class="text-sm">Proper heading hierarchy (h1 → h6)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <CheckCircle class="h-4 w-4 text-green-500" />
+                            <span class="text-sm">Navigation landmark roles</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <CheckCircle class="h-4 w-4 text-green-500" />
+                            <span class="text-sm">Main content landmarks</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <CheckCircle class="h-4 w-4 text-green-500" />
+                            <span class="text-sm">Form labels and descriptions</span>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-3">Live Regions</h3>
+                    <p class="text-sm text-text-muted mb-4">
+                        Dynamic content updates are announced to screen readers:
+                    </p>
+                    <div class="space-y-2">
+                        <div class="text-sm">
+                            <span class="font-mono bg-surface-hover px-2 py-1 rounded">aria-live="polite"</span>
+                            <span class="ml-2">- Status messages and notifications</span>
+                        </div>
+                        <div class="text-sm">
+                            <span class="font-mono bg-surface-hover px-2 py-1 rounded">aria-live="assertive"</span>
+                            <span class="ml-2">- Error messages and alerts</span>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-3">Skip Links</h3>
+                    <p class="text-sm text-text-muted">
+                        Hidden links that become visible on focus allow keyboard users to skip navigation:
+                    </p>
+                    <div class="mt-4 p-4 bg-surface rounded border border-border">
+                        <div class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded">
+                            Skip to main content
+                        </div>
+                        <p class="text-xs text-text-muted mt-2">
+                            (Focus on this area to see the skip link)
+                        </p>
+                    </div>
+                </Card>
+            </div>
+        </section>
+
+        <!-- Color Contrast -->
+        <section>
+            <Heading level={2} class="flex items-center gap-2 mb-6">
+                <Eye class="h-5 w-5" />
+                Color & Contrast
+            </Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">WCAG AA Contrast Ratios</h3>
+                <div class="grid gap-6 md:grid-cols-2">
+                    <div>
+                        <h4 class="text-sm font-medium mb-3">Text Examples</h4>
+                        <div class="space-y-3">
+                            <div class="p-4 bg-background border border-border rounded">
+                                <p class="text-text-main">Normal text on background</p>
+                                <p class="text-xs text-text-muted mt-1">Ratio: 15.8:1 ✓</p>
+                            </div>
+                            <div class="p-4 bg-primary rounded">
+                                <p class="text-primary-foreground">Text on primary</p>
+                                <p class="text-xs opacity-75 mt-1">Ratio: 4.5:1 ✓</p>
+                            </div>
+                            <div class="p-4 bg-surface border border-border rounded">
+                                <p class="text-text-main">Text on surface</p>
+                                <p class="text-xs text-text-muted mt-1">Ratio: 8.59:1 ✓</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-sm font-medium mb-3">Interactive Elements</h4>
+                        <div class="space-y-3">
+                            <button class="px-4 py-2 bg-primary text-primary-foreground rounded">
+                                Standard Button
+                            </button>
+                            <button class="px-4 py-2 border border-border rounded">
+                                Outlined Button
+                            </button>
+                            <button class="px-4 py-2 bg-destructive text-destructive-foreground rounded">
+                                Destructive Button
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Motion & Animation -->
+        <section>
+            <Heading level={2} class="flex items-center gap-2 mb-6">
+                <Keyboard class="h-5 w-5" />
+                Motion Preferences
+            </Heading>
+
+            <Card class="p-6">
+                <p class="text-sm text-text-muted mb-4">
+                    Respects user's motion preferences to reduce animations and transitions:
+                </p>
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <CheckCircle class="h-4 w-4 text-green-500" />
+                        <span class="text-sm">Detects <code class="font-mono bg-surface-hover px-1 rounded">prefers-reduced-motion</code></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <CheckCircle class="h-4 w-4 text-green-500" />
+                        <span class="text-sm">Animations respect motion preference</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <CheckCircle class="h-4 w-4 text-green-500" />
+                        <span class="text-sm">Scroll behavior respects preference</span>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Resources -->
+        <section>
+            <Heading level={2} class="flex items-center gap-2 mb-6">
+                <ExternalLink class="h-5 w-5" />
+                Resources & Tools
+            </Heading>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-3">Testing Tools</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li>
+                            <a href="https://web.dev/accessibility-audits/" class="text-primary hover:underline flex items-center gap-1">
+                                Chrome DevTools Accessibility Audit
+                                <ExternalLink class="h-3 w-3" />
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://wave.webaim.org/" class="text-primary hover:underline flex items-center gap-1">
+                                WAVE Web Accessibility Evaluation Tool
+                                <ExternalLink class="h-3 w-3" />
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.nvaccess.org/" class="text-primary hover:underline flex items-center gap-1">
+                                NVDA Screen Reader
+                                <ExternalLink class="h-3 w-3" />
+                            </a>
+                        </li>
+                    </ul>
+                </Card>
+
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-3">Guidelines</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li>
+                            <a href="https://www.w3.org/TR/WCAG21/" class="text-primary hover:underline flex items-center gap-1">
+                                WCAG 2.1 Guidelines
+                                <ExternalLink class="h-3 w-3" />
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.a11yproject.com/" class="text-primary hover:underline flex items-center gap-1">
+                                A11y Project
+                                <ExternalLink class="h-3 w-3" />
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://web.dev/accessibility/" class="text-primary hover:underline flex items-center gap-1">
+                                Web.dev Accessibility
+                                <ExternalLink class="h-3 w-3" />
+                            </a>
+                        </li>
+                    </ul>
+                </Card>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Focus indicator demo
+        const focusDemo = document.createElement('div');
+        focusDemo.innerHTML = `
+            <p class="text-sm text-text-muted mt-4">
+                <strong>Try it:</strong> Use Tab to navigate through the examples above and notice the clear focus indicators.
+            </p>
+        `;
+
+        // Show current shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                const key = e.key.toLowerCase();
+                if (['k', 'n', 'i', '/', 'a', 'delete'].includes(key)) {
+                    // Visual feedback for shortcut usage
+                    const indicator = document.createElement('div');
+                    indicator.className = 'fixed bottom-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-lg text-xs z-50';
+                    indicator.textContent = `${e.ctrlKey ? 'Ctrl' : 'Cmd'} + ${e.shiftKey ? ' + Shift' : ''} + ${key.toUpperCase()}`;
+                    document.body.appendChild(indicator);
+                    setTimeout(() => indicator.remove(), 1000);
+                }
+            }
+        });
+    </script>
+</AppLayout>
