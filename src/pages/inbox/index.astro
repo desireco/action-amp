@@ -17,6 +17,7 @@ import matter from "gray-matter";
 import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 import Button from "../../components/ui/Button.astro";
+import LoadingButton from "../../components/ui/LoadingButton.astro";
 
 // Get available projects for bulk move
 async function getProjects() {
@@ -128,13 +129,15 @@ const typeIcons = {
                 </span>
             </div>
             <div class="flex flex-wrap gap-2">
-                <button
+                <LoadingButton
                     id="bulk-delete"
-                    class="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                    class="px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-lg"
+                    variant="ghost"
+                    loadingText="Deleting..."
                 >
                     <Trash2 class="h-4 w-4" />
                     Delete Selected
-                </button>
+                </LoadingButton>
                 <div class="flex items-center gap-2">
                     <select
                         id="bulk-project-select"
@@ -145,14 +148,15 @@ const typeIcons = {
                             <option value={project.id}>{project.area} / {project.title}</option>
                         ))}
                     </select>
-                    <button
+                    <LoadingButton
                         id="bulk-move"
-                        class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="px-3 py-1.5 text-sm"
+                        loadingText="Moving..."
                         disabled
                     >
                         Move to Project
                         <ArrowRight class="h-4 w-4" />
-                    </button>
+                    </LoadingButton>
                 </div>
             </div>
         </div>
@@ -311,6 +315,8 @@ const typeIcons = {
                     return;
                 }
 
+                bulkDelete.setAttribute('data-loading', 'true');
+
                 try {
                     const response = await fetch('/api/inbox/bulk-delete', {
                         method: 'POST',
@@ -344,6 +350,8 @@ const typeIcons = {
                 } catch (error) {
                     console.error('Error deleting items:', error);
                     alert('Failed to delete items');
+                } finally {
+                    bulkDelete.removeAttribute('data-loading');
                 }
             });
 
@@ -363,6 +371,8 @@ const typeIcons = {
                 if (!confirm(`Move ${selected.length} item(s) to selected project?`)) {
                     return;
                 }
+
+                bulkMove.setAttribute('data-loading', 'true');
 
                 try {
                     const response = await fetch('/api/inbox/bulk-move', {
@@ -397,6 +407,8 @@ const typeIcons = {
                 } catch (error) {
                     console.error('Error moving items:', error);
                     alert('Failed to move items');
+                } finally {
+                    bulkMove.removeAttribute('data-loading');
                 }
             });
         });

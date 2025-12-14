@@ -8,6 +8,7 @@ import Lightbulb from "~icons/lucide/lightbulb";
 import Heading from "../components/ui/Heading.astro";
 import Card from "../components/ui/Card.astro";
 import Button from "../components/ui/Button.astro";
+import LoadingButton from "../components/ui/LoadingButton.astro";
 ---
 
 <AppLayout title="Capture | Action Amp">
@@ -108,13 +109,17 @@ import Button from "../components/ui/Button.astro";
                 </div>
 
                 <div class="flex justify-end">
-                    <Button type="submit" class="flex items-center gap-2">
-                        Capture to Inbox
+                    <LoadingButton
+                        type="submit"
+                        class="flex items-center gap-2"
+                        id="capture-submit-btn"
+                        loadingText="Capturing..."
+                    >
+                        <span>Capture to Inbox</span>
                         <kbd
                             class="hidden sm:inline-block px-2 py-0.5 bg-white/20 rounded text-xs font-sans"
                             >⌘+Enter</kbd
-                        >
-                    </Button>
+                        </LoadingButton>
                 </div>
             </form>
         </Card>
@@ -166,12 +171,10 @@ import Button from "../components/ui/Button.astro";
         const type = typeInput ? typeInput.value : undefined;
 
         try {
-            const submitBtn = form.querySelector(
-                'button[type="submit"]',
-            ) as HTMLButtonElement;
-            const originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = "Capturing...";
+            const submitBtn = document.getElementById('capture-submit-btn') as HTMLButtonElement;
+            if (submitBtn) {
+                submitBtn.setAttribute('data-loading', 'true');
+            }
 
             const res = await fetch("/api/inbox", {
                 method: "POST",
@@ -189,12 +192,17 @@ import Button from "../components/ui/Button.astro";
                 alert("Failed to capture item");
             }
 
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
+            if (submitBtn) {
+                submitBtn.removeAttribute('data-loading');
+            }
             textarea.focus();
         } catch (err) {
             console.error(err);
             alert("Error capturing item");
+            const submitBtn = document.getElementById('capture-submit-btn') as HTMLButtonElement;
+            if (submitBtn) {
+                submitBtn.removeAttribute('data-loading');
+            }
         }
     }
 

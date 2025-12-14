@@ -1,0 +1,104 @@
+---
+import Button from './Button.astro';
+import Spinner from './Spinner.astro';
+
+export interface Props {
+  loading?: boolean;
+  loadingText?: string;
+  children: any;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
+  size?: 'sm' | 'md' | 'lg';
+  class?: string;
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  href?: string;
+}
+
+const {
+  loading = false,
+  loadingText = 'Loading...',
+  children,
+  variant = 'primary',
+  size = 'md',
+  class: className = '',
+  type = 'button',
+  disabled = false,
+  href,
+  ...rest
+} = Astro.props;
+---
+
+{
+  href ? (
+    <a
+      href={href}
+      class={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed loading-btn ${
+        className}`}
+      aria-disabled={loading || disabled}
+      data-loading-text={loadingText}
+    >
+      <span class="loading-spinner hidden">
+        <Spinner size="sm" />
+      </span>
+      <span class="loading-text">{children}</span>
+    </a>
+  ) : (
+    <button
+      type={type}
+      class={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed loading-btn ${
+        className}`}
+      disabled={loading || disabled}
+      aria-disabled={loading || disabled}
+      data-loading-text={loadingText}
+      {...rest}
+    >
+      <span class="loading-spinner hidden">
+        <Spinner size="sm" />
+      </span>
+      <span class="loading-text">{children}</span>
+    </button>
+  )
+}
+
+<script>
+  // Handle dynamic loading state
+  document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.loading-btn');
+    buttons.forEach(button => {
+      const updateState = () => {
+        const isLoading = button.hasAttribute('data-loading');
+        const spinner = button.querySelector('.loading-spinner');
+        const text = button.querySelector('.loading-text');
+
+        if (spinner && text) {
+          if (isLoading) {
+            spinner.classList.remove('hidden');
+            text.textContent = button.getAttribute('data-loading-text') || 'Loading...';
+            button.disabled = true;
+          } else {
+            spinner.classList.add('hidden');
+            // Restore original text from a data attribute if available
+            const originalText = button.getAttribute('data-original-text');
+            if (originalText) {
+              text.textContent = originalText;
+            }
+            button.disabled = false;
+          }
+        }
+      };
+
+      // Store original text
+      const text = button.querySelector('.loading-text');
+      if (text && !button.hasAttribute('data-original-text')) {
+        button.setAttribute('data-original-text', text.textContent || '');
+      }
+
+      // Update initially
+      updateState();
+
+      // Watch for changes
+      const observer = new MutationObserver(updateState);
+      observer.observe(button, { attributes: true, attributeFilter: ['data-loading'] });
+    });
+  });
+</script>

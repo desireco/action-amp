@@ -1,0 +1,18 @@
+---
+export interface Props {
+  class?: string;
+  lines?: number;
+  width?: string;
+}
+
+const { class: className = '', lines = 1, width = 'w-full' } = Astro.props;
+---
+
+<div class={`space-y-2 ${className}`}>
+  {Array.from({ length: lines }).map((_, i) => (
+    <div
+      class={`h-4 bg-surface-hover rounded animate-pulse ${i === 0 ? width : 'w-full'}`}
+      aria-hidden="true"
+    ></div>
+  ))}
+</div>
