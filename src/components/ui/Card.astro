@@ -1,5 +1,5 @@
 ---
-import { Card as ShadcnCard } from '@/components/ui/card';
+import { Card as ShadcnCard, CardContent as ShadcnCardContent } from '@/components/ui/card';
 
 interface Props {
     class?: string;
@@ -10,5 +10,7 @@ const { class: className = "", ...rest } = Astro.props;
 ---
 
 <ShadcnCard client:idle class={className} {...rest}>
-    <slot />
+    <ShadcnCardContent class="p-0">
+        <slot />
+    </ShadcnCardContent>
 </ShadcnCard>
