@@ -171,49 +171,64 @@ try {
             {
                 sortedActions.length > 0 ? (
                     <Card class="overflow-hidden">
-                        {sortedActions.map((action) => {
-                            const Icon =
-                                statusIcons[action.data.status] || Circle;
-                            const colorClass =
-                                statusColors[action.data.status] ||
-                                "text-text-muted";
+                        <div id="actions-list" class="sortable-container">
+                            {sortedActions.map((action) => {
+                                const Icon =
+                                    statusIcons[action.data.status] || Circle;
+                                const colorClass =
+                                    statusColors[action.data.status] ||
+                                    "text-text-muted";
 
-                            return (
-                                <div class="p-4 border-b border-border last:border-0 flex items-center gap-4 hover:bg-surface-hover transition-colors group">
-                                    <button
-                                        class="action-toggle focus:outline-none"
+                                // Extract action ID from the full path
+                                const actionId = action.id.split('/').pop()?.replace('.md', '') || '';
+
+                                return (
+                                    <div
+                                        class="action-item p-4 border-b border-border last:border-0 flex items-center gap-4 hover:bg-surface-hover transition-colors group cursor-move"
+                                        data-action-id={actionId}
                                         data-path={`areas/${action.id}`}
                                         data-status={action.data.status}
-                                        title={
-                                            action.data.status === "completed"
-                                                ? "Mark as Todo"
-                                                : "Mark as Completed"
-                                        }
                                     >
-                                        <Icon
-                                            class={`h-5 w-5 ${colorClass} hover:scale-110 transition-transform`}
-                                        />
-                                    </button>
-                                    <div class="flex-1 min-w-0">
-                                        <span
-                                            class={`text-sm font-medium ${action.data.status === "completed" ? "text-text-muted line-through" : "text-text-main"}`}
+                                        <div class="drag-handle p-1 cursor-grab active:cursor-grabbing">
+                                            <svg class="h-4 w-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                                            </svg>
+                                        </div>
+                                        <button
+                                            class="action-toggle focus:outline-none"
+                                            data-path={`areas/${action.id}`}
+                                            data-status={action.data.status}
+                                            title={
+                                                action.data.status === "completed"
+                                                    ? "Mark as Todo"
+                                                    : "Mark as Completed"
+                                            }
                                         >
-                                            {action.data.title}
+                                            <Icon
+                                                class={`h-5 w-5 ${colorClass} hover:scale-110 transition-transform`}
+                                            />
+                                        </button>
+                                        <div class="flex-1 min-w-0">
+                                            <span
+                                                class={`text-sm font-medium ${action.data.status === "completed" ? "text-text-muted line-through" : "text-text-main"}`}
+                                            >
+                                                {action.data.title}
+                                            </span>
+                                        </div>
+                                        <span
+                                            class:list={[
+                                                "text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity",
+                                                action.data.priority === "high"
+                                                    ? "bg-red-500/10 text-red-500"
+                                                    : "bg-surface-hover text-text-muted",
+                                            ]}
+                                        >
+                                            {action.data.priority}
                                         </span>
                                     </div>
-                                    <span
-                                        class:list={[
-                                            "text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity",
-                                            action.data.priority === "high"
-                                                ? "bg-red-500/10 text-red-500"
-                                                : "bg-surface-hover text-text-muted",
-                                        ]}
-                                    >
-                                        {action.data.priority}
-                                    </span>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </Card>
                 ) : (
                     <Card class="text-center py-12 border-2 border-dashed border-border bg-surface/50">
@@ -264,6 +279,89 @@ try {
                 });
             });
         </script>
+
+        <!-- Load SortableJS from CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+        <script>
+            // Initialize drag-and-drop for actions
+            document.addEventListener("DOMContentLoaded", () => {
+                const actionsList = document.getElementById("actions-list");
+                if (actionsList) {
+                    // Initialize Sortable
+                    const sortable = Sortable.create(actionsList, {
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        chosenClass: 'sortable-chosen',
+                        dragClass: 'sortable-drag',
+                        handle: '.drag-handle',
+
+                        // Called when item is dropped
+                        async onEnd(evt) {
+                            const items = Array.from(actionsList.querySelectorAll('.action-item'));
+                            const actionIds = items.map(item => item.dataset.actionId);
+
+                            // Get project directory from URL
+                            const pathParts = window.location.pathname.split('/');
+                            const projectDir = pathParts.slice(1, -1).join('/'); // Remove /projects/ from start and action ID from end
+
+                            try {
+                                const response = await fetch('/api/actions/reorder', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        actionIds: actionIds,
+                                        projectDir: projectDir
+                                    })
+                                });
+
+                                if (!response.ok) {
+                                    console.error('Failed to reorder actions');
+                                    alert('Failed to save new order');
+                                    // Refresh to restore original order
+                                    window.location.reload();
+                                }
+                            } catch (error) {
+                                console.error('Error reordering actions:', error);
+                                alert('Error saving new order');
+                                window.location.reload();
+                            }
+                        }
+                    });
+                }
+            });
+        </script>
+
+        <style>
+            .sortable-ghost {
+                opacity: 0.4;
+                background: var(--color-surface-hover);
+            }
+
+            .sortable-chosen {
+                background: var(--color-surface);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+
+            .sortable-drag {
+                transform: rotate(2deg);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            }
+
+            .action-item {
+                transition: all 0.2s ease;
+            }
+
+            .action-item:hover {
+                background: var(--color-surface-hover);
+            }
+
+            .drag-handle:hover {
+                background: var(--color-surface-hover);
+                border-radius: 4px;
+            }
+        </style>
 
         <div class="space-y-4">
             <Heading level={2} class="flex items-center gap-2">
