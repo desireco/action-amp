@@ -4,12 +4,18 @@ import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 import Button from "../../components/ui/Button.astro";
 import Input from "../../components/ui/Input.astro";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import Search from "~icons/lucide/search";
 import Filter from "~icons/lucide/filter";
 import Plus from "~icons/lucide/plus";
 import Layout from "~icons/lucide/layout";
 import Grid from "~icons/lucide/grid";
 import List from "~icons/lucide/list";
+import Check from "~icons/lucide/check";
+import X from "~icons/lucide/x";
 
 const title = "Patterns | Design Showcase";
 ---
@@ -52,18 +58,18 @@ const title = "Patterns | Design Showcase";
                 </div>
 
                 <!-- Active Filters -->
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                    <Badge variant="secondary" class="flex items-center gap-1">
                         Type: Action
-                        <button class="ml-1 hover:text-primary-foreground">×</button>
-                    </span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">
+                        <X class="h-3 w-3 cursor-pointer hover:text-text-muted" />
+                    </Badge>
+                    <Badge variant="secondary" class="flex items-center gap-1">
                         Status: Active
-                        <button class="ml-1 hover:text-primary-foreground">×</button>
-                    </span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background">
+                        <X class="h-3 w-3 cursor-pointer hover:text-text-muted" />
+                    </Badge>
+                    <Button variant="ghost" size="sm">
                         Clear all
-                    </span>
+                    </Button>
                 </div>
 
                 <!-- Results Count -->
@@ -279,6 +285,116 @@ const title = "Patterns | Design Showcase";
                         <Button>Next Step</Button>
                     </div>
                 </div>
+            </Card>
+        </section>
+
+        <!-- Tabbed Content -->
+        <section>
+            <Heading level={2}>Tabbed Content</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Organized Content Navigation</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Pattern for organizing related content in a compact space:
+                </p>
+
+                <Tabs defaultValue="overview" class="w-full" client:load>
+                    <TabsList class="grid w-full grid-cols-4">
+                        <TabsTrigger value="overview">Overview</TabsTrigger>
+                        <TabsTrigger value="details">Details</TabsTrigger>
+                        <TabsTrigger value="settings">Settings</TabsTrigger>
+                        <TabsTrigger value="activity">Activity</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="overview" class="mt-4">
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-medium">Project Overview</h4>
+                            <p class="text-text-muted">
+                                This is the main overview tab containing summary information about the project.
+                            </p>
+                            <div class="grid gap-4 md:grid-cols-3">
+                                <Card class="p-4">
+                                    <h5 class="font-medium mb-1">Progress</h5>
+                                    <p class="text-2xl font-bold text-primary">75%</p>
+                                </Card>
+                                <Card class="p-4">
+                                    <h5 class="font-medium mb-1">Tasks</h5>
+                                    <p class="text-2xl font-bold text-primary">24</p>
+                                </Card>
+                                <Card class="p-4">
+                                    <h5 class="font-medium mb-1">Team</h5>
+                                    <p class="text-2xl font-bold text-primary">8</p>
+                                </Card>
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="details" class="mt-4">
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-medium">Project Details</h4>
+                            <div class="grid gap-4">
+                                <div class="flex justify-between py-2">
+                                    <span class="text-text-muted">Created</span>
+                                    <span>Dec 13, 2025</span>
+                                </div>
+                                <Separator />
+                                <div class="flex justify-between py-2">
+                                    <span class="text-text-muted">Last Updated</span>
+                                    <span>Dec 14, 2025</span>
+                                </div>
+                                <Separator />
+                                <div class="flex justify-between py-2">
+                                    <span class="text-text-muted">Status</span>
+                                    <Badge variant="secondary">Active</Badge>
+                                </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="settings" class="mt-4">
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-medium">Project Settings</h4>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium">Email Notifications</p>
+                                        <p class="text-sm text-text-muted">Receive updates about this project</p>
+                                    </div>
+                                    <Checkbox id="email-notif" defaultChecked />
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium">Auto-archive</p>
+                                        <p class="text-sm text-text-muted">Archive completed tasks automatically</p>
+                                    </div>
+                                    <Checkbox id="auto-archive" />
+                                </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="activity" class="mt-4">
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-medium">Recent Activity</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                                    <div>
+                                        <p class="text-sm">Task "Design system update" completed</p>
+                                        <p class="text-xs text-text-muted">2 hours ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-muted rounded-full mt-2"></div>
+                                    <div>
+                                        <p class="text-sm">New team member joined</p>
+                                        <p class="text-xs text-text-muted">5 hours ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+                </Tabs>
             </Card>
         </section>
 
