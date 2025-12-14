@@ -6,12 +6,50 @@ import Lightbulb from "~icons/lucide/lightbulb";
 import FileText from "~icons/lucide/file-text";
 import CheckSquare from "~icons/lucide/check-square";
 import BookOpen from "~icons/lucide/book-open";
+import Trash2 from "~icons/lucide/trash-2";
+import ArrowRight from "~icons/lucide/arrow-right";
+import Square from "~icons/lucide/square";
+import CheckSquare2 from "~icons/lucide/check-square";
 import { getCachedCollection } from "../../lib/content-cache";
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
+
+// Get available projects for bulk move
+async function getProjects() {
+    try {
+        const areas = await getCachedCollection("areas");
+        const projects: any[] = [];
+
+        for (const area of areas) {
+            const areaDir = path.join(process.cwd(), "data", "areas", area.id.replace(".toml", ""));
+            try {
+                const files = await fs.readdir(areaDir);
+                const projectFile = files.find(f => f === "project.toml");
+                if (projectFile) {
+                    const projectPath = path.join(areaDir, projectFile);
+                    const content = await fs.readFile(projectPath, "utf-8");
+                    const parsed = matter(content, { delimiters: '+++' });
+                    projects.push({
+                        id: `${area.id}/${projectFile}`,
+                        title: parsed.data.name || area.data.name,
+                        area: area.data.name
+                    });
+                }
+            } catch (error) {
+                // Skip if directory doesn't exist
+            }
+        }
+        return projects;
+    } catch {
+        return [];
+    }
+}
+
+const projects = await getProjects();
 
 const fromCollection = await getCachedCollection("inbox");
 
@@ -81,6 +119,62 @@ const typeIcons = {
         </div>
     </div>
 
+    <!-- Bulk Actions Bar -->
+    <div id="bulk-actions" class="hidden mb-4 p-4 bg-surface-hover border border-border rounded-lg">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium">
+                    <span id="selected-count">0</span> items selected
+                </span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button
+                    id="bulk-delete"
+                    class="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                    <Trash2 class="h-4 w-4" />
+                    Delete Selected
+                </button>
+                <div class="flex items-center gap-2">
+                    <select
+                        id="bulk-project-select"
+                        class="px-3 py-1.5 text-sm bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                        <option value="">Select project...</option>
+                        {projects.map(project => (
+                            <option value={project.id}>{project.area} / {project.title}</option>
+                        ))}
+                    </select>
+                    <button
+                        id="bulk-move"
+                        class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled
+                    >
+                        Move to Project
+                        <ArrowRight class="h-4 w-4" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Select All Bar -->
+    {sortedItems.length > 0 && (
+        <div class="mb-2 p-3 bg-surface/50 border border-border rounded-lg flex items-center justify-between">
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input
+                    type="checkbox"
+                    id="select-all"
+                    class="w-4 h-4 text-primary bg-surface border-border rounded focus:ring-primary focus:ring-2"
+                />
+                <span class="text-sm font-medium">Select All</span>
+            </label>
+            <span class="text-sm text-text-muted">
+                {sortedItems.length} items
+            </span>
+        </div>
+    )}
+
     <div class="grid gap-4">
         {
             sortedItems.length === 0 ? (
@@ -97,46 +191,214 @@ const typeIcons = {
                 </Card>
             ) : (
                 sortedItems.map((item) => (
-                    <a href={`/inbox/${item.id}`} class="block group">
-                        <Card class="p-5 hover:border-primary/50 hover:shadow-md transition-all">
-                            <div class="flex items-start justify-between">
-                                <div class="flex-1 min-w-0">
+                    <div class="inbox-item group" data-id={item.id}>
+                        <label class="flex items-start gap-4 p-5 bg-surface border border-border rounded-lg hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
+                            <input
+                                type="checkbox"
+                                class="inbox-checkbox mt-1 w-4 h-4 text-primary bg-surface border-border rounded focus:ring-primary focus:ring-2"
+                                value={item.id}
+                            />
+                            <div class="flex-1 min-w-0">
+                                <a href={`/inbox/${item.id}`} class="block">
                                     <p class="text-lg font-semibold group-hover:text-primary transition-colors truncate">
                                         {item.data.title}
                                     </p>
-                                    <div class="mt-2 flex items-center gap-3 text-sm text-text-muted">
-                                        <span
-                                            class:list={[
-                                                "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider flex items-center gap-1",
-                                                item.data.type
-                                                    ? "bg-primary/10 text-primary"
-                                                    : "bg-surface-hover text-text-muted",
-                                            ]}
-                                        >
-                                            {(() => {
-                                                const Icon =
-                                                    typeIcons[
-                                                        item.data
-                                                            .type as keyof typeof typeIcons
-                                                    ] || InboxIcon;
-                                                return <Icon class="h-3 w-3" />;
-                                            })()}
-                                            {item.data.type || "Unsorted"}
-                                        </span>
-                                        <span>
-                                            Captured{" "}
-                                            {item.data.captured.toLocaleDateString(
-                                                undefined,
-                                                { dateStyle: "medium" },
-                                            )}
-                                        </span>
-                                    </div>
+                                </a>
+                                <div class="mt-2 flex items-center gap-3 text-sm text-text-muted">
+                                    <span
+                                        class:list={[
+                                            "px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider flex items-center gap-1",
+                                            item.data.type
+                                                ? "bg-primary/10 text-primary"
+                                                : "bg-surface-hover text-text-muted",
+                                        ]}
+                                    >
+                                        {(() => {
+                                            const Icon =
+                                                typeIcons[
+                                                    item.data
+                                                        .type as keyof typeof typeIcons
+                                                ] || InboxIcon;
+                                            return <Icon class="h-3 w-3" />;
+                                        })()}
+                                        {item.data.type || "Unsorted"}
+                                    </span>
+                                    <span>
+                                        Captured{" "}
+                                        {item.data.captured.toLocaleDateString(
+                                            undefined,
+                                            { dateStyle: "medium" },
+                                        )}
+                                    </span>
                                 </div>
                             </div>
-                        </Card>
-                    </a>
+                        </label>
+                    </div>
                 ))
             )
         }
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectAll = document.getElementById('select-all');
+            const checkboxes = document.querySelectorAll('.inbox-checkbox');
+            const bulkActions = document.getElementById('bulk-actions');
+            const selectedCount = document.getElementById('selected-count');
+            const bulkDelete = document.getElementById('bulk-delete');
+            const bulkMove = document.getElementById('bulk-move');
+            const bulkProjectSelect = document.getElementById('bulk-project-select');
+
+            // Update selected count and show/hide bulk actions
+            function updateBulkActions() {
+                const selected = document.querySelectorAll('.inbox-checkbox:checked');
+                const count = selected.length;
+
+                selectedCount.textContent = count;
+
+                if (count > 0) {
+                    bulkActions.classList.remove('hidden');
+                } else {
+                    bulkActions.classList.add('hidden');
+                }
+
+                // Enable/disable move button based on project selection
+                if (count > 0 && bulkProjectSelect.value) {
+                    bulkMove.disabled = false;
+                } else {
+                    bulkMove.disabled = true;
+                }
+            }
+
+            // Select all functionality
+            selectAll?.addEventListener('change', () => {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = selectAll.checked;
+                });
+                updateBulkActions();
+            });
+
+            // Individual checkbox changes
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    // Update select all state
+                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                    const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+
+                    selectAll.checked = allChecked;
+                    selectAll.indeterminate = someChecked && !allChecked;
+
+                    updateBulkActions();
+                });
+
+                // Prevent label click when clicking on the link
+                checkbox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            });
+
+            // Project selection change
+            bulkProjectSelect?.addEventListener('change', updateBulkActions);
+
+            // Bulk delete
+            bulkDelete?.addEventListener('click', async () => {
+                const selected = Array.from(document.querySelectorAll('.inbox-checkbox:checked'))
+                    .map(cb => cb.value);
+
+                if (selected.length === 0) return;
+
+                if (!confirm(`Are you sure you want to delete ${selected.length} item(s)? This action cannot be undone.`)) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/inbox/bulk-delete', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ itemIds: selected })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Remove deleted items from DOM
+                        selected.forEach(id => {
+                            const item = document.querySelector(`[data-id="${id}"]`);
+                            if (item) {
+                                item.remove();
+                            }
+                        });
+                        updateBulkActions();
+
+                        // Show success message
+                        const message = document.createElement('div');
+                        message.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                        message.textContent = `Deleted ${result.deletedCount} item(s)`;
+                        document.body.appendChild(message);
+                        setTimeout(() => message.remove(), 3000);
+                    } else {
+                        alert(`Error: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error deleting items:', error);
+                    alert('Failed to delete items');
+                }
+            });
+
+            // Bulk move
+            bulkMove?.addEventListener('click', async () => {
+                const selected = Array.from(document.querySelectorAll('.inbox-checkbox:checked'))
+                    .map(cb => cb.value);
+
+                if (selected.length === 0) return;
+
+                const projectId = bulkProjectSelect.value;
+                if (!projectId) {
+                    alert('Please select a project');
+                    return;
+                }
+
+                if (!confirm(`Move ${selected.length} item(s) to selected project?`)) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/inbox/bulk-move', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ itemIds: selected, projectId })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Remove moved items from DOM
+                        selected.forEach(id => {
+                            const item = document.querySelector(`[data-id="${id}"]`);
+                            if (item) {
+                                item.remove();
+                            }
+                        });
+                        updateBulkActions();
+
+                        // Show success message
+                        const message = document.createElement('div');
+                        message.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                        message.textContent = `Moved ${result.movedCount} item(s) to project`;
+                        document.body.appendChild(message);
+                        setTimeout(() => message.remove(), 3000);
+                    } else {
+                        alert(`Error: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error moving items:', error);
+                    alert('Failed to move items');
+                }
+            });
+        });
+    </script>
 </AppLayout>
