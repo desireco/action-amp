@@ -1,39 +1,27 @@
 import type { APIRoute } from 'astro';
 import { dataWriter } from '../../../lib/data/writer';
+import { createAPIRoute, parseRequestBody } from '../../../lib/api-handler';
+import { ValidationError } from '../../../lib/errors';
 
-export const POST: APIRoute = async ({ request }) => {
-    try {
-        const { path, status } = await request.json();
+export const POST: APIRoute = createAPIRoute(async ({ request }) => {
+    const { path, status } = await parseRequestBody(request);
 
-        if (!path || !status) {
-            return new Response(JSON.stringify({ error: 'Path and status are required' }), {
-                status: 400,
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
-
-        // Ensure path is safe - basic check
-        if (path.includes('..')) {
-            return new Response(JSON.stringify({ error: 'Invalid path' }), {
-                status: 400,
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
-
-        // Assume path is relative to data/ directory if it doesn't start with data/
-        const filePath = path.startsWith('data/') ? path : `data/${path}`;
-
-        await dataWriter.updateActionStatus(filePath, status);
-
-        return new Response(JSON.stringify({ success: true }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-        });
-    } catch (error) {
-        console.error('Error updating status:', error);
-        return new Response(JSON.stringify({ error: 'Failed to update status' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
+    if (!path || !status) {
+        throw new ValidationError('Path and status are required');
     }
-};
+
+    // Ensure path is safe - basic check
+    if (path.includes('..')) {
+        throw new ValidationError('Invalid path');
+    }
+
+    // Assume path is relative to data/ directory if it doesn't start with data/
+    const filePath = path.startsWith('data/') ? path : `data/${path}`;
+
+    await dataWriter.updateActionStatus(filePath, status);
+
+    return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+});

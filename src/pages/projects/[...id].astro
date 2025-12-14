@@ -151,7 +151,10 @@ try {
                     project.data.due_date && (
                         <div>
                             <span class="font-medium text-text-main">Due:</span>{" "}
-                            {project.data.due_date.toLocaleDateString()}
+                            {typeof project.data.due_date === 'string'
+                                ? new Date(project.data.due_date).toLocaleDateString()
+                                : project.data.due_date.toLocaleDateString()
+                            }
                         </div>
                     )
                 }
