@@ -50,7 +50,8 @@ When working on this project, follow these rules:
 1. **Task Management**: Use `bd` (beads) to pick tasks, work on **only one task at a time**
 2. **Git Cleanliness**: Do not start new tasks when there are untracked files in git
 3. **Pre-commit Testing**: Run tests before committing and resolve any failures
-4. **Task Process**:
+4. **Test Verification**: All tasks must pass tests before being marked complete (automatically enforced)
+5. **Task Process**:
    - Pick highest priority ready task from `bd ready`
    - Mark as `in_progress` when starting: `bd update <task-id> --status in_progress`
    - Complete the task implementation
@@ -58,14 +59,35 @@ When working on this project, follow these rules:
    - Verify all tests pass before proceeding
    - Commit changes if tests pass
    - Close task when complete: `bd close <task-id>`
-   - **IMPORTANT**: Tasks cannot be marked complete until ALL tests are passing
-5. **Separate Commits**: Keep different types of changes in separate commits
+   - **IMPORTANT**: Tasks cannot be marked complete until ALL tests are passing (automatically enforced)
+6. **Test-Protected Task Completion**: The `bin/bd` wrapper automatically verifies tests before allowing task closure
+7. **Separate Commits**: Keep different types of changes in separate commits
 
 ### Testing
 
 - Unit tests: `npm test` (uses Vitest)
 - E2E tests: `npm run test:e2e` (uses Playwright)
 - Always run tests before committing changes
+
+### Test-Protected Task Completion
+
+This project includes automatic test verification for task completion:
+
+1. **How it works**: The `bin/bd` wrapper script intercepts `bd close` commands
+2. **Before closing a task**: Automatically runs all tests
+3. **If tests pass**: Allows the task to be closed
+4. **If tests fail**: Blocks the operation and shows error messages
+
+**Setup**:
+```bash
+# Add to PATH (or create an alias)
+export PATH="$(pwd)/bin:$PATH"
+
+# Now all bd commands will use the wrapper
+bd close <task-id>  # Will run tests first
+```
+
+**Documentation**: See `docs/test-verification.md` for detailed information
 
 ### Using Beads for Task Management
 
