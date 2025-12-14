@@ -1,0 +1,89 @@
+---
+interface ErrorDisplayProps {
+    error?: Error | string | null;
+    title?: string;
+    message?: string;
+    variant?: 'inline' | 'card' | 'toast';
+    onRetry?: () => void;
+    onDismiss?: () => void;
+}
+
+const {
+    error,
+    title = 'Something went wrong',
+    message,
+    variant = 'card',
+    onRetry,
+    onDismiss
+} = Astro.props;
+
+const errorMessage = error instanceof Error ? error.message : error || message || 'An unexpected error occurred';
+
+const variantClasses = {
+    inline: 'text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3',
+    card: 'bg-destructive/10 border border-destructive/20 rounded-lg p-6',
+    toast: 'bg-destructive text-destructive-foreground border border-destructive/20 rounded-lg p-4 shadow-lg',
+};
+
+const iconClasses = {
+    inline: 'h-4 w-4',
+    card: 'h-6 w-6',
+    toast: 'h-5 w-5',
+};
+---
+
+<div class={variantClasses[variant]}>
+    <div class="flex items-start gap-3">
+        <svg
+            class={`${iconClasses[variant]} text-destructive flex-shrink-0 mt-0.5`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+        </svg>
+
+        <div class="flex-1 min-w-0">
+            {title && variant !== 'toast' && (
+                <h3 class="font-medium text-destructive mb-1">{title}</h3>
+            )}
+            <p class="text-destructive text-sm">{errorMessage}</p>
+
+            {import.meta.env.DEV && error instanceof Error && error.stack && (
+                <details class="mt-2 text-xs text-destructive/70">
+                    <summary className="cursor-pointer hover:text-destructive">Error details (dev only)</summary>
+                    <pre class="mt-1 whitespace-pre-wrap font-mono bg-destructive/5 p-2 rounded overflow-auto max-h-32">
+                        {error.stack}
+                    </pre>
+                </details>
+            )}
+
+            {(onRetry || onDismiss) && (
+                <div class="flex gap-2 mt-3">
+                    {onRetry && (
+                        <button
+                            onClick={onRetry}
+                            class="text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 px-3 py-1 rounded-md transition-colors"
+                        >
+                            Try Again
+                        </button>
+                    )}
+                    {onDismiss && (
+                        <button
+                            onClick={onDismiss}
+                            class="text-sm bg-background text-text-main hover:bg-background/80 px-3 py-1 rounded-md border transition-colors"
+                        >
+                            Dismiss
+                        </button>
+                    )}
+                </div>
+            )}
+        </div>
+    </div>
+</div>

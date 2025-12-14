@@ -1,52 +1,40 @@
 import type { APIRoute } from 'astro';
 import { dataWriter } from '../../../lib/data/writer';
+import { createAPIRoute, parseRequestBody, createSuccessResponse, createErrorResponse } from '../../../lib/api-handler';
+import { NotFoundError, ValidationError } from '../../../lib/errors';
 
-export const PUT: APIRoute = async ({ params, request }) => {
+export const PUT: APIRoute = createAPIRoute(async ({ params, request }) => {
     const { id } = params;
     if (!id) {
-        return new Response(JSON.stringify({ error: 'ID is required' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        throw new ValidationError('ID is required');
     }
+
+    const data = await parseRequestBody(request);
 
     try {
-        const data = await request.json();
         await dataWriter.updateInboxItem(id, data);
-
-        return new Response(JSON.stringify({ success: true }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return createSuccessResponse({ message: 'Item updated successfully' });
     } catch (error) {
-        console.error(`Error updating inbox item ${id}:`, error);
-        return new Response(JSON.stringify({ error: 'Failed to update item' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        if (error instanceof Error && error.message.includes('not found')) {
+            throw new NotFoundError('Inbox item', id);
+        }
+        throw error;
     }
-};
+});
 
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = createAPIRoute(async ({ params }) => {
     const { id } = params;
     if (!id) {
-        return new Response(JSON.stringify({ error: 'ID is required' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        throw new ValidationError('ID is required');
     }
 
     try {
         await dataWriter.deleteInboxItem(id);
-        return new Response(JSON.stringify({ success: true }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return createSuccessResponse({ message: 'Item deleted successfully' });
     } catch (error) {
-        console.error(`Error deleting inbox item ${id}:`, error);
-        return new Response(JSON.stringify({ error: 'Failed to delete item' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        if (error instanceof Error && error.message.includes('not found')) {
+            throw new NotFoundError('Inbox item', id);
+        }
+        throw error;
     }
-};
+});
