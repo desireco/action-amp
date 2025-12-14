@@ -2,6 +2,7 @@
 import AppLayout from "../../layouts/AppLayout.astro";
 import Heading from "../../components/ui/Heading.astro";
 import { ComponentShowcase } from "../../components/ui/ComponentShowcase";
+import { ComponentGallery } from "../../components/ui/ComponentGallery";
 import Layers from "~icons/lucide/layers";
 import CheckCircle from "~icons/lucide/check-circle";
 import AlertTriangle from "~icons/lucide/alert-triangle";
@@ -46,6 +47,15 @@ const title = "Components | Design Showcase";
 
         <!-- React Component Showcase -->
         <ComponentShowcase client:load />
+
+        <!-- Component Gallery with Code Examples -->
+        <section class="mt-12">
+            <Heading level={2}>Component Gallery</Heading>
+            <p class="text-text-muted mb-6">
+                Complete component examples with live previews and ready-to-use code snippets.
+            </p>
+            <ComponentGallery client:load />
+        </section>
 
         <!-- Static Previews -->
         <section class="mt-12">
