@@ -1,0 +1,181 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
+import Palette from "~icons/lucide/palette";
+import Zap from "~icons/lucide/zap";
+import Layers from "~icons/lucide/layers";
+import Eye from "~icons/lucide/eye";
+import Type from "~icons/lucide/type";
+import Layout from "~icons/lucide/layout";
+import FileText from "~icons/lucide/file-text";
+import Accessibility from "~icons/lucide/accessibility";
+
+const title = "Design Showcase | Action Amp";
+---
+
+<AppLayout title={title} currentPath="/design-showcase">
+    <div class="max-w-6xl mx-auto space-y-12">
+        <div class="text-center space-y-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 mb-4">
+                <Zap class="h-8 w-8 text-primary" />
+            </div>
+            <Heading level={1}>Design Showcase</Heading>
+            <p class="text-xl text-text-muted max-w-2xl mx-auto">
+                Explore ActionAmp's design system, components, and implementation patterns
+            </p>
+        </div>
+
+        <!-- Design Categories -->
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <!-- Design System -->
+            <a href="/design-showcase/design-system" class="group block">
+                <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-primary/10 rounded-lg">
+                            <Palette class="h-6 w-6 text-primary" />
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">
+                                Design System
+                            </h3>
+                            <p class="text-sm text-text-muted mt-1">
+                                Colors, typography, spacing, and layout guidelines
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+            </a>
+
+            <!-- Components -->
+            <a href="/design-showcase/components" class="group block">
+                <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-purple-500/10 rounded-lg">
+                            <Layers class="h-6 w-6 text-purple-500" />
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">
+                                Components
+                            </h3>
+                            <p class="text-sm text-text-muted mt-1">
+                                UI components library and usage examples
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+            </a>
+
+            <!-- Patterns -->
+            <a href="/design-showcase/patterns" class="group block">
+                <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-green-500/10 rounded-lg">
+                            <Layout class="h-6 w-6 text-green-500" />
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">
+                                Patterns
+                            </h3>
+                            <p class="text-sm text-text-muted mt-1">
+                                Common UI patterns and best practices
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+            </a>
+
+            <!-- Typography -->
+            <a href="/design-showcase/typography" class="group block">
+                <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-blue-500/10 rounded-lg">
+                            <Type class="h-6 w-6 text-blue-500" />
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">
+                                Typography
+                            </h3>
+                            <p class="text-sm text-text-muted mt-1">
+                                Font styles, sizes, and hierarchy
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+            </a>
+
+            <!-- Accessibility -->
+            <a href="/design-showcase/accessibility" class="group block">
+                <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-orange-500/10 rounded-lg">
+                            <Accessibility class="h-6 w-6 text-orange-500" />
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold group-hover:text:text-primary transition-colors">
+                                Accessibility
+                            </h3>
+                            <p class="text-sm text-text-muted mt-1">
+                                WCAG compliance and inclusive design
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+            </a>
+
+            <!-- Templates -->
+            <a href="/design-showcase/templates" class="group block">
+                <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-pink-500/10 rounded-lg">
+                            <FileText class="h-6 w-6 text-pink-500" />
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">
+                                Templates
+                            </h3>
+                            <p class="text-sm text-text-muted mt-1">
+                                Page templates and layouts
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+            </a>
+        </div>
+
+        <!-- Quick Links -->
+        <section class="mt-16">
+            <Heading level={2}>Quick Links</Heading>
+            <div class="grid gap-4 md:grid-cols-2">
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-4">For Developers</h3>
+                    <div class="space-y-2">
+                        <a href="https://github.com/your-org/action-amp" class="text-primary hover:underline flex items-center gap-1">
+                            GitHub Repository
+                            <Eye class="h-3 w-3" />
+                        </a>
+                        <a href="/api" class="text-primary hover:underline flex items-center gap-1">
+                            API Documentation
+                            <FileText class="h-3 w-3" />
+                        </a>
+                    </div>
+                </Card>
+
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-4">Design Resources</h3>
+                    <div class="space-y-2">
+                        <a href="/design-showcase/design-tokens" class="text-primary hover:underline flex items-center gap-1">
+                            Design Tokens
+                            <Palette class="h-3 w-3" />
+                        </a>
+                        <a href="/design-showcase/iconography" class="text-primary hover:underline flex items-center gap-1">
+                            Iconography
+                            <Eye class="h-3 w-3" />
+                        </a>
+                    </div>
+                </Card>
+            </div>
+        </section>
+    </div>
+</AppLayout>

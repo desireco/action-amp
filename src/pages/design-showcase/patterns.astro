@@ -1,0 +1,356 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
+import Input from "../../components/ui/Input.astro";
+import Search from "~icons/lucide/search";
+import Filter from "~icons/lucide/filter";
+import Plus from "~icons/lucide/plus";
+import Layout from "~icons/lucide/layout";
+import Grid from "~icons/lucide/grid";
+import List from "~icons/lucide/list";
+
+const title = "Patterns | Design Showcase";
+---
+
+<AppLayout title={title} currentPath="/design-showcase/patterns">
+    <div class="max-w-6xl mx-auto space-y-8">
+        <Heading level={1} class="flex items-center gap-3">
+            <Layout class="h-8 w-8 text-primary" />
+            UI Patterns
+        </Heading>
+
+        <p class="text-lg text-text-muted">
+            Common UI patterns and design solutions used throughout ActionAmp.
+        </p>
+
+        <!-- Search and Filter Pattern -->
+        <section>
+            <Heading level={2}>Search & Filter</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Search Bar with Filters</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    A common pattern for finding items in large datasets:
+                </p>
+
+                <!-- Search Bar -->
+                <div class="flex gap-3 mb-4">
+                    <div class="relative flex-1">
+                        <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
+                        <Input placeholder="Search items..." class="pl-10" />
+                    </div>
+                    <Button variant="outline" class="flex items-center gap-2">
+                        <Filter class="h-4 w-4" />
+                        Filters
+                    </Button>
+                    <Button class="flex items-center gap-2">
+                        <Plus class="h-4 w-4" />
+                        Add New
+                    </Button>
+                </div>
+
+                <!-- Active Filters -->
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">
+                        Type: Action
+                        <button class="ml-1 hover:text-primary-foreground">×</button>
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">
+                        Status: Active
+                        <button class="ml-1 hover:text-primary-foreground">×</button>
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background">
+                        Clear all
+                    </span>
+                </div>
+
+                <!-- Results Count -->
+                <p class="text-sm text-text-muted">
+                    Showing 1-10 of 42 results
+                </p>
+            </Card>
+        </section>
+
+        <!-- Data Table Pattern -->
+        <section>
+            <Heading level={2}>Data Tables</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Structured Data Display</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Pattern for displaying tabular data with sorting and actions:
+                </p>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-border">
+                                <th class="text-left py-3 px-4 font-medium">
+                                    <button class="flex items-center gap-1 hover:text-primary">
+                                        Name
+                                        <span class="text-xs">↕</span>
+                                    </button>
+                                </th>
+                                <th class="text-left py-3 px-4 font-medium">Status</th>
+                                <th class="text-left py-3 px-4 font-medium">Updated</th>
+                                <th class="text-right py-3 px-4 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-border hover:bg-surface-hover">
+                                <td class="py-3 px-4">Project Alpha</td>
+                                <td class="py-3 px-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-green-500 text-white">
+                                        Active
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-sm text-text-muted">2 hours ago</td>
+                                <td class="py-3 px-4 text-right">
+                                    <Button variant="ghost" size="sm">Edit</Button>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-border hover:bg-surface-hover">
+                                <td class="py-3 px-4">Project Beta</td>
+                                <td class="py-3 px-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-yellow-500 text-black">
+                                        Review
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-sm text-text-muted">1 day ago</td>
+                                <td class="py-3 px-4 text-right">
+                                    <Button variant="ghost" size="sm">Edit</Button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-surface-hover">
+                                <td class="py-3 px-4">Project Gamma</td>
+                                <td class="py-3 px-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-secondary text-secondary-foreground">
+                                        Draft
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-sm text-text-muted">3 days ago</td>
+                                <td class="py-3 px-4 text-right">
+                                    <Button variant="ghost" size="sm">Edit</Button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between mt-4">
+                    <p class="text-sm text-text-muted">
+                        Showing 1-10 of 42 items
+                    </p>
+                    <div class="flex gap-2">
+                        <Button variant="outline" size="sm" disabled>Previous</Button>
+                        <Button variant="outline" size="sm">1</Button>
+                        <Button size="sm">2</Button>
+                        <Button variant="outline" size="sm">3</Button>
+                        <Button variant="outline" size="sm">Next</Button>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Card Grid Pattern -->
+        <section>
+            <Heading level={2}>Card Layouts</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Grid of Cards</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Pattern for displaying multiple related items:
+                </p>
+
+                <!-- View Toggle -->
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex gap-2">
+                        <Button variant="outline" size="sm" class="flex items-center gap-1">
+                            <Grid class="h-4 w-4" />
+                            Grid
+                        </Button>
+                        <Button variant="ghost" size="sm" class="flex items-center gap-1">
+                            <List class="h-4 w-4" />
+                            List
+                        </Button>
+                    </div>
+                    <p class="text-sm text-text-muted">12 items</p>
+                </div>
+
+                <!-- Card Grid -->
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <Card class="p-4 hover:shadow-lg transition-shadow">
+                        <div class="aspect-video bg-surface rounded mb-3"></div>
+                        <h4 class="font-semibold mb-1">Card Title 1</h4>
+                        <p class="text-sm text-text-muted mb-3">
+                            Brief description of the item being displayed in this card.
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background">
+                                        Category
+                                    </span>
+                            <Button variant="ghost" size="sm">View →</Button>
+                        </div>
+                    </Card>
+
+                    <Card class="p-4 hover:shadow-lg transition-shadow">
+                        <div class="aspect-video bg-surface rounded mb-3"></div>
+                        <h4 class="font-semibold mb-1">Card Title 2</h4>
+                        <p class="text-sm text-text-muted mb-3">
+                            Brief description of the item being displayed in this card.
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background">
+                                        Category
+                                    </span>
+                            <Button variant="ghost" size="sm">View →</Button>
+                        </div>
+                    </Card>
+
+                    <Card class="p-4 hover:shadow-lg transition-shadow">
+                        <div class="aspect-video bg-surface rounded mb-3"></div>
+                        <h4 class="font-semibold mb-1">Card Title 3</h4>
+                        <p class="text-sm text-text-muted mb-3">
+                            Brief description of the item being displayed in this card.
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background">
+                                        Category
+                                    </span>
+                            <Button variant="ghost" size="sm">View →</Button>
+                        </div>
+                    </Card>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Forms Pattern -->
+        <section>
+            <Heading level={2}>Forms</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Multi-step Form</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Pattern for complex data entry with validation:
+                </p>
+
+                <!-- Progress Indicator -->
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">1</div>
+                        <span class="text-sm">Basic Info</span>
+                    </div>
+                    <div class="w-8 h-0.5 bg-border"></div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">2</div>
+                        <span class="text-sm">Details</span>
+                    </div>
+                    <div class="w-8 h-0.5 bg-border"></div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-surface border-2 border-border rounded-full flex items-center justify-center text-sm font-medium text-text-muted">3</div>
+                        <span class="text-sm text-text-muted">Review</span>
+                    </div>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">First Name</label>
+                        <Input placeholder="Enter first name" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Last Name</label>
+                        <Input placeholder="Enter last name" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-1">Description</label>
+                        <Input placeholder="Brief description" />
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-between mt-6">
+                    <Button variant="outline">Previous</Button>
+                    <div class="flex gap-2">
+                        <Button variant="ghost">Save Draft</Button>
+                        <Button>Next Step</Button>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Empty States -->
+        <section>
+            <Heading level={2}>Empty States</Heading>
+
+            <div class="grid gap-6 md:grid-cols-2">
+                <Card class="p-8 text-center">
+                    <div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Search class="h-8 w-8 text-text-muted" />
+                    </div>
+                    <h3 class="font-semibold mb-2">No Results Found</h3>
+                    <p class="text-sm text-text-muted mb-4">
+                        Try adjusting your search terms or filters to find what you're looking for.
+                    </p>
+                    <Button variant="outline">Clear Filters</Button>
+                </Card>
+
+                <Card class="p-8 text-center">
+                    <div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Plus class="h-8 w-8 text-text-muted" />
+                    </div>
+                    <h3 class="font-semibold mb-2">No Items Yet</h3>
+                    <p class="text-sm text-text-muted mb-4">
+                        Get started by creating your first item and organizing your workspace.
+                    </p>
+                    <Button>Create First Item</Button>
+                </Card>
+            </div>
+        </section>
+
+        <!-- Navigation Patterns -->
+        <section>
+            <Heading level={2}>Navigation</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Breadcrumb Navigation</h3>
+                <p class="text-sm text-text-muted mb-4">
+                    Shows the user's location in the site hierarchy:
+                </p>
+                <nav class="flex items-center gap-2 text-sm">
+                    <a href="#" class="text-text-muted hover:text-text-main">Home</a>
+                    <span class="text-text-muted">/</span>
+                    <a href="#" class="text-text-muted hover:text-text-main">Projects</a>
+                    <span class="text-text-muted">/</span>
+                    <span class="text-text-main">Current Page</span>
+                </nav>
+            </Card>
+
+            <Card class="p-6 mt-4">
+                <h3 class="font-semibold mb-4">Tabs Navigation</h3>
+                <p class="text-sm text-text-muted mb-4">
+                    Switch between related views within the same context:
+                </p>
+                <div class="border-b border-border">
+                    <nav class="flex gap-6">
+                        <button class="pb-3 px-1 border-b-2 border-primary text-primary font-medium">
+                            Overview
+                        </button>
+                        <button class="pb-3 px-1 border-b-2 border-transparent text-text-muted hover:text-text-main">
+                            Details
+                        </button>
+                        <button class="pb-3 px-1 border-b-2 border-transparent text-text-muted hover:text-text-main">
+                            Activity
+                        </button>
+                        <button class="pb-3 px-1 border-b-2 border-transparent text-text-muted hover:text-text-main">
+                            Settings
+                        </button>
+                    </nav>
+                </div>
+            </Card>
+        </section>
+    </div>
+</AppLayout>

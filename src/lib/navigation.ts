@@ -7,6 +7,7 @@ import Plus from '~icons/lucide/plus';
 import ListChecks from '~icons/lucide/list-checks';
 import Target from '~icons/lucide/target';
 import Search from '~icons/lucide/search';
+import Palette from '~icons/lucide/palette';
 
 export type NavItem = {
   name: string;
@@ -30,5 +31,19 @@ export function buildNavItems(contextProjects: any[]): NavItem[] {
     },
     { name: 'Areas', href: '/areas', icon: LayoutGrid },
     { name: 'Reviews', href: '/reviews', icon: CalendarCheck },
+    {
+      name: 'Design Showcase',
+      href: '/design-showcase',
+      icon: Palette,
+      subitems: [
+        { name: 'Design Tokens', href: '/design-showcase/design-tokens' },
+        { name: 'Components', href: '/design-showcase/components' },
+        { name: 'Patterns', href: '/design-showcase/patterns' },
+        { name: 'Typography', href: '/design-showcase/typography' },
+        { name: 'Iconography', href: '/design-showcase/iconography' },
+        { name: 'Accessibility', href: '/design-showcase/accessibility' },
+        { name: 'Templates', href: '/design-showcase/templates' },
+      ],
+    },
   ];
 }

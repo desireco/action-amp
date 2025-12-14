@@ -1,0 +1,275 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Type from "~icons/lucide/type";
+
+const title = "Typography | Design Showcase";
+---
+
+<AppLayout title={title} currentPath="/design-showcase/typography">
+    <div class="max-w-4xl mx-auto space-y-8">
+        <Heading level={1} class="flex items-center gap-3">
+            <Type class="h-8 w-8 text-primary" />
+            Typography
+        </Heading>
+
+        <p class="text-lg text-text-muted">
+            Typography creates hierarchy, readability, and visual harmony in ActionAmp's interface.
+        </p>
+
+        <!-- Font Family -->
+        <section>
+            <Heading level={2}>Font Family</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Primary Typeface: Inter</h3>
+                <p class="text-sm text-text-muted mb-4">
+                    Inter is a humanist sans-serif designed for user interfaces, featuring excellent legibility at screen sizes.
+                </p>
+                <div class="bg-surface p-6 rounded-lg">
+                    <p class="text-2xl font-light mb-2">
+                        Aa Bb Cc Dd Ee Ff Gg
+                    </p>
+                    <p class="text-2xl font-light mb-2">
+                        Hh Ii Jj Kk Ll Mm Nn
+                    </p>
+                    <p class="text-2xl font-light mb-2">
+                        Oo Pp Qq Rr Ss Tt Uu
+                    </p>
+                    <p class="text-2xl font-light">
+                        Vv Ww Xx Yy Zz 1234567890
+                    </p>
+                </div>
+                <div class="mt-4 p-4 bg-surface-hover rounded-lg font-mono text-sm">
+                    CSS: font-family: 'Inter', system-ui, sans-serif
+                </div>
+            </Card>
+        </section>
+
+        <!-- Type Scale -->
+        <section>
+            <Heading level={2}>Type Scale</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Heading Hierarchy</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Clear hierarchy improves scannability and content organization:
+                </p>
+
+                <div class="space-y-6">
+                    <div>
+                        <h1 class="text-4xl font-light mb-2">Heading 1</h1>
+                        <p class="text-sm text-text-muted">36px / 48px - Used for main page titles</p>
+                    </div>
+
+                    <div>
+                        <h2 class="text-3xl mb-2">Heading 2</h2>
+                        <p class="text-sm text-text-muted">30px / 40px - Used for section titles</p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-2xl font-medium mb-2">Heading 3</h3>
+                        <p class="text-sm text-text-muted">24px / 32px - Used for subsections</p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xl font-semibold mb-2">Heading 4</h4>
+                        <p class="text-sm text-text-muted">20px / 28px - Used for card titles</p>
+                    </div>
+
+                    <div>
+                        <h5 class="text-lg font-bold mb-2">Heading 5</h5>
+                        <p class="text-sm text-text-muted">18px / 24px - Used for component titles</p>
+                    </div>
+                </div>
+            </Card>
+
+            <Card class="p-6 mt-6">
+                <h3 class="font-semibold mb-4">Body Text</h3>
+
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-base leading-6">
+                            Body Text (Default)<br>
+                            <span class="text-sm text-text-muted">16px / 24px - Primary content text</span>
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-lg leading-7">
+                            Large Body Text<br>
+                            <span class="text-sm text-text-muted">18px / 28px - Emphasized content</span>
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-sm leading-5">
+                            Small Text<br>
+                            <span class="text-sm text-text-muted">14px / 20px - Secondary information</span>
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs leading-4">
+                            Extra Small Text<br>
+                            <span class="text-sm text-text-muted">12px / 16px - Metadata and captions</span>
+                        </p>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Font Weights -->
+        <section>
+            <Heading level={2}>Font Weights</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Weight Variations</h3>
+                <div class="space-y-4">
+                    <p class="font-light text-2xl">Light - 300</p>
+                    <p class="font-normal text-2xl">Regular - 400</p>
+                    <p class="font-medium text-2xl">Medium - 500</p>
+                    <p class="font-semibold text-2xl">Semibold - 600</p>
+                    <p class="font-bold text-2xl">Bold - 700</p>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Text Colors -->
+        <section>
+            <Heading level={2}>Text Colors</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Color Hierarchy</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Text colors create visual hierarchy and indicate relationships:
+                </p>
+
+                <div class="space-y-6">
+                    <div class="p-4 bg-background border border-border rounded">
+                        <p class="text-text-main mb-1">Primary Text</p>
+                        <p class="font-mono text-xs text-text-muted">#fafafa</p>
+                    </div>
+
+                    <div class="p-4 bg-background border border-border rounded">
+                        <p class="text-text-muted mb-1">Secondary/Muted Text</p>
+                        <p class="font-mono text-xs text-text-muted">#a1a1aa</p>
+                    </div>
+
+                    <div class="p-4 bg-background border border-border rounded">
+                        <p class="text-primary mb-1">Primary Accent Text</p>
+                        <p class="font-mono text-xs text-text-muted">#6366f1</p>
+                    </div>
+
+                    <div class="p-4 bg-primary rounded">
+                        <p class="text-primary-foreground mb-1">Text on Primary</p>
+                        <p class="font-mono text-xs opacity-75">#ffffff</p>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Text Utilities -->
+        <section>
+            <Heading level={2}>Text Utilities</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Common Text Modifiers</h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-lg mb-2">Alignment:</p>
+                        <p class="text-left bg-surface p-2 rounded mb-1">Left aligned text</p>
+                        <p class="text-center bg-surface p-2 rounded mb-1">Center aligned text</p>
+                        <p class="text-right bg-surface p-2 rounded">Right aligned text</p>
+                    </div>
+
+                    <div>
+                        <p class="text-lg mb-2">Transformations:</p>
+                        <p class="uppercase bg-surface p-2 rounded mb-1">Uppercase text</p>
+                        <p class="lowercase bg-surface p-2 rounded mb-1">Lowercase text</p>
+                        <p class="capitalize bg-surface p-2 rounded">Capitalized text</p>
+                    </div>
+
+                    <div>
+                        <p class="text-lg mb-2">Decoration:</p>
+                        <p class="underline">Underlined text</p>
+                        <p class="line-through text-text-muted mt-2">Strikethrough text</p>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Line Length & Reading -->
+        <section>
+            <Heading level={2}>Reading Best Practices</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Optimal Line Length</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Comfortable reading requires proper line length and spacing:
+                </p>
+
+                <div class="space-y-6">
+                    <div class="p-4 bg-surface rounded">
+                        <p class="text-sm text-text-muted mb-2">Too Narrow (40-50 characters)</p>
+                        <p class="leading-relaxed">
+                            This text is too cramped. It forces the reader to jump between lines frequently, which can be tiring and disruptive to the reading flow.
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-surface rounded">
+                        <p class="text-sm text-text-muted mb-2">Optimal (60-75 characters)</p>
+                        <p class="leading-relaxed max-w-2xl">
+                            This line length is ideal for comfortable reading. It allows the eye to track naturally across each line without getting lost, creating a pleasant reading experience that reduces fatigue.
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-surface rounded">
+                        <p class="text-sm text-text-muted mb-2">Too Wide (100+ characters)</p>
+                        <p class="leading-relaxed">
+                            This line length makes it difficult to find the start of the next line, causing eye strain and making it harder to maintain your place in long passages of text.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 bg-surface-hover rounded-lg">
+                    <p class="text-sm font-medium mb-2">Recommendations:</p>
+                    <ul class="text-sm text-text-muted space-y-1">
+                        <li>• Body text: 60-75 characters per line</li>
+                        <li>• Line height: 1.5x font size for body text</li>
+                        <li>• Paragraph spacing: 1em between paragraphs</li>
+                        <li>• Use columns for very wide layouts</li>
+                    </ul>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Responsive Typography -->
+        <section>
+            <Heading level={2}>Responsive Typography</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Adaptive Sizing</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Typography scales appropriately across different screen sizes:
+                </p>
+
+                <div class="space-y-4">
+                    <div class="p-4 bg-surface rounded">
+                        <p class="text-xs text-text-muted mb-1">Mobile: &lt; 768px</p>
+                        <p class="text-2xl font-light">Heading 1 scales down</p>
+                    </div>
+                    <div class="p-4 bg-surface rounded">
+                        <p class="text-xs text-text-muted mb-1">Tablet: 768px - 1024px</p>
+                        <p class="text-3xl font-light">Heading 1 medium size</p>
+                    </div>
+                    <div class="p-4 bg-surface rounded">
+                        <p class="text-xs text-text-muted mb-1">Desktop: &gt; 1024px</p>
+                        <p class="text-4xl font-light">Heading 1 full size</p>
+                    </div>
+                </div>
+            </Card>
+        </section>
+    </div>
+</AppLayout>

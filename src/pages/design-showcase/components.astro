@@ -1,0 +1,216 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
+import Input from "../../components/ui/Input.astro";
+import Badge from "../../components/ui/Badge.astro";
+import Spinner from "../../components/ui/Spinner.astro";
+import Skeleton from "../../components/ui/Skeleton.astro";
+import LoadingButton from "../../components/ui/LoadingButton.astro";
+import Layers from "~icons/lucide/layers";
+import Code from "~icons/lucide/code";
+import Eye from "~icons/lucide/eye";
+import CheckCircle from "~icons/lucide/check-circle";
+import AlertTriangle from "~icons/lucide/alert-triangle";
+import X from "~icons/lucide/x";
+import Search from "~icons/lucide/search";
+
+const title = "Components | Design Showcase";
+---
+
+<AppLayout title={title} currentPath="/design-showcase/components">
+    <div class="max-w-6xl mx-auto space-y-8">
+        <Heading level={1} class="flex items-center gap-3">
+            <Layers class="h-8 w-8 text-primary" />
+            UI Components
+        </Heading>
+
+        <p class="text-lg text-text-muted">
+            A comprehensive library of reusable UI components built with Astro and TailwindCSS.
+        </p>
+
+        <!-- Buttons -->
+        <section>
+            <Heading level={2}>Buttons</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Button Variants</h3>
+                <div class="space-y-6">
+                    <!-- Primary Buttons -->
+                    <div>
+                        <h4 class="text-sm font-medium text-text-muted mb-3">Primary</h4>
+                        <div class="flex flex-wrap gap-3">
+                            <Button>Default</Button>
+                            <Button variant="primary">Primary</Button>
+                            <Button disabled>Disabled</Button>
+                            <Button size="sm">Small</Button>
+                            <Button size="lg">Large</Button>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Buttons -->
+                    <div>
+                        <h4 class="text-sm font-medium text-text-muted mb-3">Secondary</h4>
+                        <div class="flex flex-wrap gap-3">
+                            <Button variant="secondary">Secondary</Button>
+                            <Button variant="outline">Outline</Button>
+                            <Button variant="ghost">Ghost</Button>
+                        </div>
+                    </div>
+
+                    <!-- Destructive Buttons -->
+                    <div>
+                        <h4 class="text-sm font-medium text-text-muted mb-3">Destructive</h4>
+                        <div class="flex flex-wrap gap-3">
+                            <Button variant="destructive">Destructive</Button>
+                            <Button variant="destructive-outline">Destructive Outline</Button>
+                        </div>
+                    </div>
+
+                    <!-- Icon Buttons -->
+                    <div>
+                        <h4 class="text-sm font-medium text-text-muted mb-3">With Icons</h4>
+                        <div class="flex flex-wrap gap-3">
+                            <Button class="flex items-center gap-2">
+                                <CheckCircle class="h-4 w-4" />
+                                Save
+                            </Button>
+                            <Button variant="outline" class="flex items-center gap-2">
+                                <Eye class="h-4 w-4" />
+                                Preview
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                                <Code class="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Form Elements -->
+        <section>
+            <Heading level={2}>Form Elements</Heading>
+
+            <div class="grid gap-6 lg:grid-cols-2">
+                <!-- Inputs -->
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-4">Input Fields</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Text Input</label>
+                            <Input placeholder="Enter text..." />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Email Input</label>
+                            <Input type="email" placeholder="email@example.com" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Password Input</label>
+                            <Input type="password" placeholder="••••••••" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Disabled Input</label>
+                            <Input disabled value="Disabled field" />
+                        </div>
+                    </div>
+                </Card>
+
+                <!-- Input Variations -->
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-4">Input Variations</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">With Error</label>
+                            <Input class="border-destructive" placeholder="Error state" />
+                            <p class="text-xs text-destructive mt-1">This field is required</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Search Input</label>
+                            <div class="relative">
+                                <Input class="pl-9" placeholder="Search..." />
+                                <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+        </section>
+
+        <!-- Badges -->
+        <section>
+            <Heading level={2}>Badges</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Badge Variants</h3>
+                <div class="space-y-4">
+                    <div class="flex flex-wrap gap-2">
+                        <Badge>Default</Badge>
+                        <Badge variant="primary">Primary</Badge>
+                        <Badge variant="secondary">Secondary</Badge>
+                        <Badge variant="success">Success</Badge>
+                        <Badge variant="warning">Warning</Badge>
+                        <Badge variant="destructive">Destructive</Badge>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <Badge size="sm">Small</Badge>
+                        <Badge>Default</Badge>
+                        <Badge size="lg">Large</Badge>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Badge class="flex items-center gap-1">
+                            <CheckCircle class="h-3 w-3" />
+                            Verified
+                        </Badge>
+                        <Badge variant="warning" class="flex items-center gap-1">
+                            <AlertTriangle class="h-3 w-3" />
+                            Warning
+                        </Badge>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Loading States -->
+        <section>
+            <Heading level={2}>Loading States</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Spinners</h3>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <Spinner size="sm" />
+                        <span class="text-sm">Small</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Spinner />
+                        <span class="text-sm">Default</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Spinner size="lg" />
+                        <span class="text-sm">Large</span>
+                    </div>
+                </div>
+            </Card>
+
+            <Card class="p-6 mt-4">
+                <h3 class="font-semibold mb-4">Skeleton Loaders</h3>
+                <div class="space-y-3">
+                    <Skeleton class="h-4 w-3/4" />
+                    <Skeleton class="h-4 w-1/2" />
+                    <Skeleton class="h-4 w-2/3" />
+                </div>
+            </Card>
+
+            <Card class="p-6 mt-4">
+                <h3 class="font-semibold mb-4">Loading Buttons</h3>
+                <div class="flex flex-wrap gap-3">
+                    <LoadingButton loading={true}>Loading...</LoadingButton>
+                    <LoadingButton loading={true} variant="outline">Processing</LoadingButton>
+                    <LoadingButton loading={true} variant="ghost">Saving...</LoadingButton>
+                </div>
+            </Card>
+        </section>
+    </div>
+</AppLayout>

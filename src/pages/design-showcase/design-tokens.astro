@@ -1,0 +1,295 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+
+const title = "Design Tokens | Design Showcase";
+---
+
+<AppLayout title={title} currentPath="/design-showcase/design-tokens">
+    <div class="max-w-4xl mx-auto space-y-8">
+        <Heading level={1}>Design Tokens</Heading>
+        <p class="text-lg text-text-muted">
+            ActionAmp's design system is built on a consistent set of design tokens that ensure visual harmony and maintainability.
+        </p>
+
+        <!-- Color Tokens -->
+        <section>
+            <Heading level={2}>Colors</Heading>
+
+            <div class="space-y-6">
+                <!-- Primary Colors -->
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-4">Primary Colors</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-12 h-12 bg-primary rounded"></div>
+                                <div>
+                                    <p class="font-mono text-sm">primary</p>
+                                    <p class="text-xs text-text-muted">#6366f1</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-12 h-12 bg-primary/10 rounded"></div>
+                                <div>
+                                    <p class="font-mono text-sm">primary/10</p>
+                                    <p class="text-xs text-text-muted">rgba(99, 102, 241, 0.1)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                <!-- Surface Colors -->
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-4">Surface Colors</h3>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-12 h-12 bg-background border border-border rounded"></div>
+                                    <div>
+                                        <p class="font-mono text-sm">background</p>
+                                        <p class="text-xs text-text-muted">#09090b</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-12 h-12 bg-surface border border-border rounded"></div>
+                                    <div>
+                                        <p class="font-mono text-sm">surface</p>
+                                        <p class="text-xs text-text-muted">#18181b</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-12 h-12 bg-surface-hover rounded"></div>
+                                    <div>
+                                        <p class="font-mono text-sm">surface-hover</p>
+                                        <p class="text-xs text-text-muted">#27272a</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                <!-- Text Colors -->
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-4">Text Colors</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <p class="text-text-main">Main Text</p>
+                            <p class="font-mono text-xs text-text-muted">#fafafa</p>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-text-muted">Muted Text</p>
+                            <p class="font-mono text-xs text-text-muted">#a1a1aa</p>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-primary">Primary Text</p>
+                            <p class="font-mono text-xs text-muted">#6366f1</p>
+                        </div>
+                    </div>
+                </Card>
+
+                <!-- Functional Colors -->
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-4">Functional Colors</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-12 h-12 bg-destructive rounded"></div>
+                                <div>
+                                    <p class="text-white">destructive</p>
+                                    <p class="font-mono text-xs text-white/80">#ef4444</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-success">Success</p>
+                            <p class="font-mono text-xs">#22c55e</p>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-warning">Warning</p>
+                            <p class="font-mono text-xs">#eab308</p>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-info">Info</p>
+                            <p class="font-mono text-xs">#3b82f6</p>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+        </section>
+
+        <!-- Typography -->
+        <section>
+            <Heading level={2}>Typography</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Font Family</h3>
+                <div class="bg-surface p-4 rounded-lg font-mono text-sm">
+                    --font-sans: 'Inter', system-ui, sans-serif
+                </div>
+            </Card>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Type Scale</h3>
+                <div class="space-y-3">
+                    <div class="space-y-1">
+                        <p class="text-4xl font-light">Light</p>
+                        <p class="text-xs text-text-muted">36px / 48px</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-3xl">Regular</p>
+                        <p class="text-xs text-text-muted">30px / 40px</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-2xl font-medium">Medium</p>
+                        <p class="text-xs text-text-muted">24px / 32px</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-xl font-semibold">Semibold</p>
+                        <p class="text-xs text-text-muted">20px / 28px</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-lg font-bold">Bold</p>
+                        <p class="text-xs text-text-muted">18px / 24px</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-base">Normal</p>
+                        <p class="text-xs text-text-muted">16px / 24px</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm">Small</p>
+                        <p class="text-xs text-text-muted">14px / 20px</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-xs">Extra Small</p>
+                        <p class="text-xs text-text-muted">12px / 16px</p>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Spacing -->
+        <section>
+            <Heading level={2}>Spacing</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Scale</h3>
+                <p class="text-sm text-text-muted mb-4">
+                    Based on 4px (0.25rem) base unit:
+                </p>
+                <div class="space-y-2 bg-surface p-4 rounded-lg font-mono text-xs">
+                    <div>spacing: 0.25rem</div>
+                    <div class="space-y-1">
+                        <div class="h-1 bg-primary/20"></div>
+                        <div>1x (4px)</div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-2 bg-primary/20"></div>
+                        <div>2x (8px)</div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="h-3 bg-primary/20"></div>
+                        <div>3x (12px)</div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="h-4 bg-primary/20"></div>
+                        <div>4x (16px)</div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="h-5 bg-primary/20"></div>
+                        <div>6x (24px)</div>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Border Radius -->
+        <section>
+            <Heading level={2}>Border Radius</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Corner Radius</h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="space-y-2">
+                        <div class="w-12 h-12 rounded-sm bg-surface border border-border"></div>
+                        <p class="text-xs text-center">sm</p>
+                        <p class="text-xs text-center text-text-muted">0.125rem</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="w-12 h-12 rounded bg-surface border border-border"></div>
+                        <p class="text-xs text-center">default</p>
+                        <p class="text-xs text-center text-text-muted">0.5rem</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="w-12 h-12 rounded-md bg-surface border border-border"></div>
+                        <p class="text-xs text-center">md</p>
+                        <p class="text-xs text-center text-text-muted">0.375rem</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="w-12 h-12 rounded-lg bg-surface border border-border"></div>
+                        <p class="text-xs text-center">lg</p>
+                        <p class="text-xs text-center text-text-muted">0.5rem</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="w-12 h-12 rounded-xl bg-surface border border-border"></div>
+                        <p class="text-xs text-center">xl</p>
+                        <p class="text-xs text-center text-text-muted">0.75rem</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="w-12 h-12 rounded-2xl bg-surface border border-border"></div>
+                        <p class="text-xs text-center">2xl</p>
+                        <p class="text-xs text-center text-text-muted">1rem</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="w-12 h-12 rounded-3xl bg-surface border border-border"></div>
+                        <p class="text-xs text-center">3xl</p>
+                        <p class="text-xs text-center text-text-muted">1.5rem</p>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Shadows -->
+        <section>
+            <Heading level={2}>Shadows</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Elevation</h3>
+                <div class="grid grid-cols-4 gap-4 items-end">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-surface rounded"></div>
+                        <p class="text-xs text-text-muted mt-1">none</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-surface rounded shadow-sm"></div>
+                        <p class="text-xs text-text-muted mt-1">sm</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-surface rounded shadow-md"></div>
+                        <p class="text-xs text-text-muted mt-1">md</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-surface rounded shadow-lg"></div>
+                        <p class="text-xs text-text-muted mt-1">lg</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-surface rounded shadow-xl"></div>
+                        <p class="text-xs text-text-muted mt-1">xl</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-surface rounded shadow-2xl"></div>
+                        <p class="text-xs text-text-muted mt-1">2xl</p>
+                    </div>
+                </div>
+            </Card>
+        </section>
+    </div>
+</AppLayout>

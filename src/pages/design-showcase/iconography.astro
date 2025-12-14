@@ -1,0 +1,459 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import Heading from "../../components/ui/Heading.astro";
+import Card from "../../components/ui/Card.astro";
+import Button from "../../components/ui/Button.astro";
+import Search from "~icons/lucide/search";
+import Plus from "~icons/lucide/plus";
+import Edit from "~icons/lucide/edit";
+import Trash2 from "~icons/lucide/trash-2";
+import Check from "~icons/lucide/check";
+import X from "~icons/lucide/x";
+import ChevronDown from "~icons/lucide/chevron-down";
+import ChevronRight from "~icons/lucide/chevron-right";
+import ChevronLeft from "~icons/lucide/chevron-left";
+import ChevronUp from "~icons/lucide/chevron-up";
+import Menu from "~icons/lucide/menu";
+import Home from "~icons/lucide/home";
+import Settings from "~icons/lucide/settings";
+import User from "~icons/lucide/user";
+import Bell from "~icons/lucide/bell";
+import Mail from "~icons/lucide/mail";
+import Calendar from "~icons/lucide/calendar";
+import Clock from "~icons/lucide/clock";
+import Star from "~icons/lucide/star";
+import Heart from "~icons/lucide/heart";
+import Bookmark from "~icons/lucide/bookmark";
+import Share from "~icons/lucide/share";
+import Download from "~icons/lucide/download";
+import Upload from "~icons/lucide/upload";
+import Eye from "~icons/lucide/eye";
+import EyeOff from "~icons/lucide/eye-off";
+import Lock from "~icons/lucide/lock";
+import Unlock from "~icons/lucide/unlock";
+import AlertCircle from "~icons/lucide/alert-circle";
+import AlertTriangle from "~icons/lucide/alert-triangle";
+import Info from "~icons/lucide/info";
+import CheckCircle from "~icons/lucide/check-circle";
+import XCircle from "~icons/lucide/x-circle";
+import ArrowUp from "~icons/lucide/arrow-up";
+import ArrowDown from "~icons/lucide/arrow-down";
+import ArrowLeft from "~icons/lucide/arrow-left";
+import ArrowRight from "~icons/lucide/arrow-right";
+import ExternalLink from "~icons/lucide/external-link";
+import Copy from "~icons/lucide/copy";
+import Filter from "~icons/lucide/filter";
+import Grid from "~icons/lucide/grid";
+import List from "~icons/lucide/list";
+import Layout from "~icons/lucide/layout";
+import Layers from "~icons/lucide/layers";
+import FileText from "~icons/lucide/file-text";
+import Folder from "~icons/lucide/folder";
+import FolderOpen from "~icons/lucide/folder-open";
+import Tag from "~icons/lucide/tag";
+import Zap from "~icons/lucide/zap";
+import Target from "~icons/lucide/target";
+import TrendingUp from "~icons/lucide/trending-up";
+import BarChart from "~icons/lucide/bar-chart";
+import PieChart from "~icons/lucide/pie-chart";
+import Activity from "~icons/lucide/activity";
+import RefreshCw from "~icons/lucide/refresh-cw";
+import RotateCcw from "~icons/lucide/rotate-ccw";
+import MoreVertical from "~icons/lucide/more-vertical";
+import MoreHorizontal from "~icons/lucide/more-horizontal";
+import Minus from "~icons/lucide/minus";
+import Maximize from "~icons/lucide/maximize";
+import Minimize from "~icons/lucide/minimize";
+
+const title = "Iconography | Design Showcase";
+
+const iconCategories = [
+    {
+        name: "Navigation",
+        icons: [
+            { component: ChevronLeft, name: "Chevron Left" },
+            { component: ChevronRight, name: "Chevron Right" },
+            { component: ChevronUp, name: "Chevron Up" },
+            { component: ChevronDown, name: "Chevron Down" },
+            { component: ArrowLeft, name: "Arrow Left" },
+            { component: ArrowRight, name: "Arrow Right" },
+            { component: ArrowUp, name: "Arrow Up" },
+            { component: ArrowDown, name: "Arrow Down" },
+            { component: Menu, name: "Menu" },
+            { component: Home, name: "Home" },
+        ]
+    },
+    {
+        name: "Actions",
+        icons: [
+            { component: Plus, name: "Add" },
+            { component: Edit, name: "Edit" },
+            { component: Trash2, name: "Delete" },
+            { component: Check, name: "Check" },
+            { component: X, name: "Close" },
+            { component: Copy, name: "Copy" },
+            { component: Download, name: "Download" },
+            { component: Upload, name: "Upload" },
+            { component: Share, name: "Share" },
+            { component: ExternalLink, name: "External Link" },
+        ]
+    },
+    {
+        name: "UI Elements",
+        icons: [
+            { component: Search, name: "Search" },
+            { component: Filter, name: "Filter" },
+            { component: Grid, name: "Grid" },
+            { component: List, name: "List" },
+            { component: Layout, name: "Layout" },
+            { component: Layers, name: "Layers" },
+            { component: MoreVertical, name: "More Vertical" },
+            { component: MoreHorizontal, name: "More Horizontal" },
+            { component: Settings, name: "Settings" },
+            { component: Menu, name: "Menu" },
+        ]
+    },
+    {
+        name: "Status & Feedback",
+        icons: [
+            { component: CheckCircle, name: "Success" },
+            { component: XCircle, name: "Error" },
+            { component: AlertCircle, name: "Alert" },
+            { component: AlertTriangle, name: "Warning" },
+            { component: Info, name: "Info" },
+            { component: Activity, name: "Activity" },
+            { component: TrendingUp, name: "Trending Up" },
+            { component: BarChart, name: "Bar Chart" },
+            { component: PieChart, name: "Pie Chart" },
+            { component: Target, name: "Target" },
+        ]
+    },
+    {
+        name: "Content & Media",
+        icons: [
+            { component: FileText, name: "Document" },
+            { component: Folder, name: "Folder" },
+            { component: FolderOpen, name: "Folder Open" },
+            { component: Star, name: "Star" },
+            { component: Heart, name: "Heart" },
+            { component: Bookmark, name: "Bookmark" },
+            { component: Tag, name: "Tag" },
+            { component: Eye, name: "Show" },
+            { component: EyeOff, name: "Hide" },
+            { component: Calendar, name: "Calendar" },
+        ]
+    },
+    {
+        name: "User & System",
+        icons: [
+            { component: User, name: "User" },
+            { component: Bell, name: "Notifications" },
+            { component: Mail, name: "Email" },
+            { component: Lock, name: "Lock" },
+            { component: Unlock, name: "Unlock" },
+            { component: Clock, name: "Time" },
+            { component: Zap, name: "Energy/Power" },
+            { component: RefreshCw, name: "Refresh" },
+            { component: RotateCcw, name: "Undo" },
+            { component: Settings, name: "Settings" },
+        ]
+    }
+];
+---
+
+<AppLayout title={title} currentPath="/design-showcase/iconography">
+    <div class="max-w-6xl mx-auto space-y-8">
+        <Heading level={1} class="flex items-center gap-3">
+            <Zap class="h-8 w-8 text-primary" />
+            Iconography
+        </Heading>
+
+        <p class="text-lg text-text-muted">
+            Consistent, clear icons that enhance usability and provide visual communication throughout ActionAmp.
+        </p>
+
+        <!-- Icon System -->
+        <section>
+            <Heading level={2}>Icon System</Heading>
+
+            <div class="grid gap-6 md:grid-cols-2">
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-3">Lucide Icons</h3>
+                    <p class="text-sm text-text-muted mb-4">
+                        We use Lucide for our icon library, providing:
+                    </p>
+                    <ul class="space-y-2 text-sm text-text-muted">
+                        <li>• Consistent stroke width (2px)</li>
+                        <li>• 24x24px default size</li>
+                        <li>• Sharp, modern aesthetic</li>
+                        <li>• 700+ icons available</li>
+                        <li>• Optimized for UI clarity</li>
+                    </ul>
+                </Card>
+
+                <Card class="p-6">
+                    <h3 class="font-semibold mb-3">Usage Guidelines</h3>
+                    <p class="text-sm text-text-muted mb-4">
+                        Best practices for using icons:
+                    </p>
+                    <ul class="space-y-2 text-sm text-text-muted">
+                        <li>• Use icons to supplement, not replace text</li>
+                        <li>• Maintain consistent sizing within context</li>
+                        <li>• Pair with labels for accessibility</li>
+                        <li>• Use familiar metaphors</li>
+                        <li>• Avoid decorative icons without purpose</li>
+                    </ul>
+                </Card>
+            </div>
+        </section>
+
+        <!-- Icon Sizes -->
+        <section>
+            <Heading level={2}>Icon Sizes</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Size Variations</h3>
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <p class="text-sm text-text-muted">16px - Small (UI elements)</p>
+                        <div class="flex gap-4 p-4 bg-surface rounded">
+                            <Search class="h-4 w-4" />
+                            <Plus class="h-4 w-4" />
+                            <Edit class="h-4 w-4" />
+                            <Trash2 class="h-4 w-4" />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="text-sm text-text-muted">20px - Medium (Buttons)</p>
+                        <div class="flex gap-4 p-4 bg-surface rounded">
+                            <Search class="h-5 w-5" />
+                            <Plus class="h-5 w-5" />
+                            <Edit class="h-5 w-5" />
+                            <Trash2 class="h-5 w-5" />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="text-sm text-text-muted">24px - Default (Standard)</p>
+                        <div class="flex gap-4 p-4 bg-surface rounded">
+                            <Search class="h-6 w-6" />
+                            <Plus class="h-6 w-6" />
+                            <Edit class="h-6 w-6" />
+                            <Trash2 class="h-6 w-6" />
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="text-sm text-text-muted">32px - Large (Features)</p>
+                        <div class="flex gap-4 p-4 bg-surface rounded">
+                            <Search class="h-8 w-8" />
+                            <Plus class="h-8 w-8" />
+                            <Edit class="h-8 w-8" />
+                            <Trash2 class="h-8 w-8" />
+                        </div>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Icon Library -->
+        <section>
+            <Heading level={2}>Icon Library</Heading>
+
+            {iconCategories.map(category => (
+                <Card class="p-6 mb-6">
+                    <h3 class="font-semibold mb-4">{category.name}</h3>
+                    <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                        {category.icons.map(icon => {
+                            const IconComponent = icon.component;
+                            return (
+                                <div class="flex flex-col items-center gap-2 p-3 bg-surface rounded hover:bg-surface-hover transition-colors cursor-pointer group">
+                                    <IconComponent class="h-6 w-6 text-text-main group-hover:text-primary" />
+                                    <span class="text-xs text-center text-text-muted">{icon.name}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </Card>
+            ))}
+        </section>
+
+        <!-- Icon with Text -->
+        <section>
+            <Heading level={2}>Icons with Text</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Common Patterns</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Icons paired with text for clarity and scannability:
+                </p>
+
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <Button class="flex items-center gap-2">
+                            <Plus class="h-4 w-4" />
+                            New Item
+                        </Button>
+                        <Button variant="outline" class="flex items-center gap-2">
+                            <Edit class="h-4 w-4" />
+                            Edit
+                        </Button>
+                        <Button variant="ghost" class="flex items-center gap-2">
+                            <Trash2 class="h-4 w-4" />
+                            Delete
+                        </Button>
+                    </div>
+
+                    <div class="flex gap-6">
+                        <div class="flex items-center gap-2">
+                            <CheckCircle class="h-5 w-5 text-green-500" />
+                            <span class="text-sm">Completed</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <AlertCircle class="h-5 w-5 text-yellow-500" />
+                            <span class="text-sm">In Progress</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <XCircle class="h-5 w-5 text-red-500" />
+                            <span class="text-sm">Failed</span>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                        <div class="flex items-center gap-3 p-3 bg-surface rounded">
+                            <Folder class="h-5 w-5 text-blue-500" />
+                            <div>
+                                <p class="font-medium">Documents</p>
+                                <p class="text-xs text-text-muted">24 files</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-surface rounded">
+                            <Calendar class="h-5 w-5 text-green-500" />
+                            <div>
+                                <p class="font-medium">Calendar</p>
+                                <p class="text-xs text-text-muted">5 events</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-surface rounded">
+                            <Tag class="h-5 w-5 text-purple-500" />
+                            <div>
+                                <p class="font-medium">Tags</p>
+                                <p class="text-xs text-text-muted">12 labels</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Color Variations -->
+        <section>
+            <Heading level={2}>Icon Colors</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Semantic Colors</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Icons use color to convey meaning and status:
+                </p>
+
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <CheckCircle class="h-6 w-6 text-green-500" />
+                            <span class="text-sm">Success - Green (text-green-500)</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <Info class="h-6 w-6 text-blue-500" />
+                            <span class="text-sm">Info - Blue (text-blue-500)</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <AlertTriangle class="h-6 w-6 text-yellow-500" />
+                            <span class="text-sm">Warning - Yellow (text-yellow-500)</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <XCircle class="h-6 w-6 text-red-500" />
+                            <span class="text-sm">Error - Red (text-red-500)</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <Star class="h-6 w-6 text-yellow-500" />
+                            <span class="text-sm">Featured - Yellow</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <Heart class="h-6 w-6 text-red-500" />
+                            <span class="text-sm">Favorite - Red</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <Bookmark class="h-6 w-6 text-blue-500" />
+                            <span class="text-sm">Saved - Blue</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <Lock class="h-6 w-6 text-gray-500" />
+                            <span class="text-sm">Locked - Gray</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 bg-surface-hover rounded-lg">
+                    <p class="text-sm font-medium mb-2">Color Guidelines:</p>
+                    <ul class="text-sm text-text-muted space-y-1">
+                        <li>• Use semantic colors consistently with their meanings</li>
+                        <li>• Default to current text color for neutral icons</li>
+                        <li>• Use primary color for interactive hover states</li>
+                        <li>• Ensure sufficient contrast (3:1 minimum)</li>
+                    </ul>
+                </div>
+            </Card>
+        </section>
+
+        <!-- Animated Icons -->
+        <section>
+            <Heading level={2}>Animated Icons</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Motion & States</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Subtle animations enhance user feedback and delight:
+                </p>
+
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="space-y-3">
+                        <p class="text-sm font-medium">Loading States:</p>
+                        <div class="flex gap-4">
+                            <RefreshCw class="h-6 w-6 animate-spin" />
+                            <Activity class="h-6 w-6 animate-pulse" />
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <p class="text-sm font-medium">Interactive States:</p>
+                        <div class="flex gap-4">
+                            <div class="group cursor-pointer">
+                                <ChevronRight class="h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                            <div class="group cursor-pointer">
+                                <ChevronDown class="h-6 w-6 group-hover:translate-y-1 transition-transform" />
+                            </div>
+                            <div class="group cursor-pointer">
+                                <Plus class="h-6 w-6 group-hover:rotate-90 transition-transform" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 bg-surface-hover rounded-lg">
+                    <p class="text-sm font-medium mb-2">Animation Guidelines:</p>
+                    <ul class="text-sm text-text-muted space-y-1">
+                        <li>• Keep animations subtle (200-300ms duration)</li>
+                        <li>• Respect prefers-reduced-motion</li>
+                        <li>• Use animations to indicate state changes</li>
+                        <li>• Avoid animations that distract from content</li>
+                    </ul>
+                </div>
+            </Card>
+        </section>
+    </div>
+</AppLayout>
