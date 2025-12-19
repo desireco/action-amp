@@ -94,7 +94,7 @@ export class DataWriter {
 
         if (type === 'action') {
             // Update metadata for Action
-            parsed.data.status = 'todo';
+            parsed.data.status = 'draft';
             parsed.data.priority = 'medium';
             parsed.data.created = parsed.data.captured || new Date().toISOString();
             delete parsed.data.type;

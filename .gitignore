@@ -38,3 +38,9 @@ pnpm-debug.log*
 .beads/beads.db*
 .beads/daemon.*
 .beads/*.left.*
+
+# Auto-Claude files and folders
+.auto-claude
+worktrees/
+.worktrees/
+logs/

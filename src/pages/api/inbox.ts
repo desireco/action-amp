@@ -1,5 +1,22 @@
 import type { APIRoute } from 'astro';
 import { dataWriter } from '../../lib/data/writer';
+import { getCachedCollection } from '../../lib/content-cache';
+
+export const GET: APIRoute = async () => {
+    try {
+        const items = await getCachedCollection('inbox');
+        return new Response(JSON.stringify(items), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        console.error('Error fetching inbox items:', error);
+        return new Response(JSON.stringify({ error: 'Failed to fetch items' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+};
 
 export const POST: APIRoute = async ({ request }) => {
     try {

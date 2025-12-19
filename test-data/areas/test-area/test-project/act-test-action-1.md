@@ -1,7 +1,7 @@
 ---
 id: "test-action-1"
 title: "Test Action Todo"
-status: "todo"
+status: "draft"
 priority: "high"
 created: "2024-01-01"
 

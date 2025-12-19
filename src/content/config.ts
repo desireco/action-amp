@@ -44,7 +44,7 @@ const actions = defineCollection({
   schema: z.object({
     id: z.string(),
     title: z.string(),
-    status: z.enum(['todo', 'completed', 'in_progress', 'blocked', 'cancelled']).default('todo'),
+    status: z.enum(['draft', 'todo', 'completed', 'in_progress', 'blocked', 'cancelled']).default('draft'),
     priority: z.enum(['high', 'medium', 'low']).default('medium'),
     created: z.coerce.date(),
     completed: z.coerce.date().optional(),

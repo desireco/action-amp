@@ -47,7 +47,7 @@ description = "A test project"
   const actionMd = `---
 id: "test-action"
 title: "Test Action"
-status: "todo"
+status: "draft"
 priority: "medium"
 created: "2024-01-01"
 ---

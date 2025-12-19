@@ -52,10 +52,7 @@ export function getCached<T>(
 
 export function invalidate(...keys: string[]) {
   for (const key of keys) {
-    const entry = globalStore.store.get(key);
-    if (entry) {
-      globalStore.store.delete(key);
-    }
+    globalStore.store.delete(key);
   }
 }
 

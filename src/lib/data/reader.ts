@@ -34,7 +34,7 @@ export class DataReader {
                 // Ensure defaults
                 const data = {
                     title: parsed.data.title || 'Untitled',
-                    status: parsed.data.status || 'todo',
+                    status: parsed.data.status || 'draft',
                     priority: parsed.data.priority || 'medium',
                     created: parsed.data.created,
                     completed: parsed.data.completed,

@@ -249,7 +249,8 @@ const typeIcons = {
             deleteBtn.disabled = true;
             const res = await fetch(`/api/inbox/${inboxItemId}`, { method: "DELETE" });
             if (res.ok) {
-                window.location.href = "/inbox";
+                // Force a hard refresh with timestamp to bypass any cache
+                window.location.href = "/inbox?t=" + Date.now();
             } else {
                 alert("Failed to delete item");
                 deleteBtn.disabled = false;

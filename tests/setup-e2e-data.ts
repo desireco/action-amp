@@ -55,7 +55,7 @@ due_date = "2024-12-31"
     {
       id: 'test-action-1',
       title: 'Test Action Todo',
-      status: 'todo',
+      status: 'draft',
       priority: 'high',
       content: 'This is a test action with todo status'
     },

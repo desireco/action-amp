@@ -51,7 +51,7 @@ description = "A test project"
     {
       id: 'test-action-1',
       title: 'Test Action 1',
-      status: 'todo',
+      status: 'draft',
       priority: 'high',
       content: 'This is test action 1'
     },

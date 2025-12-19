@@ -9,7 +9,7 @@ export interface InboxItem {
 export interface ActionItem {
     id: string;
     title: string;
-    status: 'todo' | 'completed' | 'in_progress' | 'blocked' | 'cancelled';
+    status: 'draft' | 'todo' | 'completed' | 'in_progress' | 'blocked' | 'cancelled';
     priority: 'high' | 'medium' | 'low';
     created: Date;
     completed?: Date;

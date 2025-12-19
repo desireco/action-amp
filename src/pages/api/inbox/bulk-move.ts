@@ -56,7 +56,7 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
             // Create action content
             const actionData = {
                 title: parsed.data.title || 'Untitled Action',
-                status: 'todo',
+                status: 'draft',
                 priority: parsed.data.priority || 'medium',
                 captured: parsed.data.captured || new Date().toISOString(),
                 type: parsed.data.type || 'note',

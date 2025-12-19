@@ -253,10 +253,12 @@ export class SearchManager {
 
   private getStatusBadge(status: string): string {
     const colors: Record<string, string> = {
+      draft: "bg-orange-500/10 text-orange-500",
       todo: "bg-gray-500/10 text-gray-500",
       in_progress: "bg-blue-500/10 text-blue-500",
       completed: "bg-green-500/10 text-green-500",
       blocked: "bg-red-500/10 text-red-500",
+      cancelled: "bg-gray-500/10 text-gray-500",
       active: "bg-green-500/10 text-green-500",
       archived: "bg-gray-500/10 text-gray-500",
       on_hold: "bg-yellow-500/10 text-yellow-500",
