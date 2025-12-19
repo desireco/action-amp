@@ -1,39 +1,45 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
-import { getCachedCollection } from "../../lib/content-cache";
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 
-const fromCollection = await getCachedCollection("reviews");
-
-async function readDynamicReviews() {
+async function readReviews() {
     try {
         const base = path.join(process.cwd(), "data/reviews");
         const types = ["daily", "weekly", "monthly", "quarterly"];
         const items: any[] = [];
+        
         for (const t of types) {
             const dir = path.join(base, t);
-            const exists = await fs.stat(dir).then((s) => s.isDirectory()).catch(() => false);
-            if (!exists) continue;
-            const files = await fs.readdir(dir);
-            for (const f of files.filter((f) => f.endsWith(".md"))) {
-                const raw = await fs.readFile(path.join(dir, f), "utf-8");
-                const parsed = matter(raw);
-                items.push({
-                    id: `${t}/${f.replace(/\.md$/, "")}`,
-                    collection: "reviews",
-                    data: {
-                        type: parsed.data.type || t,
-                        date: parsed.data.date ? new Date(parsed.data.date) : new Date(),
-                    },
-                });
+            try {
+                const exists = await fs.stat(dir).then((s) => s.isDirectory()).catch(() => false);
+                if (!exists) continue;
+                
+                const files = await fs.readdir(dir);
+                for (const f of files.filter((f) => f.endsWith(".md"))) {
+                    const raw = await fs.readFile(path.join(dir, f), "utf-8");
+                    const parsed = matter(raw);
+                    items.push({
+                        id: `${t}/${f.replace(/\.md$/, "")}`,
+                        collection: "reviews",
+                        data: {
+                            type: parsed.data.type || t,
+                            date: parsed.data.date ? new Date(parsed.data.date) : new Date(),
+                        },
+                    });
+                }
+            } catch (error) {
+                // Skip if directory doesn't exist or can't be read
+                console.error(`Error reading ${t} reviews:`, error);
             }
         }
+        
         return items;
-    } catch {
+    } catch (error) {
+        console.error('Error reading reviews:', error);
         return [];
     }
 }
@@ -48,8 +54,7 @@ function dedupe(items: any[]) {
     });
 }
 
-const dynamic = await readDynamicReviews();
-const reviews = dedupe([...fromCollection, ...dynamic]);
+const reviews = await readReviews();
 reviews.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
 const today = new Date().toISOString().split("T")[0];

@@ -1,11 +1,9 @@
 /// <reference types="vitest" />
-import { getViteConfig } from 'astro/config';
+import { defineConfig } from 'vitest/config';
 
-export default getViteConfig({
+export default defineConfig({
     test: {
-        /* for example, use global to avoid globals imports (describe, test, expect): */
-        // globals: true,
-        include: ['src/**/*.test.ts'],
-        exclude: ['tests/**/*', 'node_modules/**/*'],
+        include: ['src/**/*.test.ts', 'tests/**/*.spec.ts'],
+        exclude: ['node_modules/**/*'],
     },
 });
