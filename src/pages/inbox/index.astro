@@ -98,30 +98,6 @@ async function getInboxItems() {
 
 const inboxItems = await getInboxItems();
 
-// Development mode: Add filesystem watching for real-time updates
-if (import.meta.env.DEV) {
-    let lastModified = 0;
-    const watchInterval = setInterval(async () => {
-        try {
-            const dir = path.join(process.cwd(), "data/inbox");
-            const stats = await fs.stat(dir);
-            if (stats.mtimeMs > lastModified) {
-                lastModified = stats.mtimeMs;
-                const newItems = await getInboxItems();
-                // Trigger a cache-busting reload
-                window.location.reload();
-            }
-        } catch (error) {
-            // Ignore errors during development
-        }
-    }, 1000); // Check every second
-
-    // Clean up interval on page unload
-    window.addEventListener('beforeunload', () => {
-        clearInterval(watchInterval);
-    });
-}
-
 const sortedItems = inboxItems.sort(
     (a, b) => b.data.captured.valueOf() - a.data.captured.valueOf(),
 );
@@ -273,170 +249,194 @@ const typeIcons = {
         }
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const selectAll = document.getElementById('select-all');
-            const checkboxes = document.querySelectorAll('.inbox-checkbox');
-            const bulkActions = document.getElementById('bulk-actions');
-            const selectedCount = document.getElementById('selected-count');
-            const bulkDelete = document.getElementById('bulk-delete');
-            const bulkMove = document.getElementById('bulk-move');
-            const bulkProjectSelect = document.getElementById('bulk-project-select');
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.inbox-checkbox');
+        const bulkActions = document.getElementById('bulk-actions');
+        const selectedCount = document.getElementById('selected-count');
+        const bulkDelete = document.getElementById('bulk-delete');
+        const bulkMove = document.getElementById('bulk-move');
+        const bulkProjectSelect = document.getElementById('bulk-project-select');
 
-            // Update selected count and show/hide bulk actions
-            function updateBulkActions() {
-                const selected = document.querySelectorAll('.inbox-checkbox:checked');
-                const count = selected.length;
-
-                selectedCount.textContent = count;
-
-                if (count > 0) {
-                    bulkActions.classList.remove('hidden');
-                } else {
-                    bulkActions.classList.add('hidden');
+        // Development mode: Add filesystem watching for real-time updates
+        if (import.meta.env.DEV) {
+            let lastModified = 0;
+            const watchInterval = setInterval(async () => {
+                try {
+                    const dir = path.join(process.cwd(), "data/inbox");
+                    const stats = await fs.stat(dir);
+                    if (stats.mtimeMs > lastModified) {
+                        lastModified = stats.mtimeMs;
+                        const newItems = await getInboxItems();
+                        // Trigger a cache-busting reload
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    // Ignore errors during development
                 }
+            }, 1000); // Check every second
 
-                // Enable/disable move button based on project selection
-                if (count > 0 && bulkProjectSelect.value) {
-                    bulkMove.disabled = false;
-                } else {
-                    bulkMove.disabled = true;
-                }
+            // Clean up interval on page unload
+            window.addEventListener('beforeunload', () => {
+                clearInterval(watchInterval);
+            });
+        }
+
+        // Update selected count and show/hide bulk actions
+        function updateBulkActions() {
+            const selected = document.querySelectorAll('.inbox-checkbox:checked');
+            const count = selected.length;
+
+            selectedCount.textContent = count;
+
+            if (count > 0) {
+                bulkActions.classList.remove('hidden');
+            } else {
+                bulkActions.classList.add('hidden');
             }
 
-            // Select all functionality
-            selectAll?.addEventListener('change', () => {
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = selectAll.checked;
-                });
+            // Enable/disable move button based on project selection
+            if (count > 0 && bulkProjectSelect.value) {
+                bulkMove.disabled = false;
+            } else {
+                bulkMove.disabled = true;
+            }
+        }
+
+        // Select all functionality
+        selectAll?.addEventListener('change', () => {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+            updateBulkActions();
+        });
+
+        // Individual checkbox changes
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                // Update select all state
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+
+                selectAll.checked = allChecked;
+                selectAll.indeterminate = someChecked && !allChecked;
+
                 updateBulkActions();
             });
 
-            // Individual checkbox changes
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', () => {
-                    // Update select all state
-                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-                    const someChecked = Array.from(checkboxes).some(cb => cb.checked);
-
-                    selectAll.checked = allChecked;
-                    selectAll.indeterminate = someChecked && !allChecked;
-
-                    updateBulkActions();
-                });
-
-                // Prevent label click when clicking on the link
-                checkbox.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
-            });
-
-            // Project selection change
-            bulkProjectSelect?.addEventListener('change', updateBulkActions);
-
-            // Bulk delete
-            bulkDelete?.addEventListener('click', async () => {
-                const selected = Array.from(document.querySelectorAll('.inbox-checkbox:checked'))
-                    .map(cb => cb.value);
-
-                if (selected.length === 0) return;
-
-                if (!confirm(`Are you sure you want to delete ${selected.length} item(s)? This action cannot be undone.`)) {
-                    return;
-                }
-
-                bulkDelete.setAttribute('data-loading', 'true');
-
-                try {
-                    const response = await fetch('/api/inbox/bulk-delete', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ itemIds: selected })
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        // Show success message
-                        const message = document.createElement('div');
-                        message.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                        message.textContent = `Deleted ${result.deletedCount} item(s)`;
-                        document.body.appendChild(message);
-                        setTimeout(() => message.remove(), 3000);
-
-                        // Force a hard refresh with timestamp to bypass any cache
-                        setTimeout(() => {
-                            window.location.href = "/inbox?t=" + Date.now();
-                        }, 1000);
-                    } else {
-                        alert(`Error: ${result.error}`);
-                    }
-                } catch (error) {
-                    console.error('Error deleting items:', error);
-                    alert('Failed to delete items');
-                } finally {
-                    bulkDelete.removeAttribute('data-loading');
-                }
-            });
-
-            // Bulk move
-            bulkMove?.addEventListener('click', async () => {
-                const selected = Array.from(document.querySelectorAll('.inbox-checkbox:checked'))
-                    .map(cb => cb.value);
-
-                if (selected.length === 0) return;
-
-                const projectId = bulkProjectSelect.value;
-                if (!projectId) {
-                    alert('Please select a project');
-                    return;
-                }
-
-                if (!confirm(`Move ${selected.length} item(s) to selected project?`)) {
-                    return;
-                }
-
-                bulkMove.setAttribute('data-loading', 'true');
-
-                try {
-                    const response = await fetch('/api/inbox/bulk-move', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ itemIds: selected, projectId })
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        // Remove moved items from DOM
-                        selected.forEach(id => {
-                            const item = document.querySelector(`[data-id="${id}"]`);
-                            if (item) {
-                                item.remove();
-                            }
-                        });
-                        updateBulkActions();
-
-                        // Show success message
-                        const message = document.createElement('div');
-                        message.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                        message.textContent = `Moved ${result.movedCount} item(s) to project`;
-                        document.body.appendChild(message);
-                        setTimeout(() => message.remove(), 3000);
-                    } else {
-                        alert(`Error: ${result.error}`);
-                    }
-                } catch (error) {
-                    console.error('Error moving items:', error);
-                    alert('Failed to move items');
-                } finally {
-                    bulkMove.removeAttribute('data-loading');
-                }
+            // Prevent label click when clicking on the link
+            checkbox.addEventListener('click', (e) => {
+                e.stopPropagation();
             });
         });
-    </script>
+
+        // Project selection change
+        bulkProjectSelect?.addEventListener('change', updateBulkActions);
+
+        // Bulk delete
+        bulkDelete?.addEventListener('click', async () => {
+            const selected = Array.from(document.querySelectorAll('.inbox-checkbox:checked'))
+                .map(cb => cb.value);
+
+            if (selected.length === 0) return;
+
+            if (!confirm(`Are you sure you want to delete ${selected.length} item(s)? This action cannot be undone.`)) {
+                return;
+            }
+
+            bulkDelete.setAttribute('data-loading', 'true');
+
+            try {
+                const response = await fetch('/api/inbox/bulk-delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ itemIds: selected })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Show success message
+                    const message = document.createElement('div');
+                    message.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                    message.textContent = `Deleted ${result.deletedCount} item(s)`;
+                    document.body.appendChild(message);
+                    setTimeout(() => message.remove(), 3000);
+
+                    // Force a hard refresh with timestamp to bypass any cache
+                    setTimeout(() => {
+                        window.location.href = "/inbox?t=" + Date.now();
+                    }, 1000);
+                } else {
+                    alert(`Error: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error deleting items:', error);
+                alert('Failed to delete items');
+            } finally {
+                bulkDelete.removeAttribute('data-loading');
+            }
+        });
+
+        // Bulk move
+        bulkMove?.addEventListener('click', async () => {
+            const selected = Array.from(document.querySelectorAll('.inbox-checkbox:checked'))
+                .map(cb => cb.value);
+
+            if (selected.length === 0) return;
+
+            const projectId = bulkProjectSelect.value;
+            if (!projectId) {
+                alert('Please select a project');
+                return;
+            }
+
+            if (!confirm(`Move ${selected.length} item(s) to selected project?`)) {
+                return;
+            }
+
+            bulkMove.setAttribute('data-loading', 'true');
+
+            try {
+                const response = await fetch('/api/inbox/bulk-move', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ itemIds: selected, projectId })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Remove moved items from DOM
+                    selected.forEach(id => {
+                        const item = document.querySelector(`[data-id="${id}"]`);
+                        if (item) {
+                            item.remove();
+                        }
+                    });
+                    updateBulkActions();
+
+                    // Show success message
+                    const message = document.createElement('div');
+                    message.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                    message.textContent = `Moved ${result.movedCount} item(s) to project`;
+                    document.body.appendChild(message);
+                    setTimeout(() => message.remove(), 3000);
+                } else {
+                    alert(`Error: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error moving items:', error);
+                alert('Failed to move items');
+            } finally {
+                bulkMove.removeAttribute('data-loading');
+            }
+        });
+    });
+</script>
 </AppLayout>
