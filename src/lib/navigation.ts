@@ -22,6 +22,7 @@ export function buildNavItems(contextProjects: any[]): NavItem[] {
     { name: 'Next Action', href: '/next', icon: Target },
     { name: 'Inbox', href: '/inbox', icon: Inbox },
     { name: 'Triage', href: '/triage', icon: ListChecks },
+    { name: 'WorkLab', href: '/worklab', icon: Zap },
     { name: 'Search', href: '/search', icon: Search },
     {
       name: 'Projects',

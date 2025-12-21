@@ -1,0 +1,20 @@
+---
+import { TaskEditor } from './TaskEditor';
+
+interface Props {
+    taskId: string;
+    initialTitle: string;
+    initialContent: string;
+    [key: string]: any;
+}
+
+const { taskId, initialTitle, initialContent, ...rest } = Astro.props;
+---
+
+<TaskEditor
+    client:load
+    taskId={taskId}
+    initialTitle={initialTitle}
+    initialContent={initialContent}
+    {...rest}
+/>

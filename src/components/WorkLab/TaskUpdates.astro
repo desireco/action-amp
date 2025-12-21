@@ -1,0 +1,18 @@
+---
+import { TaskUpdates } from './TaskUpdates';
+
+interface Props {
+    taskId: string;
+    updates?: any[];
+    [key: string]: any;
+}
+
+const { taskId, updates, ...rest } = Astro.props;
+---
+
+<TaskUpdates
+    client:load
+    taskId={taskId}
+    updates={updates}
+    {...rest}
+/>

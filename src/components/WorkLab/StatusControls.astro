@@ -1,0 +1,18 @@
+---
+import { StatusControls } from './StatusControls';
+
+interface Props {
+    taskId: string;
+    currentStatus: 'todo' | 'in_progress' | 'blocked' | 'completed';
+    [key: string]: any;
+}
+
+const { taskId, currentStatus, ...rest } = Astro.props;
+---
+
+<StatusControls
+    client:load
+    taskId={taskId}
+    currentStatus={currentStatus}
+    {...rest}
+/>

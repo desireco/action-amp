@@ -69,6 +69,7 @@ import LoadingButton from "../components/ui/LoadingButton.astro";
                                 name="type"
                                 value="note"
                                 class="peer sr-only"
+                                checked
                             />
                             <div
                                 class="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background text-text-muted peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary/5 hover:border-primary/50 transition-all"
@@ -108,18 +109,29 @@ import LoadingButton from "../components/ui/LoadingButton.astro";
                     </div>
                 </div>
 
-                <div class="flex justify-end">
+                <div class="flex justify-between items-center pt-2">
+                    <LoadingButton
+                        type="submit"
+                        variant="secondary"
+                        class="flex items-center gap-2"
+                        id="capture-new-btn"
+                        loadingText="Saving..."
+                    >
+                        <span>Save & New</span>
+                    </LoadingButton>
+
                     <LoadingButton
                         type="submit"
                         class="flex items-center gap-2"
                         id="capture-submit-btn"
-                        loadingText="Capturing..."
+                        loadingText="Saving..."
                     >
-                        <span>Capture to Inbox</span>
+                        <span>Save</span>
                         <kbd
                             class="hidden sm:inline-block px-2 py-0.5 bg-white/20 rounded text-xs font-sans"
                             >⌘+Enter</kbd
-                        </LoadingButton>
+                        >
+                    </LoadingButton>
                 </div>
             </form>
         </Card>
@@ -152,7 +164,7 @@ import LoadingButton from "../components/ui/LoadingButton.astro";
     const textarea = document.getElementById("note") as HTMLTextAreaElement;
     const successMessage = document.getElementById("success-message");
 
-    async function handleSubmit(e: Event) {
+    async function handleSubmit(e: SubmitEvent) {
         e.preventDefault();
         const content = textarea.value.trim();
         if (!content) return;
@@ -170,10 +182,18 @@ import LoadingButton from "../components/ui/LoadingButton.astro";
         ) as HTMLInputElement;
         const type = typeInput ? typeInput.value : undefined;
 
+        // Identify which button was clicked
+        const submitter = e.submitter as HTMLButtonElement | null;
+        const isSaveAndNew = submitter?.id === "capture-new-btn";
+        const targetBtn =
+            submitter ||
+            (document.getElementById(
+                "capture-submit-btn",
+            ) as HTMLButtonElement);
+
         try {
-            const submitBtn = document.getElementById('capture-submit-btn') as HTMLButtonElement;
-            if (submitBtn) {
-                submitBtn.setAttribute('data-loading', 'true');
+            if (targetBtn) {
+                targetBtn.setAttribute("data-loading", "true");
             }
 
             const res = await fetch("/api/inbox", {
@@ -187,32 +207,53 @@ import LoadingButton from "../components/ui/LoadingButton.astro";
             });
 
             if (res.ok) {
-                window.location.href = "/inbox";
+                if (isSaveAndNew) {
+                    // Reset form for new entry
+                    textarea.value = "";
+
+                    // Show success message temporarily
+                    if (successMessage) {
+                        successMessage.classList.remove("hidden");
+                        setTimeout(() => {
+                            successMessage.classList.add("hidden");
+                        }, 3000);
+                    }
+
+                    textarea.focus();
+                } else {
+                    // Redirect to inbox
+                    window.location.href = "/inbox";
+                }
             } else {
                 alert("Failed to capture item");
             }
 
-            if (submitBtn) {
-                submitBtn.removeAttribute('data-loading');
+            if (targetBtn) {
+                targetBtn.removeAttribute("data-loading");
             }
-            textarea.focus();
         } catch (err) {
             console.error(err);
             alert("Error capturing item");
-            const submitBtn = document.getElementById('capture-submit-btn') as HTMLButtonElement;
-            if (submitBtn) {
-                submitBtn.removeAttribute('data-loading');
+            if (targetBtn) {
+                targetBtn.removeAttribute("data-loading");
             }
         }
     }
 
     form?.addEventListener("submit", handleSubmit);
 
-    // Cmd+Enter to submit
+    // Cmd+Enter to submit (defaults to Save/Redirect behavior)
     textarea?.addEventListener("keydown", (e) => {
         if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
             e.preventDefault();
-            form.requestSubmit();
+            const submitBtn = document.getElementById(
+                "capture-submit-btn",
+            ) as HTMLButtonElement;
+            if (submitBtn) {
+                form.requestSubmit(submitBtn);
+            } else {
+                form.requestSubmit();
+            }
         }
     });
 </script>
