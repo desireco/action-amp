@@ -40,7 +40,7 @@ export class DataWriter {
         const fileContent = matter.stringify(content, frontmatter);
 
         const filePath = resolveDataPath(`inbox/${id}.md`, userId);
-        await fsApi.writeFile(filePath, fileContent);
+        await fsApi.writeFile(filePath, fileContent, userId);
 
         invalidateByPrefix(this.getCacheKey('inbox:list', userId));
         return item;
@@ -48,7 +48,7 @@ export class DataWriter {
 
     async updateInboxItem(id: string, updates: { title?: string; content?: string; type?: InboxItem['type'] }, userId?: string): Promise<void> {
         const filePath = resolveDataPath(`inbox/${id}.md`, userId);
-        const fileContent = await fsApi.readFile(filePath);
+        const fileContent = await fsApi.readFile(filePath, userId);
         const parsed = matter(fileContent);
 
         if (updates.title !== undefined) parsed.data.title = updates.title;
@@ -58,14 +58,14 @@ export class DataWriter {
         const content = updates.content !== undefined ? updates.content : parsed.content;
 
         const updatedContent = matter.stringify(content, parsed.data);
-        await fsApi.writeFile(filePath, updatedContent);
+        await fsApi.writeFile(filePath, updatedContent, userId);
 
         invalidateByPrefix(this.getCacheKey('inbox:list', userId));
     }
 
     async deleteInboxItem(id: string, userId?: string): Promise<void> {
         const filePath = resolveDataPath(`inbox/${id}.md`, userId);
-        await fsApi.deleteFile(filePath);
+        await fsApi.deleteFile(filePath, userId);
         invalidateByPrefix(this.getCacheKey('inbox:list', userId));
     }
 
@@ -85,7 +85,7 @@ export class DataWriter {
         // If the upstream code passes "areas/work/proj/act.md", resolveDataPath('areas/work...', userId) works.
         // If upstream passes "data/areas/...", resolveDataPath handles stripping 'data/'.
 
-        const fileContent = await fsApi.readFile(fullPath);
+        const fileContent = await fsApi.readFile(fullPath, userId);
         const parsed = matter(fileContent);
 
         parsed.data.status = status;
@@ -96,7 +96,7 @@ export class DataWriter {
         }
 
         const updatedContent = matter.stringify(parsed.content, parsed.data);
-        await fsApi.writeFile(fullPath, updatedContent); // writeFile takes full path or relative to cwd. fsApi.resolvePath handles it.
+        await fsApi.writeFile(fullPath, updatedContent, userId); // writeFile takes full path or relative to cwd. fsApi.resolvePath handles it.
 
         invalidateByPrefix(this.getCacheKey('actions:all', userId));
         // Also invalidate project list? No, status change might affect sort order but usually we just re-fetch actions.
@@ -146,8 +146,8 @@ export class DataWriter {
         // targetProjectDir is likely "areas/area/project"
         const targetPath = resolveDataPath(`${targetProjectDir}/${newFilename}`, userId);
 
-        await fsApi.writeFile(targetPath, updatedContent);
-        await fsApi.deleteFile(inboxPath);
+        await fsApi.writeFile(targetPath, updatedContent, userId);
+        await fsApi.deleteFile(inboxPath, userId);
 
         invalidateByPrefix(this.getCacheKey('inbox:list', userId));
         invalidateByPrefix(this.getCacheKey('actions:all', userId));
@@ -171,7 +171,7 @@ export class DataWriter {
         }
 
         const tomlContent = toml.stringify(areaData);
-        await fsApi.writeFile(areaPath, tomlContent);
+        await fsApi.writeFile(areaPath, tomlContent, userId);
 
         const listKey = this.getCacheKey('areas:list', userId);
         invalidate(listKey);
@@ -184,7 +184,7 @@ export class DataWriter {
     async updateArea(areaId: string, updates: { name?: string, icon?: string, color?: string, description?: string, priority?: string }, userId?: string): Promise<void> {
         const areaPath = resolveDataPath(`areas/${areaId}/area.toml`, userId);
 
-        const fileContent = await fsApi.readFile(areaPath);
+        const fileContent = await fsApi.readFile(areaPath, userId);
         const existingData = toml.parse(fileContent) as any;
 
         const updatedData = {
@@ -197,7 +197,7 @@ export class DataWriter {
         }
 
         const tomlContent = toml.stringify(updatedData);
-        await fsApi.writeFile(areaPath, tomlContent);
+        await fsApi.writeFile(areaPath, tomlContent, userId);
 
         const listKey = this.getCacheKey('areas:list', userId);
         invalidate(listKey);
@@ -222,7 +222,7 @@ export class DataWriter {
         }
 
         const tomlContent = toml.stringify(projectData);
-        await fsApi.writeFile(projectPath, tomlContent);
+        await fsApi.writeFile(projectPath, tomlContent, userId);
 
         const listKey = this.getCacheKey('projects:list', userId);
         invalidate(listKey);
@@ -240,7 +240,7 @@ export class DataWriter {
 
         const projectPath = resolveDataPath(`areas/${projectId}`, userId);
 
-        const fileContent = await fsApi.readFile(projectPath);
+        const fileContent = await fsApi.readFile(projectPath, userId);
         const projectData = toml.parse(fileContent) as any;
 
         if (updates.name !== undefined) projectData.name = updates.name;
@@ -249,7 +249,7 @@ export class DataWriter {
         if (updates.priority !== undefined) projectData.priority = updates.priority;
 
         const tomlContent = toml.stringify(projectData);
-        await fsApi.writeFile(projectPath, tomlContent);
+        await fsApi.writeFile(projectPath, tomlContent, userId);
 
         const listKey = this.getCacheKey('projects:list', userId);
         invalidate(listKey);

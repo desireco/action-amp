@@ -1,6 +1,6 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
-import { getEntry, getCollection, render } from "astro:content";
+import { dataReader } from "../../lib/data/reader";
 import ArrowLeft from "~icons/lucide/arrow-left";
 import Calendar from "~icons/lucide/calendar";
 import FolderInput from "~icons/lucide/folder-input";
@@ -11,63 +11,36 @@ import FileText from "~icons/lucide/file-text";
 import CheckSquare from "~icons/lucide/check-square";
 import BookOpen from "~icons/lucide/book-open";
 import InboxIcon from "~icons/lucide/inbox";
-import fs from "node:fs/promises";
-import path from "node:path";
-import matter from "gray-matter";
 import { marked } from "marked";
+import fs from "node:fs/promises";
 import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 import Button from "../../components/ui/Button.astro";
 import Input from "../../components/ui/Input.astro";
 
 const { id } = Astro.params;
+const { currentUser } = Astro.locals as any;
 
 if (!id) {
+    await fs.appendFile('debug-log.txt', `[InboxDetail] NO ID! User: ${currentUser}\n`);
     return Astro.redirect("/inbox");
 }
 
-let item: any;
-let Content: any;
-let htmlContent = "";
+// 1. Fetch item using dataReader
+const inboxItems = await dataReader.getInboxItems(currentUser);
+const item = inboxItems.find((i) => i.id === id);
 
-// Try to get from Content Collection first (fastest, pre-built)
-const collectionItem = await getEntry("inbox", id);
+await fs.appendFile('debug-log.txt', `[InboxDetail] Access ${id}. User: ${currentUser}. Found: ${!!item}\n`);
 
-if (collectionItem) {
-    item = collectionItem;
-    const rendered = await render(collectionItem);
-    Content = rendered.Content;
-} else {
-    // Fallback: Read directly from disk (for dynamic items)
-    try {
-        const filePath = path.join(process.cwd(), "data/inbox", `${id}.md`);
-
-        const fileContent = await fs.readFile(filePath, "utf-8");
-
-        const parsed = matter(fileContent);
-
-        item = {
-            id,
-            data: {
-                ...parsed.data,
-                // Ensure dates are Date objects
-                captured: parsed.data.captured
-                    ? new Date(parsed.data.captured)
-                    : new Date(),
-            },
-            body: parsed.content,
-        };
-
-        htmlContent = await marked.parse(parsed.content);
-    } catch (e: any) {
-        console.error(`Failed to read inbox item ${id}:`, e);
-        return new Response(`Error loading item: ${e.message}`, {
-            status: 500,
-        });
-    }
+if (!item) {
+    await fs.appendFile('debug-log.txt', `[InboxDetail] Item not found (REALLY)! Available: ${inboxItems.map(i => i.id).join(', ')}\n`);
+    return Astro.redirect("/inbox");
 }
 
-const projects = await getCollection("projects");
+const htmlContent = marked.parse(item.body || "");
+
+// 2. Fetch Projects for the "Move" dropdown
+const projects = await dataReader.getAllProjects(currentUser);
 const activeProjects = projects.filter((p) => p.data.status === "active");
 
 const typeIcons = {
@@ -129,9 +102,7 @@ const typeIcons = {
                         </div>
                     </div>
 
-                    <Heading level={1} class="leading-tight">
-                        {item?.data?.title}
-                    </Heading>
+                    <Heading level={1} class="leading-tight">{item?.data?.title}</Heading>
                 </div>
 
                 <div

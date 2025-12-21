@@ -62,7 +62,7 @@ const Icon = typeIcons[item.data.type as keyof typeof typeIcons] || InboxIcon;
                 </span>
                 <span>
                     Captured {
-                        item.data.captured.toLocaleDateString(undefined, {
+                        new Date(item.data.captured).toLocaleDateString(undefined, {
                             dateStyle: "medium",
                         })
                     }

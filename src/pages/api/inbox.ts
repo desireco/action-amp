@@ -2,9 +2,10 @@ import type { APIRoute } from 'astro';
 import { dataWriter } from '../../lib/data/writer';
 import { dataReader } from '../../lib/data/reader';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ locals }) => {
     try {
-        const items = await dataReader.getInboxItems();
+        const { currentUser } = locals as any;
+        const items = await dataReader.getInboxItems(currentUser);
         return new Response(JSON.stringify(items), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
@@ -18,8 +19,9 @@ export const GET: APIRoute = async () => {
     }
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
     try {
+        const { currentUser } = locals as any;
         const data = await request.json();
 
         if (!data.title) {
@@ -29,7 +31,7 @@ export const POST: APIRoute = async ({ request }) => {
             });
         }
 
-        const item = await dataWriter.createInboxItem(data.title, data.content, data.type);
+        const item = await dataWriter.createInboxItem(data.title, data.content, data.type, currentUser);
 
         return new Response(JSON.stringify(item), {
             status: 201,

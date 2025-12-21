@@ -15,7 +15,7 @@ import { defineConfig, devices } from '@playwright/test';
 import { execSync } from 'child_process';
 try {
   console.log('Setting up E2E test data...');
-  execSync('npx tsx tests/setup-e2e-data.ts', { stdio: 'inherit' });
+  execSync('TEST_USER=demo_user npx tsx tests/setup-e2e-data.ts', { stdio: 'inherit' });
 } catch (e) {
   console.error('❌ E2E test data setup failed:', e);
   process.exit(1);
@@ -24,7 +24,7 @@ try {
 export default defineConfig({
   testDir: './tests',
   /* Run tests in files in parallel */
-  fullyParallel: true,
+  fullyParallel: false,
   /* Test timeout */
   timeout: process.env.CI ? 60000 : 30000,
   /* Expect timeout */
@@ -36,7 +36,7 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI ? [['dot'], ['json', { outputFile: 'test-results/results.json' }]] : 'list',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -47,8 +47,8 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: process.env.CI ? 'retain-on-failure' : 'on-first-retry',
 
-    /* Run tests in headless mode on CI */
-    headed: !process.env.CI,
+    /* Run or not in headless mode */
+    headless: !!process.env.CI,
 
     /* Set timeout for actions */
     actionTimeout: 10000,
@@ -89,12 +89,18 @@ export default defineConfig({
   webServer: process.env.CI ? {
     command: 'npm run build && npm run preview -- --port 4322 --host 127.0.0.1',
     url: 'http://127.0.0.1:4322',
+    env: {
+      TEST_USER: 'demo_user'
+    },
     reuseExistingServer: false,
     timeout: 120000,
   } : {
     command: 'npm run dev',
     url: 'http://localhost:4000',
-    reuseExistingServer: true,
+    env: {
+      TEST_USER: 'demo_user'
+    },
+    reuseExistingServer: false,
     timeout: 30000,
   },
 });

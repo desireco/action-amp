@@ -1,8 +1,7 @@
 ---
 import AppLayout from "../layouts/AppLayout.astro";
-import fs from "node:fs/promises";
+import { dataReader } from "../lib/data/reader";
 import path from "node:path";
-import matter from "gray-matter";
 import CheckCircle2 from "~icons/lucide/check-circle-2";
 import AlertCircle from "~icons/lucide/alert-circle";
 import Clock from "~icons/lucide/clock";
@@ -11,120 +10,22 @@ import Heading from "../components/ui/Heading.astro";
 import Card from "../components/ui/Card.astro";
 import Button from "../components/ui/Button.astro";
 
+const { currentUser } = Astro.locals as any;
 const settings = (Astro.locals as any).settings;
 const currentContext = settings.next_action_context;
 
-// Read actions from filesystem
-async function getActions() {
-    try {
-        const base = path.join(process.cwd(), "data/areas");
-        const actions: any[] = [];
-        
-        // Read all areas
-        const areas = await fs.readdir(base);
-        for (const area of areas) {
-            const areaPath = path.join(base, area);
-            try {
-                const stats = await fs.stat(areaPath);
-                if (!stats.isDirectory()) continue;
-                
-                // Read all projects in area
-                const projects = await fs.readdir(areaPath);
-                for (const project of projects) {
-                    const projectPath = path.join(areaPath, project);
-                    try {
-                        const projectStats = await fs.stat(projectPath);
-                        if (!projectStats.isDirectory()) continue;
-                        
-                        // Read actions in project
-                        const actionFiles = await fs.readdir(projectPath);
-                        for (const file of actionFiles) {
-                            if (!file.startsWith('act-') || !file.endsWith('.md')) continue;
-                            
-                            const filePath = path.join(projectPath, file);
-                            const content = await fs.readFile(filePath, 'utf-8');
-                            const parsed = matter(content);
-                            
-                            actions.push({
-                                id: `${area}/${project}/${file}`,
-                                data: {
-                                    title: parsed.data.title || (parsed.content.split("\n")[0] || "").trim(),
-                                    status: parsed.data.status || 'todo',
-                                    priority: parsed.data.priority || 'medium',
-                                    created: parsed.data.created ? new Date(parsed.data.created) : new Date(),
-                                },
-                            });
-                        }
-                    } catch (error) {
-                        // Skip if project directory doesn't exist or can't be read
-                    }
-                }
-            } catch (error) {
-                // Skip if area directory doesn't exist or can't be read
-            }
-        }
-        
-        return actions;
-    } catch (error) {
-        console.error('Error reading actions:', error);
-        return [];
-    }
-}
-
-// Read projects from filesystem
-async function getProjects() {
-    try {
-        const base = path.join(process.cwd(), "data/areas");
-        const projects: any[] = [];
-        
-        // Read all areas
-        const areas = await fs.readdir(base);
-        for (const area of areas) {
-            const areaPath = path.join(base, area);
-            try {
-                const stats = await fs.stat(areaPath);
-                if (!stats.isDirectory()) continue;
-                
-                // Check for project.toml
-                const projectFile = path.join(areaPath, "project.toml");
-                try {
-                    const content = await fs.readFile(projectFile, 'utf-8');
-                    const parsed = matter(content, { delimiters: '+++' });
-                    
-                    projects.push({
-                        id: `${area}/project`,
-                        data: {
-                            name: parsed.data.name || area,
-                            status: parsed.data.status || 'active',
-                        },
-                    });
-                } catch (error) {
-                    // Skip if project.toml doesn't exist
-                }
-            } catch (error) {
-                // Skip if area directory doesn't exist or can't be read
-            }
-        }
-        
-        return projects;
-    } catch (error) {
-        console.error('Error reading projects:', error);
-        return [];
-    }
-}
-
-const allActions = await getActions();
-const allProjects = await getProjects();
+const allActions = await dataReader.getAllActions(currentUser);
+const allProjects = await dataReader.getAllProjects(currentUser);
 
 // Helper to get project details
 const getProject = (area: string, projectSlug: string) => {
-    return allProjects.find((p) => p.id === `${area}/project`);
+    return allProjects.find((p) => p.id.startsWith(`${area}/${projectSlug}`));
 };
 
 // Filter actions
 const nextActions = allActions
     .filter((action) => {
-        // Parse ID: area/project/filename
+        // action.id is area/project/filename
         const parts = action.id.split("/");
         if (parts.length < 3) return false;
 
@@ -137,12 +38,8 @@ const nextActions = allActions
         if (currentContext && area !== currentContext) return false;
 
         // Check if project is active
-        // Note: project ID in collection is "area/project/project" because of the glob pattern in config?
-        // Let's check config again.
-        // projects loader: glob({ pattern: "*/*/project.toml", base: "./data/areas" })
-        // So ID is "area/project/project".
-        const project = allProjects.find(
-            (p) => p.id === `${area}/${projectSlug}/project`,
+        const project = allProjects.find((p) =>
+            p.id.startsWith(`${area}/${projectSlug}`),
         );
         if (!project || project.data.status !== "active") return false;
 
@@ -150,18 +47,21 @@ const nextActions = allActions
     })
     .sort((a, b) => {
         // Sort by priority
-        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        const priorityOrder: Record<string, number> = {
+            high: 0,
+            medium: 1,
+            low: 2,
+        };
         const pA = priorityOrder[a.data.priority] ?? 1;
         const pB = priorityOrder[b.data.priority] ?? 1;
         if (pA !== pB) return pA - pB;
 
         // Then by created date (older first)
-        return a.data.created.getTime() - b.data.created.getTime();
+        const timeA = new Date(a.data.created || new Date()).getTime();
+        const timeB = new Date(b.data.created || new Date()).getTime();
+        return timeA - timeB;
     });
 
-// Group by project for display? Or flat list?
-// GTD Next Actions is usually a flat list per context.
-// Let's do a flat list but show project name.
 const timer = { measure: () => {} };
 ---
 
@@ -207,8 +107,8 @@ const timer = { measure: () => {} };
                 <div class="space-y-4">
                     {nextActions.map((action) => {
                         const [area, projectSlug] = action.id.split("/");
-                        const project = allProjects.find(
-                            (p) => p.id === `${area}/${projectSlug}/project`,
+                        const project = allProjects.find((p) =>
+                            p.id.startsWith(`${area}/${projectSlug}`),
                         );
                         const projectName = project?.data.name || projectSlug;
 
@@ -251,12 +151,14 @@ const timer = { measure: () => {} };
                                         {action.data.created && (
                                             <span
                                                 class="flex items-center"
-                                                title={`Created: ${action.data.created.toLocaleDateString()}`}
+                                                title={`Created: ${new Date(action.data.created).toLocaleDateString()}`}
                                             >
                                                 <Clock class="w-3 h-3 mr-1" />
                                                 {Math.floor(
                                                     (new Date().getTime() -
-                                                        action.data.created.getTime()) /
+                                                        new Date(
+                                                            action.data.created,
+                                                        ).getTime()) /
                                                         (1000 * 60 * 60 * 24),
                                                 )}
                                                 d ago

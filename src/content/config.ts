@@ -1,18 +1,19 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { resolveDataPath } from '../lib/data/path-resolver';
 
 const inbox = defineCollection({
-  loader: glob({ pattern: "*.md", base: "./data/inbox" }),
+  loader: glob({ pattern: "*.md", base: resolveDataPath("inbox") }),
   schema: z.object({
     id: z.string(),
-    type: z.enum(['action', 'note', 'link', 'idea', 'resource']).optional(), // Optional because spec says type is undecided for some
+    type: z.enum(['action', 'note', 'link', 'idea', 'resource']).optional(),
     title: z.string(),
     captured: z.coerce.date(),
   }),
 });
 
 const areas = defineCollection({
-  loader: glob({ pattern: "*/area.toml", base: "./data/areas" }),
+  loader: glob({ pattern: "*/area.toml", base: resolveDataPath("areas") }),
   schema: z.object({
     name: z.string(),
     description: z.string().optional(),
@@ -25,7 +26,7 @@ const areas = defineCollection({
 });
 
 const projects = defineCollection({
-  loader: glob({ pattern: "*/*/project.toml", base: "./data/areas" }),
+  loader: glob({ pattern: "*/*/project.toml", base: resolveDataPath("areas") }),
   schema: z.object({
     name: z.string(),
     area: z.string(),
@@ -40,7 +41,7 @@ const projects = defineCollection({
 });
 
 const actions = defineCollection({
-  loader: glob({ pattern: "*/*/act-*.md", base: "./data/areas" }),
+  loader: glob({ pattern: "*/*/act-*.md", base: resolveDataPath("areas") }),
   schema: z.object({
     id: z.string(),
     title: z.string(),
@@ -52,7 +53,7 @@ const actions = defineCollection({
 });
 
 const reviews = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./data/reviews" }),
+  loader: glob({ pattern: "**/*.md", base: resolveDataPath("reviews") }),
   schema: z.object({
     type: z.enum(['daily', 'weekly', 'monthly', 'quarterly']),
     date: z.coerce.date(),

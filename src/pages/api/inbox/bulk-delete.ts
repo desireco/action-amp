@@ -2,8 +2,11 @@ import type { APIRoute } from 'astro';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-export const POST: APIRoute = async ({ request }) => {
+import { dataWriter } from '../../../lib/data/writer';
+
+export const POST: APIRoute = async ({ request, locals }) => {
     try {
+        const { currentUser } = locals as any;
         const { itemIds } = await request.json();
 
         if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
@@ -19,8 +22,7 @@ export const POST: APIRoute = async ({ request }) => {
         // Delete each inbox item
         for (const itemId of itemIds) {
             try {
-                const filePath = path.join(process.cwd(), 'data', 'inbox', `${itemId}.md`);
-                await fs.unlink(filePath);
+                await dataWriter.deleteInboxItem(itemId, currentUser);
                 deletedItems.push(itemId);
             } catch (error) {
                 console.error(`Failed to delete inbox item ${itemId}:`, error);

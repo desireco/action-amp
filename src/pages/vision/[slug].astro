@@ -1,0 +1,420 @@
+---
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import { get } from 'lodash-es';
+
+interface ActionLog {
+  id: string;
+  type: 'completed' | 'progress' | 'nextAction';
+  content: string;
+  timestamp: string;
+  author: string;
+}
+
+interface VisionAnalytics {
+  last7Days: number;
+  last30Days: number;
+  last90Days: number;
+  totalActions: number;
+}
+
+export async function getStaticPaths() {
+  const visions = await getCollection('visions');
+  return visions.map(vision => ({
+    params: { slug: vision.slug },
+  }));
+}
+
+export async function GET({ params, request, locals }: any) {
+  const { slug } = params;
+  const visions = await getCollection('visions');
+  const vision = visions.find(v => v.slug === slug);
+  
+  if (!vision) {
+    return new Response('Vision not found', { status: 404 });
+  }
+
+  // Simulate fetching action logs (this would be replaced with actual database calls)
+  const actionLogs: ActionLog[] = [
+    {
+      id: '1',
+      type: 'nextAction',
+      content: 'Set next action for vision progress',
+      timestamp: new Date(Date.now() - 86400000).toISOString(),
+      author: 'User'
+    },
+    {
+      id: '2',
+      type: 'progress',
+      content: 'Logged progress on vision implementation',
+      timestamp: new Date(Date.now() - 172800000).toISOString(),
+      author: 'User'
+    },
+    {
+      id: '3',
+      type: 'completed',
+      content: 'Marked vision as completed',
+      timestamp: new Date(Date.now() - 259200000).toISOString(),
+      author: 'User'
+    }
+  ];
+
+  // Calculate analytics
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+  const visionAnalytics: VisionAnalytics = {
+    last7Days: actionLogs.filter(log => new Date(log.timestamp) >= sevenDaysAgo).length,
+    last30Days: actionLogs.filter(log => new Date(log.timestamp) >= thirtyDaysAgo).length,
+    last90Days: actionLogs.filter(log => new Date(log.timestamp) >= ninetyDaysAgo).length,
+    totalActions: actionLogs.length
+  };
+
+  return new Response(JSON.stringify({
+    vision,
+    actionLogs,
+    visionAnalytics
+  }), {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vision Detail</title>
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-50"></canvas>
+
+  <div id="app" class="container mx-auto p-4 max-w-4xl">
+    <h1 class="text-3xl font-bold mb-6">{vision.title}</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Vision Details</h2>
+      <p class="text-gray-700">{vision.description}</p>
+    </div>
+
+    <!-- Action Buttons Section -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Next Action</h2>
+      
+      <div class="space-y-4">
+        <button class="action-btn w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600" data-action="setNextAction">
+          <i class="fas fa-tasks mr-2"></i>
+          Set Next Action
+        </button>
+        
+        <button class="action-btn w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600" data-action="markCompleted">
+          <i class="fas fa-check-circle mr-2"></i>
+          Mark Completed
+        </button>
+        
+        <button class="action-btn w-full bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600" data-action="logProgress">
+          <i class="fas fa-chart-line mr-2"></i>
+          Log Progress
+        </button>
+      </div>
+    </div>
+
+    <!-- Analytics Dashboard -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Vision Analytics</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-blue-50 p-4 rounded">
+          <div class="text-2xl font-bold text-blue-600">{visionAnalytics.last7Days}</div>
+          <div class="text-sm text-gray-600">Last 7 Days</div>
+        </div>
+        <div class="bg-green-50 p-4 rounded">
+          <div class="text-2xl font-bold text-green-600">{visionAnalytics.last30Days}</div>
+          <div class="text-sm text-gray-600">Last 30 Days</div>
+        </div>
+        <div class="bg-purple-50 p-4 rounded">
+          <div class="text-2xl font-bold text-purple-600">{visionAnalytics.last90Days}</div>
+          <div class="text-sm text-gray-600">Last 90 Days</div>
+        </div>
+        <div class="bg-orange-50 p-4 rounded">
+          <div class="text-2xl font-bold text-orange-600">{visionAnalytics.totalActions}</div>
+          <div class="text-sm text-gray-600">Total Actions</div>
+        </div>
+      </div>
+
+      <button class="w-full bg-indigo-500 text-white py-2 px-4 rounded hover:bg-indigo-600">
+        <i class="fas fa-chart-bar mr-2"></i>
+        View Full Analytics Dashboard
+      </button>
+    </div>
+
+    <!-- Recent Activity Log -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-4">Recent Activity</h2>
+      
+      <div class="space-y-3">
+        {actionLogs.slice(0, 10).reverse().map((log) => (
+          <div key={log.id} class="border-l-4 border-blue-500 pl-4 py-2">
+            <div class="flex items-center justify-between">
+              <span class="font-medium">
+                {log.type === 'completed' && <i class="fas fa-check-circle text-green-500 mr-2"></i>}
+                {log.type === 'progress' && <i class="fas fa-chart-line text-yellow-500 mr-2"></i>}
+                {log.type === 'nextAction' && <i class="fas fa-tasks text-blue-500 mr-2"></i>}
+                {log.type.charAt(0).toUpperCase() + log.type.slice(1)}
+              </span>
+              <span class="text-sm text-gray-500">{new Date(log.timestamp).toLocaleDateString()}</span>
+            </div>
+            <p class="text-gray-700 mt-1">{log.content}</p>
+            <p class="text-sm text-gray-500">by {log.author}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialogs -->
+  <dialog id="setNextActionDialog" class="backdrop:bg-gray-800/50">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto">
+      <h3 class="text-lg font-semibold mb-4">Set Next Action</h3>
+      <form id="setNextActionForm">
+        <textarea class="w-full border rounded p-2 mb-4" placeholder="Enter next action details..." required></textarea>
+        <div class="flex justify-end space-x-2">
+          <button type="button" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" onclick="document.getElementById('setNextActionDialog').close()">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="markCompletedDialog" class="backdrop:bg-gray-800/50">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto">
+      <h3 class="text-lg font-semibold mb-4">Mark as Completed</h3>
+      <form id="markCompletedForm">
+        <input type="text" class="w-full border rounded p-2 mb-4" placeholder="Enter next step..." required>
+        <div class="flex justify-end space-x-2">
+          <button type="button" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" onclick="document.getElementById('markCompletedDialog').close()">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Save</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="logProgressDialog" class="backdrop:bg-gray-800/50">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto">
+      <h3 class="text-lg font-semibold mb-4">Log Progress</h3>
+      <form id="logProgressForm">
+        <textarea class="w-full border rounded p-2 mb-4" placeholder="Enter progress note..." required></textarea>
+        <div class="flex justify-end space-x-2">
+          <button type="button" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" onclick="document.getElementById('logProgressDialog').close()">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Save</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize confetti
+      const confetti = new Confetti('confettiCanvas');
+
+      const actionButtons = document.querySelectorAll('.action-btn');
+      const setNextActionDialog = document.getElementById('setNextActionDialog');
+      const markCompletedDialog = document.getElementById('markCompletedDialog');
+      const logProgressDialog = document.getElementById('logProgressDialog');
+
+      actionButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          const action = e.target.closest('.action-btn').dataset.action;
+          
+          switch(action) {
+            case 'setNextAction':
+              setNextActionDialog.showModal();
+              break;
+            case 'markCompleted':
+              markCompletedDialog.showModal();
+              break;
+            case 'logProgress':
+              logProgressDialog.showModal();
+              break;
+          }
+        });
+      });
+
+      // Form submissions with API calls
+      document.getElementById('setNextActionForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const content = e.target.querySelector('textarea').value;
+        
+        try {
+          const response = await fetch('/api/actions/action-logs', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              visionId: '{vision.id}',
+              type: 'nextAction',
+              content: content
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Next action saved:', result);
+            setNextActionDialog.close();
+            // Refresh page or update analytics
+            location.reload();
+          }
+        } catch (error) {
+          console.error('Error saving next action:', error);
+        }
+      });
+
+      document.getElementById('markCompletedForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nextStep = e.target.querySelector('input').value;
+        
+        try {
+          const response = await fetch('/api/actions/action-logs', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              visionId: '{vision.id}',
+              type: 'completed',
+              content: nextStep
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Marked as completed:', result);
+            markCompletedDialog.close();
+            // Show confetti celebration
+            confetti.start();
+            // Refresh page or update analytics
+            location.reload();
+          }
+        } catch (error) {
+          console.error('Error marking as completed:', error);
+        }
+      });
+
+      document.getElementById('logProgressForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const note = e.target.querySelector('textarea').value;
+        
+        try {
+          const response = await fetch('/api/actions/action-logs', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              visionId: '{vision.id}',
+              type: 'progress',
+              content: note
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Progress logged:', result);
+            logProgressDialog.close();
+            // Refresh page or update analytics
+            location.reload();
+          }
+        } catch (error) {
+          console.error('Error logging progress:', error);
+        }
+      });
+    });
+  </script>
+
+  <script>
+    // Confetti class definition
+    class Confetti {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+        this.animationId = null;
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+      }
+
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+      }
+
+      createParticle() {
+        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080'];
+        return {
+          x: Math.random() * this.canvas.width,
+          y: -10,
+          vx: (Math.random() - 0.5) * 4,
+          vy: Math.random() * 3 + 2,
+          size: Math.random() * 6 + 2,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1
+        };
+      }
+
+      start(duration = 3000) {
+        if (this.animationId) {
+          cancelAnimationFrame(this.animationId);
+        }
+
+        for (let i = 0; i < 100; i++) {
+          this.particles.push(this.createParticle());
+        }
+
+        const startTime = Date.now();
+
+        const animate = () => {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+          this.particles = this.particles.filter(particle => {
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            particle.vy += 0.1;
+            particle.life -= 0.01;
+
+            if (particle.life > 0) {
+              this.ctx.globalAlpha = particle.life;
+              this.ctx.fillStyle = particle.color;
+              this.ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+              return true;
+            }
+            return false;
+          });
+
+          const elapsed = Date.now() - startTime;
+          if (elapsed < duration && this.particles.length > 0) {
+            this.animationId = requestAnimationFrame(animate);
+          } else {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.particles = [];
+          }
+        };
+
+        animate();
+      }
+    }
+
+    // Make Confetti available globally
+    window.Confetti = Confetti;
+  </script>
+</body>
+</html>

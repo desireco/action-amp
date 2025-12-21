@@ -1,8 +1,9 @@
 import type { APIRoute } from 'astro';
 import { dataWriter } from '../../../lib/data/writer';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
     try {
+        const { currentUser } = locals as any;
         const formData = await request.formData();
         const name = formData.get('name') as string;
         const icon = formData.get('icon') as string;
@@ -20,7 +21,8 @@ export const POST: APIRoute = async ({ request }) => {
             name,
             icon,
             color,
-            description || undefined
+            description || undefined,
+            currentUser
         );
 
         return new Response(JSON.stringify(result), {

@@ -13,7 +13,8 @@ import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 import Button from "../../components/ui/Button.astro";
 
-const projects = await dataReader.getAllProjects();
+const { currentUser } = Astro.locals as any;
+const projects = await dataReader.getAllProjects(currentUser);
 
 // Sort projects by status then priority
 const statusOrder: Record<string, number> = {

@@ -5,7 +5,11 @@ import matter from 'gray-matter';
 import { createAPIRoute, parseRequestBody, createSuccessResponse } from '../../../lib/api-handler';
 import { ValidationError, DataError } from '../../../lib/errors';
 
-export const POST: APIRoute = createAPIRoute(async ({ request }) => {
+import { fsApi } from '../../../lib/data/api';
+import { resolveDataPath } from '../../../lib/data/path-resolver';
+
+export const POST: APIRoute = createAPIRoute(async ({ request, locals }) => {
+    const { currentUser } = locals as any;
     const { itemIds, projectId } = await parseRequestBody(request);
 
     if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
@@ -17,15 +21,8 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
     }
 
     // projectId comes from content collection, e.g., "work/website-redesign/project.toml"
-    // We need the directory path: "data/areas/work/website-redesign"
-    const projectDir = `data/areas/${projectId.replace('/project.toml', '')}`;
-
-    // Ensure project directory exists
-    try {
-        await fs.mkdir(path.join(process.cwd(), projectDir), { recursive: true });
-    } catch (error) {
-        throw new DataError('Failed to create project directory', 'DIR_CREATE_ERROR', { projectDir });
-    }
+    // resolveDataPath handles the nesting if currentUser is present
+    const projectDirPrefix = `areas/${projectId.replace('/project.toml', '')}`;
 
     const movedItems: string[] = [];
     const errors: string[] = [];
@@ -33,7 +30,7 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
 
     // Find the next available action number
     try {
-        const existingFiles = await fs.readdir(path.join(process.cwd(), projectDir));
+        const existingFiles = await fsApi.listDir(projectDirPrefix, currentUser);
         const actionFiles = existingFiles.filter(f => f.startsWith('act-') && f.endsWith('.md'));
         if (actionFiles.length > 0) {
             const numbers = actionFiles.map(f => {
@@ -43,14 +40,14 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
             nextActionNum = Math.max(...numbers) + 1;
         }
     } catch (error) {
-        // Directory doesn't exist, start with 1
+        // Directory doesn't exist yet, start with 1
     }
 
     // Move each inbox item to the project as an action
     for (const itemId of itemIds) {
         try {
-            const inboxPath = path.join(process.cwd(), 'data', 'inbox', `${itemId}.md`);
-            const content = await fs.readFile(inboxPath, 'utf-8');
+            const inboxFilePath = `inbox/${itemId}.md`;
+            const content = await fsApi.readFile(inboxFilePath, currentUser);
             const parsed = matter(content);
 
             // Create action content
@@ -64,25 +61,23 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
             };
 
             const actionContent = matter.stringify(parsed.content || '', actionData, {
-                delimiters: '---',
-                lineWidth: 120
+                delimiters: '---'
             });
 
             // Create action file
             const actionFileName = `act-${String(nextActionNum).padStart(3, '0')}-${itemId.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.md`;
-            const actionPath = path.join(process.cwd(), projectDir, actionFileName);
-            await fs.writeFile(actionPath, actionContent, 'utf-8');
+            const actionPath = path.join(projectDirPrefix, actionFileName);
+
+            await fsApi.writeFile(actionPath, actionContent, currentUser);
 
             // Delete the original inbox item
-            await fs.unlink(inboxPath);
+            await fsApi.deleteFile(inboxFilePath, currentUser);
 
             movedItems.push(itemId);
             nextActionNum++;
         } catch (error) {
-            if ((error as any).code === 'ENOENT') {
-                throw new DataError(`Inbox item ${itemId} not found`, 'ITEM_NOT_FOUND', { itemId });
-            }
-            throw new DataError(`Failed to move inbox item ${itemId}`, 'MOVE_ERROR', { itemId, error });
+            console.error(`Failed to move inbox item ${itemId}:`, error);
+            errors.push(itemId);
         }
     }
 
@@ -93,9 +88,9 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
             movedCount: movedItems.length,
             movedItems,
             errors,
-            message: `${errors.length > 0 ? `${errors.length} items failed to move` : 'All items moved successfully'}`
+            message: `${errors.length} items failed to move`
         }), {
-            status: errors.length > 0 ? 207 : 200, // Multi-Status if partial failures
+            status: 207, // Multi-Status
             headers: { 'Content-Type': 'application/json' }
         });
     }

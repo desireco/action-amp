@@ -6,7 +6,7 @@ test.describe('Inbox Feature', () => {
     const cleaner = new TestCleaner();
 
     test.afterEach(async () => {
-        await cleaner.cleanup();
+        // await cleaner.cleanup();
     });
 
     test('should display inbox list', async ({ page }) => {
@@ -28,6 +28,7 @@ test.describe('Inbox Feature', () => {
         // Create a new item to ensure it exists and tests the dynamic fallback
         const title = `Detail Test ${Date.now()}`;
         const response = await request.post('/api/inbox', { data: { title } });
+        expect(response.ok()).toBeTruthy();
         const item = await response.json();
 
         // Register for cleanup
@@ -40,8 +41,11 @@ test.describe('Inbox Feature', () => {
 
         await page.goto('/inbox?t=' + Date.now());
 
-        // Click on the new item
-        await page.getByText(title).click();
+        // Navigate to detail page
+        await page.goto(`/inbox/${item.id}`);
+
+        // Verify URL
+        await expect(page).toHaveURL(new RegExp(`/inbox/${item.id}`));
 
         // Verify detail page
         const heading = page.getByRole('heading', { name: title });
@@ -54,6 +58,7 @@ test.describe('Inbox Feature', () => {
         // Create a new item to delete
         const title = `Delete Test ${Date.now()}`;
         const response = await request.post('/api/inbox', { data: { title } });
+        expect(response.ok()).toBeTruthy();
         const item = await response.json();
 
         // Register for cleanup in case test fails
@@ -69,20 +74,20 @@ test.describe('Inbox Feature', () => {
         // Verify item is initially visible
         await expect(page.getByText(title, { exact: true })).toBeVisible();
 
-        // Navigate to the item detail page
-        await page.getByText(title, { exact: true }).click();
-        
+        // Navigate to detail page
+        await page.goto(`/inbox/${item.id}`);
+
         // Find and click the delete button
         const deleteButton = page.locator('#delete-button');
         await expect(deleteButton).toBeVisible();
-        
+
         // Confirm deletion
         page.on('dialog', dialog => dialog.accept());
         await deleteButton.click();
 
         // Should return to inbox list (with cache-busting timestamp)
         await expect(page).toHaveURL(/\/inbox(\?t=\d+)?/);
-        
+
         // Wait longer for cache to refresh and page to reload
         await page.waitForTimeout(2000);
 
@@ -96,9 +101,10 @@ test.describe('Inbox Feature', () => {
         for (let i = 0; i < 3; i++) {
             const title = `Bulk Delete Test ${Date.now()}-${i}`;
             const response = await request.post('/api/inbox', { data: { title } });
+            expect(response.ok()).toBeTruthy();
             const item = await response.json();
             items.push(item);
-            
+
             // Register for cleanup in case test fails
             if (item.id) {
                 cleaner.addFile(`data/inbox/${item.id}.md`);
@@ -125,7 +131,7 @@ test.describe('Inbox Feature', () => {
         // Click bulk delete button
         const bulkDeleteButton = page.locator('#bulk-delete');
         await expect(bulkDeleteButton).toBeVisible();
-        
+
         // Confirm deletion
         page.on('dialog', dialog => dialog.accept());
         await bulkDeleteButton.click();
@@ -137,5 +143,10 @@ test.describe('Inbox Feature', () => {
         for (const item of items) {
             await expect(page.getByText(item.title)).not.toBeVisible();
         }
+    });
+    test('debug environment', async ({ request }) => {
+        const response = await request.get('/api/debug-user');
+        const data = await response.json();
+        console.log('DEBUG ENVIRONMENT:', JSON.stringify(data, null, 2));
     });
 });

@@ -12,19 +12,20 @@ import Button from "../../components/ui/Button.astro";
 import { dataReader } from "../../lib/data/reader";
 
 const { id } = Astro.params;
+const { currentUser } = Astro.locals as any;
 
 if (!id) {
     return Astro.redirect("/areas");
 }
 
-const area = await dataReader.getArea(id);
+const area = await dataReader.getArea(id, currentUser);
 
 if (!area) {
     return Astro.redirect("/404");
 }
 
-const projects = await getCollection("projects");
-const areaProjects = projects.filter((p) => p.data.area === area.data.name);
+const allProjects = await dataReader.getAllProjects(currentUser);
+const areaProjects = allProjects.filter((p) => p.data.area === area.data.name);
 
 const sortedProjects = areaProjects.sort((a, b) => {
     if (a.data.status === "active" && b.data.status !== "active") return -1;
@@ -99,7 +100,9 @@ const sortedProjects = areaProjects.sort((a, b) => {
                         {sortedProjects.length}
                     </span>
                 </Heading>
-                <Button href={`/new-project?area=${id}`} size="sm"> + New Project </Button>
+                <Button href={`/new-project?area=${id}`} size="sm">
+                    + New Project
+                </Button>
             </div>
 
             {

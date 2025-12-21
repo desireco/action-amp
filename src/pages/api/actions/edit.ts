@@ -6,7 +6,8 @@ import { fsApi } from '../../../lib/data/api';
 import matter from 'gray-matter';
 import { invalidateByPrefix } from '../../../lib/cache';
 
-export const POST: APIRoute = createAPIRoute(async ({ request }) => {
+export const POST: APIRoute = createAPIRoute(async ({ request, locals }) => {
+    const { currentUser } = locals as any;
     const { path, title, content } = await parseRequestBody(request);
 
     if (!path || !title) {
@@ -19,6 +20,7 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
     }
 
     // Assume path is relative to data/ directory if it doesn't start with data/
+    // Modified to be relative to user data root via resolveDataPath
     const filePath = path.startsWith('data/') ? path : `data/${path}`;
 
     // Ensure it ends with .md
@@ -26,7 +28,7 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
 
     try {
         // Read existing file
-        const fileContent = await fsApi.readFile(finalPath);
+        const fileContent = await fsApi.readFile(finalPath, currentUser);
         const parsed = matter(fileContent);
 
         // Update title in frontmatter
@@ -36,10 +38,10 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
         const updatedContent = matter.stringify(content || '', parsed.data);
 
         // Write back to file
-        await fsApi.writeFile(finalPath, updatedContent);
+        await fsApi.writeFile(finalPath, updatedContent, currentUser);
 
         // Invalidate cache
-        invalidateByPrefix('collection:actions');
+        invalidateByPrefix(`collection:actions:${currentUser || 'global'}`);
 
         return new Response(JSON.stringify({ success: true }), {
             status: 200,

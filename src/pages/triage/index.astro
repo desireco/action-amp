@@ -2,45 +2,20 @@
 import AppLayout from "../../layouts/AppLayout.astro";
 import CheckCircle2 from "~icons/lucide/check-circle-2";
 import ArrowRight from "~icons/lucide/arrow-right";
-import fs from "node:fs/promises";
-import path from "node:path";
-import matter from "gray-matter";
+import { dataReader } from "../../lib/data/reader";
 import Heading from "../../components/ui/Heading.astro";
 import Button from "../../components/ui/Button.astro";
 
+const { currentUser } = Astro.locals as any;
+
 // Read inbox items
-const inboxDir = path.join(process.cwd(), "data/inbox");
-let inboxItems: any[] = [];
-
-try {
-    const files = await fs.readdir(inboxDir);
-    const mdFiles = files.filter((f) => f.endsWith(".md"));
-
-    inboxItems = await Promise.all(
-        mdFiles.map(async (file) => {
-            const content = await fs.readFile(
-                path.join(inboxDir, file),
-                "utf-8",
-            );
-            const parsed = matter(content);
-            return {
-                id: file.replace(".md", ""),
-                data: {
-                    ...parsed.data,
-                    captured: parsed.data.captured
-                        ? new Date(parsed.data.captured)
-                        : new Date(),
-                },
-            };
-        }),
-    );
-} catch (e) {
-    console.error("Failed to read inbox:", e);
-}
+const inboxItems = await dataReader.getInboxItems(currentUser);
 
 // Sort oldest first for triage
 const sortedItems = inboxItems.sort(
-    (a, b) => a.data.captured.valueOf() - b.data.captured.valueOf(),
+    (a, b) =>
+        new Date(a.data.captured).getTime() -
+        new Date(b.data.captured).getTime(),
 );
 
 // If there are items, redirect to the first one

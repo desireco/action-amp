@@ -4,10 +4,14 @@ import AppLayout from "../layouts/AppLayout.astro";
 import Heading from "../components/ui/Heading.astro";
 import Card from "../components/ui/Card.astro";
 
-const inboxItems = await dataReader.getInboxItems();
-const areas = await dataReader.getAreas();
-const projects = await dataReader.getAllProjects();
-const actions = await dataReader.getAllActions();
+const { currentUser } = Astro.locals as any;
+
+// Get data for dashboard
+const inboxItems = await dataReader.getInboxItems(currentUser);
+const areas = await dataReader.getAreas(currentUser);
+const projects = await dataReader.getAllProjects(currentUser);
+const actions = await dataReader.getAllActions(currentUser);
+const reviews = await dataReader.getReviews(currentUser);
 ---
 
 <AppLayout title="Dashboard | Action Amplifier">

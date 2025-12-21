@@ -1,8 +1,9 @@
 import type { APIRoute } from 'astro';
 import { dataWriter } from '../../lib/data/writer';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
     try {
+        const { currentUser } = locals as any;
         const data = await request.json();
 
         if (!data.name || !data.area) {
@@ -12,7 +13,7 @@ export const POST: APIRoute = async ({ request }) => {
             });
         }
 
-        const result = await dataWriter.createProject(data.name, data.area, data.description);
+        const result = await dataWriter.createProject(data.name, data.area, data.description, currentUser);
 
         return new Response(JSON.stringify(result), {
             status: 201,
@@ -27,8 +28,9 @@ export const POST: APIRoute = async ({ request }) => {
     }
 };
 
-export const PUT: APIRoute = async ({ request }) => {
+export const PUT: APIRoute = async ({ request, locals }) => {
     try {
+        const { currentUser } = locals as any;
         const data = await request.json();
 
         if (!data.projectId) {
@@ -43,7 +45,7 @@ export const PUT: APIRoute = async ({ request }) => {
             description: data.description,
             status: data.status,
             priority: data.priority,
-        });
+        }, currentUser);
 
         return new Response(JSON.stringify({ success: true }), {
             status: 200,

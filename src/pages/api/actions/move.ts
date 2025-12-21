@@ -1,8 +1,11 @@
 import type { APIRoute } from 'astro';
 import { dataWriter } from '../../../lib/data/writer';
 
-export const POST: APIRoute = async ({ request }) => {
+import { resolveDataPath } from '../../../lib/data/path-resolver';
+
+export const POST: APIRoute = async ({ request, locals }) => {
     try {
+        const { currentUser } = locals as any;
         const { inboxItemId, projectId } = await request.json();
 
         if (!inboxItemId || !projectId) {
@@ -13,10 +16,10 @@ export const POST: APIRoute = async ({ request }) => {
         }
 
         // projectId comes from content collection, e.g., "work/website-redesign/project.toml"
-        // We need the directory path: "data/areas/work/website-redesign"
-        const projectDir = `data/areas/${projectId.replace('/project.toml', '')}`;
+        // resolveDataPath handles the nesting if currentUser is present
+        const projectDir = resolveDataPath(`areas/${projectId.replace('/project.toml', '')}`, currentUser);
 
-        await dataWriter.assignInboxItemToProject(inboxItemId, projectDir);
+        await dataWriter.assignInboxItemToProject(inboxItemId, projectDir, currentUser);
 
         return new Response(JSON.stringify({ success: true }), {
             status: 200,

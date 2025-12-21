@@ -1,6 +1,6 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
-import { getCollection } from "astro:content";
+import { dataReader } from "../../lib/data/reader";
 import ArrowRight from "~icons/lucide/arrow-right";
 import Trash2 from "~icons/lucide/trash-2";
 import FolderInput from "~icons/lucide/folder-input";
@@ -11,10 +11,6 @@ import FileText from "~icons/lucide/file-text";
 import Link from "~icons/lucide/link";
 import Lightbulb from "~icons/lucide/lightbulb";
 import BookOpen from "~icons/lucide/book-open";
-import InboxIcon from "~icons/lucide/inbox";
-import fs from "node:fs/promises";
-import path from "node:path";
-import matter from "gray-matter";
 
 const { id } = Astro.params;
 
@@ -22,41 +18,16 @@ if (!id) {
     return Astro.redirect("/triage");
 }
 
+const { currentUser } = Astro.locals as any;
+
 // 1. Fetch all inbox items to determine current item and next item
-const inboxDir = path.join(process.cwd(), "data/inbox");
-let inboxItems: any[] = [];
-
-try {
-    const files = await fs.readdir(inboxDir);
-    const mdFiles = files.filter((f) => f.endsWith(".md"));
-
-    inboxItems = await Promise.all(
-        mdFiles.map(async (file) => {
-            const content = await fs.readFile(
-                path.join(inboxDir, file),
-                "utf-8",
-            );
-            const parsed = matter(content);
-            return {
-                id: file.replace(".md", ""),
-                data: {
-                    ...parsed.data,
-                    captured: parsed.data.captured
-                        ? new Date(parsed.data.captured)
-                        : new Date(),
-                },
-                content: parsed.content,
-            };
-        }),
-    );
-} catch (e) {
-    console.error("Failed to read inbox:", e);
-    return Astro.redirect("/inbox");
-}
+const inboxItems = await dataReader.getInboxItems(currentUser);
 
 // Sort oldest first
 const sortedItems = inboxItems.sort(
-    (a, b) => a.data.captured.valueOf() - b.data.captured.valueOf(),
+    (a, b) =>
+        new Date(a.data.captured).getTime() -
+        new Date(b.data.captured).getTime(),
 );
 
 const currentIndex = sortedItems.findIndex((item) => item.id === id);
@@ -70,8 +41,8 @@ const nextItem = sortedItems[currentIndex + 1];
 const nextLink = nextItem ? `/triage/${nextItem.id}` : "/triage";
 
 // 2. Fetch Projects for the "Move" dropdown
-const projects = await getCollection("projects");
-const activeProjects = projects.filter((p) => p.data.status === "active");
+const allProjects = await dataReader.getAllProjects(currentUser);
+const activeProjects = allProjects.filter((p) => p.data.status === "active");
 
 const typeOptions = [
     { value: "note", label: "Note", icon: FileText },
@@ -242,7 +213,7 @@ const typeOptions = [
                         Permanently remove this item.
                     </p>
                     <button
-                        id="btn-delete"
+                        id="delete-button"
                         class="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-200 dark:border-red-900/30 px-4 py-3 rounded-lg font-medium transition-colors"
                     >
                         <Trash2 class="h-5 w-5" />
@@ -258,7 +229,7 @@ const typeOptions = [
     const editForm = document.getElementById("edit-form");
     const btnSaveNext = document.getElementById("btn-save-next");
     const btnMove = document.getElementById("btn-move");
-    const btnDelete = document.getElementById("btn-delete");
+    const btnDelete = document.getElementById("delete-button");
     const projectSelect = document.getElementById("project-select");
 
     // Helper to get form data

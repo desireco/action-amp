@@ -1,7 +1,8 @@
 import type { APIRoute } from 'astro';
 import { dataReader } from '../../lib/data/reader';
 
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ url, locals }) => {
+    const { currentUser } = locals as any;
     const query = url.searchParams.get('q')?.toLowerCase() || '';
     const collectionFilter = url.searchParams.get('collection') || '';
     const statusFilter = url.searchParams.get('status') || '';
@@ -12,7 +13,7 @@ export const GET: APIRoute = async ({ url }) => {
 
         // Search Inbox
         if (!collectionFilter || collectionFilter === 'inbox') {
-            const inboxItems = await dataReader.getInboxItems();
+            const inboxItems = await dataReader.getInboxItems(currentUser);
             for (const item of inboxItems) {
                 if (matchesFilters(item.data, query, statusFilter, priorityFilter, 'inbox')) {
                     results.push({
@@ -30,7 +31,7 @@ export const GET: APIRoute = async ({ url }) => {
 
         // Search Actions
         if (!collectionFilter || collectionFilter === 'actions') {
-            const actions = await dataReader.getAllActions();
+            const actions = await dataReader.getAllActions(currentUser);
             for (const action of actions) {
                 if (matchesFilters(action.data, query, statusFilter, priorityFilter, 'actions')) {
                     // Extract area and project from the action ID
@@ -54,7 +55,7 @@ export const GET: APIRoute = async ({ url }) => {
 
         // Search Projects
         if (!collectionFilter || collectionFilter === 'projects') {
-            const projects = await dataReader.getAllProjects();
+            const projects = await dataReader.getAllProjects(currentUser);
             for (const project of projects) {
                 if (matchesFilters(project.data, query, statusFilter, priorityFilter, 'projects')) {
                     // Extract area and project name from ID
@@ -78,7 +79,7 @@ export const GET: APIRoute = async ({ url }) => {
 
         // Search Areas
         if (!collectionFilter || collectionFilter === 'areas') {
-            const areas = await dataReader.getAreas();
+            const areas = await dataReader.getAreas(currentUser);
             for (const area of areas) {
                 if (matchesFilters(area.data, query, statusFilter, priorityFilter, 'areas')) {
                     // Extract area name from ID
@@ -100,7 +101,7 @@ export const GET: APIRoute = async ({ url }) => {
 
         // Search Reviews
         if (!collectionFilter || collectionFilter === 'reviews') {
-            const reviews = await dataReader.getReviews();
+            const reviews = await dataReader.getReviews(currentUser);
             for (const review of reviews) {
                 if (matchesFilters(review.data, query, statusFilter, priorityFilter, 'reviews')) {
                     // Format the review title

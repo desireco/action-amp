@@ -1,8 +1,9 @@
 import type { APIRoute } from 'astro';
 import { dataWriter } from '../../../lib/data/writer';
 
-export const PUT: APIRoute = async ({ request, params }) => {
+export const PUT: APIRoute = async ({ request, params, locals }) => {
     try {
+        const { currentUser } = locals as any;
         const { id } = params;
 
         if (!id) {
@@ -26,7 +27,7 @@ export const PUT: APIRoute = async ({ request, params }) => {
         if (description !== null) updates.description = description;
         if (priority) updates.priority = priority;
 
-        await dataWriter.updateArea(id, updates);
+        await dataWriter.updateArea(id, updates, currentUser);
 
         return new Response(JSON.stringify({ success: true }), {
             status: 200,

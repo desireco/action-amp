@@ -7,12 +7,15 @@ import { execSync } from 'child_process';
  */
 async function setupE2EData() {
   const testDataDir = path.join(process.cwd(), 'test-data');
-  const mainDataDir = path.join(process.cwd(), 'data');
+  const testUser = process.env.TEST_USER;
+  const mainDataDir = testUser
+    ? path.join(process.cwd(), 'data', 'users', testUser)
+    : path.join(process.cwd(), 'data');
 
   // Clean up any existing test data first
   try {
     await fs.rm(testDataDir, { recursive: true, force: true });
-  } catch {}
+  } catch { }
 
   // Create test data directory
   await fs.mkdir(testDataDir, { recursive: true });
@@ -149,8 +152,8 @@ ${item.content}
 
   for (const review of reviews) {
     const reviewMd = `---
-type: daily
-date: ${review.date}
+type: "daily"
+date: "${review.date}"
 ---
 
 # ${review.title}
@@ -173,7 +176,7 @@ Test content for save and edit functionality.
     const dest = path.join(mainDataDir, dir);
 
     // Remove existing directory
-    await fs.rm(dest, { recursive: true, force: true }).catch(() => {});
+    await fs.rm(dest, { recursive: true, force: true }).catch(() => { });
 
     // Copy new directory
     execSync(`cp -r "${src}" "${dest}"`, { stdio: 'inherit' });

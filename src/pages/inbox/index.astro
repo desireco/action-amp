@@ -18,10 +18,12 @@ import Button from "../../components/ui/Button.astro";
 import LoadingButton from "../../components/ui/LoadingButton.astro";
 import InboxItem from "../../components/inbox/InboxItem.astro";
 
+const { currentUser } = Astro.locals as any;
+
 // Get available projects for bulk move
 async function getProjects() {
     try {
-        const projects = await dataReader.getAllProjects();
+        const projects = await dataReader.getAllProjects(currentUser);
         return projects.map((p) => ({
             id: p.id,
             title: p.data.name,
@@ -36,11 +38,13 @@ const projects = await getProjects();
 
 // Check for cache-busting parameter
 // Simple filesystem-based approach with robust error handling
-const inboxItems = await dataReader.getInboxItems();
+const inboxItems = await dataReader.getInboxItems(currentUser);
 
-const sortedItems = inboxItems.sort(
-    (a, b) => b.data.captured.valueOf() - a.data.captured.valueOf(),
-);
+const sortedItems = inboxItems.sort((a, b) => {
+    const timeA = a.data.captured ? new Date(a.data.captured).getTime() : 0;
+    const timeB = b.data.captured ? new Date(b.data.captured).getTime() : 0;
+    return timeB - timeA;
+});
 
 const typeIcons = {
     action: CheckSquare,
@@ -151,9 +155,7 @@ const typeIcons = {
                     </p>
                 </Card>
             ) : (
-                sortedItems.map((item) =>
-                    sortedItems.map((item) => <InboxItem item={item} />),
-                )
+                sortedItems.map((item) => <InboxItem item={item} />)
             )
         }
     </div>
@@ -178,16 +180,16 @@ const typeIcons = {
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const selectAll = document.getElementById("select-all");
-            const checkboxes = document.querySelectorAll(".inbox-checkbox");
+            const selectAll = document.getElementById("select-all") as HTMLInputElement | null;
+            const checkboxes = document.querySelectorAll(".inbox-checkbox") as NodeListOf<HTMLInputElement>;
             const triageButtons = document.querySelectorAll(".triage-button");
             const bulkActions = document.getElementById("bulk-actions");
             const selectedCount = document.getElementById("selected-count");
             const bulkDelete = document.getElementById("bulk-delete");
-            const bulkMove = document.getElementById("bulk-move");
+            const bulkMove = document.getElementById("bulk-move") as HTMLButtonElement | null;
             const bulkProjectSelect = document.getElementById(
                 "bulk-project-select",
-            );
+            ) as HTMLSelectElement | null;
 
             // Update selected count and show/hide bulk actions
             function updateBulkActions() {
@@ -196,26 +198,32 @@ const typeIcons = {
                 );
                 const count = selected.length;
 
-                selectedCount.textContent = count;
+                if (selectedCount) {
+                    selectedCount.textContent = count.toString();
+                }
 
                 if (count > 0) {
-                    bulkActions.classList.remove("hidden");
+                    bulkActions?.classList.remove("hidden");
                 } else {
-                    bulkActions.classList.add("hidden");
+                    bulkActions?.classList.add("hidden");
                 }
 
                 // Enable/disable move button based on project selection
-                if (count > 0 && bulkProjectSelect.value) {
-                    bulkMove.disabled = false;
-                } else {
-                    bulkMove.disabled = true;
+                if (bulkMove) {
+                    if (count > 0 && bulkProjectSelect?.value) {
+                        bulkMove.disabled = false;
+                    } else {
+                        bulkMove.disabled = true;
+                    }
                 }
             }
 
             // Select all functionality
             selectAll?.addEventListener("change", () => {
                 checkboxes.forEach((checkbox) => {
-                    checkbox.checked = selectAll.checked;
+                    if (selectAll) {
+                        checkbox.checked = selectAll.checked;
+                    }
                 });
                 updateBulkActions();
             });
@@ -225,14 +233,16 @@ const typeIcons = {
                 checkbox.addEventListener("change", () => {
                     // Update select all state
                     const allChecked = Array.from(checkboxes).every(
-                        (cb) => cb.checked,
+                        (cb) => (cb as HTMLInputElement).checked,
                     );
                     const someChecked = Array.from(checkboxes).some(
-                        (cb) => cb.checked,
+                        (cb) => (cb as HTMLInputElement).checked,
                     );
 
-                    selectAll.checked = allChecked;
-                    selectAll.indeterminate = someChecked && !allChecked;
+                    if (selectAll) {
+                        selectAll.checked = allChecked;
+                        selectAll.indeterminate = someChecked && !allChecked;
+                    }
 
                     updateBulkActions();
                 });

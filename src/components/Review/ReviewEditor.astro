@@ -1,0 +1,20 @@
+---
+import { ReviewEditor } from './ReviewEditor';
+
+interface Props {
+    reviewId: string;
+    initialContent: string;
+    initialHtml: string;
+    [key: string]: any;
+}
+
+const { reviewId, initialContent, initialHtml, ...rest } = Astro.props;
+---
+
+<ReviewEditor
+    client:load
+    reviewId={reviewId}
+    initialContent={initialContent}
+    initialHtml={initialHtml}
+    {...rest}
+/>

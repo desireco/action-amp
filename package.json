@@ -34,6 +34,7 @@
     "@types/sortablejs": "^1.15.9",
     "astro": "^5.16.6",
     "gray-matter": "^4.0.3",
+    "idb": "^8.0.3",
     "lucide-astro": "^0.556.0",
     "lucide-react": "^0.562.0",
     "marked": "^17.0.1",

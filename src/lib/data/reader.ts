@@ -208,7 +208,7 @@ export class DataReader {
                 console.error('Error reading inbox items:', error);
                 return [];
             }
-        }, { ttlMs: 2000 });
+        }, { ttlMs: 1 });
     }
 
     async getReviews(userId?: string): Promise<any[]> {

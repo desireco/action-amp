@@ -9,16 +9,22 @@ import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 import Button from "../../components/ui/Button.astro";
 
-const areas = await dataReader.getAreas();
+const { currentUser } = Astro.locals as any;
+const areas = await dataReader.getAreas(currentUser);
+const projects = await dataReader.getAllProjects(currentUser);
 const settings = (Astro.locals as any).settings;
 const currentContext = settings.next_action_context;
 
-// Group projects by area from settings (active projects only)
-const projectsByArea = (settings.projects || []).reduce(
+// Group projects by area (active projects only)
+const projectsByArea = projects.reduce(
     (acc: Record<string, any[]>, project: any) => {
-        const areaName = project.area;
+        const areaName = project.data.area;
         if (!acc[areaName]) acc[areaName] = [];
-        acc[areaName].push(project);
+        acc[areaName].push({
+            name: project.data.name,
+            permalink: `/projects/${project.id}`,
+            status: project.data.status,
+        });
         return acc;
     },
     {} as Record<string, any[]>,

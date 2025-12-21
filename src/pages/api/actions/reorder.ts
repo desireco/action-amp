@@ -6,19 +6,23 @@ import { parse as parseToml } from '@iarna/toml';
 import { createAPIRoute, parseRequestBody, createSuccessResponse } from '../../../lib/api-handler';
 import { ValidationError, DataError } from '../../../lib/errors';
 
-export const POST: APIRoute = createAPIRoute(async ({ request }) => {
+import { fsApi } from '../../../lib/data/api';
+import { resolveDataPath } from '../../../lib/data/path-resolver';
+
+export const POST: APIRoute = createAPIRoute(async ({ request, locals }) => {
+    const { currentUser } = locals as any;
     const { actionIds, projectDir } = await parseRequestBody(request);
 
     if (!actionIds || !Array.isArray(actionIds) || !projectDir) {
         throw new ValidationError('actionIds array and projectDir are required');
     }
 
-    // Get the full path to the project directory
-    const projectPath = path.join(process.cwd(), 'data', 'areas', projectDir);
+    // Get the path to the project directory relative to data root
+    const projectPathPrefix = path.join('areas', projectDir);
 
     // Read all action files
     const actionFiles: string[] = [];
-    const files = await fs.readdir(projectPath);
+    const files = await fsApi.listDir(projectPathPrefix, currentUser);
     for (const file of files) {
         if (file.startsWith('act-') && file.endsWith('.md')) {
             actionFiles.push(file);
@@ -28,8 +32,8 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
     // Create a map of action ID to filename
     const actionMap: Record<string, string> = {};
     for (const file of actionFiles) {
-        const filePath = path.join(projectPath, file);
-        const content = await fs.readFile(filePath, 'utf-8');
+        const filePath = path.join(projectPathPrefix, file);
+        const content = await fsApi.readFile(filePath, currentUser);
         const { data } = matter(content);
         // Use the filename without extension as ID if no ID in frontmatter
         const actionId = data.id || file.replace('.md', '');
@@ -39,8 +43,8 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
     // Read all actions into memory
     const actions: Record<string, any> = {};
     for (const [id, filename] of Object.entries(actionMap)) {
-        const filePath = path.join(projectPath, filename);
-        const content = await fs.readFile(filePath, 'utf-8');
+        const filePath = path.join(projectPathPrefix, filename);
+        const content = await fsApi.readFile(filePath, currentUser);
         const { data, content: body } = matter(content);
         actions[id] = { data, body };
     }
@@ -54,20 +58,19 @@ export const POST: APIRoute = createAPIRoute(async ({ request }) => {
             // Create new filename with numeric prefix
             const paddedNumber = String(i + 1).padStart(3, '0');
             const newFilename = `act-${paddedNumber}-${id}.md`;
-            const newPath = path.join(projectPath, newFilename);
+            const newPath = path.join(projectPathPrefix, newFilename);
 
             // Write action with updated content
             const updatedContent = matter.stringify(action.body, action.data, {
-                delimiters: '---',
-                lineWidth: 120
+                delimiters: '---'
             });
 
-            await fs.writeFile(newPath, updatedContent, 'utf-8');
+            await fsApi.writeFile(newPath, updatedContent, currentUser);
 
             // Delete old file if it has a different name
-            const oldPath = path.join(projectPath, actionMap[id]);
+            const oldPath = path.join(projectPathPrefix, actionMap[id]);
             if (oldPath !== newPath) {
-                await fs.unlink(oldPath);
+                await fsApi.deleteFile(oldPath, currentUser);
             }
         }
     }

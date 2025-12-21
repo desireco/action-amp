@@ -1,9 +1,10 @@
 import type { APIRoute } from 'astro';
 import { syncAreasProjects } from '../../../lib/data/settings';
 
-export const POST: APIRoute = async () => {
+export const POST: APIRoute = async ({ locals }) => {
     try {
-        await syncAreasProjects();
+        const { currentUser } = locals as any;
+        await syncAreasProjects(currentUser);
         return new Response(JSON.stringify({ success: true }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
