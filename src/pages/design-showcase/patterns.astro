@@ -5,7 +5,8 @@ import Card from "../../components/ui/Card.astro";
 import Button from "../../components/ui/Button.astro";
 import Input from "../../components/ui/Input.astro";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { TabsPattern } from "../../components/design/TabsPattern";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import Search from "~icons/lucide/search";
@@ -16,8 +17,27 @@ import Grid from "~icons/lucide/grid";
 import List from "~icons/lucide/list";
 import Check from "~icons/lucide/check";
 import X from "~icons/lucide/x";
+import InboxItem from "../../components/inbox/InboxItem.astro";
 
 const title = "Patterns | Design Showcase";
+
+const showcaseItem = {
+    id: "showcase-item-1",
+    data: {
+        title: "Review quarterly goals and update progress",
+        type: "action",
+        captured: new Date(),
+    },
+};
+
+const showcaseItemNote = {
+    id: "showcase-item-2",
+    data: {
+        title: "Meeting notes: Design System Sync",
+        type: "note",
+        captured: new Date(),
+    },
+};
 ---
 
 <AppLayout title={title} currentPath="/design-showcase/patterns">
@@ -44,7 +64,9 @@ const title = "Patterns | Design Showcase";
                 <!-- Search Bar -->
                 <div class="flex gap-3 mb-4">
                     <div class="relative flex-1">
-                        <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
+                        <Search
+                            class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted"
+                        />
                         <Input placeholder="Search items..." class="pl-10" />
                     </div>
                     <Button variant="outline" class="flex items-center gap-2">
@@ -59,17 +81,25 @@ const title = "Patterns | Design Showcase";
 
                 <!-- Active Filters -->
                 <div class="flex flex-wrap items-center gap-2 mb-4">
-                    <Badge variant="secondary" class="flex items-center gap-1">
+                    <Badge
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                    >
                         Type: Action
-                        <X class="h-3 w-3 cursor-pointer hover:text-text-muted" />
+                        <X
+                            class="h-3 w-3 cursor-pointer hover:text-text-muted"
+                        />
                     </Badge>
-                    <Badge variant="secondary" class="flex items-center gap-1">
+                    <Badge
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                    >
                         Status: Active
-                        <X class="h-3 w-3 cursor-pointer hover:text-text-muted" />
+                        <X
+                            class="h-3 w-3 cursor-pointer hover:text-text-muted"
+                        />
                     </Badge>
-                    <Button variant="ghost" size="sm">
-                        Clear all
-                    </Button>
+                    <Button variant="ghost" size="sm"> Clear all </Button>
                 </div>
 
                 <!-- Results Count -->
@@ -86,7 +116,8 @@ const title = "Patterns | Design Showcase";
             <Card class="p-6">
                 <h3 class="font-semibold mb-4">Structured Data Display</h3>
                 <p class="text-sm text-text-muted mb-6">
-                    Pattern for displaying tabular data with sorting and actions:
+                    Pattern for displaying tabular data with sorting and
+                    actions:
                 </p>
 
                 <div class="overflow-x-auto">
@@ -94,51 +125,81 @@ const title = "Patterns | Design Showcase";
                         <thead>
                             <tr class="border-b border-border">
                                 <th class="text-left py-3 px-4 font-medium">
-                                    <button class="flex items-center gap-1 hover:text-primary">
+                                    <button
+                                        class="flex items-center gap-1 hover:text-primary"
+                                    >
                                         Name
                                         <span class="text-xs">↕</span>
                                     </button>
                                 </th>
-                                <th class="text-left py-3 px-4 font-medium">Status</th>
-                                <th class="text-left py-3 px-4 font-medium">Updated</th>
-                                <th class="text-right py-3 px-4 font-medium">Actions</th>
+                                <th class="text-left py-3 px-4 font-medium"
+                                    >Status</th
+                                >
+                                <th class="text-left py-3 px-4 font-medium"
+                                    >Updated</th
+                                >
+                                <th class="text-right py-3 px-4 font-medium"
+                                    >Actions</th
+                                >
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-b border-border hover:bg-surface-hover">
+                            <tr
+                                class="border-b border-border hover:bg-surface-hover"
+                            >
                                 <td class="py-3 px-4">Project Alpha</td>
                                 <td class="py-3 px-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-green-500 text-white">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-green-500 text-white"
+                                    >
                                         Active
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 text-sm text-text-muted">2 hours ago</td>
+                                <td class="py-3 px-4 text-sm text-text-muted"
+                                    >2 hours ago</td
+                                >
                                 <td class="py-3 px-4 text-right">
-                                    <Button variant="ghost" size="sm">Edit</Button>
+                                    <Button variant="ghost" size="sm"
+                                        >Edit</Button
+                                    >
                                 </td>
                             </tr>
-                            <tr class="border-b border-border hover:bg-surface-hover">
+                            <tr
+                                class="border-b border-border hover:bg-surface-hover"
+                            >
                                 <td class="py-3 px-4">Project Beta</td>
                                 <td class="py-3 px-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-yellow-500 text-black">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-yellow-500 text-black"
+                                    >
                                         Review
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 text-sm text-text-muted">1 day ago</td>
+                                <td class="py-3 px-4 text-sm text-text-muted"
+                                    >1 day ago</td
+                                >
                                 <td class="py-3 px-4 text-right">
-                                    <Button variant="ghost" size="sm">Edit</Button>
+                                    <Button variant="ghost" size="sm"
+                                        >Edit</Button
+                                    >
                                 </td>
                             </tr>
                             <tr class="hover:bg-surface-hover">
                                 <td class="py-3 px-4">Project Gamma</td>
                                 <td class="py-3 px-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-secondary text-secondary-foreground">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-secondary text-secondary-foreground"
+                                    >
                                         Draft
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 text-sm text-text-muted">3 days ago</td>
+                                <td class="py-3 px-4 text-sm text-text-muted"
+                                    >3 days ago</td
+                                >
                                 <td class="py-3 px-4 text-right">
-                                    <Button variant="ghost" size="sm">Edit</Button>
+                                    <Button variant="ghost" size="sm"
+                                        >Edit</Button
+                                    >
                                 </td>
                             </tr>
                         </tbody>
@@ -151,7 +212,9 @@ const title = "Patterns | Design Showcase";
                         Showing 1-10 of 42 items
                     </p>
                     <div class="flex gap-2">
-                        <Button variant="outline" size="sm" disabled>Previous</Button>
+                        <Button variant="outline" size="sm" disabled
+                            >Previous</Button
+                        >
                         <Button variant="outline" size="sm">1</Button>
                         <Button size="sm">2</Button>
                         <Button variant="outline" size="sm">3</Button>
@@ -174,11 +237,19 @@ const title = "Patterns | Design Showcase";
                 <!-- View Toggle -->
                 <div class="flex justify-between items-center mb-6">
                     <div class="flex gap-2">
-                        <Button variant="outline" size="sm" class="flex items-center gap-1">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            class="flex items-center gap-1"
+                        >
                             <Grid class="h-4 w-4" />
                             Grid
                         </Button>
-                        <Button variant="ghost" size="sm" class="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            class="flex items-center gap-1"
+                        >
                             <List class="h-4 w-4" />
                             List
                         </Button>
@@ -192,12 +263,15 @@ const title = "Patterns | Design Showcase";
                         <div class="aspect-video bg-surface rounded mb-3"></div>
                         <h4 class="font-semibold mb-1">Card Title 1</h4>
                         <p class="text-sm text-text-muted mb-3">
-                            Brief description of the item being displayed in this card.
+                            Brief description of the item being displayed in
+                            this card.
                         </p>
                         <div class="flex justify-between items-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background">
-                                        Category
-                                    </span>
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background"
+                            >
+                                Category
+                            </span>
                             <Button variant="ghost" size="sm">View →</Button>
                         </div>
                     </Card>
@@ -206,12 +280,15 @@ const title = "Patterns | Design Showcase";
                         <div class="aspect-video bg-surface rounded mb-3"></div>
                         <h4 class="font-semibold mb-1">Card Title 2</h4>
                         <p class="text-sm text-text-muted mb-3">
-                            Brief description of the item being displayed in this card.
+                            Brief description of the item being displayed in
+                            this card.
                         </p>
                         <div class="flex justify-between items-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background">
-                                        Category
-                                    </span>
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background"
+                            >
+                                Category
+                            </span>
                             <Button variant="ghost" size="sm">View →</Button>
                         </div>
                     </Card>
@@ -220,15 +297,36 @@ const title = "Patterns | Design Showcase";
                         <div class="aspect-video bg-surface rounded mb-3"></div>
                         <h4 class="font-semibold mb-1">Card Title 3</h4>
                         <p class="text-sm text-text-muted mb-3">
-                            Brief description of the item being displayed in this card.
+                            Brief description of the item being displayed in
+                            this card.
                         </p>
                         <div class="flex justify-between items-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background">
-                                        Category
-                                    </span>
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full border border-border bg-background"
+                            >
+                                Category
+                            </span>
                             <Button variant="ghost" size="sm">View →</Button>
                         </div>
                     </Card>
+                </div>
+            </Card>
+        </section>
+
+        <!-- List Items Pattern -->
+        <section>
+            <Heading level={2}>List Items</Heading>
+
+            <Card class="p-6">
+                <h3 class="font-semibold mb-4">Inbox Items</h3>
+                <p class="text-sm text-text-muted mb-6">
+                    Pattern for displaying actionable list items with metadata
+                    and quick actions:
+                </p>
+
+                <div class="space-y-4">
+                    <InboxItem item={showcaseItem} />
+                    <InboxItem item={showcaseItemNote} />
                 </div>
             </Card>
         </section>
@@ -246,17 +344,29 @@ const title = "Patterns | Design Showcase";
                 <!-- Progress Indicator -->
                 <div class="flex items-center gap-2 mb-6">
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">1</div>
+                        <div
+                            class="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium"
+                        >
+                            1
+                        </div>
                         <span class="text-sm">Basic Info</span>
                     </div>
                     <div class="w-8 h-0.5 bg-border"></div>
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">2</div>
+                        <div
+                            class="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium"
+                        >
+                            2
+                        </div>
                         <span class="text-sm">Details</span>
                     </div>
                     <div class="w-8 h-0.5 bg-border"></div>
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 bg-surface border-2 border-border rounded-full flex items-center justify-center text-sm font-medium text-text-muted">3</div>
+                        <div
+                            class="w-8 h-8 bg-surface border-2 border-border rounded-full flex items-center justify-center text-sm font-medium text-text-muted"
+                        >
+                            3
+                        </div>
                         <span class="text-sm text-text-muted">Review</span>
                     </div>
                 </div>
@@ -264,15 +374,21 @@ const title = "Patterns | Design Showcase";
                 <!-- Form Fields -->
                 <div class="grid gap-4 md:grid-cols-2">
                     <div>
-                        <label class="block text-sm font-medium mb-1">First Name</label>
+                        <label class="block text-sm font-medium mb-1"
+                            >First Name</label
+                        >
                         <Input placeholder="Enter first name" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Last Name</label>
+                        <label class="block text-sm font-medium mb-1"
+                            >Last Name</label
+                        >
                         <Input placeholder="Enter last name" />
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium mb-1">Description</label>
+                        <label class="block text-sm font-medium mb-1"
+                            >Description</label
+                        >
                         <Input placeholder="Brief description" />
                     </div>
                 </div>
@@ -298,103 +414,7 @@ const title = "Patterns | Design Showcase";
                     Pattern for organizing related content in a compact space:
                 </p>
 
-                <Tabs defaultValue="overview" class="w-full" client:load>
-                    <TabsList class="grid w-full grid-cols-4">
-                        <TabsTrigger value="overview">Overview</TabsTrigger>
-                        <TabsTrigger value="details">Details</TabsTrigger>
-                        <TabsTrigger value="settings">Settings</TabsTrigger>
-                        <TabsTrigger value="activity">Activity</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="overview" class="mt-4">
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-medium">Project Overview</h4>
-                            <p class="text-text-muted">
-                                This is the main overview tab containing summary information about the project.
-                            </p>
-                            <div class="grid gap-4 md:grid-cols-3">
-                                <Card class="p-4">
-                                    <h5 class="font-medium mb-1">Progress</h5>
-                                    <p class="text-2xl font-bold text-primary">75%</p>
-                                </Card>
-                                <Card class="p-4">
-                                    <h5 class="font-medium mb-1">Tasks</h5>
-                                    <p class="text-2xl font-bold text-primary">24</p>
-                                </Card>
-                                <Card class="p-4">
-                                    <h5 class="font-medium mb-1">Team</h5>
-                                    <p class="text-2xl font-bold text-primary">8</p>
-                                </Card>
-                            </div>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="details" class="mt-4">
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-medium">Project Details</h4>
-                            <div class="grid gap-4">
-                                <div class="flex justify-between py-2">
-                                    <span class="text-text-muted">Created</span>
-                                    <span>Dec 13, 2025</span>
-                                </div>
-                                <Separator />
-                                <div class="flex justify-between py-2">
-                                    <span class="text-text-muted">Last Updated</span>
-                                    <span>Dec 14, 2025</span>
-                                </div>
-                                <Separator />
-                                <div class="flex justify-between py-2">
-                                    <span class="text-text-muted">Status</span>
-                                    <Badge variant="secondary">Active</Badge>
-                                </div>
-                            </div>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="settings" class="mt-4">
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-medium">Project Settings</h4>
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="font-medium">Email Notifications</p>
-                                        <p class="text-sm text-text-muted">Receive updates about this project</p>
-                                    </div>
-                                    <Checkbox id="email-notif" defaultChecked />
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="font-medium">Auto-archive</p>
-                                        <p class="text-sm text-text-muted">Archive completed tasks automatically</p>
-                                    </div>
-                                    <Checkbox id="auto-archive" />
-                                </div>
-                            </div>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="activity" class="mt-4">
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-medium">Recent Activity</h4>
-                            <div class="space-y-3">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                                    <div>
-                                        <p class="text-sm">Task "Design system update" completed</p>
-                                        <p class="text-xs text-text-muted">2 hours ago</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="w-2 h-2 bg-muted rounded-full mt-2"></div>
-                                    <div>
-                                        <p class="text-sm">New team member joined</p>
-                                        <p class="text-xs text-text-muted">5 hours ago</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </TabsContent>
-                </Tabs>
+                <TabsPattern client:load />
             </Card>
         </section>
 
@@ -404,23 +424,29 @@ const title = "Patterns | Design Showcase";
 
             <div class="grid gap-6 md:grid-cols-2">
                 <Card class="p-8 text-center">
-                    <div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div
+                        class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4"
+                    >
                         <Search class="h-8 w-8 text-text-muted" />
                     </div>
                     <h3 class="font-semibold mb-2">No Results Found</h3>
                     <p class="text-sm text-text-muted mb-4">
-                        Try adjusting your search terms or filters to find what you're looking for.
+                        Try adjusting your search terms or filters to find what
+                        you're looking for.
                     </p>
                     <Button variant="outline">Clear Filters</Button>
                 </Card>
 
                 <Card class="p-8 text-center">
-                    <div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div
+                        class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4"
+                    >
                         <Plus class="h-8 w-8 text-text-muted" />
                     </div>
                     <h3 class="font-semibold mb-2">No Items Yet</h3>
                     <p class="text-sm text-text-muted mb-4">
-                        Get started by creating your first item and organizing your workspace.
+                        Get started by creating your first item and organizing
+                        your workspace.
                     </p>
                     <Button>Create First Item</Button>
                 </Card>
@@ -437,9 +463,13 @@ const title = "Patterns | Design Showcase";
                     Shows the user's location in the site hierarchy:
                 </p>
                 <nav class="flex items-center gap-2 text-sm">
-                    <a href="#" class="text-text-muted hover:text-text-main">Home</a>
+                    <a href="#" class="text-text-muted hover:text-text-main"
+                        >Home</a
+                    >
                     <span class="text-text-muted">/</span>
-                    <a href="#" class="text-text-muted hover:text-text-main">Projects</a>
+                    <a href="#" class="text-text-muted hover:text-text-main"
+                        >Projects</a
+                    >
                     <span class="text-text-muted">/</span>
                     <span class="text-text-main">Current Page</span>
                 </nav>
@@ -452,16 +482,24 @@ const title = "Patterns | Design Showcase";
                 </p>
                 <div class="border-b border-border">
                     <nav class="flex gap-6">
-                        <button class="pb-3 px-1 border-b-2 border-primary text-primary font-medium">
+                        <button
+                            class="pb-3 px-1 border-b-2 border-primary text-primary font-medium"
+                        >
                             Overview
                         </button>
-                        <button class="pb-3 px-1 border-b-2 border-transparent text-text-muted hover:text-text-main">
+                        <button
+                            class="pb-3 px-1 border-b-2 border-transparent text-text-muted hover:text-text-main"
+                        >
                             Details
                         </button>
-                        <button class="pb-3 px-1 border-b-2 border-transparent text-text-muted hover:text-text-main">
+                        <button
+                            class="pb-3 px-1 border-b-2 border-transparent text-text-muted hover:text-text-main"
+                        >
                             Activity
                         </button>
-                        <button class="pb-3 px-1 border-b-2 border-transparent text-text-muted hover:text-text-main">
+                        <button
+                            class="pb-3 px-1 border-b-2 border-transparent text-text-muted hover:text-text-main"
+                        >
                             Settings
                         </button>
                     </nav>

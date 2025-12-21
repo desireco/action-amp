@@ -1,10 +1,10 @@
 import type { APIRoute } from 'astro';
 import { dataWriter } from '../../lib/data/writer';
-import { getCachedCollection } from '../../lib/content-cache';
+import { dataReader } from '../../lib/data/reader';
 
 export const GET: APIRoute = async () => {
     try {
-        const items = await getCachedCollection('inbox');
+        const items = await dataReader.getInboxItems();
         return new Response(JSON.stringify(items), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }

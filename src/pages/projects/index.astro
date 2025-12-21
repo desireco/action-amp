@@ -1,6 +1,6 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
-import { getCachedCollection } from "../../lib/content-cache";
+import { dataReader } from "../../lib/data/reader";
 import FolderKanban from "~icons/lucide/folder-kanban";
 import LayoutGrid from "~icons/lucide/layout-grid";
 import ChevronRight from "~icons/lucide/chevron-right";
@@ -13,7 +13,7 @@ import Heading from "../../components/ui/Heading.astro";
 import Card from "../../components/ui/Card.astro";
 import Button from "../../components/ui/Button.astro";
 
-const projects = await getCachedCollection("projects");
+const projects = await dataReader.getAllProjects();
 
 // Sort projects by status then priority
 const statusOrder: Record<string, number> = {

@@ -33,12 +33,12 @@ export class DataReader {
 
                 // Ensure defaults
                 const data = {
+                    ...parsed.data,
                     title: parsed.data.title || 'Untitled',
                     status: parsed.data.status || 'draft',
                     priority: parsed.data.priority || 'medium',
-                    created: parsed.data.created,
-                    completed: parsed.data.completed,
-                    ...parsed.data
+                    created: parsed.data.created ? new Date(parsed.data.created) : undefined,
+                    completed: parsed.data.completed ? new Date(parsed.data.completed) : undefined,
                 };
 
                 return {
@@ -70,7 +70,19 @@ export class DataReader {
 
         try {
             const content = await fs.readFile(fullPath, 'utf-8');
-            const data = toml.parse(content);
+            const data: any = toml.parse(content);
+
+            // Ensure dates are actual Date objects
+            if (data.due_date && !(data.due_date instanceof Date)) {
+                data.due_date = new Date(data.due_date);
+            }
+            if (data.created && !(data.created instanceof Date)) {
+                data.created = new Date(data.created);
+            }
+            if (data.completed && !(data.completed instanceof Date)) {
+                data.completed = new Date(data.completed);
+            }
+
             return {
                 id: projectId, // Keep original ID
                 data: data
@@ -136,6 +148,103 @@ export class DataReader {
             }));
 
             return projects.flat();
+        }, { ttlMs: 5000 });
+    }
+
+    async getAllActions(): Promise<Action[]> {
+        return getCached<Action[]>('actions:all', async () => {
+            const projects = await this.getAllProjects();
+            const allActions = await Promise.all(projects.map(async (p) => {
+                const projectDir = p.id.replace(/\/project\.toml$/, '');
+                return this.getProjectActions(projectDir);
+            }));
+            return allActions.flat();
+        }, { ttlMs: 5000 });
+    }
+
+    async getInboxItems(): Promise<any[]> {
+        return getCached<any[]>('inbox:list', async () => {
+            try {
+                const dir = fsApi.resolvePath('data/inbox');
+                try {
+                    await fs.access(dir);
+                } catch {
+                    return [];
+                }
+
+                const files = await fs.readdir(dir);
+                const mdFiles = files.filter(f => f.endsWith('.md'));
+
+                const items = await Promise.all(mdFiles.map(async (file) => {
+                    try {
+                        const content = await fs.readFile(path.join(dir, file), 'utf-8');
+                        const parsed = matter(content);
+                        return {
+                            id: file.replace(/\.md$/, ''),
+                            data: {
+                                ...parsed.data,
+                                title: parsed.data.title || (parsed.content.split('\n')[0] || '').trim(),
+                                captured: parsed.data.captured ? new Date(parsed.data.captured) : new Date(),
+                                type: parsed.data.type || undefined,
+                            },
+                            body: parsed.content
+                        };
+                    } catch (e) {
+                        console.error(`Failed to read inbox item ${file}:`, e);
+                        return null;
+                    }
+                }));
+
+                return items.filter(item => item !== null);
+            } catch (error) {
+                console.error('Error reading inbox items:', error);
+                return [];
+            }
+        }, { ttlMs: 2000 });
+    }
+
+    async getReviews(): Promise<any[]> {
+        return getCached<any[]>('reviews:list', async () => {
+            try {
+                const reviewsDir = fsApi.resolvePath('data/reviews');
+                try {
+                    await fs.access(reviewsDir);
+                } catch {
+                    return [];
+                }
+
+                const entries = await fs.readdir(reviewsDir, { withFileTypes: true });
+                const typeDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
+
+                const allReviews = await Promise.all(typeDirs.map(async (type) => {
+                    const typeDir = path.join(reviewsDir, type);
+                    const files = await fs.readdir(typeDir);
+                    const mdFiles = files.filter(f => f.endsWith('.md'));
+
+                    return Promise.all(mdFiles.map(async (file) => {
+                        try {
+                            const content = await fs.readFile(path.join(typeDir, file), 'utf-8');
+                            const parsed = matter(content);
+                            return {
+                                id: `${type}/${file}`,
+                                data: {
+                                    type: parsed.data.type || type,
+                                    date: parsed.data.date,
+                                    ...parsed.data
+                                } as any,
+                                body: parsed.content
+                            };
+                        } catch (e) {
+                            return null;
+                        }
+                    }));
+                }));
+
+                return allReviews.flat().filter(r => r !== null);
+            } catch (error) {
+                console.error('Error reading reviews:', error);
+                return [];
+            }
         }, { ttlMs: 5000 });
     }
 }
