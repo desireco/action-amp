@@ -4,10 +4,9 @@ import toml from '@iarna/toml';
 import { dataReader } from './reader';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { resolveDataPath } from './path-resolver';
 
-const SETTINGS_PATH_TOML = 'data/config/settings.toml';
-let MEM_SETTINGS: AppSettings | null = null;
-let MEM_MTIME: number | null = null;
+const MEM_SETTINGS_MAP = new Map<string, { data: AppSettings, mtime: number }>();
 
 export interface AppSettings {
     default_area?: string;
@@ -21,10 +20,15 @@ export interface AppSettings {
     [key: string]: any;
 }
 
-export async function getSettings(): Promise<AppSettings> {
-    if (await fsApi.exists(SETTINGS_PATH_TOML)) {
-        console.log('[settings] read TOML');
-        const content = await fsApi.readFile(SETTINGS_PATH_TOML);
+function getSettingsPath(userId?: string): string {
+    return resolveDataPath('config/settings.toml', userId);
+}
+
+export async function getSettings(userId?: string): Promise<AppSettings> {
+    const settingsPath = getSettingsPath(userId);
+    if (await fsApi.exists(settingsPath)) {
+        console.log(`[settings] read TOML for user=${userId || 'default'}`);
+        const content = await fsApi.readFile(settingsPath);
         const data = toml.parse(content) as any;
         return data as AppSettings;
     }
@@ -32,27 +36,32 @@ export async function getSettings(): Promise<AppSettings> {
     return {};
 }
 
-export async function getSettingsProcessCache(): Promise<AppSettings> {
+export async function getSettingsProcessCache(userId?: string): Promise<AppSettings> {
     try {
-        const settingsPath = path.join(process.cwd(), SETTINGS_PATH_TOML);
+        // We need absolute path for fs.stat
+        const relativeSettingsPath = getSettingsPath(userId);
+        const absoluteSettingsPath = fsApi.resolvePath(relativeSettingsPath);
+
         let mtimeMs = 0;
         try {
-            const stat = await fs.stat(settingsPath);
+            const stat = await fs.stat(absoluteSettingsPath);
             mtimeMs = stat.mtimeMs;
-        } catch {}
+        } catch { }
 
-        if (MEM_SETTINGS && MEM_MTIME === mtimeMs) {
-            console.log('[settings] mem hit');
-            return MEM_SETTINGS;
+        const cacheKey = userId || 'default';
+        const cached = MEM_SETTINGS_MAP.get(cacheKey);
+
+        if (cached && cached.mtime === mtimeMs) {
+            console.log(`[settings] mem hit user=${cacheKey}`);
+            return cached.data;
         }
 
-        const data = await getSettings();
-        MEM_SETTINGS = data;
-        MEM_MTIME = mtimeMs;
-        console.log(`[settings] mem refresh mtime=${mtimeMs}`);
+        const data = await getSettings(userId);
+        MEM_SETTINGS_MAP.set(cacheKey, { data, mtime: mtimeMs });
+        console.log(`[settings] mem refresh user=${cacheKey} mtime=${mtimeMs}`);
         return data;
     } catch (e) {
-        return getSettings();
+        return getSettings(userId);
     }
 }
 
@@ -62,29 +71,36 @@ function ttlForSettings(defaultMs: number): number {
     return defaultMs;
 }
 
-export async function getCachedSettings(ttlMs: number = 300000): Promise<AppSettings> {
+export async function getCachedSettings(userId?: string, ttlMs: number = 300000): Promise<AppSettings> {
     const finalTtl = ttlForSettings(ttlMs);
-    console.log(`[settings] getCached ttl=${finalTtl}ms`);
-    const settings = await getCached<AppSettings>('settings', getSettingsProcessCache, { ttlMs: finalTtl, staleWhileRevalidate: true });
+    const cacheKey = userId ? `${userId}:settings` : 'settings';
+
+    // We pass a closure that captures userId so getCached can call it without args
+    const fetcher = () => getSettingsProcessCache(userId);
+
+    const settings = await getCached<AppSettings>(cacheKey, fetcher, { ttlMs: finalTtl, staleWhileRevalidate: true });
+
     if (!settings.areas || !settings.projects) {
-        await syncAreasProjects();
-        return getSettingsProcessCache();
+        await syncAreasProjects(userId);
+        return getSettingsProcessCache(userId);
     }
     return settings;
 }
 
-export async function updateSettings(updates: Partial<AppSettings>): Promise<void> {
-    const currentSettings = await getSettings();
+export async function updateSettings(updates: Partial<AppSettings>, userId?: string): Promise<void> {
+    const currentSettings = await getSettings(userId);
     const newSettings = { ...currentSettings, ...updates };
 
     const tomlContent = toml.stringify(newSettings as any);
-    await fsApi.writeFile(SETTINGS_PATH_TOML, tomlContent);
-    invalidate('settings');
+    await fsApi.writeFile(getSettingsPath(userId), tomlContent);
+
+    const cacheKey = userId ? `${userId}:settings` : 'settings';
+    invalidate(cacheKey);
 }
 
-export async function syncAreasProjects(): Promise<void> {
-    const areas = await dataReader.getAreas();
-    const projects = await dataReader.getAllProjects();
+export async function syncAreasProjects(userId?: string): Promise<void> {
+    const areas = await dataReader.getAreas(userId);
+    const projects = await dataReader.getAllProjects(userId);
 
     const areaList = areas
         .map((a: any) => ({ slug: a?.id, name: a?.data?.name }))
@@ -108,5 +124,5 @@ export async function syncAreasProjects(): Promise<void> {
         })
         .sort((a: any, b: any) => a.name.localeCompare(b.name));
 
-    await updateSettings({ areas: areaList, projects: projectList });
+    await updateSettings({ areas: areaList, projects: projectList }, userId);
 }

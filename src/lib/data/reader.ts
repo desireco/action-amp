@@ -4,6 +4,7 @@ import matter from 'gray-matter';
 import toml from '@iarna/toml';
 import { fsApi } from './api';
 import { getCached } from '../cache';
+import { resolveDataPath } from './path-resolver';
 
 export interface Action {
     id: string;
@@ -19,9 +20,10 @@ export interface Action {
 }
 
 export class DataReader {
-    async getProjectActions(projectDir: string): Promise<Action[]> {
+    async getProjectActions(projectDir: string, userId?: string): Promise<Action[]> {
         // projectDir is relative to data/areas, e.g. "work/website-redesign"
-        const fullPath = fsApi.resolvePath(path.join('data/areas', projectDir));
+        // resolveDataPath handles the "data" prefix, so we pass "areas/" + projectDir
+        const fullPath = fsApi.resolvePath(resolveDataPath(path.join('areas', projectDir), userId));
 
         try {
             const files = await fs.readdir(fullPath);
@@ -54,7 +56,8 @@ export class DataReader {
             return [];
         }
     }
-    async getProject(projectId: string): Promise<any | null> {
+
+    async getProject(projectId: string, userId?: string): Promise<any | null> {
         // projectId is like "work/website-redesign/project.toml" or "work/website-redesign/project"
         let relativePath = projectId;
         if (!relativePath.endsWith('.toml')) {
@@ -66,7 +69,7 @@ export class DataReader {
             }
         }
 
-        const fullPath = fsApi.resolvePath(path.join('data/areas', relativePath));
+        const fullPath = fsApi.resolvePath(resolveDataPath(path.join('areas', relativePath), userId));
 
         try {
             const content = await fs.readFile(fullPath, 'utf-8');
@@ -92,9 +95,9 @@ export class DataReader {
         }
     }
 
-    async getArea(areaId: string): Promise<any | null> {
+    async getArea(areaId: string, userId?: string): Promise<any | null> {
         // areaId is like "work"
-        const fullPath = fsApi.resolvePath(path.join('data/areas', areaId, 'area.toml'));
+        const fullPath = fsApi.resolvePath(resolveDataPath(path.join('areas', areaId, 'area.toml'), userId));
 
         try {
             const content = await fs.readFile(fullPath, 'utf-8');
@@ -107,15 +110,17 @@ export class DataReader {
             return null;
         }
     }
-    async getAreas(): Promise<any[]> {
-        return getCached<any[]>('areas:list', async () => {
-            const areasDir = fsApi.resolvePath('data/areas');
+
+    async getAreas(userId?: string): Promise<any[]> {
+        const cacheKey = userId ? `${userId}:areas:list` : 'areas:list';
+        return getCached<any[]>(cacheKey, async () => {
+            const areasDir = fsApi.resolvePath(resolveDataPath('areas', userId));
             try {
                 const entries = await fs.readdir(areasDir, { withFileTypes: true });
                 const areaDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
 
                 const areas = await Promise.all(areaDirs.map(async (slug) => {
-                    const area = await this.getArea(slug);
+                    const area = await this.getArea(slug, userId);
                     return area;
                 }));
 
@@ -127,18 +132,19 @@ export class DataReader {
         }, { ttlMs: 5000 });
     }
 
-    async getAllProjects(): Promise<any[]> {
-        return getCached<any[]>('projects:list', async () => {
-            const areas = await this.getAreas();
+    async getAllProjects(userId?: string): Promise<any[]> {
+        const cacheKey = userId ? `${userId}:projects:list` : 'projects:list';
+        return getCached<any[]>(cacheKey, async () => {
+            const areas = await this.getAreas(userId);
             const projects = await Promise.all(areas.map(async (area) => {
-                const areaPath = fsApi.resolvePath(path.join('data/areas', area.id));
+                const areaPath = fsApi.resolvePath(resolveDataPath(path.join('areas', area.id), userId));
                 try {
                     const entries = await fs.readdir(areaPath, { withFileTypes: true });
                     const projectDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
 
                     const areaProjects = await Promise.all(projectDirs.map(async (slug) => {
                         const projectId = `${area.id}/${slug}/project.toml`;
-                        return this.getProject(projectId);
+                        return this.getProject(projectId, userId);
                     }));
 
                     return areaProjects.filter(p => p !== null);
@@ -151,21 +157,23 @@ export class DataReader {
         }, { ttlMs: 5000 });
     }
 
-    async getAllActions(): Promise<Action[]> {
-        return getCached<Action[]>('actions:all', async () => {
-            const projects = await this.getAllProjects();
+    async getAllActions(userId?: string): Promise<Action[]> {
+        const cacheKey = userId ? `${userId}:actions:all` : 'actions:all';
+        return getCached<Action[]>(cacheKey, async () => {
+            const projects = await this.getAllProjects(userId);
             const allActions = await Promise.all(projects.map(async (p) => {
                 const projectDir = p.id.replace(/\/project\.toml$/, '');
-                return this.getProjectActions(projectDir);
+                return this.getProjectActions(projectDir, userId);
             }));
             return allActions.flat();
         }, { ttlMs: 5000 });
     }
 
-    async getInboxItems(): Promise<any[]> {
-        return getCached<any[]>('inbox:list', async () => {
+    async getInboxItems(userId?: string): Promise<any[]> {
+        const cacheKey = userId ? `${userId}:inbox:list` : 'inbox:list';
+        return getCached<any[]>(cacheKey, async () => {
             try {
-                const dir = fsApi.resolvePath('data/inbox');
+                const dir = fsApi.resolvePath(resolveDataPath('inbox', userId));
                 try {
                     await fs.access(dir);
                 } catch {
@@ -203,10 +211,11 @@ export class DataReader {
         }, { ttlMs: 2000 });
     }
 
-    async getReviews(): Promise<any[]> {
-        return getCached<any[]>('reviews:list', async () => {
+    async getReviews(userId?: string): Promise<any[]> {
+        const cacheKey = userId ? `${userId}:reviews:list` : 'reviews:list';
+        return getCached<any[]>(cacheKey, async () => {
             try {
-                const reviewsDir = fsApi.resolvePath('data/reviews');
+                const reviewsDir = fsApi.resolvePath(resolveDataPath('reviews', userId));
                 try {
                     await fs.access(reviewsDir);
                 } catch {

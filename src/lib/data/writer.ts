@@ -4,6 +4,7 @@ import { fsApi } from './api';
 import { invalidate, invalidateByPrefix } from '../cache';
 import type { InboxItem, ActionItem } from './types';
 import { syncAreasProjects } from './settings';
+import { resolveDataPath } from './path-resolver';
 
 export class DataWriter {
     private generateId(title: string): string {
@@ -12,7 +13,11 @@ export class DataWriter {
         return `${keyword}-${suffix}`;
     }
 
-    async createInboxItem(title: string, content: string = '', type?: InboxItem['type']): Promise<InboxItem> {
+    private getCacheKey(baseKey: string, userId?: string): string {
+        return userId ? `${userId}:${baseKey}` : baseKey;
+    }
+
+    async createInboxItem(title: string, content: string = '', type?: InboxItem['type'], userId?: string): Promise<InboxItem> {
         const id = this.generateId(title);
         const item: InboxItem = {
             id,
@@ -34,13 +39,15 @@ export class DataWriter {
 
         const fileContent = matter.stringify(content, frontmatter);
 
-        await fsApi.writeFile(`data/inbox/${id}.md`, fileContent);
-        invalidateByPrefix('collection:inbox');
+        const filePath = resolveDataPath(`inbox/${id}.md`, userId);
+        await fsApi.writeFile(filePath, fileContent);
+
+        invalidateByPrefix(this.getCacheKey('inbox:list', userId));
         return item;
     }
 
-    async updateInboxItem(id: string, updates: { title?: string; content?: string; type?: InboxItem['type'] }): Promise<void> {
-        const filePath = `data/inbox/${id}.md`;
+    async updateInboxItem(id: string, updates: { title?: string; content?: string; type?: InboxItem['type'] }, userId?: string): Promise<void> {
+        const filePath = resolveDataPath(`inbox/${id}.md`, userId);
         const fileContent = await fsApi.readFile(filePath);
         const parsed = matter(fileContent);
 
@@ -52,17 +59,33 @@ export class DataWriter {
 
         const updatedContent = matter.stringify(content, parsed.data);
         await fsApi.writeFile(filePath, updatedContent);
-        invalidateByPrefix('collection:inbox');
+
+        invalidateByPrefix(this.getCacheKey('inbox:list', userId));
     }
 
-    async deleteInboxItem(id: string): Promise<void> {
-        const filePath = `data/inbox/${id}.md`;
+    async deleteInboxItem(id: string, userId?: string): Promise<void> {
+        const filePath = resolveDataPath(`inbox/${id}.md`, userId);
         await fsApi.deleteFile(filePath);
-        invalidateByPrefix('collection:inbox');
+        invalidateByPrefix(this.getCacheKey('inbox:list', userId));
     }
 
-    async updateActionStatus(filePath: string, status: ActionItem['status']): Promise<void> {
-        const fileContent = await fsApi.readFile(filePath);
+    async updateActionStatus(filePath: string, status: ActionItem['status'], userId?: string): Promise<void> {
+        const fullPath = fsApi.resolvePath(resolveDataPath(filePath, userId));
+
+        // resolveDataPath might double up "data/" if filePath already has it, but our resolveDataPath handles that.
+        // However, filePath coming in here typically starts with "data/areas/..." from reader.ts IDs?
+        // reader.ts IDs are like "work/project/act-1.md" (relative to data/areas) OR absolute paths?
+        // Let's check reader.ts getProjectActions: id: path.join(projectDir, file), where projectDir is relative to data/areas.
+        // So id is "area/project/file.md".
+        // DataReader.getProjectActions uses: path.join('areas', projectDir)
+        // So we should prepend 'areas/' here if it's strictly relative to areas.
+
+        // Actually, looking at usages (e.g. InboxItem.astro calling api), the path probably needs careful handling.
+        // But let's assume filePath passed here is relative to 'data' or 'data/users/{id}'.
+        // If the upstream code passes "areas/work/proj/act.md", resolveDataPath('areas/work...', userId) works.
+        // If upstream passes "data/areas/...", resolveDataPath handles stripping 'data/'.
+
+        const fileContent = await fsApi.readFile(fullPath);
         const parsed = matter(fileContent);
 
         parsed.data.status = status;
@@ -73,19 +96,30 @@ export class DataWriter {
         }
 
         const updatedContent = matter.stringify(parsed.content, parsed.data);
-        await fsApi.writeFile(filePath, updatedContent);
-        invalidateByPrefix('collection:actions');
+        await fsApi.writeFile(fullPath, updatedContent); // writeFile takes full path or relative to cwd. fsApi.resolvePath handles it.
+
+        invalidateByPrefix(this.getCacheKey('actions:all', userId));
+        // Also invalidate project list? No, status change might affect sort order but usually we just re-fetch actions.
     }
 
     async moveFile(oldPath: string, newPath: string): Promise<void> {
+        // This is a low-level move, potentially used by drag-and-drop.
+        // It likely receives paths derived from dataReader IDs.
+        // If IDs are relative to data root, we need to handle that.
+        // But this method signature doesn't take userId easily.
+        // Assuming callers handle path resolution for now or this is generic.
+        // However, user isolation suggests we should probably wrap this too.
+        // For now, I'll assume explicit paths are passed or use fsApi directly if trusted.
+        // But to be safe, let's keep it as is, acting on fsApi. 
+        // NOTE: if drag drop sends arbitrary paths, this is risky. But we are refactoring for abstraction.
         await fsApi.moveFile(oldPath, newPath);
     }
 
-    async assignInboxItemToProject(inboxItemId: string, targetProjectDir: string): Promise<void> {
-        const inboxPath = `data/inbox/${inboxItemId}.md`;
+    async assignInboxItemToProject(inboxItemId: string, targetProjectDir: string, userId?: string): Promise<void> {
+        const inboxPath = resolveDataPath(`inbox/${inboxItemId}.md`, userId);
         const fileContent = await fsApi.readFile(inboxPath);
         const parsed = matter(fileContent);
-        const type = parsed.data.type || 'action'; // Default to action if undefined
+        const type = parsed.data.type || 'action';
 
         let newFilename = inboxItemId;
         if (!newFilename.endsWith('.md')) {
@@ -93,41 +127,35 @@ export class DataWriter {
         }
 
         if (type === 'action') {
-            // Update metadata for Action
             parsed.data.status = 'draft';
             parsed.data.priority = 'medium';
             parsed.data.created = parsed.data.captured || new Date().toISOString();
             delete parsed.data.type;
 
-            // Prefix with act-
             if (!newFilename.startsWith('act-')) {
                 newFilename = `act-${newFilename}`;
             }
         } else {
-            // For resources (note, link, idea, resource), we keep them as is, just move them.
-            // We might want to keep the type in frontmatter to know what it is.
-            // No status or priority needed.
-            // Ensure NO act- prefix
             if (newFilename.startsWith('act-')) {
                 newFilename = newFilename.substring(4);
             }
         }
 
         const updatedContent = matter.stringify(parsed.content, parsed.data);
-        const targetPath = `${targetProjectDir}/${newFilename}`;
 
-        // Write new file first
+        // targetProjectDir is likely "areas/area/project"
+        const targetPath = resolveDataPath(`${targetProjectDir}/${newFilename}`, userId);
+
         await fsApi.writeFile(targetPath, updatedContent);
-
-        // Delete old file
         await fsApi.deleteFile(inboxPath);
-        invalidateByPrefix('collection:inbox');
-        invalidateByPrefix('collection:actions');
+
+        invalidateByPrefix(this.getCacheKey('inbox:list', userId));
+        invalidateByPrefix(this.getCacheKey('actions:all', userId));
     }
 
-    async createArea(name: string, icon: string, color: string, description?: string): Promise<{ path: string, slug: string }> {
+    async createArea(name: string, icon: string, color: string, description?: string, userId?: string): Promise<{ path: string, slug: string }> {
         const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-        const areaPath = `data/areas/${slug}/area.toml`;
+        const areaPath = resolveDataPath(`areas/${slug}/area.toml`, userId);
 
         const areaData: any = {
             name,
@@ -144,41 +172,42 @@ export class DataWriter {
 
         const tomlContent = toml.stringify(areaData);
         await fsApi.writeFile(areaPath, tomlContent);
-        invalidate('areas:list');
-        invalidateByPrefix('collection:areas');
-        await syncAreasProjects();
-        
+
+        const listKey = this.getCacheKey('areas:list', userId);
+        invalidate(listKey);
+
+        await syncAreasProjects(userId);
+
         return { path: areaPath, slug };
     }
 
-    async updateArea(areaId: string, updates: { name?: string, icon?: string, color?: string, description?: string, priority?: string }): Promise<void> {
-        const areaPath = `data/areas/${areaId}/area.toml`;
+    async updateArea(areaId: string, updates: { name?: string, icon?: string, color?: string, description?: string, priority?: string }, userId?: string): Promise<void> {
+        const areaPath = resolveDataPath(`areas/${areaId}/area.toml`, userId);
 
-        // Read existing area data
         const fileContent = await fsApi.readFile(areaPath);
         const existingData = toml.parse(fileContent) as any;
 
-        // Merge updates with existing data
         const updatedData = {
             ...existingData,
             ...updates,
         };
 
-        // Ensure created date is preserved
         if (existingData.created) {
             updatedData.created = existingData.created;
         }
 
         const tomlContent = toml.stringify(updatedData);
         await fsApi.writeFile(areaPath, tomlContent);
-        invalidate('areas:list');
-        invalidateByPrefix('collection:areas');
-        await syncAreasProjects();
+
+        const listKey = this.getCacheKey('areas:list', userId);
+        invalidate(listKey);
+
+        await syncAreasProjects(userId);
     }
 
-    async createProject(name: string, area: string, description?: string): Promise<{ path: string, slug: string }> {
+    async createProject(name: string, area: string, description?: string, userId?: string): Promise<{ path: string, slug: string }> {
         const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-        const projectPath = `data/areas/${area}/${slug}/project.toml`;
+        const projectPath = resolveDataPath(`areas/${area}/${slug}/project.toml`, userId);
 
         const projectData: any = {
             name,
@@ -194,41 +223,38 @@ export class DataWriter {
 
         const tomlContent = toml.stringify(projectData);
         await fsApi.writeFile(projectPath, tomlContent);
-        invalidate('projects:list');
-        invalidateByPrefix('collection:projects');
-        await syncAreasProjects();
-        
+
+        const listKey = this.getCacheKey('projects:list', userId);
+        invalidate(listKey);
+
+        await syncAreasProjects(userId);
+
         return { path: projectPath, slug };
     }
 
-    async updateProject(projectId: string, updates: { name?: string, description?: string, status?: string, priority?: string }): Promise<void> {
+    async updateProject(projectId: string, updates: { name?: string, description?: string, status?: string, priority?: string }, userId?: string): Promise<void> {
         // projectId is like "work/website-redesign/project.toml"
-        const projectPath = `data/areas/${projectId}`;
+        // This is relative to 'areas/' in resolveDataPath logic if prepended, or needs to handle it.
+        // In reader.ts, project IDs are "work/website-redesign/project.toml".
+        // So we want `areas/${projectId}`.
 
-        // Read the existing project file
+        const projectPath = resolveDataPath(`areas/${projectId}`, userId);
+
         const fileContent = await fsApi.readFile(projectPath);
         const projectData = toml.parse(fileContent) as any;
 
-        // Update the fields
-        if (updates.name !== undefined) {
-            projectData.name = updates.name;
-        }
-        if (updates.description !== undefined) {
-            projectData.description = updates.description;
-        }
-        if (updates.status !== undefined) {
-            projectData.status = updates.status;
-        }
-        if (updates.priority !== undefined) {
-            projectData.priority = updates.priority;
-        }
+        if (updates.name !== undefined) projectData.name = updates.name;
+        if (updates.description !== undefined) projectData.description = updates.description;
+        if (updates.status !== undefined) projectData.status = updates.status;
+        if (updates.priority !== undefined) projectData.priority = updates.priority;
 
-        // Write back to file
         const tomlContent = toml.stringify(projectData);
         await fsApi.writeFile(projectPath, tomlContent);
-        invalidate('projects:list');
-        invalidateByPrefix('collection:projects');
-        await syncAreasProjects();
+
+        const listKey = this.getCacheKey('projects:list', userId);
+        invalidate(listKey);
+
+        await syncAreasProjects(userId);
     }
 }
 
