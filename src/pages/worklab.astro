@@ -136,7 +136,7 @@ const taskUpdates = currentTask ? await getTaskUpdates(currentTask.id) : [];
 
         {
             !currentTask ? (
-                <Card class="text-center py-12 bg-surface rounded-xl border border-border border-dashed">
+                <Card class="text-center py-12 bg-surface border border-border border-dashed">
                     <CheckCircle2 class="w-12 h-12 text-text-muted mx-auto mb-4" />
                     <Heading
                         level={3}
@@ -154,7 +154,7 @@ const taskUpdates = currentTask ? await getTaskUpdates(currentTask.id) : [];
             ) : (
                 <div class="space-y-6">
                     {/* Current Task Card */}
-                    <Card class="p-6 bg-surface rounded-xl border border-border">
+                    <Card class="p-6 bg-surface border border-border">
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex-1">
                                 <div class="flex items-center gap-3 mb-2">
@@ -275,7 +275,7 @@ const taskUpdates = currentTask ? await getTaskUpdates(currentTask.id) : [];
                     </Card>
 
                     {/* Task Updates Section */}
-                    <Card class="p-6 bg-surface rounded-xl border border-border">
+                    <Card class="p-6 bg-surface border border-border">
                         <TaskUpdates
                             taskId={currentTask.id}
                             updates={taskUpdates}

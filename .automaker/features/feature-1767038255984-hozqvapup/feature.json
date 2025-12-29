@@ -1,0 +1,35 @@
+{
+  "category": "Uncategorized",
+  "description": "Update Container Border Styling\n\nRemove white borders from container components and replace with a more subtle, modern border treatment.\n\nRequirements:\n- Locate all containers with white border styling\n- Remove white borders or replace with low-contrast color (e.g., light gray, subtle shade of primary color)\n- Remove rounded corners from border treatment\n- Ensure borders blend seamlessly with surrounding elements\n- Maintain visual hierarchy without relying on heavy borders\n- Test border visibility across different background colors\n- Verify design consistency across all container components\n- Consider alternative visual separation methods (spacing, subtle shadows, background variations) if borders aren't necessary",
+  "title": "Update Container Border Styling",
+  "images": [],
+  "imagePaths": [
+    {
+      "id": "img-1767038178518-im02xato9",
+      "path": "/Users/jake/workspace/action-amp/.automaker/features/feature-1767038255984-hozqvapup/images/Screenshot_2025-12-29_at_1_56_12_PM-1767038178517.png",
+      "filename": "Screenshot_2025-12-29_at_1_56_12_PM.png",
+      "mimeType": "image/png"
+    },
+    {
+      "id": "img-1767038214647-74iljwefv",
+      "path": "/Users/jake/workspace/action-amp/.automaker/features/feature-1767038255984-hozqvapup/images/Screenshot_2025-12-29_at_1_56_52_PM-1767038214644.png",
+      "filename": "Screenshot_2025-12-29_at_1_56_52_PM.png",
+      "mimeType": "image/png"
+    }
+  ],
+  "textFilePaths": [],
+  "skipTests": true,
+  "model": "opus",
+  "thinkingLevel": "none",
+  "branchName": "main",
+  "priority": 2,
+  "planningMode": "skip",
+  "requirePlanApproval": false,
+  "dependencies": [],
+  "titleGenerating": false,
+  "status": "verified",
+  "id": "feature-1767038255984-hozqvapup",
+  "startedAt": "2025-12-29T19:57:38.964Z",
+  "updatedAt": "2025-12-29T20:07:52.247Z",
+  "justFinishedAt": "2025-12-29T20:07:52.247Z"
+}

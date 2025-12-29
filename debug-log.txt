@@ -157,3 +157,6 @@
 [2025-12-21T22:50:06.822Z] WRITE: data/users/new_test_user_1766357406791/inbox/check-et8f.md (User: new_test_user_1766357406791) -> /Users/jake/workspace/action-amp/data/users/new_test_user_1766357406791/inbox/check-et8f.md
 [2025-12-21T22:50:06.822Z] WRITE: data/users/new_test_user_1766357406791/inbox/complete-h75c.md (User: new_test_user_1766357406791) -> /Users/jake/workspace/action-amp/data/users/new_test_user_1766357406791/inbox/complete-h75c.md
 [2025-12-21T22:50:06.823Z] WRITE: data/users/new_test_user_1766357406791/areas/life/general/act-complete-h75c.md (User: new_test_user_1766357406791) -> /Users/jake/workspace/action-amp/data/users/new_test_user_1766357406791/areas/life/general/act-complete-h75c.md
+[InboxDetail] Access check-xp3a. User: zeljko_dakic. Found: true
+[InboxDetail] Access check-xp3a. User: zeljko_dakic. Found: true
+[InboxDetail] Access check-xp3a. User: zeljko_dakic. Found: true

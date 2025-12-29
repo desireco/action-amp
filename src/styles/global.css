@@ -30,8 +30,8 @@
     /* Red 500 */
     --color-destructive-foreground: #ffffff;
 
-    --color-border: #27272a;
-    /* Zinc 800 */
+    --color-border: rgba(255, 255, 255, 0.06);
+    /* Subtle white border with very low opacity for seamless blending */
 
     --color-text-main: #fafafa;
     /* Zinc 50 */
@@ -181,8 +181,8 @@ a:focus,
     --accent: #27272a;       /* Our accent */
     --accent-foreground: #fafafa; /* Our accent-foreground */
     --destructive: #ef4444;  /* Our destructive */
-    --border: #27272a;       /* Our border */
-    --input: #27272a;        /* Our border */
+    --border: rgba(255, 255, 255, 0.06);       /* Our border - subtle white with low opacity */
+    --input: rgba(255, 255, 255, 0.08);        /* Input border - slightly more visible */
     --ring: #6366f1;         /* Our primary */
 
     /* Chart colors */

@@ -9,7 +9,13 @@
     "astro": "astro",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "seed": "node scripts/seed-data.js"
+    "seed": "node scripts/seed-data.js",
+    "design-system:discover": "node scripts/design-system/discover-components.js",
+    "design-system:extract": "node scripts/design-system/extract-tokens.js",
+    "design-system:generate": "node scripts/design-system/generate-docs.js",
+    "design-system:validate": "node scripts/design-system/validate-docs.js",
+    "design-system:build": "npm run design-system:discover && npm run design-system:extract && npm run design-system:generate && npm run design-system:validate",
+    "design-system:watch": "node scripts/design-system/watch.js"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.13",

@@ -1,0 +1,1 @@
+Let me look at the root project files and structure more specifically:

@@ -1,536 +1,232 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
 import Heading from "../../components/ui/Heading.astro";
-import Card from "../../components/ui/Card.astro";
+import Palette from "~icons/lucide/palette";
 
-const title = "Design Tokens | Design Showcase";
-
-// Define color tokens for documentation
-const colorTokens = {
-    // Primary Colors
-    primary: {
-        hex: "#6366f1",
-        usage: "Primary actions, links, brand elements",
-        contrast: ["#ffffff", "#fafafa"]
-    },
-    "primary-foreground": {
-        hex: "#ffffff",
-        usage: "Text on primary backgrounds",
-    },
-
-    // Secondary Colors
-    secondary: {
-        hex: "#27272a",
-        usage: "Secondary buttons, less prominent elements",
-        contrast: ["#fafafa", "#a1a1aa"]
-    },
-    "secondary-foreground": {
-        hex: "#fafafa",
-        usage: "Text on secondary backgrounds",
-    },
-
-    // Surface Colors (Zinc Palette)
-    background: {
-        hex: "#09090b",
-        usage: "Main application background",
-        note: "Zinc 950"
-    },
-    surface: {
-        hex: "#18181b",
-        usage: "Cards, panels, elevated surfaces",
-        note: "Zinc 900"
-    },
-    "surface-hover": {
-        hex: "#27272a",
-        usage: "Hover states for surfaces",
-        note: "Zinc 800"
-    },
-    accent: {
-        hex: "#27272a",
-        usage: "Accent backgrounds, highlighted areas",
-        note: "Zinc 800"
-    },
-    "accent-foreground": {
-        hex: "#fafafa",
-        usage: "Text on accent backgrounds",
-    },
-
-    // Text Colors
-    "text-main": {
-        hex: "#fafafa",
-        usage: "Primary text, headings",
-        note: "Zinc 50"
-    },
-    "text-muted": {
-        hex: "#a1a1aa",
-        usage: "Secondary text, descriptions",
-        note: "Zinc 400"
-    },
-
-    // Border Colors
-    border: {
-        hex: "#27272a",
-        usage: "Dividers, input borders",
-        note: "Zinc 800"
-    },
-
-    // Status Colors
-    destructive: {
-        hex: "#ef4444",
-        usage: "Errors, destructive actions",
-        note: "Red 500",
-        contrast: ["#ffffff"]
-    },
-    "destructive-foreground": {
-        hex: "#ffffff",
-        usage: "Text on destructive backgrounds",
-    },
-
-    // Semantic Colors (not in CSS but used throughout)
-    success: {
-        hex: "#22c55e",
-        usage: "Success states, confirmations",
-        note: "Green 500"
-    },
-    warning: {
-        hex: "#eab308",
-        usage: "Warnings, cautions",
-        note: "Yellow 500"
-    },
-    info: {
-        hex: "#3b82f6",
-        usage: "Information, notifications",
-        note: "Blue 500"
-    }
-};
-
-// Define spacing scale
-const spacingScale = [
-    { token: "0", rem: "0", px: "0px" },
-    { token: "px", rem: "0.0625", px: "1px" },
-    { token: "0.5", rem: "0.125", px: "2px" },
-    { token: "1", rem: "0.25", px: "4px" },
-    { token: "1.5", rem: "0.375", px: "6px" },
-    { token: "2", rem: "0.5", px: "8px" },
-    { token: "2.5", rem: "0.625", px: "10px" },
-    { token: "3", rem: "0.75", px: "12px" },
-    { token: "3.5", rem: "0.875", px: "14px" },
-    { token: "4", rem: "1", px: "16px" },
-    { token: "5", rem: "1.25", px: "20px" },
-    { token: "6", rem: "1.5", px: "24px" },
-    { token: "7", rem: "1.75", px: "28px" },
-    { token: "8", rem: "2", px: "32px" },
-    { token: "9", rem: "2.25", px: "36px" },
-    { token: "10", rem: "2.5", px: "40px" },
-    { token: "12", rem: "3", px: "48px" },
-    { token: "14", rem: "3.5", px: "56px" },
-    { token: "16", rem: "4", px: "64px" },
-    { token: "20", rem: "5", px: "80px" },
-    { token: "24", rem: "6", px: "96px" },
-];
-
-// Define border radius scale
-const radiusScale = [
-    { token: "none", rem: "0", px: "0px" },
-    { token: "sm", rem: "0.125", px: "2px" },
-    { token: "DEFAULT", rem: "0.5", px: "8px", note: "Default radius" },
-    { token: "md", rem: "0.375", px: "6px" },
-    { token: "lg", rem: "0.5", px: "8px" },
-    { token: "xl", rem: "0.75", px: "12px" },
-    { token: "2xl", rem: "1", px: "16px" },
-    { token: "3xl", rem: "1.5", px: "24px" },
-    { token: "full", rem: "9999", px: "9999px", note: "Fully rounded" },
-];
-
-// Define typography scale
-const typeScale = [
-    { size: "xs", rem: "0.75", px: "12px", lineHeight: "1rem", weight: "400" },
-    { size: "sm", rem: "0.875", px: "14px", lineHeight: "1.25rem", weight: "400" },
-    { size: "base", rem: "1", px: "16px", lineHeight: "1.5rem", weight: "400" },
-    { size: "lg", rem: "1.125", px: "18px", lineHeight: "1.75rem", weight: "400" },
-    { size: "xl", rem: "1.25", px: "20px", lineHeight: "1.75rem", weight: "400" },
-    { size: "2xl", rem: "1.5", px: "24px", lineHeight: "2rem", weight: "400" },
-    { size: "3xl", rem: "1.875", px: "30px", lineHeight: "2.25rem", weight: "400" },
-    { size: "4xl", rem: "2.25", px: "36px", lineHeight: "2.5rem", weight: "300" },
-    { size: "5xl", rem: "3", px: "48px", lineHeight: "1", weight: "300" },
-    { size: "6xl", rem: "3.75", px: "60px", lineHeight: "1", weight: "300" },
-    { size: "7xl", rem: "4.5", px: "72px", lineHeight: "1", weight: "300" },
-    { size: "8xl", rem: "6", px: "96px", lineHeight: "1", weight: "300" },
-    { size: "9xl", rem: "8", px: "128px", lineHeight: "1", weight: "300" },
-];
+const title = "Design Tokens | Design System";
 ---
 
 <AppLayout title={title} currentPath="/design-showcase/design-tokens">
     <div class="max-w-6xl mx-auto space-y-12">
-        <div>
-            <Heading level={1}>Design Tokens</Heading>
-            <p class="text-lg text-text-muted mt-2">
-                ActionAmp's design system is built on a consistent set of design tokens that ensure visual harmony and maintainability.
-                These tokens are defined in our Tailwind CSS configuration and used throughout the application.
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <Palette class="h-8 w-8 text-primary" />
+                <Heading level={1}>Design Tokens</Heading>
+            </div>
+            <p class="text-lg text-text-muted">
+                ActionAmp's design token system provides a single source of truth for all design decisions.
+                These tokens ensure consistency across the application and make it easy to update the design system.
             </p>
         </div>
 
-        <!-- Color System -->
-        <section>
-            <Heading level={2}>Color System</Heading>
-            <p class="text-sm text-text-muted mb-6">
-                Our color palette is built on the Zinc color system with Indigo as our primary brand color. All colors provide sufficient contrast for WCAG 2.1 AA compliance.
-            </p>
+        <!-- Colors -->
+        
+<section>
+    <Heading level={2}>Colors</Heading>
 
-            <div class="space-y-8">
-                <!-- Brand Colors -->
-                <Card class="p-6">
-                    <h3 class="text-xl font-semibold mb-6 flex items-center gap-2">
-                        <span class="w-3 h-3 bg-primary rounded-full"></span>
-                        Brand Colors
-                    </h3>
-                    <div class="grid gap-6">
-                        {Object.entries({
-                            primary: colorTokens.primary,
-                            "primary-foreground": colorTokens["primary-foreground"],
-                            secondary: colorTokens.secondary,
-                            "secondary-foreground": colorTokens["secondary-foreground"],
-                        }).map(([name, data]) => (
-                            <div class="flex items-start gap-4">
-                                <div
-                                    class="w-20 h-20 rounded-lg border border-border flex-shrink-0"
-                                    style={`background-color: ${data.hex}`}
-                                ></div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-mono text-lg mb-1">{name}</p>
-                                    <p class="text-sm text-text-muted mb-1">{data.hex}</p>
-                                    <p class="text-sm text-text-main">{data.usage}</p>
-                                    {data.note && <p class="text-xs text-text-muted mt-1">{data.note}</p>}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-
-                <!-- Neutral Palette -->
-                <Card class="p-6">
-                    <h3 class="text-xl font-semibold mb-6">Neutral Palette</h3>
-                    <div class="grid md:grid-cols-2 gap-6">
-                        {Object.entries({
-                            background: colorTokens.background,
-                            surface: colorTokens.surface,
-                            "surface-hover": colorTokens["surface-hover"],
-                            accent: colorTokens.accent,
-                            "accent-foreground": colorTokens["accent-foreground"],
-                            border: colorTokens.border,
-                        }).map(([name, data]) => (
-                            <div class="flex items-start gap-4">
-                                <div
-                                    class="w-16 h-16 rounded-lg border border-border flex-shrink-0"
-                                    style={`background-color: ${data.hex}`}
-                                ></div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-mono mb-1">{name}</p>
-                                    <p class="text-xs text-text-muted mb-1">{data.hex}</p>
-                                    <p class="text-sm text-text-main">{data.usage}</p>
-                                    {data.note && <p class="text-xs text-text-muted mt-1">{data.note}</p>}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-
-                <!-- Text Colors -->
-                <Card class="p-6">
-                    <h3 class="text-xl font-semibold mb-6">Text Colors</h3>
-                    <div class="grid md:grid-cols-2 gap-6">
-                        {Object.entries({
-                            "text-main": colorTokens["text-main"],
-                            "text-muted": colorTokens["text-muted"],
-                        }).map(([name, data]) => (
-                            <div class="p-4 rounded-lg" style={`background-color: ${colorTokens.surface.hex}`}>
-                                <p class={name.replace("text-", "")} style={`color: ${data.hex}`}>
-                                    Sample text with this color
-                                </p>
-                                <p class="font-mono text-xs mt-2" style={`color: ${colorTokens["text-muted"].hex}`}>
-                                    {name} - {data.hex}
-                                </p>
-                                {data.note && <p class="text-xs" style={`color: ${colorTokens["text-muted"].hex}`}>{data.note}</p>}
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-
-                <!-- Semantic Colors -->
-                <Card class="p-6">
-                    <h3 class="text-xl font-semibold mb-6">Semantic Colors</h3>
-                    <div class="grid md:grid-cols-2 gap-6">
-                        {Object.entries({
-                            destructive: colorTokens.destructive,
-                            success: colorTokens.success,
-                            warning: colorTokens.warning,
-                            info: colorTokens.info,
-                        }).map(([name, data]) => (
-                            <div class="flex items-start gap-4">
-                                <div
-                                    class="w-16 h-16 rounded-lg border border-border flex-shrink-0"
-                                    style={`background-color: ${data.hex}`}
-                                ></div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-mono mb-1 capitalize">{name}</p>
-                                    <p class="text-xs text-text-muted mb-1">{data.hex}</p>
-                                    <p class="text-sm text-text-main">{data.usage}</p>
-                                    {data.note && <p class="text-xs text-text-muted mt-1">{data.note}</p>}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-
-                <!-- Color Usage Guidelines -->
-                <Card class="p-6">
-                    <h3 class="text-xl font-semibold mb-4">Color Usage Guidelines</h3>
-                    <div class="prose prose-invert max-w-none">
-                        <ul class="space-y-2 text-sm">
-                            <li><strong>Primary:</strong> Use for main CTAs, important interactive elements, and brand representation</li>
-                            <li><strong>Secondary:</strong> Use for secondary actions, alternate buttons, and less prominent elements</li>
-                            <li><strong>Background/Surface:</strong> Use to create hierarchy and depth in the interface</li>
-                            <li><strong>Destructive:</strong> Use only for actions that can't be undone (delete, remove, etc.)</li>
-                            <li><strong>Success/Warning/Info:</strong> Use for status indicators and feedback messages</li>
-                            <li><strong>Text Colors:</strong> Always ensure sufficient contrast (4.5:1 for normal text, 3:1 for large text)</li>
-                        </ul>
-                    </div>
-                </Card>
+    <div class="space-y-8">
+        
+        <div>
+            <h3 class="text-lg font-semibold mb-4">Brand Colors</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #6366f1"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">primary</div>
+                <div class="text-text-muted font-mono text-xs">#6366f1</div>
             </div>
-        </section>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #ffffff"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">primary-foreground</div>
+                <div class="text-text-muted font-mono text-xs">#ffffff</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #27272a"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">secondary</div>
+                <div class="text-text-muted font-mono text-xs">#27272a</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #fafafa"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">secondary-foreground</div>
+                <div class="text-text-muted font-mono text-xs">#fafafa</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #27272a"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">accent</div>
+                <div class="text-text-muted font-mono text-xs">#27272a</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #fafafa"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">accent-foreground</div>
+                <div class="text-text-muted font-mono text-xs">#fafafa</div>
+            </div>
+        </div>
+      
+            </div>
+        </div>
+        
+
+        
+        <div>
+            <h3 class="text-lg font-semibold mb-4">Neutral Colors</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #09090b"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">background</div>
+                <div class="text-text-muted font-mono text-xs">#09090b</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #18181b"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">surface</div>
+                <div class="text-text-muted font-mono text-xs">#18181b</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #27272a"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">surface-hover</div>
+                <div class="text-text-muted font-mono text-xs">#27272a</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #27272a"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">border</div>
+                <div class="text-text-muted font-mono text-xs">#27272a</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #fafafa"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">text-main</div>
+                <div class="text-text-muted font-mono text-xs">#fafafa</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #a1a1aa"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">text-muted</div>
+                <div class="text-text-muted font-mono text-xs">#a1a1aa</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #fafafa"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">foreground</div>
+                <div class="text-text-muted font-mono text-xs">#fafafa</div>
+            </div>
+        </div>
+      
+            </div>
+        </div>
+        
+
+        
+        <div>
+            <h3 class="text-lg font-semibold mb-4">Semantic Colors</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #ef4444"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">destructive</div>
+                <div class="text-text-muted font-mono text-xs">#ef4444</div>
+            </div>
+        </div>
+      
+        <div class="space-y-1">
+            <div class="h-20 rounded-lg border border-border" style="background-color: #ffffff"></div>
+            <div class="text-sm">
+                <div class="font-mono font-semibold">destructive-foreground</div>
+                <div class="text-text-muted font-mono text-xs">#ffffff</div>
+            </div>
+        </div>
+      
+            </div>
+        </div>
+        
+    </div>
+</section>
+  
 
         <!-- Typography -->
-        <section>
-            <Heading level={2}>Typography</Heading>
-
-            <Card class="p-6 mb-6">
-                <h3 class="text-xl font-semibold mb-4">Font Stack</h3>
-                <div class="bg-surface p-4 rounded-lg">
-                    <code class="text-sm text-text-main">--font-sans: 'Inter', system-ui, sans-serif</code>
-                    <p class="text-sm text-text-muted mt-2">
-                        Inter is used for all UI text. It provides excellent readability at all sizes and supports multiple weights.
-                    </p>
-                </div>
-            </Card>
-
-            <Card class="p-6">
-                <h3 class="text-xl font-semibold mb-6">Type Scale</h3>
-                <div class="space-y-4">
-                    {typeScale.map((type) => (
-                        <div class="flex items-center justify-between py-3 border-b border-border last:border-0">
-                            <div class="flex items-center gap-4">
-                                <span
-                                    class="text-lg"
-                                    style={`font-size: ${type.rem}rem; line-height: ${type.lineHeight}; font-weight: ${type.weight}`}
-                                >
-                                    The quick brown fox
-                                </span>
-                            </div>
-                            <div class="text-right text-sm text-text-muted">
-                                <p class="font-mono">text-{type.size}</p>
-                                <p class="font-mono">{type.px} / {parseInt(type.lineHeight) * 4}px</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </Card>
-
-            <!-- Font Weights -->
-            <Card class="p-6 mt-6">
-                <h3 class="text-xl font-semibold mb-4">Font Weights</h3>
-                <div class="grid gap-4">
-                    {[
-                        { weight: "100", name: "Thin" },
-                        { weight: "200", name: "Extra Light" },
-                        { weight: "300", name: "Light" },
-                        { weight: "400", name: "Regular" },
-                        { weight: "500", name: "Medium" },
-                        { weight: "600", name: "Semibold" },
-                        { weight: "700", name: "Bold" },
-                        { weight: "800", name: "Extra Bold" },
-                        { weight: "900", name: "Black" },
-                    ].map((font) => (
-                        <div class="flex items-center justify-between py-2">
-                            <span style={`font-weight: ${font.weight}`} className="text-base">
-                                {font.name}
-                            </span>
-                            <span class="text-sm text-text-muted font-mono">
-                                font-{font.weight}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </Card>
-        </section>
+        
+<section>
+    <Heading level={2}>Typography</Heading>
+    <div class="space-y-6">
+        
+            <div>
+                <h3 class="text-sm font-semibold text-text-muted mb-2 font-mono">sans</h3>
+                <p style="font-family: Inter, system-ui, sans-serif">Inter, system-ui, sans-serif</p>
+            </div>
+        
+    </div>
+</section>
+  
 
         <!-- Spacing -->
-        <section>
-            <Heading level={2}>Spacing</Heading>
-
-            <Card class="p-6">
-                <h3 class="text-xl font-semibold mb-4">Spacing Scale</h3>
-                <p class="text-sm text-text-muted mb-6">
-                    Based on a 4px (0.25rem) base unit. Use consistent spacing to create rhythm and harmony in your layouts.
-                </p>
-
-                <div class="grid gap-3">
-                    {spacingScale.map((space) => (
-                        <div class="flex items-center gap-4">
-                            <div class="w-24 text-sm font-mono">{space.token}</div>
-                            <div
-                                class="bg-primary/20 rounded flex-shrink-0"
-                                style={`width: ${space.rem}rem; height: ${space.rem}rem; min-width: 4px; min-height: 4px`}
-                            ></div>
-                            <div class="text-sm text-text-muted">
-                                {space.rem}rem = {space.px}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div class="mt-6 p-4 bg-surface/50 rounded-lg">
-                    <h4 class="font-semibold mb-2">Common Spacing Patterns</h4>
-                    <ul class="text-sm text-text-muted space-y-1">
-                        <li>• Component padding: p-4 (16px)</li>
-                        <li>• Section spacing: space-y-8 (32px)</li>
-                        <li>• Gap between elements: gap-2 to gap-4 (8px to 16px)</li>
-                        <li>• Margin between sections: my-6 (24px)</li>
-                    </ul>
-                </div>
-            </Card>
-        </section>
+        
+<section>
+    <Heading level={2}>Spacing</Heading>
+    <p class="text-text-muted mb-4">Spacing scale based on a 4px (0.25rem) base unit.</p>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        
+    </div>
+</section>
+  
 
         <!-- Border Radius -->
-        <section>
-            <Heading level={2}>Border Radius</Heading>
-
-            <Card class="p-6">
-                <h3 class="text-xl font-semibold mb-4">Corner Radius Scale</h3>
-                <p class="text-sm text-text-muted mb-6">
-                    The default border radius is 0.5rem (8px). Use consistently for rounded elements.
-                </p>
-
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
-                    {radiusScale.map((radius) => (
-                        <div class="text-center">
-                            <div
-                                class="w-20 h-20 bg-surface border border-border mx-auto mb-2"
-                                style={`border-radius: ${radius.token === 'full' ? '9999px' : `${radius.rem}rem`}`}
-                            ></div>
-                            <p class="text-sm font-mono">
-                                {radius.token === 'DEFAULT' ? 'rounded' : `rounded-${radius.token.toLowerCase()}`}
-                            </p>
-                            <p class="text-xs text-text-muted">
-                                {radius.px}
-                                {radius.note && ` • ${radius.note}`}
-                            </p>
-                        </div>
-                    ))}
+        
+<section>
+    <Heading level={2}>Border Radius</Heading>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        
+            <div class="space-y-2">
+                <div class="h-20 bg-surface rounded border border-border flex items-center justify-center" style="border-radius: 0.5rem">
+                    <span class="text-sm font-mono">default</span>
                 </div>
-            </Card>
-        </section>
-
-        <!-- Shadows & Elevation -->
-        <section>
-            <Heading level={2}>Shadows & Elevation</Heading>
-
-            <Card class="p-6">
-                <h3 class="text-xl font-semibold mb-6">Shadow Scale</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                    {[
-                        { name: "none", class: "" },
-                        { name: "sm", class: "shadow-sm" },
-                        { name: "DEFAULT", class: "shadow" },
-                        { name: "md", class: "shadow-md" },
-                        { name: "lg", class: "shadow-lg" },
-                        { name: "xl", class: "shadow-xl" },
-                        { name: "2xl", class: "shadow-2xl" },
-                        { name: "inner", class: "shadow-inner" },
-                    ].map((shadow) => (
-                        <div class="text-center">
-                            <div class={`w-16 h-16 bg-surface rounded mx-auto mb-2 ${shadow.class}`}></div>
-                            <p class="text-sm font-mono">
-                                {shadow.name === 'DEFAULT' ? 'shadow' : `shadow-${shadow.name}`}
-                            </p>
-                        </div>
-                    ))}
+                <div class="text-center">
+                    <div class="font-mono text-sm">0.5rem</div>
                 </div>
-            </Card>
-        </section>
-
-        <!-- Animation -->
-        <section>
-            <Heading level={2}>Animation</Heading>
-
-            <Card class="p-6">
-                <h3 class="text-xl font-semibold mb-4">Motion Guidelines</h3>
-                <p class="text-sm text-text-muted mb-6">
-                    Animations should be subtle and purposeful. Respect user preferences for reduced motion.
-                </p>
-
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div>
-                        <h4 class="font-semibold mb-3">Transition Properties</h4>
-                        <ul class="space-y-2 text-sm text-text-main">
-                            <li><code class="text-xs bg-surface px-2 py-1 rounded">transition-colors</code> - Color changes</li>
-                            <li><code class="text-xs bg-surface px-2 py-1 rounded">transition-opacity</code> - Fade in/out</li>
-                            <li><code class="text-xs bg-surface px-2 py-1 rounded">transition-transform</code> - Movement</li>
-                            <li><code class="text-xs bg-surface px-2 py-1 rounded">transition-all</code> - All properties</li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h4 class="font-semibold mb-3">Duration Classes</h4>
-                        <ul class="space-y-2 text-sm text-text-main">
-                            <li><code class="text-xs bg-surface px-2 py-1 rounded">duration-75</code> - 75ms (instant)</li>
-                            <li><code class="text-xs bg-surface px-2 py-1 rounded">duration-150</code> - 150ms (fast)</li>
-                            <li><code class="text-xs bg-surface px-2 py-1 rounded">duration-300</code> - 300ms (standard)</li>
-                            <li><code class="text-xs bg-surface px-2 py-1 rounded">duration-500</code> - 500ms (slow)</li>
-                        </ul>
-                    </div>
+            </div>
+        
+            <div class="space-y-2">
+                <div class="h-20 bg-surface rounded border border-border flex items-center justify-center" style="border-radius: 0.5rem">
+                    <span class="text-sm font-mono">radius</span>
                 </div>
-            </Card>
-        </section>
-
-        <!-- Accessibility -->
-        <section>
-            <Heading level={2}>Accessibility</Heading>
-
-            <Card class="p-6">
-                <h3 class="text-xl font-semibold mb-4">WCAG 2.1 AA Compliance</h3>
-                <div class="space-y-4 text-sm">
-                    <div>
-                        <h4 class="font-semibold mb-2">Color Contrast</h4>
-                        <p class="text-text-muted">
-                            All text meets or exceeds WCAG AA contrast ratios:
-                        </p>
-                        <ul class="mt-2 space-y-1 text-text-main ml-4">
-                            <li>• Normal text: 4.5:1 minimum</li>
-                            <li>• Large text (18px+): 3:1 minimum</li>
-                            <li>• Interactive elements: 3:1 minimum</li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h4 class="font-semibold mb-2">Focus States</h4>
-                        <p class="text-text-muted">
-                            All interactive elements have visible focus indicators with:
-                        </p>
-                        <ul class="mt-2 space-y-1 text-text-main ml-4">
-                            <li>• 2px solid outline with 2px offset</li>
-                            <li>• High contrast mode support (3px outline)</li>
-                            <li>• Visible on both light and dark backgrounds</li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h4 class="font-semibold mb-2">Reduced Motion</h4>
-                        <p class="text-text-muted">
-                            Respects <code class="text-xs bg-surface px-2 py-1 rounded">@media (prefers-reduced-motion)</code>
-                        </p>
-                    </div>
+                <div class="text-center">
+                    <div class="font-mono text-sm">0.5rem</div>
                 </div>
-            </Card>
-        </section>
+            </div>
+        
+    </div>
+</section>
+  
     </div>
 </AppLayout>

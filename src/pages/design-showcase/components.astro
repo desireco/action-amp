@@ -1,68 +1,1312 @@
 ---
 import AppLayout from "../../layouts/AppLayout.astro";
 import Heading from "../../components/ui/Heading.astro";
-import { ComponentShowcase } from "../../components/ui/ComponentShowcase";
-import { ComponentGallery } from "../../components/ui/ComponentGallery";
 import Layers from "~icons/lucide/layers";
-import CheckCircle from "~icons/lucide/check-circle";
-import AlertTriangle from "~icons/lucide/alert-triangle";
-import Search from "~icons/lucide/search";
+import Card from "../../components/ui/Card.astro";
 
-const title = "Components | Design Showcase";
+const title = "Components | Design System";
 ---
 
 <AppLayout title={title} currentPath="/design-showcase/components">
     <div class="max-w-6xl mx-auto space-y-8">
-        <Heading level={1} class="flex items-center gap-3">
-            <Layers class="h-8 w-8 text-primary" />
-            UI Components
-        </Heading>
-
-        <div class="grid gap-8 lg:grid-cols-3">
-            <div class="lg:col-span-2">
-                <p class="text-lg text-text-muted">
-                    A comprehensive library of reusable UI components built with shadcn/ui and TailwindCSS.
-                    These components provide accessibility, flexibility, and consistency across the application.
-                </p>
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <Layers class="h-8 w-8 text-primary" />
+                <Heading level={1}>UI Components</Heading>
             </div>
-            <div class="bg-surface/50 p-4 rounded-lg">
-                <h3 class="font-semibold mb-2">Key Features</h3>
-                <ul class="text-sm text-text-muted space-y-1">
-                    <li>✓ Built on Radix UI primitives</li>
-                    <li>✓ Fully accessible</li>
-                    <li>✓ Customizable themes</li>
-                    <li>✓ TypeScript support</li>
-                    <li>✓ Zero dependencies</li>
-                </ul>
-            </div>
+            <p class="text-lg text-text-muted">
+                A comprehensive library of 77 reusable UI components.
+                Click on any component to view detailed documentation, props, and examples.
+            </p>
         </div>
 
-        <!-- Interactive Component Showcase -->
+        
         <section>
-            <Heading level={2}>Interactive Components</Heading>
-            <p class="text-text-muted">
-                Try out the interactive shadcn/ui components below. These are fully functional React components that you can use throughout the application.
-            </p>
+            <Heading level={2}>Other</Heading>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                
+                <a href="/design-showcase/components/revieweditor" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">ReviewEditor</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                2 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">4 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/revieweditor" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">ReviewEditor</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                4 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">5 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/statuscontrols" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">StatusControls</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                2 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">3 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/statuscontrols" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">StatusControls</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                4 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">5 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/taskeditor" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">TaskEditor</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                2 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">4 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/taskeditor" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">TaskEditor</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                4 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">5 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/taskupdates" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">TaskUpdates</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                2 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">3 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/taskupdates" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">TaskUpdates</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                4 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">6 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/inboxitem" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">InboxItem</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                5 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">6 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/searchresultitem" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">SearchResultItem</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                2 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">1 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/searchresults" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">SearchResults</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">2 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/componentgallery" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">ComponentGallery</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                2 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">1 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/componentplayground" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">ComponentPlayground</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">7 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/componentshowcase" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">ComponentShowcase</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                2 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">1 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/errordisplay" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">ErrorDisplay</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/heading" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">Heading</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                124 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">3 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/separator" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">separator</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/toggle" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">toggle</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/404" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">404</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/edit" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">edit</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/[...id]" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">[...id]</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                7 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/index" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">index</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/new" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">new</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/capture" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">capture</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/context" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">context</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/dashboard" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">dashboard</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/accessibility" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">accessibility</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/components" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">components</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/design-tokens" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">design-tokens</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/iconography" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">iconography</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/index" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">index</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/patterns" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">patterns</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/templates" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">templates</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/typography" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">typography</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/edit-project" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">edit-project</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/faq" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">faq</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/[id]" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">[id]</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                7 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/index" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">index</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/index" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">index</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/new-project" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">new-project</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/next" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">next</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/[...id]" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">[...id]</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                7 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/index" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">index</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/[...slug]" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">[...slug]</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/index" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">index</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/search" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">search</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/settings" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">settings</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/[id]" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">[id]</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                7 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/index" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">index</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/[slug]" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">[slug]</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/worklab" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">worklab</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+            </div>
         </section>
-
-        <!-- React Component Showcase -->
-        <ComponentShowcase client:load />
-
-        <!-- Component Gallery with Code Examples -->
-        <section class="mt-12">
-            <Heading level={2}>Component Gallery</Heading>
-            <p class="text-text-muted mb-6">
-                Complete component examples with live previews and ready-to-use code snippets.
-            </p>
-            <ComponentGallery client:load />
+        
+        <section>
+            <Heading level={2}>Feedback</Heading>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                
+                <a href="/design-showcase/components/toast" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">Toast</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                3 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">4 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/badge" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">Badge</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                19 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">3 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/skeleton" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">Skeleton</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">3 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/spinner" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">Spinner</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                3 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">2 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/alert" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">alert</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/badge" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">badge</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/dialog" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">dialog</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                3 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+            </div>
         </section>
-
-        <!-- Static Previews -->
-        <section class="mt-12">
-            <Heading level={2}>Static Examples</Heading>
-            <p class="text-text-muted">
-                Static previews of components in various contexts.
-            </p>
+        
+        <section>
+            <Heading level={2}>Layout</Heading>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                
+                <a href="/design-showcase/components/toastcontainer" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">ToastContainer</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/applayout" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">AppLayout</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                59 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">3 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/layout" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">Layout</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                13 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">1 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+            </div>
         </section>
+        
+        <section>
+            <Heading level={2}>Navigation</Heading>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                
+                <a href="/design-showcase/components/tabspattern" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">TabsPattern</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                2 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/tabs" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">tabs</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+            </div>
+        </section>
+        
+        <section>
+            <Heading level={2}>Form</Heading>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                
+                <a href="/design-showcase/components/searchform" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">SearchForm</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                2 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">1 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/button" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">Button</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                153 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">7 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/buttonshadcn" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">ButtonShadcn</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                2 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/input" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">Input</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                34 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">3 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/loadingbutton" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">LoadingButton</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                6 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">10 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/button" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">button</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                35 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/checkbox" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">checkbox</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/input" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">input</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                28 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/label" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">label</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                45 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/select" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">select</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                12 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/switch" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">switch</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/textarea" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">textarea</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                9 uses
+                            </span>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+            </div>
+        </section>
+        
+        <section>
+            <Heading level={2}>Data-display</Heading>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                
+                <a href="/design-showcase/components/card" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">Card</h3>
+                                <p class="text-sm text-text-muted mt-1">astro</p>
+                            </div>
+                            
+                            <span class="px-2 py-1 bg-primary/10 rounded text-xs font-semibold">
+                                148 uses
+                            </span>
+                            
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span class="text-xs text-text-muted">2 props</span>
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+                <a href="/design-showcase/components/card" class="group">
+                    <Card class="p-6 hover:shadow-lg transition-all duration-200 border border-transparent group-hover:border-primary/50">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold group-hover:text-primary transition-colors">card</h3>
+                                <p class="text-sm text-text-muted mt-1">react</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </Card>
+                </a>
+                
+            </div>
+        </section>
+        
     </div>
 </AppLayout>

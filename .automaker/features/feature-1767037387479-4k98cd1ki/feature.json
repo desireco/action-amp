@@ -1,0 +1,81 @@
+{
+  "category": "Uncategorized",
+  "description": "Update Capture Page Design and Typography\n\nRedesign the Capture page to improve visual hierarchy, readability, and responsive layout while updating shared components for consistency.\n\nRequirements:\n- Remove border styling from the capture form container\n- Increase font size for entry/input fields to improve readability (target 16-18px base)\n- Implement responsive width constraints:\n  - Desktop: wider container with maximum width constraint\n  - Tablet: full-width layout with edge-to-edge content\n  - Mobile: full-width layout with minimal margins\n- Update shared components (buttons, inputs, labels) to match new borderless design language\n- Ensure consistent spacing and visual alignment across all viewport sizes\n- Maintain accessible color contrast and touch target sizes (minimum 44px for mobile)",
+  "title": "Capture refresh",
+  "images": [],
+  "imagePaths": [],
+  "textFilePaths": [],
+  "skipTests": false,
+  "model": "opus",
+  "thinkingLevel": "high",
+  "branchName": "main",
+  "priority": 2,
+  "planningMode": "spec",
+  "requirePlanApproval": true,
+  "dependencies": [],
+  "titleGenerating": false,
+  "status": "verified",
+  "id": "feature-1767037387479-4k98cd1ki",
+  "startedAt": "2025-12-29T19:43:08.959Z",
+  "updatedAt": "2025-12-29T19:48:28.640Z",
+  "planSpec": {
+    "status": "approved",
+    "version": 1,
+    "reviewedByUser": true,
+    "generatedAt": "2025-12-29T19:43:46.950Z",
+    "tasks": [
+      {
+        "id": "T001",
+        "description": "Remove border from Card component in capture.astro",
+        "filePath": "src/pages/capture.astro",
+        "status": "pending"
+      },
+      {
+        "id": "T002",
+        "description": "Update textarea font size to 16-18px in capture.astro",
+        "filePath": "src/pages/capture.astro",
+        "status": "pending"
+      },
+      {
+        "id": "T003",
+        "description": "Implement responsive width constraints (desktop/tablet/mobile)",
+        "filePath": "src/pages/capture.astro",
+        "status": "pending"
+      },
+      {
+        "id": "T004",
+        "description": "Update card.tsx to support borderless variant",
+        "filePath": "src/components/ui/card.tsx",
+        "status": "pending"
+      },
+      {
+        "id": "T005",
+        "description": "Update input.tsx base font size to 16px for better readability",
+        "filePath": "src/components/ui/input.tsx",
+        "status": "pending"
+      },
+      {
+        "id": "T006",
+        "description": "Update textarea.tsx base font size to 16px and increase min-height",
+        "filePath": "src/components/ui/textarea.tsx",
+        "status": "pending"
+      },
+      {
+        "id": "T007",
+        "description": "Update LoadingButton minimum touch target to 44px for mobile",
+        "filePath": "src/components/ui/LoadingButton.astro",
+        "status": "pending"
+      },
+      {
+        "id": "T008",
+        "description": "Ensure type selection buttons have proper spacing and touch targets",
+        "filePath": "src/pages/capture.astro",
+        "status": "pending"
+      }
+    ],
+    "tasksTotal": 8,
+    "tasksCompleted": 8,
+    "approvedAt": "2025-12-29T19:43:57.217Z",
+    "currentTaskId": "T008"
+  }
+}

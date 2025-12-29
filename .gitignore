@@ -33,6 +33,9 @@ pnpm-debug.log*
 # User data
 /data/
 
+# Design system generated data
+/design-system-data/
+
 # Beads runtime files (keep metadata.json and issues.jsonl)
 .beads/.local_version
 .beads/beads.db*

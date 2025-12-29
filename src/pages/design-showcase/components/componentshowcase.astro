@@ -1,0 +1,118 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import ComponentShowcase from "../../components/ui/components/.tsx/ComponentShowcase";
+import Heading from "../../components/ui/Heading.astro";
+import CodeBlock from "../../components/ui/CodeBlock.astro";
+
+const title = "ComponentShowcase Component | Design System";
+---
+
+<AppLayout title={title} currentPath="/design-showcase/components/componentshowcase">
+    <div class="max-w-6xl mx-auto space-y-8">
+        <!-- Header -->
+        <div class="space-y-4">
+            <div class="flex items-center gap-2 text-sm text-text-muted">
+                <span class="px-2 py-1 bg-primary/10 rounded">other</span>
+                <span>•</span>
+                <span>/components/ui/ComponentShowcase.tsx</span>
+            </div>
+            <Heading level={1}>ComponentShowcase</Heading>
+            <p class="text-lg text-text-muted">
+                Reusable UI component built with accessibility and flexibility in mind.
+            </p>
+        </div>
+
+        <!-- Live Preview -->
+        <section>
+            <Heading level={2}>Live Preview</Heading>
+            <div class="bg-surface rounded-lg p-8 border border-border">
+                <ComponentShowcase />
+            </div>
+        </section>
+
+        <!-- Props -->
+        
+<section>
+    <Heading level={2}>Props</Heading>
+    <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+            <thead>
+                <tr class="border-b border-border">
+                    <th class="px-4 py-2 text-left text-sm font-semibold">Name</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold">Type</th>
+                    <th class="px-4 py-2 text-center text-sm font-semibold">Required</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold">Default</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+
+        <tr>
+            <td class="px-4 py-2 font-mono text-sm">className?</td>
+            <td class="px-4 py-2 font-mono text-sm text-text-muted">string</td>
+            <td class="px-4 py-2 text-center">—</td>
+            <td class="px-4 py-2 font-mono text-sm">—</td>
+            <td class="px-4 py-2 text-sm">—</td>
+        </tr>
+      
+            </tbody>
+        </table>
+    </div>
+</section>
+  
+
+        <!-- Variants -->
+        
+
+        <!-- States -->
+        
+
+        <!-- Usage Examples -->
+        <section>
+            <Heading level={2}>Usage Examples</Heading>
+            
+<div class="space-y-6">
+    <div>
+        <h3 class="text-sm font-semibold mb-2">Basic Usage</h3>
+        <pre class="bg-surface p-4 rounded-lg overflow-x-auto text-sm"><code>&lt;ComponentShowcase /&gt;</code></pre>
+    </div>
+    
+</div>
+  
+        </section>
+
+        <!-- Accessibility -->
+        <section>
+            <Heading level={2}>Accessibility</Heading>
+            
+<div class="space-y-4">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="p-4 bg-surface rounded border border-border">
+            <h4 class="font-semibold mb-2">Keyboard Support</h4>
+            <p class="text-sm text-text-muted">
+                Limited keyboard support
+            </p>
+        </div>
+        <div class="p-4 bg-surface rounded border border-border">
+            <h4 class="font-semibold mb-2">Screen Reader</h4>
+            <p class="text-sm text-text-muted">
+                Support unknown
+            </p>
+        </div>
+    </div>
+    
+</div>
+  
+        </section>
+
+        <!-- Related Components -->
+        <section>
+            <Heading level={2}>Related Components</Heading>
+            
+<p class="text-text-muted">
+    No specific related components identified yet.
+</p>
+  
+        </section>
+    </div>
+</AppLayout>

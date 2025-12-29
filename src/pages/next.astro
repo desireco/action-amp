@@ -91,7 +91,7 @@ const timer = { measure: () => {} };
 
         {
             nextActions.length === 0 ? (
-                <Card class="text-center py-12 bg-surface rounded-xl border border-border border-dashed">
+                <Card class="text-center py-12 bg-surface border border-border border-dashed">
                     <CheckCircle2 class="w-12 h-12 text-text-muted mx-auto mb-4" />
                     <Heading
                         level={3}
@@ -113,7 +113,7 @@ const timer = { measure: () => {} };
                         const projectName = project?.data.name || projectSlug;
 
                         return (
-                            <Card class="flex items-start gap-4 p-4 bg-surface rounded-lg border border-border hover:border-primary/50 transition-colors group">
+                            <Card class="flex items-start gap-4 p-4 bg-surface border border-border hover:border-primary/50 transition-colors group">
                                 <button
                                     class="mt-1 text-text-muted hover:text-primary transition-colors"
                                     title="Mark as completed"
