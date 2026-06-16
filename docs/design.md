@@ -188,7 +188,10 @@ Shadows extracted from the live CSS — note the patterns:
 ## Components
 
 - **`completion-circle`** — *the signature.* 20px, full-radius. Empty state = transparent with a thin border. Filled state = `blue-accent` with a white check. The fill animation is the product's emotional climax — make it feel earned.
-- **`button-primary`** — solid `blue-cta`, white text, 6px radius, 12px padding, medium weight. No border, no shadow by default. Hover lightens to `blue-cta-hover`. Calm, not loud.
+- **Buttons (general pattern)** — every `.btn` uses `display: inline-flex; align-items: center; gap: 6px;` so an icon + label always lay out horizontally (icon *leading*, never stacked above the text). The global `svg { display: block }` rule would otherwise stack the icon — `inline-flex` on the button overrides it.
+- **`button-primary`** — solid `blue-cta`, white text, 8px radius, 10–12px padding, semibold. No border, no shadow by default. Hover lightens to `blue-cta-hover`. Calm, not loud.
+- **`button-secondary` (the Switch / Cancel tier)** — `surface` background, `text-2` label, **visible `border-strong` border + subtle `shadow-sm`** so it reads clearly as a tappable button (not a text link). Hover darkens background + border. Never use a faint `border`-tier outline on its own — a secondary button must look like a button, not hover ambiguously between text and control.
+- **Icon-leading buttons** — when a button carries an icon, the icon comes *before* the text (e.g. `[ ⌘ Switch ]`, `[ + Capture ]`), 13–14px, same color as the label. Never icon-above-text.
 - **`card`** — `surface` background, 8px radius, 24px padding, optional 1px border. `card-elevated` adds the two-layer blue-tinted shadow.
 - **`sidebar-item`** — 6px radius, 8px padding, transparent by default, fills with `surface-muted` when active. Source-list pattern, à la macOS Finder/Preferences.
 
@@ -210,6 +213,8 @@ Shadows extracted from the live CSS — note the patterns:
 - Don't use gradients as decoration. Things is flat color + depth, not chromatic.
 - Don't add badges, red-dot counts, or guilt-trip UI. Things' calm is the point.
 - Don't use neumorphism, glassmorphism, or aurora blobs. The depth is physical and restrained.
+- Don't stack a button icon above its label. Buttons are `inline-flex` with icon leading.
+- Don't ship a secondary/tertiary button with only a faint border. If it's tappable, it must *look* tappable — visible `border-strong` + subtle shadow.
 
 ## How to use this for ActionAmp
 

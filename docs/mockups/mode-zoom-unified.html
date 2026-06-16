@@ -5,806 +5,1077 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ActionAmp — Mode × Zoom (unified)</title>
     <style>
-      :root {
-        --font:
-          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-          Roboto, sans-serif;
-        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-        --teal: #0ea5e9;
-        --teal-cta: #0284c7;
-        --teal-cta-hover: #0369a1;
-        --teal-soft: rgba(14, 165, 233, 0.12);
-        --teal-soft-strong: rgba(14, 165, 233, 0.18);
-        --teal-tint: rgba(2, 132, 199, 0.22);
-        --amber: #f59e0b;
-        --amber-text: #92400e;
-        --amber-soft: rgba(245, 158, 11, 0.14);
+       :root {
+         --font:
+           ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+           Roboto, sans-serif;
+         --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+         --teal: #0ea5e9;
+         --teal-cta: #0284c7;
+         --teal-cta-hover: #0369a1;
+         --teal-soft: rgba(14, 165, 233, 0.12);
+         --teal-soft-strong: rgba(14, 165, 233, 0.18);
+         --teal-tint: rgba(2, 132, 199, 0.22);
+         --amber: #f59e0b;
+         --amber-text: #92400e;
+         --amber-soft: rgba(245, 158, 11, 0.14);
+       }
+       :root {
+         --bg: #f2f5f7;
+         --bg-elev: #fcfcfd;
+         --surface: #ffffff;
+         --surface-muted: #f2f5f7;
+         --surface-muted-2: #eceef0;
+         --border: #e6e8ec;
+         --border-strong: #d5d9de;
+         --text: #212224;
+         --text-2: #44474b;
+         --text-3: #55606e;
+         --text-4: #818489;
+         --shadow-md:
+           0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+       }
+       [data-theme="dark"] {
+         --bg: #13161c;
+         --bg-elev: #1a1d24;
+         --surface: #1f232b;
+         --surface-muted: #2a2f38;
+         --surface-muted-2: #30353f;
+         --border: #2f343e;
+         --border-strong: #3c4250;
+         --text: #f4f6f9;
+         --text-2: #c5cbd4;
+         --text-3: #8b939f;
+         --text-4: #6a7180;
+         --shadow-md:
+           0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+       }
+       * {
+         box-sizing: border-box;
+         margin: 0;
+         padding: 0;
+       }
+       html {
+         -webkit-font-smoothing: antialiased;
+       }
+       body {
+         font-family: var(--font);
+         background: var(--bg);
+         color: var(--text);
+         height: 100vh;
+         overflow: hidden;
+         transition:
+           background 0.5s,
+           color 0.4s;
+       }
+       button {
+         font-family: inherit;
+         cursor: pointer;
+         border: none;
+         background: none;
+         color: inherit;
+       }
+       svg {
+         display: block;
+       }
+
+       /* ============================================================
+      THE STAGE — bg tint shifts subtly with MODE
+      ============================================================ */
+       .stage {
+         position: relative;
+         width: 100vw;
+         height: 100vh;
+         overflow: hidden;
+         background: var(--bg);
+         transition: background 0.8s ease;
+       }
+       /* mode tints — very subtle, just enough to feel the shift */
+       .stage[data-mode="plan"] {
+         background: linear-gradient(180deg, #fff7ed 0%, var(--bg) 55%);
+       }
+       .stage[data-mode="do"] {
+         background: var(--bg);
+       }
+       .stage[data-mode="review"] {
+         background: linear-gradient(180deg, #eceaf6 0%, var(--bg) 55%);
+       }
+       [data-theme="dark"] .stage[data-mode="plan"] {
+         background: linear-gradient(180deg, #2a2018 0%, var(--bg) 55%);
+       }
+       [data-theme="dark"] .stage[data-mode="review"] {
+         background: linear-gradient(180deg, #1a1828 0%, var(--bg) 55%);
+       }
+
+       /* ============================================================
+      TOP HUD — brand + lens, breadcrumb (zoom orientation), theme
+      ============================================================ */
+       .hud-top {
+         position: absolute;
+         top: 0;
+         left: 0;
+         right: 0;
+         display: grid;
+         grid-template-columns: 1fr auto 1fr;
+         align-items: center;
+         gap: 16px;
+         padding: 18px 24px;
+         z-index: 20;
+       }
+       /* left zone: brand */
+       .brand-cluster {
+         display: flex;
+         align-items: center;
+         gap: 10px;
+         justify-self: start;
+       }
+       .brand-mark {
+         width: 26px;
+         height: 26px;
+         border-radius: 6px;
+         background: linear-gradient(135deg, var(--teal), #22d3ee);
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+         flex-shrink: 0;
+       }
+       .lens-pill {
+         display: inline-flex;
+         align-items: center;
+         gap: 6px;
+         font-size: 12px;
+         font-weight: 600;
+         background: var(--surface);
+         border: 1px solid var(--border);
+         padding: 5px 10px;
+         border-radius: 9999px;
+         color: var(--text-2);
+         cursor: pointer;
+         transition: all 0.15s;
+       }
+       .lens-pill:hover {
+         border-color: var(--border-strong);
+         color: var(--text);
+       }
+       .lens-pill .lens-dot {
+         width: 6px;
+         height: 6px;
+         border-radius: 9999px;
+         background: var(--teal);
+       }
+
+       /* Breadcrumb = center zone, zoom orientation */
+       .breadcrumb {
+         font-size: 13px;
+         color: var(--text-3);
+         display: flex;
+         align-items: center;
+         gap: 2px;
+         justify-self: center;
+       }
+       .crumb {
+         cursor: pointer;
+         padding: 4px 8px;
+         border-radius: 6px;
+         transition:
+           background 0.12s,
+           color 0.12s;
+       }
+       .crumb:hover {
+         background: var(--surface-muted);
+         color: var(--text-2);
+       }
+       .crumb.current {
+         color: var(--text);
+         font-weight: 600;
+       }
+       .crumb-sep {
+         color: var(--border-strong);
+         padding: 0 2px;
+       }
+
+       .hud-top-actions {
+         justify-self: end;
+         display: flex;
+         align-items: center;
+         gap: 8px;
+       }
+       .icon-btn {
+         width: 32px;
+         height: 32px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         border-radius: 6px;
+         color: var(--text-3);
+         transition: all 0.15s;
+       }
+       .icon-btn:hover {
+         background: var(--surface-muted);
+         color: var(--text);
+       }
+
+       /* ============================================================
+      THE WORLD — zoom transforms this. Task always center.
+      ============================================================ */
+       .world-wrap {
+         position: absolute;
+         inset: 0;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         padding: 96px 200px 140px; /* top clearance for HUD, sides for rails */
+       }
+       .world {
+         position: relative;
+         width: 100%;
+         max-width: 560px;
+         height: 100%;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+         will-change: transform;
+       }
+
+       .node {
+         position: absolute;
+         text-align: center;
+         transition:
+           opacity 0.5s ease,
+           filter 0.5s ease,
+           transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+         transform-origin: center center;
+       }
+       .node.dim {
+         opacity: 0.16;
+         filter: blur(3px);
+         pointer-events: none;
+       }
+
+       /* TASK — always center, always the anchor */
+       .node-task {
+         background: var(--surface);
+         border: 1px solid var(--border);
+         border-radius: 16px;
+         padding: 44px 48px;
+         box-shadow:
+           0 2px 4px rgba(0, 28, 70, 0.05),
+           0 24px 64px var(--teal-tint);
+         max-width: 480px;
+         width: 100%;
+       }
+       [data-theme="dark"] .node-task {
+         box-shadow:
+           0 2px 4px rgba(0, 0, 0, 0.2),
+           0 24px 64px rgba(14, 165, 233, 0.18);
+       }
+
+       /* PROJECT — sits above task */
+       .node-project {
+         background: var(--surface);
+         border: 1px solid var(--border);
+         border-radius: 18px;
+         padding: 32px 40px;
+         box-shadow: var(--shadow-md);
+         width: 640px;
+         transform: translateY(-200px);
+       }
+
+       /* GOAL — sits above project */
+       .node-goal {
+         background: var(--surface);
+         border: 1px solid var(--border);
+         border-radius: 22px;
+         padding: 28px 40px;
+         box-shadow: var(--shadow-md);
+         width: 820px;
+         transform: translateY(-340px);
+       }
+
+       /* connectors */
+       .connector {
+         position: absolute;
+         left: 50%;
+         width: 1px;
+         background: var(--border-strong);
+         transform: translateX(-50%);
+         opacity: 0;
+         transition: opacity 0.5s;
+         z-index: 0;
+       }
+       .connector.show {
+         opacity: 1;
+       }
+
+       /* ---- TASK content ---- */
+       .ctx {
+         font-size: 12.5px;
+         color: var(--text-3);
+         margin-bottom: 28px;
+       }
+       .completion {
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         width: 34px;
+         height: 34px;
+         border-radius: 9999px;
+         border: 2.5px solid var(--border-strong);
+         margin-bottom: 24px;
+         cursor: pointer;
+         transition:
+           transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+           border-color 0.2s;
+       }
+       .completion:hover {
+         transform: scale(1.08);
+         border-color: var(--teal);
+       }
+       .completion svg {
+         color: #fff;
+         width: 16px;
+         height: 16px;
+         opacity: 0;
+         transform: scale(0.4);
+         transition:
+           opacity 0.14s ease 0.06s,
+           transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) 0.06s;
+       }
+       .completion.filled {
+         background: var(--teal);
+         border-color: var(--teal);
+         box-shadow: 0 6px 16px var(--teal-tint);
+       }
+       .completion.filled svg {
+         opacity: 1;
+         transform: scale(1);
+       }
+       .task-title {
+         font-size: 28px;
+         font-weight: 700;
+         letter-spacing: -0.02em;
+         line-height: 1.2;
+         margin-bottom: 10px;
+       }
+       .task-meta {
+         font-size: 14px;
+         color: var(--text-3);
+         margin-bottom: 24px;
+       }
+       .task-meta .sep {
+         margin: 0 7px;
+         color: var(--border-strong);
+       }
+       .actions {
+         display: flex;
+         gap: 10px;
+         justify-content: center;
+       }
+       .btn {
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         gap: 6px;
+         font-size: 14.5px;
+         font-weight: 600;
+         padding: 10px 22px;
+         border-radius: 8px;
+         border: 1px solid transparent;
+         transition:
+           background 0.15s,
+           border-color 0.15s,
+           transform 0.08s;
+       }
+       .btn:active {
+         transform: scale(0.97);
+       }
+       .btn-primary {
+         background: var(--teal-cta);
+         color: #fff;
+       }
+       .btn-primary:hover {
+         background: var(--teal-cta-hover);
+       }
+       .btn-secondary {
+         background: var(--surface);
+         color: var(--text-2);
+         border-color: var(--border);
+       }
+       .btn-secondary:hover {
+         background: var(--surface-muted);
+       }
+
+       /* ---- "Working on it" — the active state ---- */
+      /* The hero card itself glows softly when you're inside a task.
+         On entry, it scales up subtly — "becoming the world". */
+      .node-task {
+         transition:
+           box-shadow .5s ease,
+           transform .5s cubic-bezier(.2,.7,.3,1);
       }
-      :root {
-        --bg: #f2f5f7;
-        --bg-elev: #fcfcfd;
-        --surface: #ffffff;
-        --surface-muted: #f2f5f7;
-        --surface-muted-2: #eceef0;
-        --border: #e6e8ec;
-        --border-strong: #d5d9de;
-        --text: #212224;
-        --text-2: #44474b;
-        --text-3: #55606e;
-        --text-4: #818489;
-        --shadow-md:
-          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+      .node-task.working {
+         box-shadow:
+           0 2px 4px rgba(0, 28, 70, 0.05),
+           0 0 0 1px var(--teal-soft-strong),
+           0 24px 80px var(--teal-tint);
+         transform: scale(1.03);
       }
-      [data-theme="dark"] {
-        --bg: #13161c;
-        --bg-elev: #1a1d24;
-        --surface: #1f232b;
-        --surface-muted: #2a2f38;
-        --surface-muted-2: #30353f;
-        --border: #2f343e;
-        --border-strong: #3c4250;
-        --text: #f4f6f9;
-        --text-2: #c5cbd4;
-        --text-3: #8b939f;
-        --text-4: #6a7180;
-        --shadow-md:
-          0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+      /* One-shot "settle" pulse when entering work — feels like arrival */
+      .node-task.entering-work {
+        animation: enter-work .6s cubic-bezier(.2,.7,.3,1) both;
       }
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
+      @keyframes enter-work {
+        0%   { transform: scale(1.0); }
+        35%  { transform: scale(1.05); } /* slight overshoot */
+        100% { transform: scale(1.03); }
       }
-      html {
-        -webkit-font-smoothing: antialiased;
+
+      /* ---- Task title + meta swap: old departs, new arrives ---- */
+      .task-title, .task-meta {
+        transition: opacity .18s ease, transform .18s ease;
       }
-      body {
-        font-family: var(--font);
-        background: var(--bg);
-        color: var(--text);
-        height: 100vh;
+      .task-title.leaving, .task-meta.leaving {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+      .task-title.entering, .task-meta.entering {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      /* ---- Actions row crossfade ---- */
+      .actions {
+        transition: opacity .18s ease, transform .18s ease;
+      }
+      .actions.leaving {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+      .actions.entering {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      /* ---- Working-UI slides in when work starts ---- */
+      .working-ui {
         overflow: hidden;
-        transition:
-          background 0.5s,
-          color 0.4s;
+        transition: opacity .3s ease, transform .3s ease;
       }
-      button {
-        font-family: inherit;
-        cursor: pointer;
-        border: none;
-        background: none;
-        color: inherit;
-      }
-      svg {
-        display: block;
+      .working-ui.hidden-prep {
+        opacity: 0;
+        transform: translateY(8px);
       }
 
-      /* ============================================================
-     THE STAGE — bg tint shifts subtly with MODE
-     ============================================================ */
-      .stage {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        background: var(--bg);
-        transition: background 0.8s ease;
-      }
-      /* mode tints — very subtle, just enough to feel the shift */
-      .stage[data-mode="plan"] {
-        background: linear-gradient(180deg, #fff7ed 0%, var(--bg) 55%);
-      }
-      .stage[data-mode="do"] {
-        background: var(--bg);
-      }
-      .stage[data-mode="review"] {
-        background: linear-gradient(180deg, #eceaf6 0%, var(--bg) 55%);
-      }
-      [data-theme="dark"] .stage[data-mode="plan"] {
-        background: linear-gradient(180deg, #2a2018 0%, var(--bg) 55%);
-      }
-      [data-theme="dark"] .stage[data-mode="review"] {
-        background: linear-gradient(180deg, #1a1828 0%, var(--bg) 55%);
-      }
+       /* ---- FOCUS LOCK: when working, hide all chrome (not dim — gone) ---- */
+       body.working .hud-top,
+       body.working .rail,
+       body.working .dial-wrap,
+       body.working .hint {
+         opacity: 0;
+         pointer-events: none;
+         transition: opacity .5s ease;
+       }
+       body.working .world-wrap {
+         padding: 24px; /* full canvas, centered */
+       }
 
-      /* ============================================================
-     TOP HUD — brand + lens, breadcrumb (zoom orientation), theme
-     ============================================================ */
-      .hud-top {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        align-items: center;
-        gap: 16px;
-        padding: 18px 24px;
-        z-index: 20;
-      }
-      /* left zone: brand */
-      .brand-cluster {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        justify-self: start;
-      }
-      .brand-mark {
-        width: 26px;
-        height: 26px;
-        border-radius: 6px;
-        background: linear-gradient(135deg, var(--teal), #22d3ee);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
-        flex-shrink: 0;
-      }
-      .lens-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        padding: 5px 10px;
-        border-radius: 9999px;
-        color: var(--text-2);
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-      .lens-pill:hover {
-        border-color: var(--border-strong);
-        color: var(--text);
-      }
-      .lens-pill .lens-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 9999px;
-        background: var(--teal);
-      }
+       /* ---- Feeling tags (working session) ---- */
+       .feelings {
+         display: flex;
+         gap: 6px;
+         justify-content: center;
+         margin: 22px 0 18px;
+       }
+       .feeling {
+         display: inline-flex;
+         align-items: center;
+         gap: 6px;
+         font-size: 12.5px;
+         font-weight: 500;
+         color: var(--text-3);
+         background: var(--surface);
+         border: 1px solid var(--border);
+         padding: 6px 11px;
+         border-radius: 9999px;
+         cursor: pointer;
+         transition: all .15s;
+       }
+       .feeling:hover {
+         border-color: var(--border-strong);
+         color: var(--text-2);
+         transform: translateY(-1px);
+       }
+       .feeling.picked {
+         background: var(--teal-soft);
+         border-color: transparent;
+         color: var(--teal-cta);
+         font-weight: 600;
+       }
+       .feeling .emoji { font-size: 14px }
 
-      /* Breadcrumb = center zone, zoom orientation */
-      .breadcrumb {
-        font-size: 13px;
-        color: var(--text-3);
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        justify-self: center;
-      }
-      .crumb {
-        cursor: pointer;
-        padding: 4px 8px;
-        border-radius: 6px;
-        transition:
-          background 0.12s,
-          color 0.12s;
-      }
-      .crumb:hover {
-        background: var(--surface-muted);
-        color: var(--text-2);
-      }
-      .crumb.current {
-        color: var(--text);
-        font-weight: 600;
-      }
-      .crumb-sep {
-        color: var(--border-strong);
-        padding: 0 2px;
-      }
+       /* ---- Inline note (working session) ---- */
+       .note-input {
+         margin: 0 auto 18px;
+         max-width: 320px;
+         display: flex;
+         align-items: center;
+         gap: 8px;
+         background: var(--surface-muted);
+         border: 1px solid transparent;
+         border-radius: 8px;
+         padding: 8px 12px;
+         transition: border-color .15s, background .15s;
+       }
+       .note-input:focus-within {
+         background: var(--surface);
+         border-color: var(--teal);
+       }
+       .note-input input {
+         flex: 1;
+         border: none;
+         background: transparent;
+         font-family: var(--font);
+         font-size: 13.5px;
+         color: var(--text);
+         outline: none;
+       }
+       .note-input input::placeholder { color: var(--text-4) }
+       .note-input button {
+         font-size: 12px;
+         font-weight: 600;
+         color: var(--teal-cta);
+         padding: 3px 8px;
+         border-radius: 5px;
+         opacity: 0;
+         pointer-events: none;
+         transition: opacity .12s;
+       }
+       .note-input input:not(:placeholder-shown) ~ button {
+         opacity: 1;
+         pointer-events: auto;
+       }
 
-      .hud-top-actions {
-        justify-self: end;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .icon-btn {
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        color: var(--text-3);
-        transition: all 0.15s;
-      }
-      .icon-btn:hover {
-        background: var(--surface-muted);
-        color: var(--text);
-      }
+       /* ---- Session timeline (collapsed by default) ---- */
+       .session {
+         margin: 18px auto 0;
+         max-width: 360px;
+         font-size: 12px;
+         color: var(--text-4);
+         text-align: left;
+       }
+       .session-toggle {
+         display: inline-flex;
+         align-items: center;
+         gap: 8px;
+         cursor: pointer;
+         padding: 4px 8px;
+         margin-left: -8px;
+         border-radius: 6px;
+         transition: background .12s;
+       }
+       .session-toggle:hover { background: var(--surface-muted); color: var(--text-3) }
+       .session-list {
+         margin-top: 8px;
+         padding-left: 16px;
+         border-left: 1px solid var(--border);
+         display: none;
+       }
+       .session.open .session-list { display: block; animation: soft-fade .25s ease both }
+       .session-item {
+         padding: 4px 0;
+         display: flex;
+         gap: 8px;
+         align-items: baseline;
+       }
+       .session-item .t {
+         font-family: var(--font-mono);
+         font-size: 11px;
+         color: var(--text-4);
+         min-width: 32px;
+       }
+       .session-item .body { color: var(--text-3) }
+       .session-item.feeling .body { color: var(--text-2); font-weight: 500 }
+       .session-item.note .body { font-style: italic }
+       .session-item.paused .body { color: var(--amber-text) }
+       [data-theme="dark"] .session-item.paused .body { color: var(--amber) }
 
-      /* ============================================================
-     THE WORLD — zoom transforms this. Task always center.
-     ============================================================ */
-      .world-wrap {
+       /* ---- "Switch" button (replaces Not now) ---- */
+       .btn-switch {
+         background: var(--surface);
+         color: var(--text-2);
+         border: 1px solid var(--border-strong);
+         box-shadow: var(--shadow-sm);
+       }
+       .btn-switch:hover {
+         background: var(--surface-muted);
+         border-color: var(--text-4);
+         color: var(--text);
+       }
+       .btn-switch svg { width: 14px; height: 14px }
+
+      /* ---- Switch confirm modal (overlays the card) ---- */
+      .switch-confirm {
         position: absolute;
         inset: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 96px 200px 140px; /* top clearance for HUD, sides for rails */
-      }
-      .world {
-        position: relative;
-        width: 100%;
-        max-width: 560px;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        will-change: transform;
-      }
-
-      .node {
-        position: absolute;
-        text-align: center;
-        transition:
-          opacity 0.5s ease,
-          filter 0.5s ease,
-          transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        transform-origin: center center;
-      }
-      .node.dim {
-        opacity: 0.16;
-        filter: blur(3px);
-        pointer-events: none;
-      }
-
-      /* TASK — always center, always the anchor */
-      .node-task {
         background: var(--surface);
-        border: 1px solid var(--border);
         border-radius: 16px;
-        padding: 44px 48px;
-        box-shadow:
-          0 2px 4px rgba(0, 28, 70, 0.05),
-          0 24px 64px var(--teal-tint);
-        max-width: 480px;
-        width: 100%;
-      }
-      [data-theme="dark"] .node-task {
-        box-shadow:
-          0 2px 4px rgba(0, 0, 0, 0.2),
-          0 24px 64px rgba(14, 165, 233, 0.18);
-      }
-
-      /* PROJECT — sits above task */
-      .node-project {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 32px 40px;
-        box-shadow: var(--shadow-md);
-        width: 640px;
-        transform: translateY(-200px);
-      }
-
-      /* GOAL — sits above project */
-      .node-goal {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 22px;
-        padding: 28px 40px;
-        box-shadow: var(--shadow-md);
-        width: 820px;
-        transform: translateY(-340px);
-      }
-
-      /* connectors */
-      .connector {
-        position: absolute;
-        left: 50%;
-        width: 1px;
-        background: var(--border-strong);
-        transform: translateX(-50%);
         opacity: 0;
-        transition: opacity 0.5s;
-        z-index: 0;
+        pointer-events: none;
+        transform: scale(.98);
+        transition: opacity .22s ease, transform .22s ease;
+        z-index: 10;
       }
-      .connector.show {
+      .switch-confirm.open {
         opacity: 1;
-      }
-
-      /* ---- TASK content ---- */
-      .ctx {
-        font-size: 12.5px;
-        color: var(--text-3);
-        margin-bottom: 28px;
-      }
-      .completion {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 34px;
-        height: 34px;
-        border-radius: 9999px;
-        border: 2.5px solid var(--border-strong);
-        margin-bottom: 24px;
-        cursor: pointer;
-        transition:
-          transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-          border-color 0.2s;
-      }
-      .completion:hover {
-        transform: scale(1.08);
-        border-color: var(--teal);
-      }
-      .completion svg {
-        color: #fff;
-        width: 16px;
-        height: 16px;
-        opacity: 0;
-        transform: scale(0.4);
-        transition:
-          opacity 0.14s ease 0.06s,
-          transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) 0.06s;
-      }
-      .completion.filled {
-        background: var(--teal);
-        border-color: var(--teal);
-        box-shadow: 0 6px 16px var(--teal-tint);
-      }
-      .completion.filled svg {
-        opacity: 1;
+        pointer-events: auto;
         transform: scale(1);
       }
-      .task-title {
-        font-size: 28px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        line-height: 1.2;
-        margin-bottom: 10px;
+      .switch-confirm-inner { text-align: center; padding: 20px }
+      .switch-confirm-q {
+        font-size: 13px; font-weight: 600;
+        letter-spacing: .04em; text-transform: uppercase;
+        color: var(--text-4); margin-bottom: 10px;
       }
-      .task-meta {
-        font-size: 14px;
-        color: var(--text-3);
-        margin-bottom: 24px;
+      .switch-confirm-task {
+        font-size: 22px; font-weight: 700;
+        letter-spacing: -.01em; color: var(--text);
+        margin-bottom: 24px; line-height: 1.25;
       }
-      .task-meta .sep {
-        margin: 0 7px;
-        color: var(--border-strong);
+      .switch-confirm-actions { display: flex; gap: 10px; justify-content: center }
+      .switch-confirm-actions .btn-cancel {
+        background: var(--surface-muted); color: var(--text-2);
       }
-      .actions {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-      }
-      .btn {
-        font-size: 14.5px;
-        font-weight: 600;
-        padding: 10px 22px;
-        border-radius: 8px;
-        border: 1px solid transparent;
-        transition:
-          background 0.15s,
-          transform 0.08s;
-      }
-      .btn:active {
-        transform: scale(0.97);
-      }
-      .btn-primary {
-        background: var(--teal-cta);
-        color: #fff;
-      }
-      .btn-primary:hover {
-        background: var(--teal-cta-hover);
-      }
-      .btn-secondary {
-        background: var(--surface);
-        color: var(--text-2);
-        border-color: var(--border);
-      }
-      .btn-secondary:hover {
-        background: var(--surface-muted);
-      }
+      .switch-confirm-actions .btn-cancel:hover { background: var(--surface-muted-2) }
 
-      /* ---- "Working on it" — the active state ---- */
-      /* The hero card itself glows softly when you're inside a task */
-      .node-task.working {
-        box-shadow:
-          0 2px 4px rgba(0, 28, 70, 0.05),
-          0 0 0 1px var(--teal-soft-strong),
-          0 24px 64px var(--teal-tint);
-      }
-      [data-theme="dark"] .node-task.working {
-        box-shadow:
-          0 2px 4px rgba(0, 0, 0, 0.2),
-          0 0 0 1px rgba(14, 165, 233, 0.3),
-          0 24px 64px rgba(14, 165, 233, 0.25);
-      }
-
-      /* The completion circle gets a breathing halo — "energy applied, alive" */
-      .completion {
+      /* ---- Task card replace animation (physical card swap) ---- */
+      .task-card-stage {
         position: relative;
-      }
-      .completion.active {
-        border-color: var(--teal);
-        background: var(--teal-soft);
-      }
-      .completion.active::before,
-      .completion.active::after {
-        content: "";
-        position: absolute;
-        inset: -3px;
-        border-radius: inherit;
-        border: 2px solid var(--teal);
-        opacity: 0;
-        animation: halo 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-      }
-      .completion.active::after {
-        animation-delay: 1.2s;
-      }
-      @keyframes halo {
-        0% {
-          transform: scale(1);
-          opacity: 0.6;
-        }
-        100% {
-          transform: scale(1.8);
-          opacity: 0;
-        }
-      }
-      /* A live timer replaces the meta line when working */
-      .timer {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--teal-cta);
-        background: var(--teal-soft);
-        padding: 5px 11px;
-        border-radius: 7px;
-        margin-bottom: 24px;
-      }
-      .timer .pulse {
-        width: 6px;
-        height: 6px;
-        border-radius: 9999px;
-        background: var(--teal);
-        animation: tick 1s ease-in-out infinite;
-      }
-      @keyframes tick {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.3;
-        }
-      }
-
-      /* ---- PROJECT content ---- */
-      .p-label,
-      .g-label {
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        color: var(--text-4);
-        text-transform: uppercase;
-        margin-bottom: 8px;
-      }
-      .p-title {
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        margin-bottom: 16px;
-      }
-      .p-progress {
+        min-height: 320px;
         display: flex;
-        align-items: center;
-        gap: 10px;
-        justify-content: center;
-        font-size: 13px;
-        color: var(--text-3);
-        margin-bottom: 16px;
-      }
-      .p-bar {
-        width: 200px;
-        height: 6px;
-        background: var(--surface-muted);
-        border-radius: 9999px;
-        overflow: hidden;
-      }
-      .p-bar-fill {
-        height: 100%;
-        background: var(--teal);
-        border-radius: 9999px;
-        width: 40%;
-      }
-      .p-tasks {
-        display: flex;
-        gap: 6px;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-      .p-task-chip {
-        font-size: 11.5px;
-        color: var(--text-3);
-        background: var(--surface-muted);
-        padding: 4px 9px;
-        border-radius: 9999px;
-        cursor: pointer;
-        transition: all 0.12s;
-      }
-      .p-task-chip:hover {
-        background: var(--surface-muted-2);
-        color: var(--text-2);
-      }
-      .p-task-chip.current {
-        background: var(--teal-soft);
-        color: var(--teal-cta);
-        font-weight: 600;
-      }
-
-      /* ---- GOAL content ---- */
-      .g-title {
-        font-size: 24px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        margin-bottom: 10px;
-      }
-      .g-desc {
-        font-size: 14px;
-        color: var(--text-3);
-        max-width: 520px;
-        margin: 0 auto 18px;
-      }
-      .g-projects {
-        display: flex;
-        gap: 8px;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-      .g-proj-chip {
-        font-size: 12px;
-        color: var(--text-2);
-        background: var(--surface-muted);
-        padding: 5px 11px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        cursor: pointer;
-        transition: all 0.12s;
-      }
-      .g-proj-chip:hover {
-        background: var(--surface-muted-2);
-      }
-      .g-proj-chip.current {
-        background: var(--teal-soft);
-        color: var(--teal-cta);
-        font-weight: 600;
-        border-color: transparent;
-      }
-
-      /* ============================================================
-     THE DIAL — bottom center. The persistent nav. MODE switcher.
-     ============================================================ */
-      .dial-wrap {
-        position: absolute;
-        bottom: 24px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        align-items: center;
-        gap: 0;
-        z-index: 30;
-      }
-      .dial {
-        display: flex;
-        align-items: center;
-        gap: 0;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        padding: 5px;
-        border-radius: 9999px;
-        box-shadow: var(--shadow-md);
-      }
-      .dial-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 9px 20px;
-        border-radius: 9999px;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--text-3);
-        transition:
-          background 0.25s,
-          color 0.25s;
-        cursor: pointer;
-      }
-      .dial-btn .dial-icon {
-        font-size: 14px;
-        opacity: 0.7;
-        width: 14px;
-        text-align: center;
-      }
-      .dial-btn:hover {
-        color: var(--text-2);
-      }
-      .dial-btn.active {
-        background: var(--teal-soft);
-        color: var(--teal-cta);
-        font-weight: 600;
-      }
-      .dial-btn.active .dial-icon {
-        opacity: 1;
-      }
-
-      /* Zoom control — docked beside the dial */
-      .zoom-dock {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        padding: 5px;
-        border-radius: 9999px;
-        box-shadow: var(--shadow-md);
-        margin-left: 8px;
-      }
-      .zoom-btn {
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 9999px;
-        color: var(--text-3);
-        transition: all 0.15s;
-        cursor: pointer;
-      }
-      .zoom-btn:hover {
-        background: var(--surface-muted);
-        color: var(--text);
-      }
-      .zoom-btn.active {
-        background: var(--teal-soft);
-        color: var(--teal-cta);
-      }
-
-      /* Capture — FAB right of dial cluster */
-      .fab {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: var(--teal-cta);
-        color: #fff;
-        padding: 10px 16px;
-        border-radius: 9999px;
-        font-size: 13.5px;
-        font-weight: 600;
-        box-shadow: 0 4px 12px var(--teal-tint);
-        margin-left: 8px;
-        transition:
-          transform 0.15s,
-          background 0.15s;
-      }
-      .fab:hover {
-        background: var(--teal-cta-hover);
-        transform: translateY(-1px);
-      }
-      .fab kbd {
-        font-family: var(--font-mono);
-        font-size: 10.5px;
-        background: rgba(255, 255, 255, 0.18);
-        padding: 1px 5px;
-        border-radius: 4px;
-      }
-
-      /* ============================================================
-     SIDE RAILS — past/future peek (time axis), like approach A
-     ============================================================ */
-      .rail {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 140px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        z-index: 5;
-        opacity: 0.4;
-        transition: opacity 0.3s;
-      }
-      .rail:hover {
-        opacity: 1;
-      }
-      .rail.left {
-        left: 24px;
         align-items: flex-start;
+        justify-content: center;
       }
-      .rail.right {
-        right: 24px;
-        align-items: flex-end;
-      }
-      .rail-label {
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        color: var(--text-4);
-        text-transform: uppercase;
-        margin-bottom: 4px;
-        padding: 0 4px;
-      }
-      .rail-item {
-        font-size: 12px;
-        color: var(--text-3);
-        padding: 6px 9px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition:
-          background 0.12s,
-          color 0.12s;
+      .task-card-inner {
         width: 100%;
+        position: relative; /* anchor for switch-confirm overlay */
+        transition:
+          opacity .28s ease,
+          transform .42s cubic-bezier(.4,0,.2,1);
       }
-      .rail-item:hover {
-        background: var(--surface);
-        color: var(--text-2);
-        box-shadow: var(--shadow-md);
-      }
-      .rail.left .rail-item {
-        text-align: left;
-      }
-      .rail.right .rail-item {
-        text-align: right;
-      }
-
-      /* hint — moved to BOTTOM-LEFT so it doesn't collide with the top bar */
-      .hint {
+      .task-card-inner.leaving {
+        opacity: 0;
+        transform: translateX(-40px) scale(.96);
         position: absolute;
-        bottom: 24px;
-        left: 24px;
-        font-size: 11.5px;
-        color: var(--text-4);
-        background: var(--surface);
-        border: 1px solid var(--border);
-        padding: 7px 13px;
-        border-radius: 9999px;
-        z-index: 20;
-        max-width: 320px;
-        line-height: 1.5;
-        box-shadow: var(--shadow-md);
+        top: 0; left: 0; right: 0;
+        pointer-events: none;
       }
-      .hint kbd {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        background: var(--surface-muted);
-        padding: 1px 5px;
-        border-radius: 3px;
-        border: 1px solid var(--border);
-      }
-      .hint b {
-        color: var(--text-2);
+      .task-card-inner.entering {
+        opacity: 0;
+        transform: translateX(40px) scale(.96);
       }
 
-      @keyframes rise {
-        from {
-          opacity: 0;
-          transform: translateY(8px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .node-task {
-        animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
-      }
+       @keyframes soft-fade { from { opacity: 0 } to { opacity: 1 } }
+       }
+       [data-theme="dark"] .node-task.working {
+         box-shadow:
+           0 2px 4px rgba(0, 0, 0, 0.2),
+           0 0 0 1px rgba(14, 165, 233, 0.3),
+           0 24px 64px rgba(14, 165, 233, 0.25);
+       }
 
-      @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-          animation-duration: 0.01ms !important;
-          transition-duration: 0.01ms !important;
-        }
-      }
+       /* The completion circle gets a breathing halo — "energy applied, alive" */
+       .completion {
+         position: relative;
+       }
+       .completion.active {
+         border-color: var(--teal);
+         background: var(--teal-soft);
+       }
+       .completion.active::before,
+       .completion.active::after {
+         content: "";
+         position: absolute;
+         inset: -3px;
+         border-radius: inherit;
+         border: 2px solid var(--teal);
+         opacity: 0;
+         animation: halo 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+       }
+       .completion.active::after {
+         animation-delay: 1.2s;
+       }
+       @keyframes halo {
+         0% {
+           transform: scale(1);
+           opacity: 0.6;
+         }
+         100% {
+           transform: scale(1.8);
+           opacity: 0;
+         }
+       }
+       /* A live timer replaces the meta line when working */
+       .timer {
+         display: inline-flex;
+         align-items: center;
+         gap: 7px;
+         font-family: var(--font-mono);
+         font-size: 13px;
+         font-weight: 600;
+         color: var(--teal-cta);
+         background: var(--teal-soft);
+         padding: 5px 11px;
+         border-radius: 7px;
+         margin-bottom: 24px;
+       }
+       .timer .pulse {
+         width: 6px;
+         height: 6px;
+         border-radius: 9999px;
+         background: var(--teal);
+         animation: tick 1s ease-in-out infinite;
+       }
+       @keyframes tick {
+         0%,
+         100% {
+           opacity: 1;
+         }
+         50% {
+           opacity: 0.3;
+         }
+       }
+
+       /* ---- PROJECT content ---- */
+       .p-label,
+       .g-label {
+         font-size: 11px;
+         font-weight: 600;
+         letter-spacing: 0.08em;
+         color: var(--text-4);
+         text-transform: uppercase;
+         margin-bottom: 8px;
+       }
+       .p-title {
+         font-size: 22px;
+         font-weight: 700;
+         letter-spacing: -0.01em;
+         margin-bottom: 16px;
+       }
+       .p-progress {
+         display: flex;
+         align-items: center;
+         gap: 10px;
+         justify-content: center;
+         font-size: 13px;
+         color: var(--text-3);
+         margin-bottom: 16px;
+       }
+       .p-bar {
+         width: 200px;
+         height: 6px;
+         background: var(--surface-muted);
+         border-radius: 9999px;
+         overflow: hidden;
+       }
+       .p-bar-fill {
+         height: 100%;
+         background: var(--teal);
+         border-radius: 9999px;
+         width: 40%;
+       }
+       .p-tasks {
+         display: flex;
+         gap: 6px;
+         justify-content: center;
+         flex-wrap: wrap;
+       }
+       .p-task-chip {
+         font-size: 11.5px;
+         color: var(--text-3);
+         background: var(--surface-muted);
+         padding: 4px 9px;
+         border-radius: 9999px;
+         cursor: pointer;
+         transition: all 0.12s;
+       }
+       .p-task-chip:hover {
+         background: var(--surface-muted-2);
+         color: var(--text-2);
+       }
+       .p-task-chip.current {
+         background: var(--teal-soft);
+         color: var(--teal-cta);
+         font-weight: 600;
+       }
+
+       /* ---- GOAL content ---- */
+       .g-title {
+         font-size: 24px;
+         font-weight: 700;
+         letter-spacing: -0.01em;
+         margin-bottom: 10px;
+       }
+       .g-desc {
+         font-size: 14px;
+         color: var(--text-3);
+         max-width: 520px;
+         margin: 0 auto 18px;
+       }
+       .g-projects {
+         display: flex;
+         gap: 8px;
+         justify-content: center;
+         flex-wrap: wrap;
+       }
+       .g-proj-chip {
+         font-size: 12px;
+         color: var(--text-2);
+         background: var(--surface-muted);
+         padding: 5px 11px;
+         border-radius: 8px;
+         border: 1px solid var(--border);
+         cursor: pointer;
+         transition: all 0.12s;
+       }
+       .g-proj-chip:hover {
+         background: var(--surface-muted-2);
+       }
+       .g-proj-chip.current {
+         background: var(--teal-soft);
+         color: var(--teal-cta);
+         font-weight: 600;
+         border-color: transparent;
+       }
+
+       /* ============================================================
+      THE DIAL — bottom center. The persistent nav. MODE switcher.
+      ============================================================ */
+       .dial-wrap {
+         position: absolute;
+         bottom: 24px;
+         left: 50%;
+         transform: translateX(-50%);
+         display: flex;
+         align-items: center;
+         gap: 0;
+         z-index: 30;
+       }
+       .dial {
+         display: flex;
+         align-items: center;
+         gap: 0;
+         background: var(--surface);
+         border: 1px solid var(--border);
+         padding: 5px;
+         border-radius: 9999px;
+         box-shadow: var(--shadow-md);
+       }
+       .dial-btn {
+         display: inline-flex;
+         align-items: center;
+         gap: 8px;
+         padding: 9px 20px;
+         border-radius: 9999px;
+         font-size: 13px;
+         font-weight: 500;
+         color: var(--text-3);
+         transition:
+           background 0.25s,
+           color 0.25s;
+         cursor: pointer;
+       }
+       .dial-btn .dial-icon {
+         font-size: 14px;
+         opacity: 0.7;
+         width: 14px;
+         text-align: center;
+       }
+       .dial-btn:hover {
+         color: var(--text-2);
+       }
+       .dial-btn.active {
+         background: var(--teal-soft);
+         color: var(--teal-cta);
+         font-weight: 600;
+       }
+       .dial-btn.active .dial-icon {
+         opacity: 1;
+       }
+
+       /* Zoom control — docked beside the dial */
+       .zoom-dock {
+         display: flex;
+         align-items: center;
+         gap: 2px;
+         background: var(--surface);
+         border: 1px solid var(--border);
+         padding: 5px;
+         border-radius: 9999px;
+         box-shadow: var(--shadow-md);
+         margin-left: 8px;
+       }
+       .zoom-btn {
+         width: 32px;
+         height: 32px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         border-radius: 9999px;
+         color: var(--text-3);
+         transition: all 0.15s;
+         cursor: pointer;
+       }
+       .zoom-btn:hover {
+         background: var(--surface-muted);
+         color: var(--text);
+       }
+       .zoom-btn.active {
+         background: var(--teal-soft);
+         color: var(--teal-cta);
+       }
+
+       /* Capture — FAB right of dial cluster */
+       .fab {
+         display: inline-flex;
+         align-items: center;
+         gap: 8px;
+         background: var(--teal-cta);
+         color: #fff;
+         padding: 10px 16px;
+         border-radius: 9999px;
+         font-size: 13.5px;
+         font-weight: 600;
+         box-shadow: 0 4px 12px var(--teal-tint);
+         margin-left: 8px;
+         transition:
+           transform 0.15s,
+           background 0.15s;
+       }
+       .fab:hover {
+         background: var(--teal-cta-hover);
+         transform: translateY(-1px);
+       }
+       .fab kbd {
+         font-family: var(--font-mono);
+         font-size: 10.5px;
+         background: rgba(255, 255, 255, 0.18);
+         padding: 1px 5px;
+         border-radius: 4px;
+       }
+
+       /* ============================================================
+      SIDE RAILS — past/future peek (time axis), like approach A
+      ============================================================ */
+       .rail {
+         position: absolute;
+         top: 50%;
+         transform: translateY(-50%);
+         width: 140px;
+         display: flex;
+         flex-direction: column;
+         gap: 6px;
+         z-index: 5;
+         opacity: 0.4;
+         transition: opacity 0.3s;
+       }
+       .rail:hover {
+         opacity: 1;
+       }
+       .rail.left {
+         left: 24px;
+         align-items: flex-start;
+       }
+       .rail.right {
+         right: 24px;
+         align-items: flex-end;
+       }
+       .rail-label {
+         font-size: 10px;
+         font-weight: 600;
+         letter-spacing: 0.06em;
+         color: var(--text-4);
+         text-transform: uppercase;
+         margin-bottom: 4px;
+         padding: 0 4px;
+       }
+       .rail-item {
+         font-size: 12px;
+         color: var(--text-3);
+         padding: 6px 9px;
+         border-radius: 6px;
+         cursor: pointer;
+         transition:
+           background 0.12s,
+           color 0.12s;
+         width: 100%;
+       }
+       .rail-item:hover {
+         background: var(--surface);
+         color: var(--text-2);
+         box-shadow: var(--shadow-md);
+       }
+       .rail.left .rail-item {
+         text-align: left;
+       }
+       .rail.right .rail-item {
+         text-align: right;
+       }
+
+       /* hint — moved to BOTTOM-LEFT so it doesn't collide with the top bar */
+       .hint {
+         position: absolute;
+         bottom: 24px;
+         left: 24px;
+         font-size: 11.5px;
+         color: var(--text-4);
+         background: var(--surface);
+         border: 1px solid var(--border);
+         padding: 7px 13px;
+         border-radius: 9999px;
+         z-index: 20;
+         max-width: 320px;
+         line-height: 1.5;
+         box-shadow: var(--shadow-md);
+       }
+       .hint kbd {
+         font-family: var(--font-mono);
+         font-size: 10px;
+         background: var(--surface-muted);
+         padding: 1px 5px;
+         border-radius: 3px;
+         border: 1px solid var(--border);
+       }
+       .hint b {
+         color: var(--text-2);
+       }
+
+       @keyframes rise {
+         from {
+           opacity: 0;
+           transform: translateY(8px);
+         }
+         to {
+           opacity: 1;
+           transform: translateY(0);
+         }
+       }
+       .node-task {
+         animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+       }
+
+       @media (prefers-reduced-motion: reduce) {
+         *,
+         *::before,
+         *::after {
+           animation-duration: 0.01ms !important;
+           transition-duration: 0.01ms !important;
+         }
+       }
     </style>
   </head>
   <body data-mode="do" data-zoom="task">
@@ -923,28 +1194,102 @@
 
           <!-- TASK (zoom level 0 — anchor) -->
           <div class="node node-task" id="node-task">
-            <div class="ctx" id="ctxLine">Right now · 30 min available</div>
-            <div class="completion" id="completion">
-              <svg viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M3.5 8.5l3 3 6-7"
-                  stroke="currentColor"
-                  stroke-width="2.4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+            <div class="task-card-stage" id="taskCardStage">
+              <div class="task-card-inner" id="taskCardInner">
+                <div class="ctx" id="ctxLine">Right now · 30 min available</div>
+                <div class="completion" id="completion">
+                  <svg viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M3.5 8.5l3 3 6-7"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div class="task-title" id="taskTitle">
+                  Email Sarah re: Q3 invoice
+                </div>
+                <div class="task-meta" id="taskMeta">
+                  Due today <span class="sep">·</span> 15 min
+                  <span class="sep">·</span> Important
+                </div>
+                <div class="actions" id="taskActions">
+                  <button class="btn btn-primary" id="doBtn">Do this</button>
+                  <button class="btn btn-switch" id="switchBtn">
+                    <svg viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M2 5h9l-2-2M14 11H5l2 2"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    Switch
+                  </button>
+                </div>
+                <!-- Switch confirm overlay (inside the card) -->
+                <div class="switch-confirm" id="switchConfirm">
+                  <div class="switch-confirm-inner">
+                    <div class="switch-confirm-q">Switch to</div>
+                    <div class="switch-confirm-task" id="switchConfirmTask">
+                      Review pull request #284
+                    </div>
+                    <div class="switch-confirm-actions">
+                      <button class="btn btn-cancel" id="switchCancelBtn">
+                        Cancel
+                      </button>
+                      <button class="btn btn-primary" id="switchConfirmBtn">
+                        Switch
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /.task-card-inner -->
+            </div>
+            <!-- /.task-card-stage -->
+
+            <!-- Working-session UI (hidden unless working) -->
+            <div class="working-ui" id="workingUI" style="display: none">
+              <div class="feelings" id="feelings">
+                <button class="feeling" data-feeling="flow">
+                  <span class="emoji">🔥</span> flow
+                </button>
+                <button class="feeling" data-feeling="blocked">
+                  <span class="emoji">🧱</span> blocked
+                </button>
+                <button class="feeling" data-feeling="breakthrough">
+                  <span class="emoji">⚡</span> breakthrough
+                </button>
+                <button class="feeling" data-feeling="heavy">
+                  <span class="emoji">😮‍💨</span> heavy
+                </button>
+              </div>
+              <div class="note-input">
+                <input
+                  type="text"
+                  id="noteField"
+                  placeholder="note… (optional)"
                 />
-              </svg>
-            </div>
-            <div class="task-title" id="taskTitle">
-              Email Sarah re: Q3 invoice
-            </div>
-            <div class="task-meta" id="taskMeta">
-              Due today <span class="sep">·</span> 15 min
-              <span class="sep">·</span> Important
-            </div>
-            <div class="actions" id="taskActions">
-              <button class="btn btn-primary" id="doBtn">Do this</button>
-              <button class="btn btn-secondary">Not now</button>
+                <button id="noteAdd">Add</button>
+              </div>
+              <div class="session" id="session">
+                <div class="session-toggle" id="sessionToggle">
+                  <span id="sessionSummary">▶ started</span>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path
+                      d="M2 3.5L5 6.5 8 3.5"
+                      stroke="currentColor"
+                      stroke-width="1.4"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </div>
+                <div class="session-list" id="sessionList"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -1039,77 +1384,336 @@
         lensBtn.innerHTML = `<span class="lens-dot"></span> ${lens}`;
       });
 
-      // ---- Completion: three states (idle → working → done) ----
-      const comp = document.getElementById("completion");
-      const heroCard = document.getElementById("node-task");
-      const metaEl = document.getElementById("taskMeta");
-      let taskState = "idle"; // 'idle' | 'working' | 'done'
+      // ---- Task state machine: idle → working ⇄ paused → done (→ reset) ----
+      // References re-resolve after a card swap (the old card is removed).
+      let comp, heroCard, metaEl, actionsEl;
+      heroCard = document.getElementById("node-task");
+      const workingUI = document.getElementById("workingUI");
+      const feelingsEl = document.getElementById("feelings");
+      const noteField = document.getElementById("noteField");
+      const noteAdd = document.getElementById("noteAdd");
+      const sessionEl = document.getElementById("session");
+      const sessionList = document.getElementById("sessionList");
+      const sessionToggle = document.getElementById("sessionToggle");
+      const sessionSummary = document.getElementById("sessionSummary");
+
+      let taskState = "idle"; // idle | working | paused | done
       let workStart = null,
+        elapsedAtPause = 0,
         timerInterval = null;
+      const sessionEvents = []; // {t, kind, body}
+      const FEELINGS = {
+        flow: "🔥 flow",
+        blocked: "🧱 blocked",
+        breakthrough: "⚡ breakthrough",
+        heavy: "😮‍💨 heavy",
+      };
+      const TASKS = [
+        "Email Sarah re: Q3 invoice",
+        "Review pull request #284",
+        "Draft Q3 launch plan",
+        "Prep notes for 1:1 with Marco",
+      ];
+      let taskIdx = 0;
+
+      function resolveEls() {
+        comp = document.getElementById("completion");
+        metaEl = document.getElementById("taskMeta");
+        actionsEl = document.getElementById("taskActions");
+      }
+      resolveEls();
 
       function fmtTime(ms) {
         const s = Math.floor(ms / 1000);
         const m = Math.floor(s / 60),
           ss = s % 60;
+        if (m >= 60) {
+          const h = Math.floor(m / 60);
+          return `${h}:${(m % 60).toString().padStart(2, "0")}:${ss
+            .toString()
+            .padStart(2, "0")}`;
+        }
         return `${m}:${ss.toString().padStart(2, "0")}`;
       }
+      function elapsedMs() {
+        if (!workStart) return 0;
+        return (
+          elapsedAtPause + (taskState === "paused" ? 0 : Date.now() - workStart)
+        );
+      }
+
+      function renderSession() {
+        sessionList.innerHTML = sessionEvents
+          .map((ev) => {
+            const cls = ev.kind;
+            return `<div class="session-item ${cls}"><span class="t">${ev.t}</span><span class="body">${ev.body}</span></div>`;
+          })
+          .join("");
+        const counts = sessionEvents.reduce(
+          (a, e) => ((a[e.kind] = (a[e.kind] || 0) + 1), a),
+          {},
+        );
+        const parts = [`▶ ${fmtTime(elapsedMs())}`];
+        if (counts.note)
+          parts.push(`${counts.note} note${counts.note > 1 ? "s" : ""}`);
+        if (counts.feeling)
+          parts.push(
+            `${counts.feeling} feeling${counts.feeling > 1 ? "s" : ""}`,
+          );
+        if (counts.paused)
+          parts.push(`${counts.paused} break${counts.paused > 1 ? "s" : ""}`);
+        sessionSummary.textContent = parts.join(" · ");
+      }
+      function pushEvent(kind, body) {
+        const ev = { t: fmtTime(elapsedMs()), kind, body };
+        sessionEvents.push(ev);
+        renderSession();
+      }
+
       function setTaskState(s) {
+        resolveEls();
+        const prev = taskState;
         taskState = s;
         comp.classList.remove("active", "filled");
         heroCard.classList.remove("working");
+        document.body.classList.remove("working");
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
         }
+
         if (s === "working") {
           comp.classList.add("active");
           heroCard.classList.add("working");
-          workStart = Date.now();
+          document.body.classList.add("working");
+          // The "becoming the world" one-shot pulse — only on fresh start, not resume
+          if (prev === "idle") {
+            heroCard.classList.remove("entering-work");
+            void heroCard.offsetWidth; // reflow to restart animation
+            heroCard.classList.add("entering-work");
+            workStart = Date.now();
+            elapsedAtPause = 0;
+            sessionEvents.length = 0;
+            pushEvent("started", "started working");
+          } else if (prev === "paused") {
+            workStart = Date.now();
+            pushEvent("resumed", "resumed");
+          }
           metaEl.innerHTML =
             '<span class="timer"><span class="pulse"></span> <span id="elapsed">0:00</span></span>';
           timerInterval = setInterval(() => {
             const el = document.getElementById("elapsed");
-            if (el) el.textContent = fmtTime(Date.now() - workStart);
+            if (el) el.textContent = fmtTime(elapsedMs());
           }, 1000);
-          const db = document.getElementById("doBtn");
-          if (db) {
-            db.textContent = "Done ✓";
-            db.dataset.state = "working";
-          }
+          workingUI.classList.remove("hidden-prep");
+          workingUI.style.display = "";
+          crossfadeActions(
+            '<button class="btn btn-secondary" id="pauseBtn">Take a break</button>' +
+              '<button class="btn btn-primary" id="doneBtn">Done ✓</button>',
+          );
+        } else if (s === "paused") {
+          elapsedAtPause += Date.now() - workStart;
+          workStart = null;
+          comp.classList.remove("active");
+          heroCard.classList.remove("working");
+          document.body.classList.remove("working");
+          metaEl.innerHTML =
+            '<span class="timer" style="background:var(--amber-soft);color:var(--amber-text)"><span class="pulse" style="background:var(--amber);animation:none"></span> paused · ' +
+            fmtTime(elapsedAtPause) +
+            "</span>";
+          pushEvent("paused", "took a break");
+          crossfadeActions(
+            '<button class="btn btn-primary" id="resumeBtn">Resume</button>' +
+              '<button class="btn btn-secondary" id="doneBtn">Done ✓</button>',
+          );
         } else if (s === "done") {
+          const total = elapsedMs();
           comp.classList.add("filled");
-          const elapsed = workStart ? fmtTime(Date.now() - workStart) : null;
+          workingUI.classList.add("hidden-prep");
+          setTimeout(() => {
+            workingUI.style.display = "none";
+            workingUI.classList.remove("hidden-prep");
+          }, 300);
+          pushEvent("done", `completed in ${fmtTime(total)}`);
           metaEl.innerHTML =
             "Done" +
-            (elapsed ? ` <span class="sep">·</span> took ${elapsed}` : "") +
+            ` <span class="sep">·</span> took ${fmtTime(total)}` +
             ` <span class="sep">·</span> moved Ship product v2 forward`;
-          const db = document.getElementById("doBtn");
-          if (db) {
-            db.textContent = "Done ✓";
-            db.dataset.state = "done";
-          }
+          crossfadeActions(
+            '<button class="btn btn-secondary" id="nextBtn">Next task →</button>',
+          );
         } else {
-          // idle
-          const db = document.getElementById("doBtn");
-          if (db) {
-            db.textContent = "Do this";
-            db.dataset.state = "idle";
-          }
+          // idle (reset)
+          workingUI.classList.add("hidden-prep");
+          setTimeout(() => {
+            workingUI.style.display = "none";
+            workingUI.classList.remove("hidden-prep");
+          }, 300);
+          metaEl.innerHTML =
+            'Due today <span class="sep">·</span> 15 min <span class="sep">·</span> Important';
+          crossfadeActions(
+            '<button class="btn btn-primary" id="doBtn">Do this</button>' +
+              switchBtnHTML(),
+          );
         }
       }
-      // Click circle: idle→done (skip working), working→done
-      comp.addEventListener("click", () => {
-        if (taskState === "working") setTaskState("done");
-        else if (taskState === "idle") setTaskState("done");
-        else setTaskState("idle"); // done→reset
-      });
-      // Delegate button clicks: idle→working, working→done
+
+      // Circle click (delegated — survives card swaps): working→pause, paused→resume, idle→done, done→reset
       document.addEventListener("click", (e) => {
-        const b = e.target.closest("#doBtn");
-        if (!b) return;
+        if (!e.target.closest("#completion")) return;
         e.preventDefault();
-        if (taskState === "idle") setTaskState("working");
-        else if (taskState === "working") setTaskState("done");
+        if (taskState === "working") setTaskState("paused");
+        else if (taskState === "paused") setTaskState("working");
+        else if (taskState === "idle") setTaskState("done");
+        else setTaskState("idle");
+      });
+
+      // ---- Transition helpers ----
+      // Crossfade the actions row: old leaves upward, new arrives from below
+      // Build the Switch button HTML — icon leading, with peek of the next task
+      // Switch button — plain. The confirm modal handles the target preview.
+      function switchBtnHTML() {
+        return '<button class="btn btn-switch" id="switchBtn"><svg viewBox="0 0 16 16" fill="none"><path d="M2 5h9l-2-2M14 11H5l2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Switch</button>';
+      }
+
+      // ---- Switch confirm modal ----
+      function openSwitchConfirm() {
+        const next = TASKS[(taskIdx + 1) % TASKS.length];
+        const modal = document.getElementById("switchConfirm");
+        const taskEl = document.getElementById("switchConfirmTask");
+        if (!modal || !taskEl) return;
+        taskEl.textContent = next;
+        modal.classList.add("open");
+      }
+      function closeSwitchConfirm() {
+        const modal = document.getElementById("switchConfirm");
+        if (modal) modal.classList.remove("open");
+      }
+      function crossfadeActions(html) {
+        if (actionsEl.innerHTML.trim() === html.trim()) return;
+        actionsEl.classList.add("leaving");
+        setTimeout(() => {
+          actionsEl.innerHTML = html;
+          actionsEl.classList.remove("leaving");
+          actionsEl.classList.add("entering");
+          void actionsEl.offsetWidth;
+          actionsEl.classList.remove("entering");
+        }, 180);
+      }
+      // Swap the task title + meta with a depart/arrive motion
+      function swapTask(newTitle) {
+        const stage = document.getElementById("taskCardStage");
+        const oldCard = document.getElementById("taskCardInner");
+        // Build the new card as a sibling
+        const newCard = oldCard.cloneNode(true);
+        newCard.id = "taskCardInner-new";
+        newCard.classList.add("entering");
+        // Update the new card's content
+        newCard.querySelector("#taskTitle").textContent = newTitle;
+        newCard.querySelector("#taskTitle").id = "taskTitle";
+        newCard.querySelector("#taskMeta").innerHTML =
+          'Due today <span class="sep">·</span> 15 min <span class="sep">·</span> Normal';
+        newCard.querySelector("#taskMeta").id = "taskMeta";
+        newCard.querySelector("#completion").id = "completion";
+        newCard.querySelector("#ctxLine").id = "ctxLine";
+        newCard.querySelector("#taskActions").id = "taskActions";
+        newCard.querySelector("#doBtn").id = "doBtn";
+        newCard.querySelector("#switchBtn").id = "switchBtn";
+        // Clone has duplicate modal ids — strip from old, keep on new
+        const newModal = newCard.querySelector("#switchConfirm");
+        if (newModal) newModal.classList.remove("open");
+        const oldModal = oldCard.querySelector("#switchConfirm");
+        if (oldModal) {
+          oldModal.id = "";
+          oldModal.querySelectorAll("[id]").forEach((el) => (el.id = ""));
+        }
+        stage.appendChild(newCard);
+        // Animate: old slides out left, new slides in from right
+        void newCard.offsetWidth;
+        oldCard.classList.add("leaving");
+        newCard.classList.remove("entering");
+        // After the transition, retire the old card
+        setTimeout(() => {
+          oldCard.remove();
+          newCard.id = "taskCardInner";
+          // re-bind references to the new card
+          // (the delegated click handler uses closest, so buttons still work)
+        }, 420);
+      }
+
+      // Delegated button handlers
+      document.addEventListener("click", (e) => {
+        const id = e.target.closest("[id]")?.id;
+        if (id === "doBtn") {
+          e.preventDefault();
+          setTaskState("working");
+        } else if (id === "pauseBtn") {
+          e.preventDefault();
+          setTaskState("paused");
+        } else if (id === "resumeBtn") {
+          e.preventDefault();
+          setTaskState("working");
+        } else if (id === "doneBtn") {
+          e.preventDefault();
+          setTaskState("done");
+        } else if (id === "nextBtn") {
+          e.preventDefault();
+          taskIdx = (taskIdx + 1) % TASKS.length;
+          swapTask(TASKS[taskIdx]);
+          setTaskState("idle");
+        } else if (id === "switchBtn") {
+          e.preventDefault();
+          // Ask before switching — show the next task, confirm to swap
+          openSwitchConfirm();
+        } else if (id === "switchConfirmBtn") {
+          e.preventDefault();
+          closeSwitchConfirm();
+          taskIdx = (taskIdx + 1) % TASKS.length;
+          swapTask(TASKS[taskIdx]);
+          setTaskState("idle");
+        } else if (id === "switchCancelBtn") {
+          e.preventDefault();
+          closeSwitchConfirm();
+        }
+      });
+
+      // Esc closes the switch confirm (and pauses if working)
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const modal = document.getElementById("switchConfirm");
+          if (modal && modal.classList.contains("open")) {
+            closeSwitchConfirm();
+          }
+        }
+      });
+
+      // ---- Feeling tags ----
+      feelingsEl.addEventListener("click", (e) => {
+        const b = e.target.closest(".feeling");
+        if (!b) return;
+        b.classList.add("picked");
+        setTimeout(() => b.classList.remove("picked"), 1200);
+        pushEvent("feeling", FEELINGS[b.dataset.feeling]);
+      });
+
+      // ---- Inline note ----
+      function addNote() {
+        const v = noteField.value.trim();
+        if (!v) return;
+        pushEvent("note", v);
+        noteField.value = "";
+      }
+      noteAdd.addEventListener("click", addNote);
+      noteField.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addNote();
+        }
+      });
+
+      // ---- Session expand/collapse ----
+      sessionToggle.addEventListener("click", () => {
+        sessionEl.classList.toggle("open");
       });
 
       // ============================================================
@@ -1135,7 +1739,8 @@
           title: "Email Sarah re: Q3 invoice",
           meta: 'Due today <span class="sep">·</span> 15 min <span class="sep">·</span> Important',
           actions:
-            '<button class="btn btn-primary" id="doBtn">Do this</button><button class="btn btn-secondary">Not now</button>',
+            '<button class="btn btn-primary" id="doBtn">Do this</button>' +
+            switchBtnHTML(),
         },
         review: {
           ctx: "End of day · 7 finished",
@@ -1151,12 +1756,19 @@
         dialBtns.forEach((b) =>
           b.classList.toggle("active", b.dataset.mode === mode),
         );
+        // If we're mid-session (working/paused/done), DON'T clobber the task UI —
+        // the session is the source of truth. Only re-render context.
+        if (mode === "do" && taskState !== "idle") {
+          ctxLine.textContent = MODE_CONTENT.do.ctx;
+          return;
+        }
         const c = MODE_CONTENT[mode];
         ctxLine.textContent = c.ctx;
         taskTitle.textContent = c.title;
         taskMeta.innerHTML = c.meta;
         taskActions.innerHTML = c.actions;
-        // rebind handled by delegated listener — no per-mode bind needed
+        // hide working UI when switching to a non-do mode
+        if (mode !== "do") workingUI.style.display = "none";
       }
       dialBtns.forEach((b) =>
         b.addEventListener("click", () => setMode(b.dataset.mode)),
