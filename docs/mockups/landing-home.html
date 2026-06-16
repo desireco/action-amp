@@ -1,656 +1,1579 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ActionAmp — Easiest way to get into action</title>
-<style>
-  :root {
-    /* OKLCH-tinted neutrals, never pure gray. Cool tint, very low chroma. */
-    --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Roboto, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Easiest way to get into action</title>
+    <style>
+      :root {
+        /* OKLCH-tinted neutrals, never pure gray. Cool tint, very low chroma. */
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          "SF Pro Display", Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-    /* Teal family — Committed strategy: this carries the surface */
-    --teal: oklch(0.72 0.15 220);
-    --teal-bright: oklch(0.78 0.14 215);
-    --teal-cta: oklch(0.58 0.16 225);
-    --teal-cta-hover: oklch(0.50 0.16 228);
-    --teal-soft: oklch(0.95 0.04 220);
-    --teal-soft-strong: oklch(0.90 0.07 220);
-    --teal-tint-shadow: oklch(0.58 0.16 225 / 0.22);
+        /* Teal family — Committed strategy: this carries the surface */
+        --teal: oklch(0.72 0.15 220);
+        --teal-bright: oklch(0.78 0.14 215);
+        --teal-cta: oklch(0.58 0.16 225);
+        --teal-cta-hover: oklch(0.5 0.16 228);
+        --teal-soft: oklch(0.95 0.04 220);
+        --teal-soft-strong: oklch(0.9 0.07 220);
+        --teal-tint-shadow: oklch(0.58 0.16 225 / 0.22);
 
-    /* Amber — human emphasis, rare */
-    --amber: oklch(0.78 0.16 70);
-    --amber-text: oklch(0.45 0.13 65);
-    --amber-soft: oklch(0.95 0.06 75);
+        /* Amber — human emphasis, rare */
+        --amber: oklch(0.78 0.16 70);
+        --amber-text: oklch(0.45 0.13 65);
+        --amber-soft: oklch(0.95 0.06 75);
 
-    /* Cool-tinted neutral ramp (Things DNA) */
-    --bg: oklch(0.99 0.005 230);
-    --bg-soft: oklch(0.97 0.008 230);
-    --bg-deep: oklch(0.94 0.010 230);
-    --surface: oklch(1.00 0.003 230);
-    --surface-muted: oklch(0.96 0.008 230);
-    --surface-muted-2: oklch(0.93 0.010 230);
-    --border: oklch(0.91 0.010 230);
-    --border-strong: oklch(0.86 0.012 230);
-    --text: oklch(0.20 0.015 230);
-    --text-2: oklch(0.36 0.015 230);
-    --text-3: oklch(0.50 0.015 230);
-    --text-4: oklch(0.62 0.012 230);
+        /* Cool-tinted neutral ramp (Things DNA) */
+        --bg: oklch(0.99 0.005 230);
+        --bg-soft: oklch(0.97 0.008 230);
+        --bg-deep: oklch(0.94 0.01 230);
+        --surface: oklch(1 0.003 230);
+        --surface-muted: oklch(0.96 0.008 230);
+        --surface-muted-2: oklch(0.93 0.01 230);
+        --border: oklch(0.91 0.01 230);
+        --border-strong: oklch(0.86 0.012 230);
+        --text: oklch(0.2 0.015 230);
+        --text-2: oklch(0.36 0.015 230);
+        --text-3: oklch(0.5 0.015 230);
+        --text-4: oklch(0.62 0.012 230);
 
-    --shadow-sm: 0 1px 2px oklch(0.20 0.02 230 / 0.05);
-    --shadow-md: 0 2px 6px oklch(0.20 0.02 230 / 0.06), 0 12px 32px oklch(0.20 0.02 230 / 0.06);
-    --shadow-lg: 0 4px 12px oklch(0.20 0.02 230 / 0.06), 0 32px 80px oklch(0.20 0.02 230 / 0.10);
-    --hero-shadow: 0 2px 6px oklch(0.20 0.02 230 / 0.05), 0 40px 96px var(--teal-tint-shadow);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; scroll-behavior: smooth; }
-  body { font-family: var(--font); background: #0a0a0a; color: var(--text); line-height: 1.5; }
-  button, input { font-family: inherit; }
-  button { cursor: pointer; border: none; background: none; color: inherit; font-size: inherit; }
-  svg { display: block; }
-  a { color: var(--teal-cta); text-decoration: none; transition: color .15s; }
-  a:hover { color: var(--teal-cta-hover); text-decoration: underline; }
+        --shadow-sm: 0 1px 2px oklch(0.2 0.02 230 / 0.05);
+        --shadow-md:
+          0 2px 6px oklch(0.2 0.02 230 / 0.06),
+          0 12px 32px oklch(0.2 0.02 230 / 0.06);
+        --shadow-lg:
+          0 4px 12px oklch(0.2 0.02 230 / 0.06),
+          0 32px 80px oklch(0.2 0.02 230 / 0.1);
+        --hero-shadow:
+          0 2px 6px oklch(0.2 0.02 230 / 0.05),
+          0 40px 96px var(--teal-tint-shadow);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: var(--font);
+        background: #0a0a0a;
+        color: var(--text);
+        line-height: 1.5;
+      }
+      button,
+      input {
+        font-family: inherit;
+      }
+      button {
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+        font-size: inherit;
+      }
+      svg {
+        display: block;
+      }
+      a {
+        color: var(--teal-cta);
+        text-decoration: none;
+        transition: color 0.15s;
+      }
+      a:hover {
+        color: var(--teal-cta-hover);
+        text-decoration: underline;
+      }
 
-  /* workbench (preview frame around the page) */
-  .workbench {
-    min-height: 100vh;
-    padding: 32px 24px 64px;
-    display: flex; flex-direction: column; align-items: center; gap: 32px;
-  }
-  .wb-head { color: #888; text-align: center; }
-  .wb-head h1 { color: #ddd; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-  .wb-head p { font-size: 13px; }
-  .wb-row { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
-  .device-label { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; font-weight: 600; text-align: center; margin-bottom: 12px; }
-  .frame { background: var(--bg); border-radius: 16px; overflow: hidden; box-shadow: 0 32px 80px rgba(0,0,0,.5); position: relative; }
-  .frame.desktop { width: 1100px; border-radius: 12px; border: 1px solid #2a2a2a; }
-  .frame.mobile { width: 390px; border-radius: 48px; border: 11px solid #1a1a1a; box-shadow: 0 32px 80px rgba(0,0,0,.5), inset 0 0 0 2px #2a2a2a; }
-  .mobile-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 28px; background: #1a1a1a; border-radius: 0 0 18px 18px; z-index: 100; }
-  .desktop-chrome { background: #1f1f1f; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
-  .desktop-chrome .cdot { width: 11px; height: 11px; border-radius: 9999px; }
-  .desktop-chrome .cdot.r { background: #ff5f57; }
-  .desktop-chrome .cdot.y { background: #febc2e; }
-  .desktop-chrome .cdot.g { background: #28c840; }
-  .desktop-chrome .url { flex: 1; background: #2a2a2a; color: #999; font-size: 12px; padding: 4px 12px; border-radius: 9999px; margin-left: 16px; font-family: var(--font-mono); }
-  .scroll { max-height: 760px; overflow-y: auto; }
-  .scroll::-webkit-scrollbar { width: 8px; }
-  .scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,.15); border-radius: 9999px; }
+      /* workbench (preview frame around the page) */
+      .workbench {
+        min-height: 100vh;
+        padding: 32px 24px 64px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+      }
+      .wb-head {
+        color: #888;
+        text-align: center;
+      }
+      .wb-head h1 {
+        color: #ddd;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .wb-head p {
+        font-size: 13px;
+      }
+      .wb-row {
+        display: flex;
+        gap: 32px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .device-label {
+        color: #888;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 12px;
+      }
+      .frame {
+        background: var(--bg);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+        position: relative;
+      }
+      .frame.desktop {
+        width: 1100px;
+        border-radius: 12px;
+        border: 1px solid #2a2a2a;
+      }
+      .frame.mobile {
+        width: 390px;
+        border-radius: 48px;
+        border: 11px solid #1a1a1a;
+        box-shadow:
+          0 32px 80px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 2px #2a2a2a;
+      }
+      .mobile-notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 28px;
+        background: #1a1a1a;
+        border-radius: 0 0 18px 18px;
+        z-index: 100;
+      }
+      .desktop-chrome {
+        background: #1f1f1f;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .desktop-chrome .cdot {
+        width: 11px;
+        height: 11px;
+        border-radius: 9999px;
+      }
+      .desktop-chrome .cdot.r {
+        background: #ff5f57;
+      }
+      .desktop-chrome .cdot.y {
+        background: #febc2e;
+      }
+      .desktop-chrome .cdot.g {
+        background: #28c840;
+      }
+      .desktop-chrome .url {
+        flex: 1;
+        background: #2a2a2a;
+        color: #999;
+        font-size: 12px;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        margin-left: 16px;
+        font-family: var(--font-mono);
+      }
+      .scroll {
+        max-height: 760px;
+        overflow-y: auto;
+      }
+      .scroll::-webkit-scrollbar {
+        width: 8px;
+      }
+      .scroll::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 9999px;
+      }
 
-  /* ============================================================
+      /* ============================================================
      PAGE
      ============================================================ */
-  .page { background: var(--bg); color: var(--text); }
+      .page {
+        background: var(--bg);
+        color: var(--text);
+      }
 
-  /* nav — minimal, no CTA button (was the mobile crowding cause) */
-  .nav {
-    display: flex; align-items: center; gap: 24px;
-    padding: 20px 40px;
-    background: oklch(0.99 0.005 230 / 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    position: sticky; top: 0; z-index: 50;
-    border-bottom: 1px solid var(--border);
-  }
-  .nav .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
-  .brand-mark {
-    width: 28px; height: 28px; border-radius: 8px;
-    background: linear-gradient(135deg, var(--teal), var(--teal-bright));
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 12px var(--teal-tint-shadow);
-  }
-  .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.015em; }
-  .nav-links { display: flex; gap: 28px; }
-  .nav-link { font-size: 14px; color: var(--text-3); font-weight: 500; }
-  .nav-link:hover { color: var(--text); text-decoration: none; }
+      /* nav — minimal, no CTA button (was the mobile crowding cause) */
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 20px 40px;
+        background: oklch(0.99 0.005 230 / 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        border-bottom: 1px solid var(--border);
+      }
+      .nav .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-right: auto;
+      }
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--teal), var(--teal-bright));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px var(--teal-tint-shadow);
+      }
+      .brand-name {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+      }
+      .nav-links {
+        display: flex;
+        gap: 28px;
+      }
+      .nav-link {
+        font-size: 14px;
+        color: var(--text-3);
+        font-weight: 500;
+      }
+      .nav-link:hover {
+        color: var(--text);
+        text-decoration: none;
+      }
 
-  /* ============ HERO — asymmetric, layered depth ============ */
-  /* The wedge visualized: a chaotic list recedes into the background;
+      /* ============ HERO — asymmetric, layered depth ============ */
+      /* The wedge visualized: a chaotic list recedes into the background;
      a single What Now card rises crisp in front. */
-  .hero {
-    position: relative;
-    padding: 120px 56px 140px;
-    overflow: hidden;
-    background:
-      radial-gradient(ellipse 80% 60% at 70% 30%, var(--teal-soft) 0%, transparent 60%),
-      var(--bg);
-  }
-  .hero-grid {
-    max-width: 1180px; margin: 0 auto;
-    display: grid; grid-template-columns: 1.05fr 1fr; gap: 64px; align-items: center;
-    position: relative; z-index: 2;
-  }
-  .hero-eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--teal-cta);
-    background: var(--teal-soft); padding: 6px 14px; border-radius: 9999px;
-    margin-bottom: 28px;
-  }
-  .hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--teal); }
-  .hero h1 {
-    font-size: 76px; font-weight: 800; letter-spacing: -.035em; line-height: 0.98;
-    color: var(--text); margin-bottom: 24px;
-  }
-  .hero h1 .light { font-weight: 300; color: var(--text-3); }
-  .hero h1 .accent { color: var(--teal-cta); font-style: italic; font-weight: 700; }
-  .hero-sub {
-    font-size: 20px; color: var(--text-3); line-height: 1.55; max-width: 30ch;
-    margin-bottom: 32px;
-  }
-  .hero-meta {
-    display: flex; gap: 28px; flex-wrap: wrap;
-    font-size: 13px; color: var(--text-4);
-  }
-  .hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
-  .hero-meta svg { color: var(--teal-cta); }
+      .hero {
+        position: relative;
+        padding: 120px 56px 140px;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            ellipse 80% 60% at 70% 30%,
+            var(--teal-soft) 0%,
+            transparent 60%
+          ),
+          var(--bg);
+      }
+      .hero-grid {
+        max-width: 1180px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1.05fr 1fr;
+        gap: 64px;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+      }
+      .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--teal-cta);
+        background: var(--teal-soft);
+        padding: 6px 14px;
+        border-radius: 9999px;
+        margin-bottom: 28px;
+      }
+      .hero-eyebrow .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: var(--teal);
+      }
+      .hero h1 {
+        font-size: 76px;
+        font-weight: 800;
+        letter-spacing: -0.035em;
+        line-height: 0.98;
+        color: var(--text);
+        margin-bottom: 24px;
+      }
+      .hero h1 .light {
+        font-weight: 300;
+        color: var(--text-3);
+      }
+      .hero h1 .accent {
+        color: var(--teal-cta);
+        font-style: italic;
+        font-weight: 700;
+      }
+      .hero-sub {
+        font-size: 20px;
+        color: var(--text-3);
+        line-height: 1.55;
+        max-width: 30ch;
+        margin-bottom: 32px;
+      }
+      .hero-meta {
+        display: flex;
+        gap: 28px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        color: var(--text-4);
+      }
+      .hero-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .hero-meta svg {
+        color: var(--teal-cta);
+      }
 
-  /* the receding chaotic list (background depth) */
-  .chaos {
-    position: absolute; top: 80px; right: -80px; width: 420px;
-    z-index: 1; opacity: 0.5;
-    transform: rotate(4deg);
-    filter: blur(0.5px);
-    pointer-events: none;
-  }
-  .chaos-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 16px; margin-bottom: 6px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px;
-    font-size: 13px; color: var(--text-4);
-    box-shadow: var(--shadow-sm);
-  }
-  .chaos-row:nth-child(2) { margin-left: 24px; opacity: 0.85; }
-  .chaos-row:nth-child(3) { margin-left: -16px; opacity: 0.7; }
-  .chaos-row:nth-child(4) { margin-left: 32px; opacity: 0.55; }
-  .chaos-row:nth-child(5) { margin-left: 8px; opacity: 0.4; }
-  .chaos-row:nth-child(6) { margin-left: 40px; opacity: 0.25; }
-  .chaos-row .c-box { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--border-strong); flex-shrink: 0; }
+      /* the receding chaotic list (background depth) */
+      .chaos {
+        position: absolute;
+        top: 80px;
+        right: -80px;
+        width: 420px;
+        z-index: 1;
+        opacity: 0.5;
+        transform: rotate(4deg);
+        filter: blur(0.5px);
+        pointer-events: none;
+      }
+      .chaos-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        margin-bottom: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 13px;
+        color: var(--text-4);
+        box-shadow: var(--shadow-sm);
+      }
+      .chaos-row:nth-child(2) {
+        margin-left: 24px;
+        opacity: 0.85;
+      }
+      .chaos-row:nth-child(3) {
+        margin-left: -16px;
+        opacity: 0.7;
+      }
+      .chaos-row:nth-child(4) {
+        margin-left: 32px;
+        opacity: 0.55;
+      }
+      .chaos-row:nth-child(5) {
+        margin-left: 8px;
+        opacity: 0.4;
+      }
+      .chaos-row:nth-child(6) {
+        margin-left: 40px;
+        opacity: 0.25;
+      }
+      .chaos-row .c-box {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        border: 1.5px solid var(--border-strong);
+        flex-shrink: 0;
+      }
 
-  /* the What Now card (foreground, crisp) */
-  .wn-wrap { position: relative; z-index: 3; display: flex; justify-content: center; }
-  .wn-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 22px; padding: 44px 36px;
-    box-shadow: var(--hero-shadow);
-    text-align: center; width: 100%; max-width: 380px;
-    position: relative;
-  }
-  .wn-ctx {
-    display: inline-flex; align-items: center; gap: 7px;
-    font-size: 12px; color: var(--text-3); font-weight: 500;
-    background: var(--surface-muted); padding: 5px 12px; border-radius: 9999px;
-    margin-bottom: 32px;
-  }
-  .wn-ctx .dot { width: 5px; height: 5px; border-radius: 9999px; background: var(--teal); }
-  .completion {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; border-radius: 9999px;
-    border: 2.5px solid var(--border-strong); margin-bottom: 26px;
-    position: relative;
-  }
-  .completion::before {
-    content: ""; position: absolute; inset: -4px; border-radius: 9999px;
-    border: 2px solid var(--teal); opacity: 0.5;
-    animation: halo 2.6s cubic-bezier(.4,0,.2,1) infinite;
-  }
-  @keyframes halo {
-    0% { transform: scale(1); opacity: 0.5; }
-    100% { transform: scale(1.9); opacity: 0; }
-  }
-  .wn-title { font-size: 24px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 8px; }
-  .wn-meta { font-size: 13px; color: var(--text-3); margin-bottom: 16px; }
-  .wn-why {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 12px; font-weight: 600;
-    background: var(--amber-soft); color: var(--amber-text);
-    padding: 4px 10px; border-radius: 6px; margin-bottom: 28px;
-  }
-  .wn-actions { display: flex; gap: 8px; justify-content: center; }
-  .btn {
-    font-size: 13.5px; font-weight: 600; padding: 10px 20px; border-radius: 9px;
-    border: 1px solid transparent; transition: all .15s;
-  }
-  .btn-primary { background: var(--teal-cta); color: white; box-shadow: 0 2px 8px var(--teal-tint-shadow); }
-  .btn-primary:hover { background: var(--teal-cta-hover); }
-  .btn-ghost { background: var(--surface); color: var(--text-2); border-color: var(--border-strong); }
-  .btn-ghost:hover { background: var(--surface-muted); }
+      /* the What Now card (foreground, crisp) */
+      .wn-wrap {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        justify-content: center;
+      }
+      .wn-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        padding: 44px 36px;
+        box-shadow: var(--hero-shadow);
+        text-align: center;
+        width: 100%;
+        max-width: 380px;
+        position: relative;
+      }
+      .wn-ctx {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12px;
+        color: var(--text-3);
+        font-weight: 500;
+        background: var(--surface-muted);
+        padding: 5px 12px;
+        border-radius: 9999px;
+        margin-bottom: 32px;
+      }
+      .wn-ctx .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 9999px;
+        background: var(--teal);
+      }
+      .completion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 9999px;
+        border: 2.5px solid var(--border-strong);
+        margin-bottom: 26px;
+        position: relative;
+        cursor: pointer;
+        transition: transform .2s cubic-bezier(.4,0,.2,1), border-color .25s ease, background .25s ease;
+      }
+      .completion:hover { transform: scale(1.08); border-color: var(--teal); }
+      .completion svg.check {
+        color: white; width: 15px; height: 15px;
+        opacity: 0; transform: scale(.3);
+        transition: opacity .14s ease .08s, transform .26s cubic-bezier(.34,1.56,.64,1) .08s;
+      }
+      .completion.filled {
+        background: var(--teal);
+        border-color: var(--teal);
+        box-shadow: 0 8px 20px var(--teal-tint-shadow);
+      }
+      .completion.filled::before { animation: none; opacity: 0; }
+      .completion.filled svg.check { opacity: 1; transform: scale(1); }
+      /* celebratory burst when filled */
+      .completion.burst { animation: burst .55s cubic-bezier(.2,.7,.3,1) both; }
+      @keyframes burst {
+        0%   { transform: scale(1); }
+        35%  { transform: scale(1.25); }
+        100% { transform: scale(1); }
+      }
+      .completion::before {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 9999px;
+        border: 2px solid var(--teal);
+        opacity: 0.5;
+        animation: halo 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+      @keyframes halo {
+        0% {
+          transform: scale(1);
+          opacity: 0.5;
+        }
+        100% {
+          transform: scale(1.9);
+          opacity: 0;
+        }
+      }
+      .wn-title {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+      }
+      .wn-meta {
+        font-size: 13px;
+        color: var(--text-3);
+        margin-bottom: 16px;
+      }
+      .wn-why {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        background: var(--amber-soft);
+        color: var(--amber-text);
+        padding: 4px 10px;
+        border-radius: 6px;
+        margin-bottom: 28px;
+      }
+      .wn-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+      }
+      .wn-actions .btn-primary { transition: background .2s ease, transform .15s ease, box-shadow .2s ease; }
+      .wn-actions .btn-primary.done {
+        background: var(--teal); pointer-events: none;
+      }
+      .btn {
+        font-size: 13.5px;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 9px;
+        border: 1px solid transparent;
+        transition: all 0.15s;
+      }
+      .btn-primary {
+        background: var(--teal-cta);
+        color: white;
+        box-shadow: 0 2px 8px var(--teal-tint-shadow);
+      }
+      .btn-primary:hover {
+        background: var(--teal-cta-hover);
+      }
+      .btn-ghost {
+        background: var(--surface);
+        color: var(--text-2);
+        border-color: var(--border-strong);
+      }
+      .btn-ghost:hover {
+        background: var(--surface-muted);
+      }
 
-  /* ============ SECTIONS — varied spacing for rhythm ============ */
-  .section { padding: 0 56px; max-width: 1180px; margin: 0 auto; }
-  .eyebrow {
-    font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--teal-cta); margin-bottom: 18px;
-  }
-  .display {
-    font-size: 56px; font-weight: 800; letter-spacing: -.03em; line-height: 1.02;
-    color: var(--text); max-width: 22ch; margin-bottom: 24px;
-  }
-  .display .light { font-weight: 300; color: var(--text-3); }
-  .lede { font-size: 19px; color: var(--text-3); line-height: 1.6; max-width: 56ch; margin-bottom: 14px; }
-  .lede b { color: var(--text-2); font-weight: 600; }
+      /* ============ SECTIONS — varied spacing for rhythm ============ */
+      .section {
+        padding: 0 56px;
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--teal-cta);
+        margin-bottom: 18px;
+      }
+      .display {
+        font-size: 56px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.02;
+        color: var(--text);
+        max-width: 22ch;
+        margin-bottom: 24px;
+      }
+      .display .light {
+        font-weight: 300;
+        color: var(--text-3);
+      }
+      .lede {
+        font-size: 19px;
+        color: var(--text-3);
+        line-height: 1.6;
+        max-width: 56ch;
+        margin-bottom: 14px;
+      }
+      .lede b {
+        color: var(--text-2);
+        font-weight: 600;
+      }
 
-  /* Problem section — extra airy, off-center tension */
-  .problem { padding-top: 160px; padding-bottom: 120px; }
-  .problem .display { max-width: 18ch; }
+      /* Problem section — extra airy, off-center tension */
+      .problem {
+        padding-top: 160px;
+        padding-bottom: 120px;
+      }
+      .problem .display {
+        max-width: 18ch;
+      }
 
-  /* How it works — connected horizontal flow, not identical cards */
-  .how { padding-top: 64px; padding-bottom: 160px; }
-  .flow {
-    margin-top: 56px;
-    display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0; align-items: stretch;
-  }
-  .flow-step {
-    padding: 32px 24px 0;
-    position: relative;
-  }
-  .flow-step:first-child { padding-left: 0; }
-  .flow-step:last-child { padding-right: 0; }
-  .flow-num {
-    font-family: var(--font-mono);
-    font-size: 13px; font-weight: 700;
-    color: var(--teal-cta); margin-bottom: 16px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .flow-num::before {
-    content: ""; width: 28px; height: 1.5px; background: var(--teal);
-  }
-  .flow-step h3 {
-    font-size: 24px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 10px;
-  }
-  .flow-step p { font-size: 15px; color: var(--text-3); line-height: 1.55; }
-  .flow-arrow {
-    display: flex; align-items: center; justify-content: center;
-    padding-top: 32px;
-    color: var(--border-strong);
-  }
+      /* How it works — connected horizontal flow, not identical cards */
+      .how {
+        padding-top: 64px;
+        padding-bottom: 160px;
+      }
+      .flow {
+        margin-top: 56px;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 0;
+        align-items: stretch;
+      }
+      .flow-step {
+        padding: 32px 24px 0;
+        position: relative;
+      }
+      .flow-step:first-child {
+        padding-left: 0;
+      }
+      .flow-step:last-child {
+        padding-right: 0;
+      }
+      .flow-num {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--teal-cta);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .flow-num::before {
+        content: "";
+        width: 28px;
+        height: 1.5px;
+        background: var(--teal);
+      }
+      .flow-step h3 {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 10px;
+      }
+      .flow-step p {
+        font-size: 15px;
+        color: var(--text-3);
+        line-height: 1.55;
+      }
+      .flow-arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-top: 32px;
+        color: var(--border-strong);
+      }
 
-  /* Soul — large statement, lots of air */
-  .soul {
-    padding: 180px 56px; text-align: center;
-    background:
-      radial-gradient(ellipse 50% 50% at 50% 50%, var(--teal-soft) 0%, transparent 70%),
-      var(--bg);
-  }
-  .soul-statement {
-    font-size: 64px; font-weight: 300; letter-spacing: -.025em; line-height: 1.08;
-    max-width: 18ch; margin: 0 auto 32px;
-    color: var(--text);
-  }
-  .soul-statement b { font-weight: 800; color: var(--teal-cta); font-style: italic; }
-  .soul-sub { font-size: 18px; color: var(--text-3); max-width: 50ch; margin: 0 auto; line-height: 1.55; }
+      /* Soul — large statement, lots of air */
+      .soul {
+        padding: 180px 56px;
+        text-align: center;
+        background:
+          radial-gradient(
+            ellipse 50% 50% at 50% 50%,
+            var(--teal-soft) 0%,
+            transparent 70%
+          ),
+          var(--bg);
+      }
+      .soul-statement {
+        font-size: 64px;
+        font-weight: 300;
+        letter-spacing: -0.025em;
+        line-height: 1.08;
+        max-width: 18ch;
+        margin: 0 auto 32px;
+        color: var(--text);
+      }
+      .soul-statement b {
+        font-weight: 800;
+        color: var(--teal-cta);
+        font-style: italic;
+      }
+      .soul-sub {
+        font-size: 18px;
+        color: var(--text-3);
+        max-width: 50ch;
+        margin: 0 auto;
+        line-height: 1.55;
+      }
 
-  /* Methodology — dense, credibility-only */
-  .method { padding-top: 120px; padding-bottom: 120px; }
-  .method .display { font-size: 44px; max-width: 24ch; }
-  .badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 32px; }
-  .badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: var(--surface); border: 1px solid var(--border);
-    padding: 9px 16px; border-radius: 9999px;
-    font-size: 13px; font-weight: 500; color: var(--text-2);
-    box-shadow: var(--shadow-sm);
-  }
-  .badge .b { color: var(--teal-cta); font-weight: 700; }
+      /* Methodology — dense, credibility-only */
+      .method {
+        padding-top: 120px;
+        padding-bottom: 120px;
+      }
+      .method .display {
+        font-size: 44px;
+        max-width: 24ch;
+      }
+      .badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 32px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 9px 16px;
+        border-radius: 9999px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-2);
+        box-shadow: var(--shadow-sm);
+      }
+      .badge .b {
+        color: var(--teal-cta);
+        font-weight: 700;
+      }
 
-  /* Craft — 3 rows, varied widths */
-  .craft { padding-top: 64px; padding-bottom: 160px; }
-  .craft-rows { margin-top: 48px; max-width: 760px; }
-  .craft-row {
-    display: grid; grid-template-columns: 48px 1fr; gap: 20px; align-items: start;
-    padding: 28px 0; border-bottom: 1px solid var(--border);
-  }
-  .craft-row:first-child { padding-top: 0; }
-  .craft-row:last-child { border-bottom: none; }
-  .craft-icon {
-    width: 44px; height: 44px; border-radius: 11px;
-    background: var(--teal-soft); color: var(--teal-cta);
-    display: flex; align-items: center; justify-content: center;
-  }
-  .craft-row h4 { font-size: 19px; font-weight: 700; margin-bottom: 4px; letter-spacing: -.01em; }
-  .craft-row p { font-size: 15px; color: var(--text-3); line-height: 1.5; max-width: 56ch; }
+      /* Craft — 3 rows, varied widths */
+      .craft {
+        padding-top: 64px;
+        padding-bottom: 160px;
+      }
+      .craft-rows {
+        margin-top: 48px;
+        max-width: 760px;
+      }
+      .craft-row {
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        gap: 20px;
+        align-items: start;
+        padding: 28px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .craft-row:first-child {
+        padding-top: 0;
+      }
+      .craft-row:last-child {
+        border-bottom: none;
+      }
+      .craft-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 11px;
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .craft-row h4 {
+        font-size: 19px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        letter-spacing: -0.01em;
+      }
+      .craft-row p {
+        font-size: 15px;
+        color: var(--text-3);
+        line-height: 1.5;
+        max-width: 56ch;
+      }
 
-  /* FAQ */
-  .faq-section { padding-top: 64px; padding-bottom: 120px; max-width: 760px; }
-  .faq-list { margin-top: 40px; }
-  .faq-item { padding: 22px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
-  .faq-item:first-child { border-top: 1px solid var(--border); }
-  .faq-q { font-size: 18px; font-weight: 600; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
-  .faq-q::after { content: "+"; color: var(--text-4); font-size: 22px; font-weight: 300; transition: transform .2s; }
-  .faq-item.open .faq-q::after { transform: rotate(45deg); }
-  .faq-a { font-size: 15px; color: var(--text-3); line-height: 1.6; margin-top: 0; max-height: 0; overflow: hidden; transition: max-height .25s ease, margin-top .25s ease; }
-  .faq-item.open .faq-a { max-height: 200px; margin-top: 12px; }
+      /* FAQ */
+      .faq-section {
+        padding-top: 64px;
+        padding-bottom: 120px;
+        max-width: 760px;
+      }
+      .faq-list {
+        margin-top: 40px;
+      }
+      .faq-item {
+        padding: 22px 0;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+      }
+      .faq-item:first-child {
+        border-top: 1px solid var(--border);
+      }
+      .faq-q {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .faq-q::after {
+        content: "+";
+        color: var(--text-4);
+        font-size: 22px;
+        font-weight: 300;
+        transition: transform 0.2s;
+      }
+      .faq-item.open .faq-q::after {
+        transform: rotate(45deg);
+      }
+      .faq-a {
+        font-size: 15px;
+        color: var(--text-3);
+        line-height: 1.6;
+        margin-top: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition:
+          max-height 0.25s ease,
+          margin-top 0.25s ease;
+      }
+      .faq-item.open .faq-a {
+        max-height: 200px;
+        margin-top: 12px;
+      }
 
-  /* Final section — brand mark large, confident quiet close */
-  .final {
-    padding: 160px 56px 120px; text-align: center;
-    background: linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
-  }
-  .final-mark {
-    width: 72px; height: 72px; border-radius: 18px;
-    background: linear-gradient(135deg, var(--teal), var(--teal-bright));
-    display: inline-flex; align-items: center; justify-content: center;
-    margin-bottom: 36px;
-    box-shadow: 0 12px 32px var(--teal-tint-shadow);
-  }
-  .final-mark svg { color: white; width: 36px; height: 36px; }
-  .final h2 {
-    font-size: 48px; font-weight: 300; letter-spacing: -.025em; line-height: 1.1;
-    max-width: 16ch; margin: 0 auto 18px;
-  }
-  .final h2 b { font-weight: 800; color: var(--teal-cta); font-style: italic; }
-  .final p { font-size: 16px; color: var(--text-4); margin-bottom: 24px; }
-  .final .follow-link {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 15px; font-weight: 600; color: var(--teal-cta);
-  }
-  .final .follow-link:hover { color: var(--teal-cta-hover); }
+      /* Final section — brand mark large, confident quiet close */
+      .final {
+        padding: 160px 56px 120px;
+        text-align: center;
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+      }
+      .final-mark {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, var(--teal), var(--teal-bright));
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 36px;
+        box-shadow: 0 12px 32px var(--teal-tint-shadow);
+      }
+      .final-mark svg {
+        color: white;
+        width: 36px;
+        height: 36px;
+      }
+      .final h2 {
+        font-size: 48px;
+        font-weight: 300;
+        letter-spacing: -0.025em;
+        line-height: 1.1;
+        max-width: 16ch;
+        margin: 0 auto 18px;
+      }
+      .final h2 b {
+        font-weight: 800;
+        color: var(--teal-cta);
+        font-style: italic;
+      }
+      .final p {
+        font-size: 16px;
+        color: var(--text-4);
+        margin-bottom: 24px;
+      }
+      .final .follow-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--teal-cta);
+      }
+      .final .follow-link:hover {
+        color: var(--teal-cta-hover);
+      }
 
-  /* Footer */
-  .footer {
-    padding: 40px 56px; background: var(--bg-soft); border-top: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
-  }
-  .footer .brand { display: flex; align-items: center; gap: 9px; }
-  .footer-links { display: flex; gap: 22px; }
-  .footer-links a { font-size: 13px; color: var(--text-3); }
-  .footer-links a:hover { color: var(--text-2); text-decoration: none; }
-  .footer-copy { font-size: 12px; color: var(--text-4); }
+      /* Footer */
+      .footer {
+        padding: 40px 56px;
+        background: var(--bg-soft);
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .footer .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .footer-links {
+        display: flex;
+        gap: 22px;
+      }
+      .footer-links a {
+        font-size: 13px;
+        color: var(--text-3);
+      }
+      .footer-links a:hover {
+        color: var(--text-2);
+        text-decoration: none;
+      }
+      .footer-copy {
+        font-size: 12px;
+        color: var(--text-4);
+      }
 
-  /* ============================================================
+      /* ============================================================
      MOBILE OVERRIDES — single column, tighter, no nav CTA
      ============================================================ */
-  .frame.mobile .nav { padding: 16px 20px; gap: 12px; }
-  .frame.mobile .nav-links { display: none; }
-  .frame.mobile .brand-name { font-size: 15px; }
-  .frame.mobile .brand-mark { width: 24px; height: 24px; }
+      .frame.mobile .nav {
+        padding: 16px 20px;
+        gap: 12px;
+      }
+      .frame.mobile .nav-links {
+        display: none;
+      }
+      .frame.mobile .brand-name {
+        font-size: 15px;
+      }
+      .frame.mobile .brand-mark {
+        width: 24px;
+        height: 24px;
+      }
 
-  .frame.mobile .hero { padding: 56px 22px 72px; background: radial-gradient(ellipse 80% 50% at 50% 20%, var(--teal-soft) 0%, transparent 60%), var(--bg); }
-  .frame.mobile .hero-grid { grid-template-columns: 1fr; gap: 48px; }
-  .frame.mobile .hero h1 { font-size: 44px; }
-  .frame.mobile .hero-sub { font-size: 16px; }
-  .frame.mobile .hero-meta { gap: 16px; font-size: 12px; }
-  .frame.mobile .chaos { display: none; } /* on mobile, the list fades to nothing — pure focus */
-  .frame.mobile .wn-card { padding: 32px 24px; }
-  .frame.mobile .wn-title { font-size: 20px; }
+      .frame.mobile .hero {
+        padding: 56px 22px 72px;
+        background:
+          radial-gradient(
+            ellipse 80% 50% at 50% 20%,
+            var(--teal-soft) 0%,
+            transparent 60%
+          ),
+          var(--bg);
+      }
+      .frame.mobile .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+      .frame.mobile .hero h1 {
+        font-size: 44px;
+      }
+      .frame.mobile .hero-sub {
+        font-size: 16px;
+      }
+      .frame.mobile .hero-meta {
+        gap: 16px;
+        font-size: 12px;
+      }
+      .frame.mobile .chaos {
+        display: none;
+      } /* on mobile, the list fades to nothing — pure focus */
+      .frame.mobile .wn-card {
+        padding: 32px 24px;
+      }
+      .frame.mobile .wn-title {
+        font-size: 20px;
+      }
 
-  .frame.mobile .section { padding: 0 22px; }
-  .frame.mobile .display { font-size: 34px; }
-  .frame.mobile .lede { font-size: 16px; }
-  .frame.mobile .problem { padding-top: 88px; padding-bottom: 72px; }
-  .frame.mobile .how { padding-top: 32px; padding-bottom: 88px; }
-  .frame.mobile .flow { grid-template-columns: 1fr; gap: 8px; margin-top: 36px; }
-  .frame.mobile .flow-step { padding: 24px 0 0; border-left: 1.5px solid var(--border); padding-left: 20px; }
-  .frame.mobile .flow-step:first-child { padding-left: 20px; }
-  .frame.mobile .flow-arrow { display: none; }
-  .frame.mobile .flow-step h3 { font-size: 19px; }
+      .frame.mobile .section {
+        padding: 0 22px;
+      }
+      .frame.mobile .display {
+        font-size: 34px;
+      }
+      .frame.mobile .lede {
+        font-size: 16px;
+      }
+      .frame.mobile .problem {
+        padding-top: 88px;
+        padding-bottom: 72px;
+      }
+      .frame.mobile .how {
+        padding-top: 32px;
+        padding-bottom: 88px;
+      }
+      .frame.mobile .flow {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 36px;
+      }
+      .frame.mobile .flow-step {
+        padding: 24px 0 0;
+        border-left: 1.5px solid var(--border);
+        padding-left: 20px;
+      }
+      .frame.mobile .flow-step:first-child {
+        padding-left: 20px;
+      }
+      .frame.mobile .flow-arrow {
+        display: none;
+      }
+      .frame.mobile .flow-step h3 {
+        font-size: 19px;
+      }
 
-  .frame.mobile .soul { padding: 96px 22px; }
-  .frame.mobile .soul-statement { font-size: 36px; }
-  .frame.mobile .soul-sub { font-size: 16px; }
+      .frame.mobile .soul {
+        padding: 96px 22px;
+      }
+      .frame.mobile .soul-statement {
+        font-size: 36px;
+      }
+      .frame.mobile .soul-sub {
+        font-size: 16px;
+      }
 
-  .frame.mobile .method { padding-top: 72px; padding-bottom: 72px; }
-  .frame.mobile .method .display { font-size: 30px; }
+      .frame.mobile .method {
+        padding-top: 72px;
+        padding-bottom: 72px;
+      }
+      .frame.mobile .method .display {
+        font-size: 30px;
+      }
 
-  .frame.mobile .craft { padding-top: 32px; padding-bottom: 88px; }
-  .frame.mobile .craft-row { grid-template-columns: 36px 1fr; gap: 14px; padding: 22px 0; }
-  .frame.mobile .craft-icon { width: 36px; height: 36px; }
-  .frame.mobile .craft-row h4 { font-size: 16px; }
-  .frame.mobile .craft-row p { font-size: 14px; }
+      .frame.mobile .craft {
+        padding-top: 32px;
+        padding-bottom: 88px;
+      }
+      .frame.mobile .craft-row {
+        grid-template-columns: 36px 1fr;
+        gap: 14px;
+        padding: 22px 0;
+      }
+      .frame.mobile .craft-icon {
+        width: 36px;
+        height: 36px;
+      }
+      .frame.mobile .craft-row h4 {
+        font-size: 16px;
+      }
+      .frame.mobile .craft-row p {
+        font-size: 14px;
+      }
 
-  .frame.mobile .faq-section { padding-top: 32px; padding-bottom: 72px; }
-  .frame.mobile .faq-q { font-size: 16px; }
-  .frame.mobile .faq-a { font-size: 14px; }
+      .frame.mobile .faq-section {
+        padding-top: 32px;
+        padding-bottom: 72px;
+      }
+      .frame.mobile .faq-q {
+        font-size: 16px;
+      }
+      .frame.mobile .faq-a {
+        font-size: 14px;
+      }
 
-  .frame.mobile .final { padding: 96px 22px 72px; }
-  .frame.mobile .final-mark { width: 56px; height: 56px; }
-  .frame.mobile .final h2 { font-size: 32px; }
+      .frame.mobile .final {
+        padding: 96px 22px 72px;
+      }
+      .frame.mobile .final-mark {
+        width: 56px;
+        height: 56px;
+      }
+      .frame.mobile .final h2 {
+        font-size: 32px;
+      }
 
-  .frame.mobile .footer { padding: 28px 22px; flex-direction: column; align-items: flex-start; }
-</style>
-</head>
-<body>
-
-<div class="workbench">
-  <div class="wb-head">
-    <h1>ActionAmp — Home (mobile + desktop, polished)</h1>
-    <p>Waitlist removed · pure signpost · Committed color strategy · asymmetric hero with depth</p>
-  </div>
-
-  <div class="wb-row">
-
-    <!-- ============ MOBILE ============ -->
-    <div>
-      <div class="device-label">Mobile · 390px</div>
-      <div class="frame mobile">
-        <div class="mobile-notch"></div>
-        <div class="scroll"><div class="page" id="pageMobile"></div></div>
+      .frame.mobile .footer {
+        padding: 28px 22px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="workbench">
+      <div class="wb-head">
+        <h1>ActionAmp — Home (mobile + desktop, polished)</h1>
+        <p>
+          Waitlist removed · pure signpost · Committed color strategy ·
+          asymmetric hero with depth
+        </p>
       </div>
-    </div>
 
-    <!-- ============ DESKTOP ============ -->
-    <div>
-      <div class="device-label">Desktop · 1100px</div>
-      <div class="frame desktop">
-        <div class="desktop-chrome">
-          <span class="cdot r"></span><span class="cdot y"></span><span class="cdot g"></span>
-          <span class="url">actionamp.com</span>
+      <div class="wb-row">
+        <!-- ============ MOBILE ============ -->
+        <div>
+          <div class="device-label">Mobile · 390px</div>
+          <div class="frame mobile">
+            <div class="mobile-notch"></div>
+            <div class="scroll"><div class="page" id="pageMobile"></div></div>
+          </div>
         </div>
-        <div class="scroll"><div class="page" id="pageDesktop"></div></div>
-      </div>
-    </div>
 
-  </div>
-</div>
-
-<!-- Page template (shared). Cloned into both frames via JS to keep one source of truth. -->
-<template id="pageTemplate">
-  <nav class="nav">
-    <div class="brand">
-      <div class="brand-mark"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <span class="brand-name">ActionAmp</span>
-    </div>
-    <div class="nav-links">
-      <a class="nav-link" href="#how">How it works</a>
-      <a class="nav-link" href="#soul">Why</a>
-      <a class="nav-link" href="#method">Methodology</a>
-      <a class="nav-link" href="#faq">FAQ</a>
-    </div>
-    <span style="width:0"></span>
-  </nav>
-
-  <section class="hero">
-    <!-- the receding list -->
-    <div class="chaos">
-      <div class="chaos-row"><span class="c-box"></span> Email Sarah re: Q3 invoice</div>
-      <div class="chaos-row"><span class="c-box"></span> Review PR #284</div>
-      <div class="chaos-row"><span class="c-box"></span> Reply to Marco</div>
-      <div class="chaos-row"><span class="c-box"></span> Fix the login bug</div>
-      <div class="chaos-row"><span class="c-box"></span> Draft Q3 plan</div>
-      <div class="chaos-row"><span class="c-box"></span> Prep 1:1 notes</div>
-    </div>
-
-    <div class="hero-grid">
-      <div>
-        <span class="hero-eyebrow"><span class="dot"></span> A focus app, not a todo app</span>
-        <h1><span class="light">Easiest way</span><br>to get <span class="accent">into action</span>.</h1>
-        <p class="hero-sub">Every other app opens to your list. ActionAmp opens to the <b>one thing</b> to do next.</p>
-        <div class="hero-meta">
-          <span><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 6h2M9 6h2M5 9h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Keyboard-first</span>
-          <span><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Calm by default</span>
-          <span><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8c0-3 2-6 6-6s6 3 6 6-2 6-6 6-6-3-6-6z" stroke="currentColor" stroke-width="1.5"/></svg> GTD-compatible</span>
-        </div>
-      </div>
-
-      <div class="wn-wrap">
-        <div class="wn-card">
-          <div class="wn-ctx"><span class="dot"></span> Right now · 30 min</div>
-          <div class="completion"></div>
-          <div class="wn-title">Email Sarah re: Q3 invoice</div>
-          <div class="wn-meta">Due today · 15 min</div>
-          <div class="wn-why">★ Important · the reason this is next</div>
-          <div class="wn-actions">
-            <button class="btn btn-primary">Do this</button>
-            <button class="btn btn-ghost">Switch</button>
+        <!-- ============ DESKTOP ============ -->
+        <div>
+          <div class="device-label">Desktop · 1100px</div>
+          <div class="frame desktop">
+            <div class="desktop-chrome">
+              <span class="cdot r"></span><span class="cdot y"></span
+              ><span class="cdot g"></span>
+              <span class="url">actionamp.com</span>
+            </div>
+            <div class="scroll"><div class="page" id="pageDesktop"></div></div>
           </div>
         </div>
       </div>
     </div>
-  </section>
 
-  <section class="section problem">
-    <div class="eyebrow">The problem</div>
-    <h2 class="display"><span class="light">Your todo app is part of why</span> you can't focus.</h2>
-    <p class="lede">Every app optimizes <b>capture</b>, writing things down. Nobody optimizes the <b>decision</b>: of all this, what do I do right now?</p>
-    <p class="lede">The list grows faster than you can work it. You don't fail to capture. You fail to <b>pick</b>. The list becomes anxiety, not action.</p>
-  </section>
-
-  <section class="section how" id="how">
-    <div class="eyebrow">How it works</div>
-    <h2 class="display"><span class="light">Three moves,</span> not three hundred features.</h2>
-    <div class="flow">
-      <div class="flow-step">
-        <div class="flow-num">01</div>
-        <h3>Capture</h3>
-        <p>Thought goes to inbox in under two seconds. From anywhere.</p>
-      </div>
-      <div class="flow-arrow"><svg width="20" height="14" viewBox="0 0 20 14" fill="none"><path d="M2 7h15M13 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div class="flow-step">
-        <div class="flow-num">02</div>
-        <h3>Triage</h3>
-        <p>Decide what each thing <i>is</i>: task, project, or reference.</p>
-      </div>
-      <div class="flow-arrow"><svg width="20" height="14" viewBox="0 0 20 14" fill="none"><path d="M2 7h15M13 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div class="flow-step">
-        <div class="flow-num">03</div>
-        <h3>Focus</h3>
-        <p>ActionAmp picks the next thing. You do it. The rest disappears.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="soul" id="soul">
-    <h2 class="soul-statement">The home screen isn't a list.<br>It's a <b>decision</b>.</h2>
-    <p class="soul-sub">Every other app opens to your full todo list. ActionAmp opens to one task, the next thing that matters, and hides the rest. You can always see it. You just don't have to.</p>
-  </section>
-
-  <section class="section method" id="method">
-    <div class="eyebrow">Methodology</div>
-    <h2 class="display">GTD-compatible. <span class="light">PARA-flavored.</span></h2>
-    <p class="lede">If you know <b>Getting Things Done</b>, you're home: inbox, triage, projects, someday. If you know <b>PARA</b>, you'll recognize the shape, with one swap: <b>Goals replace Areas</b>, because this app is about action, and goals are active where areas are passive.</p>
-    <div class="badges">
-      <span class="badge"><span class="b">/</span> Inbox → triage</span>
-      <span class="badge"><span class="b">/</span> Goals over areas</span>
-      <span class="badge"><span class="b">/</span> Projects & tasks</span>
-      <span class="badge"><span class="b">/</span> Priority + size</span>
-    </div>
-  </section>
-
-  <section class="section craft">
-    <div class="eyebrow">Craft</div>
-    <h2 class="display"><span class="light">Built like it belongs</span> on your machine.</h2>
-    <div class="craft-rows">
-      <div class="craft-row">
-        <div class="craft-icon"><svg width="20" height="20" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 6h2M9 6h2M5 9h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-        <div>
-          <h4>Every action has a shortcut</h4>
-          <p>Capture, triage, switch, complete, all from the keyboard. The mouse is optional, not required.</p>
+    <!-- Page template (shared). Cloned into both frames via JS to keep one source of truth. -->
+    <template id="pageTemplate">
+      <nav class="nav">
+        <div class="brand">
+          <div class="brand-mark">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <span class="brand-name">ActionAmp</span>
         </div>
-      </div>
-      <div class="craft-row">
-        <div class="craft-icon"><svg width="20" height="20" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div>
-          <h4>No guilt red dots</h4>
-          <p>No streak shaming, no badge counts screaming for attention. Whitespace is the point.</p>
+        <div class="nav-links">
+          <a class="nav-link" href="#how">How it works</a>
+          <a class="nav-link" href="#soul">Why</a>
+          <a class="nav-link" href="#method">Methodology</a>
+          <a class="nav-link" href="#faq">FAQ</a>
         </div>
-      </div>
-      <div class="craft-row">
-        <div class="craft-icon"><svg width="20" height="20" viewBox="0 0 16 16" fill="none"><path d="M8 2.5l5 2v4.5c0 3-2 5-5 5.5-3-.5-5-2.5-5-5.5V4.5l5-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
-        <div>
-          <h4>Native feel</h4>
-          <p>System font, soft shadows, restrained motion. Looks like it belongs to your OS, not like it's trying to impress it.</p>
+        <span style="width: 0"></span>
+      </nav>
+
+      <section class="hero">
+        <!-- the receding list -->
+        <div class="chaos">
+          <div class="chaos-row">
+            <span class="c-box"></span> Email Sarah re: Q3 invoice
+          </div>
+          <div class="chaos-row">
+            <span class="c-box"></span> Review PR #284
+          </div>
+          <div class="chaos-row">
+            <span class="c-box"></span> Reply to Marco
+          </div>
+          <div class="chaos-row">
+            <span class="c-box"></span> Fix the login bug
+          </div>
+          <div class="chaos-row"><span class="c-box"></span> Draft Q3 plan</div>
+          <div class="chaos-row">
+            <span class="c-box"></span> Prep 1:1 notes
+          </div>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <section class="section faq-section" id="faq">
-    <div class="eyebrow">FAQ</div>
-    <h2 class="display" style="font-size: 40px;">Honest answers.</h2>
-    <div class="faq-list">
-      <div class="faq-item">
-        <div class="faq-q">Is this just another todo app?</div>
-        <div class="faq-a">No. The list is demoted. "What do I do next?" is the home screen. ActionAmp optimizes the decision, not the capture.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">Do I need to know GTD or PARA?</div>
-        <div class="faq-a">No. The methodology is there if you want it, invisible if you don't. Most users just capture, triage, and do.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">When does it launch?</div>
-        <div class="faq-a">Soon. When it's ready, you'll know.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">Will there be a mobile app?</div>
-        <div class="faq-a">Web first, designed mobile-first. Native apps come after we nail the core.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">Pricing?</div>
-        <div class="faq-a">Free at launch. A paid tier comes later, for power users.</div>
-      </div>
-    </div>
-  </section>
+        <div class="hero-grid">
+          <div>
+            <span class="hero-eyebrow"
+              ><span class="dot"></span> A focus app, not a todo app</span
+            >
+            <h1>
+              <span class="light">Easiest way</span><br />to get
+              <span class="accent">into action</span>.
+            </h1>
+            <p class="hero-sub">
+              Every other app opens to your list. ActionAmp opens to the
+              <b>one thing</b> to do next.
+            </p>
+            <div class="hero-meta">
+              <span
+                ><svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <rect
+                    x="2"
+                    y="3"
+                    width="12"
+                    height="10"
+                    rx="1.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                  <path
+                    d="M5 6h2M9 6h2M5 9h6"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                Keyboard-first</span
+              >
+              <span
+                ><svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3.5 8.5l3 3 6-7"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Calm by default</span
+              >
+              <span
+                ><svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2 8c0-3 2-6 6-6s6 3 6 6-2 6-6 6-6-3-6-6z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                </svg>
+                GTD-compatible</span
+              >
+            </div>
+          </div>
 
-  <section class="final">
-    <div class="final-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <h2>Do the <b>next thing</b>.<br>Not all the things.</h2>
-    <p>When it's ready, you'll know.</p>
-    <a class="follow-link" href="#">
-      Follow along
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
-  </section>
+          <div class="wn-wrap">
+            <div class="wn-card">
+              <div class="wn-ctx">
+                <span class="dot"></span> Right now · 30 min
+              </div>
+              <div class="completion" title="Click to complete">
+                <svg class="check" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div class="wn-title">Email Sarah re: Q3 invoice</div>
+              <div class="wn-meta">Due today · 15 min</div>
+              <div class="wn-why">★ Important · the reason this is next</div>
+              <div class="wn-actions">
+                <button class="btn btn-primary wn-do">Do this</button>
+                <button class="btn btn-ghost">Switch</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-  <footer class="footer">
-    <div class="brand">
-      <div class="brand-mark" style="width:22px;height:22px;border-radius:6px"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <span class="brand-name" style="font-size:14px">ActionAmp</span>
-    </div>
-    <div class="footer-links">
-      <a href="#">About</a>
-      <a href="#">Privacy</a>
-      <a href="#">Terms</a>
-      <a href="#">Help</a>
-    </div>
-    <div class="footer-copy">© 2026 ActionAmp</div>
-  </footer>
-</template>
+      <section class="section problem">
+        <div class="eyebrow">The problem</div>
+        <h2 class="display">
+          <span class="light">Your todo app is part of why</span> you can't
+          focus.
+        </h2>
+        <p class="lede">
+          Every app optimizes <b>capture</b>, writing things down. Nobody
+          optimizes the <b>decision</b>: of all this, what do I do right now?
+        </p>
+        <p class="lede">
+          The list grows faster than you can work it. You don't fail to capture.
+          You fail to <b>pick</b>. The list becomes anxiety, not action.
+        </p>
+      </section>
 
-<script>
-  // clone the template into both frames — single source of truth
-  const tpl = document.getElementById("pageTemplate").content;
-  document.getElementById("pageMobile").appendChild(tpl.cloneNode(true));
-  document.getElementById("pageDesktop").appendChild(tpl.cloneNode(true));
+      <section class="section how" id="how">
+        <div class="eyebrow">How it works</div>
+        <h2 class="display">
+          <span class="light">Three moves,</span> not three hundred features.
+        </h2>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-num">01</div>
+            <h3>Capture</h3>
+            <p>Thought goes to inbox in under two seconds. From anywhere.</p>
+          </div>
+          <div class="flow-arrow">
+            <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
+              <path
+                d="M2 7h15M13 2l5 5-5 5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">02</div>
+            <h3>Triage</h3>
+            <p>
+              Decide what each thing <i>is</i>: task, project, or reference.
+            </p>
+          </div>
+          <div class="flow-arrow">
+            <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
+              <path
+                d="M2 7h15M13 2l5 5-5 5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">03</div>
+            <h3>Focus</h3>
+            <p>
+              ActionAmp picks the next thing. You do it. The rest disappears.
+            </p>
+          </div>
+        </div>
+      </section>
 
-  // FAQ expand/collapse (delegated across both clones)
-  document.addEventListener("click", (e) => {
-    const item = e.target.closest(".faq-item");
-    if (!item) return;
-    item.classList.toggle("open");
-  });
+      <section class="soul" id="soul">
+        <h2 class="soul-statement">
+          The home screen isn't a list.<br />It's a <b>decision</b>.
+        </h2>
+        <p class="soul-sub">
+          Every other app opens to your full todo list. ActionAmp opens to one
+          task, the next thing that matters, and hides the rest. You can always
+          see it. You just don't have to.
+        </p>
+      </section>
 
-  // nav-link smooth scroll (both clones)
-  document.addEventListener("click", (e) => {
-    const link = e.target.closest(".nav-link");
-    if (!link) return;
-    const id = link.getAttribute("href");
-    if (!id || !id.startsWith("#")) return;
-    const root = link.closest(".page");
-    const target = root.querySelector(id);
-    if (target) {
-      e.preventDefault();
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  });
-</script>
-</body>
+      <section class="section method" id="method">
+        <div class="eyebrow">Methodology</div>
+        <h2 class="display">
+          GTD-compatible. <span class="light">PARA-flavored.</span>
+        </h2>
+        <p class="lede">
+          If you know <b>Getting Things Done</b>, you're home: inbox, triage,
+          projects, someday. If you know <b>PARA</b>, you'll recognize the
+          shape, with one swap: <b>Goals replace Areas</b>, because this app is
+          about action, and goals are active where areas are passive.
+        </p>
+        <div class="badges">
+          <span class="badge"><span class="b">/</span> Inbox → triage</span>
+          <span class="badge"><span class="b">/</span> Goals over areas</span>
+          <span class="badge"><span class="b">/</span> Projects & tasks</span>
+          <span class="badge"><span class="b">/</span> Priority + size</span>
+        </div>
+      </section>
+
+      <section class="section craft">
+        <div class="eyebrow">Craft</div>
+        <h2 class="display">
+          <span class="light">Built like it belongs</span> on your machine.
+        </h2>
+        <div class="craft-rows">
+          <div class="craft-row">
+            <div class="craft-icon">
+              <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                <rect
+                  x="2"
+                  y="3"
+                  width="12"
+                  height="10"
+                  rx="1.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M5 6h2M9 6h2M5 9h6"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <div>
+              <h4>Every action has a shortcut</h4>
+              <p>
+                Capture, triage, switch, complete, all from the keyboard. The
+                mouse is optional, not required.
+              </p>
+            </div>
+          </div>
+          <div class="craft-row">
+            <div class="craft-icon">
+              <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                <circle
+                  cx="8"
+                  cy="8"
+                  r="6"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M5 8l2 2 4-4"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div>
+              <h4>No guilt red dots</h4>
+              <p>
+                No streak shaming, no badge counts screaming for attention.
+                Whitespace is the point.
+              </p>
+            </div>
+          </div>
+          <div class="craft-row">
+            <div class="craft-icon">
+              <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 2.5l5 2v4.5c0 3-2 5-5 5.5-3-.5-5-2.5-5-5.5V4.5l5-2z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div>
+              <h4>Native feel</h4>
+              <p>
+                System font, soft shadows, restrained motion. Looks like it
+                belongs to your OS, not like it's trying to impress it.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section faq-section" id="faq">
+        <div class="eyebrow">FAQ</div>
+        <h2 class="display" style="font-size: 40px">Honest answers.</h2>
+        <div class="faq-list">
+          <div class="faq-item">
+            <div class="faq-q">Is this just another todo app?</div>
+            <div class="faq-a">
+              No. The list is demoted. "What do I do next?" is the home screen.
+              ActionAmp optimizes the decision, not the capture.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">Do I need to know GTD or PARA?</div>
+            <div class="faq-a">
+              No. The methodology is there if you want it, invisible if you
+              don't. Most users just capture, triage, and do.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">When does it launch?</div>
+            <div class="faq-a">Soon. When it's ready, you'll know.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">Will there be a mobile app?</div>
+            <div class="faq-a">
+              Web first, designed mobile-first. Native apps come after we nail
+              the core.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">Pricing?</div>
+            <div class="faq-a">
+              Free at launch. A paid tier comes later, for power users.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="final">
+        <div class="final-mark">
+          <svg viewBox="0 0 16 16" fill="none">
+            <path
+              d="M3.5 8.5l3 3 6-7"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <h2>Do the <b>next thing</b>.<br />Not all the things.</h2>
+        <p>When it's ready, you'll know.</p>
+        <a class="follow-link" href="#">
+          Follow along
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M5 3l5 5-5 5"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+      </section>
+
+      <footer class="footer">
+        <div class="brand">
+          <div
+            class="brand-mark"
+            style="width: 22px; height: 22px; border-radius: 6px"
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <span class="brand-name" style="font-size: 14px">ActionAmp</span>
+        </div>
+        <div class="footer-links">
+          <a href="#">About</a>
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">Help</a>
+        </div>
+        <div class="footer-copy">© 2026 ActionAmp</div>
+      </footer>
+    </template>
+
+    <script>
+      // clone the template into both frames — single source of truth
+      const tpl = document.getElementById("pageTemplate").content;
+      document.getElementById("pageMobile").appendChild(tpl.cloneNode(true));
+      document.getElementById("pageDesktop").appendChild(tpl.cloneNode(true));
+
+      // ---- Interactive hero What Now card (the payoff) ----
+      // Click completion circle OR "Do this" → fill with teal + checkmark →
+      // celebratory burst → button becomes "Done ✓" → after 2.2s reset to a
+      // fresh task. Each frame's card is independent.
+      const HERO_TASKS = [
+        { title: "Email Sarah re: Q3 invoice", why: "★ Important · the reason this is next", meta: "Due today · 15 min" },
+        { title: "Review pull request #284",   why: "Normal · fits in 30 min",            meta: "Due today · 30 min" },
+        { title: "Prep notes for 1:1 with Marco", why: "Low · quick win",                   meta: "Tomorrow · 10 min" },
+        { title: "Reply to legal re: contract",  why: "★ Important · overdue",             meta: "Was due yesterday" },
+        { title: "Draft the Q3 launch plan",     why: "Important · break it down",         meta: "This week · XL" },
+      ];
+      let heroIdx = 0;
+      function resetHeroCard(card) {
+        const next = HERO_TASKS[heroIdx % HERO_TASKS.length];
+        heroIdx++;
+        const comp = card.querySelector(".completion");
+        const title = card.querySelector(".wn-title");
+        const why = card.querySelector(".wn-why");
+        const meta = card.querySelector(".wn-meta");
+        const doBtn = card.querySelector(".wn-do");
+        comp.classList.remove("filled", "burst");
+        title.textContent = next.title;
+        why.textContent = next.why;
+        meta.textContent = next.meta;
+        doBtn.classList.remove("done");
+        doBtn.textContent = "Do this";
+      }
+      function fillHeroCard(card) {
+        const comp = card.querySelector(".completion");
+        const doBtn = card.querySelector(".wn-do");
+        if (comp.classList.contains("filled")) return; // already done, wait for reset
+        comp.classList.add("filled", "burst");
+        doBtn.classList.add("done");
+        doBtn.textContent = "Done ✓";
+        setTimeout(() => {
+          comp.classList.remove("burst");
+          // fade out, swap, fade in
+          card.style.transition = "opacity .3s ease";
+          card.style.opacity = "0.35";
+          setTimeout(() => {
+            resetHeroCard(card);
+            card.style.opacity = "1";
+          }, 300);
+        }, 2200);
+      }
+      document.addEventListener("click", (e) => {
+        // completion circle click
+        if (e.target.closest(".completion")) {
+          const card = e.target.closest(".wn-card");
+          if (card) fillHeroCard(card);
+          return;
+        }
+        // "Do this" button click
+        const doBtn = e.target.closest(".wn-do");
+        if (doBtn) {
+          const card = doBtn.closest(".wn-card");
+          if (card) fillHeroCard(card);
+          return;
+        }
+      });
+
+      // FAQ expand/collapse (delegated across both clones)
+      document.addEventListener("click", (e) => {
+        const item = e.target.closest(".faq-item");
+        if (!item) return;
+        item.classList.toggle("open");
+      });
+
+      // nav-link smooth scroll (both clones)
+      document.addEventListener("click", (e) => {
+        const link = e.target.closest(".nav-link");
+        if (!link) return;
+        const id = link.getAttribute("href");
+        if (!id || !id.startsWith("#")) return;
+        const root = link.closest(".page");
+        const target = root.querySelector(id);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    </script>
+  </body>
 </html>
