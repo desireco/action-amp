@@ -8,7 +8,7 @@
 
 ## ☐ Design — interaction refinements
 
-- [ ] **Goal/project "Open →" navigation** — when zoomed to Project/Goal, an affordance to re-anchor the whole view at that scope (visit it as its own thing, not just see in context). Closes a loop from the desktop spine.
+- [x] **Goal/project "Open →" navigation** — DECIDED 2026-06-16: when zoomed to a Project/Goal, an "Open →" affordance re-anchors the whole view at that scope. **Project view = Layout 1 (Overview/dashboard):** progress bar, next-action callout, full task list visible. List is OK here because you *chose* to navigate to the project (review/plan mode), unlike home where the list is demoted. Guard against: must feel like a project manifest, not a generic todo list. See `docs/mockups/project-anchor-layouts.html`.
 - [ ] **Mobile prototype — pinch vs two-finger swipe for zoom.** Pinch can fight the browser's native pinch-zoom; test if a two-finger horizontal swipe feels better for scope changes.
 - [ ] **Mobile prototype — long-press threshold.** 500ms may trigger by accident while scrolling. Consider 600–700ms + movement-cancel.
 - [ ] **Mobile prototype — zoom chips (G/P/●) keep or kill?** They're a pinch fallback but add visual noise. Decide once pinch is proven.

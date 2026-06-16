@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Project view: 2 layouts</title>
+    <style>
+      :root {
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+        --teal: #0ea5e9;
+        --teal-cta: #0284c7;
+        --teal-cta-hover: #0369a1;
+        --teal-soft: rgba(14, 165, 233, 0.12);
+        --teal-soft-strong: rgba(14, 165, 233, 0.18);
+        --teal-tint: rgba(2, 132, 199, 0.22);
+        --amber: #f59e0b;
+        --amber-text: #92400e;
+        --amber-soft: rgba(245, 158, 11, 0.14);
+      }
+      :root {
+        --bg: #f2f5f7;
+        --bg-elev: #fcfcfd;
+        --surface: #ffffff;
+        --surface-muted: #f2f5f7;
+        --surface-muted-2: #eceef0;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text: #212224;
+        --text-2: #44474b;
+        --text-3: #55606e;
+        --text-4: #818489;
+        --shadow-md:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+        --shadow-lg:
+          0 2px 4px rgba(0, 28, 70, 0.05), 0 24px 64px var(--teal-tint);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.4;
+        min-height: 100vh;
+        padding: 48px 24px 80px;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+        font-size: inherit;
+      }
+      svg {
+        display: block;
+      }
+
+      .page {
+        max-width: 720px;
+        margin: 0 auto;
+      }
+
+      /* ---- Header + toggle ---- */
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--text-4);
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+      h1 {
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        margin-bottom: 10px;
+      }
+      .lede {
+        font-size: 15px;
+        color: var(--text-2);
+        margin-bottom: 28px;
+        max-width: 58ch;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+      }
+      .toggle {
+        display: inline-flex;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 9999px;
+        padding: 4px;
+        box-shadow: var(--shadow-md);
+      }
+      .toggle-btn {
+        padding: 8px 16px;
+        border-radius: 9999px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-3);
+        transition: all 0.2s;
+      }
+      .toggle-btn.active {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .toggle-note {
+        font-size: 13px;
+        color: var(--text-3);
+      }
+
+      /* ---- Re-anchored breadcrumb (Project is now the `current`) ---- */
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 13px;
+        color: var(--text-3);
+        margin-bottom: 28px;
+      }
+      .crumb {
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.12s;
+      }
+      .crumb:hover {
+        background: var(--surface-muted);
+      }
+      .crumb.current {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .crumb-sep {
+        color: var(--border-strong);
+        padding: 0 2px;
+      }
+
+      /* ---- Card stage ---- */
+      .card-stage {
+        display: flex;
+        justify-content: center;
+      }
+      .card-stage > div {
+        display: none;
+      }
+      .card-stage.show-1 .layout-1 {
+        display: block;
+      }
+      .card-stage.show-2 .layout-2 {
+        display: block;
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .layout-1,
+      .layout-2 {
+        animation: rise 0.4s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+        width: 100%;
+      }
+
+      /* ============================================================
+     SHARED card elements
+     ============================================================ */
+      .proj-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: var(--shadow-lg);
+      }
+      .proj-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--text-4);
+        text-transform: uppercase;
+      }
+      .proj-title {
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        color: var(--text);
+      }
+
+      .completion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        border: 2.5px solid var(--border-strong);
+        flex-shrink: 0;
+      }
+      .completion svg {
+        color: white;
+        opacity: 0;
+        transform: scale(0.4);
+        transition: all 0.2s;
+      }
+      .completion.done {
+        background: var(--teal);
+        border-color: var(--teal);
+      }
+      .completion.done svg {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .progress-bar {
+        height: 6px;
+        background: var(--surface-muted);
+        border-radius: 9999px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--teal);
+        border-radius: 9999px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 13.5px;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        transition:
+          background 0.15s,
+          transform 0.08s;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn-primary {
+        background: var(--teal-cta);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--teal-cta-hover);
+      }
+      .btn-switch {
+        background: var(--surface);
+        color: var(--text-2);
+        border-color: var(--border-strong);
+      }
+      .btn-switch svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      .section-rule {
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--text-4);
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .section-rule::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      /* ============================================================
+     LAYOUT 1 — "Overview" (project = dashboard, everything visible)
+     ============================================================ */
+      .layout-1 .proj-card {
+        padding: 32px 36px;
+        max-width: 560px;
+      }
+      .layout-1 .proj-head {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+      .layout-1 .proj-label {
+        margin-bottom: 8px;
+      }
+      .layout-1 .proj-title {
+        font-size: 26px;
+        line-height: 1.2;
+        margin-bottom: 14px;
+      }
+      .layout-1 .proj-goal {
+        font-size: 12.5px;
+        color: var(--text-3);
+      }
+      .layout-1 .proj-goal b {
+        color: var(--text-2);
+        font-weight: 600;
+      }
+
+      .layout-1 .progress-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+      .layout-1 .progress-bar {
+        flex: 1;
+      }
+      .layout-1 .progress-text {
+        font-size: 12.5px;
+        color: var(--text-3);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .layout-1 .progress-text b {
+        color: var(--teal-cta);
+      }
+
+      .layout-1 .next-block {
+        background: var(--surface-muted);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .layout-1 .next-block .completion {
+        width: 22px;
+        height: 22px;
+        border-width: 2px;
+      }
+      .layout-1 .next-body {
+        flex: 1;
+        text-align: left;
+      }
+      .layout-1 .next-title {
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .layout-1 .next-meta {
+        font-size: 12px;
+        color: var(--text-3);
+        margin-top: 2px;
+      }
+
+      .layout-1 .task-list {
+        text-align: left;
+      }
+      .layout-1 .task-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 4px;
+        font-size: 13.5px;
+      }
+      .layout-1 .task-row .completion {
+        width: 16px;
+        height: 16px;
+        border-width: 1.5px;
+      }
+      .layout-1 .task-row .t-title {
+        flex: 1;
+        color: var(--text-2);
+      }
+      .layout-1 .task-row.done .t-title {
+        color: var(--text-4);
+        text-decoration: line-through;
+      }
+      .layout-1 .task-row.next .t-title {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .layout-1 .task-row .t-meta {
+        font-size: 11px;
+        color: var(--text-4);
+        font-weight: 600;
+      }
+      .layout-1 .task-more {
+        font-size: 12px;
+        color: var(--text-4);
+        padding: 6px 4px 0;
+      }
+
+      /* ============================================================
+     LAYOUT 2 — "Action-forward" (project = frame, next action = hero)
+     ============================================================ */
+      .layout-2 .proj-card {
+        padding: 24px 36px 32px;
+        max-width: 520px;
+        text-align: center;
+      }
+      .layout-2 .proj-head {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding-bottom: 18px;
+        margin-bottom: 28px;
+        border-bottom: 1px solid var(--border);
+      }
+      .layout-2 .proj-label {
+        font-size: 10.5px;
+      }
+      .layout-2 .proj-title {
+        font-size: 14px;
+      }
+      .layout-2 .proj-meta {
+        font-size: 12px;
+        color: var(--text-3);
+      }
+      .layout-2 .proj-meta b {
+        color: var(--teal-cta);
+        font-weight: 600;
+      }
+      .layout-2 .sep {
+        color: var(--border-strong);
+        margin: 0 2px;
+      }
+
+      .layout-2 .hero-circle {
+        margin-bottom: 24px;
+      }
+      .layout-2 .hero-circle .completion {
+        width: 34px;
+        height: 34px;
+      }
+
+      .layout-2 .next-title {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        margin-bottom: 8px;
+      }
+      .layout-2 .next-meta {
+        font-size: 13.5px;
+        color: var(--text-3);
+        margin-bottom: 24px;
+      }
+      .layout-2 .next-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 28px;
+      }
+
+      .layout-2 .also {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .layout-2 .also-label {
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--text-4);
+        text-transform: uppercase;
+        width: 100%;
+        margin-bottom: 4px;
+      }
+      .layout-2 .also-chip {
+        font-size: 12px;
+        color: var(--text-3);
+        background: var(--surface-muted);
+        padding: 5px 10px;
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: background 0.12s;
+      }
+      .layout-2 .also-chip:hover {
+        background: var(--surface-muted-2);
+        color: var(--text-2);
+      }
+
+      /* ---- Annotations under each ---- */
+      .annotation {
+        margin-top: 24px;
+        padding: 14px 18px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 13px;
+        color: var(--text-3);
+        line-height: 1.5;
+      }
+      .annotation b {
+        color: var(--text-2);
+      }
+      .annotation .pros {
+        color: #047857;
+        font-weight: 600;
+      }
+      .annotation .cons {
+        color: var(--amber-text);
+        font-weight: 600;
+      }
+
+      .footnote {
+        margin-top: 40px;
+        font-size: 13px;
+        color: var(--text-3);
+        text-align: center;
+        max-width: 56ch;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="eyebrow">Project view · re-anchored · 2 layouts</div>
+      <h1>When you arrive at a Project, what should you see?</h1>
+      <p class="lede">
+        Both keep the <b>Project as the anchor</b> (breadcrumb shows it as
+        current). Both show <b>next action</b> + <b>progress</b>. They differ in
+        visual weight: Layout 1 is a scannable dashboard; Layout 2 points you
+        straight at the next thing to do.
+      </p>
+
+      <div class="toggle-row">
+        <div class="toggle">
+          <button class="toggle-btn active" data-layout="1">
+            Layout 1 · Overview
+          </button>
+          <button class="toggle-btn" data-layout="2">
+            Layout 2 · Action-forward
+          </button>
+        </div>
+        <span class="toggle-note">Toggle live · both use the same data</span>
+      </div>
+
+      <!-- Re-anchored breadcrumb: Project is now current -->
+      <div class="breadcrumb">
+        <span class="crumb">Grow audience</span>
+        <span class="crumb-sep">›</span>
+        <span class="crumb current">Ship product v2</span>
+      </div>
+
+      <div class="card-stage show-1" id="stage">
+        <!-- ============ LAYOUT 1 — OVERVIEW ============ -->
+        <div class="layout-1">
+          <div class="proj-card">
+            <div class="proj-head">
+              <div class="proj-label">Project</div>
+              <div class="proj-title">Ship product v2</div>
+              <div class="proj-goal">supports <b>Grow audience</b></div>
+            </div>
+
+            <div class="progress-row">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 33%"></div>
+              </div>
+              <div class="progress-text"><b>4</b> of 12 · 33%</div>
+            </div>
+
+            <div class="section-rule" style="margin-bottom: 12px">
+              Next action
+            </div>
+            <div class="next-block">
+              <div class="completion"></div>
+              <div class="next-body">
+                <div class="next-title">Email Sarah re: Q3 invoice</div>
+                <div class="next-meta">Important · 15 min · due today</div>
+              </div>
+              <button class="btn btn-primary">Do this</button>
+            </div>
+
+            <div class="section-rule" style="margin-bottom: 8px">
+              All tasks · 12
+            </div>
+            <div class="task-list">
+              <div class="task-row done">
+                <div class="completion done">
+                  <svg width="9" height="9" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M3.5 8.5l3 3 6-7"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div class="t-title">Standup notes → Linear</div>
+                <div class="t-meta">DONE</div>
+              </div>
+              <div class="task-row done">
+                <div class="completion done">
+                  <svg width="9" height="9" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M3.5 8.5l3 3 6-7"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div class="t-title">Fix login bug</div>
+                <div class="t-meta">DONE</div>
+              </div>
+              <div class="task-row next">
+                <div class="completion"></div>
+                <div class="t-title">Email Sarah re: Q3 invoice</div>
+                <div class="t-meta">NEXT · IMPORTANT</div>
+              </div>
+              <div class="task-row">
+                <div class="completion"></div>
+                <div class="t-title">Review pull request #284</div>
+                <div class="t-meta">NORMAL · M</div>
+              </div>
+              <div class="task-row">
+                <div class="completion"></div>
+                <div class="t-title">Draft Q3 launch plan</div>
+                <div class="t-meta">XL</div>
+              </div>
+              <div class="task-more">+ 7 more</div>
+            </div>
+          </div>
+          <div class="annotation">
+            <b>Layout 1 — Overview.</b> The Project is a dashboard. Progress,
+            next action, and the full task list are all visible at once.
+            <span class="pros">Pro:</span> great for reviewing a project's state
+            at a glance. <span class="cons">Con:</span> it's a list — the exact
+            thing ActionAmp demotes elsewhere. Risks feeling like "just another
+            task manager project view."
+          </div>
+        </div>
+
+        <!-- ============ LAYOUT 2 — ACTION-FORWARD ============ -->
+        <div class="layout-2">
+          <div class="proj-card">
+            <div class="proj-head">
+              <span class="proj-label">Project</span>
+              <span class="proj-title">Ship product v2</span>
+              <span class="sep">·</span>
+              <span class="proj-meta"><b>4</b> of 12 done</span>
+              <span class="sep">·</span>
+              <span class="proj-meta">Grow audience</span>
+            </div>
+
+            <div class="hero-circle">
+              <div class="completion"></div>
+            </div>
+
+            <div class="next-title">Email Sarah re: Q3 invoice</div>
+            <div class="next-meta">Important · 15 min · due today</div>
+
+            <div class="next-actions">
+              <button class="btn btn-primary">Do this</button>
+              <button class="btn btn-switch">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2 5h9l-2-2M14 11H5l2 2"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Switch
+              </button>
+            </div>
+
+            <div class="also">
+              <div class="also-label">Also in this project · 11 more</div>
+              <span class="also-chip">Review PR #284</span>
+              <span class="also-chip">Draft launch plan</span>
+              <span class="also-chip">Prep 1:1 notes</span>
+              <span class="also-chip">+ 8 more</span>
+            </div>
+          </div>
+          <div class="annotation">
+            <b>Layout 2 — Action-forward.</b> The Project frames the top (name +
+            progress + goal as a compact header), then the
+            <b>next action is the hero</b> — same DNA as What Now (circle,
+            title, Do this / Switch). Other tasks are quiet chips.
+            <span class="pros">Pro:</span> consistent with the whole app's
+            thesis — arriving somewhere still points you at one thing to do.
+            <span class="cons">Con:</span> hides the task list; reviewing all
+            tasks needs a second step.
+          </div>
+        </div>
+      </div>
+
+      <p class="footnote">
+        My lean: <b>Layout 2</b>. It keeps the "What Now" DNA even inside a
+        Project — you arrived at the project, and it immediately tells you what
+        to do there. Layout 1 is the safe choice but it's the list view we're
+        trying to demote. But Layout 2 needs an obvious "see all tasks →"
+        affordance so the list is one tap away.
+      </p>
+    </div>
+
+    <script>
+      const stage = document.getElementById("stage");
+      const btns = document.querySelectorAll(".toggle-btn");
+      btns.forEach((b) =>
+        b.addEventListener("click", () => {
+          const n = b.dataset.layout;
+          stage.classList.remove("show-1", "show-2");
+          stage.classList.add("show-" + n);
+          btns.forEach((x) => x.classList.toggle("active", x === b));
+        }),
+      );
+    </script>
+  </body>
+</html>
