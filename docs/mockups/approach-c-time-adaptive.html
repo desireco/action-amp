@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ActionAmp — Approach C: Time-adaptive</title>
+<style>
+  :root {
+    --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    --teal: #0EA5E9; --teal-cta: #0284C7; --teal-cta-hover: #0369A1;
+    --teal-soft: rgba(14,165,233,.12); --teal-tint: rgba(2,132,199,.22);
+    --amber: #F59E0B; --amber-text: #92400E; --amber-soft: rgba(245,158,11,.14);
+    --rose: #F43F5E; --rose-soft: rgba(244,63,94,.10);
+  }
+  :root {
+    --bg: #F2F5F7; --bg-elev: #FCFCFD; --surface: #FFFFFF;
+    --surface-muted: #F2F5F7; --border: #E6E8EC; --border-strong: #D5D9DE;
+    --text: #212224; --text-2: #44474B; --text-3: #55606E; --text-4: #818489;
+    --shadow-md: 0 2px 4px rgba(0,28,70,.06), 0 8px 24px rgba(0,28,70,.06);
+  }
+  [data-theme="dark"] {
+    --bg: #13161C; --bg-elev: #1A1D24; --surface: #1F232B;
+    --surface-muted: #2A2F38; --border: #2F343E; --border-strong: #3C4250;
+    --text: #F4F6F9; --text-2: #C5CBD4; --text-3: #8B939F; --text-4: #6A7180;
+    --shadow-md: 0 2px 4px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background .6s,color .4s}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg{display:block}
+
+  /* ============================================================
+     TIME-OF-DAY TINT — the bg subtly shifts with the mode
+     (morning = warm, midday = clear, evening = deep)
+     ============================================================ */
+  .stage{
+    position:relative;width:100vw;height:100vh;overflow:hidden;
+    background:var(--bg);
+    transition: background .8s ease;
+  }
+  .stage[data-mode="plan"]    { background: linear-gradient(180deg, #FFF7ED 0%, var(--bg) 60%); }
+  .stage[data-mode="do"]      { background: var(--bg); }
+  .stage[data-mode="review"]  { background: linear-gradient(180deg, #1E1B2E 0%, var(--bg) 50%); }
+  [data-theme="dark"] .stage[data-mode="plan"]{ background: linear-gradient(180deg, #2A1F1A 0%, var(--bg) 50%); }
+  [data-theme="dark"] .stage[data-mode="review"]{ background: linear-gradient(180deg, #0F0D1A 0%, var(--bg) 50%); }
+
+  .content{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    padding:80px 24px 100px;
+  }
+
+  /* ---- Mode views ---- */
+  .mode-view{
+    width:100%;max-width:640px;text-align:center;
+    animation: rise .6s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+  /* the ritual question — changes per mode */
+  .ritual{
+    font-size:13px;font-weight:600;letter-spacing:.06em;
+    color:var(--text-4);text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .headline{
+    font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.15;
+    margin-bottom:12px;
+  }
+  .subhead{
+    font-size:16px;color:var(--text-3);margin-bottom:40px;max-width:48ch;margin-left:auto;margin-right:auto;
+  }
+
+  /* ---- PLAN mode: pick today's 3 ---- */
+  .plan-cards{
+    display:flex;flex-direction:column;gap:10px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;padding:14px;box-shadow:var(--shadow-md);
+    text-align:left;
+  }
+  .plan-card{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 16px;border-radius:10px;cursor:pointer;
+    border:1px solid transparent;
+    transition:background .15s,border-color .15s;
+  }
+  .plan-card:hover{background:var(--surface-muted)}
+  .plan-card.picked{background:var(--teal-soft);border-color:transparent}
+  .plan-card .pc-circle{
+    width:22px;height:22px;border-radius:9999px;
+    border:2px solid var(--border-strong);flex-shrink:0;
+    transition:all .18s;
+  }
+  .plan-card.picked .pc-circle{
+    background:var(--teal);border-color:var(--teal);
+    box-shadow:0 0 0 4px var(--teal-soft);
+  }
+  .plan-card .pc-body{flex:1}
+  .plan-card .pc-title{font-size:15px;font-weight:600;color:var(--text)}
+  .plan-card .pc-sub{font-size:12.5px;color:var(--text-3);margin-top:1px}
+  .plan-card .pc-meta{font-size:11px;color:var(--text-4);font-weight:600}
+
+  .plan-foot{margin-top:18px;font-size:13px;color:var(--text-3)}
+  .plan-foot b{color:var(--text)}
+
+  /* ---- DO mode: the task (same hero as v2) ---- */
+  .do-ctx{font-size:12.5px;color:var(--text-3);margin-bottom:30px}
+  .completion{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:9999px;
+    border:2.5px solid var(--border-strong);margin-bottom:28px;cursor:pointer;
+    transition:transform .2s,border-color .2s;
+  }
+  .completion:hover{transform:scale(1.08);border-color:var(--teal)}
+  .completion svg{color:#fff;width:16px;height:16px;opacity:0;transform:scale(.4);transition:opacity .14s ease .06s,transform .22s cubic-bezier(.34,1.56,.64,1) .06s}
+  .completion.filled{background:var(--teal);border-color:var(--teal);box-shadow:0 6px 16px var(--teal-tint)}
+  .completion.filled svg{opacity:1;transform:scale(1)}
+  .task-title{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-bottom:10px}
+  .task-meta{font-size:14px;color:var(--text-3);margin-bottom:32px}
+  .task-meta .sep{margin:0 7px;color:var(--border-strong)}
+  .actions{display:flex;gap:10px;justify-content:center}
+  .btn{font-size:14.5px;font-weight:600;padding:10px 22px;border-radius:8px;border:1px solid transparent;transition:background .15s,transform .08s}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--teal-cta);color:#fff}
+  .btn-primary:hover{background:var(--teal-cta-hover)}
+  .btn-secondary{background:var(--surface);color:var(--text-2);border-color:var(--border)}
+  .btn-secondary:hover{background:var(--surface-muted)}
+
+  /* ---- REVIEW mode: debrief ---- */
+  .review-stats{
+    display:flex;justify-content:center;gap:40px;margin-bottom:32px;
+  }
+  .stat{text-align:center}
+  .stat-num{font-size:42px;font-weight:700;letter-spacing:-.02em;color:var(--text);line-height:1}
+  .stat-num.teal{color:var(--teal-cta)}
+  .stat-num.amber{color:var(--amber-text)}
+  [data-theme="dark"] .stat-num.amber{color:var(--amber)}
+  .stat-label{font-size:12px;color:var(--text-3);margin-top:6px;font-weight:500}
+
+  .review-hl{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:12px;padding:18px 22px;
+    margin-bottom:24px;text-align:left;
+    box-shadow:var(--shadow-md);
+  }
+  .review-hl-label{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--text-4);text-transform:uppercase;margin-bottom:6px}
+  .review-hl-body{font-size:15px;color:var(--text-2);line-height:1.5}
+  .review-hl-body b{color:var(--text)}
+
+  .review-q{
+    font-size:18px;color:var(--text-2);font-weight:500;margin-bottom:18px;
+  }
+  .review-q b{color:var(--text);font-weight:700}
+
+  /* ============================================================
+     HUD — the only persistent nav: the time-of-day dial
+     ============================================================ */
+  .hud-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:12px;padding:16px 24px;z-index:20}
+  .brand-mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--teal),#22D3EE);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(2,132,199,.25)}
+  .now{font-size:13px;color:var(--text-3)}
+  .now b{color:var(--text-2);font-weight:600}
+  .hud-top-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .icon-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:var(--text-3);transition:all .15s}
+  .icon-btn:hover{background:var(--surface-muted);color:var(--text)}
+
+  /* The dial — bottom center. Three modes, current highlighted. */
+  .dial{
+    position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:0;
+    background:var(--surface);border:1px solid var(--border);
+    padding:5px;border-radius:9999px;box-shadow:var(--shadow-md);
+    z-index:20;
+  }
+  .dial-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 18px;border-radius:9999px;
+    font-size:13px;font-weight:500;color:var(--text-3);
+    transition:background .25s,color .25s;
+    cursor:pointer;
+  }
+  .dial-btn .dial-icon{font-size:15px;opacity:.8}
+  .dial-btn:hover{color:var(--text-2)}
+  .dial-btn.active{background:var(--teal-soft);color:var(--teal-cta);font-weight:600}
+  .dial-btn.active .dial-icon{opacity:1}
+
+  .fab{
+    position:absolute;bottom:24px;right:24px;
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--teal-cta);color:#fff;padding:10px 16px;border-radius:10px;
+    font-size:13.5px;font-weight:600;box-shadow:0 4px 12px var(--teal-tint);z-index:20;
+    transition:transform .15s,background .15s;
+  }
+  .fab:hover{background:var(--teal-cta-hover);transform:translateY(-1px)}
+  .fab kbd{font-family:var(--font-mono);font-size:10.5px;background:rgba(255,255,255,.18);padding:1px 5px;border-radius:4px}
+
+  .hint{
+    position:absolute;bottom:24px;left:24px;
+    font-size:11.5px;color:var(--text-4);
+    background:var(--surface);border:1px solid var(--border);
+    padding:8px 12px;border-radius:8px;z-index:20;max-width:280px;line-height:1.5;
+  }
+  .hint kbd{font-family:var(--font-mono);font-size:10px;background:var(--surface-muted);padding:1px 4px;border-radius:3px;border:1px solid var(--border)}
+  .hint b{color:var(--text-2)}
+
+  @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage" data-mode="do">
+
+  <div class="hud-top">
+    <div class="brand-mark"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="now"><span id="nowText"><b>2:14pm</b> · Work lens</span></div>
+    <div class="hud-top-actions">
+      <button class="icon-btn" id="lensBtn" title="Lens (L)">L·W</button>
+      <button class="icon-btn" id="themeBtn" title="Theme (⌘D)">
+        <svg id="themeIcon" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 9.2A5 5 0 016.8 3 5.5 5.5 0 1013 9.2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+    <!-- mode views injected by JS -->
+  </div>
+
+  <button class="fab">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    Capture <kbd>⌘K</kbd>
+  </button>
+
+  <div class="hint">
+    <b>Time-adaptive:</b> the home <i>is</i> the mode. Morning = plan, midday = do, evening = review. Switch manually too — click the dial or press <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>.
+  </div>
+
+  <!-- The dial -->
+  <div class="dial" id="dial">
+    <button class="dial-btn" data-mode="plan"><span class="dial-icon">☀</span> Plan</button>
+    <button class="dial-btn active" data-mode="do"><span class="dial-icon">▶</span> Do</button>
+    <button class="dial-btn" data-mode="review"><span class="dial-icon">☾</span> Review</button>
+  </div>
+
+</div>
+
+<script>
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('themeBtn');
+  const themeIcon = document.getElementById('themeIcon');
+  const sun='<path d="M8 2v1.5M8 12.5V14M14 8h-1.5M3.5 8H2M12.2 3.8l-1 1M4.8 11.2l-1 1M12.2 12.2l-1-1M4.8 4.8l-1-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.4"/>';
+  const moon='<path d="M13 9.2A5 5 0 016.8 3 5.5 5.5 0 1013 9.2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>';
+  function setT(t){root.dataset.theme=t;themeIcon.innerHTML=t==='dark'?sun:moon}
+  themeBtn.addEventListener('click',()=>setT(root.dataset.theme==='dark'?'light':'dark'));
+  document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='d'){e.preventDefault();setT(root.dataset.theme==='dark'?'light':'dark')}});
+
+  // Lens
+  const lensBtn=document.getElementById('lensBtn');
+  let lens='W';
+  lensBtn.addEventListener('click',()=>{lens=lens==='W'?'M':'W';lensBtn.textContent=`L·${lens}`});
+
+  // ============================================================
+  // MODE VIEWS — three different "homes"
+  // ============================================================
+  const VIEWS = {
+    plan: `
+      <div class="mode-view">
+        <div class="ritual">Good morning · 8:02am</div>
+        <div class="headline">What deserves today?</div>
+        <div class="subhead">You have 12 things that could be done. Pick up to 3. The rest stay quiet.</div>
+        <div class="plan-cards">
+          <div class="plan-card picked"><div class="pc-circle"></div><div class="pc-body"><div class="pc-title">Email Sarah re: Q3 invoice</div><div class="pc-sub">Ship product v2 · 15 min</div></div><div class="pc-meta">IMPORTANT</div></div>
+          <div class="plan-card picked"><div class="pc-circle"></div><div class="pc-body"><div class="pc-title">Review pull request #284</div><div class="pc-sub">Engineering · 30 min</div></div><div class="pc-meta">NORMAL</div></div>
+          <div class="plan-card"><div class="pc-circle"></div><div class="pc-body"><div class="pc-title">Draft Q3 launch plan</div><div class="pc-sub">Ship product v2 · this is big</div></div><div class="pc-meta">XL</div></div>
+          <div class="plan-card"><div class="pc-circle"></div><div class="pc-body"><div class="pc-title">Prep notes for 1:1 with Marco</div><div class="pc-sub">Work · 10 min</div></div><div class="pc-meta">NORMAL</div></div>
+        </div>
+        <div class="plan-foot"><b>2 picked</b> · 1 slot left for today</div>
+      </div>
+    `,
+    do: `
+      <div class="mode-view">
+        <div class="do-ctx">Right now · 30 min available</div>
+        <div class="completion" id="completion">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="task-title">Email Sarah re: Q3 invoice</div>
+        <div class="task-meta">Due today <span class="sep">·</span> 15 min <span class="sep">·</span> Important</div>
+        <div class="actions">
+          <button class="btn btn-primary" id="doBtn">Do this</button>
+          <button class="btn btn-secondary">Not now</button>
+        </div>
+      </div>
+    `,
+    review: `
+      <div class="mode-view">
+        <div class="ritual">End of day · 6:48pm</div>
+        <div class="headline">You showed up today.</div>
+        <div class="subhead">A calm look back before you close the laptop.</div>
+        <div class="review-stats">
+          <div class="stat"><div class="stat-num teal">7</div><div class="stat-label">finished</div></div>
+          <div class="stat"><div class="stat-num">2</div><div class="stat-label">rolled over</div></div>
+          <div class="stat"><div class="stat-num amber">1</div><div class="stat-label">big win</div></div>
+        </div>
+        <div class="review-hl">
+          <div class="review-hl-label">The big one</div>
+          <div class="review-hl-body">You finished <b>Email Sarah re: Q3 invoice</b> — it moved <b>Ship product v2</b> forward, which serves <b>Grow audience</b>. That's the chain that mattered today.</div>
+        </div>
+        <div class="review-q">Tomorrow, the most important thing is <b>Draft Q3 launch plan</b>. Ready to commit?</div>
+        <div class="actions">
+          <button class="btn btn-primary">Commit to tomorrow</button>
+          <button class="btn btn-secondary">Just log it</button>
+        </div>
+      </div>
+    `,
+  };
+
+  const stage = document.getElementById('stage');
+  const content = document.getElementById('content');
+  const dialBtns = document.querySelectorAll('.dial-btn');
+
+  function setMode(mode){
+    stage.dataset.mode = mode;
+    content.innerHTML = VIEWS[mode];
+    dialBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    // rebind completion for "do" mode
+    if (mode === 'do') {
+      const c = document.getElementById('completion');
+      c.addEventListener('click', () => c.classList.toggle('filled'));
+      document.getElementById('doBtn').addEventListener('click', e => {
+        c.classList.add('filled');
+        e.currentTarget.textContent = 'Done ✓';
+        setTimeout(() => e.currentTarget.textContent = 'Do this', 1400);
+      });
+    }
+  }
+  dialBtns.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === '1') setMode('plan');
+    else if (e.key === '2') setMode('do');
+    else if (e.key === '3') setMode('review');
+  });
+
+  // initial
+  setMode('do');
+</script>
+</body>
+</html>
