@@ -1,0 +1,394 @@
+/*
+ * Onboarding page styles. Consumes design tokens.
+ * Full-screen dark overlay with animated gesture demos.
+ */
+@import "../styles/tokens.css";
+
+.aa-onboarding {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  background: oklch(0.14 0.02 230 / 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+.aa-onboarding.leaving {
+  opacity: 0;
+}
+
+/* dim background pattern */
+.aa-ob-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 30%, oklch(0.58 0.16 225 / 0.12) 0%, transparent 60%),
+    transparent;
+  pointer-events: none;
+}
+
+/* skip link */
+.aa-ob-skip {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+  font-size: 13px;
+  font-weight: 500;
+  color: oklch(0.7 0.01 230 / 0.5);
+  padding: 6px 14px;
+  border-radius: var(--aa-radius-full);
+  transition: color var(--aa-dur-base);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+.aa-ob-skip:hover {
+  color: oklch(0.8 0.01 230 / 0.8);
+}
+
+/* stage */
+.aa-ob-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 32px 40px;
+  position: relative;
+  z-index: 2;
+}
+
+/* page */
+.aa-ob-page {
+  text-align: center;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.aa-ob-enter {
+  animation: aa-ob-fade-in 0.4s var(--aa-ease-out-quart) both;
+}
+@keyframes aa-ob-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* brand mark on welcome */
+.aa-ob-brand {
+  margin-bottom: 28px;
+}
+.aa-ob-brand .aa-brand-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--aa-radius-xl);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 32px var(--aa-teal-tint-shadow);
+}
+
+/* eyebrow */
+.aa-ob-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--aa-teal);
+  margin-bottom: 16px;
+}
+
+/* headings */
+.aa-ob-h1 {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: white;
+  margin-bottom: 16px;
+  max-width: 16ch;
+}
+.aa-ob-h2 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: white;
+  margin-bottom: 14px;
+  max-width: 18ch;
+}
+.aa-ob-final {
+  margin-top: 20px;
+  font-weight: 300;
+  font-size: 30px;
+  color: var(--aa-teal);
+}
+
+/* body */
+.aa-ob-body {
+  font-size: 16px;
+  line-height: 1.55;
+  color: oklch(0.75 0.01 230 / 0.7);
+  max-width: 32ch;
+  margin-bottom: 32px;
+}
+.aa-ob-body .aa-ob-bold,
+.aa-ob-body b {
+  color: oklch(0.9 0.01 230 / 0.95);
+  font-weight: 600;
+}
+
+/* progress dots */
+.aa-ob-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.aa-ob-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--aa-radius-full);
+  background: oklch(0.7 0.01 230 / 0.2);
+  transition: all var(--aa-dur-base);
+}
+.aa-ob-dot.active {
+  background: var(--aa-teal);
+  width: 18px;
+}
+
+/* ============================================================
+   GESTURE DEMO
+   ============================================================ */
+.aa-ob-demo {
+  width: 200px;
+  height: 130px;
+  border-radius: var(--aa-radius-xl);
+  background: oklch(0.2 0.015 230 / 0.5);
+  border: 1px solid oklch(0.4 0.01 230 / 0.3);
+  position: relative;
+  margin-bottom: 36px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.aa-ob-demo-card {
+  width: 130px;
+  padding: 14px;
+  background: var(--aa-surface);
+  border-radius: var(--aa-radius-lg);
+  text-align: center;
+  box-shadow: 0 4px 12px oklch(0.1 0.01 230 / 0.3);
+}
+.aa-ob-demo-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--aa-radius-full);
+  border: 2px solid var(--aa-border-strong);
+  margin: 0 auto 8px;
+}
+.aa-ob-demo-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--aa-text);
+}
+
+/* finger / touch indicator */
+.aa-ob-finger {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--aa-radius-full);
+  background: oklch(0.72 0.15 220 / 0.25);
+  border: 2px solid var(--aa-teal);
+  z-index: 5;
+}
+.aa-ob-finger::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+}
+.aa-ob-finger-amber {
+  background: oklch(0.78 0.16 70 / 0.25);
+  border-color: var(--aa-amber);
+}
+.aa-ob-finger-amber::after {
+  background: var(--aa-amber);
+}
+
+/* Lesson 1: finger descends and holds */
+.aa-ob-finger-hold {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: aa-ob-finger-hold 2.4s ease-in-out infinite;
+}
+@keyframes aa-ob-finger-hold {
+  0% { top: 20%; left: 50%; transform: translate(-50%, -50%); opacity: 0; }
+  15% { opacity: 1; }
+  30% { top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 1; }
+  80% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  100% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+}
+
+/* Lesson 2: two fingers swipe left */
+.aa-ob-finger-swipe-1 {
+  top: 50%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  animation: aa-ob-finger-swipe-left 2.2s ease-in-out infinite;
+}
+.aa-ob-finger-swipe-2 {
+  top: 50%;
+  left: 65%;
+  transform: translate(-50%, -50%);
+  animation: aa-ob-finger-swipe-left-2 2.2s ease-in-out infinite;
+}
+@keyframes aa-ob-finger-swipe-left {
+  0% { left: 65%; opacity: 0; }
+  20% { opacity: 1; }
+  70% { left: 25%; opacity: 1; }
+  100% { left: 25%; opacity: 0; }
+}
+@keyframes aa-ob-finger-swipe-left-2 {
+  0% { left: 70%; opacity: 0; }
+  20% { opacity: 1; }
+  70% { left: 35%; opacity: 1; }
+  100% { left: 35%; opacity: 0; }
+}
+
+/* Lesson 3: single-finger horizontal swipe */
+.aa-ob-finger-single-swipe {
+  top: 50%;
+  left: 70%;
+  transform: translate(-50%, -50%);
+  animation: aa-ob-finger-single 2s ease-in-out infinite;
+}
+@keyframes aa-ob-finger-single {
+  0% { left: 70%; transform: translate(-50%, -50%); opacity: 0; }
+  20% { opacity: 1; }
+  70% { left: 30%; transform: translate(-50%, -50%); opacity: 1; }
+  100% { left: 30%; transform: translate(-50%, -50%); opacity: 0; }
+}
+
+/* Lesson 4: breadcrumb demo */
+.aa-ob-breadcrumb-demo {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: oklch(0.7 0.01 230 / 0.6);
+  white-space: nowrap;
+}
+.aa-ob-bc-item {
+  padding: 3px 6px;
+  border-radius: var(--aa-radius-sm);
+}
+.aa-ob-bc-current {
+  color: var(--aa-teal);
+  font-weight: 700;
+  background: oklch(0.72 0.15 220 / 0.15);
+  animation: aa-ob-bc-pulse 2s ease-in-out infinite;
+}
+@keyframes aa-ob-bc-pulse {
+  0%, 100% { background: oklch(0.72 0.15 220 / 0.15); }
+  50% { background: oklch(0.72 0.15 220 / 0.3); }
+}
+.aa-ob-bc-sep {
+  opacity: 0.4;
+}
+
+/* ============================================================
+   FOOTER CTA
+   ============================================================ */
+.aa-ob-foot {
+  padding: 0 32px 60px;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+.aa-ob-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--aa-teal-cta);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 16px 36px;
+  border-radius: var(--aa-radius-lg);
+  box-shadow: 0 8px 24px var(--aa-teal-tint-shadow);
+  transition: transform var(--aa-dur-fast), background var(--aa-dur-base);
+  border: none;
+  cursor: pointer;
+}
+.aa-ob-cta:hover {
+  background: var(--aa-teal-cta-hover);
+}
+.aa-ob-cta:active {
+  transform: scale(0.96);
+}
+
+/* ============================================================
+   DONE PAGE
+   ============================================================ */
+.aa-ob-done-page {
+  justify-content: center;
+}
+.aa-ob-done-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 12px 32px var(--aa-teal-tint-shadow);
+  animation: aa-ob-done-pop 0.5s var(--aa-ease-spring) both;
+}
+.aa-ob-done-circle svg {
+  color: white;
+  width: 30px;
+  height: 30px;
+}
+@keyframes aa-ob-done-pop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .aa-ob-h1 { font-size: 26px; }
+  .aa-ob-h2 { font-size: 22px; }
+  .aa-ob-body { font-size: 15px; }
+  .aa-ob-demo { width: 180px; height: 120px; }
+  .aa-ob-foot { padding-bottom: 48px; }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .aa-onboarding *,
+  .aa-onboarding *::before,
+  .aa-onboarding *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
