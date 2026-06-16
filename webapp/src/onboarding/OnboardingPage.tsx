@@ -1,15 +1,27 @@
 import { useState, useEffect, useCallback } from "react";
 import "./OnboardingPage.css";
 
-type Page = "welcome" | "lesson-1" | "lesson-2" | "lesson-3" | "lesson-4" | "done";
+type Page =
+  | "welcome"
+  | "lesson-1"
+  | "lesson-2"
+  | "lesson-3"
+  | "lesson-4"
+  | "done";
 
-const PAGES: Page[] = ["welcome", "lesson-1", "lesson-2", "lesson-3", "lesson-4"];
+const PAGES: Page[] = [
+  "welcome",
+  "lesson-1",
+  "lesson-2",
+  "lesson-3",
+  "lesson-4",
+];
 
 const LESSONS = [
   {
     eyebrow: "1 of 4 · the sacred one",
     title: "Hold the card to start working.",
-    body: "A long-press says \"I'm committing to this.\" The card becomes the world. Everything else fades.",
+    body: 'A long-press says "I\'m committing to this." The card becomes the world. Everything else fades.',
   },
   {
     eyebrow: "2 of 4 · the signature",
@@ -102,18 +114,25 @@ export function OnboardingPage() {
             <div className="aa-ob-brand">
               <div className="aa-brand-mark">
                 <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
-                  <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M3.5 8.5l3 3 6-7"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
             </div>
             <div className="aa-ob-eyebrow">Welcome to ActionAmp</div>
             <h1 className="aa-ob-h1">
-              We're special.<br />
+              We're special.
+              <br />
               Let's teach you the moves.
             </h1>
             <p className="aa-ob-body">
-              This isn't another list of checkboxes. It's a focus tool with its own way
-              of moving. Four quick gestures — about 30 seconds.
+              This isn't another list of checkboxes. It's a focus tool with its
+              own way of moving. Four quick gestures — about 30 seconds.
             </p>
             <div className="aa-ob-dots">
               <span className={`aa-ob-dot active`} />
@@ -130,7 +149,15 @@ export function OnboardingPage() {
           <div className="aa-ob-page aa-ob-enter" key={lessonIdx}>
             <div className="aa-ob-eyebrow">{LESSONS[lessonIdx].eyebrow}</div>
             <h2 className="aa-ob-h2">{LESSONS[lessonIdx].title}</h2>
-            <p className="aa-ob-body" dangerouslySetInnerHTML={{ __html: LESSONS[lessonIdx].body.replace(/<b>/g, '<b class="aa-ob-bold">') }} />
+            <p
+              className="aa-ob-body"
+              dangerouslySetInnerHTML={{
+                __html: LESSONS[lessonIdx].body.replace(
+                  /<b>/g,
+                  '<b class="aa-ob-bold">',
+                ),
+              }}
+            />
 
             {/* Gesture demo */}
             <div className="aa-ob-demo">
@@ -164,14 +191,19 @@ export function OnboardingPage() {
                   <span className="aa-ob-bc-sep">›</span>
                   <span className="aa-ob-bc-item">Ship product v2</span>
                   <span className="aa-ob-bc-sep">›</span>
-                  <span className="aa-ob-bc-item aa-ob-bc-current">Email Sarah</span>
+                  <span className="aa-ob-bc-item aa-ob-bc-current">
+                    Email Sarah
+                  </span>
                 </div>
               )}
             </div>
 
             <div className="aa-ob-dots">
               {PAGES.slice(1).map((_, i) => (
-                <span key={i} className={`aa-ob-dot ${i === lessonIdx ? "active" : ""}`} />
+                <span
+                  key={i}
+                  className={`aa-ob-dot ${i === lessonIdx ? "active" : ""}`}
+                />
               ))}
             </div>
           </div>
@@ -182,7 +214,13 @@ export function OnboardingPage() {
           <div className="aa-ob-page aa-ob-enter aa-ob-done-page">
             <div className="aa-ob-done-circle">
               <svg viewBox="0 0 16 16" fill="none">
-                <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M3.5 8.5l3 3 6-7"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
             <h2 className="aa-ob-h2 aa-ob-final">{FINAL_MSG}</h2>
@@ -193,7 +231,16 @@ export function OnboardingPage() {
       {/* Footer CTA */}
       <div className="aa-ob-foot">
         {!isDone ? (
-          <button className="aa-ob-cta" onClick={pageIdx === 0 ? next : (pageIdx >= PAGES.length - 1 ? complete : next)}>
+          <button
+            className="aa-ob-cta"
+            onClick={
+              pageIdx === 0
+                ? next
+                : pageIdx >= PAGES.length - 1
+                  ? complete
+                  : next
+            }
+          >
             {pageIdx === 0
               ? "Show me →"
               : pageIdx >= PAGES.length - 1

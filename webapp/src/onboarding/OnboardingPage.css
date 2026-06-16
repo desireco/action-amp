@@ -25,7 +25,11 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 50% 30%, oklch(0.58 0.16 225 / 0.12) 0%, transparent 60%),
+    radial-gradient(
+      ellipse 60% 50% at 50% 30%,
+      oklch(0.58 0.16 225 / 0.12) 0%,
+      transparent 60%
+    ),
     transparent;
   pointer-events: none;
 }
@@ -73,8 +77,14 @@
   animation: aa-ob-fade-in 0.4s var(--aa-ease-out-quart) both;
 }
 @keyframes aa-ob-fade-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* brand mark on welcome */
@@ -230,11 +240,33 @@
   animation: aa-ob-finger-hold 2.4s ease-in-out infinite;
 }
 @keyframes aa-ob-finger-hold {
-  0% { top: 20%; left: 50%; transform: translate(-50%, -50%); opacity: 0; }
-  15% { opacity: 1; }
-  30% { top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 1; }
-  80% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-  100% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+  0% {
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  30% {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+  80% {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0;
+  }
 }
 
 /* Lesson 2: two fingers swipe left */
@@ -251,16 +283,38 @@
   animation: aa-ob-finger-swipe-left-2 2.2s ease-in-out infinite;
 }
 @keyframes aa-ob-finger-swipe-left {
-  0% { left: 65%; opacity: 0; }
-  20% { opacity: 1; }
-  70% { left: 25%; opacity: 1; }
-  100% { left: 25%; opacity: 0; }
+  0% {
+    left: 65%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  70% {
+    left: 25%;
+    opacity: 1;
+  }
+  100% {
+    left: 25%;
+    opacity: 0;
+  }
 }
 @keyframes aa-ob-finger-swipe-left-2 {
-  0% { left: 70%; opacity: 0; }
-  20% { opacity: 1; }
-  70% { left: 35%; opacity: 1; }
-  100% { left: 35%; opacity: 0; }
+  0% {
+    left: 70%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  70% {
+    left: 35%;
+    opacity: 1;
+  }
+  100% {
+    left: 35%;
+    opacity: 0;
+  }
 }
 
 /* Lesson 3: single-finger horizontal swipe */
@@ -271,10 +325,24 @@
   animation: aa-ob-finger-single 2s ease-in-out infinite;
 }
 @keyframes aa-ob-finger-single {
-  0% { left: 70%; transform: translate(-50%, -50%); opacity: 0; }
-  20% { opacity: 1; }
-  70% { left: 30%; transform: translate(-50%, -50%); opacity: 1; }
-  100% { left: 30%; transform: translate(-50%, -50%); opacity: 0; }
+  0% {
+    left: 70%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  70% {
+    left: 30%;
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+  100% {
+    left: 30%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  }
 }
 
 /* Lesson 4: breadcrumb demo */
@@ -301,8 +369,13 @@
   animation: aa-ob-bc-pulse 2s ease-in-out infinite;
 }
 @keyframes aa-ob-bc-pulse {
-  0%, 100% { background: oklch(0.72 0.15 220 / 0.15); }
-  50% { background: oklch(0.72 0.15 220 / 0.3); }
+  0%,
+  100% {
+    background: oklch(0.72 0.15 220 / 0.15);
+  }
+  50% {
+    background: oklch(0.72 0.15 220 / 0.3);
+  }
 }
 .aa-ob-bc-sep {
   opacity: 0.4;
@@ -329,7 +402,9 @@
   padding: 16px 36px;
   border-radius: var(--aa-radius-lg);
   box-shadow: 0 8px 24px var(--aa-teal-tint-shadow);
-  transition: transform var(--aa-dur-fast), background var(--aa-dur-base);
+  transition:
+    transform var(--aa-dur-fast),
+    background var(--aa-dur-base);
   border: none;
   cursor: pointer;
 }
@@ -364,20 +439,37 @@
   height: 30px;
 }
 @keyframes aa-ob-done-pop {
-  0% { transform: scale(0); }
-  60% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 768px) {
-  .aa-ob-h1 { font-size: 26px; }
-  .aa-ob-h2 { font-size: 22px; }
-  .aa-ob-body { font-size: 15px; }
-  .aa-ob-demo { width: 180px; height: 120px; }
-  .aa-ob-foot { padding-bottom: 48px; }
+  .aa-ob-h1 {
+    font-size: 26px;
+  }
+  .aa-ob-h2 {
+    font-size: 22px;
+  }
+  .aa-ob-body {
+    font-size: 15px;
+  }
+  .aa-ob-demo {
+    width: 180px;
+    height: 120px;
+  }
+  .aa-ob-foot {
+    padding-bottom: 48px;
+  }
 }
 
 /* ============================================================

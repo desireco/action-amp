@@ -8,6 +8,9 @@ import { SignupPage } from "./src/auth/email/SignupPage" with { type: "ref" };
 import { userSignupFields } from "./src/auth/email/userSignupFields" with { type: "ref" };
 import { LandingPage } from "./src/landing/LandingPage" with { type: "ref" };
 import { OnboardingPage } from "./src/onboarding/OnboardingPage" with { type: "ref" };
+import { AboutPage } from "./src/public/AboutPage" with { type: "ref" };
+import { PrivacyPage } from "./src/public/PrivacyPage" with { type: "ref" };
+import { TermsPage } from "./src/public/TermsPage" with { type: "ref" };
 
 export default app({
   name: "webapp",
@@ -47,6 +50,9 @@ export default app({
   spec: [
     route("LandingRoute", "/", page(LandingPage, { authRequired: false })),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
+    route("AboutRoute", "/about", page(AboutPage, { authRequired: false })),
+    route("PrivacyRoute", "/privacy", page(PrivacyPage, { authRequired: false })),
+    route("TermsRoute", "/terms", page(TermsPage, { authRequired: false })),
     route("LoginRoute", "/login", page(LoginPage)),
     route("SignupRoute", "/signup", page(SignupPage)),
     route(

@@ -1,0 +1,268 @@
+/*
+ * Public layout + markdown rendering styles.
+ * Consumes design tokens. Scoped under .aa-public and .aa-markdown-body.
+ *
+ * Readability principles:
+ * - Narrow measure (max-width 65ch) — the gold standard for reading speed.
+ * - Generous leading (1.7) on prose.
+ * - Clear hierarchy via size + weight + margin.
+ * - Every element breathes; no dense walls of text.
+ */
+@import "../styles/tokens.css";
+
+.aa-public {
+  background: var(--aa-bg);
+  color: var(--aa-text);
+  font-family: var(--aa-font);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.aa-public * {
+  box-sizing: border-box;
+}
+
+.aa-public a {
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+  transition: color var(--aa-dur-fast);
+}
+.aa-public a:hover {
+  color: var(--aa-teal-cta-hover);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   NAV — minimal (just brand + back-home)
+   ============================================================ */
+.aa-pub-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 56px;
+  max-width: 1180px;
+  margin: 0 auto;
+  width: 100%;
+  border-bottom: 1px solid var(--aa-border);
+}
+.aa-pub-back {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--aa-text-3);
+  transition: color var(--aa-dur-fast);
+}
+.aa-pub-back:hover {
+  color: var(--aa-text);
+  text-decoration: none;
+}
+
+/* shared brand (used in nav + footer) */
+.aa-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.aa-brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--aa-radius-md);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px var(--aa-teal-tint-shadow);
+  flex-shrink: 0;
+}
+.aa-brand-mark-sm {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--aa-radius-sm);
+}
+.aa-brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--aa-text);
+}
+.aa-brand-name-sm {
+  font-size: 14px;
+}
+
+/* ============================================================
+   MAIN — markdown body
+   ============================================================ */
+.aa-pub-main {
+  flex: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 64px 56px;
+  width: 100%;
+}
+
+.aa-markdown-body {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--aa-text-2);
+}
+
+/* Headings — clear hierarchy, generous top-margin to separate sections */
+.aa-markdown-body h1 {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--aa-text);
+  margin-bottom: 12px;
+}
+.aa-markdown-body h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--aa-text);
+  margin-top: 48px;
+  margin-bottom: 12px;
+}
+.aa-markdown-body h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--aa-text);
+  margin-top: 32px;
+  margin-bottom: 8px;
+}
+
+/* The first paragraph after h1 (usually the "last updated" line) gets room */
+.aa-markdown-body > p:first-of-type {
+  margin-top: 4px;
+}
+
+/* Paragraphs */
+.aa-markdown-body p {
+  margin-bottom: 18px;
+  max-width: 65ch;
+}
+.aa-markdown-body strong {
+  color: var(--aa-text);
+  font-weight: 600;
+}
+.aa-markdown-body em {
+  color: var(--aa-text-3);
+  font-style: italic;
+}
+
+/* Blockquotes — subtle, for "last updated" dates */
+.aa-markdown-body blockquote {
+  border-left: 3px solid var(--aa-teal);
+  padding-left: 16px;
+  margin-bottom: 28px;
+  color: var(--aa-text-3);
+  font-size: 15px;
+}
+.aa-markdown-body blockquote p {
+  margin-bottom: 0;
+}
+
+/* Lists — proper indent + spacing between items */
+.aa-markdown-body ul,
+.aa-markdown-body ol {
+  margin-bottom: 18px;
+  padding-left: 24px;
+  max-width: 65ch;
+}
+.aa-markdown-body li {
+  margin-bottom: 8px;
+  line-height: 1.65;
+}
+.aa-markdown-body li:last-child {
+  margin-bottom: 0;
+}
+.aa-markdown-body ul li::marker {
+  color: var(--aa-teal);
+}
+
+/* Inline code */
+.aa-markdown-body code {
+  font-family: var(--aa-font-mono);
+  font-size: 14px;
+  background: var(--aa-surface-muted);
+  padding: 2px 6px;
+  border-radius: var(--aa-radius-xs);
+  color: var(--aa-text-2);
+}
+
+/* Horizontal rule */
+.aa-markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--aa-border);
+  margin: 40px 0;
+}
+
+/* Links inside prose */
+.aa-markdown-body a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.aa-markdown-body a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.aa-pub-footer {
+  padding: 40px 56px;
+  max-width: 1180px;
+  margin: 0 auto;
+  width: 100%;
+  border-top: 1px solid var(--aa-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: var(--aa-bg-soft);
+}
+.aa-pub-footer-links {
+  display: flex;
+  gap: 22px;
+}
+.aa-pub-footer-links a {
+  font-size: 13px;
+  color: var(--aa-text-3);
+}
+.aa-pub-footer-links a:hover {
+  color: var(--aa-text-2);
+  text-decoration: none;
+}
+.aa-pub-copy {
+  font-size: 12px;
+  color: var(--aa-text-4);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .aa-pub-nav {
+    padding: 16px 20px;
+  }
+  .aa-pub-main {
+    padding: 40px 22px;
+  }
+  .aa-markdown-body {
+    font-size: 16px;
+  }
+  .aa-markdown-body h1 {
+    font-size: 28px;
+  }
+  .aa-markdown-body h2 {
+    font-size: 20px;
+  }
+  .aa-pub-footer {
+    padding: 28px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
