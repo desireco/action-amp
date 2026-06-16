@@ -216,16 +216,40 @@
         color: var(--text-4);
         margin-bottom: 28px;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        flex-wrap: wrap;
       }
       .breadcrumb .crumb {
         color: var(--text-3);
+        padding: 5px 9px;
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: background 0.12s, color 0.12s;
+        -webkit-tap-highlight-color: transparent;
       }
-      .breadcrumb .current {
+      .breadcrumb .crumb:hover {
+        background: var(--surface-muted);
         color: var(--text-2);
-        font-weight: 600;
+      }
+      .breadcrumb .crumb:active {
+        transform: scale(0.95);
+        transition: transform 0.04s;
+      }
+      /* The crumb matching the current scope is the zoom position */
+      .breadcrumb .crumb.scope-active {
+        color: var(--teal-cta);
+        font-weight: 700;
+        background: var(--teal-soft);
+      }
+      /* Ancestors above the current scope dim slightly (out of focus) */
+      .breadcrumb .crumb.ancestor {
+        color: var(--text-4);
       }
       .breadcrumb .sep {
-        margin: 0 5px;
+        margin: 0 2px;
         opacity: 0.5;
       }
 
@@ -390,7 +414,7 @@
         border: 1px solid transparent;
         transition:
           background 0.15s,
-          transform 0.12s cubic-bezier(.4,0,.2,1),
+          transform 0.12s cubic-bezier(0.4, 0, 0.2, 1),
           box-shadow 0.15s;
         width: 100%;
         -webkit-tap-highlight-color: transparent;
@@ -595,7 +619,9 @@
         font-weight: 600;
         color: var(--text-3);
         box-shadow: var(--shadow-md);
-        transition: transform 0.12s cubic-bezier(.4,0,.2,1), background 0.15s;
+        transition:
+          transform 0.12s cubic-bezier(0.4, 0, 0.2, 1),
+          background 0.15s;
         -webkit-tap-highlight-color: transparent;
       }
       .mode-pill:active {
@@ -609,38 +635,6 @@
       }
       .mode-pill .icon {
         font-size: 14px;
-      }
-
-      .zoom-row {
-        display: flex;
-        gap: 6px;
-        justify-content: center;
-        margin-top: 10px;
-      }
-      .zoom-chip {
-        width: 40px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        color: var(--text-3);
-        font-size: 11px;
-        font-weight: 600;
-        transition: transform 0.12s cubic-bezier(.4,0,.2,1);
-        -webkit-tap-highlight-color: transparent;
-        box-shadow: var(--shadow-md);
-      }
-      .zoom-chip:active {
-        transform: scale(0.9);
-        transition: transform 0.04s;
-      }
-      .zoom-chip.active {
-        background: var(--teal-soft);
-        color: var(--teal-cta);
-        border-color: transparent;
       }
 
       .fab {
@@ -657,13 +651,17 @@
         justify-content: center;
         box-shadow: 0 8px 20px var(--teal-tint);
         z-index: 45;
-        transition: transform 0.15s cubic-bezier(.4,0,.2,1), box-shadow 0.15s;
+        transition:
+          transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.15s;
         -webkit-tap-highlight-color: transparent;
       }
       .fab:active {
         transform: scale(0.9);
         box-shadow: 0 4px 10px var(--teal-tint);
-        transition: transform 0.04s, box-shadow 0.04s;
+        transition:
+          transform 0.04s,
+          box-shadow 0.04s;
       }
 
       /* ============================================================
@@ -797,11 +795,11 @@
         </div>
 
         <div class="breadcrumb" id="breadcrumb">
-          <span class="crumb">Grow audience</span>
+          <span class="crumb" data-scope="goal">Grow audience</span>
           <span class="sep">›</span>
-          <span class="crumb">Ship product v2</span>
+          <span class="crumb" data-scope="project">Ship product v2</span>
           <span class="sep">›</span>
-          <span class="current">Email Sarah</span>
+          <span class="crumb current" data-scope="task">Email Sarah</span>
         </div>
 
         <div class="card-area">
@@ -879,7 +877,7 @@
               stroke-linejoin="round"
             />
           </svg>
-          two-finger swipe ↔ to zoom · one-finger swipe ↔ for mode
+          two-finger swipe ↔ to zoom · or tap the breadcrumb · one-finger swipe ↔ for mode
         </div>
       </div>
 
@@ -907,11 +905,6 @@
           <button class="mode-pill" data-mode="review">
             <span class="icon">☾</span> Review
           </button>
-        </div>
-        <div class="zoom-row">
-          <button class="zoom-chip" data-zoom="goal">G</button>
-          <button class="zoom-chip" data-zoom="project">P</button>
-          <button class="zoom-chip active" data-zoom="task">●</button>
         </div>
       </div>
 
@@ -946,10 +939,14 @@
 
       // ---- Tap haptic helper (single source) ----
       // Light tap for buttons/chips; slightly stronger for primary CTAs.
-      const haptic = (ms = 8) => { if (navigator.vibrate) navigator.vibrate(ms); };
+      const haptic = (ms = 8) => {
+        if (navigator.vibrate) navigator.vibrate(ms);
+      };
       // Wire every tappable control to fire haptics on press
       document.addEventListener("pointerdown", (e) => {
-        const t = e.target.closest(".btn, .mode-pill, .zoom-chip, .fab, .feeling");
+        const t = e.target.closest(
+          ".btn, .mode-pill, .breadcrumb .crumb, .fab, .feeling",
+        );
         if (!t) return;
         // Primary CTAs get a slightly stronger tap; everything else light
         haptic(t.classList.contains("btn-primary") ? 12 : 8);
@@ -964,7 +961,6 @@
       const modeIndicator = document.getElementById("modeIndicator");
       const breadcrumb = document.getElementById("breadcrumb");
       const dialBtns = document.querySelectorAll(".mode-pill");
-      const zoomChips = document.querySelectorAll(".zoom-chip");
 
       let mode = "do"; // plan | do | review
       let scope = "task"; // task | project | goal
@@ -1020,20 +1016,29 @@
       );
 
       // ============================================================
-      // SCOPE (zoom) — two-finger swipe (left=out, right=in) or tap zoom chips
+      // SCOPE (zoom) — two-finger swipe (left=out, right=in) or tap breadcrumb crumbs
       // ============================================================
+      const SCOPE_ORDER = ["task", "project", "goal"]; // index increases as you zoom out
       function setScope(s) {
+        if (!SCOPE_ORDER.includes(s) || s === scope) return;
         scope = s;
-        zoomChips.forEach((c) =>
-          c.classList.toggle("active", c.dataset.zoom === s),
-        );
-        // breadcrumb prominence shifts
-        if (s === "task") breadcrumb.style.opacity = "0.7";
-        else breadcrumb.style.opacity = "1";
+        // Highlight the crumb matching the new scope; ancestors above it dim.
+        const targetIdx = SCOPE_ORDER.indexOf(s);
+        crumbEls.forEach((c) => {
+          const idx = SCOPE_ORDER.indexOf(c.dataset.scope);
+          c.classList.toggle("scope-active", idx === targetIdx);
+          c.classList.toggle("ancestor", idx > targetIdx); // deeper than current (not visible at this zoom)
+          c.classList.toggle("current", idx === 0); // task is always the leaf
+        });
+        breadcrumb.style.opacity = "1";
+        haptic(10);
       }
-      zoomChips.forEach((c) =>
-        c.addEventListener("click", () => setScope(c.dataset.zoom)),
+      const crumbEls = document.querySelectorAll(".breadcrumb .crumb");
+      crumbEls.forEach((c) =>
+        c.addEventListener("click", () => setScope(c.dataset.scope)),
       );
+      // init: task is the active scope
+      setScope("task");
 
       // ============================================================
       // TASK STATE — the core

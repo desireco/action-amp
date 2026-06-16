@@ -159,8 +159,8 @@ translate to thumbs.
 
 | Action | Desktop | Mobile |
 |---|---|---|
-| Zoom out (Task→Project→Goal) | `Z` | two-finger swipe left |
-| Zoom in | `X` | two-finger swipe right |
+| Zoom out (Task→Project→Goal) | `Z` / click breadcrumb crumb | two-finger swipe left / tap breadcrumb crumb |
+| Zoom in | `X` / click breadcrumb crumb | two-finger swipe right / tap breadcrumb crumb |
 | Switch to Plan mode | `1` | swipe right on card |
 | Switch to Review mode | `3` | swipe left on card |
 | Start working | `Enter` / Do this | long-press card |
