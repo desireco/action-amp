@@ -1109,6 +1109,10 @@
         padding: 28px 22px;
         flex-direction: column;
         align-items: flex-start;
+        /* make the footer a real destination on mobile — its own screen */
+        scroll-snap-align: start;
+        min-height: 778px;
+        justify-content: center;
       }
     </style>
   </head>
@@ -1368,8 +1372,8 @@
           just works.
         </p>
         <p class="lede">
-          We also borrowed from <b>PARA</b>, with one deliberate change: we
-          took its <b>Areas</b> and called them <b>Goals</b>. Not the same, but
+          We also borrowed from <b>PARA</b>, with one deliberate change: we took
+          its <b>Areas</b> and called them <b>Goals</b>. Not the same, but
           similar. Areas are passive buckets ("Health", "Finance"). Goals are
           active outcomes ("Run a 10k", "Get finances under control"). For an
           app about action, the active framing fits.
