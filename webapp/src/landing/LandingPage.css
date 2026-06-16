@@ -94,7 +94,7 @@
    ============================================================ */
 .aa-hero {
   position: relative;
-  padding: 120px 56px 140px;
+  padding: 120px 0 140px;
   overflow: hidden;
   background:
     radial-gradient(
@@ -152,6 +152,7 @@
 .aa-hero-grid {
   max-width: 1180px;
   margin: 0 auto;
+  padding: 0 56px;
   display: grid;
   grid-template-columns: 1.05fr 1fr;
   gap: 64px;
