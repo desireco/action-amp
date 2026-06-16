@@ -203,7 +203,9 @@
         scroll-snap-type: y mandatory;
         scroll-behavior: smooth;
       }
-      .frame.mobile .scroll::-webkit-scrollbar { width: 0; }
+      .frame.mobile .scroll::-webkit-scrollbar {
+        width: 0;
+      }
       .frame.mobile section {
         scroll-snap-align: start;
         scroll-snap-stop: always;
@@ -213,7 +215,10 @@
         justify-content: center;
       }
       /* hero already centers itself; keep its bespoke layout intact */
-      .frame.mobile section.hero { justify-content: flex-start; padding-top: 56px; }
+      .frame.mobile section.hero {
+        justify-content: flex-start;
+        padding-top: 56px;
+      }
       .scroll::-webkit-scrollbar {
         width: 8px;
       }
@@ -1355,7 +1360,7 @@
       <section class="section method" id="method">
         <div class="eyebrow">Methodology</div>
         <h2 class="display">
-          GTD-compatible. <span class="light">PARA-flavored.</span>
+          GTD-compatible. <span class="light">Built for action.</span>
         </h2>
         <p class="lede">
           If you know <b>Getting Things Done</b>, you're home: inbox, triage,
@@ -1382,7 +1387,7 @@
             </div>
           </div>
           <div class="faq-item">
-            <div class="faq-q">Do I need to know GTD or PARA?</div>
+            <div class="faq-q">Do I need to know GTD?</div>
             <div class="faq-a">
               No. The methodology is there if you want it, invisible if you
               don't. Most users just capture, triage, and do.
