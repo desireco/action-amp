@@ -26,8 +26,8 @@ export default app({
     methods: {
       email: {
         fromField: {
-          name: "Basic App",
-          email: "hello@example.com",
+          name: "ActionAmp",
+          email: "noreply@actionamp.com",
         },
         userSignupFields,
         emailVerification: {
@@ -42,7 +42,11 @@ export default app({
     onAuthFailedRedirectTo: "/login",
   },
   emailSender: {
-    provider: "Dummy",
+    provider: "SMTP",
+    defaultFrom: {
+      name: "ActionAmp",
+      email: "noreply@actionamp.com",
+    },
   },
   client: {
     rootComponent: App,

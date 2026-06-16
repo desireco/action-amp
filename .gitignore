@@ -7,6 +7,9 @@ webapp/.wasp/
 webapp/.env*
 webapp/build/
 
+# secrets
+.env
+
 # os
 .DS_Store
 .pi/
