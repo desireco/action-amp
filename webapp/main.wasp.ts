@@ -51,7 +51,11 @@ export default app({
     route("LandingRoute", "/", page(LandingPage, { authRequired: false })),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
     route("AboutRoute", "/about", page(AboutPage, { authRequired: false })),
-    route("PrivacyRoute", "/privacy", page(PrivacyPage, { authRequired: false })),
+    route(
+      "PrivacyRoute",
+      "/privacy",
+      page(PrivacyPage, { authRequired: false }),
+    ),
     route("TermsRoute", "/terms", page(TermsPage, { authRequired: false })),
     route("LoginRoute", "/login", page(LoginPage)),
     route("SignupRoute", "/signup", page(SignupPage)),

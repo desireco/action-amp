@@ -1,6 +1,6 @@
 # Privacy Policy
 
-*Last updated: June 16, 2026*
+_Last updated: June 16, 2026_
 
 This policy describes what ActionAmp collects, why, and what we do (and don't do) with it. We wrote it in plain language because privacy policies shouldn't require a lawyer to understand.
 

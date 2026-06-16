@@ -30,16 +30,18 @@ export function renderMarkdown(md: string): string {
 
   // Inline formatting: bold, italic, links, code
   const inline = (text: string): string => {
-    return text
-      // inline code
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // bold
-      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-      .replace(/__([^_]+)__/g, "<strong>$1</strong>")
-      // italic (not inside URLs)
-      .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>")
-      // links [text](url)
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    return (
+      text
+        // inline code
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        // bold
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/__([^_]+)__/g, "<strong>$1</strong>")
+        // italic (not inside URLs)
+        .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>")
+        // links [text](url)
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+    );
   };
 
   for (let i = 0; i < lines.length; i++) {

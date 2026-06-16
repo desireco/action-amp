@@ -7,7 +7,7 @@ Every todo app helps you write things down. None of them help you pick. The resu
 ## What we believe
 
 - **Calm over features.** Whitespace is the point. If a screen feels crowded, something's wrong.
-- **Action over lists.** The home screen should show you *one thing to do*, not fifty things you haven't done.
+- **Action over lists.** The home screen should show you _one thing to do_, not fifty things you haven't done.
 - **Honesty over nudges.** No streak shaming, no red-dot guilt trips, no manipulation. Just the next thing.
 
 ## Who's behind it

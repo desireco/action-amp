@@ -1,6 +1,6 @@
 # Terms of Service
 
-*Last updated: June 16, 2026*
+_Last updated: June 16, 2026_
 
 These terms govern your use of ActionAmp. They're written in plain language. By using the app, you agree to them.
 

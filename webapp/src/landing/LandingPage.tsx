@@ -364,7 +364,7 @@ export function LandingPage() {
           Not all the things.
         </h2>
         <p>When it's ready, you'll know.</p>
-        <a className="aa-follow-link" href="#">
+        <a className="aa-follow-link" href="/about">
           Follow along
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path
@@ -394,10 +394,9 @@ export function LandingPage() {
           <span className="aa-brand-name aa-brand-name-sm">ActionAmp</span>
         </div>
         <div className="aa-footer-links">
-          <a href="#">About</a>
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
-          <a href="#">Help</a>
+          <a href="/about">About</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
         </div>
         <div className="aa-footer-copy">© 2026 ActionAmp</div>
       </footer>
