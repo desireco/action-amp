@@ -1,467 +1,973 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ActionAmp — Approach A: Zoom + Pan</title>
-<style>
-  :root {
-    --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-    --teal: #0EA5E9; --teal-cta: #0284C7; --teal-cta-hover: #0369A1;
-    --teal-soft: rgba(14,165,233,.12); --teal-tint: rgba(2,132,199,.22);
-    --amber: #F59E0B; --amber-text: #92400E; --amber-soft: rgba(245,158,11,.14);
-  }
-  :root {
-    --bg: #F2F5F7; --bg-elev: #FCFCFD; --surface: #FFFFFF;
-    --surface-muted: #F2F5F7; --border: #E6E8EC; --border-strong: #D5D9DE;
-    --text: #212224; --text-2: #44474B; --text-3: #55606E; --text-4: #818489;
-    --shadow-md: 0 2px 4px rgba(0,28,70,.06), 0 8px 24px rgba(0,28,70,.06);
-  }
-  [data-theme="dark"] {
-    --bg: #13161C; --bg-elev: #1A1D24; --surface: #1F232B;
-    --surface-muted: #2A2F38; --border: #2F343E; --border-strong: #3C4250;
-    --text: #F4F6F9; --text-2: #C5CBD4; --text-3: #8B939F; --text-4: #6A7180;
-    --shadow-md: 0 2px 4px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{-webkit-font-smoothing:antialiased}
-  body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background .4s ease,color .4s ease}
-  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-  svg{display:block}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Approach A: Zoom + Pan</title>
+    <style>
+      :root {
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+        --teal: #0ea5e9;
+        --teal-cta: #0284c7;
+        --teal-cta-hover: #0369a1;
+        --teal-soft: rgba(14, 165, 233, 0.12);
+        --teal-tint: rgba(2, 132, 199, 0.22);
+        --amber: #f59e0b;
+        --amber-text: #92400e;
+        --amber-soft: rgba(245, 158, 11, 0.14);
+      }
+      :root {
+        --bg: #f2f5f7;
+        --bg-elev: #fcfcfd;
+        --surface: #ffffff;
+        --surface-muted: #f2f5f7;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text: #212224;
+        --text-2: #44474b;
+        --text-3: #55606e;
+        --text-4: #818489;
+        --shadow-md:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+      }
+      [data-theme="dark"] {
+        --bg: #13161c;
+        --bg-elev: #1a1d24;
+        --surface: #1f232b;
+        --surface-muted: #2a2f38;
+        --border: #2f343e;
+        --border-strong: #3c4250;
+        --text: #f4f6f9;
+        --text-2: #c5cbd4;
+        --text-3: #8b939f;
+        --text-4: #6a7180;
+        --shadow-md:
+          0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        overflow: hidden;
+        transition:
+          background 0.4s ease,
+          color 0.4s ease;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+      }
+      svg {
+        display: block;
+      }
 
-  /* ============================================================
+      /* ============================================================
      THE STAGE — a single canvas. No sidebar. Movement IS nav.
      ============================================================ */
-  .stage{
-    position:relative;width:100vw;height:100vh;overflow:hidden;
-    background:
-      radial-gradient(circle at 50% 40%, var(--bg-elev) 0%, var(--bg) 60%);
-  }
+      .stage {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: radial-gradient(
+          circle at 50% 40%,
+          var(--bg-elev) 0%,
+          var(--bg) 60%
+        );
+      }
 
-  /* The world — transformed by zoom (scale) + pan (translateX) */
-  .world{
-    position:absolute;inset:0;
-    display:flex;align-items:center;justify-content:center;
-    transition: transform .6s cubic-bezier(.4,0,.2,1);
-    will-change: transform;
-  }
+      /* The world — transformed by zoom (scale) + pan (translateX) */
+      .world {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: transform;
+      }
 
-  /* ---- A node in the world. Each is centered, then offset by data-zoom. ---- */
-  .node{
-    position:absolute;
-    transition: opacity .5s ease, filter .5s ease, transform .6s cubic-bezier(.4,0,.2,1);
-    text-align:center;
-    transform-origin:center center;
-  }
-  .node.dim{ opacity:.18; filter:blur(3px); pointer-events:none; }
+      /* ---- A node in the world. Each is centered, then offset by data-zoom. ---- */
+      .node {
+        position: absolute;
+        transition:
+          opacity 0.5s ease,
+          filter 0.5s ease,
+          transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: center;
+        transform-origin: center center;
+      }
+      .node.dim {
+        opacity: 0.18;
+        filter: blur(3px);
+        pointer-events: none;
+      }
 
-  /* TASK — the smallest, most present. Zoom level 0. */
-  .node-task{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:14px;
-    padding:48px 56px;
-    box-shadow: 0 2px 4px rgba(0,28,70,.05), 0 24px 64px var(--teal-tint);
-    max-width:480px;
-  }
-  [data-theme="dark"] .node-task{ box-shadow:0 2px 4px rgba(0,0,0,.2), 0 24px 64px rgba(14,165,233,.18); }
+      /* TASK — the smallest, most present. Zoom level 0. */
+      .node-task {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 48px 56px;
+        box-shadow:
+          0 2px 4px rgba(0, 28, 70, 0.05),
+          0 24px 64px var(--teal-tint);
+        max-width: 480px;
+      }
+      [data-theme="dark"] .node-task {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, 0.2),
+          0 24px 64px rgba(14, 165, 233, 0.18);
+      }
 
-  /* PROJECT — medium. Zoom level 1. Sits BEHIND/ABOVE task. */
-  .node-project{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:18px;
-    padding:40px 48px;
-    box-shadow:var(--shadow-md);
-    width:680px;
-    transform: translateY(-220px) scale(1);
-  }
+      /* PROJECT — medium. Zoom level 1. Sits BEHIND/ABOVE task. */
+      .node-project {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 40px 48px;
+        box-shadow: var(--shadow-md);
+        width: 680px;
+        transform: translateY(-220px) scale(1);
+      }
 
-  /* GOAL — largest. Zoom level 2. Top of the hierarchy. */
-  .node-goal{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:22px;
-    padding:36px 48px;
-    box-shadow:var(--shadow-md);
-    width:880px;
-    transform: translateY(-380px) scale(1);
-  }
+      /* GOAL — largest. Zoom level 2. Top of the hierarchy. */
+      .node-goal {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        padding: 36px 48px;
+        box-shadow: var(--shadow-md);
+        width: 880px;
+        transform: translateY(-380px) scale(1);
+      }
 
-  /* Connectors — thin lines showing the hierarchy */
-  .connector{
-    position:absolute;left:50%;width:1px;background:var(--border-strong);
-    transform:translateX(-50%);
-    opacity:0;transition:opacity .5s ease;
-    z-index:0;
-  }
-  .connector.show{opacity:1;}
+      /* Connectors — thin lines showing the hierarchy */
+      .connector {
+        position: absolute;
+        left: 50%;
+        width: 1px;
+        background: var(--border-strong);
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        z-index: 0;
+      }
+      .connector.show {
+        opacity: 1;
+      }
 
-  /* ---- Task node content ---- */
-  .ctx{font-size:12.5px;color:var(--text-3);margin-bottom:28px}
-  .completion{
-    display:inline-flex;align-items:center;justify-content:center;
-    width:34px;height:34px;border-radius:9999px;
-    border:2.5px solid var(--border-strong);margin-bottom:24px;cursor:pointer;
-    transition:transform .2s cubic-bezier(.4,0,.2,1),border-color .2s ease;
-  }
-  .completion:hover{transform:scale(1.08);border-color:var(--teal)}
-  .completion svg{color:#fff;width:16px;height:16px;opacity:0;transform:scale(.4);transition:opacity .14s ease .06s,transform .22s cubic-bezier(.34,1.56,.64,1) .06s}
-  .completion.filled{background:var(--teal);border-color:var(--teal);box-shadow:0 6px 16px var(--teal-tint)}
-  .completion.filled svg{opacity:1;transform:scale(1)}
-  .task-title{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-bottom:10px}
-  .task-meta{font-size:14px;color:var(--text-3);margin-bottom:24px}
-  .task-meta .sep{margin:0 7px;color:var(--border-strong)}
-  .actions{display:flex;gap:10px;justify-content:center}
-  .btn{font-size:14.5px;font-weight:600;padding:10px 22px;border-radius:8px;border:1px solid transparent;transition:background .15s,border-color .15s,transform .08s}
-  .btn:active{transform:scale(.97)}
-  .btn-primary{background:var(--teal-cta);color:#fff}
-  .btn-primary:hover{background:var(--teal-cta-hover)}
-  .btn-secondary{background:var(--surface);color:var(--text-2);border-color:var(--border)}
-  .btn-secondary:hover{background:var(--surface-muted)}
+      /* ---- Task node content ---- */
+      .ctx {
+        font-size: 12.5px;
+        color: var(--text-3);
+        margin-bottom: 28px;
+      }
+      .completion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 9999px;
+        border: 2.5px solid var(--border-strong);
+        margin-bottom: 24px;
+        cursor: pointer;
+        transition:
+          transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          border-color 0.2s ease;
+      }
+      .completion:hover {
+        transform: scale(1.08);
+        border-color: var(--teal);
+      }
+      .completion svg {
+        color: #fff;
+        width: 16px;
+        height: 16px;
+        opacity: 0;
+        transform: scale(0.4);
+        transition:
+          opacity 0.14s ease 0.06s,
+          transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) 0.06s;
+      }
+      .completion.filled {
+        background: var(--teal);
+        border-color: var(--teal);
+        box-shadow: 0 6px 16px var(--teal-tint);
+      }
+      .completion.filled svg {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .task-title {
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        margin-bottom: 10px;
+      }
+      .task-meta {
+        font-size: 14px;
+        color: var(--text-3);
+        margin-bottom: 24px;
+      }
+      .task-meta .sep {
+        margin: 0 7px;
+        color: var(--border-strong);
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+      .btn {
+        font-size: 14.5px;
+        font-weight: 600;
+        padding: 10px 22px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          transform 0.08s;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn-primary {
+        background: var(--teal-cta);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--teal-cta-hover);
+      }
+      .btn-secondary {
+        background: var(--surface);
+        color: var(--text-2);
+        border-color: var(--border);
+      }
+      .btn-secondary:hover {
+        background: var(--surface-muted);
+      }
 
-  /* ---- Project node content ---- */
-  .p-label,.g-label{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text-4);text-transform:uppercase;margin-bottom:8px}
-  .p-title{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:14px}
-  .p-progress{display:flex;align-items:center;gap:10px;justify-content:center;font-size:13px;color:var(--text-3)}
-  .p-bar{width:200px;height:6px;background:var(--surface-muted);border-radius:9999px;overflow:hidden}
-  .p-bar-fill{height:100%;background:var(--teal);border-radius:9999px;width:40%;transition:width .6s ease}
-  .p-tasks{display:flex;gap:6px;justify-content:center;margin-top:18px;flex-wrap:wrap}
-  .p-task{font-size:11.5px;color:var(--text-3);background:var(--surface-muted);padding:4px 9px;border-radius:9999px}
-  .p-task.current{background:var(--teal-soft);color:var(--teal-cta);font-weight:600}
+      /* ---- Project node content ---- */
+      .p-label,
+      .g-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--text-4);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      .p-title {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin-bottom: 14px;
+      }
+      .p-progress {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: center;
+        font-size: 13px;
+        color: var(--text-3);
+      }
+      .p-bar {
+        width: 200px;
+        height: 6px;
+        background: var(--surface-muted);
+        border-radius: 9999px;
+        overflow: hidden;
+      }
+      .p-bar-fill {
+        height: 100%;
+        background: var(--teal);
+        border-radius: 9999px;
+        width: 40%;
+        transition: width 0.6s ease;
+      }
+      .p-tasks {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-top: 18px;
+        flex-wrap: wrap;
+      }
+      .p-task {
+        font-size: 11.5px;
+        color: var(--text-3);
+        background: var(--surface-muted);
+        padding: 4px 9px;
+        border-radius: 9999px;
+      }
+      .p-task.current {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+        font-weight: 600;
+      }
 
-  /* ---- Goal node content ---- */
-  .g-title{font-size:24px;font-weight:700;letter-spacing:-.01em;margin-bottom:10px}
-  .g-desc{font-size:14px;color:var(--text-3);max-width:520px;margin:0 auto 18px}
-  .g-projects{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-  .g-proj{font-size:12px;color:var(--text-2);background:var(--surface-muted);padding:5px 11px;border-radius:8px;border:1px solid var(--border)}
-  .g-proj.current{background:var(--teal-soft);color:var(--teal-cta);font-weight:600;border-color:transparent}
+      /* ---- Goal node content ---- */
+      .g-title {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin-bottom: 10px;
+      }
+      .g-desc {
+        font-size: 14px;
+        color: var(--text-3);
+        max-width: 520px;
+        margin: 0 auto 18px;
+      }
+      .g-projects {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .g-proj {
+        font-size: 12px;
+        color: var(--text-2);
+        background: var(--surface-muted);
+        padding: 5px 11px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+      .g-proj.current {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+        font-weight: 600;
+        border-color: transparent;
+      }
 
-  /* ============================================================
+      /* ============================================================
      HUD — orientation, not chrome. Minimal. Top + bottom only.
      ============================================================ */
-  .hud-top{
-    position:absolute;top:0;left:0;right:0;
-    display:flex;align-items:center;gap:12px;
-    padding:16px 24px;
-    z-index:10;
-  }
-  .brand{display:flex;align-items:center;gap:9px}
-  .brand-mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--teal),#22D3EE);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(2,132,199,.25)}
-  .breadcrumb{
-    font-size:13px;color:var(--text-3);
-    display:flex;align-items:center;gap:8px;
-  }
-  .breadcrumb .crumb{cursor:pointer;transition:color .15s}
-  .breadcrumb .crumb:hover{color:var(--text)}
-  .breadcrumb .crumb.current{color:var(--text);font-weight:600}
-  .breadcrumb .sep{color:var(--border-strong)}
+      .hud-top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 24px;
+        z-index: 10;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .brand-mark {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, var(--teal), #22d3ee);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+      }
+      .breadcrumb {
+        font-size: 13px;
+        color: var(--text-3);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .breadcrumb .crumb {
+        cursor: pointer;
+        transition: color 0.15s;
+      }
+      .breadcrumb .crumb:hover {
+        color: var(--text);
+      }
+      .breadcrumb .crumb.current {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .breadcrumb .sep {
+        color: var(--border-strong);
+      }
 
-  .hud-top-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
-  .icon-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:var(--text-3);transition:all .15s}
-  .icon-btn:hover{background:var(--surface-muted);color:var(--text)}
+      .hud-top-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .icon-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        color: var(--text-3);
+        transition: all 0.15s;
+      }
+      .icon-btn:hover {
+        background: var(--surface-muted);
+        color: var(--text);
+      }
 
-  /* ---- Bottom HUD: zoom + pan controls (also keyboard) ---- */
-  .hud-bottom{
-    position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
-    display:flex;align-items:center;gap:6px;
-    background:var(--surface);border:1px solid var(--border);
-    padding:6px;border-radius:10px;box-shadow:var(--shadow-md);
-    z-index:10;
-    font-size:13px;
-  }
-  .hud-group{display:flex;align-items:center;gap:2px}
-  .hud-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
-  .hud-btn{
-    display:inline-flex;align-items:center;gap:6px;
-    padding:6px 10px;border-radius:6px;color:var(--text-2);
-    transition:background .12s,color .12s;font-weight:500;
-  }
-  .hud-btn:hover{background:var(--surface-muted);color:var(--text)}
-  .hud-btn.active{background:var(--teal-soft);color:var(--teal-cta);font-weight:600}
-  .hud-btn svg{opacity:.75}
-  .hud-btn kbd{font-family:var(--font-mono);font-size:10.5px;background:var(--surface-muted);padding:1px 5px;border-radius:4px;border:1px solid var(--border);color:var(--text-3)}
+      /* ---- Bottom HUD: zoom + pan controls (also keyboard) ---- */
+      .hud-bottom {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 6px;
+        border-radius: 10px;
+        box-shadow: var(--shadow-md);
+        z-index: 10;
+        font-size: 13px;
+      }
+      .hud-group {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+      .hud-sep {
+        width: 1px;
+        height: 20px;
+        background: var(--border);
+        margin: 0 4px;
+      }
+      .hud-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        color: var(--text-2);
+        transition:
+          background 0.12s,
+          color 0.12s;
+        font-weight: 500;
+      }
+      .hud-btn:hover {
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+      .hud-btn.active {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+        font-weight: 600;
+      }
+      .hud-btn svg {
+        opacity: 0.75;
+      }
+      .hud-btn kbd {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        background: var(--surface-muted);
+        padding: 1px 5px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        color: var(--text-3);
+      }
 
-  /* ---- Side rails: past/future peek (the time axis) ---- */
-  .rail{
-    position:absolute;top:50%;transform:translateY(-50%);
-    width:120px;
-    display:flex;flex-direction:column;gap:6px;
-    z-index:5;
-    opacity:.5;transition:opacity .3s;
-  }
-  .rail:hover{opacity:1}
-  .rail.left{left:24px;align-items:flex-start}
-  .rail.right{right:24px;align-items:flex-end}
-  .rail-label{font-size:10.5px;font-weight:600;letter-spacing:.06em;color:var(--text-4);text-transform:uppercase;margin-bottom:4px;padding:0 4px}
-  .rail-item{
-    font-size:12px;color:var(--text-3);
-    padding:6px 9px;border-radius:6px;cursor:pointer;
-    transition:background .12s,color .12s;
-    width:100%;
-  }
-  .rail-item:hover{background:var(--surface);color:var(--text-2)}
-  .rail.left .rail-item{text-align:left}
-  .rail.right .rail-item{text-align:right}
+      /* ---- Side rails: past/future peek (the time axis) ---- */
+      .rail {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 120px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        z-index: 5;
+        opacity: 0.5;
+        transition: opacity 0.3s;
+      }
+      .rail:hover {
+        opacity: 1;
+      }
+      .rail.left {
+        left: 24px;
+        align-items: flex-start;
+      }
+      .rail.right {
+        right: 24px;
+        align-items: flex-end;
+      }
+      .rail-label {
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--text-4);
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        padding: 0 4px;
+      }
+      .rail-item {
+        font-size: 12px;
+        color: var(--text-3);
+        padding: 6px 9px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition:
+          background 0.12s,
+          color 0.12s;
+        width: 100%;
+      }
+      .rail-item:hover {
+        background: var(--surface);
+        color: var(--text-2);
+      }
+      .rail.left .rail-item {
+        text-align: left;
+      }
+      .rail.right .rail-item {
+        text-align: right;
+      }
 
-  /* ---- Capture FAB ---- */
-  .fab{
-    position:absolute;bottom:20px;right:24px;
-    display:inline-flex;align-items:center;gap:8px;
-    background:var(--teal-cta);color:#fff;
-    padding:10px 16px;border-radius:10px;
-    font-size:13.5px;font-weight:600;
-    box-shadow:0 4px 12px var(--teal-tint);
-    z-index:11;
-    transition:transform .15s,background .15s;
-  }
-  .fab:hover{background:var(--teal-cta-hover);transform:translateY(-1px)}
-  .fab kbd{font-family:var(--font-mono);font-size:10.5px;background:rgba(255,255,255,.18);padding:1px 5px;border-radius:4px}
+      /* ---- Capture FAB ---- */
+      .fab {
+        position: absolute;
+        bottom: 20px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--teal-cta);
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 13.5px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px var(--teal-tint);
+        z-index: 11;
+        transition:
+          transform 0.15s,
+          background 0.15s;
+      }
+      .fab:hover {
+        background: var(--teal-cta-hover);
+        transform: translateY(-1px);
+      }
+      .fab kbd {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        background: rgba(255, 255, 255, 0.18);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
 
-  /* Hint */
-  .hint{
-    position:absolute;bottom:20px;left:24px;
-    font-size:11.5px;color:var(--text-4);
-    background:var(--surface);border:1px solid var(--border);
-    padding:7px 11px;border-radius:8px;
-    z-index:10;
-    max-width:260px;line-height:1.5;
-  }
-  .hint kbd{font-family:var(--font-mono);font-size:10px;background:var(--surface-muted);padding:1px 4px;border-radius:3px;border:1px solid var(--border)}
+      /* Hint */
+      .hint {
+        position: absolute;
+        bottom: 20px;
+        left: 24px;
+        font-size: 11.5px;
+        color: var(--text-4);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 7px 11px;
+        border-radius: 8px;
+        z-index: 10;
+        max-width: 260px;
+        line-height: 1.5;
+      }
+      .hint kbd {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        background: var(--surface-muted);
+        padding: 1px 4px;
+        border-radius: 3px;
+        border: 1px solid var(--border);
+      }
 
-  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  .node-task{animation:rise .5s cubic-bezier(.2,.7,.3,1) both}
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .node-task {
+        animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+      }
 
-  @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-</style>
-</head>
-<body data-zoom="task">
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body data-zoom="task">
+    <div class="stage" id="stage">
+      <!-- =================== TOP HUD =================== -->
+      <div class="hud-top">
+        <div class="brand">
+          <div class="brand-mark">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+        <div class="breadcrumb" id="breadcrumb">
+          <span class="crumb" data-zoom-target="goal">Grow audience</span>
+          <span class="sep">›</span>
+          <span class="crumb" data-zoom-target="project">Ship product v2</span>
+          <span class="sep">›</span>
+          <span class="crumb current" data-zoom-target="task">Email Sarah</span>
+        </div>
+        <div class="hud-top-actions">
+          <button class="icon-btn" id="lensBtn" title="Lens: Work (press L)">
+            L·W
+          </button>
+          <button class="icon-btn" id="themeBtn" title="Toggle theme (⌘D)">
+            <svg
+              id="themeIcon"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+            >
+              <path
+                d="M13 9.2A5 5 0 016.8 3 5.5 5.5 0 1013 9.2z"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
 
-<div class="stage" id="stage">
+      <!-- =================== LEFT RAIL (past / Logbook) =================== -->
+      <div class="rail left">
+        <div class="rail-label">Done today</div>
+        <div class="rail-item">Standup notes</div>
+        <div class="rail-item">Fix login bug</div>
+        <div class="rail-item">Reply to Marco</div>
+      </div>
 
-  <!-- =================== TOP HUD =================== -->
-  <div class="hud-top">
-    <div class="brand">
-      <div class="brand-mark"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    </div>
-    <div class="breadcrumb" id="breadcrumb">
-      <span class="crumb" data-zoom-target="goal">Grow audience</span>
-      <span class="sep">›</span>
-      <span class="crumb" data-zoom-target="project">Ship product v2</span>
-      <span class="sep">›</span>
-      <span class="crumb current" data-zoom-target="task">Email Sarah</span>
-    </div>
-    <div class="hud-top-actions">
-      <button class="icon-btn" id="lensBtn" title="Lens: Work (press L)">L·W</button>
-      <button class="icon-btn" id="themeBtn" title="Toggle theme (⌘D)">
-        <svg id="themeIcon" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 9.2A5 5 0 016.8 3 5.5 5.5 0 1013 9.2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      <!-- =================== RIGHT RAIL (future / Upcoming) =================== -->
+      <div class="rail right">
+        <div class="rail-label">Coming up</div>
+        <div class="rail-item">Review PR #284</div>
+        <div class="rail-item">1:1 with Marco</div>
+        <div class="rail-item">Draft launch plan</div>
+      </div>
+
+      <!-- =================== THE WORLD =================== -->
+      <div class="world" id="world">
+        <!-- connectors -->
+        <div
+          class="connector"
+          id="conn-goal"
+          style="height: 200px; top: calc(50% - 280px)"
+        ></div>
+        <div
+          class="connector"
+          id="conn-project"
+          style="height: 140px; top: calc(50% - 130px)"
+        ></div>
+
+        <!-- GOAL (zoom level 2 — top) -->
+        <div class="node node-goal" id="node-goal">
+          <div class="g-label">Goal · Work lens</div>
+          <div class="g-title">Grow audience</div>
+          <div class="g-desc">
+            Build something people tell their friends about. The "why" behind
+            everything in this lens.
+          </div>
+          <div class="g-projects">
+            <span class="g-proj">Write blog</span>
+            <span class="g-proj current">Ship product v2</span>
+            <span class="g-proj">Community MVP</span>
+          </div>
+        </div>
+
+        <!-- PROJECT (zoom level 1 — middle) -->
+        <div class="node node-project" id="node-project">
+          <div class="p-label">Project · supports "Grow audience"</div>
+          <div class="p-title">Ship product v2</div>
+          <div class="p-progress">
+            <div class="p-bar"><div class="p-bar-fill"></div></div>
+            <span>4 of 10 · 40%</span>
+          </div>
+          <div class="p-tasks">
+            <span class="p-task current">Email Sarah</span>
+            <span class="p-task">Review PR</span>
+            <span class="p-task">Draft plan</span>
+            <span class="p-task">+ 7 more</span>
+          </div>
+        </div>
+
+        <!-- TASK (zoom level 0 — present, center) -->
+        <div class="node node-task" id="node-task">
+          <div class="ctx">Right now · 30 min available</div>
+          <div class="completion" id="completion">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <div class="task-title">Email Sarah re: Q3 invoice</div>
+          <div class="task-meta">
+            Due today <span class="sep">·</span> 15 min
+            <span class="sep">·</span> Important
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" id="doBtn">Do this</button>
+            <button class="btn btn-secondary">Not now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================== CAPTURE FAB =================== -->
+      <button class="fab">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M8 3v10M3 8h10"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+        </svg>
+        Capture <kbd>⌘K</kbd>
       </button>
-    </div>
-  </div>
 
-  <!-- =================== LEFT RAIL (past / Logbook) =================== -->
-  <div class="rail left">
-    <div class="rail-label">Done today</div>
-    <div class="rail-item">Standup notes</div>
-    <div class="rail-item">Fix login bug</div>
-    <div class="rail-item">Reply to Marco</div>
-  </div>
+      <!-- =================== HINT =================== -->
+      <div class="hint">
+        <strong style="color: var(--text-2)">Try it:</strong> press
+        <kbd>Z</kbd> to zoom out, <kbd>X</kbd> to zoom in · <kbd>←</kbd> past,
+        <kbd>→</kbd> future
+      </div>
 
-  <!-- =================== RIGHT RAIL (future / Upcoming) =================== -->
-  <div class="rail right">
-    <div class="rail-label">Coming up</div>
-    <div class="rail-item">Review PR #284</div>
-    <div class="rail-item">1:1 with Marco</div>
-    <div class="rail-item">Draft launch plan</div>
-  </div>
-
-  <!-- =================== THE WORLD =================== -->
-  <div class="world" id="world">
-
-    <!-- connectors -->
-    <div class="connector" id="conn-goal" style="height:200px;top:calc(50% - 280px)"></div>
-    <div class="connector" id="conn-project" style="height:140px;top:calc(50% - 130px)"></div>
-
-    <!-- GOAL (zoom level 2 — top) -->
-    <div class="node node-goal" id="node-goal">
-      <div class="g-label">Goal · Work lens</div>
-      <div class="g-title">Grow audience</div>
-      <div class="g-desc">Build something people tell their friends about. The "why" behind everything in this lens.</div>
-      <div class="g-projects">
-        <span class="g-proj">Write blog</span>
-        <span class="g-proj current">Ship product v2</span>
-        <span class="g-proj">Community MVP</span>
+      <!-- =================== BOTTOM HUD (zoom + pan controls) =================== -->
+      <div class="hud-bottom">
+        <div class="hud-group">
+          <button class="hud-btn" data-pan="left" title="Past (←)">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M10 3L5 8l5 5"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <span style="font-size: 12px; color: var(--text-3); padding: 0 6px"
+            >Today</span
+          >
+          <button class="hud-btn" data-pan="right" title="Future (→)">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M6 3l5 5-5 5"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="hud-sep"></div>
+        <div class="hud-group">
+          <button class="hud-btn" data-zoom="goal" title="Zoom to Goal (Z)">
+            Goal
+          </button>
+          <button class="hud-btn" data-zoom="project" title="Zoom to Project">
+            Project
+          </button>
+          <button
+            class="hud-btn active"
+            data-zoom="task"
+            title="Zoom to Task (X)"
+          >
+            Task
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- PROJECT (zoom level 1 — middle) -->
-    <div class="node node-project" id="node-project">
-      <div class="p-label">Project · supports "Grow audience"</div>
-      <div class="p-title">Ship product v2</div>
-      <div class="p-progress">
-        <div class="p-bar"><div class="p-bar-fill"></div></div>
-        <span>4 of 10 · 40%</span>
-      </div>
-      <div class="p-tasks">
-        <span class="p-task current">Email Sarah</span>
-        <span class="p-task">Review PR</span>
-        <span class="p-task">Draft plan</span>
-        <span class="p-task">+ 7 more</span>
-      </div>
-    </div>
+    <script>
+      // ---- Theme ----
+      const root = document.documentElement;
+      const themeBtn = document.getElementById("themeBtn");
+      const themeIcon = document.getElementById("themeIcon");
+      const sunIcon =
+        '<path d="M8 2v1.5M8 12.5V14M14 8h-1.5M3.5 8H2M12.2 3.8l-1 1M4.8 11.2l-1 1M12.2 12.2l-1-1M4.8 4.8l-1-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.4"/>';
+      const moonIcon =
+        '<path d="M13 9.2A5 5 0 016.8 3 5.5 5.5 0 1013 9.2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>';
+      function setTheme(t) {
+        root.dataset.theme = t;
+        themeIcon.innerHTML = t === "dark" ? sunIcon : moonIcon;
+      }
+      themeBtn.addEventListener("click", () =>
+        setTheme(root.dataset.theme === "dark" ? "light" : "dark"),
+      );
+      document.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "d") {
+          e.preventDefault();
+          setTheme(root.dataset.theme === "dark" ? "light" : "dark");
+        }
+      });
 
-    <!-- TASK (zoom level 0 — present, center) -->
-    <div class="node node-task" id="node-task">
-      <div class="ctx">Right now · 30 min available</div>
-      <div class="completion" id="completion">
-        <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="task-title">Email Sarah re: Q3 invoice</div>
-      <div class="task-meta">Due today <span class="sep">·</span> 15 min <span class="sep">·</span> Important</div>
-      <div class="actions">
-        <button class="btn btn-primary" id="doBtn">Do this</button>
-        <button class="btn btn-secondary">Not now</button>
-      </div>
-    </div>
+      // ---- Completion ----
+      const comp = document.getElementById("completion");
+      comp.addEventListener("click", () => comp.classList.toggle("filled"));
+      document.getElementById("doBtn").addEventListener("click", (e) => {
+        comp.classList.add("filled");
+        e.currentTarget.textContent = "Done ✓";
+        setTimeout(() => (e.currentTarget.textContent = "Do this"), 1400);
+      });
 
-  </div>
+      // ============================================================
+      // ZOOM — transform the world. No sidebar. Movement IS nav.
+      // ============================================================
+      const world = document.getElementById("world");
+      const nodes = {
+        task: document.getElementById("node-task"),
+        project: document.getElementById("node-project"),
+        goal: document.getElementById("node-goal"),
+      };
+      const connGoal = document.getElementById("conn-goal");
+      const connProj = document.getElementById("conn-project");
+      const crumbs = document.querySelectorAll("#breadcrumb .crumb");
+      const hudBtns = document.querySelectorAll(".hud-btn[data-zoom]");
 
-  <!-- =================== CAPTURE FAB =================== -->
-  <button class="fab">
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-    Capture <kbd>⌘K</kbd>
-  </button>
+      // Each zoom level: how to transform the world + which nodes are dim
+      const ZOOM = {
+        task: { scale: 1.0, ty: 0, dim: ["project", "goal"], showConn: [] },
+        project: { scale: 0.78, ty: 130, dim: ["goal"], showConn: ["project"] },
+        goal: { scale: 0.6, ty: 240, dim: [], showConn: ["goal", "project"] },
+      };
 
-  <!-- =================== HINT =================== -->
-  <div class="hint">
-    <strong style="color:var(--text-2)">Try it:</strong> press <kbd>Z</kbd> to zoom out, <kbd>X</kbd> to zoom in · <kbd>←</kbd> past, <kbd>→</kbd> future
-  </div>
+      function setZoom(level) {
+        const z = ZOOM[level];
+        // pan world down + scale down so the targeted ancestor comes to center
+        world.style.transform = `translateY(${z.ty}px) scale(${z.scale})`;
+        // dim non-focused nodes
+        Object.entries(nodes).forEach(([k, n]) => {
+          n.classList.toggle("dim", z.dim.includes(k));
+        });
+        // connectors
+        connGoal.classList.toggle("show", z.showConn.includes("goal"));
+        connProj.classList.toggle("show", z.showConn.includes("project"));
+        // breadcrumb current
+        crumbs.forEach((c) =>
+          c.classList.toggle("current", c.dataset.zoomTarget === level),
+        );
+        // hud buttons
+        hudBtns.forEach((b) =>
+          b.classList.toggle("active", b.dataset.zoom === level),
+        );
+        document.body.dataset.zoom = level;
+      }
 
-  <!-- =================== BOTTOM HUD (zoom + pan controls) =================== -->
-  <div class="hud-bottom">
-    <div class="hud-group">
-      <button class="hud-btn" data-pan="left" title="Past (←)">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <span style="font-size:12px;color:var(--text-3);padding:0 6px">Today</span>
-      <button class="hud-btn" data-pan="right" title="Future (→)">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
-    <div class="hud-sep"></div>
-    <div class="hud-group">
-      <button class="hud-btn" data-zoom="goal" title="Zoom to Goal (Z)">Goal</button>
-      <button class="hud-btn" data-zoom="project" title="Zoom to Project">Project</button>
-      <button class="hud-btn active" data-zoom="task" title="Zoom to Task (X)">Task</button>
-    </div>
-  </div>
+      // wire zoom controls
+      hudBtns.forEach((b) =>
+        b.addEventListener("click", () => setZoom(b.dataset.zoom)),
+      );
+      crumbs.forEach((c) =>
+        c.addEventListener("click", () => setZoom(c.dataset.zoomTarget)),
+      );
+      // clicking a dim node zooms to it
+      Object.entries(nodes).forEach(([k, n]) =>
+        n.addEventListener("click", () => setZoom(k)),
+      );
 
-</div>
+      // ---- Lens cycle ----
+      const lensBtn = document.getElementById("lensBtn");
+      let lens = "W";
+      lensBtn.addEventListener("click", () => {
+        lens = lens === "W" ? "M" : "W";
+        lensBtn.textContent = `L·${lens}`;
+        // a visible re-scope: pulse the stage
+        document.getElementById("stage").style.animation = "none";
+        void document.getElementById("stage").offsetWidth;
+      });
 
-<script>
-  // ---- Theme ----
-  const root = document.documentElement;
-  const themeBtn = document.getElementById('themeBtn');
-  const themeIcon = document.getElementById('themeIcon');
-  const sunIcon = '<path d="M8 2v1.5M8 12.5V14M14 8h-1.5M3.5 8H2M12.2 3.8l-1 1M4.8 11.2l-1 1M12.2 12.2l-1-1M4.8 4.8l-1-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.4"/>';
-  const moonIcon = '<path d="M13 9.2A5 5 0 016.8 3 5.5 5.5 0 1013 9.2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>';
-  function setTheme(t){ root.dataset.theme=t; themeIcon.innerHTML = t==='dark'?sunIcon:moonIcon; }
-  themeBtn.addEventListener('click',()=>setTheme(root.dataset.theme==='dark'?'light':'dark'));
-  document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='d'){e.preventDefault();setTheme(root.dataset.theme==='dark'?'light':'dark')} });
+      // ---- Keyboard ----
+      document.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT") return;
+        const k = e.key.toLowerCase();
+        if (k === "z") {
+          const order = ["task", "project", "goal"];
+          const cur = document.body.dataset.zoom;
+          const next =
+            order[Math.min(order.indexOf(cur) + 1, order.length - 1)];
+          setZoom(next);
+        } else if (k === "x") {
+          const order = ["task", "project", "goal"];
+          const cur = document.body.dataset.zoom;
+          const next = order[Math.max(order.indexOf(cur) - 1, 0)];
+          setZoom(next);
+        } else if (k === "arrowleft") {
+          // pan to past — flash the rail
+          document.querySelector(".rail.left").style.opacity = "1";
+          setTimeout(
+            () => (document.querySelector(".rail.left").style.opacity = ""),
+            800,
+          );
+        } else if (k === "arrowright") {
+          document.querySelector(".rail.right").style.opacity = "1";
+          setTimeout(
+            () => (document.querySelector(".rail.right").style.opacity = ""),
+            800,
+          );
+        }
+      });
 
-  // ---- Completion ----
-  const comp = document.getElementById('completion');
-  comp.addEventListener('click',()=>comp.classList.toggle('filled'));
-  document.getElementById('doBtn').addEventListener('click',e=>{comp.classList.add('filled');e.currentTarget.textContent='Done ✓';setTimeout(()=>e.currentTarget.textContent='Do this',1400)});
-
-  // ============================================================
-  // ZOOM — transform the world. No sidebar. Movement IS nav.
-  // ============================================================
-  const world = document.getElementById('world');
-  const nodes = {
-    task: document.getElementById('node-task'),
-    project: document.getElementById('node-project'),
-    goal: document.getElementById('node-goal'),
-  };
-  const connGoal = document.getElementById('conn-goal');
-  const connProj = document.getElementById('conn-project');
-  const crumbs = document.querySelectorAll('#breadcrumb .crumb');
-  const hudBtns = document.querySelectorAll('.hud-btn[data-zoom]');
-
-  // Each zoom level: how to transform the world + which nodes are dim
-  const ZOOM = {
-    task:    { scale: 1.0, ty: 0,    dim: ['project','goal'], showConn: [] },
-    project: { scale: 0.78, ty: 130, dim: ['goal'],           showConn: ['project'] },
-    goal:    { scale: 0.6, ty: 240, dim: [],                  showConn: ['goal','project'] },
-  };
-
-  function setZoom(level){
-    const z = ZOOM[level];
-    // pan world down + scale down so the targeted ancestor comes to center
-    world.style.transform = `translateY(${z.ty}px) scale(${z.scale})`;
-    // dim non-focused nodes
-    Object.entries(nodes).forEach(([k,n])=>{
-      n.classList.toggle('dim', z.dim.includes(k) );
-    });
-    // connectors
-    connGoal.classList.toggle('show', z.showConn.includes('goal'));
-    connProj.classList.toggle('show', z.showConn.includes('project'));
-    // breadcrumb current
-    crumbs.forEach(c => c.classList.toggle('current', c.dataset.zoomTarget === level));
-    // hud buttons
-    hudBtns.forEach(b => b.classList.toggle('active', b.dataset.zoom === level));
-    document.body.dataset.zoom = level;
-  }
-
-  // wire zoom controls
-  hudBtns.forEach(b => b.addEventListener('click', () => setZoom(b.dataset.zoom)));
-  crumbs.forEach(c => c.addEventListener('click', () => setZoom(c.dataset.zoomTarget)));
-  // clicking a dim node zooms to it
-  Object.entries(nodes).forEach(([k,n]) => n.addEventListener('click', () => setZoom(k)));
-
-  // ---- Lens cycle ----
-  const lensBtn = document.getElementById('lensBtn');
-  let lens = 'W';
-  lensBtn.addEventListener('click',()=>{
-    lens = lens === 'W' ? 'M' : 'W';
-    lensBtn.textContent = `L·${lens}`;
-    // a visible re-scope: pulse the stage
-    document.getElementById('stage').style.animation='none';
-    void document.getElementById('stage').offsetWidth;
-  });
-
-  // ---- Keyboard ----
-  document.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT') return;
-    const k = e.key.toLowerCase();
-    if (k === 'z') {
-      const order = ['task','project','goal'];
-      const cur = document.body.dataset.zoom;
-      const next = order[Math.min(order.indexOf(cur)+1, order.length-1)];
-      setZoom(next);
-    } else if (k === 'x') {
-      const order = ['task','project','goal'];
-      const cur = document.body.dataset.zoom;
-      const next = order[Math.max(order.indexOf(cur)-1, 0)];
-      setZoom(next);
-    } else if (k === 'arrowleft') {
-      // pan to past — flash the rail
-      document.querySelector('.rail.left').style.opacity = '1';
-      setTimeout(()=>document.querySelector('.rail.left').style.opacity='', 800);
-    } else if (k === 'arrowright') {
-      document.querySelector('.rail.right').style.opacity = '1';
-      setTimeout(()=>document.querySelector('.rail.right').style.opacity='', 800);
-    }
-  });
-
-  // pan buttons (visual only — feel)
-  document.querySelectorAll('.hud-btn[data-pan]').forEach(b=>{
-    b.addEventListener('click',()=>{
-      const rail = document.querySelector(b.dataset.pan==='left' ? '.rail.left' : '.rail.right');
-      rail.style.opacity='1'; setTimeout(()=>rail.style.opacity='',800);
-    });
-  });
-</script>
-</body>
+      // pan buttons (visual only — feel)
+      document.querySelectorAll(".hud-btn[data-pan]").forEach((b) => {
+        b.addEventListener("click", () => {
+          const rail = document.querySelector(
+            b.dataset.pan === "left" ? ".rail.left" : ".rail.right",
+          );
+          rail.style.opacity = "1";
+          setTimeout(() => (rail.style.opacity = ""), 800);
+        });
+      });
+    </script>
+  </body>
 </html>

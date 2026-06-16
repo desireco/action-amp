@@ -1,151 +1,429 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ActionAmp — Three interaction approaches</title>
-<style>
-  :root {
-    --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-    --teal: #0EA5E9; --teal-cta: #0284C7; --teal-soft: rgba(14,165,233,.12);
-    --amber: #F59E0B; --amber-text: #92400E; --amber-soft: rgba(245,158,11,.14);
-    --bg: #F2F5F7; --surface: #FFFFFF; --surface-muted: #F2F5F7;
-    --border: #E6E8EC; --border-strong: #D5D9DE;
-    --text: #212224; --text-2: #44474B; --text-3: #55606E; --text-4: #818489;
-    --shadow-md: 0 2px 4px rgba(0,28,70,.06), 0 8px 24px rgba(0,28,70,.06);
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{-webkit-font-smoothing:antialiased}
-  body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.45;padding:56px 24px 80px}
-  .page{max-width:960px;margin:0 auto}
-  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--text-4);text-transform:uppercase;margin-bottom:14px}
-  h1{font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-bottom:16px}
-  .lede{font-size:17px;color:var(--text-2);max-width:60ch;margin-bottom:48px}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Three interaction approaches</title>
+    <style>
+      :root {
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+        --teal: #0ea5e9;
+        --teal-cta: #0284c7;
+        --teal-soft: rgba(14, 165, 233, 0.12);
+        --amber: #f59e0b;
+        --amber-text: #92400e;
+        --amber-soft: rgba(245, 158, 11, 0.14);
+        --bg: #f2f5f7;
+        --surface: #ffffff;
+        --surface-muted: #f2f5f7;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text: #212224;
+        --text-2: #44474b;
+        --text-3: #55606e;
+        --text-4: #818489;
+        --shadow-md:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.45;
+        padding: 56px 24px 80px;
+      }
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--text-4);
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+      h1 {
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        margin-bottom: 16px;
+      }
+      .lede {
+        font-size: 17px;
+        color: var(--text-2);
+        max-width: 60ch;
+        margin-bottom: 48px;
+      }
 
-  .grid{display:grid;grid-template-columns:1fr;gap:20px}
-  @media(min-width:840px){.grid{grid-template-columns:1fr 1fr 1fr}}
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      @media (min-width: 840px) {
+        .grid {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
 
-  .card{
-    display:flex;flex-direction:column;
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:14px;padding:24px;
-    box-shadow:var(--shadow-md);
-    text-decoration:none;color:inherit;
-    transition:transform .15s,box-shadow .15s,border-color .15s;
-  }
-  .card:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(0,28,70,.12);border-color:var(--border-strong)}
-  .card-tag{
-    display:inline-flex;align-items:center;gap:6px;
-    font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
-    padding:3px 8px;border-radius:9999px;margin-bottom:14px;align-self:flex-start;
-  }
-  .card-tag.a{background:var(--teal-soft);color:var(--teal-cta)}
-  .card-tag.b{background:var(--amber-soft);color:var(--amber-text)}
-  .card-tag.c{background:#FCE7F3;color:#9D174D}
-  .card-title{font-size:19px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
-  .card-desc{font-size:14px;color:var(--text-2);line-height:1.5;margin-bottom:18px;flex:1}
-  .card-meta{
-    border-top:1px solid var(--border);padding-top:14px;margin-top:4px;
-    display:flex;flex-direction:column;gap:8px;
-  }
-  .meta-row{display:flex;justify-content:space-between;font-size:12.5px}
-  .meta-label{color:var(--text-4);font-weight:500}
-  .meta-val{color:var(--text-2);font-weight:600;text-align:right}
-  .meta-val.risk{color:var(--amber-text)}
-  .card-go{
-    margin-top:16px;text-align:center;font-size:13px;font-weight:600;
-    color:var(--teal-cta);padding:10px;border-radius:8px;
-    background:var(--teal-soft);
-  }
-  .card:hover .card-go{background:var(--teal);color:#fff}
+      .card {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 24px;
+        box-shadow: var(--shadow-md);
+        text-decoration: none;
+        color: inherit;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s,
+          border-color 0.15s;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 40px rgba(0, 28, 70, 0.12);
+        border-color: var(--border-strong);
+      }
+      .card-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: 9999px;
+        margin-bottom: 14px;
+        align-self: flex-start;
+      }
+      .card-tag.a {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .card-tag.b {
+        background: var(--amber-soft);
+        color: var(--amber-text);
+      }
+      .card-tag.c {
+        background: #fce7f3;
+        color: #9d174d;
+      }
+      .card-title {
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin-bottom: 8px;
+      }
+      .card-desc {
+        font-size: 14px;
+        color: var(--text-2);
+        line-height: 1.5;
+        margin-bottom: 18px;
+        flex: 1;
+      }
+      .card-meta {
+        border-top: 1px solid var(--border);
+        padding-top: 14px;
+        margin-top: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .meta-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12.5px;
+      }
+      .meta-label {
+        color: var(--text-4);
+        font-weight: 500;
+      }
+      .meta-val {
+        color: var(--text-2);
+        font-weight: 600;
+        text-align: right;
+      }
+      .meta-val.risk {
+        color: var(--amber-text);
+      }
+      .card-go {
+        margin-top: 16px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--teal-cta);
+        padding: 10px;
+        border-radius: 8px;
+        background: var(--teal-soft);
+      }
+      .card:hover .card-go {
+        background: var(--teal);
+        color: #fff;
+      }
 
-  .compare{margin-top:56px}
-  .compare-label{font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--text-4);text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:12px}
-  .compare-label::after{content:"";flex:1;height:1px;background:var(--border)}
-  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-md);font-size:13.5px}
-  th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--border)}
-  th{background:var(--surface-muted);font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em}
-  tr:last-child td{border-bottom:none}
-  td:first-child{font-weight:600;color:var(--text-2)}
-  .footnote{margin-top:40px;font-size:13px;color:var(--text-3);line-height:1.6;max-width:64ch}
-  .footnote b{color:var(--text-2)}
-</style>
-</head>
-<body>
-<div class="page">
+      .compare {
+        margin-top: 56px;
+      }
+      .compare-label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--text-4);
+        text-transform: uppercase;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .compare-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        background: var(--surface-muted);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-3);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td:first-child {
+        font-weight: 600;
+        color: var(--text-2);
+      }
+      .footnote {
+        margin-top: 40px;
+        font-size: 13px;
+        color: var(--text-3);
+        line-height: 1.6;
+        max-width: 64ch;
+      }
+      .footnote b {
+        color: var(--text-2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="eyebrow">Interaction model · three bets</div>
+      <h1>How should ActionAmp feel to move through?</h1>
+      <p class="lede">
+        The visual DNA is fixed (Things + teal/amber). The question now is the
+        <b>interaction model</b> — how you switch lens, start tasks, move
+        between modes, review. Three genuinely different approaches. Each is a
+        clickable prototype. Open all three, then tell me which one feels like
+        home.
+      </p>
 
-  <div class="eyebrow">Interaction model · three bets</div>
-  <h1>How should ActionAmp feel to move through?</h1>
-  <p class="lede">The visual DNA is fixed (Things + teal/amber). The question now is the <b>interaction model</b> — how you switch lens, start tasks, move between modes, review. Three genuinely different approaches. Each is a clickable prototype. Open all three, then tell me which one feels like home.</p>
+      <div class="grid">
+        <a class="card" href="approach-a-zoom-pan.html">
+          <span class="card-tag a">A · Spatial</span>
+          <div class="card-title">Zoom + Pan</div>
+          <div class="card-desc">
+            Task → Project → Goal is <b>zoom</b> (Figma for your work). Past →
+            present → future is <b>pan</b>. No sidebar — movement <i>is</i> the
+            navigation.
+          </div>
+          <div class="card-meta">
+            <div class="meta-row">
+              <span class="meta-label">Inspired by</span
+              ><span class="meta-val">Figma + timelines</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Best for</span
+              ><span class="meta-val">hierarchy clarity</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Risk</span
+              ><span class="meta-val risk">disorientation</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Keys</span
+              ><span class="meta-val" style="font-family: var(--font-mono)"
+                >Z / X / ←→</span
+              >
+            </div>
+          </div>
+          <div class="card-go">Open prototype →</div>
+        </a>
 
-  <div class="grid">
+        <a class="card" href="approach-b-focus-blur.html">
+          <span class="card-tag b">B · Optical</span>
+          <div class="card-title">Focus / Blur</div>
+          <div class="card-desc">
+            Everything stays visible — but only what you're doing is
+            <b>sharp</b>. The rest is blurred periphery. Switching =
+            <b>attention shift</b>, no movement at all.
+          </div>
+          <div class="card-meta">
+            <div class="meta-row">
+              <span class="meta-label">Inspired by</span
+              ><span class="meta-val">depth-of-field</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Best for</span
+              ><span class="meta-val">calm + context</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Risk</span
+              ><span class="meta-val risk">too subtle</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Keys</span
+              ><span class="meta-val">click any card</span>
+            </div>
+          </div>
+          <div class="card-go">Open prototype →</div>
+        </a>
 
-    <a class="card" href="approach-a-zoom-pan.html">
-      <span class="card-tag a">A · Spatial</span>
-      <div class="card-title">Zoom + Pan</div>
-      <div class="card-desc">Task → Project → Goal is <b>zoom</b> (Figma for your work). Past → present → future is <b>pan</b>. No sidebar — movement <i>is</i> the navigation.</div>
-      <div class="card-meta">
-        <div class="meta-row"><span class="meta-label">Inspired by</span><span class="meta-val">Figma + timelines</span></div>
-        <div class="meta-row"><span class="meta-label">Best for</span><span class="meta-val">hierarchy clarity</span></div>
-        <div class="meta-row"><span class="meta-label">Risk</span><span class="meta-val risk">disorientation</span></div>
-        <div class="meta-row"><span class="meta-label">Keys</span><span class="meta-val" style="font-family:var(--font-mono)">Z / X / ←→</span></div>
+        <a class="card" href="approach-c-time-adaptive.html">
+          <span class="card-tag c">C · Temporal</span>
+          <div class="card-title">Time-adaptive</div>
+          <div class="card-desc">
+            The home <b>is</b> the mode. Morning = <i>plan</i>, midday =
+            <i>do</i>, evening = <i>review</i>. Time itself is the switcher.
+            Each mode is a different ritual.
+          </div>
+          <div class="card-meta">
+            <div class="meta-row">
+              <span class="meta-label">Inspired by</span
+              ><span class="meta-val">ritual + calendar</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Best for</span
+              ><span class="meta-val">daily rhythm</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Risk</span
+              ><span class="meta-val risk">feels prescriptive</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Keys</span
+              ><span class="meta-val" style="font-family: var(--font-mono)"
+                >1 / 2 / 3</span
+              >
+            </div>
+          </div>
+          <div class="card-go">Open prototype →</div>
+        </a>
       </div>
-      <div class="card-go">Open prototype →</div>
-    </a>
 
-    <a class="card" href="approach-b-focus-blur.html">
-      <span class="card-tag b">B · Optical</span>
-      <div class="card-title">Focus / Blur</div>
-      <div class="card-desc">Everything stays visible — but only what you're doing is <b>sharp</b>. The rest is blurred periphery. Switching = <b>attention shift</b>, no movement at all.</div>
-      <div class="card-meta">
-        <div class="meta-row"><span class="meta-label">Inspired by</span><span class="meta-val">depth-of-field</span></div>
-        <div class="meta-row"><span class="meta-label">Best for</span><span class="meta-val">calm + context</span></div>
-        <div class="meta-row"><span class="meta-label">Risk</span><span class="meta-val risk">too subtle</span></div>
-        <div class="meta-row"><span class="meta-label">Keys</span><span class="meta-val">click any card</span></div>
+      <div class="compare">
+        <div class="compare-label">Side by side</div>
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>A · Zoom + Pan</th>
+              <th>B · Focus / Blur</th>
+              <th>C · Time-adaptive</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Navigation metaphor</td>
+              <td>Space (zoom/pan)</td>
+              <td>Attention (focus)</td>
+              <td>Time (ritual)</td>
+            </tr>
+            <tr>
+              <td>Sidebar?</td>
+              <td>Gone — breadcrumb only</td>
+              <td>Gone — periphery shows all</td>
+              <td>Gone — dial at bottom</td>
+            </tr>
+            <tr>
+              <td>Task → Project → Goal</td>
+              <td>Zoom out</td>
+              <td>Click to focus</td>
+              <td>Shown as context chain</td>
+            </tr>
+            <tr>
+              <td>Past ↔ Future</td>
+              <td>Pan L / R</td>
+              <td>Always visible (blurred)</td>
+              <td>Implicit in mode</td>
+            </tr>
+            <tr>
+              <td>Lens switch (Work/Me)</td>
+              <td>Re-scopes the world</td>
+              <td>Re-scopes periphery</td>
+              <td>Re-scopes the ritual</td>
+            </tr>
+            <tr>
+              <td>Task-start</td>
+              <td>Pull-focus zoom-in</td>
+              <td>Everything else blurs more</td>
+              <td>Enters "Do" mode</td>
+            </tr>
+            <tr>
+              <td>Review</td>
+              <td>Pan to past</td>
+              <td>Focus the logbook node</td>
+              <td>Built-in "Review" mode</td>
+            </tr>
+            <tr>
+              <td>Biggest strength</td>
+              <td>Hierarchy becomes tangible</td>
+              <td>Calmest; never loses context</td>
+              <td>Matches real daily rhythm</td>
+            </tr>
+            <tr>
+              <td>Biggest risk</td>
+              <td>Prezi-style disorientation</td>
+              <td>Too quiet to read as nav</td>
+              <td>Prescriptive / gimmicky</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="card-go">Open prototype →</div>
-    </a>
 
-    <a class="card" href="approach-c-time-adaptive.html">
-      <span class="card-tag c">C · Temporal</span>
-      <div class="card-title">Time-adaptive</div>
-      <div class="card-desc">The home <b>is</b> the mode. Morning = <i>plan</i>, midday = <i>do</i>, evening = <i>review</i>. Time itself is the switcher. Each mode is a different ritual.</div>
-      <div class="card-meta">
-        <div class="meta-row"><span class="meta-label">Inspired by</span><span class="meta-val">ritual + calendar</span></div>
-        <div class="meta-row"><span class="meta-label">Best for</span><span class="meta-val">daily rhythm</span></div>
-        <div class="meta-row"><span class="meta-label">Risk</span><span class="meta-val risk">feels prescriptive</span></div>
-        <div class="meta-row"><span class="meta-label">Keys</span><span class="meta-val" style="font-family:var(--font-mono)">1 / 2 / 3</span></div>
-      </div>
-      <div class="card-go">Open prototype →</div>
-    </a>
-
-  </div>
-
-  <div class="compare">
-    <div class="compare-label">Side by side</div>
-    <table>
-      <thead>
-        <tr><th></th><th>A · Zoom + Pan</th><th>B · Focus / Blur</th><th>C · Time-adaptive</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Navigation metaphor</td><td>Space (zoom/pan)</td><td>Attention (focus)</td><td>Time (ritual)</td></tr>
-        <tr><td>Sidebar?</td><td>Gone — breadcrumb only</td><td>Gone — periphery shows all</td><td>Gone — dial at bottom</td></tr>
-        <tr><td>Task → Project → Goal</td><td>Zoom out</td><td>Click to focus</td><td>Shown as context chain</td></tr>
-        <tr><td>Past ↔ Future</td><td>Pan L / R</td><td>Always visible (blurred)</td><td>Implicit in mode</td></tr>
-        <tr><td>Lens switch (Work/Me)</td><td>Re-scopes the world</td><td>Re-scopes periphery</td><td>Re-scopes the ritual</td></tr>
-        <tr><td>Task-start</td><td>Pull-focus zoom-in</td><td>Everything else blurs more</td><td>Enters "Do" mode</td></tr>
-        <tr><td>Review</td><td>Pan to past</td><td>Focus the logbook node</td><td>Built-in "Review" mode</td></tr>
-        <tr><td>Biggest strength</td><td>Hierarchy becomes tangible</td><td>Calmest; never loses context</td><td>Matches real daily rhythm</td></tr>
-        <tr><td>Biggest risk</td><td>Prezi-style disorientation</td><td>Too quiet to read as nav</td><td>Prescriptive / gimmicky</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <p class="footnote">
-    <b>How to use this:</b> open each prototype, spend 60 seconds, come back. The right answer might be a hybrid — e.g. <i>C as the home rhythm</i> with <i>A's zoom for hierarchy</i> and <i>B's blur for task-start pull-focus</i>. They're not mutually exclusive. The question is which is the <b>spine</b> the others hang off.
-  </p>
-
-</div>
-</body>
+      <p class="footnote">
+        <b>How to use this:</b> open each prototype, spend 60 seconds, come
+        back. The right answer might be a hybrid — e.g.
+        <i>C as the home rhythm</i> with <i>A's zoom for hierarchy</i> and
+        <i>B's blur for task-start pull-focus</i>. They're not mutually
+        exclusive. The question is which is the <b>spine</b> the others hang
+        off.
+      </p>
+    </div>
+  </body>
 </html>
