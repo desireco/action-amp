@@ -390,20 +390,32 @@
         border: 1px solid transparent;
         transition:
           background 0.15s,
-          transform 0.08s;
+          transform 0.12s cubic-bezier(.4,0,.2,1),
+          box-shadow 0.15s;
         width: 100%;
+        -webkit-tap-highlight-color: transparent;
       }
       .btn:active {
-        transform: scale(0.97);
+        transform: scale(0.96);
+        transition: transform 0.04s;
       }
       .btn-primary {
         background: var(--teal-cta);
         color: white;
+        box-shadow: 0 4px 12px var(--teal-tint);
+      }
+      .btn-primary:active {
+        background: var(--teal-cta-hover);
+        box-shadow: 0 2px 6px var(--teal-tint);
       }
       .btn-secondary {
         background: var(--surface);
         color: var(--text-2);
         border-color: var(--border-strong);
+      }
+      .btn-secondary:active {
+        background: var(--surface-muted);
+        border-color: var(--text-4);
       }
       .btn-switch {
         background: transparent;
@@ -583,6 +595,12 @@
         font-weight: 600;
         color: var(--text-3);
         box-shadow: var(--shadow-md);
+        transition: transform 0.12s cubic-bezier(.4,0,.2,1), background 0.15s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mode-pill:active {
+        transform: scale(0.95) translateY(1px);
+        transition: transform 0.04s;
       }
       .mode-pill.active {
         background: var(--teal-soft);
@@ -611,7 +629,13 @@
         color: var(--text-3);
         font-size: 11px;
         font-weight: 600;
+        transition: transform 0.12s cubic-bezier(.4,0,.2,1);
+        -webkit-tap-highlight-color: transparent;
         box-shadow: var(--shadow-md);
+      }
+      .zoom-chip:active {
+        transform: scale(0.9);
+        transition: transform 0.04s;
       }
       .zoom-chip.active {
         background: var(--teal-soft);
@@ -633,9 +657,13 @@
         justify-content: center;
         box-shadow: 0 8px 20px var(--teal-tint);
         z-index: 45;
+        transition: transform 0.15s cubic-bezier(.4,0,.2,1), box-shadow 0.15s;
+        -webkit-tap-highlight-color: transparent;
       }
       .fab:active {
-        transform: scale(0.94);
+        transform: scale(0.9);
+        box-shadow: 0 4px 10px var(--teal-tint);
+        transition: transform 0.04s, box-shadow 0.04s;
       }
 
       /* ============================================================
@@ -915,6 +943,17 @@
 
       // ---- State ----
       const phone = document.getElementById("phone");
+
+      // ---- Tap haptic helper (single source) ----
+      // Light tap for buttons/chips; slightly stronger for primary CTAs.
+      const haptic = (ms = 8) => { if (navigator.vibrate) navigator.vibrate(ms); };
+      // Wire every tappable control to fire haptics on press
+      document.addEventListener("pointerdown", (e) => {
+        const t = e.target.closest(".btn, .mode-pill, .zoom-chip, .fab, .feeling");
+        if (!t) return;
+        // Primary CTAs get a slightly stronger tap; everything else light
+        haptic(t.classList.contains("btn-primary") ? 12 : 8);
+      });
       const card = document.getElementById("taskCard");
       const comp = document.getElementById("completion");
       const ctxEl = document.getElementById("ctx");
@@ -1204,8 +1243,7 @@
         (e) => {
           if (e.touches.length === 2) {
             // average X of both fingers as the start reference
-            twoFingerStartX =
-              (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            twoFingerStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
             twoFingerStartScope = scope;
             if (navigator.vibrate) navigator.vibrate(10);
           }
@@ -1216,13 +1254,14 @@
         "touchmove",
         (e) => {
           if (e.touches.length === 2 && twoFingerStartScope) {
-            const avgX =
-              (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            const avgX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
             const dx = avgX - twoFingerStartX;
             // swipe left (negative dx) → zoom out (task → project → goal)
             if (dx < -50 && twoFingerStartScope !== "goal") {
               const order = ["task", "project", "goal"];
-              setScope(order[Math.min(order.indexOf(twoFingerStartScope) + 1, 2)]);
+              setScope(
+                order[Math.min(order.indexOf(twoFingerStartScope) + 1, 2)],
+              );
               twoFingerStartScope = scope;
               twoFingerStartX = avgX; // reset for continued swiping
               if (navigator.vibrate) navigator.vibrate(15);
@@ -1230,7 +1269,9 @@
             // swipe right (positive dx) → zoom in (goal → project → task)
             else if (dx > 50 && twoFingerStartScope !== "task") {
               const order = ["task", "project", "goal"];
-              setScope(order[Math.max(order.indexOf(twoFingerStartScope) - 1, 0)]);
+              setScope(
+                order[Math.max(order.indexOf(twoFingerStartScope) - 1, 0)],
+              );
               twoFingerStartScope = scope;
               twoFingerStartX = avgX; // reset for continued swiping
               if (navigator.vibrate) navigator.vibrate(15);
