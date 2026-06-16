@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ActionAmp — Mobile (gesture-modal)</title>
+<style>
+  :root {
+    --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    --teal: #0EA5E9; --teal-cta: #0284C7; --teal-cta-hover: #0369A1;
+    --teal-soft: rgba(14,165,233,.12); --teal-soft-strong: rgba(14,165,233,.18);
+    --teal-tint: rgba(2,132,199,.22);
+    --amber: #F59E0B; --amber-text: #92400E; --amber-soft: rgba(245,158,11,.14);
+  }
+  :root {
+    --bg: #F2F5F7; --bg-elev: #FCFCFD; --surface: #FFFFFF;
+    --surface-muted: #F2F5F7; --surface-muted-2: #ECEEF0;
+    --border: #E6E8EC; --border-strong: #D5D9DE;
+    --text: #212224; --text-2: #44474B; --text-3: #55606E; --text-4: #818489;
+    --shadow-md: 0 2px 4px rgba(0,28,70,.06), 0 8px 24px rgba(0,28,70,.06);
+    --shadow-lg: 0 8px 32px rgba(0,28,70,.18);
+  }
+  [data-theme="dark"] {
+    --bg: #13161C; --bg-elev: #1A1D24; --surface: #1F232B;
+    --surface-muted: #2A2F38; --surface-muted-2: #30353F;
+    --border: #2F343E; --border-strong: #3C4250;
+    --text: #F4F6F9; --text-2: #C5CBD4; --text-3: #8B939F; --text-4: #6A7180;
+    --shadow-md: 0 2px 4px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,.5);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body {
+    font-family: var(--font);
+    background: #0a0a0a; /* page bg around the phone */
+    color: var(--text);
+    line-height: 1.4;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    overflow: hidden;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; font-size: inherit; }
+  svg { display: block; }
+
+  /* ============================================================
+     THE PHONE FRAME — for desktop viewing of the mobile mock
+     ============================================================ */
+  .phone {
+    width: 390px; height: 844px; /* iPhone 14 logical */
+    background: var(--bg);
+    border-radius: 48px;
+    border: 11px solid #1a1a1a;
+    box-shadow: 0 32px 80px rgba(0,0,0,.5), inset 0 0 0 2px #2a2a2a;
+    position: relative;
+    overflow: hidden;
+    transition: background .5s;
+  }
+  .phone[data-mode="plan"]   { background: linear-gradient(180deg, #FFF7ED 0%, var(--bg) 50%); }
+  .phone[data-mode="do"]     { background: var(--bg); }
+  .phone[data-mode="review"] { background: linear-gradient(180deg, #ECEAF6 0%, var(--bg) 50%); }
+  [data-theme="dark"] .phone[data-mode="plan"]{ background: linear-gradient(180deg, #2A2018 0%, var(--bg) 50%); }
+  [data-theme="dark"] .phone[data-mode="review"]{ background: linear-gradient(180deg, #1A1828 0%, var(--bg) 50%); }
+
+  /* notch */
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 28px;
+    background: #1a1a1a; border-radius: 0 0 18px 18px;
+    z-index: 100;
+  }
+
+  /* status bar (time / battery) */
+  .status-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 44px; padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 14px; font-weight: 600; color: var(--text);
+    z-index: 50;
+  }
+  .status-bar .icons { display: flex; gap: 5px; align-items: center; }
+
+  /* ============================================================
+     SCREEN CONTENT — fits between status bar and bottom bar
+     ============================================================ */
+  .screen {
+    position: absolute;
+    top: 44px; bottom: 0; left: 0; right: 0;
+    display: flex; flex-direction: column;
+    padding: 12px 20px 120px;
+  }
+
+  /* ---- Top: lens chip + mode indicator ---- */
+  .top-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .lens-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 9999px; color: var(--text-2);
+  }
+  .lens-chip .dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--teal); }
+
+  .mode-indicator {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    color: var(--text-4); letter-spacing: 0.04em;
+  }
+  .mode-indicator.working { color: var(--teal-cta); }
+  .mode-indicator.paused { color: var(--amber-text); }
+
+  /* ---- Breadcrumb (zoom orientation) ---- */
+  .breadcrumb {
+    font-size: 12px; color: var(--text-4);
+    margin-bottom: 28px; text-align: center;
+  }
+  .breadcrumb .crumb { color: var(--text-3); }
+  .breadcrumb .current { color: var(--text-2); font-weight: 600; }
+  .breadcrumb .sep { margin: 0 5px; opacity: .5; }
+
+  /* ============================================================
+     THE TASK CARD — fills most of the screen
+     ============================================================ */
+  .card-area {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .task-card {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 36px 28px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,28,70,.04), 0 24px 48px var(--teal-tint);
+    position: relative;
+    transition: box-shadow .5s, transform .5s cubic-bezier(.2,.7,.3,1);
+  }
+  .task-card.working {
+    box-shadow: 0 4px 12px rgba(0,28,70,.05), 0 0 0 1px var(--teal-soft-strong), 0 24px 64px var(--teal-tint);
+    transform: scale(1.02);
+  }
+
+  .ctx { font-size: 12px; color: var(--text-3); margin-bottom: 28px; }
+  .completion {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 9999px;
+    border: 3px solid var(--border-strong); margin-bottom: 24px;
+    position: relative;
+    transition: transform .2s, border-color .2s, background .2s;
+  }
+  .completion svg { color: white; width: 20px; height: 20px; opacity: 0; transform: scale(.4); transition: opacity .14s, transform .22s cubic-bezier(.34,1.56,.64,1); }
+  .completion.active { border-color: var(--teal); background: var(--teal-soft); }
+  .completion.active::before, .completion.active::after {
+    content: ""; position: absolute; inset: -3px; border-radius: inherit;
+    border: 2px solid var(--teal); opacity: 0;
+    animation: halo 2.4s cubic-bezier(.4,0,.2,1) infinite;
+  }
+  .completion.active::after { animation-delay: 1.2s; }
+  @keyframes halo { 0% { transform: scale(1); opacity: .6; } 100% { transform: scale(1.7); opacity: 0; } }
+  .completion.filled { background: var(--teal); border-color: var(--teal); }
+  .completion.filled svg { opacity: 1; transform: scale(1); }
+
+  .task-title { font-size: 24px; font-weight: 700; letter-spacing: -.02em; line-height: 1.25; margin-bottom: 8px; }
+  .task-meta { font-size: 13px; color: var(--text-3); margin-bottom: 28px; }
+  .task-meta .sep { margin: 0 6px; color: var(--border-strong); }
+  .timer {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 600;
+    color: var(--teal-cta); background: var(--teal-soft);
+    padding: 6px 12px; border-radius: 8px;
+  }
+  .timer .pulse { width: 6px; height: 6px; border-radius: 9999px; background: var(--teal); animation: tick 1s ease-in-out infinite; }
+  @keyframes tick { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+  .actions { display: flex; flex-direction: column; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 15px; font-weight: 600;
+    padding: 14px 20px; border-radius: 12px;
+    border: 1px solid transparent;
+    transition: background .15s, transform .08s;
+    width: 100%;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--teal-cta); color: white; }
+  .btn-secondary { background: var(--surface); color: var(--text-2); border-color: var(--border-strong); }
+  .btn-switch { background: transparent; color: var(--text-3); border-color: var(--border); }
+  .btn svg { width: 14px; height: 14px; }
+
+  /* ============================================================
+     GESTURE HINTS — subtle affordance cues
+     ============================================================ */
+  .gesture-edge {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 32px; height: 80px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-4); opacity: 0.4;
+    font-size: 18px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .gesture-edge.left { left: 4px; }
+  .gesture-edge.right { right: 4px; }
+
+  .pinch-hint {
+    position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: var(--text-4);
+    display: flex; align-items: center; gap: 6px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* ============================================================
+     WORKING MODE: chrome hides, full focus
+     ============================================================ */
+  .phone.working .top-row,
+  .phone.working .breadcrumb,
+  .phone.working .bottom-bar,
+  .phone.working .gesture-edge,
+  .phone.working .pinch-hint {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .4s;
+  }
+  .phone.working .screen { padding-top: 60px; padding-bottom: 40px; }
+
+  /* ---- Working session UI (mobile) ---- */
+  .session-ui { margin-top: 20px; display: none; }
+  .session-ui.show { display: block; animation: fade .3s ease both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .feelings { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .feeling {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 500; color: var(--text-3);
+    background: var(--surface-muted); border: 1px solid var(--border);
+    padding: 7px 11px; border-radius: 9999px;
+  }
+  .feeling.tapped { background: var(--teal-soft); border-color: transparent; color: var(--teal-cta); font-weight: 600; }
+  .feeling .emoji { font-size: 14px; }
+
+  .note-row {
+    display: flex; gap: 8px; align-items: center;
+    background: var(--surface-muted); border-radius: 10px; padding: 4px 4px 4px 14px;
+  }
+  .note-row input {
+    flex: 1; border: none; background: transparent; font-family: var(--font);
+    font-size: 14px; color: var(--text); outline: none; padding: 8px 0;
+  }
+  .note-row input::placeholder { color: var(--text-4); }
+  .note-row .add {
+    background: var(--teal-soft); color: var(--teal-cta);
+    font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 8px;
+  }
+
+  /* ============================================================
+     BOTTOM BAR — the dial + zoom + capture (thumb zone)
+     ============================================================ */
+  .bottom-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 14px 20px 30px;
+    background: linear-gradient(180deg, transparent, var(--bg) 30%);
+    z-index: 40;
+  }
+  .dial-row {
+    display: flex; gap: 8px; align-items: center; justify-content: center;
+  }
+  .mode-pill {
+    flex: 1;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px; border-radius: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 13px; font-weight: 600; color: var(--text-3);
+    box-shadow: var(--shadow-md);
+  }
+  .mode-pill.active { background: var(--teal-soft); color: var(--teal-cta); border-color: transparent; }
+  .mode-pill .icon { font-size: 14px; }
+
+  .zoom-row {
+    display: flex; gap: 6px; justify-content: center;
+    margin-top: 10px;
+  }
+  .zoom-chip {
+    width: 40px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text-3);
+    font-size: 11px; font-weight: 600;
+    box-shadow: var(--shadow-md);
+  }
+  .zoom-chip.active { background: var(--teal-soft); color: var(--teal-cta); border-color: transparent; }
+
+  .fab {
+    position: absolute; bottom: 110px; right: 20px;
+    width: 56px; height: 56px; border-radius: 9999px;
+    background: var(--teal-cta); color: white;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 20px var(--teal-tint);
+    z-index: 45;
+  }
+  .fab:active { transform: scale(.94); }
+
+  /* ============================================================
+     SWITCH CONFIRM (full-screen sheet on mobile)
+     ============================================================ */
+  .switch-sheet {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.3);
+    display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s;
+    z-index: 90;
+  }
+  .switch-sheet.open { opacity: 1; pointer-events: auto; }
+  .switch-sheet-inner {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 12px 24px 40px;
+    width: 100%;
+    transform: translateY(100%);
+    transition: transform .3s cubic-bezier(.2,.7,.3,1);
+    text-align: center;
+  }
+  .switch-sheet.open .switch-sheet-inner { transform: translateY(0); }
+  .grabber { width: 40px; height: 4px; background: var(--border-strong); border-radius: 9999px; margin: 0 auto 20px; }
+  .switch-q { font-size: 13px; font-weight: 600; color: var(--text-4); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+  .switch-task { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 24px; line-height: 1.3; }
+  .switch-actions { display: flex; flex-direction: column; gap: 8px; }
+
+  /* hint outside phone */
+  .external-hint {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    color: #888; font-size: 12px; text-align: center;
+    max-width: 380px; line-height: 1.5;
+  }
+  .external-hint kbd {
+    font-family: var(--font-mono); background: #222; color: #ddd;
+    padding: 2px 6px; border-radius: 4px; font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone" data-mode="do">
+
+  <div class="notch"></div>
+
+  <!-- status bar -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <span class="icons">
+      <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor"><rect x="0" y="6" width="2" height="4" rx="0.5"/><rect x="4" y="4" width="2" height="6" rx="0.5"/><rect x="8" y="2" width="2" height="8" rx="0.5"/><rect x="12" y="0" width="2" height="10" rx="0.5"/></svg>
+      <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x="0.5" y="0.5" width="18" height="9" rx="2" stroke="currentColor"/><rect x="2" y="2" width="14" height="6" rx="1" fill="currentColor"/><rect x="19.5" y="3.5" width="1.5" height="3" rx="0.5" fill="currentColor"/></svg>
+    </span>
+  </div>
+
+  <!-- screen content -->
+  <div class="screen">
+
+    <div class="top-row">
+      <div class="lens-chip"><span class="dot"></span> Work</div>
+      <div class="mode-indicator" id="modeIndicator">NORMAL</div>
+    </div>
+
+    <div class="breadcrumb" id="breadcrumb">
+      <span class="crumb">Grow audience</span>
+      <span class="sep">›</span>
+      <span class="crumb">Ship product v2</span>
+      <span class="sep">›</span>
+      <span class="current">Email Sarah</span>
+    </div>
+
+    <div class="card-area">
+      <!-- gesture edges -->
+      <div class="gesture-edge left">‹</div>
+      <div class="gesture-edge right">›</div>
+
+      <div class="task-card" id="taskCard">
+        <div class="ctx" id="ctx">Right now · 30 min</div>
+        <div class="completion" id="completion">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="task-title" id="taskTitle">Email Sarah re: Q3 invoice</div>
+        <div class="task-meta" id="taskMeta">Due today <span class="sep">·</span> 15 min <span class="sep">·</span> Important</div>
+
+        <div class="actions" id="actions">
+          <button class="btn btn-primary" id="doBtn">Do this</button>
+          <button class="btn btn-switch" id="switchBtn">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M2 5h9l-2-2M14 11H5l2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Switch
+          </button>
+        </div>
+
+        <div class="session-ui" id="sessionUI">
+          <div class="feelings" id="feelings">
+            <button class="feeling" data-f="flow"><span class="emoji">🔥</span> flow</button>
+            <button class="feeling" data-f="blocked"><span class="emoji">🧱</span> blocked</button>
+            <button class="feeling" data-f="breakthrough"><span class="emoji">⚡</span> win</button>
+            <button class="feeling" data-f="heavy"><span class="emoji">😮‍💨</span> heavy</button>
+          </div>
+          <div class="note-row">
+            <input type="text" id="noteField" placeholder="note…">
+            <button class="add" id="noteAdd">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pinch-hint">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 5l-3 3 3 3M11 5l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      pinch to zoom · swipe ↔ for mode
+    </div>
+
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" title="Capture (pull down from top)">
+    <svg width="20" height="20" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+
+  <!-- bottom bar -->
+  <div class="bottom-bar">
+    <div class="dial-row">
+      <button class="mode-pill" data-mode="plan"><span class="icon">☀</span> Plan</button>
+      <button class="mode-pill active" data-mode="do"><span class="icon">▶</span> Do</button>
+      <button class="mode-pill" data-mode="review"><span class="icon">☾</span> Review</button>
+    </div>
+    <div class="zoom-row">
+      <button class="zoom-chip" data-zoom="goal">G</button>
+      <button class="zoom-chip" data-zoom="project">P</button>
+      <button class="zoom-chip active" data-zoom="task">●</button>
+    </div>
+  </div>
+
+  <!-- switch confirm sheet -->
+  <div class="switch-sheet" id="switchSheet">
+    <div class="switch-sheet-inner">
+      <div class="grabber"></div>
+      <div class="switch-q">Switch to</div>
+      <div class="switch-task" id="switchTaskName">Review pull request #284</div>
+      <div class="switch-actions">
+        <button class="btn btn-primary" id="switchConfirm">Switch</button>
+        <button class="btn btn-secondary" id="switchCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="external-hint">
+  Desktop keys: <kbd>Z</kbd>/<kbd>X</kbd> zoom · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> mode · <kbd>Enter</kbd> work · <kbd>S</kbd> switch · <kbd>Esc</kbd> exit
+</div>
+
+<script>
+  // ---- Theme (kept for parity; not the focus of this mock) ----
+  // no theme toggle on mobile mock — keep it minimal, light-only
+
+  // ---- State ----
+  const phone = document.getElementById("phone");
+  const card = document.getElementById("taskCard");
+  const comp = document.getElementById("completion");
+  const ctxEl = document.getElementById("ctx");
+  const titleEl = document.getElementById("taskTitle");
+  const metaEl = document.getElementById("taskMeta");
+  const actionsEl = document.getElementById("actions");
+  const sessionUI = document.getElementById("sessionUI");
+  const modeIndicator = document.getElementById("modeIndicator");
+  const breadcrumb = document.getElementById("breadcrumb");
+  const dialBtns = document.querySelectorAll(".mode-pill");
+  const zoomChips = document.querySelectorAll(".zoom-chip");
+
+  let mode = "do";       // plan | do | review
+  let scope = "task";    // task | project | goal
+  let taskState = "idle";// idle | working | paused | done
+  let workStart = null, elapsedPause = 0, timerInt = null;
+
+  const TASKS = [
+    { title: "Email Sarah re: Q3 invoice", meta: 'Due today <span class="sep">·</span> 15 min <span class="sep">·</span> Important' },
+    { title: "Review pull request #284",   meta: 'Today <span class="sep">·</span> 30 min <span class="sep">·</span> Normal' },
+    { title: "Draft Q3 launch plan",       meta: 'This week <span class="sep">·</span> XL <span class="sep">·</span> Important' },
+    { title: "Prep notes for 1:1",         meta: 'Tomorrow <span class="sep">·</span> 10 min <span class="sep">·</span> Normal' },
+  ];
+  let taskIdx = 0;
+
+  function fmt(ms) { const s=Math.floor(ms/1000),m=Math.floor(s/60); return `${m}:${(s%60).toString().padStart(2,"0")}`; }
+  function elapsed() { return elapsedPause + (workStart && taskState==="working" ? Date.now()-workStart : 0); }
+
+  // ============================================================
+  // MODE (Plan / Do / Review) — swipe horizontal or tap dial
+  // ============================================================
+  function setMode(m) {
+    mode = m;
+    phone.dataset.mode = m;
+    dialBtns.forEach(b => b.classList.toggle("active", b.dataset.mode === m));
+  }
+  dialBtns.forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+  // ============================================================
+  // SCOPE (zoom) — pinch or tap zoom chips
+  // ============================================================
+  function setScope(s) {
+    scope = s;
+    zoomChips.forEach(c => c.classList.toggle("active", c.dataset.zoom === s));
+    // breadcrumb prominence shifts
+    if (s === "task") breadcrumb.style.opacity = "0.7";
+    else breadcrumb.style.opacity = "1";
+  }
+  zoomChips.forEach(c => c.addEventListener("click", () => setScope(c.dataset.zoom)));
+
+  // ============================================================
+  // TASK STATE — the core
+  // ============================================================
+  function setTaskState(s) {
+    taskState = s;
+    card.classList.remove("working");
+    phone.classList.remove("working");
+    comp.classList.remove("active", "filled");
+    if (timerInt) { clearInterval(timerInt); timerInt = null; }
+
+    if (s === "working") {
+      card.classList.add("working");
+      phone.classList.add("working");
+      comp.classList.add("active");
+      modeIndicator.textContent = "WORKING";
+      modeIndicator.className = "mode-indicator working";
+      if (workStart === null) { workStart = Date.now(); elapsedPause = 0; }
+      metaEl.innerHTML = `<span class="timer"><span class="pulse"></span> <span id="elapsed">${fmt(elapsed())}</span></span>`;
+      timerInt = setInterval(() => {
+        const e = document.getElementById("elapsed");
+        if (e) e.textContent = fmt(elapsed());
+      }, 1000);
+      sessionUI.classList.add("show");
+      actionsEl.innerHTML = `
+        <button class="btn btn-secondary" id="pauseBtn">Take a break</button>
+        <button class="btn btn-primary" id="doneBtn">Done ✓</button>`;
+    } else if (s === "paused") {
+      elapsedPause += Date.now() - workStart; workStart = null;
+      modeIndicator.textContent = "PAUSED";
+      modeIndicator.className = "mode-indicator paused";
+      metaEl.innerHTML = `<span class="timer" style="background:var(--amber-soft);color:var(--amber-text)"><span class="pulse" style="background:var(--amber);animation:none"></span> paused · ${fmt(elapsedPause)}</span>`;
+      actionsEl.innerHTML = `
+        <button class="btn btn-primary" id="resumeBtn">Resume</button>
+        <button class="btn btn-secondary" id="doneBtn">Done ✓</button>`;
+    } else if (s === "done") {
+      comp.classList.add("filled");
+      const t = elapsed();
+      modeIndicator.textContent = "DONE";
+      modeIndicator.className = "mode-indicator";
+      sessionUI.classList.remove("show");
+      metaEl.innerHTML = `Done <span class="sep">·</span> took ${fmt(t)} <span class="sep">·</span> moved v2 forward`;
+      actionsEl.innerHTML = `<button class="btn btn-secondary" id="nextBtn">Next task →</button>`;
+    } else {
+      // idle
+      modeIndicator.textContent = "NORMAL";
+      modeIndicator.className = "mode-indicator";
+      sessionUI.classList.remove("show");
+      workStart = null; elapsedPause = 0;
+      metaEl.innerHTML = TASKS[taskIdx].meta;
+      actionsEl.innerHTML = `
+        <button class="btn btn-primary" id="doBtn">Do this</button>
+        <button class="btn btn-switch" id="switchBtn">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M2 5h9l-2-2M14 11H5l2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Switch
+        </button>`;
+    }
+  }
+
+  // ============================================================
+  // DELEGATED CLICKS
+  // ============================================================
+  document.addEventListener("click", (e) => {
+    const id = e.target.closest("[id]")?.id;
+    if (id === "doBtn") setTaskState("working");
+    else if (id === "pauseBtn") setTaskState("paused");
+    else if (id === "resumeBtn") { workStart = Date.now(); setTaskState("working"); }
+    else if (id === "doneBtn") setTaskState("done");
+    else if (id === "nextBtn") { taskIdx = (taskIdx + 1) % TASKS.length; titleEl.textContent = TASKS[taskIdx].title; setTaskState("idle"); }
+    else if (id === "switchBtn") openSwitch();
+    else if (id === "switchConfirm") { closeSwitch(); taskIdx = (taskIdx + 1) % TASKS.length; titleEl.textContent = TASKS[taskIdx].title; setTaskState("idle"); }
+    else if (id === "switchCancel") closeSwitch();
+  });
+
+  // completion tap = pause/resume/done
+  comp.addEventListener("click", () => {
+    if (taskState === "working") setTaskState("paused");
+    else if (taskState === "paused") { workStart = Date.now(); setTaskState("working"); }
+    else if (taskState === "idle") setTaskState("done");
+    else setTaskState("idle");
+  });
+
+  // feelings
+  document.getElementById("feelings").addEventListener("click", (e) => {
+    const f = e.target.closest(".feeling"); if (!f) return;
+    f.classList.add("tapped"); setTimeout(() => f.classList.remove("tapped"), 1000);
+  });
+
+  // notes
+  document.getElementById("noteAdd").addEventListener("click", () => {
+    const nf = document.getElementById("noteField"); if (!nf.value.trim()) return;
+    nf.value = "";
+  });
+
+  // ============================================================
+  // SWITCH SHEET
+  // ============================================================
+  function openSwitch() {
+    document.getElementById("switchTaskName").textContent = TASKS[(taskIdx + 1) % TASKS.length].title;
+    document.getElementById("switchSheet").classList.add("open");
+  }
+  function closeSwitch() { document.getElementById("switchSheet").classList.remove("open"); }
+
+  // ============================================================
+  // TOUCH GESTURES — the mobile translation of the modal keys
+  // ============================================================
+  // We use simple touchstart/touchend tracking. Real pinch needs two fingers;
+  // here we simulate pinch-out with a 2-finger spread and pinch-in with pinch,
+  // and fall back to the on-screen zoom chips for demo simplicity.
+  let touchStartX = 0, touchStartY = 0, touchStartTime = 0, longPressTimer = null;
+
+  card.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+      // long press → enter working (if idle)
+      if (taskState === "idle") {
+        longPressTimer = setTimeout(() => {
+          setTaskState("working");
+          longPressTimer = null;
+          if (navigator.vibrate) navigator.vibrate(15);
+        }, 500);
+      }
+    }
+  }, { passive: true });
+
+  card.addEventListener("touchmove", (e) => {
+    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+  }, { passive: true });
+
+  card.addEventListener("touchend", (e) => {
+    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    if (taskState === "working") return; // gestures locked in working mode
+
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const dt = Date.now() - touchStartTime;
+    const absX = Math.abs(dx), absY = Math.abs(dy);
+
+    // swipe horizontal → mode change
+    if (absX > 50 && absX > absY * 1.3) {
+      if (dx > 0) {
+        // swipe right → Plan (or back from Plan to Do)
+        setMode(mode === "do" ? "plan" : "do");
+      } else {
+        // swipe left → Review
+        setMode(mode === "do" ? "review" : "do");
+      }
+      return;
+    }
+    // swipe down (on the card, while idle) → done shortcut
+    if (dy > 60 && absY > absX * 1.3 && taskState === "idle") {
+      setTaskState("done");
+      return;
+    }
+  });
+
+  // pinch (two fingers) → zoom
+  let pinchStartDist = 0, pinchStartScope = null;
+  card.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchStartDist = Math.hypot(dx, dy);
+      pinchStartScope = scope;
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+  }, { passive: true });
+  card.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 2 && pinchStartScope) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const ratio = dist / pinchStartDist;
+      if (ratio > 1.25 && pinchStartScope !== "goal") {
+        // pinch out → zoom out
+        const order = ["task","project","goal"];
+        setScope(order[Math.min(order.indexOf(pinchStartScope) + 1, 2)]);
+        pinchStartScope = scope;
+      } else if (ratio < 0.75 && pinchStartScope !== "task") {
+        // pinch in → zoom in
+        const order = ["task","project","goal"];
+        setScope(order[Math.max(order.indexOf(pinchStartScope) - 1, 0)]);
+        pinchStartScope = scope;
+      }
+    }
+  }, { passive: true });
+
+  // ============================================================
+  // KEYBOARD (for desktop preview of the mobile mock)
+  // ============================================================
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (document.getElementById("switchSheet").classList.contains("open")) closeSwitch();
+      else if (taskState === "working") setTaskState("paused");
+      else if (taskState === "paused") setTaskState("working");
+    }
+    else if (e.key === "Enter" && taskState === "idle") setTaskState("working");
+    else if (e.key === "1") setMode("plan");
+    else if (e.key === "2") setMode("do");
+    else if (e.key === "3") setMode("review");
+    else if (e.key.toLowerCase() === "z") {
+      const o = ["task","project","goal"]; setScope(o[Math.min(o.indexOf(scope)+1, 2)]);
+    }
+    else if (e.key.toLowerCase() === "x") {
+      const o = ["task","project","goal"]; setScope(o[Math.max(o.indexOf(scope)-1, 0)]);
+    }
+    else if (e.key.toLowerCase() === "s" && taskState === "idle") openSwitch();
+  });
+</script>
+</body>
+</html>
