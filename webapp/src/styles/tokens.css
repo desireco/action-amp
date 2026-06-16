@@ -1,0 +1,92 @@
+/*
+ * ActionAmp — Design Tokens
+ * Source of truth for every page. Derived from docs/design.md (Things DNA)
+ * + the teal/amber two-accent system (see docs/mockups/teal-amber-system.html).
+ *
+ * Color strategy: Committed — teal carries ~30% of any given surface.
+ * All neutrals are OKLCH cool-tinted (never pure gray, never #000/#fff).
+ * Amber is rare: human-emphasis only (Important priority, "why this" nudges).
+ */
+
+:root {
+  /* ---- Type ---- */
+  --aa-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "SF Pro Display", Roboto, sans-serif;
+  --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ---- Teal: system / state (the primary accent) ---- */
+  --aa-teal: oklch(0.72 0.15 220);
+  --aa-teal-bright: oklch(0.78 0.14 215);
+  --aa-teal-cta: oklch(0.58 0.16 225);
+  --aa-teal-cta-hover: oklch(0.5 0.16 228);
+  --aa-teal-soft: oklch(0.95 0.04 220);
+  --aa-teal-soft-strong: oklch(0.9 0.07 220);
+  --aa-teal-tint-shadow: oklch(0.58 0.16 225 / 0.22);
+
+  /* ---- Amber: human emphasis (rare) ---- */
+  --aa-amber: oklch(0.78 0.16 70);
+  --aa-amber-text: oklch(0.45 0.13 65);
+  --aa-amber-soft: oklch(0.95 0.06 75);
+  --aa-amber-soft-strong: oklch(0.92 0.09 75);
+
+  /* ---- Violet: project / goal accents ---- */
+  --aa-violet: oklch(0.62 0.2 295);
+  --aa-violet-soft: oklch(0.95 0.04 295);
+  --aa-violet-text: oklch(0.45 0.15 295);
+
+  /* ---- Rose: errors / overdue (rare) ---- */
+  --aa-rose: oklch(0.6 0.18 15);
+  --aa-rose-soft: oklch(0.95 0.04 15);
+  --aa-rose-text: oklch(0.45 0.16 15);
+
+  /* ---- Neutral ramp (cool-tinted, Things DNA) ---- */
+  --aa-bg: oklch(0.99 0.005 230);
+  --aa-bg-soft: oklch(0.97 0.008 230);
+  --aa-bg-deep: oklch(0.94 0.01 230);
+  --aa-surface: oklch(1 0.003 230);
+  --aa-surface-muted: oklch(0.96 0.008 230);
+  --aa-surface-muted-2: oklch(0.93 0.01 230);
+  --aa-border: oklch(0.91 0.01 230);
+  --aa-border-strong: oklch(0.86 0.012 230);
+  --aa-text: oklch(0.2 0.015 230);
+  --aa-text-2: oklch(0.36 0.015 230);
+  --aa-text-3: oklch(0.5 0.015 230);
+  --aa-text-4: oklch(0.62 0.012 230);
+
+  /* ---- Radii ---- */
+  --aa-radius-xs: 4px;
+  --aa-radius-sm: 6px;
+  --aa-radius-md: 8px;
+  --aa-radius-lg: 12px;
+  --aa-radius-xl: 18px;
+  --aa-radius-2xl: 22px;
+  --aa-radius-full: 9999px;
+
+  /* ---- Spacing (4/8 grid) ---- */
+  --aa-space-xs: 4px;
+  --aa-space-sm: 8px;
+  --aa-space-md: 16px;
+  --aa-space-lg: 24px;
+  --aa-space-xl: 32px;
+  --aa-space-2xl: 48px;
+  --aa-space-3xl: 64px;
+  --aa-space-4xl: 96px;
+  --aa-space-5xl: 128px;
+
+  /* ---- Shadows (blue-tinted, layered — never pure black) ---- */
+  --aa-shadow-sm: 0 1px 2px oklch(0.2 0.02 230 / 0.05);
+  --aa-shadow-md: 0 2px 6px oklch(0.2 0.02 230 / 0.06),
+    0 12px 32px oklch(0.2 0.02 230 / 0.06);
+  --aa-shadow-lg: 0 4px 12px oklch(0.2 0.02 230 / 0.06),
+    0 32px 80px oklch(0.2 0.02 230 / 0.1);
+  --aa-hero-shadow: 0 2px 6px oklch(0.2 0.02 230 / 0.05),
+    0 40px 96px var(--aa-teal-tint-shadow);
+
+  /* ---- Motion ---- */
+  --aa-ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --aa-ease-out-quart: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --aa-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --aa-dur-fast: 0.12s;
+  --aa-dur-base: 0.2s;
+  --aa-dur-slow: 0.4s;
+}

@@ -20,5 +20,14 @@ export default defineConfig([
     rules: {
       "@typescript-eslint/no-require-imports": ["off"]
     }
+  },
+  {
+    // ActionAmp: our copy voice uses contractions heavily (don't, isn't, you're).
+    // The react/no-unescaped-entities rule forces escaping every apostrophe in
+    // JSX text, which harms readability for natural-language UI copy.
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    rules: {
+      "react/no-unescaped-entities": ["off"]
+    }
   }
 ]);
