@@ -227,7 +227,9 @@
         padding: 5px 9px;
         border-radius: 9999px;
         cursor: pointer;
-        transition: background 0.12s, color 0.12s;
+        transition:
+          background 0.12s,
+          color 0.12s;
         -webkit-tap-highlight-color: transparent;
       }
       .breadcrumb .crumb:hover {
@@ -497,11 +499,25 @@
       .phone.working .breadcrumb,
       .phone.working .bottom-bar,
       .phone.working .gesture-edge,
-      .phone.working .pinch-hint,
-      .phone.working .fab {
+      .phone.working .pinch-hint {
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.4s;
+      }
+      /* The ONE exception: capture stays reachable (focus-protector).
+         But quiet — shrinks, dims, drops its shadow. Brightens on press. */
+      .phone.working .fab {
+        width: 40px;
+        height: 40px;
+        opacity: 0.32;
+        box-shadow: none;
+        transition: opacity 0.25s, transform 0.2s, box-shadow 0.2s;
+      }
+      .phone.working .fab:active,
+      .phone.working .fab:hover {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 8px 20px var(--teal-tint);
       }
       .phone.working .screen {
         padding-top: 60px;
@@ -877,13 +893,14 @@
               stroke-linejoin="round"
             />
           </svg>
-          two-finger swipe ↔ to zoom · or tap the breadcrumb · one-finger swipe ↔ for mode
+          two-finger swipe ↔ to zoom · or tap the breadcrumb · one-finger swipe
+          ↔ for mode
         </div>
       </div>
 
       <!-- FAB -->
       <button class="fab" title="Capture (pull down from top)">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
           <path
             d="M8 3v10M3 8h10"
             stroke="currentColor"

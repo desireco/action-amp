@@ -166,7 +166,7 @@ translate to thumbs.
 | Start working | `Enter` / Do this | long-press card |
 | Pause/resume | `Esc` / `Space` | tap circle |
 | Mark done | `D` / Done ✓ | swipe-down on card |
-| Capture | `⌘K` | pull-down from top / FAB |
+| Capture | `⌘K` | pull-down from top / FAB (FAB stays in working mode as a quiet ghost — the focus-protector exception) |
 | Switch task | `S` | swipe-left-and-hold / "next" affordance |
 | Cycle Lens | `L` | tap lens chip |
 | Peek past / future | `←` / `→` | swipe from left/right screen edge |
