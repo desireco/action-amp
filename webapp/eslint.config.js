@@ -6,11 +6,18 @@ import globals from "globals";
 import eslintTypescript from "typescript-eslint";
 
 export default defineConfig([
-  { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], plugins: { js }, extends: ["js/recommended"] },
-  { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], languageOptions: { globals: { ...globals.browser, ...globals.node } } },
+  {
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    plugins: { js },
+    extends: ["js/recommended"],
+  },
+  {
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    languageOptions: { globals: { ...globals.browser, ...globals.node } },
+  },
   eslintTypescript.configs.recommended,
   eslintReact.configs.flat.recommended,
-  eslintReact.configs.flat['jsx-runtime'],
+  eslintReact.configs.flat["jsx-runtime"],
   eslintPrettier,
   // Overrides:
   {
@@ -18,8 +25,8 @@ export default defineConfig([
     // This allows us to use `require` syntax in CJS files.
     files: ["**/*.{cjs,cts}"],
     rules: {
-      "@typescript-eslint/no-require-imports": ["off"]
-    }
+      "@typescript-eslint/no-require-imports": ["off"],
+    },
   },
   {
     // ActionAmp: our copy voice uses contractions heavily (don't, isn't, you're).
@@ -27,7 +34,7 @@ export default defineConfig([
     // JSX text, which harms readability for natural-language UI copy.
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
     rules: {
-      "react/no-unescaped-entities": ["off"]
-    }
-  }
+      "react/no-unescaped-entities": ["off"],
+    },
+  },
 ]);

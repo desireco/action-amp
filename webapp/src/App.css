@@ -22,8 +22,14 @@ html {
 }
 
 body {
-  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    "SF Pro Display", Roboto, sans-serif;
+  font-family:
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "SF Pro Display",
+    Roboto,
+    sans-serif;
   background: oklch(0.99 0.005 230);
   color: oklch(0.2 0.015 230);
   line-height: 1.5;

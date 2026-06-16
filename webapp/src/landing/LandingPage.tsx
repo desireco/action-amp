@@ -2,11 +2,31 @@ import { useState, useCallback } from "react";
 import "./LandingPage.css";
 
 const HERO_TASKS = [
-  { title: "Email Sarah re: Q3 invoice", why: "★ Important · the reason this is next", meta: "Due today · 15 min" },
-  { title: "Review pull request #284", why: "Normal · fits in 30 min", meta: "Due today · 30 min" },
-  { title: "Prep notes for 1:1 with Marco", why: "Low · quick win", meta: "Tomorrow · 10 min" },
-  { title: "Reply to legal re: contract", why: "★ Important · overdue", meta: "Was due yesterday" },
-  { title: "Draft the Q3 launch plan", why: "Important · break it down", meta: "This week · XL" },
+  {
+    title: "Email Sarah re: Q3 invoice",
+    why: "★ Important · the reason this is next",
+    meta: "Due today · 15 min",
+  },
+  {
+    title: "Review pull request #284",
+    why: "Normal · fits in 30 min",
+    meta: "Due today · 30 min",
+  },
+  {
+    title: "Prep notes for 1:1 with Marco",
+    why: "Low · quick win",
+    meta: "Tomorrow · 10 min",
+  },
+  {
+    title: "Reply to legal re: contract",
+    why: "★ Important · overdue",
+    meta: "Was due yesterday",
+  },
+  {
+    title: "Draft the Q3 launch plan",
+    why: "Important · break it down",
+    meta: "This week · XL",
+  },
 ];
 
 const FAQ_ITEMS = [
@@ -46,48 +66,108 @@ export function LandingPage() {
         <div className="aa-brand">
           <div className="aa-brand-mark">
             <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-              <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
           <span className="aa-brand-name">ActionAmp</span>
         </div>
         <div className="aa-nav-links">
-          <a className="aa-nav-link" href="#how">How it works</a>
-          <a className="aa-nav-link" href="#soul">Why</a>
-          <a className="aa-nav-link" href="#method">Methodology</a>
-          <a className="aa-nav-link" href="#faq">FAQ</a>
+          <a className="aa-nav-link" href="#how">
+            How it works
+          </a>
+          <a className="aa-nav-link" href="#soul">
+            Why
+          </a>
+          <a className="aa-nav-link" href="#method">
+            Methodology
+          </a>
+          <a className="aa-nav-link" href="#faq">
+            FAQ
+          </a>
         </div>
       </nav>
 
       <section className="aa-hero">
         <div className="aa-chaos" aria-hidden="true">
-          <div className="aa-chaos-row"><span className="aa-c-box" />something</div>
-          <div className="aa-chaos-row"><span className="aa-c-box" />another thing</div>
-          <div className="aa-chaos-row"><span className="aa-c-box" />don't forget</div>
-          <div className="aa-chaos-row"><span className="aa-c-box" />and this</div>
+          <div className="aa-chaos-row">
+            <span className="aa-c-box" />
+            something
+          </div>
+          <div className="aa-chaos-row">
+            <span className="aa-c-box" />
+            another thing
+          </div>
+          <div className="aa-chaos-row">
+            <span className="aa-c-box" />
+            don't forget
+          </div>
+          <div className="aa-chaos-row">
+            <span className="aa-c-box" />
+            and this
+          </div>
         </div>
 
         <div className="aa-hero-grid">
           <div className="aa-hero-text">
-            <span className="aa-hero-eyebrow"><span className="aa-dot" />A focus app, not a todo app</span>
+            <span className="aa-hero-eyebrow">
+              <span className="aa-dot" />A focus app, not a todo app
+            </span>
             <h1>
-              <span className="aa-light">Easiest way</span><br />
+              <span className="aa-light">Easiest way</span>
+              <br />
               to get <span className="aa-accent">into action</span>.
             </h1>
             <p className="aa-hero-sub">
-              Every other app opens to your list. ActionAmp opens to the <b>one thing</b> to do next.
+              Every other app opens to your list. ActionAmp opens to the{" "}
+              <b>one thing</b> to do next.
             </p>
             <div className="aa-hero-meta">
               <span>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5" /><path d="M5 6h2M9 6h2M5 9h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <rect
+                    x="2"
+                    y="3"
+                    width="12"
+                    height="10"
+                    rx="1.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <path
+                    d="M5 6h2M9 6h2M5 9h6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
                 Keyboard-first
               </span>
               <span>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3.5 8.5l3 3 6-7"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 Calm by default
               </span>
               <span>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8c0-3 2-6 6-6s6 3 6 6-2 6-6 6-6-3-6-6z" stroke="currentColor" strokeWidth="1.5" /></svg>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2 8c0-3 2-6 6-6s6 3 6 6-2 6-6 6-6-3-6-6z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                </svg>
                 GTD-compatible
               </span>
             </div>
@@ -95,7 +175,10 @@ export function LandingPage() {
 
           <div className="aa-wn-wrap">
             <div className="aa-wn-card">
-              <div className="aa-wn-ctx"><span className="aa-dot" />Right now · 30 min</div>
+              <div className="aa-wn-ctx">
+                <span className="aa-dot" />
+                Right now · 30 min
+              </div>
               <button
                 className={`aa-completion ${done ? "filled burst" : ""}`}
                 onClick={handleComplete}
@@ -103,10 +186,18 @@ export function LandingPage() {
                 title="Click to complete"
               >
                 <svg className="aa-check" viewBox="0 0 16 16" fill="none">
-                  <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M3.5 8.5l3 3 6-7"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
-              <div className="aa-wn-title" key={taskIdx}>{task.title}</div>
+              <div className="aa-wn-title" key={taskIdx}>
+                {task.title}
+              </div>
               <div className="aa-wn-meta">{task.meta}</div>
               <div className="aa-wn-why">{task.why}</div>
               <div className="aa-wn-actions">
@@ -145,7 +236,8 @@ export function LandingPage() {
       <section className="aa-section aa-how" id="how">
         <div className="aa-eyebrow">How it works</div>
         <h2 className="aa-display">
-          <span className="aa-light">Three moves,</span> not three hundred features.
+          <span className="aa-light">Three moves,</span> not three hundred
+          features.
         </h2>
         <div className="aa-flow">
           <div className="aa-flow-step">
@@ -154,33 +246,54 @@ export function LandingPage() {
             <p>Thought goes to inbox in under two seconds. From anywhere.</p>
           </div>
           <div className="aa-flow-arrow">
-            <svg width="20" height="14" viewBox="0 0 20 14" fill="none"><path d="M2 7h15M13 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
+              <path
+                d="M2 7h15M13 2l5 5-5 5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
           <div className="aa-flow-step">
             <div className="aa-flow-num">02</div>
             <h3>Triage</h3>
-            <p>Decide what each thing <i>is</i>: task, project, or reference.</p>
+            <p>
+              Decide what each thing <i>is</i>: task, project, or reference.
+            </p>
           </div>
           <div className="aa-flow-arrow">
-            <svg width="20" height="14" viewBox="0 0 20 14" fill="none"><path d="M2 7h15M13 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
+              <path
+                d="M2 7h15M13 2l5 5-5 5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
           <div className="aa-flow-step">
             <div className="aa-flow-num">03</div>
             <h3>Focus</h3>
-            <p>ActionAmp picks the next thing. You do it. The rest disappears.</p>
+            <p>
+              ActionAmp picks the next thing. You do it. The rest disappears.
+            </p>
           </div>
         </div>
       </section>
 
       <section className="aa-soul" id="soul">
         <h2 className="aa-soul-statement">
-          The home screen isn't a list.<br />
+          The home screen isn't a list.
+          <br />
           It's a <b>decision</b>.
         </h2>
         <p className="aa-soul-sub">
-          Every other app opens to your full todo list. ActionAmp opens to one task,
-          the next thing that matters, and hides the rest. You can always see it.
-          You just don't have to.
+          Every other app opens to your full todo list. ActionAmp opens to one
+          task, the next thing that matters, and hides the rest. You can always
+          see it. You just don't have to.
         </p>
       </section>
 
@@ -195,17 +308,25 @@ export function LandingPage() {
           just works.
         </p>
         <p className="aa-lede">
-          We also borrowed from <b>PARA</b>, with one deliberate change: we
-          took its <b>Areas</b> and called them <b>Goals</b>. Not the same, but
+          We also borrowed from <b>PARA</b>, with one deliberate change: we took
+          its <b>Areas</b> and called them <b>Goals</b>. Not the same, but
           similar. Areas are passive buckets ("Health", "Finance"). Goals are
           active outcomes ("Run a 10k", "Get finances under control"). For an
           app about action, the active framing fits.
         </p>
         <div className="aa-badges">
-          <span className="aa-badge"><span className="aa-b">/</span>Inbox → triage</span>
-          <span className="aa-badge"><span className="aa-b">/</span>Goals over areas</span>
-          <span className="aa-badge"><span className="aa-b">/</span>Projects & tasks</span>
-          <span className="aa-badge"><span className="aa-b">/</span>Priority + size</span>
+          <span className="aa-badge">
+            <span className="aa-b">/</span>Inbox → triage
+          </span>
+          <span className="aa-badge">
+            <span className="aa-b">/</span>Goals over areas
+          </span>
+          <span className="aa-badge">
+            <span className="aa-b">/</span>Projects & tasks
+          </span>
+          <span className="aa-badge">
+            <span className="aa-b">/</span>Priority + size
+          </span>
         </div>
       </section>
 
@@ -229,7 +350,13 @@ export function LandingPage() {
       <section className="aa-final">
         <div className="aa-final-mark">
           <svg viewBox="0 0 16 16" fill="none">
-            <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M3.5 8.5l3 3 6-7"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </div>
         <h2>
@@ -239,7 +366,15 @@ export function LandingPage() {
         <p>When it's ready, you'll know.</p>
         <a className="aa-follow-link" href="#">
           Follow along
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5 3l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M5 3l5 5-5 5"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </a>
       </section>
 
@@ -247,7 +382,13 @@ export function LandingPage() {
         <div className="aa-brand">
           <div className="aa-brand-mark aa-brand-mark-sm">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
           <span className="aa-brand-name aa-brand-name-sm">ActionAmp</span>
