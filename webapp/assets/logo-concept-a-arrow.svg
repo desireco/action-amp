@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Action Amp A arrow concept</title>
+  <desc id="desc">A bold letter A surrounded by a circular arrow, suggesting action, motion, and amplification.</desc>
+  <defs>
+    <linearGradient id="amp-orange" x1="124" y1="90" x2="388" y2="428" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fb923c" />
+      <stop offset="1" stop-color="#ea580c" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#111827" />
+  <path
+    d="M352.5 128.5c-33.5-27.2-78.6-37.9-122.3-25.2-69.8 20.2-110 93.2-89.8 163 4.1 14.1 10.4 27.1 18.3 38.6"
+    fill="none"
+    stroke="url(#amp-orange)"
+    stroke-width="36"
+    stroke-linecap="round"
+  />
+  <path d="M374.3 72.4 389 162.2l-88.4-21.7 31.8-25.1 41.9-43Z" fill="#fb923c" />
+  <path
+    d="M155.8 383.4 236.3 147h43.4l80.5 236.4h-55.4l-12.7-42.9h-68.2l-12.7 42.9h-55.4Zm81.9-89h40.6L258 225.3l-20.3 69.1Z"
+    fill="#f9fafb"
+  />
+  <path d="M230.7 326.9h54.6l13 41.8h-80.6l13-41.8Z" fill="url(#amp-orange)" opacity=".92" />
+</svg>

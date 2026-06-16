@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — What Now (v2, simplified)</title>
+    <style>
+      /* ============================================================
+     THEME TOKENS
+     ============================================================ */
+      :root {
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+        --radius-xs: 4px;
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-full: 9999px;
+
+        /* Teal — system/state */
+        --teal: #0ea5e9;
+        --teal-cta: #0284c7;
+        --teal-cta-hover: #0369a1;
+        --teal-soft: rgba(14, 165, 233, 0.12);
+        --teal-soft-strong: rgba(14, 165, 233, 0.18);
+        --teal-tint-shadow: rgba(2, 132, 199, 0.22);
+
+        /* Amber — human emphasis */
+        --amber: #f59e0b;
+        --amber-text: #92400e;
+        --amber-soft: rgba(245, 158, 11, 0.14);
+        --amber-soft-strong: rgba(245, 158, 11, 0.22);
+      }
+
+      /* ---- LIGHT theme (default) ---- */
+      :root {
+        --bg: #f2f5f7;
+        --bg-elevated: #fcfcfd;
+        --surface: #ffffff;
+        --surface-muted: #f2f5f7;
+        --surface-muted-2: #eceef0;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text-primary: #212224;
+        --text-secondary: #44474b;
+        --text-tertiary: #55606e;
+        --text-quaternary: #818489;
+        --shadow-sm: 0 1px 2px rgba(0, 28, 70, 0.04);
+        --shadow-md:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+        --hero-shadow:
+          0 2px 4px rgba(0, 28, 70, 0.05), 0 16px 48px var(--teal-tint-shadow);
+      }
+      /* ---- DARK theme ---- */
+      [data-theme="dark"] {
+        --bg: #13161c;
+        --bg-elevated: #1a1d24;
+        --surface: #1f232b;
+        --surface-raised: #252a33;
+        --surface-muted: #2a2f38;
+        --surface-muted-2: #30353f;
+        --border: #2f343e;
+        --border-strong: #3c4250;
+        --text-primary: #f4f6f9;
+        --text-secondary: #c5cbd4;
+        --text-tertiary: #8b939f;
+        --text-quaternary: #6a7180;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-md:
+          0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+        --hero-shadow:
+          0 2px 4px rgba(0, 0, 0, 0.2), 0 24px 64px rgba(14, 165, 233, 0.18);
+      }
+
+      /* ============================================================
+     BASE
+     ============================================================ */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body {
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text-primary);
+        line-height: 1.4;
+        height: 100vh;
+        overflow: hidden;
+        transition:
+          background 0.3s ease,
+          color 0.3s ease;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+      }
+      svg {
+        display: block;
+      }
+
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes soft-fade {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* ============================================================
+     APP SHELL — narrower sidebar, flat nav
+     ============================================================ */
+      .app {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        height: 100vh;
+      }
+
+      /* ---------- SIDEBAR ---------- */
+      .sidebar {
+        background: var(--bg-elevated);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 18px 12px;
+        animation: soft-fade 0.4s ease both;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 8px 22px;
+      }
+      .brand-mark {
+        width: 26px;
+        height: 26px;
+        border-radius: var(--radius-sm);
+        background: linear-gradient(135deg, var(--teal), #22d3ee);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+      }
+      .brand-name {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      /* ---- Lens switch ---- */
+      .lens {
+        display: flex;
+        background: var(--surface-muted);
+        border-radius: var(--radius-md);
+        padding: 3px;
+        margin-bottom: 22px;
+      }
+      .lens-btn {
+        flex: 1;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: var(--radius-sm);
+        color: var(--text-tertiary);
+        transition: all 0.2s ease;
+      }
+      .lens-btn.active {
+        background: var(--surface);
+        color: var(--text-primary);
+        box-shadow: var(--shadow-sm);
+      }
+      .lens-btn:not(.active):hover {
+        color: var(--text-secondary);
+      }
+
+      /* ---- Flat nav (no section labels) ---- */
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        padding: 7px 8px;
+        border-radius: var(--radius-sm);
+        transition:
+          background 0.12s ease,
+          color 0.12s ease;
+        position: relative;
+        cursor: pointer;
+      }
+      .nav-item:hover {
+        background: var(--surface-muted);
+        color: var(--text-primary);
+      }
+      .nav-item.active {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+        font-weight: 600;
+      }
+      .nav-item.active::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 7px;
+        bottom: 7px;
+        width: 3px;
+        border-radius: var(--radius-full);
+        background: var(--teal);
+        animation: bar-rise 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+      }
+      @keyframes bar-rise {
+        from {
+          transform: scaleY(0);
+        }
+        to {
+          transform: scaleY(1);
+        }
+      }
+      .nav-item svg {
+        width: 16px;
+        height: 16px;
+        opacity: 0.8;
+        flex-shrink: 0;
+      }
+      .nav-item.active svg {
+        opacity: 1;
+      }
+      .nav-count {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--surface-muted-2);
+        color: var(--text-tertiary);
+        padding: 1px 7px;
+        border-radius: var(--radius-full);
+      }
+      .nav-item.active .nav-count {
+        background: var(--teal-soft-strong);
+        color: var(--teal-cta);
+      }
+      .nav-count.urgent {
+        background: var(--amber-soft-strong);
+        color: var(--amber-text);
+      }
+
+      .sidebar-foot {
+        margin-top: auto;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+      }
+
+      /* ---------- MAIN ---------- */
+      .main {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-elevated);
+        animation: soft-fade 0.4s ease both;
+      }
+      /* breadcrumb GONE in v2 — sidebar already shows location */
+      .topbar-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .kbd-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 6px 11px 6px 10px;
+        border-radius: var(--radius-sm);
+        transition: all 0.15s ease;
+      }
+      .kbd-btn:hover {
+        background: var(--surface-muted);
+        border-color: var(--border-strong);
+        color: var(--text-primary);
+      }
+      .kbd-btn svg {
+        opacity: 0.7;
+      }
+      .kbd {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--surface-muted-2);
+        color: var(--text-tertiary);
+        padding: 2px 5px;
+        border-radius: var(--radius-xs);
+        border: 1px solid var(--border);
+      }
+      /* secondary ⌘\ button GONE in v2 — ⌘K is enough */
+
+      .icon-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-sm);
+        color: var(--text-tertiary);
+        transition: all 0.15s ease;
+      }
+      .icon-btn:hover {
+        background: var(--surface-muted);
+        color: var(--text-primary);
+      }
+
+      /* ---------- CONTENT — hero only ---------- */
+      .content {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 24px;
+      }
+
+      /* ============================================================
+     "WHAT NOW" — stripped to the essentials
+     ============================================================ */
+      .whatnow {
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
+        text-align: center;
+        animation: rise-in 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+        animation-delay: 0.08s;
+      }
+
+      /* Demoted context — static text, small, no breathing dot, no pill chrome */
+      .wn-context {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--text-tertiary);
+        margin-bottom: 36px;
+        letter-spacing: 0.01em;
+      }
+
+      /* ---- THE COMPLETION CIRCLE (signature) ---- */
+      .completion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-full);
+        border: 2.5px solid var(--border-strong);
+        margin-bottom: 32px;
+        cursor: pointer;
+        transition:
+          transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          border-color 0.2s ease;
+      }
+      .completion:hover {
+        transform: scale(1.08);
+        border-color: var(--teal);
+      }
+      .completion svg {
+        color: white;
+        width: 15px;
+        height: 15px;
+        opacity: 0;
+        transform: scale(0.4);
+        transition:
+          opacity 0.14s ease,
+          transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transition-delay: 60ms;
+      }
+      .completion.filled {
+        background: var(--teal);
+        border-color: var(--teal);
+        box-shadow: 0 6px 16px var(--teal-tint-shadow);
+      }
+      .completion.filled svg {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .wn-task {
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+      }
+      .wn-meta {
+        font-size: 14px;
+        color: var(--text-tertiary);
+        margin-bottom: 36px;
+      }
+      .wn-meta .sep {
+        margin: 0 7px;
+        color: var(--border-strong);
+      }
+
+      /* "why" chip GONE from hero in v2 — reveal on hover via title attr instead.
+     But keep a single, subtle line so the user still knows WHY. */
+      .wn-why {
+        font-size: 12.5px;
+        color: var(--text-tertiary);
+        margin-bottom: 32px;
+      }
+      .wn-why strong {
+        color: var(--amber-text);
+        font-weight: 600;
+      }
+      [data-theme="dark"] .wn-why strong {
+        color: var(--amber);
+      }
+
+      .wn-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .btn {
+        font-size: 14.5px;
+        font-weight: 600;
+        padding: 10px 22px;
+        border-radius: var(--radius-md);
+        border: 1px solid transparent;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          transform 0.08s ease,
+          box-shadow 0.15s ease;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn-primary {
+        background: var(--teal-cta);
+        color: white;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      }
+      .btn-primary:hover {
+        background: var(--teal-cta-hover);
+        box-shadow: 0 4px 12px var(--teal-tint-shadow);
+      }
+      .btn-secondary {
+        background: var(--surface);
+        color: var(--text-secondary);
+        border-color: var(--border);
+      }
+      .btn-secondary:hover {
+        background: var(--surface-muted);
+        border-color: var(--border-strong);
+        color: var(--text-primary);
+      }
+
+      /* ============================================================
+     REDUCED MOTION
+     ============================================================ */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <!-- ============================ SIDEBAR ============================ -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <div class="brand-name">ActionAmp</div>
+        </div>
+
+        <div class="lens">
+          <button class="lens-btn active">Work</button>
+          <button class="lens-btn">Me</button>
+        </div>
+
+        <!-- Flat nav — no section labels -->
+        <nav class="nav">
+          <a class="nav-item active">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M8 1.5l1.8 4.2 4.5.4-3.4 3 1 4.4L8 11.3 4.1 13.5l1-4.4-3.4-3 4.5-.4z"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linejoin="round"
+              />
+            </svg>
+            What Now
+          </a>
+          <a class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3 4h10M3 8h10M3 12h6"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            Inbox
+            <span class="nav-count urgent">4</span>
+          </a>
+          <a class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none">
+              <circle
+                cx="8"
+                cy="8"
+                r="6"
+                stroke="currentColor"
+                stroke-width="1.4"
+              />
+              <path
+                d="M8 5v3.5l2 1"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+              />
+            </svg>
+            Today
+            <span class="nav-count">3</span>
+          </a>
+          <a class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none">
+              <rect
+                x="2.5"
+                y="3.5"
+                width="11"
+                height="10"
+                rx="1.5"
+                stroke="currentColor"
+                stroke-width="1.4"
+              />
+              <path
+                d="M2.5 6.5h11M5.5 2v3M10.5 2v3"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+              />
+            </svg>
+            Upcoming
+          </a>
+          <a class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M2.5 8c0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5-2.5 5.5-5.5 5.5-5.5-2.5-5.5-5.5z"
+                stroke="currentColor"
+                stroke-width="1.4"
+              />
+              <path
+                d="M8 5v3"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-dasharray="1 1.5"
+              />
+            </svg>
+            Someday
+          </a>
+          <a class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M2 4h3l1.5 8h6L14 6H5"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="6.5" cy="13.5" r="1" fill="currentColor" />
+              <circle cx="11.5" cy="13.5" r="1" fill="currentColor" />
+            </svg>
+            Projects
+            <span class="nav-count">6</span>
+          </a>
+          <a class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M8 1l2.2 4.5 5 .7-3.6 3.5.85 5L8 12.3 3.55 14.7l.85-5L.8 6.2l5-.7z"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Goals
+            <span class="nav-count">3</span>
+          </a>
+          <a class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M2 13.5V4l4-1.5v11M6 8h4M10 13.5V6l4-1.5v9"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Logbook
+          </a>
+        </nav>
+
+        <div class="sidebar-foot">
+          <a class="nav-item" style="cursor: default">
+            <svg viewBox="0 0 16 16" fill="none">
+              <circle
+                cx="8"
+                cy="5.5"
+                r="2.5"
+                stroke="currentColor"
+                stroke-width="1.4"
+              />
+              <path
+                d="M3 13.5c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+              />
+            </svg>
+            Jake
+          </a>
+        </div>
+      </aside>
+
+      <!-- ============================ MAIN ============================ -->
+      <main class="main">
+        <div class="topbar">
+          <!-- no breadcrumb -->
+          <div class="topbar-actions">
+            <button class="kbd-btn" id="captureBtn">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 3v10M3 8h10"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+              </svg>
+              Capture
+              <span class="kbd">⌘K</span>
+            </button>
+            <button class="icon-btn" id="themeBtn" title="Toggle theme (⌘D)">
+              <svg
+                id="themeIcon"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+              >
+                <path
+                  d="M13 9.2A5 5 0 016.8 3 5.5 5.5 0 1013 9.2z"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="content">
+          <!-- ============ WHAT NOW — essentials only ============ -->
+          <div class="whatnow">
+            <div class="wn-context">Right now · 30 min available · Work</div>
+
+            <div class="completion" id="completion" title="Click to complete">
+              <svg viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M3.5 8.5l3 3 6-7"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+
+            <div class="wn-task">Email Sarah re: Q3 invoice</div>
+            <div class="wn-meta">
+              Ship product v2 <span class="sep">·</span> due today
+              <span class="sep">·</span> 15 min
+            </div>
+
+            <div class="wn-why">
+              Because it's <strong>Important</strong> and due today.
+            </div>
+
+            <div class="wn-actions">
+              <button class="btn btn-primary" id="doBtn">Do this</button>
+              <button class="btn btn-secondary">Not now</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const root = document.documentElement;
+      const themeBtn = document.getElementById("themeBtn");
+      const themeIcon = document.getElementById("themeIcon");
+      const sunIcon =
+        '<path d="M8 2v1.5M8 12.5V14M14 8h-1.5M3.5 8H2M12.2 3.8l-1 1M4.8 11.2l-1 1M12.2 12.2l-1-1M4.8 4.8l-1-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.4"/>';
+      const moonIcon =
+        '<path d="M13 9.2A5 5 0 016.8 3 5.5 5.5 0 1013 9.2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>';
+
+      function setTheme(t) {
+        root.dataset.theme = t;
+        themeIcon.innerHTML = t === "dark" ? sunIcon : moonIcon;
+      }
+      themeBtn.addEventListener("click", () =>
+        setTheme(root.dataset.theme === "dark" ? "light" : "dark"),
+      );
+      document.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "d") {
+          e.preventDefault();
+          setTheme(root.dataset.theme === "dark" ? "light" : "dark");
+        }
+      });
+
+      const completion = document.getElementById("completion");
+      completion.addEventListener("click", () =>
+        completion.classList.toggle("filled"),
+      );
+
+      document.getElementById("doBtn").addEventListener("click", (e) => {
+        completion.classList.add("filled");
+        e.currentTarget.textContent = "Done ✓";
+        setTimeout(() => {
+          e.currentTarget.textContent = "Do this";
+        }, 1400);
+      });
+
+      document.getElementById("captureBtn").addEventListener("click", (e) => {
+        e.currentTarget.style.transform = "scale(.96)";
+        setTimeout(() => (e.currentTarget.style.transform = ""), 120);
+      });
+
+      document.querySelectorAll(".lens-btn").forEach((b) => {
+        b.addEventListener("click", () => {
+          document
+            .querySelectorAll(".lens-btn")
+            .forEach((x) => x.classList.remove("active"));
+          b.classList.add("active");
+        });
+      });
+    </script>
+  </body>
+</html>

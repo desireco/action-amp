@@ -1,0 +1,13 @@
+# old project
+aa-old/
+
+# wasp / node
+webapp/node_modules/
+webapp/.wasp/
+webapp/.env*
+webapp/build/
+
+# os
+.DS_Store
+.pi/
+skills-lock.json

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Action Amp A battery concept</title>
+  <desc id="desc">A bold letter A integrated with a charged battery, suggesting energy, capacity, and amplification.</desc>
+  <defs>
+    <linearGradient id="battery-charge" x1="150" y1="126" x2="362" y2="386" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fb923c" />
+      <stop offset="1" stop-color="#ea580c" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#111827" />
+  <path
+    d="M164 114h172c19.9 0 36 16.1 36 36v19h14c16.6 0 30 13.4 30 30v114c0 16.6-13.4 30-30 30h-14v19c0 19.9-16.1 36-36 36H164c-19.9 0-36-16.1-36-36V150c0-19.9 16.1-36 36-36Z"
+    fill="#f9fafb"
+  />
+  <path
+    d="M174 156h151c5.5 0 10 4.5 10 10v180c0 5.5-4.5 10-10 10H174c-5.5 0-10-4.5-10-10V166c0-5.5 4.5-10 10-10Z"
+    fill="#111827"
+  />
+  <path d="M190 339 238.8 173h34.4L322 339h-43.4l-7.5-28.2h-30.2l-7.5 28.2H190Zm58.7-61.4h14.6L256 231.8l-7.3 45.8Z" fill="#f9fafb" />
+  <path d="M183 357h134c9.9 0 18-8.1 18-18v-34H183v52Z" fill="url(#battery-charge)" />
+  <path d="M241 309h30l8 30h-46l8-30Z" fill="#111827" opacity=".92" />
+  <path d="M374 207h18v98h-18v-98Z" fill="url(#battery-charge)" />
+</svg>

@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Accent color candidates</title>
+    <style>
+      :root {
+        /* Things DNA — cool-tinted neutrals, not pure gray */
+        --white: #ffffff;
+        --surface: #fcfcfd;
+        --surface-raised: #f8f9fb;
+        --surface-muted: #f2f5f7;
+        --surface-muted-2: #eceef0;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text-primary: #212224;
+        --text-secondary: #44474b;
+        --text-tertiary: #55606e;
+        --navy: #26344a;
+
+        /* Native system font — the brand */
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+
+        /* Soft, layered, blue-tinted shadow (Things elevation) */
+        --shadow-card:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+        --shadow-hero:
+          0 2px 4px rgba(0, 28, 70, 0.08), 0 12px 40px rgba(0, 28, 70, 0.1);
+      }
+
+      /* Per-candidate accent -- each candidate section overrides --accent + --accent-cta */
+      .candidate {
+        --accent: #0ea5e9;
+        --accent-soft: rgba(14, 165, 233, 0.12);
+        --accent-cta: #0284c7;
+        --accent-cta-hover: #0369a1;
+        --accent-tint-shadow: rgba(2, 132, 199, 0.18);
+      }
+      .candidate.c-teal {
+        --accent: #0ea5e9;
+        --accent-soft: rgba(14, 165, 233, 0.12);
+        --accent-cta: #0284c7;
+        --accent-cta-hover: #0369a1;
+        --accent-tint-shadow: rgba(2, 132, 199, 0.2);
+      }
+      .candidate.c-indigo {
+        --accent: #6366f1;
+        --accent-soft: rgba(99, 102, 241, 0.12);
+        --accent-cta: #4f46e5;
+        --accent-cta-hover: #4338ca;
+        --accent-tint-shadow: rgba(79, 70, 229, 0.2);
+      }
+      .candidate.c-emerald {
+        --accent: #10b981;
+        --accent-soft: rgba(16, 185, 129, 0.12);
+        --accent-cta: #059669;
+        --accent-cta-hover: #047857;
+        --accent-tint-shadow: rgba(5, 150, 105, 0.2);
+      }
+      .candidate.c-amber {
+        --accent: #f59e0b;
+        --accent-soft: rgba(245, 158, 11, 0.14);
+        --accent-cta: #d97706;
+        --accent-cta-hover: #b45309;
+        --accent-tint-shadow: rgba(217, 119, 6, 0.22);
+      }
+      .candidate.c-rose {
+        --accent: #f43f5e;
+        --accent-soft: rgba(244, 63, 94, 0.1);
+        --accent-cta: #e11d48;
+        --accent-cta-hover: #be123c;
+        --accent-tint-shadow: rgba(225, 29, 72, 0.2);
+      }
+      .candidate.c-things {
+        --accent: #5c9cf5;
+        --accent-soft: rgba(92, 156, 245, 0.14);
+        --accent-cta: #2576eb;
+        --accent-cta-hover: #1e64c7;
+        --accent-tint-shadow: rgba(37, 118, 235, 0.2);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body {
+        font-family: var(--font);
+        background: var(--surface-muted);
+        color: var(--text-primary);
+        line-height: 1.4;
+        padding: 64px 24px 96px;
+      }
+
+      .page {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      .page-head {
+        margin-bottom: 56px;
+      }
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+      .page-head h1 {
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        line-height: 1.15;
+        color: var(--text-primary);
+        margin-bottom: 14px;
+      }
+      .page-head p {
+        font-size: 17px;
+        color: var(--text-secondary);
+        max-width: 60ch;
+      }
+
+      /* ---- Candidate block ---- */
+      .candidate {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 40px 40px 44px;
+        margin-bottom: 28px;
+        box-shadow: var(--shadow-card);
+      }
+      .candidate-head {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        margin-bottom: 4px;
+      }
+      .swatch {
+        width: 22px;
+        height: 22px;
+        border-radius: 9999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 4px var(--accent-soft);
+        flex-shrink: 0;
+        align-self: center;
+      }
+      .candidate-name {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .candidate-hex {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        color: var(--text-tertiary);
+        margin-left: auto;
+      }
+      .candidate-tag {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin: 2px 0 36px 36px;
+      }
+
+      /* ---- The "What Now" hero mock (our signature surface) ---- */
+      .whatnow {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 48px 40px 40px;
+        text-align: center;
+        /* Accent-tinted hero shadow — the "premium depth" trick */
+        box-shadow:
+          0 2px 4px rgba(0, 28, 70, 0.05),
+          0 16px 48px var(--accent-tint-shadow);
+      }
+      .whatnow-context {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-tertiary);
+        background: var(--surface-muted);
+        padding: 6px 12px;
+        border-radius: 9999px;
+        margin-bottom: 32px;
+      }
+      .whatnow-context .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: var(--accent);
+      }
+      .whatnow h2 {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        line-height: 1.2;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+      }
+      .whatnow-meta {
+        font-size: 14px;
+        color: var(--text-tertiary);
+        margin-bottom: 8px;
+      }
+      .whatnow-why {
+        display: inline-block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--accent-cta);
+        background: var(--accent-soft);
+        padding: 5px 11px;
+        border-radius: 6px;
+        margin-bottom: 32px;
+      }
+
+      /* The signature: completion circle */
+      .completion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 9999px;
+        margin-bottom: 24px;
+      }
+      .completion.empty {
+        background: transparent;
+        border: 2px solid var(--border-strong);
+      }
+      .completion.filled {
+        background: var(--accent);
+        box-shadow: 0 4px 12px var(--accent-tint-shadow);
+      }
+      .completion.filled svg {
+        color: white;
+      }
+
+      .whatnow-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 4px;
+      }
+
+      /* Buttons */
+      .btn {
+        font-family: var(--font);
+        font-size: 15px;
+        font-weight: 600;
+        padding: 11px 22px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .btn-primary {
+        background: var(--accent-cta);
+        color: white;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+      .btn-primary:hover {
+        background: var(--accent-cta-hover);
+      }
+      .btn-secondary {
+        background: var(--surface-raised);
+        color: var(--text-secondary);
+        border-color: var(--border);
+      }
+      .btn-secondary:hover {
+        background: var(--surface-muted);
+      }
+
+      /* ---- Mini component row: shows accent in selection + chips ---- */
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+      .row-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        width: 100%;
+        margin-bottom: 6px;
+      }
+      /* Sidebar item — active state uses accent */
+      .nav-item {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        padding: 7px 12px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .nav-item.active {
+        background: var(--accent-soft);
+        color: var(--accent-cta);
+        font-weight: 600;
+      }
+      .nav-item .nav-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        background: currentColor;
+        opacity: 0.5;
+      }
+      .nav-item.active .nav-dot {
+        opacity: 1;
+      }
+
+      /* Priority + size chips (semantic color use) */
+      .chip {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 9px;
+        border-radius: 9999px;
+        background: var(--surface-muted);
+        color: var(--text-secondary);
+      }
+      .chip.important {
+        background: var(--accent-soft);
+        color: var(--accent-cta);
+      }
+
+      .link {
+        color: var(--accent-cta);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+
+      .footnote {
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-tertiary);
+        margin-top: 40px;
+        max-width: 56ch;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="page-head">
+        <div class="eyebrow">ActionAmp · Accent color candidates</div>
+        <h1>Pick the one that feels like focus.</h1>
+        <p>
+          Each candidate does the three jobs the accent has to do: fill the
+          completion circle (the emotional payoff), mark selection/active, and
+          drive the primary CTA. Same hero, same DNA — only the hue changes.
+        </p>
+      </header>
+
+      <!-- ============ TEAL ============ -->
+      <section class="candidate c-teal">
+        <div class="candidate-head">
+          <span class="swatch"></span>
+          <span class="candidate-name">Electric teal</span>
+          <span class="candidate-hex">#0EA5E9 · CTA #0284C7</span>
+        </div>
+        <p class="candidate-tag">
+          "Signal through noise." Tech-forward, reads like activation. My lean.
+        </p>
+
+        <div class="whatnow">
+          <div class="whatnow-context">
+            <span class="dot"></span> Right now · 30 min · Work lens
+          </div>
+          <div class="completion empty"></div>
+          <h2>Email Sarah re: Q3 invoice</h2>
+          <div class="whatnow-meta">
+            Work → Ship product v2 · due today · 15 min
+          </div>
+          <div class="whatnow-why">Important · due today · S</div>
+          <div class="whatnow-actions">
+            <button class="btn btn-primary">Do this</button>
+            <button class="btn btn-secondary">Not now</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-label">Selection &amp; semantic chips</div>
+          <span class="nav-item active"
+            ><span class="nav-dot"></span> What Now</span
+          >
+          <span class="nav-item"><span class="nav-dot"></span> Inbox</span>
+          <span class="nav-item"><span class="nav-dot"></span> Today</span>
+          <span class="chip important">Important</span>
+          <span class="chip">Normal</span>
+          <span class="chip">S</span>
+          <a class="link" href="#">linked project →</a>
+        </div>
+      </section>
+
+      <!-- ============ INDIGO ============ -->
+      <section class="candidate c-indigo">
+        <div class="candidate-head">
+          <span class="swatch"></span>
+          <span class="candidate-name">Deep indigo</span>
+          <span class="candidate-hex">#6366F1 · CTA #4F46E5</span>
+        </div>
+        <p class="candidate-tag">
+          "Deep focus." Linear/Arc energy. Calm, premium, slightly cooler. Reads
+          serious.
+        </p>
+
+        <div class="whatnow">
+          <div class="whatnow-context">
+            <span class="dot"></span> Right now · 30 min · Work lens
+          </div>
+          <div class="completion empty"></div>
+          <h2>Email Sarah re: Q3 invoice</h2>
+          <div class="whatnow-meta">
+            Work → Ship product v2 · due today · 15 min
+          </div>
+          <div class="whatnow-why">Important · due today · S</div>
+          <div class="whatnow-actions">
+            <button class="btn btn-primary">Do this</button>
+            <button class="btn btn-secondary">Not now</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-label">Selection &amp; semantic chips</div>
+          <span class="nav-item active"
+            ><span class="nav-dot"></span> What Now</span
+          >
+          <span class="nav-item"><span class="nav-dot"></span> Inbox</span>
+          <span class="nav-item"><span class="nav-dot"></span> Today</span>
+          <span class="chip important">Important</span>
+          <span class="chip">Normal</span>
+          <span class="chip">S</span>
+          <a class="link" href="#">linked project →</a>
+        </div>
+      </section>
+
+      <!-- ============ EMERALD ============ -->
+      <section class="candidate c-emerald">
+        <div class="candidate-head">
+          <span class="swatch"></span>
+          <span class="candidate-name">Emerald</span>
+          <span class="candidate-hex">#10B981 · CTA #059669</span>
+        </div>
+        <p class="candidate-tag">
+          "Go / progress." Natural for a doing-app. Risk: can read as a generic
+          success-badge.
+        </p>
+
+        <div class="whatnow">
+          <div class="whatnow-context">
+            <span class="dot"></span> Right now · 30 min · Work lens
+          </div>
+          <div class="completion empty"></div>
+          <h2>Email Sarah re: Q3 invoice</h2>
+          <div class="whatnow-meta">
+            Work → Ship product v2 · due today · 15 min
+          </div>
+          <div class="whatnow-why">Important · due today · S</div>
+          <div class="whatnow-actions">
+            <button class="btn btn-primary">Do this</button>
+            <button class="btn btn-secondary">Not now</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-label">Selection &amp; semantic chips</div>
+          <span class="nav-item active"
+            ><span class="nav-dot"></span> What Now</span
+          >
+          <span class="nav-item"><span class="nav-dot"></span> Inbox</span>
+          <span class="nav-item"><span class="nav-dot"></span> Today</span>
+          <span class="chip important">Important</span>
+          <span class="chip">Normal</span>
+          <span class="chip">S</span>
+          <a class="link" href="#">linked project →</a>
+        </div>
+      </section>
+
+      <!-- ============ AMBER ============ -->
+      <section class="candidate c-amber">
+        <div class="candidate-head">
+          <span class="swatch"></span>
+          <span class="candidate-name">Warm amber</span>
+          <span class="candidate-hex">#F59E0B · CTA #D97706</span>
+        </div>
+        <p class="candidate-tag">
+          "Energy / momentum." Warmest option. Risk: can feel urgent or
+          stressful over time.
+        </p>
+
+        <div class="whatnow">
+          <div class="whatnow-context">
+            <span class="dot"></span> Right now · 30 min · Work lens
+          </div>
+          <div class="completion empty"></div>
+          <h2>Email Sarah re: Q3 invoice</h2>
+          <div class="whatnow-meta">
+            Work → Ship product v2 · due today · 15 min
+          </div>
+          <div class="whatnow-why">Important · due today · S</div>
+          <div class="whatnow-actions">
+            <button class="btn btn-primary">Do this</button>
+            <button class="btn btn-secondary">Not now</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-label">Selection &amp; semantic chips</div>
+          <span class="nav-item active"
+            ><span class="nav-dot"></span> What Now</span
+          >
+          <span class="nav-item"><span class="nav-dot"></span> Inbox</span>
+          <span class="nav-item"><span class="nav-dot"></span> Today</span>
+          <span class="chip important">Important</span>
+          <span class="chip">Normal</span>
+          <span class="chip">S</span>
+          <a class="link" href="#">linked project →</a>
+        </div>
+      </section>
+
+      <!-- ============ ROSE ============ -->
+      <section class="candidate c-rose">
+        <div class="candidate-head">
+          <span class="swatch"></span>
+          <span class="candidate-name">Rose</span>
+          <span class="candidate-hex">#F43F5E · CTA #E11D48</span>
+        </div>
+        <p class="candidate-tag">
+          "Human / warm." Distinctive, less techy. Risk: can read as alert/error
+          if overused.
+        </p>
+
+        <div class="whatnow">
+          <div class="whatnow-context">
+            <span class="dot"></span> Right now · 30 min · Work lens
+          </div>
+          <div class="completion empty"></div>
+          <h2>Email Sarah re: Q3 invoice</h2>
+          <div class="whatnow-meta">
+            Work → Ship product v2 · due today · 15 min
+          </div>
+          <div class="whatnow-why">Important · due today · S</div>
+          <div class="whatnow-actions">
+            <button class="btn btn-primary">Do this</button>
+            <button class="btn btn-secondary">Not now</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-label">Selection &amp; semantic chips</div>
+          <span class="nav-item active"
+            ><span class="nav-dot"></span> What Now</span
+          >
+          <span class="nav-item"><span class="nav-dot"></span> Inbox</span>
+          <span class="nav-item"><span class="nav-dot"></span> Today</span>
+          <span class="chip important">Important</span>
+          <span class="chip">Normal</span>
+          <span class="chip">S</span>
+          <a class="link" href="#">linked project →</a>
+        </div>
+      </section>
+
+      <!-- ============ THINGS BLUE (reference) ============ -->
+      <section class="candidate c-things">
+        <div class="candidate-head">
+          <span class="swatch"></span>
+          <span class="candidate-name"
+            >Things blue
+            <span
+              style="
+                font-weight: 400;
+                color: var(--text-tertiary);
+                font-size: 14px;
+              "
+              >(reference)</span
+            ></span
+          >
+          <span class="candidate-hex">#5C9CF5 · CTA #2576EB</span>
+        </div>
+        <p class="candidate-tag">
+          Instant familiarity — but we'd be borrowing Things' identity. Shown
+          for comparison.
+        </p>
+
+        <div class="whatnow">
+          <div class="whatnow-context">
+            <span class="dot"></span> Right now · 30 min · Work lens
+          </div>
+          <div class="completion empty"></div>
+          <h2>Email Sarah re: Q3 invoice</h2>
+          <div class="whatnow-meta">
+            Work → Ship product v2 · due today · 15 min
+          </div>
+          <div class="whatnow-why">Important · due today · S</div>
+          <div class="whatnow-actions">
+            <button class="btn btn-primary">Do this</button>
+            <button class="btn btn-secondary">Not now</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-label">Selection &amp; semantic chips</div>
+          <span class="nav-item active"
+            ><span class="nav-dot"></span> What Now</span
+          >
+          <span class="nav-item"><span class="nav-dot"></span> Inbox</span>
+          <span class="nav-item"><span class="nav-dot"></span> Today</span>
+          <span class="chip important">Important</span>
+          <span class="chip">Normal</span>
+          <span class="chip">S</span>
+          <a class="link" href="#">linked project →</a>
+        </div>
+      </section>
+
+      <p class="footnote">
+        All candidates inherit the Things DNA: native system font, cool-tinted
+        neutral ramp, soft layered shadows tinted with the accent, 4–8px radii,
+        generous whitespace. Only the hue changes. Open this file in your
+        browser and judge which one feels like <em>focus</em>.
+      </p>
+    </div>
+  </body>
+</html>

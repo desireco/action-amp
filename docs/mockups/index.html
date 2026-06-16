@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp · Design workbench</title>
+    <style>
+      :root {
+        /* ---- Things DNA neutrals (cool-tinted, never pure gray) ---- */
+        --white: #ffffff;
+        --surface: #fcfcfd;
+        --surface-raised: #f8f9fb;
+        --surface-muted: #f2f5f7;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text-primary: #212224;
+        --text-secondary: #44474b;
+        --text-tertiary: #55606e;
+
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+
+        /* ---- Teal: system/state ---- */
+        --teal: #0ea5e9;
+        --teal-cta: #0284c7;
+        --teal-cta-hover: #0369a1;
+        --teal-soft: rgba(14, 165, 233, 0.12);
+        /* ---- Amber: human emphasis ---- */
+        --amber: #f59e0b;
+        --amber-text: #92400e;
+        --amber-soft: rgba(245, 158, 11, 0.14);
+
+        --shadow-card:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body {
+        font-family: var(--font);
+        background: var(--surface-muted);
+        color: var(--text-primary);
+        line-height: 1.4;
+        padding: 64px 24px 96px;
+      }
+      .page {
+        max-width: 820px;
+        margin: 0 auto;
+      }
+
+      /* ---- Header ---- */
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 28px;
+      }
+      .brand-mark {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--teal), #22d3ee);
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .brand-mark svg {
+        color: white;
+      }
+      .brand-name {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+      h1 {
+        font-size: 38px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        margin-bottom: 16px;
+      }
+      .lede {
+        font-size: 17px;
+        color: var(--text-secondary);
+        max-width: 56ch;
+        margin-bottom: 48px;
+      }
+
+      /* ---- Section labels ---- */
+      .section-label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        margin: 40px 0 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      /* ---- Mockup cards ---- */
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: var(--shadow-card);
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 4px 8px rgba(0, 28, 70, 0.08),
+          0 16px 40px rgba(0, 28, 70, 0.1);
+        border-color: var(--border-strong);
+      }
+      .card-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: 9999px;
+        margin-bottom: 14px;
+      }
+      .card-tag.system {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .card-tag.wip {
+        background: var(--amber-soft);
+        color: var(--amber-text);
+      }
+      .card-tag.planned {
+        background: var(--surface-muted);
+        color: var(--text-tertiary);
+      }
+
+      .card-title {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin-bottom: 6px;
+      }
+      .card-desc {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.45;
+        margin-bottom: 14px;
+      }
+      .card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--text-tertiary);
+      }
+      .card-go {
+        color: var(--teal-cta);
+        font-weight: 600;
+      }
+      .card:hover .card-go {
+        text-decoration: underline;
+      }
+
+      /* ---- System swatches strip ---- */
+      .swatches {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+      }
+      .sw {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: flex-start;
+      }
+      .sw-chip {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+      .sw-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-tertiary);
+      }
+      .sw-hex {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 10px;
+        color: var(--text-tertiary);
+      }
+
+      .footnote {
+        margin-top: 48px;
+        font-size: 13px;
+        color: var(--text-tertiary);
+        line-height: 1.5;
+      }
+      .footnote code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: var(--surface-muted);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M3.5 8.5l3 3 6-7"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div class="brand-name">ActionAmp</div>
+      </div>
+
+      <div class="eyebrow">Design workbench</div>
+      <h1>The work surfaces.</h1>
+      <p class="lede">
+        Every design mock lives here. Click in to work a surface, refresh to see
+        changes. All pages use the teal + amber system and the Things DNA.
+      </p>
+
+      <!-- ============ Active mockups ============ -->
+      <div class="section-label">In progress</div>
+      <div class="grid">
+        <a class="card" href="teal-amber-system.html">
+          <span class="card-tag system">System</span>
+          <div class="card-title">Teal + Amber system</div>
+          <div class="card-desc">
+            The two-accent rule across four surfaces: What Now, Today list, dark
+            Focus mode, role grid. The current source of truth for color.
+          </div>
+          <div class="card-foot">
+            <span>Light + dark</span><span class="card-go">Open →</span>
+          </div>
+        </a>
+
+        <a class="card" href="accent-candidates.html">
+          <span class="card-tag system">Reference</span>
+          <div class="card-title">Accent candidates</div>
+          <div class="card-desc">
+            Six candidate hues (teal, indigo, emerald, amber, rose, Things blue)
+            on the same hero — how we arrived at teal + amber.
+          </div>
+          <div class="card-foot">
+            <span>Decision log</span><span class="card-go">Open →</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- ============ Planned ============ -->
+      <div class="section-label">Planned</div>
+      <div class="grid">
+        <a class="card" href="app-shell-whatnow.html">
+          <span class="card-tag wip">Next</span>
+          <div class="card-title">App shell + What Now</div>
+          <div class="card-desc">
+            Sidebar (Lens switch + nav), top bar (⌘K / ⌘\), and the signature
+            home surface. Light + dark toggle. The hardest page — nails the
+            chrome for everything else.
+          </div>
+          <div class="card-foot">
+            <span>Not built yet</span><span class="card-go">Build →</span>
+          </div>
+        </a>
+
+        <div class="card" style="cursor: default">
+          <span class="card-tag planned">Planned</span>
+          <div class="card-title">Inbox + triage</div>
+          <div class="card-desc">
+            Universal inbox list and the one-item-at-a-time triage walkthrough.
+            Nails list density and the GTD clarify flow.
+          </div>
+          <div class="card-foot">
+            <span>After app shell</span
+            ><span class="card-go" style="color: var(--text-tertiary)">—</span>
+          </div>
+        </div>
+
+        <div class="card" style="cursor: default">
+          <span class="card-tag planned">Planned</span>
+          <div class="card-title">Today + Upcoming</div>
+          <div class="card-desc">
+            The planning list (Today cap, priority/size chips, done section) and
+            dated future items. Where the priority-first matcher is visible.
+          </div>
+          <div class="card-foot">
+            <span>After app shell</span
+            ><span class="card-go" style="color: var(--text-tertiary)">—</span>
+          </div>
+        </div>
+
+        <div class="card" style="cursor: default">
+          <span class="card-tag planned">Planned</span>
+          <div class="card-title">Marketing home</div>
+          <div class="card-desc">
+            The public site hero — "Easiest way to get into action" — waitlist
+            capture, sections, footer. No chrome, pure pitch.
+          </div>
+          <div class="card-foot">
+            <span>Later</span
+            ><span class="card-go" style="color: var(--text-tertiary)">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ Palette quick-reference ============ -->
+      <div class="section-label">Palette</div>
+      <div class="swatches">
+        <div class="sw">
+          <div class="sw-chip" style="background: #0ea5e9"></div>
+          <div class="sw-label">Teal</div>
+          <div class="sw-hex">#0EA5E9</div>
+        </div>
+        <div class="sw">
+          <div class="sw-chip" style="background: #0284c7"></div>
+          <div class="sw-label">Teal CTA</div>
+          <div class="sw-hex">#0284C7</div>
+        </div>
+        <div class="sw">
+          <div class="sw-chip" style="background: #f59e0b"></div>
+          <div class="sw-label">Amber</div>
+          <div class="sw-hex">#F59E0B</div>
+        </div>
+        <div class="sw">
+          <div class="sw-chip" style="background: #92400e"></div>
+          <div class="sw-label">Amber text</div>
+          <div class="sw-hex">#92400E</div>
+        </div>
+        <div class="sw">
+          <div class="sw-chip" style="background: #212224"></div>
+          <div class="sw-label">Text</div>
+          <div class="sw-hex">#212224</div>
+        </div>
+        <div class="sw">
+          <div class="sw-chip" style="background: #f2f5f7"></div>
+          <div class="sw-label">Surface muted</div>
+          <div class="sw-hex">#F2F5F7</div>
+        </div>
+        <div class="sw">
+          <div class="sw-chip" style="background: #e6e8ec"></div>
+          <div class="sw-label">Border</div>
+          <div class="sw-hex">#E6E8EC</div>
+        </div>
+        <div class="sw">
+          <div class="sw-chip" style="background: #1a1d24"></div>
+          <div class="sw-label">Dark bg</div>
+          <div class="sw-hex">#1A1D24</div>
+        </div>
+      </div>
+
+      <p class="footnote">
+        Work surface rules: edit a file, refresh the browser. Files live in
+        <code>docs/mockups/</code>. To add a new mockup, drop an HTML file in
+        and add a card above. Open <code>teal-amber-system.html</code> as the
+        color source of truth.
+      </p>
+    </div>
+  </body>
+</html>

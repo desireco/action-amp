@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Teal + Amber two-accent system</title>
+    <style>
+      :root {
+        /* ---- Things DNA: cool-tinted neutrals (never pure gray) ---- */
+        --white: #ffffff;
+        --surface: #fcfcfd;
+        --surface-raised: #f8f9fb;
+        --surface-muted: #f2f5f7;
+        --surface-muted-2: #eceef0;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text-primary: #212224;
+        --text-secondary: #44474b;
+        --text-tertiary: #55606e;
+        --navy: #26344a;
+
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+
+        /* ---- PRIMARY ACCENT: Teal = system / state ---- */
+        --teal: #0ea5e9; /* completion fill, selection, icons */
+        --teal-cta: #0284c7; /* primary buttons */
+        --teal-cta-hover: #0369a1;
+        --teal-soft: rgba(14, 165, 233, 0.12); /* selection backgrounds */
+        --teal-soft-strong: rgba(14, 165, 233, 0.18);
+        --teal-tint-shadow: rgba(2, 132, 199, 0.22);
+
+        /* ---- SECONDARY ACCENT: Amber = human emphasis ---- */
+        --amber: #f59e0b; /* fills, chip backgrounds, warm icon */
+        --amber-strong: #d97706; /* emphasis borders, small bold text */
+        --amber-text: #92400e; /* TEXT on light — passes WCAG AA */
+        --amber-soft: rgba(245, 158, 11, 0.14); /* emphasis backgrounds */
+        --amber-soft-strong: rgba(245, 158, 11, 0.22);
+        --amber-tint-shadow: rgba(217, 119, 6, 0.22);
+
+        --shadow-card:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body {
+        font-family: var(--font);
+        background: var(--surface-muted);
+        color: var(--text-primary);
+        line-height: 1.4;
+        padding: 56px 24px 96px;
+      }
+      .page {
+        max-width: 920px;
+        margin: 0 auto;
+      }
+
+      /* ---- Page head ---- */
+      .page-head {
+        margin-bottom: 48px;
+      }
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+      .page-head h1 {
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        line-height: 1.15;
+        margin-bottom: 14px;
+      }
+      .page-head p {
+        font-size: 17px;
+        color: var(--text-secondary);
+        max-width: 62ch;
+      }
+
+      /* ---- The rule legend ---- */
+      .legend {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin: 36px 0 56px;
+      }
+      .legend-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px 22px;
+        box-shadow: var(--shadow-card);
+      }
+      .legend-card.teal {
+        border-left: 4px solid var(--teal);
+      }
+      .legend-card.amber {
+        border-left: 4px solid var(--amber);
+      }
+      .legend-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .legend-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 9999px;
+        flex-shrink: 0;
+      }
+      .legend-dot.teal {
+        background: var(--teal);
+      }
+      .legend-dot.amber {
+        background: var(--amber);
+      }
+      .legend-role {
+        font-size: 13px;
+        color: var(--text-tertiary);
+        margin-bottom: 12px;
+      }
+      .legend-list {
+        list-style: none;
+        font-size: 13.5px;
+        color: var(--text-secondary);
+      }
+      .legend-list li {
+        padding: 3px 0;
+      }
+      .legend-list li::before {
+        content: "·";
+        margin-right: 8px;
+        color: var(--text-tertiary);
+      }
+
+      /* ---- Section labels ---- */
+      .section-label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        margin: 48px 0 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      /* ============ SURFACE 1: "What Now" hero ============ */
+      .whatnow {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 52px 44px 44px;
+        text-align: center;
+        box-shadow:
+          0 2px 4px rgba(0, 28, 70, 0.05),
+          0 16px 48px var(--teal-tint-shadow);
+      }
+      .whatnow-context {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-tertiary);
+        background: var(--surface-muted);
+        padding: 6px 13px;
+        border-radius: 9999px;
+        margin-bottom: 32px;
+      }
+      .whatnow-context .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: var(--teal);
+      }
+
+      .completion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 9999px;
+        margin-bottom: 26px;
+        background: transparent;
+        border: 2.5px solid var(--border-strong);
+        transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .completion svg {
+        color: white;
+        opacity: 0;
+        transition: opacity 0.12s ease 0.06s;
+      }
+      .completion.filled {
+        background: var(--teal);
+        border-color: var(--teal);
+        box-shadow: 0 6px 16px var(--teal-tint-shadow);
+      }
+      .completion.filled svg {
+        opacity: 1;
+      }
+
+      .whatnow h2 {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        line-height: 1.2;
+        margin-bottom: 10px;
+      }
+      .whatnow-meta {
+        font-size: 14px;
+        color: var(--text-tertiary);
+        margin-bottom: 14px;
+      }
+
+      /* "Why this?" line uses AMBER — it's an emphasis nudge */
+      .whatnow-why {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--amber-text);
+        background: var(--amber-soft);
+        padding: 6px 12px;
+        border-radius: 7px;
+        margin-bottom: 32px;
+      }
+
+      .whatnow-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .btn {
+        font-family: var(--font);
+        font-size: 15px;
+        font-weight: 600;
+        padding: 11px 22px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .btn-primary {
+        background: var(--teal-cta);
+        color: white;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+      .btn-primary:hover {
+        background: var(--teal-cta-hover);
+      }
+      .btn-secondary {
+        background: var(--surface-raised);
+        color: var(--text-secondary);
+        border-color: var(--border);
+      }
+      .btn-secondary:hover {
+        background: var(--surface-muted);
+      }
+
+      /* ============ SURFACE 2: Today list ============ */
+      .today {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: var(--shadow-card);
+      }
+      .today-head {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+      .today-title {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .today-count {
+        font-size: 13px;
+        color: var(--text-tertiary);
+      }
+
+      .task-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 22px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: background 0.12s ease;
+      }
+      .task-row:last-child {
+        border-bottom: none;
+      }
+      .task-row:hover {
+        background: var(--surface-raised);
+      }
+      .task-row.selected {
+        background: var(--teal-soft);
+        box-shadow: inset 3px 0 0 var(--teal);
+      }
+
+      .task-circle {
+        width: 20px;
+        height: 20px;
+        border-radius: 9999px;
+        border: 2px solid var(--border-strong);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+      }
+      .task-circle.done {
+        background: var(--teal);
+        border-color: var(--teal);
+      }
+      .task-circle.done svg {
+        color: white;
+        width: 11px;
+        height: 11px;
+      }
+
+      .task-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .task-title {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      .task-title.done {
+        color: var(--text-tertiary);
+        text-decoration: line-through;
+      }
+      .task-sub {
+        font-size: 12.5px;
+        color: var(--text-tertiary);
+        margin-top: 2px;
+      }
+
+      .task-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      /* Chips — semantic color use */
+      .chip {
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 9999px;
+        background: var(--surface-muted);
+        color: var(--text-secondary);
+        letter-spacing: 0.01em;
+      }
+      /* IMPORTANT uses amber — the one place warmth = "your attention here" */
+      .chip.important {
+        background: var(--amber-soft);
+        color: var(--amber-text);
+      }
+      /* SIZE chips stay neutral — size is structural, not urgent */
+      .chip.size-xl {
+        background: var(--amber-soft-strong);
+        color: var(--amber-text);
+      }
+      .chip.normal,
+      .chip.low {
+        background: var(--surface-muted);
+        color: var(--text-tertiary);
+      }
+
+      /* ============ SURFACE 3: Focus mode (dark) ============ */
+      .focus-mode {
+        background: #1a1d24;
+        border-radius: 14px;
+        padding: 64px 44px 56px;
+        text-align: center;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+        position: relative;
+        overflow: hidden;
+      }
+      .focus-mode::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse at center top,
+          rgba(14, 165, 233, 0.1),
+          transparent 60%
+        );
+        pointer-events: none;
+      }
+      .focus-label {
+        position: relative;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        margin-bottom: 28px;
+      }
+      .focus-completion {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 9999px;
+        border: 2.5px solid rgba(255, 255, 255, 0.25);
+        margin-bottom: 28px;
+      }
+      .focus-completion.lit {
+        background: var(--teal);
+        border-color: var(--teal);
+        box-shadow:
+          0 0 0 6px rgba(14, 165, 233, 0.18),
+          0 8px 24px rgba(14, 165, 233, 0.4);
+      }
+      .focus-completion svg {
+        color: white;
+      }
+      .focus-mode h2 {
+        position: relative;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        color: white;
+        margin-bottom: 12px;
+      }
+      .focus-meta {
+        position: relative;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.55);
+        margin-bottom: 20px;
+      }
+      .focus-why {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--amber);
+        background: var(--amber-soft-strong);
+        padding: 6px 12px;
+        border-radius: 7px;
+      }
+
+      /* ============ SURFACE 4: roles in action (mini grid) ============ */
+      .roles {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+      .role {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .role-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 18px;
+      }
+      .role-icon.teal {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .role-icon.amber {
+        background: var(--amber-soft);
+        color: var(--amber-text);
+      }
+      .role-label {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .role-note {
+        font-size: 12.5px;
+        color: var(--text-tertiary);
+        margin-top: 1px;
+      }
+
+      .footnote {
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-tertiary);
+        margin-top: 48px;
+        max-width: 58ch;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.5;
+      }
+      .footnote strong {
+        color: var(--text-secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="page-head">
+        <div class="eyebrow">
+          Two-accent system · teal primary, amber secondary
+        </div>
+        <h1>Teal carries the system. Amber carries the warmth.</h1>
+        <p>
+          Two accents work when they have non-competing roles. Teal is
+          everything the app does <em>for</em> you — completion, selection,
+          focus, the primary action. Amber appears only when something needs
+          your human attention — Important priority, the "why this?" nudge, an
+          XL-size warning. Amber is never the default; that's what keeps it from
+          becoming stressful.
+        </p>
+      </header>
+
+      <!-- ============ THE RULE ============ -->
+      <div class="legend">
+        <div class="legend-card teal">
+          <div class="legend-title">
+            <span class="legend-dot teal"></span> Teal — system / state
+          </div>
+          <div class="legend-role">
+            The app talking to you. The default accent.
+          </div>
+          <ul class="legend-list">
+            <li>Completion circle fill</li>
+            <li>Selection &amp; active states</li>
+            <li>Primary CTA buttons</li>
+            <li>Focus-mode glow &amp; progress</li>
+            <li>Links &amp; "open" affordances</li>
+          </ul>
+        </div>
+        <div class="legend-card amber">
+          <div class="legend-title">
+            <span class="legend-dot amber"></span> Amber — human emphasis
+          </div>
+          <div class="legend-role">
+            Where your attention is genuinely needed. Rare.
+          </div>
+          <ul class="legend-list">
+            <li>"Important" priority chip</li>
+            <li>The "why this?" focus nudge</li>
+            <li>XL-size break-down warning</li>
+            <li>Momentum / streak (Phase 2)</li>
+            <li>Today-cap warning ("1 slot left")</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ============ SURFACE 1: What Now ============ -->
+      <div class="section-label">
+        Surface 1 · "What Now" hero (teal dominant, amber nudge)
+      </div>
+      <div class="whatnow">
+        <div class="whatnow-context">
+          <span class="dot"></span> Right now · 30 min · Work lens
+        </div>
+        <div class="completion" id="heroCircle">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M3.5 8.5l3 3 6-7"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <h2>Email Sarah re: Q3 invoice</h2>
+        <div class="whatnow-meta">
+          Work → Ship product v2 · due today · 15 min
+        </div>
+        <div class="whatnow-why">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+            <path
+              d="M8 1l2.2 4.5 5 .7-3.6 3.5.85 5L8 12.3 3.55 14.7l.85-5L.8 6.2l5-.7z"
+            />
+          </svg>
+          Important · due today · S
+        </div>
+        <div class="whatnow-actions">
+          <button class="btn btn-primary">Do this</button>
+          <button class="btn btn-secondary">Not now</button>
+        </div>
+      </div>
+      <p
+        style="
+          text-align: center;
+          font-size: 12.5px;
+          color: var(--text-tertiary);
+          margin-top: 12px;
+        "
+      >
+        Click the circle to see the teal completion payoff · the "why this?"
+        chip is the single amber touch
+      </p>
+
+      <!-- ============ SURFACE 2: Today list ============ -->
+      <div class="section-label">
+        Surface 2 · Today list (teal selection, amber only on Important)
+      </div>
+      <div class="today">
+        <div class="today-head">
+          <div class="today-title">Today</div>
+          <div class="today-count">4 of 5 · 1 slot left</div>
+        </div>
+
+        <div class="task-row selected">
+          <div class="task-circle"></div>
+          <div class="task-body">
+            <div class="task-title">Email Sarah re: Q3 invoice</div>
+            <div class="task-sub">Ship product v2 · due today</div>
+          </div>
+          <div class="task-meta">
+            <span class="chip important">Important</span>
+            <span class="chip">S</span>
+          </div>
+        </div>
+
+        <div class="task-row">
+          <div class="task-circle"></div>
+          <div class="task-body">
+            <div class="task-title">Review pull request #284</div>
+            <div class="task-sub">Engineering · due today</div>
+          </div>
+          <div class="task-meta">
+            <span class="chip normal">Normal</span>
+            <span class="chip">M</span>
+          </div>
+        </div>
+
+        <div class="task-row">
+          <div class="task-circle done">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <div class="task-body">
+            <div class="task-title done">Standup notes → Linear</div>
+            <div class="task-sub">Done · 9:42am</div>
+          </div>
+          <div class="task-meta">
+            <span class="chip low">Low</span>
+            <span class="chip">S</span>
+          </div>
+        </div>
+
+        <div class="task-row">
+          <div class="task-circle"></div>
+          <div class="task-body">
+            <div class="task-title">Draft Q3 launch plan</div>
+            <div class="task-sub">
+              Ship product v2 · this is big — break it down?
+            </div>
+          </div>
+          <div class="task-meta">
+            <span class="chip important">Important</span>
+            <span class="chip size-xl">XL</span>
+          </div>
+        </div>
+      </div>
+      <p
+        style="
+          text-align: center;
+          font-size: 12.5px;
+          color: var(--text-tertiary);
+          margin-top: 12px;
+        "
+      >
+        Amber appears on exactly two chips — Important &amp; XL. Everything else
+        stays teal or neutral. Calm, not noisy.
+      </p>
+
+      <!-- ============ SURFACE 3: Focus mode (dark) ============ -->
+      <div class="section-label">
+        Surface 3 · Focus mode (dark — teal glow, amber nudge)
+      </div>
+      <div class="focus-mode">
+        <div class="focus-label">Focusing</div>
+        <div class="focus-completion lit">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M3.5 8.5l3 3 6-7"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <h2>Email Sarah re: Q3 invoice</h2>
+        <div class="focus-meta">Work → Ship product v2 · 15 min remaining</div>
+        <div class="focus-why">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+            <path
+              d="M8 1l2.2 4.5 5 .7-3.6 3.5.85 5L8 12.3 3.55 14.7l.85-5L.8 6.2l5-.7z"
+            />
+          </svg>
+          Important · the reason this is next
+        </div>
+      </div>
+
+      <!-- ============ SURFACE 4: roles at a glance ============ -->
+      <div class="section-label">The roles in one glance</div>
+      <div class="roles">
+        <div class="role">
+          <div class="role-icon teal">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="role-label">Completion</div>
+            <div class="role-note">Teal — the payoff</div>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-icon amber">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path
+                d="M8 1l2.2 4.5 5 .7-3.6 3.5.85 5L8 12.3 3.55 14.7l.85-5L.8 6.2l5-.7z"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="role-label">Important priority</div>
+            <div class="role-note">Amber — your attention</div>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-icon teal">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect
+                x="2"
+                y="2"
+                width="12"
+                height="12"
+                rx="3"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <rect
+                x="2"
+                y="2"
+                width="6"
+                height="12"
+                rx="3"
+                fill="currentColor"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="role-label">Selection / active</div>
+            <div class="role-note">Teal — system state</div>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-icon amber">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M8 2v8M8 13v.5"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="role-label">XL break-down nudge</div>
+            <div class="role-note">Amber — gentle warning</div>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-icon teal">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M2 8h2l2-5 4 10 2-5h2"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="role-label">Progress / momentum</div>
+            <div class="role-note">Teal (or amber if celebrating)</div>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-icon amber">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle
+                cx="8"
+                cy="8"
+                r="6"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <path
+                d="M8 5v3.5l2 1"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="role-label">Today cap warning</div>
+            <div class="role-note">Amber — "1 slot left"</div>
+          </div>
+        </div>
+      </div>
+
+      <p class="footnote">
+        <strong>The test:</strong> if you scan Surface 2 and amber feels calm —
+        appearing only where your eye genuinely should go (the Important task,
+        the XL warning) — the system works. If amber feels loud or omnipresent,
+        we've broken the rule and need to pull it back. Treat this page as the
+        work surface: tell me what to push, pull, add, or kill.
+      </p>
+    </div>
+
+    <script>
+      // Click the hero completion circle to feel the teal payoff
+      const c = document.getElementById("heroCircle");
+      c.style.cursor = "pointer";
+      c.addEventListener("click", () => c.classList.toggle("filled"));
+    </script>
+  </body>
+</html>
