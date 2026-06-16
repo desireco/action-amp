@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Plan mode = Today list card</title>
+    <style>
+      :root {
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+        --teal: #0ea5e9;
+        --teal-cta: #0284c7;
+        --teal-cta-hover: #0369a1;
+        --teal-soft: rgba(14, 165, 233, 0.12);
+        --teal-soft-strong: rgba(14, 165, 233, 0.18);
+        --teal-tint: rgba(2, 132, 199, 0.22);
+        --amber: #f59e0b;
+        --amber-text: #92400e;
+        --amber-soft: rgba(245, 158, 11, 0.14);
+        --amber-soft-strong: rgba(245, 158, 11, 0.22);
+        --violet: #7c3aed;
+        --violet-soft: rgba(124, 58, 237, 0.08);
+        --violet-text: #5b21b6;
+        --rose: #e11d48;
+        --rose-soft: rgba(225, 29, 72, 0.06);
+        --rose-text: #9f1239;
+      }
+      :root {
+        --bg: #f2f5f7;
+        --bg-elev: #fcfcfd;
+        --surface: #ffffff;
+        --surface-muted: #f2f5f7;
+        --surface-muted-2: #eceef0;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text: #212224;
+        --text-2: #44474b;
+        --text-3: #55606e;
+        --text-4: #818489;
+        --shadow-md:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+        --shadow-lg:
+          0 2px 4px rgba(0, 28, 70, 0.05), 0 24px 64px var(--teal-tint);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--font);
+        background: linear-gradient(180deg, #fff7ed 0%, var(--bg) 50%);
+        color: var(--text);
+        line-height: 1.4;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+        font-size: inherit;
+      }
+      svg {
+        display: block;
+      }
+
+      .phone {
+        width: 390px;
+        height: 844px;
+        background: transparent;
+        border-radius: 48px;
+        border: 11px solid #1a1a1a;
+        box-shadow:
+          0 32px 80px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 2px #2a2a2a;
+        position: relative;
+        overflow: hidden;
+      }
+      .phone-inner {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, #fff7ed 0%, var(--bg) 50%);
+        border-radius: 37px;
+      }
+      .notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 28px;
+        background: #1a1a1a;
+        border-radius: 0 0 18px 18px;
+        z-index: 100;
+      }
+      .status-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 44px;
+        padding: 0 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        z-index: 50;
+      }
+      .screen {
+        position: absolute;
+        top: 44px;
+        bottom: 90px;
+        left: 0;
+        right: 0;
+        padding: 14px 20px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* top: lens + mode indicator */
+      .top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .lens-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 6px 12px;
+        border-radius: 9999px;
+        color: var(--text-2);
+      }
+      .lens-chip .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: var(--teal);
+      }
+      .mode-indicator {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--amber-text);
+        letter-spacing: 0.04em;
+      }
+
+      /* breadcrumb (zoom orientation) */
+      .breadcrumb {
+        font-size: 12px;
+        color: var(--text-4);
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        margin-bottom: 14px;
+      }
+      .breadcrumb .crumb {
+        color: var(--text-3);
+        padding: 4px 8px;
+        border-radius: 9999px;
+      }
+      .breadcrumb .crumb.scope-active {
+        color: var(--teal-cta);
+        font-weight: 700;
+        background: var(--teal-soft);
+      }
+      .breadcrumb .sep {
+        opacity: 0.5;
+        margin: 0 2px;
+      }
+
+      /* ============================================================
+     THE CARD — list-shaped (still has card DNA: border + shadow + radius)
+     ============================================================ */
+      .card {
+        flex: 1;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .card-head {
+        padding: 18px 22px 14px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .card-head .ch-left {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .card-head .ch-title {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--text);
+      }
+      .card-head .ch-sub {
+        font-size: 11.5px;
+        color: var(--text-3);
+      }
+      /* the cap badge — amber when near full */
+      .cap-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: 9999px;
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .cap-badge.near {
+        background: var(--amber-soft-strong);
+        color: var(--amber-text);
+      }
+      .cap-badge.full {
+        background: var(--rose-soft);
+        color: var(--rose-text);
+      }
+
+      /* the list */
+      .list-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 12px;
+      }
+      .group-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-4);
+        padding: 14px 10px 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .group-label .g-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 9999px;
+        background: var(--violet);
+      }
+      .group-label .g-count {
+        margin-left: auto;
+        font-weight: 600;
+        color: var(--text-3);
+      }
+
+      .task-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.12s;
+      }
+      .task-row:hover {
+        background: var(--surface-muted);
+      }
+      .task-row.selected {
+        background: var(--teal-soft);
+        box-shadow: inset 2px 0 0 var(--teal);
+      }
+
+      .task-row .completion {
+        width: 20px;
+        height: 20px;
+        border-radius: 9999px;
+        border: 2px solid var(--border-strong);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.18s;
+      }
+      .task-row.done .completion {
+        background: var(--teal);
+        border-color: var(--teal);
+      }
+      .task-row.done .completion svg {
+        color: white;
+        width: 11px;
+        height: 11px;
+      }
+      .task-row .completion svg {
+        opacity: 0;
+      }
+      .task-row.done .completion svg {
+        opacity: 1;
+      }
+
+      .task-row .t-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .task-row .t-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .task-row.done .t-title {
+        color: var(--text-4);
+        text-decoration: line-through;
+      }
+      .task-row.selected .t-title {
+        font-weight: 600;
+      }
+      .task-row .t-sub {
+        font-size: 11px;
+        color: var(--text-4);
+        margin-top: 2px;
+      }
+
+      .task-row .t-meta {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .chip {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 7px;
+        border-radius: 9999px;
+        background: var(--surface-muted);
+        color: var(--text-3);
+        letter-spacing: 0.02em;
+      }
+      .chip.important {
+        background: var(--amber-soft);
+        color: var(--amber-text);
+      }
+      .chip.size {
+        background: var(--surface-muted-2);
+        color: var(--text-3);
+      }
+      .chip.size.xl {
+        background: var(--amber-soft-strong);
+        color: var(--amber-text);
+      }
+      .chip.overdue {
+        background: var(--rose-soft);
+        color: var(--rose-text);
+      }
+
+      /* done section (collapsed) */
+      .done-section {
+        border-top: 1px solid var(--border);
+        padding: 12px 22px;
+        background: var(--surface-muted);
+      }
+      .done-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--text-3);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .done-toggle .chev {
+        transition: transform 0.18s;
+        color: var(--text-4);
+      }
+      .done-toggle.open .chev {
+        transform: rotate(180deg);
+      }
+      .done-toggle .count {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--text-4);
+        font-weight: 600;
+      }
+      .done-list {
+        display: none;
+        padding-top: 8px;
+      }
+      .done-list.open {
+        display: block;
+      }
+      .done-list .task-row {
+        padding: 8px 10px;
+      }
+
+      /* card foot: add + "start doing" CTA */
+      .card-foot {
+        padding: 12px 16px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .add-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text-3);
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: background 0.12s;
+      }
+      .add-btn:hover {
+        background: var(--surface-muted);
+        color: var(--text-2);
+      }
+      .start-btn {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--teal-cta);
+        color: white;
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 9px 16px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px var(--teal-tint);
+        transition: all 0.12s;
+      }
+      .start-btn:hover {
+        background: var(--teal-cta-hover);
+      }
+      .start-btn:active {
+        transform: scale(0.97);
+      }
+
+      /* bottom bar (mode dial) */
+      .bottom-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 14px 20px 30px;
+        z-index: 40;
+      }
+      .dial-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+      }
+      .mode-pill {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 12px;
+        border-radius: 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-3);
+        box-shadow: var(--shadow-md);
+        transition: all 0.15s;
+      }
+      .mode-pill:active {
+        transform: scale(0.95);
+      }
+      .mode-pill.active {
+        background: var(--amber-soft-strong);
+        color: var(--amber-text);
+        border-color: transparent;
+      }
+      .mode-pill .icon {
+        font-size: 14px;
+      }
+
+      /* external hint */
+      .external-hint {
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--text-4);
+        font-size: 12px;
+        text-align: center;
+        max-width: 380px;
+        line-height: 1.5;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 10px 16px;
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+      }
+      .external-hint b {
+        color: var(--text-2);
+      }
+      .external-hint kbd {
+        font-family: var(--font-mono);
+        background: var(--surface-muted);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        border: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone">
+      <div class="phone-inner"></div>
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="display: flex; gap: 5px">
+          <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor">
+            <rect x="0" y="6" width="2" height="4" rx=".5" />
+            <rect x="4" y="4" width="2" height="6" rx=".5" />
+            <rect x="8" y="2" width="2" height="8" rx=".5" />
+            <rect x="12" y="0" width="2" height="10" rx=".5" />
+          </svg>
+          <svg width="22" height="10" viewBox="0 0 22 10" fill="none">
+            <rect
+              x=".5"
+              y=".5"
+              width="18"
+              height="9"
+              rx="2"
+              stroke="currentColor"
+            />
+            <rect
+              x="2"
+              y="2"
+              width="14"
+              height="6"
+              rx="1"
+              fill="currentColor"
+            />
+          </svg>
+        </span>
+      </div>
+
+      <div class="screen">
+        <div class="top-row">
+          <div class="lens-chip"><span class="dot"></span> Work</div>
+          <div class="mode-indicator">PLAN</div>
+        </div>
+
+        <div class="breadcrumb">
+          <span class="crumb">Grow audience</span><span class="sep">›</span>
+          <span class="crumb">Ship product v2</span><span class="sep">›</span>
+          <span class="crumb scope-active">Today</span>
+        </div>
+
+        <!-- THE CARD (list-shaped) -->
+        <div class="card">
+          <div class="card-head">
+            <div class="ch-left">
+              <div class="ch-title">Today</div>
+              <div class="ch-sub">Tuesday, June 16</div>
+            </div>
+            <div class="cap-badge near" id="capBadge">4 of 5 · 1 slot left</div>
+          </div>
+
+          <div class="list-scroll" id="listScroll">
+            <!-- Group: Grow audience -->
+            <div class="group-label">
+              <span class="g-dot"></span> Grow audience
+              <span class="g-count">2</span>
+            </div>
+
+            <div class="task-row done">
+              <div class="completion">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3.5 8.5l3 3 6-7"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+              <div class="t-body">
+                <div class="t-title">Standup notes → Linear</div>
+                <div class="t-sub">Ship product v2 · done 9:42am</div>
+              </div>
+            </div>
+
+            <div class="task-row selected" id="task1">
+              <div class="completion"></div>
+              <div class="t-body">
+                <div class="t-title">Email Sarah re: Q3 invoice</div>
+                <div class="t-sub">Ship product v2 · due today</div>
+              </div>
+              <div class="t-meta">
+                <span class="chip important">Important</span>
+                <span class="chip size">S</span>
+              </div>
+            </div>
+
+            <div class="task-row">
+              <div class="completion"></div>
+              <div class="t-body">
+                <div class="t-title">Review pull request #284</div>
+                <div class="t-sub">Engineering · due today</div>
+              </div>
+              <div class="t-meta">
+                <span class="chip size">M</span>
+              </div>
+            </div>
+
+            <!-- Group: General (Work) -->
+            <div class="group-label">
+              <span class="g-dot" style="background: var(--text-4)"></span>
+              General
+              <span class="g-count">2</span>
+            </div>
+
+            <div class="task-row">
+              <div class="completion"></div>
+              <div class="t-body">
+                <div class="t-title">Prep notes for 1:1 with Marco</div>
+                <div class="t-sub">tomorrow · 10 min</div>
+              </div>
+              <div class="t-meta">
+                <span class="chip size">S</span>
+              </div>
+            </div>
+
+            <div class="task-row">
+              <div class="completion"></div>
+              <div class="t-body">
+                <div class="t-title">Draft Q3 launch plan</div>
+                <div class="t-sub">this is big — break it down?</div>
+              </div>
+              <div class="t-meta">
+                <span class="chip important">Important</span>
+                <span class="chip size xl">XL</span>
+              </div>
+            </div>
+
+            <!-- overdue (from yesterday) -->
+            <div class="group-label">
+              <span class="g-dot" style="background: var(--rose)"></span>
+              Overdue
+              <span class="g-count">1</span>
+            </div>
+            <div class="task-row">
+              <div class="completion"></div>
+              <div class="t-body">
+                <div class="t-title">Reply to legal re: contract</div>
+                <div class="t-sub">was due yesterday</div>
+              </div>
+              <div class="t-meta">
+                <span class="chip overdue">overdue</span>
+                <span class="chip important">Important</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- done section collapsed -->
+          <div class="done-section">
+            <div class="done-toggle" id="doneToggle">
+              <svg
+                class="chev"
+                width="12"
+                height="12"
+                viewBox="0 0 16 16"
+                fill="none"
+              >
+                <path
+                  d="M4 6l4 4 4-4"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              Done today
+              <span class="count">3 finished</span>
+            </div>
+            <div class="done-list" id="doneList">
+              <div class="task-row done">
+                <div class="completion">
+                  <svg viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M3.5 8.5l3 3 6-7"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div class="t-body">
+                  <div class="t-title">Fix login bug</div>
+                  <div class="t-sub">done 11:14am</div>
+                </div>
+              </div>
+              <div class="task-row done">
+                <div class="completion">
+                  <svg viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M3.5 8.5l3 3 6-7"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div class="t-body">
+                  <div class="t-title">Reply to Marco</div>
+                  <div class="t-sub">done 12:30pm</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- foot -->
+          <div class="card-foot">
+            <button class="add-btn" id="addBtn">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 3v10M3 8h10"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+              Add to Today
+            </button>
+            <button class="start-btn" id="startBtn">
+              Start doing
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M5 3l5 5-5 5"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- bottom dial -->
+      <div class="bottom-bar">
+        <div class="dial-row">
+          <button class="mode-pill active">
+            <span class="icon">☀</span> Plan
+          </button>
+          <button class="mode-pill" id="doPill">
+            <span class="icon">▶</span> Do
+          </button>
+          <button class="mode-pill"><span class="icon">☾</span> Review</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="external-hint">
+      <b>Plan mode at Task scope = Today list card.</b> Same card DNA (border +
+      shadow + radius), list-shaped. Tap a task to select →
+      <kbd>Start doing</kbd> promotes it to What Now (Do mode). Today cap shows
+      amber at 4/5.
+    </div>
+
+    <script>
+      // tap a task row to select it
+      document.querySelectorAll(".task-row:not(.done)").forEach((row) => {
+        row.addEventListener("click", () => {
+          document
+            .querySelectorAll(".task-row")
+            .forEach((r) => r.classList.remove("selected"));
+          row.classList.add("selected");
+        });
+      });
+
+      // done section expand
+      const dt = document.getElementById("doneToggle");
+      const dl = document.getElementById("doneList");
+      dt.addEventListener("click", () => {
+        dt.classList.toggle("open");
+        dl.classList.toggle("open");
+      });
+
+      // completion toggle on done rows
+      document.querySelectorAll(".task-row .completion").forEach((c) => {
+        c.addEventListener("click", (e) => {
+          e.stopPropagation();
+          c.closest(".task-row").classList.toggle("done");
+        });
+      });
+
+      // "Start doing" → would switch to Do mode (What Now) with selected task
+      document.getElementById("startBtn").addEventListener("click", (e) => {
+        e.currentTarget.innerHTML =
+          '→ Do mode <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        setTimeout(() => {
+          e.currentTarget.innerHTML =
+            'Start doing <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M5 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        }, 1400);
+      });
+
+      // "Do" pill → flash to show mode switch (mock)
+      document.getElementById("doPill").addEventListener("click", (e) => {
+        alert(
+          "→ Switches to Do mode: What Now (single-task hero) for the selected task",
+        );
+      });
+    </script>
+  </body>
+</html>

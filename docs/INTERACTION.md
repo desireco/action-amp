@@ -23,6 +23,19 @@ This is why ActionAmp feels nothing like Things/Todoist/Asana once you use it:
 the chrome changes around you, the rules change, the keys change. You're not
 clicking through pages — you're **shifting modes**.
 
+### Load-bearing consequence: modes are renderings, not pages
+
+Plan / Do / Review are **three renderings of the same Mode × Scope card
+position**, not three separate pages. At Task scope:
+
+- **Plan mode** = Today list card (arrange commitments)
+- **Do mode** = What Now hero (one task, working state)
+- **Review mode** = debrief (look back)
+
+Switching modes re-renders the card; it doesn't navigate to a new screen. This
+keeps the architecture pure: every surface lives at a Mode × Scope coordinate,
+and the data underneath is the same — only the presentation changes.
+
 ### Why modal fits the product thesis
 The whole bet is *focus*. Modal UIs *enforce* focus: in Working mode, almost
 nothing else is possible, because almost nothing else should be. The interface
