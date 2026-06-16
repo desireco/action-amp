@@ -159,8 +159,8 @@ translate to thumbs.
 
 | Action | Desktop | Mobile |
 |---|---|---|
-| Zoom out (Task→Project→Goal) | `Z` | pinch out |
-| Zoom in | `X` | pinch in |
+| Zoom out (Task→Project→Goal) | `Z` | two-finger swipe left |
+| Zoom in | `X` | two-finger swipe right |
 | Switch to Plan mode | `1` | swipe right on card |
 | Switch to Review mode | `3` | swipe left on card |
 | Start working | `Enter` / Do this | long-press card |
@@ -172,8 +172,9 @@ translate to thumbs.
 | Peek past / future | `←` / `→` | swipe from left/right screen edge |
 | Cancel / exit | `Esc` | tap outside / back gesture |
 
-**Pinch-to-zoom through Task→Project→Goal is the signature mobile gesture.**
-Nobody else has it. It makes the hierarchy model physical.
+**Two-finger swipe (left = out / right = in) through Task→Project→Goal is the
+signature mobile gesture.** Nobody else has it. It makes the hierarchy model
+physical without fighting the browser's native pinch-zoom.
 
 ---
 
