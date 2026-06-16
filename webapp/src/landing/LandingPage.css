@@ -34,7 +34,9 @@
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 20px 40px;
+  padding: 20px 56px;
+  max-width: 1180px;
+  margin: 0 auto;
   background: oklch(0.99 0.005 230 / 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -691,6 +693,8 @@
 /* Footer */
 .aa-footer {
   padding: 40px 56px;
+  max-width: 1180px;
+  margin: 0 auto;
   background: var(--aa-bg-soft);
   border-top: 1px solid var(--aa-border);
   display: flex;
@@ -732,7 +736,9 @@
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
-  .aa-landing::-webkit-scrollbar { width: 0; }
+  .aa-landing::-webkit-scrollbar {
+    width: 0;
+  }
   .aa-landing section,
   .aa-landing .aa-footer {
     scroll-snap-align: start;
