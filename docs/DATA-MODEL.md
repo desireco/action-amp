@@ -153,6 +153,19 @@ basic loop works.
   (→ convert to Project, or add subtasks). *(InboxItem retention still open —
   see below.)*
 
+### Added 2026-06-16 (triage design)
+
+- ✅ **Task defaults:** Size=M, Priority=Normal, **When=Someday** (triaging never
+  auto-clutters Today — the user must actively promote a task to Today).
+- ✅ **Project is optional; "General" = no projectId.** A Task with no Project
+  is a "General" task in its Lens context (Work general, Me general). Every Task
+  requires a Lens; Project is optional. There is no global "General" bucket —
+  Generals are scoped per Lens.
+- ✅ **Triage = co-authoring the spec.** An InboxItem is raw text with parser
+  guesses (date/priority/size/project/tags). Triage is the act of committing
+  to those properties (or editing them), then confirming what it becomes.
+  Properties are not pre-known; they are assigned during triage.
+
 ## 9. Still open
 
 - **InboxItem retention** — keep the original InboxItem after triage or delete on

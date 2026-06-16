@@ -1,505 +1,949 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ActionAmp — Mobile + first-launch coach</title>
-<style>
-  :root {
-    --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-    --teal: #0EA5E9; --teal-cta: #0284C7; --teal-cta-hover: #0369A1;
-    --teal-soft: rgba(14,165,233,.12); --teal-soft-strong: rgba(14,165,233,.18);
-    --teal-tint: rgba(2,132,199,.22);
-    --amber: #F59E0B; --amber-text: #92400E; --amber-soft: rgba(245,158,11,.14);
-  }
-  :root {
-    --bg: #F2F5F7; --bg-elev: #FCFCFD; --surface: #FFFFFF;
-    --surface-muted: #F2F5F7; --surface-muted-2: #ECEEF0;
-    --border: #E6E8EC; --border-strong: #D5D9DE;
-    --text: #212224; --text-2: #44474B; --text-3: #55606E; --text-4: #818489;
-    --shadow-md: 0 2px 4px rgba(0,28,70,.06), 0 8px 24px rgba(0,28,70,.06);
-    --shadow-lg: 0 2px 4px rgba(0,28,70,.05), 0 24px 64px var(--teal-tint);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html { -webkit-font-smoothing: antialiased; }
-  body {
-    font-family: var(--font); background: #0a0a0a; color: var(--text);
-    line-height: 1.4; min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px; overflow: hidden;
-  }
-  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; font-size: inherit; }
-  svg { display: block; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Mobile + first-launch coach</title>
+    <style>
+      :root {
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+        --teal: #0ea5e9;
+        --teal-cta: #0284c7;
+        --teal-cta-hover: #0369a1;
+        --teal-soft: rgba(14, 165, 233, 0.12);
+        --teal-soft-strong: rgba(14, 165, 233, 0.18);
+        --teal-tint: rgba(2, 132, 199, 0.22);
+        --amber: #f59e0b;
+        --amber-text: #92400e;
+        --amber-soft: rgba(245, 158, 11, 0.14);
+      }
+      :root {
+        --bg: #f2f5f7;
+        --bg-elev: #fcfcfd;
+        --surface: #ffffff;
+        --surface-muted: #f2f5f7;
+        --surface-muted-2: #eceef0;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text: #212224;
+        --text-2: #44474b;
+        --text-3: #55606e;
+        --text-4: #818489;
+        --shadow-md:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+        --shadow-lg:
+          0 2px 4px rgba(0, 28, 70, 0.05), 0 24px 64px var(--teal-tint);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--font);
+        background: #0a0a0a;
+        color: var(--text);
+        line-height: 1.4;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        overflow: hidden;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+        font-size: inherit;
+      }
+      svg {
+        display: block;
+      }
 
-  /* phone frame (same as mobile-gesture-modal) */
-  .phone {
-    width: 390px; height: 844px; background: var(--bg);
-    border-radius: 48px; border: 11px solid #1a1a1a;
-    box-shadow: 0 32px 80px rgba(0,0,0,.5), inset 0 0 0 2px #2a2a2a;
-    position: relative; overflow: hidden;
-  }
-  .phone[data-mode="plan"]   { background: linear-gradient(180deg, #FFF7ED 0%, var(--bg) 50%); }
-  .phone[data-mode="do"]     { background: var(--bg); }
-  .phone[data-mode="review"] { background: linear-gradient(180deg, #ECEAF6 0%, var(--bg) 50%); }
-  .notch {
-    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-    width: 120px; height: 28px; background: #1a1a1a; border-radius: 0 0 18px 18px; z-index: 100;
-  }
-  .status-bar {
-    position: absolute; top: 0; left: 0; right: 0; height: 44px; padding: 0 28px;
-    display: flex; align-items: center; justify-content: space-between;
-    font-size: 14px; font-weight: 600; color: var(--text); z-index: 50;
-  }
+      /* phone frame (same as mobile-gesture-modal) */
+      .phone {
+        width: 390px;
+        height: 844px;
+        background: var(--bg);
+        border-radius: 48px;
+        border: 11px solid #1a1a1a;
+        box-shadow:
+          0 32px 80px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 2px #2a2a2a;
+        position: relative;
+        overflow: hidden;
+      }
+      .phone[data-mode="plan"] {
+        background: linear-gradient(180deg, #fff7ed 0%, var(--bg) 50%);
+      }
+      .phone[data-mode="do"] {
+        background: var(--bg);
+      }
+      .phone[data-mode="review"] {
+        background: linear-gradient(180deg, #eceaf6 0%, var(--bg) 50%);
+      }
+      .notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 28px;
+        background: #1a1a1a;
+        border-radius: 0 0 18px 18px;
+        z-index: 100;
+      }
+      .status-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 44px;
+        padding: 0 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        z-index: 50;
+      }
 
-  /* dimmed app behind coach */
-  .screen {
-    position: absolute; top: 44px; bottom: 0; left: 0; right: 0;
-    padding: 12px 20px 120px;
-    transition: filter .4s, opacity .4s;
-  }
-  .phone.coaching .screen { filter: blur(3px) brightness(.9); opacity: .5; pointer-events: none; }
+      /* dimmed app behind coach */
+      .screen {
+        position: absolute;
+        top: 44px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 12px 20px 120px;
+        transition:
+          filter 0.4s,
+          opacity 0.4s;
+      }
+      .phone.coaching .screen {
+        filter: blur(3px) brightness(0.9);
+        opacity: 0.5;
+        pointer-events: none;
+      }
 
-  .top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-  .lens-chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 13px; font-weight: 600;
-    background: var(--surface); border: 1px solid var(--border);
-    padding: 6px 12px; border-radius: 9999px; color: var(--text-2);
-  }
-  .lens-chip .dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--teal); }
-  .mode-indicator { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-4); }
+      .top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+      .lens-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 6px 12px;
+        border-radius: 9999px;
+        color: var(--text-2);
+      }
+      .lens-chip .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: var(--teal);
+      }
+      .mode-indicator {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-4);
+      }
 
-  .breadcrumb {
-    font-size: 12px; color: var(--text-4); margin-bottom: 28px; text-align: center;
-    display: flex; align-items: center; justify-content: center; gap: 2px; flex-wrap: wrap;
-  }
-  .breadcrumb .crumb {
-    color: var(--text-3); padding: 5px 9px; border-radius: 9999px;
-  }
-  .breadcrumb .crumb.scope-active { color: var(--teal-cta); font-weight: 700; background: var(--teal-soft); }
-  .breadcrumb .sep { margin: 0 2px; opacity: 0.5; }
+      .breadcrumb {
+        font-size: 12px;
+        color: var(--text-4);
+        margin-bottom: 28px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        flex-wrap: wrap;
+      }
+      .breadcrumb .crumb {
+        color: var(--text-3);
+        padding: 5px 9px;
+        border-radius: 9999px;
+      }
+      .breadcrumb .crumb.scope-active {
+        color: var(--teal-cta);
+        font-weight: 700;
+        background: var(--teal-soft);
+      }
+      .breadcrumb .sep {
+        margin: 0 2px;
+        opacity: 0.5;
+      }
 
-  .card-area { display: flex; align-items: center; justify-content: center; min-height: 460px; }
-  .task-card {
-    width: 100%; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 24px; padding: 36px 28px; text-align: center;
-    box-shadow: 0 4px 12px rgba(0,28,70,.04), 0 24px 48px var(--teal-tint);
-  }
-  .ctx { font-size: 12px; color: var(--text-3); margin-bottom: 28px; }
-  .completion {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 44px; height: 44px; border-radius: 9999px;
-    border: 3px solid var(--border-strong); margin-bottom: 24px;
-  }
-  .task-title { font-size: 24px; font-weight: 700; letter-spacing: -.02em; line-height: 1.25; margin-bottom: 8px; }
-  .task-meta { font-size: 13px; color: var(--text-3); margin-bottom: 28px; }
+      .card-area {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 460px;
+      }
+      .task-card {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 36px 28px;
+        text-align: center;
+        box-shadow:
+          0 4px 12px rgba(0, 28, 70, 0.04),
+          0 24px 48px var(--teal-tint);
+      }
+      .ctx {
+        font-size: 12px;
+        color: var(--text-3);
+        margin-bottom: 28px;
+      }
+      .completion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 9999px;
+        border: 3px solid var(--border-strong);
+        margin-bottom: 24px;
+      }
+      .task-title {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
+        margin-bottom: 8px;
+      }
+      .task-meta {
+        font-size: 13px;
+        color: var(--text-3);
+        margin-bottom: 28px;
+      }
 
-  /* ============================================================
+      /* ============================================================
      THE COACH — full-screen overlay, paged
      ============================================================ */
-  .coach {
-    position: absolute; inset: 0; z-index: 200;
-    display: flex; flex-direction: column;
-    background: rgba(19, 22, 28, 0.86);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    opacity: 0; pointer-events: none;
-    transition: opacity .35s ease;
-  }
-  .coach.show { opacity: 1; pointer-events: auto; }
+      .coach {
+        position: absolute;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        background: rgba(19, 22, 28, 0.86);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.35s ease;
+      }
+      .coach.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
 
-  /* skip link top-right */
-  .coach-skip {
-    position: absolute; top: 60px; right: 24px;
-    font-size: 13px; font-weight: 500; color: rgba(255,255,255,.55);
-    padding: 6px 12px; border-radius: 9999px; z-index: 10;
-    transition: color .15s;
-  }
-  .coach-skip:hover { color: rgba(255,255,255,.85); }
+      /* skip link top-right */
+      .coach-skip {
+        position: absolute;
+        top: 60px;
+        right: 24px;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.55);
+        padding: 6px 12px;
+        border-radius: 9999px;
+        z-index: 10;
+        transition: color 0.15s;
+      }
+      .coach-skip:hover {
+        color: rgba(255, 255, 255, 0.85);
+      }
 
-  /* pages */
-  .coach-pages { flex: 1; position: relative; }
-  .coach-page {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 80px 32px 120px;
-    text-align: center;
-    opacity: 0; transform: translateX(40px);
-    transition: opacity .35s ease, transform .35s cubic-bezier(.2,.7,.3,1);
-    pointer-events: none;
-  }
-  .coach-page.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
-  .coach-page.leaving { opacity: 0; transform: translateX(-40px); }
+      /* pages */
+      .coach-pages {
+        flex: 1;
+        position: relative;
+      }
+      .coach-page {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 32px 120px;
+        text-align: center;
+        opacity: 0;
+        transform: translateX(40px);
+        transition:
+          opacity 0.35s ease,
+          transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
+        pointer-events: none;
+      }
+      .coach-page.active {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+      .coach-page.leaving {
+        opacity: 0;
+        transform: translateX(-40px);
+      }
 
-  /* page content */
-  .eyebrow {
-    font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--teal); margin-bottom: 16px;
-  }
-  .coach-page h2 {
-    font-size: 30px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15;
-    color: white; margin-bottom: 14px; max-width: 14ch;
-  }
-  .coach-page p {
-    font-size: 16px; line-height: 1.5; color: rgba(255,255,255,.72);
-    max-width: 30ch; margin-bottom: 36px;
-  }
-  .coach-page p b { color: rgba(255,255,255,.95); font-weight: 600; }
+      /* page content */
+      .eyebrow {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--teal);
+        margin-bottom: 16px;
+      }
+      .coach-page h2 {
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        color: white;
+        margin-bottom: 14px;
+        max-width: 14ch;
+      }
+      .coach-page p {
+        font-size: 16px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.72);
+        max-width: 30ch;
+        margin-bottom: 36px;
+      }
+      .coach-page p b {
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 600;
+      }
 
-  /* gesture demo stage */
-  .demo {
-    width: 220px; height: 140px;
-    border-radius: 18px;
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.1);
-    position: relative;
-    margin-bottom: 36px;
-    overflow: hidden;
-  }
-  .demo-card {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 140px; padding: 14px;
-    background: var(--surface); border-radius: 12px;
-    font-size: 11px; font-weight: 600; color: var(--text);
-    box-shadow: 0 4px 12px rgba(0,0,0,.2);
-  }
-  .demo-card .mini-circle {
-    width: 12px; height: 12px; border-radius: 9999px;
-    border: 2px solid var(--border-strong); margin: 0 auto 6px;
-  }
-  .demo-card .mini-circle.filled { background: var(--teal); border-color: var(--teal); }
+      /* gesture demo stage */
+      .demo {
+        width: 220px;
+        height: 140px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        margin-bottom: 36px;
+        overflow: hidden;
+      }
+      .demo-card {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 140px;
+        padding: 14px;
+        background: var(--surface);
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+      .demo-card .mini-circle {
+        width: 12px;
+        height: 12px;
+        border-radius: 9999px;
+        border: 2px solid var(--border-strong);
+        margin: 0 auto 6px;
+      }
+      .demo-card .mini-circle.filled {
+        background: var(--teal);
+        border-color: var(--teal);
+      }
 
-  /* animated finger/cursor */
-  .finger {
-    position: absolute;
-    width: 28px; height: 28px;
-    border-radius: 9999px;
-    background: rgba(14,165,233,.25);
-    border: 2px solid var(--teal);
-    z-index: 5;
-  }
-  .finger::after {
-    content: ""; position: absolute; inset: 8px;
-    border-radius: 9999px; background: var(--teal);
-  }
-  .finger.f2 { /* second finger for pinch/two-finger */
-    background: rgba(245,158,11,.25); border-color: var(--amber);
-  }
-  .finger.f2::after { background: var(--amber); }
+      /* animated finger/cursor */
+      .finger {
+        position: absolute;
+        width: 28px;
+        height: 28px;
+        border-radius: 9999px;
+        background: rgba(14, 165, 233, 0.25);
+        border: 2px solid var(--teal);
+        z-index: 5;
+      }
+      .finger::after {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border-radius: 9999px;
+        background: var(--teal);
+      }
+      .finger.f2 {
+        /* second finger for pinch/two-finger */
+        background: rgba(245, 158, 11, 0.25);
+        border-color: var(--amber);
+      }
+      .finger.f2::after {
+        background: var(--amber);
+      }
 
-  /* gesture-specific animations */
-  @keyframes demo-longpress {
-    0%, 30%   { transform: scale(1); box-shadow: 0 0 0 0 var(--teal-tint); }
-    30%, 70%  { transform: scale(1.04); box-shadow: 0 0 0 12px rgba(14,165,233,.05); }
-    70%, 100% { transform: scale(1.06); box-shadow: 0 0 0 0 rgba(14,165,233,0); }
-  }
-  @keyframes demo-finger-hold {
-    0%   { top: 30%; left: 50%; transform: translate(-50%, -50%); opacity: 0; }
-    15%  { opacity: 1; }
-    30%  { top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 1; }
-    80%  { top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 1; }
-    100% { top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; }
-  }
+      /* gesture-specific animations */
+      @keyframes demo-longpress {
+        0%,
+        30% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 var(--teal-tint);
+        }
+        30%,
+        70% {
+          transform: scale(1.04);
+          box-shadow: 0 0 0 12px rgba(14, 165, 233, 0.05);
+        }
+        70%,
+        100% {
+          transform: scale(1.06);
+          box-shadow: 0 0 0 0 rgba(14, 165, 233, 0);
+        }
+      }
+      @keyframes demo-finger-hold {
+        0% {
+          top: 30%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0;
+        }
+        15% {
+          opacity: 1;
+        }
+        30% {
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 1;
+        }
+        80% {
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 1;
+        }
+        100% {
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0;
+        }
+      }
 
-  @keyframes demo-two-finger {
-    0%   { transform: translate(-50%, -50%) scale(1); }
-    50%  { transform: translate(-30%, -50%) scale(1); }
-    100% { transform: translate(-50%, -50%) scale(1); }
-  }
-  @keyframes demo-finger-left {
-    0%   { left: 60%; opacity: 0; }
-    20%  { opacity: 1; }
-    70%  { left: 25%; opacity: 1; }
-    100% { left: 25%; opacity: 0; }
-  }
-  @keyframes demo-finger-left-2 {
-    0%   { left: 65%; opacity: 0; }
-    20%  { opacity: 1; }
-    70%  { left: 35%; opacity: 1; }
-    100% { left: 35%; opacity: 0; }
-  }
+      @keyframes demo-two-finger {
+        0% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+          transform: translate(-30%, -50%) scale(1);
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+      @keyframes demo-finger-left {
+        0% {
+          left: 60%;
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+        }
+        70% {
+          left: 25%;
+          opacity: 1;
+        }
+        100% {
+          left: 25%;
+          opacity: 0;
+        }
+      }
+      @keyframes demo-finger-left-2 {
+        0% {
+          left: 65%;
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+        }
+        70% {
+          left: 35%;
+          opacity: 1;
+        }
+        100% {
+          left: 35%;
+          opacity: 0;
+        }
+      }
 
-  @keyframes demo-swipe {
-    0%   { transform: translate(-50%, -50%) translateX(0); }
-    50%  { transform: translate(-50%, -50%) translateX(-40px); }
-    100% { transform: translate(-50%, -50%) translateX(0); }
-  }
-  @keyframes demo-finger-swipe {
-    0%   { left: 70%; top: 50%; transform: translate(-50%, -50%); opacity: 0; }
-    20%  { opacity: 1; }
-    70%  { left: 30%; top: 50%; transform: translate(-50%, -50%); opacity: 1; }
-    100% { left: 30%; top: 50%; transform: translate(-50%, -50%); opacity: 0; }
-  }
+      @keyframes demo-swipe {
+        0% {
+          transform: translate(-50%, -50%) translateX(0);
+        }
+        50% {
+          transform: translate(-50%, -50%) translateX(-40px);
+        }
+        100% {
+          transform: translate(-50%, -50%) translateX(0);
+        }
+      }
+      @keyframes demo-finger-swipe {
+        0% {
+          left: 70%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+        }
+        70% {
+          left: 30%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 1;
+        }
+        100% {
+          left: 30%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0;
+        }
+      }
 
-  @keyframes demo-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,.4); }
-    50%      { box-shadow: 0 0 0 10px rgba(14,165,233,0); }
-  }
+      @keyframes demo-pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 0 10px rgba(14, 165, 233, 0);
+        }
+      }
 
-  /* progress dots */
-  .coach-progress {
-    display: flex; gap: 6px; justify-content: center; margin-bottom: 28px;
-  }
-  .dot {
-    width: 6px; height: 6px; border-radius: 9999px;
-    background: rgba(255,255,255,.2); transition: all .25s;
-  }
-  .dot.active { background: var(--teal); width: 18px; border-radius: 9999px; }
+      /* progress dots */
+      .coach-progress {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-bottom: 28px;
+      }
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.2);
+        transition: all 0.25s;
+      }
+      .dot.active {
+        background: var(--teal);
+        width: 18px;
+        border-radius: 9999px;
+      }
 
-  /* CTA button (large, thumb-friendly) */
-  .coach-cta {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    background: var(--teal-cta); color: white;
-    font-size: 16px; font-weight: 600;
-    padding: 16px 36px; border-radius: 14px;
-    box-shadow: 0 8px 24px var(--teal-tint);
-    transition: transform .12s, background .15s;
-  }
-  .coach-cta:active { transform: scale(.96); background: var(--teal-cta-hover); }
-  .coach-cta.ghost {
-    background: rgba(255,255,255,.08); color: rgba(255,255,255,.85);
-    box-shadow: none; border: 1px solid rgba(255,255,255,.12);
-  }
-  .coach-cta.ghost:hover { background: rgba(255,255,255,.12); }
+      /* CTA button (large, thumb-friendly) */
+      .coach-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: var(--teal-cta);
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        padding: 16px 36px;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px var(--teal-tint);
+        transition:
+          transform 0.12s,
+          background 0.15s;
+      }
+      .coach-cta:active {
+        transform: scale(0.96);
+        background: var(--teal-cta-hover);
+      }
+      .coach-cta.ghost {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.85);
+        box-shadow: none;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      .coach-cta.ghost:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
 
-  .coach-foot { padding: 0 32px 60px; text-align: center; }
+      .coach-foot {
+        padding: 0 32px 60px;
+        text-align: center;
+      }
 
-  /* replay button (when coach closed) */
-  .replay {
-    position: absolute; top: 60px; right: 24px; z-index: 60;
-    font-size: 12px; color: var(--text-4);
-    background: var(--surface); border: 1px solid var(--border);
-    padding: 6px 12px; border-radius: 9999px;
-    box-shadow: var(--shadow-md);
-    transition: all .15s;
-  }
-  .replay:hover { color: var(--text-2); border-color: var(--border-strong); }
+      /* replay button (when coach closed) */
+      .replay {
+        position: absolute;
+        top: 60px;
+        right: 24px;
+        z-index: 60;
+        font-size: 12px;
+        color: var(--text-4);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 6px 12px;
+        border-radius: 9999px;
+        box-shadow: var(--shadow-md);
+        transition: all 0.15s;
+      }
+      .replay:hover {
+        color: var(--text-2);
+        border-color: var(--border-strong);
+      }
 
-  .external-hint {
-    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-    color: #888; font-size: 12px; text-align: center; max-width: 380px; line-height: 1.5;
-  }
-</style>
-</head>
-<body>
+      .external-hint {
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #888;
+        font-size: 12px;
+        text-align: center;
+        max-width: 380px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone" id="phone" data-mode="do">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="display: flex; gap: 5px">
+          <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor">
+            <rect x="0" y="6" width="2" height="4" rx=".5" />
+            <rect x="4" y="4" width="2" height="6" rx=".5" />
+            <rect x="8" y="2" width="2" height="8" rx=".5" />
+            <rect x="12" y="0" width="2" height="10" rx=".5" />
+          </svg>
+          <svg width="22" height="10" viewBox="0 0 22 10" fill="none">
+            <rect
+              x=".5"
+              y=".5"
+              width="18"
+              height="9"
+              rx="2"
+              stroke="currentColor"
+            />
+            <rect
+              x="2"
+              y="2"
+              width="14"
+              height="6"
+              rx="1"
+              fill="currentColor"
+            />
+          </svg>
+        </span>
+      </div>
 
-<div class="phone" id="phone" data-mode="do">
+      <!-- dimmed app -->
+      <div class="screen">
+        <div class="top-row">
+          <div class="lens-chip"><span class="dot"></span> Work</div>
+          <div class="mode-indicator">NORMAL</div>
+        </div>
+        <div class="breadcrumb">
+          <span class="crumb">Grow audience</span><span class="sep">›</span>
+          <span class="crumb">Ship product v2</span><span class="sep">›</span>
+          <span class="crumb scope-active">Email Sarah</span>
+        </div>
+        <div class="card-area">
+          <div class="task-card">
+            <div class="ctx">Right now · 30 min</div>
+            <div class="completion"></div>
+            <div class="task-title">Email Sarah re: Q3 invoice</div>
+            <div class="task-meta">Due today · 15 min · Important</div>
+          </div>
+        </div>
+      </div>
 
-  <div class="notch"></div>
-  <div class="status-bar">
-    <span>9:41</span>
-    <span style="display:flex;gap:5px">
-      <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor"><rect x="0" y="6" width="2" height="4" rx=".5"/><rect x="4" y="4" width="2" height="6" rx=".5"/><rect x="8" y="2" width="2" height="8" rx=".5"/><rect x="12" y="0" width="2" height="10" rx=".5"/></svg>
-      <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x=".5" y=".5" width="18" height="9" rx="2" stroke="currentColor"/><rect x="2" y="2" width="14" height="6" rx="1" fill="currentColor"/></svg>
-    </span>
-  </div>
+      <!-- replay (visible when coach closed) -->
+      <button class="replay" id="replayBtn" style="display: none">
+        ↻ Replay tutorial
+      </button>
 
-  <!-- dimmed app -->
-  <div class="screen">
-    <div class="top-row">
-      <div class="lens-chip"><span class="dot"></span> Work</div>
-      <div class="mode-indicator">NORMAL</div>
-    </div>
-    <div class="breadcrumb">
-      <span class="crumb">Grow audience</span><span class="sep">›</span>
-      <span class="crumb">Ship product v2</span><span class="sep">›</span>
-      <span class="crumb scope-active">Email Sarah</span>
-    </div>
-    <div class="card-area">
-      <div class="task-card">
-        <div class="ctx">Right now · 30 min</div>
-        <div class="completion"></div>
-        <div class="task-title">Email Sarah re: Q3 invoice</div>
-        <div class="task-meta">Due today · 15 min · Important</div>
+      <!-- ============ THE COACH ============ -->
+      <div class="coach show" id="coach">
+        <button class="coach-skip" id="skipBtn">I'll figure it out</button>
+
+        <div class="coach-pages" id="pages">
+          <!-- PAGE 0 — intro -->
+          <div class="coach-page active" data-page="0">
+            <div class="eyebrow">Welcome to ActionAmp</div>
+            <h2>We're special. Let's teach you the moves.</h2>
+            <p>
+              This isn't another list of checkboxes. It's a focus tool with its
+              own way of moving. Four quick gestures — about 30 seconds.
+            </p>
+            <div class="coach-progress">
+              <span class="dot active"></span><span class="dot"></span
+              ><span class="dot"></span><span class="dot"></span
+              ><span class="dot"></span>
+            </div>
+          </div>
+
+          <!-- PAGE 1 — long-press to work -->
+          <div class="coach-page" data-page="1">
+            <div class="eyebrow">1 of 4 · the sacred one</div>
+            <h2>Hold the card to start working.</h2>
+            <p>
+              A long-press says <b>"I'm committing to this."</b> The card
+              becomes the world. Everything else fades.
+            </p>
+            <div class="demo">
+              <div class="demo-card" id="demoCard1">
+                <div class="mini-circle"></div>
+                Email Sarah
+              </div>
+              <div class="finger" id="finger1"></div>
+            </div>
+            <div class="coach-progress">
+              <span class="dot"></span><span class="dot active"></span
+              ><span class="dot"></span><span class="dot"></span
+              ><span class="dot"></span>
+            </div>
+          </div>
+
+          <!-- PAGE 2 — two-finger swipe to zoom -->
+          <div class="coach-page" data-page="2">
+            <div class="eyebrow">2 of 4 · the signature</div>
+            <h2>Two-finger swipe to zoom.</h2>
+            <p>
+              Swipe <b>left with two fingers</b> to zoom out: Task → Project →
+              Goal. Swipe right to drill back in. This is how you see the bigger
+              picture.
+            </p>
+            <div class="demo">
+              <div class="demo-card">
+                <div class="mini-circle"></div>
+                Email Sarah
+              </div>
+              <div class="finger" id="finger2a"></div>
+              <div class="finger f2" id="finger2b"></div>
+            </div>
+            <div class="coach-progress">
+              <span class="dot"></span><span class="dot"></span
+              ><span class="dot active"></span><span class="dot"></span
+              ><span class="dot"></span>
+            </div>
+          </div>
+
+          <!-- PAGE 3 — swipe for mode -->
+          <div class="coach-page" data-page="3">
+            <div class="eyebrow">3 of 4 · the rhythm</div>
+            <h2>Swipe sideways for Plan, Do, Review.</h2>
+            <p>
+              Morning = <b>Plan</b>. Midday = <b>Do</b>. Evening =
+              <b>Review</b>. One finger, left or right on the card, to shift
+              your mode.
+            </p>
+            <div class="demo">
+              <div class="demo-card" id="demoCard3">
+                <div class="mini-circle"></div>
+                Email Sarah
+              </div>
+              <div class="finger" id="finger3"></div>
+            </div>
+            <div class="coach-progress">
+              <span class="dot"></span><span class="dot"></span
+              ><span class="dot"></span><span class="dot active"></span
+              ><span class="dot"></span>
+            </div>
+          </div>
+
+          <!-- PAGE 4 — breadcrumb + close -->
+          <div class="coach-page" data-page="4">
+            <div class="eyebrow">4 of 4 · the escape hatch</div>
+            <h2>Tap the breadcrumb to jump.</h2>
+            <p>
+              Any time, tap
+              <b>Grow audience › Ship product v2 › Email Sarah</b> to leap
+              straight to a scope. No gestures required.
+            </p>
+            <div
+              style="
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 14px;
+                padding: 14px 18px;
+                margin-bottom: 36px;
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                flex-wrap: wrap;
+              "
+            >
+              <span style="color: rgba(255, 255, 255, 0.5)">Grow audience</span>
+              <span style="opacity: 0.4">›</span>
+              <span style="color: rgba(255, 255, 255, 0.5)"
+                >Ship product v2</span
+              >
+              <span style="opacity: 0.4">›</span>
+              <span
+                style="
+                  color: var(--teal);
+                  font-weight: 700;
+                  background: var(--teal-soft);
+                  padding: 3px 9px;
+                  border-radius: 9999px;
+                "
+                >Email Sarah</span
+              >
+            </div>
+            <div class="coach-progress">
+              <span class="dot"></span><span class="dot"></span
+              ><span class="dot"></span><span class="dot"></span
+              ><span class="dot active"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="coach-foot">
+          <button class="coach-cta" id="ctaBtn">Show me →</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- replay (visible when coach closed) -->
-  <button class="replay" id="replayBtn" style="display:none">↻ Replay tutorial</button>
-
-  <!-- ============ THE COACH ============ -->
-  <div class="coach show" id="coach">
-
-    <button class="coach-skip" id="skipBtn">I'll figure it out</button>
-
-    <div class="coach-pages" id="pages">
-
-      <!-- PAGE 0 — intro -->
-      <div class="coach-page active" data-page="0">
-        <div class="eyebrow">Welcome to ActionAmp</div>
-        <h2>We're special. Let's teach you the moves.</h2>
-        <p>This isn't another list of checkboxes. It's a focus tool with its own way of moving. Four quick gestures — about 30 seconds.</p>
-        <div class="coach-progress">
-          <span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        </div>
-      </div>
-
-      <!-- PAGE 1 — long-press to work -->
-      <div class="coach-page" data-page="1">
-        <div class="eyebrow">1 of 4 · the sacred one</div>
-        <h2>Hold the card to start working.</h2>
-        <p>A long-press says <b>"I'm committing to this."</b> The card becomes the world. Everything else fades.</p>
-        <div class="demo">
-          <div class="demo-card" id="demoCard1"><div class="mini-circle"></div>Email Sarah</div>
-          <div class="finger" id="finger1"></div>
-        </div>
-        <div class="coach-progress">
-          <span class="dot"></span><span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        </div>
-      </div>
-
-      <!-- PAGE 2 — two-finger swipe to zoom -->
-      <div class="coach-page" data-page="2">
-        <div class="eyebrow">2 of 4 · the signature</div>
-        <h2>Two-finger swipe to zoom.</h2>
-        <p>Swipe <b>left with two fingers</b> to zoom out: Task → Project → Goal. Swipe right to drill back in. This is how you see the bigger picture.</p>
-        <div class="demo">
-          <div class="demo-card"><div class="mini-circle"></div>Email Sarah</div>
-          <div class="finger" id="finger2a"></div>
-          <div class="finger f2" id="finger2b"></div>
-        </div>
-        <div class="coach-progress">
-          <span class="dot"></span><span class="dot"></span><span class="dot active"></span><span class="dot"></span><span class="dot"></span>
-        </div>
-      </div>
-
-      <!-- PAGE 3 — swipe for mode -->
-      <div class="coach-page" data-page="3">
-        <div class="eyebrow">3 of 4 · the rhythm</div>
-        <h2>Swipe sideways for Plan, Do, Review.</h2>
-        <p>Morning = <b>Plan</b>. Midday = <b>Do</b>. Evening = <b>Review</b>. One finger, left or right on the card, to shift your mode.</p>
-        <div class="demo">
-          <div class="demo-card" id="demoCard3"><div class="mini-circle"></div>Email Sarah</div>
-          <div class="finger" id="finger3"></div>
-        </div>
-        <div class="coach-progress">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot active"></span><span class="dot"></span>
-        </div>
-      </div>
-
-      <!-- PAGE 4 — breadcrumb + close -->
-      <div class="coach-page" data-page="4">
-        <div class="eyebrow">4 of 4 · the escape hatch</div>
-        <h2>Tap the breadcrumb to jump.</h2>
-        <p>Any time, tap <b>Grow audience › Ship product v2 › Email Sarah</b> to leap straight to a scope. No gestures required.</p>
-        <div style="background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:14px; padding:14px 18px; margin-bottom:36px; font-size:13px; color:rgba(255,255,255,.7); display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;">
-          <span style="color:rgba(255,255,255,.5)">Grow audience</span>
-          <span style="opacity:.4">›</span>
-          <span style="color:rgba(255,255,255,.5)">Ship product v2</span>
-          <span style="opacity:.4">›</span>
-          <span style="color:var(--teal); font-weight:700; background:var(--teal-soft); padding:3px 9px; border-radius:9999px">Email Sarah</span>
-        </div>
-        <div class="coach-progress">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot active"></span>
-        </div>
-      </div>
-
+    <div class="external-hint">
+      Desktop preview — click "Show me →" to page through. Keys: ←/→ also work.
     </div>
 
-    <div class="coach-foot">
-      <button class="coach-cta" id="ctaBtn">Show me →</button>
-    </div>
+    <script>
+      const phone = document.getElementById("phone");
+      const coach = document.getElementById("coach");
+      const pages = document.querySelectorAll(".coach-page");
+      const dots = document.querySelectorAll(".coach-page.active .dot"); // updated per page below
+      const cta = document.getElementById("ctaBtn");
+      const skip = document.getElementById("skipBtn");
+      const replay = document.getElementById("replayBtn");
+      let page = 0;
+      const LAST = pages.length - 1;
 
-  </div>
+      const CTA_LABEL = [
+        "Show me →",
+        "Next →",
+        "Next →",
+        "Next →",
+        "That's it. Go do something.",
+      ];
 
-</div>
+      function updateDots() {
+        pages.forEach((p, i) => {
+          if (i !== page) return;
+          p.querySelectorAll(".dot").forEach((d, j) =>
+            d.classList.toggle("active", j === page),
+          );
+        });
+      }
 
-<div class="external-hint">Desktop preview — click "Show me →" to page through. Keys: ←/→ also work.</div>
+      function goTo(n) {
+        if (n < 0 || n > LAST) return;
+        const prev = pages[page];
+        const next = pages[n];
+        if (prev === next) return;
+        prev.classList.remove("active");
+        prev.classList.add("leaving");
+        setTimeout(() => prev.classList.remove("leaving"), 350);
+        next.classList.add("active");
+        page = n;
+        updateDots();
+        cta.textContent = CTA_LABEL[n];
+        // play the demo animation for the new page
+        playDemo(n);
+      }
 
-<script>
-  const phone = document.getElementById("phone");
-  const coach = document.getElementById("coach");
-  const pages = document.querySelectorAll(".coach-page");
-  const dots = document.querySelectorAll(".coach-page.active .dot"); // updated per page below
-  const cta = document.getElementById("ctaBtn");
-  const skip = document.getElementById("skipBtn");
-  const replay = document.getElementById("replayBtn");
-  let page = 0;
-  const LAST = pages.length - 1;
+      function closeCoach() {
+        coach.classList.remove("show");
+        phone.classList.remove("coaching");
+        setTimeout(() => {
+          coach.style.display = "none";
+          replay.style.display = "";
+        }, 400);
+      }
 
-  const CTA_LABEL = ["Show me →", "Next →", "Next →", "Next →", "That's it. Go do something."];
+      function openCoach() {
+        coach.style.display = "";
+        replay.style.display = "none";
+        setTimeout(() => {
+          coach.classList.add("show");
+          phone.classList.add("coaching");
+          goTo(0);
+        }, 20);
+      }
 
-  function updateDots() {
-    pages.forEach((p, i) => {
-      if (i !== page) return;
-      p.querySelectorAll(".dot").forEach((d, j) => d.classList.toggle("active", j === page));
-    });
-  }
+      cta.addEventListener("click", () => {
+        if (page === LAST) closeCoach();
+        else goTo(page + 1);
+      });
+      skip.addEventListener("click", closeCoach);
+      replay.addEventListener("click", openCoach);
 
-  function goTo(n) {
-    if (n < 0 || n > LAST) return;
-    const prev = pages[page];
-    const next = pages[n];
-    if (prev === next) return;
-    prev.classList.remove("active");
-    prev.classList.add("leaving");
-    setTimeout(() => prev.classList.remove("leaving"), 350);
-    next.classList.add("active");
-    page = n;
-    updateDots();
-    cta.textContent = CTA_LABEL[n];
-    // play the demo animation for the new page
-    playDemo(n);
-  }
+      // keyboard for desktop preview
+      document.addEventListener("keydown", (e) => {
+        if (coach.style.display === "none") return;
+        if (e.key === "ArrowRight") {
+          if (page < LAST) goTo(page + 1);
+          else closeCoach();
+        } else if (e.key === "ArrowLeft") goTo(page - 1);
+        else if (e.key === "Escape") closeCoach();
+      });
 
-  function closeCoach() {
-    coach.classList.remove("show");
-    phone.classList.remove("coaching");
-    setTimeout(() => {
-      coach.style.display = "none";
-      replay.style.display = "";
-    }, 400);
-  }
+      // demo animations (re-triggered each time a page shows)
+      function playDemo(n) {
+        // clear all animation classes / restart by reflow
+        document.querySelectorAll(".demo-card, .finger").forEach((el) => {
+          el.style.animation = "none";
+          void el.offsetWidth;
+          el.style.animation = "";
+        });
+        if (n === 1) {
+          document.getElementById("demoCard1").style.animation =
+            "demo-longpress 2.4s ease-in-out infinite";
+          document.getElementById("finger1").style.animation =
+            "demo-finger-hold 2.4s ease-in-out infinite";
+        } else if (n === 2) {
+          document.getElementById("finger2a").style.cssText =
+            "top:50%; left:55%; transform:translate(-50%,-50%); animation: demo-finger-left 2.2s ease-in-out infinite;";
+          document.getElementById("finger2b").style.cssText =
+            "top:50%; left:60%; transform:translate(-50%,-50%); animation: demo-finger-left-2 2.2s ease-in-out infinite;";
+        } else if (n === 3) {
+          document.getElementById("finger3").style.animation =
+            "demo-finger-swipe 2s ease-in-out infinite";
+        }
+      }
 
-  function openCoach() {
-    coach.style.display = "";
-    replay.style.display = "none";
-    setTimeout(() => {
-      coach.classList.add("show");
+      // initial
       phone.classList.add("coaching");
-      goTo(0);
-    }, 20);
-  }
-
-  cta.addEventListener("click", () => {
-    if (page === LAST) closeCoach();
-    else goTo(page + 1);
-  });
-  skip.addEventListener("click", closeCoach);
-  replay.addEventListener("click", openCoach);
-
-  // keyboard for desktop preview
-  document.addEventListener("keydown", (e) => {
-    if (coach.style.display === "none") return;
-    if (e.key === "ArrowRight") { if (page < LAST) goTo(page + 1); else closeCoach(); }
-    else if (e.key === "ArrowLeft") goTo(page - 1);
-    else if (e.key === "Escape") closeCoach();
-  });
-
-  // demo animations (re-triggered each time a page shows)
-  function playDemo(n) {
-    // clear all animation classes / restart by reflow
-    document.querySelectorAll(".demo-card, .finger").forEach(el => {
-      el.style.animation = "none";
-      void el.offsetWidth;
-      el.style.animation = "";
-    });
-    if (n === 1) {
-      document.getElementById("demoCard1").style.animation = "demo-longpress 2.4s ease-in-out infinite";
-      document.getElementById("finger1").style.animation = "demo-finger-hold 2.4s ease-in-out infinite";
-    } else if (n === 2) {
-      document.getElementById("finger2a").style.cssText = "top:50%; left:55%; transform:translate(-50%,-50%); animation: demo-finger-left 2.2s ease-in-out infinite;";
-      document.getElementById("finger2b").style.cssText = "top:50%; left:60%; transform:translate(-50%,-50%); animation: demo-finger-left-2 2.2s ease-in-out infinite;";
-    } else if (n === 3) {
-      document.getElementById("finger3").style.animation = "demo-finger-swipe 2s ease-in-out infinite";
-    }
-  }
-
-  // initial
-  phone.classList.add("coaching");
-  updateDots();
-</script>
-</body>
+      updateDots();
+    </script>
+  </body>
 </html>

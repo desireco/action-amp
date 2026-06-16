@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Triage (Tinder-style)</title>
+    <style>
+      :root {
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+        --teal: #0ea5e9;
+        --teal-cta: #0284c7;
+        --teal-cta-hover: #0369a1;
+        --teal-soft: rgba(14, 165, 233, 0.12);
+        --teal-soft-strong: rgba(14, 165, 233, 0.18);
+        --teal-tint: rgba(2, 132, 199, 0.22);
+        --amber: #f59e0b;
+        --amber-text: #92400e;
+        --amber-soft: rgba(245, 158, 11, 0.14);
+        --rose: #e11d48;
+        --rose-soft: rgba(225, 29, 72, 0.08);
+        --rose-text: #9f1239;
+        --violet: #7c3aed;
+        --violet-soft: rgba(124, 58, 237, 0.08);
+        --violet-text: #5b21b6;
+      }
+      :root {
+        --bg: #f2f5f7;
+        --bg-elev: #fcfcfd;
+        --surface: #ffffff;
+        --surface-muted: #f2f5f7;
+        --surface-muted-2: #eceef0;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text: #212224;
+        --text-2: #44474b;
+        --text-3: #55606e;
+        --text-4: #818489;
+        --shadow-md:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+        --shadow-lg:
+          0 2px 4px rgba(0, 28, 70, 0.05), 0 24px 64px var(--teal-tint);
+      }
+      [data-theme="dark"] {
+        --bg: #13161c;
+        --bg-elev: #1a1d24;
+        --surface: #1f232b;
+        --surface-muted: #2a2f38;
+        --surface-muted-2: #30353f;
+        --border: #2f343e;
+        --border-strong: #3c4250;
+        --text: #f4f6f9;
+        --text-2: #c5cbd4;
+        --text-3: #8b939f;
+        --text-4: #6a7180;
+        --shadow-md:
+          0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+        --shadow-lg:
+          0 2px 4px rgba(0, 0, 0, 0.2), 0 24px 64px rgba(14, 165, 233, 0.18);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.4;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+        font-size: inherit;
+      }
+      svg {
+        display: block;
+      }
+
+      /* phone frame for mobile preview parity */
+      .phone {
+        width: 390px;
+        height: 844px;
+        background: var(--bg);
+        border-radius: 48px;
+        border: 11px solid #1a1a1a;
+        box-shadow:
+          0 32px 80px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 2px #2a2a2a;
+        position: relative;
+        overflow: hidden;
+        transition: background 0.5s;
+      }
+      .notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 28px;
+        background: #1a1a1a;
+        border-radius: 0 0 18px 18px;
+        z-index: 100;
+      }
+      .status-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 44px;
+        padding: 0 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        z-index: 50;
+      }
+
+      .screen {
+        position: absolute;
+        top: 44px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 18px 22px 32px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ---- top: progress + close ---- */
+      .top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+      }
+      .close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-3);
+        transition: all 0.15s;
+      }
+      .close-btn:hover {
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+
+      .progress-wrap {
+        flex: 1;
+        margin: 0 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+      .progress-count {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-4);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .progress-count b {
+        color: var(--text-2);
+      }
+      .progress-bar {
+        width: 100%;
+        height: 3px;
+        background: var(--surface-muted);
+        border-radius: 9999px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--teal);
+        border-radius: 9999px;
+        transition: width 0.4s cubic-bezier(0.2, 0.7, 0.3, 1);
+      }
+
+      .title-row {
+        text-align: center;
+        margin: 24px 0 8px;
+      }
+      .title-row h1 {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        color: var(--text);
+        line-height: 1.2;
+      }
+      .title-row p {
+        font-size: 13px;
+        color: var(--text-3);
+        margin-top: 4px;
+      }
+
+      /* ============================================================
+     CARD STAGE — one card center, dispatch actions below
+     ============================================================ */
+      .card-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      .card-stage {
+        width: 100%;
+        position: relative;
+        min-height: 240px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .card {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 32px 26px;
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+        transition:
+          opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+          transform 0.42s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.3s ease;
+        will-change: transform, opacity;
+      }
+      /* exit animations — direction encodes the decision */
+      .card.exit-right {
+        opacity: 0;
+        transform: translateX(120px) rotate(8deg);
+      }
+      .card.exit-left {
+        opacity: 0;
+        transform: translateX(-120px) rotate(-8deg);
+      }
+      .card.exit-down {
+        opacity: 0;
+        transform: translateY(120px) scale(0.9);
+      }
+      .card.exit-up {
+        opacity: 0;
+        transform: translateY(-80px) scale(0.95);
+      }
+      /* enter: come from the right (next card) */
+      .card.enter-prep {
+        opacity: 0;
+        transform: translateX(40px) scale(0.98);
+      }
+      /* exit-confirm: brief pulse when dispatched */
+      .card.dispatched {
+        box-shadow:
+          0 0 0 4px var(--teal-soft-strong),
+          var(--shadow-lg);
+      }
+
+      .card-body {
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--text);
+        line-height: 1.35;
+        margin-bottom: 16px;
+      }
+      .card-meta {
+        font-size: 12px;
+        color: var(--text-4);
+        margin-bottom: 16px;
+      }
+      .card-chips {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .chip {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 9px;
+        border-radius: 9999px;
+        background: var(--surface-muted);
+        color: var(--text-3);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .chip.date {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .chip.priority {
+        background: var(--amber-soft);
+        color: var(--amber-text);
+      }
+      .chip.tag {
+        background: var(--violet-soft);
+        color: var(--violet-text);
+      }
+
+      /* ============================================================
+     DISPATCH ACTIONS — 5 buttons, each = a "becomes"
+     ============================================================ */
+      .dispatch {
+        margin-top: 28px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .dispatch .full {
+        grid-column: 1 / -1;
+      }
+      .disp-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
+        transition:
+          transform 0.12s,
+          background 0.15s,
+          border-color 0.15s;
+        text-align: left;
+      }
+      .disp-btn:hover {
+        background: var(--surface-muted);
+        border-color: var(--border-strong);
+      }
+      .disp-btn:active {
+        transform: scale(0.97);
+        transition: transform 0.04s;
+      }
+      .disp-btn .disp-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .disp-btn .disp-icon svg {
+        width: 16px;
+        height: 16px;
+      }
+      .disp-btn .disp-label {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.2;
+      }
+      .disp-btn .disp-sub {
+        font-size: 11px;
+        color: var(--text-4);
+        margin-top: 1px;
+      }
+      .disp-btn .disp-key {
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-4);
+        background: var(--surface-muted);
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+      }
+
+      /* per-action colors */
+      .disp-btn[data-action="task-today"] .disp-icon {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .disp-btn[data-action="project"] .disp-icon {
+        background: var(--violet-soft);
+        color: var(--violet-text);
+      }
+      .disp-btn[data-action="resource"] .disp-icon {
+        background: var(--amber-soft);
+        color: var(--amber-text);
+      }
+      .disp-btn[data-action="goal"] .disp-icon {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .disp-btn[data-action="trash"] .disp-icon {
+        background: var(--rose-soft);
+        color: var(--rose-text);
+      }
+      .disp-btn[data-action="someday"] .disp-icon {
+        background: var(--surface-muted);
+        color: var(--text-3);
+      }
+      .disp-btn[data-action="upcoming"] .disp-icon {
+        background: var(--surface-muted);
+        color: var(--text-3);
+      }
+
+      /* secondary tier (less common) */
+      .disp-row-secondary {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .disp-mini {
+        padding: 9px 8px;
+        border-radius: 9px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--text-3);
+        text-align: center;
+        transition: all 0.12s;
+      }
+      .disp-mini:hover {
+        background: var(--surface-muted);
+        color: var(--text-2);
+      }
+      .disp-mini:active {
+        transform: scale(0.96);
+      }
+      .disp-mini .k {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        color: var(--text-4);
+        display: block;
+        margin-top: 2px;
+      }
+
+      /* ============================================================
+     EMPTY STATE — inbox zero
+     ============================================================ */
+      .empty-state {
+        text-align: center;
+        animation: fade 0.5s ease both;
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .empty-circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 9999px;
+        background: var(--teal);
+        box-shadow: 0 12px 32px var(--teal-tint);
+        margin-bottom: 24px;
+      }
+      .empty-circle svg {
+        color: white;
+        width: 30px;
+        height: 30px;
+      }
+      .empty-state h2 {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 10px;
+      }
+      .empty-state p {
+        font-size: 15px;
+        color: var(--text-3);
+        margin-bottom: 28px;
+        max-width: 28ch;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .empty-state .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: var(--teal-cta);
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px var(--teal-tint);
+      }
+      .empty-state .btn-primary:hover {
+        background: var(--teal-cta-hover);
+      }
+
+      /* ============================================================
+     EXTERNAL HINT (desktop keys)
+     ============================================================ */
+      .external-hint {
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #888;
+        font-size: 12px;
+        text-align: center;
+        max-width: 380px;
+        line-height: 1.5;
+      }
+      .external-hint kbd {
+        font-family: var(--font-mono);
+        background: #222;
+        color: #ddd;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone" id="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="display: flex; gap: 5px">
+          <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor">
+            <rect x="0" y="6" width="2" height="4" rx=".5" />
+            <rect x="4" y="4" width="2" height="6" rx=".5" />
+            <rect x="8" y="2" width="2" height="8" rx=".5" />
+            <rect x="12" y="0" width="2" height="10" rx=".5" />
+          </svg>
+          <svg width="22" height="10" viewBox="0 0 22 10" fill="none">
+            <rect
+              x=".5"
+              y=".5"
+              width="18"
+              height="9"
+              rx="2"
+              stroke="currentColor"
+            />
+            <rect
+              x="2"
+              y="2"
+              width="14"
+              height="6"
+              rx="1"
+              fill="currentColor"
+            />
+          </svg>
+        </span>
+      </div>
+
+      <div class="screen">
+        <!-- top: close + progress -->
+        <div class="top-row">
+          <button class="close-btn" id="closeBtn" title="Done triaging (Esc)">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M4 4l8 8M12 4l-8 8"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <div class="progress-wrap">
+            <div class="progress-count" id="progressCount">
+              <b>1</b> of <b>7</b>
+            </div>
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                id="progressFill"
+                style="width: 14%"
+              ></div>
+            </div>
+          </div>
+          <div style="width: 32px"></div>
+        </div>
+
+        <div class="title-row">
+          <h1>What is this?</h1>
+          <p>Decide what each thing becomes. It leaves the inbox for good.</p>
+        </div>
+
+        <!-- card stage -->
+        <div class="card-area">
+          <div class="card-stage" id="cardStage">
+            <div class="card" id="card">
+              <div class="card-body" id="cardBody">
+                Email Sarah re: Q3 invoice tomorrow
+              </div>
+              <div class="card-meta">captured 14 min ago</div>
+              <div class="card-chips" id="cardChips">
+                <span class="chip date">📅 tomorrow</span>
+                <span class="chip priority">★ Important</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- dispatch actions -->
+          <div class="dispatch" id="dispatch">
+            <button class="disp-btn" data-action="task-today" data-exit="right">
+              <div class="disp-icon">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <circle
+                    cx="8"
+                    cy="8"
+                    r="6"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                  <path
+                    d="M8 5v3.5l2 1"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="disp-label">Task · Today</div>
+                <div class="disp-sub">a quick action, due today</div>
+              </div>
+              <span class="disp-key">1</span>
+            </button>
+            <button class="disp-btn" data-action="project" data-exit="up">
+              <div class="disp-icon">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <rect
+                    x="2"
+                    y="3"
+                    width="12"
+                    height="10"
+                    rx="1.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                  <path d="M2 6h12" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              </div>
+              <div>
+                <div class="disp-label">Project</div>
+                <div class="disp-sub">a big outcome, multi-step</div>
+              </div>
+              <span class="disp-key">P</span>
+            </button>
+            <button
+              class="disp-btn full"
+              data-action="resource"
+              data-exit="left"
+            >
+              <div class="disp-icon">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3.5 13.5V3.5a1 1 0 011-1h5.5L13 5.5v8a1 1 0 01-1 1H4.5a1 1 0 01-1-1z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M9.5 2.5V6h3.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="disp-label">Resource</div>
+                <div class="disp-sub">
+                  reference — link or note, filed under a project or goal
+                </div>
+              </div>
+              <span class="disp-key">R</span>
+            </button>
+          </div>
+
+          <!-- secondary tier: someday, upcoming, goal-link, trash -->
+          <div class="disp-row-secondary" id="dispatchSecondary">
+            <button class="disp-mini" data-action="upcoming" data-exit="right">
+              Upcoming<span class="k">2</span>
+            </button>
+            <button class="disp-mini" data-action="someday" data-exit="left">
+              Someday<span class="k">3</span>
+            </button>
+            <button class="disp-mini" data-action="trash" data-exit="down">
+              Trash<span class="k">Del</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- empty state (hidden until inbox empty) -->
+        <div class="empty-state" id="emptyState" style="display: none">
+          <div class="empty-circle">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <h2>Inbox zero.</h2>
+          <p>Nothing left to decide. Go do something.</p>
+          <button class="btn-primary" id="doneBtn">Done →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="external-hint">
+      Desktop keys: <kbd>1</kbd> Today · <kbd>2</kbd> Upcoming ·
+      <kbd>3</kbd> Someday · <kbd>P</kbd> Project · <kbd>R</kbd> Resource ·
+      <kbd>Del</kbd> Trash · <kbd>←/→</kbd> navigate · <kbd>Esc</kbd> done
+    </div>
+
+    <script>
+      // ---- Sample inbox items (NL-parsed chips included) ----
+      const INBOX = [
+        {
+          text: "Email Sarah re: Q3 invoice tomorrow",
+          meta: "captured 14 min ago",
+          chips: [
+            { t: "date", v: "📅 tomorrow" },
+            { t: "priority", v: "★ Important" },
+          ],
+        },
+        {
+          text: "Plan Q3 launch",
+          meta: "captured 1 hr ago",
+          chips: [{ t: "tag", v: "#work" }],
+        },
+        {
+          text: "Competitor pricing PDF",
+          meta: "captured yesterday",
+          chips: [{ t: "tag", v: "@resource" }],
+        },
+        {
+          text: "Pick up dry cleaning",
+          meta: "captured this morning",
+          chips: [{ t: "tag", v: "#personal" }],
+        },
+        {
+          text: "Write blog: focus tips for ADHD",
+          meta: "captured 2 days ago",
+          chips: [
+            { t: "tag", v: "#writing" },
+            { t: "priority", v: "★ Important" },
+          ],
+        },
+        {
+          text: "Renew domain before June 30",
+          meta: "captured 3 days ago",
+          chips: [{ t: "date", v: "📅 Jun 30" }],
+        },
+        {
+          text: "Idea: weekly review email digest",
+          meta: "captured last week",
+          chips: [],
+        },
+      ];
+      let idx = 0;
+      const total = INBOX.length;
+
+      const cardEl = document.getElementById("card");
+      const bodyEl = document.getElementById("cardBody");
+      const metaEl = document.querySelector(".card-meta");
+      const chipsEl = document.getElementById("cardChips");
+      const progressCount = document.getElementById("progressCount");
+      const progressFill = document.getElementById("progressFill");
+      const cardArea = document.querySelector(".card-area");
+      const emptyState = document.getElementById("emptyState");
+
+      function render() {
+        const item = INBOX[idx];
+        bodyEl.textContent = item.text;
+        metaEl.textContent = item.meta;
+        chipsEl.innerHTML = item.chips
+          .map((c) => `<span class="chip ${c.t}">${c.v}</span>`)
+          .join("");
+        const done = idx; // items before current are processed
+        const remaining = total - done;
+        progressCount.innerHTML = `<b>${done + 1}</b> of <b>${total}</b>`;
+        progressFill.style.width = `${(done / total) * 100}%`;
+      }
+
+      // ---- Dispatch: animate card out in the chosen direction, bring next in ----
+      function dispatch(action, exitDir) {
+        if (idx >= total) return;
+        // brief confirm pulse
+        cardEl.classList.add("dispatched");
+        setTimeout(() => cardEl.classList.remove("dispatched"), 200);
+
+        // exit animation
+        cardEl.classList.add(`exit-${exitDir}`);
+        setTimeout(() => {
+          idx++;
+          if (idx >= total) {
+            // empty state
+            cardArea.style.display = "none";
+            emptyState.style.display = "";
+            progressFill.style.width = "100%";
+            progressCount.innerHTML = `<b>${total}</b> of <b>${total}</b> · done`;
+            return;
+          }
+          // reset card, prep enter, then animate in
+          cardEl.classList.remove(
+            "exit-right",
+            "exit-left",
+            "exit-down",
+            "exit-up",
+          );
+          cardEl.classList.add("enter-prep");
+          render();
+          void cardEl.offsetWidth;
+          cardEl.classList.remove("enter-prep");
+        }, 320);
+      }
+
+      // wire dispatch buttons
+      document.querySelectorAll("[data-action]").forEach((btn) => {
+        btn.addEventListener("click", () =>
+          dispatch(btn.dataset.action, btn.dataset.exit),
+        );
+      });
+
+      // close
+      document
+        .getElementById("closeBtn")
+        .addEventListener("click", () =>
+          window.history.length > 1 ? window.history.back() : null,
+        );
+      document.getElementById("doneBtn").addEventListener("click", () => null);
+
+      // keyboard
+      const KEYMAP = {
+        1: ["task-today", "right"],
+        2: ["upcoming", "right"],
+        3: ["someday", "left"],
+        p: ["project", "up"],
+        r: ["resource", "left"],
+        Delete: ["trash", "down"],
+        Backspace: ["trash", "down"],
+      };
+      document.addEventListener("keydown", (e) => {
+        if (idx >= total) return;
+        const k = e.key.toLowerCase();
+        if (KEYMAP[e.key] || KEYMAP[k]) {
+          const [action, dir] = KEYMAP[e.key] || KEYMAP[k];
+          e.preventDefault();
+          dispatch(action, dir);
+        } else if (e.key === "ArrowLeft" && idx > 0) {
+          idx--;
+          render();
+        } else if (e.key === "Escape") {
+          // pretend-close
+        }
+      });
+
+      // ---- swipe gestures (mobile) ----
+      let sx = 0,
+        sy = 0,
+        st = 0;
+      cardEl.addEventListener(
+        "touchstart",
+        (e) => {
+          sx = e.touches[0].clientX;
+          sy = e.touches[0].clientY;
+          st = Date.now();
+        },
+        { passive: true },
+      );
+      cardEl.addEventListener("touchend", (e) => {
+        const dx = e.changedTouches[0].clientX - sx;
+        const dy = e.changedTouches[0].clientY - sy;
+        const ax = Math.abs(dx),
+          ay = Math.abs(dy);
+        if (ax < 50 && ay < 50) return; // tap, not swipe
+        if (ax > ay) {
+          // horizontal: right = task-today, left = someday
+          if (dx > 0) dispatch("task-today", "right");
+          else dispatch("someday", "left");
+        } else {
+          // vertical: down = trash, up = project
+          if (dy > 0) dispatch("trash", "down");
+          else dispatch("project", "up");
+        }
+      });
+
+      render();
+    </script>
+  </body>
+</html>

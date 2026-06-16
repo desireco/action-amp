@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Triage: A (Tinder) vs C (focus + queue)</title>
+    <style>
+      :root {
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+        --teal: #0ea5e9;
+        --teal-cta: #0284c7;
+        --teal-cta-hover: #0369a1;
+        --teal-soft: rgba(14, 165, 233, 0.12);
+        --teal-soft-strong: rgba(14, 165, 233, 0.18);
+        --teal-tint: rgba(2, 132, 199, 0.22);
+        --amber: #f59e0b;
+        --amber-text: #92400e;
+        --amber-soft: rgba(245, 158, 11, 0.14);
+        --rose: #e11d48;
+        --rose-soft: rgba(225, 29, 72, 0.08);
+        --rose-text: #9f1239;
+        --violet: #7c3aed;
+        --violet-soft: rgba(124, 58, 237, 0.08);
+        --violet-text: #5b21b6;
+      }
+      :root {
+        --bg: #f2f5f7;
+        --bg-elev: #fcfcfd;
+        --surface: #ffffff;
+        --surface-muted: #f2f5f7;
+        --surface-muted-2: #eceef0;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text: #212224;
+        --text-2: #44474b;
+        --text-3: #55606e;
+        --text-4: #818489;
+        --shadow-md:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+        --shadow-lg:
+          0 2px 4px rgba(0, 28, 70, 0.05), 0 24px 64px var(--teal-tint);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--font);
+        background: #0a0a0a;
+        color: var(--text);
+        line-height: 1.4;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+        font-size: inherit;
+      }
+      svg {
+        display: block;
+      }
+
+      /* phone */
+      .phone {
+        width: 360px;
+        height: 780px;
+        background: var(--bg);
+        border-radius: 44px;
+        border: 10px solid #1a1a1a;
+        box-shadow:
+          0 32px 80px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 2px #2a2a2a;
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 110px;
+        height: 26px;
+        background: #1a1a1a;
+        border-radius: 0 0 16px 16px;
+        z-index: 100;
+      }
+      .status-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        padding: 0 26px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        z-index: 50;
+      }
+      .screen {
+        position: absolute;
+        top: 40px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 14px 20px 28px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* shared header */
+      .top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .close-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-3);
+        transition: all 0.15s;
+      }
+      .close-btn:hover {
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+      .progress-wrap {
+        flex: 1;
+        margin: 0 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+      }
+      .progress-count {
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--text-4);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .progress-count b {
+        color: var(--text-2);
+      }
+      .progress-bar {
+        width: 100%;
+        height: 3px;
+        background: var(--surface-muted);
+        border-radius: 9999px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--teal);
+        border-radius: 9999px;
+        transition: width 0.4s cubic-bezier(0.2, 0.7, 0.3, 1);
+      }
+
+      .phone-label {
+        text-align: center;
+        padding-top: 14px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #888;
+      }
+      .phone-label .title-line {
+        font-size: 14px;
+        color: #ddd;
+        text-transform: none;
+        letter-spacing: 0;
+        margin-bottom: 4px;
+        font-weight: 700;
+      }
+
+      /* ============================================================
+     LAYOUT A — TINDER (one card, dispatch actions)
+     ============================================================ */
+      .layout-a .title-row {
+        text-align: center;
+        margin: 18px 0 8px;
+      }
+      .layout-a .title-row h1 {
+        font-size: 21px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        line-height: 1.2;
+      }
+      .layout-a .title-row p {
+        font-size: 12.5px;
+        color: var(--text-3);
+        margin-top: 4px;
+      }
+      .layout-a .card-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .layout-a .card {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 28px 22px;
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+        margin-bottom: 18px;
+      }
+      .layout-a .card-body {
+        font-size: 17px;
+        font-weight: 600;
+        line-height: 1.35;
+        margin-bottom: 12px;
+      }
+      .layout-a .card-meta {
+        font-size: 11px;
+        color: var(--text-4);
+        margin-bottom: 12px;
+      }
+      .layout-a .card-chips {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .chip {
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 9999px;
+        background: var(--surface-muted);
+        color: var(--text-3);
+      }
+      .chip.date {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .chip.priority {
+        background: var(--amber-soft);
+        color: var(--amber-text);
+      }
+
+      .layout-a .dispatch {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+      }
+      .disp-btn {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
+        transition:
+          transform 0.12s,
+          background 0.15s;
+        text-align: left;
+      }
+      .disp-btn:hover {
+        background: var(--surface-muted);
+      }
+      .disp-btn:active {
+        transform: scale(0.97);
+      }
+      .disp-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .disp-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+      .disp-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .disp-sub {
+        font-size: 10px;
+        color: var(--text-4);
+        margin-top: 1px;
+      }
+      .disp-btn[data-action="task-today"] .disp-icon {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .disp-btn[data-action="project"] .disp-icon {
+        background: var(--violet-soft);
+        color: var(--violet-text);
+      }
+      .disp-btn[data-action="resource"] .disp-icon {
+        background: var(--amber-soft);
+        color: var(--amber-text);
+      }
+      .disp-btn[data-action="someday"] .disp-icon {
+        background: var(--surface-muted);
+        color: var(--text-3);
+      }
+      .disp-btn[data-action="trash"] .disp-icon {
+        background: var(--rose-soft);
+        color: var(--rose-text);
+      }
+
+      .layout-a .full {
+        grid-column: 1 / -1;
+      }
+      .layout-a .secondary {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 5px;
+        margin-top: 6px;
+      }
+      .disp-mini {
+        padding: 8px 6px;
+        border-radius: 8px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-3);
+        text-align: center;
+      }
+      .disp-mini:active {
+        transform: scale(0.96);
+      }
+
+      /* ============================================================
+     LAYOUT C — FOCUS CARD + QUEUE (selectable list)
+     ============================================================ */
+      .layout-c .title-row {
+        text-align: center;
+        margin: 14px 0 10px;
+      }
+      .layout-c .title-row h1 {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .layout-c .title-row p {
+        font-size: 11.5px;
+        color: var(--text-3);
+        margin-top: 2px;
+      }
+
+      /* the focused card (smaller than A — leaves room for queue) */
+      .layout-c .focus-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px 18px;
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+        margin-bottom: 12px;
+        transition:
+          opacity 0.25s,
+          transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .layout-c .focus-card.exit {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+      }
+      .layout-c .focus-body {
+        font-size: 15.5px;
+        font-weight: 600;
+        line-height: 1.3;
+        margin-bottom: 8px;
+      }
+      .layout-c .focus-meta {
+        font-size: 10.5px;
+        color: var(--text-4);
+        margin-bottom: 8px;
+      }
+      .layout-c .focus-chips {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      /* compact dispatch (inline row, not big buttons) */
+      .layout-c .dispatch-inline {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 14px;
+      }
+      .layout-c .disp-inline {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 9px 4px;
+        border-radius: 9px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-3);
+        box-shadow: var(--shadow-md);
+        transition: all 0.12s;
+      }
+      .layout-c .disp-inline:hover {
+        background: var(--surface-muted);
+      }
+      .layout-c .disp-inline:active {
+        transform: scale(0.95);
+      }
+      .layout-c .disp-inline .ico {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .layout-c .disp-inline .ico svg {
+        width: 12px;
+        height: 12px;
+      }
+      .layout-c .disp-inline[data-action="task-today"] .ico {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+      .layout-c .disp-inline[data-action="project"] .ico {
+        background: var(--violet-soft);
+        color: var(--violet-text);
+      }
+      .layout-c .disp-inline[data-action="resource"] .ico {
+        background: var(--amber-soft);
+        color: var(--amber-text);
+      }
+      .layout-c .disp-inline[data-action="someday"] .ico {
+        background: var(--surface-muted);
+        color: var(--text-3);
+      }
+      .layout-c .disp-inline[data-action="trash"] .ico {
+        background: var(--rose-soft);
+        color: var(--rose-text);
+      }
+
+      /* the queue */
+      .queue-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-4);
+        margin-bottom: 6px;
+        padding-left: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .queue-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+      .queue {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .queue-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 9px;
+        background: var(--surface);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.12s;
+      }
+      .queue-row:hover {
+        background: var(--surface-muted);
+      }
+      .queue-row.active {
+        background: var(--teal-soft);
+        border-color: transparent;
+        box-shadow: inset 2px 0 0 var(--teal);
+      }
+      .queue-row .q-num {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-4);
+        width: 16px;
+        flex-shrink: 0;
+      }
+      .queue-row.active .q-num {
+        color: var(--teal-cta);
+      }
+      .queue-row .q-body {
+        flex: 1;
+        font-size: 12.5px;
+        color: var(--text-2);
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .queue-row.active .q-body {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .queue-row .q-chips {
+        display: flex;
+        gap: 3px;
+        flex-shrink: 0;
+      }
+      .queue-row .q-chip {
+        font-size: 9px;
+        padding: 2px 5px;
+        border-radius: 9999px;
+        background: var(--surface-muted);
+        color: var(--text-4);
+      }
+      .queue-row .q-chip.date {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ LAYOUT A — TINDER ============ -->
+    <div class="phone layout-a">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span>▮▮▮</span></div>
+      <div class="screen">
+        <div class="top-row">
+          <button class="close-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M4 4l8 8M12 4l-8 8"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <div class="progress-wrap">
+            <div class="progress-count"><b>1</b> of <b>7</b></div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 14%"></div>
+            </div>
+          </div>
+          <div style="width: 30px"></div>
+        </div>
+
+        <div class="title-row">
+          <h1>What is this?</h1>
+          <p>Decide what each thing becomes.</p>
+        </div>
+
+        <div class="card-area">
+          <div class="card">
+            <div class="card-body">Email Sarah re: Q3 invoice tomorrow</div>
+            <div class="card-meta">captured 14 min ago</div>
+            <div class="card-chips">
+              <span class="chip date">📅 tomorrow</span>
+              <span class="chip priority">★ Important</span>
+            </div>
+          </div>
+
+          <div class="dispatch">
+            <button class="disp-btn" data-action="task-today">
+              <div class="disp-icon">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <circle
+                    cx="8"
+                    cy="8"
+                    r="6"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                  <path
+                    d="M8 5v3.5l2 1"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="disp-label">Task · Today</div>
+                <div class="disp-sub">due today</div>
+              </div>
+            </button>
+            <button class="disp-btn" data-action="project">
+              <div class="disp-icon">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <rect
+                    x="2"
+                    y="3"
+                    width="12"
+                    height="10"
+                    rx="1.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="disp-label">Project</div>
+                <div class="disp-sub">big outcome</div>
+              </div>
+            </button>
+            <button class="disp-btn full" data-action="resource">
+              <div class="disp-icon">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3.5 13.5V3.5a1 1 0 011-1h5.5L13 5.5v8a1 1 0 01-1 1H4.5a1 1 0 01-1-1z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="disp-label">Resource</div>
+                <div class="disp-sub">
+                  reference — filed under a project or goal
+                </div>
+              </div>
+            </button>
+          </div>
+          <div class="secondary">
+            <button class="disp-mini">Upcoming</button>
+            <button class="disp-mini">Someday</button>
+            <button class="disp-mini">Trash</button>
+          </div>
+        </div>
+
+        <div class="phone-label">
+          <div class="title-line">A · Tinder</div>
+          one card at a time · max focus · can't pick
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ LAYOUT C — FOCUS + QUEUE ============ -->
+    <div class="phone layout-c">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span>▮▮▮</span></div>
+      <div class="screen">
+        <div class="top-row">
+          <button class="close-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M4 4l8 8M12 4l-8 8"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <div class="progress-wrap">
+            <div class="progress-count"><b>1</b> of <b>7</b></div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 14%"></div>
+            </div>
+          </div>
+          <div style="width: 30px"></div>
+        </div>
+
+        <div class="title-row">
+          <h1>What is this?</h1>
+          <p>Tap any in the queue to triage it.</p>
+        </div>
+
+        <!-- focused card -->
+        <div class="focus-card">
+          <div class="focus-body">Email Sarah re: Q3 invoice tomorrow</div>
+          <div class="focus-meta">captured 14 min ago</div>
+          <div class="focus-chips">
+            <span class="chip date">📅 tomorrow</span>
+            <span class="chip priority">★ Important</span>
+          </div>
+        </div>
+
+        <!-- inline dispatch -->
+        <div class="dispatch-inline">
+          <button class="disp-inline" data-action="task-today">
+            <div class="ico">
+              <svg viewBox="0 0 16 16" fill="none">
+                <circle
+                  cx="8"
+                  cy="8"
+                  r="6"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M8 5v3.5l2 1"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            Today
+          </button>
+          <button class="disp-inline" data-action="project">
+            <div class="ico">
+              <svg viewBox="0 0 16 16" fill="none">
+                <rect
+                  x="2"
+                  y="3"
+                  width="12"
+                  height="10"
+                  rx="1.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+              </svg>
+            </div>
+            Project
+          </button>
+          <button class="disp-inline" data-action="resource">
+            <div class="ico">
+              <svg viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M3.5 13.5V3.5a1 1 0 011-1h5.5L13 5.5v8a1 1 0 01-1 1H4.5a1 1 0 01-1-1z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            Resource
+          </button>
+          <button class="disp-inline" data-action="someday">
+            <div class="ico">
+              <svg viewBox="0 0 16 16" fill="none">
+                <circle
+                  cx="8"
+                  cy="8"
+                  r="5.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-dasharray="1 1.5"
+                />
+              </svg>
+            </div>
+            Someday
+          </button>
+          <button class="disp-inline" data-action="trash">
+            <div class="ico">
+              <svg viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M3 4h10M6 4V2.5a1 1 0 011-1h2a1 1 0 011 1V4M5 4l.5 9a1 1 0 001 1h3a1 1 0 001-1L11 4"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            Trash
+          </button>
+        </div>
+
+        <!-- the queue -->
+        <div class="queue-label">Inbox · 7 items</div>
+        <div class="queue">
+          <div class="queue-row active">
+            <span class="q-num">1</span
+            ><span class="q-body">Email Sarah re: Q3 invoice tomorrow</span
+            ><span class="q-chips"
+              ><span class="q-chip date">tomorrow</span></span
+            >
+          </div>
+          <div class="queue-row">
+            <span class="q-num">2</span
+            ><span class="q-body">Plan Q3 launch</span
+            ><span class="q-chips"></span>
+          </div>
+          <div class="queue-row">
+            <span class="q-num">3</span
+            ><span class="q-body">Competitor pricing PDF</span
+            ><span class="q-chips"></span>
+          </div>
+          <div class="queue-row">
+            <span class="q-num">4</span
+            ><span class="q-body">Pick up dry cleaning</span
+            ><span class="q-chips"></span>
+          </div>
+          <div class="queue-row">
+            <span class="q-num">5</span
+            ><span class="q-body">Write blog: focus tips for ADHD</span
+            ><span class="q-chips"><span class="q-chip">★</span></span>
+          </div>
+          <div class="queue-row">
+            <span class="q-num">6</span
+            ><span class="q-body">Renew domain before June 30</span
+            ><span class="q-chips"
+              ><span class="q-chip date">Jun 30</span></span
+            >
+          </div>
+          <div class="queue-row">
+            <span class="q-num">7</span
+            ><span class="q-body">Idea: weekly review email digest</span
+            ><span class="q-chips"></span>
+          </div>
+        </div>
+
+        <div class="phone-label">
+          <div class="title-line">C · Focus + Queue</div>
+          hero card + selectable list · any item tappable
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Layout C: queue row clicks move focus to that item
+      document.querySelectorAll(".layout-c .queue-row").forEach((row, i) => {
+        row.addEventListener("click", () => {
+          document
+            .querySelectorAll(".layout-c .queue-row")
+            .forEach((r) => r.classList.remove("active"));
+          row.classList.add("active");
+          const body = row.querySelector(".q-body").textContent;
+          const focusBody = document.querySelector(".layout-c .focus-body");
+          const focusChips = document.querySelector(".layout-c .focus-chips");
+          // brief exit then enter
+          const fc = document.querySelector(".layout-c .focus-card");
+          fc.classList.add("exit");
+          setTimeout(() => {
+            focusBody.textContent = body;
+            focusChips.innerHTML = row.querySelector(".q-chips").innerHTML;
+            fc.classList.remove("exit");
+          }, 250);
+        });
+      });
+    </script>
+  </body>
+</html>

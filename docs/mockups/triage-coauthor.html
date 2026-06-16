@@ -1,0 +1,1169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Triage: co-authoring the spec</title>
+    <style>
+      :root {
+        --font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+        --teal: #0ea5e9;
+        --teal-cta: #0284c7;
+        --teal-cta-hover: #0369a1;
+        --teal-soft: rgba(14, 165, 233, 0.12);
+        --teal-soft-strong: rgba(14, 165, 233, 0.18);
+        --teal-tint: rgba(2, 132, 199, 0.22);
+        --amber: #f59e0b;
+        --amber-text: #92400e;
+        --amber-soft: rgba(245, 158, 11, 0.14);
+        --rose: #e11d48;
+        --rose-soft: rgba(225, 29, 72, 0.08);
+        --rose-text: #9f1239;
+        --violet: #7c3aed;
+        --violet-soft: rgba(124, 58, 237, 0.08);
+        --violet-text: #5b21b6;
+      }
+      :root {
+        --bg: #f2f5f7;
+        --bg-elev: #fcfcfd;
+        --surface: #ffffff;
+        --surface-muted: #f2f5f7;
+        --surface-muted-2: #eceef0;
+        --border: #e6e8ec;
+        --border-strong: #d5d9de;
+        --text: #212224;
+        --text-2: #44474b;
+        --text-3: #55606e;
+        --text-4: #818489;
+        --shadow-md:
+          0 2px 4px rgba(0, 28, 70, 0.06), 0 8px 24px rgba(0, 28, 70, 0.06);
+        --shadow-lg:
+          0 2px 4px rgba(0, 28, 70, 0.05), 0 24px 64px var(--teal-tint);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        font-family: var(--font);
+        background: #0a0a0a;
+        color: var(--text);
+        line-height: 1.4;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+        font-size: inherit;
+      }
+      svg {
+        display: block;
+      }
+
+      .phone {
+        width: 390px;
+        height: 844px;
+        background: var(--bg);
+        border-radius: 48px;
+        border: 11px solid #1a1a1a;
+        box-shadow:
+          0 32px 80px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 2px #2a2a2a;
+        position: relative;
+        overflow: hidden;
+      }
+      .notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 28px;
+        background: #1a1a1a;
+        border-radius: 0 0 18px 18px;
+        z-index: 100;
+      }
+      .status-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 44px;
+        padding: 0 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        z-index: 50;
+      }
+      .screen {
+        position: absolute;
+        top: 44px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 16px 22px 28px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* top: close + progress */
+      .top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-3);
+        transition: all 0.15s;
+      }
+      .close-btn:hover {
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+      .progress-wrap {
+        flex: 1;
+        margin: 0 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+      .progress-count {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-4);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .progress-count b {
+        color: var(--text-2);
+      }
+      .progress-bar {
+        width: 100%;
+        height: 3px;
+        background: var(--surface-muted);
+        border-radius: 9999px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--teal);
+        border-radius: 9999px;
+        transition: width 0.4s cubic-bezier(0.2, 0.7, 0.3, 1);
+      }
+
+      .title-row {
+        text-align: center;
+        margin: 16px 0 20px;
+      }
+      .title-row h1 {
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        color: var(--text);
+        line-height: 1.2;
+        margin-bottom: 4px;
+      }
+      .title-row p {
+        font-size: 12.5px;
+        color: var(--text-3);
+      }
+
+      /* ============================================================
+     THE CARD — raw text + editable chips
+     ============================================================ */
+      .card-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 26px 22px;
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+        transition:
+          opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+          transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .card.exit-right {
+        opacity: 0;
+        transform: translateX(120px) rotate(6deg);
+      }
+      .card.exit-left {
+        opacity: 0;
+        transform: translateX(-120px) rotate(-6deg);
+      }
+      .card.exit-down {
+        opacity: 0;
+        transform: translateY(120px) scale(0.9);
+      }
+      .card.exit-up {
+        opacity: 0;
+        transform: translateY(-80px) scale(0.95);
+      }
+      .card.enter-prep {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      .card-body {
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--text);
+        line-height: 1.35;
+        margin-bottom: 8px;
+        /* editable: subtle affordance */
+        outline: none;
+        border-radius: 8px;
+        padding: 4px 8px;
+        margin-left: -8px;
+        margin-right: -8px;
+        transition: background 0.15s;
+        cursor: text;
+        position: relative;
+      }
+      .card-body:hover {
+        background: var(--surface-muted);
+      }
+      .card-body:focus {
+        background: var(--surface-muted);
+        box-shadow: inset 0 0 0 1.5px var(--teal);
+      }
+      /* a tiny "edit" pencil hint on hover */
+      .card-body-wrap {
+        position: relative;
+        display: inline-block;
+        max-width: 100%;
+      }
+      .card-body-wrap::after {
+        content: "";
+        position: absolute;
+        right: -22px;
+        top: 4px;
+        width: 14px;
+        height: 14px;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'><path d='M11 2l3 3-8 8H3v-3z' stroke='%23818489' stroke-width='1.3' stroke-linejoin='round'/></svg>");
+        background-repeat: no-repeat;
+        opacity: 0;
+        transition: opacity 0.15s;
+        pointer-events: none;
+      }
+      .card-body-wrap:hover::after {
+        opacity: 0.6;
+      }
+      .card-meta {
+        font-size: 11.5px;
+        color: var(--text-4);
+        margin-bottom: 18px;
+      }
+
+      /* the "type" picker — what does this become? */
+      .type-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-4);
+        margin-bottom: 8px;
+      }
+      .type-row {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+      .type-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 9999px;
+        background: var(--surface-muted);
+        color: var(--text-3);
+        font-size: 12.5px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        transition: all 0.15s;
+      }
+      .type-btn:hover {
+        background: var(--surface-muted-2);
+        color: var(--text-2);
+      }
+      .type-btn.active {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+        border-color: transparent;
+      }
+      .type-btn svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      /* ---- Editable chips — the spec being co-authored ---- */
+      .spec-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-4);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .spec-label::before,
+      .spec-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+      /* ---- Vertical property list (each row = one spec, tap to expand) ---- */
+      .spec-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 22px;
+        text-align: left;
+      }
+      .spec-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 12px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        transition:
+          background 0.12s,
+          border-color 0.12s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .spec-row:hover {
+        background: var(--surface-muted);
+        border-color: var(--border-strong);
+      }
+      .spec-row:active {
+        transform: scale(0.99);
+      }
+      .spec-row.open {
+        background: var(--surface-muted);
+        border-color: var(--teal);
+      }
+      .spec-row .spec-key {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-4);
+        width: 72px;
+        flex-shrink: 0;
+      }
+      .spec-row .spec-val {
+        flex: 1;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--text);
+        text-align: right;
+      }
+      /* value tinting per property */
+      .spec-row.set-when .spec-val,
+      .spec-row.v-Today .spec-val {
+        color: var(--teal-cta);
+      }
+      .spec-row.v-Important .spec-val,
+      .spec-row.v-XL .spec-val {
+        color: var(--amber-text);
+      }
+      .spec-row.is-project .spec-val {
+        color: var(--violet-text);
+      }
+      .spec-row.v-General .spec-val,
+      .spec-row.is-default .spec-val {
+        color: var(--text-3);
+        font-weight: 500;
+      }
+      .spec-row .spec-chev {
+        color: var(--text-4);
+        transition: transform 0.18s;
+        flex-shrink: 0;
+      }
+      .spec-row.open .spec-chev {
+        transform: rotate(180deg);
+      }
+
+      /* inline expansion panel (replaces floating popover) */
+      .spec-options {
+        display: none;
+        flex-direction: column;
+        gap: 2px;
+        padding: 6px;
+        margin-top: 4px;
+        background: var(--surface-muted);
+        border-radius: 10px;
+      }
+      .spec-row.open + .spec-options {
+        display: flex;
+        animation: fade 0.18s ease both;
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .spec-opt {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-2);
+        cursor: pointer;
+        transition: background 0.1s;
+      }
+      .spec-opt:hover {
+        background: var(--surface);
+      }
+      .spec-opt.active {
+        background: var(--teal-soft);
+        color: var(--teal-cta);
+        font-weight: 600;
+      }
+      .spec-opt .opt-check {
+        opacity: 0;
+      }
+      .spec-opt.active .opt-check {
+        opacity: 1;
+      }
+
+      /* the confirm bar */
+      .confirm-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .confirm-summary {
+        flex: 1;
+        font-size: 11.5px;
+        color: var(--text-4);
+        line-height: 1.4;
+        text-align: left;
+      }
+      .confirm-summary b {
+        color: var(--text-2);
+        font-weight: 600;
+      }
+      .confirm-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: var(--teal-cta);
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 12px 22px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px var(--teal-tint);
+        transition:
+          transform 0.12s,
+          background 0.15s;
+        flex-shrink: 0;
+      }
+      .confirm-btn:hover {
+        background: var(--teal-cta-hover);
+      }
+      .confirm-btn:active {
+        transform: scale(0.96);
+      }
+
+      /* ---- Inline chip-edit popover (tiny) ---- */
+      /* ---- Undo toast (after dispatch) ---- */
+      .undo-toast {
+        position: absolute;
+        left: 50%;
+        bottom: 40px;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--text);
+        color: var(--surface);
+        padding: 11px 16px;
+        border-radius: 9999px;
+        font-size: 12.5px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.25s,
+          transform 0.25s;
+        z-index: 60;
+      }
+      .undo-toast.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(-50%) translateY(0);
+      }
+      .undo-toast button {
+        color: var(--teal);
+        font-weight: 700;
+        font-size: 12.5px;
+      }
+
+      /* ---- Empty state ---- */
+      .empty-state {
+        text-align: center;
+        flex: 1;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        animation: fade 0.5s ease both;
+      }
+      .empty-state.show {
+        display: flex;
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .empty-circle {
+        width: 64px;
+        height: 64px;
+        border-radius: 9999px;
+        background: var(--teal);
+        box-shadow: 0 12px 32px var(--teal-tint);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 22px;
+      }
+      .empty-circle svg {
+        color: white;
+        width: 30px;
+        height: 30px;
+      }
+      .empty-state h2 {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+      }
+      .empty-state p {
+        font-size: 14px;
+        color: var(--text-3);
+        margin-bottom: 24px;
+        max-width: 26ch;
+      }
+
+      /* external hint */
+      .external-hint {
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #888;
+        font-size: 12px;
+        text-align: center;
+        max-width: 380px;
+        line-height: 1.5;
+      }
+      .external-hint kbd {
+        font-family: var(--font-mono);
+        background: #222;
+        color: #ddd;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone" id="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="display: flex; gap: 5px">
+          <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor">
+            <rect x="0" y="6" width="2" height="4" rx=".5" />
+            <rect x="4" y="4" width="2" height="6" rx=".5" />
+            <rect x="8" y="2" width="2" height="8" rx=".5" />
+            <rect x="12" y="0" width="2" height="10" rx=".5" />
+          </svg>
+          <svg width="22" height="10" viewBox="0 0 22 10" fill="none">
+            <rect
+              x=".5"
+              y=".5"
+              width="18"
+              height="9"
+              rx="2"
+              stroke="currentColor"
+            />
+            <rect
+              x="2"
+              y="2"
+              width="14"
+              height="6"
+              rx="1"
+              fill="currentColor"
+            />
+          </svg>
+        </span>
+      </div>
+
+      <div class="screen">
+        <div class="top-row">
+          <button class="close-btn" id="closeBtn">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M4 4l8 8M12 4l-8 8"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <div class="progress-wrap">
+            <div class="progress-count" id="progressCount">
+              <b>1</b> of <b>7</b>
+            </div>
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                id="progressFill"
+                style="width: 0%"
+              ></div>
+            </div>
+          </div>
+          <div style="width: 32px"></div>
+        </div>
+
+        <div class="title-row">
+          <h1>What is this?</h1>
+          <p>Tap chips to adjust. Confirm to commit.</p>
+        </div>
+
+        <!-- card stage -->
+        <div class="card-area" id="cardArea">
+          <div class="card" id="card">
+            <div class="card-body-wrap">
+              <div
+                class="card-body"
+                id="cardBody"
+                contenteditable="true"
+                spellcheck="false"
+              >
+                Email Sarah re: Q3 invoice tomorrow
+              </div>
+            </div>
+            <div class="card-meta" id="cardMeta">captured 14 min ago</div>
+
+            <!-- type picker -->
+            <div class="type-label">becomes</div>
+            <div class="type-row" id="typeRow">
+              <button class="type-btn active" data-type="task">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <circle
+                    cx="8"
+                    cy="8"
+                    r="6"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                  <path
+                    d="M8 5v3.5l2 1"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                Task
+              </button>
+              <button class="type-btn" data-type="project">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <rect
+                    x="2"
+                    y="3"
+                    width="12"
+                    height="10"
+                    rx="1.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                </svg>
+                Project
+              </button>
+              <button class="type-btn" data-type="resource">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3.5 13.5V3.5a1 1 0 011-1h5.5L13 5.5v8a1 1 0 01-1 1H4.5a1 1 0 01-1-1z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Resource
+              </button>
+            </div>
+
+            <!-- spec chips (swap per type) -->
+            <div class="spec-label">spec</div>
+            <div class="spec-list" id="specList"></div>
+
+            <!-- confirm -->
+            <div class="confirm-row">
+              <div class="confirm-summary" id="confirmSummary"></div>
+              <button class="confirm-btn" id="confirmBtn">Confirm</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- empty state -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-circle">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <h2>Inbox zero.</h2>
+          <p>Nothing left to decide. Go do something.</p>
+        </div>
+      </div>
+
+      <!-- undo toast -->
+      <div class="undo-toast" id="undoToast">
+        <span id="undoMsg">Done.</span>
+        <button id="undoBtn">Undo</button>
+      </div>
+    </div>
+
+    <div class="external-hint">
+      Tap any chip to edit · <kbd>Tab</kbd> cycle chips ·
+      <kbd>Enter</kbd> confirm · <kbd>Esc</kbd> popover/close
+    </div>
+
+    <script>
+      // ---- Sample inbox items (parser pre-fills the spec) ----
+      const INBOX = [
+        {
+          text: "Email Sarah re: Q3 invoice tomorrow",
+          meta: "captured 14 min ago",
+          parsed: {
+            type: "task",
+            when: "Today",
+            size: "M",
+            priority: "Important",
+            project: null,
+            goal: null,
+          },
+        },
+        {
+          text: "Plan Q3 launch",
+          meta: "captured 1 hr ago",
+          parsed: {
+            type: "project",
+            when: null,
+            size: null,
+            priority: null,
+            project: null,
+            goal: "Grow audience",
+          },
+        },
+        {
+          text: "Competitor pricing PDF",
+          meta: "captured yesterday",
+          parsed: {
+            type: "resource",
+            when: null,
+            size: null,
+            priority: null,
+            project: "Ship product v2",
+            goal: null,
+          },
+        },
+        {
+          text: "Pick up dry cleaning",
+          meta: "captured this morning",
+          parsed: {
+            type: "task",
+            when: "Today",
+            size: "S",
+            priority: "Normal",
+            project: null,
+            goal: null,
+          },
+        },
+        {
+          text: "Write blog: focus tips for ADHD",
+          meta: "captured 2 days ago",
+          parsed: {
+            type: "task",
+            when: "Someday",
+            size: "L",
+            priority: "Normal",
+            project: "Write blog",
+            goal: "Grow audience",
+          },
+        },
+      ];
+
+      // ---- Defaults (per the decision) ----
+      const DEFAULTS = {
+        task: {
+          when: "Someday",
+          size: "M",
+          priority: "Normal",
+          project: null,
+          goal: null,
+        },
+        project: { goal: null, due: null },
+        resource: { parent: null, kind: "Link" },
+      };
+
+      // ---- Options per chip ----
+      const OPTIONS = {
+        when: ["Today", "Upcoming", "Someday"],
+        size: ["S", "M", "L", "XL"],
+        priority: ["Low", "Normal", "Important"],
+        project: ["General", "Ship product v2", "Write blog", "Community MVP"],
+        goal: ["—", "Grow audience", "Run a 10k", "Ship product v2"],
+        parent: ["Ship product v2", "Write blog", "Grow audience"],
+        kind: ["Link", "Note"],
+        due: ["—", "This week", "Next week", "Next month"],
+      };
+
+      let idx = 0;
+      const total = INBOX.length;
+      let working = null; // current spec being edited
+
+      const cardEl = document.getElementById("card");
+      const cardArea = document.getElementById("cardArea");
+      const bodyEl = document.getElementById("cardBody");
+      const metaEl = document.getElementById("cardMeta");
+      const specList = document.getElementById("specList");
+      const confirmSummary = document.getElementById("confirmSummary");
+      const progressCount = document.getElementById("progressCount");
+      const progressFill = document.getElementById("progressFill");
+      const emptyState = document.getElementById("emptyState");
+      // (popover removed — inline expansion now)
+      const undoToast = document.getElementById("undoToast");
+      const undoMsg = document.getElementById("undoMsg");
+
+      // Start from parsed; merge defaults for anything not parsed
+      function loadItem(i) {
+        const item = INBOX[i];
+        const p = item.parsed;
+        if (p.type === "task") {
+          working = {
+            type: "task",
+            when: p.when || DEFAULTS.task.when,
+            size: p.size || DEFAULTS.task.size,
+            priority: p.priority || DEFAULTS.task.priority,
+            project: p.project || null, // null = General
+            goal: p.goal || null,
+          };
+        } else if (p.type === "project") {
+          working = {
+            type: "project",
+            goal: p.goal || null,
+            due: p.due || null,
+          };
+        } else if (p.type === "resource") {
+          working = {
+            type: "resource",
+            parent: p.parent || null,
+            kind: p.kind || "Link",
+          };
+        }
+        bodyEl.textContent = item.text;
+        metaEl.textContent = item.meta;
+        // set type button active
+        document
+          .querySelectorAll(".type-btn")
+          .forEach((b) =>
+            b.classList.toggle("active", b.dataset.type === working.type),
+          );
+        renderSpec();
+        renderSummary();
+      }
+
+      // ---- Vertical spec list (each row = property, expands inline) ----
+      let openKey = null;
+      function renderSpec() {
+        specList.innerHTML = "";
+        const props = specForType(working.type);
+        props.forEach((p) => {
+          const val = displayVal(p.key, working[p.field]);
+          const isDefault = !working[p.field] && p.key !== "kind";
+          const row = document.createElement("div");
+          row.className = "spec-row v-" + val.replace(/\s/g, "");
+          if (p.key === "project" || p.key === "parent")
+            row.classList.add("is-project");
+          if (isDefault) row.classList.add("is-default");
+          if (working[p.field] && p.key === "when")
+            row.classList.add("set-when");
+          if (openKey === p.key) row.classList.add("open");
+          row.innerHTML = `
+            <div class="spec-key">${p.key}</div>
+            <div class="spec-val">${val}</div>
+            <svg class="spec-chev" width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          `;
+          // options panel (sibling)
+          const opts = document.createElement("div");
+          opts.className = "spec-options";
+          (OPTIONS[p.key] || []).forEach((opt) => {
+            const o = document.createElement("button");
+            o.className = "spec-opt";
+            const cur = working[p.field];
+            const isActive =
+              cur === opt ||
+              (opt === "General" && !cur && p.key === "project") ||
+              (opt === "—" && !cur);
+            if (isActive) o.classList.add("active");
+            o.innerHTML = `<span>${opt}</span><svg class="opt-check" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+            o.addEventListener("click", () => {
+              working[p.field] = opt === "—" || opt === "General" ? null : opt;
+              openKey = null;
+              renderSpec();
+              renderSummary();
+            });
+            opts.appendChild(o);
+          });
+          row.addEventListener("click", () => {
+            openKey = openKey === p.key ? null : p.key;
+            renderSpec();
+          });
+          specList.appendChild(row);
+          specList.appendChild(opts);
+        });
+      }
+
+      function specForType(t) {
+        if (t === "task")
+          return [
+            { key: "when", field: "when" },
+            { key: "size", field: "size" },
+            { key: "priority", field: "priority" },
+            { key: "project", field: "project" },
+            { key: "goal", field: "goal" },
+          ];
+        if (t === "project")
+          return [
+            { key: "goal", field: "goal" },
+            { key: "due", field: "due" },
+          ];
+        if (t === "resource")
+          return [
+            { key: "parent", field: "parent" },
+            { key: "kind", field: "kind" },
+          ];
+        return [];
+      }
+
+      function displayVal(key, val) {
+        if (val) return val;
+        if (key === "project") return "General";
+        if (key === "goal" || key === "due") return "—";
+        if (key === "parent") return "Pick parent…";
+        return val || "";
+      }
+
+      function renderSummary() {
+        if (working.type === "task") {
+          const where = working.project || "General";
+          const lens = "Work"; // mocked
+          const goalBit = working.goal
+            ? ` · supports <b>${working.goal}</b>`
+            : "";
+          confirmSummary.innerHTML = `→ <b>${working.when}</b> · <b>${working.size}</b> · <b>${working.priority}</b><br>in <b>${where}</b> (${lens})${goalBit}`;
+        } else if (working.type === "project") {
+          const goalBit = working.goal
+            ? ` · supports <b>${working.goal}</b>`
+            : "";
+          confirmSummary.innerHTML = `→ new <b>Project</b>${goalBit}`;
+        } else if (working.type === "resource") {
+          confirmSummary.innerHTML = `→ <b>${working.kind}</b> filed under <b>${working.parent || "—"}</b>`;
+        }
+      }
+
+      // ---- type picker ----
+      document.querySelectorAll(".type-btn").forEach((b) => {
+        b.addEventListener("click", () => {
+          const t = b.dataset.type;
+          // re-init working for the new type, preserving parsed values where sensible
+          const p = INBOX[idx].parsed;
+          if (t === "task")
+            working = {
+              type: "task",
+              when: p.when || DEFAULTS.task.when,
+              size: p.size || DEFAULTS.task.size,
+              priority: p.priority || DEFAULTS.task.priority,
+              project: p.project || null,
+              goal: p.goal || null,
+            };
+          else if (t === "project")
+            working = { type: "project", goal: p.goal || null, due: null };
+          else if (t === "resource")
+            working = {
+              type: "resource",
+              parent: p.project || null,
+              kind: "Link",
+            };
+          document
+            .querySelectorAll(".type-btn")
+            .forEach((x) => x.classList.toggle("active", x === b));
+          renderSpec();
+          renderSummary();
+        });
+      });
+
+      // ---- confirm (dispatch) ----
+      function dispatch() {
+        // exit direction by where it went
+        let dir = "right";
+        if (working.type === "task" && working.when === "Today") dir = "right";
+        else if (working.type === "task" && working.when === "Someday")
+          dir = "left";
+        else if (working.type === "project") dir = "up";
+        else if (working.type === "resource") dir = "left";
+
+        cardEl.classList.add(`exit-${dir}`);
+        showUndo();
+
+        setTimeout(() => {
+          idx++;
+          if (idx >= total) {
+            cardArea.style.display = "none";
+            emptyState.classList.add("show");
+            progressFill.style.width = "100%";
+            progressCount.innerHTML = `<b>${total}</b> of <b>${total}</b> · done`;
+            return;
+          }
+          cardEl.classList.remove(
+            "exit-right",
+            "exit-left",
+            "exit-down",
+            "exit-up",
+          );
+          cardEl.classList.add("enter-prep");
+          loadItem(idx);
+          updateProgress();
+          void cardEl.offsetWidth;
+          cardEl.classList.remove("enter-prep");
+        }, 320);
+      }
+
+      function updateProgress() {
+        progressCount.innerHTML = `<b>${idx + 1}</b> of <b>${total}</b>`;
+        progressFill.style.width = `${(idx / total) * 100}%`;
+      }
+
+      function showUndo() {
+        const what = working.type === "task" ? `${working.when}` : working.type;
+        undoMsg.innerHTML = `→ <b>${what}</b>. `;
+        undoToast.classList.add("show");
+        setTimeout(() => undoToast.classList.remove("show"), 4000);
+      }
+
+      document.getElementById("confirmBtn").addEventListener("click", dispatch);
+      document.getElementById("undoBtn").addEventListener("click", () => {
+        undoToast.classList.remove("show");
+        if (idx > 0) {
+          idx--;
+          loadItem(idx);
+          updateProgress();
+        }
+      });
+
+      // Esc closes any open spec row; Enter confirms dispatch (when not editing)
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          if (openKey) {
+            openKey = null;
+            renderSpec();
+          }
+        } else if (e.key === "Enter" && !openKey) {
+          // don't dispatch if the user is editing the title
+          if (document.activeElement !== bodyEl) dispatch();
+        }
+      });
+
+      // ---- Title editing: persist back to the item on blur ----
+      bodyEl.addEventListener("blur", () => {
+        const newText = bodyEl.textContent.trim();
+        if (newText && idx < total) INBOX[idx].text = newText;
+      });
+      // pressing Enter in the title blurs it (commits the edit) instead of dispatching
+      bodyEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          bodyEl.blur();
+        }
+      });
+
+      // init
+      loadItem(0);
+      updateProgress();
+    </script>
+  </body>
+</html>

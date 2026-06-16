@@ -23,7 +23,7 @@
 
 ## ☐ Design — surfaces not yet built
 
-- [ ] **Inbox + triage surface.** Universal inbox list + the one-item-at-a-time triage walkthrough. The GTD clarify ritual. Big new surface — gesture for dispatch, bulk triage, how parsed-token chips render.
+- [x] **Inbox + triage surface.** DONE 2026-06-16. Two distinct surfaces: (1) **Inbox list** = browse/scan/pick entry point; (2) **Triage** = the act, **Layout A (Tinder-style one-card flow)** with card-replace exit animations. Critical reframing: triage is **co-authoring the spec**, not just dispatching — the card shows raw text + NL-parsed editable properties, the user confirms/edits what the thing becomes. **Layout: vertical property list with inline expansion** (each row = one property, tap to expand options in place, no floating popover). **Title is editable inline** (contenteditable, persists on blur). Defaults: Size=M, Priority=Normal, When=Someday (never auto-Today), Project=General (null = lives in Lens context). Confirm summary at bottom reads back the commitment in plain English. Undo toast for 4s after dispatch. See `docs/mockups/triage-coauthor.html` (canonical), `triage-tinder.html` (early), `triage-a-vs-c.html` (A/C comparison).
 - [ ] **Today list view** (planning mode, priority/size chips, Today cap enforcement, done section).
 - [ ] **Upcoming + Someday views.**
 - [ ] **Projects list + Project detail.** Roll-up, next-action, convert Task→Project (XL path).
