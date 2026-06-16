@@ -1,31 +1,44 @@
-@import "tailwindcss";
+/*
+ * ActionAmp global styles.
+ * The design system tokens live in ./styles/tokens.css (imported per-page).
+ * This file holds the bare global reset + body defaults only.
+ */
 
-@theme {
-  --text-tiny: 0.625rem; /* Font size is 10px */
-  --text-tiny--line-height: 1rem;
+* {
+  box-sizing: border-box;
+}
 
-  /* Orange palette (Tailwind orange scale) */
-  --color-primary-50: #fff7ed;
-  --color-primary-100: #ffedd5;
-  --color-primary-200: #fed7aa;
-  --color-primary-300: #fdba74;
-  --color-primary-400: #fb923c;
-  --color-primary-500: #f97316;
-  --color-primary-600: #ea580c;
-  --color-primary-700: #c2410c;
-  --color-primary-800: #9a3412;
-  --color-primary-900: #7c2d12;
-  --color-primary-950: #431407;
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  @apply has-[dialog:open]:overflow-hidden;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "SF Pro Display", Roboto, sans-serif;
+  background: oklch(0.99 0.005 230);
+  color: oklch(0.2 0.015 230);
+  line-height: 1.5;
 }
 
-@utility card {
-  @apply rounded-xl border border-neutral-200 bg-white shadow-xs transition-all duration-200;
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-@utility label {
-  @apply text-sm font-medium text-neutral-700;
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+svg {
+  display: block;
 }
