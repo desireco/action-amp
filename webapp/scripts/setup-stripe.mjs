@@ -5,7 +5,6 @@
  * Creates the Products and Prices for our pricing model (docs/PRICING.md):
  *   - ActionAmp Pro:   Yearly $79.50 (recurring), Monthly $12.95 (recurring),
  *                      Prepaid $90 (one-time, 12-mo)
- *   - ActionAmp Founder: $52 (one-time, lifetime)
  *
  * Idempotent: tags everything with `actionamp_product` / `actionamp_plan`
  * metadata and searches before creating — safe to re-run. Prints the price IDs
@@ -53,22 +52,6 @@ const CATALOG = [
         amount: 9000,
         // one-time: grants a 12-month entitlement (handled by the webhook)
         metadata: { actionamp_plan: "pro_prepaid", label: "Pro Prepaid (12 mo, no auto-renew)" },
-      },
-    ],
-  },
-  {
-    product: {
-      name: "ActionAmp Founder",
-      description: "Early-adopter lifetime Pro. Never renews. Launch-only.",
-      metadata: { actionamp_product: "founder" },
-    },
-    prices: [
-      {
-        env: "STRIPE_PRICE_FOUNDER",
-        amount: 5200,
-        recurring: { interval: "year" },
-        // one-time: permanent FOUNDER entitlement
-        metadata: { actionamp_plan: "founder", label: "Founder" },
       },
     ],
   },
