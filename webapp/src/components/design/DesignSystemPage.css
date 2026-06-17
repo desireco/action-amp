@@ -781,6 +781,44 @@
 }
 
 /* ============================================================
+   Icon grid
+   ============================================================ */
+.ds-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: var(--aa-space-md);
+}
+
+.ds-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--aa-space-md) var(--aa-space-sm);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+}
+
+.ds-icon-item__svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--aa-text-2);
+}
+
+.ds-icon-item__svg svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ds-icon-item__label {
+  font-size: 0.72rem;
+  color: var(--aa-text-3);
+  font-weight: 500;
+}
+
+/* ============================================================
    Topbar & Kbd (from app-shell-whatnow.html)
    ============================================================ */
 .ds-kbd-btn {

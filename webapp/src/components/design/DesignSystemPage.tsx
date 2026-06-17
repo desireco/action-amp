@@ -6,8 +6,22 @@ import {
   Card,
   Chip,
   CompletionCircle,
+  LensSwitch,
   ModeDial,
+  NavItem,
   ZoomDock,
+  StarIcon,
+  InboxIcon,
+  ClockIcon,
+  CalendarIcon,
+  SomedayIcon,
+  ProjectsIcon,
+  GoalsIcon,
+  LogbookIcon,
+  UserIcon,
+  PlusIcon,
+  MoonIcon,
+  SunIcon,
 } from "../ui";
 import "./DesignSystemPage.css";
 
@@ -27,6 +41,9 @@ const SECTIONS = [
   { id: "forms", label: "Form Elements" },
   { id: "shadows", label: "Shadows & Motion" },
   { id: "sidebar", label: "Sidebar" },
+  { id: "lens", label: "Lens Switch" },
+  { id: "nav-item", label: "Nav Item" },
+  { id: "icons", label: "Icon Set" },
   { id: "topbar", label: "Topbar & Kbd" },
   { id: "dispatch", label: "Dispatch Buttons" },
   { id: "progress", label: "Progress Bar" },
@@ -529,6 +546,69 @@ export function DesignSystemPage() {
         </Sec>
 
         {/* ============================================================
+           LENS SWITCH — Work/Me toggle
+           ============================================================ */}
+        <Sec id="lens" title="Lens Switch" desc="Segmented control for switching between life contexts (Work / Me). Sits at the top of the sidebar. Distinct from ModeDial (operational modes). From app-shell-whatnow.html.">
+          <Sub h="Default">
+            <LensSwitchDemo />
+          </Sub>
+        </Sec>
+
+        {/* ============================================================
+           NAV ITEM — sidebar nav element
+           ============================================================ */}
+        <Sec id="nav-item" title="Nav Item" desc="Sidebar navigation item with icon, optional count badge, and the signature teal left-edge active bar. From app-shell-whatnow.html.">
+          <Sub h="States">
+            <div className="ds-navitems">
+              <NavItem icon={<StarIcon />} label="What Now" active />
+              <NavItem icon={<InboxIcon />} label="Inbox" count={4} countVariant="urgent" />
+              <NavItem icon={<ClockIcon />} label="Today" count={3} />
+              <NavItem icon={<ProjectsIcon />} label="Projects" soon />
+            </div>
+          </Sub>
+        </Sec>
+
+        {/* ============================================================
+           ICON SET — nav + UI icons
+           ============================================================ */}
+        <Sec id="icons" title="Icon Set" desc="Thin 1.4-stroke SVG icons, 16×16 viewBox. All use currentColor for theming. Source: app-shell-whatnow.html.">
+          <Sub h="Navigation">
+            <div className="ds-icon-grid">
+              {[
+                { icon: <StarIcon />, label: "Star" },
+                { icon: <InboxIcon />, label: "Inbox" },
+                { icon: <ClockIcon />, label: "Clock" },
+                { icon: <CalendarIcon />, label: "Calendar" },
+                { icon: <SomedayIcon />, label: "Someday" },
+                { icon: <ProjectsIcon />, label: "Projects" },
+                { icon: <GoalsIcon />, label: "Goals" },
+                { icon: <LogbookIcon />, label: "Logbook" },
+              ].map((i) => (
+                <div key={i.label} className="ds-icon-item">
+                  <span className="ds-icon-item__svg">{i.icon}</span>
+                  <span className="ds-icon-item__label">{i.label}</span>
+                </div>
+              ))}
+            </div>
+          </Sub>
+          <Sub h="Actions">
+            <div className="ds-icon-grid">
+              {[
+                { icon: <PlusIcon />, label: "Plus" },
+                { icon: <MoonIcon />, label: "Moon" },
+                { icon: <SunIcon />, label: "Sun" },
+                { icon: <UserIcon />, label: "User" },
+              ].map((i) => (
+                <div key={i.label} className="ds-icon-item">
+                  <span className="ds-icon-item__svg">{i.icon}</span>
+                  <span className="ds-icon-item__label">{i.label}</span>
+                </div>
+              ))}
+            </div>
+          </Sub>
+        </Sec>
+
+        {/* ============================================================
            TOPBAR & KBD (from app-shell-whatnow.html)
            ============================================================ */}
         <Sec id="topbar" title="Topbar & Kbd" desc="Top-right action bar from app shell. Kbd button for ⌘K capture, icon button for theme toggle.">
@@ -945,5 +1025,25 @@ function BreadcrumbDemo() {
       active={active}
       onSelect={setActive}
     />
+  );
+}
+
+/* ================================================================
+   LensSwitch demo
+   ================================================================ */
+
+function LensSwitchDemo() {
+  const [lens, setLens] = useState("work");
+  return (
+    <div style={{ width: 200 }}>
+      <LensSwitch
+        options={[
+          { id: "work", label: "Work" },
+          { id: "me", label: "Me" },
+        ]}
+        active={lens}
+        onSelect={setLens}
+      />
+    </div>
   );
 }

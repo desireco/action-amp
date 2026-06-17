@@ -23,6 +23,9 @@
 - [x] **ModeDial** — bottom-center persistent nav (Plan/Do/Review). Foundation of navigation. `src/components/ui/ModeDial.tsx` + `ModeDial.css`
 - [x] **ZoomDock** — Task/Project/Goal zoom controls. `src/components/ui/ZoomDock.tsx` + `ZoomDock.css`
 - [x] **Breadcrumb** — zoom orientation crumbs (Goal › Project › Task). `src/components/ui/Breadcrumb.tsx` + `Breadcrumb.css`
+- [x] **LensSwitch** — segmented control (Work/Me) for sidebar top. `src/components/ui/LensSwitch.tsx` + `LensSwitch.css`
+- [x] **NavItem** — sidebar nav item with icon + active bar + count badge. `src/components/ui/NavItem.tsx` + `NavItem.css`
+- [x] **Icons** — 12 thin-stroke SVG icons (nav + actions). `src/components/ui/icons.tsx`
 - [ ] **Icon** — thin wrapper for SVG icons with size/color props, ensures consistent sizing across the app.
 - [ ] **Toggle/Switch** — teal accent when on, neutral when off.
 
@@ -44,22 +47,22 @@
 > The persistent chrome that frames every authenticated page.
 > Goal: match the `app-shell-whatnow.html` prototype — sidebar with lens switch, icons, active indicator bar, topbar with capture button.
 
-### 1.1 ⬜ Sidebar upgrade
-- [ ] Add **Lens switch** (Work / Me toggle) below brand, matches prototype's `lens` component.
-- [ ] Add **nav item icons** — one SVG per nav item (star, inbox, clock, calendar, dashed-circle, folder, target, book). Use the icons from the prototype.
-- [ ] Add **active indicator bar** — the teal left-edge bar that animates in on the active nav item (prototype: `.nav-item.active::before`).
-- [ ] Add **count badges** — inbox count (amber urgent), today count, project count, goal count.
-- [ ] Add **nav sections** — subtle dividers: "⌡ What Now / Inbox / Today / Upcoming / Someday" then "Projects / Goals" then "Logbook".
-- [ ] Add **user avatar/initials** at sidebar bottom instead of text name.
+### 1.1 ✅ Sidebar upgrade
+- [x] Add **Lens switch** (Work / Me toggle) below brand, matches prototype's `lens` component.
+- [x] Add **nav item icons** — one SVG per nav item (star, inbox, clock, calendar, dashed-circle, folder, target, book). Use the icons from the prototype.
+- [x] Add **active indicator bar** — the teal left-edge bar that animates in on the active nav item (prototype: `.nav-item.active::before`).
+- [x] Add **count badges** — inbox count (amber urgent), today count, project count, goal count. (Hidden on `soon` items until pages exist.)
+- [x] Add **nav sections** — subtle dividers: "⌡ What Now / Inbox / Today / Upcoming / Someday" then "Projects / Goals" then "Logbook".
+- [x] Add **user avatar/initials** at sidebar bottom instead of text name.
 
-### 1.2 ⬜ Topbar
-- [ ] Add topbar to AppShell main area — right-aligned actions.
-- [ ] **Capture button** (`⌘K`) with kbd hint, matches prototype's `.kbd-btn`.
-- [ ] **Theme toggle** icon button (sun/moon) with `⌘D` shortcut.
+### 1.2 ✅ Topbar
+- [x] Add topbar to AppShell main area — right-aligned actions.
+- [x] **Capture button** (`⌘K`) with kbd hint, matches prototype's `.kbd-btn`.
+- [x] **Theme toggle** icon button (sun/moon) with `⌘D` shortcut. (Toggle works; ⌘D shortcut + dark tokens pending.)
 
-### 1.3 ⬜ Sidebar responsive
-- [ ] Collapse sidebar to topbar on mobile (< 768px). Hamburger or horizontal scroll nav.
-- [ ] Sidebar collapsible via keyboard shortcut or toggle button.
+### 1.3 ✅ Sidebar responsive
+- [x] Collapse sidebar to topbar on mobile (< 768px). Horizontal scroll nav.
+- [ ] Sidebar collapsible via keyboard shortcut or toggle button (desktop).
 
 ---
 

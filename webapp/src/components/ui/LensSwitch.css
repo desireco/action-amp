@@ -1,0 +1,61 @@
+@import "../../styles/tokens.css";
+
+/* ============================================================
+   LensSwitch — segmented control (Work / Me)
+   ============================================================ */
+.aa-lens {
+  display: inline-flex;
+  width: 100%;
+  background: var(--aa-surface-muted);
+  border-radius: var(--aa-radius-md);
+  padding: 3px;
+}
+
+.aa-lens__btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--aa-font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: var(--aa-radius-sm);
+  color: var(--aa-text-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition:
+    background 0.2s var(--aa-ease-out),
+    color 0.2s var(--aa-ease-out),
+    box-shadow 0.2s var(--aa-ease-out);
+}
+
+.aa-lens__btn:not(.aa-lens__btn--active):hover {
+  color: var(--aa-text-2);
+}
+
+.aa-lens__btn:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-lens__btn--active {
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-lens__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-lens__btn {
+    transition-duration: 0.01ms !important;
+  }
+}
