@@ -81,7 +81,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <NavItem
             icon={<InboxIcon />}
             label="Inbox"
-            soon
+            active={isActive("/app/inbox")}
+            to="/app/inbox"
             count={4}
             countVariant="urgent"
           />

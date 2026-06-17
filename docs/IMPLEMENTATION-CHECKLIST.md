@@ -100,22 +100,23 @@
 
 ## Phase 3 — Inbox
 
-### 3.1 ⬜ Inbox list page (`/app/inbox`)
-- [ ] List of untriaged items, newest first.
-- [ ] Each row: text + parsed-token chips (date / tag / priority).
-- [ ] Row actions: open, triage (→ review mode), delete.
-- [ ] Header with "Triage" button → opens review mode.
-- [ ] Empty state: "Inbox zero. Capture something with ⌘K."
+### 3.1 ✅ Inbox list page (`/app/inbox`)
+- [x] List of untriaged items, newest first.
+- [x] Each row: text + parsed-token chips (date / tag / priority).
+- [x] Row actions: open, triage (→ review mode), delete.
+- [x] Header with "Triage" button → opens review mode.
+- [x] Empty state: "Inbox zero. Capture something with ⌘K."
 
-### 3.2 ⬜ Inbox Triage page (`/app/inbox/review`)
-- [ ] Tinder-style walkthrough, one item at a time. Based on `triage-tinder.html` prototype.
-- [ ] Card with item text + chips + "captured X ago" meta.
-- [ ] **Dispatch buttons**: Task·Today (⌘1), Project (P), Resource (R), Upcoming (⌘2), Someday (⌘3), Trash (Del).
-- [ ] Exit animations (direction encodes decision — right/left/up/down).
-- [ ] Progress bar: "3 of 7 triaged."
-- [ ] Keyboard shortcuts (1/2/3/P/R/Del + ←/→ to navigate + Esc to close).
+### 3.2 ✅ Inbox Triage page (`/app/inbox/review`)
+- [x] Tinder-style walkthrough, one item at a time. Based on `triage-tinder.html` prototype.
+- [x] Card with item text + chips + "captured X ago" meta.
+- [x] **Dispatch buttons**: Task·Today (1), Project (P), Resource (R), Upcoming (2), Someday (3), Trash (Del).
+- [x] Exit animations (direction encodes decision — right/left/up/down).
+- [x] Progress bar: "1 of 7" → advances on dispatch.
+- [x] Keyboard shortcuts (1/2/3/P/R/Del + Esc to close).
 - [ ] Swipe gestures on mobile (right=Today, left=Someday, up=Project, down=Trash).
-- [ ] Empty state: filled teal circle + "Inbox zero. Go do something."
+- [x] Empty state: filled teal circle + "Inbox zero. Go do something."
+- [x] Reusable components: `DispatchButton`, `TriageCard`
 
 ---
 

@@ -6,9 +6,11 @@ import {
   Card,
   Chip,
   CompletionCircle,
+  DispatchButton,
   LensSwitch,
   ModeDial,
   NavItem,
+  TriageCard,
   WhatNowCard,
   ZoomDock,
   StarIcon,
@@ -47,6 +49,7 @@ const SECTIONS = [
   { id: "icons", label: "Icon Set" },
   { id: "topbar", label: "Topbar & Kbd" },
   { id: "dispatch", label: "Dispatch Buttons" },
+  { id: "triage-card", label: "Triage Card" },
   { id: "progress", label: "Progress Bar" },
   { id: "empty", label: "Empty States" },
   { id: "wn-card", label: "What Now Card" },
@@ -640,43 +643,59 @@ export function DesignSystemPage() {
         <Sec id="dispatch" title="Dispatch Buttons" desc="Triage action buttons — icon + label + sublabel + kbd shortcut. From triage-tinder.html prototype.">
           <Sub h="Primary Dispatch">
             <div className="ds-dispatch-grid">
-              <button className="ds-disp-btn">
-                <div className="ds-disp-btn__icon ds-disp-btn__icon--teal">
-                  <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" /><path d="M8 5v3.5l2 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                </div>
-                <div className="ds-disp-btn__text">
-                  <div className="ds-disp-btn__label">Task · Today</div>
-                  <div className="ds-disp-btn__sub">a quick action, due today</div>
-                </div>
-                <span className="ds-disp-btn__key">1</span>
-              </button>
-              <button className="ds-disp-btn">
-                <div className="ds-disp-btn__icon ds-disp-btn__icon--violet">
-                  <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5" /><path d="M2 6h12" stroke="currentColor" strokeWidth="1.5" /></svg>
-                </div>
-                <div className="ds-disp-btn__text">
-                  <div className="ds-disp-btn__label">Project</div>
-                  <div className="ds-disp-btn__sub">a big outcome, multi-step</div>
-                </div>
-                <span className="ds-disp-btn__key">P</span>
-              </button>
-              <button className="ds-disp-btn ds-disp-btn--full">
-                <div className="ds-disp-btn__icon ds-disp-btn__icon--amber">
-                  <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 13.5V3.5a1 1 0 011-1h5.5L13 5.5v8a1 1 0 01-1 1H4.5a1 1 0 01-1-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /><path d="M9.5 2.5V6h3.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>
-                </div>
-                <div className="ds-disp-btn__text">
-                  <div className="ds-disp-btn__label">Resource</div>
-                  <div className="ds-disp-btn__sub">reference — link or note, filed under a project or goal</div>
-                </div>
-                <span className="ds-disp-btn__key">R</span>
-              </button>
+              <DispatchButton
+                tone="teal"
+                label="Task · Today"
+                sub="a quick action, due today"
+                kbd="1"
+                icon={<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" /><path d="M8 5v3.5l2 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
+              />
+              <DispatchButton
+                tone="violet"
+                label="Project"
+                sub="a big outcome, multi-step"
+                kbd="P"
+                icon={<svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5" /><path d="M2 6h12" stroke="currentColor" strokeWidth="1.5" /></svg>}
+              />
+              <DispatchButton
+                tone="amber"
+                label="Resource"
+                sub="reference — link or note, filed under a project or goal"
+                kbd="R"
+                icon={<svg viewBox="0 0 16 16" fill="none"><path d="M3.5 13.5V3.5a1 1 0 011-1h5.5L13 5.5v8a1 1 0 01-1 1H4.5a1 1 0 01-1-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /><path d="M9.5 2.5V6h3.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>}
+              />
             </div>
           </Sub>
           <Sub h="Secondary Dispatch (Mini)">
             <div className="ds-dispatch-mini-row">
-              <button className="ds-disp-mini">Upcoming<span className="ds-disp-mini__key">2</span></button>
-              <button className="ds-disp-mini">Someday<span className="ds-disp-mini__key">3</span></button>
-              <button className="ds-disp-mini ds-disp-mini--danger">Trash<span className="ds-disp-mini__key">Del</span></button>
+              <DispatchButton mini kbd="2" label="Upcoming" />
+              <DispatchButton mini kbd="3" label="Someday" />
+              <DispatchButton mini danger kbd="Del" label="Trash" />
+            </div>
+          </Sub>
+        </Sec>
+
+        {/* ============================================================
+           TRIAGE CARD — single item during the triage walkthrough
+           ============================================================ */}
+        <Sec id="triage-card" title="Triage Card" desc="A single captured item during the Tinder-style triage walkthrough. Shows text, 'captured X ago' meta, and parsed-token chips. From triage-tinder.html.">
+          <Sub h="Default">
+            <div style={{ maxWidth: 400 }}>
+              <TriageCard
+                body="Email Sarah re: Q3 invoice tomorrow"
+                meta="captured 14 min ago"
+                chips={[
+                  { tone: "date", label: "📅 tomorrow" },
+                  { tone: "priority", label: "★ Important" },
+                ]}
+              />
+            </div>
+          </Sub>
+          <Sub h="Chips Taxonomy">
+            <div className="ds-usage">
+              <p className="ds-usage__p"><strong>date</strong> — teal. Parsed due dates (📅 tomorrow, 📅 Jun 30).</p>
+              <p className="ds-usage__p"><strong>priority</strong> — amber. Importance flags (★ Important).</p>
+              <p className="ds-usage__p"><strong>tag</strong> — violet. Hashtags, mentions, contexts (#work, @resource).</p>
             </div>
           </Sub>
         </Sec>

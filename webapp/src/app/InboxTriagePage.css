@@ -1,0 +1,209 @@
+@import "../styles/tokens.css";
+
+.aa-triage {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 56px - var(--aa-space-3xl) * 2);
+  min-height: calc(100dvh - 56px - var(--aa-space-3xl) * 2);
+}
+
+/* ---- Top row: close + progress ---- */
+.aa-triage__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-triage__close {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--aa-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--aa-text-3);
+  cursor: pointer;
+  transition:
+    background 0.15s var(--aa-ease-out),
+    color 0.15s var(--aa-ease-out);
+}
+
+.aa-triage__close:hover {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text);
+}
+
+.aa-triage__close:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-triage__top-spacer {
+  width: 32px;
+}
+
+.aa-triage__progress {
+  flex: 1;
+  margin: 0 var(--aa-space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.aa-triage__progress-count {
+  font-size: 0.69rem;
+  font-weight: 600;
+  color: var(--aa-text-4);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.aa-triage__progress-count b {
+  color: var(--aa-text-2);
+}
+
+.aa-triage__progress-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--aa-surface-muted);
+  border-radius: var(--aa-radius-full);
+  overflow: hidden;
+}
+
+.aa-triage__progress-fill {
+  height: 100%;
+  background: var(--aa-teal);
+  border-radius: var(--aa-radius-full);
+  transition: width 0.4s var(--aa-ease-out-quart);
+}
+
+/* ---- Title ---- */
+.aa-triage__title {
+  text-align: center;
+  margin: var(--aa-space-lg) 0 var(--aa-space-sm);
+}
+
+.aa-triage__title h1 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--aa-text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.aa-triage__title p {
+  font-size: 0.82rem;
+  color: var(--aa-text-3);
+  margin: 4px 0 0;
+}
+
+/* ---- Stage: card + dispatch ---- */
+.aa-triage__stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--aa-space-xl);
+  padding: var(--aa-space-lg) 0;
+}
+
+/* ---- Primary dispatch grid ---- */
+.aa-triage__dispatch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--aa-space-sm);
+}
+
+/* Make the Resource button span full width */
+.aa-triage__dispatch .aa-disp:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+/* ---- Secondary dispatch row ---- */
+.aa-triage__dispatch-secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+/* ============================================================
+   Empty state — inbox zero
+   ============================================================ */
+.aa-triage-empty {
+  text-align: center;
+  max-width: 380px;
+  margin: 0 auto;
+  padding: var(--aa-space-3xl) 0;
+  animation: aa-triage-fade 0.5s var(--aa-ease-out) both;
+}
+
+@keyframes aa-triage-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.aa-triage-empty__circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  box-shadow: 0 12px 32px var(--aa-teal-tint-shadow);
+  color: var(--aa-surface);
+  margin-bottom: var(--aa-space-lg);
+}
+
+.aa-triage-empty__circle svg {
+  width: 30px;
+  height: 30px;
+}
+
+.aa-triage-empty__title {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--aa-text);
+  margin: 0 0 var(--aa-space-sm);
+}
+
+.aa-triage-empty__text {
+  font-size: 0.95rem;
+  color: var(--aa-text-3);
+  margin: 0 auto var(--aa-space-xl);
+  max-width: 28ch;
+  line-height: 1.5;
+}
+
+.aa-triage-empty__actions {
+  display: flex;
+  gap: var(--aa-space-sm);
+  justify-content: center;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 480px) {
+  .aa-triage__dispatch {
+    grid-template-columns: 1fr;
+  }
+  .aa-triage__dispatch .aa-disp:nth-child(3) {
+    grid-column: auto;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-triage__progress-fill,
+  .aa-triage-empty {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

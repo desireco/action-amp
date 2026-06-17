@@ -1,6 +1,8 @@
 import { action, api, app, page, query, route } from "@wasp.sh/spec";
 import { App } from "./src/App" with { type: "ref" };
 import { WhatNowPage } from "./src/app/WhatNowPage" with { type: "ref" };
+import { InboxPage } from "./src/app/InboxPage" with { type: "ref" };
+import { InboxTriagePage } from "./src/app/InboxTriagePage" with { type: "ref" };
 import { SettingsPage } from "./src/app/SettingsPage" with { type: "ref" };
 import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
@@ -64,6 +66,8 @@ export default app({
   spec: [
     route("LandingRoute", "/", page(LandingPage, { authRequired: false })),
     route("AppRoute", "/app", page(WhatNowPage)),
+    route("InboxRoute", "/app/inbox", page(InboxPage)),
+    route("InboxTriageRoute", "/app/inbox/review", page(InboxTriagePage)),
     route("SettingsRoute", "/app/settings", page(SettingsPage)),
     route("BillingRoute", "/app/settings/billing", page(BillingPage)),
     route(

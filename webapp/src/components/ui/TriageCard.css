@@ -1,0 +1,82 @@
+@import "../../styles/tokens.css";
+
+/* ============================================================
+   TriageCard — single item during the triage walkthrough
+   ============================================================ */
+.aa-triage-card {
+  width: 100%;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-xl);
+  padding: var(--aa-space-xl) var(--aa-space-lg);
+  box-shadow: var(--aa-shadow-lg);
+  text-align: center;
+  transition:
+    opacity 0.32s var(--aa-ease-out),
+    transform 0.42s var(--aa-ease-out),
+    box-shadow 0.3s var(--aa-ease-out);
+  will-change: transform, opacity;
+}
+
+.aa-triage-card__body {
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--aa-text);
+  line-height: 1.35;
+  margin: 0 0 var(--aa-space-md);
+}
+
+.aa-triage-card__meta {
+  font-size: 0.75rem;
+  color: var(--aa-text-4);
+  margin: 0 0 var(--aa-space-md);
+}
+
+.aa-triage-card__chips {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ---- Exit animations: direction encodes the decision ---- */
+.aa-triage-card--exit-right {
+  opacity: 0;
+  transform: translateX(120px) rotate(8deg);
+}
+
+.aa-triage-card--exit-left {
+  opacity: 0;
+  transform: translateX(-120px) rotate(-8deg);
+}
+
+.aa-triage-card--exit-down {
+  opacity: 0;
+  transform: translateY(120px) scale(0.9);
+}
+
+.aa-triage-card--exit-up {
+  opacity: 0;
+  transform: translateY(-80px) scale(0.95);
+}
+
+/* ---- Enter prep (next card coming in from the right) ---- */
+.aa-triage-card--entering {
+  opacity: 0;
+  transform: translateX(40px) scale(0.98);
+}
+
+/* ---- Dispatched confirm pulse ---- */
+.aa-triage-card--dispatched {
+  box-shadow:
+    0 0 0 4px var(--aa-teal-soft-strong),
+    var(--aa-shadow-lg);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-triage-card {
+    transition-duration: 0.01ms !important;
+  }
+}
