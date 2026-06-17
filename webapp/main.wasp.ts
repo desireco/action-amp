@@ -8,6 +8,7 @@ import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
 import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
 import { getTask } from "./src/tasks/operations" with { type: "ref" };
+import { ensureOnboarded, getAppData } from "./src/onboarding/operations" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
@@ -99,6 +100,8 @@ export default app({
       page(EmailVerificationPage),
     ),
     query(getTask, { entities: ["Task"], auth: true }),
+    query(getAppData, { entities: ["Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
+    action(ensureOnboarded, { entities: ["Lens"], auth: true }),
     query(getBillingStatus, { entities: ["Payment"], auth: true }),
     action(createCheckoutSession, { entities: ["User"], auth: true }),
     api("POST", "/webhooks/stripe", stripeWebhook, {

@@ -10,19 +10,36 @@ generator client {
 // Use Prisma Schema file to define your entities: https://www.prisma.io/docs/concepts/components/prisma-schema.
 // Run `wasp db migrate-dev` in the CLI to create the database tables,
 // then run `wasp db studio` to open Prisma Studio and view your db models.
+//
+// DATA MODEL AUTHORITY: docs/DATA-MODEL.md (v3). Hierarchy:
+//   Lens → Goal → Project → {Task, Resource}
+// Key constraints:
+//   - Every Goal/Project/standalone Task belongs to exactly one Lens.
+//   - Tasks can exist WITHOUT a Project ("General", scoped per Lens).
+//   - Projects can exist WITHOUT a Goal (standalone).
+//   - Projects contain Tasks + Resources only (NEVER nested Projects).
+//   - Every Resource is filed under exactly one Project OR Goal (no loose resources).
+//   - Task defaults: size=M, priority=Normal, status=Someday (triage never auto-clutters Today).
+
 model User {
   id        String @id @default(uuid())
   firstName String
   lastName  String
 
-  tasks    Task[]
-  tags     Tag[]
-  payments Payment[]
+  // Work-tracker entities
+  lenses     Lens[]
+  goals      Goal[]
+  projects   Project[]
+  tasks      Task[]
+  resources  Resource[]
+  inboxItems InboxItem[]
+  tags       Tag[]
 
   // ---- Billing (Stripe) ----
   // Entitlement state. Mutated ONLY by the Stripe webhook (the source of
   // truth) — never by client actions. See docs/BILLING-INTEGRATION.md.
-  plan             Plan      @default(FREE)
+  payments        Payment[]
+  plan            Plan    @default(FREE)
   stripeCustomerId String?   // set on first checkout; links to the Stripe customer
   planRenewsAt     DateTime? // null for FREE + FOUNDER (never expires)
 }
@@ -66,25 +83,212 @@ enum PaymentStatus {
   REFUNDED
 }
 
-model Task {
-  id          String   @id @default(uuid())
-  description String
-  isDone      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+// ============================================================
+// Lens — the top-level scoping switch (Work / Me by default)
+// ============================================================
+// Defaults seeded for every user: Work + Me. See src/onboarding/ensureLenses.ts
+model Lens {
+  id        String   @id @default(uuid())
+  name      String // "Work", "Me", (Phase 2: user-defined)
+  createdAt DateTime @default(now())
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
-  tags Tag[]
+  goals    Goal[]
+  projects Project[]
+  tasks    Task[] // standalone tasks directly in this lens
+
+  @@unique([userId, name]) // one user can't have two lenses with the same name
+}
+
+// ============================================================
+// Goal — the organizing layer (replaces PARA's Areas)
+// ============================================================
+// Active, outcome-oriented ("Run a 10k"). Projects + standalone Tasks link to a
+// Goal to express WHY they matter. Standalone projects/tasks (goalId = null) are allowed.
+model Goal {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  isDone      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  lens   Lens   @relation(fields: [lensId], references: [id], onDelete: Cascade)
+  lensId String
+
+  projects  Project[]
+  tasks     Task[]     // standalone tasks linked to this goal
+  resources Resource[] // resources filed directly under the goal
+
+  @@unique([userId, name]) // unique goal names per user
+}
+
+// ============================================================
+// Project — an outcome needing >1 step
+// ============================================================
+// Container for Tasks + Resources only. NEVER nested. goalId optional
+// (projects can exist without a goal).
+model Project {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  dueDate     DateTime?
+  isDone      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  lens   Lens   @relation(fields: [lensId], references: [id], onDelete: Cascade)
+  lensId String
+
+  goal   Goal?  @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  goalId String?
+
+  tasks     Task[]
+  resources Resource[]
+}
+
+// ============================================================
+// Task — the atomic action (THE focus candidate)
+// ============================================================
+// projectId optional: a Task with no Project is "General" in its Lens.
+// content: longer-form notes / markdown body for the task.
+// updates: an activity log of status notes / progress over time.
+model Task {
+  id          String   @id @default(uuid())
+  description String // the title — what to do
+  content     String? // longer notes / markdown body
+  isDone      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  // ---- Focus attributes (read by the What Now engine) ----
+  priority Priority   @default(NORMAL) // primary sort key
+  size     Size       @default(M)      // secondary signal + XL break-down nudge
+  status   TaskStatus @default(SOMEDAY) // TODAY | UPCOMING | SOMEDAY (pre-filters focus)
+  dueDate  DateTime?
+  order    Int        @default(0) // manual sort order within a list
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  lens   Lens   @relation(fields: [lensId], references: [id], onDelete: Cascade)
+  lensId String
+
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId String?
+
+  goal   Goal?  @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  goalId String?
+
+  tags   Tag[]
+  updates TaskUpdate[] // activity log / progress notes
+}
+
+// Primary sort key for the focus engine. Important > Normal > Low.
+enum Priority {
+  LOW
+  NORMAL
+  IMPORTANT
+}
+
+// Secondary signal + nudge. XL prompts a break-down (→ Project or subtasks).
+enum Size {
+  S
+  M
+  L
+  XL
+}
+
+// The post-triage "where it lives" bucket. INBOX is handled by InboxItem (pre-triage).
+// Defaults to SOMEDAY so triage never auto-clutters Today.
+enum TaskStatus {
+  SOMEDAY
+  UPCOMING
+  TODAY
+}
+
+// ============================================================
+// TaskUpdate — an activity-log entry on a Task
+// ============================================================
+// A time-ordered list of progress notes / status updates. Think Linear's
+// activity feed or a lightweight changelog per task. Deleted with the task.
+model TaskUpdate {
+  id        String   @id @default(uuid())
+  body      String // the update / note text (markdown ok)
+  createdAt DateTime @default(now())
+
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId String
+}
+
+// ============================================================
+// Resource — reference material (links + notes), NOT an action
+// ============================================================
+// Filed under exactly one Project OR Goal (no loose resources). Exactly one of
+// projectId/goalId must be set; the other null. Enforced at the app layer;
+// both FKs are nullable at the DB level to support either parent.
+model Resource {
+  id        String   @id @default(uuid())
+  title     String
+  url       String?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String?
+
+  goal   Goal?  @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  goalId String?
+}
+
+// ============================================================
+// InboxItem — universal inbox, polymorphic pre-triage
+// ============================================================
+// Raw captured text + the NL parser's guesses. Triage commits these into a
+// concrete type (Task/Project/Resource) and DELETES the InboxItem (the
+// transformed entity IS the record). See docs/DATA-MODEL.md §9 (decided: delete).
+model InboxItem {
+  id        String   @id @default(uuid())
+  text      String // raw captured text
+  status    InboxItemStatus @default(UNPROCESSED)
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  // ---- Parsed-token guesses from the NL parser (nullable; assigned at triage) ----
+  parsedDate     DateTime?
+  parsedPriority Priority?
+  parsedSize     Size?
+  parsedTags     String[] // raw tag strings: ["#work", "@phone"]
+  parsedProject  String?  // guess at project name (resolved to projectId at triage)
+}
+
+enum InboxItemStatus {
+  UNPROCESSED
+  // (no PROCESSED state — triaged items are deleted, not marked processed)
 }
 
 model Tag {
   id    String @id @default(uuid())
-  name  String @unique
+  name  String
   color String
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
   tasks Task[]
+
+  @@unique([userId, name]) // tags are per-user (two users can share a tag name)
 }

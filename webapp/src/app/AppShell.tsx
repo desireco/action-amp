@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { useAuth, logout } from "wasp/client/auth";
+import { useQuery, ensureOnboarded, getAppData } from "wasp/client/operations";
 import {
   BrandMark,
   LensSwitch,
@@ -33,8 +34,24 @@ import "./AppShell.css";
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
   const location = useLocation();
-  const [lens, setLens] = useState<"work" | "me">("work");
+  const [lens, setLens] = useState<string>("Work");
   const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  // Idempotent: ensures the user has the default Work/Me lenses (covers both
+  // existing users and new signups). Runs once per app load.
+  useEffect(() => {
+    ensureOnboarded();
+  }, [ensureOnboarded]);
+
+  // Shell data: lenses (sidebar switch + query scoping) + nav counts.
+  const { data: appData } = useQuery(getAppData);
+  const lenses = appData?.lenses ?? [];
+  const counts = appData?.counts ?? { inbox: 0, today: 0, projects: 0, goals: 0 };
+
+  // Keep the active lens valid once lenses load; default to the first.
+  const activeLens = lenses.find((l) => l.name === lens) ?? lenses[0];
+  const activeLensName = activeLens?.name ?? lens;
+  void activeLens; // (activeLens.id is the scope we'll pass to Phase 4 queries)
 
   const isActive = (to: string) =>
     to === "/app" ? location.pathname === "/app" : location.pathname.startsWith(to);
@@ -61,12 +78,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
 
         <LensSwitch
-          options={[
-            { id: "work", label: "Work" },
-            { id: "me", label: "Me" },
-          ]}
-          active={lens}
-          onSelect={(id) => setLens(id as "work" | "me")}
+          options={lenses.length > 0 ? lenses.map((l) => ({ id: l.name, label: l.name })) : [{ id: "Work", label: "Work" }, { id: "Me", label: "Me" }]}
+          active={activeLensName}
+          onSelect={(id) => setLens(id)}
           className="aa-app-lens"
         />
 
@@ -83,18 +97,18 @@ export function AppShell({ children }: { children: ReactNode }) {
             label="Inbox"
             active={isActive("/app/inbox")}
             to="/app/inbox"
-            count={4}
+            count={counts.inbox}
             countVariant="urgent"
           />
-          <NavItem icon={<ClockIcon />} label="Today" soon count={3} />
+          <NavItem icon={<ClockIcon />} label="Today" soon count={counts.today} />
           <NavItem icon={<CalendarIcon />} label="Upcoming" soon />
           <NavItem icon={<SomedayIcon />} label="Someday" soon />
         </nav>
 
         {/* Section 2 — structure */}
         <nav className="aa-app-nav">
-          <NavItem icon={<ProjectsIcon />} label="Projects" soon count={6} />
-          <NavItem icon={<GoalsIcon />} label="Goals" soon count={3} />
+          <NavItem icon={<ProjectsIcon />} label="Projects" soon count={counts.projects} />
+          <NavItem icon={<GoalsIcon />} label="Goals" soon count={counts.goals} />
         </nav>
 
         {/* Section 3 — history */}

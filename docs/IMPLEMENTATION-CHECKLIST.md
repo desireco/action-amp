@@ -123,6 +123,13 @@
 ## Phase 4 — List Views
 
 > Simpler list pages — grouped lists with completion circles.
+>
+> **Foundation done:** the data model (`docs/DATA-MODEL.md` v3) is implemented:
+> Lens → Goal → Project → {Task, Resource}, plus InboxItem + TaskUpdate.
+> Task has `content` (markdown body) + `updates[]` activity log. Tasks can exist
+> without projects; projects without goals. Default Work/Me lenses are seeded
+> via `ensureOnboarded` on every app load (idempotent). Migration:
+> `20260617203913_add_lens_goals_projects_resources_inbox`.
 
 ### 4.1 ⬜ Today page (`/app/today`)
 - [ ] Tasks due today/overdue, grouped by Goal.
