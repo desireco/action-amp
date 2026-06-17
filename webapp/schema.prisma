@@ -11,11 +11,59 @@ generator client {
 // Run `wasp db migrate-dev` in the CLI to create the database tables,
 // then run `wasp db studio` to open Prisma Studio and view your db models.
 model User {
-  id       String @id @default(uuid())
-  username String
+  id        String @id @default(uuid())
+  firstName String
+  lastName  String
 
-  tasks Task[]
-  tags  Tag[]
+  tasks    Task[]
+  tags     Tag[]
+  payments Payment[]
+
+  // ---- Billing (Stripe) ----
+  // Entitlement state. Mutated ONLY by the Stripe webhook (the source of
+  // truth) — never by client actions. See docs/BILLING-INTEGRATION.md.
+  plan             Plan      @default(FREE)
+  stripeCustomerId String?   // set on first checkout; links to the Stripe customer
+  planRenewsAt     DateTime? // null for FREE + FOUNDER (never expires)
+}
+
+// A user's entitlement tier. FOUNDER = early adopter, PRO forever, no renewal.
+enum Plan {
+  FREE
+  PRO
+  FOUNDER
+}
+
+// Our own record of every payment — an audit trail independent of Stripe
+// availability, and what we render on the billing page's history table.
+// Created by the webhook handler (Phase 2) from verified Stripe events.
+model Payment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  // Stripe references (for reconciliation / dedupe)
+  stripePaymentIntentId  String? @unique
+  stripeInvoiceId        String? @unique
+  stripeCheckoutSessionId String?
+
+  // What they paid and what it granted
+  amount      Int    // in cents (Stripe convention)
+  currency    String @default("usd")
+  plan        Plan   // the plan this payment granted (PRO / FOUNDER)
+  description String // human label: "Pro Yearly", "Founder", etc.
+
+  status   PaymentStatus @default(PENDING)
+  paidAt   DateTime?
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
 }
 
 model Task {

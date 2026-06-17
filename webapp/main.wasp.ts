@@ -1,5 +1,14 @@
-import { app, page, route } from "@wasp.sh/spec";
+import { action, api, app, page, query, route } from "@wasp.sh/spec";
 import { App } from "./src/App" with { type: "ref" };
+import { WhatNowPage } from "./src/app/WhatNowPage" with { type: "ref" };
+import { SettingsPage } from "./src/app/SettingsPage" with { type: "ref" };
+import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
+import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
+import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
+import { getTask } from "./src/tasks/operations" with { type: "ref" };
+import { getBillingStatus, createCheckoutSession } from "./src/billing/operations" with { type: "ref" };
+import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
+import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
 import { LoginPage } from "./src/auth/email/LoginPage" with { type: "ref" };
 import { PasswordResetPage } from "./src/auth/email/PasswordResetPage" with { type: "ref" };
@@ -38,7 +47,7 @@ export default app({
         },
       },
     },
-    onAuthSucceededRedirectTo: "/",
+    onAuthSucceededRedirectTo: "/app",
     onAuthFailedRedirectTo: "/login",
   },
   emailSender: {
@@ -53,6 +62,15 @@ export default app({
   },
   spec: [
     route("LandingRoute", "/", page(LandingPage, { authRequired: false })),
+    route("AppRoute", "/app", page(WhatNowPage)),
+    route("SettingsRoute", "/app/settings", page(SettingsPage)),
+    route("BillingRoute", "/app/settings/billing", page(BillingPage)),
+    route(
+      "PreferencesRoute",
+      "/app/settings/preferences",
+      page(PreferencesPage),
+    ),
+    route("TaskDetailRoute", "/app/tasks/:id", page(TaskDetailPage)),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
     route("AboutRoute", "/about", page(AboutPage, { authRequired: false })),
     route(
@@ -74,5 +92,12 @@ export default app({
       "/email-verification",
       page(EmailVerificationPage),
     ),
+    query(getTask, { entities: ["Task"], auth: true }),
+    query(getBillingStatus, { entities: ["Payment"], auth: true }),
+    action(createCheckoutSession, { entities: ["User"], auth: true }),
+    api("POST", "/webhooks/stripe", stripeWebhook, {
+      entities: ["User", "Payment"],
+      middlewareConfigFn: stripeWebhookMiddleware,
+    }),
   ],
 });
