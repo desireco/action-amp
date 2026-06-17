@@ -38,13 +38,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   // Idempotent: ensures the user has the default Work/Me lenses (covers both
-  // existing users and new signups). Runs once per app load.
+  // existing users and new signups). Runs once per app load — but ONLY when
+  // authenticated, so the /login redirect path doesn't 500 these ops.
   useEffect(() => {
-    ensureOnboarded();
-  }, [ensureOnboarded]);
+    if (user) ensureOnboarded();
+  }, [user, ensureOnboarded]);
 
   // Shell data: lenses (sidebar switch + query scoping) + nav counts.
-  const { data: appData } = useQuery(getAppData);
+  // Disabled until authenticated (avoids 'Not authenticated' 500s on the
+  // pre-auth render while Wasp resolves the session).
+  const { data: appData } = useQuery(getAppData, undefined, { enabled: !!user });
   const lenses = appData?.lenses ?? [];
   const counts = appData?.counts ?? { inbox: 0, today: 0, projects: 0, goals: 0 };
 
