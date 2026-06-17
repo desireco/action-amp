@@ -398,6 +398,8 @@ export function LandingPage() {
           <Link to="/about">About</Link>
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
+          <Link to="/login">Log in</Link>
+          <Link to="/signup">Sign up</Link>
         </div>
         <div className="aa-footer-copy">© 2026 ActionAmp</div>
       </footer>
