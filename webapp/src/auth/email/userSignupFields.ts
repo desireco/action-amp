@@ -1,13 +1,16 @@
 import { defineUserSignupFields } from "wasp/server/auth";
 
 export const userSignupFields = defineUserSignupFields({
-  username: (data) => {
-    if (typeof data.username !== "string") {
-      throw new Error("Username is required.");
+  firstName: (data) => {
+    if (typeof data.firstName !== "string" || data.firstName.trim() === "") {
+      throw new Error("First name is required.");
     }
-    if (data.username.length < 6) {
-      throw new Error("Username must be at least 6 characters long.");
+    return data.firstName.trim();
+  },
+  lastName: (data) => {
+    if (typeof data.lastName !== "string" || data.lastName.trim() === "") {
+      throw new Error("Last name is required.");
     }
-    return data.username;
+    return data.lastName.trim();
   },
 });

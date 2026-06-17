@@ -1,0 +1,64 @@
+@import "../styles/tokens.css";
+
+.aa-task {
+  max-width: 620px;
+}
+
+.aa-task-back {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: var(--aa-text-3);
+  margin-bottom: var(--aa-space-lg);
+}
+
+.aa-task-back:hover {
+  color: var(--aa-teal-cta);
+}
+
+.aa-task-check {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--aa-radius-full);
+  border: 2px solid var(--aa-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-task-check.done {
+  background: var(--aa-teal);
+  border-color: var(--aa-teal);
+}
+
+.aa-task-check svg {
+  opacity: 0;
+}
+
+.aa-task-check.done svg {
+  opacity: 1;
+}
+
+.aa-task-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--aa-text);
+  margin: 0 0 var(--aa-space-sm);
+}
+
+.aa-task-meta {
+  font-size: 0.9rem;
+  color: var(--aa-text-3);
+  margin: 0;
+}
+
+.aa-task-state {
+  font-size: 1rem;
+  color: var(--aa-text-3);
+}
+
+.aa-task-err {
+  color: var(--aa-rose-text);
+}

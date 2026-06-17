@@ -1,11 +1,36 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
+import "./auth.css";
 
-export function AuthLayout({ children }: { children: ReactNode }) {
+interface AuthLayoutProps {
+  title: string;
+  subtitle?: string;
+  children: ReactNode;
+  footer?: ReactNode;
+}
+
+/**
+ * ActionAmp auth shell — a calm, centered card with the brand mark and a
+ * direct, on-voice headline. Wraps Wasp's themed auth forms.
+ */
+export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   return (
-    <div className="flex justify-center">
-      {/* Auth UI has margin-top on title, so we lower the top padding */}
-      <div className="card mt-32 h-fit w-full max-w-md px-8 py-10 pt-4">
+    <div className="aa-auth">
+      <div className="aa-auth-card">
+        <div className="aa-auth-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M3.5 8.5l3 3 6-7"
+              stroke="white"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        <h1 className="aa-auth-title">{title}</h1>
+        {subtitle && <p className="aa-auth-subtitle">{subtitle}</p>}
         {children}
+        {footer && <div className="aa-auth-footer">{footer}</div>}
       </div>
     </div>
   );

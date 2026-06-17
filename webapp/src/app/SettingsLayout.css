@@ -1,0 +1,93 @@
+@import "../styles/tokens.css";
+
+.aa-settings-hub {
+  max-width: 680px;
+}
+
+.aa-settings-back {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: var(--aa-text-3);
+  margin-bottom: var(--aa-space-lg);
+}
+
+.aa-settings-back:hover {
+  color: var(--aa-teal-cta);
+}
+
+.aa-settings-h {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--aa-text);
+  margin: 0 0 var(--aa-space-lg);
+}
+
+/* ---- sub-nav tabs ---- */
+.aa-settings-tabs {
+  display: flex;
+  gap: var(--aa-space-xs);
+  border-bottom: 1px solid var(--aa-border);
+  margin-bottom: var(--aa-space-xl);
+}
+
+.aa-settings-tab {
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--aa-text-3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition:
+    color var(--aa-dur-base) var(--aa-ease-out),
+    border-color var(--aa-dur-base) var(--aa-ease-out);
+}
+
+.aa-settings-tab:hover {
+  color: var(--aa-text);
+}
+
+.aa-settings-tab.active {
+  color: var(--aa-teal-cta);
+  border-bottom-color: var(--aa-teal-cta);
+  font-weight: 600;
+}
+
+.aa-settings-body {
+  /* each page styles its own sections */
+}
+
+/* ---- Shared settings section styles (used by Preferences stubs) ---- */
+.aa-settings-section {
+  border-top: 1px solid var(--aa-border);
+  padding: var(--aa-space-lg) 0;
+}
+
+.aa-settings-sh {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  margin: 0 0 var(--aa-space-md);
+}
+
+.aa-settings-note {
+  font-size: 0.9rem;
+  color: var(--aa-text-3);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.aa-settings-soon .aa-settings-sh em {
+  font-style: normal;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.7rem;
+  color: var(--aa-text-4);
+  background: var(--aa-surface-muted-2);
+  padding: 1px 6px;
+  border-radius: var(--aa-radius-xs);
+  margin-left: var(--aa-space-sm);
+}

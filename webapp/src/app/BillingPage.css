@@ -1,0 +1,303 @@
+@import "../styles/tokens.css";
+
+/* ============================================================
+   Section spacing
+   ============================================================ */
+.aa-billing-section {
+  margin-bottom: var(--aa-space-2xl);
+}
+
+.aa-billing-section:last-child {
+  margin-bottom: 0;
+}
+
+/* ============================================================
+   Headings
+   ============================================================ */
+.aa-billing-heading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--aa-text);
+  margin: 0 0 var(--aa-space-lg);
+}
+
+/* ============================================================
+   Checkout result banners
+   ============================================================ */
+.aa-billing-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  border-radius: var(--aa-radius-sm);
+}
+
+.aa-billing-banner svg {
+  flex-shrink: 0;
+}
+
+.aa-billing-banner-success {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+
+.aa-billing-banner-muted {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text-3);
+}
+
+/* ============================================================
+   Active plan state
+   ============================================================ */
+.aa-billing-active {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-lg);
+  padding: var(--aa-space-lg);
+  background: var(--aa-surface-muted);
+  border-radius: var(--aa-radius-md);
+}
+
+.aa-billing-active-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+
+.aa-billing-active-renewal {
+  font-size: 0.85rem;
+  color: var(--aa-text-3);
+  margin: var(--aa-space-xs) 0 0;
+}
+
+.aa-billing-manage {
+  background: none;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--aa-text-2);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition:
+    border-color var(--aa-dur-base) var(--aa-ease-out),
+    color var(--aa-dur-base) var(--aa-ease-out);
+}
+
+.aa-billing-manage:hover:not(:disabled) {
+  border-color: var(--aa-teal-cta);
+  color: var(--aa-teal-cta);
+}
+
+.aa-billing-manage:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Current tier line (free users)
+   ============================================================ */
+.aa-billing-current-tier {
+  font-size: 0.92rem;
+  color: var(--aa-text-3);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.aa-billing-current-tier strong {
+  color: var(--aa-text);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Plan picker grid
+   ============================================================ */
+.aa-billing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--aa-space-sm);
+}
+
+/* ---- Individual plan card ---- */
+.aa-billing-plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--aa-space-lg);
+  background: var(--aa-surface);
+  border: 1.5px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--aa-font);
+  transition:
+    border-color var(--aa-dur-base) var(--aa-ease-out),
+    box-shadow var(--aa-dur-base) var(--aa-ease-out);
+}
+
+.aa-billing-plan:hover:not(:disabled) {
+  border-color: var(--aa-border-strong);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-billing-plan:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* Recommended / highlighted plan */
+.aa-billing-plan.recommended {
+  border-color: var(--aa-teal-cta);
+  box-shadow: 0 0 0 1px var(--aa-teal-cta), var(--aa-shadow-sm);
+}
+
+.aa-billing-plan.recommended:hover:not(:disabled) {
+  box-shadow: 0 0 0 1px var(--aa-teal-cta), var(--aa-shadow-md);
+}
+
+/* Reserve badge space on every card so content aligns */
+.aa-billing-plan::before {
+  content: "";
+  display: block;
+  height: 20px;
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-billing-plan-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--aa-teal-cta);
+  background: var(--aa-teal-soft);
+  padding: 2px 7px;
+  border-radius: var(--aa-radius-xs);
+  margin-bottom: var(--aa-space-md);
+  /* Overlay the reserved space */
+  margin-top: -20px;
+}
+
+/* Price block */
+.aa-billing-plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-xs);
+  margin-bottom: var(--aa-space-sm);
+}
+
+.aa-billing-plan-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--aa-text);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.aa-billing-plan-period {
+  font-size: 0.85rem;
+  color: var(--aa-text-3);
+}
+
+/* Plan name */
+.aa-billing-plan-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--aa-text);
+  margin-bottom: 2px;
+}
+
+/* Pitch line */
+.aa-billing-plan-pitch {
+  font-size: 0.8rem;
+  color: var(--aa-text-3);
+  line-height: 1.4;
+  margin-bottom: var(--aa-space-lg);
+}
+
+/* CTA at bottom */
+.aa-billing-plan-cta {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--aa-teal-cta);
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+
+.aa-billing-plan:hover:not(:disabled) .aa-billing-plan-cta {
+  color: var(--aa-teal-cta-hover);
+}
+
+/* ============================================================
+   State / empty messages
+   ============================================================ */
+.aa-billing-empty,
+.aa-billing-state {
+  font-size: 0.9rem;
+  color: var(--aa-text-3);
+  margin: 0;
+}
+
+/* ============================================================
+   Payment history table
+   ============================================================ */
+.aa-billing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.aa-billing-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  padding: var(--aa-space-sm) var(--aa-space-sm);
+  border-bottom: 1px solid var(--aa-border);
+}
+
+.aa-billing-table td {
+  padding: var(--aa-space-sm);
+  border-bottom: 1px solid var(--aa-border);
+  color: var(--aa-text-2);
+}
+
+.aa-billing-table tr:last-child td {
+  border-bottom: none;
+}
+
+.aa-billing-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: var(--aa-radius-full);
+  text-transform: capitalize;
+}
+
+.aa-billing-pill-succeeded {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+
+.aa-billing-pill-pending {
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-3);
+}
+
+.aa-billing-pill-failed,
+.aa-billing-pill-refunded {
+  background: var(--aa-rose-soft);
+  color: var(--aa-rose-text);
+}

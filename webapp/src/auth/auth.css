@@ -1,0 +1,155 @@
+@import "../styles/tokens.css";
+
+/*
+ * ActionAmp auth pages (login / signup / reset / verify).
+ * Wraps Wasp's auth forms in a calm Things-DNA card and rethemes them.
+ *
+ * The Wasp forms are driven by CSS variables (set via the `appearance` prop,
+ * see ./appearance.ts) plus a few hardcoded values we override below. The
+ * attribute/type selectors here outrank the forms' hashed CSS-module classes
+ * (single-class specificity) + their !important flags.
+ */
+
+/* ---- Full-screen calm stage ---- */
+.aa-auth {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--aa-space-2xl) var(--aa-space-lg);
+  background: var(--aa-bg);
+}
+
+/* ---- Card ---- */
+.aa-auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  box-shadow: var(--aa-shadow-md);
+  padding: var(--aa-space-2xl) var(--aa-space-xl);
+}
+
+/* ---- Brand mark ---- */
+.aa-auth-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--aa-radius-md);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px var(--aa-teal-tint-shadow);
+  margin: 0 auto var(--aa-space-lg);
+}
+
+/* ---- Headline ---- */
+.aa-auth-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--aa-text);
+  margin: 0;
+}
+
+.aa-auth-subtitle {
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--aa-text-3);
+  margin: var(--aa-space-sm) 0 0;
+}
+
+/* ---- Footer links ---- */
+.aa-auth-footer {
+  margin-top: var(--aa-space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--aa-text-3);
+}
+
+.aa-auth-footer a {
+  color: var(--aa-teal-cta);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.aa-auth-footer a:hover {
+  color: var(--aa-teal-cta-hover);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   Wasp form overrides (scoped to our card)
+   ============================================================ */
+
+/* Hide the form's built-in title — we render our own */
+.aa-auth-card h2 {
+  display: none !important;
+}
+
+/* Labels */
+.aa-auth-card label {
+  color: var(--aa-text-2) !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  margin-bottom: 6px !important;
+}
+
+/* Inputs — beat the hardcoded #f8f4ff purple bg + pure-black shadow */
+.aa-auth-card input[type="email"],
+.aa-auth-card input[type="password"],
+.aa-auth-card input[type="text"] {
+  background-color: var(--aa-surface) !important;
+  border: 1px solid var(--aa-border-strong) !important;
+  border-radius: var(--aa-radius-sm) !important;
+  padding: 10px 12px !important;
+  font-size: 0.95rem !important;
+  line-height: 1.4 !important;
+  color: var(--aa-text) !important;
+  box-shadow: none !important;
+  transition:
+    border-color var(--aa-dur-base) var(--aa-ease-out),
+    box-shadow var(--aa-dur-base) var(--aa-ease-out) !important;
+}
+
+.aa-auth-card input[type="email"]:focus,
+.aa-auth-card input[type="password"]:focus,
+.aa-auth-card input[type="text"]:focus {
+  border-color: var(--aa-teal) !important;
+  box-shadow: 0 0 0 3px var(--aa-teal-soft) !important;
+  outline: none !important;
+}
+
+.aa-auth-card input::placeholder {
+  color: var(--aa-text-4) !important;
+}
+
+/* Submit button — color comes from --color-brand vars (see appearance.ts);
+   refine the shape only */
+.aa-auth-card button[type="submit"] {
+  border-radius: var(--aa-radius-sm) !important;
+  padding: 11px 14px !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 480px) {
+  .aa-auth {
+    padding: var(--aa-space-lg) var(--aa-space-md);
+  }
+  .aa-auth-card {
+    padding: var(--aa-space-xl) var(--aa-space-lg);
+    border-radius: var(--aa-radius-lg);
+  }
+}

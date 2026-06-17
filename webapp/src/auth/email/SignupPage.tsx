@@ -1,34 +1,40 @@
 import { Link } from "react-router";
 import { SignupForm } from "wasp/client/auth";
 import { AuthLayout } from "../AuthLayout";
+import { aaAuthAppearance } from "../appearance";
 
 export function SignupPage() {
   return (
-    <AuthLayout>
+    <AuthLayout
+      title="Make a start."
+      subtitle="Capture less. Do more."
+      footer={
+        <span>
+          Already have an account? <Link to="/login">Log in</Link>
+        </span>
+      }
+    >
       <SignupForm
+        {...aaAuthAppearance}
         additionalFields={[
           {
-            name: "username",
+            name: "firstName",
             type: "input",
-            label: "Username",
+            label: "First name",
             validations: {
-              required: "Username is required",
-              minLength: {
-                value: 6,
-                message: "Username must be at least 6 characters long",
-              },
+              required: "First name is required",
+            },
+          },
+          {
+            name: "lastName",
+            type: "input",
+            label: "Last name",
+            validations: {
+              required: "Last name is required",
             },
           },
         ]}
       />
-      <br />
-      <span className="text-sm font-medium text-neutral-900">
-        Already have an account?{" "}
-        <Link to="/login" className="font-semibold underline">
-          Go to login
-        </Link>
-        .
-      </span>
     </AuthLayout>
   );
 }
