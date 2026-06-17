@@ -1,0 +1,79 @@
+@import "../../styles/tokens.css";
+
+/* ============================================================
+   ModeDial — bottom-center persistent nav
+   ============================================================ */
+.aa-dial {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  padding: 5px;
+  border-radius: var(--aa-radius-full);
+  box-shadow: var(--aa-shadow-md);
+}
+
+.aa-dial__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border-radius: var(--aa-radius-full);
+  font-family: var(--aa-font);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--aa-text-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition:
+    background 0.25s var(--aa-ease-out),
+    color 0.25s var(--aa-ease-out);
+}
+
+.aa-dial__btn:hover {
+  color: var(--aa-text-2);
+}
+
+.aa-dial__btn:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-dial__btn--active {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+  font-weight: 600;
+}
+
+.aa-dial__icon {
+  font-size: 0.88rem;
+  opacity: 0.7;
+  width: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aa-dial__btn--active .aa-dial__icon {
+  opacity: 1;
+}
+
+/* Compact — mobile thumb-zone variant (from mobile-gesture-modal .mode-pill) */
+.aa-dial--compact .aa-dial__btn {
+  padding: 8px 14px;
+  font-size: 0.78rem;
+}
+
+.aa-dial--compact .aa-dial__icon {
+  font-size: 0.82rem;
+  width: 12px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-dial__btn {
+    transition-duration: 0.01ms !important;
+  }
+}

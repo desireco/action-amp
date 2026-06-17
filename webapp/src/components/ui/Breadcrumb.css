@@ -1,0 +1,77 @@
+@import "../../styles/tokens.css";
+
+/* ============================================================
+   Breadcrumb — zoom orientation crumbs
+   ============================================================ */
+.aa-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  font-family: var(--aa-font);
+  font-size: 0.75rem;
+  color: var(--aa-text-4);
+}
+
+.aa-breadcrumb__pair {
+  display: inline-flex;
+  align-items: center;
+}
+
+.aa-breadcrumb__sep {
+  margin: 0 2px;
+  opacity: 0.5;
+}
+
+.aa-breadcrumb__crumb {
+  color: var(--aa-text-3);
+  padding: 5px 9px;
+  border-radius: var(--aa-radius-full);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  transition:
+    background 0.12s var(--aa-ease-out),
+    color 0.12s var(--aa-ease-out),
+    transform 0.04s var(--aa-ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.aa-breadcrumb__crumb:hover {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text-2);
+}
+
+.aa-breadcrumb__crumb:active {
+  transform: scale(0.95);
+}
+
+.aa-breadcrumb__crumb:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+/* Current zoom position */
+.aa-breadcrumb__crumb--active {
+  color: var(--aa-teal-cta);
+  font-weight: 700;
+  background: var(--aa-teal-soft);
+}
+
+/* Ancestors above current (out of focus) */
+.aa-breadcrumb__crumb--ancestor {
+  color: var(--aa-text-4);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-breadcrumb__crumb {
+    transition-duration: 0.01ms !important;
+  }
+  .aa-breadcrumb__crumb:active {
+    transform: none !important;
+  }
+}

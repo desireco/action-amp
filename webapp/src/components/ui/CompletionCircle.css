@@ -1,0 +1,100 @@
+@import "../../styles/tokens.css";
+
+.aa-cc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--aa-radius-full);
+  border: 2.5px solid var(--aa-border-strong);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  color: var(--aa-surface);
+  transition:
+    transform 0.2s var(--aa-ease-out),
+    border-color 0.2s var(--aa-ease-out),
+    background 0.25s var(--aa-ease-out),
+    box-shadow 0.25s var(--aa-ease-out);
+}
+
+.aa-cc:hover:not(.aa-cc--disabled) {
+  transform: scale(1.08);
+  border-color: var(--aa-teal);
+}
+
+.aa-cc:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+/* Sizes */
+.aa-cc--sm { width: 20px; height: 20px; }
+.aa-cc--md { width: 32px; height: 32px; }
+.aa-cc--lg { width: 44px; height: 44px; }
+
+/* Disabled */
+.aa-cc--disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* Check icon — hidden until filled */
+.aa-cc__check {
+  width: 55%;
+  height: 55%;
+  opacity: 0;
+  transform: scale(0.3);
+  transition:
+    opacity 0.14s var(--aa-ease-out) 0.08s,
+    transform 0.26s var(--aa-ease-spring) 0.08s;
+}
+
+/* Filled state */
+.aa-cc--filled {
+  background: var(--aa-teal);
+  border-color: var(--aa-teal);
+  box-shadow: 0 6px 16px var(--aa-teal-tint-shadow);
+}
+
+.aa-cc--filled .aa-cc__check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Burst animation (for hero completion) */
+.aa-cc--burst {
+  animation: cc-burst 0.55s var(--aa-ease-out-quart) both;
+}
+
+@keyframes cc-burst {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* Pulsing halo (for hero What Now card) */
+.aa-cc--pulse::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: var(--aa-radius-full);
+  border: 2px solid var(--aa-teal);
+  opacity: 0.5;
+  animation: cc-halo 2.6s var(--aa-ease-out) infinite;
+}
+
+@keyframes cc-halo {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-cc,
+  .aa-cc__check {
+    transition-duration: 0.01ms !important;
+    transition-iteration-count: 1 !important;
+  }
+  .aa-cc--burst { animation: none !important; }
+  .aa-cc--pulse::before { animation: none !important; }
+}
