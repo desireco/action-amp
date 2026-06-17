@@ -1,0 +1,28 @@
+@import "../styles/tokens.css";
+
+/* Today-specific styles — the list chrome lives in ListShell.css + GroupedList.css */
+
+.aa-today {
+  max-width: 680px;
+}
+
+.aa-today__overflow-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  flex-wrap: wrap;
+  padding: var(--aa-space-md);
+  margin-bottom: var(--aa-space-xl);
+  background: var(--aa-amber-soft);
+  border: 1px solid var(--aa-amber-soft-strong);
+  border-radius: var(--aa-radius-sm);
+  font-size: 0.85rem;
+  color: var(--aa-amber-text);
+  line-height: 1.5;
+}
+
+.aa-today__overflow {
+  margin-top: var(--aa-space-xl);
+  padding-top: var(--aa-space-xl);
+  border-top: 1px dashed var(--aa-border-strong);
+}

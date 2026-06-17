@@ -1,0 +1,62 @@
+@import "../styles/tokens.css";
+
+.aa-logbook {
+  max-width: 680px;
+}
+
+.aa-logbook-empty-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  color: var(--aa-surface);
+}
+
+.aa-logbook-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--aa-space-md);
+  padding: var(--aa-space-md) 0;
+  border-bottom: 1px solid var(--aa-border);
+}
+
+.aa-logbook-row:last-child {
+  border-bottom: none;
+}
+
+.aa-logbook-row__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  color: var(--aa-surface);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.aa-logbook-row__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.aa-logbook-row__title {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--aa-text-3);
+  text-decoration: line-through;
+  line-height: 1.4;
+}
+
+.aa-logbook-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}

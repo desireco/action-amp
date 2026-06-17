@@ -7,7 +7,16 @@ import { SettingsPage } from "./src/app/SettingsPage" with { type: "ref" };
 import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
 import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
-import { getTask } from "./src/tasks/operations" with { type: "ref" };
+import { getTask, getTasks, toggleTaskDone, updateTaskStatus } from "./src/tasks/operations" with { type: "ref" };
+import { getProjects } from "./src/projects/operations" with { type: "ref" };
+import { getGoals } from "./src/goals/operations" with { type: "ref" };
+import { getLogbook } from "./src/logbook/operations" with { type: "ref" };
+import { TodayPage } from "./src/lists/TodayPage" with { type: "ref" };
+import { UpcomingPage } from "./src/lists/UpcomingPage" with { type: "ref" };
+import { SomedayPage } from "./src/lists/SomedayPage" with { type: "ref" };
+import { ProjectsPage } from "./src/projects/ProjectsPage" with { type: "ref" };
+import { GoalsPage } from "./src/goals/GoalsPage" with { type: "ref" };
+import { LogbookPage } from "./src/logbook/LogbookPage" with { type: "ref" };
 import { ensureOnboarded, getAppData } from "./src/onboarding/operations" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
@@ -69,6 +78,12 @@ export default app({
     route("AppRoute", "/app", page(WhatNowPage)),
     route("InboxRoute", "/app/inbox", page(InboxPage)),
     route("InboxTriageRoute", "/app/inbox/review", page(InboxTriagePage)),
+    route("TodayRoute", "/app/today", page(TodayPage)),
+    route("UpcomingRoute", "/app/upcoming", page(UpcomingPage)),
+    route("SomedayRoute", "/app/someday", page(SomedayPage)),
+    route("ProjectsRoute", "/app/projects", page(ProjectsPage)),
+    route("GoalsRoute", "/app/goals", page(GoalsPage)),
+    route("LogbookRoute", "/app/logbook", page(LogbookPage)),
     route("SettingsRoute", "/app/settings", page(SettingsPage)),
     route("BillingRoute", "/app/settings/billing", page(BillingPage)),
     route(
@@ -100,6 +115,12 @@ export default app({
       page(EmailVerificationPage),
     ),
     query(getTask, { entities: ["Task"], auth: true }),
+    query(getTasks, { entities: ["Task"], auth: true }),
+    action(toggleTaskDone, { entities: ["Task"], auth: true }),
+    action(updateTaskStatus, { entities: ["Task"], auth: true }),
+    query(getProjects, { entities: ["Project", "Task"], auth: true }),
+    query(getGoals, { entities: ["Goal", "Project", "Task"], auth: true }),
+    query(getLogbook, { entities: ["Task", "Project"], auth: true }),
     query(getAppData, { entities: ["Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens"], auth: true }),
     query(getBillingStatus, { entities: ["Payment"], auth: true }),

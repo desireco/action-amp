@@ -131,35 +131,43 @@
 > via `ensureOnboarded` on every app load (idempotent). Migration:
 > `20260617203913_add_lens_goals_projects_resources_inbox`.
 
-### 4.1 ⬜ Today page (`/app/today`)
-- [ ] Tasks due today/overdue, grouped by Goal.
-- [ ] Each row: completion circle + task text + meta chips + size indicator.
-- [ ] Inline completion (click circle → done → animates out).
-- [ ] Enforces Today cap (5 default). Overflow UI when trying to add 6th.
-- [ ] "Done today" section collapsed at bottom.
-- [ ] Drag to reorder (Phase 2 — skip for now).
+### 4.1 ✅ Today page (`/app/today`)
+- [x] Tasks with status=TODAY (not done), grouped by Goal.
+- [x] Each row: completion circle + task text + meta chips + size indicator.
+- [x] Inline completion (click circle → optimistic done + strike-through).
+- [x] Enforces Today cap (5). Overflow UI banner + "Beyond the cap" section.
+- [ ] "Done today" section collapsed at bottom (stubbed; needs completed-task query).
+- [ ] Drag to reorder (Phase 2).
 
-### 4.2 ⬜ Upcoming page (`/app/upcoming`)
-- [ ] Grouped by date (Tomorrow / This week / Next week / Later).
-- [ ] Same row pattern as Today.
+### 4.2 ✅ Upcoming page (`/app/upcoming`)
+- [x] Tasks with status=UPCOMING, grouped by This week / Next week / Later.
+- [x] Same TaskRow pattern as Today.
 
-### 4.3 ⬜ Someday page (`/app/someday`)
-- [ ] Flat list, lighter visual weight.
-- [ ] Promote to Today/Upcoming via action menu.
+### 4.3 ✅ Someday page (`/app/someday`)
+- [x] Flat list, muted (lighter visual weight).
+- [ ] Promote to Today/Upcoming via action menu (needs row actions).
 
-### 4.4 ⬜ Projects page (`/app/projects`)
-- [ ] List of projects grouped by Goal.
-- [ ] Each row: name, progress (X/Y tasks done), due date, next-action preview.
-- [ ] "No next action" badge for projects without actionable tasks.
+### 4.4 ✅ Projects page (`/app/projects`)
+- [x] List of projects grouped by Goal (or "Standalone").
+- [x] Each row: name, progress (X/Y done bar), due date, next-action preview.
+- [x] "No next action" badge for projects without open tasks.
 
-### 4.5 ⬜ Goals page (`/app/goals`)
-- [ ] List of goals with aggregate progress.
-- [ ] Linked projects + standalone tasks count.
-- [ ] Create/edit goal inline.
+### 4.5 ✅ Goals page (`/app/goals`)
+- [x] Grid of goals with aggregate progress %.
+- [x] Linked projects + standalone tasks counts.
+- [ ] Create/edit goal inline (needs forms).
 
-### 4.6 ⬜ Logbook page (`/app/logbook`)
-- [ ] Completed items, grouped by completion date.
-- [ ] Read-only (no editing). Restore or permanently delete.
+### 4.6 ✅ Logbook page (`/app/logbook`)
+- [x] Completed tasks + projects, grouped by completion day (Today/Yesterday/weekday/date).
+- [x] Read-only. Restore/permanent-delete pending.
+
+### 4.0 ✅ Shared components + data layer
+- [x] `TaskRow` (reusable) — completion circle + title + meta chips + size.
+- [x] `GroupedList` (reusable) — section heading + count + rows.
+- [x] `ListHeader` / `ListEmpty` — shared page chrome.
+- [x] `LensContext` — active lens shared from AppShell to every page.
+- [x] Server ops: `getTasks`, `toggleTaskDone`, `updateTaskStatus`, `getProjects`, `getGoals`, `getLogbook` — all scoped by lensId.
+- [x] All 6 nav items flipped from "soon" → live links with active state.
 
 ---
 

@@ -1,0 +1,91 @@
+@import "../styles/tokens.css";
+
+.aa-goals {
+  max-width: 760px;
+}
+
+.aa-goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--aa-space-md);
+}
+
+.aa-goal-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+  padding: var(--aa-space-lg);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  transition:
+    border-color 0.12s var(--aa-ease-out),
+    box-shadow 0.12s var(--aa-ease-out);
+}
+
+.aa-goal-card:hover {
+  border-color: var(--aa-border-strong);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-goal-card__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--aa-text);
+  margin: 0;
+}
+
+.aa-goal-card__desc {
+  font-size: 0.88rem;
+  color: var(--aa-text-3);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.aa-goal-card__progress {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  margin-top: var(--aa-space-xs);
+}
+
+.aa-goal-card__bar {
+  flex: 1;
+  height: 5px;
+  background: var(--aa-surface-muted-2);
+  border-radius: var(--aa-radius-full);
+  overflow: hidden;
+}
+
+.aa-goal-card__fill {
+  height: 100%;
+  background: var(--aa-teal);
+  border-radius: var(--aa-radius-full);
+  transition: width 0.3s var(--aa-ease-out-quart);
+}
+
+.aa-goal-card__pct {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--aa-teal-cta);
+  white-space: nowrap;
+}
+
+.aa-goal-card__meta {
+  font-size: 0.78rem;
+  color: var(--aa-text-4);
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+}
+
+.aa-goal-card__dot {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-goal-card__fill {
+    transition-duration: 0.01ms !important;
+  }
+}

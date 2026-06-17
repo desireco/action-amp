@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { useAuth, logout } from "wasp/client/auth";
 import { useQuery, ensureOnboarded, getAppData } from "wasp/client/operations";
+import { LensContext } from "./lensContext";
 import {
   BrandMark,
   LensSwitch,
@@ -54,7 +55,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Keep the active lens valid once lenses load; default to the first.
   const activeLens = lenses.find((l) => l.name === lens) ?? lenses[0];
   const activeLensName = activeLens?.name ?? lens;
-  void activeLens; // (activeLens.id is the scope we'll pass to Phase 4 queries)
+  // The value pages consume via useActiveLens() to scope their queries.
+  const activeLensValue = activeLens ? { id: activeLens.id, name: activeLens.name } : null;
 
   const isActive = (to: string) =>
     to === "/app" ? location.pathname === "/app" : location.pathname.startsWith(to);
@@ -103,20 +105,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             count={counts.inbox}
             countVariant="urgent"
           />
-          <NavItem icon={<ClockIcon />} label="Today" soon count={counts.today} />
-          <NavItem icon={<CalendarIcon />} label="Upcoming" soon />
-          <NavItem icon={<SomedayIcon />} label="Someday" soon />
+          <NavItem icon={<ClockIcon />} label="Today" active={isActive("/app/today")} to="/app/today" count={counts.today} />
+          <NavItem icon={<CalendarIcon />} label="Upcoming" active={isActive("/app/upcoming")} to="/app/upcoming" />
+          <NavItem icon={<SomedayIcon />} label="Someday" active={isActive("/app/someday")} to="/app/someday" />
         </nav>
 
         {/* Section 2 — structure */}
         <nav className="aa-app-nav">
-          <NavItem icon={<ProjectsIcon />} label="Projects" soon count={counts.projects} />
-          <NavItem icon={<GoalsIcon />} label="Goals" soon count={counts.goals} />
+          <NavItem icon={<ProjectsIcon />} label="Projects" active={isActive("/app/projects")} to="/app/projects" count={counts.projects} />
+          <NavItem icon={<GoalsIcon />} label="Goals" active={isActive("/app/goals")} to="/app/goals" count={counts.goals} />
         </nav>
 
         {/* Section 3 — history */}
         <nav className="aa-app-nav">
-          <NavItem icon={<LogbookIcon />} label="Logbook" soon />
+          <NavItem icon={<LogbookIcon />} label="Logbook" active={isActive("/app/logbook")} to="/app/logbook" />
         </nav>
 
         {/* User footer */}
@@ -160,7 +162,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         {/* ---- Page content ---- */}
-        <main className="aa-app-main">{children}</main>
+        <main className="aa-app-main">
+          <LensContext.Provider value={activeLensValue}>
+            {children}
+          </LensContext.Provider>
+        </main>
       </div>
     </div>
   );

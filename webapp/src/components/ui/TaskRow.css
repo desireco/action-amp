@@ -1,0 +1,96 @@
+@import "../../styles/tokens.css";
+
+.aa-task-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--aa-space-md);
+  padding: var(--aa-space-md) 0;
+  border-bottom: 1px solid var(--aa-border);
+  transition:
+    background 0.12s var(--aa-ease-out),
+    opacity 0.25s var(--aa-ease-out);
+  list-style: none;
+}
+
+.aa-task-row:last-child {
+  border-bottom: none;
+}
+
+.aa-task-row--clickable {
+  cursor: pointer;
+  border-radius: var(--aa-radius-sm);
+}
+
+.aa-task-row--clickable:hover {
+  background: var(--aa-surface-muted);
+  margin: 0 calc(-1 * var(--aa-space-md));
+  padding-left: var(--aa-space-md);
+  padding-right: var(--aa-space-md);
+  border-bottom-color: transparent;
+}
+
+.aa-task-row--clickable:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+  background: var(--aa-surface-muted);
+}
+
+/* Circle — extend the hit area upward so adjacent rows are easy to tap */
+.aa-task-row__circle {
+  padding-top: 1px;
+  flex-shrink: 0;
+}
+
+.aa-task-row__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.aa-task-row__title {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--aa-text);
+  line-height: 1.4;
+  word-break: break-word;
+  transition: color 0.2s var(--aa-ease-out);
+}
+
+.aa-task-row--done .aa-task-row__title {
+  color: var(--aa-text-4);
+  text-decoration: line-through;
+}
+
+.aa-task-row--muted .aa-task-row__title {
+  color: var(--aa-text-3);
+  font-weight: 400;
+}
+
+.aa-task-row--muted:not(.aa-task-row--done):hover .aa-task-row__title {
+  color: var(--aa-text);
+}
+
+.aa-task-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+
+/* Size indicator — a subtle uppercase label, not a chip */
+.aa-task-row__size {
+  font-family: var(--aa-font-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--aa-text-4);
+  background: var(--aa-surface-muted);
+  padding: 1px 5px;
+  border-radius: var(--aa-radius-xs);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-task-row {
+    transition-duration: 0.01ms !important;
+  }
+}
