@@ -1,0 +1,87 @@
+@import "../../styles/tokens.css";
+
+/* ============================================================
+   WhatNowCard — the composite task card (app-shell variant, flat)
+   ============================================================ */
+.aa-wn-card {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: center;
+  animation: aa-wn-rise 0.5s var(--aa-ease-out-quart) both;
+  animation-delay: 0.08s;
+}
+
+@keyframes aa-wn-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Context line — demoted, static text */
+.aa-wn-card__context {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--aa-text-3);
+  margin-bottom: 36px;
+  letter-spacing: 0.01em;
+}
+
+/* Completion circle wrapper — adds the bottom margin the prototype uses */
+.aa-wn-card__completion {
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Task title */
+.aa-wn-card__title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--aa-text);
+  margin: 0 0 12px;
+}
+
+/* Meta line (project · due · size) */
+.aa-wn-card__meta {
+  font-size: 0.88rem;
+  color: var(--aa-text-3);
+  margin-bottom: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.aa-wn-card__sep {
+  color: var(--aa-border-strong);
+}
+
+/* "Why this" line — amber emphasis */
+.aa-wn-card__why {
+  font-size: 0.78rem;
+  color: var(--aa-text-3);
+  margin: 0 0 32px;
+  line-height: 1.5;
+}
+
+.aa-wn-card__why strong {
+  color: var(--aa-amber-text);
+  font-weight: 600;
+}
+
+/* Actions */
+.aa-wn-card__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-wn-card {
+    animation-duration: 0.01ms !important;
+  }
+}

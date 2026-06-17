@@ -10,6 +10,8 @@ export type { LensSwitchOption } from "./LensSwitch";
 export { ModeDial } from "./ModeDial";
 export type { ModeDialItem } from "./ModeDial";
 export { NavItem } from "./NavItem";
+export { WhatNowCard } from "./WhatNowCard";
+export type { WhatNowTask } from "./WhatNowCard";
 export * from "./icons";
 export { ZoomDock } from "./ZoomDock";
 export type { ZoomDockItem } from "./ZoomDock";

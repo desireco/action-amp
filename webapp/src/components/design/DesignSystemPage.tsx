@@ -9,6 +9,7 @@ import {
   LensSwitch,
   ModeDial,
   NavItem,
+  WhatNowCard,
   ZoomDock,
   StarIcon,
   InboxIcon,
@@ -868,27 +869,18 @@ function InteractiveCCDemo() {
    ================================================================ */
 
 function WhatNowCardDemo() {
-  const [filled, setFilled] = useState(false);
-  const handleClick = () => {
-    setFilled(true);
-    setTimeout(() => setFilled(false), 2000);
-  };
   return (
-    <div className="ds-wn-card">
-      <div className="ds-wn-context">Right now · 30 min available · Work</div>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <CompletionCircle size="md" filled={filled} onClick={handleClick} />
-      </div>
-      <div className="ds-wn-task">Email Sarah re: Q3 invoice</div>
-      <div className="ds-wn-meta">
-        Ship product v2 <span className="ds-wn-meta__sep">·</span> due today <span className="ds-wn-meta__sep">·</span> 15 min
-      </div>
-      <div className="ds-wn-why">Because it's <strong>Important</strong> and due today.</div>
-      <div className="ds-wn-actions">
-        <Button variant="primary">Do this</Button>
-        <Button variant="secondary">Not now</Button>
-      </div>
-    </div>
+    <WhatNowCard
+      task={{
+        title: "Email Sarah re: Q3 invoice",
+        project: "Ship product v2",
+        due: "due today",
+        size: "15 min",
+        why: "Because it's",
+        whyEmphasis: "Important and due today.",
+      }}
+      context="Right now · 30 min available · Work"
+    />
   );
 }
 

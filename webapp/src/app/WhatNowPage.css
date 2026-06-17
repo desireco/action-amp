@@ -1,7 +1,22 @@
 @import "../styles/tokens.css";
 
+/* ============================================================
+   What Now page — wraps the WhatNowCard or shows the empty state.
+   The card itself is a reusable component (components/ui/WhatNowCard).
+   ============================================================ */
+
+/* When the card is shown, center it vertically in the viewport like the
+   app-shell-whatnow.html prototype. The page sits inside .aa-app-main. */
+.aa-app-main:has(.aa-wn-card) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Empty state */
 .aa-wn {
   max-width: 620px;
+  margin: 0 auto;
 }
 
 .aa-wn-eyebrow {
@@ -28,4 +43,17 @@
   color: var(--aa-text-3);
   margin: 0;
   max-width: 480px;
+}
+
+/* Inline kbd hint inside the empty state copy */
+.aa-wn-kbd {
+  font-family: var(--aa-font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-4);
+  padding: 2px 6px;
+  border-radius: var(--aa-radius-xs);
+  border: 1px solid var(--aa-border);
+  white-space: nowrap;
 }

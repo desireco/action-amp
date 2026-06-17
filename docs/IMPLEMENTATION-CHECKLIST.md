@@ -71,29 +71,30 @@
 > The home screen. Not a list, a chooser.
 > Goal: implement the full What Now view from the prototype.
 
-### 2.1 ⬜ Moment bar / context
-- [ ] "Right now · 30 min available · Work" context line above the card.
+### 2.1 🔨 Moment bar / context
+- [x] "Right now · 30 min available · Work" context line above the card.
 - [ ] Time available selector (15m / 30m / 1h / 2h+).
 - [ ] Energy selector (low / medium / high).
 - [ ] Defaults inferred from time-of-day (Phase 2 — skip for now).
 
-### 2.2 ⬜ Task card
-- [ ] **Completion circle** — 32px, interactive. Click → fill animation + burst → "Done ✓" → swap to next task.
-- [ ] **Task title** — large, bold, the thing to do.
-- [ ] **Meta line** — project name · due date · size (S/M/L/XL).
-- [ ] **"Why this" line** — amber-highlighted reason: "Because it's Important and due today."
-- [ ] **Action buttons** — "Do this" (primary), "Not now" (secondary). "Not now" opens snooze options.
-- [ ] Card centered, max-width 520px, generous vertical padding.
+### 2.2 ✅ Task card
+- [x] **Completion circle** — 32px, interactive. Click → fill animation + burst → "Done ✓" → swap to next task.
+- [x] **Task title** — large, bold, the thing to do.
+- [x] **Meta line** — project name · due date · size (S/M/L/XL).
+- [x] **"Why this" line** — amber-highlighted reason: "Because it's Important and due today."
+- [x] **Action buttons** — "Do this" (primary), "Not now" (secondary). "Not now" opens snooze options (handler stubbed).
+- [x] Card centered, max-width 520px, generous vertical padding.
+- [x] Reusable component: `components/ui/WhatNowCard.tsx`
 
-### 2.3 ⬜ Empty state
-- [ ] Current empty state is good text. Add a subtle CTA: "Capture something with ⌘K" with a faded keyboard hint.
+### 2.3 ✅ Empty state
+- [x] Current empty state is good text. Add a subtle CTA: "Capture something with ⌘K" with a faded keyboard hint.
 
 ### 2.4 ⬜ Multiple tasks mode
 - [ ] When >1 candidate, show up to 3 cards stacked (primary + 2 smaller below).
 - [ ] Default: 1 card. Configurable or automatic based on moment.
 
 ### 2.5 ⬜ "Not now" flow
-- [ ] "Not now" button opens: Snooze (1h / 3h / tomorrow / weekend), Someday, Skip once.
+- [ ] "Not now" button opens: Snooze (1h / 3h / tomorrow / weekend), Someday, Skip once. (Handler stubbed in WhatNowCard — needs bottom sheet from modal-approach.md §03.)
 
 ---
 
