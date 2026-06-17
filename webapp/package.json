@@ -1,5 +1,5 @@
 {
-  "name": "webapp",
+  "name": "actionamp",
   "type": "module",
   "workspaces": [
     ".wasp/out/*",

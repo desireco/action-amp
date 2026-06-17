@@ -26,8 +26,8 @@ import { PrivacyPage } from "./src/public/PrivacyPage" with { type: "ref" };
 import { TermsPage } from "./src/public/TermsPage" with { type: "ref" };
 
 export default app({
-  name: "webapp",
-  title: "webapp",
+  name: "ActionAmp",
+  title: "ActionAmp",
   wasp: { version: "^0.24.0" },
   head: [
     "<link rel='icon' type='image/svg+xml' href='/favicon.svg' />",
