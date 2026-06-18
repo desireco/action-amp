@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { WhatNowCard, type WhatNowTask } from "../components/ui";
+import { WhatNowCard, FocusMode, type WhatNowTask, type FocusTask } from "../components/ui";
 import "./WhatNowPage.css";
 
 /**
@@ -23,6 +23,7 @@ const SAMPLE_TASK: WhatNowTask = {
 
 export function WhatNowPage() {
   const [hasTask, setHasTask] = useState(true);
+  const [focusTask, setFocusTask] = useState<FocusTask | null>(null);
 
   const handleComplete = () => {
     // For now: completing the sample task reveals the empty state.
@@ -44,14 +45,35 @@ export function WhatNowPage() {
   }
 
   return (
-    <WhatNowCard
-      task={SAMPLE_TASK}
-      context="Right now · 30 min available · Work"
-      onComplete={handleComplete}
-      onDo={handleComplete}
-      onNotNow={() => {
-        /* TODO: open snooze bottom sheet (see modal-approach.md §03) */
-      }}
-    />
+    <>
+      <WhatNowCard
+        task={SAMPLE_TASK}
+        context="Right now · 30 min available · Work"
+        onComplete={handleComplete}
+        onDo={() => {
+          // "Do this" enters focus mode (full-screen single-task view).
+          setFocusTask({
+            id: "sample",
+            title: SAMPLE_TASK.title,
+            project: SAMPLE_TASK.project ?? null,
+            due: SAMPLE_TASK.due ?? null,
+            size: SAMPLE_TASK.size ?? null,
+          });
+        }}
+        onNotNow={() => {
+          /* TODO: open snooze bottom sheet (see modal-approach.md §03) */
+        }}
+      />
+      {focusTask && (
+        <FocusMode
+          task={focusTask}
+          onClose={() => setFocusTask(null)}
+          onComplete={() => {
+            setFocusTask(null);
+            handleComplete();
+          }}
+        />
+      )}
+    </>
   );
 }

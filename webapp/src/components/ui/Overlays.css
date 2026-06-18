@@ -1,0 +1,276 @@
+@import "../../styles/tokens.css";
+
+/* ============================================================
+   Shared overlay shell — backdrop + card motion.
+   Used by ShortcutCheatsheet, CapturePopover, FocusMode.
+   See docs/modal-approach.md.
+   ============================================================ */
+.aa-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: oklch(0.2 0.02 230 / 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--aa-space-lg);
+  animation: aa-overlay-fade 0.15s var(--aa-ease-out) both;
+  /* Scroll lock is applied via JS (body overflow hidden) in the provider. */
+}
+
+@keyframes aa-overlay-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.aa-overlay-card {
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  box-shadow: var(--aa-shadow-lg);
+  width: 100%;
+  animation: aa-overlay-rise 0.25s var(--aa-ease-out-quart) both;
+}
+
+@keyframes aa-overlay-rise {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.aa-overlay-card--sm {
+  max-width: 420px;
+}
+
+/* Close button (top-right of overlay cards) */
+.aa-overlay__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--aa-radius-sm);
+  background: none;
+  border: none;
+  color: var(--aa-text-3);
+  cursor: pointer;
+  transition:
+    background 0.12s var(--aa-ease-out),
+    color 0.12s var(--aa-ease-out);
+}
+
+.aa-overlay__close:hover {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text);
+}
+
+.aa-overlay__close:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Shortcut cheatsheet
+   ============================================================ */
+.aa-cheatsheet__head {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  padding: var(--aa-space-md) var(--aa-space-lg);
+  border-bottom: 1px solid var(--aa-border);
+}
+
+.aa-cheatsheet__mark {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--aa-radius-sm);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--aa-surface);
+  flex-shrink: 0;
+}
+
+.aa-cheatsheet__title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--aa-text);
+  margin: 0;
+}
+
+.aa-cheatsheet__list {
+  list-style: none;
+  margin: 0;
+  padding: var(--aa-space-sm) 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.aa-cheatsheet__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-lg);
+  padding: 8px var(--aa-space-lg);
+}
+
+.aa-cheatsheet__row:hover {
+  background: var(--aa-surface-muted);
+}
+
+.aa-cheatsheet__label {
+  font-size: 0.88rem;
+  color: var(--aa-text-2);
+}
+
+.aa-cheatsheet__keys {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.aa-cheatsheet__kbd {
+  font-family: var(--aa-font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-2);
+  padding: 2px 7px;
+  border-radius: var(--aa-radius-xs);
+  border: 1px solid var(--aa-border);
+  line-height: 1.4;
+}
+
+/* ============================================================
+   Capture popover
+   ============================================================ */
+.aa-capture {
+  max-width: 480px;
+  padding: var(--aa-space-md);
+}
+
+.aa-capture__head {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+}
+
+.aa-capture__mark {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--aa-radius-sm);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--aa-surface);
+  flex-shrink: 0;
+}
+
+.aa-capture__input {
+  flex: 1;
+  font-family: var(--aa-font);
+  font-size: 1rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--aa-text);
+  padding: var(--aa-space-sm) 0;
+}
+
+.aa-capture__input::placeholder {
+  color: var(--aa-text-4);
+}
+
+.aa-capture__foot {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--aa-space-sm);
+}
+
+.aa-capture__hint {
+  font-size: 0.75rem;
+  color: var(--aa-text-4);
+}
+
+.aa-capture__kbd {
+  font-family: var(--aa-font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-3);
+  padding: 1px 5px;
+  border-radius: var(--aa-radius-xs);
+  border: 1px solid var(--aa-border);
+}
+
+/* ============================================================
+   Focus mode (full-screen single task)
+   ============================================================ */
+.aa-focus {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--aa-bg);
+  display: flex;
+  flex-direction: column;
+  animation: aa-overlay-fade 0.25s var(--aa-ease-out) both;
+}
+
+.aa-focus__top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--aa-space-md) var(--aa-space-xl);
+}
+
+.aa-focus__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--aa-space-xl) var(--aa-space-4xl);
+  text-align: center;
+}
+
+.aa-focus__title {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--aa-text);
+  margin: var(--aa-space-lg) 0 var(--aa-space-md);
+  max-width: 620px;
+}
+
+.aa-focus__meta {
+  font-size: 0.9rem;
+  color: var(--aa-text-3);
+  margin-bottom: var(--aa-space-xl);
+}
+
+.aa-focus__content {
+  font-size: 0.95rem;
+  color: var(--aa-text-2);
+  line-height: 1.6;
+  max-width: 620px;
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+.aa-focus__actions {
+  display: flex;
+  gap: var(--aa-space-sm);
+  margin-top: var(--aa-space-2xl);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-overlay,
+  .aa-overlay-card,
+  .aa-focus {
+    animation-duration: 0.01ms !important;
+  }
+}

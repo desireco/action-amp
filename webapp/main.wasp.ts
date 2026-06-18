@@ -11,6 +11,7 @@ import { getTask, getTasks, toggleTaskDone, updateTaskStatus } from "./src/tasks
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { getGoals } from "./src/goals/operations" with { type: "ref" };
 import { getLogbook } from "./src/logbook/operations" with { type: "ref" };
+import { createInboxItem } from "./src/inbox/operations" with { type: "ref" };
 import { TodayPage } from "./src/lists/TodayPage" with { type: "ref" };
 import { UpcomingPage } from "./src/lists/UpcomingPage" with { type: "ref" };
 import { SomedayPage } from "./src/lists/SomedayPage" with { type: "ref" };
@@ -123,6 +124,7 @@ export default app({
     query(getLogbook, { entities: ["Task", "Project"], auth: true }),
     query(getAppData, { entities: ["Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens"], auth: true }),
+    action(createInboxItem, { entities: ["InboxItem"], auth: true }),
     query(getBillingStatus, { entities: ["Payment"], auth: true }),
     action(createCheckoutSession, { entities: ["User"], auth: true }),
     api("POST", "/webhooks/stripe", stripeWebhook, {

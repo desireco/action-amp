@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useAuth, logout } from "wasp/client/auth";
-import { useQuery, ensureOnboarded, getAppData } from "wasp/client/operations";
+import { useQuery, ensureOnboarded, getAppData, createInboxItem } from "wasp/client/operations";
 import { LensContext } from "./lensContext";
+import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
+import { CapturePopover, ShortcutCheatsheet } from "../components/ui";
 import {
   BrandMark,
   LensSwitch,
@@ -35,6 +37,7 @@ import "./AppShell.css";
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [lens, setLens] = useState<string>("Work");
   // Theme: persisted to localStorage, kept in sync with the Preferences page.
   // Reads once on mount; falls back to the system preference on first visit.
@@ -78,6 +81,31 @@ export function AppShell({ children }: { children: ReactNode }) {
   const initials = user
     ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase()
     : "";
+
+  // ---- Overlays (capture popover, shortcut cheatsheet) ----
+  // Focus mode is page-scoped (set by a task's onOpen), so it lives in pages,
+  // not the shell. Esc closes whichever overlay is open.
+  const [captureOpen, setCaptureOpen] = useState(false);
+  const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
+
+  useKeyboardShortcuts({
+    onCapture: () => setCaptureOpen(true),
+    onGoHome: () => navigate("/app"),
+    onToggleCheatsheet: () => setCheatsheetOpen((v) => !v),
+    onCloseOverlay: () => {
+      setCaptureOpen(false);
+      setCheatsheetOpen(false);
+    },
+  });
+
+  // Lock body scroll while any overlay is open.
+  useEffect(() => {
+    const open = captureOpen || cheatsheetOpen;
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [captureOpen, cheatsheetOpen]);
 
   const toggleTheme = () => {
     const next = theme === "light" ? "dark" : "light";
@@ -159,7 +187,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* ---- Topbar ---- */}
         <header className="aa-app-topbar">
           <div className="aa-app-topbar-actions">
-            <button type="button" className="aa-app-kbd-btn" title="Capture (⌘K)">
+            <button type="button" className="aa-app-kbd-btn" title="Capture (⌘K)" onClick={() => setCaptureOpen(true)}>
               <PlusIcon width={14} height={14} />
               <span>Capture</span>
               <kbd className="aa-app-kbd">⌘K</kbd>
@@ -183,6 +211,17 @@ export function AppShell({ children }: { children: ReactNode }) {
           </LensContext.Provider>
         </main>
       </div>
+
+      {/* ---- Global overlays (capture popover + shortcut cheatsheet) ---- */}
+      {captureOpen && (
+        <CapturePopover
+          onClose={() => setCaptureOpen(false)}
+          onSubmit={async (text) => {
+            await createInboxItem({ text });
+          }}
+        />
+      )}
+      {cheatsheetOpen && <ShortcutCheatsheet onClose={() => setCheatsheetOpen(false)} />}
     </div>
   );
 }

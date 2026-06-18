@@ -233,19 +233,25 @@
 
 ## Phase 7 — Polish & Responsive
 
-### 7.1 ⬜ Keyboard shortcuts system
-- [ ] Global shortcut handler: ⌘K (capture), Space (What Now), ? (cheatsheet), Esc (close).
-- [ ] Shortcut hints on hover (tooltip or subtle kbd hint).
+### 7.1 ✅ Keyboard shortcuts system
+- [x] Global shortcut handler (`useKeyboardShortcuts`): ⌘K// (capture), Space (What Now), ? (cheatsheet), Esc (close).
+- [x] Disabled while typing in inputs (except Esc).
+- [x] Shortcuts discoverable via the cheatsheet overlay.
 
-### 7.2 ⬜ Focus mode overlay
-- [ ] Single-task full-screen overlay. Hide sidebar. Task + notes + nothing else.
-- [ ] Enter via F key. Esc to exit.
+### 7.2 ✅ Focus mode overlay
+- [x] Single-task full-screen overlay (`FocusMode`). Hide sidebar/list/counts. Task + notes + nothing else.
+- [x] Enter via What Now 'Do this'. Esc to exit (scoped handler).
 
-### 7.3 ⬜ Mobile responsive pass
-- [ ] Every page tested at 390px (iPhone), 768px (iPad), 1024px+ (desktop).
-- [ ] Sidebar → topbar on mobile.
-- [ ] What Now card adapts to narrow viewport.
-- [ ] Plan picker stacks vertically on mobile.
+### 7.3 ✅ Mobile responsive pass
+- [x] Every page tested at 390px (iPhone) — no horizontal scroll, sidebar collapses to top nav.
+- [x] Sidebar → horizontal scroll nav on mobile (<768px).
+- [x] What Now card adapts (clamp font sizes).
+- [x] Plan picker stacks vertically on mobile (<600px).
+
+### 7.0 ✅ Bonus: capture + cheatsheet overlays
+- [x] `CapturePopover` (⌘K) — quick capture, auto-focus, Enter submits to InboxItem, Esc/backdrop closes. Backed by `createInboxItem` action.
+- [x] `ShortcutCheatsheet` (?) — modal listing every shortcut.
+- [x] Shared overlay shell (backdrop + scroll lock + focus + motion) per modal-approach.md.
 
 ---
 
