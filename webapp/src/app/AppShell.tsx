@@ -36,7 +36,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
   const location = useLocation();
   const [lens, setLens] = useState<string>("Work");
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  // Theme: persisted to localStorage, kept in sync with the Preferences page.
+  // Reads once on mount; falls back to the system preference on first visit.
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    const stored = localStorage.getItem("aa-theme") as "light" | "dark" | null;
+    if (stored) return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
 
   // Idempotent: ensures the user has the default Work/Me lenses (covers both
   // existing users and new signups). Runs once per app load — but ONLY when
@@ -68,6 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const toggleTheme = () => {
     const next = theme === "light" ? "dark" : "light";
     setTheme(next);
+    localStorage.setItem("aa-theme", next);
     document.documentElement.dataset.theme = next;
   };
 

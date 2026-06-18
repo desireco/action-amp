@@ -1,0 +1,69 @@
+@import "../../styles/tokens.css";
+
+/* ============================================================
+   Table — striped rows, token-driven, responsive overflow
+   ============================================================ */
+.aa-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--aa-radius-sm);
+  border: 1px solid var(--aa-border);
+}
+
+.aa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--aa-font);
+  font-size: 0.85rem;
+}
+
+/* Header */
+.aa-table__th {
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  background: var(--aa-surface-muted);
+  border-bottom: 1px solid var(--aa-border);
+  white-space: nowrap;
+}
+
+.aa-table__th--right { text-align: right; }
+.aa-table__th--center { text-align: center; }
+
+/* Body cells */
+.aa-table__td {
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  color: var(--aa-text-2);
+  border-bottom: 1px solid var(--aa-border);
+  vertical-align: middle;
+}
+
+.aa-table__td--right { text-align: right; }
+.aa-table__td--center { text-align: center; }
+
+/* Striping */
+.aa-table__row--striped {
+  background: var(--aa-surface-muted);
+}
+
+.aa-table tbody tr:last-child .aa-table__td {
+  border-bottom: none;
+}
+
+.aa-table tbody tr:hover .aa-table__td {
+  background: var(--aa-teal-soft);
+}
+
+/* Empty state cell */
+.aa-table__empty {
+  text-align: center;
+  color: var(--aa-text-4);
+  font-style: italic;
+  padding: var(--aa-space-lg) var(--aa-space-md);
+}
+
+/* Reduced motion (hover transitions are instant, nothing to disable) */

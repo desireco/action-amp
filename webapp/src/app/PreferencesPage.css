@@ -1,12 +1,1 @@
-@import "../styles/tokens.css";
-
-.aa-pref-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--aa-space-md);
-}
-
-.aa-pref-row .aa-settings-sh {
-  margin-bottom: 4px;
-}
+/* PreferencesPage inherits Field + SettingsLayout styles. */

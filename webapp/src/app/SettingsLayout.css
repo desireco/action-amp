@@ -4,26 +4,43 @@
   max-width: 680px;
 }
 
+/* ---- Back link ---- */
 .aa-settings-back {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.85rem;
+  font-weight: 500;
   color: var(--aa-text-3);
   margin-bottom: var(--aa-space-lg);
+  text-decoration: none;
+  transition: color 0.12s var(--aa-ease-out);
 }
 
 .aa-settings-back:hover {
   color: var(--aa-teal-cta);
 }
 
+.aa-settings-back:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+  border-radius: var(--aa-radius-xs);
+}
+
+.aa-settings-back svg {
+  opacity: 0.7;
+}
+
+/* ---- Heading ---- */
 .aa-settings-h {
   font-size: 1.75rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--aa-text);
   margin: 0 0 var(--aa-space-lg);
 }
 
-/* ---- sub-nav tabs ---- */
+/* ---- Sub-nav tabs ---- */
 .aa-settings-tabs {
   display: flex;
   gap: var(--aa-space-xs);
@@ -36,6 +53,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--aa-text-3);
+  text-decoration: none;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   transition:
@@ -47,22 +65,19 @@
   color: var(--aa-text);
 }
 
+.aa-settings-tab:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+  border-radius: var(--aa-radius-xs);
+}
+
 .aa-settings-tab.active {
   color: var(--aa-teal-cta);
   border-bottom-color: var(--aa-teal-cta);
   font-weight: 600;
 }
 
-.aa-settings-body {
-  /* each page styles its own sections */
-}
-
-/* ---- Shared settings section styles (used by Preferences stubs) ---- */
-.aa-settings-section {
-  border-top: 1px solid var(--aa-border);
-  padding: var(--aa-space-lg) 0;
-}
-
+/* ---- Section heading (shared by Account + Preferences + Billing) ---- */
 .aa-settings-sh {
   font-size: 0.8rem;
   font-weight: 600;
@@ -72,13 +87,25 @@
   margin: 0 0 var(--aa-space-md);
 }
 
+/* ---- Shared settings section ---- */
+.aa-settings-section {
+  padding: var(--aa-space-lg) 0;
+  border-top: 1px solid var(--aa-border);
+}
+
+.aa-settings-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
 .aa-settings-note {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--aa-text-3);
   margin: 0;
   line-height: 1.5;
 }
 
+/* "soon" pill on a section heading */
 .aa-settings-soon .aa-settings-sh em {
   font-style: normal;
   font-weight: 400;
@@ -90,4 +117,8 @@
   padding: 1px 6px;
   border-radius: var(--aa-radius-xs);
   margin-left: var(--aa-space-sm);
+}
+
+.aa-settings-body {
+  /* each page styles its own sections */
 }

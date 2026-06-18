@@ -1,0 +1,53 @@
+@import "../styles/tokens.css";
+
+.aa-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-lg);
+  padding: var(--aa-space-md) 0;
+  border-bottom: 1px solid var(--aa-border);
+}
+
+.aa-field:last-child {
+  border-bottom: none;
+}
+
+.aa-field__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.aa-field__label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--aa-text);
+}
+
+.aa-field__desc {
+  font-size: 0.8rem;
+  color: var(--aa-text-3);
+  line-height: 1.4;
+}
+
+.aa-field__value {
+  font-size: 0.88rem;
+  color: var(--aa-text-2);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Stack vertically on narrow viewports */
+@media (max-width: 480px) {
+  .aa-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--aa-space-sm);
+  }
+  .aa-field__value {
+    text-align: left;
+  }
+}

@@ -19,12 +19,15 @@ export function SettingsLayout({ children }: { children: ReactNode }) {
   return (
     <div className="aa-settings-hub">
       <Link className="aa-settings-back" to="/app">
-        ← What Now
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M10 3l-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        What Now
       </Link>
 
       <h1 className="aa-settings-h">Settings</h1>
 
-      <nav className="aa-settings-tabs">
+      <nav className="aa-settings-tabs" aria-label="Settings">
         {TABS.map((tab) => {
           const active = tab.exact
             ? location.pathname === tab.to
@@ -34,6 +37,7 @@ export function SettingsLayout({ children }: { children: ReactNode }) {
               key={tab.to}
               to={tab.to}
               className={`aa-settings-tab ${active ? "active" : ""}`}
+              aria-current={active ? "page" : undefined}
             >
               {tab.label}
             </Link>

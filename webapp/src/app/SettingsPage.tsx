@@ -1,5 +1,8 @@
 import { useAuth, logout } from "wasp/client/auth";
+import { Button } from "../components/ui";
 import { SettingsLayout } from "./SettingsLayout";
+import { Field } from "./Field";
+import "./Field.css";
 
 /**
  * Account — who you are, and how to leave.
@@ -12,24 +15,23 @@ export function SettingsPage() {
   return (
     <SettingsLayout>
       {/* Profile */}
-      <section className="aa-account-section">
-        <h2 className="aa-account-label">Email</h2>
-        <p className="aa-account-value">{email ?? "—"}</p>
-
-        <h2 className="aa-account-label" style={{ marginTop: 16 }}>Name</h2>
-        <p className="aa-account-value">{user ? `${user.firstName} ${user.lastName}` : ""}</p>
+      <section className="aa-settings-section">
+        <Field label="Email" value={email ?? "—"} />
+        <Field label="Name" value={user ? `${user.firstName} ${user.lastName}` : ""} />
       </section>
 
       {/* Sign out */}
-      <section className="aa-account-section">
-        <button type="button" className="aa-account-logout" onClick={() => logout()}>
-          Log out
-        </button>
+      <section className="aa-settings-section">
+        <Field label="Session">
+          <Button variant="secondary" size="sm" onClick={() => logout()}>
+            Log out
+          </Button>
+        </Field>
       </section>
 
       {/* Coming soon — kept quiet */}
-      <section className="aa-account-section">
-        <p className="aa-account-soon">
+      <section className="aa-settings-section">
+        <p className="aa-settings-note">
           Change email, change password, and delete account are coming soon.
         </p>
       </section>

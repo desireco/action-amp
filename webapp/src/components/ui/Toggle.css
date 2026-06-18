@@ -1,0 +1,67 @@
+@import "../../styles/tokens.css";
+
+/* ============================================================
+   Toggle — boolean switch
+   ============================================================ */
+.aa-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 40px;
+  height: 22px;
+  border-radius: var(--aa-radius-full);
+  border: none;
+  background: var(--aa-border-strong);
+  cursor: pointer;
+  padding: 2px;
+  flex-shrink: 0;
+  transition:
+    background 0.2s var(--aa-ease-out),
+    box-shadow 0.15s var(--aa-ease-out);
+}
+
+.aa-toggle:hover:not(.aa-toggle--disabled) {
+  background: var(--aa-text-4);
+}
+
+.aa-toggle:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-toggle--on {
+  background: var(--aa-teal-cta);
+}
+
+.aa-toggle--on:hover:not(.aa-toggle--disabled) {
+  background: var(--aa-teal-cta-hover);
+}
+
+.aa-toggle--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* The thumb (circle) */
+.aa-toggle__thumb {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-surface);
+  box-shadow: var(--aa-shadow-sm);
+  transform: translateX(0);
+  transition: transform 0.2s var(--aa-ease-out-quart);
+}
+
+.aa-toggle--on .aa-toggle__thumb {
+  transform: translateX(18px);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-toggle,
+  .aa-toggle__thumb {
+    transition-duration: 0.01ms !important;
+  }
+}

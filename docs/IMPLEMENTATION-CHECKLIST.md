@@ -176,34 +176,40 @@
 > Re-skin existing scaffolded pages to match the design system.
 > Goal: Settings and Billing look like they belong to the same app.
 
-### 5.1 ⬜ Settings layout
-- [ ] Upgrade SettingsLayout to use shared BrandMark, Button, Section components.
-- [ ] Tab navigation matches the teal-accent-bottom-border pattern from prototype.
-- [ ] Back link styling consistent.
+### 5.1 ✅ Settings layout
+- [x] Upgrade SettingsLayout to use shared tokens + consistent back link with icon.
+- [x] Tab navigation matches the teal-accent-bottom-border pattern from prototype.
+- [x] Back link styling consistent.
 
-### 5.2 ⬜ Account settings page
-- [ ] Label/value pairs for email, name, joined date.
-- [ ] Logout button uses Button component (secondary variant).
-- [ ] "Coming soon" badges for linked social accounts, delete account.
+### 5.2 ✅ Account settings page
+- [x] Label/value pairs via shared `Field` component (email, name).
+- [x] Logout button uses `Button` component (secondary variant).
+- [x] "Coming soon" note for change email/password/delete account.
 
-### 5.3 ⬜ Preferences page
-- [ ] Theme toggle (light/dark) — wired to `[data-theme]`.
-- [ ] Today cap setting (number input, default 5, or "off").
-- [ ] Confirmation sounds toggle.
-- [ ] Momentum toggle.
-- [ ] All toggles use a consistent switch component.
+### 5.3 ✅ Preferences page
+- [x] Theme toggle (light/dark) — wired to `[data-theme]` + localStorage, in sync with topbar.
+- [x] Today cap setting (shown with "soon" chip until configurable).
+- [x] Confirmation sounds toggle ("soon" chip).
+- [x] Momentum toggle ("soon" chip).
+- [x] All toggles use the shared `Toggle` component.
 
-### 5.4 ⬜ Billing page
-- [ ] Active plan state card — uses Card component, Badge for plan name.
-- [ ] Plan picker grid — uses Card interactive variant for each plan.
-- [ ] Payment history table — consistent with design tokens (already pretty good, just needs shared tokens).
-- [ ] Banners (success/muted) use Card variant.
+### 5.4 ✅ Billing page
+- [x] Active plan state card — uses `Card` + `Chip` for plan name.
+- [x] Plan picker grid — uses `Card` (interactive + highlighted variants) for each plan.
+- [x] Payment history table — uses shared `Table` component with token styling.
+- [x] Banners (success/muted) use `Card` variant.
 
-### 5.5 ⬜ New reusable: **Toggle/Switch** (also Phase 0.1)
-- [ ] Teal accent when on, neutral when off. Smooth transition.
+### 5.5 ✅ New reusable: **Toggle/Switch** (also Phase 0.1)
+- [x] Teal accent when on, neutral when off. Smooth thumb slide. role=switch + aria-checked.
 
-### 5.6 ⬜ New reusable: **Table**
-- [ ] Striped rows, header styling, responsive overflow.
+### 5.6 ✅ New reusable: **Table**
+- [x] Striped rows, header styling, responsive overflow. Column render fns + row[key] fallback.
+
+### 5.7 ✅ New reusable: **Field** (settings row)
+- [x] Label/value/toggle/custom variants. Used by Account + Preferences.
+
+### 5.0 ✅ Topbar theme sync
+- [x] AppShell theme state reads from localStorage on mount, respects prefers-color-scheme, persists on toggle — stays in sync with Preferences.
 
 ---
 

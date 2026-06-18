@@ -10,6 +10,8 @@ import {
   LensSwitch,
   ModeDial,
   NavItem,
+  Table,
+  Toggle,
   TriageCard,
   WhatNowCard,
   ZoomDock,
@@ -42,6 +44,8 @@ const SECTIONS = [
   { id: "chips", label: "Chips & Badges" },
   { id: "completion", label: "Completion Circle" },
   { id: "forms", label: "Form Elements" },
+  { id: "toggle", label: "Toggle" },
+  { id: "table", label: "Table" },
   { id: "shadows", label: "Shadows & Motion" },
   { id: "sidebar", label: "Sidebar" },
   { id: "lens", label: "Lens Switch" },
@@ -445,6 +449,27 @@ export function DesignSystemPage() {
             <div className="ds-form-row">
               <textarea className="ds-textarea" placeholder="Notes…" rows={3} />
             </div>
+          </Sub>
+        </Sec>
+
+        {/* ============================================================
+           TOGGLE — boolean switch
+           ============================================================ */}
+        <Sec id="toggle" title="Toggle" desc="Boolean switch for preferences. Teal when on, neutral when off.">
+          <ToggleDemo />
+          <Sub h="Usage">
+            <div className="ds-usage">
+              <p className="ds-usage__p"><strong>role=switch</strong> with aria-checked — fully keyboard-accessible. Used by the Preferences page (dark mode, sounds, momentum).</p>
+            </div>
+          </Sub>
+        </Sec>
+
+        {/* ============================================================
+           TABLE — data grid
+           ============================================================ */}
+        <Sec id="table" title="Table" desc="Striped rows, token-driven headers, responsive overflow. Column render fns or row[key] fallback.">
+          <Sub h="Example (payment history)">
+            <TableDemo />
           </Sub>
         </Sec>
 
@@ -1054,6 +1079,63 @@ function LensSwitchDemo() {
         ]}
         active={lens}
         onSelect={setLens}
+      />
+    </div>
+  );
+}
+
+/* ================================================================
+   Toggle demo
+   ================================================================ */
+
+function ToggleDemo() {
+  const [on1, setOn1] = useState(true);
+  const [on2, setOn2] = useState(false);
+  return (
+    <div className="ds-btn-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: "var(--aa-space-md)" }}>
+      <div className="ds-toggle-row">
+        <Toggle checked={on1} onChange={setOn1} label="Dark mode" />
+        <span className="ds-toggle-label">Dark mode — {on1 ? "on" : "off"}</span>
+      </div>
+      <div className="ds-toggle-row">
+        <Toggle checked={on2} onChange={setOn2} label="Completion sounds" />
+        <span className="ds-toggle-label">Completion sounds — {on2 ? "on" : "off"}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================
+   Table demo
+   ================================================================ */
+
+interface DemoPayment {
+  id: string;
+  description: string;
+  amount: number;
+  status: "succeeded" | "pending" | "failed";
+  date: string;
+}
+
+const DEMO_PAYMENTS: DemoPayment[] = [
+  { id: "1", description: "Pro Yearly", amount: 7950, status: "succeeded", date: "Jun 1, 2026" },
+  { id: "2", description: "Pro Yearly", amount: 7950, status: "succeeded", date: "Jun 1, 2025" },
+];
+
+function TableDemo() {
+  const fmt = (cents: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+  const variant = (s: string) => s === "succeeded" ? "teal" : s === "failed" ? "rose" : "muted";
+  return (
+    <div style={{ maxWidth: 480 }}>
+      <Table
+        columns={[
+          { key: "date", header: "Date", render: (p) => p.date },
+          { key: "description", header: "Plan" },
+          { key: "amount", header: "Amount", align: "right", render: (p) => fmt(p.amount) },
+          { key: "status", header: "Status", align: "center", render: (p) => <Chip variant={variant(p.status) as "teal" | "rose" | "muted"} small>{p.status}</Chip> },
+        ]}
+        rows={DEMO_PAYMENTS}
+        rowKey={(p) => p.id}
       />
     </div>
   );
