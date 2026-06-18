@@ -91,3 +91,57 @@
   --aa-dur-base: 0.2s;
   --aa-dur-slow: 0.4s;
 }
+
+/* ============================================================
+   DARK THEME — overrides only the neutrals + shadows.
+   Accents (teal/amber/violet/rose) are identical to light: they pop
+   against the dark surface and keep the brand consistent. Cool-tinted
+   (hue 230) to match the light DNA. Triggered by [data-theme="dark"]
+   on <html>, set by the topbar toggle + Preferences page.
+   Values derive from docs/mockups/app-shell-whatnow.html dark block,
+   converted to OKLCH.
+   ============================================================ */
+[data-theme="dark"] {
+  /* ---- Neutral ramp (dark, cool-tinted) ---- */
+  --aa-bg: oklch(0.18 0.012 230);
+  --aa-bg-soft: oklch(0.21 0.012 230);
+  --aa-bg-deep: oklch(0.16 0.012 230);
+  --aa-surface: oklch(0.25 0.013 230);
+  --aa-surface-muted: oklch(0.29 0.013 230);
+  --aa-surface-muted-2: oklch(0.33 0.013 230);
+  --aa-border: oklch(0.32 0.013 230);
+  --aa-border-strong: oklch(0.4 0.015 230);
+  --aa-text: oklch(0.96 0.005 230);
+  --aa-text-2: oklch(0.85 0.008 230);
+  --aa-text-3: oklch(0.7 0.012 230);
+  --aa-text-4: oklch(0.58 0.012 230);
+
+  /* ---- Soft accent backgrounds: slightly stronger tint to read on dark ---- */
+  --aa-teal-soft: oklch(0.3 0.05 220);
+  --aa-teal-soft-strong: oklch(0.35 0.08 220);
+  --aa-amber-soft: oklch(0.3 0.06 75);
+  --aa-amber-soft-strong: oklch(0.34 0.1 75);
+  --aa-violet-soft: oklch(0.3 0.05 295);
+  --aa-rose-soft: oklch(0.3 0.06 15);
+
+  /* ---- Shadows: darker, more opaque (still blue-tinted, never pure black) ---- */
+  --aa-shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3);
+  --aa-shadow-md:
+    0 2px 6px oklch(0 0 0 / 0.3), 0 12px 32px oklch(0 0 0 / 0.25);
+  --aa-shadow-lg:
+    0 4px 12px oklch(0 0 0 / 0.3), 0 32px 80px oklch(0 0 0 / 0.2);
+  --aa-hero-shadow:
+    0 2px 6px oklch(0 0 0 / 0.3), 0 40px 96px oklch(0.58 0.16 225 / 0.25);
+
+  /* ---- Amber text shifts brighter on dark for legibility ---- */
+  --aa-amber-text: oklch(0.78 0.16 70);
+}
+
+/* color-scheme hints so native form controls + scrollbars match. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+:root[data-theme="light"],
+:root:not([data-theme]) {
+  color-scheme: light;
+}

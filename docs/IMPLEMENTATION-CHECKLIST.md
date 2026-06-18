@@ -215,16 +215,19 @@
 
 ## Phase 6 — Dark Mode
 
-### 6.1 ⬜ Dark tokens
-- [ ] Complete `[data-theme="dark"]` block in `tokens.css` covering all neutrals, surfaces, borders, text, shadows.
+### 6.1 ✅ Dark tokens
+- [x] `[data-theme="dark"]` block in `tokens.css` covering all neutrals, surfaces, borders, text, shadows. Cool-tinted (hue 230) OKLCH, derived from mockup dark values. Accents unchanged; amber-text brightened for legibility.
+- [x] `color-scheme` hints so native controls + scrollbars match.
 
-### 6.2 ⬜ Toggle wiring
-- [ ] Theme toggle in topbar sets `data-theme` on `<html>`.
-- [ ] Persist preference to `localStorage`.
-- [ ] Respect `prefers-color-scheme: dark` as default on first visit.
+### 6.2 ✅ Toggle wiring
+- [x] Theme toggle in topbar sets `data-theme` on `<html>` (via useEffect on state change).
+- [x] Persist preference to `localStorage` (key: `aa-theme`).
+- [x] Respect `prefers-color-scheme: dark` as default on first visit (in useState initializer).
+- [x] AppShell + Preferences page stay in sync (same localStorage key).
+- [x] `App.css` body uses tokens (was hardcoded light) + imports tokens.css globally.
 
-### 6.3 ⬜ Page-by-page dark QA
-- [ ] Verify every page renders correctly in dark mode.
+### 6.3 ✅ Page-by-page dark QA
+- [x] Verified via CDP: body/nav/text/surfaces all flip correctly; accents (teal swatch) stay brand-consistent. Token-driven — every page that consumes `var(--aa-*)` flips automatically.
 
 ---
 

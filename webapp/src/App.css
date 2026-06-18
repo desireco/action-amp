@@ -1,8 +1,10 @@
 /*
  * ActionAmp global styles.
- * The design system tokens live in ./styles/tokens.css (imported per-page).
- * This file holds the bare global reset + body defaults only.
+ * The design system tokens live in ./styles/tokens.css — imported here so the
+ * :root variables (including [data-theme="dark"] overrides) are available
+ * globally, before any page renders.
  */
+@import "./styles/tokens.css";
 
 * {
   box-sizing: border-box;
@@ -30,9 +32,12 @@ body {
     "SF Pro Display",
     Roboto,
     sans-serif;
-  background: oklch(0.99 0.005 230);
-  color: oklch(0.2 0.015 230);
+  background: var(--aa-bg);
+  color: var(--aa-text);
   line-height: 1.5;
+  transition:
+    background 0.3s var(--aa-ease-out),
+    color 0.3s var(--aa-ease-out);
 }
 
 a {

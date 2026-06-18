@@ -45,6 +45,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
 
+  // Apply the theme to <html> whenever it changes (initial mount + toggles).
+  // The useState initializer reads before paint; this effect commits the
+  // data-theme attribute so the dark tokens activate.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
   // Idempotent: ensures the user has the default Work/Me lenses (covers both
   // existing users and new signups). Runs once per app load — but ONLY when
   // authenticated, so the /login redirect path doesn't 500 these ops.
