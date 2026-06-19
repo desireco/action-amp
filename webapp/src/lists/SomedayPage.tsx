@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getTasks, toggleTaskDone } from "wasp/client/operations";
+import { useQueryClient } from "@tanstack/react-query";
 import { TaskRow, CompletionCircle, type TaskRowTask } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
@@ -13,6 +14,7 @@ import "./ListShell.css";
 export function SomedayPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "SOMEDAY", isDone: false } : undefined,
@@ -22,6 +24,9 @@ export function SomedayPage() {
   const handleToggle = async (task: TaskRowTask) => {
     try {
       await toggleTaskDone({ id: task.id });
+      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
+      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     } catch {
       /* reverts via refetch */
     }

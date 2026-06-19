@@ -1,4 +1,4 @@
-import type { GetGoals } from "wasp/server/operations";
+import type { GetGoals, CreateGoal } from "wasp/server/operations";
 
 /**
  * Goals list for the Goals page, scoped to the active Lens.
@@ -40,3 +40,29 @@ export const getGoals = (async (args, context) => {
     };
   });
 }) satisfies GetGoals<{ lensId: string }>;
+
+// ----------------------------------------------------------------
+// Create a goal
+// ----------------------------------------------------------------
+export const createGoal = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const name = args.name?.trim();
+  if (!name) {
+    throw new Error("Goal name is required.");
+  }
+  return await context.entities.Goal.create({
+    data: {
+      name,
+      userId: context.user.id,
+      lensId: args.lensId,
+      description: args.description,
+    },
+    select: { id: true, name: true },
+  });
+}) satisfies CreateGoal<{
+  name: string;
+  lensId: string;
+  description?: string;
+}, { id: string; name: string }>;

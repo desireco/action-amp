@@ -1,47 +1,19 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { DispatchButton, TriageCard, Button, type TriageExit } from "../components/ui";
+import { useQuery } from "wasp/client/operations";
+import { getInboxItems, triageInboxItem } from "wasp/client/operations";
+import { useQueryClient } from "@tanstack/react-query";
+import { DispatchButton, TriageCard, Button, Chip, type TriageExit } from "../components/ui";
+import { useActiveLens } from "./lensContext";
 import "./InboxTriagePage.css";
 
 /**
  * Inbox Triage — the Tinder-style walkthrough. One item at a time.
  *
- * Decide what each captured thing *becomes*. The dispatch decision drives the
- * exit animation direction (right/left/up/down). Keyboard shortcuts mirror the
- * on-screen buttons. From triage-tinder.html.
- *
- * Today this uses sample data; the Wasp mutations land with Tasks.
+ * Each dispatch calls `triageInboxItem`, which transforms the InboxItem into
+ * its concrete type (Task / Project / Resource) and deletes the original. The
+ * exit animation direction encodes the decision. From triage-tinder.html.
  */
-
-interface TriageItem {
-  id: string;
-  text: string;
-  capturedAgo: string;
-  chips: { tone: "date" | "priority" | "tag"; label: string }[];
-}
-
-const SAMPLE_ITEMS: TriageItem[] = [
-  {
-    id: "1",
-    text: "Email Sarah re: Q3 invoice tomorrow",
-    capturedAgo: "captured 14 min ago",
-    chips: [
-      { tone: "date", label: "📅 tomorrow" },
-      { tone: "priority", label: "★ Important" },
-    ],
-  },
-  { id: "2", text: "Plan Q3 launch", capturedAgo: "captured 1 hr ago", chips: [{ tone: "tag", label: "#work" }] },
-  { id: "3", text: "Competitor pricing PDF", capturedAgo: "captured yesterday", chips: [{ tone: "tag", label: "@resource" }] },
-  { id: "4", text: "Pick up dry cleaning", capturedAgo: "captured this morning", chips: [{ tone: "tag", label: "#personal" }] },
-  {
-    id: "5",
-    text: "Write blog: focus tips for ADHD",
-    capturedAgo: "captured 2 days ago",
-    chips: [{ tone: "tag", label: "#writing" }, { tone: "priority", label: "★ Important" }],
-  },
-  { id: "6", text: "Renew domain before June 30", capturedAgo: "captured 3 days ago", chips: [{ tone: "date", label: "📅 Jun 30" }] },
-  { id: "7", text: "Idea: weekly review email digest", capturedAgo: "captured last week", chips: [] },
-];
 
 type Action = "task-today" | "project" | "resource" | "upcoming" | "someday" | "trash";
 
@@ -57,33 +29,53 @@ const ACTION_EXIT: Record<Action, TriageExit> = {
 
 export function InboxTriagePage() {
   const navigate = useNavigate();
-  const [items, setItems] = useState(SAMPLE_ITEMS);
+  const queryClient = useQueryClient();
+  const lens = useActiveLens();
+  const { data: items } = useQuery(getInboxItems);
+  const list = items ?? [];
+
   const [idx, setIdx] = useState(0);
   const [exit, setExit] = useState<TriageExit>(null);
   const [dispatched, setDispatched] = useState(false);
   const [entering, setEntering] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const total = items.length;
+  const total = list.length;
   const done = idx;
   const isComplete = idx >= total;
 
   const dispatch = useCallback(
-    (action: Action) => {
-      if (idx >= total || exit) return; // ignore mid-animation
+    async (action: Action) => {
+      if (idx >= total || exit || !lens) return; // ignore mid-animation / no lens
+      const item = list[idx];
       setDispatched(true);
-      setTimeout(() => setDispatched(false), 200);
       setExit(ACTION_EXIT[action]);
+      try {
+        await triageInboxItem({
+          inboxItemId: item.id,
+          decision: action,
+          lensId: lens.id,
+        });
+        // Invalidate the lists that this triage touched.
+        queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
+        queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+        queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+        queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+        setError(null);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Triage failed.");
+      }
+      setTimeout(() => setDispatched(false), 200);
       setTimeout(() => {
         setExit(null);
         setEntering(true);
         setIdx((i) => i + 1);
-        // clear entering on next frame
         requestAnimationFrame(() => {
           requestAnimationFrame(() => setEntering(false));
         });
       }, 320);
     },
-    [idx, total, exit],
+    [idx, total, exit, lens, list, queryClient],
   );
 
   // Keyboard shortcuts (scoped to this page)
@@ -112,12 +104,13 @@ export function InboxTriagePage() {
   }, [dispatch, isComplete, navigate]);
 
   const reset = () => {
-    setItems(SAMPLE_ITEMS);
     setIdx(0);
     setExit(null);
     setDispatched(false);
     setEntering(false);
+    setError(null);
   };
+  void reset; // (kept for the 'Triage again' action when the loop reopens)
 
   if (isComplete) {
     return (
@@ -131,13 +124,13 @@ export function InboxTriagePage() {
         <p className="aa-triage-empty__text">Nothing left to decide. Go do something.</p>
         <div className="aa-triage-empty__actions">
           <Button variant="primary" onClick={() => navigate("/app")}>Done →</Button>
-          <Button variant="secondary" onClick={reset}>Triage again</Button>
+          <Button variant="secondary" onClick={() => navigate("/app/inbox")}>Back to inbox</Button>
         </div>
       </div>
     );
   }
 
-  const item = items[idx];
+  const item = list[idx];
 
   return (
     <div className="aa-triage">
@@ -173,13 +166,19 @@ export function InboxTriagePage() {
         <p>Decide what each thing becomes. It leaves the inbox for good.</p>
       </div>
 
+      {error && (
+        <div className="aa-triage__error">
+          <Chip variant="rose" small>!</Chip>
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* ---- Card stage ---- */}
       <div className="aa-triage__stage">
         <TriageCard
           key={item.id}
           body={item.text}
-          meta={item.capturedAgo}
-          chips={item.chips}
+          meta={`captured ${formatAgo(item.createdAt)}`}
           exit={exit}
           dispatched={dispatched}
           entering={entering}
@@ -216,7 +215,7 @@ export function InboxTriagePage() {
           <DispatchButton
             tone="amber"
             label="Resource"
-            sub="reference — link or note, filed under a project or goal"
+            sub="reference — needs a project or goal (file from there)"
             kbd="R"
             icon={
               <svg viewBox="0 0 16 16" fill="none">
@@ -236,4 +235,12 @@ export function InboxTriagePage() {
       </div>
     </div>
   );
+}
+
+function formatAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
+  return `${Math.floor(seconds / 86400)} days ago`;
 }

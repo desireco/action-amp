@@ -1,4 +1,4 @@
-import type { GetTask, GetTasks, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
+import type { GetTask, GetTasks, GetTopTask, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
 
 /**
  * Task operations for the Phase 4 list views.
@@ -97,3 +97,41 @@ export const updateTaskStatus = (async (args, context) => {
   status: "TODAY" | "UPCOMING" | "SOMEDAY";
   dueDate?: Date | null;
 }>;
+
+// ----------------------------------------------------------------
+// Read: the focus engine's top task (FEATURES.md F10 — MVP priority-first)
+// ----------------------------------------------------------------
+// Candidates = Tasks in the active Lens with status=TODAY, not done.
+// Rank by priority (IMPORTANT > NORMAL > LOW), then size (smaller = quick win),
+// then oldest. Returns the top 1, or null when nothing's on the table.
+const PRIORITY_RANK: Record<string, number> = { IMPORTANT: 0, NORMAL: 1, LOW: 2 };
+const SIZE_RANK: Record<string, number> = { S: 0, M: 1, L: 2, XL: 3 };
+
+export const getTopTask = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const candidates = await context.entities.Task.findMany({
+    where: {
+      userId: context.user.id,
+      lensId: args.lensId,
+      status: "TODAY",
+      isDone: false,
+    },
+    include: {
+      project: { select: { id: true, name: true } },
+      goal: { select: { id: true, name: true } },
+    },
+  });
+  if (candidates.length === 0) return null;
+
+  candidates.sort((a, b) => {
+    const pr = (PRIORITY_RANK[a.priority] ?? 1) - (PRIORITY_RANK[b.priority] ?? 1);
+    if (pr !== 0) return pr;
+    const sr = (SIZE_RANK[a.size] ?? 1) - (SIZE_RANK[b.size] ?? 1);
+    if (sr !== 0) return sr;
+    return a.createdAt.getTime() - b.createdAt.getTime();
+  });
+
+  return candidates[0];
+}) satisfies GetTopTask<{ lensId: string }>;

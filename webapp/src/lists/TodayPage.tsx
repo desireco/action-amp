@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getTasks, toggleTaskDone } from "wasp/client/operations";
+import { useQueryClient } from "@tanstack/react-query";
 import { TaskRow, CompletionCircle, Chip, type TaskRowTask } from "../components/ui";
 import { GroupedList, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
@@ -19,6 +20,7 @@ const TODAY_CAP = 5;
 export function TodayPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "TODAY", isDone: false } : undefined,
@@ -46,6 +48,10 @@ export function TodayPage() {
   const handleToggle = async (task: TaskRowTask) => {
     try {
       await toggleTaskDone({ id: task.id });
+      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+      queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
+      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     } catch {
       // optimistic state will revert via react-query refetch on error
     }

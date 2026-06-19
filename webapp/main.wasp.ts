@@ -7,11 +7,13 @@ import { SettingsPage } from "./src/app/SettingsPage" with { type: "ref" };
 import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
 import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
-import { getTask, getTasks, toggleTaskDone, updateTaskStatus } from "./src/tasks/operations" with { type: "ref" };
+import { getTask, getTasks, getTopTask, toggleTaskDone, updateTaskStatus } from "./src/tasks/operations" with { type: "ref" };
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
+import { createProject } from "./src/projects/operations" with { type: "ref" };
 import { getGoals } from "./src/goals/operations" with { type: "ref" };
+import { createGoal } from "./src/goals/operations" with { type: "ref" };
 import { getLogbook } from "./src/logbook/operations" with { type: "ref" };
-import { createInboxItem } from "./src/inbox/operations" with { type: "ref" };
+import { createInboxItem, getInboxItems, triageInboxItem } from "./src/inbox/operations" with { type: "ref" };
 import { TodayPage } from "./src/lists/TodayPage" with { type: "ref" };
 import { UpcomingPage } from "./src/lists/UpcomingPage" with { type: "ref" };
 import { SomedayPage } from "./src/lists/SomedayPage" with { type: "ref" };
@@ -117,14 +119,19 @@ export default app({
     ),
     query(getTask, { entities: ["Task"], auth: true }),
     query(getTasks, { entities: ["Task"], auth: true }),
+    query(getTopTask, { entities: ["Task"], auth: true }),
     action(toggleTaskDone, { entities: ["Task"], auth: true }),
     action(updateTaskStatus, { entities: ["Task"], auth: true }),
     query(getProjects, { entities: ["Project", "Task"], auth: true }),
+    action(createProject, { entities: ["Project"], auth: true }),
     query(getGoals, { entities: ["Goal", "Project", "Task"], auth: true }),
+    action(createGoal, { entities: ["Goal"], auth: true }),
     query(getLogbook, { entities: ["Task", "Project"], auth: true }),
     query(getAppData, { entities: ["Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens"], auth: true }),
+    query(getInboxItems, { entities: ["InboxItem"], auth: true }),
     action(createInboxItem, { entities: ["InboxItem"], auth: true }),
+    action(triageInboxItem, { entities: ["InboxItem", "Task", "Project", "Resource"], auth: true }),
     query(getBillingStatus, { entities: ["Payment"], auth: true }),
     action(createCheckoutSession, { entities: ["User"], auth: true }),
     api("POST", "/webhooks/stripe", stripeWebhook, {

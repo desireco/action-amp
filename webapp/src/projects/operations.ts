@@ -1,4 +1,4 @@
-import type { GetProjects } from "wasp/server/operations";
+import type { GetProjects, CreateProject } from "wasp/server/operations";
 
 /**
  * Projects list for the Projects page, scoped to the active Lens.
@@ -60,3 +60,31 @@ export const getProjects = (async (args, context) => {
     nextAction: p.tasks[0] ?? null, // top-priority open task
   }));
 }) satisfies GetProjects<{ lensId: string }>;
+
+// ----------------------------------------------------------------
+// Create a project (trige-to-project + a create UI)
+// ----------------------------------------------------------------
+export const createProject = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const name = args.name?.trim();
+  if (!name) {
+    throw new Error("Project name is required.");
+  }
+  return await context.entities.Project.create({
+    data: {
+      name,
+      userId: context.user.id,
+      lensId: args.lensId,
+      goalId: args.goalId,
+      description: args.description,
+    },
+    select: { id: true, name: true },
+  });
+}) satisfies CreateProject<{
+  name: string;
+  lensId: string;
+  goalId?: string;
+  description?: string;
+}, { id: string; name: string }>;

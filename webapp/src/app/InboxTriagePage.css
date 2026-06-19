@@ -104,6 +104,21 @@
   margin: 4px 0 0;
 }
 
+/* ---- Error banner (e.g. resource needs a parent) ---- */
+.aa-triage__error {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  margin-bottom: var(--aa-space-md);
+  background: var(--aa-rose-soft);
+  border: 1px solid var(--aa-rose);
+  border-radius: var(--aa-radius-sm);
+  font-size: 0.82rem;
+  color: var(--aa-rose-text);
+  line-height: 1.4;
+}
+
 /* ---- Stage: card + dispatch ---- */
 .aa-triage__stage {
   flex: 1;
