@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Breadcrumb,
   BrandMark,
@@ -216,6 +216,15 @@ function T({ token, value }: { token: string; value: string }) {
 
 export function DesignSystemPage() {
   const [active, setActive] = useState<SectionId>("overview");
+
+  // Route-specific tab title — restores the global app title on unmount.
+  useEffect(() => {
+    const prev = document.title;
+    document.title = "ActionAmp · Design System";
+    return () => {
+      document.title = prev;
+    };
+  }, []);
   const [lensActive, setLensActive] = useState<"work" | "me">("work");
 
   return (
@@ -224,7 +233,7 @@ export function DesignSystemPage() {
       <aside className="ds-nav">
         <div className="ds-nav__brand">
           <div className="ds-nav__mark"><BrandMark size="sm" /></div>
-          <span className="ds-nav__name">Design System</span>
+          <span className="ds-nav__name">ActionAmp · Design System</span>
         </div>
         <nav className="ds-nav__list">
           {SECTIONS.map((s) => (
