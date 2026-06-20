@@ -1,0 +1,32 @@
+@import "../styles/tokens.css";
+
+.aa-create-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  margin-bottom: var(--aa-space-lg);
+}
+
+.aa-create-inline__input {
+  flex: 1;
+  font-family: var(--aa-font);
+  font-size: 0.95rem;
+  padding: 9px 12px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  color: var(--aa-text);
+  transition:
+    border-color 0.15s var(--aa-ease-out),
+    box-shadow 0.15s var(--aa-ease-out);
+}
+
+.aa-create-inline__input::placeholder {
+  color: var(--aa-text-4);
+}
+
+.aa-create-inline__input:focus {
+  outline: none;
+  border-color: var(--aa-teal);
+  box-shadow: 0 0 0 3px var(--aa-teal-soft);
+}

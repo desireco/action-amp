@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { BrandMark } from "./BrandMark";
+import { BrandMark, Chip } from "./index";
+import { parseCapture } from "../../inbox/parseCapture";
 import "./Overlays.css";
 
 /**
@@ -20,6 +21,9 @@ export function CapturePopover({
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Live parse for the inline preview chips (F2).
+  const parsed = text.trim() ? parseCapture(text) : null;
 
   // Focus the input on open
   useEffect(() => {
@@ -58,13 +62,24 @@ export function CapturePopover({
             ref={inputRef}
             type="text"
             className="aa-capture__input"
-            placeholder="What's on your mind?"
+            placeholder={`What's on your mind?  (try: "Email Sarah tomorrow #work !3 ~20m")`}
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={submitting}
             aria-label="Capture"
           />
         </div>
+        {parsed && (parsed.parsedDate || parsed.parsedPriority || parsed.parsedSize || parsed.parsedTags.length > 0) && (
+          <div className="aa-capture__preview">
+            {parsed.parsedDate && <Chip variant="teal" small>📅 {formatPreviewDate(parsed.parsedDate)}</Chip>}
+            {parsed.parsedPriority === "IMPORTANT" && <Chip variant="amber" small>★ Important</Chip>}
+            {parsed.parsedPriority === "LOW" && <Chip variant="muted" small>low</Chip>}
+            {parsed.parsedSize && <Chip variant="default" small>{parsed.parsedSize}</Chip>}
+            {parsed.parsedTags.map((t) => (
+              <Chip key={t} variant={t.startsWith("@") ? "amber" : "violet"} small>{t}</Chip>
+            ))}
+          </div>
+        )}
         <div className="aa-capture__foot">
           <span className="aa-capture__hint">
             <kbd className="aa-capture__kbd">⏎</kbd> capture ·{" "}
@@ -74,4 +89,16 @@ export function CapturePopover({
       </form>
     </div>
   );
+}
+
+function formatPreviewDate(date: Date): string {
+  const d = new Date(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  if (diffDays === 0) return "today";
+  if (diffDays === 1) return "tomorrow";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }

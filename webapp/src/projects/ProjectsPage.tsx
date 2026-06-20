@@ -1,11 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getProjects } from "wasp/client/operations";
-import { Chip, GroupedList, type GroupDef } from "../components/ui";
+import { getProjects, createProject } from "wasp/client/operations";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button, Chip, GroupedList, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "../lists/ListShell";
+import { CreateInline } from "../lists/CreateInline";
 import "./ProjectsPage.css";
+import "../lists/CreateInline.css";
 
 interface ProjectRow {
   id: string;
@@ -24,11 +27,29 @@ interface ProjectRow {
 export function ProjectsPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { data: projects, isLoading } = useQuery(
     getProjects,
     lens ? { lensId: lens.id } : undefined,
     { enabled: !!lens },
   );
+
+  const handleCreate = async (name: string) => {
+    if (!lens) return;
+    setSubmitting(true);
+    try {
+      await createProject({ name, lensId: lens.id });
+      queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+      setCreating(false);
+    } catch {
+      /* surface elsewhere */
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const groups = useMemo<GroupDef<ProjectRow>[]>(() => {
     if (!projects) return [];
@@ -43,10 +64,27 @@ export function ProjectsPage() {
 
   if (!isLoading && (projects?.length ?? 0) === 0) {
     return (
-      <ListEmpty
-        title="No projects yet."
-        text="Projects are outcomes that need more than one step. Promote a big task during triage to create one."
-      />
+      <div className="aa-projects">
+        <header className="aa-list-header">
+          <div>
+            <div className="aa-list-header__eyebrow">Projects</div>
+            <h1 className="aa-list-header__title">0 active</h1>
+          </div>
+          <Button variant="secondary" size="sm" onClick={() => setCreating(true)}>New project</Button>
+        </header>
+        {creating && (
+          <CreateInline
+            placeholder="Project name (e.g. ‘Ship product v2’)"
+            onCreate={handleCreate}
+            onCancel={() => setCreating(false)}
+            submitting={submitting}
+          />
+        )}
+        <ListEmpty
+          title="No projects yet."
+          text="Projects are outcomes that need more than one step. Create one here, or promote a big task during triage."
+        />
+      </div>
     );
   }
 
@@ -57,7 +95,18 @@ export function ProjectsPage() {
           <div className="aa-list-header__eyebrow">Projects</div>
           <h1 className="aa-list-header__title">{projects?.length ?? 0} active</h1>
         </div>
+        <Button variant="secondary" size="sm" onClick={() => setCreating((v) => !v)}>
+          {creating ? "Cancel" : "New project"}
+        </Button>
       </header>
+      {creating && (
+        <CreateInline
+          placeholder="Project name (e.g. ‘Ship product v2’)"
+          onCreate={handleCreate}
+          onCancel={() => setCreating(false)}
+          submitting={submitting}
+        />
+      )}
       <GroupedList
         groups={groups}
         renderItem={(p) => {

@@ -1,4 +1,5 @@
 import type { CreateInboxItem, GetInboxItems, TriageInboxItem } from "wasp/server/operations";
+import { parseCapture } from "./parseCapture";
 
 /**
  * Inbox operations — the capture destination + the triage transformation.
@@ -9,18 +10,28 @@ import type { CreateInboxItem, GetInboxItems, TriageInboxItem } from "wasp/serve
  */
 
 // ----------------------------------------------------------------
-// Capture — create a raw InboxItem (used by the ⌘K popover)
+// Capture — create a raw InboxItem (used by the ⌘K popover).
+// Parses the text for date/tag/priority/size tokens (F2) and stores them
+// as parsed-* guesses; triage carries them onto the created Task.
 // ----------------------------------------------------------------
 export const createInboxItem = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const text = args.text?.trim();
-  if (!text) {
+  const raw = args.text?.trim();
+  if (!raw) {
     throw new Error("Capture text is required.");
   }
+  const parsed = parseCapture(raw);
   return await context.entities.InboxItem.create({
-    data: { text, userId: context.user.id },
+    data: {
+      text: parsed.cleanText,
+      userId: context.user.id,
+      parsedDate: parsed.parsedDate,
+      parsedPriority: parsed.parsedPriority,
+      parsedSize: parsed.parsedSize,
+      parsedTags: parsed.parsedTags,
+    },
     select: { id: true, text: true, createdAt: true },
   });
 }) satisfies CreateInboxItem<{ text: string }, { id: string; text: string; createdAt: Date }>;
@@ -69,6 +80,8 @@ export const triageInboxItem = (async (args, context) => {
   }
 
   const lensId = args.lensId;
+  // InboxItem.parsed* may already be set by the capture parser (F2); fall
+  // back to defaults only when the user didn't specify a token.
   const priority = item.parsedPriority ?? "NORMAL";
   const size = item.parsedSize ?? "M";
 

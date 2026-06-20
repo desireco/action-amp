@@ -1,8 +1,13 @@
+import { useState } from "react";
 import { useQuery } from "wasp/client/operations";
-import { getGoals } from "wasp/client/operations";
+import { getGoals, createGoal } from "wasp/client/operations";
+import { useQueryClient } from "@tanstack/react-query";
 import { useActiveLens } from "../app/lensContext";
+import { Button } from "../components/ui";
 import { ListEmpty } from "../lists/ListShell";
+import { CreateInline } from "../lists/CreateInline";
 import "./GoalsPage.css";
+import "../lists/CreateInline.css";
 
 interface GoalRow {
   id: string;
@@ -19,18 +24,45 @@ interface GoalRow {
  */
 export function GoalsPage() {
   const lens = useActiveLens();
+  const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { data: goals, isLoading } = useQuery(
     getGoals,
     lens ? { lensId: lens.id } : undefined,
     { enabled: !!lens },
   );
 
-  if (!isLoading && (goals?.length ?? 0) === 0) {
+  const handleCreate = async (name: string) => {
+    if (!lens) return;
+    setSubmitting(true);
+    try {
+      await createGoal({ name, lensId: lens.id });
+      queryClient.invalidateQueries({ queryKey: ["getGoals"] });
+      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+      setCreating(false);
+    } catch {
+      /* surface elsewhere */
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!isLoading && (goals?.length ?? 0) === 0 && !creating) {
     return (
-      <ListEmpty
-        title="No goals yet."
-        text="Goals are active outcomes — what your projects and tasks roll up to. Link a project or task to a goal during triage."
-      />
+      <div className="aa-goals">
+        <header className="aa-list-header">
+          <div>
+            <div className="aa-list-header__eyebrow">Goals</div>
+            <h1 className="aa-list-header__title">0 active</h1>
+          </div>
+          <Button variant="secondary" size="sm" onClick={() => setCreating(true)}>New goal</Button>
+        </header>
+        <ListEmpty
+          title="No goals yet."
+          text="Goals are active outcomes — what your projects and tasks roll up to. Create one, or link a project/task to a goal during triage."
+        />
+      </div>
     );
   }
 
@@ -41,7 +73,18 @@ export function GoalsPage() {
           <div className="aa-list-header__eyebrow">Goals</div>
           <h1 className="aa-list-header__title">{goals?.length ?? 0} active</h1>
         </div>
+        <Button variant="secondary" size="sm" onClick={() => setCreating((v) => !v)}>
+          {creating ? "Cancel" : "New goal"}
+        </Button>
       </header>
+      {creating && (
+        <CreateInline
+          placeholder="Goal name (e.g. ‘Grow audience’)"
+          onCreate={handleCreate}
+          onCancel={() => setCreating(false)}
+          submitting={submitting}
+        />
+      )}
       <div className="aa-goals-grid">
         {(goals ?? []).map((g: GoalRow) => (
           <div key={g.id} className="aa-goal-card">

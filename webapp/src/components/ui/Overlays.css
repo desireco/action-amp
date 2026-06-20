@@ -189,6 +189,16 @@
   padding-top: var(--aa-space-sm);
 }
 
+/* Live preview chips (parsed tokens) */
+.aa-capture__preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: var(--aa-space-sm);
+  border-top: 1px solid var(--aa-border);
+  margin-top: var(--aa-space-sm);
+}
+
 .aa-capture__hint {
   font-size: 0.75rem;
   color: var(--aa-text-4);
