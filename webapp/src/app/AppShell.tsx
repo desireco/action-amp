@@ -38,7 +38,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [lens, setLens] = useState<string>("Work");
+  const [lens, setLensState] = useState<string>(() => {
+    if (typeof window === "undefined") return "Work";
+    return localStorage.getItem("aa-lens") ?? "Work";
+  });
+  const setLens = (name: string) => {
+    setLensState(name);
+    localStorage.setItem("aa-lens", name);
+  };
   // Theme: persisted to localStorage, kept in sync with the Preferences page.
   // Reads once on mount; falls back to the system preference on first visit.
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -70,8 +77,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const counts = appData?.counts ?? { inbox: 0, today: 0, projects: 0, goals: 0 };
 
   // Keep the active lens valid once lenses load; default to the first.
+  // If the stored name no longer matches (e.g. renamed), self-heal: persist
+  // the fallback so we don't keep looking up a stale name.
   const activeLens = lenses.find((l) => l.name === lens) ?? lenses[0];
   const activeLensName = activeLens?.name ?? lens;
+  useEffect(() => {
+    if (activeLens && activeLens.name !== lens) {
+      setLens(activeLens.name);
+    }
+  }, [activeLens, lens]);
   // The value pages consume via useActiveLens() to scope their queries.
   const activeLensValue = activeLens ? { id: activeLens.id, name: activeLens.name } : null;
 
