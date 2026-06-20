@@ -18,6 +18,8 @@ export type { ModeDialItem } from "./ModeDial";
 export { NavItem } from "./NavItem";
 export { GroupedList } from "./GroupedList";
 export type { GroupDef } from "./GroupedList";
+export { ResourcePickerSheet } from "./ResourcePickerSheet";
+export type { PickerProject, PickerGoal } from "./ResourcePickerSheet";
 export { ShortcutCheatsheet } from "./ShortcutCheatsheet";
 export { SnoozeSheet } from "./SnoozeSheet";
 export type { SnoozePreset } from "./SnoozeSheet";

@@ -3,8 +3,10 @@ import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems, triageInboxItem } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { DispatchButton, TriageCard, Button, Chip, type TriageExit } from "../components/ui";
+import { DispatchButton, TriageCard, Button, Chip, ResourcePickerSheet, type TriageExit } from "../components/ui";
 import { useActiveLens } from "./lensContext";
+import { getProjects } from "wasp/client/operations";
+import { getGoals } from "wasp/client/operations";
 import "./InboxTriagePage.css";
 
 /**
@@ -39,13 +41,27 @@ export function InboxTriagePage() {
   const [dispatched, setDispatched] = useState(false);
   const [entering, setEntering] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resourcePickerOpen, setResourcePickerOpen] = useState(false);
+
+  // Lazy-load projects + goals for the resource picker (only fetched when
+  // the picker opens, to avoid the cost on every triage load).
+  const { data: pickerProjects } = useQuery(
+    getProjects,
+    lens ? { lensId: lens.id } : undefined,
+    { enabled: !!lens && resourcePickerOpen },
+  );
+  const { data: pickerGoals } = useQuery(
+    getGoals,
+    lens ? { lensId: lens.id } : undefined,
+    { enabled: !!lens && resourcePickerOpen },
+  );
 
   const total = list.length;
   const done = idx;
   const isComplete = idx >= total;
 
   const dispatch = useCallback(
-    async (action: Action) => {
+    async (action: Action, extra?: { goalId?: string; projectId?: string }) => {
       if (idx >= total || exit || !lens) return; // ignore mid-animation / no lens
       const item = list[idx];
       setDispatched(true);
@@ -55,6 +71,8 @@ export function InboxTriagePage() {
           inboxItemId: item.id,
           decision: action,
           lensId: lens.id,
+          goalId: extra?.goalId,
+          projectId: extra?.projectId,
         });
         // Invalidate the lists that this triage touched.
         queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
@@ -88,7 +106,6 @@ export function InboxTriagePage() {
         "2": "upcoming",
         "3": "someday",
         p: "project",
-        r: "resource",
         delete: "trash",
         backspace: "trash",
       };
@@ -215,7 +232,7 @@ export function InboxTriagePage() {
           <DispatchButton
             tone="amber"
             label="Resource"
-            sub="reference — needs a project or goal (file from there)"
+            sub="reference — link or note, filed under a project or goal"
             kbd="R"
             icon={
               <svg viewBox="0 0 16 16" fill="none">
@@ -223,7 +240,7 @@ export function InboxTriagePage() {
                 <path d="M9.5 2.5V6h3.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
               </svg>
             }
-            onClick={() => dispatch("resource")}
+            onClick={() => setResourcePickerOpen(true)}
           />
         </div>
 
@@ -233,6 +250,17 @@ export function InboxTriagePage() {
           <DispatchButton mini danger kbd="Del" label="Trash" onClick={() => dispatch("trash")} />
         </div>
       </div>
+
+      {/* ---- Resource parent picker (opens when Resource is clicked) ---- */}
+      {resourcePickerOpen && item && (
+        <ResourcePickerSheet
+          resourceTitle={item.text}
+          projects={(pickerProjects ?? []).map((p) => ({ id: p.id, name: p.name, goalName: p.goal?.name ?? null }))}
+          goals={(pickerGoals ?? []).map((g) => ({ id: g.id, name: g.name }))}
+          onPick={(parent) => dispatch("resource", parent)}
+          onClose={() => setResourcePickerOpen(false)}
+        />
+      )}
     </div>
   );
 }
