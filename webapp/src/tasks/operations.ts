@@ -1,4 +1,4 @@
-import type { GetTask, GetTasks, GetTopTask, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
+import type { GetTask, GetTasks, GetTopTask, SnoozeTask, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
 
 /**
  * Task operations for the Phase 4 list views.
@@ -135,3 +135,65 @@ export const getTopTask = (async (args, context) => {
 
   return candidates[0];
 }) satisfies GetTopTask<{ lensId: string }>;
+
+// ----------------------------------------------------------------
+// Snooze — "Not now" flow (FEATURES.md F11)
+// ----------------------------------------------------------------
+// Presets: 1h / 3h / tomorrow / weekend → Task(status=UPCOMING, dueDate=then)
+//          someday                                   → Task(status=SOMEDAY, dueDate=null)
+// The task leaves the focus queue until the snooze expires (then it's a
+// candidate again via Upcoming/Today rollover).
+const SNOWIZE_OFFSETS: Record<string, number> = {
+  "1h": 3600_000,
+  "3h": 3 * 3600_000,
+};
+
+export const snoozeTask = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.id },
+    select: { userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+
+  let status: "UPCOMING" | "SOMEDAY" = "UPCOMING";
+  let dueDate: Date | null = new Date();
+  switch (args.preset) {
+    case "1h":
+    case "3h":
+      dueDate = new Date(Date.now() + SNOWIZE_OFFSETS[args.preset]);
+      break;
+    case "tomorrow": {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      d.setHours(9, 0, 0, 0);
+      dueDate = d;
+      break;
+    }
+    case "weekend": {
+      const d = new Date();
+      const dow = d.getDay();
+      d.setDate(d.getDate() + ((6 - dow + 7) % 7 || 7)); // next Saturday
+      d.setHours(9, 0, 0, 0);
+      dueDate = d;
+      break;
+    }
+    case "someday":
+      status = "SOMEDAY";
+      dueDate = null;
+      break;
+  }
+
+  return await context.entities.Task.update({
+    where: { id: args.id },
+    data: { status, dueDate },
+    select: { id: true, status: true, dueDate: true },
+  });
+}) satisfies SnoozeTask<{
+  id: string;
+  preset: "1h" | "3h" | "tomorrow" | "weekend" | "someday";
+}>;

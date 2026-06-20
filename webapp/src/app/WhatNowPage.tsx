@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "wasp/client/operations";
-import { getTopTask, toggleTaskDone } from "wasp/client/operations";
+import { getTopTask, toggleTaskDone, snoozeTask } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { WhatNowCard, FocusMode, type FocusTask } from "../components/ui";
+import { WhatNowCard, FocusMode, SnoozeSheet, type FocusTask, type SnoozePreset } from "../components/ui";
 import { useActiveLens } from "./lensContext";
 import "./WhatNowPage.css";
 
@@ -21,6 +21,7 @@ export function WhatNowPage() {
     { enabled: !!lens },
   );
   const [focusTask, setFocusTask] = useState<FocusTask | null>(null);
+  const [snoozeOpen, setSnoozeOpen] = useState(false);
 
   const handleComplete = async () => {
     if (!topTask) return;
@@ -35,6 +36,15 @@ export function WhatNowPage() {
     } catch {
       // reverts via refetch
     }
+  };
+
+  const handleSnooze = async (preset: SnoozePreset) => {
+    if (!topTask) return;
+    await snoozeTask({ id: topTask.id, preset });
+    // Snoozed task leaves Today → refresh focus + Upcoming/Someday + counts.
+    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
   };
 
   // ---- Empty / loading states ----
@@ -90,10 +100,15 @@ export function WhatNowPage() {
             content: topTask.content ?? null,
           });
         }}
-        onNotNow={() => {
-          /* TODO: open snooze bottom sheet (modal-approach.md §03) */
-        }}
+        onNotNow={() => setSnoozeOpen(true)}
       />
+      {snoozeOpen && topTask && (
+        <SnoozeSheet
+          taskTitle={topTask.description}
+          onSnooze={handleSnooze}
+          onClose={() => setSnoozeOpen(false)}
+        />
+      )}
       {focusTask && (
         <FocusMode
           task={focusTask}

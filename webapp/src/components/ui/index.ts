@@ -1,6 +1,7 @@
 export { BrandMark } from "./BrandMark";
 export { Breadcrumb } from "./Breadcrumb";
 export type { BreadcrumbItem } from "./Breadcrumb";
+export { BottomSheet } from "./BottomSheet";
 export { Button } from "./Button";
 export { CapturePopover } from "./CapturePopover";
 export { Card } from "./Card";
@@ -18,6 +19,8 @@ export { NavItem } from "./NavItem";
 export { GroupedList } from "./GroupedList";
 export type { GroupDef } from "./GroupedList";
 export { ShortcutCheatsheet } from "./ShortcutCheatsheet";
+export { SnoozeSheet } from "./SnoozeSheet";
+export type { SnoozePreset } from "./SnoozeSheet";
 export { Table } from "./Table";
 export type { TableColumn } from "./Table";
 export { TaskRow } from "./TaskRow";
