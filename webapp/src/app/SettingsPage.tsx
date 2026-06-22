@@ -16,8 +16,12 @@ export function SettingsPage() {
     <SettingsLayout>
       {/* Profile */}
       <section className="aa-settings-section">
-        <Field label="Email" value={email ?? "—"} />
-        <Field label="Name" value={user ? `${user.firstName} ${user.lastName}` : ""} />
+      <Field label="Name" value={user ? user.fullName : ""} />
+      <Field label="Email" value={email ?? "—"} />
+      <Field
+        label="Call me"
+        value={(user && (user.preferredName || user.firstName)) || "—"}
+      />
       </section>
 
       {/* Sign out */}

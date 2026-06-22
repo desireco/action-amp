@@ -56,7 +56,7 @@ export const createCheckoutSession = (async (
   const priceId = getPriceId(priceKey);
   const authUser = context.user;
 
-  // Fetch full user record (AuthUser doesn't have email/firstName/stripeCustomerId)
+  // Fetch full user record (AuthUser doesn't have email/fullName/stripeCustomerId)
   const dbUser = await context.entities.User.findUniqueOrThrow({
     where: { id: authUser.id },
   });

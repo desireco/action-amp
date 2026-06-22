@@ -1,16 +1,22 @@
 import { defineUserSignupFields } from "wasp/server/auth";
 
+/**
+ * Signup collects ONE field: `fullName`. We extract `firstName` (first token)
+ * server-side so the client form stays a single input. `preferredName` is set
+ * later during onboarding and defaults to `firstName` when unset.
+ */
 export const userSignupFields = defineUserSignupFields({
-  firstName: (data) => {
-    if (typeof data.firstName !== "string" || data.firstName.trim() === "") {
-      throw new Error("First name is required.");
+  fullName: (data: { fullName?: unknown }) => {
+    if (typeof data.fullName !== "string" || data.fullName.trim() === "") {
+      throw new Error("Full name is required.");
     }
-    return data.firstName.trim();
+    return data.fullName.trim();
   },
-  lastName: (data) => {
-    if (typeof data.lastName !== "string" || data.lastName.trim() === "") {
-      throw new Error("Last name is required.");
+  firstName: (data: { fullName?: unknown }) => {
+    const full = typeof data.fullName === "string" ? data.fullName.trim() : "";
+    if (full === "") {
+      throw new Error("Full name is required.");
     }
-    return data.lastName.trim();
+    return full.split(/\s+/)[0];
   },
 });

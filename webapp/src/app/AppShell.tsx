@@ -92,8 +92,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isActive = (to: string) =>
     to === "/app" ? location.pathname === "/app" : location.pathname.startsWith(to);
 
+  // ponytail: 1–2 letter initials from fullName (first + last token). Good enough for an avatar.
   const initials = user
-    ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase()
+    ? user.fullName.split(/\s+/).map((s) => s[0] ?? "").slice(0, 2).join("").toUpperCase()
     : "";
 
   // ---- Overlays (capture popover, shortcut cheatsheet) ----
@@ -187,7 +188,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <span className="aa-app-user-avatar" aria-hidden="true">{initials || <UserIcon />}</span>
             <span className="aa-app-user-name">
-              {user ? `${user.firstName} ${user.lastName}`.trim() : ""}
+              {user ? user.fullName : ""}
             </span>
           </Link>
           <button type="button" className="aa-app-logout" onClick={() => logout()}>

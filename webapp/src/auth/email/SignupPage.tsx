@@ -18,19 +18,11 @@ export function SignupPage() {
         {...aaAuthAppearance}
         additionalFields={[
           {
-            name: "firstName",
+            name: "fullName",
             type: "input",
-            label: "First name",
+            label: "Full name",
             validations: {
-              required: "First name is required",
-            },
-          },
-          {
-            name: "lastName",
-            type: "input",
-            label: "Last name",
-            validations: {
-              required: "Last name is required",
+              required: "Full name is required",
             },
           },
         ]}

@@ -22,9 +22,10 @@ generator client {
 //   - Task defaults: size=M, priority=Normal, status=Someday (triage never auto-clutters Today).
 
 model User {
-  id        String @id @default(uuid())
-  firstName String
-  lastName  String
+  id             String @id @default(uuid())
+  fullName       String
+  firstName      String
+  preferredName  String? // set during onboarding; defaults to firstName when null
 
   // Work-tracker entities
   lenses     Lens[]
