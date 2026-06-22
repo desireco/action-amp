@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import "./auth.css";
+import "./AuthLayout.css";
 
 interface AuthLayoutProps {
   title: string;
@@ -9,8 +9,19 @@ interface AuthLayoutProps {
 }
 
 /**
- * ActionAmp auth shell — a calm, centered card with the brand mark and a
- * direct, on-voice headline. Wraps Wasp's themed auth forms.
+ * AuthLayout — full-screen calm stage wrapping a single centered card.
+ *
+ * Role: the shell for every authentication screen (login, signup, email
+ * verification, password reset). Renders the brand mark, an on-voice headline,
+ * the auth form body, and optional footer links.
+ *
+ * When to use: ONLY for unauthenticated entry screens that need a focused,
+ * single-card layout. For authenticated app surfaces use the app shell
+ * (AppShell.tsx); for modal flows use BottomSheet / overlay patterns.
+ *
+ * Children must be a Wasp auth form (LoginForm, SignupForm, …) themed via
+ * `aaAuthAppearance` (../appearance). The Wasp form overrides live in
+ * AuthLayout.css, scoped to `.aa-auth-card`.
  */
 export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   return (

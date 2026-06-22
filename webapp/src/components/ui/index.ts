@@ -1,3 +1,4 @@
+export { AuthLayout } from "./AuthLayout";
 export { BrandMark } from "./BrandMark";
 export { Breadcrumb } from "./Breadcrumb";
 export type { BreadcrumbItem } from "./Breadcrumb";

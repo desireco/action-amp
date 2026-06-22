@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { VerifyEmailForm } from "wasp/client/auth";
-import { AuthLayout } from "../AuthLayout";
+import { AuthLayout } from "../../components/ui";
 import { aaAuthAppearance } from "../appearance";
 
 export function EmailVerificationPage() {
