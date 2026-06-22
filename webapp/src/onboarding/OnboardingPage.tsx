@@ -100,23 +100,11 @@ function NameStep({
             submit();
           }
         }}
-        style={{
-          width: "100%",
-          maxWidth: 320,
-          padding: "12px 14px",
-          fontSize: "1.05rem",
-          borderRadius: 10,
-          border: "1px solid var(--aa-border-strong, #ccc)",
-          background: "var(--aa-surface, #fff)",
-          color: "var(--aa-text, #111)",
-          marginTop: 8,
-        }}
       />
       <button
-        className="aa-ob-cta"
+        className="aa-ob-cta aa-ob-cta--inline"
         disabled={saving}
         onClick={submit}
-        style={{ marginTop: 24 }}
       >
         Looks good →
       </button>

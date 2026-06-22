@@ -390,6 +390,32 @@
   position: relative;
   z-index: 2;
 }
+
+/* Preferred-name text input (onboarding step 0).
+   ponytail: no TextField component yet — only 2 input instances exist (this
+   + Wasp auth forms, which can't be swapped). Promote to a component at 3+. */
+.aa-ob-name-input {
+  width: 100%;
+  max-width: 320px;
+  padding: var(--aa-space-md) 14px;
+  font-size: 1.05rem;
+  border-radius: var(--aa-radius-md);
+  border: 1px solid var(--aa-border-strong);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  margin-top: var(--aa-space-sm);
+  transition:
+    border-color var(--aa-dur-base) var(--aa-ease-out),
+    box-shadow var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-ob-name-input:focus {
+  outline: none;
+  border-color: var(--aa-teal);
+  box-shadow: 0 0 0 3px var(--aa-teal-soft);
+}
+.aa-ob-name-input::placeholder {
+  color: var(--aa-text-4);
+}
 .aa-ob-cta {
   display: inline-flex;
   align-items: center;
@@ -410,6 +436,10 @@
 }
 .aa-ob-cta:hover {
   background: var(--aa-teal-cta-hover);
+}
+/* CTA placed inline below an input (name step), not in the footer strip. */
+.aa-ob-cta--inline {
+  margin-top: var(--aa-space-xl);
 }
 .aa-ob-cta:active {
   transform: scale(0.96);
