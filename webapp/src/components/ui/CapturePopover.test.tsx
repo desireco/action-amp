@@ -10,11 +10,11 @@ import { renderInContext } from "wasp/client/test";
 // We use fireEvent over @testing-library/user-event to avoid adding a
 // dependency; the tests don't need user-event's per-keyboard realism.
 
-/** Type text into the capture input via the DOM input event (React-controlled). */
+/** Type text into the capture textarea via the DOM input event (React-controlled). */
 function typeIntoInput(text: string) {
-  const input = screen.getByLabelText("Capture") as HTMLInputElement;
-  fireEvent.change(input, { target: { value: text } });
-  return input;
+  const ta = screen.getByLabelText("Capture") as HTMLTextAreaElement;
+  fireEvent.change(ta, { target: { value: text } });
+  return ta;
 }
 
 describe("CapturePopover", () => {
@@ -43,13 +43,18 @@ describe("CapturePopover", () => {
     });
 
     it("shows chips as tokens are typed", () => {
-      renderInContext(<CapturePopover onClose={() => {}} onSubmit={() => {}} />);
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} />,
+      );
       typeIntoInput("Email Sarah tomorrow !3 ~20m #work");
 
+      // Scope to the preview section — global getByText also matches the
+      // textarea's own value in jsdom, which would throw "multiple elements".
+      const preview = container.querySelector(".aa-capture__preview")!;
       // tomorrow → date chip, !3 → Important chip, #work → violet chip
-      expect(screen.getByText(/tomorrow/i)).toBeInTheDocument();
-      expect(screen.getByText(/important/i)).toBeInTheDocument();
-      expect(screen.getByText("#work")).toBeInTheDocument();
+      expect(preview.textContent).toMatch(/tomorrow/i);
+      expect(preview.textContent).toMatch(/important/i);
+      expect(preview.textContent).toMatch(/#work/);
     });
 
     it("plain text (no tokens) produces no chips", () => {
@@ -61,38 +66,88 @@ describe("CapturePopover", () => {
     });
   });
 
-  describe("submit behavior", () => {
-    it("Enter captures via onSubmit and closes the popover", async () => {
+  describe("submit behavior (Phase 1: rapid-fire + ⌘Enter close)", () => {
+    it("Enter (rapid-fire) captures, clears the input, and keeps the popover open", async () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const onClose = vi.fn();
-      renderInContext(<CapturePopover onClose={onClose} onSubmit={onSubmit} />);
+      renderInContext(
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+      );
 
       const input = typeIntoInput("A real thought");
-      fireEvent.submit(input.form!);
+      fireEvent.keyDown(input, { key: "Enter" });
 
       expect(onSubmit).toHaveBeenCalledWith("A real thought");
       expect(onSubmit).toHaveBeenCalledTimes(1);
-      // onClose runs after `await onSubmit()` — wait for the microtask.
-      // Current behavior: Enter closes (rapid-fire lands in Phase 1).
+      // rapid-fire: popover stays open, input clears
+      expect(onClose).not.toHaveBeenCalled();
+      await waitFor(() => expect(input.value).toBe(""));
+    });
+
+    it("⌘Enter captures and closes the popover", async () => {
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const onClose = vi.fn();
+      renderInContext(
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+      );
+
+      const input = typeIntoInput("Final thought");
+      fireEvent.keyDown(input, { key: "Enter", metaKey: true });
+
+      expect(onSubmit).toHaveBeenCalledWith("Final thought");
       await waitFor(() => expect(onClose).toHaveBeenCalled());
     });
 
-    it("empty input does not submit", () => {
+    it("rapid-fire stacks captured items at the top", async () => {
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
+      );
+
+      const input = typeIntoInput("first thought");
+      fireEvent.keyDown(input, { key: "Enter" });
+      await waitFor(() => expect(input.value).toBe(""));
+
+      typeIntoInput("second thought");
+      fireEvent.keyDown(input, { key: "Enter" });
+      await waitFor(() => expect(input.value).toBe(""));
+
+      // both captured items appear in the stack (newest first)
+      expect(screen.getByText("second thought")).toBeInTheDocument();
+      expect(screen.getByText("first thought")).toBeInTheDocument();
+    });
+
+    it("empty input does not capture on Enter", () => {
       const onSubmit = vi.fn();
       const onClose = vi.fn();
-      renderInContext(<CapturePopover onClose={onClose} onSubmit={onSubmit} />);
+      renderInContext(
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+      );
 
-      fireEvent.submit((screen.getByLabelText("Capture") as HTMLInputElement).form!);
+      fireEvent.keyDown(screen.getByLabelText("Capture"), { key: "Enter" });
       expect(onSubmit).not.toHaveBeenCalled();
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    it("whitespace-only input does not submit", () => {
+    it("whitespace-only input does not capture", () => {
       const onSubmit = vi.fn();
-      renderInContext(<CapturePopover onClose={() => {}} onSubmit={onSubmit} />);
+      renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
+      );
 
-      typeIntoInput("   ");
-      fireEvent.submit((screen.getByLabelText("Capture") as HTMLInputElement).form!);
+      const input = typeIntoInput("   ");
+      fireEvent.keyDown(input, { key: "Enter" });
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it("Shift+Enter does NOT capture (reserved for newline / Phase 3 expand)", () => {
+      const onSubmit = vi.fn();
+      renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
+      );
+
+      const input = typeIntoInput("draft");
+      fireEvent.keyDown(input, { key: "Enter", shiftKey: true });
       expect(onSubmit).not.toHaveBeenCalled();
     });
   });
