@@ -109,11 +109,23 @@ export function parseCapture(raw: string, now: Date = new Date()): ParsedCapture
   });
 
   // ---- Priority: !1/!2/!3 or !word or !/!!/!!! ----
-  text = text.replace(/!(\d|[a-z]+|!{0,2})\b/i, (match) => {
-    const key = match.slice(1).toLowerCase();
-    if (PRIORITY_WORDS[key]) {
-      priority = PRIORITY_WORDS[key];
-      return "";
+  // Two shapes: a bang + number/word, OR a run of bangs (!{1,3}).
+  // Specific pattern first — otherwise !{1,3} grabs just ! from !1.
+  // PRIORITY_WORDS keys bang-runs with their leading ! (!/!!/!!!) but
+  // keys number/word without (!1 → "1"). ponytail: prior single-regex form
+  // was off-by-one on bang counts; this split is the fix.
+  text = text.replace(/(!(\d+|[a-z]+)|!{1,3})/i, (match) => {
+    if (/^!+$/.test(match)) {
+      if (PRIORITY_WORDS[match]) {
+        priority = PRIORITY_WORDS[match];
+        return "";
+      }
+    } else {
+      const key = match.slice(1).toLowerCase();
+      if (PRIORITY_WORDS[key]) {
+        priority = PRIORITY_WORDS[key];
+        return "";
+      }
     }
     return match;
   });
@@ -173,7 +185,13 @@ export function parseCapture(raw: string, now: Date = new Date()): ParsedCapture
   // "jun 30" / "june 30" → that date (this year, or next if past)
   if (!date) {
     for (const { re, month } of MONTHS) {
-      const m = text.match(new RegExp(re.source + "\\s+(\\d{1,2})", "i"));
+      // Wrap the month alternation in a non-capturing group so the day
+      // pattern applies to the whole — without it, "june|jun\b\s+30" parses
+      // as (june) OR (jun\b\s+30), so "june 30" matches "june" alone and
+      // drops the day. ponytail: this bit us silently before tests existed.
+      const m = text.match(
+        new RegExp("(?:" + re.source + ")\\s+(\\d{1,2})", "i"),
+      );
       if (m) {
         const day = parseInt(m[1], 10);
         const year = now.getFullYear();
