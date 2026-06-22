@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  AuthLayout,
   Breadcrumb,
   BrandMark,
   Button,
@@ -61,6 +62,7 @@ const SECTIONS = [
   { id: "zoom-dock", label: "Zoom Dock" },
   { id: "breadcrumb", label: "Breadcrumb" },
   { id: "overlays", label: "Overlays & Modals" },
+  { id: "auth-layout", label: "Auth Layout" },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
@@ -886,6 +888,47 @@ export function DesignSystemPage() {
               <p className="ds-usage__p"><strong>Focus:</strong> focus moves into the overlay on open, returns to trigger on close. Trap focus inside while open.</p>
               <p className="ds-usage__p"><strong>Scroll lock:</strong> body scroll locks while any overlay is open.</p>
               <p className="ds-usage__p"><strong>Motion:</strong> backdrop fades 150ms; content rises 250ms with <code className="ds-inline-code">--aa-ease-out-quart</code>. Exit is ~60% of enter duration.</p>
+            </div>
+          </Sub>
+        </Sec>
+
+        {/* AUTH LAYOUT */}
+        <Sec id="auth-layout" title="Auth Layout" desc="Full-screen calm stage wrapping a single centered card. The shell for every unauthenticated entry screen.">
+          <Sub h="Role">
+            <div className="ds-usage">
+              <p className="ds-usage__p"><strong>One job:</strong> frame a single Wasp auth form (login, signup, email verification, password reset) in a focused, brand-marked card on a calm full-screen stage.</p>
+              <p className="ds-usage__p"><strong>Use when:</strong> building an unauthenticated entry screen that needs a focused single-card layout.</p>
+              <p className="ds-usage__p"><strong>Don't use for:</strong> authenticated app surfaces (use <code className="ds-inline-code">AppShell</code>); modal flows (use <code className="ds-inline-code">BottomSheet</code> or the overlay patterns above); multi-step wizards (onboarding uses its own full-screen stage).</p>
+            </div>
+          </Sub>
+          <Sub h="Anatomy">
+            <div className="ds-usage">
+              <p className="ds-usage__p"><strong>Brand mark</strong> — centered teal checkmark tile, anchors the brand.</p>
+              <p className="ds-usage__p"><strong>Title + subtitle</strong> — one short, on-voice headline + optional supporting line. No marketing copy.</p>
+              <p className="ds-usage__p"><strong>Children</strong> — a Wasp auth form (LoginForm, SignupForm, …) themed via <code className="ds-inline-code">aaAuthAppearance</code>.</p>
+              <p className="ds-usage__p"><strong>Footer</strong> — optional flat stack of secondary links ("forgot password", "make an account").</p>
+            </div>
+          </Sub>
+          <Sub h="Live preview">
+            {/* Statically render a representative auth card so the pattern is
+                visible at /design-system without mounting a live Wasp form. */}
+            <div style={{ minHeight: 360, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <AuthLayout
+                title="Welcome back."
+                subtitle="Pick up where you left off."
+                footer={
+                  <>
+                    <span>New here? <strong style={{ color: "var(--aa-teal-cta)" }}>Make an account</strong></span>
+                    <span>Forgot your password? <strong style={{ color: "var(--aa-teal-cta)" }}>Reset it</strong></span>
+                  </>
+                }
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: "var(--aa-space-md)", marginTop: "var(--aa-space-lg)" }}>
+                  <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--aa-text-2)" }}>Email</label>
+                  <div style={{ padding: "10px 12px", border: "1px solid var(--aa-border-strong)", borderRadius: "var(--aa-radius-sm)", color: "var(--aa-text-4)", fontSize: "0.95rem" }}>you@example.com</div>
+                  <div style={{ marginTop: "var(--aa-space-md)", padding: "11px 14px", background: "var(--aa-teal-cta)", color: "white", borderRadius: "var(--aa-radius-sm)", textAlign: "center", fontWeight: 600, fontSize: "0.95rem" }}>Log in</div>
+                </div>
+              </AuthLayout>
             </div>
           </Sub>
         </Sec>

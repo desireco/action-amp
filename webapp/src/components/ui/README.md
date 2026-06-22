@@ -13,6 +13,7 @@ Every component here is documented live at **`/design-system`**.
 
 | Component | Purpose | File |
 |---|---|---|
+| **AuthLayout** | Full-screen calm stage wrapping a single Wasp auth form (login/signup/verify/reset) | `AuthLayout.tsx` + `AuthLayout.css` |
 | **BrandMark** | The teal checkmark logo, 3 sizes | `BrandMark.tsx` |
 | **Button** | Primary interactive element, 4 variants × 3 sizes | `Button.tsx` + `Button.css` |
 | **Card** | Surface container, 4 variants × 4 padding presets | `Card.tsx` + `Card.css` |
@@ -33,6 +34,7 @@ import { Button, Card, ModeDial } from "../components/ui";
 ## Conventions
 
 ### Design tokens, not raw values
+
 Components consume tokens from `src/styles/tokens.css` (`--aa-*`).
 Never hardcode hex colors, pixel spacing, or font sizes in a component.
 If you need a value that doesn't exist as a token, **add the token first**, then use it.
@@ -48,13 +50,16 @@ padding: 16px;
 ```
 
 ### Naming
+
 - CSS classes use the `aa-<component>` prefix + BEM-style modifiers.
   Example: `aa-dial`, `aa-dial__btn`, `aa-dial__btn--active`.
 - React props use camelCase. Variants/sizes are string unions, not booleans.
 - Each component ships its own `.css` file co-located with the `.tsx`.
 
 ### Accessibility (non-negotiable)
+
 Every interactive component MUST have:
+
 - **`focus-visible` ring** — `outline: 2px solid var(--aa-teal); outline-offset: 2px;`
 - **`prefers-reduced-motion`** — disable transitions/animations when requested.
 - **ARIA** — `role`, `aria-label`, `aria-pressed`/`aria-selected` where applicable.
@@ -65,6 +70,7 @@ the 20px `CompletionCircle` in a list row) are acceptable because adjacent
 padding extends the hit area.
 
 ### Composition
+
 Components spread `...rest` onto their root element so consumers can pass
 `aria-*`, `data-*`, `id`, `onClick`, etc. without thinking:
 
@@ -75,6 +81,26 @@ Components spread `...rest` onto their root element so consumers can pass
 ---
 
 ## Usage examples
+
+### AuthLayout
+
+```tsx
+import { AuthLayout } from "../components/ui";
+import { LoginForm } from "wasp/client/auth";
+import { aaAuthAppearance } from "../auth/appearance";
+
+<AuthLayout
+  title="Welcome back."
+  subtitle="Pick up where you left off."
+  footer={<span>New here? <Link to="/signup">Make an account</Link></span>}
+>
+  <LoginForm {...aaAuthAppearance} />
+</AuthLayout>
+```
+
+**Use for:** login, signup, email verification, password reset — and ONLY those.
+Children must be a Wasp auth form themed via `aaAuthAppearance`. Footer is an
+optional flat stack of secondary links.
 
 ### Button
 
@@ -152,6 +178,7 @@ const [zoom, setZoom] = useState("task");
 
 Add to `src/components/ui/` when a pattern appears **3+ times** across pages.
 Before adding:
+
 1. Check the prototypes (`docs/mockups/`) — is this already designed?
 2. Check `tokens.css` — do you have the tokens you need?
 3. Add the component + co-located `.css` + barrel export.
