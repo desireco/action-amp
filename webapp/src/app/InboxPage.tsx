@@ -18,10 +18,10 @@ export function InboxPage() {
     <div className="aa-inbox">
       <header className="aa-inbox__header">
         <div>
-          <div className="aa-inbox__eyebrow">Inbox</div>
-          <h1 className="aa-inbox__title">
+          <h1 className="aa-inbox__title">Inbox</h1>
+          <p className="aa-inbox__sub">
             {isLoading ? "Loading…" : list.length > 0 ? `${list.length} to triage` : "Inbox zero"}
-          </h1>
+          </p>
         </div>
         {list.length > 0 && (
           <Link to="/app/inbox/review">
@@ -37,10 +37,9 @@ export function InboxPage() {
               <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h2 className="aa-inbox__empty-title">Inbox zero.</h2>
           <p className="aa-inbox__empty-text">
             Nothing left to decide. Capture something with{" "}
-            <span className="aa-inbox__kbd">⌘K</span> when it crosses your mind.
+            <span className="aa-inbox__kbd">⌘/</span> when it crosses your mind.
           </p>
         </div>
       ) : (

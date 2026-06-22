@@ -123,6 +123,18 @@
   color: var(--aa-amber-text);
 }
 
+/* Inbox zero: a small teal checkmark instead of a count. */
+.aa-nav-item__count--done {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .aa-nav-item,

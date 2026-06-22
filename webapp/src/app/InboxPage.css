@@ -14,12 +14,8 @@
 }
 
 .aa-inbox__eyebrow {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--aa-text-4);
-  margin-bottom: var(--aa-space-xs);
+  /* legacy — title now reads 'Inbox' directly, with __sub as the count line */
+  display: none;
 }
 
 .aa-inbox__title {
@@ -28,6 +24,12 @@
   letter-spacing: -0.015em;
   color: var(--aa-text);
   margin: 0;
+}
+
+.aa-inbox__sub {
+  font-size: 0.85rem;
+  color: var(--aa-text-3);
+  margin: 2px 0 0;
 }
 
 /* ---- List ---- */

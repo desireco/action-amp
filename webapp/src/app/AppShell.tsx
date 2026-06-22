@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuth, logout } from "wasp/client/auth";
 import { useQuery, ensureOnboarded, getAppData, createInboxItem } from "wasp/client/operations";
+import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import { CapturePopover, ShortcutCheatsheet } from "../components/ui";
@@ -38,6 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [lens, setLensState] = useState<string>(() => {
     if (typeof window === "undefined") return "Work";
     return localStorage.getItem("aa-lens") ?? "Work";
@@ -160,8 +162,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             label="Inbox"
             active={isActive("/app/inbox")}
             to="/app/inbox"
-            count={counts.inbox}
-            countVariant="urgent"
+            count={counts.inbox > 0 ? counts.inbox : (
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-label="Inbox zero">
+                <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+            countVariant={counts.inbox > 0 ? "urgent" : "done"}
           />
           <NavItem icon={<ClockIcon />} label="Today" active={isActive("/app/today")} to="/app/today" count={counts.today} />
           <NavItem icon={<CalendarIcon />} label="Upcoming" active={isActive("/app/upcoming")} to="/app/upcoming" />
@@ -242,6 +248,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           onClose={() => setCaptureOpen(false)}
           onSubmit={async (text) => {
             await createInboxItem({ text });
+            // Invalidate the inbox list + the sidebar counts so both refresh.
+            // Without this, React Query serves the stale pre-capture cache
+            // and the new item doesn't appear until a manual reload.
+            queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
+            queryClient.invalidateQueries({ queryKey: ["getAppData"] });
           }}
         />
       )}

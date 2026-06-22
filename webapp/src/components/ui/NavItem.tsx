@@ -10,8 +10,8 @@ interface NavItemProps {
   active?: boolean;
   /** Count badge content (string or number) */
   count?: ReactNode;
-  /** Count badge variant — urgent uses amber */
-  countVariant?: "default" | "urgent";
+  /** Count badge variant — urgent uses amber, done shows a teal check for empty */
+  countVariant?: "default" | "urgent" | "done";
   /** Marks not-yet-built destinations */
   soon?: boolean;
   /** Click handler / link navigation */
@@ -57,7 +57,11 @@ export function NavItem({
         <span
           className={[
             "aa-nav-item__count",
-            countVariant === "urgent" ? "aa-nav-item__count--urgent" : "",
+            countVariant === "urgent"
+              ? "aa-nav-item__count--urgent"
+              : countVariant === "done"
+                ? "aa-nav-item__count--done"
+                : "",
           ]
             .filter(Boolean)
             .join(" ")}
