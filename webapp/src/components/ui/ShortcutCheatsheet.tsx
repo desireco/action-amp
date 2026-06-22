@@ -2,11 +2,13 @@ import { BrandMark } from "./index";
 import "./Overlays.css";
 
 const SHORTCUTS: { keys: string[]; label: string }[] = [
-  { keys: ["⌘K", "/"], label: "Quick capture" },
+  { keys: ["⌘/", "⌘K"], label: "Quick capture" },
   { keys: ["Space"], label: "Go to What Now" },
-  { keys: ["?"], label: "Show this cheatsheet" },
+  { keys: ["?", "⌘?"], label: "Show this cheatsheet" },
   { keys: ["F"], label: "Focus mode (on a task)" },
   { keys: ["1", "2", "3"], label: "Today / Upcoming / Someday (in triage)" },
+  { keys: ["[", "]"], label: "Size down / up (in triage, expanded capture)" },
+  { keys: ["-", "="], label: "Priority down / up (in triage, expanded capture)" },
   { keys: ["P"], label: "Project (in triage)" },
   { keys: ["R"], label: "Resource (in triage)" },
   { keys: ["Del"], label: "Trash (in triage)" },

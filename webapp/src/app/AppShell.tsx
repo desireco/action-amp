@@ -201,10 +201,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* ---- Topbar ---- */}
         <header className="aa-app-topbar">
           <div className="aa-app-topbar-actions">
-            <button type="button" className="aa-app-kbd-btn" title="Capture (⌘K)" onClick={() => setCaptureOpen(true)}>
+            <button type="button" className="aa-app-kbd-btn" title="Capture (⌘/)" onClick={() => setCaptureOpen(true)}>
               <PlusIcon width={14} height={14} />
               <span>Capture</span>
-              <kbd className="aa-app-kbd">⌘K</kbd>
+              <kbd className="aa-app-kbd">⌘/</kbd>
             </button>
             <button
               type="button"
