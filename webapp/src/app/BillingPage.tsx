@@ -1,4 +1,4 @@
-import { useQuery, getBillingStatus, createCheckoutSession } from "wasp/client/operations";
+import { useQuery, getBillingStatus, createCheckoutSession, createCustomerPortalSession } from "wasp/client/operations";
 import { useState } from "react";
 import { SettingsLayout } from "./SettingsLayout";
 import { Button, Card, Chip, Table, type TableColumn } from "../components/ui";
@@ -126,6 +126,21 @@ function ActivePlanState({
   isFounder: boolean;
   planRenewsAt: Date | null;
 }) {
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handleManage = async () => {
+    setPortalLoading(true);
+    try {
+      const result = await createCustomerPortalSession();
+      if (result.url) {
+        window.location.href = result.url;
+      }
+    } catch (err) {
+      console.error("Portal error:", err);
+      setPortalLoading(false);
+    }
+  };
+
   return (
     <section className="aa-billing-section">
       <Card padding="lg">
@@ -138,8 +153,13 @@ function ActivePlanState({
               </p>
             )}
           </div>
-          <Button variant="secondary" size="sm" disabled>
-            Manage billing
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleManage}
+            disabled={portalLoading}
+          >
+            {portalLoading ? "Opening…" : "Manage billing"}
           </Button>
         </div>
       </Card>

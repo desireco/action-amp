@@ -5,10 +5,11 @@
  * This is the ONLY place that changes User.plan. Never trust the client.
  *
  * Events handled:
- *   - checkout.session.completed  → one-time payments (founder, prepaid)
- *   - invoice.paid                → subscription payments (pro yearly/monthly)
- *   - invoice.payment_failed      → mark payment as failed (grace period)
- *   - customer.subscription.deleted → subscription cancelled, plan expires at period end
+ *   - checkout.session.completed       → one-time payments (founder, prepaid)
+ *   - invoice.paid                      → subscription payments (pro yearly/monthly)
+ *   - invoice.payment_failed            → mark payment as failed (grace period)
+ *   - customer.subscription.updated     → safety net: expire on terminal status (canceled/unpaid)
+ *   - customer.subscription.deleted     → subscription cancelled, plan expires at period end
  *
  * Idempotency: deduplicates by Stripe event id via a DB lookup on
  * stripePaymentIntentId / stripeInvoiceId / stripeCheckoutSessionId.
@@ -82,6 +83,9 @@ export const stripeWebhook = async (
         break;
       case "invoice.payment_failed":
         await handleInvoiceFailed(event, context);
+        break;
+      case "customer.subscription.updated":
+        await handleSubscriptionUpdated(event, context);
         break;
       case "customer.subscription.deleted":
         await handleSubscriptionDeleted(event, context);
@@ -315,6 +319,45 @@ async function handleInvoiceFailed(event: Stripe.Event, context: WaspApiContext)
   // Note: we don't immediately revoke the plan. Stripe retries, and the user
   // stays active during the grace period. customer.subscription.deleted
   // handles the actual downgrade.
+}
+
+async function handleSubscriptionUpdated(event: Stripe.Event, context: WaspApiContext) {
+  const subscription = event.data.object as unknown as Record<string, unknown>;
+  const status = subscription.status as string | undefined;
+
+  // Entitlement is driven by invoice.paid + .deleted. Here we only act on
+  // terminal states as a safety net — if the sub is canceled/unpaid/incomplete,
+  // expire now in case .deleted is missed or delayed. cancel_at_period_end is
+  // intentionally a no-op (plan stays active until .deleted at period end).
+  const terminal = ["canceled", "unpaid", "incomplete_expired"];
+  if (!status || !terminal.includes(status)) {
+    console.log(`[webhook] subscription.updated — status='${status}', no action.`);
+    return;
+  }
+
+  const metadata = subscription.metadata as Record<string, string> | undefined;
+  let userId = metadata?.userId;
+  if (!userId) {
+    const customerId = extractId(subscription.customer);
+    if (customerId) {
+      const user = await context.entities.User.findFirst({
+        where: { stripeCustomerId: customerId },
+      });
+      userId = user?.id;
+    }
+  }
+
+  if (!userId) {
+    console.error("[webhook] subscription.updated — could not determine userId for terminal expiry.");
+    return;
+  }
+
+  await context.entities.User.update({
+    where: { id: userId },
+    data: { planRenewsAt: new Date() },
+  });
+
+  console.log(`[webhook] subscription.updated — terminal status '${status}', expired userId=${userId}.`);
 }
 
 async function handleSubscriptionDeleted(event: Stripe.Event, context: WaspApiContext) {

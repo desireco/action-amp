@@ -21,7 +21,7 @@ import { ProjectsPage } from "./src/projects/ProjectsPage" with { type: "ref" };
 import { GoalsPage } from "./src/goals/GoalsPage" with { type: "ref" };
 import { LogbookPage } from "./src/logbook/LogbookPage" with { type: "ref" };
 import { ensureOnboarded, getAppData, setPreferredName } from "./src/onboarding/operations" with { type: "ref" };
-import { getBillingStatus, createCheckoutSession } from "./src/billing/operations" with { type: "ref" };
+import { getBillingStatus, createCheckoutSession, createCustomerPortalSession } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
@@ -136,6 +136,7 @@ export default app({
     action(triageInboxItem, { entities: ["InboxItem", "Task", "Project", "Resource"], auth: true }),
     query(getBillingStatus, { entities: ["Payment"], auth: true }),
     action(createCheckoutSession, { entities: ["User"], auth: true }),
+    action(createCustomerPortalSession, { entities: ["User"], auth: true }),
     api("POST", "/webhooks/stripe", stripeWebhook, {
       entities: ["User", "Payment"],
       middlewareConfigFn: stripeWebhookMiddleware,
