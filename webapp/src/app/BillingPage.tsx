@@ -94,6 +94,7 @@ export function BillingPage() {
       ) : data?.isPaid ? (
         <ActivePlanState
           plan={data.plan}
+          isFounder={data.isFounder}
           planRenewsAt={data.planRenewsAt}
         />
       ) : (
@@ -119,9 +120,11 @@ export function BillingPage() {
    ============================================================ */
 function ActivePlanState({
   plan,
+  isFounder,
   planRenewsAt,
 }: {
-  plan: "FREE" | "PRO";
+  plan: "FREE" | "PRO" | "FOUNDER";
+  isFounder: boolean;
   planRenewsAt: Date | null;
 }) {
   const [portalLoading, setPortalLoading] = useState(false);
@@ -145,11 +148,13 @@ function ActivePlanState({
         <div className="aa-billing-active">
           <div>
             <Chip variant="teal">{PLAN_LABEL[plan]}</Chip>
-            {planRenewsAt && (
+            {planRenewsAt ? (
               <p className="aa-billing-active-renewal">
                 Renews {new Date(planRenewsAt).toLocaleDateString()}
               </p>
-            )}
+            ) : isFounder ? (
+              <p className="aa-billing-active-renewal">Lifetime access</p>
+            ) : null}
           </div>
           <Button
             variant="secondary"

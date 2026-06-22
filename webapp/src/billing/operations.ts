@@ -27,6 +27,7 @@ export const getBillingStatus = (async (_args, context) => {
     plan: u.plan,
     planRenewsAt: u.planRenewsAt,
     isPaid: isPaidPlan(u.plan),
+    isFounder: u.plan === "FOUNDER",
     payments,
   };
 }) satisfies GetBillingStatus<void>;
@@ -39,7 +40,7 @@ export const getBillingStatus = (async (_args, context) => {
  * `User.plan` — that's the webhook's job (source of truth).
  *
  * - Recurring plans (pro_yearly, pro_monthly) → `mode: "subscription"`
- * - One-time plans (pro_prepaid) → `mode: "payment"`
+ * - One-time plans (pro_prepaid, founder) → `mode: "payment"`
  */
 import type {
   CreateCheckoutSession,
@@ -83,7 +84,7 @@ export const createCheckoutSession = (async (
 
   // automatic_tax + allow_promotion_codes apply to both modes.
   // invoice_creation is needed for one-time payments (Stripe auto-invoices
-  // subscriptions); without it, prepaid buyers get no receipt.
+  // subscriptions); without it, prepaid/founder buyers get no receipt.
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],

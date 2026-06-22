@@ -53,6 +53,13 @@ const CATALOG = [
         // one-time: grants a 12-month entitlement (handled by the webhook)
         metadata: { actionamp_plan: "pro_prepaid", label: "Pro Prepaid (12 mo, no auto-renew)" },
       },
+      {
+        env: "STRIPE_PRICE_FOUNDER",
+        amount: 13900,
+        // one-time: lifetime Pro (Founding 100). Capped at 100 spots — enforced
+        // server-side at checkout, not by Stripe.
+        metadata: { actionamp_plan: "founder", label: "Founding 100 (lifetime)" },
+      },
     ],
   },
 ];

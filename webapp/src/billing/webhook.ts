@@ -40,6 +40,8 @@ const PRICING_ENTITLEMENT = {
   pro_yearly: { plan: "PRO" as const, renewalMs: 365 * 24 * 60 * 60 * 1000, label: "Pro Yearly" },
   pro_monthly: { plan: "PRO" as const, renewalMs: 30 * 24 * 60 * 60 * 1000, label: "Pro Monthly" },
   pro_prepaid: { plan: "PRO" as const, renewalMs: 365 * 24 * 60 * 60 * 1000, label: "Pro Prepaid (12 mo)" },
+  // Founding 100: one-time $139, lifetime. renewalMs = null → planRenewsAt stays null (never expires).
+  founder: { plan: "FOUNDER" as const, renewalMs: null, label: "Founding 100 (lifetime)" },
 } as const;
 
 export const stripeWebhook = async (
@@ -263,7 +265,7 @@ async function handleInvoicePaid(event: Stripe.Event, context: WaspApiContext) {
     where: { id: userId },
     data: {
       plan,
-      planRenewsAt: new Date(Date.now() + renewalMs),
+      planRenewsAt: plan === "FOUNDER" ? null : new Date(Date.now() + renewalMs),
     },
   });
 

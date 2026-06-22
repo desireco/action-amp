@@ -77,7 +77,7 @@ model User {
   // ---- Billing (Stripe) ----
   plan            Plan   @default(FREE)
   stripeCustomerId String?  // set on first checkout; links to Stripe customer
-  planRenewsAt     DateTime?  // null for FREE; set by webhook for PRO
+  planRenewsAt     DateTime?  // null for FREE; set by webhook for PRO; null for FOUNDER (lifetime)
   // NOTE: history/invoices live in Stripe (via the Customer Portal). We don't
   // duplicate them.
   tasks Task[]
@@ -87,20 +87,24 @@ model User {
 enum Plan {
   FREE       // default; personal scope, 3 projects, 1 goal
   PRO        // recurring or prepaid active; full features
+  FOUNDER    // Founding 100: one-time $139, lifetime, capped at 100 spots
 }
 ```
 
 **Why an enum + `planRenewsAt` instead of a richer model:**
 
-- Two states is all the UI cares about: FREE / paying-now.
+- Three states is all the UI cares about: FREE / paying-now / paying-forever (FOUNDER).
 - `planRenewsAt` lets us (a) show "renews on X", (b) detect prepaid-expiry, (c)
   serve the focus engine's "is this user pro *right now?*" check with one read.
-- A cron can scan for `plan=PRO && planRenewsAt < now` to expire prepaid terms
-  to FREE — or the webhook's `invoice.payment_failed` / subscription end events
-  handle it live.
+- FOUNDER never sets `planRenewsAt` (null = lifetime); `isPlanActive` returns
+  true unconditionally for `plan === "FOUNDER"`. A cron can scan for
+  `plan=PRO && planRenewsAt < now` to expire prepaid terms to FREE — or the
+  webhook's `invoice.payment_failed` / subscription end events handle it live.
 
-> *(The `FOUNDER` enum value and lifetime-entitlement path were removed
-> 2026-06-22 — see PRICING.md §3 Model C.)*
+> *(Founding 100 re-introduced 2026-06-22 — see PRICING.md §3 Model C. The
+> earlier FOUNDER tier was reversed then brought back as a **capped** ($139,
+> 100-spot) lifetime option; `FOUNDING_100_CAP` lives in `billing/config.ts`,
+> enforced in the checkout action once the CTA is enabled.)*
 
 > ⚠️ **Graceful degrade (from PRICING.md):** when a prepaid year ends and the
 > user drops FREE, they will *exceed* the cap (more than 1 goal / 3 projects /

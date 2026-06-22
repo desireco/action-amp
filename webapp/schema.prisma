@@ -42,13 +42,15 @@ model User {
   payments        Payment[]
   plan            Plan    @default(FREE)
   stripeCustomerId String?   // set on first checkout; links to the Stripe customer
-  planRenewsAt     DateTime? // null for FREE; set by webhook for PRO
+  planRenewsAt     DateTime? // null for FREE + FOUNDER (lifetime); set by webhook for PRO
 }
 
-// A user's entitlement tier.
+// A user's entitlement tier. FOUNDER = "Founding 100": one-time $139, lifetime,
+// capped at 100 spots (FOUNDING_100_CAP in billing/config.ts).
 enum Plan {
   FREE
   PRO
+  FOUNDER
 }
 
 // Our own record of every payment — an audit trail independent of Stripe
@@ -70,7 +72,7 @@ model Payment {
   amount      Int    // in cents (Stripe convention)
   currency    String @default("usd")
   plan        Plan   // the plan this payment granted
-  description String // human label: "Pro Yearly", "Pro Monthly", "Pro Prepaid", etc.
+  description String // human label: "Pro Yearly", "Founding 100", etc.
 
   status   PaymentStatus @default(PENDING)
   paidAt   DateTime?

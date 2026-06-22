@@ -1,0 +1,22 @@
+/* Founding 100 landing page — layers on top of .aa-markdown-body typography
+ * (shared with About/Privacy) for the prose, adds the CTA + scarcity block. */
+
+.aa-founding-sub {
+  color: var(--aa-text-3);
+  font-size: 1.05rem;
+  margin-top: -0.5rem;
+  margin-bottom: 2rem;
+}
+
+.aa-founding-cta {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--aa-border);
+  text-align: center;
+}
+
+.aa-founding-spots {
+  margin-top: 1rem;
+  color: var(--aa-text-3);
+  font-size: 0.95rem;
+}

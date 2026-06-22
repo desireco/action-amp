@@ -398,6 +398,7 @@ export function LandingPage() {
           <Link to="/about">About</Link>
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
+          <Link to="/founding-100">Founding 100</Link>
           <Link to="/login">Log in</Link>
           <Link to="/signup">Sign up</Link>
         </div>

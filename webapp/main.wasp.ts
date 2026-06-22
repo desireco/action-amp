@@ -34,6 +34,7 @@ import { LandingPage } from "./src/landing/LandingPage" with { type: "ref" };
 import { OnboardingPage } from "./src/onboarding/OnboardingPage" with { type: "ref" };
 import { DesignSystemPage } from "./src/components/design/DesignSystemPage" with { type: "ref" };
 import { AboutPage } from "./src/public/AboutPage" with { type: "ref" };
+import { Founding100Page } from "./src/public/Founding100Page" with { type: "ref" };
 import { PrivacyPage } from "./src/public/PrivacyPage" with { type: "ref" };
 import { TermsPage } from "./src/public/TermsPage" with { type: "ref" };
 
@@ -98,6 +99,7 @@ export default app({
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
     route("DesignSystemRoute", "/design-system", page(DesignSystemPage, { authRequired: false })),
     route("AboutRoute", "/about", page(AboutPage, { authRequired: false })),
+    route("Founding100Route", "/founding-100", page(Founding100Page, { authRequired: false })),
     route(
       "PrivacyRoute",
       "/privacy",
