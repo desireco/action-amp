@@ -156,7 +156,20 @@ describe("CapturePopover", () => {
     // NOTE: Esc handling does NOT live in CapturePopover — it's the parent's
     // job (window-level useKeyboardShortcuts handler). That path is covered
     // by useKeyboardShortcuts.test.tsx. Here we test only what this component
-    // owns: backdrop click and inner-card stopPropagation.
+    // owns: the X button, the Save button, backdrop click, inner-card
+    // stopPropagation.
+
+    it("the X button closes without saving", () => {
+      const onClose = vi.fn();
+      const onSubmit = vi.fn();
+      renderInContext(
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+      );
+      typeIntoInput("a draft I'll discard");
+      fireEvent.click(screen.getByLabelText(/close without saving/i));
+      expect(onClose).toHaveBeenCalled();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
 
     it("backdrop click closes without submitting", () => {
       const onClose = vi.fn();
@@ -176,6 +189,35 @@ describe("CapturePopover", () => {
       );
       fireEvent.click(container.querySelector(".aa-overlay-card")!);
       expect(onClose).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Save button", () => {
+    it("Save captures and closes (same as ⌘⏎)", async () => {
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const onClose = vi.fn();
+      renderInContext(
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+      );
+      typeIntoInput("final thought");
+      fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+      expect(onSubmit).toHaveBeenCalledWith("final thought");
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
+
+    it("Save is disabled when the input is empty", () => {
+      renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} />,
+      );
+      expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled();
+    });
+
+    it("Save is disabled for whitespace-only input", () => {
+      renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} />,
+      );
+      typeIntoInput("   ");
+      expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled();
     });
   });
 });

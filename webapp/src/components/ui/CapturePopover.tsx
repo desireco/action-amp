@@ -151,6 +151,17 @@ export function CapturePopover({
             disabled={submitting}
             aria-label="Capture"
           />
+          <button
+            type="button"
+            className="aa-overlay__close aa-capture__close"
+            onClick={onClose}
+            aria-label="Close without saving"
+            title="Close (Esc)"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
 
         {parsed &&
@@ -193,10 +204,17 @@ export function CapturePopover({
 
         <div className="aa-capture__foot">
           <span className="aa-capture__hint">
-            <kbd className="aa-capture__kbd">⏎</kbd> capture · keep open{"  · "}
-            <kbd className="aa-capture__kbd">⌘⏎</kbd> capture &amp; close{"  · "}
+            <kbd className="aa-capture__kbd">⏎</kbd> capture · keep open ·{" "}
             <kbd className="aa-capture__kbd">Esc</kbd> close
           </span>
+          <button
+            type="button"
+            className="aa-capture__save"
+            disabled={!text.trim() || submitting}
+            onClick={() => capture(true)}
+          >
+            Save
+          </button>
         </div>
       </div>
     </div>

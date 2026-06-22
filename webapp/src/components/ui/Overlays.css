@@ -243,7 +243,7 @@
 
 .aa-capture__head {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* pin mark + close to top so they don't drift when the textarea grows */
   gap: var(--aa-space-sm);
 }
 
@@ -344,8 +344,44 @@
 
 .aa-capture__foot {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-sm);
   padding-top: var(--aa-space-sm);
+}
+
+.aa-capture__close {
+  flex-shrink: 0;
+  margin-top: 2px; /* optical align with the mark */
+}
+
+.aa-capture__save {
+  font-family: var(--aa-font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--aa-surface);
+  background: var(--aa-teal-cta);
+  padding: 7px 18px;
+  border-radius: var(--aa-radius-sm);
+  border: none;
+  box-shadow: 0 2px 8px var(--aa-teal-tint-shadow);
+  cursor: pointer;
+  transition: background 0.12s var(--aa-ease-out), transform 0.1s var(--aa-ease-out);
+  flex-shrink: 0;
+}
+
+.aa-capture__save:hover:not(:disabled) {
+  background: var(--aa-teal-cta-hover);
+}
+
+.aa-capture__save:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.aa-capture__save:disabled {
+  opacity: 0.5;
+  cursor: default;
+  box-shadow: none;
 }
 
 /* Live preview chips (parsed tokens) */
