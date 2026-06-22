@@ -18,10 +18,9 @@ export function InboxPage() {
     <div className="aa-inbox">
       <header className="aa-inbox__header">
         <div>
-          <h1 className="aa-inbox__title">Inbox</h1>
-          <p className="aa-inbox__sub">
+          <h1 className="aa-inbox__title">
             {isLoading ? "Loading…" : list.length > 0 ? `${list.length} to triage` : "Inbox zero"}
-          </p>
+          </h1>
         </div>
         {list.length > 0 && (
           <Link to="/app/inbox/review">
