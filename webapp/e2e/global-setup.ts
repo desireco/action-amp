@@ -4,7 +4,7 @@
  * this project.
  */
 export default async function globalSetup() {
-  const url = process.env.E2E_BASE_URL ?? "http://localhost:3000";
+  const url = process.env.E2E_BASE_URL ?? "http://localhost:4000";
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
     try {
