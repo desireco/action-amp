@@ -99,6 +99,15 @@ export const createCheckoutSession = (async (
   const isRecurring = priceKey === "proYearly" || priceKey === "proMonthly";
   const origin = process.env.WASP_WEB_CLIENT_URL ?? "http://localhost:4000";
 
+  // Founders land on a dedicated thank-you page; everyone else returns to the
+  // billing page with a success banner.
+  const successUrl = priceKey === "founder"
+    ? `${origin}/founding-100/welcome`
+    : `${origin}/app/settings/billing?checkout=success`;
+  const cancelUrl = priceKey === "founder"
+    ? `${origin}/founding-100`
+    : `${origin}/app/settings/billing?checkout=cancelled`;
+
   // automatic_tax + allow_promotion_codes apply to both modes.
   // invoice_creation is needed for one-time payments (Stripe auto-invoices
   // subscriptions); without it, prepaid/founder buyers get no receipt.
@@ -106,8 +115,8 @@ export const createCheckoutSession = (async (
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
     mode: isRecurring ? ("subscription" as const) : ("payment" as const),
-    success_url: `${origin}/app/settings/billing?checkout=success`,
-    cancel_url: `${origin}/app/settings/billing?checkout=cancelled`,
+    success_url: successUrl,
+    cancel_url: cancelUrl,
     metadata: { userId: dbUser.id, priceKey },
     automatic_tax: { enabled: true },
     allow_promotion_codes: true,
