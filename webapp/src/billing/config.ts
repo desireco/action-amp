@@ -16,19 +16,14 @@ export const FREE_LIMITS = {
 } as const;
 
 /** All paid-up plans — i.e. the user has full feature access right now. */
-export function isPaidPlan(plan: Plan | undefined | null): plan is "PRO" | "FOUNDER" {
-  return plan === "PRO" || plan === "FOUNDER";
-}
-
-/** Founder is the launch-priced Pro tier ($52/yr recurring). */
-export function isFounder(plan: Plan | undefined | null): boolean {
-  return plan === "FOUNDER";
+export function isPaidPlan(plan: Plan | undefined | null): plan is "PRO" {
+  return plan === "PRO";
 }
 
 /**
  * Is the user's plan currently active (entitled to paid features)?
  * - FREE → no
- * - PRO / FOUNDER → yes while planRenewsAt is in the future
+ * - PRO → yes while planRenewsAt is in the future
  */
 export function isPlanActive(plan: Plan | undefined | null, planRenewsAt: Date | null): boolean {
   if (!isPaidPlan(plan)) return false;
@@ -40,12 +35,10 @@ export function isPlanActive(plan: Plan | undefined | null, planRenewsAt: Date |
 export const PLAN_LABEL: Record<Plan, string> = {
   FREE: "Free",
   PRO: "Pro",
-  FOUNDER: "Founder",
 };
 
 /** Plan badge copy shown next to the plan label. */
 export const PLAN_BADGE: Record<Plan, string> = {
   FREE: "Free plan",
   PRO: "Pro",
-  FOUNDER: "Founder",
 };

@@ -25,7 +25,6 @@ const priceIds = {
   proYearly: process.env.STRIPE_PRICE_PRO_YEARLY,
   proMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY,
   proPrepaid: process.env.STRIPE_PRICE_PRO_PREPAID,
-  founder: process.env.STRIPE_PRICE_FOUNDER,
 } as const;
 
 export type PriceKey = keyof typeof priceIds;
@@ -50,5 +49,4 @@ export const PRICE_PLAN_LABEL: Record<PriceKey, string> = {
   proYearly: "Pro Yearly",
   proMonthly: "Pro Monthly",
   proPrepaid: "Pro Prepaid (12 mo, no auto-renew)",
-  founder: "Founder (lifetime)",
 };

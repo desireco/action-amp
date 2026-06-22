@@ -94,7 +94,6 @@ export function BillingPage() {
       ) : data?.isPaid ? (
         <ActivePlanState
           plan={data.plan}
-          isFounder={data.isFounder}
           planRenewsAt={data.planRenewsAt}
         />
       ) : (
@@ -122,8 +121,7 @@ function ActivePlanState({
   plan,
   planRenewsAt,
 }: {
-  plan: "FREE" | "PRO" | "FOUNDER";
-  isFounder: boolean;
+  plan: "FREE" | "PRO";
   planRenewsAt: Date | null;
 }) {
   const [portalLoading, setPortalLoading] = useState(false);

@@ -5,7 +5,7 @@
  * This is the ONLY place that changes User.plan. Never trust the client.
  *
  * Events handled:
- *   - checkout.session.completed       → one-time payments (founder, prepaid)
+ *   - checkout.session.completed       → one-time payments (prepaid)
  *   - invoice.paid                      → subscription payments (pro yearly/monthly)
  *   - invoice.payment_failed            → mark payment as failed (grace period)
  *   - customer.subscription.updated     → safety net: expire on terminal status (canceled/unpaid)
@@ -40,7 +40,6 @@ const PRICING_ENTITLEMENT = {
   pro_yearly: { plan: "PRO" as const, renewalMs: 365 * 24 * 60 * 60 * 1000, label: "Pro Yearly" },
   pro_monthly: { plan: "PRO" as const, renewalMs: 30 * 24 * 60 * 60 * 1000, label: "Pro Monthly" },
   pro_prepaid: { plan: "PRO" as const, renewalMs: 365 * 24 * 60 * 60 * 1000, label: "Pro Prepaid (12 mo)" },
-  founder: { plan: "FOUNDER" as const, renewalMs: 365 * 24 * 60 * 60 * 1000, label: "Founder" },
 } as const;
 
 export const stripeWebhook = async (
@@ -134,7 +133,7 @@ function extractPaymentIntentId(invoice: Record<string, unknown>): string | unde
 async function handleCheckoutCompleted(event: Stripe.Event, context: WaspApiContext) {
   const session = event.data.object as unknown as Record<string, unknown>;
 
-  // Only handle one-time payments here (founder, prepaid).
+  // Only handle one-time payments here (prepaid).
   // Subscription checkouts trigger invoice.paid separately.
   if (session.mode === "subscription") {
     console.log("[webhook] checkout.session.completed — subscription mode, skipping (invoice.paid will handle).");
@@ -264,7 +263,7 @@ async function handleInvoicePaid(event: Stripe.Event, context: WaspApiContext) {
     where: { id: userId },
     data: {
       plan,
-      planRenewsAt: plan === "FOUNDER" ? null : new Date(Date.now() + renewalMs),
+      planRenewsAt: new Date(Date.now() + renewalMs),
     },
   });
 

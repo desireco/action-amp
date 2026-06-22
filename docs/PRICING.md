@@ -21,8 +21,6 @@
   positioning (~$1.53/week). See §5.
 - **Prepaid option:** **$90/yr non-recurring (DECIDED)** — same Pro product,
   no auto-renew, for the anti-subscription crowd (+$10.50 over recurring). See §5.
-- **Founder launch rate:** **$52/yr (DECIDED)** — exactly $1/week, a real
-  52-weeks-in-a-year story. Lifetime-locked for early adopters. See §5.
 - **Engine:** **Stripe (DECIDED).** NOT Wasp-built-in — Wasp 0.24 has no payment
   support; we wire Stripe via `api` (webhook) + actions (checkout). Full plan:
   see `BILLING-INTEGRATION.md`.
@@ -66,6 +64,7 @@ Where ActionAmp's price will be perceived. **Annual-equivalent** for comparison:
 | **Notion** | free + sub | $96/yr ($8/mo) | Not a focus app, but a free-tier reference point. |
 
 **Reads:**
+
 - The **focus/todo category floor is ~$24–36/yr.** Going below this signals "cheap," not "calm."
 - **Things at $50-once is the single biggest perceptual threat** — ActionAmp's exact target audience loves Things and will do the math: "why subscribe when I can own Things forever for less?"
 - **$80/yr is defensible but lonely** — only Sunsama is higher, and Sunsama is a heavier product. $80 requires earning trust fast.
@@ -88,6 +87,7 @@ The user's instinct, refined across the conversation:
 "paid trial" (~$10/mo), quietly solving the no-monthly-option problem.
 
 **Why set aside:**
+
 1. Three commitment lengths = three decisions = friction on the pricing page,
    contradicting the "calm" thesis.
 2. The 6-month tier has no real purchase rhythm — it's a middle option that
@@ -115,11 +115,16 @@ growing business on one-time sales in 2026. **But keep it on the table** — if
 subscription churn is high after launch, lifetime may be the answer for this
 audience.
 
-### Model C — Founder pricing on launch (a layer, not a model)
+### Model C — Founder pricing on launch — *reversed 2026-06-22*
 
-Whatever model ships, launch at a discount for early adopters ("Founders pay $X,
-locked for life"). Solves the pre-launch trust gap without permanently devaluing.
-**Almost certainly worth doing regardless of which model wins.**
+~~Whatever model ships, launch at a discount for early adopters ("Founders pay $X,
+locked for life"). Solves the pre-launch trust gap without permanently devaluing.~~
+
+**Reversed:** the Founder tier is no longer offered. The trust-gap concern it
+addressed is real, but adding a lifetime-locked tier adds entitlement-model
+complexity (a third plan state, non-expiring `planRenewsAt` semantics) for a
+benefit the $90 prepaid option already covers at lower complexity. If churn is
+high post-launch, revisit a *time-limited* launch discount instead of lifetime.
 
 ---
 
@@ -188,26 +193,27 @@ Pro = Work + unlimited structure + power.
 ## 5. Model A — the numbers (DECIDED)
 
 **DECISION (2026-06-16): Model A3 — premium positioning.** A bolder anchor,
-justified by the breadth of paid features coming and a clear founder on-ramp.
+justified by the breadth of paid features coming.
+
+*(Founder launch rate removed 2026-06-22 — see §3 Model C. Two tiers on the
+page: Free + Pro, with a recurring/prepaid billing choice.)*
 
 | Tier | Price | Story |
 |---|---|---|
 | **Free** | $0 (feature-capped) | The full focus loop, **personal scope only**, capped at 3 Projects / 1 Goal. Tasks unlimited. See §4. |
-| **Founder** *(launch only, lifetime-locked)* | **$52/yr** | **Exactly $1 a week.** 35% off the anchor — the cleanest pitch line we have, for the people who take a chance early. |
 | **Pro** *(regular annual)* | **$79.50/yr** | Charm-priced. "About a dollar-fifty a week." (~$1.53/wk, ~$6.63/mo equiv) |
 | **Pro prepaid** *(non-recurring)* | **$90/yr** | Same Pro, **no auto-renew**. +$10.50 for control & peace of mind. For the anti-subscription crowd. |
 | **Pro monthly** *(optional)* | **$12.95/mo** | Commitment-phobe option — ~2.0× the annual equiv, a clear push to yearly. |
 
 **The pricing story:**
 
-> *ActionAmp Pro costs about a dollar-fifty a week. Founders pay exactly a dollar.*
+> *ActionAmp Pro costs about a dollar-fifty a week.*
 
-The ladder is ~3 things on the page: Free, Pro (with a recurring-vs-prepaid
-billing toggle), and a launch-only Founder rate. Monthly is the escape hatch,
-not a headline. Founder vs regular is a clean contrast: **$1/week vs
-$1.50/week.**
+The ladder is ~2 things on the page: Free, and Pro (with a recurring-vs-prepaid
+billing toggle). Monthly is the escape hatch, not a headline.
 
 ### Why $80 anchor (the user's call)
+
 - **Premium positioning for a broad paid feature set.** The rationale is that a
   bunch of Pro features are coming (unlimited Lenses, multi-device, command
   palette, search, focus refinement) — the price needs to carry that breadth,
@@ -220,10 +226,12 @@ $1.50/week.**
 - **The honest risk, stated once and not relitigated:** $80 is the loneliest spot
   in the category — above Things-once ($50), 2.2× Todoist ($36), matched only by
   Sunsama ($192) which is a heavier product. Pre-launch, with zero reputation,
-  it's a trust bet. The founder rate ($52, "$1/week") is the bridge. *This was
-  flagged earlier; the user has chosen $80 deliberately with eyes open.*
+  it's a trust bet. *This was flagged earlier; the user has chosen $80
+  deliberately with eyes open.* (The $52 Founder bridge was removed
+  2026-06-22; the $90 prepaid is the lower-commitment on-ramp that remains.)
 
 ### Why $90 prepaid non-recurring (added 2026-06-16)
+
 - **Captures the anti-subscription segment without committing to lifetime (Model
   B).** Users who hate auto-renew pay a $10.50 premium for control.
 - **It's a billing toggle, not a new tier** — same Pro product, no auto-renew.
@@ -233,21 +241,18 @@ $1.50/week.**
   soft-lock on the excess (never delete). Full mechanics in
   `BILLING-INTEGRATION.md` §4.
 
-### Why $52 founder (the real find)
-- $52 = 52 weeks in a year → **"$1/week."** A universally understood, instantly
-  graspable story — not an arbitrary discount number.
-- 35% below the $80 anchor: a real, generous-but-not-insulting founder deal.
-- Originally explored alongside **$43** (the GTD "tickler file" — 31 daily + 12
-  monthly folders, a knowing wink to the methodology crowd). $43's magic only
-  lands on GTD insiders; **$52's magic lands on everyone** — so $52 won.
-- With the $80 anchor, the "$1/week" framing is **founder-exclusive** — which
-  actually sharpens it: the founder gets the clean number, everyone else pays
-  $1.50/week. A clear, appealing early-adopter story.
+### ~~Why $52 founder~~ — *reversed 2026-06-22 (see §3 Model C)*
+
+~~$52 = 52 weeks → "$1/week."~~ Reversed: the Founder tier is no longer offered.
+If churn is high post-launch, the cheaper lever is a time-limited launch
+discount (not lifetime) or revisiting the anchor price.
 
 ### Paths not taken — parked
+
 - **$60/yr anchor (A2):** briefly locked in, then revised to $80. The user opted
   for the premium signal + feature breadth of $80. Revisit if conversion data
-  says $80 is suppressing signups (a founder-rate move is the cheap lever).
+  says $80 is suppressing signups (a launch discount or lower anchor is the
+  cheap lever).
 
 ---
 
@@ -273,7 +278,7 @@ framework, just using its general primitives:
 The full plan — architecture, schema, endpoints, settings structure, phased
 build order, security checklist — lives in **`BILLING-INTEGRATION.md`**.
 
-**Schema shape (summary):** a `Plan` enum (`FREE | PRO | FOUNDER`) +
+**Schema shape (summary):** a `Plan` enum (`FREE | PRO`) +
 `stripeCustomerId` + `planRenewsAt` on `User`. Entitlement is enforced
 **server-side in operations** (never trust the client): `context.user.plan`
 gates creating the 4th Project, 2nd Goal, or using the Work Lens.
@@ -287,7 +292,9 @@ webhook as source of truth, signature verification, idempotency).
 
 1. ~~**Anchor price**~~ — **DECIDED: $79.50/yr** (charm-priced from $80).
 2. ~~**Prepaid non-recurring option**~~ — **DECIDED: $90/yr, no auto-renew.**
-3. ~~**Founder launch rate**~~ — **DECIDED: $52/yr ("$1/week"), lifetime-locked.**
+3. ~~**Founder launch rate**~~ — **REVERSED 2026-06-22: Founder tier dropped.**
+   *(Originally decided $52/yr lifetime-locked; removed from catalog, schema, and
+   UI. See §3 Model C for the reversal rationale.)*
 4. ~~**Monthly option included, and at what price?**~~ — **DECIDED: $12.95/mo.**
    *(Push-to-annual rate: ~$155/yr equiv ≈ 2.0× the $79.50 annual — coherent at this
    anchor. Still above the typical SaaS 1.2–1.4× norm, which is intentional
@@ -301,9 +308,6 @@ webhook as source of truth, signature verification, idempotency).
    *(lean: subscription-only at launch; revisit if churn is high. The $90 prepaid
    non-recurring option partially serves the same audience without committing
    to true lifetime.)*
-8. **Founder window mechanics** — when does the $52 FOUNDER price stop? Date /
-   user-count cap / manual? *(lean: soft cap + manual kill switch — see
-   BILLING-INTEGRATION.md §9.)*
 
 ---
 
@@ -321,3 +325,4 @@ webhook as source of truth, signature verification, idempotency).
 | 2026-06-16 | **Engine: Stripe** (Wasp has NO built-in payments — corrected earlier wrong claim) | Maker already uses Stripe; Wasp's `api`+`apiNamespace` + actions are all we need. Full plan: BILLING-INTEGRATION.md |
 | 2026-06-16 | **Feature caps: personal (Me) scope · 1 Goal · 3 Projects · unlimited Tasks** | Personal-only lens is the strongest upgrade trigger; unlimited tasks avoids punishing the core capture behavior; 3/1 is the tastes-great zone |
 | 2026-06-16 | **Monthly price: $12.95/mo** | Push-to-annual rate (~$155/yr equiv ≈ 2.0× the $79.50 annual). Still above market 1.2–1.4× norm — intentional |
+| 2026-06-22 | **Founder tier reversed: dropped from catalog, schema, and UI** | Lifetime-locked tier added entitlement-model complexity (third plan state, non-expiring `planRenewsAt`) for a benefit the $90 prepaid already covers. Trust-gap concern real but cheaper to solve with a time-limited launch discount later if churn demands it. Removed `FOUNDER` from `Plan` enum, `billing/`, `BillingPage`, and docs. |

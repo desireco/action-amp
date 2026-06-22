@@ -57,9 +57,8 @@
   when the (retriable) webhook fires. No "I paid but it says free" tickets.
 - **Two payment flows, both native Stripe:**
   - **Recurring Pro ($79.50/yr) + Monthly ($12.95/mo)** → Stripe **Subscriptions**.
-  - **Prepaid annual ($90, non-recurring) + Founder ($52, lifetime-locked)** →
-    one-time **Checkout payments** that grant a dated (or, for Founder, permanent)
-    entitlement. See §4 for how these map to entitlement states.
+  - **Prepaid annual ($90, non-recurring)** →
+    one-time **Checkout payments** that grant a dated 12-month entitlement. See §4 for how these map to entitlement states.
 
 ---
 
@@ -78,10 +77,9 @@ model User {
   // ---- Billing (Stripe) ----
   plan            Plan   @default(FREE)
   stripeCustomerId String?  // set on first checkout; links to Stripe customer
-  planRenewsAt     DateTime?  // null for FREE; set by webhook; null for FOUNDER (never expires)
+  planRenewsAt     DateTime?  // null for FREE; set by webhook for PRO
   // NOTE: history/invoices live in Stripe (via the Customer Portal). We don't
-  // duplicate them. For Founder status, store the fact in `plan`, not in a
-  // separate "isFounder" bool — plan=FOUNDER *is* the signal.
+  // duplicate them.
   tasks Task[]
   tags  Tag[]
 }
@@ -89,17 +87,20 @@ model User {
 enum Plan {
   FREE       // default; personal scope, 3 projects, 1 goal
   PRO        // recurring or prepaid active; full features
-  FOUNDER    // early adopter; PRO forever, never expires, no renewal
 }
 ```
 
 **Why an enum + `planRenewsAt` instead of a richer model:**
-- Three states is all the UI cares about: FREE / paying-now / paying-forever.
+
+- Two states is all the UI cares about: FREE / paying-now.
 - `planRenewsAt` lets us (a) show "renews on X", (b) detect prepaid-expiry, (c)
   serve the focus engine's "is this user pro *right now?*" check with one read.
-- Founder never sets `planRenewsAt` (null = no expiry). A cron can scan for
-  `plan=PRO && planRenewsAt < now` to expire prepaid terms to FREE — or the
-  webhook's `invoice.payment_failed` / subscription end events handle it live.
+- A cron can scan for `plan=PRO && planRenewsAt < now` to expire prepaid terms
+  to FREE — or the webhook's `invoice.payment_failed` / subscription end events
+  handle it live.
+
+> *(The `FOUNDER` enum value and lifetime-entitlement path were removed
+> 2026-06-22 — see PRICING.md §3 Model C.)*
 
 > ⚠️ **Graceful degrade (from PRICING.md):** when a prepaid year ends and the
 > user drops FREE, they will *exceed* the cap (more than 1 goal / 3 projects /
@@ -133,6 +134,7 @@ export async function assertCanCreateProject(context) {
 ```
 
 Rules:
+
 - **Always check `context.user.plan` on the server**, never the client. The
   client only *reads* the plan for UI (dim locked things, show upgrade prompts).
 - Use HTTP **402 Payment Required** for cap hits — the client maps that to an
@@ -146,7 +148,6 @@ Rules:
 | Event (from webhook) | `User.plan` | `planRenewsAt` | Client effect |
 |---|---|---|---|
 | New signup | `FREE` | null | personal scope, 3 projects |
-| Founder checkout paid (once) | `FOUNDER` | null (never expires) | full features, "Founder" badge, no renewal UI |
 | Recurring Pro `invoice.paid` | `PRO` | +1 year | full features, "renews on X" |
 | Monthly `invoice.paid` | `PRO` | +1 month | full features, "renews on X" |
 | Prepaid $90 checkout paid (once) | `PRO` | +1 year | full features, "expires on X" (no auto-renew) |
@@ -156,15 +157,13 @@ Rules:
 
 **Stripe product/pricing mapping** (configure in Stripe Dashboard, reference by
 price ID in env vars — §6):
+
 - `price_pro_yearly` → recurring $79.50/yr (Subscription)
 - `price_pro_monthly` → recurring $12.95/mo (Subscription)
 - `price_pro_prepaid` → one-time $90 (12-month entitlement)
-- `price_founder` → one-time $52 (FOUNDER, permanent)
 
-> Founder flag on the *Stripe* side: a one-time product whose webhook handler
-> sets `plan = FOUNDER` (not `PRO`). The $52 lifetime deal is encoded entirely by
-> which Stripe Price the Checkout Session used — the user can't self-serve into
-> FOUNDER after the launch window (we just stop offering that Price / route).
+> *(A `price_founder` / `FOUNDER` plan was designed but removed 2026-06-22 before
+> launch — see PRICING.md §3 Model C. No Stripe product for it exists.)*
 
 ---
 
@@ -186,6 +185,7 @@ active page's content, inside the AppShell. The account-name link in the
 sidebar opens the Account hub.
 
 ### 5.1 Account (`/app/settings`) — mostly exists
+
 - **Name** (first/last) — editable (today it's read-only; add edit action)
 - **Email** — change via Wasp's email-auth flow
 - **Password** — change / reset
@@ -198,63 +198,46 @@ sidebar opens the Account hub.
 
 Three view-states, all server-driven off `User.plan`:
 
-**FREE user — the upgrade screen (DECIDED layout 2026-06-16):**
+**FREE user — the upgrade screen (layout simplified 2026-06-22):**
 
-The design principle: **Founder on top and primary while the window is open;
-everything else grayed-out and below.** The founder deal is the obvious choice;
-the regular tiers are present but visually de-emphasized so picking anything
-else feels like leaving money on the table.
+A calm 3-card layout (Yearly recommended / Monthly / Prepaid). Yearly carries
+the "Best value" badge; the others are equal-weight. No founder hero, no
+scarcity framing — the page embodies the "calm focus" brand.
 
 ```
-┌──────────────────────────────────────────┐
-│  Founder  ·  $52 / year                   │  ← HERO card, full strength
-│  Exactly $1 a week. Forever.              │
-│  Early adopters only — once it's gone…    │  ← scarcity line (truthful)
-│        [  Become a Founder →  ]           │  ← THE button (teal CTA)
-└──────────────────────────────────────────┘
+┌────────────────┐ ┌────────────────┐ ┌────────────────┐
+│  Monthly       │ │  Yearly        │ │  Prepaid       │
+│  $12.95 / mo   │ │  $79.50 / yr   │ │  $90 / yr      │
+│  No commit.    │ │  Best value ★  │ │  No auto-renew │
+│  [Choose plan] │ │  [Choose plan] │ │  [Choose plan] │
+└────────────────┘ └────────────────┘ └────────────────┘
 
-   Or, the regular plans:
-
-   ┄┄ Pro (yearly)        $79.50 / year   ┄┄   ← grayed / dimmed
-   ┄┄ Pro (monthly)       $12.95 / mo    ┄┄
-   ┄┄ Pro prepaid (1 yr)  $90 / year     ┄┄   ← no auto-renew
-
-   [ Current: Free · 3 projects used of 3 ]      ← usage vs caps
+[ Current: Free · 3 projects used of 3 ]      ← usage vs caps
 ```
 
-- **Founder card is the only fully-saturated, full-size card** — teal accent,
-  the "$1/week" pitch, a clear CTA. It sits **above** the others.
-- **The three regular plans render as a dimmed list below** (grayed text, no
-  filled buttons — secondary/ghost style). Each is still tappable (we don't
-  *block* them — that's hostile), but they read as the worse deal.
-- **The scarcity line must be truthful** (PRODUCT.md: honesty over nudges).
-  State *what's true*: e.g. "Founder pricing ends at N users" (if we cap by
-  count) or a date. No fake countdowns.
 - Each tappable plan = a server action creating a Checkout Session → redirect to
   Stripe. No payment form on our side.
 - Usage row ("3 projects used of 3") under the plans shows where they are vs the
   free cap — motivates the upgrade.
+- *(A founder-hero layout was designed 2026-06-16 but reversed 2026-06-22 when
+  the Founder tier was dropped — see PRICING.md §3 Model C.)*
 
-**After the Founder window closes** (decision: §9 — likely a soft user-count
-cap + manual kill switch), the hero Founder card disappears and the three
-regular plans promote to full strength. The page is then a calm 3-card layout
-(Yearly / Monthly / Prepaid).
+**PRO user:**
 
-**PRO / FOUNDER user:**
-- Plan badge ("Pro" or "Founder"), since when, renews/expires date (or
-  "lifetime" for Founder).
+- Plan badge ("Pro"), since when, renews/expires date.
 - **"Manage billing"** button → creates a **Customer Portal Session** → redirect.
   Portal handles card changes, invoices, cancel, download receipts. We build none
   of that UI.
 - Cancel link (portal handles it; we just surface the entry point).
-- FOUNDER users never see renewal/cancel UI — they're permanent.
 
 **Dropped-to-FREE (recent expiry / cancelled):**
+
 - Honest state: "Your Pro plan ended on X. You're back on Free." + the upgrade
   screen above. Soft-locked resources (§2) get a one-time banner explaining
   what's read-only until they re-up.
 
 ### 5.3 Preferences (`/app/settings/preferences`) — Phase 2-ish
+
 - Theme (dark default — F24)
 - Today cap (default 5, configurable, off — F12)
 - Completion sounds, momentum toggle (F17)
@@ -292,7 +275,6 @@ webapp/
   STRIPE_PRICE_PRO_YEARLY=price_...
   STRIPE_PRICE_PRO_MONTHLY=price_...
   STRIPE_PRICE_PRO_PREPAID=price_...
-  STRIPE_PRICE_FOUNDER=price_...
   STRIPE_PRICE_CURRENCY=usd
   # optional dev: STRIPE_CLI=true toggles localhost forwarding notes
 
@@ -310,16 +292,17 @@ hosted Checkout + Portal (it's a redirect). Add `stripe` to
 ## 7. Phased build order (how to actually ship this)
 
 **Phase 0 — Groundwork (no Stripe calls yet)**
+
 1. Schema: add `Plan` enum + the three billing fields. Migrate (`wasp db
    migrate-dev --name billing_fields`). Seed existing users as `FREE`.
 2. `billing/config.ts` + `billing/guards.ts`: the cap rules + server guards.
    Wire guards into the *current* Task/Project/Goal operations (when they exist)
    so enforcement is real before billing is wired.
 3. Refactor SettingsPage → Account; add SettingsLayout + `/app/settings/billing`
-   + `/app/settings/preferences` routes (billing/preferences as stubs).
+   - `/app/settings/preferences` routes (billing/preferences as stubs).
 
 **Phase 1 — Checkout (taking money)**
-4. Stripe account setup: create 4 Prices in the Dashboard; grab price IDs into
+4. Stripe account setup: create 3 Prices in the Dashboard; grab price IDs into
    `.env.server`.
 5. `createCheckoutSession` action (auth:true) → maps a plan choice to a price
    ID, reuses/creates the Stripe customer (`stripeCustomerId`), returns a Stripe
@@ -330,21 +313,22 @@ hosted Checkout + Portal (it's a redirect). Add `stripe` to
 **Phase 2 — Webhook (the truth)**
 7. `apiNamespace("/webhooks", rawBody)` + `api("POST","/webhooks/stripe", ...)`.
 8. Verify signature with `STRIPE_WEBHOOK_SECRET`; on `checkout.session.completed`
-   + `invoice.paid` + `invoice.payment_failed` + `customer.subscription.deleted`,
+
+- `invoice.paid` + `invoice.payment_failed` + `customer.subscription.deleted`,
    mutate `User.plan`/`planRenewsAt` per §4. **Idempotency:** key off the Stripe
    event id so retries don't double-mutate.
-9. `getBillingStatus` query → client reads plan + usage for the right BillingPage
+
+1. `getBillingStatus` query → client reads plan + usage for the right BillingPage
    state.
 
 **Phase 3 — Portal & cleanup**
 10. `createPortalSession` action → BillingPage PRO-state "Manage billing".
 11. Account deletion cancels Stripe sub first.
 12. Graceful-degrade UX: soft-lock banner for expired prepaid/cancelled.
-13. Founder window mechanics (when to stop offering the FOUNDER price).
 
 **Phase 4 — Polish**
 14. Email receipts/renewal notices (via Resend, already wired) triggered from
-    webhook events. Founder thank-you email.
+    webhook events.
 15. Usage metering UI ("3 of 3 projects") on BillingPage.
 
 ---
@@ -377,13 +361,12 @@ hosted Checkout + Portal (it's a redirect). Add `stripe` to
 ## 9. Open decisions (before Phase 1)
 
 1. ~~**Settings nav shape**~~ — **DECIDED: sub-routes.** See §5.
-2. ~~**Billing page layout**~~ — **DECIDED: Founder hero on top, regular plans
-   grayed-out below** (while the Founder window is open). See §5.2.
-3. **Founder window mechanics:** when does the $52 FOUNDER price stop being
-   offered? A date, a user-count cap, or manual? *(lean: a soft cap + manual kill
-   switch.)* This decides what the *truthful* scarcity line says.
-4. **Trial?** None planned (free tier is forever, feature-capped). Confirm we
+2. ~~**Billing page layout**~~ — **DECIDED: calm 3-card layout** (Yearly /
+   Monthly / Prepaid). See §5.2. *(A founder-hero layout was reversed 2026-06-22
+   when the Founder tier was dropped — see PRICING.md §3 Model C.)*
+3. **Trial?** None planned (free tier is forever, feature-capped). Confirm we
    never want a time-limited Pro trial.
-5. **Currency:** USD only at launch? *(lean: yes, USD only; expand later.)*
-6. **Taxes:** Stripe Tax on/off? *(lean: off at launch for simplicity; on when
-   revenue justifies it.)*
+4. **Currency:** USD only at launch? *(lean: yes, USD only; expand later.)*
+5. **Taxes:** Stripe Tax on/off? *(lean: off at launch for simplicity; on when
+   revenue justifies it.)* *(Now enabled in checkout via `automatic_tax` as of
+   the 2026-06-22 checkout hardening — revisit whether this satisfies §9.)*
