@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "wasp/client/auth";
+import { setPreferredName } from "wasp/client/operations";
 import "./OnboardingPage.css";
 
 type Page =
+  | "name"
   | "welcome"
   | "lesson-1"
   | "lesson-2"
@@ -10,6 +13,7 @@ type Page =
   | "done";
 
 const PAGES: Page[] = [
+  "name",
   "welcome",
   "lesson-1",
   "lesson-2",
@@ -44,7 +48,84 @@ const FINAL_MSG = "That's it. Go do something.";
 
 const ONBOARDING_KEY = "actionamp_onboarding_complete";
 
+/**
+ * Step 0: preferred-name prompt. Self-contained — owns its input, save, and
+ * submit button so the carousel shell stays a pure orchestrator.
+ * ponytail: save failures are swallowed — onboarding must never block on a
+ * network hiccup; the name is re-editable in Settings.
+ */
+function NameStep({
+  user,
+  onAdvance,
+}: {
+  user: { firstName?: string } | null | undefined;
+  onAdvance: () => void;
+}) {
+  const [value, setValue] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const submit = useCallback(async () => {
+    const name = value.trim() || user?.firstName;
+    if (name) {
+      setSaving(true);
+      try {
+        await setPreferredName({ preferredName: name });
+      } catch {
+        /* non-fatal */
+      } finally {
+        setSaving(false);
+      }
+    }
+    onAdvance();
+  }, [value, user, onAdvance]);
+
+  return (
+    <div className="aa-ob-page aa-ob-enter">
+      <div className="aa-ob-eyebrow">First, a quick hello</div>
+      <h1 className="aa-ob-h1">What should we call you?</h1>
+      <p className="aa-ob-body">
+        First name, nickname, whatever feels right. You can change it later in
+        Settings.
+      </p>
+      <input
+        className="aa-ob-name-input"
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={user?.firstName ?? "Your name"}
+        autoFocus
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submit();
+          }
+        }}
+        style={{
+          width: "100%",
+          maxWidth: 320,
+          padding: "12px 14px",
+          fontSize: "1.05rem",
+          borderRadius: 10,
+          border: "1px solid var(--aa-border-strong, #ccc)",
+          background: "var(--aa-surface, #fff)",
+          color: "var(--aa-text, #111)",
+          marginTop: 8,
+        }}
+      />
+      <button
+        className="aa-ob-cta"
+        disabled={saving}
+        onClick={submit}
+        style={{ marginTop: 24 }}
+      >
+        Looks good →
+      </button>
+    </div>
+  );
+}
+
 export function OnboardingPage() {
+  const { data: user } = useAuth();
   const [pageIdx, setPageIdx] = useState(0);
   const [leaving, setLeaving] = useState(false);
 
@@ -77,6 +158,7 @@ export function OnboardingPage() {
   // keyboard nav
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (pageIdx === 0) return; // name page manages its own input keys
       if (e.key === "ArrowRight" || e.key === "Enter") {
         e.preventDefault();
         if (pageIdx >= PAGES.length - 1) complete();
@@ -93,7 +175,7 @@ export function OnboardingPage() {
   }, [pageIdx, next, complete, skip]);
 
   const isDone = pageIdx >= PAGES.length;
-  const lessonIdx = pageIdx - 1; // -1 = welcome page
+  const lessonIdx = pageIdx - 2; // name(0)/welcome(1) → negative, lessons start at idx 2
 
   return (
     <div className={`aa-onboarding ${leaving ? "leaving" : ""}`}>
@@ -108,6 +190,11 @@ export function OnboardingPage() {
 
       {/* Pages */}
       <div className="aa-ob-stage">
+        {/* NAME — preferred name prompt (step 0) */}
+        {currentPage === "name" && (
+          <NameStep user={user} onAdvance={next} />
+        )}
+
         {/* WELCOME */}
         {currentPage === "welcome" && (
           <div className="aa-ob-page aa-ob-enter">
@@ -199,7 +286,7 @@ export function OnboardingPage() {
             </div>
 
             <div className="aa-ob-dots">
-              {PAGES.slice(1).map((_, i) => (
+              {PAGES.slice(2).map((_, i) => (
                 <span
                   key={i}
                   className={`aa-ob-dot ${i === lessonIdx ? "active" : ""}`}
@@ -228,31 +315,33 @@ export function OnboardingPage() {
         )}
       </div>
 
-      {/* Footer CTA */}
-      <div className="aa-ob-foot">
-        {!isDone ? (
-          <button
-            className="aa-ob-cta"
-            onClick={
-              pageIdx === 0
-                ? next
+      {/* Footer CTA — hidden on the name step (it renders its own button) */}
+      {currentPage !== "name" && (
+        <div className="aa-ob-foot">
+          {!isDone ? (
+            <button
+              className="aa-ob-cta"
+              onClick={
+                currentPage === "welcome"
+                  ? next
+                  : pageIdx >= PAGES.length - 1
+                    ? complete
+                    : next
+              }
+            >
+              {currentPage === "welcome"
+                ? "Show me →"
                 : pageIdx >= PAGES.length - 1
-                  ? complete
-                  : next
-            }
-          >
-            {pageIdx === 0
-              ? "Show me →"
-              : pageIdx >= PAGES.length - 1
-                ? FINAL_MSG
-                : "Next →"}
-          </button>
-        ) : (
-          <button className="aa-ob-cta" onClick={complete}>
-            Go →
-          </button>
-        )}
-      </div>
+                  ? FINAL_MSG
+                  : "Next →"}
+            </button>
+          ) : (
+            <button className="aa-ob-cta" onClick={complete}>
+              Go →
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

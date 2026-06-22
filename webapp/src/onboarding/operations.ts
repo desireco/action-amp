@@ -1,4 +1,4 @@
-import type { EnsureOnboarded, GetAppData } from "wasp/server/operations";
+import type { EnsureOnboarded, GetAppData, SetPreferredName } from "wasp/server/operations";
 
 /**
  * Onboarding + app bootstrap data.
@@ -8,6 +8,8 @@ import type { EnsureOnboarded, GetAppData } from "wasp/server/operations";
  *   - existing users who predate the Lens feature (first login after deploy)
  *   - brand-new signups
  * Safe to call on every app load.
+ *
+ * `setPreferredName` — persists the onboarding preferred-name choice.
  *
  * `getAppData` — returns the user's lenses (and, later, the rest of the shell
  * data) so the client can populate the sidebar + scope the focus engine.
@@ -43,6 +45,25 @@ export const ensureOnboarded = (async (_args, context) => {
 
   return { createdLenses: created };
 }) satisfies EnsureOnboarded<never, { createdLenses: { name: string; id: string }[] }>;
+
+/**
+ * Sets the user's preferred name (the onboarding "what should we call you?"
+ * step). Independent of `ensureOnboarded` so it can be called once and skipped.
+ */
+export const setPreferredName = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const name = args.preferredName?.trim();
+  if (!name) {
+    throw new Error("Preferred name is required.");
+  }
+  await context.entities.User.update({
+    where: { id: context.user.id },
+    data: { preferredName: name },
+  });
+  return { preferredName: name };
+}) satisfies SetPreferredName<{ preferredName: string }, { preferredName: string }>;
 
 /**
  * Everything the app shell needs on first paint: lenses (for the sidebar's
