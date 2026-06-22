@@ -71,6 +71,14 @@
 /* ============================================================
    Shortcut cheatsheet
    ============================================================ */
+.aa-cheatsheet {
+  max-width: 480px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .aa-cheatsheet__head {
   display: flex;
   align-items: center;
@@ -91,20 +99,56 @@
   flex-shrink: 0;
 }
 
-.aa-cheatsheet__title {
+.aa-cheatsheet__heading {
   flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+}
+
+.aa-cheatsheet__title {
   font-size: 1rem;
   font-weight: 700;
   color: var(--aa-text);
   margin: 0;
 }
 
+.aa-cheatsheet__sub {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  margin: 0;
+}
+
+.aa-cheatsheet__sections {
+  overflow-y: auto;
+  padding: var(--aa-space-xs) 0;
+}
+
+.aa-cheatsheet__section {
+  padding: var(--aa-space-xs) 0;
+}
+
+.aa-cheatsheet__section + .aa-cheatsheet__section {
+  border-top: 1px solid var(--aa-border);
+}
+
+.aa-cheatsheet__section-title {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  margin: 0;
+  padding: var(--aa-space-sm) var(--aa-space-lg) var(--aa-space-xs);
+}
+
 .aa-cheatsheet__list {
   list-style: none;
   margin: 0;
-  padding: var(--aa-space-sm) 0;
-  max-height: 60vh;
-  overflow-y: auto;
+  padding: 0;
 }
 
 .aa-cheatsheet__row {
@@ -112,7 +156,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--aa-space-lg);
-  padding: 8px var(--aa-space-lg);
+  padding: 7px var(--aa-space-lg);
 }
 
 .aa-cheatsheet__row:hover {
@@ -124,10 +168,17 @@
   color: var(--aa-text-2);
 }
 
+.aa-cheatsheet__note {
+  font-size: 0.74rem;
+  color: var(--aa-text-4);
+  font-weight: 400;
+}
+
 .aa-cheatsheet__keys {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .aa-cheatsheet__kbd {
@@ -140,6 +191,46 @@
   border-radius: var(--aa-radius-xs);
   border: 1px solid var(--aa-border);
   line-height: 1.4;
+}
+
+.aa-cheatsheet__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  padding: var(--aa-space-sm) var(--aa-space-lg);
+  border-top: 1px solid var(--aa-border);
+  background: var(--aa-bg-soft);
+}
+
+.aa-cheatsheet__tip {
+  font-size: 0.74rem;
+  color: var(--aa-text-4);
+  font-style: italic;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.aa-cheatsheet__done {
+  font-family: var(--aa-font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--aa-surface);
+  background: var(--aa-teal-cta);
+  padding: 7px 16px;
+  border-radius: var(--aa-radius-sm);
+  box-shadow: 0 2px 8px var(--aa-teal-tint-shadow);
+  cursor: pointer;
+  transition: background 0.12s var(--aa-ease-out), transform 0.1s var(--aa-ease-out);
+  flex-shrink: 0;
+}
+
+.aa-cheatsheet__done:hover {
+  background: var(--aa-teal-cta-hover);
+}
+
+.aa-cheatsheet__done:active {
+  transform: scale(0.97);
 }
 
 /* ============================================================

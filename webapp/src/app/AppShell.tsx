@@ -210,8 +210,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button
               type="button"
               className="aa-app-icon-btn"
+              onClick={() => setCheatsheetOpen(true)}
+              title="Shortcuts (?)"
+              aria-label="Shortcuts"
+            >
+              ?
+            </button>
+            <button
+              type="button"
+              className="aa-app-icon-btn"
               onClick={toggleTheme}
-              title="Toggle theme (⌘D)"
+              title="Toggle theme"
               aria-label="Toggle theme"
             >
               {theme === "light" ? <MoonIcon /> : "☀"}
