@@ -1,6 +1,7 @@
 import type { GetBillingStatus } from "wasp/server/operations";
-import { isPaidPlan } from "./config";
+import { isPaidPlan, FOUNDING_100_CAP } from "./config";
 import { stripe, getPriceId } from "./stripe";
+import { HttpError } from "wasp/server";
 
 /**
  * The user's billing status: their plan, whether it's active, the renewal/
@@ -48,7 +49,7 @@ import type {
 } from "wasp/server/operations";
 
 export const createCheckoutSession = (async (
-  args: { priceKey: "proYearly" | "proMonthly" | "proPrepaid" },
+  args: { priceKey: "proYearly" | "proMonthly" | "proPrepaid" | "founder" },
   context
 ) => {
   if (!context.user) {
@@ -56,6 +57,22 @@ export const createCheckoutSession = (async (
   }
 
   const { priceKey } = args;
+
+  // Founding 100 cap: hard business invariant — exactly 100 lifetime spots, ever.
+  // Enforced server-side (the one place that matters); the client just renders
+  // the count. A race between two checkouts is acceptable (the webhook is the
+  // final source of truth and the count is re-checked here); the cap is a soft
+  // 100, not a precise mutex. // ponytail: per-request count, not a lock — if
+  // throughput ever made this racy we'd add a SELECT FOR UPDATE or a counter row.
+  if (priceKey === "founder") {
+    const claimed = await context.entities.User.count({
+      where: { plan: "FOUNDER" },
+    });
+    if (claimed >= FOUNDING_100_CAP) {
+      throw new HttpError(409, "All 100 Founding spots have been claimed.");
+    }
+  }
+
   const priceId = getPriceId(priceKey);
   const authUser = context.user;
 
@@ -110,7 +127,7 @@ export const createCheckoutSession = (async (
   }
 
   return { url: session.url };
-}) satisfies CreateCheckoutSession<{ priceKey: "proYearly" | "proMonthly" | "proPrepaid" }, { url: string }>;
+}) satisfies CreateCheckoutSession<{ priceKey: "proYearly" | "proMonthly" | "proPrepaid" | "founder" }, { url: string }>;
 
 /**
  * Create a Stripe Customer Portal session for the user to self-serve manage
@@ -141,3 +158,23 @@ export const createCustomerPortalSession = (async (_args, context) => {
 
   return { url: session.url };
 }) satisfies CreateCustomerPortalSession<void, { url: string }>;
+
+/**
+ * The Founding 100 status: how many of the 100 lifetime spots remain.
+ * Public (auth not required) so the landing page can render the live count.
+ * User-specific state ("am I already a founder?") comes from useAuth() on the
+ * client — this query returns only the global count.
+ */
+import type { GetFounding100Status } from "wasp/server/operations";
+
+export const getFounding100Status = (async (_args, context) => {
+  const claimed = await context.entities.User.count({
+    where: { plan: "FOUNDER" },
+  });
+  return {
+    cap: FOUNDING_100_CAP,
+    claimed,
+    remaining: Math.max(0, FOUNDING_100_CAP - claimed),
+    isFull: claimed >= FOUNDING_100_CAP,
+  };
+}) satisfies GetFounding100Status<void>;

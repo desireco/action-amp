@@ -1,3 +1,7 @@
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { useAuth } from "wasp/client/auth";
+import { useQuery, createCheckoutSession, getFounding100Status } from "wasp/client/operations";
 import { PublicLayout } from "../shared/PublicLayout";
 import { Button } from "../components/ui";
 import "./Founding100Page.css";
@@ -5,11 +9,52 @@ import "./Founding100Page.css";
 /**
  * /founding-100 — the Founding 100 landing page.
  *
- * A one-time $139 lifetime Pro tier, capped at exactly 100 spots. The CTA is
- * disabled until checkout + the 100-spot cap enforcement are wired (price ID
- * in env, count check in the checkout action). See docs/PRICING.md §3 Model C.
+ * A one-time $139 lifetime Pro tier, capped at exactly 100 spots. The live
+ * spots-remaining count comes from getFounding100Status; the CTA is enabled
+ * while spots remain and the user is signed in (checkout requires auth).
+ * Once full, the button locks and the page says so.
  */
 export function Founding100Page() {
+  const { data: user } = useAuth();
+  const { data: status } = useQuery(getFounding100Status);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const remaining = status?.remaining;
+  const isFull = status?.isFull ?? false;
+  const alreadyFounder = user?.plan === "FOUNDER";
+
+  async function handleCheckout() {
+    setError(null);
+    if (!user) {
+      navigate("/login?redirect=/founding-100");
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await createCheckoutSession({ priceKey: "founder" });
+      if (result.url) window.location.href = result.url;
+    } catch (err) {
+      console.error("Checkout error:", err);
+      setError(
+        err instanceof Error ? err.message : "Could not start checkout. Try again."
+      );
+      setLoading(false);
+    }
+  }
+
+  // CTA copy + state by situation
+  let ctaLabel = "Secure Your Lifetime Spot for $139";
+  let ctaDisabled = loading;
+  if (isFull) {
+    ctaLabel = "All 100 spots claimed";
+    ctaDisabled = true;
+  } else if (alreadyFounder) {
+    ctaLabel = "You're a Founding Member";
+    ctaDisabled = true;
+  }
+
   return (
     <PublicLayout>
       <div className="aa-founding aa-markdown-body">
@@ -63,14 +108,29 @@ export function Founding100Page() {
         </p>
 
         <div className="aa-founding-cta">
-          {/* Disabled until checkout + 100-spot cap enforcement are wired. */}
-          <Button variant="primary" size="lg" disabled>
-            Secure Your Lifetime Spot for $139
+          {error && <p className="aa-founding-error">{error}</p>}
+          <Button variant="primary" size="lg" onClick={handleCheckout} disabled={ctaDisabled}>
+            {loading ? "Opening checkout…" : ctaLabel}
           </Button>
           <p className="aa-founding-spots">
-            {/* ponytail: static 100 while CTA is disabled; becomes a live count when checkout is wired. */}
-            100 spots remaining. When they are gone, they are gone.
+            {isFull ? (
+              "The Founding 100 is full. Thank you."
+            ) : remaining !== undefined ? (
+              <>
+                <strong>{remaining}</strong> of 100 spots remaining.{" "}
+                {user
+                  ? ""
+                  : "Log in to claim one."}
+              </>
+            ) : (
+              "100 spots remaining. When they are gone, they are gone."
+            )}
           </p>
+          {alreadyFounder && (
+            <p className="aa-founding-spots">
+              Thank you — you claimed one of the 100.
+            </p>
+          )}
         </div>
       </div>
     </PublicLayout>

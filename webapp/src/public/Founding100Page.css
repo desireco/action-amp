@@ -15,6 +15,12 @@
   text-align: center;
 }
 
+.aa-founding-error {
+  color: var(--aa-rose, #c0524b);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
 .aa-founding-spots {
   margin-top: 1rem;
   color: var(--aa-text-3);
