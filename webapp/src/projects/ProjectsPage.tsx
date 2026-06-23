@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getProjects, createProject } from "wasp/client/operations";
+import { getProjects, createProject, triageInboxItem } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Chip, GroupedList, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
@@ -30,6 +30,24 @@ export function ProjectsPage() {
   const queryClient = useQueryClient();
   const [creating, setCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Shift+P from triage arrives here with state { fromInboxItemId, initialName }:
+  // open the create form pre-filled, and on submit convert the inbox item into a
+  // Project (triageInboxItem deletes the item + creates the project atomically).
+  // ponytail: capture the inbox id in a ref — the nav state is cleared on mount
+  // (so a refresh doesn't re-trigger), but handleCreate must still see it.
+  const location = useLocation();
+  const triageState = location.state as { fromInboxItemId?: string; initialName?: string } | null;
+  const fromInboxRef = useRef<string | null>(triageState?.fromInboxItemId ?? null);
+  const [initialName, setInitialName] = useState(triageState?.initialName ?? "");
+  useEffect(() => {
+    if (triageState?.fromInboxItemId) setCreating(true);
+  }, [triageState]);
+  // Clear the nav state so a refresh / re-entry doesn't re-trigger the form.
+  useEffect(() => {
+    if (triageState) navigate(location.pathname, { replace: true, state: null });
+    // eslint not configured for exhaustive-deps; [] = run once on mount.
+  }, []);
   const { data: projects, isLoading } = useQuery(
     getProjects,
     lens ? { lensId: lens.id } : undefined,
@@ -40,10 +58,23 @@ export function ProjectsPage() {
     if (!lens) return;
     setSubmitting(true);
     try {
-      await createProject({ name, lensId: lens.id });
+      if (fromInboxRef.current) {
+        // Came from triage (Shift+P): convert the inbox item into this project.
+        await triageInboxItem({
+          inboxItemId: fromInboxRef.current,
+          decision: "project",
+          lensId: lens.id,
+          name,
+        });
+        fromInboxRef.current = null;
+      } else {
+        await createProject({ name, lensId: lens.id });
+      }
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+      queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       setCreating(false);
+      setInitialName("");
     } catch {
       /* surface elsewhere */
     } finally {
@@ -78,6 +109,7 @@ export function ProjectsPage() {
             onCreate={handleCreate}
             onCancel={() => setCreating(false)}
             submitting={submitting}
+            initialValue={initialName}
           />
         )}
         <ListEmpty
@@ -105,6 +137,7 @@ export function ProjectsPage() {
           onCreate={handleCreate}
           onCancel={() => setCreating(false)}
           submitting={submitting}
+          initialValue={initialName}
         />
       )}
       <GroupedList

@@ -114,7 +114,7 @@ export const triageInboxItem = (async (args, context) => {
     case "project": {
       const project = await context.entities.Project.create({
         data: {
-          name: item.text,
+          name: args.name?.trim() || item.text,
           userId: context.user.id,
           lensId,
           goalId: args.goalId,
@@ -160,4 +160,5 @@ export const triageInboxItem = (async (args, context) => {
   lensId: string;
   goalId?: string;
   projectId?: string;
+  name?: string; // override the project name (defaults to the item text)
 }>;

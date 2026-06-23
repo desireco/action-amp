@@ -133,6 +133,10 @@ export function InboxTriagePage() {
     [idx, total, exit, lens, triageList, queryClient],
   );
 
+  // Current item — declared before the keyboard effect (Shift+P needs it) and
+  // reused in the render. Null when the loop is complete.
+  const item = triageList[idx] ?? null;
+
   // Keyboard shortcuts (scoped to this page)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -153,11 +157,21 @@ export function InboxTriagePage() {
         backspace: "trash",
       };
       if (k === "p") {
+        // Shift+P → leave triage, create a new Project from this item (Q2).
+        if (e.shiftKey) {
+          e.preventDefault();
+          navigate("/app/projects", { state: { fromInboxItemId: item.id, initialName: item.text } });
+          return;
+        }
         // P → file current item into the last-used project (default General).
         // No target yet → open the picker instead of filing standalone.
         e.preventDefault();
         if (lastProjectId) dispatch("someday", { projectId: lastProjectId });
         else setProjectPickerOpen(true);
+      } else if (e.key === "Enter") {
+        // Enter → the no-horizon default: a standalone Task (Someday).
+        e.preventDefault();
+        dispatch("someday");
       } else if (map[e.key] || map[k]) {
         e.preventDefault();
         dispatch(map[e.key] || map[k]);
@@ -167,7 +181,7 @@ export function InboxTriagePage() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [dispatch, isComplete, navigate, lastProjectId]);
+  }, [dispatch, isComplete, navigate, lastProjectId, item]);
 
   const reset = () => {
     setIdx(0);
@@ -195,8 +209,6 @@ export function InboxTriagePage() {
       </div>
     );
   }
-
-  const item = triageList[idx];
 
   return (
     <div className="aa-triage">
@@ -254,16 +266,16 @@ export function InboxTriagePage() {
         <div className="aa-triage__dispatch">
           <DispatchButton
             tone="teal"
-            label="Task · Today"
-            sub="a quick action, due today"
-            kbd="1"
+            label="Task"
+            sub="just a task — no time commitment yet"
+            kbd="↵"
             icon={
               <svg viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M8 5v3.5l2 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             }
-            onClick={() => dispatch("task-today")}
+            onClick={() => dispatch("someday")}
           />
           <DispatchButton
             tone="violet"
@@ -294,8 +306,8 @@ export function InboxTriagePage() {
         </div>
 
         <div className="aa-triage__dispatch-secondary">
+          <DispatchButton mini kbd="1" label="Today" onClick={() => dispatch("task-today")} />
           <DispatchButton mini kbd="2" label="Upcoming" onClick={() => dispatch("upcoming")} />
-          <DispatchButton mini kbd="3" label="Someday" onClick={() => dispatch("someday")} />
           <DispatchButton mini danger kbd="Del" label="Trash" onClick={() => dispatch("trash")} />
         </div>
       </div>

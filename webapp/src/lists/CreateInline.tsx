@@ -12,13 +12,15 @@ export function CreateInline({
   onCreate,
   onCancel,
   submitting = false,
+  initialValue = "",
 }: {
   placeholder: string;
   onCreate: (name: string) => Promise<void> | void;
   onCancel: () => void;
   submitting?: boolean;
+  initialValue?: string;
 }) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialValue);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
