@@ -50,7 +50,7 @@ test("dispatch to Today transforms the item and clears it from the inbox", async
   // Today is now a secondary mini button (kbd 1). Press the key — the button's
   // accessible name includes the kbd hint ("Today1"), making name-matching
   // fragile; the shortcut is what the user actually uses.
-  await page.keyboard.press("1");
+  await page.keyboard.press("t");
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
 
   // And it lands in Today as a committed task.
@@ -89,11 +89,13 @@ test("clicking the project button opens a picker; picking files into that projec
   const text = "Review the spec";
   await setupOneItemAndTriage(page, text);
 
-  // Click the project dispatch button → picker opens (mobile path).
-  await page.getByRole("button", { name: /file in/i }).click();
-  // Pick the General project from the picker (exact match — the dispatch
-  // button label "File in General" also matches /general/i).
-  await page.getByRole("button", { name: "General", exact: true }).click();
+  // Click the project dispatch button ("File in General" — the goal button is
+  // "File in goal", so /file in general/i is unambiguous).
+  await page.getByRole("button", { name: /file in general/i }).click();
+  await expect(page.getByRole("heading", { name: /file .+ in/i })).toBeVisible({ timeout: 5_000 });
+  // Pick the General row (CSS-scoped — its accessible name now includes the
+  // number prefix, so a role-name match is fragile).
+  await page.locator(".aa-triage__picker-item").filter({ hasText: "General" }).click();
 
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
   await page.goto("/app/projects");
@@ -130,14 +132,16 @@ test("Enter (the default) creates a no-horizon task — lands in Someday", async
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 });
 
-test("Shift+P leaves triage for the project creation flow, pre-filled", async ({ page }) => {
+test("Shift+P opens the project picker; its last row creates a new project", async ({ page }) => {
   const text = "Relaunch the podcast";
   await setupOneItemAndTriage(page, text);
 
-  // Shift+P → navigate to Projects with the create form pre-filled.
+  // Shift+P opens the project picker (no longer navigates directly).
   await page.keyboard.press("Shift+p");
+  await expect(page.getByRole("heading", { name: /file .+ in/i })).toBeVisible({ timeout: 5_000 });
 
-  // Lands on the Projects page with the inline form open + text pre-filled.
+  // The last row creates a new project from this item → navigate, pre-filled.
+  await page.getByRole("button", { name: /create new project/i }).click();
   await expect(page).toHaveURL(/\/app\/projects/);
   const input = page.getByLabel(/project name/i);
   await expect(input).toBeVisible({ timeout: 10_000 });
@@ -146,8 +150,34 @@ test("Shift+P leaves triage for the project creation flow, pre-filled", async ({
   // Submit → converts the inbox item into a Project (item leaves the inbox).
   await input.press("Enter");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
-
-  // The inbox item is gone (converted, not just copied).
   await page.goto("/app/inbox");
   await expect(page.getByText(/inbox zero/i)).toBeVisible();
+});
+
+test("number keys select from the project picker (1 = first project)", async ({ page }) => {
+  const text = "Draft the slides";
+  await setupOneItemAndTriage(page, text);
+
+  // Open the picker (Shift+P) and wait for General to appear (proves
+  // ensureOnboarded has seeded it) before pressing 1 — otherwise an empty list
+  // sends "1" to the create-new-project branch.
+  await page.keyboard.press("Shift+p");
+  const generalRow = page.locator(".aa-triage__picker-item").filter({ hasText: "General" });
+  await expect(generalRow).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("1");
+
+  // Item leaves triage + lands filed under General on the Projects page.
+  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
+  await page.goto("/app/projects");
+  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
+});
+
+test("G opens the goal picker; a fresh user sees an empty state", async ({ page }) => {
+  await setupOneItemAndTriage(page, "Some task");
+
+  // Shift+G opens the goal picker. A brand-new user has no goals.
+  await page.keyboard.press("Shift+g");
+  await expect(page.getByRole("heading", { name: /file .+ under goal/i })).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText(/no goals yet/i)).toBeVisible();
+  await page.keyboard.press("Escape");
 });

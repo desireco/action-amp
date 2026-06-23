@@ -45,43 +45,50 @@ export function InboxTriagePage() {
   const [error, setError] = useState<string | null>(null);
   const [resourcePickerOpen, setResourcePickerOpen] = useState(false);
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
-  // Last-used project for the P key (file-in-project), per lens. Persists across
-  // sessions so P becomes a fast, predictable file action. Defaults to the
-  // "General" project seeded by ensureOnboarded.
+  const [goalPickerOpen, setGoalPickerOpen] = useState(false);
+  // Last-used project / goal for the P / G quick-file keys, per lens. Persists
+  // across sessions. lastProjectId defaults to the "General" project seeded
+  // by ensureOnboarded; lastGoalId defaults to null (no goal is seeded).
   const [lastProjectId, setLastProjectId] = useState<string | null>(null);
+  const [lastGoalId, setLastGoalId] = useState<string | null>(null);
 
-  // Projects are needed for both the Resource picker AND the P-key target, so
-  // load them unconditionally (was: gated on resourcePickerOpen).
+  // Projects + goals feed the pickers AND the P/G quick-file targets, so both
+  // load unconditionally (scoped to the active lens).
   const { data: projects } = useQuery(
     getProjects,
     lens ? { lensId: lens.id } : undefined,
     { enabled: !!lens },
   );
-  // Resolve lastProjectId on lens change: stored value, else default to General.
+  const { data: goals } = useQuery(
+    getGoals,
+    lens ? { lensId: lens.id } : undefined,
+    { enabled: !!lens },
+  );
+
+  // Resolve last-used ids on lens change: stored value, else the default.
   useEffect(() => {
     if (!lens) return;
-    const stored = localStorage.getItem(`aa-triage-project:${lens.id}`);
-    if (stored) {
-      setLastProjectId(stored);
-    } else {
-      const general = (projects ?? []).find((p) => p.name === "General");
-      setLastProjectId(general?.id ?? null);
-    }
+    const storedProject = localStorage.getItem(`aa-triage-project:${lens.id}`);
+    setLastProjectId(
+      storedProject ??
+        (projects ?? []).find((p) => p.name === "General")?.id ??
+        null,
+    );
+    setLastGoalId(localStorage.getItem(`aa-triage-goal:${lens.id}`));
   }, [lens, projects]);
   const targetName =
     (projects ?? []).find((p) => p.id === lastProjectId)?.name ?? "project";
+  const targetGoalName =
+    (goals ?? []).find((g) => g.id === lastGoalId)?.name ?? "goal";
 
   const rememberProject = (id: string) => {
     setLastProjectId(id);
     if (lens) localStorage.setItem(`aa-triage-project:${lens.id}`, id);
   };
-
-  // Lazy-load goals for the resource picker (only fetched when it opens).
-  const { data: pickerGoals } = useQuery(
-    getGoals,
-    lens ? { lensId: lens.id } : undefined,
-    { enabled: !!lens && resourcePickerOpen },
-  );
+  const rememberGoal = (id: string) => {
+    setLastGoalId(id);
+    if (lens) localStorage.setItem(`aa-triage-goal:${lens.id}`, id);
+  };
 
   // Snapshot the list on first arrival. The triage walkthrough navigates this
   // FIXED snapshot, not the refetching query — without it, invalidating
@@ -136,52 +143,86 @@ export function InboxTriagePage() {
   // Current item — declared before the keyboard effect (Shift+P needs it) and
   // reused in the render. Null when the loop is complete.
   const item = triageList[idx] ?? null;
+  // Truncated text for picker titles.
+  const shortText = item
+    ? item.text.length > 40
+      ? item.text.slice(0, 40) + "…"
+      : item.text
+    : "";
 
   // Keyboard shortcuts (scoped to this page)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isComplete) return;
-      const meta = e.metaKey || e.ctrlKey;
-      const k = e.key.toLowerCase();
-      // Cmd/Ctrl+P → open the project picker (change the P-key target).
-      if (meta && k === "p") {
-        e.preventDefault();
-        setProjectPickerOpen(true);
+      if (isComplete || !item) return;
+
+      // ---- Modal: a picker is open. Number keys select rows; Esc closes.
+      //           Everything else is swallowed so a stray Enter/t/u doesn't dispatch
+      //      while the user is choosing where to file. ----
+      if (projectPickerOpen || goalPickerOpen) {
+        if (/^[1-9]$/.test(e.key)) {
+          e.preventDefault();
+          const n = parseInt(e.key, 10) - 1; // ponytail: 1–9 only; >9 items need a scroll+click.
+          if (projectPickerOpen) {
+            const list = projects ?? [];
+            if (n < list.length) {
+              rememberProject(list[n].id);
+              setProjectPickerOpen(false);
+              void dispatch("someday", { projectId: list[n].id });
+            } else if (n === list.length) {
+              // Last row = create a new project from this item.
+              setProjectPickerOpen(false);
+              navigate("/app/projects", {
+                state: { fromInboxItemId: item.id, initialName: item.text },
+              });
+            }
+          } else {
+            const list = goals ?? [];
+            if (n < list.length) {
+              rememberGoal(list[n].id);
+              setGoalPickerOpen(false);
+              void dispatch("someday", { goalId: list[n].id });
+            }
+          }
+        }
         return;
       }
-      const map: Record<string, Action> = {
-        "1": "task-today",
-        "2": "upcoming",
-        "3": "someday",
-        delete: "trash",
-        backspace: "trash",
-      };
-      if (k === "p") {
-        // Shift+P → leave triage, create a new Project from this item (Q2).
-        if (e.shiftKey) {
-          e.preventDefault();
-          navigate("/app/projects", { state: { fromInboxItemId: item.id, initialName: item.text } });
-          return;
-        }
-        // P → file current item into the last-used project (default General).
-        // No target yet → open the picker instead of filing standalone.
+
+      // ---- Top-level dispatch (standard: letters = file actions,
+      //      Shift+letter = open list, Enter = no-horizon default) ----
+      const k = e.key.toLowerCase();
+      if (e.key === "Enter") {
+        e.preventDefault();
+        dispatch("someday");
+      } else if (k === "t") {
+        e.preventDefault();
+        dispatch("task-today");
+      } else if (k === "u") {
+        e.preventDefault();
+        dispatch("upcoming");
+      } else if (e.shiftKey && k === "p") {
+        e.preventDefault();
+        setProjectPickerOpen(true);
+      } else if (e.shiftKey && k === "g") {
+        e.preventDefault();
+        setGoalPickerOpen(true);
+      } else if (k === "p") {
         e.preventDefault();
         if (lastProjectId) dispatch("someday", { projectId: lastProjectId });
         else setProjectPickerOpen(true);
-      } else if (e.key === "Enter") {
-        // Enter → the no-horizon default: a standalone Task (Someday).
+      } else if (k === "g") {
         e.preventDefault();
-        dispatch("someday");
-      } else if (map[e.key] || map[k]) {
+        if (lastGoalId) dispatch("someday", { goalId: lastGoalId });
+        else setGoalPickerOpen(true);
+      } else if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
-        dispatch(map[e.key] || map[k]);
+        dispatch("trash");
       } else if (e.key === "Escape") {
         navigate("/app/inbox");
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [dispatch, isComplete, navigate, lastProjectId, item]);
+  }, [dispatch, isComplete, navigate, item, projects, goals, lastProjectId, lastGoalId, projectPickerOpen, goalPickerOpen]);
 
   const reset = () => {
     setIdx(0);
@@ -280,7 +321,7 @@ export function InboxTriagePage() {
           <DispatchButton
             tone="violet"
             label={`File in ${targetName}`}
-            sub="a step in existing work — click to change"
+            sub="a step in existing work — click to choose"
             kbd="P"
             icon={
               <svg viewBox="0 0 16 16" fill="none">
@@ -292,22 +333,24 @@ export function InboxTriagePage() {
           />
           <DispatchButton
             tone="amber"
-            label="Resource"
-            sub="reference — link or note, filed under a project or goal"
-            kbd="R"
+            label={`File in ${targetGoalName}`}
+            sub="supports a bigger goal — click to choose"
+            kbd="G"
             icon={
               <svg viewBox="0 0 16 16" fill="none">
-                <path d="M3.5 13.5V3.5a1 1 0 011-1h5.5L13 5.5v8a1 1 0 01-1 1H4.5a1 1 0 01-1-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                <path d="M9.5 2.5V6h3.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="8" cy="8" r="0.5" fill="currentColor" />
               </svg>
             }
-            onClick={() => setResourcePickerOpen(true)}
+            onClick={() => setGoalPickerOpen(true)}
           />
         </div>
 
         <div className="aa-triage__dispatch-secondary">
-          <DispatchButton mini kbd="1" label="Today" onClick={() => dispatch("task-today")} />
-          <DispatchButton mini kbd="2" label="Upcoming" onClick={() => dispatch("upcoming")} />
+          <DispatchButton mini kbd="T" label="Today" onClick={() => dispatch("task-today")} />
+          <DispatchButton mini kbd="U" label="Upcoming" onClick={() => dispatch("upcoming")} />
+          <DispatchButton mini kbd="R" label="Resource" onClick={() => setResourcePickerOpen(true)} />
           <DispatchButton mini danger kbd="Del" label="Trash" onClick={() => dispatch("trash")} />
         </div>
       </div>
@@ -317,7 +360,7 @@ export function InboxTriagePage() {
         <ResourcePickerSheet
           resourceTitle={item.text}
           projects={(projects ?? []).map((p) => ({ id: p.id, name: p.name, goalName: p.goal?.name ?? null }))}
-          goals={(pickerGoals ?? []).map((g) => ({ id: g.id, name: g.name }))}
+          goals={(goals ?? []).map((g) => ({ id: g.id, name: g.name }))}
           onPick={(parent) => dispatch("resource", parent)}
           onClose={() => setResourcePickerOpen(false)}
         />
@@ -328,11 +371,11 @@ export function InboxTriagePage() {
            and remembers it as the P-key target. */}
       {projectPickerOpen && item && (
         <BottomSheet
-          title={`File “${item.text.slice(0, 40)}${item.text.length > 40 ? "…" : ""}” in`}
+          title={`File “${shortText}” in`}
           onClose={() => setProjectPickerOpen(false)}
         >
           <ul className="aa-triage__picker-list">
-            {(projects ?? []).map((p) => (
+            {(projects ?? []).map((p, i) => (
               <li key={p.id}>
                 <button
                   type="button"
@@ -343,12 +386,62 @@ export function InboxTriagePage() {
                     void dispatch("someday", { projectId: p.id });
                   }}
                 >
+                  <span className="aa-triage__picker-num">{i + 1}</span>
                   <span className="aa-triage__picker-name">{p.name}</span>
                   {p.goal && <span className="aa-triage__picker-goal">{p.goal.name}</span>}
                 </button>
               </li>
             ))}
+            {/* Last row: create a new project from this item (navigate to the
+                create flow; the inbox item is converted on submit). */}
+            <li>
+              <button
+                type="button"
+                className="aa-triage__picker-item aa-triage__picker-item--create"
+                onClick={() => {
+                  setProjectPickerOpen(false);
+                  navigate("/app/projects", { state: { fromInboxItemId: item.id, initialName: item.text } });
+                }}
+              >
+                <span className="aa-triage__picker-num">{(projects ?? []).length + 1}</span>
+                <span className="aa-triage__picker-name">Create new project</span>
+              </button>
+            </li>
           </ul>
+        </BottomSheet>
+      )}
+
+      {/* ---- Goal picker (G-key target / click on goal) ----
+           Pick files the current item as a SOMEDAY task linked to the chosen
+           goal, and remembers it as the G-key target. No "create" row — goals
+           aren't a triage outcome; create them on the Goals page. */}
+      {goalPickerOpen && item && (
+        <BottomSheet
+          title={`File “${shortText}” under goal`}
+          onClose={() => setGoalPickerOpen(false)}
+        >
+          {(goals ?? []).length === 0 ? (
+            <p className="aa-triage__picker-empty">No goals yet — create one on the Goals page.</p>
+          ) : (
+            <ul className="aa-triage__picker-list">
+              {(goals ?? []).map((g, i) => (
+                <li key={g.id}>
+                  <button
+                    type="button"
+                    className={`aa-triage__picker-item ${g.id === lastGoalId ? "current" : ""}`}
+                    onClick={() => {
+                      rememberGoal(g.id);
+                      setGoalPickerOpen(false);
+                      void dispatch("someday", { goalId: g.id });
+                    }}
+                  >
+                    <span className="aa-triage__picker-num">{i + 1}</span>
+                    <span className="aa-triage__picker-name">{g.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </BottomSheet>
       )}
     </div>

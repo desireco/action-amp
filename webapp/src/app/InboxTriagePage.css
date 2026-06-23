@@ -261,3 +261,36 @@
   color: var(--aa-text-3);
   font-weight: 400;
 }
+
+/* Numbered picker rows (projects + goals) */
+.aa-triage__picker-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface-muted);
+  color: var(--aa-text-3);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.aa-triage__picker-item.current .aa-triage__picker-num {
+  background: var(--aa-teal-cta);
+  color: white;
+}
+.aa-triage__picker-item--create {
+  border-top: 1px solid var(--aa-border);
+  margin-top: 4px;
+  padding-top: 14px;
+  color: var(--aa-teal-cta);
+}
+.aa-triage__picker-empty {
+  margin: 0;
+  padding: var(--aa-space-md) var(--aa-space-sm);
+  color: var(--aa-text-3);
+  font-size: 0.9rem;
+  text-align: center;
+}

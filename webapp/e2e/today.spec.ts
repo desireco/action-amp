@@ -21,8 +21,8 @@ async function captureAndDispatchToToday(page: Page, text: string) {
   await expect(textarea).toHaveValue("");
   await page.keyboard.press("Escape");
   await page.goto("/app/inbox/review");
-  await expect(page.getByRole("button", { name: /file in/i })).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("1");
+  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("t");
   // Wait for the dispatch to process (text leaves the triage view).
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
 }
@@ -59,8 +59,8 @@ test("F12: Today is capped at 5 — a 6th item is flagged as over-capacity", asy
   await page.goto("/app/inbox/review");
   await expect(page.getByRole("button", { name: /today/i })).toBeVisible({ timeout: 10_000 });
   for (let i = 0; i < 6; i++) {
-    await page.keyboard.press("1");
-    await page.waitForTimeout(800);
+    await page.keyboard.press("t");
+    await page.waitForTimeout(1000);
   }
 
   await page.goto("/app/today");
