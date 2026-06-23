@@ -21,7 +21,8 @@ async function captureAndDispatchToToday(page: Page, text: string) {
   await expect(textarea).toHaveValue("");
   await page.keyboard.press("Escape");
   await page.goto("/app/inbox/review");
-  await page.getByRole("button", { name: /today/i }).first().click();
+  await expect(page.getByRole("button", { name: /file in/i })).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("1");
   // Wait for the dispatch to process (text leaves the triage view).
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
 }

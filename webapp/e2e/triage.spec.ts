@@ -47,7 +47,10 @@ test("dispatch to Today transforms the item and clears it from the inbox", async
   const text = "Reply to Sarah via triage";
   await setupOneItemAndTriage(page, text);
 
-  await page.getByRole("button", { name: /task.*today/i }).click();
+  // Today is now a secondary mini button (kbd 1). Press the key — the button's
+  // accessible name includes the kbd hint ("Today1"), making name-matching
+  // fragile; the shortcut is what the user actually uses.
+  await page.keyboard.press("1");
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
 
   // And it lands in Today as a committed task.
@@ -57,17 +60,6 @@ test("dispatch to Today transforms the item and clears it from the inbox", async
   // And the inbox is empty.
   await page.goto("/app/inbox");
   await expect(page.getByText(/inbox zero/i)).toBeVisible();
-});
-
-test("dispatch to Someday files the item as Someday", async ({ page }) => {
-  const text = "Read that article";
-  await setupOneItemAndTriage(page, text);
-
-  await page.getByRole("button", { name: /someday/i }).click();
-
-  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
-  await page.goto("/app/someday");
-  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 });
 
 test("P files the item into a project (default General) and shows on the Projects page", async ({ page }) => {
@@ -121,6 +113,41 @@ test("trash deletes the item without creating anything", async ({ page }) => {
   await page.goto("/app/someday");
   await expect(page.getByText(text)).toHaveCount(0);
   // Inbox emptied.
+  await page.goto("/app/inbox");
+  await expect(page.getByText(/inbox zero/i)).toBeVisible();
+});
+
+test("Enter (the default) creates a no-horizon task — lands in Someday", async ({ page }) => {
+  const text = "Some random thought";
+  await setupOneItemAndTriage(page, text);
+
+  // Enter → the no-horizon default (primary "Task" button).
+  await page.keyboard.press("Enter");
+
+  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
+  // No-horizon = Someday (the bucket for tasks without a time commitment).
+  await page.goto("/app/someday");
+  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
+});
+
+test("Shift+P leaves triage for the project creation flow, pre-filled", async ({ page }) => {
+  const text = "Relaunch the podcast";
+  await setupOneItemAndTriage(page, text);
+
+  // Shift+P → navigate to Projects with the create form pre-filled.
+  await page.keyboard.press("Shift+p");
+
+  // Lands on the Projects page with the inline form open + text pre-filled.
+  await expect(page).toHaveURL(/\/app\/projects/);
+  const input = page.getByLabel(/project name/i);
+  await expect(input).toBeVisible({ timeout: 10_000 });
+  await expect(input).toHaveValue(text);
+
+  // Submit → converts the inbox item into a Project (item leaves the inbox).
+  await input.press("Enter");
+  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
+
+  // The inbox item is gone (converted, not just copied).
   await page.goto("/app/inbox");
   await expect(page.getByText(/inbox zero/i)).toBeVisible();
 });

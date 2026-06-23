@@ -27,7 +27,8 @@ test("a Today task appears as the single focus item on home", async ({ page }) =
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
   await page.goto("/app/inbox/review");
-  await page.getByRole("button", { name: /today/i }).click();
+  await expect(page.getByRole("button", { name: /file in/i })).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("1");
   await expect(page.getByText("The one thing")).toHaveCount(0, { timeout: 10_000 });
 
   // Go home — the triaged task should be THE focus item.
@@ -43,7 +44,8 @@ test("'Do this' enters focus mode (F13)", async ({ page }) => {
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
   await page.goto("/app/inbox/review");
-  await page.getByRole("button", { name: /today/i }).click();
+  await expect(page.getByRole("button", { name: /file in/i })).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("1");
   await page.goto("/app");
 
   await expect(page.getByText("Deep work task")).toBeVisible({ timeout: 10_000 });
@@ -63,7 +65,8 @@ test("completion circle marks the task done and removes it (F16)", async ({ page
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
   await page.goto("/app/inbox/review");
-  await page.getByRole("button", { name: /today/i }).click();
+  await expect(page.getByRole("button", { name: /file in/i })).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("1");
   await page.goto("/app");
 
   await expect(page.getByText("Finish this now")).toBeVisible({ timeout: 10_000 });
@@ -83,7 +86,8 @@ test("'Not now' defers the focused task (it leaves What Now)", async ({ page }) 
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
   await page.goto("/app/inbox/review");
-  await page.getByRole("button", { name: /today/i }).click();
+  await expect(page.getByRole("button", { name: /file in/i })).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("1");
   await page.goto("/app");
 
   await expect(page.getByText("Not now task")).toBeVisible({ timeout: 10_000 });
