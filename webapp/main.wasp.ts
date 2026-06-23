@@ -133,7 +133,7 @@ export default app({
     action(createGoal, { entities: ["Goal"], auth: true }),
     query(getLogbook, { entities: ["Task", "Project"], auth: true }),
     query(getAppData, { entities: ["Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
-    action(ensureOnboarded, { entities: ["Lens"], auth: true }),
+    action(ensureOnboarded, { entities: ["Lens", "Project"], auth: true }),
     action(setPreferredName, { entities: ["User"], auth: true }),
     query(getInboxItems, { entities: ["InboxItem"], auth: true }),
     action(createInboxItem, { entities: ["InboxItem"], auth: true }),

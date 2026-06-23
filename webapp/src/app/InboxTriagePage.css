@@ -222,3 +222,42 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ---- Project picker (BottomSheet contents) ---- */
+.aa-triage__picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.aa-triage__picker-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  padding: 12px 14px;
+  border: none;
+  border-radius: var(--aa-radius-md);
+  background: transparent;
+  color: var(--aa-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--aa-dur-fast) var(--aa-ease-out);
+}
+.aa-triage__picker-item:hover {
+  background: var(--aa-surface-muted);
+}
+.aa-triage__picker-item.current {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+.aa-triage__picker-goal {
+  font-size: 0.8rem;
+  color: var(--aa-text-3);
+  font-weight: 400;
+}

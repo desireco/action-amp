@@ -51,13 +51,15 @@ test("F12: Today is capped at 5 — a 6th item is flagged as over-capacity", asy
   await expect(textarea).toHaveValue("");
   await page.keyboard.press("Escape");
 
-  // Dispatch all 6 to Today via the "1" shortcut. Wait >320ms between presses
-  // to clear the exit animation (the dispatch guard rejects mid-animation).
+  // Dispatch all 6 to Today via the "1" shortcut. The gap must cover the API
+  // await (~150ms) + the 320ms exit animation + a render buffer, otherwise the
+  // dispatch guard (if exit) drops the press. 800ms is conservative but the
+  // test only runs in CI/local, not on the hot path.
   await page.goto("/app/inbox/review");
   await expect(page.getByRole("button", { name: /today/i })).toBeVisible({ timeout: 10_000 });
   for (let i = 0; i < 6; i++) {
     await page.keyboard.press("1");
-    await page.waitForTimeout(450);
+    await page.waitForTimeout(800);
   }
 
   await page.goto("/app/today");

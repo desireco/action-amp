@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems, triageInboxItem } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { DispatchButton, TriageCard, Button, Chip, ResourcePickerSheet, type TriageExit } from "../components/ui";
+import { DispatchButton, TriageCard, Button, Chip, BottomSheet, ResourcePickerSheet, type TriageExit } from "../components/ui";
 import { useActiveLens } from "./lensContext";
 import { getProjects } from "wasp/client/operations";
 import { getGoals } from "wasp/client/operations";
@@ -14,7 +14,9 @@ import "./InboxTriagePage.css";
  *
  * Each dispatch calls `triageInboxItem`, which transforms the InboxItem into
  * its concrete type (Task / Project / Resource) and deletes the original. The
- * exit animation direction encodes the decision. From triage-tinder.html.
+ * Dispatch transforms each InboxItem into its concrete type and deletes the
+ * original. The exit animation direction encodes the decision.
+ * From triage-tinder.html.
  */
 
 type Action = "task-today" | "project" | "resource" | "upcoming" | "someday" | "trash";
@@ -42,14 +44,39 @@ export function InboxTriagePage() {
   const [entering, setEntering] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resourcePickerOpen, setResourcePickerOpen] = useState(false);
+  const [projectPickerOpen, setProjectPickerOpen] = useState(false);
+  // Last-used project for the P key (file-in-project), per lens. Persists across
+  // sessions so P becomes a fast, predictable file action. Defaults to the
+  // "General" project seeded by ensureOnboarded.
+  const [lastProjectId, setLastProjectId] = useState<string | null>(null);
 
-  // Lazy-load projects + goals for the resource picker (only fetched when
-  // the picker opens, to avoid the cost on every triage load).
-  const { data: pickerProjects } = useQuery(
+  // Projects are needed for both the Resource picker AND the P-key target, so
+  // load them unconditionally (was: gated on resourcePickerOpen).
+  const { data: projects } = useQuery(
     getProjects,
     lens ? { lensId: lens.id } : undefined,
-    { enabled: !!lens && resourcePickerOpen },
+    { enabled: !!lens },
   );
+  // Resolve lastProjectId on lens change: stored value, else default to General.
+  useEffect(() => {
+    if (!lens) return;
+    const stored = localStorage.getItem(`aa-triage-project:${lens.id}`);
+    if (stored) {
+      setLastProjectId(stored);
+    } else {
+      const general = (projects ?? []).find((p) => p.name === "General");
+      setLastProjectId(general?.id ?? null);
+    }
+  }, [lens, projects]);
+  const targetName =
+    (projects ?? []).find((p) => p.id === lastProjectId)?.name ?? "project";
+
+  const rememberProject = (id: string) => {
+    setLastProjectId(id);
+    if (lens) localStorage.setItem(`aa-triage-project:${lens.id}`, id);
+  };
+
+  // Lazy-load goals for the resource picker (only fetched when it opens).
   const { data: pickerGoals } = useQuery(
     getGoals,
     lens ? { lensId: lens.id } : undefined,
@@ -85,7 +112,6 @@ export function InboxTriagePage() {
           goalId: extra?.goalId,
           projectId: extra?.projectId,
         });
-        // Invalidate the lists that this triage touched.
         queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
         queryClient.invalidateQueries({ queryKey: ["getTasks"] });
         queryClient.invalidateQueries({ queryKey: ["getProjects"] });
@@ -111,16 +137,28 @@ export function InboxTriagePage() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isComplete) return;
+      const meta = e.metaKey || e.ctrlKey;
       const k = e.key.toLowerCase();
+      // Cmd/Ctrl+P → open the project picker (change the P-key target).
+      if (meta && k === "p") {
+        e.preventDefault();
+        setProjectPickerOpen(true);
+        return;
+      }
       const map: Record<string, Action> = {
         "1": "task-today",
         "2": "upcoming",
         "3": "someday",
-        p: "project",
         delete: "trash",
         backspace: "trash",
       };
-      if (map[e.key] || map[k]) {
+      if (k === "p") {
+        // P → file current item into the last-used project (default General).
+        // No target yet → open the picker instead of filing standalone.
+        e.preventDefault();
+        if (lastProjectId) dispatch("someday", { projectId: lastProjectId });
+        else setProjectPickerOpen(true);
+      } else if (map[e.key] || map[k]) {
         e.preventDefault();
         dispatch(map[e.key] || map[k]);
       } else if (e.key === "Escape") {
@@ -129,7 +167,7 @@ export function InboxTriagePage() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [dispatch, isComplete, navigate]);
+  }, [dispatch, isComplete, navigate, lastProjectId]);
 
   const reset = () => {
     setIdx(0);
@@ -229,8 +267,8 @@ export function InboxTriagePage() {
           />
           <DispatchButton
             tone="violet"
-            label="Project"
-            sub="a big outcome, multi-step"
+            label={`File in ${targetName}`}
+            sub="a step in existing work — click to change"
             kbd="P"
             icon={
               <svg viewBox="0 0 16 16" fill="none">
@@ -238,7 +276,7 @@ export function InboxTriagePage() {
                 <path d="M2 6h12" stroke="currentColor" strokeWidth="1.5" />
               </svg>
             }
-            onClick={() => dispatch("project")}
+            onClick={() => setProjectPickerOpen(true)}
           />
           <DispatchButton
             tone="amber"
@@ -266,11 +304,40 @@ export function InboxTriagePage() {
       {resourcePickerOpen && item && (
         <ResourcePickerSheet
           resourceTitle={item.text}
-          projects={(pickerProjects ?? []).map((p) => ({ id: p.id, name: p.name, goalName: p.goal?.name ?? null }))}
+          projects={(projects ?? []).map((p) => ({ id: p.id, name: p.name, goalName: p.goal?.name ?? null }))}
           goals={(pickerGoals ?? []).map((g) => ({ id: g.id, name: g.name }))}
           onPick={(parent) => dispatch("resource", parent)}
           onClose={() => setResourcePickerOpen(false)}
         />
+      )}
+
+      {/* ---- Project picker (P-key target / click on project) ----
+           Pick files the current item into the chosen project as a SOMEDAY task
+           and remembers it as the P-key target. */}
+      {projectPickerOpen && item && (
+        <BottomSheet
+          title={`File “${item.text.slice(0, 40)}${item.text.length > 40 ? "…" : ""}” in`}
+          onClose={() => setProjectPickerOpen(false)}
+        >
+          <ul className="aa-triage__picker-list">
+            {(projects ?? []).map((p) => (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  className={`aa-triage__picker-item ${p.id === lastProjectId ? "current" : ""}`}
+                  onClick={() => {
+                    rememberProject(p.id);
+                    setProjectPickerOpen(false);
+                    void dispatch("someday", { projectId: p.id });
+                  }}
+                >
+                  <span className="aa-triage__picker-name">{p.name}</span>
+                  {p.goal && <span className="aa-triage__picker-goal">{p.goal.name}</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </BottomSheet>
       )}
     </div>
   );

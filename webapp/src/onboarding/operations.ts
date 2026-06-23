@@ -43,6 +43,29 @@ export const ensureOnboarded = (async (_args, context) => {
     }
   }
 
+  // Seed a "General" project per lens — the default target for triage's P key
+  // (file-in-project). Gives every triaged task a visible home so none are
+  // orphaned. Idempotent, like the lens loop above.
+  // ponytail: queries all lenses (existing + just-created) via findFirst by name;
+  // a dedicated "all lenses" query would be cleaner but this reuses the loop.
+  for (const lens of DEFAULT_LENSES) {
+    const existingLens = await context.entities.Lens.findFirst({
+      where: { userId, name: lens.name },
+      select: { id: true },
+    });
+    if (!existingLens) continue;
+    const existingProject = await context.entities.Project.findFirst({
+      where: { userId, lensId: existingLens.id, name: "General" },
+      select: { id: true },
+    });
+    if (!existingProject) {
+      await context.entities.Project.create({
+        data: { name: "General", userId, lensId: existingLens.id },
+        select: { id: true },
+      });
+    }
+  }
+
   return { createdLenses: created };
 }) satisfies EnsureOnboarded<never, { createdLenses: { name: string; id: string }[] }>;
 

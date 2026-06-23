@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signupNewUser, openCapture } from "./helpers";
+import { signupNewUser } from "./helpers";
 
 /**
  * Projects — FEATURES.md §2 + DATA-MODEL.md: Projects are multi-step outcomes
@@ -8,25 +8,12 @@ import { signupNewUser, openCapture } from "./helpers";
  * Encodes the spec. A failure is a real gap.
  */
 
-test("empty Projects shows a calm empty state", async ({ page }) => {
+test("a fresh user has a General project ready for filing", async ({ page }) => {
+  // ensureOnboarded seeds a General project per lens — the default P-key target.
+  // Projects is therefore never empty for a new user.
   await signupNewUser(page);
   await page.goto("/app/projects");
-  await expect(page.getByText(/nothing|no projects|empty/i)).toBeVisible({ timeout: 10_000 });
-});
-
-test("triaging an item as a Project creates it in the Projects list", async ({ page }) => {
-  await signupNewUser(page);
-
-  const textarea = await openCapture(page);
-  await textarea.fill("Ship Q3 launch");
-  await textarea.press("Enter");
-  await page.keyboard.press("Escape");
-
-  await page.goto("/app/inbox/review");
-  await page.getByRole("button", { name: /project/i }).first().click();
-
-  await page.goto("/app/projects");
-  await expect(page.getByText("Ship Q3 launch")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("General")).toBeVisible({ timeout: 10_000 });
 });
 
 test("a project can be created inline from the Projects page", async ({ page }) => {

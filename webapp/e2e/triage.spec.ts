@@ -70,11 +70,38 @@ test("dispatch to Someday files the item as Someday", async ({ page }) => {
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 });
 
-test("dispatch to Project creates a new Project named after the item", async ({ page }) => {
-  const text = "Plan the launch";
+test("P files the item into a project (default General) and shows on the Projects page", async ({ page }) => {
+  // P now = file-in-project (was: create new project). ensureOnboarded seeds
+  // a "General" project per lens, so P files there by default.
+  const text = "Draft the press release";
   await setupOneItemAndTriage(page, text);
 
-  await page.getByRole("button", { name: /project/i }).first().click();
+  // P key → quick-file into the default (General) project.
+  // Wait for the projects to load + lastProjectId to resolve to General (the
+  // dispatch button reads "File in General") before pressing P — otherwise P
+  // opens the picker instead of quick-filing.
+  await expect(page.getByRole("button", { name: /file in general/i })).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("p");
+
+  // Item leaves triage.
+  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
+
+  // The task is NOT standalone-today/someday — it's filed in General.
+  await page.goto("/app/projects");
+  await expect(page.getByText("General")).toBeVisible({ timeout: 10_000 });
+  // And the item's text surfaces as the project's next action / task.
+  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
+});
+
+test("clicking the project button opens a picker; picking files into that project", async ({ page }) => {
+  const text = "Review the spec";
+  await setupOneItemAndTriage(page, text);
+
+  // Click the project dispatch button → picker opens (mobile path).
+  await page.getByRole("button", { name: /file in/i }).click();
+  // Pick the General project from the picker (exact match — the dispatch
+  // button label "File in General" also matches /general/i).
+  await page.getByRole("button", { name: "General", exact: true }).click();
 
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
   await page.goto("/app/projects");

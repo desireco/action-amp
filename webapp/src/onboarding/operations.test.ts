@@ -17,12 +17,20 @@ describe("ensureOnboarded — guards", () => {
 });
 
 describe("ensureOnboarded — idempotency", () => {
-  it("creates both default lenses when neither exists", async () => {
+  it("creates both default lenses + a General project per lens when none exist", async () => {
     const m = mockContext();
-    m.entities.Lens.findFirst.mockResolvedValue(null); // both missing
+    // Lens.findFirst is called 4x total: 2x in the lens loop (both missing →
+    // null), then 2x in the project-seed loop (return the created ids).
+    m.entities.Lens.findFirst
+      .mockResolvedValueOnce(null)            // lens loop: Work missing
+      .mockResolvedValueOnce(null)            // lens loop: Me missing
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // seed lookup
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me" });    // seed lookup
     m.entities.Lens.create
       .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
       .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
+    m.entities.Project.findFirst.mockResolvedValue(null); // General missing in both
+    m.entities.Project.create.mockResolvedValue({ id: "gen" });
 
     const result = await ensureOnboarded(undefined as never, m.context);
 
@@ -30,40 +38,54 @@ describe("ensureOnboarded — idempotency", () => {
       { id: "lens-work", name: "Work" },
       { id: "lens-me", name: "Me" },
     ]);
-    expect(m.entities.Lens.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ name: "Work", userId: "user-1" }),
-      select: { id: true, name: true },
+    // General project seeded once per lens.
+    expect(m.entities.Project.create).toHaveBeenCalledTimes(2);
+    expect(m.entities.Project.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ name: "General", lensId: "lens-work", userId: "user-1" }),
+      select: { id: true },
     });
   });
 
-  it("creates only the missing lens when one already exists", async () => {
+  it("creates only the missing lens (and only its General project)", async () => {
     const m = mockContext();
     // Work exists, Me doesn't.
     m.entities.Lens.findFirst
       .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
       .mockResolvedValueOnce(null);
     m.entities.Lens.create.mockResolvedValueOnce({ id: "lens-me", name: "Me" });
+    // Project-seeding lookups: Work's General exists, Me's doesn't.
+    m.entities.Lens.findFirst
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
+    m.entities.Project.findFirst
+      .mockResolvedValueOnce({ id: "gen-work" })
+      .mockResolvedValueOnce(null);
+    m.entities.Project.create.mockResolvedValueOnce({ id: "gen-me" });
 
     const result = await ensureOnboarded(undefined as never, m.context);
 
     expect(result.createdLenses).toEqual([{ id: "lens-me", name: "Me" }]);
     expect(m.entities.Lens.create).toHaveBeenCalledTimes(1);
-    expect(m.entities.Lens.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ name: "Me", userId: "user-1" }),
-      select: { id: true, name: true },
-    });
+    expect(m.entities.Project.create).toHaveBeenCalledTimes(1);
   });
 
-  it("creates nothing when both lenses exist", async () => {
+  it("creates nothing when both lenses and both General projects exist", async () => {
     const m = mockContext();
     m.entities.Lens.findFirst
       .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me" })
+      // project-seeding lookups:
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
       .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
+    m.entities.Project.findFirst
+      .mockResolvedValueOnce({ id: "gen-work" })
+      .mockResolvedValueOnce({ id: "gen-me" });
 
     const result = await ensureOnboarded(undefined as never, m.context);
 
     expect(result.createdLenses).toEqual([]);
     expect(m.entities.Lens.create).not.toHaveBeenCalled();
+    expect(m.entities.Project.create).not.toHaveBeenCalled();
   });
 });
 
