@@ -36,7 +36,7 @@ test("a Today task appears as the single focus item on home", async ({ page }) =
   await expect(page.getByText("The one thing")).toBeVisible({ timeout: 10_000 });
 });
 
-test("'Do this' enters focus mode (F13)", async ({ page }) => {
+test("'Start' → Now state; 'Do this' then enters focus mode (F13)", async ({ page }) => {
   await signupNewUser(page);
 
   const textarea = await openCapture(page);
@@ -49,12 +49,59 @@ test("'Do this' enters focus mode (F13)", async ({ page }) => {
   await page.goto("/app");
 
   await expect(page.getByText("Deep work task")).toBeVisible({ timeout: 10_000 });
-  await page.getByRole("button", { name: /do this/i }).click();
 
-  // F13: "Do this" enters full-screen single-task focus mode. The focus
-  // overlay renders on top (aria-label "Focus: …") — assert it's visible
-  // rather than checking the sidebar is hidden (it may still be in the DOM).
+  // Default state is Next — eyebrow says 'Next · …', primary button is Start.
+  await expect(page.getByText(/Next ·/)).toBeVisible({ timeout: 5_000 });
+  await page.getByRole("button", { name: /^start$/i }).click();
+
+  // Now state: eyebrow says 'Now · …', Pause is available, Do this enters focus.
+  await expect(page.getByText(/Now ·/)).toBeVisible({ timeout: 5_000 });
+  await page.getByRole("button", { name: /do this/i }).click();
   await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
+});
+
+test("'Now' persists across navigation away and back", async ({ page }) => {
+  await signupNewUser(page);
+
+  const textarea = await openCapture(page);
+  await textarea.fill("Persists task");
+  await textarea.press("Enter");
+  await page.keyboard.press("Escape");
+  await page.goto("/app/inbox/review");
+  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("t");
+  await page.goto("/app");
+
+  await page.getByRole("button", { name: /^start$/i }).click();
+  await expect(page.getByText(/Now ·/)).toBeVisible();
+
+  // Navigate away to the inbox, then back home — the started task must still
+  // be #1 in the Now state (startedAt persisted).
+  await page.goto("/app/inbox");
+  await page.goto("/app");
+  await expect(page.getByText("Persists task")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/Now ·/)).toBeVisible({ timeout: 5_000 });
+});
+
+test("'Pause' returns a started task to the Next state (same task stays #1)", async ({ page }) => {
+  await signupNewUser(page);
+
+  const textarea = await openCapture(page);
+  await textarea.fill("Pausable task");
+  await textarea.press("Enter");
+  await page.keyboard.press("Escape");
+  await page.goto("/app/inbox/review");
+  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("t");
+  await page.goto("/app");
+
+  await page.getByRole("button", { name: /^start$/i }).click();
+  await expect(page.getByText(/Now ·/)).toBeVisible();
+
+  await page.getByRole("button", { name: /pause/i }).click();
+  // Back to Next; same task remains the focus candidate.
+  await expect(page.getByText(/Next ·/)).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText("Pausable task")).toBeVisible();
 });
 
 test("completion circle marks the task done and removes it (F16)", async ({ page }) => {

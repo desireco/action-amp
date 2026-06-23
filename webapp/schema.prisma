@@ -170,6 +170,7 @@ model Task {
   isDone      Boolean  @default(false)
   createdAt   DateTime @default(now())
   completedAt DateTime?
+  startedAt   DateTime? // non-null = "Now" (in progress); null = "Next" (candidate). Cleared on done/defer/pause.
 
   // ---- Focus attributes (read by the What Now engine) ----
   priority Priority   @default(NORMAL) // primary sort key

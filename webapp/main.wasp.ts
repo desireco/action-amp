@@ -7,7 +7,7 @@ import { SettingsPage } from "./src/app/SettingsPage" with { type: "ref" };
 import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
 import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
-import { getTask, getTasks, getTopTask, toggleTaskDone, updateTaskStatus, snoozeTask } from "./src/tasks/operations" with { type: "ref" };
+import { getTask, getTasks, getTopTask, toggleTaskDone, updateTaskStatus, snoozeTask, startTask, pauseTask } from "./src/tasks/operations" with { type: "ref" };
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { createProject } from "./src/projects/operations" with { type: "ref" };
 import { getGoals } from "./src/goals/operations" with { type: "ref" };
@@ -127,6 +127,8 @@ export default app({
     action(toggleTaskDone, { entities: ["Task"], auth: true }),
     action(updateTaskStatus, { entities: ["Task"], auth: true }),
     action(snoozeTask, { entities: ["Task"], auth: true }),
+    action(startTask, { entities: ["Task"], auth: true }),
+    action(pauseTask, { entities: ["Task"], auth: true }),
     query(getProjects, { entities: ["Project", "Task"], auth: true }),
     action(createProject, { entities: ["Project"], auth: true }),
     query(getGoals, { entities: ["Goal", "Project", "Task"], auth: true }),

@@ -26,8 +26,14 @@ interface WhatNowCardProps {
   onComplete?: (task: WhatNowTask) => void;
   /** Called when the user defers ("Not now") */
   onNotNow?: (task: WhatNowTask) => void;
-  /** Called when the user clicks "Do this" — opens focus mode / starts timer */
+  /** Called when the user clicks "Do this" — opens focus mode + starts the task */
   onDo?: (task: WhatNowTask) => void;
+  /** "next" = candidate (default); "now" = in progress. Swaps the primary button. */
+  state?: "next" | "now";
+  /** Start the task (Next → Now). */
+  onStart?: (task: WhatNowTask) => void;
+  /** Pause (Now → Next, same task stays as the candidate). */
+  onPause?: (task: WhatNowTask) => void;
 }
 
 /**
@@ -40,7 +46,7 @@ interface WhatNowCardProps {
  * The app-shell version is flat (no card chrome); the landing version wraps
  * it in an elevated card. This component is the flat app-shell variant.
  */
-export function WhatNowCard({ task, context, onComplete, onNotNow, onDo }: WhatNowCardProps) {
+export function WhatNowCard({ task, context, onComplete, onNotNow, onDo, state = "next", onStart, onPause }: WhatNowCardProps) {
   const [filled, setFilled] = useState(false);
   const [burst, setBurst] = useState(false);
   const [doing, setDoing] = useState(false);
@@ -91,12 +97,28 @@ export function WhatNowCard({ task, context, onComplete, onNotNow, onDo }: WhatN
       )}
 
       <div className="aa-wn-card__actions">
-        <Button variant="primary" onClick={handleDo} disabled={doing}>
-          {doing ? "Done ✓" : "Do this"}
-        </Button>
-        <Button variant="secondary" onClick={() => onNotNow?.(task)} disabled={doing}>
-          Not now
-        </Button>
+        {state === "now" ? (
+          // Now: the task is in progress. Pause drops back to Next (same task);
+          // Do this opens focus mode on the already-started task.
+          <>
+            <Button variant="primary" onClick={handleDo} disabled={doing}>
+              {doing ? "Done ✓" : "Do this"}
+            </Button>
+            <Button variant="secondary" onClick={() => onPause?.(task)} disabled={doing}>
+              Pause
+            </Button>
+          </>
+        ) : (
+          // Next: candidate. Start (without focus mode) or Do this (start + focus).
+          <>
+            <Button variant="primary" onClick={() => onStart?.(task)}>
+              Start
+            </Button>
+            <Button variant="secondary" onClick={() => onNotNow?.(task)}>
+              Not now
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import type { GetTask, GetTasks, GetTopTask, SnoozeTask, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
+import type { GetTask, GetTasks, GetTopTask, SnoozeTask, StartTask, PauseTask, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
 
 /**
  * Task operations for the Phase 4 list views.
@@ -68,7 +68,7 @@ export const toggleTaskDone = (async (args, context) => {
   const next = !task.isDone;
   return await context.entities.Task.update({
     where: { id: args.id },
-    data: { isDone: next, completedAt: next ? new Date() : null },
+    data: { isDone: next, completedAt: next ? new Date() : null, startedAt: null },
   });
 }) satisfies ToggleTaskDone<{ id: string }>;
 
@@ -126,6 +126,14 @@ export const getTopTask = (async (args, context) => {
   if (candidates.length === 0) return null;
 
   candidates.sort((a, b) => {
+    // An in-progress task (startedAt != null) is ALWAYS #1 — "Now" survives
+    // navigation. Among the rest, rank by priority > size > oldest.
+    const aStarted = a.startedAt ? 0 : 1;
+    const bStarted = b.startedAt ? 0 : 1;
+    if (aStarted !== bStarted) return aStarted - bStarted;
+    if (a.startedAt && b.startedAt) {
+      return a.startedAt.getTime() - b.startedAt.getTime();
+    }
     const pr = (PRIORITY_RANK[a.priority] ?? 1) - (PRIORITY_RANK[b.priority] ?? 1);
     if (pr !== 0) return pr;
     const sr = (SIZE_RANK[a.size] ?? 1) - (SIZE_RANK[b.size] ?? 1);
@@ -190,10 +198,52 @@ export const snoozeTask = (async (args, context) => {
 
   return await context.entities.Task.update({
     where: { id: args.id },
-    data: { status, dueDate },
+    data: { status, dueDate, startedAt: null },
     select: { id: true, status: true, dueDate: true },
   });
 }) satisfies SnoozeTask<{
   id: string;
   preset: "1h" | "3h" | "tomorrow" | "weekend" | "someday";
 }>;
+
+// ----------------------------------------------------------------
+// Start / Pause — the "Now" state (FEATURES.md F14: in-progress persists)
+// ----------------------------------------------------------------
+// Start → Now (startedAt = now). The task becomes #1 in getTopTask and stays
+// there across navigation. Pause → back to Next (startedAt = null); the task
+// remains a candidate but no longer holds the focus slot.
+export const startTask = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.id },
+    select: { userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+  return await context.entities.Task.update({
+    where: { id: args.id },
+    data: { startedAt: new Date() },
+    select: { id: true, startedAt: true },
+  });
+}) satisfies StartTask<{ id: string }, { id: string; startedAt: Date | null }>;
+
+export const pauseTask = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.id },
+    select: { userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+  return await context.entities.Task.update({
+    where: { id: args.id },
+    data: { startedAt: null },
+    select: { id: true, startedAt: true },
+  });
+}) satisfies PauseTask<{ id: string }, { id: string; startedAt: Date | null }>;

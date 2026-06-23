@@ -6,6 +6,8 @@ import {
   updateTaskStatus,
   getTopTask,
   snoozeTask,
+  startTask,
+  pauseTask,
 } from "./operations";
 import { mockContext } from "../test/mockContext";
 
@@ -31,6 +33,7 @@ const BASE_TASK = {
   size: "M" as string,
   isDone: false,
   completedAt: null as Date | null,
+  startedAt: null as Date | null,
   createdAt: new Date("2026-06-20T10:00:00Z"),
 };
 
@@ -123,7 +126,7 @@ describe("toggleTaskDone", () => {
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
-      data: { isDone: true, completedAt: expect.any(Date) },
+      data: { isDone: true, completedAt: expect.any(Date), startedAt: null },
     });
   });
 
@@ -136,7 +139,7 @@ describe("toggleTaskDone", () => {
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
-      data: { isDone: false, completedAt: null },
+      data: { isDone: false, completedAt: null, startedAt: null },
     });
   });
 });
@@ -290,7 +293,7 @@ describe("snoozeTask", () => {
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
-      data: { status, dueDate: expect.any(Date) },
+      data: { status, dueDate: expect.any(Date), startedAt: null },
       select: { id: true, status: true, dueDate: true },
     });
   });
@@ -304,8 +307,95 @@ describe("snoozeTask", () => {
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
-      data: { status: "SOMEDAY", dueDate: null },
+      data: { status: "SOMEDAY", dueDate: null, startedAt: null },
       select: { id: true, status: true, dueDate: true },
     });
   });
 });
+
+// ----------------------------------------------------------------
+// startTask / pauseTask — the "Now" state pointer
+// ----------------------------------------------------------------
+describe("startTask", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(startTask({ id: "task-1" }, m.context)).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("rejects a task that belongs to another user", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
+    await expect(startTask({ id: "task-1" }, m.context)).rejects.toThrow(/not found/i);
+  });
+
+  it("sets startedAt to now", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.update.mockResolvedValue({ id: "task-1", startedAt: new Date() });
+
+    const result = await startTask({ id: "task-1" }, m.context);
+
+    expect(result).toEqual({ id: "task-1", startedAt: expect.any(Date) });
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { startedAt: expect.any(Date) },
+      select: { id: true, startedAt: true },
+    });
+  });
+});
+
+describe("pauseTask", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(pauseTask({ id: "task-1" }, m.context)).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("clears startedAt (back to Next)", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.update.mockResolvedValue({ id: "task-1", startedAt: null });
+
+    const result = await pauseTask({ id: "task-1" }, m.context);
+
+    expect(result).toEqual({ id: "task-1", startedAt: null });
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { startedAt: null },
+      select: { id: true, startedAt: true },
+    });
+  });
+});
+
+// ----------------------------------------------------------------
+// getTopTask — an in-progress task (startedAt != null) is always #1
+// ----------------------------------------------------------------
+describe("getTopTask — Now state ordering", () => {
+  it("surfaces an in-progress task above higher-priority candidates", async () => {
+    const m = mockContext();
+    // A LOW-priority in-progress task + an IMPORTANT not-started one.
+    // Normal priority ranking would put IMPORTANT first; the in-progress
+    // override must win.
+    m.entities.Task.findMany.mockResolvedValue([
+      candidate({ id: "started", priority: "LOW", startedAt: new Date() }),
+      candidate({ id: "important", priority: "IMPORTANT", startedAt: null }),
+    ]);
+
+    const result = await getTopTask({ lensId: "lens-1" }, m.context);
+
+    expect(result?.id).toBe("started");
+  });
+
+  it("falls back to priority ranking when nothing is in progress", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([
+      candidate({ id: "normal", priority: "NORMAL", startedAt: null }),
+      candidate({ id: "important", priority: "IMPORTANT", startedAt: null }),
+    ]);
+
+    const result = await getTopTask({ lensId: "lens-1" }, m.context);
+
+    expect(result?.id).toBe("important");
+  });
+});
+
+/** Helper dropped — the existing `candidate()` above covers this. */

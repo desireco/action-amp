@@ -52,13 +52,13 @@ describe("WhatNowCard", () => {
     });
   });
 
-  describe("actions", () => {
-    it("'Do this' fires onDo with the task", () => {
-      const onDo = vi.fn();
-      renderInContext(<WhatNowCard task={BASE_TASK} onDo={onDo} />);
+  describe("actions — Next state (default)", () => {
+    it("'Start' fires onStart with the task (Next → Now)", () => {
+      const onStart = vi.fn();
+      renderInContext(<WhatNowCard task={BASE_TASK} onStart={onStart} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /do this/i }));
-      expect(onDo).toHaveBeenCalledWith(BASE_TASK);
+      fireEvent.click(screen.getByRole("button", { name: /start/i }));
+      expect(onStart).toHaveBeenCalledWith(BASE_TASK);
     });
 
     it("'Not now' fires onNotNow with the task", () => {
@@ -68,17 +68,35 @@ describe("WhatNowCard", () => {
       fireEvent.click(screen.getByRole("button", { name: /not now/i }));
       expect(onNotNow).toHaveBeenCalledWith(BASE_TASK);
     });
+  });
 
-    it("completion circle fires onComplete with the task", () => {
-      const onComplete = vi.fn();
-      const { container } = renderInContext(
-        <WhatNowCard task={BASE_TASK} onComplete={onComplete} />,
-      );
+  describe("actions — Now state (in progress)", () => {
+    it("'Do this' fires onDo with the task", () => {
+      const onDo = vi.fn();
+      renderInContext(<WhatNowCard task={BASE_TASK} state="now" onDo={onDo} />);
 
-      const circle = container.querySelector(".aa-wn-card__completion button")!;
-      fireEvent.click(circle);
-
-      expect(onComplete).toHaveBeenCalledWith(BASE_TASK);
+      fireEvent.click(screen.getByRole("button", { name: /do this/i }));
+      expect(onDo).toHaveBeenCalledWith(BASE_TASK);
     });
+
+    it("'Pause' fires onPause with the task (Now → Next, same task)", () => {
+      const onPause = vi.fn();
+      renderInContext(<WhatNowCard task={BASE_TASK} state="now" onPause={onPause} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /pause/i }));
+      expect(onPause).toHaveBeenCalledWith(BASE_TASK);
+    });
+  });
+
+  it("completion circle fires onComplete with the task", () => {
+    const onComplete = vi.fn();
+    const { container } = renderInContext(
+      <WhatNowCard task={BASE_TASK} onComplete={onComplete} />,
+    );
+
+    const circle = container.querySelector(".aa-wn-card__completion button")!;
+    fireEvent.click(circle);
+
+    expect(onComplete).toHaveBeenCalledWith(BASE_TASK);
   });
 });

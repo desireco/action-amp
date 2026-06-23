@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "wasp/client/operations";
-import { getTopTask, toggleTaskDone, snoozeTask } from "wasp/client/operations";
+import { getTopTask, toggleTaskDone, snoozeTask, startTask, pauseTask } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { WhatNowCard, FocusMode, SnoozeSheet, type FocusTask, type SnoozePreset } from "../components/ui";
 import { useActiveLens } from "./lensContext";
@@ -47,6 +47,19 @@ export function WhatNowPage() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
   };
 
+  // Start / Pause the "Now" state. Started tasks persist as #1 across nav.
+  const isNow = !!topTask?.startedAt;
+  const handleStart = async () => {
+    if (!topTask) return;
+    await startTask({ id: topTask.id });
+    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+  };
+  const handlePause = async () => {
+    if (!topTask) return;
+    await pauseTask({ id: topTask.id });
+    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+  };
+
   // ---- Empty / loading states ----
   if (!lens || isLoading) {
     return (
@@ -87,10 +100,14 @@ export function WhatNowPage() {
           why: "Because it's",
           whyEmphasis: `${priorityLabel(topTask.priority)}${topTask.status === "TODAY" ? " and due today" : ""}.`,
         }}
-        context={`Right now · ${lens.name}`}
+        context={`${isNow ? "Now" : "Next"} · ${lens.name}`}
+        state={isNow ? "now" : "next"}
         onComplete={handleComplete}
+        onStart={handleStart}
+        onPause={handlePause}
         onDo={() => {
-          // "Do this" enters focus mode (full-screen single-task view).
+          // "Do this" starts the task (Now) AND enters focus mode.
+          if (!isNow) void handleStart();
           setFocusTask({
             id: topTask.id,
             title: topTask.description,
