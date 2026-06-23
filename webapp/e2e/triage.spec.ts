@@ -27,21 +27,24 @@ async function setupOneItemAndTriage(page: Page, text: string) {
 test("triage shows one item at a time", async ({ page }) => {
   await signupNewUser(page);
   const textarea = await openCapture(page);
-  await textarea.fill("Item one");
+  await textarea.fill("First decision");
   await textarea.press("Enter");
-  await textarea.fill("Item two");
+  await textarea.fill("Second decision");
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
 
   await page.goto("/app/inbox/review");
 
-  // F6: one item at a time — the first is visible, the second is not yet.
-  await expect(page.getByText("Item one")).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText("Item two")).not.toBeVisible();
+  // F6: one item at a time. getInboxItems is newest-first, so the second
+  // captured item appears first.
+  await expect(page.getByText("Second decision")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("First decision")).not.toBeVisible();
 });
 
 test("dispatch to Today transforms the item and clears it from the inbox", async ({ page }) => {
-  const text = "Today task via triage";
+  // ponytail: avoid leading date keywords ("Today", "Tomorrow") — parseCapture
+  // strips them from the clean text, breaking text-match assertions.
+  const text = "Reply to Sarah via triage";
   await setupOneItemAndTriage(page, text);
 
   await page.getByRole("button", { name: /task.*today/i }).click();
@@ -57,7 +60,7 @@ test("dispatch to Today transforms the item and clears it from the inbox", async
 });
 
 test("dispatch to Someday files the item as Someday", async ({ page }) => {
-  const text = "Someday maybe";
+  const text = "Read that article";
   await setupOneItemAndTriage(page, text);
 
   await page.getByRole("button", { name: /someday/i }).click();
@@ -79,7 +82,7 @@ test("dispatch to Project creates a new Project named after the item", async ({ 
 });
 
 test("trash deletes the item without creating anything", async ({ page }) => {
-  const text = "Throw this away";
+  const text = "Discard this note";
   await setupOneItemAndTriage(page, text);
 
   await page.getByRole("button", { name: /trash/i }).click();

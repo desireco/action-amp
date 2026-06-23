@@ -35,22 +35,44 @@ test("a Today task appears as the single focus item on home", async ({ page }) =
   await expect(page.getByText("The one thing")).toBeVisible({ timeout: 10_000 });
 });
 
-test("'Do this' completes the focused task", async ({ page }) => {
+test("'Do this' enters focus mode (F13)", async ({ page }) => {
   await signupNewUser(page);
 
   const textarea = await openCapture(page);
-  await textarea.fill("Do this task");
+  await textarea.fill("Deep work task");
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
   await page.goto("/app/inbox/review");
   await page.getByRole("button", { name: /today/i }).click();
   await page.goto("/app");
 
-  await expect(page.getByText("Do this task")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("Deep work task")).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: /do this/i }).click();
 
-  // F16: completion removes it from the focus view.
-  await expect(page.getByText("Do this task")).toHaveCount(0, { timeout: 10_000 });
+  // F13: "Do this" enters full-screen single-task focus mode. The focus
+  // overlay renders on top (aria-label "Focus: …") — assert it's visible
+  // rather than checking the sidebar is hidden (it may still be in the DOM).
+  await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
+});
+
+test("completion circle marks the task done and removes it (F16)", async ({ page }) => {
+  await signupNewUser(page);
+
+  const textarea = await openCapture(page);
+  await textarea.fill("Finish this now");
+  await textarea.press("Enter");
+  await page.keyboard.press("Escape");
+  await page.goto("/app/inbox/review");
+  await page.getByRole("button", { name: /today/i }).click();
+  await page.goto("/app");
+
+  await expect(page.getByText("Finish this now")).toBeVisible({ timeout: 10_000 });
+  // F16: completion is via the circle, not "Do this".
+  const circle = page.locator(".aa-wn-card__completion button");
+  await circle.click();
+
+  // The task leaves the focus view immediately (optimistic).
+  await expect(page.getByText("Finish this now")).toHaveCount(0, { timeout: 10_000 });
 });
 
 test("'Not now' defers the focused task (it leaves What Now)", async ({ page }) => {

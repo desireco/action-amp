@@ -53,5 +53,5 @@ test("the inbox has a path to triage (review mode)", async ({ page }) => {
   await page.goto("/app/inbox");
 
   // F6: there must be a way to enter the one-at-a-time review flow.
-  await expect(page.getByRole("link", { name: "Triage" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Triage" }).first()).toBeVisible();
 });
