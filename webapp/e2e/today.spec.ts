@@ -39,19 +39,33 @@ test("triaged-to-Today items appear in the Today list", async ({ page }) => {
   await expect(page.getByText(TASK(1))).toBeVisible({ timeout: 10_000 });
 });
 
-// F12 cap: Today maxes out at 5. A 6th must be flagged, not silently shown.
-// Marked test.skip until the multi-dispatch loop is hardened against the
-// 320ms triage exit animation (every-other-click race). The single-dispatch
-// path is proven above + in triage.spec; the cap itself is tested in the
-// TodayPage unit/component tier.
-test.skip("F12: Today is capped at 5 — a 6th item is flagged as over-capacity", async ({ page }) => {
+test("F12: Today is capped at 5 — a 6th item is flagged as over-capacity", async ({ page }) => {
   await signupNewUser(page);
-  // Dispatch 6 items one at a time (each via the proven single-dispatch path).
+
+  // Capture 6 items.
+  const textarea = await openCapture(page);
   for (let i = 1; i <= 6; i++) {
-    await captureAndDispatchToToday(page, TASK(i));
+    await textarea.fill(TASK(i));
+    await textarea.press("Enter");
   }
+  await expect(textarea).toHaveValue("");
+  await page.keyboard.press("Escape");
+
+  // Dispatch all 6 to Today via the "1" shortcut. Wait >320ms between presses
+  // to clear the exit animation (the dispatch guard rejects mid-animation).
+  await page.goto("/app/inbox/review");
+  await expect(page.getByRole("button", { name: /today/i })).toBeVisible({ timeout: 10_000 });
+  for (let i = 0; i < 6; i++) {
+    await page.keyboard.press("1");
+    await page.waitForTimeout(450);
+  }
+
   await page.goto("/app/today");
-  const items = page.getByText(/^Focus task \d+$/);
-  await expect(items).toHaveCount(5, { timeout: 10_000 });
-  await expect(page.getByText(/over capacity|too many|cap|6th|exceed/i)).toBeVisible();
+
+  // F12: the cap is surfaced. The heading reads "N of 5 committed" (proving
+  // the cap is 5 and it's exceeded), an "Over capacity" banner appears, and
+  // the overflow tasks live in a separate "Beyond the cap" section.
+  await expect(page.getByRole("heading", { name: /of 5 committed/i })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/over capacity/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /beyond the cap/i })).toBeVisible();
 });

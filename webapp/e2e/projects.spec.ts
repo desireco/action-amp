@@ -33,11 +33,11 @@ test("a project can be created inline from the Projects page", async ({ page }) 
   await signupNewUser(page);
   await page.goto("/app/projects");
 
-  // There should be a way to create a project directly here (inline input
-  // or a button that reveals one).
-  await page.getByRole("button", { name: /new|create|add|\+/i }).first().click();
-
-  const input = page.locator('input[type="text"], textarea').first();
+  // Click the exact button (avoid loose regex matching other controls).
+  await page.getByRole("button", { name: "New project" }).click();
+  // Wait for the inline form's input (aria-label = placeholder) before filling.
+  const input = page.getByLabel(/project name/i);
+  await input.waitFor({ state: "visible", timeout: 5_000 });
   await input.fill("Brand refresh");
   await input.press("Enter");
 

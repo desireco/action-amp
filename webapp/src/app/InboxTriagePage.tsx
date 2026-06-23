@@ -56,14 +56,25 @@ export function InboxTriagePage() {
     { enabled: !!lens && resourcePickerOpen },
   );
 
-  const total = list.length;
+  // Snapshot the list on first arrival. The triage walkthrough navigates this
+  // FIXED snapshot, not the refetching query — without it, invalidating
+  // getInboxItems after each dispatch shrinks `list`, shifting indices (skipping
+  // items) and tripping isComplete early. The live query still updates the
+  // sidebar count; the walkthrough just doesn't chase it.
+  const [snapshot, setSnapshot] = useState<typeof list | null>(null);
+  useEffect(() => {
+    if (!snapshot && list.length > 0) setSnapshot(list);
+  }, [list, snapshot]);
+  const triageList = snapshot ?? list;
+
+  const total = triageList.length;
   const done = idx;
   const isComplete = idx >= total;
 
   const dispatch = useCallback(
     async (action: Action, extra?: { goalId?: string; projectId?: string }) => {
       if (idx >= total || exit || !lens) return; // ignore mid-animation / no lens
-      const item = list[idx];
+      const item = triageList[idx];
       setDispatched(true);
       setExit(ACTION_EXIT[action]);
       try {
@@ -93,7 +104,7 @@ export function InboxTriagePage() {
         });
       }, 320);
     },
-    [idx, total, exit, lens, list, queryClient],
+    [idx, total, exit, lens, triageList, queryClient],
   );
 
   // Keyboard shortcuts (scoped to this page)
@@ -147,7 +158,7 @@ export function InboxTriagePage() {
     );
   }
 
-  const item = list[idx];
+  const item = triageList[idx];
 
   return (
     <div className="aa-triage">
