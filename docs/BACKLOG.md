@@ -19,9 +19,12 @@ items they imply — not built yet, listed here so they're not lost:
 - [ ] **Drop the Upcoming top-level route + nav entry.** Remove `/app/upcoming`
   from `main.wasp.ts` and the sidebar. Keep `getTasks` able to query
   2  `UPCOMING` (the Today toggle needs it); just no dedicated page/area.
-- [ ] **Upcoming → Today toggle.** Add a "see upcoming" affordance on the Today
-  page that surfaces `status=UPCOMING` tasks (active-lens-scoped) for promotion
-  onto today. This is the replacement for the dedicated Upcoming page.
+- [x] **Upcoming → Today toggle.** DONE 2026-06-23. Today page has a "See
+  upcoming" / "Back to Today" toggle in the header; the Upcoming bench shows
+  `status=UPCOMING` tasks (active-lens-scoped) with a per-row "Today" promote
+  button; each Today row has a "Not today" demote button (→ bench, never
+  vanishes). Header renders even when Today is empty so the bench is always
+  reachable. No schema change — reuses `updateTaskStatus` to flip TODAY↔UPCOMING.
 - [ ] **Someday nav relocation.** Move the Someday nav entry under the Plan
   section of the new focus-switch nav (route `/app/someday` stays).
 - [ ] *(Optional, later)* **`getTopTask` auto-resurface.** If we ever want

@@ -140,8 +140,12 @@ These were the open structural calls. All resolved:
    into What Now.
 2. **What Now's Next candidate pool = Today only.** `getTopTask` filters
    `status=TODAY`. A snoozed task (which becomes `UPCOMING`) leaves What Now
-   immediately and does **not** resurface on its own when the snooze expires —
-   the user must pull it back via the Today → "see upcoming" toggle.
+   immediately. It does **not** auto-resurface when the snooze expires, but
+   it's never gone — it lives on the **Upcoming bench**, reachable via the
+   Today → "see upcoming" toggle, where the user can promote it back onto
+   today (which makes it a Next candidate again). Promote/demote is a
+   two-way swap: any Today task can be marked "Not today" (→ bench), any
+   bench task can be marked "Today" (→ court).
    *(Auto-resurface would be a one-line `getTopTask` scope change later — see §7.)*
 3. **Someday lives in the Planning Area.** It's a "maybe later" organizing
    concept, not a working one. The `/someday` page moves under Planning in the

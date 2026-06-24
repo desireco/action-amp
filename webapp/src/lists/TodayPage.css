@@ -26,3 +26,24 @@
   padding-top: var(--aa-space-xl);
   border-top: 1px dashed var(--aa-border-strong);
 }
+
+/* ---- Today ↔ Upcoming swap UI ---- */
+.aa-today__swap-row {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  /* TaskRow is a <li>; we wrap it + the swap button in a flex row. The row
+     fills the list item so the button right-aligns. */
+}
+.aa-today__swap-row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.aa-today__upcoming-empty {
+  margin: 0;
+  padding: var(--aa-space-lg) var(--aa-space-sm);
+  color: var(--aa-text-3);
+  font-size: 0.9rem;
+  text-align: center;
+}

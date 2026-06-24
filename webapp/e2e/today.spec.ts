@@ -72,3 +72,42 @@ test("F12: Today is capped at 5 — a 6th item is flagged as over-capacity", asy
   await expect(page.getByText(/over capacity/i)).toBeVisible();
   await expect(page.getByRole("heading", { name: /beyond the cap/i })).toBeVisible();
 });
+
+test("'Not today' demotes to Upcoming; the bench shows it; 'Today' promotes back", async ({ page }) => {
+  await signupNewUser(page);
+
+  // Capture + triage one item to Today.
+  const textarea = await openCapture(page);
+  await textarea.fill("Swap me around");
+  await textarea.press("Enter");
+  await expect(textarea).toHaveValue("");
+  await page.keyboard.press("Escape");
+  await page.goto("/app/inbox/review");
+  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("t");
+  // Wait for the dispatch to commit (320ms exit animation + API) before
+  // navigating — otherwise the task hasn't landed on Today yet.
+  await page.waitForTimeout(600);
+
+  // On Today, demote it via "Not today".
+  await page.goto("/app/today");
+  await expect(page.getByText("Swap me around")).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "Not today" }).click();
+
+  // It leaves the Today list...
+  await expect(page.getByText("Swap me around")).toHaveCount(0, { timeout: 10_000 });
+
+  // ...and appears on the Upcoming bench.
+  await page.getByRole("button", { name: /see upcoming/i }).click();
+  await expect(page.getByText("Swap me around")).toBeVisible({ timeout: 10_000 });
+
+  // Promote it back: it leaves the bench...
+  // (Scope to the upcoming section — the sidebar "Today" nav link also matches.)
+  const upcomingSection = page.locator(".aa-today__upcoming");
+  await upcomingSection.getByRole("button", { name: "Today" }).click();
+  await expect(page.getByText("Swap me around")).toHaveCount(0, { timeout: 10_000 });
+
+  // ...and returns to the Today list.
+  await page.getByRole("button", { name: /back to today/i }).click();
+  await expect(page.getByText("Swap me around")).toBeVisible({ timeout: 10_000 });
+});
