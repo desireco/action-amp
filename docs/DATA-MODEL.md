@@ -1,6 +1,20 @@
 # ActionAmp — Data Model & Triage Flow
 
-> Status: DRAFT v3 — GTD + PARA flavor; Areas replaced by Goals
+> Status: DRAFT v3 — GTD + PARA flavor; Areas replaced by Goals.
+> **Structural authority has moved to `WORKFLOW.md`** (2026-06-23) for *where
+> things live* (the §4 list below). Confirmed against the locked decisions:
+>
+> - **`InboxItem` stays unscoped** (no `lensId`) — capture is universal; the
+>   Lens is assigned at triage (inheriting the active lens).
+> - **`Task.status` keeps `UPCOMING`** — used by the snooze flow. It's no longer
+>   a top-level area (no dedicated page/nav), but the enum value stays; an
+>   upcoming-list view is surfaced from Today.
+> - **Someday moves under the Planning Area** in nav grouping (the `SOMEDAY`
+>   status and `/app/someday` route are unchanged).
+>
+> The entity hierarchy (§1), triage transformations (§3), and focus ranking (§5–§7)
+> below remain the data-model authority.
+>
 > Core idea: **the Inbox is universal; every item is a seed that becomes
 > something during triage.** The triage step decides *what kind of thing* it is,
 > not just what date it has.
@@ -30,6 +44,7 @@
 ```
 
 **Atomic vs. container:**
+
 - **Task** = an action. Has due date, **priority** (Low / Normal / Important),
   **size** (S / M / L / XL — see below), and status. This is what the focus
   engine surfaces. (GTD "next action".)
@@ -81,7 +96,9 @@ This is the heart of the model. During triage, each InboxItem is transformed int
 So the InboxItem is **polymorphic at rest, concrete after triage.** One input shape, five possible output shapes.
 
 ### Promotion paths (items leveling up)
+
 An item isn't locked into its first decision:
+
 - **Task → Project:** "Huh, this is actually big" → promote the Task into a
   Project (its subtasks become the Project's Tasks). **This is exactly the path
   the XL-size nudge encourages.**
@@ -89,6 +106,7 @@ An item isn't locked into its first decision:
 - **Task → Resource:** "Not doing this, but keeping the link" → demote.
 
 ### Demotion / filing
+
 - **Task → Someday:** keep it, stop nagging, no date.
 - **Anything → Trash / Archive.**
 
@@ -112,6 +130,7 @@ The Inbox is the *only* queue. Everything else is a *view* derived from each ite
 ## 5. Implications for the focus engine ("What Now")
 
 The matcher only ever considers **Tasks** (never Resources, never bare Projects):
+
 - A **Task** inside a **Project** is a candidate.
 - A **Project** with no Tasks is invisible to focus (it's a container, not an action) — though the UI can show "this Project has no next action" as a nudge.
 - A **Goal** is never surfaced directly; it's shown as supporting detail ("Email Sarah · supports: Grow audience").

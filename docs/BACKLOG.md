@@ -2,7 +2,35 @@
 
 > Single source of truth for what's left to do/decide. One item at a time.
 > Check things off as we cover them. Add new items as they emerge.
-> Last updated: 2026-06-16
+> Last updated: 2026-06-23
+
+---
+
+## ☐ Workflow refactor — from `WORKFLOW.md` (2026-06-23)
+
+Structural decisions are locked in `docs/WORKFLOW.md` §5. These are the code
+items they imply — not built yet, listed here so they're not lost:
+
+- [ ] **Focus-switch nav (AppShell refactor).** Sidebar: Lens (Work/Me) switch
+  on top, then a focus nav with three expanding sections — **Work** (What Now,
+  Today), **Plan** (Projects, Goals, Someday), **Review** (Logbook, reports).
+  One section expanded at a time (expanding one collapses the others). Capture
+  stays pinned outside both switches. No route changes — pure nav state.
+- [ ] **Drop the Upcoming top-level route + nav entry.** Remove `/app/upcoming`
+  from `main.wasp.ts` and the sidebar. Keep `getTasks` able to query
+  2  `UPCOMING` (the Today toggle needs it); just no dedicated page/area.
+- [ ] **Upcoming → Today toggle.** Add a "see upcoming" affordance on the Today
+  page that surfaces `status=UPCOMING` tasks (active-lens-scoped) for promotion
+  onto today. This is the replacement for the dedicated Upcoming page.
+- [ ] **Someday nav relocation.** Move the Someday nav entry under the Plan
+  section of the new focus-switch nav (route `/app/someday` stays).
+- [ ] *(Optional, later)* **`getTopTask` auto-resurface.** If we ever want
+  snoozed (`UPCOMING`) tasks to re-enter What Now automatically when due, widen
+  the filter from `status=TODAY` to include due-soon `UPCOMING`. One-line
+  change; deliberately deferred — current behavior is deliberate-swap only.
+- [ ] *(Phase 2 vision)* **Hard focus** — each mode (Work/Plan/Review) as a
+  distinct full-screen layout, not just nav filtering. Design exploration;
+  soft focus (above) ships first.
 
 ---
 

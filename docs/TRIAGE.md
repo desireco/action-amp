@@ -1,7 +1,12 @@
 # ActionAmp — Triage
 
-> Status: CANONICAL — 2026-06-22
+> Status: CANONICAL — 2026-06-22 (keymap); 2026-06-23 (structural cross-ref).
 > Authority for: the triage loop, the co-author UI, the keyset.
+> **Structural authority (where triage sits in the app) has moved to
+> `WORKFLOW.md` §2.2** (2026-06-23). This doc remains canonical for the triage
+> keymap and the co-author UI mechanics; it cross-references WORKFLOW.md for
+> area/mode placement.
+>
 > Sources: `DATA-MODEL.md` §3, `FEATURES.md` §2 (F6/F7), `INTERACTION.md` §3
 > (TRIAGE mode), `mockups/triage-coauthor.html` (canonical layout),
 > `webapp/src/app/InboxTriagePage.tsx` (current impl).
@@ -10,6 +15,12 @@
 > `⌘K` kept as silent alias for capture · `?` and `⌘?` toggle the shortcut
 > cheatsheet (same physical key as capture: `?` = Shift+`/`) ·
 > `[`/`]` = size down/up · `-`/`=` = priority down/up. See §7.2, §7.6.
+>
+> **Decisions locked 2026-06-23** (see `WORKFLOW.md` §5):
+>
+> - Triage inherits the active lens (no force-choice).
+> - Triage never auto-clutters Work — the default Task outcome is no-horizon
+>   (Next); committing to Today is explicit.
 
 ---
 

@@ -1,11 +1,26 @@
 # ActionAmp — Feature Spec
 
-> Status: DRAFT v1 — for review (terminology synced to Lens/Goals; feature list still pre-triage-model)
+> Status: DRAFT v1 — feature-level reference.
+> **Structural authority has moved to `WORKFLOW.md`** (2026-06-23). Where this
+> doc describes *areas, modes, or where things live* (the §0 loop framing, the
+> Upcoming/Someday placement in §2, the Today-vs-What Now split), it predates the
+> 3-modes / 5-areas model and is superseded. The F-numbered feature list below
+> remains useful as feature-level reference (what each feature does); it does
+> not describe *where* features live.
+>
+> Key structural changes (see `WORKFLOW.md` §5):
+>
+> - **Upcoming is not a top-level area** — no `/upcoming` route/nav item; it's a
+>   status reachable from Today.
+> - **Someday lives in the Planning Area** (not its own top-level area).
+> - **Work Area = What Now (Now/Next) + Today** only.
+> - **Three focus modes** (Work / Plan / Review) surfaced as an expanding-section
+>   nav; Capture is pervasive.
+>
 > Inspirations: Things (calm, refined, Inbox→Today model), TickTick (flexible, fast).
 > Wedge: **the list is demoted; "what now" is the home screen.** See §3.
 > Model authority: `DATA-MODEL.md` + `METHODOLOGY.md` (GTD + PARA flavor, Goals
-> replace Areas, Work/Me switch = **Lens**). The feature list below predates the
-> triage model and will be synced when we cut the MVP.
+> replace Areas, Work/Me switch = **Lens**).
 
 ---
 
@@ -49,6 +64,7 @@ Goal: get items *out* of the inbox and *into* a place where the focus engine can
 - **F7. Bulk clarify** — for when you do want the list: multi-select, assign goal/lens/date in one keystroke.
 
 **The model (GTD + PARA flavor — full detail in `DATA-MODEL.md`):**
+
 - **Inbox** — unprocessed.
 - **Today** — things you've committed to doing today. *(See F12: this is capped.)*
 - **Upcoming** — dated future items.
@@ -65,9 +81,11 @@ Goal: get items *out* of the inbox and *into* a place where the focus engine can
 This is the home screen. Every other app opens to a list. We open to a *decision*.
 
 ### F8. "What Now" view (default home)
+
 Given the current moment, surface **one** item — or a deliberately tiny set (default 1, max 3) — and *hide everything else*. The rest of your list still exists; you just don't see it right now.
 
 Anatomy of the view:
+
 ```
 ┌─────────────────────────────────────┐
 │  Right now                           │
@@ -81,27 +99,35 @@ Anatomy of the view:
 ```
 
 ### F9. Moment bar
+
 You tell ActionAmp the moment you're in:
+
 - **Time available** — `15m / 30m / 1h / 2h+` (or "until X o'clock")
 - **Energy** — `low / medium / high`
 - Optionally **Lens** — "only Work stuff right now" (switches the active Lens)
 One keystroke each. Defaults can be inferred from time-of-day (mornings = high energy, post-lunch = low) — overridable.
 
 ### F9b. Task attributes (Priority + Size)
+
 Every Task carries two simple attributes that the focus engine reads:
+
 - **Priority** — `Low / Normal / Important` (3 levels). *(Primary sort key for focus.)*
 - **Size** — `S / M / L / XL`. *(Secondary signal; also a nudge — see F9c.)*
 Set inline from the keyboard while triaging or editing. No 1–10 scales, no analysis paralysis.
 
 ### F9c. XL prompts a break-down
+
 Setting a Task to **XL surfaces a prompt: "This is big — break it down?"**
+
 - → **Convert to a Project** (the task becomes the Project; you add the steps), or
 - → **Add subtasks** to keep it a Task, or
 - → **Keep as-is** (you can dismiss; it's a nudge, not a block).
 XL work shouldn't sit silently as a single Task. This is the same path as the Task→Project promotion in the data model.
 
 ### F10. The focus matcher (MVP = priority-first, transparent)
+
 Candidates = Tasks in the **active Lens** that are Today/overdue. Rank by:
+
 1. **Priority** — Important > Normal > Low *(primary sort)*
 2. **Size** as secondary signal (smaller first within a priority tier — quick wins)
 3. Due/overdue as a hard pre-filter
@@ -111,6 +137,7 @@ That's the MVP. Time-available, energy, and tags are **refinement layers added l
 **Transparent by design** — a one-line "why this?" under the suggestion ("Important · due today · S"). The algorithm is never a black box; users can always see *why* and override.
 
 ### F11. "Not now" behaviors
+
 - `H` (snooze) — push 1h / 3h / tomorrow / weekend. Item leaves the focus queue until then.
 - `→ Someday` — deprioritize without dating.
 - `Skip once` — it'll come back tomorrow.
@@ -120,17 +147,21 @@ That's the MVP. Time-available, energy, and tags are **refinement layers added l
 ## 4. Do (single-item execution)
 
 ### F12. Today is capped
+
 **Today maxes out at N items (default 5, configurable).** To add a 6th, you must bump one out. This is a *feature*, not a limit — it forces the "what actually matters today" decision that ADHD brains avoid. *(Configurable; can be turned off for people who hate it.)*
 
 ### F13. Focus mode (single-task view)
+
 From any item, `F` enters full-screen single-task mode: the task, its notes, an optional timer, and *nothing else*. No sidebar, no list, no counts. Exiting returns to "What Now".
 
 ### F14. Optional timer
+
 - Pomodoro-style (default 25/5, configurable).
 - Optional ambient tick / completion sound.
 - Timer running = item is "in progress" (visible if you navigate away, but the app won't pester).
 
 ### F15. Subtasks
+
 Checklist within a task. Completing all subtasks does *not* auto-complete the parent (Things got this right — you decide when it's done).
 
 ---
@@ -182,6 +213,7 @@ Checklist within a task. Completing all subtasks does *not* auto-complete the pa
 ## 8. MVP cut vs. Phase 2
 
 **MVP (the smallest thing that proves the wedge):**
+
 - F1 quick-add, F2 NL parsing (basic), F3 Inbox
 - F6 Inbox review + the model (Today/Upcoming/Someday/Lens/Goals/Projects/Tags)
 - **F8 What Now view + F9 moment bar + F9b/F9c attributes + F10 priority-first matcher** ← the bet
@@ -192,6 +224,7 @@ Checklist within a task. Completing all subtasks does *not* auto-complete the pa
 - Email + social auth
 
 **Phase 2:**
+
 - F4 full editor in palette, F5 email-in
 - F7 bulk clarify
 - F14 timer (or pull into MVP if cheap)

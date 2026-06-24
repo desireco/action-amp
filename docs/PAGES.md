@@ -1,5 +1,22 @@
 # ActionAmp — Pages & Routes
 
+> Status: route + page reference.
+> **Structural authority has moved to `WORKFLOW.md`** (2026-06-23). The nav is
+> reorganized into three **focus-mode sections** (Work / Plan / Review) as an
+> expanding-section nav (one open at a time), with the **context switch (Lens:**
+> **Work/Me) above it and Capture pinned outside both.**
+>
+> Key changes from the route map below (see `WORKFLOW.md` §5–§7):
+>
+> - **`/app/upcoming` is removed as a top-level route/nav item.** `UPCOMING`
+>   survives as a Task status; an upcoming-list view is reachable from Today
+>   ("see upcoming" toggle) for promoting tasks onto today.
+> - **Someday (`/app/someday`) relocates under the Plan section.**
+> - The **What Now / Today** split stays, both under Work.
+>
+> The page-by-page descriptions below stay accurate for each route's contents;
+> only the *grouping* and the Upcoming demotion are superseded.
+
 > Status: DRAFT v1
 > Authority: derived from `DATA-MODEL.md` + `FEATURES.md`.
 > Lens (Work/Me) is a **global switch in the chrome**, not a page — it scopes every page below.
@@ -44,55 +61,73 @@ Persistent UI that frames every page:
 These are the main destinations. All scoped to the active Lens.
 
 ### P1. What Now  →  `/`
+
 **The home page. The wedge.** Not a list — a chooser. (FEATURES F8/F10.)
+
 - Shows 1 (max 3) Tasks ranked by priority → size → due.
 - Context line ("Important · due today · S"), Do / Not now / ⋯ actions.
 - Empty state: if no Today items → gentle prompt to triage Inbox or plan Today.
 - If Inbox is untriaged and Today is empty → nudge toward triage.
 
 ### P2. Inbox  →  `/inbox`
+
 The universal queue. (FEATURES F3.) Shows untriaged InboxItems as a list.
+
 - Sort: newest first (capture order).
 - Each row: text + parsed-token chips (date/tag/priority detected).
 - Row actions: open, triage (→ P2b), delete.
 - Header: "Triage" button → enters review mode.
 
 ### P2b. Inbox Triage  →  `/inbox/review` *(MVP — walk-through mode)*
+
 One InboxItem at a time, decide what it becomes (FEATURES F6, DATA-MODEL §3):
+
 - `1` Task (Today) · `2` Task (Upcoming, pick date) · `3` Task (Someday)
 - `P` → new/existing Project · `G` → link to Goal
 - `R` → Resource (pick parent Project/Goal) · `Del` → trash
 - Progress dot: "3 of 7 triaged."
 
 ### P3. Today  →  `/today`
+
 **Planning view** of today's commitments — distinct from What Now (which is *doing*).
+
 - List of Tasks due today/overdue, grouped by Goal.
 - Enforces the **Today cap** (FEATURES F12): adding a 6th requires bumping one out.
 - Drag to reorder priority. Inline size/priority editors.
 - "Done today" section collapsed at bottom.
 
 ### P4. Upcoming  →  `/upcoming`
+
 Dated future items. (FEATURES §2 model.)
+
 - Grouped by date (Tomorrow / This week / Next week / Later) then by Goal.
 - Tasks + dated Projects.
 
 ### P5. Someday  →  `/someday`
+
 No-date, not-forgotten, not-nagging Tasks. (GTD "Someday/Maybe".)
+
 - Grouped by Goal (or flat). Lighter visual weight.
 - Promote to Today/Upcoming when ready.
 
 ### P6. Projects  →  `/projects`
+
 All Projects in the active Lens, grouped by Goal.
+
 - Each row: name, progress (X/Y tasks done), due date if any, next-action preview.
 - "No next action" badge if a Project has no actionable Task — a GTD health nudge.
 
 ### P7. Goals  →  `/goals`
+
 All Goals in the active Lens, with roll-up. *(First-class in MVP.)*
+
 - Each Goal: linked Projects + standalone Tasks, aggregate progress.
 - Create/edit Goal inline.
 
 ### P8. Logbook  →  `/logbook`
+
 Completed + archived items. (PARA "Archive" / FEATURES F18.)
+
 - Searchable. Grouped by completion date.
 - No editing — restore or permanently delete only.
 
@@ -101,6 +136,7 @@ Completed + archived items. (PARA "Archive" / FEATURES F18.)
 ## 2. Detail pages
 
 ### D1. Project detail  →  `/projects/:id`
+
 - Header: name, parent Goal, due date, status.
 - **Tasks** list (the focus candidates) — sortable, inline-edit.
 - **Resources** list (links + notes / bookmarks) — add/edit/open.
@@ -108,13 +144,16 @@ Completed + archived items. (PARA "Archive" / FEATURES F18.)
 - "Next action" highlighted.
 
 ### D2. Goal detail  →  `/goals/:id`
+
 - Header: name, description ("the why").
 - Linked Projects (with progress) + standalone Tasks.
 - Aggregate roll-up: % complete across everything under this Goal.
 - Edit/delete Goal.
 
 ### D3. Task focus mode  →  `/tasks/:id/focus` *(or full-screen overlay)*
+
 Single-task execution view (FEATURES F13). The task, its notes, optional timer, and *nothing else*.
+
 - Entered via `F` from anywhere a Task is shown.
 - Minimal chrome — sidebar hidden.
 - Esc returns to origin.
@@ -150,6 +189,7 @@ Post-auth redirect → `/` (What Now).
 ## 5. Settings  →  `/settings`
 
 Tabbed or single-scroll *(decide later)*:
+
 - **Account** — email, password, linked social accounts, delete account.
 - **Preferences** — theme (dark default), Today cap (default 5, or off), confirmation sounds, momentum toggle.
 - **Lenses** *(Phase 2)* — add/rename/reorder Work/Me and custom Lenses.
