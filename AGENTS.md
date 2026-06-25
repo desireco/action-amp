@@ -1,0 +1,104 @@
+# AGENTS.md — ActionAmp
+
+> Agent-facing index. **Read this before any non-trivial work.** It tells you
+> which doc to read for which task, and which doc wins when two disagree.
+> For the human-facing overview + full table of contents, see [`README.md`](README.md).
+
+## What this repo is
+
+ActionAmp is a focus app: it opens to **one task** (the next thing that matters),
+not a list. Two halves of the repo:
+
+- **`docs/` (+ root `PRODUCT.md`, `DESIGN.md`)** — the *thinking*: strategy,
+  spec, canonical interaction/workflow design, mockups, research.
+- **`webapp/`** — the *implementation*: a Wasp (`>=0.24`, TypeScript Spec) app,
+  React 19 + Node + Prisma, organized vertically per feature in `webapp/src/`.
+
+ADHD is the design muse, not the marketing target. Tone is calm, direct,
+opinionated, honest — no exclamation marks, no streaks, no guilt-trip red dots.
+
+## Authority hierarchy (which doc wins)
+
+When docs conflict, **higher wins**:
+
+1. **`docs/WORKFLOW.md`** — canonical for *structure* (areas, modes, where things
+   live, how items move). Explicitly overrides `FEATURES.md`, `PAGES.md`,
+   `DATA-MODEL.md`, and `TRIAGE.md` on structural questions. (See its §5
+   "Decisions locked" and §6 "Document cascade".)
+2. **`docs/INTERACTION.md`** — canonical for the modal interaction architecture
+   (modes, state machine, gesture/keyset maps).
+3. **`docs/TRIAGE.md`** — canonical for the triage keymap + co-author UI.
+4. Everything else (`FEATURES.md`, `PAGES.md`, `DATA-MODEL.md`, spec/design
+   drafts) is **reference** — useful, but defer to the canonical docs above on
+   conflict, and update them when the canonical doc changes.
+
+> `DESIGN.md` (root) and `docs/design.md` are byte-identical. The *Things*
+> reference is the design-system foundation, **not** the final ActionAmp identity
+> — `docs/DESIGN-SYSTEM-DRAFT.md` holds the open ActionAmp-specific decisions.
+
+## Task → doc routing
+
+Pick the task; read the doc(s) on the right **before** writing code.
+
+| If the task is about… | Read first |
+|-----------------------|------------|
+| App structure, areas, modes, Lens scoping, where an item lives | `docs/WORKFLOW.md` |
+| The home screen (What Now), Now/Next state machine, Today cap | `docs/WORKFLOW.md` §2.3, §5 |
+| Triage loop, the keymap, dispatch destinations | `docs/TRIAGE.md` (+ `WORKFLOW.md` §2.2) |
+| Capture (`⌘K`), NL parsing, Inbox | `docs/WORKFLOW.md` §2.1, `docs/FEATURES.md` |
+| Navigation, modes (Work/Plan/Review), gestures, keysets | `docs/INTERACTION.md`, `docs/modal-approach.md` |
+| Overlays — popover vs sheet vs modal | `docs/modal-approach.md` |
+| Data model, entities, enums, triage flow | `docs/DATA-MODEL.md` + `webapp/schema.prisma` |
+| A specific page/route | `docs/PAGES.md` + the route in `webapp/main.wasp.ts` |
+| Look/feel, color, type, components, tokens | `DESIGN.md` + `docs/DESIGN-SYSTEM-DRAFT.md` + `webapp/src/styles/tokens.css` |
+| A UI component (Button, Card, CompletionCircle, …) | `webapp/src/components/ui/` + `DESIGN.md` |
+| Pricing, plans, feature caps | `docs/PRICING.md` + `docs/FEATURES.md` |
+| Stripe billing implementation | `docs/BILLING-INTEGRATION.md` (plan; **not yet implemented**) |
+| Marketing/public site | `docs/MARKETING.md` + `docs/PUBLIC-PAGES.md` |
+| Deployment / hosting | `docs/deployment-research.md` |
+| What's left to do / pick up next | `docs/BACKLOG.md` (+ `docs/IMPLEMENTATION-CHECKLIST.md`) |
+| Product thesis, tone, strategic principles (the "why") | `PRODUCT.md` |
+| Wasp mechanics (config, imports, migrations, ops) | `webapp/AGENTS.md` ← load the `wasp` skill too |
+
+## Implementation map (webapp/)
+
+- **`webapp/main.wasp.ts`** — every route, page, auth op, operation. The fastest
+  way to see the app's full surface area.
+- **`webapp/schema.prisma`** — models: `User, Lens, Goal, Project, Task,
+  Resource, InboxItem, Tag, Payment`; enums: `Plan, Priority, Size, TaskStatus,
+  InboxItemStatus, PaymentStatus`.
+- **`webapp/src/`** — vertical per feature. Each feature folder typically has its
+  page (`*Page.tsx`), server ops (`operations.ts`), and styles (`*.css`):
+  - `src/app/` — shell, What Now, Inbox, triage, settings, keyboard shortcuts
+  - `src/tasks/` · `src/inbox/` · `src/projects/` · `src/goals/` · `src/logbook/`
+  - `src/lists/` — Today / Upcoming / Someday
+  - `src/billing/` · `src/auth/` · `src/landing/` · `src/public/` · `src/onboarding/`
+  - `src/components/ui/` — design-system components + `icons.tsx`
+  - `src/styles/tokens.css` — design tokens (teal/amber, neutrals, dark mode)
+- **Tests:** Vitest (`*.test.ts(x)`) + Playwright e2e (`webapp/e2e/`).
+
+## Rules that always apply
+
+- **Calm over features.** Whitespace is the point. If a section feels crowded,
+  remove something. No streaks, badges, or guilt-trip UI — banned entirely.
+- **Two-accent system.** Teal = system/state (completion, selection, CTA);
+  Amber = rare human emphasis. Color must carry meaning — no decorative color.
+- **Native, not custom.** System font only. No custom display/web font.
+- **Keyboard-first.** Every action has a shortcut. Modal navigation, not sidebars
+  of nouns.
+- **The list is demoted.** The home screen (`/app`) is a chooser (What Now), not
+  a list.
+- **Structure changes start in `docs/WORKFLOW.md`.** Update it first, then
+  cascade to the docs it governs (its §6 lists the cascade).
+- **Wasp edits:** follow `webapp/AGENTS.md` (config-format detection, `with { type:
+  "ref" }` imports, `wasp db migrate-dev --name <x>`, verify with `wasp compile`
+  not `tsc`). Load the project's `wasp` skill for non-trivial Wasp work, and
+  ground against the versioned docs (`webapp/AGENTS.md` §Documentation protocol).
+
+## Where to start if you're new
+
+1. [`PRODUCT.md`](PRODUCT.md) — the thesis and tone (5 min).
+2. [`docs/WORKFLOW.md`](docs/WORKFLOW.md) — the app's structure (canonical).
+3. [`docs/INTERACTION.md`](docs/INTERACTION.md) — how you move through it.
+4. [`docs/BACKLOG.md`](docs/BACKLOG.md) — what's actually left to build.
+5. [`webapp/main.wasp.ts`](webapp/main.wasp.ts) — the implementation's front door.
