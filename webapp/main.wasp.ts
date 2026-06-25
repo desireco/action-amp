@@ -10,6 +10,8 @@ import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" }
 import { getTask, getTasks, getTopTask, toggleTaskDone, updateTaskStatus, snoozeTask, startTask, pauseTask } from "./src/tasks/operations" with { type: "ref" };
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { createProject } from "./src/projects/operations" with { type: "ref" };
+import { getProject, createTask } from "./src/projects/operations" with { type: "ref" };
+import { ProjectDetailPage } from "./src/projects/ProjectDetailPage" with { type: "ref" };
 import { getGoals } from "./src/goals/operations" with { type: "ref" };
 import { createGoal } from "./src/goals/operations" with { type: "ref" };
 import { getLogbook } from "./src/logbook/operations" with { type: "ref" };
@@ -97,6 +99,7 @@ export default app({
       page(PreferencesPage),
     ),
     route("TaskDetailRoute", "/app/tasks/:id", page(TaskDetailPage)),
+    route("ProjectDetailRoute", "/app/projects/:id", page(ProjectDetailPage)),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
     route("DesignSystemRoute", "/design-system", page(DesignSystemPage, { authRequired: false })),
     route("AboutRoute", "/about", page(AboutPage, { authRequired: false })),
@@ -131,6 +134,8 @@ export default app({
     action(pauseTask, { entities: ["Task"], auth: true }),
     query(getProjects, { entities: ["Project", "Task"], auth: true }),
     action(createProject, { entities: ["Project"], auth: true }),
+    query(getProject, { entities: ["Project", "Task"], auth: true }),
+    action(createTask, { entities: ["Task"], auth: true }),
     query(getGoals, { entities: ["Goal", "Project", "Task"], auth: true }),
     action(createGoal, { entities: ["Goal"], auth: true }),
     query(getLogbook, { entities: ["Task", "Project", "InboxItem"], auth: true }),

@@ -1,0 +1,50 @@
+@import "../styles/tokens.css";
+
+/* Project detail shares the .aa-task container width + the global
+   .aa-grouped / .aa-list-header / .aa-list-empty styles. Only the
+   project-specific layout lives here. */
+.aa-project {
+  max-width: 620px;
+}
+
+.aa-project__header {
+  align-items: flex-start;
+}
+
+.aa-project__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  margin: var(--aa-space-xs) 0 0;
+  font-size: 0.9rem;
+  color: var(--aa-text-3);
+}
+
+.aa-project__desc {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--aa-text-2);
+  margin: var(--aa-space-md) 0;
+}
+
+/* A task row + its horizon control, side by side. Mirrors Today's swap-row. */
+.aa-project__row {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+}
+
+.aa-project__row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.aa-project__horizon {
+  flex-shrink: 0;
+  display: flex;
+  gap: var(--aa-space-xs);
+}
+
+.aa-project__empty {
+  margin-top: var(--aa-space-lg);
+}

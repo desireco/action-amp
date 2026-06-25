@@ -149,7 +149,7 @@ export function ProjectsPage() {
             <button
               type="button"
               className="aa-project-row"
-              onClick={() => navigate(`/app/tasks/${p.id}`)}
+              onClick={() => navigate(`/app/projects/${p.id}`)}
             >
               <div className="aa-project-row__head">
                 <span className="aa-project-row__name">{p.name}</span>
