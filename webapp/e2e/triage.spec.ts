@@ -1,27 +1,35 @@
 import { test, expect, type Page } from "@playwright/test";
-import { signupNewUser, openCapture } from "./helpers";
+import { signupNewUser, openCapture, triageOneItem } from "./helpers";
 
 /**
- * Triage — FEATURES.md §2 F6 + TRIAGE.md: walk the inbox one item at a time,
- * dispatch each to its destination. The InboxItem is transformed into its
- * concrete type and the original is deleted.
+ * Triage — the deliberate specification flow (TRIAGE.md). Each captured item is
+ * defined through a wizard: 1) confirm the lens, 2) choose what it becomes, 3)
+ * set the spec, 4) Complete. The InboxItem is transformed into its concrete
+ * type and the original is deleted.
  *
  * Encodes the spec. Key invariants:
- *  - One item shown at a time (not a wall of rows)
- *  - Dispatch transforms + removes from inbox
- *  - The five outcomes: Today, Upcoming, Someday, Project, Trash
+ *  - One item shown at a time (not a wall of rows).
+ *  - Complete is gated until the lens is confirmed + a filing target is set
+ *    (for Task/Resource outcomes).
+ *  - The five outcomes: Today, Upcoming, Someday, Project, Archive.
  */
 
-/** Capture one item, then open the triage review. */
-async function setupOneItemAndTriage(page: Page, text: string) {
+/** Capture one item, then open the triage review (stop at step 1). */
+async function setupOneItem(page: Page, text: string) {
   await signupNewUser(page);
   const textarea = await openCapture(page);
   await textarea.fill(text);
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
   await page.goto("/app/inbox/review");
-  // Wait for the triage card to mount.
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
+}
+
+/** Advance step 1 (lens → Continue) to land on the type chooser. */
+async function continueFromLens(page: Page) {
+  // The lens radio renders first; Continue is the primary button.
+  await page.getByRole("radio").first().waitFor({ state: "visible", timeout: 10_000 });
+  await page.getByRole("button", { name: /^continue$/i }).click();
 }
 
 test("triage shows one item at a time", async ({ page }) => {
@@ -41,143 +49,120 @@ test("triage shows one item at a time", async ({ page }) => {
   await expect(page.getByText("First decision")).not.toBeVisible();
 });
 
-test("dispatch to Today transforms the item and clears it from the inbox", async ({ page }) => {
-  // ponytail: avoid leading date keywords ("Today", "Tomorrow") — parseCapture
-  // strips them from the clean text, breaking text-match assertions.
-  const text = "Reply to Sarah via triage";
-  await setupOneItemAndTriage(page, text);
+test("the wizard opens on the lens step; the active lens is pre-selected", async ({ page }) => {
+  await setupOneItem(page, "Some thought");
 
-  // Today is now a secondary mini button (kbd 1). Press the key — the button's
-  // accessible name includes the kbd hint ("Today1"), making name-matching
-  // fragile; the shortcut is what the user actually uses.
-  await page.keyboard.press("t");
-  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
-
-  // And it lands in Today as a committed task.
-  await page.goto("/app/today");
-  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
-
-  // And the inbox is empty.
-  await page.goto("/app/inbox");
-  await expect(page.getByText(/inbox zero/i)).toBeVisible();
+  // Step 1 shows the lens radio (ensureOnboarded seeds Work + Me).
+  const radios = page.getByRole("radio");
+  await expect(radios).toHaveCount(2, { timeout: 10_000 });
+  // The active lens (Work) is checked by default — Continue is enabled.
+  await expect(page.getByRole("radio", { name: /work/i })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByRole("button", { name: /^continue$/i })).toBeEnabled();
 });
 
-test("P files the item into a project (default General) and shows on the Projects page", async ({ page }) => {
-  // P now = file-in-project (was: create new project). ensureOnboarded seeds
-  // a "General" project per lens, so P files there by default.
-  const text = "Draft the press release";
-  await setupOneItemAndTriage(page, text);
-
-  // P key → quick-file into the default (General) project.
-  // Wait for the projects to load + lastProjectId to resolve to General (the
-  // dispatch button reads "File in General") before pressing P — otherwise P
-  // opens the picker instead of quick-filing.
-  await expect(page.getByRole("button", { name: /file in general/i })).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("p");
-
-  // Item leaves triage.
-  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
-
-  // The task is NOT standalone-today/someday — it's filed in General.
-  await page.goto("/app/projects");
-  await expect(page.getByText("General")).toBeVisible({ timeout: 10_000 });
-  // And the item's text surfaces as the project's next action / task.
-  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
-});
-
-test("clicking the project button opens a picker; picking files into that project", async ({ page }) => {
-  const text = "Review the spec";
-  await setupOneItemAndTriage(page, text);
-
-  // Click the project dispatch button ("File in General" — the goal button is
-  // "File in goal", so /file in general/i is unambiguous).
-  await page.getByRole("button", { name: /file in general/i }).click();
-  await expect(page.getByRole("heading", { name: /file .+ in/i })).toBeVisible({ timeout: 5_000 });
-  // Pick the General row (CSS-scoped — its accessible name now includes the
-  // number prefix, so a role-name match is fragile).
-  await page.locator(".aa-triage__picker-item").filter({ hasText: "General" }).click();
-
-  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
-  await page.goto("/app/projects");
-  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
-});
-
-test("trash deletes the item without creating anything", async ({ page }) => {
-  const text = "Discard this note";
-  await setupOneItemAndTriage(page, text);
-
-  await page.getByRole("button", { name: /trash/i }).click();
-
-  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
-  // Not in today, not in someday — genuinely gone.
-  await page.goto("/app/today");
-  await expect(page.getByText(text)).toHaveCount(0);
-  await page.goto("/app/someday");
-  await expect(page.getByText(text)).toHaveCount(0);
-  // Inbox emptied.
-  await page.goto("/app/inbox");
-  await expect(page.getByText(/inbox zero/i)).toBeVisible();
-});
-
-test("Enter (the default) creates a no-horizon task — lands in Someday", async ({ page }) => {
+test("Complete defaults to a no-horizon task (lands in Someday)", async ({ page }) => {
+  await signupNewUser(page);
   const text = "Some random thought";
-  await setupOneItemAndTriage(page, text);
+  await triageOneItem(page, text, { type: "task" });
 
-  // Enter → the no-horizon default (primary "Task" button).
-  await page.keyboard.press("Enter");
-
-  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
   // No-horizon = Someday (the bucket for tasks without a time commitment).
   await page.goto("/app/someday");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 });
 
-test("Shift+P opens the project picker; its last row creates a new project", async ({ page }) => {
+test("a task can be committed to Today via the spec step", async ({ page }) => {
+  await signupNewUser(page);
+  const text = "Reply to Sarah via triage";
+  await triageOneItem(page, text, { type: "task", when: "today" });
+
+  await page.goto("/app/today");
+  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
+  // And the inbox is empty.
+  await page.goto("/app/inbox");
+  await expect(page.getByText(/inbox zero/i)).toBeVisible();
+});
+
+test("becoming a Project uses the item text as the name", async ({ page }) => {
+  await signupNewUser(page);
   const text = "Relaunch the podcast";
-  await setupOneItemAndTriage(page, text);
+  await triageOneItem(page, text, { type: "project" });
 
-  // Shift+P opens the project picker (no longer navigates directly).
-  await page.keyboard.press("Shift+p");
-  await expect(page.getByRole("heading", { name: /file .+ in/i })).toBeVisible({ timeout: 5_000 });
-
-  // The last row creates a new project from this item → navigate, pre-filled.
-  await page.getByRole("button", { name: /create new project/i }).click();
-  await expect(page).toHaveURL(/\/app\/projects/);
-  const input = page.getByLabel(/project name/i);
-  await expect(input).toBeVisible({ timeout: 10_000 });
-  await expect(input).toHaveValue(text);
-
-  // Submit → converts the inbox item into a Project (item leaves the inbox).
-  await input.press("Enter");
+  await page.goto("/app/projects");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
   await page.goto("/app/inbox");
   await expect(page.getByText(/inbox zero/i)).toBeVisible();
 });
 
-test("number keys select from the project picker (1 = first project)", async ({ page }) => {
-  const text = "Draft the slides";
-  await setupOneItemAndTriage(page, text);
+test("becoming a Resource (Note) requires a parent before Complete", async ({ page }) => {
+  await setupOneItem(page, "Competitor pricing PDF");
 
-  // Open the picker (Shift+P) and wait for General to appear (proves
-  // ensureOnboarded has seeded it) before pressing 1 — otherwise an empty list
-  // sends "1" to the create-new-project branch.
-  await page.keyboard.press("Shift+p");
-  const generalRow = page.locator(".aa-triage__picker-item").filter({ hasText: "General" });
-  await expect(generalRow).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("1");
+  await continueFromLens(page);
+  await page.getByRole("button", { name: /^note\b/i }).click();
+  await page.getByRole("button", { name: /^continue$/i }).click();
 
-  // Item leaves triage + lands filed under General on the Projects page.
+  // On the spec step, Complete is disabled until a parent is chosen — the
+  // parent row opens a bottom-sheet picker.
+  const complete = page.getByRole("button", { name: /^complete$/i });
+  await expect(complete).toBeDisabled();
+
+  await page.locator(".aa-spec-key", { hasText: /^file under$/i }).locator("..").click();
+  await page.locator(".aa-triage__picker-item").filter({ hasText: "General" }).first().click();
+  await expect(complete).toBeEnabled();
+  await complete.click();
+
+  await expect(page.getByText("Competitor pricing PDF")).toHaveCount(0, { timeout: 10_000 });
+});
+
+test("a Task can be filed into a project via the Project spec row", async ({ page }) => {
+  const text = "Draft the press release";
+  await setupOneItem(page, text);
+
+  await continueFromLens(page);
+  await page.getByRole("button", { name: /^task\b/i }).click();
+  await page.getByRole("button", { name: /^continue$/i }).click();
+
+  // Open the Project row → bottom sheet → pick General.
+  await page.locator(".aa-spec-key", { hasText: /^project$/i }).locator("..").click();
+  await page.locator(".aa-triage__picker-item").filter({ hasText: "General" }).click();
+  await page.getByRole("button", { name: /^complete$/i }).click();
+
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
   await page.goto("/app/projects");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 });
 
-test("G opens the goal picker; a fresh user sees an empty state", async ({ page }) => {
-  await setupOneItemAndTriage(page, "Some task");
+test("Archive keeps the note — it leaves the inbox but surfaces in the Logbook", async ({ page }) => {
+  await signupNewUser(page);
+  const text = "Decline this for now";
+  await triageOneItem(page, text, { type: "archive" });
 
-  // Shift+G opens the goal picker. A brand-new user has no goals.
-  await page.keyboard.press("Shift+g");
-  await expect(page.getByRole("heading", { name: /file .+ under goal/i })).toBeVisible({ timeout: 5_000 });
-  await expect(page.getByText(/no goals yet/i)).toBeVisible();
-  await page.keyboard.press("Escape");
+  // Not a task anywhere — it wasn't turned into actionable work.
+  await page.goto("/app/today");
+  await expect(page.getByText(text)).toHaveCount(0);
+  await page.goto("/app/someday");
+  await expect(page.getByText(text)).toHaveCount(0);
+  // …and it leaves the inbox.
+  await page.goto("/app/inbox");
+  await expect(page.getByText(/inbox zero/i)).toBeVisible();
+
+  // But it's NOT lost — it lands in the Logbook's archived section, with a
+  // Restore action (lossless: declining a note never deletes it).
+  await page.goto("/app/logbook");
+  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: /^restore$/i }).click();
+
+  // Restoring returns it to the inbox for re-triage.
+  await page.goto("/app/inbox");
+  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
+});
+
+test("Esc backs out of the wizard a step at a time, then to the inbox", async ({ page }) => {
+  await setupOneItem(page, "Some task");
+
+  await continueFromLens(page); // → step 2 (type)
+  await expect(page.getByRole("button", { name: /^task\b/i })).toBeVisible();
+  await page.keyboard.press("Escape"); // back to step 1
+  await expect(page.getByRole("radio").first()).toBeVisible();
+  await page.keyboard.press("Escape"); // at step 1, Esc leaves triage
+  await expect(page).toHaveURL(/\/app\/inbox$/);
 });

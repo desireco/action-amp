@@ -60,3 +60,32 @@
   flex-wrap: wrap;
   margin-top: 5px;
 }
+
+/* Archived-note rows: muted check (not the teal "done" mark) + restore action. */
+.aa-logbook-row .aa-logbook-row__check:has(svg rect) {
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-3);
+}
+
+.aa-logbook-row__restore {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 5px 12px;
+  border-radius: var(--aa-radius-full);
+  border: 1px solid var(--aa-border);
+  background: transparent;
+  color: var(--aa-text-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    color var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-logbook-row__restore:hover {
+  background: var(--aa-teal-soft);
+  border-color: var(--aa-teal);
+  color: var(--aa-teal-cta);
+}

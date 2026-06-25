@@ -31,7 +31,7 @@ describe("triageInboxItem — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
     await expect(
-      triageInboxItem({ inboxItemId: "ix-1", decision: "trash", lensId: "l" }, m.context),
+      triageInboxItem({ inboxItemId: "ix-1", decision: "archive", lensId: "l" }, m.context),
     ).rejects.toThrow(/Not authenticated/);
   });
 
@@ -42,7 +42,7 @@ describe("triageInboxItem — guards", () => {
       userId: "someone-else",
     });
     await expect(
-      triageInboxItem({ inboxItemId: "ix-1", decision: "trash", lensId: "l" }, m.context),
+      triageInboxItem({ inboxItemId: "ix-1", decision: "archive", lensId: "l" }, m.context),
     ).rejects.toThrow(/not found/i);
   });
 });
@@ -94,7 +94,7 @@ describe("triageInboxItem — task decisions", () => {
   });
 });
 
-describe("triageInboxItem — project / resource / trash", () => {
+describe("triageInboxItem — project / resource / archive", () => {
   it("project creates a Project named after the item text", async () => {
     const m = arrange();
     m.entities.Project.create.mockResolvedValue({ id: "proj-1" });
@@ -119,16 +119,22 @@ describe("triageInboxItem — project / resource / trash", () => {
     ).rejects.toThrow(/project or goal/i);
   });
 
-  it("trash deletes the item and creates nothing", async () => {
+  it("archive marks the item ARCHIVED (kept) and creates nothing", async () => {
     const m = arrange();
     const result = await triageInboxItem(
-      { inboxItemId: "ix-1", decision: "trash", lensId: "l" },
+      { inboxItemId: "ix-1", decision: "archive", lensId: "l" },
       m.context,
     );
 
-    expect(result).toEqual({ kind: "trash", id: "ix-1" });
+    expect(result).toEqual({ kind: "archive", id: "ix-1" });
     expect(m.entities.Task.create).not.toHaveBeenCalled();
     expect(m.entities.Project.create).not.toHaveBeenCalled();
-    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({ where: { id: "ix-1" } });
+    // Archive is lossless: it updates the status + stamps archivedAt, and does
+    // NOT delete (unlike the create-type decisions).
+    expect(m.entities.InboxItem.update).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+      data: { status: "ARCHIVED", archivedAt: expect.any(Date) },
+    });
+    expect(m.entities.InboxItem.delete).not.toHaveBeenCalled();
   });
 });

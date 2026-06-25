@@ -74,9 +74,9 @@ and **deletes the original InboxItem** — the transformed entity *is* the recor
   Exit:   Esc · Q · empty inbox → "Inbox zero. Go do something."
 ```
 
-Built in `webapp/src/app/InboxTriagePage.tsx`. Card component:
-`components/ui/TriageCard.tsx`. Dispatch buttons: `DispatchButton.tsx`.
-Transform action: `inbox/operations.ts :: triageInboxItem`.
+Built in `webapp/src/inbox/TriagePage.tsx`. Card component:
+`components/ui/TriageCard.tsx`. Transform action:
+`inbox/operations.ts :: triageInboxItem`.
 
 ---
 
@@ -91,37 +91,69 @@ What an InboxItem can become (DATA-MODEL.md §3). One input shape, five outputs.
 | step in existing work | **Task** inside an existing **Project** | "Draft press release" → "Q3 launch" |
 | reference, not action | **Resource** (link/note) under a **Project or Goal** | "Competitor PDF" → "Q3 launch" |
 | supports a bigger goal | **Task/Project** linked to a **Goal** | "Write blog" → Goal: "Grow audience" |
-| (discard) | **Trash** | — |
+| I will not do now | **Archive** — the note is kept (status=ARCHIVED), not deleted | "Maybe later idea" → Logbook |
+
+> **Archive is lossless (decided 2026-06-25).** The old "Trash" decision deleted
+> the InboxItem outright — but people are reluctant to lose a note for declining
+> to act on it, and capture should never be punishing. Archive instead marks the
+> item `ARCHIVED` + stamps `archivedAt`; it leaves the inbox (which filters
+> `UNPROCESSED`) and surfaces in the **Logbook's Archived section**, where a
+> Restore action returns it to the inbox for re-triage. The Logbook is the
+> catch-all record of things no longer active: completed tasks, past projects,
+> and archived notes alike.
 
 **Promotion paths** (an item isn't locked in): Task→Project (the XL nudge),
-Resource→Task, Task→Resource, Task→Someday, anything→Trash/Archive.
+Resource→Task, Task→Resource, Task→Someday, Archive→Inbox (via Restore).
 
 ---
 
-## 4. The co-author UI (the canonical pattern)
+## 4. The co-author UI (the canonical pattern) — BUILT
 
 From `mockups/triage-coauthor.html`. This same pattern is reused in the
 expanded capture editor (`mockups/capture-palette.html`) — capture and triage
 are **one surface at different commitment levels.**
 
-- **Title row** — the raw captured text, `contenteditable`, persists on blur.
-- **Type picker** — three buttons: Task / Project / Resource. Selecting swaps
-  which spec rows show below.
-- **Vertical spec list** — each row = one property (WHEN / SIZE / PRIORITY /
-  PROJECT / GOAL). Tap to expand options *inline* (no floating popover).
-  Value tinting: teal = When, amber = Important/XL, violet = Project/Goal,
-  gray = default.
+> **Status 2026-06-25:** the co-author spec list is now built. Triage is a
+> deliberate **per-item wizard**, not a one-key dispatch. The single-card
+> dispatch buttons (Task/Today/File-in/Resource/Trash) are gone; every item is
+> specified through the steps below and committed with a final **Complete**.
+> See `webapp/src/inbox/TriagePage.tsx`.
+
+The wizard (per item):
+
+1. **Context (Lens)** — a radio, pre-filled with the active lens. The user
+   must **Continue** to ratify it. *(Reverses WORKFLOW.md §5.5's inherit-active
+   default — triage now asks, explicitly. The active lens is still the
+   pre-selection, so the common case is one Continue.)*
+2. **Type** — what does this become? **Task** (default) · **Project** ·
+   **Resource** (a Note) · **Trash**. *Goal is not a type-chooser outcome* —
+   goals are filed *into*, never created at triage (§9.3).
+3. **Spec** — the property rows, per type (see table below).
+4. **Complete** — commits the spec; gated until the lens is confirmed and
+   (for Task/Resource) a filing target is set.
+
+The spec rows are **inline-expanding**: tap a row → the options expand beneath
+it (no floating popover, no separate sheet — *except* Project/Goal/Parent,
+which open the existing bottom-sheet picker because the list can be long and
+benefits from numbered rows). Value tinting: teal = When/Today, amber =
+Important/XL, violet = Project/Goal, gray = default.
+
+- **Title row** — the raw captured text (editable inline in the mockup; in the
+  built wizard it's read-only on the card for now).
 - **Confirm summary** — reads back the commitment in plain English:
   `→ Tomorrow · M · Normal · General`. No metadata-chip soup.
-- **Undo toast** — 4s window after dispatch.
+- **Undo toast** — 4s window after dispatch *(still spec'd, not yet built)*.
 
 **Spec rows per type:**
 
 | Type | Rows |
 |---|---|
-| Task | When · Size · Priority · Project · Goal |
-| Project | Goal · Due |
-| Resource | Parent (Project/Goal) · Kind (Link/Note) |
+| Task | When · Size · Priority · Project (file into) · Goal (link) |
+| Project | Goal (supports, optional) · Due |
+| Resource (Note) | Parent (Project/Goal) · Kind (Link/Note) |
+
+> "Goal" appears as a **spec row** (link an existing goal) on Task and Project,
+> not as a type the item can *become*. Triage never creates a Goal.
 
 ---
 
@@ -316,24 +348,30 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 
 **Built** (`webapp/src/`):
 
-- ✅ Inbox list + triage walkthrough (`app/InboxTriagePage.tsx`)
-- ✅ Triage card + dispatch buttons (`components/ui/TriageCard.tsx`, `DispatchButton.tsx`)
-- ✅ Type dispatch (1/2/3/P/R/Del) + exit animations
-- ✅ Resource parent picker (`ResourcePickerSheet`)
+- ✅ Inbox list + triage walkthrough (`inbox/TriagePage.tsx`)
+- ✅ Triage card (`components/ui/TriageCard.tsx`)
+- ✅ **Co-author spec list in triage** — DONE 2026-06-25. Triage is now a
+  deliberate per-item wizard (lens → type → spec → Complete), with
+  inline-expanding property rows ported from `triage-coauthor.html`. Priority
+  and Size set in the spec step are carried to the created task (they override
+  any parsed capture token — see `inbox/operations.ts :: triageInboxItem`).
+- ✅ Type dispatch (Task/Project/Resource/Trash) + exit animations
+- ✅ Resource/Note parent picker (file under a Project or Goal)
 - ✅ Transform action (`inbox/operations.ts :: triageInboxItem`)
 - ✅ Global `⌘K` / `/` capture (to be rebased to `⌘/`)
 
 **Unbuilt (gap vs. this doc):**
 
-- ❌ **Co-author spec list in triage** — current triage dispatches *directly*;
-  it does NOT show the vertical property editor. The mockup has it, the code
-  doesn't. **This is the biggest gap.** (`triage-coauthor.html` → port)
-- ❌ Property keys `[` `]` `-` `=` (§7.6)
+- ❌ Property keys `[` `]` `-` `=` (§7.6) — the wizard uses tap-to-expand rows
+  instead, but the keyset is still spec'd for power users.
 - ❌ `H` (set When), `T` (cycle type), `G` (assign Goal) as triage shortcuts
+  (the wizard replaces one-key dispatch; these may resurface as step shortcuts).
 - ❌ `⌘/` rebind (currently `⌘K`/`/`)
 - ❌ `I` (enter triage from Normal)
 - ❌ Undo toast (4s window) — spec'd, not in code
 - ❌ Mode indicator `— TRIAGE —` (bottom-left, VIM-style)
+- ❌ Inline title edit on the triage card (the wizard shows the text read-only;
+  the contenteditable affordance from the mockup isn't ported yet)
 
 ---
 

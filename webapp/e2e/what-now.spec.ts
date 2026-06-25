@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signupNewUser, openCapture } from "./helpers";
+import { signupNewUser, triageOneItem } from "./helpers";
 
 /**
  * What Now — FEATURES.md §3 F8/F10: the home screen is a chooser, not a list.
@@ -22,14 +22,7 @@ test("a Today task appears as the single focus item on home", async ({ page }) =
   await signupNewUser(page);
 
   // Capture + triage one item to Today.
-  const textarea = await openCapture(page);
-  await textarea.fill("The one thing");
-  await textarea.press("Enter");
-  await page.keyboard.press("Escape");
-  await page.goto("/app/inbox/review");
-  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("t");
-  await expect(page.getByText("The one thing")).toHaveCount(0, { timeout: 10_000 });
+  await triageOneItem(page, "The one thing", { type: "task", when: "today" });
 
   // Go home — the triaged task should be THE focus item.
   await page.goto("/app");
@@ -39,13 +32,7 @@ test("a Today task appears as the single focus item on home", async ({ page }) =
 test("'Start' → Now state; 'Do this' then enters focus mode (F13)", async ({ page }) => {
   await signupNewUser(page);
 
-  const textarea = await openCapture(page);
-  await textarea.fill("Deep work task");
-  await textarea.press("Enter");
-  await page.keyboard.press("Escape");
-  await page.goto("/app/inbox/review");
-  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("t");
+  await triageOneItem(page, "Deep work task", { type: "task", when: "today" });
   await page.goto("/app");
 
   await expect(page.getByText("Deep work task")).toBeVisible({ timeout: 10_000 });
@@ -63,13 +50,7 @@ test("'Start' → Now state; 'Do this' then enters focus mode (F13)", async ({ p
 test("'Now' persists across navigation away and back", async ({ page }) => {
   await signupNewUser(page);
 
-  const textarea = await openCapture(page);
-  await textarea.fill("Persists task");
-  await textarea.press("Enter");
-  await page.keyboard.press("Escape");
-  await page.goto("/app/inbox/review");
-  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("t");
+  await triageOneItem(page, "Persists task", { type: "task", when: "today" });
   await page.goto("/app");
 
   await page.getByRole("button", { name: /^start$/i }).click();
@@ -86,13 +67,7 @@ test("'Now' persists across navigation away and back", async ({ page }) => {
 test("'Pause' returns a started task to the Next state (same task stays #1)", async ({ page }) => {
   await signupNewUser(page);
 
-  const textarea = await openCapture(page);
-  await textarea.fill("Pausable task");
-  await textarea.press("Enter");
-  await page.keyboard.press("Escape");
-  await page.goto("/app/inbox/review");
-  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("t");
+  await triageOneItem(page, "Pausable task", { type: "task", when: "today" });
   await page.goto("/app");
 
   await page.getByRole("button", { name: /^start$/i }).click();
@@ -107,13 +82,7 @@ test("'Pause' returns a started task to the Next state (same task stays #1)", as
 test("completion circle marks the task done and removes it (F16)", async ({ page }) => {
   await signupNewUser(page);
 
-  const textarea = await openCapture(page);
-  await textarea.fill("Finish this now");
-  await textarea.press("Enter");
-  await page.keyboard.press("Escape");
-  await page.goto("/app/inbox/review");
-  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("t");
+  await triageOneItem(page, "Finish this now", { type: "task", when: "today" });
   await page.goto("/app");
 
   await expect(page.getByText("Finish this now")).toBeVisible({ timeout: 10_000 });
@@ -128,13 +97,7 @@ test("completion circle marks the task done and removes it (F16)", async ({ page
 test("'Not now' defers the focused task (it leaves What Now)", async ({ page }) => {
   await signupNewUser(page);
 
-  const textarea = await openCapture(page);
-  await textarea.fill("Not now task");
-  await textarea.press("Enter");
-  await page.keyboard.press("Escape");
-  await page.goto("/app/inbox/review");
-  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("t");
+  await triageOneItem(page, "Not now task", { type: "task", when: "today" });
   await page.goto("/app");
 
   await expect(page.getByText("Not now task")).toBeVisible({ timeout: 10_000 });

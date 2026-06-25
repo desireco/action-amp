@@ -101,7 +101,9 @@ appears in Work/Planning/Review except by coming through triage.
 
 - Statistics and reports: how many tasks completed today/this week, what's
   stuck, what's been deferred repeatedly.
-- The **Logbook** (completed-items archive) is the data source; this area is the
+- The **Logbook** is the catch-all record of things no longer active:
+  completed tasks, past projects, and **archived notes** ("I will not do now"
+  from triage — kept lossless, restorable to the inbox). This area is the
   *view over it* (counts, trends, streaks — kept calm, no guilt-trip red dots).
 - Currently the least-built area — net-new work. (See `BACKLOG.md`.)
 
@@ -153,9 +155,14 @@ These were the open structural calls. All resolved:
 4. **Work Area = What Now (Now/Next chooser) + Today (committed list).** No
    third surface. What Now shows the single focus task with its Next→Now state
    machine; Today shows the committed-for-today list with the 5-item cap.
-5. **Triage lens assignment = inherit the active lens.** No extra step at
-   triage. The output entity lands in whatever Lens (Work/Me) is active. Users
-   who want to file cross-lens switch the Lens first, then triage.
+5. **Triage lens assignment = an explicit step (revised 2026-06-25).** Triage
+   now opens on a **Context (Lens)** step: a radio pre-filled with the active
+   lens, which the user confirms with Continue before proceeding. *(Previously
+   locked 2026-06-23 as "inherit the active lens, no extra step"; reversed
+   because triage is a deliberate specification flow, not a speed dispatch —
+   see `TRIAGE.md` §4. The active lens is still the default pre-selection, so
+   the common case is one Continue.)* The output entity still lands in whatever
+   Lens the user confirms.
 6. **Focus switch = expanding-section nav (one section open at a time).** The
    sidebar has two orthogonal switches at the top:
    - **Context switch** (Lens: Work / Me) — always available, orthogonal to
@@ -201,5 +208,5 @@ The following were updated to match this doc (commit alongside):
 - **Someday nav relocation** — move the Someday entry under the Plan section of
   the new focus-switch nav (route stays `/app/someday`).
 - **(Optional, later)** `getTopTask` scope — if auto-resurface of snoozed tasks
-  is ever wanted, widen the filter from `status=TODAY` to include due-soon
-  `UPCOMING`. One-line change; deliberately deferred.
+   is ever wanted, widen the filter from `status=TODAY` to include due-soon
+   `UPCOMING`. One-line change; deliberately deferred.

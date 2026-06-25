@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -86,3 +86,61 @@ export async function openCapture(page: Page) {
   await textarea.waitFor({ state: "visible", timeout: 5_000 });
   return textarea;
 }
+
+/**
+ * Capture one item, then open the triage review and walk the wizard through to
+ * a destination. Triage is a deliberate spec flow, not a one-key dispatch, so
+ * every outcome goes through: step 1 (lens → Continue) → step 2 (type →
+ * Continue) → step 3 (spec defaults → Complete). `dest` selects the type at
+ * step 2 ("task" | "project" | "resource" | "archive"); "task" lands the item as
+ * a no-horizon (Someday) task by default — pass `when: "today"` to commit it to
+ * Today, or `when: "upcoming"` for Upcoming.
+ *
+ * Returns once the item has left the triage stage (exit animation fired).
+ */
+export async function triageOneItem(
+  page: Page,
+  text: string,
+  dest: { type: "task" | "project" | "resource" | "archive"; when?: "today" | "upcoming" | "someday" } = { type: "task" },
+): Promise<void> {
+  // Capture → inbox. (The caller must have signed in first — see signupNewUser.)
+  const textarea = await openCapture(page);
+  await textarea.fill(text);
+  await textarea.press("Enter");
+  await page.keyboard.press("Escape");
+  await page.goto("/app/inbox/review");
+  await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
+
+  // Step 1 — confirm the active lens (pre-selected). Continue is the primary
+  // button; the lens radio has role=radio.
+  await page.getByRole("radio").first().waitFor({ state: "visible", timeout: 10_000 });
+  await page.getByRole("button", { name: /^continue$/i }).click();
+
+  // Step 2 — pick the type. The type buttons' visible label is the outcome
+  // name (Task/Project/Note/Archive); "resource" surfaces as "Note".
+  const TYPE_LABEL: Record<typeof dest.type, string> = {
+    task: "Task",
+    project: "Project",
+    resource: "Note",
+    archive: "Archive",
+  };
+  await page.getByRole("button", { name: new RegExp(`^${TYPE_LABEL[dest.type]}`, "i") }).click();
+  // The step-2 commit button reads "Continue" (or "Archive" for the archive
+  // type). Scope to the primary button so the click can't hit the type pill.
+  await page.locator(".aa-triage-step__continue").click();
+
+  if (dest.type === "archive") {
+    await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
+    return;
+  }
+
+  // Step 3 — set When (tasks only), then Complete.
+  if (dest.type === "task" && dest.when && dest.when !== "someday") {
+    const whenRow = page.locator(".aa-spec-key", { hasText: /^when$/i }).locator("..");
+    await whenRow.click();
+    await page.getByRole("button", { name: dest.when === "today" ? /^today$/i : /^upcoming$/i }).click();
+  }
+  await page.getByRole("button", { name: /^complete$/i }).click();
+  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
+}
+

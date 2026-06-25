@@ -262,10 +262,16 @@ model Resource {
 // Raw captured text + the NL parser's guesses. Triage commits these into a
 // concrete type (Task/Project/Resource) and DELETES the InboxItem (the
 // transformed entity IS the record). See docs/DATA-MODEL.md §9 (decided: delete).
+//
+// EXCEPTION: "Archive" (I will not do now) does NOT delete — it sets
+// status=ARCHIVED. The note survives, recoverable from the Logbook's Archived
+// section. Capture is cheap and lossless; people shouldn't lose a note for
+// declining to act on it.
 model InboxItem {
   id        String   @id @default(uuid())
   text      String // raw captured text
   status    InboxItemStatus @default(UNPROCESSED)
+  archivedAt DateTime? // set when status → ARCHIVED (the Logbook sorts on this)
   createdAt DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -281,7 +287,7 @@ model InboxItem {
 
 enum InboxItemStatus {
   UNPROCESSED
-  // (no PROCESSED state — triaged items are deleted, not marked processed)
+  ARCHIVED // triage "Archive" — kept (not deleted), recoverable from the Logbook
 }
 
 model Tag {

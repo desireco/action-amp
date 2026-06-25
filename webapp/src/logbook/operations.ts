@@ -1,16 +1,25 @@
 import type { GetLogbook } from "wasp/server/operations";
 
 /**
- * Logbook — completed tasks + projects, scoped to the active Lens, newest first.
- * Grouped by completion day on the client. Read-only; restore/delete are
- * separate actions (Phase 4.6 refinement).
+ * Logbook — the record of things no longer active, scoped to the active Lens.
+ *
+ * Three categories, all read-only here (restore/delete are separate actions):
+ *  - completed Tasks  (isDone, completedAt)
+ *  - completed Projects
+ *  - archived InboxItems ("I will not do now") — status ARCHIVED, archivedAt.
+ *                      Kept (not deleted) so the user never loses a captured
+ *                      note for declining to act on it.
+ *
+ * Note on scoping: Tasks and Projects carry a lensId; archived InboxItems do
+ * NOT (the inbox is universal). Archived notes are returned regardless of the
+ * active lens — they belong to the user, not a context.
  */
 export const getLogbook = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
 
-  const [tasks, projects] = await Promise.all([
+  const [tasks, projects, archived] = await Promise.all([
     context.entities.Task.findMany({
       where: {
         userId: context.user.id,
@@ -42,6 +51,19 @@ export const getLogbook = (async (args, context) => {
         goal: { select: { id: true, name: true } },
       },
     }),
+    // Archived notes — universal (no lens filter).
+    context.entities.InboxItem.findMany({
+      where: {
+        userId: context.user.id,
+        status: "ARCHIVED",
+      },
+      orderBy: { archivedAt: "desc" },
+      select: {
+        id: true,
+        text: true,
+        archivedAt: true,
+      },
+    }),
   ]);
 
   return {
@@ -59,6 +81,12 @@ export const getLogbook = (async (args, context) => {
       completedAt: p.completedAt!,
       goal: p.goal,
       kind: "project" as const,
+    })),
+    archived: archived.map((a) => ({
+      id: a.id,
+      title: a.text,
+      archivedAt: a.archivedAt!,
+      kind: "archived" as const,
     })),
   };
 }) satisfies GetLogbook<{ lensId: string }>;

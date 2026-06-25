@@ -1,5 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
-import { signupNewUser, openCapture } from "./helpers";
+import { test, expect } from "@playwright/test";
+import { signupNewUser, triageOneItem } from "./helpers";
 
 /**
  * Today — FEATURES.md §4 F12: Today is capped (default 5). To add a 6th, you
@@ -13,20 +13,6 @@ import { signupNewUser, openCapture } from "./helpers";
 
 const TASK = (n: number) => `Focus task ${n}`;
 
-/** Capture one item and dispatch it to Today via the triage review. */
-async function captureAndDispatchToToday(page: Page, text: string) {
-  const textarea = await openCapture(page);
-  await textarea.fill(text);
-  await textarea.press("Enter");
-  await expect(textarea).toHaveValue("");
-  await page.keyboard.press("Escape");
-  await page.goto("/app/inbox/review");
-  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("t");
-  // Wait for the dispatch to process (text leaves the triage view).
-  await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
-}
-
 test("empty Today shows a calm empty state", async ({ page }) => {
   await signupNewUser(page);
   await page.goto("/app/today");
@@ -35,7 +21,7 @@ test("empty Today shows a calm empty state", async ({ page }) => {
 
 test("triaged-to-Today items appear in the Today list", async ({ page }) => {
   await signupNewUser(page);
-  await captureAndDispatchToToday(page, TASK(1));
+  await triageOneItem(page, TASK(1), { type: "task", when: "today" });
   await page.goto("/app/today");
   await expect(page.getByText(TASK(1))).toBeVisible({ timeout: 10_000 });
 });
@@ -43,24 +29,10 @@ test("triaged-to-Today items appear in the Today list", async ({ page }) => {
 test("F12: Today is capped at 5 — a 6th item is flagged as over-capacity", async ({ page }) => {
   await signupNewUser(page);
 
-  // Capture 6 items.
-  const textarea = await openCapture(page);
+  // Triage 6 items to Today through the wizard (one at a time). triageOneItem
+  // captures + walks the full spec flow per item.
   for (let i = 1; i <= 6; i++) {
-    await textarea.fill(TASK(i));
-    await textarea.press("Enter");
-  }
-  await expect(textarea).toHaveValue("");
-  await page.keyboard.press("Escape");
-
-  // Dispatch all 6 to Today via the "1" shortcut. The gap must cover the API
-  // await (~150ms) + the 320ms exit animation + a render buffer, otherwise the
-  // dispatch guard (if exit) drops the press. 800ms is conservative but the
-  // test only runs in CI/local, not on the hot path.
-  await page.goto("/app/inbox/review");
-  await expect(page.getByRole("button", { name: /today/i })).toBeVisible({ timeout: 10_000 });
-  for (let i = 0; i < 6; i++) {
-    await page.keyboard.press("t");
-    await page.waitForTimeout(1000);
+    await triageOneItem(page, TASK(i), { type: "task", when: "today" });
   }
 
   await page.goto("/app/today");
@@ -77,17 +49,7 @@ test("'Not today' demotes to Upcoming; the bench shows it; 'Today' promotes back
   await signupNewUser(page);
 
   // Capture + triage one item to Today.
-  const textarea = await openCapture(page);
-  await textarea.fill("Swap me around");
-  await textarea.press("Enter");
-  await expect(textarea).toHaveValue("");
-  await page.keyboard.press("Escape");
-  await page.goto("/app/inbox/review");
-  await expect(page.getByRole("button", { name: "Trash" })).toBeVisible({ timeout: 10_000 });
-  await page.keyboard.press("t");
-  // Wait for the dispatch to commit (320ms exit animation + API) before
-  // navigating — otherwise the task hasn't landed on Today yet.
-  await page.waitForTimeout(600);
+  await triageOneItem(page, "Swap me around", { type: "task", when: "today" });
 
   // On Today, demote it via "Not today".
   await page.goto("/app/today");

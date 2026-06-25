@@ -1,8 +1,8 @@
 import { action, api, app, page, query, route } from "@wasp.sh/spec";
 import { App } from "./src/App" with { type: "ref" };
 import { WhatNowPage } from "./src/app/WhatNowPage" with { type: "ref" };
-import { InboxPage } from "./src/app/InboxPage" with { type: "ref" };
-import { InboxTriagePage } from "./src/app/InboxTriagePage" with { type: "ref" };
+import { InboxPage } from "./src/inbox/InboxPage" with { type: "ref" };
+import { TriagePage } from "./src/inbox/TriagePage" with { type: "ref" };
 import { SettingsPage } from "./src/app/SettingsPage" with { type: "ref" };
 import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
@@ -13,7 +13,7 @@ import { createProject } from "./src/projects/operations" with { type: "ref" };
 import { getGoals } from "./src/goals/operations" with { type: "ref" };
 import { createGoal } from "./src/goals/operations" with { type: "ref" };
 import { getLogbook } from "./src/logbook/operations" with { type: "ref" };
-import { createInboxItem, getInboxItems, triageInboxItem } from "./src/inbox/operations" with { type: "ref" };
+import { createInboxItem, getInboxItems, triageInboxItem, restoreArchivedItem } from "./src/inbox/operations" with { type: "ref" };
 import { TodayPage } from "./src/lists/TodayPage" with { type: "ref" };
 import { UpcomingPage } from "./src/lists/UpcomingPage" with { type: "ref" };
 import { SomedayPage } from "./src/lists/SomedayPage" with { type: "ref" };
@@ -82,7 +82,7 @@ export default app({
     route("LandingRoute", "/", page(LandingPage, { authRequired: false })),
     route("AppRoute", "/app", page(WhatNowPage)),
     route("InboxRoute", "/app/inbox", page(InboxPage)),
-    route("InboxTriageRoute", "/app/inbox/review", page(InboxTriagePage)),
+    route("InboxTriageRoute", "/app/inbox/review", page(TriagePage)),
     route("TodayRoute", "/app/today", page(TodayPage)),
     route("UpcomingRoute", "/app/upcoming", page(UpcomingPage)),
     route("SomedayRoute", "/app/someday", page(SomedayPage)),
@@ -133,7 +133,7 @@ export default app({
     action(createProject, { entities: ["Project"], auth: true }),
     query(getGoals, { entities: ["Goal", "Project", "Task"], auth: true }),
     action(createGoal, { entities: ["Goal"], auth: true }),
-    query(getLogbook, { entities: ["Task", "Project"], auth: true }),
+    query(getLogbook, { entities: ["Task", "Project", "InboxItem"], auth: true }),
     query(getAppData, { entities: ["Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),
     action(setPreferredName, { entities: ["User"], auth: true }),
@@ -141,6 +141,7 @@ export default app({
     query(getInboxItems, { entities: ["InboxItem"], auth: true }),
     action(createInboxItem, { entities: ["InboxItem"], auth: true }),
     action(triageInboxItem, { entities: ["InboxItem", "Task", "Project", "Resource"], auth: true }),
+    action(restoreArchivedItem, { entities: ["InboxItem"], auth: true }),
     query(getBillingStatus, { entities: ["Payment"], auth: true }),
     query(getFounding100Status, { entities: ["User"], auth: false }),
     action(createCheckoutSession, { entities: ["User"], auth: true }),
