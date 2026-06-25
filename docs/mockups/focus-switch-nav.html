@@ -467,7 +467,7 @@ body {
         </button>
         <div class="aa-focus-items">
           <button class="aa-nav-item active" data-view="what-now" onclick="showView('what-now')">
-            What Now
+            Next
           </button>
           <button class="aa-nav-item" data-view="today" onclick="showView('today')">
             Today <span class="count">3</span>
@@ -586,7 +586,7 @@ function chipHTML(chips) {
 
 function renderWhatNow() {
   const task = todayTasks[0];
-  if (!task) return `<div class="aa-wn"><div class="aa-wn-eyebrow">What now</div><h2>Nothing on the table.</h2></div>`;
+  if (!task) return `<div class="aa-wn"><div class="aa-wn-eyebrow">Next</div><h2>Nothing on the table.</h2></div>`;
   const isNow = wnState === 'now';
   return `
     <div class="aa-wn">
