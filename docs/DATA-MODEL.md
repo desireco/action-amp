@@ -174,8 +174,11 @@ basic loop works.
 
 ### Added 2026-06-16 (triage design)
 
-- ✅ **Task defaults:** Size=M, Priority=Normal, **When=Someday** (triaging never
-  auto-clutters Today — the user must actively promote a task to Today).
+- ✅ **Task defaults:** Size=M, Priority=Normal, **When=Upcoming** (revised
+  2026-06-25: triaging lands on the actionable bench, not buried in Someday;
+  triaging never auto-clutters Today — promoting to Today is explicit). The
+  `status` column default stays `SOMEDAY` as a DB safety net; triage always
+  sets status explicitly.
 - ✅ **Project is optional; "General" = no projectId.** A Task with no Project
   is a "General" task in its Lens context (Work general, Me general). Every Task
   requires a Lens; Project is optional. There is no global "General" bucket —

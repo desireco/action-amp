@@ -149,7 +149,11 @@ export function TriagePage() {
   const initWorking = useCallback(
     (): Working => ({
       type: "task",
-      when: "Someday",
+      // Default When = Upcoming (decided 2026-06-25). A triaged task is
+      // actionable — it lands on the Upcoming bench (reachable from Today's
+      // "See upcoming" and /app/upcoming), not buried in Someday. Today stays
+      // un-cluttered: promoting to Today is still an explicit step.
+      when: "Upcoming",
       size: item?.parsedSize ?? "M",
       priority: item?.parsedPriority ?? "NORMAL",
       projectId: null,

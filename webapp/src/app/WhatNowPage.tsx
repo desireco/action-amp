@@ -83,11 +83,15 @@ export function WhatNowPage() {
     );
   }
 
-  const metaParts = [
-    topTask.project?.name,
-    topTask.status === "TODAY" ? "due today" : null,
-    sizeLabel(topTask.size),
-  ].filter(Boolean) as string[];
+  const dueLabel =
+    topTask.status === "TODAY"
+      ? "due today"
+      : topTask.dueDate
+        ? `due ${formatWhen(topTask.dueDate)}`
+        : null;
+  const metaParts = [topTask.project?.name, dueLabel, sizeLabel(topTask.size)].filter(
+    Boolean,
+  ) as string[];
 
   return (
     <>
@@ -95,10 +99,10 @@ export function WhatNowPage() {
         task={{
           title: topTask.description,
           project: topTask.project?.name,
-          due: "due today",
+          due: dueLabel ?? undefined,
           size: sizeLabel(topTask.size),
           why: "Because it's",
-          whyEmphasis: `${priorityLabel(topTask.priority)}${topTask.status === "TODAY" ? " and due today" : ""}.`,
+          whyEmphasis: `${priorityLabel(topTask.priority)}${dueLabel ? ` · ${dueLabel}` : ""}.`,
         }}
         context={`${isNow ? "Now" : "Next"} · ${lens.name}`}
         state={isNow ? "now" : "next"}
@@ -147,4 +151,19 @@ function sizeLabel(size: string | null | undefined): string {
 
 function priorityLabel(priority: string): string {
   return priority === "IMPORTANT" ? "Important" : priority === "LOW" ? "Low" : "Normal";
+}
+
+// Relative day label for a due date: "today", "tomorrow", "Fri", or "Jun 30".
+// The "why" line and meta use this so an Upcoming task reads truthfully (not a
+// hardcoded "due today" when it has no date at all).
+function formatWhen(date: Date): string {
+  const d = new Date(date);
+  const now = new Date();
+  d.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((d.getTime() - now.getTime()) / 86_400_000);
+  if (diffDays <= 0) return "today";
+  if (diffDays === 1) return "tomorrow";
+  if (diffDays <= 7) return d.toLocaleDateString("en-US", { weekday: "short" });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }

@@ -19,8 +19,8 @@
 > **Decisions locked 2026-06-23** (see `WORKFLOW.md` §5):
 >
 > - Triage inherits the active lens (no force-choice).
-> - Triage never auto-clutters Work — the default Task outcome is no-horizon
->   (Next); committing to Today is explicit.
+> - Triage never auto-clutters Work — the default Task outcome is Upcoming
+>   (the bench); committing to Today is explicit. Demoting to Someday is, too.
 
 ---
 
@@ -159,13 +159,13 @@ Important/XL, violet = Project/Goal, gray = default.
 
 ## 5. Defaults (never auto-Today)
 
-Locked 2026-06-16 (DATA-MODEL.md §8). The inbox is a staging area, not a
-commitment. **Triaging never auto-clutters Today** — the user must actively
-promote a task to Today.
+Locked 2026-06-16 (DATA-MODEL.md §8), revised 2026-06-25 (When default). The
+inbox is a staging area, not a commitment. **Triaging never auto-clutters
+Today** — the user must actively promote a task to Today.
 
 | Property | Default | Notes |
 |---|---|---|
-| When | **Someday** | never Today by default |
+| When | **Upcoming** | actionable, lands on the bench — never Today by default. Demote to Someday explicitly. |
 | Size | **M** | |
 | Priority | **Normal** | |
 | Project | **General** (= no `projectId`) | scoped per Lens, not global |
@@ -205,7 +205,7 @@ lets us offer more*, never *the surface is heavier*.
 | Property editing | Inline chips only (tap to remove). No spec list. | Co-author spec list (triage + expanded capture) |
 | Triage | Not surfaced — do it on desktop. | Full walkthrough (§2) |
 | Keyboard shortcuts | n/a (no keyboard) | Full keyset (§7) |
-| Defaults | Identical — Someday / M / Normal / General (§5) | Identical |
+| Defaults | Identical — Upcoming / M / Normal / General (§5) | Identical |
 
 The defaults don't change by platform. Mobile just doesn't surface the levers
 (beyond what NL parsing catches at capture time).

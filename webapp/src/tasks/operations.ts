@@ -101,7 +101,12 @@ export const updateTaskStatus = (async (args, context) => {
 // ----------------------------------------------------------------
 // Read: the focus engine's top task (FEATURES.md F10 — MVP priority-first)
 // ----------------------------------------------------------------
-// Candidates = Tasks in the active Lens with status=TODAY, not done.
+// Candidates = Tasks in the active Lens with status TODAY or UPCOMING, not
+// done, whose dueDate is null or already due (≤ now). The due-guard is what
+// keeps snooze working: a snoozed task carries a future dueDate, so it stays
+// off What Now until its time arrives (then auto-resurfaces). A triaged-to-
+// Upcoming task has no dueDate, so it surfaces as Next immediately — triage
+// puts real work in front of you, not behind a toggle (WORKFLOW.md §5.2).
 // Rank by priority (IMPORTANT > NORMAL > LOW), then size (smaller = quick win),
 // then oldest. Returns the top 1, or null when nothing's on the table.
 const PRIORITY_RANK: Record<string, number> = { IMPORTANT: 0, NORMAL: 1, LOW: 2 };
@@ -115,8 +120,11 @@ export const getTopTask = (async (args, context) => {
     where: {
       userId: context.user.id,
       lensId: args.lensId,
-      status: "TODAY",
+      status: { in: ["TODAY", "UPCOMING"] },
       isDone: false,
+      // A future dueDate = snoozed/scheduled; keep it off What Now until due.
+      // (null dueDate = no horizon → always a candidate.)
+      OR: [{ dueDate: null }, { dueDate: { lte: new Date() } }],
     },
     include: {
       project: { select: { id: true, name: true } },
@@ -134,6 +142,12 @@ export const getTopTask = (async (args, context) => {
     if (a.startedAt && b.startedAt) {
       return a.startedAt.getTime() - b.startedAt.getTime();
     }
+    // A committed-Today task outranks a bench (Upcoming) task at equal
+    // priority/size — you don't want a bench task stealing the slot of
+    // something you explicitly put on the court.
+    const aToday = a.status === "TODAY" ? 0 : 1;
+    const bToday = b.status === "TODAY" ? 0 : 1;
+    if (aToday !== bToday) return aToday - bToday;
     const pr = (PRIORITY_RANK[a.priority] ?? 1) - (PRIORITY_RANK[b.priority] ?? 1);
     if (pr !== 0) return pr;
     const sr = (SIZE_RANK[a.size] ?? 1) - (SIZE_RANK[b.size] ?? 1);

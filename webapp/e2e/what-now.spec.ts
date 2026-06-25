@@ -29,6 +29,19 @@ test("a Today task appears as the single focus item on home", async ({ page }) =
   await expect(page.getByText("The one thing")).toBeVisible({ timeout: 10_000 });
 });
 
+test("an Upcoming task (no due date) also surfaces on home", async ({ page }) => {
+  await signupNewUser(page);
+
+  // Triage to Upcoming (the default since 2026-06-25) — no When chosen, so it
+  // lands on the bench with no dueDate. What Now's candidate pool is Today +
+  // Upcoming-with-no-future-due, so a triaged task must be actionable, not
+  // hidden behind the Today toggle (WORKFLOW.md §5.2).
+  await triageOneItem(page, "Bench task", { type: "task" });
+
+  await page.goto("/app");
+  await expect(page.getByText("Bench task")).toBeVisible({ timeout: 10_000 });
+});
+
 test("'Start' → Now state; 'Do this' then enters focus mode (F13)", async ({ page }) => {
   await signupNewUser(page);
 

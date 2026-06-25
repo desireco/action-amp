@@ -92,9 +92,9 @@ export async function openCapture(page: Page) {
  * a destination. Triage is a deliberate spec flow, not a one-key dispatch, so
  * every outcome goes through: step 1 (lens → Continue) → step 2 (type →
  * Continue) → step 3 (spec defaults → Complete). `dest` selects the type at
- * step 2 ("task" | "project" | "resource" | "archive"); "task" lands the item as
- * a no-horizon (Someday) task by default — pass `when: "today"` to commit it to
- * Today, or `when: "upcoming"` for Upcoming.
+ * step 2 ("task" | "project" | "resource" | "archive"); "task" lands the item on
+ * the Upcoming bench by default — pass `when: "today"` to commit it to Today,
+ * or `when: "someday"` to demote it to Someday.
  *
  * Returns once the item has left the triage stage (exit animation fired).
  */
@@ -134,11 +134,13 @@ export async function triageOneItem(
     return;
   }
 
-  // Step 3 — set When (tasks only), then Complete.
-  if (dest.type === "task" && dest.when && dest.when !== "someday") {
+  // Step 3 — set When (tasks only), then Complete. The spec row is pre-filled
+  // with the default (Upcoming), so we only touch it when an explicit choice
+  // is requested. "upcoming" matches the default and needs no click.
+  if (dest.type === "task" && dest.when && dest.when !== "upcoming") {
     const whenRow = page.locator(".aa-spec-key", { hasText: /^when$/i }).locator("..");
     await whenRow.click();
-    await page.getByRole("button", { name: dest.when === "today" ? /^today$/i : /^upcoming$/i }).click();
+    await page.getByRole("button", { name: dest.when === "today" ? /^today$/i : /^someday$/i }).click();
   }
   await page.getByRole("button", { name: /^complete$/i }).click();
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });

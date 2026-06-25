@@ -218,7 +218,13 @@ describe("getTopTask", () => {
 
     expect(result).toBeNull();
     expect(m.entities.Task.findMany).toHaveBeenCalledWith({
-      where: { userId: "user-1", lensId: "lens-1", status: "TODAY", isDone: false },
+      where: {
+        userId: "user-1",
+        lensId: "lens-1",
+        status: { in: ["TODAY", "UPCOMING"] },
+        isDone: false,
+        OR: [{ dueDate: null }, { dueDate: { lte: expect.any(Date) } }],
+      },
       include: {
         project: { select: { id: true, name: true } },
         goal: { select: { id: true, name: true } },
@@ -260,6 +266,20 @@ describe("getTopTask", () => {
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
     expect(result).toMatchObject({ id: "older" });
+  });
+
+  it("ranks a TODAY task above an equal UPCOMING task (court beats bench)", async () => {
+    const m = mockContext();
+    // Two NORMAL/M tasks; only the status differs. The committed-Today one
+    // wins — a bench task mustn't steal the slot of something on the court.
+    m.entities.Task.findMany.mockResolvedValue([
+      candidate({ id: "bench", status: "UPCOMING" }),
+      candidate({ id: "court", status: "TODAY" }),
+    ]);
+
+    const result = await getTopTask({ lensId: "lens-1" }, m.context);
+
+    expect(result).toMatchObject({ id: "court" });
   });
 });
 

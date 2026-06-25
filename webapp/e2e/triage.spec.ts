@@ -60,13 +60,15 @@ test("the wizard opens on the lens step; the active lens is pre-selected", async
   await expect(page.getByRole("button", { name: /^continue$/i })).toBeEnabled();
 });
 
-test("Complete defaults to a no-horizon task (lands in Someday)", async ({ page }) => {
+test("Complete defaults to an Upcoming task (lands on the bench)", async ({ page }) => {
   await signupNewUser(page);
   const text = "Some random thought";
   await triageOneItem(page, text, { type: "task" });
 
-  // No-horizon = Someday (the bucket for tasks without a time commitment).
-  await page.goto("/app/someday");
+  // Default When = Upcoming (decided 2026-06-25): a triaged task is actionable
+  // and lands on the Upcoming bench — reachable, not buried in Someday. Today
+  // stays un-cluttered; promoting to Today is an explicit step.
+  await page.goto("/app/upcoming");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 });
 

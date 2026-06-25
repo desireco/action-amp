@@ -138,17 +138,19 @@ These were the open structural calls. All resolved:
    item. `UPCOMING` survives as a **Task status** (the snooze flow sets it) and
    is reachable as a **view from inside Today** (a "see upcoming" toggle that
    lets you promote tasks onto today). Mental model: Upcoming = the bench; Today
-   = the court. You pull from the bench deliberately — it never auto-injects
-   into What Now.
-2. **What Now's Next candidate pool = Today only.** `getTopTask` filters
-   `status=TODAY`. A snoozed task (which becomes `UPCOMING`) leaves What Now
-   immediately. It does **not** auto-resurface when the snooze expires, but
-   it's never gone — it lives on the **Upcoming bench**, reachable via the
-   Today → "see upcoming" toggle, where the user can promote it back onto
-   today (which makes it a Next candidate again). Promote/demote is a
-   two-way swap: any Today task can be marked "Not today" (→ bench), any
-   bench task can be marked "Today" (→ court).
-   *(Auto-resurface would be a one-line `getTopTask` scope change later — see §7.)*
+   = the court. You pull from the bench deliberately for the *Today* list, but a
+   bench task with no future due date is also a Next candidate on What Now (§5.2)
+   — triage should put real work in front of you, not hide it behind a toggle.
+2. **What Now's Next candidate pool = Today + Upcoming (revised 2026-06-25).**
+   `getTopTask` selects `status ∈ {TODAY, UPCOMING}` **and** (`dueDate` is null
+   or `dueDate ≤ now`), in the active Lens, not done. So a freshly triaged task
+   (Upcoming, no due) surfaces as Next immediately; Today stays un-cluttered.
+   The due-guard preserves snooze: a snoozed task (Upcoming + future `dueDate`)
+   stays off What Now until its time arrives — at which point it auto-resurfaces
+   (the behavior §7 had deferred). *(Previously locked 2026-06-23 as "Today
+   only"; reversed because a triaged task should be actionable, not invisible —
+   the Someday default change in `TRIAGE.md` §5 made Today-only the wrong
+   default-pool pairing.)* Someday is never a Next candidate.
 3. **Someday lives in the Planning Area.** It's a "maybe later" organizing
    concept, not a working one. The `/someday` page moves under Planning in the
    nav/route cluster.
@@ -207,6 +209,7 @@ The following were updated to match this doc (commit alongside):
   Today toggle; just no dedicated page/area).
 - **Someday nav relocation** — move the Someday entry under the Plan section of
   the new focus-switch nav (route stays `/app/someday`).
-- **(Optional, later)** `getTopTask` scope — if auto-resurface of snoozed tasks
-   is ever wanted, widen the filter from `status=TODAY` to include due-soon
-   `UPCOMING`. One-line change; deliberately deferred.
+- **(Done 2026-06-25)** `getTopTask` scope — widened from `status=TODAY` to
+  `status ∈ {TODAY, UPCOMING}` with a `dueDate ≤ now` (or null) guard, so a
+  triaged-to-Upcoming task surfaces on What Now and a snoozed task auto-resurfaces
+  when its snooze expires. See §5.2.
