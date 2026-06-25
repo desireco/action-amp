@@ -16,7 +16,6 @@ import {
   StarIcon,
   InboxIcon,
   ClockIcon,
-  CalendarIcon,
   SomedayIcon,
   ProjectsIcon,
   GoalsIcon,
@@ -28,13 +27,24 @@ import "./AppShell.css";
 /**
  * Authenticated app shell — the persistent chrome framing every /app page.
  *
- * Matches app-shell-whatnow.html prototype:
- *   - Sidebar: brand, Lens switch (Work/Me), grouped nav with icons + counts +
- *     active bar, user footer.
- *   - Topbar: Capture (⌘K) + theme toggle.
+ * Sidebar structure (WORKFLOW.md):
+ *   - Brand + Lens switch (context — Work/Me, always available)
+ *   - Inbox (universal — always visible, capture destination)
+ *   - Focus nav: three expanding sections (Work / Plan / Review), one open
+n *     at a time. Expanding one collapses the others.
+ *   - User footer
  *
- * Wasp 0.24 has no layout route wrapper, so every /app page renders this.
+ * Capture is pinned in the topbar, pervasive across all modes.
  */
+
+type FocusSection = "work" | "plan" | "review";
+
+function sectionForPath(pathname: string): FocusSection {
+  if (pathname === "/app" || pathname.startsWith("/app/today")) return "work";
+  if (pathname.startsWith("/app/projects") || pathname.startsWith("/app/goals") || pathname.startsWith("/app/someday")) return "plan";
+  if (pathname.startsWith("/app/logbook")) return "review";
+  return "work";
+}
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
   const location = useLocation();
@@ -99,6 +109,23 @@ export function AppShell({ children }: { children: ReactNode }) {
     ? user.fullName.split(/\s+/).map((s) => s[0] ?? "").slice(0, 2).join("").toUpperCase()
     : "";
 
+  // ---- Focus nav: which section is expanded (one at a time) ----
+  // Auto-switches when the user navigates to a page in a different section.
+  const [expandedFocus, setExpandedFocus] = useState<FocusSection>(() =>
+    typeof window === "undefined"
+      ? "work"
+      : (localStorage.getItem("aa-focus") as FocusSection) ?? sectionForPath(location.pathname),
+  );
+  // Sync with route changes (e.g. clicking a nav item, browser back/forward).
+  useEffect(() => {
+    setExpandedFocus(sectionForPath(location.pathname));
+  }, [location.pathname]);
+
+  const handleSetFocus = (s: FocusSection) => {
+    setExpandedFocus(s);
+    localStorage.setItem("aa-focus", s);
+  };
+
   // ---- Overlays (capture popover, shortcut cheatsheet) ----
   // Focus mode is page-scoped (set by a task's onOpen), so it lives in pages,
   // not the shell. Esc closes whichever overlay is open.
@@ -149,14 +176,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           className="aa-app-lens"
         />
 
-        {/* Section 1 — focus */}
+        {/* ---- Inbox (universal — always visible, capture destination) ---- */}
         <nav className="aa-app-nav">
-          <NavItem
-            icon={<StarIcon />}
-            label="What Now"
-            active={isActive("/app")}
-            to="/app"
-          />
           <NavItem
             icon={<InboxIcon />}
             label="Inbox"
@@ -169,20 +190,63 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
             countVariant={counts.inbox > 0 ? "urgent" : "done"}
           />
-          <NavItem icon={<ClockIcon />} label="Today" active={isActive("/app/today")} to="/app/today" count={counts.today} />
-          <NavItem icon={<CalendarIcon />} label="Upcoming" active={isActive("/app/upcoming")} to="/app/upcoming" />
-          <NavItem icon={<SomedayIcon />} label="Someday" active={isActive("/app/someday")} to="/app/someday" />
         </nav>
 
-        {/* Section 2 — structure */}
-        <nav className="aa-app-nav">
-          <NavItem icon={<ProjectsIcon />} label="Projects" active={isActive("/app/projects")} to="/app/projects" count={counts.projects} />
-          <NavItem icon={<GoalsIcon />} label="Goals" active={isActive("/app/goals")} to="/app/goals" count={counts.goals} />
-        </nav>
+        {/* ---- Focus nav: expanding sections, one open at a time ---- */}
+        <nav className="aa-focus-nav">
+          {/* Work */}
+          <div className={`aa-focus-section ${expandedFocus === "work" ? "open" : ""}`}>
+            <button
+              type="button"
+              className="aa-focus-header"
+              onClick={() => handleSetFocus("work")}
+              aria-expanded={expandedFocus === "work"}
+            >
+              Work
+            </button>
+            {expandedFocus === "work" && (
+              <div className="aa-focus-items">
+                <NavItem icon={<StarIcon />} label="Next" active={isActive("/app")} to="/app" />
+                <NavItem icon={<ClockIcon />} label="Today" active={isActive("/app/today")} to="/app/today" count={counts.today} />
+              </div>
+            )}
+          </div>
 
-        {/* Section 3 — history */}
-        <nav className="aa-app-nav">
-          <NavItem icon={<LogbookIcon />} label="Logbook" active={isActive("/app/logbook")} to="/app/logbook" />
+          {/* Plan */}
+          <div className={`aa-focus-section ${expandedFocus === "plan" ? "open" : ""}`}>
+            <button
+              type="button"
+              className="aa-focus-header"
+              onClick={() => handleSetFocus("plan")}
+              aria-expanded={expandedFocus === "plan"}
+            >
+              Plan
+            </button>
+            {expandedFocus === "plan" && (
+              <div className="aa-focus-items">
+                <NavItem icon={<ProjectsIcon />} label="Projects" active={isActive("/app/projects")} to="/app/projects" count={counts.projects} />
+                <NavItem icon={<GoalsIcon />} label="Goals" active={isActive("/app/goals")} to="/app/goals" count={counts.goals} />
+                <NavItem icon={<SomedayIcon />} label="Someday" active={isActive("/app/someday")} to="/app/someday" />
+              </div>
+            )}
+          </div>
+
+          {/* Review */}
+          <div className={`aa-focus-section ${expandedFocus === "review" ? "open" : ""}`}>
+            <button
+              type="button"
+              className="aa-focus-header"
+              onClick={() => handleSetFocus("review")}
+              aria-expanded={expandedFocus === "review"}
+            >
+              Review
+            </button>
+            {expandedFocus === "review" && (
+              <div className="aa-focus-items">
+                <NavItem icon={<LogbookIcon />} label="Logbook" active={isActive("/app/logbook")} to="/app/logbook" />
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* User footer */}

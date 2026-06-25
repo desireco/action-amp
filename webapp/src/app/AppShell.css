@@ -338,3 +338,49 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ---- Focus nav: expanding sections (one open at a time) ---- */
+.aa-focus-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--aa-space-md);
+  flex: 1;
+}
+
+.aa-focus-section {
+  border-radius: var(--aa-radius-md);
+}
+
+.aa-focus-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 7px 12px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--aa-text-3);
+  cursor: pointer;
+  border-radius: var(--aa-radius-md);
+  transition: all var(--aa-dur-fast) var(--aa-ease-out);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.aa-focus-header:hover {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text-2);
+}
+.aa-focus-section.open .aa-focus-header {
+  color: var(--aa-text);
+}
+
+.aa-focus-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: var(--aa-space-sm);
+}

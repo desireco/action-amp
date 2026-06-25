@@ -69,7 +69,7 @@ export async function signupNewUser(
  */
 export async function openCapture(page: Page) {
   // Wait for the app shell to be interactive so the global key handler is live.
-  await page.getByRole("link", { name: /what now/i }).waitFor({ state: "visible", timeout: 10_000 });
+  await page.getByRole("link", { name: /^next$/i }).waitFor({ state: "visible", timeout: 10_000 });
   await page.keyboard.press("Meta+K");
   const dialog = page.getByRole("dialog", { name: /quick capture/i });
   try {
