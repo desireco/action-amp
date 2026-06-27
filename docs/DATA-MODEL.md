@@ -108,7 +108,10 @@ An item isn't locked into its first decision:
 ### Demotion / filing
 
 - **Task → Someday:** keep it, stop nagging, no date.
-- **Anything → Trash / Archive.**
+- **Anything → Archive (lossless):** the InboxItem is marked `ARCHIVED`
+  (stamps `archivedAt`), not deleted. It leaves the inbox (which filters
+  `UNPROCESSED`) and surfaces in the Logbook's Archived section, restorable to
+  the inbox. Capture should never be punishing.
 
 ---
 

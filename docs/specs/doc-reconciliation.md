@@ -1,6 +1,6 @@
 ---
 feature: doc-reconciliation
-status: ready
+status: done
 spec_owner: discover
 build_owner: build
 ---

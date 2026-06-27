@@ -75,8 +75,12 @@ item; Build pulls `ready`.**
 > Discover still owes product decisions. Statuses reflect branch state as of
 > 2026-06-27 — see §Branch state below for what's in flight.
 
-1. **doc-reconciliation** (`ready`) — make BACKLOG.md + IMPLEMENTATION-CHECKLIST
-   match the shipped code; archive done items; surface the real gap list.
+1. **doc-reconciliation** (`done` 2026-06-27) — canonical docs reconciled with
+   shipped reality: Trash→Archive leftovers fixed in WORKFLOW/TRIAGE/DATA-MODEL;
+   the fix branch's four structural reversals (Upcoming default, Today+Upcoming
+   matcher pool, explicit triage lens step, lossless Archive) confirmed sound
+   and code-verified; BACKLOG flipped to 26 done / 23 open; FEATURES.md flagged
+   stale with pointers to canonical. → §Shipped.
 2. **first-run-experience** (`done` 2026-06-27) — onboarding was dead code +
    taught gestures the webapp lacks; new users landed on empty What Now. Fixed:
    onboarding routing, `hasSeenOnboarding` migration, magic-moment seed task.
@@ -165,6 +169,12 @@ What landed and was signed off:
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **doc-reconciliation** (`done` 2026-06-27) — canonical docs reconciled with
+  shipped reality after the branch consolidation. Fixed Trash→Archive
+  contradictions in WORKFLOW/TRIAGE/DATA-MODEL; confirmed the merged fix
+  branch's four structural reversals are sound and code-matched; BACKLOG
+  flipped to 26 done / 23 open; FEATURES.md F6/F10 flagged stale with pointers
+  to the canonical docs.
 - **first-run-experience** (`done` 2026-06-27) — onboarding routing +
   `hasSeenOnboarding` migration + magic-moment seed task. Verified: done-
   conditions checked against code, 195 unit tests + 37 e2e tests pass. Review

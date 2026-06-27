@@ -2,7 +2,12 @@
 
 > Single source of truth for what's left to do/decide. One item at a time.
 > Check things off as we cover them. Add new items as they emerge.
-> Last updated: 2026-06-23
+> Last verified: **2026-06-27** (reconciled against shipped code; shipped items
+> flipped to `[x]`, open items point at `docs/specs/`).
+>
+> **The live build queue is `docs/specs/*.md`** (statuses drive it). This file
+> is the historical narrative + the non-spec'd odds-and-ends. When a spec ships,
+> its item moves here to `[x]`.
 
 ---
 
@@ -11,26 +16,31 @@
 Structural decisions are locked in `docs/WORKFLOW.md` §5. These are the code
 items they imply — not built yet, listed here so they're not lost:
 
-- [ ] **Focus-switch nav (AppShell refactor).** Sidebar: Lens (Work/Me) switch
-  on top, then a focus nav with three expanding sections — **Work** (What Now,
-  Today), **Plan** (Projects, Goals, Someday), **Review** (Logbook, reports).
-  One section expanded at a time (expanding one collapses the others). Capture
-  stays pinned outside both switches. No route changes — pure nav state.
+- [x] **Focus-switch nav (AppShell refactor).** DONE 2026-06-27 (commit
+  `04c87b1`). Sidebar: Lens (Work/Me) switch on top, then a focus nav with
+  three expanding sections — **Work** (What Now, Today), **Plan** (Projects,
+  Goals, Someday), **Review** (Logbook, reports). One section expanded at a
+  time. Capture pinned outside both switches. Pure nav state, no routes.
 - [ ] **Drop the Upcoming top-level route + nav entry.** Remove `/app/upcoming`
   from `main.wasp.ts` and the sidebar. Keep `getTasks` able to query
-  2  `UPCOMING` (the Today toggle needs it); just no dedicated page/area.
+  `UPCOMING` (the Today toggle needs it); just no dedicated page/area.
+  *(Still open — `/app/upcoming` route + page still present 2026-06-27. Tracked
+  in `docs/specs/friction-cleanup.md`.)*
 - [x] **Upcoming → Today toggle.** DONE 2026-06-23. Today page has a "See
   upcoming" / "Back to Today" toggle in the header; the Upcoming bench shows
   `status=UPCOMING` tasks (active-lens-scoped) with a per-row "Today" promote
   button; each Today row has a "Not today" demote button (→ bench, never
   vanishes). Header renders even when Today is empty so the bench is always
   reachable. No schema change — reuses `updateTaskStatus` to flip TODAY↔UPCOMING.
-- [ ] **Someday nav relocation.** Move the Someday nav entry under the Plan
-  section of the new focus-switch nav (route `/app/someday` stays).
-- [ ] *(Optional, later)* **`getTopTask` auto-resurface.** If we ever want
-  snoozed (`UPCOMING`) tasks to re-enter What Now automatically when due, widen
-  the filter from `status=TODAY` to include due-soon `UPCOMING`. One-line
-  change; deliberately deferred — current behavior is deliberate-swap only.
+- [x] **Someday nav relocation.** DONE 2026-06-27 (with the focus-switch nav).
+  Someday lives under the **Plan** expanding section; route `/app/someday`
+  unchanged.
+- [x] **`getTopTask` auto-resurface.** DONE 2026-06-25 (revised; was "optional,
+  later"). `getTopTask` now selects `status ∈ {TODAY, UPCOMING}` with a
+  `dueDate ≤ now` (or null) guard — a snoozed task auto-resurfaces when due, a
+  freshly-triaged Upcoming task surfaces immediately. See `WORKFLOW.md` §5.2.
+  *(Reversed from the 2026-06-23 "deliberate-swap only" lock — paired with the
+  triage-default-to-Upcoming change.)*
 - [ ] *(Phase 2 vision)* **Hard focus** — each mode (Work/Plan/Review) as a
   distinct full-screen layout, not just nav filtering. Design exploration;
   soft focus (above) ships first.
@@ -56,26 +66,54 @@ items they imply — not built yet, listed here so they're not lost:
 
 - [x] **Inbox + triage surface.** DONE 2026-06-16; **co-author wizard 2026-06-25.** Two distinct surfaces: (1) **Inbox list** (`inbox/InboxPage.tsx`) = browse/scan/pick entry point; (2) **Triage** (`inbox/TriagePage.tsx`) = a deliberate **per-item specification wizard**: step 1 Context (Lens radio, pre-filled) → step 2 Type (Task/Project/Resource-note/Trash) → step 3 Spec → Complete. The single-card one-key dispatch is gone; triage is co-authoring the spec, not speed-clearing. The spec list (When/Size/Priority/Project/Goal) is **inline-expanding** rows ported from the mockup (tap a row → options beneath; Project/Goal/Parent rows open the bottom-sheet picker). Priority & Size chosen in the spec step override any parsed capture token. Defaults: Size=M, Priority=Normal, When=Upcoming (never auto-Today; revised 2026-06-25 — was Someday), Project=General. **Goal is filed *into*, never created at triage.** Confirm summary reads back the commitment in plain English; Complete is gated until lens + filing target are set. **Archive (was "Trash") is lossless** — it marks the InboxItem `ARCHIVED` instead of deleting, and surfaces in the Logbook's Archived section with a Restore action (2026-06-25). Still unbuilt: undo toast, inline title edit, property keys `[`/`]`/`-`/`=`, `⌘/` rebind. See `TRIAGE.md` §3/§4/§8, `docs/mockups/triage-coauthor.html`.
 - [x] **Today list view** (planning, cap, priority/size chips, done section). DONE 2026-06-16. **Today IS the Plan mode card** (not a separate page). Same Mode×Scope position as What Now — three renderings of one card position: Plan=Today list, Do=What Now hero, Review=debrief. Card DNA preserved (border/shadow/radius), just list-shaped. Cap badge amber at 4/5, rose at full. Tasks grouped by Goal (violet dot), General (gray), Overdue (rose). Per-row Important/XL chips tinted. Done section collapsed at bottom. Tap task to select → "Start doing" promotes to Do mode. See `docs/mockups/plan-today-card.html`.
-- [ ] **Upcoming + Someday views.**
-- [ ] **Projects list + Project detail.** Roll-up, next-action, convert Task→Project (XL path).
-- [ ] **Goals list + Goal detail.** Roll-up across projects, the "why".
-- [ ] **Logbook / Review mode screen.** End-of-day debrief, weekly GTD review as guided flow. Goal-centric, conversational.
-- [ ] **Capture palette (`⌘K`)** — floating input, NL parsing, inline chips.
-- [ ] **Command palette (`⌘\`)** — fuzzy jump/run.
-- [ ] **Marketing site home** — "Easiest way to get into action", waitlist, sections, footer.
+- [ ] **Upcoming + Someday views.** *(Someday page exists at `/app/someday`;
+  Upcoming is intentionally NOT a dedicated page — reachable via the Today
+  "see upcoming" toggle. The `/app/upcoming` route still lingers and is slated
+  for removal in `docs/specs/friction-cleanup.md`.)*
+- [x] **Projects list + Project detail.** DONE 2026-06-27. Projects list at
+  `/app/projects`; **Project detail at `/app/projects/:id`** (`ProjectDetailPage.tsx`)
+  — work a project's tasks, add + complete inline, progress roll-up. e2e at
+  `e2e/project-detail.spec.ts`. *(Convert Task→Project / XL path still open.)*
+- [ ] **Goals list + Goal detail.** Goals list at `/app/goals` (shipped); **Goal
+  detail view still unbuilt** — tracked in `docs/specs/friction-cleanup.md`.
+- [ ] **Logbook / Review mode screen.** Logbook list shipped (`/app/logbook`,
+  incl. the Archived section for lossless triage Archive); **Review/debrief
+  screen unbuilt** — the least-built area (WORKFLOW §2.5).
+- [x] **Capture palette (`⌘K`)** — DONE. Floating input, NL parsing, inline
+  chips, rapid-fire. `components/ui/CapturePopover.tsx`. *(Note: `command-palette-
+  search` spec reclaims `⌘K` for the command palette; capture becomes `⌘/`-only
+  when that ships. Capture's `⌘K` alias is intentional until then.)*
+- [ ] **Command palette (`⌘\`)** — fuzzy jump/run. **Unbuilt.** Spec'd at
+  `docs/specs/command-palette-search.md` — will use `⌘K` (reclaimed from
+  capture), not `⌘\`.
+- [x] **Marketing site home** — DONE. Landing page at `/` ("Easiest way to get
+  into action"), full pitch, footer. `src/landing/LandingPage.tsx`. *(No
+  waitlist/email capture by design — see PRODUCT.md "pure signpost"; the
+  Founding 100 page at `/founding-100` has the live checkout.)*
 
 ## ☐ Build — foundation
 
-- [ ] **Prisma schema from DATA-MODEL.md.** Replace scaffold's User/Task/Tag with our model (User, Lens, Goal, Project, Task, Resource, InboxItem, Tag, Session, SessionEvent). Forces resolution of: InboxItem retention, Task status enum, Session/SessionEvent shape, soft-delete vs hard-delete for Archive.
-- [ ] **Resolve open data-model questions** before schema: InboxItem retention (delete on transform?); Session model (does each work session persist?); Archive = status or separate entity.
-- [ ] **Social auth** — add Google (and one other?) to Wasp scaffold alongside existing email auth.
-- [ ] **Switch SQLite → PostgreSQL** for dev (Wasp-managed Docker DB).
-- [ ] **First `wasp db migrate-dev`** — get the real DB booting with our model.
-- [ ] **Seed data** — sample Lens (Work/Me), Goal, Project, Tasks so the app isn't empty on first run.
+- [x] **Prisma schema from DATA-MODEL.md.** DONE. Full model in `schema.prisma`
+  (User, Lens, Goal, Project, Task, Resource, InboxItem, Tag, Payment,
+  TaskUpdate). 10 migrations. `User.plan` + Stripe fields + `hasSeenOnboarding`.
+- [x] **Resolve open data-model questions.** DONE. InboxItem: triaged items
+  become the entity; Archive is lossless (`status=ARCHIVED`, `archivedAt`) not
+  delete. Session/SessionEvent: not built (deferred — no focus-session feature).
+- [ ] **Social auth** — add Google. **Unbuilt** (email-only). Spec'd at
+  `docs/specs/social-auth-google.md` (`ready`); depends on `legal-pages-oauth`
+  (`done`).
+- [x] **PostgreSQL** — DONE. `provider = "postgresql"`; dev on Homebrew PG,
+  prod on Railway.
+- [x] **First `wasp db migrate-dev`** — DONE (10 migrations through 2026-06-27).
+- [x] **Seed data** — DONE. `ensureOnboarded` seeds Work+Me lenses + a "General"
+  project each, + one magic-moment TODAY task (guarded by `Task.count===0`).
+  See `docs/specs/first-run-experience.md` (`done`).
 
 ## ☐ Build — bring prototypes into the webapp
 
-- [ ] **Design tokens → webapp.** Export `design.md` → Tailwind theme (`npx @google/design.md export --format css-tailwind`). Wire teal/amber + dark mode into the Wasp app.
+- [x] **Design tokens → webapp.** DONE. `src/styles/tokens.css` (teal/amber,
+  neutrals, dark mode via `[data-theme="dark"]`). Not Tailwind — hand-rolled
+  CSS variables (the Tailwind export was abandoned for tighter control).
 - [ ] **App shell + What Now** as real React components (from `mode-zoom-unified.html`).
 - [ ] **Working state** as real component (breathing halo, session timeline, feelings, notes).
 - [ ] **Mode × Zoom navigation** as real React state + transitions.

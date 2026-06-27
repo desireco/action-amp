@@ -17,6 +17,19 @@
 > - **Three focus modes** (Work / Plan / Review) surfaced as an expanding-section
 >   nav; Capture is pervasive.
 >
+> **Additional staleness (2026-06-25 triage/matcher rework — not yet rewritten
+> below; defer to the canonical docs):**
+>
+> - **F6's keymap is obsolete.** Triage is no longer one-key dispatch
+>   (`1/2/3/4/Del`). It's a per-item **specification wizard** (Context → Type →
+>   Spec → Complete). See `TRIAGE.md` §4. The `Del → trash` outcome is now
+>   **Archive** (lossless, kept in the Logbook).
+> - **F10's candidate pool is obsolete.** `getTopTask` no longer selects
+>   "Today/overdue" only — it selects `Today + Upcoming` with a `dueDate ≤ now`
+>   (or null) guard, so a freshly-triaged Upcoming task surfaces on What Now and
+>   a snoozed task auto-resurfaces when due. See `WORKFLOW.md` §5.2. The triage
+>   Task default is now **Upcoming**, not Someday (`TRIAGE.md` §5).
+>
 > Inspirations: Things (calm, refined, Inbox→Today model), TickTick (flexible, fast).
 > Wedge: **the list is demoted; "what now" is the home screen.** See §3.
 > Model authority: `DATA-MODEL.md` + `METHODOLOGY.md` (GTD + PARA flavor, Goals
