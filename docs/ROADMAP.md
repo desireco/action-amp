@@ -77,17 +77,14 @@ item; Build pulls `ready`.**
 
 1. **doc-reconciliation** (`ready`) — make BACKLOG.md + IMPLEMENTATION-CHECKLIST
    match the shipped code; archive done items; surface the real gap list.
-2. **first-run-experience** (`review`) — onboarding was dead code + taught
-   mobile gestures the webapp lacks; new users landed on empty What Now.
-   Build implemented it (onboarding routing, `hasSeenOnboarding` migration,
-   magic-moment seed task) and passed its review gate. **On main; awaiting
-   Discover signoff → `done`.**
-3. **legal-pages-oauth** (`review`) — `/privacy` + `/terms` were OAuth-incomplete
-   (no Google/Stripe/analytics disclosure) and stale (Terms said "free at
-   launch" while billing is live). Build fixed the content + added consent
-   links at the signup form; two cold-context reviewers passed (1 blocker
-   found + fixed). **On main; awaiting Discover signoff → `done`.**
-   Prerequisite for social-auth-google.
+2. **first-run-experience** (`done` 2026-06-27) — onboarding was dead code +
+   taught gestures the webapp lacks; new users landed on empty What Now. Fixed:
+   onboarding routing, `hasSeenOnboarding` migration, magic-moment seed task.
+   Verified: 195 unit + 37 e2e tests pass. → §Shipped.
+3. **legal-pages-oauth** (`done` 2026-06-27) — `/privacy` + `/terms` were
+   OAuth-incomplete and stale. Fixed: third-party disclosure (Google/Stripe/
+   Resend), "Plans and billing," consent links at signup. **Open item:** confirm
+   contact addresses are real before launch (§GTM prep B). → §Shipped.
 4. **observability-minimal** (`ready`) — ship one privacy-respecting tracker +
    the 4 funnel events (land → signup → app-open → checkout). The one number
    that matters: visitor → checkout %.
@@ -138,38 +135,49 @@ item; Build pulls `ready`.**
 
 ## Branch state (2026-06-27)
 
-**Working directly on `main` now — no feature branches.** The three in-flight
+**Working directly on `main` — no feature branches.** The three in-flight
 branches were rebased onto main and deleted; their work is in main's history.
-Verified: `wasp compile` clean, 195 tests pass (13 files), migrations applied.
+Verified after consolidation + signoff: `wasp compile` clean, **195 unit tests
++ 37 e2e tests pass**, migrations applied.
 
-What landed from the consolidation:
-- **`first-run-experience` → `review`** (was `building`). Onboarding routing +
-  `hasSeenOnboarding` migration + magic-moment seed task + review writeup.
-  Build's review gate passed; **awaiting Discover signoff → `done`.**
-- **`legal-pages-oauth` → `review`** (was `ready`). Privacy/terms rewrite +
-  consent links + review writeup (2 cold-context reviewers passed, 1 blocker
-  found + fixed). **Awaiting Discover signoff → `done`.**
-- **`fix/what-now-surfaces-triaged-tasks` → merged (no spec).** A feature
-  branch that added: Project detail page + `/app/projects/:id` route (satisfies
-  part of `friction-cleanup`), a triage co-author wizard with lossless Archive
-  (new `archive_inbox_items` migration + `ARCHIVED` status), and What Now
-  surfacing triaged Today/Upcoming tasks. It also edited `WORKFLOW.md` /
-  `TRIAGE.md` / `DATA-MODEL.md` with structural decisions that `doc-reconciliation`
-  should review against the canonical docs.
+What landed and was signed off:
+- **`first-run-experience` → `done`** (signed off 2026-06-27). Onboarding
+  routing + `hasSeenOnboarding` migration + magic-moment seed task. e2e suite
+  (the one open caveat in Build's review) run and green.
+- **`legal-pages-oauth` → `done`** (signed off 2026-06-27). Privacy/terms
+  rewrite + consent links. Data-retention overclaim caught + fixed during
+  review. Contact-address confirmation carried to §GTM prep B.
+- **`fix/what-now-surfaces-triaged-tasks` → merged (no spec).** Added: Project
+  detail page + `/app/projects/:id` route (satisfies part of `friction-cleanup`),
+  triage co-author wizard with lossless Archive (`archive_inbox_items`
+  migration + `ARCHIVED` status), What Now surfacing triaged tasks. It also
+  edited `WORKFLOW.md` / `TRIAGE.md` / `DATA-MODEL.md` — `doc-reconciliation`
+  should review those edits against the canonical docs.
 
 **Open Discover actions on main:**
-1. Sign off (or send back) the two `review` specs — read their `docs/reviews/`
-   writeups and flip to `done`.
-2. `doc-reconciliation` — now higher priority: the merged fix branch edited
-   canonical docs; reconcile them.
+1. `doc-reconciliation` is now the priority — the merged fix branch edited
+   canonical docs; reconcile them so planning isn't split-brain.
+2. The seven remaining `ready` specs are the queue (observability, social-auth,
+   focus-why-transparent, focus-engine-v2, command-palette, entitlement,
+   friction-cleanup remainder).
 
 ## Shipped
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **first-run-experience** (`done` 2026-06-27) — onboarding routing +
+  `hasSeenOnboarding` migration + magic-moment seed task. Verified: done-
+  conditions checked against code, 195 unit tests + 37 e2e tests pass. Review
+  writeup at `docs/reviews/first-run-experience.md`.
+- **legal-pages-oauth** (`done` 2026-06-27) — OAuth-ready privacy/terms
+  (Google/Stripe/Resend disclosure, "Free at launch"→"Plans and billing") +
+  consent links at the signup form. The data-retention overclaim was caught and
+  fixed. **Open item carried forward:** contact addresses
+  (`privacy@`/`legal@actionamp.com`) must be confirmed real/monitored before
+  launch — see §GTM prep B. Review writeup at `docs/reviews/legal-pages-oauth.md`.
+
 (The core loop, billing, and deploy are shipped but were never tracked as duet
-specs — they predate the protocol. Going forward, items enter here only via
-`review → done`.)
+specs — they predate the protocol.)
 
 ## Icebox
 
