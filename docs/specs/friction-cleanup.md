@@ -84,6 +84,23 @@ any number of commits; the spec is `done` only when all pass.
   discover's lean is route-first for v1 (URL-addressable, shareable, simpler
   back button), with the zoom/anchor model as a later interaction refinement.
   Pick the simpler one; note it in the review.
+  **UPDATE 2026-06-27:** a route-based `ProjectDetailPage` +
+  `/app/projects/:id` already exists on the unmerged `fix/what-now-surfaces-
+  triaged-tasks` branch, with its own e2e. When that branch merges, this item
+  is done — adopt its implementation and drop the open question. The Goal
+  detail view is NOT on that branch and still needs building.
+
+## Branch overlap (2026-06-27)
+
+The unmerged `fix/what-now-surfaces-triaged-tasks` branch already implements:
+- ✅ **Project detail view** (`ProjectDetailPage.tsx` + `/app/projects/:id`
+  route + `e2e/project-detail.spec.ts`) — satisfies this spec's 4th done-condition.
+- ❓ **What Now surfacing triaged tasks** — reworks `WhatNowPage.tsx`; not in
+  this spec but coordinate if this spec's "Done today" change touches the same file.
+
+Still owed by this spec (not on that branch): drop `/upcoming` route, Someday
+promote action, "Done today" section, Goal detail view, breadcrumb navigation.
+Re-verify the done-condition list against main after that branch merges.
 
 ## Prototypes
 

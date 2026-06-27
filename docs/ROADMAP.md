@@ -72,24 +72,29 @@ item; Build pulls `ready`.**
 ### Now (the validation gauntlet — do these before anything new)
 
 > Specs live at `docs/specs/<slug>.md`. `ready` = Build may pull; `draft` =
-> Discover still owes product decisions.
+> Discover still owes product decisions. Statuses reflect branch state as of
+> 2026-06-27 — see §Branch state below for what's in flight.
 
 1. **doc-reconciliation** (`ready`) — make BACKLOG.md + IMPLEMENTATION-CHECKLIST
    match the shipped code; archive done items; surface the real gap list.
-2. **first-run-experience** (`ready`) — onboarding is dead code + teaches mobile
-   gestures the webapp lacks; new users land on empty What Now. The #1 churn
-   cliff. Fixes routing, swaps the gesture lessons for the real 3-step loop,
-   seeds one example task.
-3. **observability-minimal** (`ready`) — ship one privacy-respecting tracker +
+2. **first-run-experience** (`building` — `build/first-run-experience`) —
+   onboarding was dead code + taught mobile gestures the webapp lacks; new
+   users landed on empty What Now. Build has implemented it: route new signups
+   through real onboarding, swap the gesture lessons for the 3-step loop, seed
+   one magic-moment task. Adds a `hasSeenOnboarding` migration. Awaiting
+   review-gate signoff.
+3. **legal-pages-oauth** (`review` — `build/legal-pages-oauth`) — `/privacy` +
+   `/terms` were OAuth-incomplete (no Google/Stripe/analytics disclosure) and
+   stale (Terms said "free at launch" while billing is live). Build fixed the
+   content + added consent links at the signup form; two cold-context
+   reviewers passed (1 blocker found + fixed). **Awaiting Discover signoff →
+   `done`.** Prerequisite for social-auth-google.
+4. **observability-minimal** (`ready`) — ship one privacy-respecting tracker +
    the 4 funnel events (land → signup → app-open → checkout). The one number
    that matters: visitor → checkout %.
-4. **legal-pages-oauth** (`ready`) — `/privacy` + `/terms` exist but are
-   OAuth-incomplete (no Google/Stripe/analytics disclosure) and factually stale
-   (Terms say "free at launch" while billing is live). Fix content + add the
-   consent links at the signup form. **Prerequisite for social-auth-google.**
 5. **social-auth-google** (`ready`) — email-only is the #1 predictable friction
    at the moment of truth. Google (and only Google) first. Depends on
-   legal-pages-oauth.
+   legal-pages-oauth (now in review).
 6. **distribution-quietlaunch** — (no spec; it's a campaign, not a build item)
    get the existing product in front of ~500 of the right people in 4 weeks.
 
@@ -101,7 +106,8 @@ item; Build pulls `ready`.**
 8. **focus-why-transparent** (`ready`) — the "why this" line under What Now is
    static copy that often lies. Make it state the *actual* ranking reason in
    plain English. No matcher change, no schema change. Prerequisite for
-   focus-engine-v2 (which extends this line to explain the moment-fit).
+   focus-engine-v2. **Coordinate with the `fix/what-now-surfaces-triaged-tasks`
+   branch — it reworks `WhatNowPage.tsx`; land this after that merges.**
 9. **focus-engine-v2** (`ready`) — the moment-aware matcher: time-available +
    energy refinement *on top of* the existing priority sort (FEATURES.md F10's
    planned layer, not a speculative bet). The matcher re-ranks within a
@@ -118,13 +124,39 @@ item; Build pulls `ready`.**
     (Me-lens-only free, 3 projects, 1 goal) are not enforced anywhere (confirmed
     by audit 2026-06-27, §Free-tier audit). `FREE_LIMITS` defined, imported
     nowhere; `isPlanActive` dead code. Highest-value, smallest build, fixes a
-    live billing leak.
-12. **friction-cleanup** (`ready`) — drop the dead `/upcoming` route
-    (WORKFLOW §5.1), Project/Goal detail views, "Done today" section, Someday
-    promote action, breadcrumb navigation.
+    live billing leak. **Note:** legal-pages-oauth's review hedged its
+    data-retention clause because this isn't done — landing this unblocks an
+    accurate privacy policy too.
+12. **friction-cleanup** (`ready`, **partly covered by an unmerged branch**) —
+    the `/upcoming` route removal, "Done today" section, Someday promote, and
+    breadcrumb nav are still owed. **But the Project detail view +
+    `/app/projects/:id` route already exist on `fix/what-now-surfaces-triaged-
+    tasks`** (alongside a triage co-author wizard + lossless Archive). When
+    that branch merges, ~⅓ of this spec is satisfied; the rest stays.
 13. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
     marketing pack, the real pricing page. Only worth doing once items 7–11
     prove someone stays and pays.
+
+## Branch state (2026-06-27)
+
+Unmerged feature branches beyond the spec'd work — reconciled here so the
+priority list above matches reality, not just the spec queue.
+
+- **`build/first-run-experience`** (ahead of main by 3 commits) — spec #2,
+  `building`. Onboarding routing + `hasSeenOnboarding` migration + magic-moment
+  seed task + review-gate fixes. Substantively complete; awaiting signoff.
+- **`build/legal-pages-oauth`** (ahead by 4) — spec #3, `review`. Privacy/terms
+  rewrite + consent links + review writeup (2 cold-context reviewers passed).
+  **Awaiting Discover signoff → `done`.**
+- **`fix/what-now-surfaces-triaged-tasks`** (ahead by 3, based on old main) —
+  **not a spec'd branch.** A substantial feature branch that: adds the Project
+  detail page + route (part of `friction-cleanup`), reworks triage into a
+  co-author wizard with lossless Archive (new `archive_inbox_items` migration),
+  and makes What Now surface triaged Today/Upcoming tasks. It edits
+  `WORKFLOW.md`/`TRIAGE.md`/`DATA-MODEL.md` with its own structural decisions.
+  **Action needed:** decide whether to merge it, and reconcile its doc edits
+  against the canonical docs (it predates this roadmap and may encode
+  decisions that conflict with §Free-tier audit / WORKFLOW §5).
 
 ## Shipped
 
