@@ -1,12 +1,12 @@
 # Terms of Service
 
-_Last updated: June 16, 2026_
+_Last updated: June 27, 2026_
 
 These terms govern your use of ActionAmp. They're written in plain language. By using the app, you agree to them.
 
 ## Your account
 
-You're responsible for your account and anything done with it. Keep your password secure. You must be 13 or older.
+You're responsible for your account and anything done with it. Keep your password secure. You must be 13 or older (16 or older in the EU and UK, where local law requires it).
 
 ## Your content
 
@@ -21,11 +21,11 @@ You own everything you create in ActionAmp. We store it to provide the service. 
 
 ## The service
 
-ActionAmp is provided "as is." We work hard to make it reliable and secure, but we don't guarantee uninterrupted or error-free service. We may change features, limits, or pricing (with notice before any paid features launch).
+ActionAmp is provided "as is." We work hard to make it reliable and secure, but we don't guarantee uninterrupted or error-free service. We may change features or limits with notice.
 
-## Free at launch
+## Plans and billing
 
-ActionAmp is free during its initial launch. If we introduce a paid tier, existing features you're using will remain available. We won't bait-and-switch.
+ActionAmp has a free tier and paid plans, including Pro (recurring), Prepaid credit, and a limited Founding 100 lifetime plan. Current prices and what each plan includes live at the billing page in the app (`/app/settings/billing`). Prices may change, but we'll give notice before they do, and any paid entitlement you've already bought is honored for its term. We won't bait-and-switch.
 
 ## Termination
 

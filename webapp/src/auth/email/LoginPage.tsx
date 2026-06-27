@@ -17,6 +17,10 @@ export function LoginPage() {
             Forgot your password?{" "}
             <Link to="/request-password-reset">Reset it</Link>
           </span>
+          <span>
+            See our <Link to="/terms">Terms</Link> and{" "}
+            <Link to="/privacy">Privacy Policy</Link>.
+          </span>
         </>
       }
     >

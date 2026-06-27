@@ -9,9 +9,16 @@ export function SignupPage() {
       title="Make a start."
       subtitle="Capture less. Do more."
       footer={
-        <span>
-          Already have an account? <Link to="/login">Log in</Link>
-        </span>
+        <>
+          <span>
+            By creating an account, you agree to our{" "}
+            <Link to="/terms">Terms</Link> and{" "}
+            <Link to="/privacy">Privacy Policy</Link>.
+          </span>
+          <span>
+            Already have an account? <Link to="/login">Log in</Link>
+          </span>
+        </>
       }
     >
       <SignupForm
