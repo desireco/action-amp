@@ -1,15 +1,19 @@
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getTasks, toggleTaskDone } from "wasp/client/operations";
+import { getTasks, toggleTaskDone, updateTaskStatus } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { TaskRow, CompletionCircle, type TaskRowTask } from "../components/ui";
+import { TaskRow, Button, CompletionCircle, type TaskRowTask } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
 import "./ListShell.css";
+import "./SomedayPage.css";
 
 /**
  * Someday — undated, deprioritized tasks. Flat list, lighter visual weight
- * (muted rows). Promote via the row's project/due chips once that flow lands.
+ * (muted rows). Each row has a "→ Today" control to promote it back onto the
+ * court (reuses updateTaskStatus, same motion as the Today bench promote).
+ * No "→ Upcoming" — Upcoming is reached via snooze from What Now/Today, not
+ * from Someday, so a second destination would muddy the single promote path.
  */
 export function SomedayPage() {
   const lens = useActiveLens();
@@ -32,6 +36,15 @@ export function SomedayPage() {
     }
   };
 
+  // Promote a parked task onto Today. Same op as the Today bench promote;
+  // invalidates the same keys so both lists + the What Now engine refresh.
+  const handlePromote = async (task: TaskRowTask) => {
+    await updateTaskStatus({ id: task.id, status: "TODAY" });
+    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+  };
+
   if (!isLoading && (tasks?.length ?? 0) === 0) {
     return (
       <ListEmpty
@@ -52,13 +65,22 @@ export function SomedayPage() {
       </header>
       <ul className="aa-someday-list">
         {(tasks ?? []).map((task) => (
-          <TaskRow
-            key={task.id}
-            task={task}
-            muted
-            onToggleDone={handleToggle}
-            onOpen={() => navigate(`/app/tasks/${task.id}`)}
-          />
+          <li key={task.id} className="aa-someday-row">
+            <TaskRow
+              task={task}
+              muted
+              onToggleDone={handleToggle}
+              onOpen={() => navigate(`/app/tasks/${task.id}`)}
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handlePromote(task)}
+              title="Move to Today"
+            >
+              → Today
+            </Button>
+          </li>
         ))}
       </ul>
     </div>

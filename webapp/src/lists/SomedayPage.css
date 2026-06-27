@@ -1,0 +1,23 @@
+@import "./ListShell.css";
+
+/*
+ * Someday — parked tasks with a "→ Today" promote control per row.
+ * Mirrors the Today ↔ Upcoming swap-row layout: flex row, the TaskRow fills,
+ * the promote button right-aligns.
+ */
+.aa-someday-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aa-someday-row {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+}
+
+.aa-someday-row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
