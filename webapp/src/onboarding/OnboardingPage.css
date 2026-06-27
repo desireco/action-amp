@@ -146,7 +146,6 @@
   max-width: 32ch;
   margin-bottom: 32px;
 }
-.aa-ob-body .aa-ob-bold,
 .aa-ob-body b {
   color: oklch(0.9 0.01 230 / 0.95);
   font-weight: 600;
@@ -171,214 +170,104 @@
 }
 
 /* ============================================================
-   GESTURE DEMO
+   LOOP VISUALS (the real 3-step loop: capture / triage / focus)
+   Calm, static, one shape each — replaces the mobile-gesture demo.
    ============================================================ */
-.aa-ob-demo {
-  width: 200px;
-  height: 130px;
-  border-radius: var(--aa-radius-xl);
-  background: oklch(0.2 0.015 230 / 0.5);
-  border: 1px solid oklch(0.4 0.01 230 / 0.3);
-  position: relative;
-  margin-bottom: 36px;
-  overflow: hidden;
+.aa-ob-loop-visual {
+  width: 260px;
+  max-width: 100%;
+  margin: 0 0 36px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.aa-ob-demo-card {
-  width: 130px;
-  padding: 14px;
-  background: var(--aa-surface);
-  border-radius: var(--aa-radius-lg);
-  text-align: center;
-  box-shadow: 0 4px 12px oklch(0.1 0.01 230 / 0.3);
+
+/* Capture: ⌘K chip + a faint prompt line */
+.aa-ob-loop-capture {
+  gap: var(--aa-space-md);
 }
-.aa-ob-demo-circle {
-  width: 16px;
-  height: 16px;
-  border-radius: var(--aa-radius-full);
-  border: 2px solid var(--aa-border-strong);
-  margin: 0 auto 8px;
-}
-.aa-ob-demo-text {
-  font-size: 11px;
+.aa-ob-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  height: 40px;
+  padding: 0 12px;
+  font-family: var(--aa-font-mono, ui-monospace, monospace);
+  font-size: 0.95rem;
   font-weight: 600;
-  color: var(--aa-text);
+  color: var(--aa-teal);
+  background: oklch(0.72 0.15 220 / 0.12);
+  border: 1px solid oklch(0.72 0.15 220 / 0.4);
+  border-radius: var(--aa-radius-md);
+}
+.aa-ob-capture-line {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--aa-text-3);
 }
 
-/* finger / touch indicator */
-.aa-ob-finger {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--aa-radius-full);
-  background: oklch(0.72 0.15 220 / 0.25);
-  border: 2px solid var(--aa-teal);
-  z-index: 5;
+/* Triage: two rows, each a text + a key chip */
+.aa-ob-loop-triage {
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+  width: 220px;
 }
-.aa-ob-finger::after {
-  content: "";
-  position: absolute;
-  inset: 7px;
-  border-radius: var(--aa-radius-full);
-  background: var(--aa-teal);
-}
-.aa-ob-finger-amber {
-  background: oklch(0.78 0.16 70 / 0.25);
-  border-color: var(--aa-amber);
-}
-.aa-ob-finger-amber::after {
-  background: var(--aa-amber);
-}
-
-/* Lesson 1: finger descends and holds */
-.aa-ob-finger-hold {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: aa-ob-finger-hold 2.4s ease-in-out infinite;
-}
-@keyframes aa-ob-finger-hold {
-  0% {
-    top: 20%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  30% {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 1;
-  }
-  80% {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 1;
-  }
-  100% {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 0;
-  }
-}
-
-/* Lesson 2: two fingers swipe left */
-.aa-ob-finger-swipe-1 {
-  top: 50%;
-  left: 60%;
-  transform: translate(-50%, -50%);
-  animation: aa-ob-finger-swipe-left 2.2s ease-in-out infinite;
-}
-.aa-ob-finger-swipe-2 {
-  top: 50%;
-  left: 65%;
-  transform: translate(-50%, -50%);
-  animation: aa-ob-finger-swipe-left-2 2.2s ease-in-out infinite;
-}
-@keyframes aa-ob-finger-swipe-left {
-  0% {
-    left: 65%;
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  70% {
-    left: 25%;
-    opacity: 1;
-  }
-  100% {
-    left: 25%;
-    opacity: 0;
-  }
-}
-@keyframes aa-ob-finger-swipe-left-2 {
-  0% {
-    left: 70%;
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  70% {
-    left: 35%;
-    opacity: 1;
-  }
-  100% {
-    left: 35%;
-    opacity: 0;
-  }
-}
-
-/* Lesson 3: single-finger horizontal swipe */
-.aa-ob-finger-single-swipe {
-  top: 50%;
-  left: 70%;
-  transform: translate(-50%, -50%);
-  animation: aa-ob-finger-single 2s ease-in-out infinite;
-}
-@keyframes aa-ob-finger-single {
-  0% {
-    left: 70%;
-    transform: translate(-50%, -50%);
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  70% {
-    left: 30%;
-    transform: translate(-50%, -50%);
-    opacity: 1;
-  }
-  100% {
-    left: 30%;
-    transform: translate(-50%, -50%);
-    opacity: 0;
-  }
-}
-
-/* Lesson 4: breadcrumb demo */
-.aa-ob-breadcrumb-demo {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
+.aa-ob-triage-row {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 9px;
-  color: oklch(0.7 0.01 230 / 0.6);
-  white-space: nowrap;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  padding: 10px 14px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
 }
-.aa-ob-bc-item {
-  padding: 3px 6px;
+.aa-ob-triage-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--aa-text);
+}
+.aa-ob-triage-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--aa-teal);
+  background: oklch(0.72 0.15 220 / 0.12);
   border-radius: var(--aa-radius-sm);
 }
-.aa-ob-bc-current {
-  color: var(--aa-teal);
-  font-weight: 700;
-  background: oklch(0.72 0.15 220 / 0.15);
-  animation: aa-ob-bc-pulse 2s ease-in-out infinite;
+
+/* Focus: a single card with a check + one task — everything else gone */
+.aa-ob-focus-card {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  width: 220px;
+  padding: 16px 18px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  box-shadow: 0 8px 24px oklch(0.1 0.01 230 / 0.25);
 }
-@keyframes aa-ob-bc-pulse {
-  0%,
-  100% {
-    background: oklch(0.72 0.15 220 / 0.15);
-  }
-  50% {
-    background: oklch(0.72 0.15 220 / 0.3);
-  }
+.aa-ob-focus-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--aa-radius-full);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  color: white;
+  flex-shrink: 0;
 }
-.aa-ob-bc-sep {
-  opacity: 0.4;
+.aa-ob-focus-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--aa-text);
 }
 
 /* ============================================================
@@ -493,9 +382,8 @@
   .aa-ob-body {
     font-size: 15px;
   }
-  .aa-ob-demo {
-    width: 180px;
-    height: 120px;
+  .aa-ob-loop-visual {
+    width: 220px;
   }
   .aa-ob-foot {
     padding-bottom: 48px;

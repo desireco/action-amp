@@ -1,4 +1,4 @@
-import type { EnsureOnboarded, GetAppData, SetPreferredName } from "wasp/server/operations";
+import type { EnsureOnboarded, GetAppData, SetPreferredName, CompleteOnboarding } from "wasp/server/operations";
 
 /**
  * Onboarding + app bootstrap data.
@@ -48,12 +48,14 @@ export const ensureOnboarded = (async (_args, context) => {
   // orphaned. Idempotent, like the lens loop above.
   // ponytail: queries all lenses (existing + just-created) via findFirst by name;
   // a dedicated "all lenses" query would be cleaner but this reuses the loop.
+  let meLensId: string | null = null;
   for (const lens of DEFAULT_LENSES) {
     const existingLens = await context.entities.Lens.findFirst({
       where: { userId, name: lens.name },
       select: { id: true },
     });
     if (!existingLens) continue;
+    if (lens.name === "Me") meLensId = existingLens.id;
     const existingProject = await context.entities.Project.findFirst({
       where: { userId, lensId: existingLens.id, name: "General" },
       select: { id: true },
@@ -61,6 +63,27 @@ export const ensureOnboarded = (async (_args, context) => {
     if (!existingProject) {
       await context.entities.Project.create({
         data: { name: "General", userId, lensId: existingLens.id },
+        select: { id: true },
+      });
+    }
+  }
+
+  // Seed exactly ONE example task for brand-new users so What Now is non-empty
+  // on first paint. Guarded by "user has zero tasks" so existing users get
+  // nothing new (idempotent across logins). Placed in the Me lens, status=TODAY
+  // so getTopTask surfaces it immediately.
+  if (meLensId) {
+    const taskCount = await context.entities.Task.count({ where: { userId } });
+    if (taskCount === 0) {
+      await context.entities.Task.create({
+        data: {
+          description: "Try it: complete this task",
+          userId,
+          lensId: meLensId,
+          status: "TODAY",
+          priority: "NORMAL",
+          size: "M",
+        },
         select: { id: true },
       });
     }
@@ -87,6 +110,24 @@ export const setPreferredName = (async (args, context) => {
   });
   return { preferredName: name };
 }) satisfies SetPreferredName<{ preferredName: string }, { preferredName: string }>;
+
+/**
+ * Marks onboarding complete server-side. Persists `User.hasSeenOnboarding=true`
+ * so the client can route returning users straight to /app and show new users
+ * /welcome exactly once. Idempotent: re-calling on an already-complete user is
+ * a no-op. Replaces the old localStorage gate (which didn't survive a browser
+ * switch or a clear).
+ */
+export const completeOnboarding = (async (_args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  await context.entities.User.update({
+    where: { id: context.user.id },
+    data: { hasSeenOnboarding: true },
+  });
+  return { hasSeenOnboarding: true };
+}) satisfies CompleteOnboarding<never, { hasSeenOnboarding: boolean }>;
 
 /**
  * Everything the app shell needs on first paint: lenses (for the sidebar's

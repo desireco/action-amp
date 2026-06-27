@@ -49,7 +49,17 @@ try {
     data: { providerData: JSON.stringify(data) },
   });
 
-  console.log(`✓ ${email} → password reset, email ${verify ? "verified" : "left as-is"}`);
+  // Mark onboarding complete so the seeded dev/e2e user lands on /app, not
+  // /welcome — the first-run gate in App.tsx redirects hasSeenOnboarding=false
+  // users. Skipped with --no-verify for parity with the email-verify flag.
+  if (verify) {
+    await db.user.update({
+      where: { id: identity.auth.userId },
+      data: { hasSeenOnboarding: true },
+    });
+  }
+
+  console.log(`✓ ${email} → password reset, email ${verify ? "verified" : "left as-is"}, onboarding ${verify ? "completed" : "left as-is"}`);
   console.log(`  user: ${identity.auth.user.fullName} (${identity.auth.userId})`);
 } finally {
   await db.$disconnect();

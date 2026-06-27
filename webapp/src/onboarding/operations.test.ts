@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ensureOnboarded, setPreferredName, getAppData } from "./operations";
+import { ensureOnboarded, setPreferredName, getAppData, completeOnboarding } from "./operations";
 import { mockContext } from "../test/mockContext";
 
 /**
@@ -31,6 +31,8 @@ describe("ensureOnboarded — idempotency", () => {
       .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
     m.entities.Project.findFirst.mockResolvedValue(null); // General missing in both
     m.entities.Project.create.mockResolvedValue({ id: "gen" });
+    // Existing user already has tasks → seed guard skips.
+    m.entities.Task.count.mockResolvedValue(3);
 
     const result = await ensureOnboarded(undefined as never, m.context);
 
@@ -44,6 +46,8 @@ describe("ensureOnboarded — idempotency", () => {
       data: expect.objectContaining({ name: "General", lensId: "lens-work", userId: "user-1" }),
       select: { id: true },
     });
+    // No example task seeded — user already has tasks.
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
   });
 
   it("creates only the missing lens (and only its General project)", async () => {
@@ -61,12 +65,14 @@ describe("ensureOnboarded — idempotency", () => {
       .mockResolvedValueOnce({ id: "gen-work" })
       .mockResolvedValueOnce(null);
     m.entities.Project.create.mockResolvedValueOnce({ id: "gen-me" });
+    m.entities.Task.count.mockResolvedValue(1);
 
     const result = await ensureOnboarded(undefined as never, m.context);
 
     expect(result.createdLenses).toEqual([{ id: "lens-me", name: "Me" }]);
     expect(m.entities.Lens.create).toHaveBeenCalledTimes(1);
     expect(m.entities.Project.create).toHaveBeenCalledTimes(1);
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
   });
 
   it("creates nothing when both lenses and both General projects exist", async () => {
@@ -80,12 +86,102 @@ describe("ensureOnboarded — idempotency", () => {
     m.entities.Project.findFirst
       .mockResolvedValueOnce({ id: "gen-work" })
       .mockResolvedValueOnce({ id: "gen-me" });
+    m.entities.Task.count.mockResolvedValue(5);
 
     const result = await ensureOnboarded(undefined as never, m.context);
 
     expect(result.createdLenses).toEqual([]);
     expect(m.entities.Lens.create).not.toHaveBeenCalled();
     expect(m.entities.Project.create).not.toHaveBeenCalled();
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("ensureOnboarded — first-run seed", () => {
+  it("seeds exactly one TODAY task in the Me lens when the user has zero tasks", async () => {
+    const m = mockContext();
+    // Both lenses already exist; both General projects exist (we're isolating
+    // the seed path, not the lens/project find-or-create).
+    m.entities.Lens.findFirst
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // lens loop
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me" })
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // project loop
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
+    m.entities.Project.findFirst
+      .mockResolvedValueOnce({ id: "gen-work" })
+      .mockResolvedValueOnce({ id: "gen-me" });
+    m.entities.Task.count.mockResolvedValue(0); // ← zero-task guard triggers
+    m.entities.Task.create.mockResolvedValue({ id: "seed-task" });
+
+    await ensureOnboarded(undefined as never, m.context);
+
+    // Exactly one task, in the Me lens, TODAY/NORMAL/M, the magic-moment seed.
+    expect(m.entities.Task.create).toHaveBeenCalledTimes(1);
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: "user-1",
+        lensId: "lens-me",
+        status: "TODAY",
+        priority: "NORMAL",
+        size: "M",
+        description: expect.any(String),
+      }),
+      select: { id: true },
+    });
+  });
+
+  it("seeds nothing when the user already has at least one task", async () => {
+    const m = mockContext();
+    m.entities.Lens.findFirst
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me" })
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
+    m.entities.Project.findFirst
+      .mockResolvedValueOnce({ id: "gen-work" })
+      .mockResolvedValueOnce({ id: "gen-me" });
+    m.entities.Task.count.mockResolvedValue(2); // ← non-zero → no seed
+
+    await ensureOnboarded(undefined as never, m.context);
+
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
+  });
+
+  it("seeds nothing when the Me lens is absent (no home for the seed)", async () => {
+    const m = mockContext();
+    // Work exists, Me somehow missing — defensive: don't seed into a null lens.
+    m.entities.Lens.findFirst
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // lens loop
+      .mockResolvedValueOnce(null)                               // Me missing in lens loop
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // project loop
+      .mockResolvedValueOnce(null);                              // Me missing in project loop
+    m.entities.Project.findFirst.mockResolvedValue({ id: "gen-work" });
+    m.entities.Task.count.mockResolvedValue(0);
+
+    await ensureOnboarded(undefined as never, m.context);
+
+    // meLensId stays null → seed skipped, even though taskCount is 0.
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("completeOnboarding — guards + behavior", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(completeOnboarding(undefined as never, m.context)).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("sets hasSeenOnboarding=true on the user", async () => {
+    const m = mockContext();
+    m.entities.User.update.mockResolvedValue({});
+
+    const result = await completeOnboarding(undefined as never, m.context);
+
+    expect(result).toEqual({ hasSeenOnboarding: true });
+    expect(m.entities.User.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { hasSeenOnboarding: true },
+    });
   });
 });
 

@@ -26,6 +26,7 @@ model User {
   fullName       String
   firstName      String
   preferredName  String? // set during onboarding; defaults to firstName when null
+  hasSeenOnboarding Boolean @default(false) // true once the user has completed/skipped /welcome (server-side, not localStorage)
 
   // Work-tracker entities
   lenses     Lens[]

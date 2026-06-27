@@ -20,7 +20,7 @@ import { SomedayPage } from "./src/lists/SomedayPage" with { type: "ref" };
 import { ProjectsPage } from "./src/projects/ProjectsPage" with { type: "ref" };
 import { GoalsPage } from "./src/goals/GoalsPage" with { type: "ref" };
 import { LogbookPage } from "./src/logbook/LogbookPage" with { type: "ref" };
-import { ensureOnboarded, getAppData, setPreferredName } from "./src/onboarding/operations" with { type: "ref" };
+import { ensureOnboarded, getAppData, setPreferredName, completeOnboarding } from "./src/onboarding/operations" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
@@ -135,8 +135,9 @@ export default app({
     action(createGoal, { entities: ["Goal"], auth: true }),
     query(getLogbook, { entities: ["Task", "Project"], auth: true }),
     query(getAppData, { entities: ["Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
-    action(ensureOnboarded, { entities: ["Lens", "Project"], auth: true }),
+    action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),
     action(setPreferredName, { entities: ["User"], auth: true }),
+    action(completeOnboarding, { entities: ["User"], auth: true }),
     query(getInboxItems, { entities: ["InboxItem"], auth: true }),
     action(createInboxItem, { entities: ["InboxItem"], auth: true }),
     action(triageInboxItem, { entities: ["InboxItem", "Task", "Project", "Resource"], auth: true }),
