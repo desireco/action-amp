@@ -87,21 +87,6 @@
   }
 }
 
-/* brand mark on welcome */
-.aa-ob-brand {
-  margin-bottom: 28px;
-}
-.aa-ob-brand .aa-brand-mark {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--aa-radius-xl);
-  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 12px 32px var(--aa-teal-tint-shadow);
-}
-
 /* eyebrow */
 .aa-ob-eyebrow {
   font-size: 11px;
@@ -130,12 +115,6 @@
   color: white;
   margin-bottom: 14px;
   max-width: 18ch;
-}
-.aa-ob-final {
-  margin-top: 20px;
-  font-weight: 300;
-  font-size: 30px;
-  color: var(--aa-teal);
 }
 
 /* body */
@@ -269,6 +248,11 @@
   font-weight: 600;
   color: var(--aa-text);
 }
+.aa-ob-loop-focus {
+  /* The focus card is a single centered element; no flex layout needed
+     beyond what .aa-ob-loop-visual provides. Kept for selector symmetry
+     with -capture / -triage. */
+}
 
 /* ============================================================
    FOOTER CTA
@@ -278,6 +262,13 @@
   text-align: center;
   position: relative;
   z-index: 2;
+}
+
+/* Inline error when completeOnboarding fails — calm, not a guilt-trip red. */
+.aa-ob-error {
+  margin: 0 0 var(--aa-space-md);
+  font-size: 0.9rem;
+  color: var(--aa-amber, #b8743a);
 }
 
 /* Preferred-name text input (onboarding step 0).
@@ -332,41 +323,6 @@
 }
 .aa-ob-cta:active {
   transform: scale(0.96);
-}
-
-/* ============================================================
-   DONE PAGE
-   ============================================================ */
-.aa-ob-done-page {
-  justify-content: center;
-}
-.aa-ob-done-circle {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--aa-radius-full);
-  background: var(--aa-teal);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
-  box-shadow: 0 12px 32px var(--aa-teal-tint-shadow);
-  animation: aa-ob-done-pop 0.5s var(--aa-ease-spring) both;
-}
-.aa-ob-done-circle svg {
-  color: white;
-  width: 30px;
-  height: 30px;
-}
-@keyframes aa-ob-done-pop {
-  0% {
-    transform: scale(0);
-  }
-  60% {
-    transform: scale(1.15);
-  }
-  100% {
-    transform: scale(1);
-  }
 }
 
 /* ============================================================

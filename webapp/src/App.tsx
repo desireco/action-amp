@@ -24,12 +24,14 @@ export function App() {
   const isApp = location.pathname.startsWith("/app");
 
   // First-run redirect: send brand-new users to onboarding before /app.
-  // Skip when: unauthenticated (let the /login redirect handle it), already on
-  // /welcome (avoid a redirect loop), or the flag hasn't loaded yet (user is
-  // undefined during the initial auth resolve — wait for it).
+  // Scoped to /app* paths only — we don't want to yank an authenticated-but-
+  // unonboarded user off /email-verification, /about, /founding-100/welcome,
+  // etc. (those should stay reachable). Skip when already on /welcome (avoid a
+  // loop) or while the auth session is still resolving (user undefined).
   if (
     user &&
     user.hasSeenOnboarding === false &&
+    isApp &&
     location.pathname !== "/welcome"
   ) {
     return <Navigate to="/welcome" replace />;

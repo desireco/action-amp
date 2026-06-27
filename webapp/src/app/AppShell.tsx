@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuth, logout } from "wasp/client/auth";
 import { useQuery, ensureOnboarded, getAppData, createInboxItem } from "wasp/client/operations";
@@ -77,8 +77,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Idempotent: ensures the user has the default Work/Me lenses (covers both
   // existing users and new signups). Runs once per app load — but ONLY when
   // authenticated, so the /login redirect path doesn't 500 these ops.
+  // Guarded by a ref: React StrictMode (or a fast remount) double-fires effects
+  // in dev, and ensureOnboarded's first-run task seed is check-then-create
+  // (not atomic) — a double-fire could seed two "Try it" tasks. The ref ensures
+  // we fire once per user session; the count===0 guard inside handles across
+  // logins. Production (no StrictMode) is unaffected.
+  const onboardedFor = useRef<string | null>(null);
   useEffect(() => {
-    if (user) ensureOnboarded();
+    if (user && onboardedFor.current !== user.id) {
+      onboardedFor.current = user.id;
+      ensureOnboarded();
+    }
   }, [user, ensureOnboarded]);
 
   // Shell data: lenses (sidebar switch + query scoping) + nav counts.

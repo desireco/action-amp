@@ -49,11 +49,19 @@ try {
       where: { providerName_providerUserId: { providerName: "email", providerUserId: email } },
       data: { providerData: JSON.stringify(data) },
     });
+    // Ensure onboarding is marked complete so the first-run gate (App.tsx)
+    // doesn't redirect this user to /welcome — e2e tests expect to land on /app.
+    await db.user.update({
+      where: { id: existing.auth.userId },
+      data: { hasSeenOnboarding: true },
+    });
     console.log(email);
     process.exit(0);
   }
 
   // Fresh create: User → Auth → verified email identity, matching Wasp's shape.
+  // hasSeenOnboarding=true: the first-run gate would otherwise send the fresh
+  // e2e user to /welcome, breaking the signupNewUser → waitForURL(/\/app/).
   const providerData = JSON.stringify({
     hashedPassword: await hashPassword(password),
     isEmailVerified: true,
@@ -65,6 +73,7 @@ try {
     data: {
       fullName,
       firstName,
+      hasSeenOnboarding: true,
       auth: {
         create: {
           identities: {

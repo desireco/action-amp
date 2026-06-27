@@ -40,8 +40,6 @@ const STEPS: { eyebrow: string; title: string; body: string; visual: "capture" |
   },
 ];
 
-const ONBOARDING_KEY = "actionamp_onboarding_complete"; // kept only to short-circuit a re-flash before the server flag lands
-
 /**
  * Step 0: preferred-name prompt. Self-contained — owns its input, save, and
  * submit button so the carousel shell stays a pure orchestrator.
@@ -108,9 +106,11 @@ function NameStep({
 
 /** Minimal loop visuals — calm, one shape each, no animated fingers. */
 function LoopVisual({ kind }: { kind: "capture" | "triage" | "focus" }) {
+  // Decorative — the panel's title + body carry all the meaning, so the whole
+  // visual is hidden from screen readers to avoid a noisy duplicate readout.
   if (kind === "capture") {
     return (
-      <div className="aa-ob-loop-visual aa-ob-loop-capture">
+      <div className="aa-ob-loop-visual aa-ob-loop-capture" aria-hidden="true">
         <span className="aa-ob-kbd">⌘K</span>
         <span className="aa-ob-capture-line">a thought…</span>
       </div>
@@ -118,7 +118,7 @@ function LoopVisual({ kind }: { kind: "capture" | "triage" | "focus" }) {
   }
   if (kind === "triage") {
     return (
-      <div className="aa-ob-loop-visual aa-ob-loop-triage">
+      <div className="aa-ob-loop-visual aa-ob-loop-triage" aria-hidden="true">
         <div className="aa-ob-triage-row">
           <span className="aa-ob-triage-text">Call Sam</span>
           <span className="aa-ob-triage-key">T</span>
@@ -132,9 +132,9 @@ function LoopVisual({ kind }: { kind: "capture" | "triage" | "focus" }) {
   }
   // focus
   return (
-    <div className="aa-ob-loop-visual aa-ob-loop-focus">
+    <div className="aa-ob-loop-visual aa-ob-loop-focus" aria-hidden="true">
       <div className="aa-ob-focus-card">
-        <div className="aa-ob-focus-check" aria-hidden="true">
+        <div className="aa-ob-focus-check">
           <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
             <path
               d="M3.5 8.5l3 3 6-7"
@@ -157,30 +157,30 @@ export function OnboardingPage() {
   const [pageIdx, setPageIdx] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [completionError, setCompletionError] = useState(false);
 
   const currentPage = PAGES[pageIdx];
   const stepIdx = pageIdx - 1; // name(0) → -1; steps start at idx 1
 
   const finish = useCallback(async () => {
     // Persist the flag server-side so onboarding shows exactly once across
-    // devices. Swallow errors: even if the write fails, the client routes to
-    // /app and the next load will retry (the gate is the server flag, not
-    // this call's success).
+    // devices. If this fails, do NOT navigate to /app — the gate in App.tsx
+    // reads the same server flag, so a false flag would bounce the user right
+    // back to /welcome (a redirect loop). Instead surface an error + retry.
     setCompleting(true);
-    setLeaving(true);
+    setCompletionError(false);
     try {
       await completeOnboarding();
-      try {
-        localStorage.setItem(ONBOARDING_KEY, "true");
-      } catch {
-        /* ignore storage errors */
-      }
+      setLeaving(true);
+      // Give useAuth a tick to refetch the invalidated User before navigating,
+      // so the gate sees the updated flag and doesn't fire on /app.
+      navigate("/app");
     } catch {
-      /* non-fatal: the server gate is authoritative; worst case it re-shows once */
-    } finally {
       setCompleting(false);
+      setCompletionError(true);
+      return; // stay on the last panel; let the user retry
     }
-    navigate("/app");
+    setCompleting(false);
   }, [navigate]);
 
   const next = useCallback(() => {
@@ -252,29 +252,24 @@ export function OnboardingPage() {
       {/* Footer CTA — hidden on the name step (it renders its own button) */}
       {currentPage !== "name" && (
         <div className="aa-ob-foot">
+          {completionError && (
+            <p className="aa-ob-error" role="alert">
+              Couldn’t save — check your connection and try again.
+            </p>
+          )}
           <button
             className="aa-ob-cta"
             onClick={next}
             disabled={completing}
           >
-            {stepIdx >= STEPS.length - 1 ? "Go →" : "Next →"}
+            {completing
+              ? "Saving…"
+              : stepIdx >= STEPS.length - 1
+                ? "Go →"
+                : "Next →"}
           </button>
         </div>
       )}
     </div>
   );
-}
-
-/**
- * Check if onboarding has been completed.
- * Kept for backwards-compat; the authoritative gate is now the server-side
- * `User.hasSeenOnboarding` flag (read in App.tsx via useAuth). This helper
- * reads the legacy localStorage stamp only.
- */
-export function hasCompletedOnboarding(): boolean {
-  try {
-    return localStorage.getItem(ONBOARDING_KEY) === "true";
-  } catch {
-    return false;
-  }
 }
