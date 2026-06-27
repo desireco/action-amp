@@ -1,6 +1,6 @@
 ---
 feature: first-run-experience
-status: building
+status: review
 spec_owner: discover
 build_owner: build
 ---
