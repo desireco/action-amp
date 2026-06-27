@@ -4,6 +4,7 @@ import { getTopTask, toggleTaskDone, snoozeTask, startTask, pauseTask } from "wa
 import { useQueryClient } from "@tanstack/react-query";
 import { WhatNowCard, FocusMode, SnoozeSheet, type FocusTask, type SnoozePreset } from "../components/ui";
 import { useActiveLens } from "./lensContext";
+import { composeWhy } from "./focusWhy";
 import "./WhatNowPage.css";
 
 /**
@@ -93,6 +94,12 @@ export function WhatNowPage() {
     Boolean,
   ) as string[];
 
+  // The honest "why this?" — composed from the same fields getTopTask ranked on
+  // (startedAt → priority → due → size). Empty when there's nothing truthful
+  // to add (e.g. a Normal task with no due date); in that case the why line is
+  // omitted entirely rather than stating a fake reason. See focusWhy.ts.
+  const why = composeWhy(topTask);
+
   return (
     <>
       <WhatNowCard
@@ -101,8 +108,8 @@ export function WhatNowPage() {
           project: topTask.project?.name,
           due: dueLabel ?? undefined,
           size: sizeLabel(topTask.size),
-          why: "Because it's",
-          whyEmphasis: `${priorityLabel(topTask.priority)}${dueLabel ? ` · ${dueLabel}` : ""}.`,
+          why: why.lead || undefined,
+          whyEmphasis: why.detail || undefined,
         }}
         context={`${isNow ? "Now" : "Next"} · ${lens.name}`}
         state={isNow ? "now" : "next"}
@@ -147,10 +154,6 @@ export function WhatNowPage() {
 function sizeLabel(size: string | null | undefined): string {
   if (!size) return "";
   return { S: "15 min", M: "30 min", L: "1 hr", XL: "2 hr+" }[size] ?? size;
-}
-
-function priorityLabel(priority: string): string {
-  return priority === "IMPORTANT" ? "Important" : priority === "LOW" ? "Low" : "Normal";
 }
 
 // Relative day label for a due date: "today", "tomorrow", "Fri", or "Jun 30".
