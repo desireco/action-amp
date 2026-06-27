@@ -4,24 +4,26 @@ import { googleSignInUrl } from "wasp/client/auth";
  * "Continue with Google" button for the login + signup pages.
  *
  * Uses Wasp's generated `googleSignInUrl` (the OAuth start URL) rather than a
- * hand-rolled flow — Wasp handles the redirect/callback/session. Rendered as a
- * plain anchor styled to sit above the email form, matching AuthLayout tokens.
+ * hand-rolled OAuth flow — Wasp handles the redirect/callback/session. Rendered
+ * as a plain anchor styled to sit above the email form, matching AuthLayout
+ * tokens.
  *
- * Accessibility: it's a link (navigates away to Google), so an <a> is correct
- * (not a <button>); `googleSignInUrl` is null until the server resolves the
- * OAuth config, so we render the disabled state while it's loading.
+ * Why custom (not Wasp's stock `GoogleSignInButton`)? The stock button ships its
+ * own `SocialButton` styles that don't match our `--aa-*` design tokens; this
+ * re-skin reuses the same `googleSignInUrl` from the SDK but renders it in our
+ * AuthLayout card. It is NOT a hand-rolled OAuth flow — same URL, our chrome.
+ *
+ * Note: `googleSignInUrl` is a plain string constant built synchronously from
+ * `config.apiUrl` (`${apiUrl}/auth/google/login`) — it is never null. If Google
+ * OAuth is misconfigured server-side, the click still navigates to the login
+ * URL and the server returns the error. That's the honest behavior; we don't
+ * fake a disabled state.
  */
 export function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
-  // `googleSignInUrl` is a string when the OAuth provider is configured, or
-  // null during the initial client resolve. We render the anchor unconditionally
-  // (Wasp's hook keeps the URL stable); if null, the link no-ops safely.
-  const href = googleSignInUrl as string | null;
-
   return (
     <a
       className="aa-auth-google"
-      href={href ?? undefined}
-      aria-disabled={href == null}
+      href={googleSignInUrl}
       aria-label={label}
     >
       <GoogleGlyph />
@@ -30,7 +32,9 @@ export function GoogleButton({ label = "Continue with Google" }: { label?: strin
   );
 }
 
-/** The standard 4-color Google "G". Inline SVG so we don't add an asset dep. */
+/** The standard 4-color Google "G". Inline SVG so we don't add an asset dep.
+ *  The 4 hex colors are Google's official brand mark (a recognized third-party
+ *  logo), not decorative color — the exception to "color must carry meaning." */
 function GoogleGlyph() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">

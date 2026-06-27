@@ -170,10 +170,6 @@
   border-color: var(--aa-teal);
   background: var(--aa-teal-soft);
 }
-.aa-auth-google[aria-disabled="true"] {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 /* Divider between the Google button and the email form */
 .aa-auth-or {
