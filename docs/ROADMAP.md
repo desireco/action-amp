@@ -371,10 +371,17 @@ decision is a guess. This is why `observability-minimal` is item 2, not item 9.
 
 ## Open strategic questions (for Discover to resolve, not Build)
 
-1. **Is the wedge defensible in 2026?** "Show one task" is now a category.
-   The honest answer must lean on the transparent matcher + structure depth +
-   brand. Do we believe that enough to invest in `focus-engine-v2` before
-   validation, or after?
+1. **Is the wedge defensible in 2026?** — **ANSWERED 2026-06-27 (roast, RESHAPE).**
+   "Show one task" is a crowded category (Llama Life/Tiimo/Bento/One Thing/
+   Forget), none proven at $80/yr. The wedge is *demand-voiced* (ADHD users
+   ask "which of the 97 things do I prioritize NOW?" — that's the pitch,
+   unprompted) but **not yet defensible**, because the only real moat — the
+   matcher — is the weakest shipped part (an honest priority sort). Verdict:
+   keep the thesis + structure depth; **the matcher (`focus-engine-v2` +
+   `focus-why-transparent`) must ship and *surprise* before the $79.50 price
+   is coherent.** Full reasoning + the zero-cost 48-hour manual-matcher test
+   that validates the core assumption: `docs/research/wedge-defensibility-
+   roast-2026-06-27.md`.
 2. **Audience or product first?** This roadmap bets **product-cleanup +
    audience** in parallel (items 1–6), new features after. The alternative
    (ship more features, then seek audience) is the classic indie death spiral.
