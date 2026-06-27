@@ -92,9 +92,11 @@ item; Build pulls `ready`.**
 4. **observability-minimal** (`ready`) — ship one privacy-respecting tracker +
    the 4 funnel events (land → signup → app-open → checkout). The one number
    that matters: visitor → checkout %.
-5. **social-auth-google** (`ready`) — email-only is the #1 predictable friction
-   at the moment of truth. Google (and only Google) first. Depends on
-   legal-pages-oauth (now in review).
+5. **social-auth-google** (`done` 2026-06-27, code-side) — Google OAuth added
+   alongside email; config verified, never-throws name resolution. **Non-code
+   gate outstanding (your side):** create the Google Cloud OAuth client +
+   register redirect URIs + add a test user — see §GTM prep B. The callback
+   verifies once the client exists. → §Shipped.
 6. **distribution-quietlaunch** — (no spec; it's a campaign, not a build item)
    get the existing product in front of ~500 of the right people in 4 weeks.
 
@@ -106,11 +108,11 @@ item; Build pulls `ready`.**
    post-completion dead-end, empty-Inbox affordance). Depends on
    `observability-minimal`. The data-gated fixes (re-engagement email, etc.)
    are explicitly deferred to wait on the numbers.
-8. **focus-why-transparent** (`ready`) — the "why this" line under What Now is
-   static copy that often lies. Make it state the *actual* ranking reason in
-   plain English. No matcher change, no schema change. Prerequisite for
-   focus-engine-v2. **Coordinate with the `fix/what-now-surfaces-triaged-tasks`
-   branch — it reworks `WhatNowPage.tsx`; land this after that merges.**
+8. **focus-why-transparent** (`done` 2026-06-27) — the "why this?" line under
+   What Now now states the *actual* ranking reason, never fabricating. The
+   "never lies" invariant verified across all input combinations; rendering
+   blocker caught + fixed. Prerequisite for focus-engine-v2 (which extends
+   this line to explain moment-fit). → §Shipped.
 9. **focus-engine-v2** (`ready`, **gated on the matcher test**) — the
    moment-aware matcher: time-available + energy refinement *on top of* the
    existing priority sort (FEATURES.md F10's planned layer). The matcher
@@ -191,6 +193,20 @@ What landed and was signed off:
   fixed. **Open item carried forward:** contact addresses
   (`privacy@`/`legal@actionamp.com`) must be confirmed real/monitored before
   launch — see §GTM prep B. Review writeup at `docs/reviews/legal-pages-oauth.md`.
+- **social-auth-google** (`done` 2026-06-27, code-side) — Google OAuth added
+  alongside email; Wasp 0.24 config verified, the Google `userSignupFields`
+  never throws (name→email-localpart→`"there"`). Review blocker (false
+  null/loading story on the button) caught + fixed. **Open items carried
+  forward (non-code, your side):** create the Google Cloud OAuth client +
+  register dev/prod redirect URIs + add a test user — see §GTM prep B. The
+  actual callback can't be verified until the client exists. Review writeup at
+  `docs/reviews/social-auth-google.md`.
+- **focus-why-transparent** (`done` 2026-06-27) — the "why this?" line under
+  What Now is now composed from `getTopTask`'s actual ranking factors, never
+  fabricating a reason. The "never lies" invariant verified across all input
+  combinations; the rendering blocker (NORMAL-priority line dropped) caught +
+  fixed. +15 tests (14 helper + 1 card regression guard). Review writeup at
+  `docs/reviews/focus-why-transparent.md`.
 
 (The core loop, billing, and deploy are shipped but were never tracked as duet
 specs — they predate the protocol.)
