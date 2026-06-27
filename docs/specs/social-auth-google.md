@@ -1,6 +1,6 @@
 ---
 feature: social-auth-google
-status: building
+status: review
 spec_owner: discover
 build_owner: build
 ---
