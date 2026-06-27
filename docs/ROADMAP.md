@@ -100,9 +100,12 @@ item; Build pulls `ready`.**
 
 ### Next (only after the gauntlet produces a signal)
 
-7. **retention-criticalpath** (`draft` — needs spec) — instrument and fix the
-   first 7 days. The drop from "signed up" to "used What Now on day 3" is
-   where this product lives or dies. Overlaps with first-run-experience.
+7. **retention-criticalpath** (`ready`) — instrument the first-7-days funnel
+   (`lastSeenAt` + 3 activation events: seed-completed, first-capture,
+   first-triage) and close the known dead-ends (onboarding→seed disconnect,
+   post-completion dead-end, empty-Inbox affordance). Depends on
+   `observability-minimal`. The data-gated fixes (re-engagement email, etc.)
+   are explicitly deferred to wait on the numbers.
 8. **focus-why-transparent** (`ready`) — the "why this" line under What Now is
    static copy that often lies. Make it state the *actual* ranking reason in
    plain English. No matcher change, no schema change. Prerequisite for
