@@ -111,11 +111,14 @@ item; Build pulls `ready`.**
    plain English. No matcher change, no schema change. Prerequisite for
    focus-engine-v2. **Coordinate with the `fix/what-now-surfaces-triaged-tasks`
    branch — it reworks `WhatNowPage.tsx`; land this after that merges.**
-9. **focus-engine-v2** (`ready`) — the moment-aware matcher: time-available +
-   energy refinement *on top of* the existing priority sort (FEATURES.md F10's
-   planned layer, not a speculative bet). The matcher re-ranks within a
-   priority tier only — never demotes priority. Pro-gated. Sequenced after the
-   front-door fixes; this improves the loop for users already inside.
+9. **focus-engine-v2** (`ready`, **gated on the matcher test**) — the
+   moment-aware matcher: time-available + energy refinement *on top of* the
+   existing priority sort (FEATURES.md F10's planned layer). The matcher
+   re-ranks within a priority tier only — never demotes priority. Pro-gated.
+   **Before building: run `docs/research/matcher-test-runbook.md`** (zero-cost,
+   ~20 people, 2 days) — the roast (<`docs/research/wedge-defensibility-roast-
+   2026-06-27.md`>) found the matcher is the only real moat but currently the
+   weakest shipped part. The test decides: build as-spec'd, reshape, or icebox.
 10. **command-palette-search** (`ready`) — `⌘K` command palette (reclaimed
     from capture; capture becomes `⌘/`-only) + full-text search across **all**
     tasks (open + done). The two Pro-tier features most likely to justify the

@@ -7,6 +7,15 @@ build_owner: build
 
 # Feature: Focus engine v2 — moment-aware matcher
 
+> **Status: ready — but gated on the manual-matcher test
+> (`docs/research/matcher-test-runbook.md`).** The wedge-defensibility roast
+> (<`docs/research/wedge-defensibility-roast-2026-06-27.md`>) found the matcher
+> is the only real moat and currently the weakest shipped part. **Run the
+> zero-cost test before building this:** if the algorithm's pick doesn't
+> *surprise* real overwhelmed people, the spec's logic needs reshaping (or the
+> matcher isn't the wedge). The decision rule in the runbook tells Build/Discover
+> whether to build as-spec'd, reshape, or icebox.
+
 ## Summary
 
 Add the **time-available + energy** refinement layer to the What Now matcher,
