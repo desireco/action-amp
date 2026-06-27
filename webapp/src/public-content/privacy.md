@@ -1,6 +1,6 @@
 # Privacy Policy
 
-_Last updated: June 27, 2026_
+*Last updated: June 27, 2026*
 
 This policy describes what ActionAmp collects, why, and what we do (and don't do) with it. We wrote it in plain language because privacy policies shouldn't require a lawyer to understand.
 
@@ -17,7 +17,7 @@ We share the minimum each one needs to do its job, and nothing more.
 - **Google** — for optional "Sign in with Google" authentication. When you use it, Google confirms your identity to us and shares your name and email address. We do not share your tasks or content with Google, and we cannot read your Google data beyond that.
 - **Stripe** — for payments. Your card data goes directly to Stripe; we never see or store it. We keep only a Stripe customer reference and a record of your payments so we can manage your plan.
 - **Resend** — our email provider, used to deliver authentication and account emails (signup confirmation, password resets). They see only what's needed to deliver the message.
-- **Analytics** — we use a privacy-respecting analytics provider to understand aggregate usage. It is cookieless, does no cross-site tracking, and does not sell data. (We'll name the specific provider here once it's confirmed.)
+- **Analytics** — we use a privacy-respecting analytics provider to understand aggregate usage. It does no cross-site tracking and does not sell your data. (We'll name the specific provider here once it's confirmed.)
 
 ## What we don't do
 
@@ -32,7 +32,7 @@ Your data lives in a managed database. Passwords are hashed with industry-standa
 
 ## Data retention
 
-We keep your tasks and content for as long as your account exists. Your logbook and history are retained per your plan (unlimited on Pro; subject to the free-tier limits otherwise). Deleting your account removes everything permanently — we don't keep "soft" copies.
+We keep your tasks and content for as long as your account exists. Deleting your account removes everything permanently — see "Your rights" below.
 
 ## Your rights
 
