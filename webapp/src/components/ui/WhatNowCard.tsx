@@ -89,10 +89,11 @@ export function WhatNowCard({ task, context, onComplete, onNotNow, onDo, state =
         </div>
       )}
 
-      {task.why && (
+      {(task.why || task.whyEmphasis) && (
         <p className="aa-wn-card__why">
           {task.why}
-          {task.whyEmphasis && <strong> {task.whyEmphasis}</strong>}
+          {task.why && task.whyEmphasis && " "}
+          {task.whyEmphasis && <strong>{task.whyEmphasis}</strong>}
         </p>
       )}
 

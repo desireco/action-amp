@@ -98,7 +98,15 @@ export function WhatNowPage() {
   // (startedAt → priority → due → size). Empty when there's nothing truthful
   // to add (e.g. a Normal task with no due date); in that case the why line is
   // omitted entirely rather than stating a fake reason. See focusWhy.ts.
+  //
+  // The lead → why (plain), detail → whyEmphasis (bold amber) split only holds
+  // when there IS a lead. For a lead-less NORMAL reason (e.g. "Overdue"), the
+  // detail carries the whole reason and should render as plain text — so we
+  // promote it to `why`. This keeps the visual weight correct: amber emphasis
+  // marks an *appended* clause, not a standalone reason.
   const why = composeWhy(topTask);
+  const whyLead = why.lead || why.detail;
+  const whyDetail = why.lead ? why.detail : "";
 
   return (
     <>
@@ -108,8 +116,8 @@ export function WhatNowPage() {
           project: topTask.project?.name,
           due: dueLabel ?? undefined,
           size: sizeLabel(topTask.size),
-          why: why.lead || undefined,
-          whyEmphasis: why.detail || undefined,
+          why: whyLead || undefined,
+          whyEmphasis: whyDetail || undefined,
         }}
         context={`${isNow ? "Now" : "Next"} · ${lens.name}`}
         state={isNow ? "now" : "next"}

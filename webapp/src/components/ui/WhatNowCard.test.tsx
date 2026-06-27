@@ -50,6 +50,19 @@ describe("WhatNowCard", () => {
       const { container } = renderInContext(<WhatNowCard task={BASE_TASK} />);
       expect(container.querySelector(".aa-wn-card__why")).toBeNull();
     });
+
+    // Regression guard: a NORMAL-priority reason with no lead (e.g. "Overdue")
+    // arrives as detail-only and must still render. The what-now wiring
+    // promotes detail to `why` when there's no lead; this asserts the card
+    // renders the line off a lone `why` (no whyEmphasis) too.
+    it("renders a detail-only reason (why without whyEmphasis)", () => {
+      const { container } = renderInContext(
+        <WhatNowCard task={{ ...BASE_TASK, why: "Overdue" }} />,
+      );
+      const why = container.querySelector(".aa-wn-card__why");
+      expect(why).not.toBeNull();
+      expect(why!.textContent).toMatch(/Overdue/);
+    });
   });
 
   describe("actions — Next state (default)", () => {
