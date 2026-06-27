@@ -1,6 +1,6 @@
 ---
 feature: focus-why-transparent
-status: building
+status: review
 spec_owner: discover
 build_owner: build
 ---
