@@ -77,18 +77,17 @@ item; Build pulls `ready`.**
 
 1. **doc-reconciliation** (`ready`) — make BACKLOG.md + IMPLEMENTATION-CHECKLIST
    match the shipped code; archive done items; surface the real gap list.
-2. **first-run-experience** (`building` — `build/first-run-experience`) —
-   onboarding was dead code + taught mobile gestures the webapp lacks; new
-   users landed on empty What Now. Build has implemented it: route new signups
-   through real onboarding, swap the gesture lessons for the 3-step loop, seed
-   one magic-moment task. Adds a `hasSeenOnboarding` migration. Awaiting
-   review-gate signoff.
-3. **legal-pages-oauth** (`review` — `build/legal-pages-oauth`) — `/privacy` +
-   `/terms` were OAuth-incomplete (no Google/Stripe/analytics disclosure) and
-   stale (Terms said "free at launch" while billing is live). Build fixed the
-   content + added consent links at the signup form; two cold-context
-   reviewers passed (1 blocker found + fixed). **Awaiting Discover signoff →
-   `done`.** Prerequisite for social-auth-google.
+2. **first-run-experience** (`review`) — onboarding was dead code + taught
+   mobile gestures the webapp lacks; new users landed on empty What Now.
+   Build implemented it (onboarding routing, `hasSeenOnboarding` migration,
+   magic-moment seed task) and passed its review gate. **On main; awaiting
+   Discover signoff → `done`.**
+3. **legal-pages-oauth** (`review`) — `/privacy` + `/terms` were OAuth-incomplete
+   (no Google/Stripe/analytics disclosure) and stale (Terms said "free at
+   launch" while billing is live). Build fixed the content + added consent
+   links at the signup form; two cold-context reviewers passed (1 blocker
+   found + fixed). **On main; awaiting Discover signoff → `done`.**
+   Prerequisite for social-auth-google.
 4. **observability-minimal** (`ready`) — ship one privacy-respecting tracker +
    the 4 funnel events (land → signup → app-open → checkout). The one number
    that matters: visitor → checkout %.
@@ -139,24 +138,30 @@ item; Build pulls `ready`.**
 
 ## Branch state (2026-06-27)
 
-Unmerged feature branches beyond the spec'd work — reconciled here so the
-priority list above matches reality, not just the spec queue.
+**Working directly on `main` now — no feature branches.** The three in-flight
+branches were rebased onto main and deleted; their work is in main's history.
+Verified: `wasp compile` clean, 195 tests pass (13 files), migrations applied.
 
-- **`build/first-run-experience`** (ahead of main by 3 commits) — spec #2,
-  `building`. Onboarding routing + `hasSeenOnboarding` migration + magic-moment
-  seed task + review-gate fixes. Substantively complete; awaiting signoff.
-- **`build/legal-pages-oauth`** (ahead by 4) — spec #3, `review`. Privacy/terms
-  rewrite + consent links + review writeup (2 cold-context reviewers passed).
-  **Awaiting Discover signoff → `done`.**
-- **`fix/what-now-surfaces-triaged-tasks`** (ahead by 3, based on old main) —
-  **not a spec'd branch.** A substantial feature branch that: adds the Project
-  detail page + route (part of `friction-cleanup`), reworks triage into a
-  co-author wizard with lossless Archive (new `archive_inbox_items` migration),
-  and makes What Now surface triaged Today/Upcoming tasks. It edits
-  `WORKFLOW.md`/`TRIAGE.md`/`DATA-MODEL.md` with its own structural decisions.
-  **Action needed:** decide whether to merge it, and reconcile its doc edits
-  against the canonical docs (it predates this roadmap and may encode
-  decisions that conflict with §Free-tier audit / WORKFLOW §5).
+What landed from the consolidation:
+- **`first-run-experience` → `review`** (was `building`). Onboarding routing +
+  `hasSeenOnboarding` migration + magic-moment seed task + review writeup.
+  Build's review gate passed; **awaiting Discover signoff → `done`.**
+- **`legal-pages-oauth` → `review`** (was `ready`). Privacy/terms rewrite +
+  consent links + review writeup (2 cold-context reviewers passed, 1 blocker
+  found + fixed). **Awaiting Discover signoff → `done`.**
+- **`fix/what-now-surfaces-triaged-tasks` → merged (no spec).** A feature
+  branch that added: Project detail page + `/app/projects/:id` route (satisfies
+  part of `friction-cleanup`), a triage co-author wizard with lossless Archive
+  (new `archive_inbox_items` migration + `ARCHIVED` status), and What Now
+  surfacing triaged Today/Upcoming tasks. It also edited `WORKFLOW.md` /
+  `TRIAGE.md` / `DATA-MODEL.md` with structural decisions that `doc-reconciliation`
+  should review against the canonical docs.
+
+**Open Discover actions on main:**
+1. Sign off (or send back) the two `review` specs — read their `docs/reviews/`
+   writeups and flip to `done`.
+2. `doc-reconciliation` — now higher priority: the merged fix branch edited
+   canonical docs; reconcile them.
 
 ## Shipped
 
