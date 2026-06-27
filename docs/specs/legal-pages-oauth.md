@@ -1,6 +1,6 @@
 ---
 feature: legal-pages-oauth
-status: building
+status: review
 spec_owner: discover
 build_owner: build
 ---
