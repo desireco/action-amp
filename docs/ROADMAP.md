@@ -107,9 +107,10 @@ item; Build pulls `ready`.**
    planned layer, not a speculative bet). The matcher re-ranks within a
    priority tier only — never demotes priority. Pro-gated. Sequenced after the
    front-door fixes; this improves the loop for users already inside.
-10. **command-palette-search** (`ready`) — `⌘\` fuzzy jump + Logbook full-text
-    search. The two Pro-tier features most likely to justify the price to an
-    existing user. Depends on entitlement-enforcement.
+10. **command-palette-search** (`ready`) — `⌘K` command palette (reclaimed
+    from capture; capture becomes `⌘/`-only) + full-text search across **all**
+    tasks (open + done). The two Pro-tier features most likely to justify the
+    price to an existing user. Depends on entitlement-enforcement.
 
 ### Then (earn-the-revenue work — gated on ≥1 paying non-founder user)
 

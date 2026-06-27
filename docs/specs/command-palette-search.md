@@ -10,40 +10,55 @@ build_owner: build
 ## Summary
 
 Add the two Pro-tier "power" features the pricing page already sells but that
-don't exist: a `⌘\` command palette (fuzzy jump to any task/project/goal/view
-+ run actions), and full-text search across the Logbook. Both are the features
-most likely to justify the $79.50/yr price to an existing user who has built
-up real structure. Because they're Pro-only on paper, this spec also wires the
+don't exist: a command palette (fuzzy jump to any task/project/goal/view +
+run actions), and full-text search across **all of the user's tasks — open
+and completed**. Both are the features most likely to justify the $79.50/yr
+price to an existing user who has built up real structure, and shipping them
+makes the Pro tier honest (it currently advertises features that aren't
+there). Because they're Pro-only on paper, this spec also wires the
 entitlement gate (depends on `entitlement-enforcement`).
 
-## Why
+### Two product calls, resolved up front
 
-The audit found the command palette and search are **Pro-only in PRICING.md §4
-but don't exist at all** — there's nothing to gate. They rank highly because
-they're the *retention* features: a user who has captured hundreds of tasks
-needs to find and jump to them, and "I can finally search my own history" is
-the moment Pro becomes worth it. Shipping them also makes the Pro tier honest
-(it currently advertises features that aren't there). `⌘\` is chosen over
-`⌘K` (which is already capture) per FEATURES.md F20.
+1. **The binding is `⌘K`, not `⌘\` — and capture moves.** Today `⌘K` opens
+   capture (`useKeyboardShortcuts.ts:46`, locked 2026-06-22 with `⌘/` as the
+   documented primary). But `⌘K` is the *universal* command-palette convention
+   (Linear, Notion, Raycast, Slack). A power-user feature on `⌘\` fights every
+   new user's muscle memory — they'll hit `⌘K`, get capture, and conclude the
+   palette doesn't exist. Resolution: **the command palette takes `⌘K`**;
+   **capture becomes `⌘/` (already the documented primary) + the existing
+   `/`-in-empty-space path.** This is a small breaking change to a locked
+   shortcut, but it's the right one — `⌘K` = "do/command" is stronger muscle
+   memory than `⌘K` = "capture," and capture keeps a one-key path. Update the
+   cheatsheet + FEATURES.md §6 to match.
+2. **Search covers open *and* completed tasks, not Logbook-only.** The earlier
+   "Logbook-only" framing was backwards: a user with 200 tasks who wants to
+   find the open "Email Sarah" task isn't helped by searching only completed
+   items. The "What Now is a chooser, not a list" principle governs the *home
+   screen* — it doesn't forbid search elsewhere. Search is a Planning/Review
+   tool, and it spans the whole library.
 
 ## Done-conditions
 
-- [ ] **The command palette opens on `⌘\`.** A new `CommandPalette` overlay
+- [ ] **The command palette opens on `⌘K`.** A new `CommandPalette` overlay
       (same overlay shell as `CapturePopover` — reuse `Overlays.css` patterns).
-      Registered in `useKeyboardShortcuts.ts` alongside the existing `⌘K`/
-      `⌘/` capture binding. Disabled while typing in inputs (same rule as the
-      global handler).
-- [ ] **The palette fuzzy-searches and jumps.** Typing matches against: open
-      Tasks (description), Projects (name), Goals (name), and a fixed set of
-      view/action targets ("Today", "What Now", "Inbox", "Logbook",
-      "Settings", "Toggle theme"). Arrow/Enter selects; the selected item
-      navigates (tasks → `/app/tasks/:id`, projects → `/app/projects/:id`,
-      views → their route). Esc closes.
-- [ ] **Logbook full-text search exists.** A new server query
-      `searchLogbook({ query })` (or a param on `getLogbook`) doing a
-      case-insensitive `contains` search over completed Tasks' `description`
-      + `content`, scoped to the user. Surfaced as a search box on the
-      Logbook page (`LogbookPage.tsx`) that filters the list live (or on Enter).
+      Registered in `useKeyboardShortcuts.ts`. **`⌘K` is reclaimed from
+      capture** — capture's `⌘K` binding is removed; capture keeps `⌘/` (its
+      documented primary) + the bare-`/`-in-empty-space path. Disabled while
+      typing in inputs (same rule as the global handler).
+- [ ] **The palette fuzzy-searches and jumps.** Typing matches against: all
+      Tasks (open + done — description), Projects (name), Goals (name), and a
+      fixed set of view/action targets ("Today", "What Now", "Inbox",
+      "Logbook", "Settings", "Toggle theme"). Arrow/Enter selects; the selected
+      item navigates (tasks → `/app/tasks/:id` or `/app/logbook` if done,
+      projects → `/app/projects/:id`, views → their route). Esc closes.
+- [ ] **Full-text search exists across all the user's tasks.** A new server
+      query `searchTasks({ query })` doing a case-insensitive `contains`
+      search over Tasks' `description` + `content`, scoped to the user,
+      returning both open and completed (with a done/open flag so the UI can
+      distinguish). Surfaced as a search box that the palette and/or a
+      Planning-area page can call. **Not Logbook-only** — see the Summary's
+      second product call.
 - [ ] **Both features are gated to paid plans.** Uses
       `isPlanActive(context.user.plan, context.user.planRenewsAt)` on the
       server query, and the client hides/disables the `⌘\` hint + search box
@@ -54,24 +69,28 @@ the moment Pro becomes worth it. Shipping them also makes the Pro tier honest
       common choice; tiny) or equivalent. No bespoke edit-distance code.
 - [ ] **Keyboard-first, mouse-optional.** Every palette action reachable
       without the mouse (arrow nav + Enter), per PRODUCT.md "keyboard-first."
-- [ ] **Tests:** a Vitest case for `searchLogbook` (match, no-match,
-      cross-user isolation via userId scoping). A component test for the
-      palette's open/filter/select/navigate is nice-to-have.
-- [ ] **`wasp compile` passes. Existing suite green.**
+- [ ] **Tests:** a Vitest case for `searchTasks` (match, no-match,
+      cross-user isolation via userId scoping, open-vs-done flag returned).
+      A component test for the palette's open/filter/select/navigate is
+      nice-to-have. An e2e asserting `⌘K` opens the palette (not capture) is
+      required — this is the breaking-change guarantee.
+- [ ] **`wasp compile` passes. Existing suite green** — note: any test or e2e
+      that asserts `⌘K` → capture must be updated to `⌘/` → capture. The
+      cheatsheet copy (`ShortcutCheatsheet`) and FEATURES.md §6 are updated to
+      reflect the new binding.
 - [ ] **Cold-context reviewer passes.**
 
 ## Non-goals
 
-- **No search across *open* tasks / Inbox in v1.** Logbook only for now; open-
-  task search muddies the "What Now is a chooser, not a list" thesis. The
-  command palette's jump-to-task covers the active-set need.
-- **No saved searches / smart lists.**
 - **No search over task `updates[]` (the activity log).** `description` +
   `content` only for v1.
+- **No saved searches / smart lists.**
 - **No AI/semantic search.** Plain fuzzy substring. (AI is explicitly Phase 2.)
 - **No command palette actions beyond navigation + the fixed view list.**
   "Run any action" (start timer, set energy) is F20's full vision; v1 is jump.
 - **No mobile-specific UI.** Desktop-first; mobile gets the same overlay.
+- **No reclaiming of `⌘K` in contexts where the OS/browser owns it** (e.g.
+  inside a contenteditable the browser may intercept) — accept that edge.
 
 ## Open questions
 
