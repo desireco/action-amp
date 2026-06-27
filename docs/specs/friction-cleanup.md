@@ -1,6 +1,6 @@
 ---
 feature: friction-cleanup
-status: ready
+status: building
 spec_owner: discover
 build_owner: build
 ---
