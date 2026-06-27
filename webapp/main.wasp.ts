@@ -32,6 +32,8 @@ import { PasswordResetPage } from "./src/auth/email/PasswordResetPage" with { ty
 import { RequestPasswordResetPage } from "./src/auth/email/RequestPasswordResetPage" with { type: "ref" };
 import { SignupPage } from "./src/auth/email/SignupPage" with { type: "ref" };
 import { userSignupFields } from "./src/auth/email/userSignupFields" with { type: "ref" };
+import { userSignupFields as googleUserSignupFields } from "./src/auth/google/userSignupFields" with { type: "ref" };
+import { getConfig as getGoogleConfig } from "./src/auth/google/config" with { type: "ref" };
 import { LandingPage } from "./src/landing/LandingPage" with { type: "ref" };
 import { OnboardingPage } from "./src/onboarding/OnboardingPage" with { type: "ref" };
 import { DesignSystemPage } from "./src/components/design/DesignSystemPage" with { type: "ref" };
@@ -65,6 +67,14 @@ export default app({
         passwordReset: {
           clientRoute: "PasswordResetRoute",
         },
+      },
+      // Google social auth — the #1 checkout-friction remover for a
+      // no-reputation app. Requests profile+email (default is profile-only).
+      // Account-linking: Wasp does NOT auto-merge an email account with a
+      // Google account on the same address — see docs/specs/social-auth-google.
+      google: {
+        configFn: getGoogleConfig,
+        userSignupFields: googleUserSignupFields,
       },
     },
     onAuthSucceededRedirectTo: "/app",

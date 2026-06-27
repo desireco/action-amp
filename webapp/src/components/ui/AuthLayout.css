@@ -142,6 +142,59 @@
 }
 
 /* ============================================================
+   "Continue with Google" — sits above the email form. A neutral surface
+   button (not teal — teal is the primary CTA), so the email path stays the
+   visual default and Google reads as the fast alternative.
+   ============================================================ */
+.aa-auth-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: var(--aa-space-lg);
+  border-radius: var(--aa-radius-sm);
+  border: 1px solid var(--aa-border-strong);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color var(--aa-dur-base) var(--aa-ease-out),
+    background var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-auth-google:hover {
+  border-color: var(--aa-teal);
+  background: var(--aa-teal-soft);
+}
+.aa-auth-google[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Divider between the Google button and the email form */
+.aa-auth-or {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  margin: 0 0 var(--aa-space-lg);
+  color: var(--aa-text-4);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.aa-auth-or::before,
+.aa-auth-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--aa-border);
+}
+
+/* ============================================================
    Responsive
    ============================================================ */
 @media (max-width: 480px) {

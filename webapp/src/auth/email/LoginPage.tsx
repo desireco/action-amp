@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { LoginForm } from "wasp/client/auth";
 import { AuthLayout } from "../../components/ui";
 import { aaAuthAppearance } from "../appearance";
+import { GoogleButton } from "../google/GoogleButton";
 
 export function LoginPage() {
   return (
@@ -24,6 +25,8 @@ export function LoginPage() {
         </>
       }
     >
+      <GoogleButton />
+      <div className="aa-auth-or" aria-hidden="true">or with email</div>
       <LoginForm {...aaAuthAppearance} />
     </AuthLayout>
   );
