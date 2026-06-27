@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getTasks, toggleTaskDone, updateTaskStatus } from "wasp/client/operations";
+import { getTasks, getDoneToday, toggleTaskDone, updateTaskStatus } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, TaskRow, CompletionCircle, Chip, type TaskRowTask } from "../components/ui";
 import { GroupedList, type GroupDef } from "../components/ui";
@@ -36,6 +36,17 @@ export function TodayPage() {
     { enabled: !!lens && showUpcoming },
   );
 
+  // Done-today: tasks completed since local midnight. Fetched on mount (not
+  // lazy) so the collapsed header can show the count; the rows render only when
+  // the section is expanded. The set is small (lens-scoped, today-only), so the
+  // cost on a normal Today load is negligible.
+  const [showDone, setShowDone] = useState(false);
+  const { data: doneToday } = useQuery(
+    getDoneToday,
+    lens ? { lensId: lens.id } : undefined,
+    { enabled: !!lens },
+  );
+
   const groups = useMemo<GroupDef<TaskRowTask>[]>(() => {
     if (!tasks) return [];
     // Group the CAPPED set (first TODAY_CAP) by Goal (or "General").
@@ -49,10 +60,19 @@ export function TodayPage() {
     return Array.from(byGoal, ([name, items]) => ({ key: name, label: name, items }));
   }, [tasks]);
 
+  // Done-today grouped by Goal (or "General"), same shape as the open-task
+  // groups so GroupedList + TaskRow render identically (muted). Empty until
+  // the section is expanded and the lazy query resolves.
   const doneGroups = useMemo<GroupDef<TaskRowTask>[]>(() => {
-    // Done-today section is collapsed by default; re-query on demand later.
-    return [];
-  }, []);
+    if (!doneToday) return [];
+    const byGoal = new Map<string, TaskRowTask[]>();
+    for (const t of doneToday) {
+      const key = t.goal?.name ?? "General";
+      if (!byGoal.has(key)) byGoal.set(key, []);
+      byGoal.get(key)!.push(t);
+    }
+    return Array.from(byGoal, ([name, items]) => ({ key: name, label: name, items }));
+  }, [doneToday]);
 
   const handleToggle = async (task: TaskRowTask) => {
     try {
@@ -197,7 +217,33 @@ export function TodayPage() {
         </>
       )}
 
-      {doneGroups.length > 0 && <div className="aa-today__done-section">{/* TODO: collapsed "Done today" */}</div>}
+      {(doneToday?.length ?? 0) > 0 && (
+        <section className="aa-today__done-section">
+          <button
+            type="button"
+            className="aa-today__done-header"
+            onClick={() => setShowDone((v) => !v)}
+            aria-expanded={showDone}
+          >
+            <span>Done today</span>
+            <span className="aa-today__done-count">{doneToday!.length}</span>
+          </button>
+          {showDone && (
+            <GroupedList
+              groups={doneGroups}
+              renderItem={(task) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  muted
+                  onToggleDone={handleToggle}
+                  onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                />
+              )}
+            />
+          )}
+        </section>
+      )}
     </div>
   );
 }

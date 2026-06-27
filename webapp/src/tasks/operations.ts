@@ -1,4 +1,4 @@
-import type { GetTask, GetTasks, GetTopTask, SnoozeTask, StartTask, PauseTask, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
+import type { GetTask, GetTasks, GetDoneToday, GetTopTask, SnoozeTask, StartTask, PauseTask, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
 
 /**
  * Task operations for the Phase 4 list views.
@@ -48,6 +48,38 @@ export const getTasks = (async (args, context) => {
     },
   });
 }) satisfies GetTasks<{ lensId: string; status?: "TODAY" | "UPCOMING" | "SOMEDAY"; isDone?: boolean }>;
+
+// ----------------------------------------------------------------
+// Read: tasks completed today (for the Today "Done today" section)
+// ----------------------------------------------------------------
+// Separate from getTasks (which has no date filter and returns full history).
+// Scoped to the active lens + completed since local-midnight, newest first.
+// Includes project/goal so the section can group the same way open tasks do.
+export const getDoneToday = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  // Local-midnight boundary: completedAt is stamped server-side on toggle; we
+  // compare against the start of "today" in the server's locale. Day-granular
+  // is the right resolution for a "done today" section.
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  return await context.entities.Task.findMany({
+    where: {
+      userId: context.user.id,
+      lensId: args.lensId,
+      isDone: true,
+      completedAt: { gte: startOfToday },
+    },
+    orderBy: { completedAt: "desc" },
+    include: {
+      tags: true,
+      project: { select: { id: true, name: true } },
+      goal: { select: { id: true, name: true } },
+    },
+  });
+}) satisfies GetDoneToday<{ lensId: string }>;
 
 // ----------------------------------------------------------------
 // Write: toggle a task's done state
