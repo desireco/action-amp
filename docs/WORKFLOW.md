@@ -32,8 +32,8 @@ triage.
                                         ▼
             ┌─────────────────┬─────────┴──────┬─────────────────┐
             ▼                 ▼                ▼                 ▼
-        TASK              PROJECT           RESOURCE          (trash)
-       (in a context)    (in a context)    (in a context)
+        TASK              PROJECT           RESOURCE          (archive —
+       (in a context)    (in a context)    (in a context)     kept, lossless)
 
   Context = Work or Me lens. Scopes Tasks, Projects, Goals, Resources.
   Capture + Inbox are NOT scoped — they're universal.
@@ -58,19 +58,18 @@ appears in Work/Planning/Review except by coming through triage.
 ### 2.2 Triage — the transfer
 
 - Walks the inbox one item at a time. For each item, decide **what it becomes**
-  and **where it lands**.
-- Outcomes: Task / Project / Resource / Trash.
+  and **where it lands**, through a deliberate **per-item specification wizard**
+  (`inbox/TriagePage.tsx`; see `TRIAGE.md` §4 for the canonical pattern).
+- Outcomes: Task / Project / Resource / **Archive** (lossless — the note is
+  kept, not deleted; recoverable from the Logbook).
 - Filing targets are scoped — triaging an item into a Project or Goal places it
-  in the **active context (lens)**. (Open: force-lens-choice vs inherit-active —
-  see §5.)
-- Triage never auto-clutters the Work area: a triaged task defaults to
-  **no horizon** (Next). Committing to Today is an explicit choice.
-- Keymap (canonical, see `TRIAGE.md`):
-  - `Enter` → Task, no horizon (the default)
-  - `t` → Task, Today · `u` → Task, Upcoming (pending elimination — see §5)
-  - `p` / `P` → file in last project / open project picker
-  - `g` / `G` → file in last goal / open goal picker
-  - `Del` → trash
+  in the **Lens confirmed on the wizard's Context step** (§5.5).
+- Triage never auto-clutters the Work area: a triaged Task defaults to
+  **Upcoming** (the bench), which surfaces on What Now only if undated or due
+  (§5.2). Committing to Today is an explicit choice; demoting to Someday is, too.
+- The single-card one-key dispatch (`1/2/3/P/R/Del`) is **gone** — replaced by
+  the wizard steps (Context → Type → Spec → Complete). The old keymap survives
+  only as step shortcuts where noted in `TRIAGE.md` §7.
 
 ### 2.3 Work Area — doing, right now
 

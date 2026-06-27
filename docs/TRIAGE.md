@@ -65,9 +65,9 @@ and **deletes the original InboxItem** — the transformed entity *is* the recor
      │  │                            [ Confirm ]│   │
      │  └──────────────────────────────────────┘   │
      │                                              │
-     │  ← prev   1 Today  2 Upcoming  3 Someday →   │  ← dispatch keys
-     │           P Project  R Resource  Del trash   │
-     └─────────────────────────────────────────────┘
+     │  ← prev   type: Task · Project · Resource · Archive →  │  ← wizard steps
+     │           (Context → Type → Spec → Complete)           │
+     └─────────────────────────────────────────────────────────┘
           ↓ (exit animation encodes the decision →/←/↑/↓)
    Next item appears.
           ─────────────────────────────────────────────────────────────
@@ -126,8 +126,9 @@ The wizard (per item):
    default — triage now asks, explicitly. The active lens is still the
    pre-selection, so the common case is one Continue.)*
 2. **Type** — what does this become? **Task** (default) · **Project** ·
-   **Resource** (a Note) · **Trash**. *Goal is not a type-chooser outcome* —
-   goals are filed *into*, never created at triage (§9.3).
+   **Resource** (a Note) · **Archive** (lossless — kept, recoverable). *Goal is
+   not a type-chooser outcome* — goals are filed *into*, never created at
+   triage (§9.3).
 3. **Spec** — the property rows, per type (see table below).
 4. **Complete** — commits the spec; gated until the lens is confirmed and
    (for Task/Resource) a filing target is set.
@@ -275,7 +276,7 @@ physical key — `?` is Shift+`/`.
 | `P` | Becomes Project (direct) |
 | `R` | Becomes Resource (opens parent picker) |
 | `G` | Assign/link Goal |
-| `Del` / `Backspace` | Trash |
+| `Del` / `Backspace` | Archive (lossless — kept, recoverable from the Logbook) |
 
 **Navigation:**
 
@@ -355,7 +356,7 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
   inline-expanding property rows ported from `triage-coauthor.html`. Priority
   and Size set in the spec step are carried to the created task (they override
   any parsed capture token — see `inbox/operations.ts :: triageInboxItem`).
-- ✅ Type dispatch (Task/Project/Resource/Trash) + exit animations
+- ✅ Type dispatch (Task/Project/Resource/Archive) + exit animations
 - ✅ Resource/Note parent picker (file under a Project or Goal)
 - ✅ Transform action (`inbox/operations.ts :: triageInboxItem`)
 - ✅ Global `⌘K` / `/` capture (to be rebased to `⌘/`)
