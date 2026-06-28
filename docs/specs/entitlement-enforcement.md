@@ -40,36 +40,41 @@ missing.
 - [ ] **`FREE_LIMITS` is read in `createGoal`.** Same pattern in
       `src/goals/operations.ts`: FREE user, count non-done Goals in lens,
       throw `HttpError(402)` if `>= FREE_LIMITS.goals` (1). Verified by test.
-- [ ] **The Work Lens is gated for FREE users — server-side, not client.**
-      This is the load-bearing decision and it must be enforced in the queries,
-      not the UI. Why: lens selection today is pure client React state +
-      `localStorage` (`AppShell.tsx:53-59`, key `aa-lens`); there is **no server
-      action for "switch lens"** — the active lens is just a `lensId` arg passed
-      to `getTasks`/`getProjects`/`getGoals`. A client-only gate is therefore
-      trivially bypassable (the lens is in localStorage; the queries still
-      return Work data). For a *billing* trigger that PRICING.md §4 calls "the
-      strongest single upgrade driver," a bypassable wall means nobody ever
-      upgrades. So:
-      - **Server:** `getTasks`/`getProjects`/`getGoals` (and any other lens-
-        scoped read) throw `HttpError(402)` — or return an empty/upgrade-shaped
-        result — when a FREE user queries a Lens whose name is `Work`. A single
-        helper `assertLensAllowed(context.user, lensId, lenses)` does the check;
-        call it from each lens-scoped operation. (A FREE user still *sees* both
-        lenses in the switch — the gate is on the *content*, not the visibility.)
-      - **Client:** when a query 402s (or returns the upgrade marker), the Work
-        area renders a calm upgrade state instead of tasks — small inline
-        message + link to `/app/settings/billing`. Never a hard modal; never a
-        red dot (banned by PRODUCT.md).
-      - **Keep both lenses seeded** (`ensureOnboarded` unchanged): a FREE user
-        can still create Work-lens entities via the create-guards above (those
-        are plan-checked) — but reading the Work area prompts upgrade. The Work
-        lens stays *aspirational* and *populated-on-upgrade*, which is exactly
-        the "I want to bring my work life in" trigger PRICING.md describes.
+- [ ] **The Work Lens is "visible-but-locked" for FREE users.** Design call
+      (revised 2026-06-27): FREE users *see* the Work lens in the switch, but
+      selecting it surfaces a calm **"This is a Pro feature"** message instead
+      of Work content — they don't get a hard 402 error, they get an invitation.
+      This is softer and more on-brand than a read-time error, and it's the
+      common pattern (Things/Todoist/Linear all show locked premium surfaces).
+
+      **Two layers, both required:**
+      - **Client (the UX — your ask):** when a FREE user clicks the Work lens
+        (`LensSwitch` onSelect, `AppShell.tsx`), the app does **not** switch the
+        active lens / fire Work queries. Instead it shows a calm inline panel
+        in the main area: a short line ("Work is a Pro feature — bring your
+        work life into ActionAmp") + a primary link to
+        `/app/settings/billing` or the Founding-100 page. No modal, no red dot,
+        no guilt copy (PRODUCT.md). The Work lens in the switch can carry a
+        subtle "Pro" affordance (a tiny lock or "Pro" chip) so the gate is
+        discoverable *before* the click, not just after.
+      - **Server (the enforcement — non-negotiable):** the client gate alone is
+        bypassable (lens state is client React + `localStorage`, no server
+        action; a savvy user can set `aa-lens=Work` and the queries would still
+        return data). So `getTasks`/`getProjects`/`getGoals` (any lens-scoped
+        read) **must refuse Work-lens data for FREE users** server-side — via a
+        shared `assertLensAllowed(context.user, lensId, lenses)` helper that
+        throws `HttpError(402)` when a FREE user targets a lens named `Work`.
+        The client gate is the friendly surface; this is the billing boundary.
+        Without it, "visible-but-locked" is theater.
+      - **Keep both lenses seeded** (`ensureOnboarded` unchanged): the Work lens
+        exists for FREE users (so the switch shows it and it's populated on
+        upgrade), but its content is gated by both layers above.
 - [ ] **A new FREE user defaults to the Me lens**, not Work. Today
       `AppShell.tsx:55` defaults to `"Work"`. Flip the default to `"Me"` so a
       FREE user's first experience is the lens they're entitled to — landing
-      them in a gated Work view on first paint would be a terrible first
-      impression. (The default is cosmetic for paid users; they switch freely.)
+      them on the locked Work panel on first paint would be a poor first
+      impression even with the friendly message. (Cosmetic for paid users; they
+      switch freely.)
 - [ ] **The client shows the cap state.** On the Projects page and Goals page,
       FREE users see their remaining allowance (e.g. "2 of 3 projects") near
       the create affordance; at the cap, the create button is disabled with a
@@ -112,17 +117,21 @@ missing.
 
 ## Open questions
 
-- _(The Work-lens gate site — previously open — is **resolved**: server-side, in
-  the lens-scoped queries, via a shared `assertLensAllowed` helper. See the
-  done-condition above for the full reasoning. Rationale: lens state is client-
-  side React + localStorage with no server action, so a client gate is bypassable
-  and useless as a billing trigger.)_
-- **402 vs empty-result for the gate.** Throwing `HttpError(402)` is simplest
-  and lets the client branch cleanly, but it surfaces as a query error in
-  React Query (needs an `onError`/`error` render branch). Returning an upgrade-
-  marker shape keeps the query "successful" but flagged. Build picks the one
-  that reads cleanest in the existing list pages; note it. Lean: 402 + an error
-  boundary per area is more honest about what happened.
+- _(The Work-lens gate — resolved 2026-06-27: **visible-but-locked**. FREE users
+  see Work in the switch; clicking shows a calm "Pro feature" panel (the UX);
+  the server still refuses Work queries via `assertLensAllowed` → 402 (the
+  boundary). Both layers required — the client gate is bypassable, so the
+  server guard is non-negotiable.)_
+- _(The 402-vs-empty-result question — resolved by the above: **402 server-side
+  as the enforcement**, but the common path never hits it because the client
+  gate intercepts the click first. The 402 is the safety net for the bypass
+  case, not the user-facing surface. Build still renders a calm fallback if a
+  402 somehow reaches the client, but it should be rare.)_
+- **The "Pro" affordance on the Work lens chip.** A tiny lock icon, a "Pro"
+  chip, or nothing (rely on the post-click message)? Lean: a subtle "Pro" chip
+  so the gate is discoverable before the click — but keep it tiny and neutral,
+  not a bright badge (PRODUCT.md bans attention-grabbing UI). Build picks; note
+  it in the review.
 
 ## Prototypes
 
