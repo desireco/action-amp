@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-06-27 (Discover — project review + GTM; resources-project-owned spec added; cli spec added 2026-06-27 as item 15) -->
+<!-- Last reviewed: 2026-06-27 (Discover — project review + GTM; resources-project-owned spec added; cli spec added 2026-06-27 as item 15; work-area-merged spec added 2026-06-27 as item 16) -->
 
 ---
 
@@ -170,6 +170,20 @@ item; Build pulls `ready`.**
     what the backend already exposes; missing writes filed as
     `cli-write-ops.md` (`deferred`) + `cli-comments-resources.md` (`deferred`,
     unblocks the `task-research` skill). Spec at `docs/specs/cli.md`.
+16. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
+    Lens-scoped page (hero + Today | Done columns), and reshapes how a task is
+    worked: **no completion circle anywhere** (complete only from focus mode —
+    the list becomes a chooser, not a tick-box), a **timestamped activity log**
+    per task (`Started / Paused / Completed / Not doing` interleaved with user
+    notes, via a `kind` enum on `TaskUpdate`, which is surfaced nowhere today),
+    and **`NOT_DOING` → lossless archive** (a decision recorded in history
+    instead of silent delete). Reverses WORKFLOW.md §5.4 "two surfaces" → one.
+    This is a **surfaces-and-logging refactor, not selection logic** — the
+    `getTopTask` matcher is untouched, so it's independent of `focus-engine-v2`.
+    Honest framing: it's product-quality polish on the wedge surface itself,
+    so it sits in this tier (post-gauntlet), not the validation gauntlet.
+    Interactive prototype at `docs/mockups/today-merged.html`. Spec at
+    `docs/specs/work-area-merged.md`.
 
 ## Branch state (2026-06-27)
 

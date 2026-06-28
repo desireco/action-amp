@@ -44,6 +44,18 @@ items they imply — not built yet, listed here so they're not lost:
 - [ ] *(Phase 2 vision)* **Hard focus** — each mode (Work/Plan/Review) as a
   distinct full-screen layout, not just nav filtering. Design exploration;
   soft focus (above) ships first.
+- [ ] **Merged Work Area (What Now + Today on one page) + complete-only-from-
+  focus + activity log.** Drafted 2026-06-27; spec at
+  `docs/specs/work-area-merged.md`. Collapses `/app` + `/app/today` into one
+  page (hero on top, Today | Done columns below, Lens-scoped). Three reshaping
+  rules: (1) **no completion circle anywhere** — a task completes only from
+  focus mode (Start → Complete), the list becomes a chooser not a tick-box;
+  (2) a **timestamped activity log** per task — `Started / Paused / Completed /
+  Not doing` events interleaved with user notes via a `kind` enum on
+  `TaskUpdate` (which is surfaced nowhere today); (3) **`NOT_DOING` → archive**
+  (lossless, recoverable) — "decided not to do it" recorded in history instead
+  of silent delete. Reverses WORKFLOW.md §5.4's "two surfaces" → one. Interactive
+  prototype at `docs/mockups/today-merged.html`.
 
 ---
 
