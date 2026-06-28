@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Today (merged prototype)</title>
+    <!--
+      PROTOTYPE — merges What Now (Now/Next chooser) + Today (committed list) +
+      Done-today into a single page. Two states:
+
+        PLAN  = full-width Now/Next card on top, two columns below (Today | Done)
+        FOCUS = started a task → full-screen, Complete / Pause / comments only
+
+      Rules this prototype locks in:
+      - NO completion circle anywhere. A task is completed only from focus mode,
+        via the Complete button — after it has been started. You cannot tick a
+        task done from a list or the hero.
+      - Each Today row has a Focus button that promotes that task into the hero
+        (the "what's next" card) WITHOUT entering focus mode.
+      - Focus mode = the work has started. Actions: Complete, Pause, and adding
+        progress notes (TaskUpdate — body + createdAt, the real schema model).
+        Notes render as a timestamped thread, newest at the bottom.
+
+      Faithful to the shipped app: tokens are the real OKLCH values from
+      webapp/src/styles/tokens.css; the card reproduces WhatNowCard (.aa-wn-card),
+      rows reproduce TaskRow (.aa-task-row) minus the circle. No framework —
+      vanilla so it opens with a double-click.
+    -->
+    <style>
+      /* ============================================================
+         TOKENS — copied verbatim from webapp/src/styles/tokens.css (light)
+         ============================================================ */
+      :root {
+        --aa-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          "SF Pro Display", Roboto, sans-serif;
+        --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+        --aa-teal: oklch(0.72 0.15 220);
+        --aa-teal-bright: oklch(0.78 0.14 215);
+        --aa-teal-cta: oklch(0.58 0.16 225);
+        --aa-teal-cta-hover: oklch(0.5 0.16 228);
+        --aa-teal-soft: oklch(0.95 0.04 220);
+        --aa-teal-soft-strong: oklch(0.9 0.07 220);
+        --aa-teal-tint-shadow: oklch(0.58 0.16 225 / 0.22);
+
+        --aa-amber: oklch(0.78 0.16 70);
+        --aa-amber-text: oklch(0.45 0.13 65);
+        --aa-amber-soft: oklch(0.95 0.06 75);
+        --aa-amber-soft-strong: oklch(0.92 0.09 75);
+
+        --aa-violet: oklch(0.62 0.2 295);
+        --aa-violet-soft: oklch(0.95 0.04 295);
+        --aa-violet-text: oklch(0.45 0.15 295);
+
+        --aa-bg: oklch(0.99 0.005 230);
+        --aa-bg-soft: oklch(0.97 0.008 230);
+        --aa-bg-deep: oklch(0.94 0.01 230);
+        --aa-surface: oklch(1 0.003 230);
+        --aa-surface-muted: oklch(0.96 0.008 230);
+        --aa-surface-muted-2: oklch(0.93 0.01 230);
+        --aa-border: oklch(0.91 0.01 230);
+        --aa-border-strong: oklch(0.86 0.012 230);
+        --aa-text: oklch(0.2 0.015 230);
+        --aa-text-2: oklch(0.36 0.015 230);
+        --aa-text-3: oklch(0.5 0.015 230);
+        --aa-text-4: oklch(0.62 0.012 230);
+
+        --aa-radius-xs: 4px;
+        --aa-radius-sm: 6px;
+        --aa-radius-md: 8px;
+        --aa-radius-lg: 12px;
+        --aa-radius-xl: 18px;
+        --aa-radius-full: 9999px;
+
+        --aa-space-xs: 4px;
+        --aa-space-sm: 8px;
+        --aa-space-md: 16px;
+        --aa-space-lg: 24px;
+        --aa-space-xl: 32px;
+        --aa-space-2xl: 48px;
+
+        --aa-shadow-md: 0 2px 6px oklch(0.2 0.02 230 / 0.06),
+          0 12px 32px oklch(0.2 0.02 230 / 0.06);
+        --aa-hero-shadow: 0 2px 6px oklch(0.2 0.02 230 / 0.05),
+          0 40px 96px var(--aa-teal-tint-shadow);
+
+        --aa-ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+        --aa-ease-out-quart: cubic-bezier(0.2, 0.7, 0.3, 1);
+        --aa-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        --aa-dur-base: 0.2s;
+        --aa-dur-slow: 0.4s;
+      }
+
+      [data-theme="dark"] {
+        --aa-bg: oklch(0.18 0.012 230);
+        --aa-bg-soft: oklch(0.21 0.012 230);
+        --aa-bg-deep: oklch(0.16 0.012 230);
+        --aa-surface: oklch(0.25 0.013 230);
+        --aa-surface-muted: oklch(0.29 0.013 230);
+        --aa-surface-muted-2: oklch(0.33 0.013 230);
+        --aa-border: oklch(0.32 0.013 230);
+        --aa-border-strong: oklch(0.4 0.015 230);
+        --aa-text: oklch(0.96 0.005 230);
+        --aa-text-2: oklch(0.85 0.008 230);
+        --aa-text-3: oklch(0.7 0.012 230);
+        --aa-text-4: oklch(0.58 0.012 230);
+        --aa-teal-soft: oklch(0.3 0.05 220);
+        --aa-teal-soft-strong: oklch(0.35 0.08 220);
+        --aa-amber-soft: oklch(0.3 0.06 75);
+        --aa-violet-soft: oklch(0.3 0.05 295);
+        --aa-amber-text: oklch(0.78 0.16 70);
+      }
+
+      /* ============================================================
+         BASE
+         ============================================================ */
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: var(--aa-font);
+        background: var(--aa-bg);
+        color: var(--aa-text);
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+      }
+      button { font-family: inherit; }
+
+      /* ============================================================
+         APP SHELL — slim, just enough to feel real
+         ============================================================ */
+      .shell {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: var(--aa-space-xl) var(--aa-space-xl) var(--aa-space-3xl, 64px);
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--aa-space-lg);
+        margin-bottom: var(--aa-space-xl);
+      }
+
+      /* LensSwitch — segmented control (Work / Me). Reproduced from
+         webapp/src/components/ui/LensSwitch.css so the mock matches the real
+         component. */
+      .aa-lens {
+        display: inline-flex;
+        background: var(--aa-surface-muted);
+        border-radius: var(--aa-radius-md);
+        padding: 3px;
+      }
+      .aa-lens__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--aa-font);
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 6px 16px;
+        border-radius: var(--aa-radius-sm);
+        color: var(--aa-text-3);
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s var(--aa-ease-out),
+          color 0.2s var(--aa-ease-out),
+          box-shadow 0.2s var(--aa-ease-out);
+      }
+      .aa-lens__btn:not(.aa-lens__btn--active):hover { color: var(--aa-text-2); }
+      .aa-lens__btn:focus-visible {
+        outline: 2px solid var(--aa-teal);
+        outline-offset: 2px;
+      }
+      .aa-lens__btn--active {
+        background: var(--aa-surface);
+        color: var(--aa-text);
+        box-shadow: var(--aa-shadow-sm);
+      }
+
+      /* ============================================================
+         WHAT NOW CARD — reproduces .aa-wn-card (WhatNowCard.css)
+         ============================================================ */
+      .aa-wn-card {
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
+        text-align: center;
+        animation: aa-wn-rise 0.5s var(--aa-ease-out-quart) both;
+        animation-delay: 0.08s;
+        transition: max-width 0.4s var(--aa-ease-out-quart);
+      }
+      @keyframes aa-wn-rise {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .aa-wn-card__context {
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--aa-text-3);
+        margin-bottom: 36px;
+        letter-spacing: 0.01em;
+      }
+      .aa-wn-card__completion {
+        margin-bottom: 32px;
+        display: flex;
+        justify-content: center;
+      }
+      /* Calm state indicator replaces the completion circle in the hero.
+         A task can only be completed from focus mode — so the hero shows a
+         small Now/Next dot, not a tickable circle. */
+      .aa-wn-state {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--aa-space-sm);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--aa-text-4);
+      }
+      .aa-wn-state__dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--aa-text-4);
+        transition: background 0.2s var(--aa-ease-out);
+      }
+      /* When the hero task is "now", the dot is live teal + gently pulses,
+         signalling "work in progress — open focus". */
+      .aa-wn-state--now { color: var(--aa-teal-cta); }
+      .aa-wn-state--now .aa-wn-state__dot {
+        background: var(--aa-teal);
+        animation: aa-wn-pulse 1.8s var(--aa-ease-out) infinite;
+      }
+      @keyframes aa-wn-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 var(--aa-teal-tint-shadow); }
+        50%      { box-shadow: 0 0 0 6px transparent; }
+      }
+      .aa-wn-card__title {
+        font-size: 1.875rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        color: var(--aa-text);
+        margin: 0 0 12px;
+      }
+      .aa-wn-card__meta {
+        font-size: 0.88rem;
+        color: var(--aa-text-3);
+        margin-bottom: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+      .aa-wn-card__sep { color: var(--aa-border-strong); }
+      .aa-wn-card__why {
+        font-size: 0.78rem;
+        color: var(--aa-text-3);
+        margin: 0 0 32px;
+        line-height: 1.5;
+      }
+      .aa-wn-card__why strong {
+        color: var(--aa-amber-text);
+        font-weight: 600;
+      }
+      .aa-wn-card__actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      /* Button — primary / secondary / ghost */
+      .aa-btn {
+        font-size: 0.92rem;
+        font-weight: 600;
+        padding: 9px 18px;
+        border-radius: var(--aa-radius-md);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: background 0.15s var(--aa-ease-out),
+          border-color 0.15s var(--aa-ease-out),
+          transform 0.1s var(--aa-ease-out);
+      }
+      .aa-btn:active { transform: translateY(1px); }
+      .aa-btn--primary {
+        background: var(--aa-teal-cta);
+        color: #fff;
+      }
+      .aa-btn--primary:hover { background: var(--aa-teal-cta-hover); }
+      .aa-btn--secondary {
+        background: var(--aa-surface-muted-2);
+        color: var(--aa-text-2);
+      }
+      .aa-btn--secondary:hover { background: var(--aa-border); }
+      .aa-btn--ghost {
+        background: transparent;
+        color: var(--aa-text-3);
+        font-size: 0.8rem;
+        padding: 5px 10px;
+      }
+      .aa-btn--ghost:hover { color: var(--aa-text); background: var(--aa-surface-muted); }
+      .aa-btn--sm { font-size: 0.8rem; padding: 5px 12px; }
+
+      /* ============================================================
+         TWO-COLUMN ZONE — Today | Done (the "PLAN" state)
+         ============================================================ */
+      .columns {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: var(--aa-space-2xl);
+        margin-top: var(--aa-space-2xl);
+        padding-top: var(--aa-space-2xl);
+        border-top: 1px solid var(--aa-border);
+        transition: opacity 0.35s var(--aa-ease-out),
+          transform 0.35s var(--aa-ease-out-quart),
+          max-height 0.35s var(--aa-ease-out);
+        overflow: hidden;
+      }
+      /* FOCUS state: the plan (hero + columns) hides; a full-screen focus
+         surface takes over. Started = the work has begun. */
+      body.focus .shell { display: none; }
+      body.focus .focus-view { display: flex; }
+
+      /* ---- Focus view ---- */
+      .focus-view {
+        display: none;
+        min-height: 100vh;
+        flex-direction: column;
+        align-items: center;
+        padding: var(--aa-space-2xl) var(--aa-space-xl) var(--aa-space-2xl);
+        animation: aa-focus-rise 0.4s var(--aa-ease-out-quart) both;
+      }
+      @keyframes aa-focus-rise {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .focus-view__top {
+        width: 100%;
+        max-width: 640px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--aa-space-2xl);
+      }
+      .focus-view__live {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--aa-space-sm);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--aa-teal-cta);
+      }
+      .focus-view__live-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--aa-teal);
+        animation: aa-wn-pulse 1.8s var(--aa-ease-out) infinite;
+      }
+      .focus-view__exit {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--aa-text-3);
+        font-size: 0.85rem;
+        font-weight: 500;
+        padding: 6px 10px;
+        border-radius: var(--aa-radius-sm);
+        transition: background 0.15s var(--aa-ease-out), color 0.15s var(--aa-ease-out);
+      }
+      .focus-view__exit:hover { background: var(--aa-surface-muted); color: var(--aa-text); }
+
+      .focus-view__body {
+        width: 100%;
+        max-width: 640px;
+      }
+      .focus-view__title {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        margin: 0 0 var(--aa-space-md);
+        color: var(--aa-text);
+      }
+      .focus-view__meta {
+        font-size: 0.88rem;
+        color: var(--aa-text-3);
+        margin-bottom: var(--aa-space-2xl);
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+      .focus-view__sep { color: var(--aa-border-strong); }
+
+      .focus-view__actions {
+        display: flex;
+        gap: 10px;
+        margin-bottom: var(--aa-space-2xl);
+      }
+
+      /* ---- TaskUpdate thread (progress notes, timestamped) ---- */
+      .focus-view__thread-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--aa-text-4);
+        margin: 0 0 var(--aa-space-md);
+        padding-top: var(--aa-space-xl);
+        border-top: 1px solid var(--aa-border);
+      }
+      .focus-view__thread {
+        display: flex;
+        flex-direction: column;
+        gap: var(--aa-space-md);
+        margin-bottom: var(--aa-space-lg);
+      }
+      .focus-update {
+        display: flex;
+        gap: var(--aa-space-md);
+        animation: aa-focus-rise 0.25s var(--aa-ease-out-quart) both;
+      }
+      .focus-update__rail {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .focus-update__node {
+        width: 9px; height: 9px;
+        border-radius: 50%;
+        background: var(--aa-surface);
+        border: 2px solid var(--aa-border-strong);
+        margin-top: 4px;
+      }
+      .focus-update__line {
+        width: 2px;
+        flex: 1;
+        background: var(--aa-border);
+        margin-top: 2px;
+      }
+      .focus-update:last-child .focus-update__line { display: none; }
+      .focus-update__body { flex: 1; min-width: 0; padding-bottom: var(--aa-space-sm); }
+      .focus-update__text {
+        font-size: 0.92rem;
+        line-height: 1.5;
+        color: var(--aa-text-2);
+      }
+      .focus-update__time {
+        font-size: 0.72rem;
+        color: var(--aa-text-4);
+        font-family: var(--aa-font-mono);
+        margin-top: 3px;
+      }
+
+      /* Compose box */
+      .focus-compose {
+        display: flex;
+        gap: var(--aa-space-sm);
+        margin-top: var(--aa-space-md);
+      }
+      .focus-compose__input {
+        flex: 1;
+        font-family: inherit;
+        font-size: 0.9rem;
+        color: var(--aa-text);
+        background: var(--aa-surface);
+        border: 1px solid var(--aa-border-strong);
+        border-radius: var(--aa-radius-md);
+        padding: 10px 14px;
+        outline: none;
+        transition: border-color 0.15s var(--aa-ease-out),
+          box-shadow 0.15s var(--aa-ease-out);
+      }
+      .focus-compose__input::placeholder { color: var(--aa-text-4); }
+      .focus-compose__input:focus {
+        border-color: var(--aa-teal);
+        box-shadow: 0 0 0 3px var(--aa-teal-soft-strong);
+      }
+
+      .col h3 {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--aa-text-4);
+        margin: 0 0 var(--aa-space-md);
+        display: flex;
+        align-items: baseline;
+        gap: var(--aa-space-sm);
+      }
+      .col__count {
+        font-family: var(--aa-font-mono);
+        font-size: 0.7rem;
+        color: var(--aa-text-4);
+        font-weight: 500;
+      }
+
+      /* TaskRow — reproduces .aa-task-row (TaskRow.css) */
+      ul.aa-task-list { list-style: none; margin: 0; padding: 0; }
+      .aa-task-row {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--aa-space-md);
+        padding: var(--aa-space-md) 0;
+        border-bottom: 1px solid var(--aa-border);
+      }
+      .aa-task-row:last-child { border-bottom: none; }
+      .aa-task-row__main { flex: 1; min-width: 0; }
+      .aa-task-row__title {
+        display: block;
+        font-size: 0.95rem;
+        color: var(--aa-text);
+        line-height: 1.4;
+      }
+      .aa-task-row--done .aa-task-row__title {
+        color: var(--aa-text-4);
+        text-decoration: line-through;
+      }
+      .aa-task-row--muted .aa-task-row__title {
+        color: var(--aa-text-3);
+        font-weight: 400;
+      }
+      .aa-task-row__meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 5px;
+      }
+      .aa-chip {
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: var(--aa-radius-xs);
+        line-height: 1.4;
+      }
+      .aa-chip--violet { background: var(--aa-violet-soft); color: var(--aa-violet-text); }
+      .aa-chip--teal { background: var(--aa-teal-soft-strong); color: var(--aa-teal-cta); }
+      .aa-chip--amber { background: var(--aa-amber-soft); color: var(--aa-amber-text); }
+      .aa-task-row__size {
+        font-family: var(--aa-font-mono);
+        font-size: 0.66rem;
+        font-weight: 600;
+        color: var(--aa-text-4);
+        background: var(--aa-surface-muted);
+        padding: 1px 5px;
+        border-radius: var(--aa-radius-xs);
+      }
+      .aa-task-row__row-action {
+        margin-left: var(--aa-space-sm);
+        align-self: center;
+      }
+
+      .col--done .aa-task-row__title { color: var(--aa-text-4); }
+      .col__empty {
+        font-size: 0.85rem;
+        color: var(--aa-text-4);
+        font-style: italic;
+        padding: var(--aa-space-sm) 0;
+      }
+
+      /* A Today row that's currently promoted into the hero ("the focus").
+         It stays in the list but reads as the chosen next-up — a soft teal
+         rail + label, not removed. Clicking Focus on another row moves it. */
+      .aa-task-row--focus {
+        position: relative;
+        padding-left: var(--aa-space-md);
+      }
+      .aa-task-row--focus::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 10px; bottom: 10px;
+        width: 3px;
+        border-radius: var(--aa-radius-full);
+        background: var(--aa-teal);
+      }
+      .aa-task-row--focus .aa-task-row__title { color: var(--aa-teal-cta); }
+      .aa-task-row__focus-tag {
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--aa-teal-cta);
+        background: var(--aa-teal-soft-strong);
+        padding: 2px 6px;
+        border-radius: var(--aa-radius-xs);
+        align-self: center;
+      }
+
+      /* ============================================================
+         PROTOTYPE CONTROL CHIPS (bottom-right)
+         ============================================================ */
+      .proto-controls {
+        position: fixed;
+        right: var(--aa-space-lg);
+        bottom: var(--aa-space-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--aa-space-sm);
+        align-items: flex-end;
+        z-index: 50;
+      }
+      .proto-label {
+        font-size: 0.66rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--aa-text-4);
+      }
+      .proto-chips { display: flex; gap: var(--aa-space-xs); }
+      .proto-chip {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 6px 11px;
+        border-radius: var(--aa-radius-full);
+        border: 1px solid var(--aa-border-strong);
+        background: var(--aa-surface);
+        color: var(--aa-text-3);
+        cursor: pointer;
+        box-shadow: var(--aa-shadow-md);
+        transition: all 0.15s var(--aa-ease-out);
+      }
+      .proto-chip:hover { color: var(--aa-text); }
+      .proto-chip[aria-pressed="true"] {
+        background: var(--aa-teal-cta);
+        border-color: var(--aa-teal-cta);
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body data-theme="light">
+    <div class="shell">
+      <!-- Slim topbar — just enough shell context to feel real -->
+      <div class="topbar">
+        <!-- Lens switch — context (Work/Me). Scopes the whole page: hero,
+             Today, Done, and focus view all reflect the active lens. Mirrors
+             the shipped LensSwitch component (segmented control). -->
+        <div
+          class="aa-lens"
+          role="tablist"
+          aria-label="Lens"
+          id="lensSwitch"
+        ></div>
+        <button class="aa-btn aa-btn--ghost aa-btn--sm" id="themeToggle">Dark</button>
+      </div>
+
+      <!-- WHAT NOW / NOW-NEXT — full width, the hero -->
+      <div class="aa-wn-card" id="wnCard">
+        <div class="aa-wn-card__context" id="wnContext">Next · Work</div>
+        <div class="aa-wn-card__completion">
+          <span class="aa-wn-state" id="wnState">
+            <span class="aa-wn-state__dot"></span>
+            <span id="wnStateLabel">Next</span>
+          </span>
+        </div>
+        <h2 class="aa-wn-card__title" id="wnTitle"></h2>
+        <div class="aa-wn-card__meta" id="wnMeta"></div>
+        <p class="aa-wn-card__why" id="wnWhy"></p>
+        <div class="aa-wn-card__actions" id="wnActions"></div>
+      </div>
+
+      <!-- TWO COLUMNS — Today | Done (collapse in FOCUS state) -->
+      <div class="columns" id="columns">
+        <section class="col col--today">
+          <h3>Today <span class="col__count" id="todayCount"></span></h3>
+          <ul class="aa-task-list" id="todayList"></ul>
+        </section>
+
+        <section class="col col--done">
+          <h3>Done today <span class="col__count" id="doneCount">3</span></h3>
+          <ul class="aa-task-list" id="doneList"></ul>
+        </section>
+      </div>
+    </div>
+
+    <!-- FOCUS VIEW — only visible when a task is started (work has begun).
+         Complete / Pause / progress notes. No completion circle anywhere —
+         the only way to complete is the Complete button here. -->
+    <div class="focus-view" id="focusView">
+      <div class="focus-view__top">
+        <span class="focus-view__live">
+          <span class="focus-view__live-dot"></span>
+          In focus · <span id="focusLens">Work</span>
+        </span>
+        <button class="focus-view__exit" id="focusExit">Pause & exit (Esc)</button>
+      </div>
+      <div class="focus-view__body">
+        <h1 class="focus-view__title" id="focusTitle"></h1>
+        <div class="focus-view__meta" id="focusMeta"></div>
+        <div class="focus-view__actions">
+          <button class="aa-btn aa-btn--primary" id="focusComplete">Complete</button>
+          <button class="aa-btn aa-btn--secondary" id="focusPause">Pause</button>
+        </div>
+
+        <div class="focus-view__thread-label">Progress</div>
+        <div class="focus-view__thread" id="focusThread"></div>
+        <div class="focus-compose">
+          <input
+            type="text"
+            class="focus-compose__input"
+            id="focusCompose"
+            placeholder="Add a progress note…  (Enter to post)"
+            autocomplete="off"
+          />
+          <button class="aa-btn aa-btn--secondary aa-btn--sm" id="focusPost">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prototype controls -->
+    <div class="proto-controls">
+      <span class="proto-label">Prototype · force state</span>
+      <div class="proto-chips">
+        <button class="proto-chip" id="forcePlan" aria-pressed="true">Plan</button>
+        <button class="proto-chip" id="forceFocus" aria-pressed="false">Focus</button>
+      </div>
+    </div>
+
+    <script>
+      // --- Seed data (stand-in for getTopTask + getTasks, lens-scoped). ---
+      // The active lens scopes the whole page: hero, Today, Done, focus view
+      // all reflect whatever lens is active (mirrors useActiveLens() scoping).
+      const LENSES = [
+        { id: "Work", label: "Work" },
+        { id: "Me", label: "Me" },
+      ];
+      let activeLens = "Work";
+
+      // Per-lens task sets. Switching lens swaps the entire view — same as the
+      // shipped app, where the Lens switch changes what every /app page shows.
+      const tasksByLens = {
+        Work: [
+          { id: "t1", title: "Draft the Q3 launch announcement", project: "Launch",
+            due: "due today", size: "M", why: "Only task left on Launch for today, and <strong>it's due today.</strong>" },
+          { id: "t2", title: "Reply to Maya re: pricing tiers", project: null,
+            priority: true, due: "due today", size: "S", why: "Marked <strong>Important</strong> — do before the rest." },
+          { id: "t3", title: "Review pull request #142", project: "Engineering",
+            due: null, size: "M", why: null },
+        ],
+        Me: [
+          { id: "m1", title: "Book the dentist appointment", project: null,
+            due: "due today", size: "S", why: "Marked <strong>due today.</strong>" },
+          { id: "m2", title: "30 min run", project: "Health",
+            due: null, size: "M", why: null },
+        ],
+      };
+      const doneByLens = {
+        Work: ["Send invoice to Contoso", "Triage inbox (12 → 0)", "Morning standup notes"],
+        Me: ["Take vitamins", "Stretch"],
+      };
+
+      // Hero + start + update state, keyed by lens so each context keeps its
+      // own "what's next" + progress log independently.
+      const heroId    = { Work: "t1", Me: "m1" };
+      const startedAt = { Work: { t1: null, t2: null, t3: null }, Me: { m1: null, m2: null } };
+      const updates   = { Work: { t1: [], t2: [], t3: [] }, Me: { m1: [], m2: [] } };
+
+      const SIZE_LABEL = { S: "15 min", M: "30 min", L: "1 hr", XL: "2 hr+" };
+      const TODAY_CAP  = 5;
+
+      const $ = (id) => document.getElementById(id);
+      const wnActions    = $('wnActions');
+      const wnContext    = $('wnContext');
+      const wnState      = $('wnState');
+      const wnStateLabel = $('wnStateLabel');
+      const wnTitle      = $('wnTitle');
+      const wnMeta       = $('wnMeta');
+      const wnWhy        = $('wnWhy');
+      const todayList    = $('todayList');
+      const todayCount   = $('todayCount');
+      const doneList     = $('doneList');
+      const doneCount    = $('doneCount');
+
+      // All accessors read the active-lens slice.
+      const tasks  = () => tasksByLens[activeLens];
+      const heroIdNow = () => heroId[activeLens];
+      function heroTask() { return tasks().find((t) => t.id === heroIdNow()); }
+      function listTasks() { return tasks().filter((t) => t.id !== heroIdNow()); }
+      const activeStartedId = () =>
+        Object.keys(startedAt[activeLens]).find((id) => startedAt[activeLens][id]) ?? null;
+
+      // ============================================================
+      // HERO (Plan state)
+      // ============================================================
+      function renderHero() {
+        const t = heroTask();
+        if (!t) return;
+        wnTitle.textContent = t.title;
+
+        const metaBits = [];
+        if (t.project) metaBits.push(t.project);
+        if (t.due)     metaBits.push(t.due);
+        if (t.size)    metaBits.push(SIZE_LABEL[t.size] ?? t.size);
+        wnMeta.innerHTML = metaBits.map((b, i) =>
+          (i > 0 ? '<span class="aa-wn-card__sep">·</span>' : '') + '<span>' + b + '</span>'
+        ).join('');
+
+        wnWhy.innerHTML = t.why ?? '';
+        wnWhy.style.display = t.why ? '' : 'none';
+
+        // State indicator: "Now" if this task is started, else "Next".
+        const started = !!startedAt[activeLens][t.id];
+        wnState.classList.toggle('aa-wn-state--now', started);
+        wnStateLabel.textContent = started ? 'Now' : 'Next';
+        wnContext.textContent = (started ? 'Now' : 'Next') + ' · ' + activeLens;
+
+        // Hero actions — NEVER a complete affordance. Only Start (→ focus) +
+        // Not now. A task completes from focus mode, not here.
+        wnActions.innerHTML = '';
+        wnActions.append(
+          mkBtn('Start', 'primary', enterFocus),
+          mkBtn('Not now', 'secondary', () => {}),
+        );
+      }
+
+      // ============================================================
+      // TODAY COLUMN
+      // ============================================================
+      function renderToday() {
+        todayCount.textContent = tasks().length + ' of ' + TODAY_CAP;
+        todayList.innerHTML = '';
+
+        const hero = heroTask();
+        if (hero) todayList.appendChild(rowEl(hero, { isFocus: true }));
+        for (const t of listTasks()) todayList.appendChild(rowEl(t, { isFocus: false }));
+      }
+
+      function rowEl(t, { isFocus }) {
+        const li = document.createElement('li');
+        li.className = 'aa-task-row' + (isFocus ? ' aa-task-row--focus' : '');
+        li.dataset.id = t.id;
+
+        // No circle. A task is never completed from the list.
+        const main = document.createElement('div');
+        main.className = 'aa-task-row__main';
+        const title = document.createElement('span');
+        title.className = 'aa-task-row__title';
+        title.textContent = t.title;
+        main.appendChild(title);
+
+        const meta = document.createElement('div');
+        meta.className = 'aa-task-row__meta';
+        if (t.priority) {
+          const star = document.createElement('span');
+          star.className = 'aa-chip aa-chip--amber'; star.textContent = '★';
+          meta.appendChild(star);
+        }
+        if (t.project) {
+          const p = document.createElement('span');
+          p.className = 'aa-chip aa-chip--violet'; p.textContent = t.project;
+          meta.appendChild(p);
+        }
+        if (t.due) {
+          const d = document.createElement('span');
+          d.className = 'aa-chip aa-chip--teal'; d.textContent = t.due.replace(/^due /, '');
+          meta.appendChild(d);
+        }
+        if (t.size) {
+          const s = document.createElement('span');
+          s.className = 'aa-task-row__size'; s.textContent = t.size;
+          meta.appendChild(s);
+        }
+        if (meta.childElementCount) main.appendChild(meta);
+        li.appendChild(main);
+
+        // Right-side action: hero row shows a status tag (Next / In focus);
+        // every other row gets a Focus button that promotes it into the hero.
+        const action = document.createElement('div');
+        action.className = 'aa-task-row__row-action';
+        if (isFocus) {
+          const tag = document.createElement('span');
+          tag.className = 'aa-task-row__focus-tag';
+          tag.textContent = startedAt[activeLens][t.id] ? 'In focus' : 'Next';
+          action.appendChild(tag);
+        } else {
+          const f = mkBtn('Focus', 'ghost', () => promote(t.id));
+          f.classList.add('aa-btn--sm');
+          action.appendChild(f);
+        }
+        li.appendChild(action);
+        return li;
+      }
+
+      // Promote a Today task into the hero. Stays in Plan mode — this is "pick
+      // what's next," NOT "start doing it." Start (hero) does that.
+      function promote(id) {
+        // If another task is mid-focus, leave it started — the hero just
+        // changes; the started task is flagged in its row. (No two "nows":
+        // entering focus on the new hero below will pause any other.)
+        heroId[activeLens] = id;
+        renderHero();
+        renderToday();
+      }
+
+      // ============================================================
+      // FOCUS VIEW — the only place to start, complete, or note a task
+      // ============================================================
+      function enterFocus() {
+        const id = heroIdNow();
+        // Single "now" rule: starting this task pauses any other in this lens.
+        const cur = activeStartedId();
+        const lensStarted = startedAt[activeLens];
+        if (cur && cur !== id) lensStarted[cur] = null;
+        lensStarted[id] = new Date();
+
+        renderHero();      // hero flips to "Now" (visible again on exit)
+        renderToday();
+        renderFocusView();
+        document.body.classList.add('focus');
+        $('forcePlan').setAttribute('aria-pressed', 'false');
+        $('forceFocus').setAttribute('aria-pressed', 'true');
+        $('focusLens').textContent = activeLens;
+        $('focusCompose').focus();
+      }
+
+      function exitFocus({ complete = false } = {}) {
+        const id = heroIdNow();
+        const lensStarted = startedAt[activeLens];
+        if (complete) {
+          // The single sanctioned completion path.
+          lensStarted[id] = null;
+          updates[activeLens][id] = [];   // cleared on done (isDone semantics)
+        } else {
+          // Pause: work stops, task returns to Next. startedAt cleared.
+          lensStarted[id] = null;
+        }
+        document.body.classList.remove('focus');
+        $('forcePlan').setAttribute('aria-pressed', 'true');
+        $('forceFocus').setAttribute('aria-pressed', 'false');
+        renderHero();
+        renderToday();
+      }
+
+      function renderFocusView() {
+        const t = heroTask();
+        if (!t) return;
+        $('focusTitle').textContent = t.title;
+
+        const metaBits = [];
+        if (t.project) metaBits.push(t.project);
+        if (t.due)     metaBits.push(t.due);
+        if (t.size)    metaBits.push(SIZE_LABEL[t.size] ?? t.size);
+        $('focusMeta').innerHTML = metaBits.map((b, i) =>
+          (i > 0 ? '<span class="focus-view__sep">·</span>' : '') + '<span>' + b + '</span>'
+        ).join('');
+        $('focusLens').textContent = activeLens;
+
+        renderThread(t.id);
+      }
+
+      // TaskUpdate thread — newest at the bottom. Reads the active-lens slice
+      // of the updates log (TaskUpdate: body + createdAt, the real model).
+      function renderThread(id) {
+        const list = updates[activeLens][id];
+        const thread = $('focusThread');
+        thread.innerHTML = '';
+        if (list.length === 0) {
+          const empty = document.createElement('p');
+          empty.className = 'col__empty';
+          empty.textContent = 'No notes yet. Add one when you make progress.';
+          thread.appendChild(empty);
+          return;
+        }
+        list.forEach((u, i) => {
+          const row = document.createElement('div');
+          row.className = 'focus-update';
+
+          const rail = document.createElement('div');
+          rail.className = 'focus-update__rail';
+          const node = document.createElement('div');
+          node.className = 'focus-update__node';
+          const line = document.createElement('div');
+          line.className = 'focus-update__line';
+          rail.append(node, line);
+
+          const body = document.createElement('div');
+          body.className = 'focus-update__body';
+          const text = document.createElement('div');
+          text.className = 'focus-update__text';
+          text.textContent = u.body;
+          const time = document.createElement('div');
+          time.className = 'focus-update__time';
+          time.textContent = formatTime(u.createdAt);
+          body.append(text, time);
+
+          row.append(rail, body);
+          thread.appendChild(row);
+        });
+      }
+
+      function addUpdate() {
+        const input = $('focusCompose');
+        const body = input.value.trim();
+        if (!body) return;
+        updates[activeLens][heroIdNow()].push({ body, createdAt: new Date() });
+        input.value = '';
+        renderThread(heroIdNow());
+        // Keep the field focused for rapid-fire notes.
+        input.focus();
+      }
+
+      // ============================================================
+      // DONE COLUMN (lens-scoped)
+      // ============================================================
+      function renderDone() {
+        const items = doneByLens[activeLens];
+        doneCount.textContent = items.length;
+        doneList.innerHTML = '';
+        for (const title of items) {
+          const li = document.createElement('li');
+          li.className = 'aa-task-row aa-task-row--done aa-task-row--muted';
+          const main = document.createElement('div');
+          main.className = 'aa-task-row__main';
+          const t = document.createElement('span');
+          t.className = 'aa-task-row__title';
+          t.textContent = title;
+          main.appendChild(t);
+          li.appendChild(main);
+          doneList.appendChild(li);
+        }
+      }
+
+      // ============================================================
+      // LENS SWITCH
+      // ============================================================
+      function renderLensSwitch() {
+        const root = $('lensSwitch');
+        root.innerHTML = '';
+        for (const lens of LENSES) {
+          const isActive = lens.id === activeLens;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'aa-lens__btn' + (isActive ? ' aa-lens__btn--active' : '');
+          btn.setAttribute('role', 'tab');
+          btn.setAttribute('aria-selected', String(isActive));
+          btn.textContent = lens.label;
+          btn.addEventListener('click', () => switchLens(lens.id));
+          root.appendChild(btn);
+        }
+      }
+
+      // Switch lens. The active lens scopes the whole page — hero, Today,
+      // Done, and focus view all swap to the new context. If the outgoing
+      // lens has a task mid-focus, exit it first (you can't be "in focus"
+      // on a task that's now out of view).
+      function switchLens(id) {
+        if (id === activeLens) return;
+        if (document.body.classList.contains('focus')) {
+          document.body.classList.remove('focus');
+          $('forcePlan').setAttribute('aria-pressed', 'true');
+          $('forceFocus').setAttribute('aria-pressed', 'false');
+        }
+        activeLens = id;
+        renderAll();
+      }
+
+      // ============================================================
+      // Shared
+      // ============================================================
+      function mkBtn(label, variant, onClick) {
+        const b = document.createElement('button');
+        b.className = 'aa-btn aa-btn--' + variant;
+        b.textContent = label;
+        b.addEventListener('click', onClick);
+        return b;
+      }
+
+      // 9:41 AM  ·  9:42 AM  (compact, mono — matches the size-chip aesthetic)
+      function formatTime(d) {
+        return new Date(d).toLocaleTimeString('en-US', {
+          hour: 'numeric', minute: '2-digit',
+        });
+      }
+
+      // ---- Wire up ----
+      $('forcePlan').addEventListener('click', () => exitFocus());
+      $('forceFocus').addEventListener('click', enterFocus);
+      $('focusExit').addEventListener('click', () => exitFocus());
+      $('focusComplete').addEventListener('click', () => exitFocus({ complete: true }));
+      $('focusPause').addEventListener('click', () => exitFocus());
+      $('focusPost').addEventListener('click', addUpdate);
+      $('focusCompose').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addUpdate(); }
+      });
+      // Esc exits focus (mirrors the real FocusMode component).
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.body.classList.contains('focus')) {
+          exitFocus();
+        }
+      });
+
+      // Theme toggle
+      const themeBtn = $('themeToggle');
+      themeBtn.addEventListener('click', () => {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        themeBtn.textContent = isDark ? 'Dark' : 'Light';
+      });
+
+      // Re-render everything for the active lens. Called on lens switch + init.
+      function renderAll() {
+        renderLensSwitch();
+        renderHero();
+        renderToday();
+        renderDone();
+      }
+
+      // Initial render
+      renderAll();
+    </script>
+  </body>
+</html>
