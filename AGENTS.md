@@ -56,7 +56,8 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Stripe billing implementation | `docs/BILLING-INTEGRATION.md` (plan; **not yet implemented**) |
 | Marketing/public site | `docs/MARKETING.md` + `docs/PUBLIC-PAGES.md` |
 | Deployment / hosting | `docs/deployment-research.md` |
-| What's left to do / pick up next | `docs/BACKLOG.md` (+ `docs/IMPLEMENTATION-CHECKLIST.md`) |
+| What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/BACKLOG.md` |
+| A specific feature spec (ready/draft status, done-conditions) | `docs/specs/<feature>.md` (index + order in `docs/ROADMAP.md`) |
 | Product thesis, tone, strategic principles (the "why") | `PRODUCT.md` |
 | Wasp mechanics (config, imports, migrations, ops) | `webapp/AGENTS.md` ← load the `wasp` skill too |
 

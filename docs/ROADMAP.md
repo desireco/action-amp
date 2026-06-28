@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-06-27 (Discover — project review + GTM) -->
+<!-- Last reviewed: 2026-06-27 (Discover — project review + GTM; resources-project-owned spec added) -->
 
 ---
 
@@ -141,7 +141,19 @@ item; Build pulls `ready`.**
     `/app/projects/:id` route already exist on `fix/what-now-surfaces-triaged-
     tasks`** (alongside a triage co-author wizard + lossless Archive). When
     that branch merges, ~⅓ of this spec is satisfied; the rest stays.
-13. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
+13. **resources-project-owned** (`ready`) — make the existing-but-invisible
+    `Resource` entity real: project-owned links+notes, surfaced on the Project
+    detail page (add/edit/delete), with tasks referencing their project's
+    resources (many-to-many) and a **delete-with-impact** flow that shows which
+    tasks depend on a resource before you remove it. Closes the gap `PAGES.md`
+    already promises, and lands the PARA "reference material" leg of the
+    structure-depth differentiator named in §"The threat the docs under-price."
+    Narrowing resources from "Project or Goal" to **project-owned** is a
+    structural simplification (DB-enforceable invariant, no picker). Spec at
+    `docs/specs/resources-project-owned.md`. Gated on items 7–11 like the rest
+    of this tier — depth earns its keep after retention + the matcher prove
+    someone stays.
+14. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
     marketing pack, the real pricing page. Only worth doing once items 7–11
     prove someone stays and pays.
 
@@ -169,9 +181,9 @@ What landed and was signed off:
 **Open Discover actions on main:**
 1. `doc-reconciliation` is now the priority — the merged fix branch edited
    canonical docs; reconcile them so planning isn't split-brain.
-2. The seven remaining `ready` specs are the queue (observability, social-auth,
+2. The eight `ready` specs are the queue (observability, social-auth,
    focus-why-transparent, focus-engine-v2, command-palette, entitlement,
-   friction-cleanup remainder).
+   friction-cleanup remainder, resources-project-owned).
 
 ## Shipped
 
@@ -431,6 +443,7 @@ roadmaps forget and most launches stall on.
 - [ ] Entitlement caps → **`entitlement-enforcement`** (`ready`)
 - [ ] Friction cleanup → **`friction-cleanup`** (`ready`)
 - [ ] Command palette + search → **`command-palette-search`** (`ready`)
+- [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`)
 
 ### B. Non-code items the user owns (no spec — these are setup/decisions)
 
