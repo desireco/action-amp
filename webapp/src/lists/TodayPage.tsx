@@ -62,7 +62,8 @@ export function TodayPage() {
 
   // Done-today grouped by Goal (or "General"), same shape as the open-task
   // groups so GroupedList + TaskRow render identically (muted). Empty until
-  // the section is expanded and the lazy query resolves.
+  // the eager getDoneToday query resolves (fetched on mount so the collapsed
+  // count is known without expanding).
   const doneGroups = useMemo<GroupDef<TaskRowTask>[]>(() => {
     if (!doneToday) return [];
     const byGoal = new Map<string, TaskRowTask[]>();

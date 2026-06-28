@@ -64,14 +64,21 @@ export function GoalDetailPage() {
     ];
   }, [goal]);
 
-  // Aggregate progress across standalone tasks + every linked project's tasks.
-  // Matches the rollup getGoals computes for the list view, so the two agree.
+  // Aggregate progress — MUST match getGoals' rollup so the list-card % and
+  // this header % agree. getGoals counts each linked Project as a single
+  // binary unit (done/not-done) + each standalone task as a unit; it does NOT
+  // count project-internal tasks (a half-done project is "not done"). We use
+  // the identical formula here. This also avoids double-counting a task that
+  // carries both goalId and projectId (standalone tasks are goal.tasks; project
+  // tasks are reached only via their project's binary state).
   const { progress, totalItems, doneItems } = useMemo(() => {
     if (!goal) return { progress: 0, totalItems: 0, doneItems: 0 };
-    const taskDone = goal.tasks.filter((t) => t.isDone).length;
-    const projectTaskDone = goal.projects.flatMap((p) => p.tasks).filter((t) => t.isDone).length;
-    const done = taskDone + projectTaskDone;
-    const total = goal.tasks.length + goal.projects.flatMap((p) => p.tasks).length;
+    const projectsDone = goal.projects.filter((p) => p.isDone).length;
+    const projectsTotal = goal.projects.length;
+    const tasksDone = goal.tasks.filter((t) => t.isDone).length;
+    const tasksTotal = goal.tasks.length;
+    const done = projectsDone + tasksDone;
+    const total = projectsTotal + tasksTotal;
     return {
       progress: total === 0 ? 0 : Math.round((done / total) * 100),
       totalItems: total,

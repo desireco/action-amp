@@ -78,7 +78,7 @@ export function SomedayPage() {
               onClick={() => handlePromote(task)}
               title="Move to Today"
             >
-              → Today
+              Today
             </Button>
           </li>
         ))}

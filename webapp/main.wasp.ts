@@ -11,7 +11,8 @@ import { getTask, getTasks, getDoneToday, getTopTask, toggleTaskDone, updateTask
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { createProject } from "./src/projects/operations" with { type: "ref" };
 import { getProject, createTask } from "./src/projects/operations" with { type: "ref" };
-import { ProjectDetailPage } from "./src/projects/ProjectDetailPage" with { type: "ref" };import { getGoals, getGoal } from "./src/goals/operations" with { type: "ref" };
+import { ProjectDetailPage } from "./src/projects/ProjectDetailPage" with { type: "ref" };
+import { getGoals, getGoal } from "./src/goals/operations" with { type: "ref" };
 import { createGoal } from "./src/goals/operations" with { type: "ref" };
 import { getLogbook } from "./src/logbook/operations" with { type: "ref" };
 import { createInboxItem, getInboxItems, triageInboxItem, restoreArchivedItem } from "./src/inbox/operations" with { type: "ref" };
