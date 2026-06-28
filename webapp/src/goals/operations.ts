@@ -1,4 +1,4 @@
-import type { GetGoals, CreateGoal } from "wasp/server/operations";
+import type { GetGoals, GetGoal, CreateGoal } from "wasp/server/operations";
 
 /**
  * Goals list for the Goals page, scoped to the active Lens.
@@ -40,6 +40,45 @@ export const getGoals = (async (args, context) => {
     };
   });
 }) satisfies GetGoals<{ lensId: string }>;
+
+// ----------------------------------------------------------------
+// Read: single goal (for the Goal detail page)
+// ----------------------------------------------------------------
+// Returns the goal + its standalone tasks (horizon-groupable like Project
+// detail) + its linked projects (name + progress, for the "linked projects"
+// list). Scoped by userId for tenancy. Standalone tasks are the ones filed
+// directly under the goal (goalId set, projectId null); project tasks are
+// reached via the project list, not duplicated here.
+export const getGoal = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  return await context.entities.Goal.findUnique({
+    where: { id: args.id, userId: context.user.id },
+    include: {
+      // Standalone tasks under this goal, with project/goal for TaskRow.
+      tasks: {
+        orderBy: [{ order: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
+        include: {
+          tags: true,
+          project: { select: { id: true, name: true } },
+          goal: { select: { id: true, name: true } },
+        },
+      },
+      // Linked projects: name + done/total for a per-project progress read.
+      projects: {
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          isDone: true,
+          dueDate: true,
+          tasks: { select: { id: true, isDone: true } },
+        },
+      },
+    },
+  });
+}) satisfies GetGoal<{ id: string }>;
 
 // ----------------------------------------------------------------
 // Create a goal

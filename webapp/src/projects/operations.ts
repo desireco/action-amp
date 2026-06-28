@@ -167,7 +167,11 @@ export const createTask = (async (args, context) => {
       content: null,
       userId: context.user.id,
       lensId: args.lensId,
-      projectId: args.projectId,
+      // A task is filed under a Project OR a Goal (or neither — standalone in
+      // the lens). Exactly one of projectId/goalId is typically set; both are
+      // nullable at the DB layer to support either parent.
+      projectId: args.projectId ?? null,
+      goalId: args.goalId ?? null,
       status: "UPCOMING",
       priority: "NORMAL",
       size: "M",
@@ -178,5 +182,6 @@ export const createTask = (async (args, context) => {
 }) satisfies CreateTask<{
   description: string;
   lensId: string;
-  projectId: string;
+  projectId?: string;
+  goalId?: string;
 }, { id: string }>;

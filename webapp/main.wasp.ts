@@ -11,8 +11,7 @@ import { getTask, getTasks, getDoneToday, getTopTask, toggleTaskDone, updateTask
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { createProject } from "./src/projects/operations" with { type: "ref" };
 import { getProject, createTask } from "./src/projects/operations" with { type: "ref" };
-import { ProjectDetailPage } from "./src/projects/ProjectDetailPage" with { type: "ref" };
-import { getGoals } from "./src/goals/operations" with { type: "ref" };
+import { ProjectDetailPage } from "./src/projects/ProjectDetailPage" with { type: "ref" };import { getGoals, getGoal } from "./src/goals/operations" with { type: "ref" };
 import { createGoal } from "./src/goals/operations" with { type: "ref" };
 import { getLogbook } from "./src/logbook/operations" with { type: "ref" };
 import { createInboxItem, getInboxItems, triageInboxItem, restoreArchivedItem } from "./src/inbox/operations" with { type: "ref" };
@@ -21,6 +20,7 @@ import { UpcomingPage } from "./src/lists/UpcomingPage" with { type: "ref" };
 import { SomedayPage } from "./src/lists/SomedayPage" with { type: "ref" };
 import { ProjectsPage } from "./src/projects/ProjectsPage" with { type: "ref" };
 import { GoalsPage } from "./src/goals/GoalsPage" with { type: "ref" };
+import { GoalDetailPage } from "./src/goals/GoalDetailPage" with { type: "ref" };
 import { LogbookPage } from "./src/logbook/LogbookPage" with { type: "ref" };
 import { ensureOnboarded, getAppData, setPreferredName, completeOnboarding } from "./src/onboarding/operations" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status } from "./src/billing/operations" with { type: "ref" };
@@ -100,6 +100,7 @@ export default app({
     route("SomedayRoute", "/app/someday", page(SomedayPage)),
     route("ProjectsRoute", "/app/projects", page(ProjectsPage)),
     route("GoalsRoute", "/app/goals", page(GoalsPage)),
+    route("GoalDetailRoute", "/app/goals/:id", page(GoalDetailPage)),
     route("LogbookRoute", "/app/logbook", page(LogbookPage)),
     route("SettingsRoute", "/app/settings", page(SettingsPage)),
     route("BillingRoute", "/app/settings/billing", page(BillingPage)),
@@ -148,6 +149,7 @@ export default app({
     query(getProject, { entities: ["Project", "Task"], auth: true }),
     action(createTask, { entities: ["Task"], auth: true }),
     query(getGoals, { entities: ["Goal", "Project", "Task"], auth: true }),
+    query(getGoal, { entities: ["Goal", "Project", "Task"], auth: true }),
     action(createGoal, { entities: ["Goal"], auth: true }),
     query(getLogbook, { entities: ["Task", "Project", "InboxItem"], auth: true }),
     query(getAppData, { entities: ["Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),

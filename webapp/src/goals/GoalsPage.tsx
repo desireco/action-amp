@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getGoals, createGoal } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
@@ -88,7 +89,7 @@ export function GoalsPage() {
       <div className="aa-goals-grid">
         {(goals ?? []).map((g: GoalRow) => (
           <div key={g.id} className="aa-goal-card">
-            <h3 className="aa-goal-card__name">{g.name}</h3>
+            <Link to={`/app/goals/${g.id}`} className="aa-goal-card__name">{g.name}</Link>
             {g.description && <p className="aa-goal-card__desc">{g.description}</p>}
             <div className="aa-goal-card__progress">
               <div className="aa-goal-card__bar">
