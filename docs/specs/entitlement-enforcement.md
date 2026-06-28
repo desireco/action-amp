@@ -14,8 +14,30 @@ free product stops giving away the Pro product and the strongest upgrade
 trigger ("personal-only Lens") actually exists. Today `FREE_LIMITS` in
 `billing/config.ts` is defined and imported nowhere; `createProject` /
 `createGoal` create unconditionally; the Work lens is seeded for everyone.
-This spec wires the existing, unused `FREE_LIMITS` + `isPaidPlan` into the
+This spec wires the existing, unused `FREE_LIMITS` + `isPlanActive` into the
 operations that create scoped entities, and adds the matching client UX.
+
+## The design principle (load-bearing — read before building)
+
+**Every limit a FREE user encounters is a paywall moment.** When a free user
+hits any cap — tries the Work lens, creates a 4th project, a 2nd goal, later
+opens the command palette — they don't get a hard error or silent refusal.
+They get a **calm, specific "this is a Pro feature" message** that names what
+they tried + what Pro unlocks + a path to upgrade. The pattern is identical
+across every limit: same tone, same component, same billing link.
+
+This is on-brand (PRODUCT.md: honest, not salesy; calm, not pushy) and it's
+the conversion mechanism — each cap is a natural "I want more" moment, and a
+raw 402 wastes it. The server-side guard is the enforcement; the friendly
+client surface is the upgrade trigger. Both are required for every limit.
+
+**Shared building block:** a single `<ProGate>` component (or render helper)
+takes `{ feature: string; reason: string }` and renders the consistent panel:
+a short line ("`{feature}` is a Pro feature"), a one-sentence `{reason}`
+("bring your work life in" / "organize more than 3 projects" / etc.), and a
+primary link to `/app/settings/billing` (+ secondary to `/founding-100`).
+Every limit surfaces through it, so the tone never drifts and there's one
+place to tune the upgrade copy. No modals, no red dots, no urgency tricks.
 
 ## Why
 
@@ -31,55 +53,58 @@ missing.
 
 ## Done-conditions
 
-- [ ] **`FREE_LIMITS` is read in `createProject`.** In
-      `src/projects/operations.ts`, before `Project.create`, if the user is
-      not paid (`!isPaidPlan(context.user.plan)`), count the user's non-done
+- [ ] **`FREE_LIMITS` is read in `createProject` — server refuses, client
+      invites.** In `src/projects/operations.ts`, before `Project.create`, if
+      the user is not active-paid (`!isPlanActive(...)`), count non-done
       Projects in the target lens; throw `HttpError(402, ...)` if `>=
-      FREE_LIMITS.projects` (3). Verified by a Vitest case: a FREE user
-      creating a 4th project is rejected; a PRO user is not.
-- [ ] **`FREE_LIMITS` is read in `createGoal`.** Same pattern in
+      FREE_LIMITS.projects` (3). **The client surfaces this as a paywall
+      moment**, not a raw error: the Projects page catches the 402 on the
+      create action and renders the shared `<ProGate>` with `feature: "a 4th
+      project"` / `reason: "organize more than 3 projects with Pro"`.
+      Verified by: a Vitest case (FREE user 4th project rejected, PRO not) +
+      a component test that the ProGate renders on the 402.
+- [ ] **`FREE_LIMITS` is read in `createGoal` — same pattern.** In
       `src/goals/operations.ts`: FREE user, count non-done Goals in lens,
-      throw `HttpError(402)` if `>= FREE_LIMITS.goals` (1). Verified by test.
-- [ ] **The Work Lens is "visible-but-locked" for FREE users.** Design call
-      (revised 2026-06-27): FREE users *see* the Work lens in the switch, but
-      selecting it surfaces a calm **"This is a Pro feature"** message instead
-      of Work content — they don't get a hard 402 error, they get an invitation.
-      This is softer and more on-brand than a read-time error, and it's the
-      common pattern (Things/Todoist/Linear all show locked premium surfaces).
+      throw `HttpError(402)` if `>= FREE_LIMITS.goals` (1). Client renders
+      `<ProGate>` with `feature: "a 2nd goal"` / `reason: "link work to more
+      than one outcome with Pro"`. Verified by test.
+- [ ] **The cap is discoverable *before* the wall.** On the Projects page and
+      Goals page, FREE users see their remaining allowance near the create
+      affordance (e.g. "2 of 3 projects used" via a `Chip`); at the cap the
+      create control is disabled and reads as a ProGate trigger ("Upgrade for
+      more projects →"), not a dead button. PRO users see no cap UI. Reuse
+      `getAppData` counts (already returned) — no new query. This way the
+      paywall moment is anticipated, not a surprise mid-action.
+- [ ] **The Work Lens is "visible-but-locked" for FREE users** (the same
+      paywall-moment principle applied to the lens). FREE users *see* the Work
+      lens in the switch, but selecting it renders the shared `<ProGate>` in
+      the main area — `feature: "the Work lens"` / `reason: "bring your work
+      life into ActionAmp"` — instead of Work content. Same component, same
+      tone, same billing link as the project/goal caps. The Work lens chip can
+      carry a subtle "Pro" affordance (tiny chip, not a bright badge —
+      PRODUCT.md) so the gate is discoverable before the click.
 
-      **Two layers, both required:**
-      - **Client (the UX — your ask):** when a FREE user clicks the Work lens
-        (`LensSwitch` onSelect, `AppShell.tsx`), the app does **not** switch the
-        active lens / fire Work queries. Instead it shows a calm inline panel
-        in the main area: a short line ("Work is a Pro feature — bring your
-        work life into ActionAmp") + a primary link to
-        `/app/settings/billing` or the Founding-100 page. No modal, no red dot,
-        no guilt copy (PRODUCT.md). The Work lens in the switch can carry a
-        subtle "Pro" affordance (a tiny lock or "Pro" chip) so the gate is
-        discoverable *before* the click, not just after.
-      - **Server (the enforcement — non-negotiable):** the client gate alone is
-        bypassable (lens state is client React + `localStorage`, no server
-        action; a savvy user can set `aa-lens=Work` and the queries would still
-        return data). So `getTasks`/`getProjects`/`getGoals` (any lens-scoped
-        read) **must refuse Work-lens data for FREE users** server-side — via a
-        shared `assertLensAllowed(context.user, lensId, lenses)` helper that
-        throws `HttpError(402)` when a FREE user targets a lens named `Work`.
-        The client gate is the friendly surface; this is the billing boundary.
-        Without it, "visible-but-locked" is theater.
+      **Two layers, both required (the lens-specific enforcement):**
+      - **Client (the UX):** on Work-lens click for a FREE user, the app does
+        **not** switch the active lens / fire Work queries — it shows the
+        `<ProGate>`. No modal, no red dot, no guilt copy.
+      - **Server (the boundary, non-negotiable):** the client gate is bypassable
+        (lens state is client React + `localStorage`, no server action; a user
+        can set `aa-lens=Work` and the queries would still run). So
+        `getTasks`/`getProjects`/`getGoals` (any lens-scoped read) **must refuse
+        Work-lens data for FREE users** server-side via a shared
+        `assertLensAllowed(context.user, lensId, lenses)` helper that throws
+        `HttpError(402)`. The client gate is the friendly surface; this is the
+        billing boundary. Without it, "visible-but-locked" is theater.
       - **Keep both lenses seeded** (`ensureOnboarded` unchanged): the Work lens
-        exists for FREE users (so the switch shows it and it's populated on
-        upgrade), but its content is gated by both layers above.
+        exists for FREE users (so the switch shows it + it's populated on
+        upgrade), but its content is gated by both layers.
 - [ ] **A new FREE user defaults to the Me lens**, not Work. Today
       `AppShell.tsx:55` defaults to `"Work"`. Flip the default to `"Me"` so a
       FREE user's first experience is the lens they're entitled to — landing
       them on the locked Work panel on first paint would be a poor first
       impression even with the friendly message. (Cosmetic for paid users; they
       switch freely.)
-- [ ] **The client shows the cap state.** On the Projects page and Goals page,
-      FREE users see their remaining allowance (e.g. "2 of 3 projects") near
-      the create affordance; at the cap, the create button is disabled with a
-      tooltip linking to billing. PRO users see no cap UI. Reuse `getAppData`
-      counts (already returned) — no new query.
 - [ ] **`isPlanActive` is used, not just `isPaidPlan`, where renewal matters.**
       The create-guards above check `isPaidPlan` (any paid plan); but a PRO
       user whose `planRenewsAt` has passed should be treated as FREE.
@@ -105,9 +130,12 @@ missing.
 
 - **No Logbook 30-day limit.** Deferred (above).
 - **No multi-device cap.** No device model exists; building one is out of scope.
-- **No command-palette / search / energy-tag gating.** Those features don't
-  exist yet; nothing to gate. They'll be gated when built
-  (`command-palette-search`, `focus-engine-v2`).
+- **No command-palette / search / energy-tag gating in *this* spec.** Those
+  features don't exist yet. **But when they ship, they reuse this same
+  `<ProGate>` pattern** — that's the point of the shared component. Each future
+  Pro feature's spec should call `<ProGate feature="the command palette"
+  reason="...">` rather than invent its own paywall. The pattern is established
+  here; later specs inherit it.
 - **No pricing changes, no new plans, no Stripe changes.** The plans and
   prices are correct; only enforcement is missing.
 - **No migration of plan data.** Existing `User.plan` values are already
