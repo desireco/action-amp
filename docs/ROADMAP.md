@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-06-27 (Discover — project review + GTM; resources-project-owned spec added) -->
+<!-- Last reviewed: 2026-06-27 (Discover — project review + GTM; resources-project-owned spec added; cli spec added 2026-06-27 as item 15) -->
 
 ---
 
@@ -156,6 +156,20 @@ item; Build pulls `ready`.**
 14. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
     marketing pack, the real pricing page. Only worth doing once items 7–11
     prove someone stays and pays.
+15. **cli** (`ready`, **developer surface — not validation-critical**) — a
+    top-level `cli/` package (typed library + thin binary) that talks to the
+    HTTP API via **Personal Access Tokens** added to the backend, plus four
+    paired orchestration skills (inbox-triage, goal-breakdown, today-balancer,
+    task-research) that shell out to `actionamp <cmd> --json`. Headline command
+    is `actionamp now`. **Honest framing:** this is a power-user / developer
+    surface, not part of the validation gauntlet (§"Now") — the roadmap's own
+    thesis is that adding surfaces before proving anyone wants the existing
+    product is malpractice. So it's `ready` for Build to pull
+    **opportunistically** (a self-contained, well-scoped piece of work; or when
+    the skills need a machine interface), not a jump-the-queue item. Ships only
+    what the backend already exposes; missing writes filed as
+    `cli-write-ops.md` (`deferred`) + `cli-comments-resources.md` (`deferred`,
+    unblocks the `task-research` skill). Spec at `docs/specs/cli.md`.
 
 ## Branch state (2026-06-27)
 

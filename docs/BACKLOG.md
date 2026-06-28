@@ -131,6 +131,29 @@ items they imply — not built yet, listed here so they're not lost:
 
 ---
 
+## ☐ CLI + orchestration skills (developer surface)
+
+> A top-level `cli/` package (typed library + thin binary) talking to the HTTP
+> API via **Personal Access Tokens**, plus four paired agent skills that shell
+> out to `actionamp <cmd> --json`. This is a power-user / developer surface —
+> **not** part of the validation gauntlet; `ready` for Build to pull
+> opportunistically. Tracked as roadmap item 15 in `docs/ROADMAP.md`.
+
+- [ ] **`cli`** (`ready`, spec: `docs/specs/cli.md`) — PAT plumbing on the
+      backend (`ApiKey` model + `/api/cli/*` transport), the `cli/` package
+      (`now`, `task`, `today`, `inbox`, `project`, `goal`, `logbook`), and
+      three unblocked skills (inbox-triage, goal-breakdown, today-balancer) +
+      one scaffolded-blocked (task-research).
+- [ ] **`cli-write-ops`** (`deferred`, spec: `docs/specs/cli-write-ops.md`) —
+      the missing writes: edit task description/priority/size, edit/delete
+      project + goal. Unblocks refinement flows.
+- [ ] **`cli-comments-resources`** (`deferred`, spec:
+      `docs/specs/cli-comments-resources.md`) — a Comment model + full Resource
+      CRUD. Unblocks the `task-research` skill. Reconciles with
+      `resources-project-owned`.
+
+---
+
 ## ✓ Done
 
 - [x] Foundation commit (spec, design system ref, mockups, scaffold) — `e9c05c4`
