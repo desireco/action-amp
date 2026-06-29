@@ -88,14 +88,14 @@ Each predicate from `docs/specs/first-run-experience.md` → verdict + evidence.
 - [x] Onboarding teaches the real 3-step loop in ≤3 panels — **PASS** —
       `PAGES = ["name","step-1","step-2","step-3"]`: exactly 3 panels after the
       name step. Capture ("press ⌘K, type a thought, hit Enter") → Triage
-      ("decide what each thing becomes") → Focus ("What Now picks the next
+      ("decide what each thing becomes") → Focus ("Next picks the next
       thing"). One title + one body + one `LoopVisual` each. Content matches the
-      real app (⌘K capture, Inbox triage T/P keys, What Now single-task).
+      real app (⌘K capture, Inbox triage T/P keys, Next single-task).
 - [x] New users get seed content — **PASS** — `ensureOnboarded` seeds one Task
       in Me lens, `status=TODAY, priority=NORMAL, size=M`, description "Try it:
       complete this task", guarded by `Task.count===0`. Test
       "seeds exactly one TODAY task in the Me lens when the user has zero tasks".
-- [x] First-paint What Now non-empty — **PASS (by construction)** — the seeded
+- [x] First-paint Next non-empty — **PASS (by construction)** — the seeded
       task is `status=TODAY`, which `getTopTask` surfaces. (Manual browser
       verification deferred — see Open items.)
 - [x] Existing users unaffected — **PASS** — the `Task.count===0` guard means a
@@ -163,11 +163,11 @@ manual step the spec's own done-conditions ask for):
    e2e-breaking root cause is fixed at the source (`create-verified-user.mjs` +
    `reset-user.mjs` now set the flag), and I re-seeded the dev user, but I did
    not execute Playwright this session. The spec's done-conditions ("existing
-   e2e login flow still passes," "first-paint What Now non-empty") are best
+   e2e login flow still passes," "first-paint Next non-empty") are best
    confirmed by actually running it. If any spec fails, send me the output.
 2. **Spot-check the onboarding visually** — open `/welcome` as a fresh user,
    click through the 3 panels, confirm the loop visuals render and "Go →" lands
-   on `/app` with the seeded task in What Now.
+   on `/app` with the seeded task in Next.
 
 Once Discover confirms the e2e + visual check, this is `done`. I've left the
 `legal-pages-oauth` review (its prerequisite in the chain) at `review` too —

@@ -61,7 +61,7 @@ Mobile-first. Slides up from the bottom edge, anchored in the thumb zone.
 Used for action menus and the "Not now" snooze flow.
 
 **Used by:**
-- **"Not now" snooze** — 1h / 3h / tomorrow / weekend / Someday (from What Now card)
+- **"Not now" snooze** — 1h / 3h / tomorrow / weekend / Someday (from Next card)
 - **Action menus** — row-level actions on tasks/projects
 - **Filter / sort** — list controls
 

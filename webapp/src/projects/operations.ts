@@ -150,7 +150,7 @@ export const getProject = (async (args, context) => {
 // Create: a task directly in a project (the detail page's "add task")
 // ----------------------------------------------------------------
 // Mirrors createProject. A task added here is actionable on landing: it gets
-// status UPCOMING (the triage default since 2026-06-25 — surfaces on What Now,
+// status UPCOMING (the triage default since 2026-06-25 — surfaces on Next,
 // doesn't clutter Today) and the M / NORMAL defaults. lensId comes from the
 // project (not the active lens) so a task always joins its project's lens.
 export const createTask = (async (args, context) => {

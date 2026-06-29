@@ -196,7 +196,7 @@ export function GoalDetailPage() {
               <p className="aa-list-empty__text">
                 {goal.projects.length > 0
                   ? "Tasks live in this goal's projects — or add a standalone one here."
-                  : "Add the first step — a task lands on Upcoming and shows on What Now."}
+                  : "Add the first step — a task lands on Upcoming and shows on Next."}
               </p>
             </div>
           ) : (

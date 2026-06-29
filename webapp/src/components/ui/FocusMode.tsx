@@ -15,7 +15,7 @@ export interface FocusTask {
  * FocusMode — full-screen single-task view. No sidebar, no list, no counts.
  *
  * Overlay pattern #01: takes over the viewport. Entered via `F` on a task (or
- * from What Now's "Do this"). Esc exits, returning to What Now.
+ * from Next's "Do this"). Esc exits, returning to Next.
  * From FEATURES.md F13.
  */
 export function FocusMode({

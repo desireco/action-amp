@@ -65,7 +65,7 @@ appears in Work/Planning/Review except by coming through triage.
 - Filing targets are scoped — triaging an item into a Project or Goal places it
   in the **Lens confirmed on the wizard's Context step** (§5.5).
 - Triage never auto-clutters the Work area: a triaged Task defaults to
-  **Upcoming** (the bench), which surfaces on What Now only if undated or due
+  **Upcoming** (the bench), which surfaces on Next only if undated or due
   (§5.2). Committing to Today is an explicit choice; demoting to Someday is, too.
 - The single-card one-key dispatch (`1/2/3/P/R/Del`) is **gone** — replaced by
   the wizard steps (Context → Type → Spec → Complete). The old keymap survives
@@ -75,7 +75,7 @@ appears in Work/Planning/Review except by coming through triage.
 
 - Where **Now / Next** lives. The home screen (`/app`) is a chooser, not a list.
 - Two surfaces:
-  - **What Now** — the single focus task. State machine:
+  - **Next** — the single focus task. State machine:
     `Next → (Start) → Now → (Done | Defer | Pause) → Next`. The Now state
     (`Task.startedAt`) persists across navigation.
   - **Today** — the committed-for-today list, capped at 5 (F12). The cap is a
@@ -138,14 +138,14 @@ These were the open structural calls. All resolved:
    is reachable as a **view from inside Today** (a "see upcoming" toggle that
    lets you promote tasks onto today). Mental model: Upcoming = the bench; Today
    = the court. You pull from the bench deliberately for the *Today* list, but a
-   bench task with no future due date is also a Next candidate on What Now (§5.2)
+   bench task with no future due date is also a Next candidate on Next (§5.2)
    — triage should put real work in front of you, not hide it behind a toggle.
-2. **What Now's Next candidate pool = Today + Upcoming (revised 2026-06-25).**
+2. **Next's Next candidate pool = Today + Upcoming (revised 2026-06-25).**
    `getTopTask` selects `status ∈ {TODAY, UPCOMING}` **and** (`dueDate` is null
    or `dueDate ≤ now`), in the active Lens, not done. So a freshly triaged task
    (Upcoming, no due) surfaces as Next immediately; Today stays un-cluttered.
    The due-guard preserves snooze: a snoozed task (Upcoming + future `dueDate`)
-   stays off What Now until its time arrives — at which point it auto-resurfaces
+   stays off Next until its time arrives — at which point it auto-resurfaces
    (the behavior §7 had deferred). *(Previously locked 2026-06-23 as "Today
    only"; reversed because a triaged task should be actionable, not invisible —
    the Someday default change in `TRIAGE.md` §5 made Today-only the wrong
@@ -153,8 +153,8 @@ These were the open structural calls. All resolved:
 3. **Someday lives in the Planning Area.** It's a "maybe later" organizing
    concept, not a working one. The `/someday` page moves under Planning in the
    nav/route cluster.
-4. **Work Area = What Now (Now/Next chooser) + Today (committed list).** No
-   third surface. What Now shows the single focus task with its Next→Now state
+4. **Work Area = Next (Now/Next chooser) + Today (committed list).** No
+   third surface. Next shows the single focus task with its Next→Now state
    machine; Today shows the committed-for-today list with the 5-item cap.
 5. **Triage lens assignment = an explicit step (revised 2026-06-25).** Triage
    now opens on a **Context (Lens)** step: a radio pre-filled with the active
@@ -172,7 +172,7 @@ These were the open structural calls. All resolved:
      one section is expanded at a time; expanding one collapses the others.
      This delivers the "when you're in a view, you don't see other things"
      property with plain nav state (no routing-layer change).
-   - Expanding **Work** shows: What Now, Today.
+   - Expanding **Work** shows: Next, Today.
    - Expanding **Plan** shows: Projects, Goals, Someday.
    - Expanding **Review** shows: Logbook, reports (when built).
    - **Capture stays pinned outside both switches** — it's pervasive.
@@ -210,5 +210,5 @@ The following were updated to match this doc (commit alongside):
   the new focus-switch nav (route stays `/app/someday`).
 - **(Done 2026-06-25)** `getTopTask` scope — widened from `status=TODAY` to
   `status ∈ {TODAY, UPCOMING}` with a `dueDate ≤ now` (or null) guard, so a
-  triaged-to-Upcoming task surfaces on What Now and a snoozed task auto-resurfaces
+  triaged-to-Upcoming task surfaces on Next and a snoozed task auto-resurfaces
   when its snooze expires. See §5.2.

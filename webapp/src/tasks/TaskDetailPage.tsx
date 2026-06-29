@@ -17,7 +17,7 @@ export function TaskDetailPage() {
   return (
     <div className="aa-task">
       <Link className="aa-task-back" to="/app">
-        ← What Now
+        ← Next
       </Link>
 
       {isLoading && <p className="aa-task-state">Loading…</p>}

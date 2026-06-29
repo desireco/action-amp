@@ -16,7 +16,7 @@ const base = {
   "aria-hidden": true,
 } as const;
 
-/* What Now — star (the home / chooser) */
+/* Next — star (the home / chooser) */
 export function StarIcon(p: IconProps) {
   return (
     <svg {...base} {...p}>

@@ -52,7 +52,7 @@
 - [x] Add **nav item icons** — one SVG per nav item (star, inbox, clock, calendar, dashed-circle, folder, target, book). Use the icons from the prototype.
 - [x] Add **active indicator bar** — the teal left-edge bar that animates in on the active nav item (prototype: `.nav-item.active::before`).
 - [x] Add **count badges** — inbox count (amber urgent), today count, project count, goal count. (Hidden on `soon` items until pages exist.)
-- [x] Add **nav sections** — subtle dividers: "⌡ What Now / Inbox / Today / Upcoming / Someday" then "Projects / Goals" then "Logbook".
+- [x] Add **nav sections** — subtle dividers: "⌡ Next / Inbox / Today / Upcoming / Someday" then "Projects / Goals" then "Logbook".
 - [x] Add **user avatar/initials** at sidebar bottom instead of text name.
 
 ### 1.2 ✅ Topbar
@@ -66,10 +66,10 @@
 
 ---
 
-## Phase 2 — What Now Page (the wedge)
+## Phase 2 — Next Page (the wedge)
 
 > The home screen. Not a list, a chooser.
-> Goal: implement the full What Now view from the prototype.
+> Goal: implement the full Next view from the prototype.
 
 ### 2.1 🔨 Moment bar / context
 - [x] "Right now · 30 min available · Work" context line above the card.
@@ -84,7 +84,7 @@
 - [x] **"Why this" line** — amber-highlighted reason: "Because it's Important and due today."
 - [x] **Action buttons** — "Do this" (primary), "Not now" (secondary). "Not now" opens snooze options (handler stubbed).
 - [x] Card centered, max-width 520px, generous vertical padding.
-- [x] Reusable component: `components/ui/WhatNowCard.tsx`
+- [x] Reusable component: `components/ui/NextCard.tsx`
 
 ### 2.3 ✅ Empty state
 - [x] Current empty state is good text. Add a subtle CTA: "Capture something with ⌘K" with a faded keyboard hint.
@@ -94,7 +94,7 @@
 - [ ] Default: 1 card. Configurable or automatic based on moment.
 
 ### 2.5 ⬜ "Not now" flow
-- [ ] "Not now" button opens: Snooze (1h / 3h / tomorrow / weekend), Someday, Skip once. (Handler stubbed in WhatNowCard — needs bottom sheet from modal-approach.md §03.)
+- [ ] "Not now" button opens: Snooze (1h / 3h / tomorrow / weekend), Someday, Skip once. (Handler stubbed in NextCard — needs bottom sheet from modal-approach.md §03.)
 
 ---
 
@@ -234,18 +234,18 @@
 ## Phase 7 — Polish & Responsive
 
 ### 7.1 ✅ Keyboard shortcuts system
-- [x] Global shortcut handler (`useKeyboardShortcuts`): ⌘K// (capture), Space (What Now), ? (cheatsheet), Esc (close).
+- [x] Global shortcut handler (`useKeyboardShortcuts`): ⌘K// (capture), Space (Next), ? (cheatsheet), Esc (close).
 - [x] Disabled while typing in inputs (except Esc).
 - [x] Shortcuts discoverable via the cheatsheet overlay.
 
 ### 7.2 ✅ Focus mode overlay
 - [x] Single-task full-screen overlay (`FocusMode`). Hide sidebar/list/counts. Task + notes + nothing else.
-- [x] Enter via What Now 'Do this'. Esc to exit (scoped handler).
+- [x] Enter via Next 'Do this'. Esc to exit (scoped handler).
 
 ### 7.3 ✅ Mobile responsive pass
 - [x] Every page tested at 390px (iPhone) — no horizontal scroll, sidebar collapses to top nav.
 - [x] Sidebar → horizontal scroll nav on mobile (<768px).
-- [x] What Now card adapts (clamp font sizes).
+- [x] Next card adapts (clamp font sizes).
 - [x] Plan picker stacks vertically on mobile (<600px).
 
 ### 7.0 ✅ Bonus: capture + cheatsheet overlays
@@ -268,5 +268,5 @@
 - ✅ `BillingPage.css` — full billing page styles (plan grid, table, banners)
 - ✅ `PreferencesPage.css` — pref row styles
 - ✅ `PublicLayout.css` + `MarkdownPage.tsx` — public pages (About/Privacy/Terms)
-- ✅ `WhatNowPage.tsx` — empty state text
+- ✅ `NextPage.tsx` — empty state text
 - ✅ `/design-system` — living style guide (19 sections covering all components + tokens)

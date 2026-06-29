@@ -249,7 +249,7 @@ physical key — `?` is Shift+`/`.
 | `⌘K` | Open capture (silent alias) | LOCKED — keep for muscle memory |
 | `Esc` | Close topmost overlay / return to Normal | always works |
 | `?` · `⌘?` | Toggle shortcut cheatsheet | LOCKED — `⌘?` = Cmd+Shift+/ (same key as `⌘/`) | |
-| `Space` | Go to What Now (home) | suppressed on buttons |
+| `Space` | Go to Next (home) | suppressed on buttons |
 
 ### 7.3 Normal mode (browsing)
 

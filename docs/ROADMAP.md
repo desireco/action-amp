@@ -15,17 +15,17 @@ audience yet**. That distinction changes the whole roadmap.
 - **Deployed to Railway**, live at `actionamp.com` + `api.actionamp.com` (both
   return HTTP 200). Postgres on Railway, Resend SMTP for auth email.
 - **Full core loop works end-to-end**: capture (`⌘K`) → inbox → triage →
-  task/project → What Now focus chooser → Today (capped at 5) → completion →
+  task/project → Next focus chooser → Today (capped at 5) → completion →
   Logbook. Every step has a real server operation and a route.
 - **Live Stripe billing**: recurring (Pro $79.50/yr, $12.95/mo), prepaid ($90),
   and the capped **Founding 100** ($139 lifetime, 100 spots, server-enforced
   cap, live count on the landing page). Webhook is the source of truth; client
   never mutates `plan`.
 - **The wedge is built**: `getTopTask` priority-first matcher, Now/Next state
-  machine (`startedAt` persists across navigation), the What Now single-task
+  machine (`startedAt` persists across navigation), the Next single-task
   home screen, focus-mode overlay.
 - **Test suite green**: 183 unit/component tests (13 files), 8 Playwright e2e
-  specs (capture, login, inbox, triage, projects, today, what-now).
+  specs (capture, login, inbox, triage, projects, today, next).
 - **Polished landing page**, design-system page, onboarding, dark mode,
   keyboard-shortcut system, focus-switch nav (Work/Plan/Review expanding
   sections).
@@ -82,7 +82,7 @@ item; Build pulls `ready`.**
    and code-verified; BACKLOG flipped to 26 done / 23 open; FEATURES.md flagged
    stale with pointers to canonical. → §Shipped.
 2. **first-run-experience** (`done` 2026-06-27) — onboarding was dead code +
-   taught gestures the webapp lacks; new users landed on empty What Now. Fixed:
+   taught gestures the webapp lacks; new users landed on empty Next. Fixed:
    onboarding routing, `hasSeenOnboarding` migration, magic-moment seed task.
    Verified: 195 unit + 37 e2e tests pass. → §Shipped.
 3. **legal-pages-oauth** (`done` 2026-06-27) — `/privacy` + `/terms` were
@@ -102,18 +102,18 @@ item; Build pulls `ready`.**
 
 ### Next (only after the gauntlet produces a signal)
 
-7. **retention-criticalpath** (`ready`) — instrument the first-7-days funnel
+1. **retention-criticalpath** (`ready`) — instrument the first-7-days funnel
    (`lastSeenAt` + 3 activation events: seed-completed, first-capture,
    first-triage) and close the known dead-ends (onboarding→seed disconnect,
    post-completion dead-end, empty-Inbox affordance). Depends on
    `observability-minimal`. The data-gated fixes (re-engagement email, etc.)
    are explicitly deferred to wait on the numbers.
-8. **focus-why-transparent** (`done` 2026-06-27) — the "why this?" line under
-   What Now now states the *actual* ranking reason, never fabricating. The
+2. **focus-why-transparent** (`done` 2026-06-27) — the "why this?" line under
+   Next now states the *actual* ranking reason, never fabricating. The
    "never lies" invariant verified across all input combinations; rendering
    blocker caught + fixed. Prerequisite for focus-engine-v2 (which extends
    this line to explain moment-fit). → §Shipped.
-9. **focus-engine-v2** (`ready`, **gated on the matcher test**) — the
+3. **focus-engine-v2** (`ready`, **gated on the matcher test**) — the
    moment-aware matcher: time-available + energy refinement *on top of* the
    existing priority sort (FEATURES.md F10's planned layer). The matcher
    re-ranks within a priority tier only — never demotes priority. Pro-gated.
@@ -121,27 +121,27 @@ item; Build pulls `ready`.**
    ~20 people, 2 days) — the roast (<`docs/research/wedge-defensibility-roast-
    2026-06-27.md`>) found the matcher is the only real moat but currently the
    weakest shipped part. The test decides: build as-spec'd, reshape, or icebox.
-10. **command-palette-search** (`ready`) — `⌘K` command palette (reclaimed
+4. **command-palette-search** (`ready`) — `⌘K` command palette (reclaimed
     from capture; capture becomes `⌘/`-only) + full-text search across **all**
     tasks (open + done). The two Pro-tier features most likely to justify the
     price to an existing user. Depends on entitlement-enforcement.
 
 ### Then (earn-the-revenue work — gated on ≥1 paying non-founder user)
 
-11. **entitlement-enforcement** (`ready`) — the feature caps in PRICING.md §4
+1. **entitlement-enforcement** (`ready`) — the feature caps in PRICING.md §4
     (Me-lens-only free, 3 projects, 1 goal) are not enforced anywhere (confirmed
     by audit 2026-06-27, §Free-tier audit). `FREE_LIMITS` defined, imported
     nowhere; `isPlanActive` dead code. Highest-value, smallest build, fixes a
     live billing leak. **Note:** legal-pages-oauth's review hedged its
     data-retention clause because this isn't done — landing this unblocks an
     accurate privacy policy too.
-12. **friction-cleanup** (`ready`, **partly covered by an unmerged branch**) —
+2. **friction-cleanup** (`ready`, **partly covered by an unmerged branch**) —
     the `/upcoming` route removal, "Done today" section, Someday promote, and
     breadcrumb nav are still owed. **But the Project detail view +
     `/app/projects/:id` route already exist on `fix/what-now-surfaces-triaged-
     tasks`** (alongside a triage co-author wizard + lossless Archive). When
     that branch merges, ~⅓ of this spec is satisfied; the rest stays.
-13. **resources-project-owned** (`ready`) — make the existing-but-invisible
+3. **resources-project-owned** (`ready`) — make the existing-but-invisible
     `Resource` entity real: project-owned links+notes, surfaced on the Project
     detail page (add/edit/delete), with tasks referencing their project's
     resources (many-to-many) and a **delete-with-impact** flow that shows which
@@ -153,10 +153,10 @@ item; Build pulls `ready`.**
     `docs/specs/resources-project-owned.md`. Gated on items 7–11 like the rest
     of this tier — depth earns its keep after retention + the matcher prove
     someone stays.
-14. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
+4. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
     marketing pack, the real pricing page. Only worth doing once items 7–11
     prove someone stays and pays.
-15. **cli** (`ready`, **developer surface — not validation-critical**) — a
+5. **cli** (`ready`, **developer surface — not validation-critical**) — a
     top-level `cli/` package (typed library + thin binary) that talks to the
     HTTP API via **Personal Access Tokens** added to the backend, plus four
     paired orchestration skills (inbox-triage, goal-breakdown, today-balancer,
@@ -170,7 +170,7 @@ item; Build pulls `ready`.**
     what the backend already exposes; missing writes filed as
     `cli-write-ops.md` (`deferred`) + `cli-comments-resources.md` (`deferred`,
     unblocks the `task-research` skill). Spec at `docs/specs/cli.md`.
-16. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
+6. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
     Lens-scoped page (hero + Today | Done columns), and reshapes how a task is
     worked: **no completion circle anywhere** (complete only from focus mode —
     the list becomes a chooser, not a tick-box), a **timestamped activity log**
@@ -190,9 +190,10 @@ item; Build pulls `ready`.**
 **Working directly on `main` — no feature branches.** The three in-flight
 branches were rebased onto main and deleted; their work is in main's history.
 Verified after consolidation + signoff: `wasp compile` clean, **195 unit tests
-+ 37 e2e tests pass**, migrations applied.
+- 37 e2e tests pass**, migrations applied.
 
 What landed and was signed off:
+
 - **`first-run-experience` → `done`** (signed off 2026-06-27). Onboarding
   routing + `hasSeenOnboarding` migration + magic-moment seed task. e2e suite
   (the one open caveat in Build's review) run and green.
@@ -202,11 +203,12 @@ What landed and was signed off:
 - **`fix/what-now-surfaces-triaged-tasks` → merged (no spec).** Added: Project
   detail page + `/app/projects/:id` route (satisfies part of `friction-cleanup`),
   triage co-author wizard with lossless Archive (`archive_inbox_items`
-  migration + `ARCHIVED` status), What Now surfacing triaged tasks. It also
+  migration + `ARCHIVED` status), Next surfacing triaged tasks. It also
   edited `WORKFLOW.md` / `TRIAGE.md` / `DATA-MODEL.md` — `doc-reconciliation`
   should review those edits against the canonical docs.
 
 **Open Discover actions on main:**
+
 1. `doc-reconciliation` is now the priority — the merged fix branch edited
    canonical docs; reconcile them so planning isn't split-brain.
 2. The eight `ready` specs are the queue (observability, social-auth,
@@ -242,7 +244,7 @@ What landed and was signed off:
   actual callback can't be verified until the client exists. Review writeup at
   `docs/reviews/social-auth-google.md`.
 - **focus-why-transparent** (`done` 2026-06-27) — the "why this?" line under
-  What Now is now composed from `getTopTask`'s actual ranking factors, never
+  Next is now composed from `getTopTask`'s actual ranking factors, never
   fabricating a reason. The "never lies" invariant verified across all input
   combinations; the rendering blocker (NORMAL-priority line dropped) caught +
   fixed. +15 tests (14 helper + 1 card regression guard). Review writeup at
@@ -354,9 +356,9 @@ reach the value that wall would protect.
    one-finger swipe for modes) — see `docs/mockups/`. The webapp does not
    implement these; real interaction is keyboard + buttons (per the e2e suite).
    It teaches gestures the product lacks, and teaches nothing about the actual
-   loop: capture → triage → What Now.
+   loop: capture → triage → Next.
 3. **No seed data.** `ensureOnboarded` creates only empty Work+Me lenses and
-   empty "General" projects. A brand-new user lands on What Now showing
+   empty "General" projects. A brand-new user lands on Next showing
    *"Nothing on the table"* with an empty Inbox — no example task, no obvious
    first move. The empty state copy ("Capture something with ⌘K, then triage it
    to Today") is correct *instructions*, but a user who hasn't felt the magic
@@ -369,15 +371,13 @@ reach the value that wall would protect.
 
 The free tier is **unlimited** (which is generous) but **unwelcoming** (which
 is fatal). The two findings compound: a new user gets everything for free and
-still has no reason to stay, because the magic moment (What Now picking your
+still has no reason to stay, because the magic moment (Next picking your
 next task) requires them to first capture, then triage, then set Today — with
 nothing guiding them there. **There is no wall, and there is no welcome.**
 Fixing the welcome (item 2) is more urgent than fixing the wall (item 9),
 because a wall behind a door nobody enters protects nothing.
 
 ---
-
-
 
 Aligned to the `go-to-market-strategy` skill's motion selection: **PLG** is
 correct (ACV < $5K, self-serve possible, technical-ish buyer). The motion is
@@ -395,7 +395,7 @@ sequenced as audience-first.
 
 ### Motion: Product-Led Growth (self-serve, free → paid)
 
-- **Free tier** is the wedge (What Now, full focus loop, personal scope). It
+- **Free tier** is the wedge (Next, full focus loop, personal scope). It
   exists. The leak is that entitlement isn't enforced (roadmap item 8) — free
   currently gives away the Pro structure. Fix the trigger before driving
   traffic, or you drive traffic to a product that can't convert.
@@ -413,7 +413,7 @@ sequenced as audience-first.
 | Phase | Goal | Trigger to advance |
 |---|---|---|
 | **0 — Quiet (now)** | Reconcile docs, add analytics, fix auth friction, enforce entitlement. | Analytics live; Google auth live; caps enforced. |
-| **1 — Friends & alpha (wks 1–2)** | Get 20–50 humans you can talk to, by direct ask. Founding 100 as the patron ask. | ≥20 external signups; ≥3 used What Now on day 3. |
+| **1 — Friends & alpha (wks 1–2)** | Get 20–50 humans you can talk to, by direct ask. Founding 100 as the patron ask. | ≥20 external signups; ≥3 used Next on day 3. |
 | **2 — Community (wks 3–6)** | Item 4: put it in front of ~500 of the right people via communities + a small owned list. | ≥500 unique visitors; known visitor→signup rate. |
 | **3 — Paid open (wk ~8)** | Only if Phase 2 shows the funnel isn't broken: pricing page live, Product Hunt launch, the launch-marketing-pack from the GTM skill. | Known signup→paid rate ≥ 3%; or a clear reshape signal. |
 

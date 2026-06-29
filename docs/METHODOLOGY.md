@@ -16,7 +16,7 @@ GTD defines a 5-step workflow. We map each to a concrete part of the app:
 | **2. Clarify** | Decide what each item *is* | **Triage** — InboxItem → Task / Project / Resource / Goal-link |
 | **3. Organize** | Put it where it belongs | Projects, Goals, Lenses, dates, tags |
 | **4. Reflect** | Review regularly | Inbox review mode, Today cap, weekly review (P2) |
-| **5. Engage** | Do the work | **"What Now" focus engine** ← the wedge |
+| **5. Engage** | Do the work | **"Next" focus engine** ← the wedge |
 
 The GTD clarifying question ("is it actionable?") is literally our triage fork:
 - Actionable & 1 step → **Task**

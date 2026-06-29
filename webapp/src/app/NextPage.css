@@ -1,8 +1,8 @@
 @import "../styles/tokens.css";
 
 /* ============================================================
-   What Now page — wraps the WhatNowCard or shows the empty state.
-   The card itself is a reusable component (components/ui/WhatNowCard).
+   Next page — wraps the NextCard or shows the empty state.
+   The card itself is a reusable component (components/ui/NextCard).
    ============================================================ */
 
 /* When the card is shown, center it vertically in the viewport like the

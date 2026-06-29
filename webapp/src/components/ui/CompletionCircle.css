@@ -72,7 +72,7 @@
   100% { transform: scale(1); }
 }
 
-/* Pulsing halo (for hero What Now card) */
+/* Pulsing halo (for hero Next card) */
 .aa-cc--pulse::before {
   content: "";
   position: absolute;

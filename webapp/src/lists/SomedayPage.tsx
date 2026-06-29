@@ -12,7 +12,7 @@ import "./SomedayPage.css";
  * Someday — undated, deprioritized tasks. Flat list, lighter visual weight
  * (muted rows). Each row has a "→ Today" control to promote it back onto the
  * court (reuses updateTaskStatus, same motion as the Today bench promote).
- * No "→ Upcoming" — Upcoming is reached via snooze from What Now/Today, not
+ * No "→ Upcoming" — Upcoming is reached via snooze from Next/Today, not
  * from Someday, so a second destination would muddy the single promote path.
  */
 export function SomedayPage() {
@@ -37,7 +37,7 @@ export function SomedayPage() {
   };
 
   // Promote a parked task onto Today. Same op as the Today bench promote;
-  // invalidates the same keys so both lists + the What Now engine refresh.
+  // invalidates the same keys so both lists + the Next engine refresh.
   const handlePromote = async (task: TaskRowTask) => {
     await updateTaskStatus({ id: task.id, status: "TODAY" });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });

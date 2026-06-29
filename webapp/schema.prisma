@@ -173,7 +173,7 @@ model Task {
   completedAt DateTime?
   startedAt   DateTime? // non-null = "Now" (in progress); null = "Next" (candidate). Cleared on done/defer/pause.
 
-  // ---- Focus attributes (read by the What Now engine) ----
+  // ---- Focus attributes (read by the Next engine) ----
   priority Priority   @default(NORMAL) // primary sort key
   size     Size       @default(M)      // secondary signal + XL break-down nudge
   status   TaskStatus @default(SOMEDAY) // TODAY | UPCOMING | SOMEDAY (pre-filters focus)

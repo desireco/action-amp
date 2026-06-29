@@ -106,7 +106,7 @@ function Congratulations({ memberNumber }: { memberNumber: number | undefined })
       <div className="aa-founding-cta">
         <Link to="/app">
           <Button variant="primary" size="lg">
-            Go to your What Now
+            See your Next
           </Button>
         </Link>
         <p className="aa-founding-spots">Thank you, genuinely, for the bet.</p>

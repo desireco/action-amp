@@ -1053,7 +1053,7 @@
 }
 
 /* ============================================================
-   Empty states (from triage-tinder + What Now)
+   Empty states (from triage-tinder + Next)
    ============================================================ */
 .ds-empty-state {
   text-align: center;
@@ -1107,7 +1107,7 @@
 }
 
 /* ============================================================
-   What Now card (composite demo)
+   Next card (composite demo)
    ============================================================ */
 .ds-wn-card {
   width: 100%;

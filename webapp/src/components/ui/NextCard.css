@@ -1,7 +1,7 @@
 @import "../../styles/tokens.css";
 
 /* ============================================================
-   WhatNowCard — the composite task card (app-shell variant, flat)
+   NextCard — the composite task card (app-shell variant, flat)
    ============================================================ */
 .aa-wn-card {
   width: 100%;

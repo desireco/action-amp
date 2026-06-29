@@ -11,10 +11,10 @@ build_owner: build
 
 A brand-new user who signs up should be **guided to the magic moment**, not
 dumped on an empty screen. Today onboarding is dead code and teaches the wrong
-thing; a new user lands on What Now showing *"Nothing on the table"* with an
+thing; a new user lands on Next showing *"Nothing on the table"* with an
 empty inbox and no path to feeling the product pick their next task. This spec
 fixes the front door: route new signups through a short, real onboarding, seed
-them one example task so What Now is non-empty on first load, and remove the
+them one example task so Next is non-empty on first load, and remove the
 mobile-gesture lessons that the webapp doesn't implement.
 
 ## Why
@@ -29,7 +29,7 @@ churn cliffs at the front door:
    gestures (long-press, two-finger zoom, one-finger mode swipe) that the
    webapp does **not** implement — real interaction is keyboard + buttons.
 3. `ensureOnboarded` (`onboarding/operations.ts`) creates empty lenses and
-   empty "General" projects only. First-paint What Now is *"Nothing on the
+   empty "General" projects only. First-paint Next is *"Nothing on the
    table."*
 
 A user who hasn't felt the magic won't do homework to feel it. This is the #1
@@ -58,7 +58,7 @@ Each is a checkable predicate. Verify against the running app + the test suite.
 - [ ] **Onboarding teaches the real 3-step loop in ≤3 short panels:**
       (1) Capture — "press ⌘K (or ⌘/), type a thought, hit Enter";
       (2) Triage — "go to Inbox, decide what each thing becomes";
-      (3) Focus — "What Now picks your next task. Do it. The rest disappears."
+      (3) Focus — "Next picks your next task. Do it. The rest disappears."
       Each panel is one sentence + one visual. No more than 3 panels total
       after the preferred-name step.
 - [ ] **New users get seed content**, created by `ensureOnboarded` only when
@@ -66,8 +66,8 @@ Each is a checkable predicate. Verify against the running app + the test suite.
       in the Me lens with `status=TODAY`, `priority=NORMAL`, `size=M`, e.g.
       description "Try it: complete this task". No fake projects/goals beyond
       the existing "General" project.
-- [ ] **First-paint What Now is non-empty for a new user.** Verified: after
-      onboarding, `/app` shows the seeded task in the What Now card, not the
+- [ ] **First-paint Next is non-empty for a new user.** Verified: after
+      onboarding, `/app` shows the seeded task in the Next card, not the
       "Nothing on the table" empty state.
 - [ ] **Existing users are unaffected.** `ensureOnboarded`'s seed branch is
       guarded by "user has zero tasks," so the 0 existing production users who
@@ -90,7 +90,7 @@ Each is a checkable predicate. Verify against the running app + the test suite.
 - **No changes to auth methods.** Email-only stays; Google auth is a separate
   spec (`social-auth-google`).
 - **No seed of multiple tasks / projects / goals.** Exactly one task. The
-  point is to make What Now non-empty, not to fake a populated life.
+  point is to make Next non-empty, not to fake a populated life.
 - **No analytics events** in this spec (that's `observability-minimal`).
 - **No redesign of the onboarding visual style.** Reuse existing
   `OnboardingPage.css` tokens; only swap content.

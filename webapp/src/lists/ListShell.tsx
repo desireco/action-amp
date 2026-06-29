@@ -24,7 +24,7 @@ export function ListHeader({
 }
 
 /**
- * Empty-state shell — the same calm pattern as Inbox/What Now empty states.
+ * Empty-state shell — the same calm pattern as Inbox/Next empty states.
  */
 export function ListEmpty({
   icon,

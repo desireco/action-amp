@@ -146,7 +146,7 @@ export function ProjectDetailPage() {
               <div className="aa-list-empty__icon"><CompletionCircle size="md" /></div>
               <h2 className="aa-list-empty__title">No tasks yet.</h2>
               <p className="aa-list-empty__text">
-                Add the first step — a task lands on Upcoming and shows on What Now.
+                Add the first step — a task lands on Upcoming and shows on Next.
               </p>
             </div>
           ) : (

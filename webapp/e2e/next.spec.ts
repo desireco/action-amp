@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { signupNewUser, triageOneItem } from "./helpers";
 
 /**
- * What Now — FEATURES.md §3 F8/F10: the home screen is a chooser, not a list.
+ * Next — FEATURES.md §3 F8/F10: the home screen is a chooser, not a list.
  * Given the moment, surface ONE Today task and hide the rest.
  *
  * F8: one task shown, with "Do this" + "Not now" actions.
@@ -33,7 +33,7 @@ test("an Upcoming task (no due date) also surfaces on home", async ({ page }) =>
   await signupNewUser(page);
 
   // Triage to Upcoming (the default since 2026-06-25) — no When chosen, so it
-  // lands on the bench with no dueDate. What Now's candidate pool is Today +
+  // lands on the bench with no dueDate. Next's candidate pool is Today +
   // Upcoming-with-no-future-due, so a triaged task must be actionable, not
   // hidden behind the Today toggle (WORKFLOW.md §5.2).
   await triageOneItem(page, "Bench task", { type: "task" });
@@ -107,7 +107,7 @@ test("completion circle marks the task done and removes it (F16)", async ({ page
   await expect(page.getByText("Finish this now")).toHaveCount(0, { timeout: 10_000 });
 });
 
-test("'Not now' defers the focused task (it leaves What Now)", async ({ page }) => {
+test("'Not now' defers the focused task (it leaves Next)", async ({ page }) => {
   await signupNewUser(page);
 
   await triageOneItem(page, "Not now task", { type: "task", when: "today" });

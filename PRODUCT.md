@@ -36,7 +36,7 @@ serves.
   manipulation. Banned entirely.
 
 ## Strategic Principles (load-bearing — do not violate)
-1. **The list is demoted.** What Now (one task) is the home screen.
+1. **The list is demoted.** Next (one task) is the home screen.
 2. **Calm over features.** Whitespace is the point. If a section feels
    crowded, remove something.
 3. **Honesty over nudges.** No fake scarcity, no streaks-as-guilt, no

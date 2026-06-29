@@ -38,7 +38,7 @@ For a focus app, motion is a tool, not decoration. Three jobs only:
 
 ## D4. The "calm focus" differentiator (vs Things)
 
-Things is a list app. ActionAmp demotes the list. The signature surface — the **Focus view** (single task, What Now) — needs a visual treatment Things doesn't have:
+Things is a list app. ActionAmp demotes the list. The signature surface — the **Focus view** (single task, Next) — needs a visual treatment Things doesn't have:
 
 - **More whitespace than feels comfortable** at first — the single task is *centered, large, alone*.
 - **Everything else fades** — sidebar dims or hides, counts disappear, nav quiets.

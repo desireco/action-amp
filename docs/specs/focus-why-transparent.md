@@ -5,14 +5,14 @@ spec_owner: discover
 build_owner: build
 ---
 
-# Feature: Transparent "why this" for What Now
+# Feature: Transparent "why this" for Next
 
 ## Summary
 
-Enrich the single line under the What Now task so it states the *actual* reason
+Enrich the single line under the Next task so it states the *actual* reason
 that task was ranked first — in plain English, not a template. Today the line
 is hardcoded as `"Because it's" + priority + " and due today"` regardless of
-what actually decided the ranking (see `WhatNowPage.tsx:100-102`). This spec
+what actually decided the ranking (see `NextPage.tsx:100-102`). This spec
 makes it reflect the real signal: in-progress state, priority, size-fit, and
 overdue/due-today, composed dynamically from what `getTopTask` actually did.
 
@@ -41,7 +41,7 @@ doesn't depend on that bet.
 ## Done-conditions
 
 - [ ] **The "why this" string is composed from the actual ranking factors.**
-      In `WhatNowPage.tsx` (and/or a small helper), build the reason from the
+      In `NextPage.tsx` (and/or a small helper), build the reason from the
       task's real state, in priority of signal:
       1. If `startedAt != null` → **"You're already doing this."** (the Now
          state is the strongest signal; it always wins — see `getTopTask`'s
@@ -59,8 +59,8 @@ doesn't depend on that bet.
 - [ ] **Tone matches the brand.** Calm, direct, no exclamation, no guilt.
       E.g. `"You're already doing this."` / `"Important and overdue."` /
       `"Quick win — due today, fits in 15 min."` (not "🔥 DO THIS NOW!").
-- [ ] **The What Now card renders the composed string** where it currently
-      renders the hardcoded `whyEmphasis`. The `WhatNowCard` component's
+- [ ] **The Next card renders the composed string** where it currently
+      renders the hardcoded `whyEmphasis`. The `NextCard` component's
       `why` / `whyEmphasis` props may need to become a single `reason` string
       — Build's call, keep the visual identical.
 - [ ] **`getTopTask`'s return is sufficient to compose the line** — confirm it
@@ -70,7 +70,7 @@ doesn't depend on that bet.
 - [ ] **No matcher logic changes.** `getTopTask` ranking stays priority → size
       → oldest (plus the in-progress override). This spec only changes *what
       we say about* the result, not *how* the result is chosen.
-- [ ] **`wasp compile` passes; existing `what-now` e2e still green** (it may
+- [ ] **`wasp compile` passes; existing `next` e2e still green** (it may
       assert on the old copy — update the test to match the new honest line).
 - [ ] **Cold-context reviewer passes.**
 
@@ -94,4 +94,4 @@ doesn't depend on that bet.
 ## Prototypes
 
 _(none — a one-line string change in an existing card; no new UI paradigm.
-The current What Now card visual is unchanged.)_
+The current Next card visual is unchanged.)_

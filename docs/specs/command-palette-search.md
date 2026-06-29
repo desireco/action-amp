@@ -34,7 +34,7 @@ entitlement gate (depends on `entitlement-enforcement`).
 2. **Search covers open *and* completed tasks, not Logbook-only.** The earlier
    "Logbook-only" framing was backwards: a user with 200 tasks who wants to
    find the open "Email Sarah" task isn't helped by searching only completed
-   items. The "What Now is a chooser, not a list" principle governs the *home
+   items. The "Next is a chooser, not a list" principle governs the *home
    screen* — it doesn't forbid search elsewhere. Search is a Planning/Review
    tool, and it spans the whole library.
 
@@ -48,7 +48,7 @@ entitlement gate (depends on `entitlement-enforcement`).
       typing in inputs (same rule as the global handler).
 - [ ] **The palette fuzzy-searches and jumps.** Typing matches against: all
       Tasks (open + done — description), Projects (name), Goals (name), and a
-      fixed set of view/action targets ("Today", "What Now", "Inbox",
+      fixed set of view/action targets ("Today", "Next", "Inbox",
       "Logbook", "Settings", "Toggle theme"). Arrow/Enter selects; the selected
       item navigates (tasks → `/app/tasks/:id` or `/app/logbook` if done,
       projects → `/app/projects/:id`, views → their route). Esc closes.

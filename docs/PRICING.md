@@ -159,7 +159,7 @@ Three trigger types exist; we're leaning **feature-capped**:
 
 ### The feature cap design (DECIDED 2026-06-16)
 
-The principle: **the wedge (What Now) must be free forever.** People fall in
+The principle: **the wedge (Next) must be free forever.** People fall in
 love with the focus magic on a flat list. They pay when they want to *organize
 at scale* — and the strongest trigger is wanting to bring their **work** life
 in. So free = the full focus loop on a personal scope, with limited structure;
@@ -169,7 +169,7 @@ Pro = Work + unlimited structure + power.
 |---|---|---|
 | Capture / Inbox (F1–F3) | **Unlimited** | Unlimited |
 | **Tasks** | **Unlimited** | Unlimited |
-| What Now focus engine (F8–F10) — *the wedge* | **Full** | Full |
+| Next focus engine (F8–F10) — *the wedge* | **Full** | Full |
 | Today (capped at 5, F12) | **Full** | Full (cap configurable/off) |
 | Basic triage (F6) | **Full** | Full |
 | Completion + Logbook (F16/F18) | **Full** (30-day history) | Full (unlimited history) |

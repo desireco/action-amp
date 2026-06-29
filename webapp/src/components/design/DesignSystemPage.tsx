@@ -14,7 +14,7 @@ import {
   Table,
   Toggle,
   TriageCard,
-  WhatNowCard,
+  NextCard,
   ZoomDock,
   StarIcon,
   InboxIcon,
@@ -57,7 +57,7 @@ const SECTIONS = [
   { id: "triage-card", label: "Triage Card" },
   { id: "progress", label: "Progress Bar" },
   { id: "empty", label: "Empty States" },
-  { id: "wn-card", label: "What Now Card" },
+  { id: "wn-card", label: "Next Card" },
   { id: "mode-dial", label: "Mode Dial (Bottom Nav)" },
   { id: "zoom-dock", label: "Zoom Dock" },
   { id: "breadcrumb", label: "Breadcrumb" },
@@ -266,7 +266,7 @@ export function DesignSystemPage() {
         <Sec id="overview" title="Design Principles" desc="Five principles that guide every decision.">
           <div className="ds-principles">
             {[
-              { p: "The list is demoted", d: "What Now is the home screen. Not a list — a chooser. Focus on the next action, not everything." },
+              { p: "The list is demoted", d: "Next is the home screen. Not a list — a chooser. Focus on the next action, not everything." },
               { p: "Teal carries 30%", d: "Every surface should feel teal-touched. It's the system color — states, actions, structure. Amber is rare: only for human emphasis." },
               { p: "Cool-tinted calm", d: "All neutrals lean blue. Never pure gray, never pure black, never pure white. The app should feel like Things — calm, confident, quiet." },
               { p: "Native system fonts", d: "SF Pro on Apple, Segoe on Windows, Roboto on Android. No custom font loading. Fast, native, familiar." },
@@ -281,7 +281,7 @@ export function DesignSystemPage() {
         </Sec>
 
         {/* TYPOGRAPHY */}
-        <Sec id="typography" title="Typography" desc="System font stack. Matches the type scale used across all prototypes (landing hero, What Now card, triage).">
+        <Sec id="typography" title="Typography" desc="System font stack. Matches the type scale used across all prototypes (landing hero, Next card, triage).">
           <div className="ds-type-scale">
             {FONT_SIZES.map((f) => (
               <div key={f.label} className="ds-type-row">
@@ -428,7 +428,7 @@ export function DesignSystemPage() {
         </Sec>
 
         {/* COMPLETION CIRCLE */}
-        <Sec id="completion" title="Completion Circle" desc="The signature empty→filled interaction. Used in What Now, Today, and landing hero.">
+        <Sec id="completion" title="Completion Circle" desc="The signature empty→filled interaction. Used in Next, Today, and landing hero.">
           <Sub h="States">
             <div className="ds-cc-row">
               <div className="ds-cc-demo"><CompletionCircle size="sm" /><span className="ds-cc-demo__label">Empty (sm)</span></div>
@@ -531,10 +531,10 @@ export function DesignSystemPage() {
           </Sub>
           <Sub h="Nav Items">
             <div className="ds-navitems">
-              {/* What Now — active */}
+              {/* Next — active */}
               <a className="ds-navitem ds-navitem--active">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.8 4.2 4.5.4-3.4 3 1 4.4L8 11.3 4.1 13.5l1-4.4-3.4-3 4.5-.4z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /></svg>
-                What Now
+                Next
               </a>
               {/* Inbox — with urgent count */}
               <a className="ds-navitem">
@@ -600,7 +600,7 @@ export function DesignSystemPage() {
         <Sec id="nav-item" title="Nav Item" desc="Sidebar navigation item with icon, optional count badge, and the signature teal left-edge active bar. From app-shell-whatnow.html.">
           <Sub h="States">
             <div className="ds-navitems">
-              <NavItem icon={<StarIcon />} label="What Now" active />
+              <NavItem icon={<StarIcon />} label="Next" active />
               <NavItem icon={<InboxIcon />} label="Inbox" count={4} countVariant="urgent" />
               <NavItem icon={<ClockIcon />} label="Today" count={3} />
               <NavItem icon={<ProjectsIcon />} label="Projects" soon />
@@ -761,7 +761,7 @@ export function DesignSystemPage() {
         {/* ============================================================
            EMPTY STATES (from triage-tinder.html)
            ============================================================ */}
-        <Sec id="empty" title="Empty States" desc="Inbox zero. What Now empty. From triage-tinder + What Now prototypes.">
+        <Sec id="empty" title="Empty States" desc="Inbox zero. Next empty. From triage-tinder + Next prototypes.">
           <Sub h="Inbox Zero (Triage Complete)">
             <div className="ds-empty-state">
               <div className="ds-empty-state__circle">
@@ -771,7 +771,7 @@ export function DesignSystemPage() {
               <p className="ds-empty-state__text">Nothing left to decide. Go do something.</p>
             </div>
           </Sub>
-          <Sub h="What Now Empty">
+          <Sub h="Next Empty">
             <div className="ds-empty-state">
               <h3 className="ds-empty-state__title" style={{ fontSize: "2rem" }}>What now?</h3>
               <p className="ds-empty-state__text">Your inbox is empty. Capture something with <span className="ds-inline-kbd">⌘K</span></p>
@@ -782,9 +782,9 @@ export function DesignSystemPage() {
         {/* ============================================================
            WHAT NOW CARD (composite from all 3 prototypes)
            ============================================================ */}
-        <Sec id="wn-card" title="What Now Card" desc="The composite task card — context pill, completion circle, task, meta, why badge, actions. From app-shell + landing + triage prototypes.">
+        <Sec id="wn-card" title="Next Card" desc="The composite task card — context pill, completion circle, task, meta, why badge, actions. From app-shell + landing + triage prototypes.">
           <Sub h="Full Card (App Shell Version)">
-            <WhatNowCardDemo />
+            <NextCardDemo />
           </Sub>
           <Sub h="Landing Hero Card Version">
             <div className="ds-wn-hero-card">
@@ -961,12 +961,12 @@ function InteractiveCCDemo() {
 }
 
 /* ================================================================
-   What Now card interactive demo
+   Next card interactive demo
    ================================================================ */
 
-function WhatNowCardDemo() {
+function NextCardDemo() {
   return (
-    <WhatNowCard
+    <NextCard
       task={{
         title: "Email Sarah re: Q3 invoice",
         project: "Ship product v2",

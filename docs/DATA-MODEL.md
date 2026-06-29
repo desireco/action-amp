@@ -130,7 +130,7 @@ The Inbox is the *only* queue. Everything else is a *view* derived from each ite
 
 ---
 
-## 5. Implications for the focus engine ("What Now")
+## 5. Implications for the focus engine ("Next")
 
 The matcher only ever considers **Tasks** (never Resources, never bare Projects):
 
@@ -151,7 +151,7 @@ The matcher only ever considers **Tasks** (never Resources, never bare Projects)
 
 ## 7. Focus ranking — MVP rule (simple, by priority)
 
-The "What Now" engine, in its simplest form:
+The "Next" engine, in its simplest form:
 
 1. Candidates = **Tasks** in the **active Lens** that are Today/overdue.
 2. Sort by **priority** (highest first).

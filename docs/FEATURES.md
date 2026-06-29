@@ -3,7 +3,7 @@
 > Status: DRAFT v1 — feature-level reference.
 > **Structural authority has moved to `WORKFLOW.md`** (2026-06-23). Where this
 > doc describes *areas, modes, or where things live* (the §0 loop framing, the
-> Upcoming/Someday placement in §2, the Today-vs-What Now split), it predates the
+> Upcoming/Someday placement in §2, the Today-vs-Next split), it predates the
 > 3-modes / 5-areas model and is superseded. The F-numbered feature list below
 > remains useful as feature-level reference (what each feature does); it does
 > not describe *where* features live.
@@ -13,7 +13,7 @@
 > - **Upcoming is not a top-level area** — no `/upcoming` route/nav item; it's a
 >   status reachable from Today.
 > - **Someday lives in the Planning Area** (not its own top-level area).
-> - **Work Area = What Now (Now/Next) + Today** only.
+> - **Work Area = Next (Now/Next) + Today** only.
 > - **Three focus modes** (Work / Plan / Review) surfaced as an expanding-section
 >   nav; Capture is pervasive.
 >
@@ -26,7 +26,7 @@
 >   **Archive** (lossless, kept in the Logbook).
 > - **F10's candidate pool is obsolete.** `getTopTask` no longer selects
 >   "Today/overdue" only — it selects `Today + Upcoming` with a `dueDate ≤ now`
->   (or null) guard, so a freshly-triaged Upcoming task surfaces on What Now and
+>   (or null) guard, so a freshly-triaged Upcoming task surfaces on Next and
 >   a snoozed task auto-resurfaces when due. See `WORKFLOW.md` §5.2. The triage
 >   Task default is now **Upcoming**, not Someday (`TRIAGE.md` §5).
 >
@@ -89,11 +89,11 @@ Goal: get items *out* of the inbox and *into* a place where the focus engine can
 
 ---
 
-## 3. Focus — "What Now?" (the soul of the app)
+## 3. Focus — "Next?" (the soul of the app)
 
 This is the home screen. Every other app opens to a list. We open to a *decision*.
 
-### F8. "What Now" view (default home)
+### F8. "Next" view (default home)
 
 Given the current moment, surface **one** item — or a deliberately tiny set (default 1, max 3) — and *hide everything else*. The rest of your list still exists; you just don't see it right now.
 
@@ -165,7 +165,7 @@ That's the MVP. Time-available, energy, and tags are **refinement layers added l
 
 ### F13. Focus mode (single-task view)
 
-From any item, `F` enters full-screen single-task mode: the task, its notes, an optional timer, and *nothing else*. No sidebar, no list, no counts. Exiting returns to "What Now".
+From any item, `F` enters full-screen single-task mode: the task, its notes, an optional timer, and *nothing else*. No sidebar, no list, no counts. Exiting returns to "Next".
 
 ### F14. Optional timer
 
@@ -195,7 +195,7 @@ Checklist within a task. Completing all subtasks does *not* auto-complete the pa
 | Shortcut | Action |
 |---|---|
 | `Cmd+K` / `/` | Quick capture (from anywhere) |
-| `Space` | Open "What Now" (home) |
+| `Space` | Open "Next" (home) |
 | `?` | Shortcut cheat sheet |
 | `J` / `K` | Move selection down / up |
 | `Enter` | Open selected item |
@@ -229,7 +229,7 @@ Checklist within a task. Completing all subtasks does *not* auto-complete the pa
 
 - F1 quick-add, F2 NL parsing (basic), F3 Inbox
 - F6 Inbox review + the model (Today/Upcoming/Someday/Lens/Goals/Projects/Tags)
-- **F8 What Now view + F9 moment bar + F9b/F9c attributes + F10 priority-first matcher** ← the bet
+- **F8 Next view + F9 moment bar + F9b/F9c attributes + F10 priority-first matcher** ← the bet
 - F12 Today cap, F13 focus mode (no timer yet), F15 subtasks
 - F16 completion, F18 Logbook
 - F20 command palette, F21 keyboard hints, the shortcut set
@@ -249,7 +249,7 @@ Checklist within a task. Completing all subtasks does *not* auto-complete the pa
 
 ## 9. Open decisions (need your call)
 
-1. **Home screen = "What Now"** (my strong rec) vs. opening to Today-as-list. *This is the central bet — push back if it feels wrong.*
+1. **Home screen = "Next"** (my strong rec) vs. opening to Today-as-list. *This is the central bet — push back if it feels wrong.*
 2. **Today cap of 5** — enforce by default (you can change/disable), or don't cap at all?
 3. **Focus matcher = priority-first** for MVP (decided: sort by priority; time/energy/tags are later refinements). *Open: is "AI suggest" ever core, or always Phase 2? (lean: always Phase 2.)*
 4. **Timer** — MVP or Phase 2?

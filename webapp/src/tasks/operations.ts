@@ -84,7 +84,7 @@ export const getDoneToday = (async (args, context) => {
 // ----------------------------------------------------------------
 // Write: toggle a task's done state
 // ----------------------------------------------------------------
-// Sets completedAt when marking done, clears it when un-done. The What Now /
+// Sets completedAt when marking done, clears it when un-done. The Next /
 // Today completion circle calls this; optimistic UI hides the row afterwards.
 export const toggleTaskDone = (async (args, context) => {
   if (!context.user) {
@@ -136,7 +136,7 @@ export const updateTaskStatus = (async (args, context) => {
 // Candidates = Tasks in the active Lens with status TODAY or UPCOMING, not
 // done, whose dueDate is null or already due (≤ now). The due-guard is what
 // keeps snooze working: a snoozed task carries a future dueDate, so it stays
-// off What Now until its time arrives (then auto-resurfaces). A triaged-to-
+// off Next until its time arrives (then auto-resurfaces). A triaged-to-
 // Upcoming task has no dueDate, so it surfaces as Next immediately — triage
 // puts real work in front of you, not behind a toggle (WORKFLOW.md §5.2).
 // Rank by priority (IMPORTANT > NORMAL > LOW), then size (smaller = quick win),
@@ -154,7 +154,7 @@ export const getTopTask = (async (args, context) => {
       lensId: args.lensId,
       status: { in: ["TODAY", "UPCOMING"] },
       isDone: false,
-      // A future dueDate = snoozed/scheduled; keep it off What Now until due.
+      // A future dueDate = snoozed/scheduled; keep it off Next until due.
       // (null dueDate = no horizon → always a candidate.)
       OR: [{ dueDate: null }, { dueDate: { lte: new Date() } }],
     },

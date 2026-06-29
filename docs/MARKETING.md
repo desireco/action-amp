@@ -45,7 +45,7 @@ The home page is one long scroll, each section answering one question a visitor 
 - **Headline (draft):** *Stop managing your list. Start doing the next thing.*
 - **Subhead:** ActionAmp is a focus app for people with too much on their plate. Capture everything — then let it show you the *one* thing to do now.
 - **Email capture:** single field + button "Get early access." → `/waitlist`.
-- **Visual:** a calm, minimal mock of the "What Now" screen — one task, big, the rest hidden. (Contrast with a chaotic cluttered-list screenshot faded behind it.)
+- **Visual:** a calm, minimal mock of the "Next" screen — one task, big, the rest hidden. (Contrast with a chaotic cluttered-list screenshot faded behind it.)
 - **Micro-trust line:** "No spam. One email when we launch."
 
 ### S3. The problem (name the pain)
@@ -58,10 +58,10 @@ The home page is one long scroll, each section answering one question a visitor 
 2. **Triage** — decide what each thing *is* (task, project, reference) — GTD-style.
 3. **Focus** — ActionAmp picks the next thing. You do it. The rest disappears.
 
-### S5. "What Now" — the soul (feature spotlight)
+### S5. "Next" — the soul (feature spotlight)
 The hero feature gets its own section.
 - Headline: *The home screen isn't a list. It's a decision.*
-- Show the What Now mock again, bigger, with callouts: context line, the one task, Do / Not now.
+- Show the Next mock again, bigger, with callouts: context line, the one task, Do / Not now.
 - One-line "why this?": transparency — "Important · due today · 15 min."
 
 ### S6. Built for the methodology-aware (credibility)

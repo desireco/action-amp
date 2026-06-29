@@ -4,7 +4,7 @@
 
 ## What changed
 
-On `main`. The one-line "why this?" under the What Now task is now composed
+On `main`. The one-line "why this?" under the Next task is now composed
 from `getTopTask`'s actual ranking factors instead of hardcoded copy that
 often lied ("due today" for an undated task; omitting that #1 was in-progress).
 This is the cheapest expression of ActionAmp's one defensible position
@@ -17,16 +17,17 @@ This is the cheapest expression of ActionAmp's one defensible position
   Empty when nothing truthful to add.
 - `webapp/src/app/focusWhy.test.ts` (new) — 14 cases: every branch + the
   load-bearing "never lies" invariant.
-- `webapp/src/app/WhatNowPage.tsx` — wire `composeWhy` into the why/whyEmphasis
+- `webapp/src/app/NextPage.tsx` — wire `composeWhy` into the why/whyEmphasis
   props. Lead-less (NORMAL) reasons promote detail → `why` so they render as
   plain text, not bold amber. Dropped the now-dead `priorityLabel` helper.
-- `webapp/src/components/ui/WhatNowCard.tsx` — gate the why line on
+- `webapp/src/components/ui/NextCard.tsx` — gate the why line on
   `(why || whyEmphasis)` and render them independently (was gated on `why`
   alone, which dropped detail-only reasons). +1 regression-guard test.
 
 Commits:
+
 - `2b8abe5` spec: ready → building
-- (impl) honest "why this" line for What Now
+- (impl) honest "why this" line for Next
 - `d9eca00` fix NORMAL-priority why-line being dropped (review)
 
 ## Gates run
@@ -47,8 +48,8 @@ Commits:
     how the card rendered a lead-less reason.
 - **Diagnostics:** `wasp compile` — exit 0, three times (impl, after fix, final).
 - **Tests:** `npm test` — **210 passed (210)**, exit 0. Was 195 → +14 focusWhy
-  + 1 card regression guard.
-- **e2e:** `what-now.spec.ts` does NOT assert on the why-line copy (only task
+  - 1 card regression guard.
+- **e2e:** `next.spec.ts` does NOT assert on the why-line copy (only task
   titles + Now/Next context), so it's unaffected. Not re-run this session.
 
 ## Done-conditions
@@ -69,7 +70,7 @@ Each predicate from `docs/specs/focus-why-transparent.md` → verdict + evidence
 - [x] Tone matches the brand — **PASS** — Reviewer B inspected every emitted
       string: zero exclamation marks, zero guilt/FOMO. "Quick win" is the only
       borderline-gamified term and is spec-sanctioned. Calm/direct throughout.
-- [x] The What Now card renders the composed string — **PASS (after fix)** —
+- [x] The Next card renders the composed string — **PASS (after fix)** —
       originally the card gated the `<p>` on `{task.why && …}` (the lead),
       dropping NORMAL-priority reasons entirely. Fixed: gate on
       `(why || whyEmphasis)`, render independently. Regression-guard test added.
@@ -78,23 +79,25 @@ Each predicate from `docs/specs/focus-why-transparent.md` → verdict + evidence
       `select`, so all scalar fields (startedAt, priority, size, dueDate,
       status) are returned. No schema change, no query select change needed.
 - [x] No matcher logic changes — **PASS** — `getTopTask` sort
-      (`operations.ts:136–156`) untouched. Only `WhatNowPage` consumption.
-- [x] `wasp compile` passes; existing what-now e2e green — **PASS** — compile
+      (`operations.ts:136–156`) untouched. Only `NextPage` consumption.
+- [x] `wasp compile` passes; existing next e2e green — **PASS** — compile
       exit 0; e2e asserts nothing on the why copy so unaffected.
 - [x] Cold-context reviewer passes — **PASS** — after the wiring fix.
 
 ## Findings
 
 **Accepted (fixed in `d9eca00`):**
+
 1. **[BLOCKER, both reviewers] NORMAL-priority why-line dropped.** `composeWhy`
    correctly returns `{lead:'', detail:'Overdue'}` for a NORMAL overdue task,
-   but `WhatNowCard` gated the whole `<p>` on `{task.why && …}` (the lead) →
+   but `NextCard` gated the whole `<p>` on `{task.why && …}` (the lead) →
    the truthful detail vanished for the default priority. Fix: card gates on
    `(why || whyEmphasis)` and renders independently; wiring promotes detail →
    `why` (plain) when there's no lead so it doesn't render as bold amber.
    Added a regression-guard component test.
 
 **Accepted nits (deferred, non-blocking):**
+
 - **Internal "today" inconsistency** (Reviewer A, N2): `formatWhen` (the meta
   `due` label) treats past dates as "today" (`diffDays <= 0`), while `dueClause`
   (the why line) distinguishes "overdue" (`< 0`) from "due today" (`=== 0`). So
@@ -127,7 +130,7 @@ invariant holds across every input combination. The one fix needed was a
 rendering bug, not a logic bug.
 
 No non-code gates block this one — it's pure code, fully verified at the unit
-level. The only manual step worth doing is a visual spot-check of the What Now
+level. The only manual step worth doing is a visual spot-check of the Next
 card across a few task states (in-progress, important+overdue, normal+overdue,
 normal+nodate) to confirm the line reads as intended. Once Discover signs off,
 this is `done`.

@@ -13,7 +13,7 @@ const PRESETS: { preset: SnoozePreset; label: string; hint: string }[] = [
 ];
 
 /**
- * SnoozeSheet — the "Not now" flow from the What Now card.
+ * SnoozeSheet — the "Not now" flow from the Next card.
  *
  * A BottomSheet of 5 snooze presets. Calls onSnooze with the chosen preset; the
  * parent runs the mutation (snoozeTask) and closes the sheet. The task leaves

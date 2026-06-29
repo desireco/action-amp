@@ -5,11 +5,11 @@ spec_owner: discover
 build_owner: build
 ---
 
-# Feature: Merged Work Area (What Now + Today on one page), complete-only-from-focus, and a timestamped activity log
+# Feature: Merged Work Area (Next + Today on one page), complete-only-from-focus, and a timestamped activity log
 
 ## Summary
 
-Collapse the Work Area's two separate routes — `/app` (the What Now Now/Next
+Collapse the Work Area's two separate routes — `/app` (the Next Now/Next
 chooser) and `/app/today` (the committed list + Done-today) — into **one
 page**: a full-width Now/Next card on top, two columns below (Today | Done
 today), all scoped by the Lens switch already in the shell. Two rules reshape
@@ -42,7 +42,7 @@ Lens switch, Start → focus, notes thread, dark mode).
 Three problems, each independently motivating.
 
 1. **The Work Area is split across two routes for no structural reason.**
-   `WORKFLOW.md §5.4` locks "What Now + Today = two surfaces, no third" — but
+   `WORKFLOW.md §5.4` locks "Next + Today = two surfaces, no third" — but
    ships them as *two routes* (`/app`, `/app/today`) with separate headers and
    empty states. The hero (the wedge) and the committed list (the plan for
    today) are one mental surface: "what am I doing, and what else is on the
@@ -51,7 +51,7 @@ Three problems, each independently motivating.
    between them. Fewer surfaces, not more — the merge *reduces* app surface
    area.
 2. **The completion circle invites the wrong move.** Today every `TaskRow`
-   (Today, Upcoming, Someday, Done) and the `WhatNowCard` carry a tickable
+   (Today, Upcoming, Someday, Done) and the `NextCard` carry a tickable
    `CompletionCircle` that calls `toggleTaskDone`. That makes "complete" a
    one-click list action — but the product thesis is that you complete a task
    by *doing* it, and doing it means entering focus. Allowing check-off from a
@@ -78,7 +78,7 @@ Each predicate is independently verifiable. The spec is `done` only when all pas
 ### Structure (the merge)
 
 - [ ] **One page renders both the Now/Next card and the Today list.** The
-      `/app` route shows the full-width What Now card (hero) **and**, below it,
+      `/app` route shows the full-width Next card (hero) **and**, below it,
       the committed-for-today list + the collapsed Done-today section — what
       `/app/today` renders today. The `/app/today` route is removed (or
       redirects to `/app`); the Today nav entry points at `/app`. Verified by
@@ -101,7 +101,7 @@ Each predicate is independently verifiable. The spec is `done` only when all pas
 ### Complete-only-from-focus
 
 - [ ] **No `CompletionCircle` renders on the hero card or any `TaskRow`.**
-      `WhatNowCard.tsx` and `TaskRow.tsx` no longer render the circle; the
+      `NextCard.tsx` and `TaskRow.tsx` no longer render the circle; the
       `onToggleDone` prop / `handleCircle` path is removed. Verified by grep —
       no `CompletionCircle` import remains in either component.
 - [ ] **`toggleTaskDone` is not callable from any list or the hero.** Its only
@@ -153,7 +153,7 @@ Each predicate is independently verifiable. The spec is `done` only when all pas
 - [ ] **Archived tasks are losslessly recoverable from the Logbook**, mirroring
       the existing `InboxItem` Archive (WORKFLOW §2.5). The decision (the
       `NOT_DOING` event + any reason note) is visible in the task's history.
-- [ ] **A not-doing task leaves the active surfaces** (What Now, Today,
+- [ ] **A not-doing task leaves the active surfaces** (Next, Today,
       Upcoming) the moment it's archived — it does not linger as a fourth
       status on a list.
 

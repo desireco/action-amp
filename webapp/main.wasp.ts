@@ -1,6 +1,6 @@
 import { action, api, app, page, query, route } from "@wasp.sh/spec";
 import { App } from "./src/App" with { type: "ref" };
-import { WhatNowPage } from "./src/app/WhatNowPage" with { type: "ref" };
+import { NextPage } from "./src/app/NextPage" with { type: "ref" };
 import { InboxPage } from "./src/inbox/InboxPage" with { type: "ref" };
 import { TriagePage } from "./src/inbox/TriagePage" with { type: "ref" };
 import { SettingsPage } from "./src/app/SettingsPage" with { type: "ref" };
@@ -93,7 +93,7 @@ export default app({
   },
   spec: [
     route("LandingRoute", "/", page(LandingPage, { authRequired: false })),
-    route("AppRoute", "/app", page(WhatNowPage)),
+    route("AppRoute", "/app", page(NextPage)),
     route("InboxRoute", "/app/inbox", page(InboxPage)),
     route("InboxTriageRoute", "/app/inbox/review", page(TriagePage)),
     route("TodayRoute", "/app/today", page(TodayPage)),

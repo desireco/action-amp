@@ -47,7 +47,7 @@ queryClient.invalidateQueries({ queryKey: ["getProjects"] });
 queryClient.invalidateQueries({ queryKey: ["getAppData"] });
 ```
 
-This is duplicated across `WhatNowPage`, `TodayPage`, `SomedayPage`, `UpcomingPage`, `GoalsPage`, `ProjectsPage`. **Most of it is redundant** — Wasp already invalidates any query sharing an entity with the action.
+This is duplicated across `NextPage`, `TodayPage`, `SomedayPage`, `UpcomingPage`, `GoalsPage`, `ProjectsPage`. **Most of it is redundant** — Wasp already invalidates any query sharing an entity with the action.
 
 **Suggested fix for the `wasp` skill — add a section:**
 

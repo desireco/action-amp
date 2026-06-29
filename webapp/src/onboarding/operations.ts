@@ -68,7 +68,7 @@ export const ensureOnboarded = (async (_args, context) => {
     }
   }
 
-  // Seed exactly ONE example task for brand-new users so What Now is non-empty
+  // Seed exactly ONE example task for brand-new users so Next is non-empty
   // on first paint. Guarded by "user has zero tasks" so existing users get
   // nothing new (idempotent across logins). Placed in the Me lens, status=TODAY
   // so getTopTask surfaces it immediately.

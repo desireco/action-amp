@@ -95,7 +95,7 @@ any number of commits; the spec is `done` only when all pass.
 The unmerged `fix/what-now-surfaces-triaged-tasks` branch already implements:
 - ✅ **Project detail view** (`ProjectDetailPage.tsx` + `/app/projects/:id`
   route + `e2e/project-detail.spec.ts`) — satisfies this spec's 4th done-condition.
-- ❓ **What Now surfacing triaged tasks** — reworks `WhatNowPage.tsx`; not in
+- ❓ **Next surfacing triaged tasks** — reworks `NextPage.tsx`; not in
   this spec but coordinate if this spec's "Done today" change touches the same file.
 
 Still owed by this spec (not on that branch): drop `/upcoming` route, Someday

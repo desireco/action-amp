@@ -9,7 +9,7 @@ import { useEffect } from "react";
  *
  * Shortcuts (FEATURES.md §6):
  *   ⌘/ · ⌘K     → open capture popover (⌘/ primary, ⌘K silent alias)
- *   Space         → go to What Now (home)
+ *   Space         → go to Next (home)
  *   ? · ⌘?        → toggle the shortcut cheatsheet (same physical key as ⌘/)
  *   Esc           → close any open overlay (cheatsheet, capture, focus mode)
  *
@@ -67,7 +67,7 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       // Below shortcuts are disabled while typing.
       if (isTypingTarget(e.target)) return;
 
-      // Space — What Now (home). Avoid hijacking button-activation space.
+      // Space — Next (home). Avoid hijacking button-activation space.
       if (e.key === " " && !(e.target instanceof HTMLButtonElement)) {
         e.preventDefault();
         handlers.onGoHome?.();

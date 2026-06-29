@@ -22,10 +22,10 @@
 ### P1. `/` — Home (the full pitch, one scroll)
 The whole story in one page. Already spec'd section-by-section in `MARKETING.md §2`:
 - Nav (sticky): logo · How it works · For you · About · `[ Log in ]` · `[ Join the waitlist ]`
-- S1 Hero — headline + email capture + What Now mock visual
+- S1 Hero — headline + email capture + Next mock visual
 - S2 The problem — name the pain (capture vs. decision)
 - S3 How it works — Capture → Triage → Focus (3 steps)
-- S4 "What Now" spotlight — the soul of the app
+- S4 "Next" spotlight — the soul of the app
 - S5 Methodology — GTD-compatible + PARA flavor (Goals replace Areas)
 - S6 Craft — keyboard-first, calm, no guilt-red-dots
 - S7 Who it's for — overwhelmed / ADHD / recovering-app-addicts
@@ -80,7 +80,7 @@ Already prototyped at `docs/mockups/mobile-coach.html`. Opening line:
 Closing line: *"That's it. Go do something."* (Not "You're all set!" — too cheerful.)
 
 ### O3. First-capture prompt (in-app, not a page)
-Empty What Now state with a single gentle prompt:
+Empty Next state with a single gentle prompt:
 - "Add your first thought" + a subtle pulse on the capture FAB / `⌘K` hint
 - User types anything → it lands in Inbox → the prompt updates to:
 - "Nice. Now there's something in your Inbox. Want to triage it?" → yes leads to O4
@@ -137,7 +137,7 @@ Discord/forum link or embedded. Phase 2.
 
 - **No separate `/waitlist` page if we collapse it into home.** Lean: keep it as a confirmation page (P2) — the home captures, the confirmation thanks. But no growth mechanics on it.
 - **No `/pricing` until paid.** "Free at launch" lives in the home FAQ.
-- **No `/dashboard` or `/app` portal page.** The app's home IS What Now (`/`). Auth-required routes are the app; public routes are everything above.
+- **No `/dashboard` or `/app` portal page.** The app's home IS Next (`/`). Auth-required routes are the app; public routes are everything above.
 
 ---
 
@@ -149,11 +149,11 @@ visitor → / → email capture → /waitlist (confirmation)
                                  /signup → auth → /welcome (first-run) → coach → app
                                                                               ↓
                                                                           /today etc. (auth-required)
-returning user → /login → auth → / (What Now)
+returning user → /login → auth → / (Next)
 ```
 
 Public routes (`authRequired: false`): `/`, `/waitlist`, `/about`, `/privacy`, `/terms`, `/login`, `/signup`, `/help`, `/changelog`, `/blog`, `/guides`, `/welcome` (gated by first-run flag).
-App routes (auth-required): What Now, Inbox, Today, Upcoming, Someday, Projects, Goals, Logbook, Settings.
+App routes (auth-required): Next, Inbox, Today, Upcoming, Someday, Projects, Goals, Logbook, Settings.
 
 ---
 

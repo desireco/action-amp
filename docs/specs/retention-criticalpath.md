@@ -13,7 +13,7 @@ Define and instrument the funnel that decides whether a new user becomes a
 returning user, then fix the drop points the data exposes. This is **not one
 feature** — it's a measurement layer (the events + the `lastSeenAt` tracking
 that don't exist today) plus a small set of known dead-ends to close. The
-magic moment (What Now picking your next task) is built and seeded, but it's
+magic moment (Next picking your next task) is built and seeded, but it's
 fragile: onboarding doesn't connect to the seed, and completing the seed task
 lands the user on a dead-end empty state with no path forward. **Depends on
 `observability-minimal`** — without events, retention is unmeasurable and
@@ -71,17 +71,17 @@ These are inspectable in the code today; they're friction regardless of what
 the numbers eventually say.
 
 - [ ] **Onboarding connects to the seed.** The final onboarding panel (or the
-      What Now first-paint) acknowledges the seeded task — e.g. the focus panel
+      Next first-paint) acknowledges the seeded task — e.g. the focus panel
       reads "We put one task on your table — try completing it" instead of the
-      generic "What Now picks the next thing." The seed exists; onboarding
-      pretends it doesn't. (`OnboardingPage.tsx` STEPS[2] / `WhatNowPage.tsx`
+      generic "Next picks the next thing." The seed exists; onboarding
+      pretends it doesn't. (`OnboardingPage.tsx` STEPS[2] / `NextPage.tsx`
       first-paint.)
 - [ ] **The post-completion dead-end is closed.** Today, completing the seed
-      task flips What Now to *"Nothing on the table. Capture something with ⌘K"*
+      task flips Next to *"Nothing on the table. Capture something with ⌘K"*
       — a dead-end that assumes the loop is internalized. Replace with a calm,
       specific next step that references the just-completed action: e.g.
       *"Done. Capture your own with ⌘K — what's actually on your mind?"*
-      (`WhatNowPage.tsx` empty state, lines ~77-82.)
+      (`NextPage.tsx` empty state, lines ~77-82.)
 - [ ] **The empty Inbox has a single next action**, not just a zero state.
       Today's Inbox zero ("Capture something with ⌘K") is correct copy but
       offers no affordance. Add the `⌘K` hint as a tappable/clickable control
@@ -95,7 +95,7 @@ Do not build these now; they're listed so the queue knows they're coming and
 - A re-engagement email (the "you captured 3 things on Tuesday" nudge). Needs
   D1/D7 data + an email provider beyond auth (Resend is wired, but no campaign
   flow). Brand-caution: must not become guilt-trip spam (PRODUCT.md bans it).
-- "Not now" bottom sheet + multi-card What Now (FEATURES.md F11/F8). These are
+- "Not now" bottom sheet + multi-card Next (FEATURES.md F11/F8). These are
   real but they're *feature* work, not retention measurement; sequence after
   the data shows they'd move the needle.
 - Onboarding A/B variants. Only worth it once the baseline funnel is measured.

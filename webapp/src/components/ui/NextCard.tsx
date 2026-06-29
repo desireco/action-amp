@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button, CompletionCircle } from "../ui";
-import "./WhatNowCard.css";
+import "./NextCard.css";
 
-export interface WhatNowTask {
+export interface NextTask {
   /** The thing to do */
   title: string;
   /** Project this task belongs to */
@@ -17,27 +17,27 @@ export interface WhatNowTask {
   whyEmphasis?: string;
 }
 
-interface WhatNowCardProps {
+interface NextCardProps {
   /** The task to display */
-  task: WhatNowTask;
+  task: NextTask;
   /** Context line above the card (e.g. "Right now · 30 min available · Work") */
   context?: string;
   /** Called when the user completes the task (circle click or "Do this" → done) */
-  onComplete?: (task: WhatNowTask) => void;
+  onComplete?: (task: NextTask) => void;
   /** Called when the user defers ("Not now") */
-  onNotNow?: (task: WhatNowTask) => void;
+  onNotNow?: (task: NextTask) => void;
   /** Called when the user clicks "Do this" — opens focus mode + starts the task */
-  onDo?: (task: WhatNowTask) => void;
+  onDo?: (task: NextTask) => void;
   /** "next" = candidate (default); "now" = in progress. Swaps the primary button. */
   state?: "next" | "now";
   /** Start the task (Next → Now). */
-  onStart?: (task: WhatNowTask) => void;
+  onStart?: (task: NextTask) => void;
   /** Pause (Now → Next, same task stays as the candidate). */
-  onPause?: (task: WhatNowTask) => void;
+  onPause?: (task: NextTask) => void;
 }
 
 /**
- * WhatNowCard — the composite task card. The product's wedge.
+ * NextCard — the composite task card. The product's wedge.
  *
  * Centered, single-task chooser. Completion circle → task title → meta line →
  * amber "why" line → Do this / Not now actions.
@@ -46,7 +46,7 @@ interface WhatNowCardProps {
  * The app-shell version is flat (no card chrome); the landing version wraps
  * it in an elevated card. This component is the flat app-shell variant.
  */
-export function WhatNowCard({ task, context, onComplete, onNotNow, onDo, state = "next", onStart, onPause }: WhatNowCardProps) {
+export function NextCard({ task, context, onComplete, onNotNow, onDo, state = "next", onStart, onPause }: NextCardProps) {
   const [filled, setFilled] = useState(false);
   const [burst, setBurst] = useState(false);
   const [doing, setDoing] = useState(false);

@@ -18,7 +18,7 @@ build_owner: build
 
 ## Summary
 
-Add the **time-available + energy** refinement layer to the What Now matcher,
+Add the **time-available + energy** refinement layer to the Next matcher,
 on top of the existing priority → size → oldest sort. The user sets the moment
 they're in (two one-key selectors: time, energy); the matcher re-ranks Today's
 candidates to fit it; the "why this" line (built in `focus-why-transparent`)
@@ -54,7 +54,7 @@ differentiation. It's built on the product's own terms below, not on theirs.
 
 ## Done-conditions
 
-- [ ] **The What Now card surfaces a moment bar** with two selectors:
+- [ ] **The Next card surfaces a moment bar** with two selectors:
       - **Time available** — `15m / 30m / 1h / 2h+` (FEATURES.md F9).
       - **Energy** — `low / medium / high` (F9).
       Each settable with one keystroke (`T` cycles time, `G` cycles energy —
@@ -99,14 +99,14 @@ differentiation. It's built on the product's own terms below, not on theirs.
       back to today; within-tier fit preferred; priority never crossed by fit;
       untagged-task energy defaults to medium; the "why this" string for:
       fits-the-moment, doesn't-fit, moment-unset.
-- [ ] **`wasp compile` passes; existing `what-now` e2e updated and green.**
+- [ ] **`wasp compile` passes; existing `next` e2e updated and green.**
 - [ ] **Cold-context reviewer passes.**
 
 ## Non-goals
 
 - **No "AI suggest" / learned model.** Explicitly Phase 2 (FEATURES.md §8).
   v2 is a transparent rules engine — the rules are visible in the "why" line.
-- **No multi-task What Now** (show 3 cards) — separate spec.
+- **No multi-task Next** (show 3 cards) — separate spec.
 - **No calendar integration.** Sunsama's lane, not ours.
 - **No removal of the priority-first fallback.** Additive only.
 - **No new `Task` columns.** Time/energy live as tags; `size` already exists.

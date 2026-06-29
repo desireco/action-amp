@@ -29,7 +29,7 @@ Plan / Do / Review are **three renderings of the same Mode × Scope card
 position**, not three separate pages. At Task scope:
 
 - **Plan mode** = Today list card (arrange commitments)
-- **Do mode** = What Now hero (one task, working state)
+- **Do mode** = Next hero (one task, working state)
 - **Review mode** = debrief (look back)
 
 Switching modes re-renders the card; it doesn't navigate to a new screen. This

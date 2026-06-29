@@ -1,5 +1,5 @@
 /**
- * Compose the honest one-line "why this?" for the What Now card.
+ * Compose the honest one-line "why this?" for the Next card.
  *
  * PRODUCT.md names transparency as load-bearing: the line under the suggestion
  * must state the *actual* reason `getTopTask` ranked this task first — never a
@@ -20,7 +20,7 @@
  *      "due today" / "due tomorrow" / "due <weekday>" / "due <Jun 30>".
  *   5. size-fit           → appended only when it adds info (S/M → "fits in …").
  *
- * The split into `lead` / `detail` maps onto the WhatNowCard's `why` (lead) +
+ * The split into `lead` / `detail` maps onto the NextCard's `why` (lead) +
  * `whyEmphasis` (detail, rendered strong in amber) props, keeping the visual
  * identical to the old hardcoded line.
  */

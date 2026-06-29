@@ -232,7 +232,7 @@ describe("createTask — happy path", () => {
         userId: "user-1",
         lensId: "lens-1", // from the project, not the active lens
         projectId: "proj-1",
-        status: "UPCOMING", // the triage default — actionable, surfaces on What Now
+        status: "UPCOMING", // the triage default — actionable, surfaces on Next
         priority: "NORMAL",
         size: "M",
       }),

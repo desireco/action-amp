@@ -12,7 +12,7 @@
 >   survives as a Task status; an upcoming-list view is reachable from Today
 >   ("see upcoming" toggle) for promoting tasks onto today.
 > - **Someday (`/app/someday`) relocates under the Plan section.**
-> - The **What Now / Today** split stays, both under Work.
+> - The **Next / Today** split stays, both under Work.
 >
 > The page-by-page descriptions below stay accurate for each route's contents;
 > only the *grouping* and the Upcoming demotion are superseded.
@@ -60,7 +60,7 @@ Persistent UI that frames every page:
 
 These are the main destinations. All scoped to the active Lens.
 
-### P1. What Now  →  `/`
+### P1. Next  →  `/`
 
 **The home page. The wedge.** Not a list — a chooser. (FEATURES F8/F10.)
 
@@ -89,7 +89,7 @@ One InboxItem at a time, decide what it becomes (FEATURES F6, DATA-MODEL §3):
 
 ### P3. Today  →  `/today`
 
-**Planning view** of today's commitments — distinct from What Now (which is *doing*).
+**Planning view** of today's commitments — distinct from Next (which is *doing*).
 
 - List of Tasks due today/overdue, grouped by Goal.
 - Enforces the **Today cap** (FEATURES F12): adding a 6th requires bumping one out.
@@ -182,7 +182,7 @@ These aren't pages but are core surfaces:
 | `/password-reset` | Reset | email only |
 | `/email-verification` | Verify email | email only |
 
-Post-auth redirect → `/` (What Now).
+Post-auth redirect → `/` (Next).
 
 ---
 
@@ -201,7 +201,7 @@ Tabbed or single-scroll *(decide later)*:
 
 ```
 MVP routes (auth-required except auth pages):
-  /                          What Now (home)
+  /                          Next (home)
   /inbox                     Inbox
   /inbox/review              Triage walkthrough
   /today                     Today (planning)
@@ -224,7 +224,7 @@ Phase 2:
 
 ## 7. Open decisions (need your call)
 
-1. **Today vs. What Now — two pages or one?** My proposal: **two.** What Now (`/`) = the chooser (doing); Today (`/today`) = the list (planning, cap enforcement). They serve different moments. *Alternative: collapse into one page with a toggle.* ← lean: keep separate.
+1. **Today vs. Next — two pages or one?** My proposal: **two.** Next (`/`) = the chooser (doing); Today (`/today`) = the list (planning, cap enforcement). They serve different moments. *Alternative: collapse into one page with a toggle.* ← lean: keep separate.
 2. **Triage = dedicated walkthrough page (`/inbox/review`) or inline in the inbox list?** I lean **dedicated walkthrough** for MVP — it's the GTD "clarify" ritual and deserves focus. *Alternative: triage buttons inline on each inbox row.*
 3. **Project/Goal detail = full pages or expand-in-place panels?** Lean **full pages** (shareable URLs, deep-linkable, back-button friendly). *Alternative: Things-style inline expand.*
 4. **Focus mode = route (`/tasks/:id/focus`) or full-screen overlay?** Lean **overlay** (feels more "mode", no nav jank). Either works.

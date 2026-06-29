@@ -2,18 +2,18 @@ import { useState } from "react";
 import { useQuery } from "wasp/client/operations";
 import { getTopTask, toggleTaskDone, snoozeTask, startTask, pauseTask } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { WhatNowCard, FocusMode, SnoozeSheet, type FocusTask, type SnoozePreset } from "../components/ui";
+import { NextCard, FocusMode, SnoozeSheet, type FocusTask, type SnoozePreset } from "../components/ui";
 import { useActiveLens } from "./lensContext";
 import { composeWhy } from "./focusWhy";
-import "./WhatNowPage.css";
+import "./NextPage.css";
 
 /**
- * The home screen — "What Now". The product's wedge: not a list, a chooser.
+ * The home screen — "Next". The product's wedge: not a list, a chooser.
  *
  * Renders the focus engine's top task (priority-first MVP, FEATURES.md F10),
  * or a calm empty state when nothing's on the table. Scoped to the active Lens.
  */
-export function WhatNowPage() {
+export function NextPage() {
   const lens = useActiveLens();
   const queryClient = useQueryClient();
   const { data: topTask, isLoading } = useQuery(
@@ -29,7 +29,7 @@ export function WhatNowPage() {
     try {
       await toggleTaskDone({ id: topTask.id });
       // Refresh the focus candidates + dependent lists so the completed task
-      // leaves What Now and the nav counts update.
+      // leaves Next and the nav counts update.
       queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
       queryClient.invalidateQueries({ queryKey: ["getTasks"] });
       queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
@@ -110,7 +110,7 @@ export function WhatNowPage() {
 
   return (
     <>
-      <WhatNowCard
+      <NextCard
         task={{
           title: topTask.description,
           project: topTask.project?.name,

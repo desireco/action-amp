@@ -110,7 +110,7 @@ describe("useKeyboardShortcuts — cheatsheet", () => {
 });
 
 describe("useKeyboardShortcuts — navigation", () => {
-  it("Space goes to What Now", () => {
+  it("Space goes to Next", () => {
     render(<Harness {...handlers} />);
     press(" ");
     expect(handlers.onGoHome).toHaveBeenCalledTimes(1);
