@@ -22,8 +22,8 @@ const PAGES: Page[] = ["name", "step-1", "step-2", "step-3"];
 const STEPS: { eyebrow: string; title: string; body: string; visual: "capture" | "triage" | "focus" }[] = [
   {
     eyebrow: "1 of 3 · capture",
-    title: "Press ⌘K. Type a thought. Hit Enter.",
-    body: "Anything landing in your head goes in the Inbox first. It doesn't have to be a task yet — it just has to leave your mind.",
+    title: "Use ⌘K to capture a thought.",
+    body: "Once you're in the app, anything landing in your head goes in the Inbox first. It doesn't have to be a task yet — it just has to leave your mind.",
     visual: "capture",
   },
   {
@@ -34,8 +34,8 @@ const STEPS: { eyebrow: string; title: string; body: string; visual: "capture" |
   },
   {
     eyebrow: "3 of 3 · focus",
-    title: "What Now picks the next thing.",
-    body: "Do it. Everything else disappears until it's that thing's turn. That's the whole app.",
+    title: "Next picks the task most likely to move you forward.",
+    body: "One task at a time, ranked by what actually matters. Start it, and the rest steps out of the way until it's their turn. This is the whole app — not a list, a decision.",
     visual: "focus",
   },
 ];
@@ -121,11 +121,11 @@ function LoopVisual({ kind }: { kind: "capture" | "triage" | "focus" }) {
       <div className="aa-ob-loop-visual aa-ob-loop-triage" aria-hidden="true">
         <div className="aa-ob-triage-row">
           <span className="aa-ob-triage-text">Call Sam</span>
-          <span className="aa-ob-triage-key">T</span>
+          <span className="aa-ob-triage-key">Task</span>
         </div>
         <div className="aa-ob-triage-row">
           <span className="aa-ob-triage-text">Plan Q3</span>
-          <span className="aa-ob-triage-key">P</span>
+          <span className="aa-ob-triage-key">Project</span>
         </div>
       </div>
     );
