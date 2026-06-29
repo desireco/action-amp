@@ -95,6 +95,17 @@
   display: none !important;
 }
 
+/* Hide Wasp's stock social-auth block + its "Or continue with" divider.
+   We render our own themed Google button + "or with email" divider above the
+   form (see GoogleButton.tsx), and Wasp offers no prop to disable its stock
+   social block — so without this we get two Google buttons and two dividers.
+   Attribute selectors beat the hashed CSS-module class names and survive
+   build-to-build hash changes. */
+.aa-auth-card [class*="_socialAuth"],
+.aa-auth-card [class*="_orContinueWith"] {
+  display: none !important;
+}
+
 /* Labels */
 .aa-auth-card label {
   color: var(--aa-text-2) !important;
