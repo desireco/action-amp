@@ -10,8 +10,10 @@ import { test, expect } from "@playwright/test";
  * Requires `wasp start` serving on :4000 (see playwright.config.ts).
  */
 
-const E2E_EMAIL = process.env.E2E_EMAIL ?? "zeljko@dakic.com";
-const E2E_PASSWORD = process.env.E2E_PASSWORD ?? "Zezanjeamp42";
+// ponytail: default to a throwaway test account so e2e never depends on a
+// real person's email. Create it via scripts/create-verified-user.mjs.
+const E2E_EMAIL = process.env.E2E_EMAIL ?? "test@example.com";
+const E2E_PASSWORD = process.env.E2E_PASSWORD ?? "Testpass123!";
 
 // Wasp's LoginForm renders labels as plain <div>s (not <label> elements), so
 // getByLabel() can't associate them — target inputs by type instead.

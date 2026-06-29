@@ -7,7 +7,7 @@
  * (argon2id, same as signup) so the hash matches what login expects.
  *
  * USAGE:
- *   node scripts/reset-user.mjs --email zeljko@dakic.com --password 'Ze..."'
+ *   node scripts/reset-user.mjs --email test@example.com --password 'Testpass123!'
  *   node scripts/reset-user.mjs --email a@b.c --password 'x' --no-verify  # skip verify
  *
  * ponytail: argon2 hashing + providerData JSON shape are Wasp internals that

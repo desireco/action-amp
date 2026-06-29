@@ -9,7 +9,7 @@
  * after the first run so it's safe in practice).
  *
  * USAGE:
- *   node scripts/tasks-to-inbox.mjs --email zeljko@dakic.com
+ *   node scripts/tasks-to-inbox.mjs --email test@example.com
  *   node scripts/tasks-to-inbox.mjs --email a@b.c --dry-run
  *
  * ponytail: does not touch tasks that are already done (completedAt set) —
