@@ -2,16 +2,18 @@ import type { ReactNode } from "react";
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuth, logout } from "wasp/client/auth";
-import { useQuery, ensureOnboarded, getAppData, createInboxItem } from "wasp/client/operations";
+import { useQuery, ensureOnboarded, getAppData, createInboxItem, submitFeedback } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
+import { FeedbackDialog } from "./FeedbackDialog";
 import { CapturePopover, ShortcutCheatsheet, ConfirmDialog } from "../components/ui";
 import {
   BrandMark,
   LensSwitch,
   NavItem,
   PlusIcon,
+  LoudspeakerIcon,
   StarIcon,
   InboxIcon,
   ClockIcon,
@@ -171,6 +173,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [mobileLensOpen, setMobileLensOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useKeyboardShortcuts({
     onCapture: () => setCaptureOpen(true),
@@ -181,17 +184,18 @@ export function AppShell({ children }: { children: ReactNode }) {
       setCheatsheetOpen(false);
       setConfirmLogout(false);
       setMobileLensOpen(false);
+      setFeedbackOpen(false);
     },
   });
 
   // Lock body scroll while any overlay is open.
   useEffect(() => {
-    const open = captureOpen || cheatsheetOpen || confirmLogout;
+    const open = captureOpen || cheatsheetOpen || confirmLogout || feedbackOpen;
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [captureOpen, cheatsheetOpen, confirmLogout]);
+  }, [captureOpen, cheatsheetOpen, confirmLogout, feedbackOpen]);
 
   return (
     <div className="aa-app">
@@ -368,15 +372,26 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </nav>
 
-      <button
-        type="button"
-        className="aa-app-help-fab"
-        onClick={() => setCheatsheetOpen(true)}
-        title="Shortcuts (?)"
-        aria-label="Shortcuts"
-      >
-        ?
-      </button>
+      <div className="aa-app-utility-cluster" aria-label="Shell utilities">
+        <button
+          type="button"
+          className="aa-app-utility-btn"
+          onClick={() => setFeedbackOpen(true)}
+          title="Leave feedback"
+          aria-label="Leave feedback"
+        >
+          <LoudspeakerIcon />
+        </button>
+        <button
+          type="button"
+          className="aa-app-utility-btn"
+          onClick={() => setCheatsheetOpen(true)}
+          title="Shortcuts (?)"
+          aria-label="Shortcuts"
+        >
+          ?
+        </button>
+      </div>
 
       <button
         type="button"
@@ -405,6 +420,20 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
       )}
       {cheatsheetOpen && <ShortcutCheatsheet onClose={() => setCheatsheetOpen(false)} />}
+      {feedbackOpen && (
+        <FeedbackDialog
+          onClose={() => setFeedbackOpen(false)}
+          onSubmit={async (message) => {
+            await submitFeedback({
+              message,
+              route: `${location.pathname}${location.search}`,
+              section: expandedFocus,
+              lens: activeLensValue,
+              userAgent: typeof window === "undefined" ? null : window.navigator.userAgent,
+            });
+          }}
+        />
+      )}
       {confirmLogout && (
         <ConfirmDialog
           title="Log out?"

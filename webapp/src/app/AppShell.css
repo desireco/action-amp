@@ -168,12 +168,18 @@
   min-height: 100dvh;
 }
 
-/* Floating shortcut help */
-.aa-app-help-fab {
+/* Floating shell utilities */
+.aa-app-utility-cluster {
   position: fixed;
   top: max(var(--aa-space-lg), env(safe-area-inset-top));
   right: max(var(--aa-space-lg), env(safe-area-inset-right));
   z-index: 28;
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+}
+
+.aa-app-utility-btn {
   width: 32px;
   height: 32px;
   display: flex;
@@ -194,13 +200,13 @@
     color 0.15s var(--aa-ease-out);
 }
 
-.aa-app-help-fab:hover {
+.aa-app-utility-btn:hover {
   background: var(--aa-surface-muted);
   border-color: var(--aa-border-strong);
   color: var(--aa-text);
 }
 
-.aa-app-help-fab:focus-visible {
+.aa-app-utility-btn:focus-visible {
   outline: 2px solid var(--aa-teal);
   outline-offset: 2px;
 }
@@ -301,7 +307,7 @@
   .aa-app-main {
     padding: var(--aa-space-xl) var(--aa-space-lg);
   }
-  .aa-app-help-fab {
+  .aa-app-utility-cluster {
     top: max(var(--aa-space-sm), env(safe-area-inset-top));
     right: max(var(--aa-space-md), env(safe-area-inset-right));
   }

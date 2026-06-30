@@ -36,6 +36,7 @@ model User {
   resources  Resource[]
   inboxItems InboxItem[]
   tags       Tag[]
+  feedback   Feedback[]
 
   // ---- Billing (Stripe) ----
   // Entitlement state. Mutated ONLY by the Stripe webhook (the source of
@@ -239,6 +240,31 @@ model TaskUpdate {
 
   task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId String
+}
+
+// ============================================================
+// Feedback — in-app user feedback with app context
+// ============================================================
+// Submitted from the shell feedback button. Always stored; production also
+// emails the configured admin. Context fields are intentionally denormalized so
+// feedback remains useful even if a lens is renamed later.
+model Feedback {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  message   String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  userName  String?
+  userEmail String?
+
+  route     String?
+  section   String?
+  lensId    String?
+  lensName  String?
+  lensColor String?
+  userAgent String?
 }
 
 // ============================================================

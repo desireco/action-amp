@@ -25,6 +25,7 @@ import { GoalDetailPage } from "./src/goals/GoalDetailPage" with { type: "ref" }
 import { LogbookPage } from "./src/logbook/LogbookPage" with { type: "ref" };
 import { ensureOnboarded, setPreferredName, completeOnboarding } from "./src/onboarding/operations" with { type: "ref" };
 import { getAppData } from "./src/app/operations" with { type: "ref" };
+import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
@@ -156,6 +157,7 @@ export default app({
     action(createGoal, { entities: ["Goal"], auth: true }),
     query(getLogbook, { entities: ["Task", "Project", "InboxItem"], auth: true }),
     query(getAppData, { entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
+    action(submitFeedback, { entities: ["User", "Feedback"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),
     action(setPreferredName, { entities: ["User"], auth: true }),
     action(completeOnboarding, { entities: ["User"], auth: true }),

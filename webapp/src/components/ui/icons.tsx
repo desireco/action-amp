@@ -112,6 +112,16 @@ export function PlusIcon(p: IconProps) {
   );
 }
 
+/* Feedback — loudspeaker */
+export function LoudspeakerIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M2.5 9.5h2.2L9 12.2V3.8L4.7 6.5H2.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M11 6.1c.6.5.9 1.2.9 1.9s-.3 1.4-.9 1.9M12.7 4.5c1 .9 1.6 2.1 1.6 3.5s-.6 2.6-1.6 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /* Moon — theme (dark) */
 export function MoonIcon(p: IconProps) {
   return (

@@ -104,6 +104,85 @@
 }
 
 /* ============================================================
+   Feedback dialog
+   ============================================================ */
+.aa-feedback {
+  padding: var(--aa-space-md) var(--aa-space-lg);
+}
+
+.aa-feedback__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-feedback__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--aa-text);
+  margin: 0;
+}
+
+.aa-feedback__sub {
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--aa-text-3);
+  margin: 4px 0 0;
+}
+
+.aa-feedback__textarea {
+  width: 100%;
+  min-height: 130px;
+  resize: vertical;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-bg-soft);
+  color: var(--aa-text);
+  font-family: var(--aa-font);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  padding: var(--aa-space-sm);
+}
+
+.aa-feedback__textarea:focus {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+  border-color: transparent;
+}
+
+.aa-feedback__textarea::placeholder {
+  color: var(--aa-text-4);
+}
+
+.aa-feedback__error {
+  margin: var(--aa-space-xs) 0 0;
+  color: var(--aa-rose-text);
+  font-size: 0.82rem;
+}
+
+.aa-feedback__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  margin-top: var(--aa-space-md);
+}
+
+.aa-feedback__count {
+  color: var(--aa-text-4);
+  font-size: 0.74rem;
+}
+
+.aa-feedback__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--aa-space-sm);
+}
+
+/* ============================================================
    Shortcut cheatsheet
    ============================================================ */
 .aa-cheatsheet {

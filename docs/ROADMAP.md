@@ -99,6 +99,11 @@ item; Build pulls `ready`.**
    verifies once the client exists. → §Shipped.
 6. **distribution-quietlaunch** — (no spec; it's a campaign, not a build item)
    get the existing product in front of ~500 of the right people in 4 weeks.
+7. **in-app-feedback** (`done` 2026-06-30) — shell loudspeaker opens a simple
+   feedback modal. Feedback is stored with user, route, Work/Plan/Review
+   section, lens context, and user agent; production sends an admin email to
+   `ACTIONAMP_ADMIN_EMAIL` (default `zeljko@dakic.com`) after the DB write. Dev
+   stores only. → §Shipped.
 
 ### Next (only after the gauntlet produces a signal)
 
