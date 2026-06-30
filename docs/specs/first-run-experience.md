@@ -62,12 +62,12 @@ Each is a checkable predicate. Verify against the running app + the test suite.
       Each panel is one sentence + one visual. No more than 3 panels total
       after the preferred-name step.
 - [ ] **New users get seed content**, created by `ensureOnboarded` only when
-      the user has zero tasks (idempotent guard): exactly **one** example Task
-      in the Me lens with `status=TODAY`, `priority=NORMAL`, `size=M`, e.g.
-      description "Try it: complete this task". No fake projects/goals beyond
-      the existing "General" project.
+      the user has zero tasks (idempotent guard): a light starter set of three
+      tiny Tasks in the Me lens with `status=TODAY`, `priority=NORMAL`,
+      `size=S`, e.g. complete one task, capture one real thing, then triage it.
+      No fake projects/goals beyond the existing "General" project.
 - [ ] **First-paint Next is non-empty for a new user.** Verified: after
-      onboarding, `/app` shows the seeded task in the Next card, not the
+      onboarding, `/app` shows a starter task in the Next card, not the
       "Nothing on the table" empty state.
 - [ ] **Existing users are unaffected.** `ensureOnboarded`'s seed branch is
       guarded by "user has zero tasks," so the 0 existing production users who
@@ -89,8 +89,9 @@ Each is a checkable predicate. Verify against the running app + the test suite.
   The empty-state copy already instructs; don't build a tutorial.
 - **No changes to auth methods.** Email-only stays; Google auth is a separate
   spec (`social-auth-google`).
-- **No seed of multiple tasks / projects / goals.** Exactly one task. The
-  point is to make Next non-empty, not to fake a populated life.
+- **No bulky example data / projects / goals.** The starter set may contain a
+  few tiny tasks that teach the first loop, but the point is to make Next
+  usable, not to fake a populated life.
 - **No analytics events** in this spec (that's `observability-minimal`).
 - **No redesign of the onboarding visual style.** Reuse existing
   `OnboardingPage.css` tokens; only swap content.

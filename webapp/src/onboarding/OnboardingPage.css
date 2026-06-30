@@ -1,6 +1,6 @@
 /*
  * Onboarding page styles. Consumes design tokens.
- * Full-screen dark overlay with animated gesture demos.
+ * Full-screen first-run flow.
  */
 @import "../styles/tokens.css";
 
@@ -42,7 +42,7 @@
   z-index: 10;
   font-size: 13px;
   font-weight: 500;
-  color: oklch(0.7 0.01 230 / 0.5);
+  color: oklch(0.78 0.01 230 / 0.68);
   padding: 6px 14px;
   border-radius: var(--aa-radius-full);
   transition: color var(--aa-dur-base);
@@ -60,7 +60,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 60px 32px 40px;
+  padding: 72px 32px;
   position: relative;
   z-index: 2;
 }
@@ -68,7 +68,7 @@
 /* page */
 .aa-ob-page {
   text-align: center;
-  max-width: 440px;
+  max-width: 520px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -89,41 +89,50 @@
 
 /* eyebrow */
 .aa-ob-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: var(--aa-teal);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 /* headings */
 .aa-ob-h1 {
-  font-size: 34px;
+  font-size: 44px;
   font-weight: 800;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
   line-height: 1.1;
   color: white;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   max-width: 16ch;
 }
+.aa-ob-h1--wide {
+  max-width: 18ch;
+}
 .aa-ob-h2 {
-  font-size: 26px;
+  font-size: 36px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   line-height: 1.15;
   color: white;
-  margin-bottom: 14px;
-  max-width: 18ch;
+  margin-bottom: 18px;
+  max-width: 20ch;
+}
+.aa-ob-title-mobile {
+  display: none;
 }
 
 /* body */
 .aa-ob-body {
-  font-size: 16px;
-  line-height: 1.55;
-  color: oklch(0.75 0.01 230 / 0.7);
-  max-width: 32ch;
-  margin-bottom: 32px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: oklch(0.8 0.01 230 / 0.78);
+  max-width: 34ch;
+  margin-bottom: 30px;
+}
+.aa-ob-body--intro {
+  max-width: 37ch;
 }
 .aa-ob-body b {
   color: oklch(0.9 0.01 230 / 0.95);
@@ -155,7 +164,7 @@
 .aa-ob-loop-visual {
   width: 260px;
   max-width: 100%;
-  margin: 0 0 36px;
+  margin: 0 0 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -179,6 +188,21 @@
   background: oklch(0.72 0.15 220 / 0.12);
   border: 1px solid oklch(0.72 0.15 220 / 0.4);
   border-radius: var(--aa-radius-md);
+}
+.aa-ob-mobile-capture-chip {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: white;
+  background: var(--aa-teal-cta);
+  border-radius: var(--aa-radius-full);
+  box-shadow: 0 8px 24px var(--aa-teal-tint-shadow);
+}
+.aa-ob-mobile-capture-chip svg {
+  width: 18px;
+  height: 18px;
 }
 .aa-ob-capture-line {
   font-size: 0.95rem;
@@ -254,16 +278,6 @@
      with -capture / -triage. */
 }
 
-/* ============================================================
-   FOOTER CTA
-   ============================================================ */
-.aa-ob-foot {
-  padding: 0 32px 60px;
-  text-align: center;
-  position: relative;
-  z-index: 2;
-}
-
 /* Inline error when completeOnboarding fails — calm, not a guilt-trip red. */
 .aa-ob-error {
   margin: 0 0 var(--aa-space-md);
@@ -305,7 +319,9 @@
   color: white;
   font-size: 16px;
   font-weight: 600;
-  padding: 16px 36px;
+  min-height: 52px;
+  min-width: 128px;
+  padding: 15px 32px;
   border-radius: var(--aa-radius-lg);
   box-shadow: 0 8px 24px var(--aa-teal-tint-shadow);
   transition:
@@ -319,30 +335,89 @@
 }
 /* CTA placed inline below an input (name step), not in the footer strip. */
 .aa-ob-cta--inline {
-  margin-top: var(--aa-space-xl);
+  margin-top: var(--aa-space-lg);
 }
 .aa-ob-cta:active {
   transform: scale(0.96);
+}
+.aa-ob-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 26px;
 }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 768px) {
+  .aa-ob-skip {
+    top: 22px;
+    right: 18px;
+  }
+  .aa-ob-stage {
+    padding: 78px 28px 54px;
+  }
+  .aa-ob-page {
+    max-width: 100%;
+  }
   .aa-ob-h1 {
-    font-size: 26px;
+    font-size: 34px;
+    max-width: 15ch;
   }
   .aa-ob-h2 {
-    font-size: 22px;
+    font-size: 30px;
+    max-width: 16ch;
   }
   .aa-ob-body {
-    font-size: 15px;
+    font-size: 17px;
+    max-width: 31ch;
+    margin-bottom: 28px;
   }
   .aa-ob-loop-visual {
     width: 220px;
+    margin-bottom: 24px;
   }
-  .aa-ob-foot {
-    padding-bottom: 48px;
+  .aa-ob-title-desktop {
+    display: none;
+  }
+  .aa-ob-title-mobile {
+    display: inline;
+  }
+  .aa-ob-kbd--desktop {
+    display: none;
+  }
+  .aa-ob-mobile-capture-chip {
+    display: inline-flex;
+  }
+  .aa-ob-actions {
+    margin-top: 24px;
+  }
+  .aa-ob-cta {
+    min-width: 154px;
+    max-width: 100%;
+    padding-inline: 26px;
+  }
+  .aa-ob-name-input {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .aa-ob-stage {
+    padding-inline: 24px;
+  }
+  .aa-ob-h1 {
+    font-size: 31px;
+  }
+  .aa-ob-h2 {
+    font-size: 27px;
+  }
+  .aa-ob-body {
+    font-size: 16px;
+  }
+  .aa-ob-cta {
+    width: 100%;
   }
 }
 

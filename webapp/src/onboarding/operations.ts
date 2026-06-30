@@ -1,4 +1,11 @@
-import type { EnsureOnboarded, GetAppData, SetPreferredName, CompleteOnboarding } from "wasp/server/operations";
+import type {
+  EnsureOnboarded,
+  GetAppData,
+  SetPreferredName,
+  CompleteOnboarding,
+} from "wasp/server/operations";
+import { PrismaClient } from "@prisma/client";
+import { buildWelcomeEmail } from "./welcomeEmail";
 
 /**
  * Onboarding + app bootstrap data.
@@ -15,10 +22,51 @@ import type { EnsureOnboarded, GetAppData, SetPreferredName, CompleteOnboarding 
  * data) so the client can populate the sidebar + scope the focus engine.
  */
 
-const DEFAULT_LENSES = [
-  { name: "Work" },
-  { name: "Me" },
+const DEFAULT_LENSES = [{ name: "Work" }, { name: "Me" }] as const;
+const STARTER_TASKS = [
+  "Try it: complete this task",
+  "Capture one real thing on your mind",
+  "Open the Inbox and decide what that thing becomes",
 ] as const;
+
+// The recipient address is NOT on context.user (the User entity has no email
+// column — even billing creates Stripe customers without one). It lives on
+// AuthIdentity: for the email provider, `providerUserId` IS the address. Auth
+// isn't exposed via context.entities (Wasp holds auth models internal), so we
+// reach it via a direct PrismaClient — the same pattern scripts/ uses. One
+// module-level instance (PrismaClient is designed as a long-lived singleton).
+const prisma = new PrismaClient();
+
+async function sendWelcomeEmail(user: {
+  id: string;
+  firstName?: string | null;
+  preferredName?: string | null;
+}) {
+  const auth = await prisma.auth.findFirst({
+    where: { userId: user.id },
+    include: { identities: true },
+  });
+  if (!auth) return;
+
+  // Map Wasp's flat AuthIdentity rows into the {email, google} shape
+  // buildWelcomeEmail expects. providerUserId is the address for the email
+  // provider; for google it's a sub id (filtered out by the @ check inside).
+  const identities = { email: null as { id: string } | null, google: null as { id: string } | null };
+  for (const identity of auth.identities) {
+    if (identity.providerName === "email") identities.email = { id: identity.providerUserId };
+    else if (identity.providerName === "google") identities.google = { id: identity.providerUserId };
+  }
+
+  const email = buildWelcomeEmail({ ...user, identities });
+  if (!email) return;
+
+  // ponytail: string-concat the module path so `wasp compile` doesn't try to
+  // statically resolve `wasp/server/email` before the SDK is generated. A
+  // direct import broke compile in earlier Wasp phases; revisit if it resolves.
+  const emailModule = "wasp/server/" + "email";
+  const { emailSender } = await import(emailModule);
+  await emailSender.send(email);
+}
 
 export const ensureOnboarded = (async (_args, context) => {
   if (!context.user) {
@@ -68,29 +116,34 @@ export const ensureOnboarded = (async (_args, context) => {
     }
   }
 
-  // Seed exactly ONE example task for brand-new users so Next is non-empty
-  // on first paint. Guarded by "user has zero tasks" so existing users get
-  // nothing new (idempotent across logins). Placed in the Me lens, status=TODAY
-  // so getTopTask surfaces it immediately.
+  // Seed a tiny starter set for brand-new users so Next is non-empty and the
+  // first session teaches the loop by doing it. Guarded by "user has zero
+  // tasks" so existing users get nothing new (idempotent across logins).
+  // Placed in the Me lens, status=TODAY so getTopTask surfaces them.
   if (meLensId) {
     const taskCount = await context.entities.Task.count({ where: { userId } });
     if (taskCount === 0) {
-      await context.entities.Task.create({
-        data: {
-          description: "Try it: complete this task",
-          userId,
-          lensId: meLensId,
-          status: "TODAY",
-          priority: "NORMAL",
-          size: "M",
-        },
-        select: { id: true },
-      });
+      for (const description of STARTER_TASKS) {
+        await context.entities.Task.create({
+          data: {
+            description,
+            userId,
+            lensId: meLensId,
+            status: "TODAY",
+            priority: "NORMAL",
+            size: "S",
+          },
+          select: { id: true },
+        });
+      }
     }
   }
 
   return { createdLenses: created };
-}) satisfies EnsureOnboarded<never, { createdLenses: { name: string; id: string }[] }>;
+}) satisfies EnsureOnboarded<
+  never,
+  { createdLenses: { name: string; id: string }[] }
+>;
 
 /**
  * Sets the user's preferred name (the onboarding "what should we call you?"
@@ -109,7 +162,10 @@ export const setPreferredName = (async (args, context) => {
     data: { preferredName: name },
   });
   return { preferredName: name };
-}) satisfies SetPreferredName<{ preferredName: string }, { preferredName: string }>;
+}) satisfies SetPreferredName<
+  { preferredName: string },
+  { preferredName: string }
+>;
 
 /**
  * Marks onboarding complete server-side. Persists `User.hasSeenOnboarding=true`
@@ -122,10 +178,22 @@ export const completeOnboarding = (async (_args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+  if (context.user.hasSeenOnboarding) {
+    return { hasSeenOnboarding: true };
+  }
+
   await context.entities.User.update({
     where: { id: context.user.id },
     data: { hasSeenOnboarding: true },
   });
+
+  try {
+    await sendWelcomeEmail(context.user);
+  } catch {
+    // Welcome email is a helpful follow-up, not a gate. Onboarding completion
+    // must not fail because SMTP is unavailable or a provider rejects delivery.
+  }
+
   return { hasSeenOnboarding: true };
 }) satisfies CompleteOnboarding<never, { hasSeenOnboarding: boolean }>;
 
@@ -155,7 +223,15 @@ export const getAppData = (async (_args, context) => {
       context.entities.Goal.count({ where: { userId, isDone: false } }),
     ]);
 
-  return { lenses, counts: { inbox: inboxCount, today: todayCount, projects: projectCount, goals: goalCount } };
+  return {
+    lenses,
+    counts: {
+      inbox: inboxCount,
+      today: todayCount,
+      projects: projectCount,
+      goals: goalCount,
+    },
+  };
 }) satisfies GetAppData<
   never,
   {

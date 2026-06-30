@@ -1,6 +1,31 @@
-import { describe, it, expect } from "vitest";
-import { ensureOnboarded, setPreferredName, getAppData, completeOnboarding } from "./operations";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  ensureOnboarded,
+  setPreferredName,
+  getAppData,
+  completeOnboarding,
+} from "./operations";
 import { mockContext } from "../test/mockContext";
+
+// sendWelcomeEmail reaches Auth via a module-level PrismaClient (Auth isn't
+// exposed through context.entities). Mock it so tests don't hit the real DB;
+// auth.findFirst returns null by default => no email resolves, no send. The
+// email path itself is covered in welcomeEmail.test.ts (buildWelcomeEmail).
+// vi.hoisted: vi.mock is hoisted above top-level consts, so the mock fn must
+// be hoisted too or it's accessed before initialization.
+const { authFindFirst } = vi.hoisted(() => ({
+  authFindFirst: vi.fn().mockResolvedValue(null),
+}));
+vi.mock("@prisma/client", () => ({
+  PrismaClient: class MockPrismaClient {
+    auth = { findFirst: authFindFirst };
+  },
+}));
+
+beforeEach(() => {
+  authFindFirst.mockResolvedValue(null);
+  authFindFirst.mockClear();
+});
 
 /**
  * Onboarding operations — three ops with distinct shapes:
@@ -12,7 +37,9 @@ import { mockContext } from "../test/mockContext";
 describe("ensureOnboarded — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
-    await expect(ensureOnboarded(undefined as never, m.context)).rejects.toThrow(/Not authenticated/);
+    await expect(
+      ensureOnboarded(undefined as never, m.context),
+    ).rejects.toThrow(/Not authenticated/);
   });
 });
 
@@ -22,10 +49,10 @@ describe("ensureOnboarded — idempotency", () => {
     // Lens.findFirst is called 4x total: 2x in the lens loop (both missing →
     // null), then 2x in the project-seed loop (return the created ids).
     m.entities.Lens.findFirst
-      .mockResolvedValueOnce(null)            // lens loop: Work missing
-      .mockResolvedValueOnce(null)            // lens loop: Me missing
+      .mockResolvedValueOnce(null) // lens loop: Work missing
+      .mockResolvedValueOnce(null) // lens loop: Me missing
       .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // seed lookup
-      .mockResolvedValueOnce({ id: "lens-me", name: "Me" });    // seed lookup
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me" }); // seed lookup
     m.entities.Lens.create
       .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
       .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
@@ -43,7 +70,11 @@ describe("ensureOnboarded — idempotency", () => {
     // General project seeded once per lens.
     expect(m.entities.Project.create).toHaveBeenCalledTimes(2);
     expect(m.entities.Project.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ name: "General", lensId: "lens-work", userId: "user-1" }),
+      data: expect.objectContaining({
+        name: "General",
+        lensId: "lens-work",
+        userId: "user-1",
+      }),
       select: { id: true },
     });
     // No example task seeded — user already has tasks.
@@ -98,7 +129,7 @@ describe("ensureOnboarded — idempotency", () => {
 });
 
 describe("ensureOnboarded — first-run seed", () => {
-  it("seeds exactly one TODAY task in the Me lens when the user has zero tasks", async () => {
+  it("seeds three light TODAY tasks in the Me lens when the user has zero tasks", async () => {
     const m = mockContext();
     // Both lenses already exist; both General projects exist (we're isolating
     // the seed path, not the lens/project find-or-create).
@@ -115,16 +146,39 @@ describe("ensureOnboarded — first-run seed", () => {
 
     await ensureOnboarded(undefined as never, m.context);
 
-    // Exactly one task, in the Me lens, TODAY/NORMAL/M, the magic-moment seed.
-    expect(m.entities.Task.create).toHaveBeenCalledTimes(1);
-    expect(m.entities.Task.create).toHaveBeenCalledWith({
+    // Three tiny tasks, in the Me lens, TODAY/NORMAL/S, enough to teach the
+    // loop without filling the user's day.
+    expect(m.entities.Task.create).toHaveBeenCalledTimes(3);
+    expect(m.entities.Task.create).toHaveBeenNthCalledWith(1, {
       data: expect.objectContaining({
         userId: "user-1",
         lensId: "lens-me",
         status: "TODAY",
         priority: "NORMAL",
-        size: "M",
-        description: expect.any(String),
+        size: "S",
+        description: "Try it: complete this task",
+      }),
+      select: { id: true },
+    });
+    expect(m.entities.Task.create).toHaveBeenNthCalledWith(2, {
+      data: expect.objectContaining({
+        userId: "user-1",
+        lensId: "lens-me",
+        status: "TODAY",
+        priority: "NORMAL",
+        size: "S",
+        description: "Capture one real thing on your mind",
+      }),
+      select: { id: true },
+    });
+    expect(m.entities.Task.create).toHaveBeenNthCalledWith(3, {
+      data: expect.objectContaining({
+        userId: "user-1",
+        lensId: "lens-me",
+        status: "TODAY",
+        priority: "NORMAL",
+        size: "S",
+        description: "Open the Inbox and decide what that thing becomes",
       }),
       select: { id: true },
     });
@@ -152,9 +206,9 @@ describe("ensureOnboarded — first-run seed", () => {
     // Work exists, Me somehow missing — defensive: don't seed into a null lens.
     m.entities.Lens.findFirst
       .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // lens loop
-      .mockResolvedValueOnce(null)                               // Me missing in lens loop
+      .mockResolvedValueOnce(null) // Me missing in lens loop
       .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // project loop
-      .mockResolvedValueOnce(null);                              // Me missing in project loop
+      .mockResolvedValueOnce(null); // Me missing in project loop
     m.entities.Project.findFirst.mockResolvedValue({ id: "gen-work" });
     m.entities.Task.count.mockResolvedValue(0);
 
@@ -168,11 +222,19 @@ describe("ensureOnboarded — first-run seed", () => {
 describe("completeOnboarding — guards + behavior", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
-    await expect(completeOnboarding(undefined as never, m.context)).rejects.toThrow(/Not authenticated/);
+    await expect(
+      completeOnboarding(undefined as never, m.context),
+    ).rejects.toThrow(/Not authenticated/);
   });
 
   it("sets hasSeenOnboarding=true on the user", async () => {
     const m = mockContext();
+    m.context.user = {
+      ...m.context.user,
+      firstName: "Jake",
+      preferredName: null,
+      hasSeenOnboarding: false,
+    };
     m.entities.User.update.mockResolvedValue({});
 
     const result = await completeOnboarding(undefined as never, m.context);
@@ -182,6 +244,28 @@ describe("completeOnboarding — guards + behavior", () => {
       where: { id: "user-1" },
       data: { hasSeenOnboarding: true },
     });
+    // The email path ran (auth queried for the address) even though the
+    // default mock returns no identity, so nothing was sent.
+    expect(authFindFirst).toHaveBeenCalledWith({
+      where: { userId: "user-1" },
+      include: { identities: true },
+    });
+  });
+
+  it("does not update or resend when onboarding is already complete", async () => {
+    const m = mockContext();
+    m.context.user = {
+      ...m.context.user,
+      firstName: "Jake",
+      hasSeenOnboarding: true,
+    };
+
+    const result = await completeOnboarding(undefined as never, m.context);
+
+    expect(result).toEqual({ hasSeenOnboarding: true });
+    expect(m.entities.User.update).not.toHaveBeenCalled();
+    // Early-return short-circuits before the email path too.
+    expect(authFindFirst).not.toHaveBeenCalled();
   });
 });
 
@@ -222,7 +306,9 @@ describe("setPreferredName — happy path", () => {
 describe("getAppData — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
-    await expect(getAppData(undefined as never, m.context)).rejects.toThrow(/Not authenticated/);
+    await expect(getAppData(undefined as never, m.context)).rejects.toThrow(
+      /Not authenticated/,
+    );
   });
 });
 

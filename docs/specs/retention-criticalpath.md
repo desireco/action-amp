@@ -14,8 +14,9 @@ returning user, then fix the drop points the data exposes. This is **not one
 feature** — it's a measurement layer (the events + the `lastSeenAt` tracking
 that don't exist today) plus a small set of known dead-ends to close. The
 magic moment (Next picking your next task) is built and seeded, but it's
-fragile: onboarding doesn't connect to the seed, and completing the seed task
-lands the user on a dead-end empty state with no path forward. **Depends on
+fragile: onboarding doesn't connect to the starter set, and completing the
+starter loop can land the user on a dead-end empty state with no path forward.
+**Depends on
 `observability-minimal`** — without events, retention is unmeasurable and
 every "fix" is a guess.
 
@@ -51,8 +52,8 @@ Split into **instrumentation** (shippable now) and **known dead-ends**
       D1/D7 retention without trusting client analytics.
 - [ ] **The 4 `observability-minimal` events are emitted** (land → signup →
       app-first-open → checkout) **plus 3 retention-specific ones:**
-      - `seed_task_completed` — the user completed the magic-moment seed task
-        (the first real engagement signal).
+      - `seed_task_completed` — the user completed the first magic-moment
+        starter task (the first real engagement signal).
       - `first_capture` — the user captured their own first InboxItem (the user
         crossed from "trying the demo" to "using it for real").
       - `first_triage` — the user triaged their first item (the loop closed
@@ -70,9 +71,9 @@ Split into **instrumentation** (shippable now) and **known dead-ends**
 These are inspectable in the code today; they're friction regardless of what
 the numbers eventually say.
 
-- [ ] **Onboarding connects to the seed.** The final onboarding panel (or the
-      Next first-paint) acknowledges the seeded task — e.g. the focus panel
-      reads "We put one task on your table — try completing it" instead of the
+- [ ] **Onboarding connects to the starter set.** The final onboarding panel
+      (or the Next first-paint) acknowledges the starter tasks — e.g. the focus
+      panel reads "We put a few light tasks on your table" instead of the
       generic "Next picks the next thing." The seed exists; onboarding
       pretends it doesn't. (`OnboardingPage.tsx` STEPS[2] / `NextPage.tsx`
       first-paint.)

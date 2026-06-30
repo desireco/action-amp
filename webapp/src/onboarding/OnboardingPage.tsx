@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "wasp/client/auth";
 import { setPreferredName, completeOnboarding } from "wasp/client/operations";
+import { PlusIcon } from "../components/ui/icons";
 import "./OnboardingPage.css";
 
 /**
@@ -13,29 +14,38 @@ import "./OnboardingPage.css";
  * switch (the old localStorage gate didn't).
  */
 
-type Page = "name" | "step-1" | "step-2" | "step-3";
-
-const PAGES: Page[] = ["name", "step-1", "step-2", "step-3"];
+type Page = "welcome" | "name" | "capture" | "triage" | "focus";
 
 // The real loop, in three one-sentence panels. Each pairs a single line with a
 // minimal visual — no coachmarks, no tutorial-on-the-tutorial.
-const STEPS: { eyebrow: string; title: string; body: string; visual: "capture" | "triage" | "focus" }[] = [
+const STEPS: {
+  page: Extract<Page, "capture" | "triage" | "focus">;
+  eyebrow: string;
+  title: string;
+  mobileTitle?: string;
+  body: string;
+  visual: "capture" | "triage" | "focus";
+}[] = [
   {
+    page: "capture",
     eyebrow: "1 of 3 · capture",
     title: "Use ⌘K to capture a thought.",
-    body: "Once you're in the app, anything landing in your head goes in the Inbox first. It doesn't have to be a task yet — it just has to leave your mind.",
+    mobileTitle: "Capture a thought before it disappears.",
+    body: "Capture is for thoughts before they become plans. Anything landing in your head goes in the Inbox first.",
     visual: "capture",
   },
   {
+    page: "triage",
     eyebrow: "2 of 3 · triage",
     title: "Decide what each thing becomes.",
-    body: "Open the Inbox and sort: is it a task, a project, a someday-maybe? One key per decision. The Inbox clears as you go.",
+    body: "Some thoughts are tasks. Some are projects. Some are just later. Triage is where you decide without cluttering today.",
     visual: "triage",
   },
   {
+    page: "focus",
     eyebrow: "3 of 3 · focus",
-    title: "Next picks the task most likely to move you forward.",
-    body: "One task at a time, ranked by what actually matters. Start it, and the rest steps out of the way until it's their turn. This is the whole app — not a list, a decision.",
+    title: "Start with one thing.",
+    body: "We put a few light starter tasks on your table. Next will show them one at a time, then get out of the way.",
     visual: "focus",
   },
 ];
@@ -104,6 +114,40 @@ function NameStep({
   );
 }
 
+function WelcomeStep({ onAdvance }: { onAdvance: () => void }) {
+  return (
+    <div className="aa-ob-page aa-ob-enter">
+      <div className="aa-ob-eyebrow">Welcome to ActionAmp</div>
+      <h1 className="aa-ob-h1 aa-ob-h1--wide">
+        It opens to one task, not a list.
+      </h1>
+      <p className="aa-ob-body aa-ob-body--intro">
+        ActionAmp is built for the moment after capture: deciding what actually
+        deserves your attention now.
+      </p>
+      <button className="aa-ob-cta aa-ob-cta--inline" onClick={onAdvance}>
+        Show me →
+      </button>
+    </div>
+  );
+}
+
+function StepTitle({
+  title,
+  mobileTitle,
+}: {
+  title: string;
+  mobileTitle?: string;
+}) {
+  if (!mobileTitle) return <>{title}</>;
+  return (
+    <>
+      <span className="aa-ob-title-desktop">{title}</span>
+      <span className="aa-ob-title-mobile">{mobileTitle}</span>
+    </>
+  );
+}
+
 /** Minimal loop visuals — calm, one shape each, no animated fingers. */
 function LoopVisual({ kind }: { kind: "capture" | "triage" | "focus" }) {
   // Decorative — the panel's title + body carry all the meaning, so the whole
@@ -111,7 +155,10 @@ function LoopVisual({ kind }: { kind: "capture" | "triage" | "focus" }) {
   if (kind === "capture") {
     return (
       <div className="aa-ob-loop-visual aa-ob-loop-capture" aria-hidden="true">
-        <span className="aa-ob-kbd">⌘K</span>
+        <span className="aa-ob-kbd aa-ob-kbd--desktop">⌘K</span>
+        <span className="aa-ob-mobile-capture-chip">
+          <PlusIcon />
+        </span>
         <span className="aa-ob-capture-line">a thought…</span>
       </div>
     );
@@ -159,8 +206,16 @@ export function OnboardingPage() {
   const [completing, setCompleting] = useState(false);
   const [completionError, setCompletionError] = useState(false);
 
-  const currentPage = PAGES[pageIdx];
-  const stepIdx = pageIdx - 1; // name(0) → -1; steps start at idx 1
+  const pages = useMemo<Page[]>(() => {
+    const needsName = user ? !user.firstName?.trim() : false;
+    return needsName
+      ? ["welcome", "name", "capture", "triage", "focus"]
+      : ["welcome", "capture", "triage", "focus"];
+  }, [user]);
+
+  const currentPage = pages[pageIdx] ?? "welcome";
+  const stepIdx = STEPS.findIndex((step) => step.page === currentPage);
+  const currentStep = stepIdx >= 0 ? STEPS[stepIdx] : null;
 
   const finish = useCallback(async () => {
     // Persist the flag server-side so onboarding shows exactly once across
@@ -184,12 +239,12 @@ export function OnboardingPage() {
   }, [navigate]);
 
   const next = useCallback(() => {
-    if (pageIdx >= PAGES.length - 1) {
+    if (pageIdx >= pages.length - 1) {
       void finish();
     } else {
       setPageIdx(pageIdx + 1);
     }
-  }, [pageIdx, finish]);
+  }, [pageIdx, pages.length, finish]);
 
   // keyboard nav
   useEffect(() => {
@@ -223,19 +278,23 @@ export function OnboardingPage() {
       </button>
 
       <div className="aa-ob-stage">
-        {/* NAME — preferred name prompt (step 0) */}
-        {currentPage === "name" && (
-          <NameStep user={user} onAdvance={next} />
-        )}
+        {currentPage === "welcome" && <WelcomeStep onAdvance={next} />}
+
+        {currentPage === "name" && <NameStep user={user} onAdvance={next} />}
 
         {/* LOOP STEPS */}
-        {stepIdx >= 0 && stepIdx < STEPS.length && (
+        {currentStep && (
           <div className="aa-ob-page aa-ob-enter" key={stepIdx}>
-            <div className="aa-ob-eyebrow">{STEPS[stepIdx].eyebrow}</div>
-            <h2 className="aa-ob-h2">{STEPS[stepIdx].title}</h2>
-            <p className="aa-ob-body">{STEPS[stepIdx].body}</p>
+            <div className="aa-ob-eyebrow">{currentStep.eyebrow}</div>
+            <h2 className="aa-ob-h2">
+              <StepTitle
+                title={currentStep.title}
+                mobileTitle={currentStep.mobileTitle}
+              />
+            </h2>
+            <p className="aa-ob-body">{currentStep.body}</p>
 
-            <LoopVisual kind={STEPS[stepIdx].visual} />
+            <LoopVisual kind={currentStep.visual} />
 
             <div className="aa-ob-dots">
               {STEPS.map((_, i) => (
@@ -245,31 +304,28 @@ export function OnboardingPage() {
                 />
               ))}
             </div>
+
+            <div className="aa-ob-actions">
+              {completionError && (
+                <p className="aa-ob-error" role="alert">
+                  Couldn’t save — check your connection and try again.
+                </p>
+              )}
+              <button
+                className="aa-ob-cta"
+                onClick={next}
+                disabled={completing}
+              >
+                {completing
+                  ? "Saving…"
+                  : stepIdx >= STEPS.length - 1
+                    ? "Show me my starter tasks →"
+                    : "Next →"}
+              </button>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Footer CTA — hidden on the name step (it renders its own button) */}
-      {currentPage !== "name" && (
-        <div className="aa-ob-foot">
-          {completionError && (
-            <p className="aa-ob-error" role="alert">
-              Couldn’t save — check your connection and try again.
-            </p>
-          )}
-          <button
-            className="aa-ob-cta"
-            onClick={next}
-            disabled={completing}
-          >
-            {completing
-              ? "Saving…"
-              : stepIdx >= STEPS.length - 1
-                ? "Go →"
-                : "Next →"}
-          </button>
-        </div>
-      )}
     </div>
   );
 }
