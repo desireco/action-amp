@@ -296,15 +296,18 @@ physical key — `?` is Shift+`/`.
 
 ### 7.5 Capture mode
 
-**`⌘Enter` to close is LOCKED 2026-06-22.** It's the escape hatch that makes
-rapid-fire (`Enter` = capture + keep open) safe — you never get trapped in
-the loop. Standard "commit and send" pattern (Slack, email).
+**`Enter` to capture + close, `⌘Enter` to add another — REVERSED 2026-06-30.**
+The single capture is the common case (one thing on your mind → commit and get
+back to work), so it gets the unmodified key. Adding to the list (rapid-fire)
+is the modifier case. *(Previously locked 2026-06-22 the other way around —
+`⌘Enter` to close, `Enter` to keep open — on the "commit and send" / Slack
+analogy. Reversed because capture is usually a one-off, not a session.)*
 
 | Key | Action |
 |---|---|
 | `⌘/` · `⌘K` · click | Open |
-| `Enter` | Capture + keep open (rapid-fire) — clears input, stacks "✓ captured" |
-| `⌘Enter` | **Capture + close** (the "done capturing" key) |
+| `Enter` | **Capture + close** (commit this one and get back to work) |
+| `⌘Enter` | Capture + keep open (add to the list, rapid-fire) — clears input, stacks "✓ captured" |
 | `Shift+Enter` | Expand to full co-author editor (desktop) |
 | `/` (first keystroke) | Command prefix — `/daily review`, `/focus`, `/switch Work` *(Phase 2)* |
 | `Esc` | Close without saving |

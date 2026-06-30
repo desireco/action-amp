@@ -7,8 +7,8 @@ import "./Overlays.css";
  * CapturePopover — the universal quick-capture input (⌘/).
  *
  * Phase 1: rapid-fire + auto-grow.
- *   - Enter       → capture + clear + keep open (the 2-second dump loop)
- *   - ⌘Enter      → capture + close (the "done capturing" escape hatch)
+ *   - Enter       → capture + close (commit this one and get back to work)
+ *   - ⌘Enter      → capture + clear + keep open (add to the list, rapid-fire)
  *   - Shift+Enter → literal newline (textarea default; expand reclaims this in Phase 3)
  *   - Esc         → close without saving (handled by the parent keymap)
  *
@@ -90,11 +90,13 @@ export function CapturePopover({
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key !== "Enter") return;
     if (e.metaKey || e.ctrlKey) {
+      // ⌘Enter → capture + keep open (add to the list, rapid-fire)
       e.preventDefault();
-      void capture(true); // ⌘Enter → capture + close
+      void capture(false);
     } else if (!e.shiftKey) {
+      // Enter → capture + close (Shift+Enter = literal newline)
       e.preventDefault();
-      void capture(false); // Enter → rapid-fire (Shift+Enter = newline)
+      void capture(true);
     }
   }
 
@@ -210,7 +212,8 @@ export function CapturePopover({
 
         <div className="aa-capture__foot">
           <span className="aa-capture__hint">
-            <kbd className="aa-capture__kbd">⏎</kbd> capture · keep open ·{" "}
+            <kbd className="aa-capture__kbd">⏎</kbd> save ·{" "}
+            <kbd className="aa-capture__kbd">⌘⏎</kbd> add another ·{" "}
             <kbd className="aa-capture__kbd">Esc</kbd> close
           </span>
           <button

@@ -37,17 +37,28 @@ test.describe("F1 — quick capture", () => {
     ).toBeVisible({ timeout: 5_000 });
   });
 
-  test("typing + Enter captures the item and keeps the popover open (rapid-fire)", async ({ page }) => {
+  test("typing + ⌘Enter captures the item and keeps the popover open (rapid-fire)", async ({ page }) => {
     await signupNewUser(page);
     const textarea = await openCapture(page);
 
     await textarea.fill("Email Sarah");
-    await textarea.press("Enter");
+    await textarea.press("Meta+Enter");
 
-    // F1: stays open for rapid capture. Input clears.
+    // ⌘Enter = add another: stays open for rapid capture. Input clears.
     await expect(page.getByRole("dialog", { name: /quick capture/i })).toBeVisible();
     await expect(textarea).toHaveValue("");
     await expect(textarea).toBeFocused();
+  });
+
+  test("typing + Enter captures and closes the popover", async ({ page }) => {
+    await signupNewUser(page);
+    const textarea = await openCapture(page);
+
+    await textarea.fill("One thing on my mind");
+    await textarea.press("Enter");
+
+    // Enter = capture + close (commit this one and get back to work)
+    await expect(page.getByRole("dialog", { name: /quick capture/i })).toBeHidden({ timeout: 5_000 });
   });
 
   test("capture does not navigate away from the current screen", async ({ page }) => {

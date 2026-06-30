@@ -66,8 +66,8 @@ describe("CapturePopover", () => {
     });
   });
 
-  describe("submit behavior (Phase 1: rapid-fire + ⌘Enter close)", () => {
-    it("Enter (rapid-fire) captures, clears the input, and keeps the popover open", async () => {
+  describe("submit behavior (Phase 1: Enter to close, ⌘Enter to add another)", () => {
+    it("Enter captures and closes the popover", async () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const onClose = vi.fn();
       renderInContext(
@@ -79,37 +79,38 @@ describe("CapturePopover", () => {
 
       expect(onSubmit).toHaveBeenCalledWith("A real thought");
       expect(onSubmit).toHaveBeenCalledTimes(1);
-      // rapid-fire: popover stays open, input clears
-      expect(onClose).not.toHaveBeenCalled();
-      await waitFor(() => expect(input.value).toBe(""));
+      // Enter = capture + close (commit this one and get back to work)
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
     });
 
-    it("⌘Enter captures and closes the popover", async () => {
+    it("⌘Enter captures, clears the input, and keeps the popover open (rapid-fire)", async () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const onClose = vi.fn();
       renderInContext(
         <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
       );
 
-      const input = typeIntoInput("Final thought");
+      const input = typeIntoInput("Another thought");
       fireEvent.keyDown(input, { key: "Enter", metaKey: true });
 
-      expect(onSubmit).toHaveBeenCalledWith("Final thought");
-      await waitFor(() => expect(onClose).toHaveBeenCalled());
+      expect(onSubmit).toHaveBeenCalledWith("Another thought");
+      // ⌘Enter = add to the list: popover stays open, input clears
+      expect(onClose).not.toHaveBeenCalled();
+      await waitFor(() => expect(input.value).toBe(""));
     });
 
-    it("rapid-fire stacks captured items at the top", async () => {
+    it("⌘Enter rapid-fire stacks captured items at the top", async () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       renderInContext(
         <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
       );
 
       const input = typeIntoInput("first thought");
-      fireEvent.keyDown(input, { key: "Enter" });
+      fireEvent.keyDown(input, { key: "Enter", metaKey: true });
       await waitFor(() => expect(input.value).toBe(""));
 
       typeIntoInput("second thought");
-      fireEvent.keyDown(input, { key: "Enter" });
+      fireEvent.keyDown(input, { key: "Enter", metaKey: true });
       await waitFor(() => expect(input.value).toBe(""));
 
       // both captured items appear in the stack (newest first)
