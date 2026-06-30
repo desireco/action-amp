@@ -199,7 +199,7 @@ function LoopVisual({ kind }: { kind: "capture" | "triage" | "focus" }) {
 }
 
 export function OnboardingPage() {
-  const { data: user } = useAuth();
+  const { data: user, refetch: refetchUser } = useAuth();
   const navigate = useNavigate();
   const [pageIdx, setPageIdx] = useState(0);
   const [leaving, setLeaving] = useState(false);
@@ -226,9 +226,12 @@ export function OnboardingPage() {
     setCompletionError(false);
     try {
       await completeOnboarding();
+      // Refetch the auth session so the App.tsx first-run gate sees the
+      // updated hasSeenOnboarding flag. Without this, the cached User still
+      // has hasSeenOnboarding=false and the gate bounces us right back to
+      // /welcome — an infinite redirect loop.
+      await refetchUser();
       setLeaving(true);
-      // Give useAuth a tick to refetch the invalidated User before navigating,
-      // so the gate sees the updated flag and doesn't fire on /app.
       navigate("/app");
     } catch {
       setCompleting(false);
