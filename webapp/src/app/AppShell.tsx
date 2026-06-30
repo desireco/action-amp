@@ -108,8 +108,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           count: todayByLens[l.id] ?? 0,
         }))
       : [
-          { id: "Work", label: "Work", color: "indigo" },
-          { id: "Me", label: "Me", color: "emerald" },
+          { id: "Work", label: "Work", color: "indigo", count: 0 },
+          { id: "Me", label: "Me", color: "emerald", count: 0 },
         ];
 
   // Keep the active lens valid once lenses load; default to the first.
