@@ -10,3 +10,6 @@ node_modules/
 !.env.example
 !.env.*.example
 test-results/
+
+# Playwright CLI skill scratch (page snapshots, not source)
+.playwright-cli/
