@@ -69,6 +69,41 @@
 }
 
 /* ============================================================
+   Confirm dialog (overlay pattern #04 — small centered)
+   ============================================================ */
+.aa-confirm {
+  padding: var(--aa-space-md) var(--aa-space-lg);
+}
+
+.aa-confirm__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--aa-space-sm);
+}
+
+.aa-confirm__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--aa-text);
+  margin: 0;
+}
+
+.aa-confirm__body {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--aa-text-2);
+  margin: var(--aa-space-xs) 0 var(--aa-space-lg);
+}
+
+.aa-confirm__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--aa-space-sm);
+}
+
+/* ============================================================
    Shortcut cheatsheet
    ============================================================ */
 .aa-cheatsheet {

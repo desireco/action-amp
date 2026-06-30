@@ -6,7 +6,7 @@ import { useQuery, ensureOnboarded, getAppData, createInboxItem } from "wasp/cli
 import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
-import { CapturePopover, ShortcutCheatsheet } from "../components/ui";
+import { CapturePopover, ShortcutCheatsheet, ConfirmDialog } from "../components/ui";
 import {
   BrandMark,
   LensSwitch,
@@ -149,6 +149,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // not the shell. Esc closes whichever overlay is open.
   const [captureOpen, setCaptureOpen] = useState(false);
   const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   useKeyboardShortcuts({
     onCapture: () => setCaptureOpen(true),
@@ -157,17 +158,18 @@ export function AppShell({ children }: { children: ReactNode }) {
     onCloseOverlay: () => {
       setCaptureOpen(false);
       setCheatsheetOpen(false);
+      setConfirmLogout(false);
     },
   });
 
   // Lock body scroll while any overlay is open.
   useEffect(() => {
-    const open = captureOpen || cheatsheetOpen;
+    const open = captureOpen || cheatsheetOpen || confirmLogout;
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [captureOpen, cheatsheetOpen]);
+  }, [captureOpen, cheatsheetOpen, confirmLogout]);
 
   const toggleTheme = () => {
     const next = theme === "light" ? "dark" : "light";
@@ -180,7 +182,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="aa-app">
       {/* ============================ SIDEBAR ============================ */}
       <aside className="aa-app-side">
-        <Link className="aa-app-brand" to="/">
+        <Link className="aa-app-brand" to="/app" title="Next">
           <span className="aa-app-mark" aria-hidden="true">
             <BrandMark size="sm" />
           </span>
@@ -279,7 +281,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {user ? user.fullName : ""}
             </span>
           </Link>
-          <button type="button" className="aa-app-logout" onClick={() => logout()}>
+          <button type="button" className="aa-app-logout" onClick={() => setConfirmLogout(true)}>
             Log out
           </button>
         </div>
@@ -339,6 +341,20 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
       )}
       {cheatsheetOpen && <ShortcutCheatsheet onClose={() => setCheatsheetOpen(false)} />}
+      {confirmLogout && (
+        <ConfirmDialog
+          title="Log out?"
+          message="You'll be signed out and return to the home page."
+          confirmLabel="Log out"
+          cancelLabel="Stay"
+          danger
+          onConfirm={async () => {
+            await logout();
+            navigate("/");
+          }}
+          onClose={() => setConfirmLogout(false)}
+        />
+      )}
     </div>
   );
 }

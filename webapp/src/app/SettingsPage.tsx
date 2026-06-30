@@ -1,5 +1,7 @@
+import { useState } from "react";
+import { useNavigate } from "react-router";
 import { useAuth, logout } from "wasp/client/auth";
-import { Button } from "../components/ui";
+import { Button, ConfirmDialog } from "../components/ui";
 import { SettingsLayout } from "./SettingsLayout";
 import { Field } from "./Field";
 import "./Field.css";
@@ -11,6 +13,8 @@ import "./Field.css";
 export function SettingsPage() {
   const { data: user } = useAuth();
   const email = user?.identities?.email?.id ?? null;
+  const navigate = useNavigate();
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   return (
     <SettingsLayout>
@@ -27,7 +31,7 @@ export function SettingsPage() {
       {/* Sign out */}
       <section className="aa-settings-section">
         <Field label="Session">
-          <Button variant="secondary" size="sm" onClick={() => logout()}>
+          <Button variant="secondary" size="sm" onClick={() => setConfirmLogout(true)}>
             Log out
           </Button>
         </Field>
@@ -39,6 +43,21 @@ export function SettingsPage() {
           Change email, change password, and delete account are coming soon.
         </p>
       </section>
+
+      {confirmLogout && (
+        <ConfirmDialog
+          title="Log out?"
+          message="You'll be signed out and return to the home page."
+          confirmLabel="Log out"
+          cancelLabel="Stay"
+          danger
+          onConfirm={async () => {
+            await logout();
+            navigate("/");
+          }}
+          onClose={() => setConfirmLogout(false)}
+        />
+      )}
     </SettingsLayout>
   );
 }

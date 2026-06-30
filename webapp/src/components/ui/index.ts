@@ -8,6 +8,7 @@ export { CapturePopover } from "./CapturePopover";
 export { Card } from "./Card";
 export { Chip } from "./Chip";
 export { CompletionCircle } from "./CompletionCircle";
+export { ConfirmDialog } from "./ConfirmDialog";
 export { DispatchButton } from "./DispatchButton";
 export type { DispatchTone } from "./DispatchButton";
 export { FocusMode } from "./FocusMode";
