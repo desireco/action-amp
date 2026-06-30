@@ -61,8 +61,9 @@
 
 /* ---- Lens switch ---- */
 .aa-app-lens {
-  width: 196px;
-  flex: 0 0 196px;
+  width: 100%;
+  flex: none;
+  margin-bottom: var(--aa-space-xs);
 }
 
 /* ---- Nav sections ---- */
@@ -157,7 +158,7 @@
 }
 
 /* ============================================================
-   MAIN WRAPPER (topbar + content)
+   MAIN WRAPPER
    ============================================================ */
 .aa-app-mainwrap {
   display: flex;
@@ -167,46 +168,25 @@
   min-height: 100dvh;
 }
 
-/* ---- Topbar ---- */
-.aa-app-topbar {
+/* Floating shortcut help */
+.aa-app-help-fab {
+  position: fixed;
+  top: max(var(--aa-space-lg), env(safe-area-inset-top));
+  right: max(var(--aa-space-lg), env(safe-area-inset-right));
+  z-index: 28;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
-  height: 56px;
-  padding: 0 var(--aa-space-xl);
-  border-bottom: 1px solid var(--aa-border);
-  background:
-    linear-gradient(
-      90deg,
-      var(--aa-active-lens-soft-strong) 0%,
-      var(--aa-bg-soft) 46%,
-      var(--aa-surface) 100%
-    );
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  transition: background 0.4s var(--aa-ease-out);
-}
-
-.aa-app-topbar-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: var(--aa-space-sm);
-}
-
-/* Kbd button — ⌘K capture */
-.aa-app-kbd-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-family: var(--aa-font);
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--aa-text-2);
+  justify-content: center;
+  border-radius: var(--aa-radius-sm);
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
-  padding: 6px 11px 6px 10px;
-  border-radius: var(--aa-radius-sm);
+  color: var(--aa-text-3);
+  box-shadow: var(--aa-shadow-sm);
+  font-family: var(--aa-font);
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
   transition:
     background 0.15s var(--aa-ease-out),
@@ -214,55 +194,13 @@
     color 0.15s var(--aa-ease-out);
 }
 
-.aa-app-kbd-btn:hover {
+.aa-app-help-fab:hover {
   background: var(--aa-surface-muted);
   border-color: var(--aa-border-strong);
   color: var(--aa-text);
 }
 
-.aa-app-kbd-btn:focus-visible {
-  outline: 2px solid var(--aa-teal);
-  outline-offset: 2px;
-}
-
-.aa-app-kbd-btn svg {
-  opacity: 0.7;
-}
-
-.aa-app-kbd {
-  font-family: var(--aa-font-mono);
-  font-size: 0.69rem;
-  font-weight: 600;
-  background: var(--aa-surface-muted-2);
-  color: var(--aa-text-4);
-  padding: 2px 5px;
-  border-radius: var(--aa-radius-xs);
-  border: 1px solid var(--aa-border);
-}
-
-/* Icon button — theme toggle */
-.aa-app-icon-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--aa-radius-sm);
-  background: none;
-  border: none;
-  color: var(--aa-text-3);
-  cursor: pointer;
-  transition:
-    background 0.15s var(--aa-ease-out),
-    color 0.15s var(--aa-ease-out);
-}
-
-.aa-app-icon-btn:hover {
-  background: var(--aa-surface-muted);
-  color: var(--aa-text);
-}
-
-.aa-app-icon-btn:focus-visible {
+.aa-app-help-fab:focus-visible {
   outline: 2px solid var(--aa-teal);
   outline-offset: 2px;
 }
@@ -271,6 +209,61 @@
 .aa-app-main {
   flex: 1;
   padding: var(--aa-space-3xl) var(--aa-space-4xl);
+}
+
+.aa-app-capture-fab {
+  position: fixed;
+  right: max(var(--aa-space-xl), env(safe-area-inset-right));
+  bottom: max(var(--aa-space-xl), env(safe-area-inset-bottom));
+  z-index: 28;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px 0 13px;
+  border: none;
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-teal-cta);
+  color: var(--aa-surface);
+  box-shadow: var(--aa-shadow-md);
+  font-family: var(--aa-font);
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--aa-ease-out),
+    box-shadow 0.15s var(--aa-ease-out),
+    background 0.15s var(--aa-ease-out);
+}
+
+.aa-app-capture-fab:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--aa-shadow-lg);
+  background: var(--aa-teal);
+}
+
+.aa-app-capture-fab:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.aa-app-capture-fab:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 3px;
+}
+
+.aa-app-capture-fab svg {
+  flex: none;
+}
+
+.aa-app-capture-fab kbd {
+  font-family: var(--aa-font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: var(--aa-radius-xs);
+  background: rgba(255, 255, 255, 0.18);
+  color: currentColor;
 }
 
 .aa-mobile-dock {
@@ -305,11 +298,12 @@
   .aa-app-lens {
     display: none;
   }
-  .aa-app-topbar {
-    display: none;
-  }
   .aa-app-main {
     padding: var(--aa-space-xl) var(--aa-space-lg);
+  }
+  .aa-app-help-fab {
+    top: max(var(--aa-space-sm), env(safe-area-inset-top));
+    right: max(var(--aa-space-md), env(safe-area-inset-right));
   }
   .aa-mobile-dock {
     position: fixed;
@@ -439,28 +433,23 @@
     border-radius: var(--aa-radius-full);
     background: var(--aa-active-lens);
   }
-  .aa-mobile-dock__capture {
-    position: absolute;
-    right: 12px;
-    top: -52px;
-    width: 44px;
-    height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
+  .aa-app-capture-fab {
+    right: max(calc(var(--aa-space-sm) + 10px), env(safe-area-inset-right));
+    bottom: calc(max(var(--aa-space-sm), env(safe-area-inset-bottom)) + 72px);
+    width: 46px;
+    min-height: 46px;
+    padding: 0;
     border-radius: var(--aa-radius-md);
-    background: var(--aa-teal-cta);
-    color: var(--aa-surface);
-    box-shadow: var(--aa-shadow-md);
-    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  .aa-mobile-dock__capture:active,
+  .aa-app-capture-fab span,
+  .aa-app-capture-fab kbd {
+    display: none;
+  }
   .aa-mobile-dock__item:active {
     transform: translateY(1px) scale(0.98);
   }
-  .aa-mobile-dock.is-lens-open .aa-mobile-dock__capture {
+  .aa-app-capture-fab.is-hidden-while-lens-open {
     display: none;
   }
 }

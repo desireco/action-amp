@@ -12,7 +12,6 @@ import {
   LensSwitch,
   NavItem,
   PlusIcon,
-  MoonIcon,
   StarIcon,
   InboxIcon,
   ClockIcon,
@@ -34,7 +33,7 @@ import "./AppShell.css";
 n *     at a time. Expanding one collapses the others.
  *   - User footer
  *
- * Capture is pinned in the topbar, pervasive across all modes.
+ * Capture is a lower-right floating action, pervasive across all modes.
  */
 
 type FocusSection = "work" | "plan" | "review";
@@ -58,21 +57,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     setLensState(name);
     localStorage.setItem("aa-lens", name);
   };
-  // Theme: persisted to localStorage, kept in sync with the Preferences page.
-  // Reads once on mount; falls back to the system preference on first visit.
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") return "light";
-    const stored = localStorage.getItem("aa-theme") as "light" | "dark" | null;
-    if (stored) return stored;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  });
-
-  // Apply the theme to <html> whenever it changes (initial mount + toggles).
-  // The useState initializer reads before paint; this effect commits the
-  // data-theme attribute so the dark tokens activate.
+  // Theme is controlled from Settings > Preferences. The shell only applies the
+  // persisted/system value on app entry so the tokens are active before a
+  // settings page is visited.
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("aa-theme") as "light" | "dark" | null;
+    const theme = stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     document.documentElement.dataset.theme = theme;
-  }, [theme]);
+  }, []);
 
   // Idempotent: ensures the user has the default Work/Me lenses (covers both
   // existing users and new signups). Runs once per app load — but ONLY when
@@ -104,6 +97,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   const lenses = appData?.lenses ?? [];
   const counts = appData?.counts ?? { inbox: 0, today: 0, projects: 0, goals: 0 };
   const todayByLens = appData?.todayByLens ?? {};
+  const lensOptions =
+    lenses.length > 0
+      ? lenses.map((l) => ({
+          id: l.name,
+          label: l.name,
+          color: l.color ?? undefined,
+          count: todayByLens[l.id] ?? 0,
+        }))
+      : [
+          { id: "Work", label: "Work", color: "indigo" },
+          { id: "Me", label: "Me", color: "emerald" },
+        ];
 
   // Keep the active lens valid once lenses load; default to the first.
   // If the stored name no longer matches (e.g. renamed), self-heal: persist
@@ -187,13 +192,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       document.body.style.overflow = "";
     };
   }, [captureOpen, cheatsheetOpen, confirmLogout]);
-
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    localStorage.setItem("aa-theme", next);
-    document.documentElement.dataset.theme = next;
-  };
 
   return (
     <div className="aa-app">
@@ -281,6 +279,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* User footer */}
         <div className="aa-app-user">
+          <LensSwitch
+            options={lensOptions}
+            active={activeLensName}
+            onSelect={(id) => setLens(id)}
+            className="aa-app-lens"
+          />
           <Link
             to="/app/settings"
             className={`aa-app-user-btn ${isActive("/app/settings") ? "active" : ""}`}
@@ -299,53 +303,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* ============================ MAIN ============================ */}
       <div className="aa-app-mainwrap">
-        {/* ---- Topbar ---- */}
-        <header className="aa-app-topbar">
-          <div className="aa-app-topbar-actions">
-            <LensSwitch
-              options={
-                lenses.length > 0
-                  ? lenses.map((l) => ({
-                      id: l.name,
-                      label: l.name,
-                      color: l.color ?? undefined,
-                      count: todayByLens[l.id] ?? 0,
-                    }))
-                  : [
-                      { id: "Work", label: "Work", color: "indigo" },
-                      { id: "Me", label: "Me", color: "emerald" },
-                    ]
-              }
-              active={activeLensName}
-              onSelect={(id) => setLens(id)}
-              className="aa-app-lens"
-            />
-            <button type="button" className="aa-app-kbd-btn" title="Capture (⌘/)" onClick={() => setCaptureOpen(true)}>
-              <PlusIcon width={14} height={14} />
-              <span>Capture</span>
-              <kbd className="aa-app-kbd">⌘/</kbd>
-            </button>
-            <button
-              type="button"
-              className="aa-app-icon-btn"
-              onClick={() => setCheatsheetOpen(true)}
-              title="Shortcuts (?)"
-              aria-label="Shortcuts"
-            >
-              ?
-            </button>
-            <button
-              type="button"
-              className="aa-app-icon-btn"
-              onClick={toggleTheme}
-              title="Toggle theme"
-              aria-label="Toggle theme"
-            >
-              {theme === "light" ? <MoonIcon /> : "☀"}
-            </button>
-          </div>
-        </header>
-
         {/* ---- Page content ---- */}
         <main className="aa-app-main">
           <LensContext.Provider value={activeLensValue}>
@@ -357,18 +314,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav className={`aa-mobile-dock ${mobileLensOpen ? "is-lens-open" : ""}`} aria-label="Mobile navigation">
         {mobileLensOpen && (
           <div className="aa-mobile-lens-menu" role="menu" aria-label="Choose Lens">
-            {(lenses.length > 0
-              ? lenses.map((l) => ({
-                  id: l.name,
-                  label: l.name,
-                  color: l.color ?? undefined,
-                  count: todayByLens[l.id] ?? 0,
-                }))
-              : [
-                  { id: "Work", label: "Work", color: "indigo" },
-                  { id: "Me", label: "Me", color: "emerald" },
-                ]
-            ).map((l) => (
+            {lensOptions.map((l) => (
               <button
                 key={l.id}
                 type="button"
@@ -420,10 +366,29 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span>{activeLensName}</span>
           </button>
         </div>
-        <button type="button" className="aa-mobile-dock__capture" title="Capture (⌘/)" aria-label="Capture" onClick={() => setCaptureOpen(true)}>
-          <PlusIcon width={18} height={18} />
-        </button>
       </nav>
+
+      <button
+        type="button"
+        className="aa-app-help-fab"
+        onClick={() => setCheatsheetOpen(true)}
+        title="Shortcuts (?)"
+        aria-label="Shortcuts"
+      >
+        ?
+      </button>
+
+      <button
+        type="button"
+        className={`aa-app-capture-fab ${mobileLensOpen ? "is-hidden-while-lens-open" : ""}`}
+        title="Capture (⌘K)"
+        aria-label="Capture"
+        onClick={() => setCaptureOpen(true)}
+      >
+        <PlusIcon width={18} height={18} />
+        <span>Capture</span>
+        <kbd>⌘K</kbd>
+      </button>
 
       {/* ---- Global overlays (capture popover + shortcut cheatsheet) ---- */}
       {captureOpen && (

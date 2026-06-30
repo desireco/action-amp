@@ -45,7 +45,7 @@
 ## Phase 1 — App Shell
 
 > The persistent chrome that frames every authenticated page.
-> Goal: match the `app-shell-whatnow.html` prototype — sidebar with lens switch, icons, active indicator bar, topbar with capture button.
+> Goal: match the `app-shell-whatnow.html` prototype — sidebar with lens switch, icons, active indicator bar, and persistent capture.
 
 ### 1.1 ✅ Sidebar upgrade
 - [x] Add **Lens switch** (Work / Me toggle) below brand, matches prototype's `lens` component.
@@ -55,13 +55,13 @@
 - [x] Add **nav sections** — subtle dividers: "⌡ Next / Inbox / Today / Upcoming / Someday" then "Projects / Goals" then "Logbook".
 - [x] Add **user avatar/initials** at sidebar bottom instead of text name.
 
-### 1.2 ✅ Topbar
-- [x] Add topbar to AppShell main area — right-aligned actions.
-- [x] **Capture button** (`⌘K`) with kbd hint, matches prototype's `.kbd-btn`.
-- [x] **Theme toggle** icon button (sun/moon) with `⌘D` shortcut. (Toggle works; ⌘D shortcut + dark tokens pending.)
+### 1.2 ✅ Floating shell actions
+- [x] Remove the topbar; shell utility actions float over the workspace.
+- [x] **Capture button** (`⌘K`) as lower-right floating action.
+- [x] **Theme toggle** moved to Settings > Preferences.
 
 ### 1.3 ✅ Sidebar responsive
-- [x] Collapse sidebar to topbar on mobile (< 768px). Horizontal scroll nav.
+- [x] Collapse sidebar to mobile header + bottom nav (< 768px).
 - [ ] Sidebar collapsible via keyboard shortcut or toggle button (desktop).
 
 ---
@@ -187,7 +187,7 @@
 - [x] "Coming soon" note for change email/password/delete account.
 
 ### 5.3 ✅ Preferences page
-- [x] Theme toggle (light/dark) — wired to `[data-theme]` + localStorage, in sync with topbar.
+- [x] Theme toggle (light/dark) — wired to `[data-theme]` + localStorage, in Settings > Preferences.
 - [x] Today cap setting (shown with "soon" chip until configurable).
 - [x] Confirmation sounds toggle ("soon" chip).
 - [x] Momentum toggle ("soon" chip).
@@ -208,7 +208,7 @@
 ### 5.7 ✅ New reusable: **Field** (settings row)
 - [x] Label/value/toggle/custom variants. Used by Account + Preferences.
 
-### 5.0 ✅ Topbar theme sync
+### 5.0 ✅ Theme sync
 - [x] AppShell theme state reads from localStorage on mount, respects prefers-color-scheme, persists on toggle — stays in sync with Preferences.
 
 ---
@@ -220,7 +220,7 @@
 - [x] `color-scheme` hints so native controls + scrollbars match.
 
 ### 6.2 ✅ Toggle wiring
-- [x] Theme toggle in topbar sets `data-theme` on `<html>` (via useEffect on state change).
+- [x] Theme toggle in Settings sets `data-theme` on `<html>`.
 - [x] Persist preference to `localStorage` (key: `aa-theme`).
 - [x] Respect `prefers-color-scheme: dark` as default on first visit (in useState initializer).
 - [x] AppShell + Preferences page stay in sync (same localStorage key).
@@ -234,7 +234,7 @@
 ## Phase 7 — Polish & Responsive
 
 ### 7.1 ✅ Keyboard shortcuts system
-- [x] Global shortcut handler (`useKeyboardShortcuts`): ⌘K// (capture), Space (Next), ? (cheatsheet), Esc (close).
+- [x] Global shortcut handler (`useKeyboardShortcuts`): ⌘K (capture), Space (Next), ? (cheatsheet), Esc (close).
 - [x] Disabled while typing in inputs (except Esc).
 - [x] Shortcuts discoverable via the cheatsheet overlay.
 

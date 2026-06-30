@@ -52,7 +52,7 @@ const SECTIONS = [
   { id: "lens", label: "Lens Switch" },
   { id: "nav-item", label: "Nav Item" },
   { id: "icons", label: "Icon Set" },
-  { id: "topbar", label: "Topbar & Kbd" },
+  { id: "utilities", label: "Floating Utility" },
   { id: "dispatch", label: "Dispatch Buttons" },
   { id: "triage-card", label: "Triage Card" },
   { id: "progress", label: "Progress Bar" },
@@ -650,22 +650,13 @@ export function DesignSystemPage() {
         </Sec>
 
         {/* ============================================================
-           TOPBAR & KBD (from app-shell-whatnow.html)
+           FLOATING UTILITY
            ============================================================ */}
-        <Sec id="topbar" title="Topbar & Kbd" desc="Top-right action bar from app shell. Kbd button for ⌘K capture, icon button for theme toggle.">
-          <Sub h="Kbd Button (⌘K Capture)">
+        <Sec id="utilities" title="Floating Utility" desc="Small shell utility controls float over the workspace; Capture lives as a lower-right floating action button.">
+          <Sub h="Icon Button">
             <div className="ds-btn-row">
-              <button className="ds-kbd-btn">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-                Capture
-                <span className="ds-kbd-btn__kbd">⌘K</span>
-              </button>
-            </div>
-          </Sub>
-          <Sub h="Icon Button (Theme Toggle)">
-            <div className="ds-btn-row">
-              <button className="ds-icon-btn" title="Toggle theme (⌘D)">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 9.2A5 5 0 016.8 3 5.5 5.5 0 1013 9.2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /></svg>
+              <button className="ds-icon-btn" title="Shortcuts (?)">
+                ?
               </button>
               <button className="ds-icon-btn" title="Close">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>

@@ -124,7 +124,7 @@
    Accents (teal/amber/violet/rose) are identical to light: they pop
    against the dark surface and keep the brand consistent. Cool-tinted
    (hue 230) to match the light DNA. Triggered by [data-theme="dark"]
-   on <html>, set by the topbar toggle + Preferences page.
+   on <html>, set by Settings > Preferences.
    Values derive from docs/mockups/app-shell-whatnow.html dark block,
    converted to OKLCH.
    ============================================================ */

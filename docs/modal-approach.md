@@ -40,7 +40,7 @@ Centered card over a dimmed backdrop. Lightweight — the user hasn't left their
 Used for quick capture and inline edits.
 
 **Used by:**
-- **⌘K Capture** — the universal quick-add (triggered from the topbar kbd button)
+- **⌘K Capture** — the universal quick-add (triggered from the lower-right FAB or shortcut)
 - **Quick edit** — inline field edits that need room
 - **Search / ⌘P** — command palette
 
@@ -133,7 +133,7 @@ All motion respects `prefers-reduced-motion: reduce` (snaps to final state, ~0ms
 | Layer | z-index |
 |---|---|
 | App content | 0 |
-| Topbar / sidebar | 10 |
+| Sidebar / floating shell controls | 10 |
 | Capture popover | 40 |
 | Bottom sheet | 40 |
 | Confirm dialog | 100 |

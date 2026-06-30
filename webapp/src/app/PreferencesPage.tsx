@@ -17,7 +17,9 @@ export function PreferencesPage() {
   // ---- Theme: live, persisted ----
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") return "light";
-    return (localStorage.getItem("aa-theme") as "light" | "dark") ?? "light";
+    const stored = localStorage.getItem("aa-theme") as "light" | "dark" | null;
+    if (stored) return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
   const toggleTheme = (next: boolean) => {
     const value = next ? "dark" : "light";
