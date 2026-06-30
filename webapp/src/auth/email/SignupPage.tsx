@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { SignupForm } from "wasp/client/auth";
 import { AuthLayout } from "../../components/ui";
 import { aaAuthAppearance } from "../appearance";
-import { GoogleButton } from "../google/GoogleButton";
+// GoogleButton import omitted while Google auth is disabled — see main.wasp.ts.
 
 export function SignupPage() {
   return (
@@ -22,8 +22,6 @@ export function SignupPage() {
         </>
       }
     >
-      <GoogleButton />
-      <div className="aa-auth-or" aria-hidden="true">or with email</div>
       <SignupForm
         {...aaAuthAppearance}
         additionalFields={[
