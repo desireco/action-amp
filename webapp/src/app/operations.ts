@@ -81,7 +81,7 @@ export const getAppData = (async (args, context) => {
 
   const [inboxCount, todayCount, projectCount, goalCount, todayByLensRows] =
     await Promise.all([
-      context.entities.InboxItem.count({ where: { userId } }),
+      context.entities.InboxItem.count({ where: { userId, status: "UNPROCESSED" } }),
       // Focus-nav counts: lens-scoped to match the list pages.
       context.entities.Task.count({
         where: { userId, ...lensWhere, status: "TODAY", isDone: false },

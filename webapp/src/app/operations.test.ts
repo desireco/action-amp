@@ -53,10 +53,16 @@ describe("getAppData — happy path", () => {
       todayByLens: { "lens-work": 3, "lens-me": 1 },
     });
 
-    // Inbox is global (no lens). Today/Projects/Goals are lens-scoped to match
-    // the list pages — this is the fix for the badge-vs-list mismatch.
+    // Inbox is global (no lens) but only counts unprocessed items, matching
+    // getInboxItems/InboxPage. Archived notes live in Logbook and must not
+    // inflate the Inbox badge.
     expect(m.entities.InboxItem.count).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.not.objectContaining({ lensId: expect.anything() }) }),
+      expect.objectContaining({
+        where: {
+          userId: "user-1",
+          status: "UNPROCESSED",
+        },
+      }),
     );
     expect(m.entities.Task.count).toHaveBeenCalledWith(
       expect.objectContaining({
