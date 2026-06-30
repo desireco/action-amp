@@ -42,18 +42,21 @@
 
   /* ---- Lens identity colors (one per context: Work=indigo, Me=emerald) ----
      Identity only — never system/state (that stays teal). Each lens ships a
-     base, a -text (for legible-on-surface use), and -soft / -soft-strong tints
-     for backgrounds. Default lenses are seeded in onboarding/operations.ts;
-     these names must match the Lens.color column. */
+     base (the dot / rail), a -text (legible colored text), and a tint ramp:
+     -soft (atmosphere), -soft-strong (tinted fills), -mid (clear fills that
+     actually read as the hue, not near-white). Default lenses are seeded in
+     onboarding/operations.ts; these names must match the Lens.color column. */
   --aa-lens-indigo: oklch(0.58 0.18 275);
-  --aa-lens-indigo-text: oklch(0.45 0.16 275);
-  --aa-lens-indigo-soft: oklch(0.95 0.04 275);
-  --aa-lens-indigo-soft-strong: oklch(0.9 0.07 275);
+  --aa-lens-indigo-text: oklch(0.4 0.17 275);
+  --aa-lens-indigo-soft: oklch(0.96 0.035 275);
+  --aa-lens-indigo-soft-strong: oklch(0.92 0.07 275);
+  --aa-lens-indigo-mid: oklch(0.82 0.11 275);
 
   --aa-lens-emerald: oklch(0.6 0.15 165);
-  --aa-lens-emerald-text: oklch(0.42 0.12 165);
-  --aa-lens-emerald-soft: oklch(0.95 0.05 165);
-  --aa-lens-emerald-soft-strong: oklch(0.9 0.08 165);
+  --aa-lens-emerald-text: oklch(0.38 0.13 165);
+  --aa-lens-emerald-soft: oklch(0.96 0.045 165);
+  --aa-lens-emerald-soft-strong: oklch(0.91 0.08 165);
+  --aa-lens-emerald-mid: oklch(0.82 0.1 165);
 
   /* ---- Active lens (re-pointed per widget via [data-lens-color]) ----
      Defaults to indigo so lenses seeded before colors existed (null color)
@@ -62,6 +65,7 @@
   --aa-active-lens-text: var(--aa-lens-indigo-text);
   --aa-active-lens-soft: var(--aa-lens-indigo-soft);
   --aa-active-lens-soft-strong: var(--aa-lens-indigo-soft-strong);
+  --aa-active-lens-mid: var(--aa-lens-indigo-mid);
 
   /* ---- Neutral ramp (cool-tinted, Things DNA) ---- */
   --aa-bg: oklch(0.99 0.005 230);
@@ -148,8 +152,12 @@
   --aa-rose-soft: oklch(0.3 0.06 15);
   --aa-lens-indigo-soft: oklch(0.3 0.06 275);
   --aa-lens-indigo-soft-strong: oklch(0.34 0.1 275);
+  --aa-lens-indigo-mid: oklch(0.4 0.1 275);
+  --aa-lens-indigo-text: oklch(0.78 0.13 275);
   --aa-lens-emerald-soft: oklch(0.3 0.06 165);
   --aa-lens-emerald-soft-strong: oklch(0.34 0.1 165);
+  --aa-lens-emerald-mid: oklch(0.4 0.1 165);
+  --aa-lens-emerald-text: oklch(0.78 0.12 165);
 
   /* ---- Shadows: darker, more opaque (still blue-tinted, never pure black) ---- */
   --aa-shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3);
@@ -171,4 +179,29 @@
 :root[data-theme="light"],
 :root:not([data-theme]) {
   color-scheme: light;
+}
+
+/* ============================================================
+   Active-lens resolution — AppShell sets <html data-lens="...">.
+   Each block re-points the runtime --aa-active-lens-* vars that every accent
+   reads from (background wash, sidebar tint, lens-switch active fill, nav rail,
+   NextCard label, triage step). Without these, data-lens is set but ignored and
+   every lens renders indigo. The :root defaults (above) cover null/unknown, so
+   these only kick in for known keys. Theme-agnostic: it references the
+   --aa-lens-* vars, which the [data-theme="dark"] block above re-tunes.
+   ============================================================ */
+[data-lens="indigo"] {
+  --aa-active-lens: var(--aa-lens-indigo);
+  --aa-active-lens-text: var(--aa-lens-indigo-text);
+  --aa-active-lens-soft: var(--aa-lens-indigo-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-indigo-soft-strong);
+  --aa-active-lens-mid: var(--aa-lens-indigo-mid);
+}
+
+[data-lens="emerald"] {
+  --aa-active-lens: var(--aa-lens-emerald);
+  --aa-active-lens-text: var(--aa-lens-emerald-text);
+  --aa-active-lens-soft: var(--aa-lens-emerald-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-emerald-soft-strong);
+  --aa-active-lens-mid: var(--aa-lens-emerald-mid);
 }

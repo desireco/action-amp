@@ -148,6 +148,11 @@ The matcher only ever considers **Tasks** (never Resources, never bare Projects)
 - Switching Lens is one keystroke (e.g. `Tab` cycles Work → Me → …).
 - **Cross-lens exceptions** (an overdue Work item surfacing while you're in Me)
   are Phase 2; MVP is strict — only the active Lens's items are candidates.
+- **`Lens.color`** (nullable string, added 2026-06-30) — an identity palette key
+  (`"indigo"` for Work, `"emerald"` for Me). Seeded in `ensureOnboarded` and
+  backfilled onto existing lenses on next load. Surfaces the active context via
+  `<html data-lens>` → `--aa-active-lens-*` CSS tokens (see `WORKFLOW.md` §3 and
+  `styles/tokens.css`). Identity only; never system/state.
 
 ## 7. Focus ranking — MVP rule (simple, by priority)
 

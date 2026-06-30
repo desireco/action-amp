@@ -55,6 +55,22 @@
   animation: aa-nav-bar-rise 0.25s var(--aa-ease-out) both;
 }
 
+/* Lens-scoped nav (Next/Today/Projects/Goals/Someday/Logbook) takes the active
+   lens's identity color instead of teal — so the rail tells you which context
+   you're in. Inbox is NOT in .aa-focus-nav, so it keeps teal (it's universal).
+   CTAs/links/completion-circle are unaffected — only the nav rail recolors. */
+.aa-focus-nav .aa-nav-item--active {
+  background: var(--aa-active-lens-soft);
+  color: var(--aa-active-lens-text);
+}
+.aa-focus-nav .aa-nav-item--active::before {
+  background: var(--aa-active-lens);
+}
+.aa-focus-nav .aa-nav-item--active .aa-nav-item__count {
+  background: var(--aa-active-lens-soft-strong);
+  color: var(--aa-active-lens-text);
+}
+
 @keyframes aa-nav-bar-rise {
   from { transform: scaleY(0); }
   to { transform: scaleY(1); }

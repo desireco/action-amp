@@ -119,7 +119,12 @@ export function NextPage() {
           why: whyLead || undefined,
           whyEmphasis: whyDetail || undefined,
         }}
-        context={`${isNow ? "Now" : "Next"} · ${lens.name}`}
+        context={
+          <>
+            {isNow ? "Now" : "Next"} ·{" "}
+            <span className="aa-wn-card__context-lens">{lens.name}</span>
+          </>
+        }
         state={isNow ? "now" : "next"}
         onComplete={handleComplete}
         onStart={handleStart}

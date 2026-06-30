@@ -122,6 +122,16 @@ appears in Work/Planning/Review except by coming through triage.
   explicitly if we adopt force-choice — §5).
 - Switching lenses swaps the entire Work / Planning / Review content; the Inbox
   count in the sidebar stays the same regardless of lens.
+- **Each Lens carries an identity color** (stored on `Lens.color` as a palette
+  key: Work = `indigo`, Me = `emerald`). The active lens's hue is mirrored onto
+  `<html data-lens>` and surfaces immersively — a faint background wash, the
+  lens-switch dot + rail, the lens-scoped nav rail (Next/Today/Projects/Goals/
+  Someday/Logbook), the NextCard context label, and the Triage context-step.
+  This is **identity, not decoration**, and it never borrows the reserved hues:
+  teal = system/state (CTAs, links, the completion circle), amber = Important,
+  violet = projects/goals, rose = errors. Inbox and Capture stay neutral — they
+  have no lens. See `styles/tokens.css` (`--aa-lens-*`, `--aa-active-lens-*`).
+
 
 ## 4. The three modes
 

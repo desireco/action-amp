@@ -16,7 +16,12 @@
   flex-direction: column;
   padding: var(--aa-space-lg) var(--aa-space-md);
   border-right: 1px solid var(--aa-border);
-  background: var(--aa-bg-soft);
+  /* Sidebar carries the active lens's identity tint, so the nav column itself
+     reads as "in" the active context (indigo atmosphere for Work, emerald for
+     Me). Fades down so it stays calm. Reinforced by the lens switch fill and
+     the active nav rail — three coordinated signals, no side-stripe needed. */
+  background:
+    linear-gradient(180deg, var(--aa-active-lens-soft-strong) 0%, var(--aa-bg-soft) 65%);
   height: 100vh;
   height: 100dvh;
   position: sticky;
@@ -33,7 +38,7 @@
   font-size: 0.95rem;
   color: var(--aa-text);
   padding: var(--aa-space-xs) var(--aa-space-sm);
-  margin-bottom: var(--aa-space-lg);
+  margin-bottom: var(--aa-space-md);
   text-decoration: none;
 }
 
@@ -56,7 +61,7 @@
 
 /* ---- Lens switch ---- */
 .aa-app-lens {
-  margin-bottom: var(--aa-space-lg);
+  margin-bottom: var(--aa-space-md);
 }
 
 /* ---- Nav sections ---- */
@@ -168,10 +173,17 @@
   height: 56px;
   padding: 0 var(--aa-space-xl);
   border-bottom: 1px solid var(--aa-border);
-  background: var(--aa-bg-soft);
+  background:
+    linear-gradient(
+      90deg,
+      var(--aa-active-lens-soft-strong) 0%,
+      var(--aa-bg-soft) 46%,
+      var(--aa-surface) 100%
+    );
   position: sticky;
   top: 0;
   z-index: 10;
+  transition: background 0.4s var(--aa-ease-out);
 }
 
 .aa-app-topbar-actions {
@@ -280,16 +292,19 @@
     overflow-y: hidden;
   }
   .aa-app-brand {
+    order: 1;
     margin-bottom: 0;
     margin-right: var(--aa-space-sm);
     flex-shrink: 0;
   }
   .aa-app-lens {
+    order: 2;
     margin-bottom: 0;
     width: auto;
     flex-shrink: 0;
   }
   .aa-app-nav {
+    order: 3;
     flex-direction: row;
     gap: var(--aa-space-xs);
     margin-bottom: 0;
@@ -309,6 +324,7 @@
     flex: 0;
   }
   .aa-app-user {
+    order: 4;
     margin-top: 0;
     margin-left: auto;
     padding-top: 0;

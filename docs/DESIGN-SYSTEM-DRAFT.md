@@ -19,6 +19,19 @@ Candidates (all pass WCAG AA on white):
 **(lean: electric teal `#0EA5E9` family)** — signals focus/forward, clearly ours, calm but not sleepy.
 The completion circle fill is the emotional climax — teal "lit up" reads like *activation*.
 
+**Lens identity palette (decided 2026-06-30).** Each Lens (Work / Me) carries an
+identity color that signals which context is active: **Work = indigo** (hue ~255),
+**Me = emerald** (hue ~150). Both sit ≥35° from every reserved hue (teal 220,
+amber 70, violet 295, rose 15), so they read as a distinct category — context —
+without colliding with system/state, Important, projects/goals, or errors.
+
+Guardrail: the lens hue is **identity only**. It colors the lens-switch dot + rail,
+the lens-scoped nav rail, the NextCard context label, the Triage context-step,
+and a faint shell background wash. It never replaces teal for CTAs, links, or the
+completion circle. Inbox and Capture stay neutral (no lens). Implemented as palette
+keys (`Lens.color`) resolved via `<html data-lens>` into `--aa-active-lens-*`
+runtime tokens in `styles/tokens.css`.
+
 ## D2. Light-first or dark-first?
 
 The app is for focus/ADHD. Two competing arguments:

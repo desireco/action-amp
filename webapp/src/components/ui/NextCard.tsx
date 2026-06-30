@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button, CompletionCircle } from "../ui";
 import "./NextCard.css";
 
@@ -20,8 +20,9 @@ export interface NextTask {
 interface NextCardProps {
   /** The task to display */
   task: NextTask;
-  /** Context line above the card (e.g. "Right now · 30 min available · Work") */
-  context?: string;
+  /** Context line above the card (e.g. "Now · Work"). Accepts a node so the
+   * lens name can carry its identity color separately from the state half. */
+  context?: ReactNode;
   /** Called when the user completes the task (circle click or "Do this" → done) */
   onComplete?: (task: NextTask) => void;
   /** Called when the user defers ("Not now") */

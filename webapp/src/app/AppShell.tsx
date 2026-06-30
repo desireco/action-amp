@@ -103,6 +103,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
   const lenses = appData?.lenses ?? [];
   const counts = appData?.counts ?? { inbox: 0, today: 0, projects: 0, goals: 0 };
+  const todayByLens = appData?.todayByLens ?? {};
 
   // Keep the active lens valid once lenses load; default to the first.
   // If the stored name no longer matches (e.g. renamed), self-heal: persist
@@ -118,6 +119,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const activeLensValue = activeLens
     ? { id: activeLens.id, name: activeLens.name, color: activeLens.color ?? null }
     : null;
+
+  // Mirror the active lens's identity color onto <html data-lens="..."> so CSS
+  // can apply the per-lens palette globally (background wash, sidebar tint, nav
+  // rail, card accent, triage step). Falls back to "indigo" (the :root default)
+  // for unknown/null — see styles/tokens.css. Identity only, never system/state.
+  //
+  // Deps on the color KEY (a primitive string), not the activeLens object: the
+  // query cache may return a referentially-equal object across a switch before
+  // the refetch lands, which would skip the effect. Keying on the primitive
+  // guarantees it fires the instant the selection changes.
+  const activeLensColor = activeLens?.color || "indigo";
+  useEffect(() => {
+    document.documentElement.dataset.lens = activeLensColor;
+  }, [activeLensColor]);
 
   const isActive = (to: string) =>
     to === "/app" ? location.pathname === "/app" : location.pathname.startsWith(to);
@@ -182,19 +197,31 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="aa-app">
       {/* ============================ SIDEBAR ============================ */}
       <aside className="aa-app-side">
+        <LensSwitch
+          options={
+            lenses.length > 0
+              ? lenses.map((l) => ({
+                  id: l.name,
+                  label: l.name,
+                  color: l.color ?? undefined,
+                  count: todayByLens[l.id] ?? 0,
+                }))
+              : [
+                  { id: "Work", label: "Work", color: "indigo" },
+                  { id: "Me", label: "Me", color: "emerald" },
+                ]
+          }
+          active={activeLensName}
+          onSelect={(id) => setLens(id)}
+          className="aa-app-lens"
+        />
+
         <Link className="aa-app-brand" to="/app" title="Next">
           <span className="aa-app-mark" aria-hidden="true">
             <BrandMark size="sm" />
           </span>
           <span className="aa-app-brand-name">ActionAmp</span>
         </Link>
-
-        <LensSwitch
-          options={lenses.length > 0 ? lenses.map((l) => ({ id: l.name, label: l.name })) : [{ id: "Work", label: "Work" }, { id: "Me", label: "Me" }]}
-          active={activeLensName}
-          onSelect={(id) => setLens(id)}
-          className="aa-app-lens"
-        />
 
         {/* ---- Inbox (universal — always visible, capture destination) ---- */}
         <nav className="aa-app-nav">
