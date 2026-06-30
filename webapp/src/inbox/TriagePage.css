@@ -194,9 +194,24 @@
 }
 
 .aa-triage-radio__opt.active {
-  background: var(--aa-teal-soft);
-  border-color: var(--aa-teal);
-  color: var(--aa-teal-cta);
+  background: var(--aa-active-lens-soft);
+  border-color: var(--aa-active-lens);
+  color: var(--aa-active-lens-text);
+}
+/* Each lens option previews its own identity color when selected — so picking
+   a lens shows you the context you're filing into. Scoped per data-lens-color
+   (set from Lens.color), re-pointing the active-lens vars locally. */
+.aa-triage-radio__opt[data-lens-color="indigo"].active {
+  --aa-active-lens: var(--aa-lens-indigo);
+  --aa-active-lens-text: var(--aa-lens-indigo-text);
+  --aa-active-lens-soft: var(--aa-lens-indigo-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-indigo-soft-strong);
+}
+.aa-triage-radio__opt[data-lens-color="emerald"].active {
+  --aa-active-lens: var(--aa-lens-emerald);
+  --aa-active-lens-text: var(--aa-lens-emerald-text);
+  --aa-active-lens-soft: var(--aa-lens-emerald-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-emerald-soft-strong);
 }
 
 .aa-triage-radio__dot {
@@ -212,8 +227,8 @@
 }
 
 .aa-triage-radio__opt.active .aa-triage-radio__dot {
-  border-color: var(--aa-teal-cta);
-  background: var(--aa-teal-cta);
+  border-color: var(--aa-active-lens);
+  background: var(--aa-active-lens);
   box-shadow: inset 0 0 0 2px var(--aa-surface);
 }
 

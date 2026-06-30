@@ -440,12 +440,19 @@ export function TriagePage() {
                 <div className="aa-triage-step__label">1 · Context</div>
                 <p className="aa-triage-step__q">Which life does this belong to?</p>
                 <div className="aa-triage-radio" role="radiogroup" aria-label="Lens">
-                  {(lenses.length > 0 ? lenses : [{ id: "Work", name: "Work" }, { id: "Me", name: "Me" }]).map((l) => (
+                  {(lenses.length > 0
+                    ? lenses
+                    : [
+                        { id: "Work", name: "Work", color: "indigo" },
+                        { id: "Me", name: "Me", color: "emerald" },
+                      ]
+                  ).map((l) => (
                     <button
                       key={l.id}
                       type="button"
                       role="radio"
                       aria-checked={chosenLensId === l.id}
+                      data-lens-color={l.color ?? undefined}
                       className={`aa-triage-radio__opt ${chosenLensId === l.id ? "active" : ""}`}
                       onClick={() => setChosenLensId(l.id)}
                     >

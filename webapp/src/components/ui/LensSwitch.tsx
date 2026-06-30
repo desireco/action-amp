@@ -55,9 +55,11 @@ export function LensSwitch({
               .join(" ")}
             role="tab"
             aria-selected={isActive}
+            data-lens-color={opt.color || undefined}
             onClick={() => onSelect(opt.id)}
           >
             {opt.icon && <span className="aa-lens__icon">{opt.icon}</span>}
+            {opt.color && <span className="aa-lens__dot" aria-hidden="true" />}
             <span className="aa-lens__label">{opt.label}</span>
           </button>
         );

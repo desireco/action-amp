@@ -53,6 +53,22 @@
   justify-content: center;
 }
 
+/* Identity-color dot — one per lens, so each context shows its own color in
+   the switch. Default (null color) is indigo, matching tokens.css's active-lens
+   fallback. Per-lens override via the data-lens-color attr stamped on the btn. */
+.aa-lens__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-active-lens);
+}
+.aa-lens__btn[data-lens-color="indigo"] .aa-lens__dot {
+  background: var(--aa-lens-indigo);
+}
+.aa-lens__btn[data-lens-color="emerald"] .aa-lens__dot {
+  background: var(--aa-lens-emerald);
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .aa-lens__btn {

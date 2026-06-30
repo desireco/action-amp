@@ -11,6 +11,15 @@ import { createContext, useContext } from "react";
 export interface ActiveLens {
   id: string;
   name: string;
+  /**
+   * Identity color key (e.g. "indigo", "emerald") — see styles/tokens.css's
+   * `--aa-lens-*` palette. Null for lenses seeded before colors existed; the
+   * client falls back to indigo (the :root `--aa-active-lens*` default).
+   * Identity only, never system/state. Widgets that want to paint per-lens
+   * stamp `data-lens-color` on a node and let CSS re-point `--aa-active-lens*`
+   * locally (see LensSwitch, TriagePage context radio).
+   */
+  color: string | null;
 }
 
 export const LensContext = createContext<ActiveLens | null>(null);
