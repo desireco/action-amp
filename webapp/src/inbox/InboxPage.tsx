@@ -1,7 +1,7 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems } from "wasp/client/operations";
-import { Button, Chip } from "../components/ui";
+import { Button, Chip, ArrowRightIcon } from "../components/ui";
 import "./InboxPage.css";
 /**
  * Inbox — the capture destination. Untriaged items, newest first.
@@ -11,20 +11,26 @@ import "./InboxPage.css";
  */
 
 export function InboxPage() {
+  const navigate = useNavigate();
   const { data: items, isLoading } = useQuery(getInboxItems);
   const list = items ?? [];
 
   return (
     <div className="aa-inbox">
       <header className="aa-inbox__header">
-        <div>
-          <h1 className="aa-inbox__title">
-            {isLoading ? "Loading…" : list.length > 0 ? `${list.length} to triage` : "Inbox zero"}
-          </h1>
+        <div className="aa-inbox__heading">
+          <h1 className="aa-inbox__title">Inbox</h1>
+          {isLoading ? (
+            <p className="aa-inbox__sub">…</p>
+          ) : list.length > 0 ? (
+            <p className="aa-inbox__sub">{list.length} to triage</p>
+          ) : null}
         </div>
         {list.length > 0 && (
-          <Link to="/app/inbox/review">
-            <Button variant="primary">Triage</Button>
+          <Link to="/app/inbox/review" className="aa-inbox__cta">
+            <Button variant="primary" icon={<ArrowRightIcon />} iconEnd>
+              Triage
+            </Button>
           </Link>
         )}
       </header>
@@ -43,9 +49,17 @@ export function InboxPage() {
         </div>
       ) : (
         <ul className="aa-inbox__list">
-          {list.map((item) => (
-            <li key={item.id} className="aa-inbox__row">
-              <div className="aa-inbox__row-main">
+          {list.map((item, i) => {
+            const go = () => navigate(`/app/inbox/review?i=${i}`);
+            return (
+              <li
+                key={item.id}
+                className="aa-inbox__row"
+                onClick={go}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && go()}
+              >
                 <p className="aa-inbox__row-text">{item.text}</p>
                 <div className="aa-inbox__row-meta">
                   <span className="aa-inbox__row-ago">captured {formatAgo(item.createdAt)}</span>
@@ -57,14 +71,9 @@ export function InboxPage() {
                     <Chip key={t} variant={t.startsWith("@") ? "amber" : "violet"} small>{t}</Chip>
                   ))}
                 </div>
-              </div>
-              <div className="aa-inbox__row-actions">
-                <Link to="/app/inbox/review">
-                  <Button variant="ghost" size="sm">Triage</Button>
-                </Link>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

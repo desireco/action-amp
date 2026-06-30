@@ -7,7 +7,7 @@
 /* ---- Header ---- */
 .aa-inbox__header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--aa-space-md);
   margin-bottom: var(--aa-space-xl);
@@ -18,12 +18,30 @@
   display: none;
 }
 
+.aa-inbox__heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+  min-width: 0;
+}
+
 .aa-inbox__title {
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--aa-text);
   margin: 0;
+}
+
+.aa-inbox__sub {
+  font-size: 0.9rem;
+  color: var(--aa-text-3);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.aa-inbox__cta {
+  flex-shrink: 0;
 }
 
 /* ---- List ---- */
@@ -36,12 +54,12 @@
 }
 
 .aa-inbox__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--aa-space-md);
-  padding: var(--aa-space-md) 0;
+  display: block;
+  padding: var(--aa-space-md) var(--aa-space-md);
+  margin: 0 calc(-1 * var(--aa-space-md));
+  border-radius: var(--aa-radius-sm);
   border-bottom: 1px solid var(--aa-border);
+  cursor: pointer;
   transition: background 0.12s var(--aa-ease-out);
 }
 
@@ -51,21 +69,18 @@
 
 .aa-inbox__row:hover {
   background: var(--aa-surface-muted);
-  margin: 0 calc(-1 * var(--aa-space-md));
-  padding-left: var(--aa-space-md);
-  padding-right: var(--aa-space-md);
-  border-radius: var(--aa-radius-sm);
 }
 
-.aa-inbox__row-main {
-  min-width: 0;
-  flex: 1;
+.aa-inbox__row:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: -2px;
+  background: var(--aa-surface-muted);
 }
 
 .aa-inbox__row-text {
   font-size: 0.95rem;
   color: var(--aa-text);
-  margin: 0 0 4px;
+  margin: 0 0 var(--aa-space-xs);
   line-height: 1.4;
 }
 
@@ -79,26 +94,6 @@
 .aa-inbox__row-ago {
   font-size: 0.72rem;
   color: var(--aa-text-4);
-}
-
-.aa-inbox__row-actions {
-  display: flex;
-  gap: 4px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.12s var(--aa-ease-out);
-}
-
-.aa-inbox__row:hover .aa-inbox__row-actions,
-.aa-inbox__row:focus-within .aa-inbox__row-actions {
-  opacity: 1;
-}
-
-/* Touch devices: always show actions (no hover) */
-@media (hover: none) {
-  .aa-inbox__row-actions {
-    opacity: 1;
-  }
 }
 
 /* ---- Empty state ---- */

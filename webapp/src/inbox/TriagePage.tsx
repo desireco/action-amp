@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems, triageInboxItem } from "wasp/client/operations";
 import { getAppData } from "wasp/client/operations";
@@ -77,17 +77,27 @@ interface Working {
 
 export function TriagePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const activeLens = useActiveLens();
   const { data: items } = useQuery(getInboxItems);
   const list = items ?? [];
+
+  // Seed position from `?i=N` (e.g. an inbox row click) once on first arrival.
+  // The walkthrough then owns advancement; we don't track the live param. Read
+  // as a plain value (not reactively) so completing an item doesn't yank the
+  // index when the URL still holds the stale N.
+  const startIdx = (() => {
+    const n = Number(searchParams.get("i"));
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  })();
 
   // The lens list for step 1's radio. Pulled from the shell's app-data query
   // (same source as the sidebar switch) so the radio shows every lens.
   const { data: appData } = useQuery(getAppData, { lensName: activeLens?.name });
   const lenses = appData?.lenses ?? [];
 
-  const [idx, setIdx] = useState(0);
+  const [idx, setIdx] = useState(startIdx);
   const [exit, setExit] = useState<TriageExit>(null);
   const [dispatched, setDispatched] = useState(false);
   const [entering, setEntering] = useState(false);
@@ -133,7 +143,15 @@ export function TriagePage() {
   const triageList = snapshot ?? list;
 
   const total = triageList.length;
-  const done = idx;
+  // Clamp the start to the live list: a stale `?i` (manual URL, or a list that
+  // shrank between the inbox render and arrival) must never point past the end.
+  const start = Math.min(startIdx, total);
+  // Progress is session-relative: when arrived via a row click (?i=N), the
+  // walkthrough reviews from N to the end. Counting from `start` keeps the
+  // "n of m" label and bar honest — it reflects what YOU triaged this session,
+  // not items above N you never touched.
+  const remaining = Math.max(0, total - start);
+  const done = idx - start;
   const isComplete = idx >= total;
 
   const item = triageList[idx] ?? null;
@@ -301,6 +319,9 @@ export function TriagePage() {
   ]);
 
   if (isComplete) {
+    // Started mid-list (?i>0): items above the start index are still
+    // untriaged, so "Inbox zero" would be a lie. Say what's actually true.
+    const reachedFromTop = start === 0;
     return (
       <div className="aa-triage-empty">
         <div className="aa-triage-empty__circle" aria-hidden="true">
@@ -308,10 +329,22 @@ export function TriagePage() {
             <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        <h2 className="aa-triage-empty__title">Inbox zero.</h2>
-        <p className="aa-triage-empty__text">Nothing left to decide. Go do something.</p>
+        <h2 className="aa-triage-empty__title">
+          {reachedFromTop ? "Inbox zero." : "Caught up from here."}
+        </h2>
+        <p className="aa-triage-empty__text">
+          {reachedFromTop
+            ? "Nothing left to decide. Go do something."
+            : `${start} earlier ${start === 1 ? "item is" : "items are"} still in the inbox.`}
+        </p>
         <div className="aa-triage-empty__actions">
-          <Button variant="primary" onClick={() => navigate("/app")}>Done →</Button>
+          {reachedFromTop ? (
+            <Button variant="primary" onClick={() => navigate("/app")}>Done →</Button>
+          ) : (
+            <Button variant="primary" onClick={() => navigate("/app/inbox/review")}>
+              Triage earlier →
+            </Button>
+          )}
           <Button variant="secondary" onClick={() => navigate("/app/inbox")}>Back to inbox</Button>
         </div>
       </div>
@@ -350,12 +383,12 @@ export function TriagePage() {
         </button>
         <div className="aa-triage__progress">
           <span className="aa-triage__progress-count">
-            <b>{done + 1}</b> of <b>{total}</b>
+            <b>{done + 1}</b> of <b>{remaining}</b>
           </span>
           <div className="aa-triage__progress-bar">
             <div
               className="aa-triage__progress-fill"
-              style={{ width: `${(done / total) * 100}%` }}
+              style={{ width: `${remaining > 0 ? (done / remaining) * 100 : 0}%` }}
             />
           </div>
         </div>

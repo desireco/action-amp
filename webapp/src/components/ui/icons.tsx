@@ -130,3 +130,12 @@ export function SunIcon(p: IconProps) {
     </svg>
   );
 }
+
+/* Arrow right — forward motion (CTAs that advance the user) */
+export function ArrowRightIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
