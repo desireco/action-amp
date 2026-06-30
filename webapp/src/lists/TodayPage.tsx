@@ -27,13 +27,14 @@ export function TodayPage() {
     { enabled: !!lens },
   );
   // Upcoming bench: status=UPCOMING tasks in the active lens, surfaced when
-  // the user swaps to pull one onto today. Lazy — only fetched when the bench
-  // is open, to avoid the cost on a normal Today load.
+  // the user swaps to pull one onto today. Fetched on mount so the closed
+  // "See upcoming" control can show a count; otherwise rolled/bench tasks can
+  // look like they disappeared when Today is empty.
   const [showUpcoming, setShowUpcoming] = useState(false);
   const { data: upcoming } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "UPCOMING", isDone: false } : undefined,
-    { enabled: !!lens && showUpcoming },
+    { enabled: !!lens },
   );
 
   // Done-today: tasks completed since local midnight. Fetched on mount (not
@@ -124,7 +125,9 @@ export function TodayPage() {
           onClick={() => setShowUpcoming((v) => !v)}
           aria-expanded={showUpcoming}
         >
-          {showUpcoming ? "Back to Today" : "See upcoming"}
+          {showUpcoming
+            ? "Back to Today"
+            : `See upcoming${(upcoming?.length ?? 0) > 0 ? ` ${upcoming!.length}` : ""}`}
         </Button>
       </header>
 
