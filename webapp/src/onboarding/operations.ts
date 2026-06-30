@@ -22,7 +22,13 @@ import { buildWelcomeEmail } from "./welcomeEmail";
  * data) so the client can populate the sidebar + scope the focus engine.
  */
 
-const DEFAULT_LENSES = [{ name: "Work" }, { name: "Me" }] as const;
+// Each default lens carries an identity color key (see styles/tokens.css
+// `--aa-lens-*` palette). Work = indigo, Me = emerald. The color signals which
+// context is active; it's identity, never system/state (that's teal's job).
+const DEFAULT_LENSES = [
+  { name: "Work", color: "indigo" },
+  { name: "Me", color: "emerald" },
+] as const;
 const STARTER_TASKS = [
   "Try it: complete this task",
   "Capture one real thing on your mind",
@@ -80,14 +86,22 @@ export const ensureOnboarded = (async (_args, context) => {
     // findOrCreate per lens — idempotent across logins
     const existing = await context.entities.Lens.findFirst({
       where: { userId, name: lens.name },
-      select: { id: true, name: true },
+      select: { id: true, name: true, color: true },
     });
     if (!existing) {
       const row = await context.entities.Lens.create({
-        data: { name: lens.name, userId },
+        data: { name: lens.name, color: lens.color, userId },
         select: { id: true, name: true },
       });
       created.push(row);
+    } else if (existing.color !== lens.color) {
+      // Backfill: existing lenses predate the color column (or drifted). Patch
+      // them up to the default identity color. Safe + idempotent.
+      await context.entities.Lens.update({
+        where: { id: existing.id },
+        data: { color: lens.color },
+        select: { id: true },
+      });
     }
   }
 
@@ -218,10 +232,41 @@ export const getAppData = (async (args, context) => {
 
   const userId = context.user.id;
 
+  // ---- Daily Today → Upcoming rollover (lazy, on app load) ----
+  // WORKFLOW.md §2.3: Today is the committed-for-today list. At the start of a
+  // new calendar day, incomplete TODAY tasks roll to UPCOMING so Today starts
+  // fresh each morning — a deliberate re-commitment, not a backlog. Done tasks
+  // are left alone (they keep their status + completedAt for the Logbook).
+  // `startedAt` (the "Now" state) is preserved, so an interrupted focus task
+  // still resurfaces as #1 on Next even though it's now UPCOMING.
+  //
+  // Triggered lazily here (not a cron job) so it runs in dev (SQLite-free) and
+  // needs no new infra. Idempotent: once lastTodayRolloverAt is "today", the
+  // day check short-circuits. Day boundary is the server's local calendar day
+  // (same precedent as getDoneToday's midnight logic in tasks/operations.ts).
+  // Note: we read lastTodayRolloverAt via an explicit User fetch rather than
+  // context.user — Wasp's auth user record isn't guaranteed to carry custom
+  // fields, but the User entity delegate always does.
+  const userRow = await context.entities.User.findUnique({
+    where: { id: userId },
+    select: { lastTodayRolloverAt: true },
+  });
+  const lastRoll = userRow?.lastTodayRolloverAt ?? null;
+  if (!lastRoll || isDifferentDay(lastRoll, new Date())) {
+    await context.entities.Task.updateMany({
+      where: { userId, status: "TODAY", isDone: false },
+      data: { status: "UPCOMING" },
+    });
+    await context.entities.User.update({
+      where: { id: userId },
+      data: { lastTodayRolloverAt: new Date() },
+    });
+  }
+
   const lenses = await context.entities.Lens.findMany({
     where: { userId },
     orderBy: { createdAt: "asc" },
-    select: { id: true, name: true },
+    select: { id: true, name: true, color: true },
   });
   // Resolve the requested lens name to an id; fall back to the first lens so
   // counts are never empty just because the stored name was stale/missing.
@@ -258,7 +303,21 @@ export const getAppData = (async (args, context) => {
 }) satisfies GetAppData<
   { lensName?: string | null },
   {
-    lenses: { id: string; name: string }[];
+    lenses: { id: string; name: string; color: string | null }[];
     counts: { inbox: number; today: number; projects: number; goals: number };
   }
 >;
+
+/**
+ * Calendar-day inequality — drives the lazy Today rollover. True when `a` and
+ * `b` fall on different Y/M/D (in their own locale). Returns true when `a` is
+ * null is handled by the caller (the `!lastRoll` check), so this assumes two
+ * valid dates.
+ */
+function isDifferentDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() !== b.getFullYear() ||
+    a.getMonth() !== b.getMonth() ||
+    a.getDate() !== b.getDate()
+  );
+}

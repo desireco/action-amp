@@ -82,6 +82,11 @@ appears in Work/Planning/Review except by coming through triage.
     feature, not a limit — it forces the "what actually matters today" decision.
 - **Eliminating:** the separate "Upcoming" area. Time-deferred tasks will roll
   up into Today on their day (decision on the exact mechanism pending — §5).
+  At the start of each new calendar day, incomplete **Today** tasks roll to
+  **Upcoming** so Today starts fresh — a deliberate re-commitment, not a
+  backlog. Lazy: runs on app load (in `getAppData`), idempotent within a day
+  via `User.lastTodayRolloverAt`. Done tasks are left alone; `startedAt` (the
+  Now state) is preserved. Locked 2026-06-30.
 - This is the only area with a focus mode (`F`) and a Now state.
 
 ### 2.4 Planning Area — organizing
@@ -178,6 +183,19 @@ These were the open structural calls. All resolved:
    - **Capture stays pinned outside both switches** — it's pervasive.
    - This is **soft focus now**. A future **hard focus** (each mode as a
      distinct full-screen layout) is the north star, flagged in `BACKLOG.md`.
+7. **Today rolls over daily (locked 2026-06-30).** At the start of each new
+   calendar day, every incomplete **Today** task flips to **Upcoming** so Today
+   starts fresh each morning — a deliberate re-commitment, not a backlog.
+   - **Lazy trigger:** runs inside `getAppData` on app load (no cron job, no
+     new infra — works in dev and prod). Idempotent within a day via
+     `User.lastTodayRolloverAt` (the day-boundary check short-circuits).
+   - **Scope:** all incomplete `status=TODAY, isDone=false` tasks, regardless
+     of `dueDate`. Done tasks are left alone (they keep their status for the
+     Logbook). `startedAt` (the Now state) is **preserved**, so an interrupted
+     focus task resurfaces as #1 on Next even though it's now Upcoming.
+   - **No effect on Next:** `getTopTask` already pools Today + Upcoming
+     (§5.2), so rolled tasks stay focus candidates — this is a list/view
+     concern, not a focus-engine concern. Resolves the pending note in §2.3.
 
 ## 6. Document cascade
 

@@ -8,6 +8,8 @@ export interface LensSwitchOption {
   label: string;
   /** Optional leading icon */
   icon?: ReactNode;
+  /** Identity color key ("indigo", "emerald"); rendered as a dot + data attr */
+  color?: string | null;
 }
 
 interface LensSwitchProps {

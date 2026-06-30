@@ -79,7 +79,7 @@ export default app({
       },
     },
     onAuthSucceededRedirectTo: "/app",
-    onAuthFailedRedirectTo: "/login",
+    onAuthFailedRedirectTo: "/",
   },
   emailSender: {
     provider: "SMTP",
@@ -153,7 +153,7 @@ export default app({
     query(getGoal, { entities: ["Goal", "Project", "Task"], auth: true }),
     action(createGoal, { entities: ["Goal"], auth: true }),
     query(getLogbook, { entities: ["Task", "Project", "InboxItem"], auth: true }),
-    query(getAppData, { entities: ["Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
+    query(getAppData, { entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),
     action(setPreferredName, { entities: ["User"], auth: true }),
     action(completeOnboarding, { entities: ["User"], auth: true }),

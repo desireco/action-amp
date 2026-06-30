@@ -67,6 +67,16 @@ describe("ensureOnboarded — idempotency", () => {
       { id: "lens-work", name: "Work" },
       { id: "lens-me", name: "Me" },
     ]);
+    // Each lens is created with its identity color (Work=indigo, Me=emerald).
+    expect(m.entities.Lens.create).toHaveBeenCalledTimes(2);
+    expect(m.entities.Lens.create).toHaveBeenNthCalledWith(1, {
+      data: { name: "Work", color: "indigo", userId: "user-1" },
+      select: { id: true, name: true },
+    });
+    expect(m.entities.Lens.create).toHaveBeenNthCalledWith(2, {
+      data: { name: "Me", color: "emerald", userId: "user-1" },
+      select: { id: true, name: true },
+    });
     // General project seeded once per lens.
     expect(m.entities.Project.create).toHaveBeenCalledTimes(2);
     expect(m.entities.Project.create).toHaveBeenCalledWith({
@@ -83,15 +93,15 @@ describe("ensureOnboarded — idempotency", () => {
 
   it("creates only the missing lens (and only its General project)", async () => {
     const m = mockContext();
-    // Work exists, Me doesn't.
+    // Work exists (with its color already set), Me doesn't.
     m.entities.Lens.findFirst
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
       .mockResolvedValueOnce(null);
     m.entities.Lens.create.mockResolvedValueOnce({ id: "lens-me", name: "Me" });
     // Project-seeding lookups: Work's General exists, Me's doesn't.
     m.entities.Lens.findFirst
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
-      .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: "emerald" });
     m.entities.Project.findFirst
       .mockResolvedValueOnce({ id: "gen-work" })
       .mockResolvedValueOnce(null);
@@ -109,11 +119,11 @@ describe("ensureOnboarded — idempotency", () => {
   it("creates nothing when both lenses and both General projects exist", async () => {
     const m = mockContext();
     m.entities.Lens.findFirst
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
-      .mockResolvedValueOnce({ id: "lens-me", name: "Me" })
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: "emerald" })
       // project-seeding lookups:
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
-      .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: "emerald" });
     m.entities.Project.findFirst
       .mockResolvedValueOnce({ id: "gen-work" })
       .mockResolvedValueOnce({ id: "gen-me" });
@@ -126,18 +136,52 @@ describe("ensureOnboarded — idempotency", () => {
     expect(m.entities.Project.create).not.toHaveBeenCalled();
     expect(m.entities.Task.create).not.toHaveBeenCalled();
   });
+
+  // Backfill: lenses created before the color column existed have color=null.
+  // ensureOnboarded patches them up to the default identity color (idempotent),
+  // so existing users get lens identity on next load without a manual step.
+  it("backfills the identity color onto pre-existing lenses missing it", async () => {
+    const m = mockContext();
+    // Both lenses exist but predate the color column (color: null).
+    m.entities.Lens.findFirst
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: null })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: null })
+      // project-seeding lookups (General already exists for both):
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: null })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: null });
+    m.entities.Project.findFirst
+      .mockResolvedValueOnce({ id: "gen-work" })
+      .mockResolvedValueOnce({ id: "gen-me" });
+    m.entities.Task.count.mockResolvedValue(5);
+
+    await ensureOnboarded(undefined as never, m.context);
+
+    // No new lenses created; both existing ones patched to their default color.
+    expect(m.entities.Lens.create).not.toHaveBeenCalled();
+    expect(m.entities.Lens.update).toHaveBeenCalledTimes(2);
+    expect(m.entities.Lens.update).toHaveBeenNthCalledWith(1, {
+      where: { id: "lens-work" },
+      data: { color: "indigo" },
+      select: { id: true },
+    });
+    expect(m.entities.Lens.update).toHaveBeenNthCalledWith(2, {
+      where: { id: "lens-me" },
+      data: { color: "emerald" },
+      select: { id: true },
+    });
+  });
 });
 
 describe("ensureOnboarded — first-run seed", () => {
   it("seeds three light TODAY tasks in the Me lens when the user has zero tasks", async () => {
     const m = mockContext();
-    // Both lenses already exist; both General projects exist (we're isolating
-    // the seed path, not the lens/project find-or-create).
+    // Both lenses already exist (colors already set); both General projects
+    // exist (we're isolating the seed path, not the lens/project find-or-create).
     m.entities.Lens.findFirst
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // lens loop
-      .mockResolvedValueOnce({ id: "lens-me", name: "Me" })
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // project loop
-      .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" }) // lens loop
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: "emerald" })
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" }) // project loop
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: "emerald" });
     m.entities.Project.findFirst
       .mockResolvedValueOnce({ id: "gen-work" })
       .mockResolvedValueOnce({ id: "gen-me" });
@@ -187,10 +231,10 @@ describe("ensureOnboarded — first-run seed", () => {
   it("seeds nothing when the user already has at least one task", async () => {
     const m = mockContext();
     m.entities.Lens.findFirst
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
-      .mockResolvedValueOnce({ id: "lens-me", name: "Me" })
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work" })
-      .mockResolvedValueOnce({ id: "lens-me", name: "Me" });
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: "emerald" })
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: "emerald" });
     m.entities.Project.findFirst
       .mockResolvedValueOnce({ id: "gen-work" })
       .mockResolvedValueOnce({ id: "gen-me" });
@@ -205,9 +249,9 @@ describe("ensureOnboarded — first-run seed", () => {
     const m = mockContext();
     // Work exists, Me somehow missing — defensive: don't seed into a null lens.
     m.entities.Lens.findFirst
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // lens loop
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" }) // lens loop
       .mockResolvedValueOnce(null) // Me missing in lens loop
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work" }) // project loop
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" }) // project loop
       .mockResolvedValueOnce(null); // Me missing in project loop
     m.entities.Project.findFirst.mockResolvedValue({ id: "gen-work" });
     m.entities.Task.count.mockResolvedValue(0);
@@ -315,9 +359,12 @@ describe("getAppData — guards", () => {
 describe("getAppData — happy path", () => {
   it("aggregates lenses + four counts, lens-scoping the focus-nav counts", async () => {
     const m = mockContext();
+    // Rollover already ran today → short-circuits so this test stays focused
+    // on the count aggregation (covered in the rollover describe block).
+    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
     const lenses = [
-      { id: "lens-work", name: "Work" },
-      { id: "lens-me", name: "Me" },
+      { id: "lens-work", name: "Work", color: "indigo" },
+      { id: "lens-me", name: "Me", color: "emerald" },
     ];
 
     // Lens.findMany resolves first (awaited before the counts); the four count
@@ -355,6 +402,12 @@ describe("getAppData — happy path", () => {
         where: expect.objectContaining({ lensId: "lens-work", isDone: false }),
       }),
     );
+    // Lenses carry their identity color so the shell can paint per-lens.
+    expect(m.entities.Lens.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: { id: true, name: true, color: true },
+      }),
+    );
   });
 
   it("falls back to the first lens when lensName is stale/missing", async () => {
@@ -363,8 +416,9 @@ describe("getAppData — happy path", () => {
     // or a renamed lens). Counts must still resolve against a real lens, not
     // silently zero out.
     const m = mockContext();
+    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-me", name: "Me" },
+      { id: "lens-me", name: "Me", color: "emerald" },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Task.count.mockResolvedValue(1);
@@ -378,5 +432,121 @@ describe("getAppData — happy path", () => {
         where: expect.objectContaining({ lensId: "lens-me" }),
       }),
     );
+  });
+});
+
+describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
+  // The rollover runs at the top of getAppData, before the count fetches, so
+  // todayCount reflects the roll. It's lazy (no cron) and idempotent within a
+  // day via lastTodayRolloverAt. See WORKFLOW.md §2.3.
+
+  it("rolls all incomplete TODAY tasks to UPCOMING on a new day (or first-ever load)", async () => {
+    const m = mockContext();
+    // lastTodayRolloverAt is null → treated as "never run" → rolls.
+    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: null });
+    m.entities.Task.updateMany.mockResolvedValue({ count: 3 });
+    m.entities.User.update.mockResolvedValue({});
+    m.entities.Lens.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(0);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+
+    await getAppData({ lensName: "Work" }, m.context);
+
+    // Bulk flip: every incomplete TODAY task for this user → UPCOMING.
+    expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
+      where: { userId: "user-1", status: "TODAY", isDone: false },
+      data: { status: "UPCOMING" },
+    });
+    // The rollover timestamp is stamped so it won't re-run the same day.
+    expect(m.entities.User.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { lastTodayRolloverAt: expect.any(Date) },
+    });
+  });
+
+  it("does NOT roll when lastTodayRolloverAt is already today (idempotent)", async () => {
+    const m = mockContext();
+    const today = new Date();
+    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: today });
+    m.entities.Lens.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(2);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+
+    await getAppData({ lensName: "Work" }, m.context);
+
+    // Same calendar day → rollover short-circuits; no flip, no re-stamp.
+    expect(m.entities.Task.updateMany).not.toHaveBeenCalled();
+    expect(m.entities.User.update).not.toHaveBeenCalled();
+  });
+
+  it("rolls again when lastTodayRolloverAt is a previous day", async () => {
+    const m = mockContext();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: yesterday });
+    m.entities.Task.updateMany.mockResolvedValue({ count: 1 });
+    m.entities.User.update.mockResolvedValue({});
+    m.entities.Lens.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(0);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+
+    await getAppData({ lensName: "Work" }, m.context);
+
+    expect(m.entities.Task.updateMany).toHaveBeenCalled();
+    expect(m.entities.User.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { lastTodayRolloverAt: expect.any(Date) },
+    });
+  });
+
+  it("preserves startedAt (the Now state) — only status flips", async () => {
+    // The updateMany data object must NOT touch startedAt, so an interrupted
+    // focus task keeps its place and resurfaces as #1 on Next.
+    const m = mockContext();
+    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: null });
+    m.entities.Task.updateMany.mockResolvedValue({ count: 1 });
+    m.entities.User.update.mockResolvedValue({});
+    m.entities.Lens.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(0);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+
+    await getAppData({ lensName: "Work" }, m.context);
+
+    const call = m.entities.Task.updateMany.mock.calls[0][0];
+    expect(call.data).toEqual({ status: "UPCOMING" });
+    expect(call.data).not.toHaveProperty("startedAt");
+  });
+
+  it("excludes done tasks — only incomplete TODAY rolls", async () => {
+    // The where-clause must include isDone: false so completed Today tasks
+    // (shown under "Done today" / Logbook) are left as-is.
+    const m = mockContext();
+    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: null });
+    m.entities.Task.updateMany.mockResolvedValue({ count: 0 });
+    m.entities.User.update.mockResolvedValue({});
+    m.entities.Lens.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(0);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+
+    await getAppData({ lensName: "Work" }, m.context);
+
+    expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
+      where: expect.objectContaining({
+        userId: "user-1",
+        status: "TODAY",
+        isDone: false,
+      }),
+      data: { status: "UPCOMING" },
+    });
   });
 });

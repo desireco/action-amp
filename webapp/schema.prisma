@@ -44,6 +44,13 @@ model User {
   plan            Plan    @default(FREE)
   stripeCustomerId String?   // set on first checkout; links to the Stripe customer
   planRenewsAt     DateTime? // null for FREE + FOUNDER (lifetime); set by webhook for PRO
+
+  // ---- Today rollover (lazy, on app load) ----
+  // Tracks the last calendar day the Today→Upcoming rollover ran for this
+  // user. getAppData checks it each load: if it's a new day (or null), every
+  // incomplete TODAY task flips to UPCOMING and this is stamped. Idempotent
+  // within a day. See docs/WORKFLOW.md §2.3.
+  lastTodayRolloverAt DateTime?
 }
 
 // A user's entitlement tier. FOUNDER = "Founding 100": one-time $139, lifetime,
@@ -93,6 +100,7 @@ enum PaymentStatus {
 model Lens {
   id        String   @id @default(uuid())
   name      String // "Work", "Me", (Phase 2: user-defined)
+  color     String? // identity color key ("indigo", "emerald") from the lens palette in tokens.css
   createdAt DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

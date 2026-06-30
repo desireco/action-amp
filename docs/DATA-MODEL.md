@@ -191,6 +191,15 @@ basic loop works.
   to those properties (or editing them), then confirming what it becomes.
   Properties are not pre-known; they are assigned during triage.
 
+### Added 2026-06-30 (daily rollover)
+
+- ✅ **Today rolls to Upcoming daily.** `User.lastTodayRolloverAt` (nullable
+  `DateTime`) tracks the last calendar day the rollover ran. `getAppData`
+  checks it on every load: if it's a new day (or null), every incomplete
+  `status=TODAY, isDone=false` task bulk-flips to `UPCOMING` and the timestamp
+  is stamped. Lazy (no cron), idempotent within a day. See `WORKFLOW.md` §5.7
+  for the full decision.
+
 ## 9. Still open
 
 - **InboxItem retention** — keep the original InboxItem after triage or delete on

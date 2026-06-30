@@ -115,7 +115,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [activeLens, lens]);
   // The value pages consume via useActiveLens() to scope their queries.
-  const activeLensValue = activeLens ? { id: activeLens.id, name: activeLens.name } : null;
+  const activeLensValue = activeLens
+    ? { id: activeLens.id, name: activeLens.name, color: activeLens.color ?? null }
+    : null;
 
   const isActive = (to: string) =>
     to === "/app" ? location.pathname === "/app" : location.pathname.startsWith(to);
