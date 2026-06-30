@@ -121,8 +121,7 @@ item; Build pulls `ready`.**
    ~20 people, 2 days) — the roast (<`docs/research/wedge-defensibility-roast-
    2026-06-27.md`>) found the matcher is the only real moat but currently the
    weakest shipped part. The test decides: build as-spec'd, reshape, or icebox.
-4. **command-palette-search** (`ready`) — `⌘K` command palette (reclaimed
-    from capture; capture becomes `⌘/`-only) + full-text search across **all**
+4. **command-palette-search** (`ready`) — command palette + full-text search across **all**
     tasks (open + done). The two Pro-tier features most likely to justify the
     price to an existing user. Depends on entitlement-enforcement.
 

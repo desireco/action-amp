@@ -76,7 +76,7 @@ items they imply — not built yet, listed here so they're not lost:
 
 ## ☐ Design — surfaces not yet built
 
-- [x] **Inbox + triage surface.** DONE 2026-06-16; **co-author wizard 2026-06-25.** Two distinct surfaces: (1) **Inbox list** (`inbox/InboxPage.tsx`) = browse/scan/pick entry point; (2) **Triage** (`inbox/TriagePage.tsx`) = a deliberate **per-item specification wizard**: step 1 Context (Lens radio, pre-filled) → step 2 Type (Task/Project/Resource-note/Trash) → step 3 Spec → Complete. The single-card one-key dispatch is gone; triage is co-authoring the spec, not speed-clearing. The spec list (When/Size/Priority/Project/Goal) is **inline-expanding** rows ported from the mockup (tap a row → options beneath; Project/Goal/Parent rows open the bottom-sheet picker). Priority & Size chosen in the spec step override any parsed capture token. Defaults: Size=M, Priority=Normal, When=Upcoming (never auto-Today; revised 2026-06-25 — was Someday), Project=General. **Goal is filed *into*, never created at triage.** Confirm summary reads back the commitment in plain English; Complete is gated until lens + filing target are set. **Archive (was "Trash") is lossless** — it marks the InboxItem `ARCHIVED` instead of deleting, and surfaces in the Logbook's Archived section with a Restore action (2026-06-25). Still unbuilt: undo toast, inline title edit, property keys `[`/`]`/`-`/`=`, `⌘/` rebind. See `TRIAGE.md` §3/§4/§8, `docs/mockups/triage-coauthor.html`.
+- [x] **Inbox + triage surface.** DONE 2026-06-16; **co-author wizard 2026-06-25.** Two distinct surfaces: (1) **Inbox list** (`inbox/InboxPage.tsx`) = browse/scan/pick entry point; (2) **Triage** (`inbox/TriagePage.tsx`) = a deliberate **per-item specification wizard**: step 1 Context (Lens radio, pre-filled) → step 2 Type (Task/Project/Resource-note/Trash) → step 3 Spec → Complete. The single-card one-key dispatch is gone; triage is co-authoring the spec, not speed-clearing. The spec list (When/Size/Priority/Project/Goal) is **inline-expanding** rows ported from the mockup (tap a row → options beneath; Project/Goal/Parent rows open the bottom-sheet picker). Priority & Size chosen in the spec step override any parsed capture token. Defaults: Size=M, Priority=Normal, When=Upcoming (never auto-Today; revised 2026-06-25 — was Someday), Project=General. **Goal is filed *into*, never created at triage.** Confirm summary reads back the commitment in plain English; Complete is gated until lens + filing target are set. **Archive (was "Trash") is lossless** — it marks the InboxItem `ARCHIVED` instead of deleting, and surfaces in the Logbook's Archived section with a Restore action (2026-06-25). Still unbuilt: undo toast, inline title edit, property keys `[`/`]`/`-`/`=`. See `TRIAGE.md` §3/§4/§8, `docs/mockups/triage-coauthor.html`.
 - [x] **Today list view** (planning, cap, priority/size chips, done section). DONE 2026-06-16. **Today IS the Plan mode card** (not a separate page). Same Mode×Scope position as Next — three renderings of one card position: Plan=Today list, Do=Next hero, Review=debrief. Card DNA preserved (border/shadow/radius), just list-shaped. Cap badge amber at 4/5, rose at full. Tasks grouped by Goal (violet dot), General (gray), Overdue (rose). Per-row Important/XL chips tinted. Done section collapsed at bottom. Tap task to select → "Start doing" promotes to Do mode. See `docs/mockups/plan-today-card.html`.
 - [ ] **Upcoming + Someday views.** *(Someday page exists at `/app/someday`;
   Upcoming is intentionally NOT a dedicated page — reachable via the Today
@@ -92,12 +92,9 @@ items they imply — not built yet, listed here so they're not lost:
   incl. the Archived section for lossless triage Archive); **Review/debrief
   screen unbuilt** — the least-built area (WORKFLOW §2.5).
 - [x] **Capture palette (`⌘K`)** — DONE. Floating input, NL parsing, inline
-  chips, rapid-fire. `components/ui/CapturePopover.tsx`. *(Note: `command-palette-
-  search` spec reclaims `⌘K` for the command palette; capture becomes `⌘/`-only
-  when that ships. Capture's `⌘K` alias is intentional until then.)*
+  chips, rapid-fire. `components/ui/CapturePopover.tsx`.
 - [ ] **Command palette (`⌘\`)** — fuzzy jump/run. **Unbuilt.** Spec'd at
-  `docs/specs/command-palette-search.md` — will use `⌘K` (reclaimed from
-  capture), not `⌘\`.
+  `docs/specs/command-palette-search.md`.
 - [x] **Marketing site home** — DONE. Landing page at `/` ("Easiest way to get
   into action"), full pitch, footer. `src/landing/LandingPage.tsx`. *(No
   waitlist/email capture by design — see PRODUCT.md "pure signpost"; the

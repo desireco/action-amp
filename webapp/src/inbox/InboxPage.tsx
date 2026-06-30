@@ -44,7 +44,7 @@ export function InboxPage() {
           </div>
           <p className="aa-inbox__empty-text">
             Nothing left to decide. Capture something with{" "}
-            <span className="aa-inbox__kbd">⌘/</span> when it crosses your mind.
+            <span className="aa-inbox__kbd">⌘K</span> when it crosses your mind.
           </p>
         </div>
       ) : (

@@ -56,7 +56,7 @@ The product bet: **overwhelm happens at step 3, not step 1.** ADHD brains don't 
 
 Goal: thought → inbox in under 2 seconds, never leaving the keyboard.
 
-- **F1. Global quick-add** — `Cmd+K` (or `/`) opens a floating input from *anywhere* in the app. Type, `Enter`, done. Stays on the current screen.
+- **F1. Global quick-add** — `Cmd+K` opens a floating input from *anywhere* in the app. Type, `Enter`, done. Stays on the current screen.
 - **F2. Natural-language parsing** (Things/TickTick style) — `Email Sarah re: invoice tomorrow #mvp @phone !2 ~20m`
   - `tomorrow` → due date · `#mvp` → project (resolved at triage if a project by that name exists in the chosen lens) · `@phone` → context tag · `!2` → priority · `~20m` → size (time tokens map to S/M/L/XL, e.g. <15m=S, <1h=M, <2h=L, >2h=XL)
   - Parsed tokens show as chips inline before you hit Enter (so you see what it understood).
@@ -195,7 +195,7 @@ Checklist within a task. Completing all subtasks does *not* auto-complete the pa
 
 | Shortcut | Action |
 |---|---|
-| `Cmd+K` / `/` | Quick capture (from anywhere) |
+| `Cmd+K` | Quick capture (from anywhere) |
 | `Space` | Open "Next" (home) |
 | `?` | Shortcut cheat sheet |
 | `J` / `K` | Move selection down / up |

@@ -20,17 +20,11 @@ entitlement gate (depends on `entitlement-enforcement`).
 
 ### Two product calls, resolved up front
 
-1. **The binding is `⌘K`, not `⌘\` — and capture moves.** Today `⌘K` opens
-   capture (`useKeyboardShortcuts.ts:46`, locked 2026-06-22 with `⌘/` as the
-   documented primary). But `⌘K` is the *universal* command-palette convention
-   (Linear, Notion, Raycast, Slack). A power-user feature on `⌘\` fights every
-   new user's muscle memory — they'll hit `⌘K`, get capture, and conclude the
-   palette doesn't exist. Resolution: **the command palette takes `⌘K`**;
-   **capture becomes `⌘/` (already the documented primary) + the existing
-   `/`-in-empty-space path.** This is a small breaking change to a locked
-   shortcut, but it's the right one — `⌘K` = "do/command" is stronger muscle
-   memory than `⌘K` = "capture," and capture keeps a one-key path. Update the
-   cheatsheet + FEATURES.md §6 to match.
+1. **Capture owns `⌘K`; the command palette uses `⌘\`.** Capture is the first
+   move in ActionAmp and is locked to `⌘K` (2026-06-30). The palette should
+   keep the separate `⌘\` binding already shown in the app/page docs rather
+   than displacing capture. Update the cheatsheet + FEATURES.md §6 if the
+   palette ships with additional discoverability copy.
 2. **Search covers open *and* completed tasks, not Logbook-only.** The earlier
    "Logbook-only" framing was backwards: a user with 200 tasks who wants to
    find the open "Email Sarah" task isn't helped by searching only completed
@@ -40,12 +34,10 @@ entitlement gate (depends on `entitlement-enforcement`).
 
 ## Done-conditions
 
-- [ ] **The command palette opens on `⌘K`.** A new `CommandPalette` overlay
+- [ ] **The command palette opens on `⌘\`.** A new `CommandPalette` overlay
       (same overlay shell as `CapturePopover` — reuse `Overlays.css` patterns).
-      Registered in `useKeyboardShortcuts.ts`. **`⌘K` is reclaimed from
-      capture** — capture's `⌘K` binding is removed; capture keeps `⌘/` (its
-      documented primary) + the bare-`/`-in-empty-space path. Disabled while
-      typing in inputs (same rule as the global handler).
+      Registered in `useKeyboardShortcuts.ts`. `⌘K` remains capture. Disabled
+      while typing in inputs (same rule as the global handler).
 - [ ] **The palette fuzzy-searches and jumps.** Typing matches against: all
       Tasks (open + done — description), Projects (name), Goals (name), and a
       fixed set of view/action targets ("Today", "Next", "Inbox",
@@ -72,12 +64,11 @@ entitlement gate (depends on `entitlement-enforcement`).
 - [ ] **Tests:** a Vitest case for `searchTasks` (match, no-match,
       cross-user isolation via userId scoping, open-vs-done flag returned).
       A component test for the palette's open/filter/select/navigate is
-      nice-to-have. An e2e asserting `⌘K` opens the palette (not capture) is
-      required — this is the breaking-change guarantee.
+      nice-to-have. An e2e asserting `⌘\` opens the palette is required.
 - [ ] **`wasp compile` passes. Existing suite green** — note: any test or e2e
-      that asserts `⌘K` → capture must be updated to `⌘/` → capture. The
-      cheatsheet copy (`ShortcutCheatsheet`) and FEATURES.md §6 are updated to
-      reflect the new binding.
+      that asserts `⌘K` → capture should remain valid. The cheatsheet copy
+      (`ShortcutCheatsheet`) and FEATURES.md §6 are updated to reflect the new
+      palette binding.
 - [ ] **Cold-context reviewer passes.**
 
 ## Non-goals
@@ -89,8 +80,7 @@ entitlement gate (depends on `entitlement-enforcement`).
 - **No command palette actions beyond navigation + the fixed view list.**
   "Run any action" (start timer, set energy) is F20's full vision; v1 is jump.
 - **No mobile-specific UI.** Desktop-first; mobile gets the same overlay.
-- **No reclaiming of `⌘K` in contexts where the OS/browser owns it** (e.g.
-  inside a contenteditable the browser may intercept) — accept that edge.
+- **No reclaiming `⌘K` from capture.** Capture keeps the stable global chord.
 
 ## Open questions
 

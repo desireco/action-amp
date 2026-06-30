@@ -11,9 +11,8 @@
 > (TRIAGE mode), `mockups/triage-coauthor.html` (canonical layout),
 > `webapp/src/app/InboxTriagePage.tsx` (current impl).
 >
-> **Decisions locked 2026-06-22:** `⌘/` invokes capture (primary) ·
-> `⌘K` kept as silent alias for capture · `?` and `⌘?` toggle the shortcut
-> cheatsheet (same physical key as capture: `?` = Shift+`/`) ·
+> **Decisions locked 2026-06-30:** `⌘K` invokes capture · `?` and `⌘?`
+> toggle the shortcut cheatsheet (`⌘?` = Cmd+Shift+`/`) ·
 > `[`/`]` = size down/up · `-`/`=` = priority down/up. See §7.2, §7.6.
 >
 > **Decisions locked 2026-06-23** (see `WORKFLOW.md` §5):
@@ -237,19 +236,17 @@ Every common `⌘<letter>` is taken. The only modifier browsers leave alone is
 
 ### 7.2 Global (work in every mode, even while typing)
 
-**`⌘/` to open capture is LOCKED 2026-06-22** (primary invoke).
-**`⌘K` stays as a silent alias** — locked 2026-06-22, zero-cost, preserves
-muscle memory.
+**`⌘K` to open capture is LOCKED 2026-06-30** (single invoke).
+**`⌘/` is not a capture shortcut** — retired 2026-06-30 so Capture has one
+clear chord and `/`-family shortcuts stay available for browser/help behavior.
 **`⌘?` (Cmd+Shift+/) toggles the cheatsheet** — locked 2026-06-22, paired
-with bare `?`. Mnemonic: capture (`⌘/`) and help (`⌘?`) share the same
-physical key — `?` is Shift+`/`.
+with bare `?`.
 
 | Key | Action | Notes |
 |---|---|---|
-| `⌘/` | **Open capture palette** | LOCKED primary invoke |
-| `⌘K` | Open capture (silent alias) | LOCKED — keep for muscle memory |
+| `⌘K` | **Open capture palette** | LOCKED primary invoke |
 | `Esc` | Close topmost overlay / return to Normal | always works |
-| `?` · `⌘?` | Toggle shortcut cheatsheet | LOCKED — `⌘?` = Cmd+Shift+/ (same key as `⌘/`) | |
+| `?` · `⌘?` | Toggle shortcut cheatsheet | LOCKED — `⌘?` = Cmd+Shift+/ | |
 | `Space` | Go to Next (home) | suppressed on buttons |
 
 ### 7.3 Normal mode (browsing)
@@ -305,7 +302,7 @@ analogy. Reversed because capture is usually a one-off, not a session.)*
 
 | Key | Action |
 |---|---|
-| `⌘/` · `⌘K` · click | Open |
+| `⌘K` · click | Open |
 | `Enter` | **Capture + close** (commit this one and get back to work) |
 | `⌘Enter` | Capture + keep open (add to the list, rapid-fire) — clears input, stacks "✓ captured" |
 | `Shift+Enter` | Expand to full co-author editor (desktop) |
@@ -343,7 +340,7 @@ triage + expanded capture + task lists. Mirrors the *while-typing* language —
 |---|---|
 | `Esc` / `Space` | Pause |
 | `D` | Done |
-| `⌘/` | Capture (the one exception — focus-protector) |
+| `⌘K` | Capture (the one exception — focus-protector) |
 
 That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 
@@ -363,7 +360,7 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 - ✅ Type dispatch (Task/Project/Resource/Archive) + exit animations
 - ✅ Resource/Note parent picker (file under a Project or Goal)
 - ✅ Transform action (`inbox/operations.ts :: triageInboxItem`)
-- ✅ Global `⌘K` / `/` capture (to be rebased to `⌘/`)
+- ✅ Global `⌘K` capture
 
 **Unbuilt (gap vs. this doc):**
 
@@ -371,7 +368,6 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
   instead, but the keyset is still spec'd for power users.
 - ❌ `H` (set When), `T` (cycle type), `G` (assign Goal) as triage shortcuts
   (the wizard replaces one-key dispatch; these may resurface as step shortcuts).
-- ❌ `⌘/` rebind (currently `⌘K`/`/`)
 - ❌ `I` (enter triage from Normal)
 - ❌ Undo toast (4s window) — spec'd, not in code
 - ❌ Mode indicator `— TRIAGE —` (bottom-left, VIM-style)

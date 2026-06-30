@@ -22,7 +22,7 @@ triage.
 ```
                             ┌──────────────────────────┐
                             │  CAPTURE  (pervasive)    │
-                            │  ⌘K / ⌘/ from anywhere   │
+                            │  ⌘K from anywhere        │
                             └────────────┬─────────────┘
                                          ▼
                                   ┌────────────┐
@@ -47,7 +47,7 @@ appears in Work/Planning/Review except by coming through triage.
 ### 2.1 Capture (Inbox) — pervasive
 
 - The **only** area that exists across every context and every mode.
-- `⌘K` / `⌘/` opens the capture popover from anywhere. **Enter** commits and
+- `⌘K` opens the capture popover from anywhere. **Enter** commits and
   closes (the common case — one thing on your mind, then back to work);
   **⌘Enter** commits and keeps the popover open to add another (rapid-fire).
   (Keymap reversed 2026-06-30 — see TRIAGE.md §7.5.)

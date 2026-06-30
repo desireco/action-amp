@@ -4,7 +4,7 @@ import { parseCapture, type ParsedCapture } from "../../inbox/parseCapture";
 import "./Overlays.css";
 
 /**
- * CapturePopover — the universal quick-capture input (⌘/).
+ * CapturePopover — the universal quick-capture input (⌘K).
  *
  * Phase 1: rapid-fire + auto-grow.
  *   - Enter       → capture + close (commit this one and get back to work)

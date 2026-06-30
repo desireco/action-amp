@@ -56,7 +56,7 @@ Each is a checkable predicate. Verify against the running app + the test suite.
       references long-press, two-finger swipe, or one-finger mode swipe. The
       `LESSONS` array and any `aa-ob-finger-*` CSS/demo markup are deleted.
 - [ ] **Onboarding teaches the real 3-step loop in ≤3 short panels:**
-      (1) Capture — "press ⌘K (or ⌘/), type a thought, hit Enter";
+      (1) Capture — "press ⌘K, type a thought, hit Enter";
       (2) Triage — "go to Inbox, decide what each thing becomes";
       (3) Focus — "Next picks your next task. Do it. The rest disappears."
       Each panel is one sentence + one visual. No more than 3 panels total

@@ -53,27 +53,27 @@ afterEach(() => {
   document.body.replaceChildren(); // clears manually-created els (RTL cleanup handles React trees)
 });
 
-describe("useKeyboardShortcuts — capture (locked 2026-06-22)", () => {
-  it("⌘/ opens capture", () => {
-    render(<Harness {...handlers} />);
-    press("/", { meta: true });
-    expect(handlers.onCapture).toHaveBeenCalledTimes(1);
-  });
-
-  it("⌘K opens capture (silent alias)", () => {
+describe("useKeyboardShortcuts — capture", () => {
+  it("⌘K opens capture", () => {
     render(<Harness {...handlers} />);
     press("k", { meta: true });
     expect(handlers.onCapture).toHaveBeenCalledTimes(1);
   });
 
-  it("⌘/ fires even inside a text field (focus-protector)", () => {
+  it("⌘K fires even inside a text field (focus-protector)", () => {
     const input = setTypingTarget("INPUT");
     render(<Harness {...handlers} />);
     // Dispatch from the input so e.target is the input element
     input.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "/", metaKey: true, bubbles: true }),
+      new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }),
     );
     expect(handlers.onCapture).toHaveBeenCalledTimes(1);
+  });
+
+  it("⌘/ does NOT open capture", () => {
+    render(<Harness {...handlers} />);
+    press("/", { meta: true });
+    expect(handlers.onCapture).not.toHaveBeenCalled();
   });
 
   it("bare / does NOT open capture (retired — Firefox quick-find conflict)", () => {
