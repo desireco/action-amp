@@ -79,19 +79,33 @@ export const getAppData = (async (args, context) => {
     lenses[0]?.id;
   const lensWhere = activeLensId ? { lensId: activeLensId } : {};
 
-  const [inboxCount, todayCount, projectCount, goalCount] = await Promise.all([
-    context.entities.InboxItem.count({ where: { userId } }),
-    // Focus-nav counts: lens-scoped to match the list pages.
-    context.entities.Task.count({
-      where: { userId, ...lensWhere, status: "TODAY", isDone: false },
-    }),
-    context.entities.Project.count({
-      where: { userId, ...lensWhere, isDone: false },
-    }),
-    context.entities.Goal.count({
-      where: { userId, ...lensWhere, isDone: false },
-    }),
-  ]);
+  const [inboxCount, todayCount, projectCount, goalCount, todayByLensRows] =
+    await Promise.all([
+      context.entities.InboxItem.count({ where: { userId } }),
+      // Focus-nav counts: lens-scoped to match the list pages.
+      context.entities.Task.count({
+        where: { userId, ...lensWhere, status: "TODAY", isDone: false },
+      }),
+      context.entities.Project.count({
+        where: { userId, ...lensWhere, isDone: false },
+      }),
+      context.entities.Goal.count({
+        where: { userId, ...lensWhere, isDone: false },
+      }),
+      // Per-lens Today counts for the lens switch's badges. This intentionally
+      // matches the Today nav count semantics, not the broader Next candidate
+      // pool, so the Lens badge answers "how many are committed today here?"
+      context.entities.Task.groupBy({
+        by: ["lensId"],
+        where: { userId, status: "TODAY", isDone: false },
+        _count: { _all: true },
+      }),
+    ]);
+
+  const todayByLens: Record<string, number> = {};
+  for (const row of todayByLensRows) {
+    todayByLens[row.lensId] = row._count._all;
+  }
 
   return {
     lenses,
@@ -101,12 +115,14 @@ export const getAppData = (async (args, context) => {
       projects: projectCount,
       goals: goalCount,
     },
+    todayByLens,
   };
 }) satisfies GetAppData<
   { lensName?: string | null },
   {
     lenses: { id: string; name: string; color: string | null }[];
     counts: { inbox: number; today: number; projects: number; goals: number };
+    todayByLens: Record<string, number>;
   }
 >;
 

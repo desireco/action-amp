@@ -11,17 +11,21 @@
   padding: 3px;
 }
 
+/* Each tab ALWAYS owns its color as identity — not just when active. So Work
+   reads indigo and Me reads emerald side-by-side, before you click anything:
+   the dot is a solid color swatch, the label is tinted toward the lens hue.
+   This is the "tabs should show which color is theirs" requirement. */
 .aa-lens__btn {
   flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
   font-family: var(--aa-font);
   font-size: 0.82rem;
   font-weight: 600;
   padding: 6px 10px;
-  border-radius: var(--aa-radius-sm);
+  border-radius: 0;
   color: var(--aa-text-3);
   background: none;
   border: none;
@@ -32,8 +36,19 @@
     box-shadow 0.2s var(--aa-ease-out);
 }
 
+/* Inactive tab: label carries its own lens hue so the two tabs read as
+   different colors even when nothing is selected. Uses the solid lens color
+   (not the dark -text variant) so it stays light enough to read as "available,
+   not live" — the active tab is the one filled solid. */
+.aa-lens__btn[data-lens-color="indigo"]:not(.aa-lens__btn--active) {
+  color: var(--aa-lens-indigo);
+}
+.aa-lens__btn[data-lens-color="emerald"]:not(.aa-lens__btn--active) {
+  color: var(--aa-lens-emerald);
+}
+
 .aa-lens__btn:not(.aa-lens__btn--active):hover {
-  color: var(--aa-text-2);
+  background: var(--aa-surface-muted);
 }
 
 .aa-lens__btn:focus-visible {
@@ -41,10 +56,22 @@
   outline-offset: 2px;
 }
 
+/* Active tab: no fill. Selection is the underline so labels stay readable on
+   the neutral segmented surface. */
 .aa-lens__btn--active {
-  background: var(--aa-surface);
-  color: var(--aa-text);
-  box-shadow: var(--aa-shadow-sm);
+  background: transparent;
+  color: var(--aa-active-lens-text);
+  box-shadow: inset 0 -2.5px 0 var(--aa-active-lens);
+}
+.aa-lens__btn--active[data-lens-color="indigo"] {
+  background: transparent;
+  color: var(--aa-lens-indigo-text);
+  box-shadow: inset 0 -2.5px 0 var(--aa-lens-indigo);
+}
+.aa-lens__btn--active[data-lens-color="emerald"] {
+  background: transparent;
+  color: var(--aa-lens-emerald-text);
+  box-shadow: inset 0 -2.5px 0 var(--aa-lens-emerald);
 }
 
 .aa-lens__icon {
@@ -53,20 +80,59 @@
   justify-content: center;
 }
 
-/* Identity-color dot — one per lens, so each context shows its own color in
-   the switch. Default (null color) is indigo, matching tokens.css's active-lens
-   fallback. Per-lens override via the data-lens-color attr stamped on the btn. */
+/* Identity-color swatch — the dot is the primary "this tab's color" marker.
+   Solid, full-strength lens hue, always visible (active or not). Big enough to
+   read as a real color sample, not a punctuation dot. Default (null color) is
+   indigo, matching tokens.css's active-lens fallback. */
 .aa-lens__dot {
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: var(--aa-radius-full);
   background: var(--aa-active-lens);
+  flex: none;
+  box-shadow: 0 0 0 1.5px oklch(1 0 0 / 0.35);
 }
 .aa-lens__btn[data-lens-color="indigo"] .aa-lens__dot {
   background: var(--aa-lens-indigo);
 }
 .aa-lens__btn[data-lens-color="emerald"] .aa-lens__dot {
   background: var(--aa-lens-emerald);
+}
+
+/* Today-count badge — how many open Today tasks are in this lens. Shown
+   only when > 0 (a 0 badge is noise and skirts the no-guilt-trip rule). */
+.aa-lens__count {
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--aa-radius-full);
+  margin-left: 1px;
+}
+.aa-lens__btn[data-lens-color="indigo"]:not(.aa-lens__btn--active) .aa-lens__count {
+  background: var(--aa-lens-indigo-soft-strong);
+  color: var(--aa-lens-indigo-text);
+}
+.aa-lens__btn[data-lens-color="emerald"]:not(.aa-lens__btn--active) .aa-lens__count {
+  background: var(--aa-lens-emerald-soft-strong);
+  color: var(--aa-lens-emerald-text);
+}
+.aa-lens__btn--active .aa-lens__count {
+  background: var(--aa-active-lens-soft-strong);
+  color: var(--aa-active-lens-text);
+}
+.aa-lens__btn--active[data-lens-color="indigo"] .aa-lens__count {
+  background: var(--aa-lens-indigo-soft-strong);
+  color: var(--aa-lens-indigo-text);
+}
+.aa-lens__btn--active[data-lens-color="emerald"] .aa-lens__count {
+  background: var(--aa-lens-emerald-soft-strong);
+  color: var(--aa-lens-emerald-text);
 }
 
 /* Reduced motion */

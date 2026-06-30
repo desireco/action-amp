@@ -58,4 +58,42 @@ describe("LensSwitch", () => {
       expect(screen.getByText("Work").closest("button")).not.toHaveAttribute("data-lens-color");
     });
   });
+
+  describe("today count", () => {
+    it("shows the count badge when a lens has today tasks (> 0)", () => {
+      const opts = [
+        { id: "Work", label: "Work", color: "indigo", count: 3 },
+        { id: "Me", label: "Me", color: "emerald", count: 0 },
+      ];
+      renderInContext(<LensSwitch options={opts} active="Work" onSelect={() => {}} />);
+      // Work shows 3; Me has 0 and shows nothing (no guilt dot for empty).
+      expect(screen.getByText("3")).toBeInTheDocument();
+      expect(screen.queryByText("0")).not.toBeInTheDocument();
+    });
+
+    it("labels the badge for screen readers", () => {
+      renderInContext(
+        <LensSwitch
+          options={[{ id: "Work", label: "Work", color: "indigo", count: 2 }]}
+          active="Work"
+          onSelect={() => {}}
+        />,
+      );
+      expect(screen.getByLabelText("2 today tasks")).toBeInTheDocument();
+    });
+
+    it("omits the badge entirely when count is missing or 0", () => {
+      const { container } = renderInContext(
+        <LensSwitch
+          options={[
+            { id: "Work", label: "Work", color: "indigo" }, // no count
+            { id: "Me", label: "Me", color: "emerald", count: 0 },
+          ]}
+          active="Work"
+          onSelect={() => {}}
+        />,
+      );
+      expect(container.querySelector(".aa-lens__count")).toBeNull();
+    });
+  });
 });

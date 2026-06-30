@@ -10,6 +10,12 @@ export interface LensSwitchOption {
   icon?: ReactNode;
   /** Identity color key ("indigo", "emerald"); rendered as a dot + data attr */
   color?: string | null;
+  /**
+   * Count of open Today tasks in this lens. Rendered as a small badge on the
+   * button, but ONLY when > 0 — a 0 badge would be noise (and a guilt dot,
+   * which the product bans).
+   */
+  count?: number;
 }
 
 interface LensSwitchProps {
@@ -61,6 +67,11 @@ export function LensSwitch({
             {opt.icon && <span className="aa-lens__icon">{opt.icon}</span>}
             {opt.color && <span className="aa-lens__dot" aria-hidden="true" />}
             <span className="aa-lens__label">{opt.label}</span>
+            {opt.count != null && opt.count > 0 && (
+              <span className="aa-lens__count" aria-label={`${opt.count} today tasks`}>
+                {opt.count}
+              </span>
+            )}
           </button>
         );
       })}

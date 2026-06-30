@@ -25,6 +25,7 @@ type EntitySpy = {
   deleteMany: ReturnType<typeof vi.fn>;
   upsert: ReturnType<typeof vi.fn>;
   count: ReturnType<typeof vi.fn>;
+  groupBy: ReturnType<typeof vi.fn>;
 };
 
 function entitySpy(): EntitySpy {
@@ -39,6 +40,9 @@ function entitySpy(): EntitySpy {
     deleteMany: vi.fn(),
     upsert: vi.fn(),
     count: vi.fn(),
+    // groupBy resolves to an empty array by default — most callers don't use it,
+    // and an empty group is the safe "no aggregated rows" shape.
+    groupBy: vi.fn().mockResolvedValue([]),
   };
 }
 

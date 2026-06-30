@@ -32,18 +32,25 @@ describe("getAppData — happy path", () => {
     ];
 
     // Lens.findMany resolves first (awaited before the counts); the four count
-    // spies then run in the Promise.all.
+    // spies + the per-lens Today groupBy then run in the Promise.all.
     m.entities.Lens.findMany.mockResolvedValue(lenses);
     m.entities.InboxItem.count.mockResolvedValue(5);
     m.entities.Task.count.mockResolvedValue(3);
     m.entities.Project.count.mockResolvedValue(7);
     m.entities.Goal.count.mockResolvedValue(2);
+    // Per-lens Today counts for the lens-switch badges (groupBy shape: one row
+    // per lens with its _count). Work has 3 today, Me has 1 today.
+    m.entities.Task.groupBy.mockResolvedValue([
+      { lensId: "lens-work", _count: { _all: 3 } },
+      { lensId: "lens-me", _count: { _all: 1 } },
+    ]);
 
     const result = await getAppData({ lensName: "Work" }, m.context);
 
     expect(result).toEqual({
       lenses,
       counts: { inbox: 5, today: 3, projects: 7, goals: 2 },
+      todayByLens: { "lens-work": 3, "lens-me": 1 },
     });
 
     // Inbox is global (no lens). Today/Projects/Goals are lens-scoped to match
@@ -70,6 +77,23 @@ describe("getAppData — happy path", () => {
     expect(m.entities.Lens.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         select: { id: true, name: true, color: true },
+      }),
+    );
+    // Per-lens Today counts are NOT scoped to the active lens — every lens gets
+    // its own number so both Work/Me badges can show simultaneously.
+    expect(m.entities.Task.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        by: ["lensId"],
+        where: expect.objectContaining({
+          userId: "user-1",
+          status: "TODAY",
+          isDone: false,
+        }),
+      }),
+    );
+    expect(m.entities.Task.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({ lensId: expect.anything() }),
       }),
     );
   });
