@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "wasp/client/auth";
+import { useQueryClient } from "@tanstack/react-query";
 import { setPreferredName, completeOnboarding } from "wasp/client/operations";
 import { PlusIcon } from "../components/ui/icons";
 import "./OnboardingPage.css";
@@ -199,7 +200,8 @@ function LoopVisual({ kind }: { kind: "capture" | "triage" | "focus" }) {
 }
 
 export function OnboardingPage() {
-  const { data: user, refetch: refetchUser } = useAuth();
+  const { data: user } = useAuth();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [pageIdx, setPageIdx] = useState(0);
   const [leaving, setLeaving] = useState(false);
@@ -226,11 +228,14 @@ export function OnboardingPage() {
     setCompletionError(false);
     try {
       await completeOnboarding();
-      // Refetch the auth session so the App.tsx first-run gate sees the
-      // updated hasSeenOnboarding flag. Without this, the cached User still
-      // has hasSeenOnboarding=false and the gate bounces us right back to
-      // /welcome — an infinite redirect loop.
-      await refetchUser();
+      // Optimistically update the cached auth user so the App.tsx first-run
+      // gate sees hasSeenOnboarding=true without waiting on a refetch round-
+      // trip. Wasp's auth query lives under the ['auth/me'] cache key (see
+      // sdk useAuth.js -> getMe.queryCacheKey); without this, the stale cached
+      // flag bounces us right back to /welcome — an infinite redirect loop.
+      queryClient.setQueryData(["auth/me"], (old: unknown) =>
+        old ? { ...(old as object), hasSeenOnboarding: true } : old,
+      );
       setLeaving(true);
       navigate("/app");
     } catch {
