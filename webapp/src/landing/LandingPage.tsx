@@ -1,6 +1,9 @@
 import { useState, useCallback } from "react";
 import { Link } from "react-router";
 import "./LandingPage.css";
+// Design-system Button styles — so the landing CTA uses the real .aa-btn--*
+// classes instead of a bespoke copy. Imported for its CSS side effect.
+import "../components/ui/Button.css";
 
 const HERO_TASKS = [
   {
@@ -64,7 +67,7 @@ export function LandingPage() {
   return (
     <div className="aa-landing">
       <nav className="aa-nav">
-        <div className="aa-brand">
+        <Link to="/" className="aa-brand" aria-label="ActionAmp home">
           <div className="aa-brand-mark">
             <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
               <path
@@ -77,7 +80,7 @@ export function LandingPage() {
             </svg>
           </div>
           <span className="aa-brand-name">ActionAmp</span>
-        </div>
+        </Link>
         <div className="aa-nav-links">
           <a className="aa-nav-link" href="#how">
             How it works
@@ -91,6 +94,11 @@ export function LandingPage() {
           <a className="aa-nav-link" href="#faq">
             FAQ
           </a>
+        </div>
+        <div className="aa-nav-auth">
+          <Link to="/login" className="aa-nav-link aa-nav-link-auth">
+            Log in
+          </Link>
         </div>
       </nav>
 
@@ -172,6 +180,12 @@ export function LandingPage() {
                 GTD-compatible
               </span>
             </div>
+            <Link
+              to="/signup"
+              className="aa-btn aa-btn--primary aa-btn--lg aa-hero-cta"
+            >
+              Make an account
+            </Link>
           </div>
 
           <div className="aa-wn-wrap">
@@ -203,12 +217,12 @@ export function LandingPage() {
               <div className="aa-wn-why">{task.why}</div>
               <div className="aa-wn-actions">
                 <button
-                  className={`aa-btn aa-btn-primary ${done ? "done" : ""}`}
+                  className={`aa-btn aa-btn--primary ${done ? "is-done" : ""}`}
                   onClick={handleComplete}
                 >
                   {done ? "Done ✓" : "Do this"}
                 </button>
-                <button className="aa-btn aa-btn-ghost">Switch</button>
+                <button className="aa-btn aa-btn--secondary">Switch</button>
               </div>
             </div>
           </div>
@@ -364,23 +378,22 @@ export function LandingPage() {
           Do the <b>next thing</b>.<br />
           Not all the things.
         </h2>
-        <p>When it's ready, you'll know.</p>
-        <Link className="aa-follow-link" to="/about">
-          Follow along
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M5 3l5 5-5 5"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </Link>
+        <p>Free while we're in beta.</p>
+        <div className="aa-final-cta">
+          <Link
+            to="/signup"
+            className="aa-btn aa-btn--primary aa-btn--lg aa-final-cta-btn"
+          >
+            Make an account
+          </Link>
+          <span className="aa-final-login">
+            Already use it? <Link to="/login">Log in</Link>
+          </span>
+        </div>
       </section>
 
       <footer className="aa-footer">
-        <div className="aa-brand">
+        <Link to="/" className="aa-brand" aria-label="ActionAmp home">
           <div className="aa-brand-mark aa-brand-mark-sm">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
               <path
@@ -393,14 +406,12 @@ export function LandingPage() {
             </svg>
           </div>
           <span className="aa-brand-name aa-brand-name-sm">ActionAmp</span>
-        </div>
+        </Link>
         <div className="aa-footer-links">
           <Link to="/about">About</Link>
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
           <Link to="/founding-100">Founding 100</Link>
-          <Link to="/login">Log in</Link>
-          <Link to="/signup">Sign up</Link>
         </div>
         <div className="aa-footer-copy">© 2026 ActionAmp</div>
       </footer>

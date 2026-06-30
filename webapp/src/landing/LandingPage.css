@@ -50,6 +50,11 @@
   align-items: center;
   gap: 10px;
   margin-right: auto;
+  color: var(--aa-text);
+  text-decoration: none;
+}
+.aa-brand:hover {
+  text-decoration: none;
 }
 .aa-brand-mark {
   width: 28px;
@@ -60,6 +65,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px var(--aa-teal-tint-shadow);
+  color: white;
 }
 .aa-brand-mark-sm {
   width: 22px;
@@ -86,6 +92,20 @@
 }
 .aa-nav-link:hover {
   color: var(--aa-text);
+  text-decoration: none;
+}
+/* Right-aligned auth link. Brand uses margin-right:auto, so this sits at the
+   far right. Survives mobile (the section anchors in .aa-nav-links don't). */
+.aa-nav-auth {
+  margin-left: 24px;
+}
+.aa-nav-link-auth {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--aa-text-2);
+}
+.aa-nav-link-auth:hover {
+  color: var(--aa-teal-cta);
   text-decoration: none;
 }
 
@@ -223,6 +243,16 @@
 }
 .aa-hero-meta svg {
   color: var(--aa-teal-cta);
+}
+/* Primary sign-up CTA. Uses the design-system .aa-btn--primary--lg; this just
+   adds spacing and a subtle hover lift so it reads as the page's main action. */
+.aa-hero-cta {
+  margin-top: 32px;
+  align-self: flex-start;
+}
+.aa-hero-cta:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
 }
 
 /* ---- Next card ---- */
@@ -372,42 +402,33 @@
   gap: 8px;
   justify-content: center;
 }
-.aa-btn {
+/* Demo buttons use the design-system Button classes (.aa-btn--primary etc.,
+   from components/ui/Button.css). The "Do this" button shrinks slightly so
+   it stays subordinate to the hero CTA. */
+.aa-wn-actions .aa-btn {
   font-size: 13.5px;
-  font-weight: 600;
-  padding: 10px 20px;
-  border-radius: 9px;
-  border: 1px solid transparent;
-  transition:
-    background var(--aa-dur-base),
-    transform var(--aa-dur-fast);
+  padding: 9px 20px;
 }
-.aa-btn:active {
-  transform: scale(0.97);
-}
-.aa-btn-primary {
-  background: var(--aa-teal-cta);
-  color: white;
-  box-shadow: 0 2px 8px var(--aa-teal-tint-shadow);
-  transition:
-    background var(--aa-dur-base),
-    transform var(--aa-dur-fast),
-    box-shadow var(--aa-dur-base);
-}
-.aa-btn-primary:hover {
-  background: var(--aa-teal-cta-hover);
-}
-.aa-btn-primary.done {
+.aa-wn-actions .aa-btn--primary.is-done {
   background: var(--aa-teal);
   pointer-events: none;
 }
-.aa-btn-ghost {
-  background: var(--aa-surface);
-  color: var(--aa-text-2);
-  border-color: var(--aa-border-strong);
+/*
+ * Link-button override (the bug fix).
+ * The global `.aa-landing a { color: teal }` rule has specificity 0,1,1 and
+ * would otherwise turn any anchor styled as a primary button into teal-on-teal.
+ * Scope the design-system button color back onto links rendered as buttons.
+ */
+.aa-landing a.aa-btn {
+  color: var(--aa-text);
+  text-decoration: none;
 }
-.aa-btn-ghost:hover {
-  background: var(--aa-surface-muted);
+.aa-landing a.aa-btn:hover {
+  text-decoration: none;
+}
+.aa-landing a.aa-btn--primary,
+.aa-landing a.aa-btn--primary:visited {
+  color: var(--aa-surface);
 }
 
 /* ============================================================
@@ -677,17 +698,33 @@
 .aa-final p {
   font-size: 16px;
   color: var(--aa-text-4);
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
-.aa-follow-link {
-  display: inline-flex;
+.aa-final-cta {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--aa-teal-cta);
+  gap: 16px;
 }
-.aa-follow-link:hover {
+/* The page's main conversion: larger than the in-demo button. */
+.aa-final-cta-btn {
+  font-size: 17px;
+  padding: 15px 40px;
+  border-radius: var(--aa-radius-md);
+}
+.aa-final-cta-btn:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+.aa-final-login {
+  font-size: 14px;
+  color: var(--aa-text-4);
+}
+.aa-final-login a {
+  color: var(--aa-teal-cta);
+  font-weight: 500;
+}
+.aa-final-login a:hover {
   color: var(--aa-teal-cta-hover);
 }
 
@@ -761,6 +798,9 @@
   }
   .aa-nav-links {
     display: none;
+  }
+  .aa-nav-auth {
+    margin-left: 0;
   }
   .aa-brand-name {
     font-size: 15px;
