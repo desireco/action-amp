@@ -166,15 +166,16 @@ Today** — the user must actively promote a task to Today.
 
 | Property | Default | Notes |
 |---|---|---|
-| When | **Upcoming** | actionable, lands on the bench — never Today by default. Demote to Someday explicitly. |
+| When | **Upcoming** | actionable, lands on the bench — never Today by default. Demote to Someday explicitly. The one exception: an explicit `today`/`tonight` capture token pre-fills Today (it's user intent, not a default). |
 | Size | **M** | |
 | Priority | **Normal** | |
-| Project | **General** (= no `projectId`) | scoped per Lens, not global |
+| Project | **General** (= no `projectId`) | scoped per Lens, not global. A `#project` capture token links if a project by that name exists in the chosen Lens; otherwise General (no auto-create). |
 | Goal | none | |
 | Lens | the active Lens | every entity requires one |
 
 Parser pre-fills any token the user typed at capture (`tomorrow`, `!3`, `~XL`,
-`#ship`) — defaults only fill the gaps.
+`#ship`, `@phone`) — defaults only fill the gaps. `#` links a project, `@` is a
+context tag (§7.5).
 
 ---
 

@@ -9,13 +9,33 @@ describe("parseCapture", () => {
   // Fixed "now" so relative date tests are deterministic: Wed 2026-06-24 10:00
   const NOW = new Date(2026, 5, 24, 10, 0, 0); // June = month index 5
 
-  describe("tags (# and @)", () => {
+  describe("project (#)", () => {
     it.each([
-      ["email #work", ["#work"], "email"],
+      ["email #work", "work"],
+      ["ship the #mvp feature", "mvp"],
+    ])("'%s' → project %j", (input, project) => {
+      const r = parseCapture(input, NOW);
+      expect(r.parsedProject).toBe(project);
+      // A lone #project is NOT a tag anymore.
+      expect(r.parsedTags).toEqual([]);
+    });
+
+    it("lowercases the project hint", () => {
+      expect(parseCapture("Email #MVP", NOW).parsedProject).toBe("mvp");
+    });
+
+    it("only the FIRST #token is the project; extras fall through to tags", () => {
+      // Rare but lossless: a second #token stays as a violet chip.
+      const r = parseCapture("x #mvp #extra", NOW);
+      expect(r.parsedProject).toBe("mvp");
+      expect(r.parsedTags).toEqual(["#extra"]);
+    });
+  });
+
+  describe("context tags (@)", () => {
+    it.each([
       ["call @phone", ["@phone"], "call"],
-      ["buy milk #errands @home", ["#errands", "@home"], "buy milk"],
-      // Tags-only input falls back to raw text (parser avoids empty captures).
-      ["#tag-1 @tag_2", ["#tag-1", "@tag_2"], "#tag-1 @tag_2"],
+      ["buy milk @errands @home", ["@errands", "@home"], "buy milk"],
     ])("'%s' → tags %j, text %j", (input, tags, text) => {
       const r = parseCapture(input, NOW);
       expect(r.parsedTags).toEqual(tags);
@@ -23,7 +43,7 @@ describe("parseCapture", () => {
     });
 
     it("lowercases tag names", () => {
-      expect(parseCapture("Email #WORK", NOW).parsedTags).toEqual(["#work"]);
+      expect(parseCapture("Email @WORK", NOW).parsedTags).toEqual(["@work"]);
     });
   });
 
@@ -38,6 +58,8 @@ describe("parseCapture", () => {
       ["task !3", "IMPORTANT"],
       ["task !important", "IMPORTANT"],
       ["task !imp", "IMPORTANT"],
+      ["task !high", "IMPORTANT"],
+      ["task !h", "IMPORTANT"],
       ["task !!!", "IMPORTANT"],
     ])("'%s' → %s", (input, priority) => {
       const r = parseCapture(input, NOW);
@@ -164,28 +186,29 @@ describe("parseCapture", () => {
   describe("combined tokens (real capture strings)", () => {
     it("parses a full Things-style string", () => {
       const r = parseCapture(
-        "Email Sarah re: invoice tomorrow #work !3 ~20m",
+        "Email Sarah re: invoice tomorrow #mvp !3 ~20m",
         NOW,
       );
       expect(r.cleanText).toBe("Email Sarah re: invoice");
       expect(r.parsedDate).toEqual(new Date(2026, 5, 25, 9, 0, 0));
       expect(r.parsedPriority).toBe("IMPORTANT");
       expect(r.parsedSize).toBe("M"); // 20m → M
-      expect(r.parsedTags).toEqual(["#work"]);
+      expect(r.parsedProject).toBe("mvp");
+      expect(r.parsedTags).toEqual([]);
     });
 
     it("collapses extra whitespace after token removal", () => {
-      const r = parseCapture("  do   #x   something  ", NOW);
+      const r = parseCapture("  do   @x   something  ", NOW);
       expect(r.cleanText).toBe("do something");
-      expect(r.parsedTags).toEqual(["#x"]);
+      expect(r.parsedTags).toEqual(["@x"]);
     });
   });
 
   describe("edge cases", () => {
     it("returns original text when input is only tokens", () => {
-      const r = parseCapture("#work !3 ~XL", NOW);
-      expect(r.cleanText).toBe("#work !3 ~XL");
-      expect(r.parsedTags).toEqual(["#work"]);
+      const r = parseCapture("#mvp !3 ~XL", NOW);
+      expect(r.cleanText).toBe("#mvp !3 ~XL");
+      expect(r.parsedProject).toBe("mvp");
       expect(r.parsedPriority).toBe("IMPORTANT");
       expect(r.parsedSize).toBe("XL");
     });
@@ -197,12 +220,14 @@ describe("parseCapture", () => {
       expect(r.parsedPriority).toBeNull();
       expect(r.parsedSize).toBeNull();
       expect(r.parsedTags).toEqual([]);
+      expect(r.parsedProject).toBeNull();
     });
 
     it("empty string returns empty", () => {
       const r = parseCapture("", NOW);
       expect(r.cleanText).toBe("");
       expect(r.parsedTags).toEqual([]);
+      expect(r.parsedProject).toBeNull();
     });
   });
 });

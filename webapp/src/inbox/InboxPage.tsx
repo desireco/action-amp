@@ -64,6 +64,7 @@ export function InboxPage() {
                 <div className="aa-inbox__row-meta">
                   <span className="aa-inbox__row-ago">captured {formatAgo(item.createdAt)}</span>
                   {item.parsedDate && <Chip variant="teal" small>📅 {formatParsedDate(item.parsedDate)}</Chip>}
+                  {item.parsedProject && <Chip variant="teal" small>▣ {item.parsedProject}</Chip>}
                   {item.parsedPriority === "IMPORTANT" && <Chip variant="amber" small>★ Important</Chip>}
                   {item.parsedPriority === "LOW" && <Chip variant="muted" small>low</Chip>}
                   {item.parsedSize && <Chip variant="default" small>{item.parsedSize}</Chip>}

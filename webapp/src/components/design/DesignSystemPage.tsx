@@ -398,8 +398,9 @@ export function DesignSystemPage() {
               <Chip variant="default">Default</Chip>
               <Chip variant="teal">📅 Tomorrow</Chip>
               <Chip variant="teal">Today</Chip>
+              <Chip variant="teal">▣ mvp</Chip>
               <Chip variant="amber">★ Important</Chip>
-              <Chip variant="violet">#work</Chip>
+              <Chip variant="amber">@phone</Chip>
               <Chip variant="rose">Overdue</Chip>
               <Chip variant="muted">Someday</Chip>
             </div>
@@ -730,8 +731,9 @@ export function DesignSystemPage() {
           <Sub h="Chips Taxonomy">
             <div className="ds-usage">
               <p className="ds-usage__p"><strong>date</strong> — teal. Parsed due dates (📅 tomorrow, 📅 Jun 30).</p>
+              <p className="ds-usage__p"><strong>project</strong> — teal. A `#project` capture hint, resolved at triage (▣ mvp).</p>
               <p className="ds-usage__p"><strong>priority</strong> — amber. Importance flags (★ Important).</p>
-              <p className="ds-usage__p"><strong>tag</strong> — violet. Hashtags, mentions, contexts (#work, @resource).</p>
+              <p className="ds-usage__p"><strong>context tag</strong> — amber. `@context` capture tags (@phone, @errands).</p>
             </div>
           </Sub>
         </Sec>

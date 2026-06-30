@@ -141,7 +141,7 @@ export function CapturePopover({
             ref={taRef}
             rows={1}
             className="aa-capture__textarea"
-            placeholder={`What's on your mind?  (try: "Email Sarah tomorrow #work !3 ~20m")`}
+            placeholder={`What's on your mind?  (try: "Email Sarah #mvp today !3")`}
             value={text}
             onChange={(e) => {
               setText(e.target.value);
@@ -168,11 +168,17 @@ export function CapturePopover({
           (parsed.parsedDate ||
             parsed.parsedPriority ||
             parsed.parsedSize ||
+            parsed.parsedProject ||
             parsed.parsedTags.length > 0) && (
             <div className="aa-capture__preview">
               {parsed.parsedDate && (
                 <Chip variant="teal" small>
                   📅 {formatPreviewDate(parsed.parsedDate)}
+                </Chip>
+              )}
+              {parsed.parsedProject && (
+                <Chip variant="teal" small>
+                  ▣ {parsed.parsedProject}
                 </Chip>
               )}
               {parsed.parsedPriority === "IMPORTANT" && (
@@ -228,6 +234,11 @@ function CapturedChips({ parsed }: { parsed: ParsedCapture }) {
       {parsed.parsedDate && (
         <Chip variant="teal" small>
           {formatPreviewDate(parsed.parsedDate)}
+        </Chip>
+      )}
+      {parsed.parsedProject && (
+        <Chip variant="teal" small>
+          ▣ {parsed.parsedProject}
         </Chip>
       )}
       {parsed.parsedPriority === "IMPORTANT" && (

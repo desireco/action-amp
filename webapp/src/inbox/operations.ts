@@ -31,6 +31,7 @@ export const createInboxItem = (async (args, context) => {
       parsedPriority: parsed.parsedPriority,
       parsedSize: parsed.parsedSize,
       parsedTags: parsed.parsedTags,
+      parsedProject: parsed.parsedProject,
     },
     select: { id: true, text: true, createdAt: true },
   });
@@ -54,6 +55,7 @@ export const getInboxItems = (async (_args, context) => {
       parsedPriority: true,
       parsedSize: true,
       parsedTags: true,
+      parsedProject: true,
     },
   });
 }) satisfies GetInboxItems<never>;

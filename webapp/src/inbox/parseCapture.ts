@@ -6,9 +6,14 @@
  *
  * Syntax:
  *   tomorrow            → date (also: today, next week, weekdays, jun 30, 6/30)
- *   #work  @errands     → tags
- *   !1  !low            → priority (1=low, 2=normal, 3=important)
+ *   #mvp                → project hint (resolved to a project at triage)
+ *   @errands  @phone    → context tags
+ *   !1  !low  !high     → priority (1=low, 2=normal, 3=important)
  *   ~20m  ~1h  ~XL      → size (time→S/M/L/XL: <15m=S, <1h=M, <2h=L, else XL)
+ *
+ * `#` and `@` are deliberately different (TRIAGE.md §7.5): `#` links a project,
+ * `@` is a context tag. Only the FIRST `#token` is a project hint — any further
+ * `#` tokens fall through to parsedTags (rare, kept lossless).
  *
  * Used at capture time (server) to populate InboxItem.parsed-* fields, and
  * available client-side for live preview in the capture popover.
@@ -24,6 +29,8 @@ export interface ParsedCapture {
   parsedPriority: ParsedPriority | null;
   parsedSize: ParsedSize | null;
   parsedTags: string[];
+  /** The first #token — a project name hint (no prefix, lowercased). */
+  parsedProject: string | null;
 }
 
 const WEEKDAYS = [
@@ -74,6 +81,8 @@ const PRIORITY_WORDS: Record<string, ParsedPriority> = {
   "3": "IMPORTANT",
   important: "IMPORTANT",
   imp: "IMPORTANT",
+  high: "IMPORTANT", // !high / !h aliases for the IMPORTANT level (enum is 3-level)
+  h: "IMPORTANT",
   "!!!": "IMPORTANT",
   "!!": "NORMAL",
   "!": "LOW",
@@ -98,11 +107,19 @@ const SIZE_WORDS: Record<string, ParsedSize> = {
 export function parseCapture(raw: string, now: Date = new Date()): ParsedCapture {
   let text = raw;
   const tags: string[] = [];
+  let project: string | null = null;
   let date: Date | null = null;
   let priority: ParsedPriority | null = null;
   let size: ParsedSize | null = null;
 
-  // ---- Tags: #tag or @tag ----
+  // ---- Project hint: first #name wins (TRIAGE.md §7.5 — `#` links a project) ----
+  // Further `#` tokens fall through to tags below so nothing is lost.
+  text = text.replace(/#([a-zA-Z0-9_-]+)/, (_, name) => {
+    project = name.toLowerCase();
+    return "";
+  });
+
+  // ---- Context tags: @name (and any extra #names) ----
   text = text.replace(/([#@])([a-zA-Z0-9_-]+)/g, (_, prefix, name) => {
     tags.push(`${prefix}${name.toLowerCase()}`);
     return "";
@@ -235,5 +252,6 @@ export function parseCapture(raw: string, now: Date = new Date()): ParsedCapture
     parsedPriority: priority,
     parsedSize: size,
     parsedTags: tags,
+    parsedProject: project,
   };
 }

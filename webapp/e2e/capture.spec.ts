@@ -63,15 +63,16 @@ test.describe("F1 — quick capture", () => {
 });
 
 test.describe("F2 — natural-language parsing shows chips inline before Enter", () => {
-  test("parses a tag (#) into a chip preview", async ({ page }) => {
+  test("parses a project hint (#) into a chip preview", async ({ page }) => {
     await signupNewUser(page);
     const textarea = await openCapture(page);
 
-    await textarea.fill("Email Sarah #work");
+    await textarea.fill("Email Sarah #mvp");
 
-    // F2: parsed token shows as a chip in the dialog BEFORE Enter is pressed.
+    // F2: the #token is a project hint — it surfaces as a teal chip (▣ mvp)
+    // in the dialog BEFORE Enter is pressed.
     const dialog = page.getByRole("dialog", { name: /quick capture/i });
-    await expect(dialog.locator(".aa-chip", { hasText: "#work" })).toBeVisible();
+    await expect(dialog.locator(".aa-chip", { hasText: /▣\s*mvp/ })).toBeVisible();
   });
 
   test("parses priority (!3) and date (tomorrow) tokens into chip previews", async ({ page }) => {

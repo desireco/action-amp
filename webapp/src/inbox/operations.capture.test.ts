@@ -46,9 +46,10 @@ describe("createInboxItem — happy path", () => {
     // parseCapture strips tokens — cleanText should not contain !important or #work
     expect(call.data.text).toBe("Email Sarah");
     expect(call.data.userId).toBe("user-1");
-    // Parsed tokens are threaded through
+    // Parsed tokens are threaded through. #work is a project hint, not a tag.
     expect(call.data.parsedPriority).toBe("IMPORTANT");
-    expect(call.data.parsedTags).toContain("#work");
+    expect(call.data.parsedProject).toBe("work");
+    expect(call.data.parsedTags).toEqual([]);
     expect(call.select).toEqual({ id: true, text: true, createdAt: true });
   });
 });
@@ -83,6 +84,7 @@ describe("getInboxItems — scoping", () => {
         parsedPriority: true,
         parsedSize: true,
         parsedTags: true,
+        parsedProject: true,
       },
     });
   });

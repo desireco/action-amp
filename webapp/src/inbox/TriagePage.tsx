@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems, triageInboxItem } from "wasp/client/operations";
@@ -161,6 +161,18 @@ export function TriagePage() {
       : item.text
     : "";
 
+  // Resolve a `#project` capture token to an actual project in the confirmed
+  // lens — case-insensitive name match. Link-only: if there's no match (typo, or
+  // the project lives in another lens), the task lands in General and the user
+  // picks manually. No auto-create, so a typo never spawns a stray project.
+  // (Declared after `item`/`projects` — both are read here.)
+  const resolvedProjectId = useMemo(() => {
+    const hint = item?.parsedProject;
+    if (!hint) return null;
+    const match = (projects ?? []).find((p) => p.name.toLowerCase() === hint);
+    return match?.id ?? null;
+  }, [item?.parsedProject, projects]);
+
   // ---- Initialize a fresh working spec for a new item ----
   // Precedence on the property defaults: capture-parser token > app default.
   // (When/Size/Priority reflect what the user typed at capture, if anything.)
@@ -170,8 +182,10 @@ export function TriagePage() {
       // Default When = Upcoming (decided 2026-06-25). A triaged task is
       // actionable — it lands on the Upcoming bench (reachable from Today's
       // "See upcoming" and /app/upcoming), not buried in Someday. Today stays
-      // un-cluttered: promoting to Today is still an explicit step.
-      when: "Upcoming",
+      // un-cluttered EXCEPT when the user said so explicitly at capture: an
+      // `today`/`tonight` token is intent, not a default, so it pre-fills Today
+      // (the "no auto-Today by default" principle still holds for everything else).
+      when: item?.parsedDate && isSameDay(item.parsedDate, new Date()) ? "Today" : "Upcoming",
       size: item?.parsedSize ?? "M",
       priority: item?.parsedPriority ?? "NORMAL",
       projectId: null,
@@ -228,7 +242,7 @@ export function TriagePage() {
         lensId: chosenLensId,
         projectId:
           w.type === "task"
-            ? w.projectId ?? undefined
+            ? w.projectId ?? resolvedProjectId ?? undefined
             : w.type === "resource"
               ? w.parentProjectId ?? undefined
               : undefined,
@@ -259,7 +273,7 @@ export function TriagePage() {
       });
     }, 320);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, total, exit, activeLens, working, chosenLensId, item, queryClient]);
+  }, [idx, total, exit, activeLens, working, chosenLensId, item, queryClient, resolvedProjectId]);
 
   // ---- Keyboard (step-aware; no one-key dispatch) ----
   useEffect(() => {
@@ -354,8 +368,11 @@ export function TriagePage() {
   // ---- Helpers for the spec rows ----
   const setW = (patch: Partial<Working>) => setWorking((w) => (w ? { ...w, ...patch } : w));
 
+  // Effective project = manual picker choice > resolved #token link. Drives both
+  // the SpecRow display and what dispatch sends; a manual pick always wins.
+  const effectiveProjectId = working?.projectId ?? resolvedProjectId ?? null;
   const projectName =
-    (projects ?? []).find((p) => p.id === working?.projectId)?.name ?? null;
+    (projects ?? []).find((p) => p.id === effectiveProjectId)?.name ?? null;
   const goalName =
     (goals ?? []).find((g) => g.id === working?.goalId)?.name ?? null;
   const parentName = working
@@ -458,7 +475,11 @@ export function TriagePage() {
                     ["project", "Project", "an outcome needing more than one step"],
                     ["resource", "Note", "reference material — not an action"],
                     ["archive", "Archive", "I will not do now — keep it for later"],
-                  ] as const).map(([t, label, sub]) => (
+                  ] as const)
+                    // A captured `#project` token means this is a task *in* that
+                    // project — it can't itself be a new project. Hide that option.
+                    .filter(([t]) => !(t === "project" && item.parsedProject))
+                    .map(([t, label, sub]) => (
                     <button
                       key={t}
                       type="button"
@@ -596,7 +617,7 @@ export function TriagePage() {
               <li key={p.id}>
                 <button
                   type="button"
-                  className={`aa-triage__picker-item ${p.id === working?.projectId ? "current" : ""}`}
+                  className={`aa-triage__picker-item ${p.id === effectiveProjectId ? "current" : ""}`}
                   onClick={() => {
                     setW({ projectId: p.id });
                     setProjectPickerOpen(false);
@@ -810,4 +831,13 @@ function formatAgo(date: Date): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
   return `${Math.floor(seconds / 86400)} days ago`;
+}
+
+/** Calendar-day equality — used to detect an `today`/`tonight` capture token. */
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }

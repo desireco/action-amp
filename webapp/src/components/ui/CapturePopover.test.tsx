@@ -46,15 +46,15 @@ describe("CapturePopover", () => {
       const { container } = renderInContext(
         <CapturePopover onClose={() => {}} onSubmit={() => {}} />,
       );
-      typeIntoInput("Email Sarah tomorrow !3 ~20m #work");
+      typeIntoInput("Email Sarah tomorrow !3 ~20m #mvp");
 
       // Scope to the preview section — global getByText also matches the
       // textarea's own value in jsdom, which would throw "multiple elements".
       const preview = container.querySelector(".aa-capture__preview")!;
-      // tomorrow → date chip, !3 → Important chip, #work → violet chip
+      // tomorrow → date chip, !3 → Important chip, #mvp → teal project chip (▣ mvp)
       expect(preview.textContent).toMatch(/tomorrow/i);
       expect(preview.textContent).toMatch(/important/i);
-      expect(preview.textContent).toMatch(/#work/);
+      expect(preview.textContent).toMatch(/▣\s*mvp/);
     });
 
     it("plain text (no tokens) produces no chips", () => {
