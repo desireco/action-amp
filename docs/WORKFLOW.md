@@ -47,8 +47,10 @@ appears in Work/Planning/Review except by coming through triage.
 ### 2.1 Capture (Inbox) — pervasive
 
 - The **only** area that exists across every context and every mode.
-- `⌘K` / `⌘/` opens the capture popover from anywhere. Enter commits, stays
-  open for rapid-fire.
+- `⌘K` / `⌘/` opens the capture popover from anywhere. **Enter** commits and
+  closes (the common case — one thing on your mind, then back to work);
+  **⌘Enter** commits and keeps the popover open to add another (rapid-fire).
+  (Keymap reversed 2026-06-30 — see TRIAGE.md §7.5.)
 - Destination is the **Inbox**, which is **universal** (not scoped to a lens).
 - Natural-language parsing (date/tag/priority/size tokens) shows chips before
   Enter so you see what it understood.

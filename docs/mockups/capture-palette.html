@@ -1167,7 +1167,7 @@
       <div class="legend">
         <h2>Decisions encoded in this prototype</h2>
         <ul>
-          <li><b>Rapid-fire is the default.</b> Enter captures + clears the input + prepends a "✓ captured" row; the palette stays open. <b>⌘Enter captures and closes</b> — the escape hatch so you're never trapped in the loop. Esc closes without saving.</li>
+          <li><b>Enter commits and closes.</b> The single capture is the common case — one thing on your mind, then back to work. <b>⌘Enter captures + clears the input + prepends a "✓ captured" row; the palette stays open</b> to add another (rapid-fire). Esc closes without saving. <em>(Reversed 2026-06-30 — previously Enter kept open and ⌘Enter closed.)</em></li>
           <li><b>Shift+Enter = expand.</b> The card grows in place into the vertical property list already shipped in <code>triage-coauthor.html</code>. Same DNA — capture and triage are the same surface at different commitment levels.</li>
           <li><b>The capture field grows, never scrolls sideways.</b> One line → wraps → grows to ~4 lines → scrolls internally. Same element on mobile and desktop. Locked 2026-06-22.</li>
           <li><b>First-class properties: <code>#</code> (project/goal) and <code>@</code> (context).</b> Choosing where this goes beats choosing how urgent it is — urgency is triage's job. Priority (<code>!</code>) and size (<code>~</code>) stay parseable but live in the expanded editor.</li>
@@ -1430,7 +1430,7 @@
               "<b>FAB</b> · always reachable, even inside Working mode (the focus-protector). Tap to open the bottom sheet.";
           } else {
             mCaption.innerHTML =
-              "<b>Bottom sheet</b> · grabber to dismiss, same NL-parse chips, Enter captures + keeps the sheet open for the next thought.";
+              "<b>Bottom sheet</b> · grabber to dismiss, same NL-parse chips, ⌘Enter captures + keeps the sheet open to add another; Enter commits and closes.";
           }
         });
       });
@@ -1443,7 +1443,7 @@
           .querySelector('#grp-mobile button[data-state="m-sheet"]')
           .classList.add("active");
         mCaption.innerHTML =
-          "<b>Bottom sheet</b> · grabber to dismiss, same NL-parse chips, Enter captures + keeps the sheet open for the next thought.";
+          "<b>Bottom sheet</b> · grabber to dismiss, same NL-parse chips, ⌘Enter captures + keeps the sheet open to add another; Enter commits and closes.";
       });
 
       function escapeHtml(s) {
