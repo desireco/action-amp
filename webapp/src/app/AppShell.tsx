@@ -165,6 +165,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [captureOpen, setCaptureOpen] = useState(false);
   const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [mobileLensOpen, setMobileLensOpen] = useState(false);
 
   useKeyboardShortcuts({
     onCapture: () => setCaptureOpen(true),
@@ -174,6 +175,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       setCaptureOpen(false);
       setCheatsheetOpen(false);
       setConfirmLogout(false);
+      setMobileLensOpen(false);
     },
   });
 
@@ -197,25 +199,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="aa-app">
       {/* ============================ SIDEBAR ============================ */}
       <aside className="aa-app-side">
-        <LensSwitch
-          options={
-            lenses.length > 0
-              ? lenses.map((l) => ({
-                  id: l.name,
-                  label: l.name,
-                  color: l.color ?? undefined,
-                  count: todayByLens[l.id] ?? 0,
-                }))
-              : [
-                  { id: "Work", label: "Work", color: "indigo" },
-                  { id: "Me", label: "Me", color: "emerald" },
-                ]
-          }
-          active={activeLensName}
-          onSelect={(id) => setLens(id)}
-          className="aa-app-lens"
-        />
-
         <Link className="aa-app-brand" to="/app" title="Next">
           <span className="aa-app-mark" aria-hidden="true">
             <BrandMark size="sm" />
@@ -319,6 +302,24 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* ---- Topbar ---- */}
         <header className="aa-app-topbar">
           <div className="aa-app-topbar-actions">
+            <LensSwitch
+              options={
+                lenses.length > 0
+                  ? lenses.map((l) => ({
+                      id: l.name,
+                      label: l.name,
+                      color: l.color ?? undefined,
+                      count: todayByLens[l.id] ?? 0,
+                    }))
+                  : [
+                      { id: "Work", label: "Work", color: "indigo" },
+                      { id: "Me", label: "Me", color: "emerald" },
+                    ]
+              }
+              active={activeLensName}
+              onSelect={(id) => setLens(id)}
+              className="aa-app-lens"
+            />
             <button type="button" className="aa-app-kbd-btn" title="Capture (⌘/)" onClick={() => setCaptureOpen(true)}>
               <PlusIcon width={14} height={14} />
               <span>Capture</span>
@@ -352,6 +353,77 @@ export function AppShell({ children }: { children: ReactNode }) {
           </LensContext.Provider>
         </main>
       </div>
+
+      <nav className={`aa-mobile-dock ${mobileLensOpen ? "is-lens-open" : ""}`} aria-label="Mobile navigation">
+        {mobileLensOpen && (
+          <div className="aa-mobile-lens-menu" role="menu" aria-label="Choose Lens">
+            {(lenses.length > 0
+              ? lenses.map((l) => ({
+                  id: l.name,
+                  label: l.name,
+                  color: l.color ?? undefined,
+                  count: todayByLens[l.id] ?? 0,
+                }))
+              : [
+                  { id: "Work", label: "Work", color: "indigo" },
+                  { id: "Me", label: "Me", color: "emerald" },
+                ]
+            ).map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                role="menuitemradio"
+                aria-checked={l.id === activeLensName}
+                className={`aa-mobile-lens-menu__item ${l.id === activeLensName ? "active" : ""}`}
+                data-lens-color={l.color}
+                onClick={() => {
+                  setLens(l.id);
+                  setMobileLensOpen(false);
+                }}
+              >
+                <span className="aa-mobile-lens-menu__dot" aria-hidden="true" />
+                <span>{l.label}</span>
+                {(l.count ?? 0) > 0 && <span className="aa-mobile-lens-menu__count">{l.count}</span>}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="aa-mobile-dock__row">
+          <Link className={`aa-mobile-dock__item ${isActive("/app") ? "active" : ""}`} to="/app" aria-label="Next">
+            <StarIcon />
+            <span>Next</span>
+          </Link>
+          <Link className={`aa-mobile-dock__item ${isActive("/app/inbox") ? "active" : ""}`} to="/app/inbox" aria-label="Inbox">
+            <InboxIcon />
+            <span>Inbox</span>
+          </Link>
+          <Link className={`aa-mobile-dock__item ${isActive("/app/today") ? "active" : ""}`} to="/app/today" aria-label="Today">
+            <ClockIcon />
+            <span>Today</span>
+          </Link>
+          <Link className={`aa-mobile-dock__item ${expandedFocus === "plan" ? "active" : ""}`} to="/app/projects" aria-label="Plan">
+            <ProjectsIcon />
+            <span>Plan</span>
+          </Link>
+          <Link className={`aa-mobile-dock__item ${expandedFocus === "review" ? "active" : ""}`} to="/app/logbook" aria-label="Review">
+            <LogbookIcon />
+            <span>Review</span>
+          </Link>
+          <button
+            type="button"
+            className={`aa-mobile-dock__item aa-mobile-dock__lens-btn ${mobileLensOpen ? "active" : ""}`}
+            aria-label={`Lens: ${activeLensName}`}
+            aria-expanded={mobileLensOpen}
+            onClick={() => setMobileLensOpen((v) => !v)}
+          >
+            <span className="aa-mobile-dock__lens-dot" aria-hidden="true" />
+            <span>{activeLensName}</span>
+          </button>
+        </div>
+        <button type="button" className="aa-mobile-dock__capture" title="Capture (⌘/)" aria-label="Capture" onClick={() => setCaptureOpen(true)}>
+          <PlusIcon width={18} height={18} />
+        </button>
+      </nav>
 
       {/* ---- Global overlays (capture popover + shortcut cheatsheet) ---- */}
       {captureOpen && (
