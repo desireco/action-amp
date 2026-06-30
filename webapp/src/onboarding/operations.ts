@@ -200,28 +200,51 @@ export const completeOnboarding = (async (_args, context) => {
 /**
  * Everything the app shell needs on first paint: lenses (for the sidebar's
  * Work/Me switch and to scope queries), plus counts for nav badges.
+ *
+ * Focus-nav counts (today/projects/goals) are scoped to the active Lens so the
+ * badges match what each list page actually shows (TodayPage, ProjectsPage,
+ * GoalsPage all query by `lensId`). Inbox is NOT lens-scoped — it's the global
+ * pre-triage pool (InboxItem has no lens until triage assigns one).
+ *
+ * The active lens is client-side localStorage state, so the client passes its
+ * name in. We resolve name→id server-side (the authoritative source) and fall
+ * back to the first lens if the name is stale (e.g. still "Work" before lenses
+ * load) — mirroring AppShell's own activeLens self-heal.
  */
-export const getAppData = (async (_args, context) => {
+export const getAppData = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
 
   const userId = context.user.id;
 
-  const [lenses, inboxCount, todayCount, projectCount, goalCount] =
-    await Promise.all([
-      context.entities.Lens.findMany({
-        where: { userId },
-        orderBy: { createdAt: "asc" },
-        select: { id: true, name: true },
-      }),
-      context.entities.InboxItem.count({ where: { userId } }),
-      context.entities.Task.count({
-        where: { userId, status: "TODAY", isDone: false },
-      }),
-      context.entities.Project.count({ where: { userId, isDone: false } }),
-      context.entities.Goal.count({ where: { userId, isDone: false } }),
-    ]);
+  const lenses = await context.entities.Lens.findMany({
+    where: { userId },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, name: true },
+  });
+  // Resolve the requested lens name to an id; fall back to the first lens so
+  // counts are never empty just because the stored name was stale/missing.
+  // If the user somehow has no lenses yet, lensWhere stays empty — but every
+  // Task/Project/Goal requires a lensId, so the counts are 0 regardless.
+  const activeLensId =
+    (args?.lensName && lenses.find((l) => l.name === args.lensName)?.id) ||
+    lenses[0]?.id;
+  const lensWhere = activeLensId ? { lensId: activeLensId } : {};
+
+  const [inboxCount, todayCount, projectCount, goalCount] = await Promise.all([
+    context.entities.InboxItem.count({ where: { userId } }),
+    // Focus-nav counts: lens-scoped to match the list pages.
+    context.entities.Task.count({
+      where: { userId, ...lensWhere, status: "TODAY", isDone: false },
+    }),
+    context.entities.Project.count({
+      where: { userId, ...lensWhere, isDone: false },
+    }),
+    context.entities.Goal.count({
+      where: { userId, ...lensWhere, isDone: false },
+    }),
+  ]);
 
   return {
     lenses,
@@ -233,7 +256,7 @@ export const getAppData = (async (_args, context) => {
     },
   };
 }) satisfies GetAppData<
-  never,
+  { lensName?: string | null },
   {
     lenses: { id: string; name: string }[];
     counts: { inbox: number; today: number; projects: number; goals: number };

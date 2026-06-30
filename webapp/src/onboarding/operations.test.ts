@@ -313,36 +313,69 @@ describe("getAppData — guards", () => {
 });
 
 describe("getAppData — happy path", () => {
-  it("aggregates lenses + four counts into the shell payload", async () => {
+  it("aggregates lenses + four counts, lens-scoping the focus-nav counts", async () => {
     const m = mockContext();
     const lenses = [
       { id: "lens-work", name: "Work" },
       { id: "lens-me", name: "Me" },
     ];
 
-    // Promise.all runs 5 entity calls — mock each one.
+    // Lens.findMany resolves first (awaited before the counts); the four count
+    // spies then run in the Promise.all.
     m.entities.Lens.findMany.mockResolvedValue(lenses);
     m.entities.InboxItem.count.mockResolvedValue(5);
     m.entities.Task.count.mockResolvedValue(3);
     m.entities.Project.count.mockResolvedValue(7);
     m.entities.Goal.count.mockResolvedValue(2);
 
-    const result = await getAppData(undefined as never, m.context);
+    const result = await getAppData({ lensName: "Work" }, m.context);
 
     expect(result).toEqual({
       lenses,
       counts: { inbox: 5, today: 3, projects: 7, goals: 2 },
     });
 
-    // Verify the count queries use the right filters.
+    // Inbox is global (no lens). Today/Projects/Goals are lens-scoped to match
+    // the list pages — this is the fix for the badge-vs-list mismatch.
+    expect(m.entities.InboxItem.count).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.not.objectContaining({ lensId: expect.anything() }) }),
+    );
     expect(m.entities.Task.count).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ status: "TODAY", isDone: false }),
+        where: expect.objectContaining({ lensId: "lens-work", status: "TODAY", isDone: false }),
       }),
     );
     expect(m.entities.Project.count).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ isDone: false }),
+        where: expect.objectContaining({ lensId: "lens-work", isDone: false }),
+      }),
+    );
+    expect(m.entities.Goal.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ lensId: "lens-work", isDone: false }),
+      }),
+    );
+  });
+
+  it("falls back to the first lens when lensName is stale/missing", async () => {
+    // Reproduces the original bug's shape: client sends a lensName that doesn't
+    // match any lens yet (e.g. "Work" still in localStorage while lenses load,
+    // or a renamed lens). Counts must still resolve against a real lens, not
+    // silently zero out.
+    const m = mockContext();
+    m.entities.Lens.findMany.mockResolvedValue([
+      { id: "lens-me", name: "Me" },
+    ]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(1);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+
+    await getAppData({ lensName: "Work" }, m.context); // "Work" not present
+
+    expect(m.entities.Task.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ lensId: "lens-me" }),
       }),
     );
   });

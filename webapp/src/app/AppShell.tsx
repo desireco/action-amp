@@ -90,10 +90,17 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [user, ensureOnboarded]);
 
-  // Shell data: lenses (sidebar switch + query scoping) + nav counts.
-  // Disabled until authenticated (avoids 'Not authenticated' 500s on the
-  // pre-auth render while Wasp resolves the session).
-  const { data: appData } = useQuery(getAppData, undefined, { enabled: !!user });
+  // Shell data: lenses (sidebar switch + query scoping) + nav counts. Counts
+  // are scoped to the active lens so the badges match each list page. We pass
+  // the lens *name* (the only thing known before lenses load — it's in
+  // localStorage); getAppData resolves name→id server-side. Disabled until
+  // authenticated (avoids 'Not authenticated' 500s on the pre-auth render
+  // while Wasp resolves the session).
+  const { data: appData } = useQuery(
+    getAppData,
+    { lensName: lens },
+    { enabled: !!user },
+  );
   const lenses = appData?.lenses ?? [];
   const counts = appData?.counts ?? { inbox: 0, today: 0, projects: 0, goals: 0 };
 

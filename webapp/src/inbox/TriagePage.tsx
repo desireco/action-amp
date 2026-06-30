@@ -84,7 +84,7 @@ export function TriagePage() {
 
   // The lens list for step 1's radio. Pulled from the shell's app-data query
   // (same source as the sidebar switch) so the radio shows every lens.
-  const { data: appData } = useQuery(getAppData);
+  const { data: appData } = useQuery(getAppData, { lensName: activeLens?.name });
   const lenses = appData?.lenses ?? [];
 
   const [idx, setIdx] = useState(0);
