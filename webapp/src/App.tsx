@@ -20,8 +20,22 @@ import "./App.css";
  */
 export function App() {
   const location = useLocation();
-  const { data: user } = useAuth();
+  const { data: user, status } = useAuth();
   const isApp = location.pathname.startsWith("/app");
+
+  // Auth gate. Wasp wraps each *page* in `createAuthRequiredPage`, but this is
+  // the layout (the `rootElement`), so it isn't wrapped. Without a gate here,
+  // the shell mounts and renders interactive chrome (capture FAB, logout)
+  // during session resolution and when the session is stale/null — letting the
+  // user fire auth-required actions that 500 ("Not authenticated") or 401
+  // ("Invalid credentials"). So we gate at the layout too: wait for the session
+  // to resolve, and send a resolved-but-null user to "/" rather than a broken
+  // /app. Mirrors the per-page gate's behavior (same `status` field) but one
+  // level up, where the chrome lives. Scoped to /app* — public pages stay bare.
+  if (isApp) {
+    if (status === "loading") return null;
+    if (!user) return <Navigate to="/" replace />;
+  }
 
   // First-run redirect: send brand-new users to onboarding before /app.
   // Scoped to /app* paths only — we don't want to yank an authenticated-but-

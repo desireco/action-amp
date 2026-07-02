@@ -410,6 +410,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <CapturePopover
           onClose={() => setCaptureOpen(false)}
           onSubmit={async (text) => {
+            // Belt-and-suspenders: the App.tsx gate should make this
+            // unreachable without a user, but never fire an auth-required
+            // action unauthenticated (the original "Not authenticated" 500).
+            if (!user) return;
             await createInboxItem({ text });
             // Invalidate the inbox list + the sidebar counts so both refresh.
             // Without this, React Query serves the stale pre-capture cache
