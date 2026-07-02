@@ -221,4 +221,58 @@ describe("CapturePopover", () => {
       expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled();
     });
   });
+
+  describe("error handling", () => {
+    // The catch block used to be empty, which turned every server failure
+    // (e.g. an auth 500) into a silent no-op — "nothing happened." These
+    // guard that the failure now surfaces and the input is kept for retry.
+
+    it("surfaces an inline error and keeps the text when onSubmit rejects", async () => {
+      const onSubmit = vi.fn().mockRejectedValue(new Error("Not authenticated."));
+      const onClose = vi.fn();
+      renderInContext(
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+      );
+
+      const input = typeIntoInput("a thought that won't save");
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      // The popover stays open, the text is preserved for a retry…
+      await waitFor(() =>
+        expect(screen.getByText(/not authenticated/i)).toBeInTheDocument(),
+      );
+      expect(onClose).not.toHaveBeenCalled();
+      expect(input.value).toBe("a thought that won't save");
+    });
+
+    it("falls back to a calm default when the error carries no message", async () => {
+      const onSubmit = vi.fn().mockRejectedValue(new Error(""));
+      renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
+      );
+
+      fireEvent.keyDown(typeIntoInput("x"), { key: "Enter" });
+
+      await waitFor(() =>
+        expect(screen.getByText(/could not save/i)).toBeInTheDocument(),
+      );
+    });
+
+    it("clears the error once the user edits the text", async () => {
+      const onSubmit = vi.fn().mockRejectedValue(new Error("Not authenticated."));
+      renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
+      );
+
+      const input = typeIntoInput("a thought");
+      fireEvent.keyDown(input, { key: "Enter" });
+      await waitFor(() =>
+        expect(screen.getByText(/not authenticated/i)).toBeInTheDocument(),
+      );
+
+      // Typing again dismisses the error and restores the shortcut hint.
+      fireEvent.change(input, { target: { value: "a thought edited" } });
+      expect(screen.queryByText(/not authenticated/i)).not.toBeInTheDocument();
+    });
+  });
 });

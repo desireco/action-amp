@@ -35,6 +35,7 @@ export function CapturePopover({
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [captured, setCaptured] = useState<CapturedItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
   // Live parse for the inline preview chips (F2).
@@ -80,8 +81,16 @@ export function CapturePopover({
         [{ id: Date.now(), text: p.cleanText, parsed: p }, ...prev].slice(0, 3),
       );
       resetInput();
-    } catch {
-      // leave the text in place so the user can retry; error surfaces elsewhere
+    } catch (err) {
+      // Leave the text in place so the user can edit and retry. Surface the
+      // message inline — there is no other channel, and a silent catch turns
+      // every server failure into "nothing happened."
+      console.error("[capture] submit failed:", err);
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Could not save. Your text is kept — try again.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -147,6 +156,7 @@ export function CapturePopover({
             value={text}
             onChange={(e) => {
               setText(e.target.value);
+              setError(null);
               grow();
             }}
             onKeyDown={handleKeyDown}
@@ -212,9 +222,17 @@ export function CapturePopover({
 
         <div className="aa-capture__foot">
           <span className="aa-capture__hint">
-            <kbd className="aa-capture__kbd">⏎</kbd> save ·{" "}
-            <kbd className="aa-capture__kbd">⌘⏎</kbd> add another ·{" "}
-            <kbd className="aa-capture__kbd">Esc</kbd> close
+            {error ? (
+              <span className="aa-capture__error" role="alert">
+                {error}
+              </span>
+            ) : (
+              <>
+                <kbd className="aa-capture__kbd">⏎</kbd> save ·{" "}
+                <kbd className="aa-capture__kbd">⌘⏎</kbd> add another ·{" "}
+                <kbd className="aa-capture__kbd">Esc</kbd> close
+              </>
+            )}
           </span>
           <button
             type="button"

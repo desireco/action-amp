@@ -524,6 +524,14 @@
   border: 1px solid var(--aa-border);
 }
 
+/* Inline error (replaces the hint line when a submit fails). Rose is the
+   system's rare-emphasis accent — used only for the rare negative case, so
+   it carries meaning instead of alarming. No red dot, no exclamation. */
+.aa-capture__error {
+  font-size: 0.78rem;
+  color: var(--aa-rose-text);
+}
+
 /* ============================================================
    Focus mode (full-screen single task)
    ============================================================ */
