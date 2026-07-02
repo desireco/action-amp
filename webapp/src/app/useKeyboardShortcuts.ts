@@ -40,10 +40,11 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
     const onKey = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
 
-      // ⌘K — capture. Works everywhere (even in text fields).
-      // Bare `/` and ⌘/ are intentionally not capture shortcuts: `/` collides
-      // with browser quick-find conventions, and one capture chord is clearer.
-      if (meta && e.key.toLowerCase() === "k") {
+      // ⌘K or ⌘/ — capture. Works everywhere (even in text fields). Two
+      // chords reach the same place: ⌘K is the primary, ⌘/ the alt for muscle
+      // memory from command-palette conventions. Bare `/` stays excluded — it
+      // collides with browser quick-find and would fire while typing.
+      if (meta && (e.key.toLowerCase() === "k" || e.key === "/")) {
         e.preventDefault();
         handlers.onCapture?.();
         return;

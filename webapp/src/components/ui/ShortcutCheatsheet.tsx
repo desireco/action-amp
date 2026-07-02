@@ -27,7 +27,7 @@ const SECTIONS: ShortcutSection[] = [
   {
     title: "Global",
     items: [
-      { keys: ["⌘K"], label: "Capture" },
+      { keys: ["⌘K"], label: "Capture", note: "also ⌘/" },
       { keys: ["Space"], label: "Go to Next" },
       { keys: ["?"], label: "Show this sheet", note: "also ⌘?" },
       { keys: ["Esc"], label: "Close / back" },
@@ -36,8 +36,8 @@ const SECTIONS: ShortcutSection[] = [
   {
     title: "In capture",
     items: [
-      { keys: ["⏎"], label: "Capture, keep open", note: "rapid-fire" },
-      { keys: ["⌘⏎"], label: "Capture and close" },
+      { keys: ["⏎"], label: "Capture and close" },
+      { keys: ["⌘⏎"], label: "Capture, keep open", note: "rapid-fire" },
       { keys: ["⇧⏎"], label: "New line" },
     ],
   },
