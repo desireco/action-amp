@@ -126,7 +126,6 @@ export function NextPage() {
           </>
         }
         state={isNow ? "now" : "next"}
-        onComplete={handleComplete}
         onStart={handleStart}
         onPause={handlePause}
         onDo={() => {

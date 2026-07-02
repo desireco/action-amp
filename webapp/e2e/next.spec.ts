@@ -92,18 +92,22 @@ test("'Pause' returns a started task to the Next state (same task stays #1)", as
   await expect(page.getByText("Pausable task")).toBeVisible();
 });
 
-test("completion circle marks the task done and removes it (F16)", async ({ page }) => {
+test("completing a task in focus mode removes it from Next (F16)", async ({ page }) => {
   await signupNewUser(page);
 
   await triageOneItem(page, "Finish this now", { type: "task", when: "today" });
   await page.goto("/app");
 
   await expect(page.getByText("Finish this now")).toBeVisible({ timeout: 10_000 });
-  // F16: completion is via the circle, not "Do this".
-  const circle = page.locator(".aa-wn-card__completion button");
-  await circle.click();
+  // F16: completion happens in focus mode, not via a list-row checkbox.
+  // Start → Now state, then "Do this" enters focus, then "Done" completes it.
+  await page.getByRole("button", { name: /^start$/i }).click();
+  await expect(page.getByText(/Now ·/)).toBeVisible({ timeout: 5_000 });
+  await page.getByRole("button", { name: /do this/i }).click();
+  await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: /^done$/i }).click();
 
-  // The task leaves the focus view immediately (optimistic).
+  // The task leaves the focus view and Next (no checkbox to tick on the card).
   await expect(page.getByText("Finish this now")).toHaveCount(0, { timeout: 10_000 });
 });
 

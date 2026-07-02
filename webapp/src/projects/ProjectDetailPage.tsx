@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getProject, createTask, toggleTaskDone, updateTaskStatus } from "wasp/client/operations";
+import { getProject, createTask, updateTaskStatus } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Chip, TaskRow, CompletionCircle, type TaskRowTask } from "../components/ui";
 import { CreateInline } from "../lists/CreateInline";
@@ -58,19 +58,6 @@ export function ProjectDetailPage() {
 
   const doneCount = project?.tasks.filter((t) => t.isDone).length ?? 0;
   const total = project?.tasks.length ?? 0;
-
-  const handleToggle = async (task: TaskRowTask) => {
-    try {
-      await toggleTaskDone({ id: task.id });
-      queryClient.invalidateQueries({ queryKey: ["getProject"] });
-      queryClient.invalidateQueries({ queryKey: ["getProjects"] });
-      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-      queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-    } catch {
-      // optimistic state reverts via react-query refetch
-    }
-  };
 
   // Move a task between horizons. "Next horizon up" cycles Someday→Upcoming→Today;
   // the row's button reflects the inverse action (the thing you'd do next).
@@ -165,7 +152,6 @@ export function ProjectDetailPage() {
                           <TaskRow
                             task={task}
                             muted={task.status === "SOMEDAY" || task.isDone}
-                            onToggleDone={handleToggle}
                             onOpen={() => navigate(`/app/tasks/${task.id}`)}
                           />
                           {!task.isDone && (

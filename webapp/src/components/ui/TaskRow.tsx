@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Chip, CompletionCircle } from "../ui";
+import { Chip } from "../ui";
 import "./TaskRow.css";
 
 export interface TaskRowTask {
@@ -16,9 +15,7 @@ export interface TaskRowTask {
 
 interface TaskRowProps {
   task: TaskRowTask;
-  /** Called when the completion circle is clicked. Mutates the task. */
-  onToggleDone?: (task: TaskRowTask) => void;
-  /** Lighter visual weight (for Someday) */
+  /** Lighter visual weight (for Someday / Done) */
   muted?: boolean;
   /** Open the task detail on row click */
   onOpen?: (task: TaskRowTask) => void;
@@ -28,20 +25,15 @@ interface TaskRowProps {
 const SIZE_LABEL: Record<string, string> = { S: "S", M: "M", L: "L", XL: "XL" };
 
 /**
- * TaskRow — the universal task list row. Completion circle + title + meta chips.
+ * TaskRow — the universal task list row. Title + meta chips.
  *
- * Used by Today, Upcoming, Someday, and Logbook. The circle optimistically
- * flips and the row animates out (Logbook rows are read-only — pass no
- * onToggleDone).
+ * Used by Today, Upcoming, Someday, Project, Goal, and the Today bench. There
+ * is no completion control here — completing a task happens in focus mode, not
+ * by ticking a row. A done task reads as such via the `--done` class (struck
+ * through, muted), driven by `task.isDone`.
  */
-export function TaskRow({ task, onToggleDone, muted = false, onOpen, className = "" }: TaskRowProps) {
-  const [optimisticDone, setOptimisticDone] = useState<boolean | null>(null);
-  const done = optimisticDone ?? task.isDone ?? false;
-
-  const handleCircle = () => {
-    setOptimisticDone(!done);
-    onToggleDone?.({ ...task, isDone: !done });
-  };
+export function TaskRow({ task, muted = false, onOpen, className = "" }: TaskRowProps) {
+  const done = task.isDone ?? false;
 
   return (
     <li
@@ -59,13 +51,6 @@ export function TaskRow({ task, onToggleDone, muted = false, onOpen, className =
       tabIndex={onOpen ? 0 : undefined}
       onKeyDown={onOpen ? (e) => e.key === "Enter" && onOpen(task) : undefined}
     >
-      <div className="aa-task-row__circle">
-        <CompletionCircle
-          size="sm"
-          filled={done}
-          onClick={onToggleDone ? handleCircle : undefined}
-        />
-      </div>
       <div className="aa-task-row__main">
         <span className="aa-task-row__title">{task.description}</span>
         {(task.project || task.dueDate || task.size || task.priority === "IMPORTANT") && (

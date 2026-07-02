@@ -3,9 +3,10 @@ import { screen, fireEvent } from "@testing-library/react";
 import { NextCard, type NextTask } from "./NextCard";
 import { renderInContext } from "wasp/client/test";
 
-// NextCard — the composite task card (the product wedge). Completion circle
-// → title → meta → amber "why" → Do this / Not now. Tests render + the three
-// callbacks + conditional "why" line.
+// NextCard — the composite task card (the product wedge). Title → meta →
+// amber "why" → Start / Not now (Next) or Do this / Pause (Now). Completion
+// happens in focus mode, not on this card, so there's no completion control
+// here. Tests render + the callbacks + conditional "why" line.
 
 const BASE_TASK: NextTask = {
   title: "Email Sarah",
@@ -99,17 +100,5 @@ describe("NextCard", () => {
       fireEvent.click(screen.getByRole("button", { name: /pause/i }));
       expect(onPause).toHaveBeenCalledWith(BASE_TASK);
     });
-  });
-
-  it("completion circle fires onComplete with the task", () => {
-    const onComplete = vi.fn();
-    const { container } = renderInContext(
-      <NextCard task={BASE_TASK} onComplete={onComplete} />,
-    );
-
-    const circle = container.querySelector(".aa-wn-card__completion button")!;
-    fireEvent.click(circle);
-
-    expect(onComplete).toHaveBeenCalledWith(BASE_TASK);
   });
 });

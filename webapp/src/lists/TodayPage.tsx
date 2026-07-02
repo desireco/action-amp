@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getTasks, getDoneToday, toggleTaskDone, updateTaskStatus } from "wasp/client/operations";
+import { getTasks, getDoneToday, updateTaskStatus } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, TaskRow, CompletionCircle, Chip, type TaskRowTask } from "../components/ui";
 import { GroupedList, type GroupDef } from "../components/ui";
@@ -75,18 +75,6 @@ export function TodayPage() {
     }
     return Array.from(byGoal, ([name, items]) => ({ key: name, label: name, items }));
   }, [doneToday]);
-
-  const handleToggle = async (task: TaskRowTask) => {
-    try {
-      await toggleTaskDone({ id: task.id });
-      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-      queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-      queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
-      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-    } catch {
-      // optimistic state will revert via react-query refetch on error
-    }
-  };
 
   // Promote an Upcoming task onto Today; demote a Today task to Upcoming
   // (the bench — keeps it reachable via the swap, never "disappears").
@@ -182,7 +170,6 @@ export function TodayPage() {
               <div className="aa-today__swap-row" key={task.id}>
                 <TaskRow
                   task={task}
-                  onToggleDone={handleToggle}
                   onOpen={() => navigate(`/app/tasks/${task.id}`)}
                 />
                 <Button
@@ -208,7 +195,6 @@ export function TodayPage() {
                     <TaskRow
                       task={task}
                       muted
-                      onToggleDone={handleToggle}
                       onOpen={() => navigate(`/app/tasks/${task.id}`)}
                     />
                   </li>
@@ -240,7 +226,6 @@ export function TodayPage() {
                   key={task.id}
                   task={task}
                   muted
-                  onToggleDone={handleToggle}
                   onOpen={() => navigate(`/app/tasks/${task.id}`)}
                 />
               )}

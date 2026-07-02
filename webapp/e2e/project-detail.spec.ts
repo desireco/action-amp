@@ -6,10 +6,12 @@ import { signupNewUser, triageOneItem } from "./helpers";
  *
  * Previously the Projects page linked a project to /app/tasks/<projectId> (wrong
  * table → always blank). Now it links to a real detail page that shows the
- * project's tasks, lets you add one, and complete one.
+ * project's tasks and lets you add one or move it between horizons. There is no
+ * completion control on the row itself — completing a task happens in focus
+ * mode (exercised in next.spec.ts), not by ticking a list row.
  */
 
-test("opening a project shows its tasks; add + complete work", async ({ page }) => {
+test("opening a project shows its tasks; add + horizon move work", async ({ page }) => {
   await signupNewUser(page);
 
   // Create a project with one task via triage (the only existing create path).
@@ -29,8 +31,12 @@ test("opening a project shows its tasks; add + complete work", async ({ page }) 
   await page.getByRole("button", { name: /^create$/i }).click();
   await expect(page.getByText("Record episode 1")).toBeVisible({ timeout: 10_000 });
 
-  // Complete it: click the completion circle. The row gains the done class.
+  // The row has no checkbox — but it does let you promote it onto Today.
   const taskRow = page.locator(".aa-task-row").filter({ hasText: "Record episode 1" });
-  await taskRow.locator(".aa-task-row__circle").click();
-  await expect(taskRow).toHaveClass(/aa-task-row--done/);
+  await expect(taskRow.locator(".aa-task-row__circle")).toHaveCount(0);
+  await taskRow.getByRole("button", { name: /^today$/i }).click();
+
+  // Promoted: the row is now under the Today heading, not Upcoming.
+  await expect(page.locator("section", { has: page.getByRole("heading", { name: /^today$/i }) })
+    .locator(".aa-task-row").filter({ hasText: "Record episode 1" })).toBeVisible({ timeout: 10_000 });
 });

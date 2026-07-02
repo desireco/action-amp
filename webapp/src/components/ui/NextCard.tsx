@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Button, CompletionCircle } from "../ui";
+import { Button } from "../ui";
 import "./NextCard.css";
 
 export interface NextTask {
@@ -23,8 +23,6 @@ interface NextCardProps {
   /** Context line above the card (e.g. "Now · Work"). Accepts a node so the
    * lens name can carry its identity color separately from the state half. */
   context?: ReactNode;
-  /** Called when the user completes the task (circle click or "Do this" → done) */
-  onComplete?: (task: NextTask) => void;
   /** Called when the user defers ("Not now") */
   onNotNow?: (task: NextTask) => void;
   /** Called when the user clicks "Do this" — opens focus mode + starts the task */
@@ -40,43 +38,26 @@ interface NextCardProps {
 /**
  * NextCard — the composite task card. The product's wedge.
  *
- * Centered, single-task chooser. Completion circle → task title → meta line →
- * amber "why" line → Do this / Not now actions.
+ * Centered, single-task chooser. Task title → meta line → amber "why" line →
+ * Start / Not now (or Do this / Pause when in progress). There is no completion
+ * control on the card itself — completing a task happens in focus mode, reached
+ * via "Do this".
  *
  * From app-shell-whatnow.html + landing-home.html prototypes.
  * The app-shell version is flat (no card chrome); the landing version wraps
  * it in an elevated card. This component is the flat app-shell variant.
  */
-export function NextCard({ task, context, onComplete, onNotNow, onDo, state = "next", onStart, onPause }: NextCardProps) {
-  const [filled, setFilled] = useState(false);
-  const [burst, setBurst] = useState(false);
+export function NextCard({ task, context, onNotNow, onDo, state = "next", onStart, onPause }: NextCardProps) {
   const [doing, setDoing] = useState(false);
-
-  const handleComplete = () => {
-    setFilled(true);
-    setBurst(true);
-    setTimeout(() => setBurst(false), 600);
-    onComplete?.(task);
-  };
 
   const handleDo = () => {
     setDoing(true);
     onDo?.(task);
-    // Brief "Done ✓" confirmation before the parent can swap the task
-    setTimeout(() => {
-      setFilled(true);
-      setBurst(true);
-      setTimeout(() => setBurst(false), 600);
-    }, 100);
   };
 
   return (
     <div className="aa-wn-card">
       {context && <div className="aa-wn-card__context">{context}</div>}
-
-      <div className="aa-wn-card__completion">
-        <CompletionCircle size="md" filled={filled} onClick={handleComplete} className={burst ? "aa-cc--burst" : ""} />
-      </div>
 
       <h2 className="aa-wn-card__title">{task.title}</h2>
 

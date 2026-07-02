@@ -28,20 +28,6 @@ export function TaskDetailPage() {
 
       {task && (
         <>
-          <div
-            className={`aa-task-check ${task.isDone ? "done" : ""}`}
-            aria-hidden="true"
-          >
-            <svg viewBox="0 0 16 16" fill="none">
-              <path
-                d="M3.5 8.5l3 3 6-7"
-                stroke="white"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
           <h1 className="aa-task-title">{task.description}</h1>
           <p className="aa-task-meta">
             {task.isDone ? "Done" : "Open"} · added{" "}

@@ -3,8 +3,9 @@ import { screen, fireEvent } from "@testing-library/react";
 import { TaskRow, type TaskRowTask } from "./TaskRow";
 import { renderInContext } from "wasp/client/test";
 
-// TaskRow — the universal task list row. Completion circle toggle + row click
-// (onOpen) + conditional meta chips. Uses fireEvent over user-event (no dep).
+// TaskRow — the universal task list row. Title + meta chips + row click (onOpen).
+// There is no completion control here; a done task reads as such via the
+// `--done` class (driven by task.isDone). Uses fireEvent over user-event (no dep).
 
 const BASE_TASK: TaskRowTask = {
   id: "task-1",
@@ -30,32 +31,13 @@ describe("TaskRow", () => {
       const { container } = renderInContext(<TaskRow task={BASE_TASK} />);
       expect(container.querySelector(".aa-task-row__meta")).toBeNull();
     });
-  });
 
-  describe("completion toggle", () => {
-    it("fires onToggleDone with flipped isDone when circle is clicked", () => {
-      const onToggleDone = vi.fn();
-      renderInContext(<TaskRow task={BASE_TASK} onToggleDone={onToggleDone} />);
-
-      // The circle is a clickable element inside .aa-task-row__circle.
-      const circle = screen
-        .getByText("Email Sarah")
-        .closest("li")!
-        .querySelector(".aa-task-row__circle button")!;
-      fireEvent.click(circle);
-
-      expect(onToggleDone).toHaveBeenCalledTimes(1);
-      expect(onToggleDone).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "task-1", isDone: true }),
+    it("marks done rows with the done class (no checkbox — completion is elsewhere)", () => {
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, isDone: true }} />,
       );
-    });
-
-    it("does not attach a circle handler when onToggleDone is omitted (read-only)", () => {
-      // Logbook rows pass no onToggleDone — the circle is decorative.
-      const { container } = renderInContext(<TaskRow task={BASE_TASK} />);
-      const circle = container.querySelector(".aa-task-row__circle")!;
-      // No throw, no crash — the click is a no-op.
-      expect(() => fireEvent.click(circle)).not.toThrow();
+      const li = container.querySelector(".aa-task-row")!;
+      expect(li).toHaveClass("aa-task-row--done");
     });
   });
 
@@ -71,8 +53,6 @@ describe("TaskRow", () => {
     });
 
     it("does not render the row as a button when onOpen is omitted", () => {
-      // The completion-circle button is always present; what's absent is the
-      // row itself being a clickable button.
       renderInContext(<TaskRow task={BASE_TASK} />);
       const li = screen.getByText("Email Sarah").closest("li")!;
       expect(li).not.toHaveAttribute("role");

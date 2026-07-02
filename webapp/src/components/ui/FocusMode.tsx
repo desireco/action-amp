@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Button, CompletionCircle } from "./index";
+import { Button } from "./index";
 import "./Overlays.css";
 
 export interface FocusTask {
@@ -47,7 +47,6 @@ export function FocusMode({
         </button>
       </div>
       <div className="aa-focus__body">
-        <CompletionCircle size="md" onClick={onComplete} />
         <h1 className="aa-focus__title">{task.title}</h1>
         {(task.project || task.due || task.size) && (
           <p className="aa-focus__meta">

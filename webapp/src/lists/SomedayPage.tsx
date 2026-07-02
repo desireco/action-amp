@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getTasks, toggleTaskDone, updateTaskStatus } from "wasp/client/operations";
+import { getTasks, updateTaskStatus } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { TaskRow, Button, CompletionCircle, type TaskRowTask } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
@@ -24,17 +24,6 @@ export function SomedayPage() {
     lens ? { lensId: lens.id, status: "SOMEDAY", isDone: false } : undefined,
     { enabled: !!lens },
   );
-
-  const handleToggle = async (task: TaskRowTask) => {
-    try {
-      await toggleTaskDone({ id: task.id });
-      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-      queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
-      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-    } catch {
-      /* reverts via refetch */
-    }
-  };
 
   // Promote a parked task onto Today. Same op as the Today bench promote;
   // invalidates the same keys so both lists + the Next engine refresh.
@@ -69,7 +58,6 @@ export function SomedayPage() {
             <TaskRow
               task={task}
               muted
-              onToggleDone={handleToggle}
               onOpen={() => navigate(`/app/tasks/${task.id}`)}
             />
             <Button

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getGoal, createTask, toggleTaskDone, updateTaskStatus } from "wasp/client/operations";
+import { getGoal, createTask, updateTaskStatus } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Chip, TaskRow, CompletionCircle, type TaskRowTask } from "../components/ui";
 import { CreateInline } from "../lists/CreateInline";
@@ -85,19 +85,6 @@ export function GoalDetailPage() {
       doneItems: done,
     };
   }, [goal]);
-
-  const handleToggle = async (task: TaskRowTask) => {
-    try {
-      await toggleTaskDone({ id: task.id });
-      queryClient.invalidateQueries({ queryKey: ["getGoal"] });
-      queryClient.invalidateQueries({ queryKey: ["getGoals"] });
-      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-      queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-    } catch {
-      // optimistic state reverts via react-query refetch
-    }
-  };
 
   const setStatus = async (task: GoalTask, status: GoalTask["status"]) => {
     await updateTaskStatus({ id: task.id, status });
@@ -215,7 +202,6 @@ export function GoalDetailPage() {
                           <TaskRow
                             task={task}
                             muted={task.status === "SOMEDAY" || task.isDone}
-                            onToggleDone={handleToggle}
                             onOpen={() => navigate(`/app/tasks/${task.id}`)}
                           />
                           {!task.isDone && (
