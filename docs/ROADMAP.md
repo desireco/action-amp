@@ -193,8 +193,8 @@ item; Build pulls `ready`.**
 
 **Working directly on `main` — no feature branches.** The three in-flight
 branches were rebased onto main and deleted; their work is in main's history.
-Verified after consolidation + signoff: `wasp compile` clean, **195 unit tests
-- 37 e2e tests pass**, migrations applied.
+Verified after consolidation + signoff: `wasp compile` clean, **195 unit
+tests and 37 e2e tests pass**, migrations applied.
 
 What landed and was signed off:
 
@@ -487,8 +487,8 @@ code state.
       redirect URIs, get `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, set them
       in Railway service vars. *Gates social-auth-google.*
 - [ ] **Stripe in production mode.** Confirm the prod keys (not test) are what
-      `.env.server.prod` + Railway hold, and that the webhook endpoint is
-      registered in the Stripe dashboard pointing at
+      the `action-amp-server` Railway service vars hold, and that the webhook
+      endpoint is registered in the Stripe dashboard pointing at
       `api.actionamp.com/webhooks/stripe`. The code is live; verify the live
       key + webhook signature match prod. *Gates all billing.*
 - [ ] **A real, monitored support/contact address.** Privacy + Terms reference
