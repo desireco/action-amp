@@ -4,7 +4,7 @@ import { wasp } from "wasp/client/vite";
 export default defineConfig({
   plugins: [wasp()],
   server: {
-    open: true,
+    open: false,
     port: 4000,
   },
 });
