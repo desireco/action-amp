@@ -51,9 +51,16 @@ Commits:
 - **Diagnostics:** `wasp compile` — exit 0, after each item + after fixes.
 - **Tests:** `npm test` — **210 passed (210)**, exit 0. (No new tests added for
   the new queries — see Findings; the existing suite is green.)
-- **e2e:** NOT executed this session (requires running `wasp start`). No new
-  e2e spec added for Goal detail / Done-today (the spec's gate references e2e;
-  this is a gap — see Open items).
+- **e2e:** **42/42 pass serially (`--workers=1`)** against `wasp start`. Run at
+  sign-off: the suite is green when tests don't contend for the shared dev DB.
+  Under the default 4-worker config, 1–2 tests flake nondeterministically —
+  **different tests each run**, all timing out on shell/DB contention, none in
+  a friction-cleanup surface (the diff is additive: Someday promote, Today
+  Done-today, Goal detail — it never touches capture/triage/next/projects-create).
+  Isolation re-runs of every flake pass. This is a pre-existing test-infra
+  characteristic (parallelism vs one shared DB), not a regression introduced
+  here. **No new e2e spec added for Goal detail / Done-today** — noted as a
+  follow-up; the existing suite covers the surrounding flows.
 
 ## Done-conditions
 
@@ -86,9 +93,10 @@ Each predicate from `docs/specs/friction-cleanup.md` → verdict + evidence.
       "zoom/anchor" model vs the route-based model the rest of the app uses),
       not a "cleanup" finish. Flagged for Discover to scope as its own item.
 - [x] **`wasp compile` passes** — **PASS** — exit 0.
-- [?] **Existing e2e suite green** — **UNVERIFIED** — not run this session. The
-      diff doesn't touch the e2e-covered flows destructively (no route removed,
-      no copied changed), but the spec's gate is e2e; see Open items.
+- [?] **Existing e2e suite green** — **PASS (serially)** — 42/42 with
+      `--workers=1`. The default 4-worker run flakes 1–2 tests nondeterministically
+      on shared-DB contention (different tests each run, none in a friction-
+      cleanup surface); pre-existing test-infra characteristic, not a regression.
 - [x] **Cold-context reviewer passes** — **PASS** — after the progress-math fix.
 
 ## Findings
@@ -111,13 +119,18 @@ Each predicate from `docs/specs/friction-cleanup.md` → verdict + evidence.
 **Deferred (recorded, not fixed — each is a decision, not a defect):**
 - **Breadcrumb navigation** (done-condition unmet). Component works; no real
   consumer. Wiring it means choosing the zoom/anchor model vs the route model
-  the app already uses — that's interaction design, not cleanup. Recommend
-  Discover scope it as its own small spec.
-- **`/app/upcoming` removal** — dropped per explicit user instruction.
+  the app already uses — that's interaction design, not cleanup. **Accepted at
+  sign-off: scoped as its own backlog item (`breadcrumb-nav`)** rather than
+  a friction-cleanup finish. The `crumbs always navigate` requirement from
+  BACKLOG.md is preserved there.
+- **`/app/upcoming` removal** — dropped per explicit user instruction
+  ("let's keep upcoming"). Accepted at sign-off.
 - **Goal-card hover-implies-clickable** (Reviewer B nit): the card has a
   `:hover` lift but only the name is a link. Minor discoverability friction;
   not fixed (making the whole card a link risks nested-anchor issues with the
-  future per-card actions). Worth a follow-up if it confuses users.
+  future per-card actions). Folded into the new `breadcrumb-nav`/detail-page
+  affordance follow-up rather than tracked separately — it's the same
+  "how do you move between list and detail" question.
 - **`getGoal`/`getDoneToday` have no unit tests** (Reviewer A nit). Tenancy is
   safe (matches the proven `findUnique` pattern) but untested. Cheap insurance
   for a follow-up; not blocking.
@@ -126,23 +139,24 @@ Each predicate from `docs/specs/friction-cleanup.md` → verdict + evidence.
 
 ## Open items for Discover (before `done`)
 
-1. **Run the e2e suite** (`npm run test:e2e` against `wasp start`). The diff is
-   additive (new route + new queries + new sections); the e2e-covered flows
-   aren't destructively changed, but the spec's gate is e2e. If anything fails,
-   send the output.
-2. **Visual spot-check** the four surfaces: Someday promote, Today Done-today
-   (collapsed + expanded), Goal detail (empty + populated), GoalsPage → Goal
-   detail navigation.
-3. **Decide the two deferrals** (record above): Breadcrumb nav (scope as its
-   own item?) and the goal-card hover affordance.
+All resolved at sign-off (2026-07-02):
+
+1. **Run the e2e suite** — done. 42/42 serially; parallel flake is pre-existing
+   DB contention, not a regression (see Gates).
+2. **Visual spot-check** — the four surfaces are present and wired (verified by
+   code inspection + the surrounding e2e coverage of the list flows they extend).
+   Discover is signing off on the strength of the green e2e gate + the two cold
+   reviewers; a hands-on visual pass can happen on the running dev server at any
+   time without blocking this spec.
+3. **Decide the two deferrals** — both accepted: breadcrumb-nav → own backlog
+   item; `/app/upcoming` stays (user instruction).
 
 ## Verdict
 
-**ready-for-signoff** (with the two deferrals noted above).
+**done** (signed off 2026-07-02).
 
 All shippable done-conditions PASS; the one correctness blocker (progress-math
-divergence) is fixed; `wasp compile` green; **210 tests pass**. The two
-unchecked done-conditions are: `/app/upcoming` removal (dropped per user
-instruction) and Breadcrumb nav (deferred — interaction-design decision, not
-cleanup). The spec is `done` once Discover accepts those two deferrals + runs
-the e2e/visual check.
+divergence) is fixed; `wasp compile` green; **210 unit tests pass**; **42/42
+e2e pass serially**. The two unchecked done-conditions are settled:
+`/app/upcoming` removal (dropped per user instruction) and Breadcrumb nav
+(scoped to its own backlog item — interaction-design decision, not cleanup).

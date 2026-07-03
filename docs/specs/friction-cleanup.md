@@ -1,6 +1,6 @@
 ---
 feature: friction-cleanup
-status: review
+status: done
 spec_owner: discover
 build_owner: build
 ---

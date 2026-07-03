@@ -139,12 +139,15 @@ item; Build pulls `ready`.**
     live billing leak. **Note:** legal-pages-oauth's review hedged its
     data-retention clause because this isn't done — landing this unblocks an
     accurate privacy policy too.
-2. **friction-cleanup** (`ready`, **partly covered by an unmerged branch**) —
-    the `/upcoming` route removal, "Done today" section, Someday promote, and
-    breadcrumb nav are still owed. **But the Project detail view +
-    `/app/projects/:id` route already exist on `fix/what-now-surfaces-triaged-
-    tasks`** (alongside a triage co-author wizard + lossless Archive). When
-    that branch merges, ~⅓ of this spec is satisfied; the rest stays.
+2. **breadcrumb-nav** (`ready`, small) — the `Breadcrumb` component works
+    (crumbs are `<button>`s) but is wired only into the design-system demo, not
+    the Project/Goal detail pages (both use a `← Back` Link). Per BACKLOG.md's
+    BUILD REQUIREMENT (2026-06-16), clicking an ancestor crumb should re-anchor
+    the view at that scope. Spun out of `friction-cleanup` at sign-off: wiring
+    it means choosing the WORKFLOW.md "zoom/anchor" model vs the route-based
+    model the rest of the app already uses — an interaction-design decision,
+    not a cleanup finish. Includes the goal-card hover-implies-clickable nit
+    (same "list ↔ detail" affordance question).
 3. **resources-project-owned** (`ready`) — make the existing-but-invisible
     `Resource` entity real: project-owned links+notes, surfaced on the Project
     detail page (add/edit/delete), with tasks referencing their project's
@@ -215,9 +218,9 @@ What landed and was signed off:
 
 1. `doc-reconciliation` is now the priority — the merged fix branch edited
    canonical docs; reconcile them so planning isn't split-brain.
-2. The eight `ready` specs are the queue (observability, social-auth,
+2. The `ready` specs are the queue: observability, social-auth,
    focus-why-transparent, focus-engine-v2, command-palette, entitlement,
-   friction-cleanup remainder, resources-project-owned).
+   breadcrumb-nav, resources-project-owned.
 
 ## Shipped
 
@@ -253,6 +256,14 @@ What landed and was signed off:
   combinations; the rendering blocker (NORMAL-priority line dropped) caught +
   fixed. +15 tests (14 helper + 1 card regression guard). Review writeup at
   `docs/reviews/focus-why-transparent.md`.
+- **friction-cleanup** (`done` 2026-07-02) — closed the small honest gaps:
+  Someday promote-to-Today, Today "Done today" section (`getDoneToday`), Goal
+  detail view (`/app/goals/:id` + `getGoal`, progress math matched to
+  `getGoals`'s rollup after a review-blocker fix). 210 unit tests + 42/42 e2e
+  (serially). **Two done-conditions settled at sign-off:** `/app/upcoming`
+  removal dropped per user instruction; breadcrumb nav spun out as its own
+  backlog item (`breadcrumb-nav`) — interaction-design decision, not cleanup.
+  Review writeup at `docs/reviews/friction-cleanup.md`.
 
 (The core loop, billing, and deploy are shipped but were never tracked as duet
 specs — they predate the protocol.)
@@ -469,12 +480,13 @@ roadmaps forget and most launches stall on.
 
 - [x] Legal pages exist (`/privacy`, `/terms`) — but need OAuth + billing
       accuracy fixes → **`legal-pages-oauth`** (`ready`)
-- [ ] First-run experience → **`first-run-experience`** (`ready`)
+- [x] First-run experience → **`first-run-experience`** (`done`)
 - [ ] Observability → **`observability-minimal`** (`ready`)
 - [ ] Google auth → **`social-auth-google`** (`ready`, needs legal + console)
 - [ ] Entitlement caps → **`entitlement-enforcement`** (`ready`)
-- [ ] Friction cleanup → **`friction-cleanup`** (`ready`)
+- [x] Friction cleanup → **`friction-cleanup`** (`done`; breadcrumb-nav spun out)
 - [ ] Command palette + search → **`command-palette-search`** (`ready`)
+- [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup)
 - [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`)
 
 ### B. Non-code items the user owns (no spec — these are setup/decisions)
