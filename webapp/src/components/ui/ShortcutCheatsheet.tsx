@@ -34,6 +34,16 @@ const SECTIONS: ShortcutSection[] = [
     ],
   },
   {
+    title: "Navigation",
+    items: [
+      { keys: ["g i"], label: "Inbox" },
+      { keys: ["g t"], label: "Triage" },
+      { keys: ["g n"], label: "Next" },
+      { keys: ["g p"], label: "Planning" },
+      { keys: ["g r"], label: "Review" },
+    ],
+  },
+  {
     title: "In capture",
     items: [
       { keys: ["⏎"], label: "Capture and close" },

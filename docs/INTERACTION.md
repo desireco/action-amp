@@ -85,6 +85,7 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
   - `⌘K` / `⌘/` — Capture mode
   - `⌘\` — Command mode
   - `L` — cycle Lens (Work / Me)
+  - `g` `i/n/t/p/r` — jump to Inbox / Next / Triage / Planning / Review (two-key chord)
   - `←` / `→` — peek past / future
   - `?` — show keyset
   - `Enter` — start working (when a task is focused)

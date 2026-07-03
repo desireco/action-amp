@@ -5,7 +5,7 @@ import { useAuth, logout } from "wasp/client/auth";
 import { useQuery, ensureOnboarded, getAppData, createInboxItem, submitFeedback } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
-import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
+import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcuts";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { CapturePopover, ShortcutCheatsheet, ConfirmDialog } from "../components/ui";
 import {
@@ -39,6 +39,15 @@ n *     at a time. Expanding one collapses the others.
  */
 
 type FocusSection = "work" | "plan" | "review";
+
+/** Routes for the `g`-prefix navigation chords (useKeyboardShortcuts). */
+const NAV_ROUTE: Record<NavDestination, string> = {
+  inbox: "/app/inbox",
+  next: "/app",
+  triage: "/app/inbox/review",
+  planning: "/app/projects",
+  review: "/app/logbook",
+};
 
 function sectionForPath(pathname: string): FocusSection {
   if (pathname === "/app" || pathname.startsWith("/app/today")) return "work";
@@ -178,6 +187,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   useKeyboardShortcuts({
     onCapture: () => setCaptureOpen(true),
     onGoHome: () => navigate("/app"),
+    onNavigate: (dest) => navigate(NAV_ROUTE[dest]),
     onToggleCheatsheet: () => setCheatsheetOpen((v) => !v),
     onCloseOverlay: () => {
       setCaptureOpen(false);

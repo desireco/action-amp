@@ -43,6 +43,7 @@ beforeEach(() => {
   handlers = {
     onCapture: vi.fn(),
     onGoHome: vi.fn(),
+    onNavigate: vi.fn(),
     onToggleCheatsheet: vi.fn(),
     onCloseOverlay: vi.fn(),
   } as unknown as Required<ShortcutHandlers>;
@@ -80,6 +81,60 @@ describe("useKeyboardShortcuts — capture", () => {
     render(<Harness {...handlers} />);
     press("/");
     expect(handlers.onCapture).not.toHaveBeenCalled();
+  });
+});
+
+describe("useKeyboardShortcuts — g-prefix navigation", () => {
+  it.each([
+    ["i", "inbox"],
+    ["t", "triage"],
+    ["n", "next"],
+    ["p", "planning"],
+    ["r", "review"],
+  ] as const)("g %s navigates to %s", (secondKey, dest) => {
+    render(<Harness {...handlers} />);
+    press("g");
+    press(secondKey);
+    expect(handlers.onNavigate).toHaveBeenCalledTimes(1);
+    expect(handlers.onNavigate).toHaveBeenCalledWith(dest);
+  });
+
+  it("a lone g with no follow-up does nothing (times out)", () => {
+    vi.useFakeTimers();
+    render(<Harness {...handlers} />);
+    press("g");
+    // Advance past the 750ms prefix timeout.
+    vi.advanceTimersByTime(800);
+    // A subsequent key is now treated as a fresh stroke, not a chord second.
+    press("i");
+    expect(handlers.onNavigate).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it("g then an unrelated key cancels the prefix (no navigation)", () => {
+    render(<Harness {...handlers} />);
+    press("g");
+    press("x"); // not a nav destination
+    expect(handlers.onNavigate).not.toHaveBeenCalled();
+    // Prefix is cancelled: a following valid dest key is too late.
+    press("i");
+    expect(handlers.onNavigate).not.toHaveBeenCalled();
+  });
+
+  it("Esc cancels an armed g-prefix", () => {
+    render(<Harness {...handlers} />);
+    press("g");
+    press("Escape");
+    press("i");
+    expect(handlers.onNavigate).not.toHaveBeenCalled();
+  });
+
+  it("g does NOT arm inside a text field (typing-guarded)", () => {
+    const input = setTypingTarget("INPUT");
+    render(<Harness {...handlers} />);
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "g", bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "i", bubbles: true }));
+    expect(handlers.onNavigate).not.toHaveBeenCalled();
   });
 });
 
