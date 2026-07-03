@@ -32,11 +32,15 @@ test("opening a project shows its tasks; add + horizon move work", async ({ page
   await expect(page.getByText("Record episode 1")).toBeVisible({ timeout: 10_000 });
 
   // The row has no checkbox — but it does let you promote it onto Today.
-  const taskRow = page.locator(".aa-task-row").filter({ hasText: "Record episode 1" });
-  await expect(taskRow.locator(".aa-task-row__circle")).toHaveCount(0);
-  await taskRow.getByRole("button", { name: /^today$/i }).click();
+  // The horizon-move "Today" button is a SIBLING of TaskRow inside the row's
+  // <li class="aa-project__row"> (TaskRow itself is a pure title+chips row;
+  // completion moved to focus mode in e1ce93d). Scope the search to that <li>.
+  const row = page.locator(".aa-project__row").filter({ hasText: "Record episode 1" });
+  await expect(row.locator(".aa-task-row__circle")).toHaveCount(0);
+  await row.getByRole("button", { name: /^today$/i }).click();
 
-  // Promoted: the row is now under the Today heading, not Upcoming.
-  await expect(page.locator("section", { has: page.getByRole("heading", { name: /^today$/i }) })
+  // Promoted: the row is now under the Today heading, not Upcoming. The group
+  // heading renders as "Today<N>" (label + count span), so match by prefix.
+  await expect(page.locator("section", { has: page.getByRole("heading", { name: /^today/i }) })
     .locator(".aa-task-row").filter({ hasText: "Record episode 1" })).toBeVisible({ timeout: 10_000 });
 });
