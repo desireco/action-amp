@@ -133,6 +133,36 @@ describe("parseCapture", () => {
       const r = parseCapture("launch next month", NOW);
       expect(r.parsedDate).toEqual(new Date(2026, 6, 24, 9, 0, 0));
     });
+
+    // @today / @tomorrow / @tonight set the DATE, not a tag. A user typing
+    // @today means today-the-date; without this they got a "today" tag and the
+    // triage When defaulted to Upcoming. (Other @words stay tags — see below.)
+    it("@today sets the date (not a tag)", () => {
+      const r = parseCapture("work on capture @today", NOW);
+      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 9, 0, 0));
+      expect(r.parsedTags).not.toContain("@today");
+      expect(r.cleanText).toBe("work on capture");
+    });
+
+    it("@tomorrow / @tmrw set the date", () => {
+      expect(parseCapture("ship @tomorrow", NOW).parsedDate).toEqual(
+        new Date(2026, 5, 25, 9, 0, 0),
+      );
+      expect(parseCapture("ship @tmrw", NOW).parsedDate).toEqual(
+        new Date(2026, 5, 25, 9, 0, 0),
+      );
+    });
+
+    it("@tonight sets today at 8pm", () => {
+      const r = parseCapture("call @tonight", NOW);
+      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 20, 0, 0));
+    });
+
+    it("@date words coexist with @context tags", () => {
+      const r = parseCapture("Call client @phone @today", NOW);
+      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 9, 0, 0));
+      expect(r.parsedTags).toEqual(["@phone"]);
+    });
   });
 
   describe("dates — weekdays (next occurrence)", () => {

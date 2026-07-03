@@ -119,6 +119,31 @@ export function parseCapture(raw: string, now: Date = new Date()): ParsedCapture
     return "";
   });
 
+  // ---- @date words: @today / @tomorrow / @tonight also set the date ----
+  // The bare words (today/tomorrow/tonight) already set the date below. These
+  // prefixed forms are treated the same way — a user typing @today means
+  // today-the-date, not a context tag named "today". Stripped before the
+  // generic @tag pass so they never fall through to tags. (Other @words stay
+  // tags: @errands, @phone, etc.)
+  if (!date) {
+    text = text.replace(/@tonight\b/i, () => {
+      const d = new Date(now);
+      d.setHours(20, 0, 0, 0);
+      date = d;
+      return "";
+    });
+    text = text.replace(/@today\b/i, () => {
+      date = startOfDay(now);
+      return "";
+    });
+    text = text.replace(/@tomorrow\b|@tmrw\b|@tmr\b/i, () => {
+      const d = new Date(now);
+      d.setDate(d.getDate() + 1);
+      date = startOfDay(d);
+      return "";
+    });
+  }
+
   // ---- Context tags: @name (and any extra #names) ----
   text = text.replace(/([#@])([a-zA-Z0-9_-]+)/g, (_, prefix, name) => {
     tags.push(`${prefix}${name.toLowerCase()}`);
