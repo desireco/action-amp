@@ -39,13 +39,13 @@ lie.
 
 ### The single most important fact
 
-**ActionAmp is live, and almost nobody is using it.** The landing page is a
-"pure signpost" by design (PRODUCT.md: no waitlist, no form, footer "follow
-along" link only). The Founding 100 page exists and the checkout works — but
-there is **no distribution, no waitlist, no email list, no analytics**, and no
-evidence of a single external user yet. So the binding constraint on the
-business is **not engineering**. It is **attention**. A roadmap that adds more
-features before proving anyone wants the existing ones is malpractice.
+**ActionAmp is live, and almost nobody is using it.** The landing page carries
+a newsletter capture (footer + hero) and the Founding 100 checkout, both live —
+but there is **no distribution, no analytics, and no evidence of a single
+external user yet**. (There is also no waitlist, by deliberate choice — see
+PRODUCT.md §"Fair to users.") So the binding constraint on the business is
+**not engineering**. It is **attention**. A roadmap that adds more features
+before proving anyone wants the existing ones is malpractice.
 
 ---
 
@@ -394,13 +394,6 @@ because a wall behind a door nobody enters protects nothing.
 
 ---
 
-Aligned to the `go-to-market-strategy` skill's motion selection: **PLG** is
-correct (ACV < $5K, self-serve possible, technical-ish buyer). The motion is
-not in question; **the missing prerequisite is audience.** So the launch is
-sequenced as audience-first.
-
----
-
 ## GTM strategy (the campaign, not the feature list)
 
 Aligned to the `go-to-market-strategy` skill's motion selection: **PLG** is
@@ -415,9 +408,10 @@ sequenced as audience-first.
   currently gives away the Pro structure. Fix the trigger before driving
   traffic, or you drive traffic to a product that can't convert.
 - **Channels (ORB):**
-  - **Owned (build first):** a real email list (the landing page has none
-    today — PRODUCT.md's "pure signpost" was right pre-product, wrong
-    post-deploy), a blog/SEO surface for ADHD+focus+GTD intent.
+  - **Owned (build first):** the email list is now live (newsletter capture
+    on the landing page — footer + hero), so the job is **growing it**, not
+    standing it up. Still needed: a blog/SEO surface for ADHD+focus+GTD
+    intent (deferred — see PUBLIC-PAGES.md Tier 4 → BACKLOG).
   - **Rented (drive to owned):** r/ADHD, r/productivity, r/gtd (carefully —
     these ban self-promo; lead with value, not links); ADHD/focus Twitter &
     TikTok where Llama Life/Tiimo already play.
@@ -460,10 +454,12 @@ decision is a guess. This is why `observability-minimal` is item 2, not item 9.
    audience** in parallel (items 1–6), new features after. The alternative
    (ship more features, then seek audience) is the classic indie death spiral.
    Push back hard if you think a specific feature is the unlock.
-3. **The "pure signpost" landing page.** Correct pre-deploy; now arguably
-   leaving money on the table (no email capture = no owned audience). The
-   brand register bans manipulation, but a quiet email field is not
-   manipulation. Resolve before Phase 2.
+3. **The landing-page CTA.** ~~Correct pre-deploy; now arguably leaving money
+   on the table…~~ **RESOLVED 2026-07-03** — newsletter capture (footer + quiet
+   hero) and the Founding 100 link are the live CTAs. The principle that
+   governs them is **fairness**, not "no nudge ever" — see PRODUCT.md §"Fair to
+   users" (revised). Signup, paid-plan push, and the honest Founding 100 cap
+   are all in-bounds; deception, trapping, and guilt-tripping are out.
 4. **$80 anchor, eyes-open.** PRICING.md already flags this as the loneliest
    spot. Keep it — but the data prerequisite (item 3) is what lets us move it
    without guessing.

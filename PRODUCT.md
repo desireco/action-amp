@@ -39,9 +39,16 @@ serves.
 1. **The list is demoted.** Next (one task) is the home screen.
 2. **Calm over features.** Whitespace is the point. If a section feels
    crowded, remove something.
-3. **Honesty over nudges.** No fake scarcity, no streaks-as-guilt, no
-   badges. The waitlist was removed because it felt like manipulation;
-   the landing page is a pure signpost.
+3. **Fair to users.** Asking for the signup, selling the paid plan,
+   sending the occasional nudge — none of that is dishonest; it's how a
+   sustainable product treats people like adults. The commitment is
+   fairness, not anti-commerce. What we won't do: **deceive** (fake
+   scarcity, invented social proof, hidden charges, dark patterns),
+   **trap** (hard-to-cancel, data lock-in, silent renewals), or
+   **guilt-trip** (streaks-as-anxiety, red-dot nagging, badge FOMO).
+   Real scarcity stated honestly — the Founding 100 cap — is fair;
+   invented scarcity is not. The product competes on being worth it, not
+   on making the alternatives painful.
 4. **Methodology-aware but invisible.** GTD + PARA-flavored (Goals replace
    Areas) — credibility for power users, invisible to beginners.
 5. **Keyboard-first, native feel.** System font, restrained motion, every
@@ -60,6 +67,20 @@ serves.
   the completion state AND the favicon (one visual, three jobs).
 
 ## Current CTA
-**None.** The landing page is a pure signpost — articulate the idea, no form.
-When the app is close to launch, add a quiet signup. For now: a footer link
-to follow along (Twitter/blog), nothing else.
+
+Three surfaces, all fair-play:
+
+- **Signup** — the hero CTA ("Make an account") and the final CTA both send
+  ready visitors to `/signup`. Asking for the signup is not manipulation; it's
+  the point.
+- **Newsletter** — a plain email-capture field in the footer (always) and a
+  quiet one in the hero (alongside the signup button). One line: *"One email
+  when there's something to say."* No invented urgency, but no apology either.
+- **The Founding 100** (`/founding-100`) — a one-time $139 lifetime Pro tier,
+  capped at 100 spots, with a live checkout. The cap is a real business-health
+  guardrail (lifetime plans are genuinely risky past a point), stated as such.
+  We push it because it's a good deal for the right people, not because we
+  fake a countdown.
+
+Post-launch, the newsletter CTAs stay; the signup CTAs are already live. See
+`docs/PUBLIC-PAGES.md` for the full public-surface spec.
