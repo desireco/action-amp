@@ -170,7 +170,20 @@ item; Build pulls `ready`.**
     what the backend already exposes; missing writes filed as
     `cli-write-ops.md` (`deferred`) + `cli-comments-resources.md` (`deferred`,
     unblocks the `task-research` skill). Spec at `docs/specs/cli.md`.
-5. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
+5. **goal-planning** (`ready`, new 2026-07-03) — the Planning area is
+    **read-mostly today**: you can create Goals/Projects and read roll-ups, but
+    cannot complete, reopen, edit, delete, or re-link them, and cannot start a
+    Project from inside a Goal (`isDone`/`completedAt` on both models are
+    write-only-by-hand; `grep updateProject|completeGoal|deleteGoal` → zero
+    matches). This closes the lifecycle + alignment holes and adds one
+    lightweight planning affordance: an explicit **sequence** of Projects under
+    a Goal, with the first one surfaced as "the next project toward this goal."
+    Pure Planning-area completion — no new routes, no matcher impact (independent
+    of `focus-engine-v2`). Same tier as `resources-project-owned` + `breadcrumb-nav`
+    per user decision 2026-07-03: depth/polish on a shipped surface, gated like
+    the rest of this tier. Spec at `docs/specs/goal-planning.md`; catalog at
+    `docs/features/goal-planning.md`.
+6. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
     Lens-scoped page (hero + Today | Done columns), and reshapes how a task is
     worked: **no completion circle anywhere** (complete only from focus mode —
     the list becomes a chooser, not a tick-box), a **timestamped activity log**
@@ -488,6 +501,7 @@ roadmaps forget and most launches stall on.
 - [ ] Command palette + search → **`command-palette-search`** (`ready`)
 - [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup)
 - [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`)
+- [ ] Goal/Project lifecycle (complete/edit/relink/sequence) → **`goal-planning`** (`ready`)
 
 ### B. Non-code items the user owns (no spec — these are setup/decisions)
 
