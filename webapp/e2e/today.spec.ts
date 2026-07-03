@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signupNewUser, triageOneItem } from "./helpers";
+import { signupNewUser, triageOneItem, completeTopTask } from "./helpers";
 
 /**
  * Today — FEATURES.md §4 F12: Today is capped (default 5). To add a 6th, you
@@ -15,6 +15,8 @@ const TASK = (n: number) => `Focus task ${n}`;
 
 test("empty Today shows a calm empty state", async ({ page }) => {
   await signupNewUser(page);
+  // Clear the seeded starter task (visible on Today under the Me default).
+  await completeTopTask(page);
   await page.goto("/app/today");
   await expect(page.getByText(/nothing|clear|empty|no .*today/i)).toBeVisible({ timeout: 10_000 });
 });
@@ -47,6 +49,9 @@ test("F12: Today is capped at 5 — a 6th item is flagged as over-capacity", asy
 
 test("'Not today' demotes to Upcoming; the bench shows it; 'Today' promotes back", async ({ page }) => {
   await signupNewUser(page);
+  // Clear the seeded starter task so "Swap me around" is the only Today row
+  // (deterministic per-row "Not today" click).
+  await completeTopTask(page);
 
   // Capture + triage one item to Today.
   await triageOneItem(page, "Swap me around", { type: "task", when: "today" });

@@ -1,4 +1,16 @@
-import { describe, it, expect } from "vitest";
+// @vitest-environment node
+// Server-op tests run in node: ops import entitlement guards that pull
+// `wasp/server` (HttpError), blocked by detectServerImports in jsdom. No DOM
+// APIs here — node is correct.
+import { describe, it, expect, vi } from "vitest";
+
+// Stub the server-only HttpError layer so this test never loads `wasp/server`.
+// The guards become no-op resolves; the entitlement *throw* path (402 + ProGate
+// body) is verified end-to-end. See goals/operations.test.ts for rationale.
+vi.mock("../billing/entitlementHttp", () => ({
+  assertLensAllowed: vi.fn().mockResolvedValue(undefined),
+  assertUnderCap: vi.fn().mockResolvedValue(undefined),
+}));
 import { getProjects, createProject, getProject, createTask } from "./operations";
 import { mockContext } from "../test/mockContext";
 

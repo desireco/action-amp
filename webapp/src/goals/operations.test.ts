@@ -1,4 +1,18 @@
-import { describe, it, expect } from "vitest";
+// @vitest-environment node
+// Server-op tests run in node (not jsdom): the ops import entitlement guards
+// that pull `wasp/server` (HttpError), which Wasp's detectServerImports plugin
+// blocks in the client/jsdom env. These tests call ops as plain functions with
+// a mock context — no DOM APIs — so node is the correct environment.
+import { describe, it, expect, vi } from "vitest";
+
+// Stub the server-only HttpError layer so the op test never loads
+// `wasp/server` (blocked by detectServerImports under src/). These tests cover
+// the getGoals aggregation + create guard-rails; the entitlement *throw* path
+// (402 status + ProGate body) is verified end-to-end, not here.
+vi.mock("../billing/entitlementHttp", () => ({
+  assertLensAllowed: vi.fn().mockResolvedValue(undefined),
+  assertUnderCap: vi.fn().mockResolvedValue(undefined),
+}));
 import { getGoals, createGoal } from "./operations";
 import { mockContext } from "../test/mockContext";
 

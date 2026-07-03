@@ -135,6 +135,20 @@
   color: var(--aa-lens-emerald-text);
 }
 
+/* Pro-only lens affordance — a tiny, neutral chip (not a bright badge;
+ * PRODUCT.md bans attention-grabbing UI). Signals the gate before the click. */
+.aa-lens__pro {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  background: var(--aa-surface-muted);
+  padding: 1px 5px;
+  border-radius: var(--aa-radius-xs);
+  line-height: 1.3;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .aa-lens__btn {

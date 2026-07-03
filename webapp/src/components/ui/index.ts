@@ -18,6 +18,7 @@ export type { LensSwitchOption } from "./LensSwitch";
 export { ModeDial } from "./ModeDial";
 export type { ModeDialItem } from "./ModeDial";
 export { NavItem } from "./NavItem";
+export { ProGate } from "./ProGate";
 export { GroupedList } from "./GroupedList";
 export type { GroupDef } from "./GroupedList";
 export { ResourcePickerSheet } from "./ResourcePickerSheet";

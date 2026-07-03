@@ -1,5 +1,7 @@
 import type { CreateInboxItem, GetInboxItems, TriageInboxItem, RestoreArchivedItem } from "wasp/server/operations";
 import { parseCapture, type ParsedPriority, type ParsedSize } from "./parseCapture";
+import { FREE_LIMITS } from "../billing/config";
+import { assertLensAllowed, assertUnderCap } from "../billing/entitlementHttp";
 
 /**
  * Inbox operations — the capture destination + the triage transformation.
@@ -82,6 +84,10 @@ export const triageInboxItem = (async (args, context) => {
   }
 
   const lensId = args.lensId;
+  // Entitlement: triage files entities into a lens. FREE users may only file
+  // into Me (the Work lens is visible-but-locked). Guards every decision that
+  // creates a lens-scoped entity (task/project). Archive + restore don't.
+  await assertLensAllowed(context, lensId);
   // Precedence: explicit triage choice > the capture parser's guess > default.
   // The triage wizard lets the user set Priority/Size deliberately (the spec
   // step); when they do, that wins over whatever `~XL` / `!3` token they may
@@ -155,6 +161,15 @@ export const triageInboxItem = (async (args, context) => {
       break;
     }
     case "project": {
+      // Entitlement cap: a FREE user can convert an inbox item into a project
+      // only under the per-lens cap (lens already guarded above).
+      const projectCount = await context.entities.Project.count({
+        where: { userId: context.user.id, lensId, isDone: false },
+      });
+      await assertUnderCap(context, lensId, projectCount, FREE_LIMITS.projects, {
+        feature: "a 4th project",
+        reason: "organize more than 3 projects with Pro",
+      });
       const project = await context.entities.Project.create({
         data: {
           name: args.name?.trim() || item.text,

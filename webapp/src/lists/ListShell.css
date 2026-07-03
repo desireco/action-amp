@@ -25,6 +25,12 @@
   margin: 0;
 }
 
+/* Allowance row — sits under the title. Used for free-tier cap chips
+ * ("2 of 3 projects used"). Empty for PRO users. */
+.aa-list-header__meta {
+  margin-top: var(--aa-space-xs);
+}
+
 .aa-list-header__actions {
   display: flex;
   align-items: center;

@@ -16,6 +16,13 @@ export interface LensSwitchOption {
    * which the product bans).
    */
   count?: number;
+  /**
+   * Is this lens a Pro-only feature for the current user? (FREE users + the
+   * Work lens.) Renders a tiny, neutral "Pro" chip so the gate is discoverable
+   * before the click — NOT a bright badge (PRODUCT.md bans attention-grabbing
+   * UI). Selecting a proLocked lens shows a <ProGate> instead of switching.
+   */
+  proLocked?: boolean;
 }
 
 interface LensSwitchProps {
@@ -71,6 +78,9 @@ export function LensSwitch({
               <span className="aa-lens__count" aria-label={`${opt.count} today tasks`}>
                 {opt.count}
               </span>
+            )}
+            {opt.proLocked && (
+              <span className="aa-lens__pro" title="Pro feature">Pro</span>
             )}
           </button>
         );

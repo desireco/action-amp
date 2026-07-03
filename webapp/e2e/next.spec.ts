@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signupNewUser, triageOneItem } from "./helpers";
+import { signupNewUser, triageOneItem, completeTopTask } from "./helpers";
 
 /**
  * Next — FEATURES.md §3 F8/F10: the home screen is a chooser, not a list.
@@ -11,8 +11,11 @@ import { signupNewUser, triageOneItem } from "./helpers";
 
 test("empty state: no Today tasks shows a calm prompt, not an empty list", async ({ page }) => {
   await signupNewUser(page);
-  // Home is /app — a fresh user has no Today tasks.
-  await expect(page).toHaveURL(/\/app/);
+  // A fresh user has a seeded "Try it" starter task (in the Me lens, the FREE
+  // default). Clear it so we can observe the genuine empty state.
+  await completeTopTask(page);
+  // Home is /app — now empty of Today tasks.
+  await page.goto("/app");
   // F8: the home should communicate calm/empty, not a blank list. Wording may
   // evolve; assert the page rendered its shell (the heading is present).
   await expect(page.getByRole("heading", { name: /what now/i }).or(page.getByText(/nothing|clear|all done|nothing on/i))).toBeVisible({ timeout: 10_000 });
@@ -20,6 +23,9 @@ test("empty state: no Today tasks shows a calm prompt, not an empty list", async
 
 test("a Today task appears as the single focus item on home", async ({ page }) => {
   await signupNewUser(page);
+  // Clear the seeded starter task (now visible on home under the Me default) so
+  // the triaged task below is the single focus item, not the seed.
+  await completeTopTask(page);
 
   // Capture + triage one item to Today.
   await triageOneItem(page, "The one thing", { type: "task", when: "today" });
@@ -31,6 +37,9 @@ test("a Today task appears as the single focus item on home", async ({ page }) =
 
 test("an Upcoming task (no due date) also surfaces on home", async ({ page }) => {
   await signupNewUser(page);
+  // Clear the seeded starter task (now visible on home under the Me default) so
+  // the triaged task below is the single focus item, not the seed.
+  await completeTopTask(page);
 
   // Triage to Upcoming (the default since 2026-06-25) — no When chosen, so it
   // lands on the bench with no dueDate. Next's candidate pool is Today +
@@ -44,6 +53,9 @@ test("an Upcoming task (no due date) also surfaces on home", async ({ page }) =>
 
 test("'Start' → Now state; 'Do this' then enters focus mode (F13)", async ({ page }) => {
   await signupNewUser(page);
+  // Clear the seeded starter task (now visible on home under the Me default) so
+  // the triaged task below is the single focus item, not the seed.
+  await completeTopTask(page);
 
   await triageOneItem(page, "Deep work task", { type: "task", when: "today" });
   await page.goto("/app");
@@ -62,6 +74,9 @@ test("'Start' → Now state; 'Do this' then enters focus mode (F13)", async ({ p
 
 test("'Now' persists across navigation away and back", async ({ page }) => {
   await signupNewUser(page);
+  // Clear the seeded starter task (now visible on home under the Me default) so
+  // the triaged task below is the single focus item, not the seed.
+  await completeTopTask(page);
 
   await triageOneItem(page, "Persists task", { type: "task", when: "today" });
   await page.goto("/app");
@@ -79,6 +94,9 @@ test("'Now' persists across navigation away and back", async ({ page }) => {
 
 test("'Pause' returns a started task to the Next state (same task stays #1)", async ({ page }) => {
   await signupNewUser(page);
+  // Clear the seeded starter task (now visible on home under the Me default) so
+  // the triaged task below is the single focus item, not the seed.
+  await completeTopTask(page);
 
   await triageOneItem(page, "Pausable task", { type: "task", when: "today" });
   await page.goto("/app");
@@ -94,6 +112,9 @@ test("'Pause' returns a started task to the Next state (same task stays #1)", as
 
 test("completing a task in focus mode removes it from Next (F16)", async ({ page }) => {
   await signupNewUser(page);
+  // Clear the seeded starter task (now visible on home under the Me default) so
+  // the triaged task below is the single focus item, not the seed.
+  await completeTopTask(page);
 
   await triageOneItem(page, "Finish this now", { type: "task", when: "today" });
   await page.goto("/app");
@@ -113,6 +134,9 @@ test("completing a task in focus mode removes it from Next (F16)", async ({ page
 
 test("'Not now' defers the focused task (it leaves Next)", async ({ page }) => {
   await signupNewUser(page);
+  // Clear the seeded starter task (now visible on home under the Me default) so
+  // the triaged task below is the single focus item, not the seed.
+  await completeTopTask(page);
 
   await triageOneItem(page, "Not now task", { type: "task", when: "today" });
   await page.goto("/app");

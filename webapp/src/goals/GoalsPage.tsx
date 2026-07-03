@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getGoals, createGoal } from "wasp/client/operations";
+import { getGoals, createGoal, getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { useActiveLens } from "../app/lensContext";
-import { Button } from "../components/ui";
+import { Button, Chip, ProGate } from "../components/ui";
 import { ListEmpty } from "../lists/ListShell";
 import { CreateInline } from "../lists/CreateInline";
+import { FREE_LIMITS } from "../billing/config";
+import { useEntitled, extractEntitlementMessage } from "../billing/useEntitled";
+import type { EntitlementMessage } from "../billing/entitlement-types";
 import "./GoalsPage.css";
 import "../lists/CreateInline.css";
 
@@ -28,26 +31,61 @@ export function GoalsPage() {
   const queryClient = useQueryClient();
   const [creating, setCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [gate, setGate] = useState<EntitlementMessage | null>(null);
   const { data: goals, isLoading } = useQuery(
     getGoals,
     lens ? { lensId: lens.id } : undefined,
     { enabled: !!lens },
   );
 
+  // Entitlement: FREE users capped at FREE_LIMITS.goals per lens. Count from
+  // getAppData (lens-scoped, non-done) — deduped with the shell's fetch. PRO
+  // users see no cap UI.
+  const entitled = useEntitled();
+  const { data: appData } = useQuery(
+    getAppData,
+    { lensName: lens?.name ?? "" },
+    { enabled: !!lens },
+  );
+  const goalCount = appData?.counts.goals ?? 0;
+  const atCap = !entitled && goalCount >= FREE_LIMITS.goals;
+
   const handleCreate = async (name: string) => {
     if (!lens) return;
     setSubmitting(true);
+    setGate(null);
     try {
       await createGoal({ name, lensId: lens.id });
       queryClient.invalidateQueries({ queryKey: ["getGoals"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
       setCreating(false);
-    } catch {
-      /* surface elsewhere */
+    } catch (err) {
+      // Entitlement: a 402 from the cap guard → paywall moment, not raw error.
+      setGate(extractEntitlementMessage(err));
     } finally {
       setSubmitting(false);
     }
   };
+
+  // Create affordance: button, or ProGate trigger when a FREE user is at cap.
+  const CreateControl = ({ empty }: { empty: boolean }) =>
+    atCap ? (
+      <ProGate asTrigger feature="New goal" reason="link work to more than one outcome with Pro">
+        <span className="aa-progate-trigger__label">New goal</span>
+        <span className="aa-progate-trigger__cta">Upgrade →</span>
+      </ProGate>
+    ) : (
+      <Button variant="secondary" size="sm" onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}>
+        {creating ? "Cancel" : "New goal"}
+      </Button>
+    );
+
+  const AllowanceChip = () =>
+    !entitled && !atCap ? (
+      <Chip variant="muted" small>
+        {goalCount} of {FREE_LIMITS.goals} used
+      </Chip>
+    ) : null;
 
   if (!isLoading && (goals?.length ?? 0) === 0 && !creating) {
     return (
@@ -57,8 +95,9 @@ export function GoalsPage() {
             <div className="aa-list-header__eyebrow">Goals</div>
             <h1 className="aa-list-header__title">0 active</h1>
           </div>
-          <Button variant="secondary" size="sm" onClick={() => setCreating(true)}>New goal</Button>
+          <CreateControl empty />
         </header>
+        {gate && <ProGate feature={gate.feature} reason={gate.reason} />}
         <ListEmpty
           title="No goals yet."
           text="Goals are active outcomes — what your projects and tasks roll up to. Create one, or link a project/task to a goal during triage."
@@ -73,11 +112,13 @@ export function GoalsPage() {
         <div>
           <div className="aa-list-header__eyebrow">Goals</div>
           <h1 className="aa-list-header__title">{goals?.length ?? 0} active</h1>
+          <div className="aa-list-header__meta">
+            <AllowanceChip />
+          </div>
         </div>
-        <Button variant="secondary" size="sm" onClick={() => setCreating((v) => !v)}>
-          {creating ? "Cancel" : "New goal"}
-        </Button>
+        <CreateControl empty={false} />
       </header>
+      {gate && <ProGate feature={gate.feature} reason={gate.reason} />}
       {creating && (
         <CreateInline
           placeholder="Goal name (e.g. ‘Grow audience’)"

@@ -217,6 +217,12 @@
   padding: var(--aa-space-3xl) var(--aa-space-4xl);
 }
 
+/* Work-lens gate surface — center the ProGate panel in the main area so the
+ * "this is a Pro feature" message reads as a deliberate state, not a glitch. */
+.aa-app-gate {
+  margin: var(--aa-space-3xl) auto;
+}
+
 .aa-app-capture-fab {
   position: fixed;
   right: max(var(--aa-space-xl), env(safe-area-inset-right));

@@ -1,4 +1,5 @@
 import type { GetTask, GetTasks, GetDoneToday, GetTopTask, SnoozeTask, StartTask, PauseTask, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
+import { assertLensAllowed } from "../billing/entitlementHttp";
 
 /**
  * Task operations for the Phase 4 list views.
@@ -31,6 +32,11 @@ export const getTasks = (async (args, context) => {
     throw new Error("Not authenticated.");
   }
 
+  // Entitlement: FREE users may only read the Me lens (Work is visible-but-
+  // locked). The detail reads (getTask) are unguarded — no data loss for
+  // existing content; only list/scope reads enforce the lens rule.
+  await assertLensAllowed(context, args.lensId);
+
   const where: Record<string, unknown> = {
     userId: context.user.id,
     lensId: args.lensId,
@@ -59,6 +65,8 @@ export const getDoneToday = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+  // Entitlement: FREE users may only read the Me lens.
+  await assertLensAllowed(context, args.lensId);
   // Local-midnight boundary: completedAt is stamped server-side on toggle; we
   // compare against the start of "today" in the server's locale. Day-granular
   // is the right resolution for a "done today" section.
@@ -148,6 +156,10 @@ export const getTopTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+  // Entitlement: FREE users may only read the Me lens. The home screen (Next)
+  // calls this; a FREE user lands on Me, so this passes — the guard exists for
+  // the localStorage-bypass case where a Work lensId reaches the server.
+  await assertLensAllowed(context, args.lensId);
   const candidates = await context.entities.Task.findMany({
     where: {
       userId: context.user.id,

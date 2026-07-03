@@ -1,4 +1,6 @@
 import type { GetGoals, GetGoal, CreateGoal } from "wasp/server/operations";
+import { FREE_LIMITS } from "../billing/config";
+import { assertLensAllowed, assertUnderCap } from "../billing/entitlementHttp";
 
 /**
  * Goals list for the Goals page, scoped to the active Lens.
@@ -9,6 +11,9 @@ export const getGoals = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+
+  // Entitlement: FREE users may only read the Me lens.
+  await assertLensAllowed(context, args.lensId);
 
   const goals = await context.entities.Goal.findMany({
     where: {
@@ -91,6 +96,17 @@ export const createGoal = (async (args, context) => {
   if (!name) {
     throw new Error("Goal name is required.");
   }
+
+  // Entitlement: FREE users capped at FREE_LIMITS.goals per lens + Me-only.
+  await assertLensAllowed(context, args.lensId);
+  const goalCount = await context.entities.Goal.count({
+    where: { userId: context.user.id, lensId: args.lensId, isDone: false },
+  });
+  await assertUnderCap(context, args.lensId, goalCount, FREE_LIMITS.goals, {
+    feature: "a 2nd goal",
+    reason: "link work to more than one outcome with Pro",
+  });
+
   return await context.entities.Goal.create({
     data: {
       name,

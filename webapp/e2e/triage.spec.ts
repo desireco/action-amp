@@ -59,8 +59,9 @@ test("the wizard opens on the lens step; the active lens is pre-selected", async
   // Step 1 shows the lens radio (ensureOnboarded seeds Work + Me).
   const radios = page.getByRole("radio");
   await expect(radios).toHaveCount(2, { timeout: 10_000 });
-  // The active lens (Work) is checked by default — Continue is enabled.
-  await expect(page.getByRole("radio", { name: /work/i })).toHaveAttribute("aria-checked", "true");
+  // The active lens (Me — the FREE-tier default since entitlement-enforcement)
+  // is checked by default; Continue is enabled.
+  await expect(page.getByRole("radio", { name: /^me$/i })).toHaveAttribute("aria-checked", "true");
   await expect(page.getByRole("button", { name: /^continue$/i })).toBeEnabled();
 });
 

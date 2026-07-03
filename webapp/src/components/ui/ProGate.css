@@ -1,0 +1,117 @@
+@import "../../styles/tokens.css";
+
+/* ---- Inline panel (default) ---- */
+.aa-progate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 28px 32px;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  background: var(--aa-surface);
+  max-width: 420px;
+}
+
+.aa-progate__feature {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--aa-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.35;
+}
+
+/* A quiet key-cap mark — not a bright lock badge (PRODUCT.md bans attention-
+ * grabbing UI). Teal = system/state, the calm accent. */
+.aa-progate__lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--aa-radius-xs);
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+  font-size: 0.8rem;
+  font-weight: 700;
+  transform: rotate(180deg); /* ⌃ reads as a roof/caret — subtle */
+  flex-shrink: 0;
+}
+
+.aa-progate__reason {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--aa-text-2);
+  line-height: 1.5;
+}
+
+.aa-progate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.aa-progate__primary {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+  padding: 6px 0;
+  border-bottom: 1.5px solid transparent;
+  transition: border-color 0.12s var(--aa-ease-out);
+}
+
+.aa-progate__primary:hover {
+  border-bottom-color: var(--aa-teal-cta);
+}
+
+.aa-progate__secondary {
+  font-size: 0.85rem;
+  color: var(--aa-text-3);
+  text-decoration: none;
+  transition: color 0.12s var(--aa-ease-out);
+}
+
+.aa-progate__secondary:hover {
+  color: var(--aa-text-2);
+}
+
+/* ---- Trigger (at-cap create affordance) ---- */
+/* Replaces the "New project" / "New goal" button when a FREE user is at the
+ * cap — a quiet upgrade path, not a dead button. Visually echoes a secondary
+ * button so the row doesn't feel broken. */
+.aa-progate-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: var(--aa-radius-sm);
+  border: 1px solid var(--aa-teal-soft-strong);
+  background: var(--aa-teal-soft);
+  transition:
+    background 0.12s var(--aa-ease-out),
+    box-shadow 0.12s var(--aa-ease-out);
+}
+
+.aa-progate-trigger:hover {
+  background: var(--aa-teal-soft-strong);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-progate-trigger__label {
+  color: var(--aa-text-2);
+  font-weight: 500;
+}
+
+.aa-progate-trigger__cta {
+  color: var(--aa-teal-cta);
+}

@@ -7,7 +7,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
 import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcuts";
 import { FeedbackDialog } from "./FeedbackDialog";
-import { CapturePopover, ShortcutCheatsheet, ConfirmDialog } from "../components/ui";
+import { CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate } from "../components/ui";
+import { useEntitled } from "../billing/useEntitled";
 import {
   BrandMark,
   LensSwitch,
@@ -61,11 +62,25 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  // Entitlement: FREE users may only use the Me lens. The Work lens is
+  // "visible-but-locked" — they see it in the switch, but selecting it shows a
+  // <ProGate> instead of switching (the friendly surface). The server guard is
+  // the boundary; this is the UX.
+  const entitled = useEntitled();
+  const [workGated, setWorkGated] = useState(false);
   const [lens, setLensState] = useState<string>(() => {
-    if (typeof window === "undefined") return "Work";
-    return localStorage.getItem("aa-lens") ?? "Work";
+    if (typeof window === "undefined") return "Me";
+    return localStorage.getItem("aa-lens") ?? "Me";
   });
   const setLens = (name: string) => {
+    // FREE user clicking the Work lens: don't switch (their queries would 402
+    // server-side anyway); show the ProGate in the main area instead. Stay on
+    // the Me lens so the sidebar/data behind the gate stays valid.
+    if (!entitled && name === "Work") {
+      setWorkGated(true);
+      return;
+    }
+    setWorkGated(false);
     setLensState(name);
     localStorage.setItem("aa-lens", name);
   };
@@ -109,6 +124,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const lenses = appData?.lenses ?? [];
   const counts = appData?.counts ?? { inbox: 0, today: 0, projects: 0, goals: 0 };
   const todayByLens = appData?.todayByLens ?? {};
+  // The Work lens is "visible-but-locked" for FREE users: shown in the switch
+  // with a tiny "Pro" affordance (proLocked), but selecting it shows the gate.
+  const workLocked = !entitled;
   const lensOptions =
     lenses.length > 0
       ? lenses.map((l) => ({
@@ -116,20 +134,34 @@ export function AppShell({ children }: { children: ReactNode }) {
           label: l.name,
           color: l.color ?? undefined,
           count: todayByLens[l.id] ?? 0,
+          proLocked: workLocked && l.name !== "Me",
         }))
       : [
-          { id: "Work", label: "Work", color: "indigo", count: 0 },
-          { id: "Me", label: "Me", color: "emerald", count: 0 },
+          { id: "Work", label: "Work", color: "indigo", count: 0, proLocked: workLocked },
+          { id: "Me", label: "Me", color: "emerald", count: 0, proLocked: false },
         ];
 
   // Keep the active lens valid once lenses load; default to the first.
   // If the stored name no longer matches (e.g. renamed), self-heal: persist
   // the fallback so we don't keep looking up a stale name.
-  const activeLens = lenses.find((l) => l.name === lens) ?? lenses[0];
+  //
+  // Entitlement clamp: a FREE user must never resolve to the Work lens here —
+  // a stored `aa-lens=Work` (a bypass attempt, or stale from a lapsed plan)
+  // would otherwise scope their queries to Work and 402 server-side. Fall back
+  // to Me (or the first non-Work lens) so the client never asks for Work data
+  // it isn't entitled to. The server guard is the boundary; this prevents the
+  // broken UX of every query erroring on load.
+  const resolvedLens = lenses.find((l) => l.name === lens) ?? lenses[0];
+  const activeLens =
+    !entitled && resolvedLens && resolvedLens.name !== "Me"
+      ? lenses.find((l) => l.name === "Me") ?? lenses.find((l) => l.name !== "Work") ?? resolvedLens
+      : resolvedLens;
   const activeLensName = activeLens?.name ?? lens;
   useEffect(() => {
     if (activeLens && activeLens.name !== lens) {
-      setLens(activeLens.name);
+      setLensState(activeLens.name);
+      localStorage.setItem("aa-lens", activeLens.name);
+      setWorkGated(false);
     }
   }, [activeLens, lens]);
   // The value pages consume via useActiveLens() to scope their queries.
@@ -321,7 +353,18 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* ---- Page content ---- */}
         <main className="aa-app-main">
           <LensContext.Provider value={activeLensValue}>
-            {children}
+            {/* Work-lens gate: a FREE user clicking Work sees the ProGate in the
+             * main area instead of Work content. The lens isn't switched (setLens
+             * bails), so the Me lens stays active behind the gate. */}
+            {workGated ? (
+              <ProGate
+                feature="the Work lens"
+                reason="bring your work life into ActionAmp"
+                className="aa-app-gate"
+              />
+            ) : (
+              children
+            )}
           </LensContext.Provider>
         </main>
       </div>

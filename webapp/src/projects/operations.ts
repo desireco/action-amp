@@ -4,6 +4,8 @@ import type {
   GetProject,
   CreateTask,
 } from "wasp/server/operations";
+import { FREE_LIMITS } from "../billing/config";
+import { assertLensAllowed, assertUnderCap } from "../billing/entitlementHttp";
 
 /**
  * Projects list for the Projects page, scoped to the active Lens.
@@ -14,6 +16,9 @@ export const getProjects = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+
+  // Entitlement: FREE users may only read the Me lens.
+  await assertLensAllowed(context, args.lensId);
 
   const projects = await context.entities.Project.findMany({
     where: {
@@ -77,6 +82,18 @@ export const createProject = (async (args, context) => {
   if (!name) {
     throw new Error("Project name is required.");
   }
+
+  // Entitlement: FREE users capped at FREE_LIMITS.projects per lens, and the
+  // Work lens is locked. Count non-done projects so finishing work frees a slot.
+  await assertLensAllowed(context, args.lensId);
+  const projectCount = await context.entities.Project.count({
+    where: { userId: context.user.id, lensId: args.lensId, isDone: false },
+  });
+  await assertUnderCap(context, args.lensId, projectCount, FREE_LIMITS.projects, {
+    feature: "a 4th project",
+    reason: "organize more than 3 projects with Pro",
+  });
+
   return await context.entities.Project.create({
     data: {
       name,
@@ -134,6 +151,10 @@ export const getProject = (async (args, context) => {
     },
   });
   if (!project) return null;
+  // Entitlement: a FREE user may have an existing Work-lens project (seeded
+  // before the cap, or created on a lapsed plan). They can still open and use
+  // it (no data loss — spec invariant), so we do NOT block reads of existing
+  // projects. The lens guard applies to list/create, not to detail reads.
   return {
     id: project.id,
     name: project.name,

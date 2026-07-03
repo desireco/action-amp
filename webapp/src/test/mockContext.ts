@@ -52,11 +52,21 @@ export interface MockContext {
   entities: Record<string, EntitySpy>;
 }
 
+/** A user shape with the fields entitlement guards read (plan/planRenewsAt). */
+export interface MockUser {
+  id: string;
+  plan?: string | null;
+  planRenewsAt?: Date | null;
+}
+
 /**
- * Build a mock context. Pass a userId to control `context.user.id`, or null to
- * simulate an unauthenticated request.
+ * Build a mock context.
+ * - `userId` (string) — a minimal authenticated user (FREE, no plan fields).
+ * - `null` — an unauthenticated request (context.user === null).
+ * - `MockUser` object — an authenticated user with explicit plan/planRenewsAt,
+ *   for entitlement tests (FREE / active-PRO / expired-PRO / FOUNDER).
  */
-export function mockContext(userId: string | null = "user-1"): MockContext {
+export function mockContext(userId: string | MockUser | null = "user-1"): MockContext {
   const entities = {
     User: entitySpy(),
     Task: entitySpy(),
@@ -69,9 +79,16 @@ export function mockContext(userId: string | null = "user-1"): MockContext {
     Payment: entitySpy(),
     Feedback: entitySpy(),
   };
+  // Normalize: string → { id }, MockUser → as-is, null → unauthenticated.
+  const user =
+    userId === null
+      ? null
+      : typeof userId === "string"
+        ? { id: userId }
+        : userId;
   return {
     context: {
-      user: userId === null ? null : { id: userId },
+      user,
       entities,
     },
     entities,

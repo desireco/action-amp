@@ -88,6 +88,35 @@ export async function openCapture(page: Page) {
 }
 
 /**
+ * Complete whatever task is currently surfaced as the top item on the home
+ * screen (/app), via the focus-mode flow (Start → Do this → Done).
+ *
+ * Used to clear the seeded "Try it" starter task (now visible on home since the
+ * FREE-tier default lens became Me — entitlement-enforcement) so a test starts
+ * from a clean slate. No-op if home is already empty (no Start button).
+ */
+export async function completeTopTask(page: Page) {
+  // ensureOnboarded seeds up to 3 starter tasks in the Me lens. Clear all of
+  // them so the test starts from a clean slate: loop the focus-mode completion
+  // flow until home shows no Start button (empty).
+  for (let i = 0; i < 5; i++) {
+    await page.goto("/app");
+    const startBtn = page.getByRole("button", { name: /^start$/i });
+    // Wait briefly for the home to render a top task. If none appears, home is
+    // empty — done.
+    if (!(await startBtn.waitFor({ state: "visible", timeout: 3_000 }).then(() => true).catch(() => false))) return;
+    await startBtn.click();
+    // "Do this" appears only in the Now state (after Start) — wait for it.
+    await page.getByText(/Now ·/).waitFor({ state: "visible", timeout: 5_000 });
+    await page.getByRole("button", { name: /do this/i }).click();
+    await page.getByLabel(/focus:/i).waitFor({ state: "visible", timeout: 10_000 });
+    await page.getByRole("button", { name: /^done$/i }).click();
+    await page.getByLabel(/focus:/i).waitFor({ state: "detached", timeout: 10_000 });
+  }
+}
+
+
+/**
  * Capture one item, then open the triage review and walk the wizard through to
  * a destination. Triage is a deliberate spec flow, not a one-key dispatch, so
  * every outcome goes through: step 1 (lens → Continue) → step 2 (type →
