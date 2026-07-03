@@ -14,7 +14,7 @@ test("empty inbox shows a calm zero state", async ({ page }) => {
 
   // F3: a fresh user sees an empty inbox, not a wall of rows. The empty state
   // should communicate "inbox zero" — the exact wording may evolve.
-  await expect(page.getByText(/inbox zero/i)).toBeVisible();
+  await expect(page.getByText(/nothing left to decide/i)).toBeVisible();
 });
 
 test("captured items appear in the inbox, newest first", async ({ page }) => {
@@ -22,7 +22,9 @@ test("captured items appear in the inbox, newest first", async ({ page }) => {
 
   const textarea = await openCapture(page);
   await textarea.fill("First captured");
-  await textarea.press("Enter");
+  // ⌘Enter = rapid-fire: capture + keep the dialog open for the next item.
+  // A plain Enter would close the dialog, leaving `textarea` detached.
+  await textarea.press("Meta+Enter");
   await textarea.fill("Second captured");
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
@@ -45,10 +47,12 @@ test("the inbox has a path to triage (review mode)", async ({ page }) => {
 
   const textarea = await openCapture(page);
   await textarea.fill("Something to decide");
+  // Enter = capture + close. The dialog closing is the signal that capture
+  // completed (the textarea unmounts, so asserting its value would fail).
   await textarea.press("Enter");
-  // Wait for the capture to process (input clears) before closing.
-  await expect(textarea).toHaveValue("");
-  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("dialog", { name: /quick capture/i }),
+  ).toBeHidden({ timeout: 5_000 });
 
   await page.goto("/app/inbox");
 

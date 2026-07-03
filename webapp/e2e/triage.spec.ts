@@ -34,9 +34,13 @@ async function continueFromLens(page: Page) {
 
 test("triage shows one item at a time", async ({ page }) => {
   await signupNewUser(page);
+  // Capture two items. The first uses ⌘Enter (rapid-fire: capture + keep
+  // open) so the dialog stays mounted; the second uses Enter (capture +
+  // close). Re-filling after a plain Enter would target a detached dialog.
   const textarea = await openCapture(page);
   await textarea.fill("First decision");
-  await textarea.press("Enter");
+  await textarea.press("Meta+Enter");
+  // ⌘Enter clears the input and keeps focus in the same open dialog.
   await textarea.fill("Second decision");
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
@@ -81,7 +85,64 @@ test("a task can be committed to Today via the spec step", async ({ page }) => {
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
   // And the inbox is empty.
   await page.goto("/app/inbox");
-  await expect(page.getByText(/inbox zero/i)).toBeVisible();
+  await expect(page.getByText(/nothing left to decide/i)).toBeVisible();
+});
+
+test("a 'today' capture token preselects When = Today (no manual step needed)", async ({ page }) => {
+  // Regression guard: the bare `today` token sets parsedDate to today, and
+  // triage must default When to Today (TriagePage initWorking) so the user
+  // can Complete without touching the spec. The @today form is a context
+  // tag (TRIAGE.md §7.5) and does NOT trigger this — only bare `today`.
+  // Capture strips the token, so we capture "…today" but the stored/triaged
+  // item text is the token-free remainder.
+  await signupNewUser(page);
+  const textarea = await openCapture(page);
+  await textarea.fill("Ship the demo today");
+  await textarea.press("Enter");
+  await page.keyboard.press("Escape");
+  await page.goto("/app/inbox/review");
+  // The token is stripped: the item shows as "Ship the demo".
+  await expect(page.getByText("Ship the demo")).toBeVisible({ timeout: 10_000 });
+
+  await continueFromLens(page);
+  await page.getByRole("button", { name: /^task\b/i }).click();
+  await page.getByRole("button", { name: /^continue$/i }).click();
+  // No When change — rely on the parsed-today default. Then Complete.
+  await page.getByRole("button", { name: /^complete$/i }).click();
+  await expect(page.getByText("Ship the demo")).toHaveCount(0, { timeout: 10_000 });
+
+  // If the default weren't Today, the item would land on Upcoming instead.
+  await page.goto("/app/today");
+  await expect(page.getByText("Ship the demo")).toBeVisible({ timeout: 10_000 });
+});
+
+test("a #project capture token preselects the project link (type stays Task)", async ({ page }) => {
+  // Regression guard: #project means "this task belongs to that project"
+  // (TRIAGE.md §7.5 — link, don't create). Triage keeps the type as Task and
+  // pre-fills the Project spec row from the parsed hint, so completing files
+  // the task under the matched project with no manual selection.
+  // ensureOnboarded seeds a "General" project per lens; #general resolves to
+  // it. Capture strips the token, so we capture "…#general" but the stored
+  // item text is the token-free remainder.
+  await signupNewUser(page);
+  const textarea = await openCapture(page);
+  await textarea.fill("Draft the brief #general");
+  await textarea.press("Enter");
+  await page.keyboard.press("Escape");
+  await page.goto("/app/inbox/review");
+  await expect(page.getByText("Draft the brief")).toBeVisible({ timeout: 10_000 });
+
+  await continueFromLens(page);
+  await page.getByRole("button", { name: /^task\b/i }).click();
+  await page.getByRole("button", { name: /^continue$/i }).click();
+  // No Project row change — rely on the parsed-#general preselection.
+  await page.getByRole("button", { name: /^complete$/i }).click();
+  await expect(page.getByText("Draft the brief")).toHaveCount(0, { timeout: 10_000 });
+
+  // Filed under the General project — visible on its detail page.
+  await page.goto("/app/projects");
+  await page.getByText("General").click();
+  await expect(page.getByText("Draft the brief")).toBeVisible({ timeout: 10_000 });
 });
 
 test("becoming a Project uses the item text as the name", async ({ page }) => {
@@ -92,7 +153,7 @@ test("becoming a Project uses the item text as the name", async ({ page }) => {
   await page.goto("/app/projects");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
   await page.goto("/app/inbox");
-  await expect(page.getByText(/inbox zero/i)).toBeVisible();
+  await expect(page.getByText(/nothing left to decide/i)).toBeVisible();
 });
 
 test("becoming a Resource (Note) requires a parent before Complete", async ({ page }) => {
@@ -145,7 +206,7 @@ test("Archive keeps the note — it leaves the inbox but surfaces in the Logbook
   await expect(page.getByText(text)).toHaveCount(0);
   // …and it leaves the inbox.
   await page.goto("/app/inbox");
-  await expect(page.getByText(/inbox zero/i)).toBeVisible();
+  await expect(page.getByText(/nothing left to decide/i)).toBeVisible();
 
   // But it's NOT lost — it lands in the Logbook's archived section, with a
   // Restore action (lossless: declining a note never deletes it).

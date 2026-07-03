@@ -127,12 +127,13 @@ export async function triageOneItem(
   await page.getByRole("button", { name: new RegExp(`^${TYPE_LABEL[dest.type]}`, "i") }).click();
   // The step-2 commit button reads "Continue" (or "Archive" for the archive
   // type). Scope to the primary button so the click can't hit the type pill.
-  await page.locator(".aa-triage-step__continue").click();
-
+  // Archive has no step 3 — this commit IS the triage action, so wait for the
+  // server response here. Other types advance to the spec step.
   if (dest.type === "archive") {
-    await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
+    await commitTriage(page, page.locator(".aa-triage-step__continue"), text);
     return;
   }
+  await page.locator(".aa-triage-step__continue").click();
 
   // Step 3 — set When (tasks only), then Complete. The spec row is pre-filled
   // with the default (Upcoming), so we only touch it when an explicit choice
@@ -142,7 +143,30 @@ export async function triageOneItem(
     await whenRow.click();
     await page.getByRole("button", { name: dest.when === "today" ? /^today$/i : /^someday$/i }).click();
   }
-  await page.getByRole("button", { name: /^complete$/i }).click();
+  await commitTriage(page, page.getByRole("button", { name: /^complete$/i }), text);
+}
+
+/**
+ * Click the commit button and wait for triage to ACTUALLY settle — not just the
+ * exit animation. The wizard animates the item away the instant the commit is
+ * clicked (setExit runs before the server action resolves), so a naive
+ * toHaveCount(0) passes while triageInboxItem is still in flight. If the caller
+ * then navigates to /app/inbox, the getInboxItems refetch can beat the delete
+ * and show the item still present — a flaky "inbox zero" failure. Waiting on the
+ * action response guarantees the InboxItem is gone (or ARCHIVED) before we return.
+ */
+async function commitTriage(
+  page: Page,
+  commitButton: import("@playwright/test").Locator,
+  text: string,
+): Promise<void> {
+  const triageResponse = page
+    .waitForResponse((r) => r.url().includes("/operations/triage-inbox-item"), { timeout: 10_000 })
+    .catch(() => null);
+  await commitButton.click();
+  const res = await triageResponse;
+  if (res) expect(res.ok()).toBeTruthy();
+  // The exit animation removes the item from the triage stage.
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
 }
 

@@ -120,7 +120,9 @@ test.describe("F3 — captured items land in the Inbox", () => {
 
     const textarea = await openCapture(page);
     await textarea.fill("First item");
-    await textarea.press("Enter");
+    // ⌘Enter = rapid-fire: capture + keep the dialog open for the next item.
+    // A plain Enter would close the dialog, leaving `textarea` detached.
+    await textarea.press("Meta+Enter");
     await textarea.fill("Second item");
     await textarea.press("Enter");
     await page.keyboard.press("Escape");
