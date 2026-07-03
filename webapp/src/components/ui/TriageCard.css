@@ -35,9 +35,22 @@
 
 .aa-triage-card__chips {
   display: flex;
-  gap: 6px;
+  gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
+  margin: 0 0 var(--aa-space-md);
+}
+
+/* Prominent chips: the triage card is the one place parsed-token context
+   decides an outcome, so the chips carry meaning (not decoration). Scaled up
+   from the base .aa-chip so they read alongside the 1.2rem body, not as an
+   afterthought. Scoped here so the shared Chip stays small elsewhere. */
+.aa-triage-card__chips .aa-chip {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--aa-radius-md);
+  line-height: 1.3;
 }
 
 /* ---- Exit animations: direction encodes the decision ---- */

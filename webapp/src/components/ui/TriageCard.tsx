@@ -65,7 +65,7 @@ export function TriageCard({
       {chips && chips.length > 0 && (
         <div className="aa-triage-card__chips">
           {chips.map((c, i) => (
-            <Chip key={i} variant={CHIP_VARIANT[c.tone]} small>
+            <Chip key={i} variant={CHIP_VARIANT[c.tone]}>
               {c.label}
             </Chip>
           ))}

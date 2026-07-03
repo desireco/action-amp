@@ -4,7 +4,7 @@ import { useQuery } from "wasp/client/operations";
 import { getInboxItems, triageInboxItem } from "wasp/client/operations";
 import { getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { TriageCard, Button, BottomSheet, type TriageExit } from "../components/ui";
+import { TriageCard, Button, BottomSheet, type TriageExit, type TriageChip } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { getProjects } from "wasp/client/operations";
 import { getGoals } from "wasp/client/operations";
@@ -160,6 +160,22 @@ export function TriagePage() {
       ? item.text.slice(0, 40) + "…"
       : item.text
     : "";
+
+  // Parsed-token chips shown on the card so the user sees what they captured
+  // (the stored text is token-stripped, so without these the `@today`/`#mvp`
+  // context is invisible during triage). Mirrors InboxPage's chip rendering,
+  // mapped onto TriageCard's three tones (date / priority / tag).
+  const triageChips: TriageChip[] = useMemo(() => {
+    if (!item) return [];
+    const chips: TriageChip[] = [];
+    if (item.parsedDate) chips.push({ tone: "date", label: `📅 ${formatChipDate(item.parsedDate)}` });
+    if (item.parsedProject) chips.push({ tone: "tag", label: `▣ ${item.parsedProject}` });
+    if (item.parsedPriority === "IMPORTANT") chips.push({ tone: "priority", label: "★ Important" });
+    if (item.parsedPriority === "LOW") chips.push({ tone: "priority", label: "low" });
+    if (item.parsedSize) chips.push({ tone: "tag", label: item.parsedSize });
+    for (const t of item.parsedTags) chips.push({ tone: "tag", label: t });
+    return chips;
+  }, [item]);
 
   // Resolve a `#project` capture token to an actual project in the confirmed
   // lens — case-insensitive name match. Link-only: if there's no match (typo, or
@@ -430,6 +446,7 @@ export function TriagePage() {
             key={item.id}
             body={item.text}
             meta={`captured ${formatAgo(item.createdAt)}`}
+            chips={triageChips}
             exit={exit}
             dispatched={dispatched}
             entering={entering}
@@ -838,6 +855,20 @@ function formatAgo(date: Date): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
   return `${Math.floor(seconds / 86400)} days ago`;
+}
+
+/** Format a parsed-date chip label: today / tomorrow / yesterday / Mon D. */
+function formatChipDate(date: Date): string {
+  const d = new Date(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  if (diffDays === 0) return "today";
+  if (diffDays === 1) return "tomorrow";
+  if (diffDays === -1) return "yesterday";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 /** Calendar-day equality — used to detect an `today`/`tonight` capture token. */
