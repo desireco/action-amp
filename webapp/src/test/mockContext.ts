@@ -65,6 +65,7 @@ export function mockContext(userId: string | null = "user-1"): MockContext {
     InboxItem: entitySpy(),
     Resource: entitySpy(),
     Lens: entitySpy(),
+    Tag: entitySpy(),
     Payment: entitySpy(),
     Feedback: entitySpy(),
   };
