@@ -180,8 +180,8 @@
 }
 
 .aa-app-utility-btn {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,7 +191,7 @@
   color: var(--aa-text-3);
   box-shadow: var(--aa-shadow-sm);
   font-family: var(--aa-font);
-  font-size: 0.9rem;
+  font-size: 1.35rem;
   font-weight: 700;
   cursor: pointer;
   transition:
