@@ -27,7 +27,7 @@ const SECTIONS: ShortcutSection[] = [
   {
     title: "Global",
     items: [
-      { keys: ["⌘K"], label: "Capture", note: "also ⌘/" },
+      { keys: ["⌘K"], label: "Capture", note: "also ⌘/ · works in text fields" },
       { keys: ["Space"], label: "Go to Next" },
       { keys: ["?"], label: "Show this sheet", note: "also ⌘?" },
       { keys: ["Esc"], label: "Close / back" },
@@ -36,11 +36,13 @@ const SECTIONS: ShortcutSection[] = [
   {
     title: "Navigation",
     items: [
-      { keys: ["g i"], label: "Inbox" },
-      { keys: ["g t"], label: "Triage" },
-      { keys: ["g n"], label: "Next" },
-      { keys: ["g p"], label: "Planning" },
-      { keys: ["g r"], label: "Review" },
+      { keys: ["⇧I"], label: "Inbox" },
+      { keys: ["⇧N"], label: "Next" },
+      { keys: ["⇧T"], label: "Today" },
+      { keys: ["⇧G"], label: "Triage", note: "triaGe" },
+      { keys: ["⇧P"], label: "Planning" },
+      { keys: ["⇧R"], label: "Review" },
+      { keys: ["⇧C"], label: "Capture", note: "also ⌘K" },
     ],
   },
   {

@@ -84,57 +84,47 @@ describe("useKeyboardShortcuts — capture", () => {
   });
 });
 
-describe("useKeyboardShortcuts — g-prefix navigation", () => {
+describe("useKeyboardShortcuts — Shift-letter navigation", () => {
   it.each([
-    ["i", "inbox"],
-    ["t", "triage"],
-    ["n", "next"],
-    ["p", "planning"],
-    ["r", "review"],
-  ] as const)("g %s navigates to %s", (secondKey, dest) => {
+    ["I", "inbox"],
+    ["N", "next"],
+    ["T", "today"],
+    ["G", "triage"],
+    ["P", "planning"],
+    ["R", "review"],
+  ] as const)("Shift+%s navigates to %s", (letter, dest) => {
     render(<Harness {...handlers} />);
-    press("g");
-    press(secondKey);
+    press(letter, { shift: true });
     expect(handlers.onNavigate).toHaveBeenCalledTimes(1);
     expect(handlers.onNavigate).toHaveBeenCalledWith(dest);
   });
 
-  it("a lone g with no follow-up does nothing (times out)", () => {
-    vi.useFakeTimers();
+  it("Shift+C opens capture (typing-safe convenience chord)", () => {
     render(<Harness {...handlers} />);
-    press("g");
-    // Advance past the 750ms prefix timeout.
-    vi.advanceTimersByTime(800);
-    // A subsequent key is now treated as a fresh stroke, not a chord second.
-    press("i");
-    expect(handlers.onNavigate).not.toHaveBeenCalled();
-    vi.useRealTimers();
+    press("C", { shift: true });
+    expect(handlers.onCapture).toHaveBeenCalledTimes(1);
   });
 
-  it("g then an unrelated key cancels the prefix (no navigation)", () => {
+  it("bare letters do NOT navigate (lowercase p/r must stay free for triage)", () => {
     render(<Harness {...handlers} />);
-    press("g");
-    press("x"); // not a nav destination
-    expect(handlers.onNavigate).not.toHaveBeenCalled();
-    // Prefix is cancelled: a following valid dest key is too late.
+    press("p");
+    press("r");
     press("i");
     expect(handlers.onNavigate).not.toHaveBeenCalled();
   });
 
-  it("Esc cancels an armed g-prefix", () => {
-    render(<Harness {...handlers} />);
-    press("g");
-    press("Escape");
-    press("i");
-    expect(handlers.onNavigate).not.toHaveBeenCalled();
-  });
-
-  it("g does NOT arm inside a text field (typing-guarded)", () => {
+  it("navigation chords are typing-guarded (no fire inside a text field)", () => {
     const input = setTypingTarget("INPUT");
     render(<Harness {...handlers} />);
-    input.dispatchEvent(new KeyboardEvent("keydown", { key: "g", bubbles: true }));
-    input.dispatchEvent(new KeyboardEvent("keydown", { key: "i", bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "I", shiftKey: true, bubbles: true }));
     expect(handlers.onNavigate).not.toHaveBeenCalled();
+  });
+
+  it("Shift + a non-destination letter does nothing", () => {
+    render(<Harness {...handlers} />);
+    press("X", { shift: true });
+    expect(handlers.onNavigate).not.toHaveBeenCalled();
+    expect(handlers.onCapture).not.toHaveBeenCalled();
   });
 });
 

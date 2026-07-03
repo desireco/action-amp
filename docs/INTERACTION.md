@@ -82,10 +82,11 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
   - `Z` / `X` — zoom out / in (scope)
   - `1` `2` `3` — Plan / Do / Review (mode)
   - `S` — Switch task (opens confirm)
-  - `⌘K` / `⌘/` — Capture mode
+  - `⌘K` / `⌘/` — Capture mode (works in text fields — the focus-protector)
+  - `⇧C` — Capture (typing-safe convenience; same as ⌘K)
   - `⌘\` — Command mode
   - `L` — cycle Lens (Work / Me)
-  - `g` `i/n/t/p/r` — jump to Inbox / Next / Triage / Planning / Review (two-key chord)
+  - `⇧I` / `⇧N` / `⇧T` / `⇧G` / `⇧P` / `⇧R` — jump to Inbox / Next / Today / TriaGe / Planning / Review
   - `←` / `→` — peek past / future
   - `?` — show keyset
   - `Enter` — start working (when a task is focused)

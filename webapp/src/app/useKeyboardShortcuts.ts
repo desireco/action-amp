@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 /**
  * Global keyboard shortcuts for ActionAmp.
@@ -7,21 +7,30 @@ import { useEffect, useRef } from "react";
  * is a no-op when the user is typing in an input/textarea/contenteditable
  * (except Esc, which always works to close overlays).
  *
- * Shortcuts (FEATURES.md §6):
- *   ⌘K / ⌘/      → open capture popover
- *   Space         → go to Next (home)
- *   g i/n/t/p/r   → jump to Inbox / Next / Triage / Planning / Review (vim-style
- *                   two-key chord; `g` arms a prefix, the next key dispatches)
- *   ? · ⌘?        → toggle the shortcut cheatsheet
- *   Esc           → close any open overlay (cheatsheet, capture, focus mode)
+ * Navigation uses one grammar: Shift + the first letter of the destination.
+ * Capital chords never collide with triage's lowercase p/r dispatch, and Shift
+ * doesn't type into inputs the way bare letters do. Captures the lot in a
+ * single, memorable rule.
  *
- * Context-specific shortcuts (triage 1/2/3/P/R/Del + the property keys
- * `[`/`]`/`-`/`=`, focus F) are scoped to their own pages, not here.
- * Property keys live where the co-author spec list renders (Phase 4).
+ *   ⌘K / ⌘/      → open capture popover (always works, even in text fields)
+ *   Shift+I/N/T/G/P/R → jump to Inbox / Next / Today / TriaGe / Planning / Review
+ *   Shift+C      → capture (typing-safe; ⌘K remains the focus-protector)
+ *   Space        → go to Next (home) — the long-standing convention
+ *   ? · ⌘?       → toggle the shortcut cheatsheet
+ *   Esc          → close any open overlay (cheatsheet, capture, focus mode)
+ *
+ * Context-specific shortcuts (triage 1/2/3/P/R/Del, focus F) are scoped to
+ * their own pages, not here.
  */
 
-/** Areas reachable via the `g`-prefix navigation chords. */
-export type NavDestination = "inbox" | "next" | "triage" | "planning" | "review";
+/** Areas reachable via the Shift-letter navigation chords. */
+export type NavDestination =
+  | "inbox"
+  | "next"
+  | "today"
+  | "triage"
+  | "planning"
+  | "review";
 
 export interface ShortcutHandlers {
   onCapture?: () => void;
@@ -43,13 +52,6 @@ function isTypingTarget(el: EventTarget | null): boolean {
 }
 
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
-  // The `g`-prefix for two-key nav chords (g i, g n, …). Lives in a ref so the
-  // window listener can read/write it without re-binding. Cleared by: a matching
-  // second key, any non-matching key, Esc, or a ~750ms timeout (so a stray `g`
-  // doesn't leave the prefix armed indefinitely).
-  const prefixRef = useRef<"g" | null>(null);
-  const prefixTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
@@ -66,7 +68,7 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
 
       // ⌘? — cheatsheet (Cmd+Shift+/).
       // Up here because Cmd chords don't type text, so it works in fields
-      // too. Locked 2026-06-22. (Bare `?` is handled below, typing-guarded.)
+      // too. (Bare `?` is handled below, typing-guarded.)
       if (meta && e.key === "?") {
         e.preventDefault();
         handlers.onToggleCheatsheet?.();
@@ -74,15 +76,43 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       }
 
       // Esc — always closes the topmost overlay. Never blocked by typing.
-      // Also cancels any armed `g`-prefix so a stray prefix never lingers.
       if (e.key === "Escape") {
-        prefixRef.current = null;
         handlers.onCloseOverlay?.();
         return;
       }
 
       // Below shortcuts are disabled while typing.
       if (isTypingTarget(e.target)) return;
+
+      // Shift + letter → navigation + capture. One grammar: Shift + the first
+      // letter of the destination. Capitals never clash with triage's lowercase
+      // p/r, and Shift doesn't type into fields (the typing guard above is a
+      // belt-and-suspenders backstop). `e.shiftKey && e.key.length === 1` keys
+      // off the shifted glyph so this only matches true Shift+letter presses,
+      // not Shift+arrow/Shift+symbol.
+      if (e.shiftKey && e.key.length === 1) {
+        const SHIFT_NAV: Record<string, NavDestination> = {
+          I: "inbox",
+          N: "next",
+          T: "today",
+          G: "triage", // triaGe
+          P: "planning",
+          R: "review",
+        };
+        const dest = SHIFT_NAV[e.key.toUpperCase()];
+        if (dest) {
+          e.preventDefault();
+          handlers.onNavigate?.(dest);
+          return;
+        }
+        // Shift+C → capture (typing-safe convenience; ⌘K stays the always-works
+        // focus-protector).
+        if (e.key.toUpperCase() === "C") {
+          e.preventDefault();
+          handlers.onCapture?.();
+          return;
+        }
+      }
 
       // Space — Next (home). Avoid hijacking button-activation space.
       if (e.key === " " && !(e.target instanceof HTMLButtonElement)) {
@@ -97,43 +127,6 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       if (e.key === "?") {
         e.preventDefault();
         handlers.onToggleCheatsheet?.();
-        return;
-      }
-
-      // g-prefix navigation chords (vim-style): `g` arms a prefix, the next
-      // key jumps to an area. Two keys = no collision with single-key shortcuts
-      // or with typing (the whole block is past the typing guard, so `g` never
-      // fires while composing text). Any non-matching second key cancels.
-      const G_DEST: Record<string, NavDestination> = {
-        i: "inbox",
-        n: "next",
-        t: "triage",
-        p: "planning",
-        r: "review",
-      };
-      const lower = e.key.toLowerCase();
-
-      if (prefixRef.current === "g") {
-        // A prefix is armed: dispatch on match, cancel on anything else.
-        if (prefixTimerRef.current) clearTimeout(prefixTimerRef.current);
-        prefixRef.current = null;
-        const dest = G_DEST[lower];
-        if (dest) {
-          e.preventDefault();
-          handlers.onNavigate?.(dest);
-        }
-        return;
-      }
-
-      // Arm the prefix on a bare `g`. A timeout cancels it if no second key
-      // follows — so a lone `g` is a no-op rather than a stuck prefix.
-      if (lower === "g") {
-        e.preventDefault();
-        prefixRef.current = "g";
-        if (prefixTimerRef.current) clearTimeout(prefixTimerRef.current);
-        prefixTimerRef.current = setTimeout(() => {
-          prefixRef.current = null;
-        }, 750);
         return;
       }
     };

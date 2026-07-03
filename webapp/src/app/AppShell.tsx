@@ -40,10 +40,11 @@ n *     at a time. Expanding one collapses the others.
 
 type FocusSection = "work" | "plan" | "review";
 
-/** Routes for the `g`-prefix navigation chords (useKeyboardShortcuts). */
+/** Routes for the Shift-letter navigation chords (useKeyboardShortcuts). */
 const NAV_ROUTE: Record<NavDestination, string> = {
   inbox: "/app/inbox",
   next: "/app",
+  today: "/app/today",
   triage: "/app/inbox/review",
   planning: "/app/projects",
   review: "/app/logbook",
