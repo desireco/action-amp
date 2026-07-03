@@ -1,6 +1,6 @@
 ---
 feature: entitlement-enforcement
-status: ready
+status: done
 spec_owner: discover
 build_owner: build
 ---

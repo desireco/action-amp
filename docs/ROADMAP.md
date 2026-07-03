@@ -132,14 +132,7 @@ item; Build pulls `ready`.**
 
 ### Then (earn-the-revenue work — gated on ≥1 paying non-founder user)
 
-1. **entitlement-enforcement** (`ready`) — the feature caps in PRICING.md §4
-    (Me-lens-only free, 3 projects, 1 goal) are not enforced anywhere (confirmed
-    by audit 2026-06-27, §Free-tier audit). `FREE_LIMITS` defined, imported
-    nowhere; `isPlanActive` dead code. Highest-value, smallest build, fixes a
-    live billing leak. **Note:** legal-pages-oauth's review hedged its
-    data-retention clause because this isn't done — landing this unblocks an
-    accurate privacy policy too.
-2. **breadcrumb-nav** (`ready`, small) — the `Breadcrumb` component works
+1. **breadcrumb-nav** (`ready`, small) — the `Breadcrumb` component works
     (crumbs are `<button>`s) but is wired only into the design-system demo, not
     the Project/Goal detail pages (both use a `← Back` Link). Per BACKLOG.md's
     BUILD REQUIREMENT (2026-06-16), clicking an ancestor crumb should re-anchor
@@ -148,7 +141,7 @@ item; Build pulls `ready`.**
     model the rest of the app already uses — an interaction-design decision,
     not a cleanup finish. Includes the goal-card hover-implies-clickable nit
     (same "list ↔ detail" affordance question).
-3. **resources-project-owned** (`ready`) — make the existing-but-invisible
+2. **resources-project-owned** (`ready`) — make the existing-but-invisible
     `Resource` entity real: project-owned links+notes, surfaced on the Project
     detail page (add/edit/delete), with tasks referencing their project's
     resources (many-to-many) and a **delete-with-impact** flow that shows which
@@ -160,10 +153,10 @@ item; Build pulls `ready`.**
     `docs/specs/resources-project-owned.md`. Gated on items 7–11 like the rest
     of this tier — depth earns its keep after retention + the matcher prove
     someone stays.
-4. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
+3. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
     marketing pack, the real pricing page. Only worth doing once items 7–11
     prove someone stays and pays.
-5. **cli** (`ready`, **developer surface — not validation-critical**) — a
+4. **cli** (`ready`, **developer surface — not validation-critical**) — a
     top-level `cli/` package (typed library + thin binary) that talks to the
     HTTP API via **Personal Access Tokens** added to the backend, plus four
     paired orchestration skills (inbox-triage, goal-breakdown, today-balancer,
@@ -177,7 +170,7 @@ item; Build pulls `ready`.**
     what the backend already exposes; missing writes filed as
     `cli-write-ops.md` (`deferred`) + `cli-comments-resources.md` (`deferred`,
     unblocks the `task-research` skill). Spec at `docs/specs/cli.md`.
-6. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
+5. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
     Lens-scoped page (hero + Today | Done columns), and reshapes how a task is
     worked: **no completion circle anywhere** (complete only from focus mode —
     the list becomes a chooser, not a tick-box), a **timestamped activity log**
@@ -219,8 +212,8 @@ What landed and was signed off:
 1. `doc-reconciliation` is now the priority — the merged fix branch edited
    canonical docs; reconcile them so planning isn't split-brain.
 2. The `ready` specs are the queue: observability, social-auth,
-   focus-why-transparent, focus-engine-v2, command-palette, entitlement,
-   breadcrumb-nav, resources-project-owned.
+   focus-why-transparent, focus-engine-v2, command-palette, breadcrumb-nav,
+   resources-project-owned.
 
 ## Shipped
 
@@ -264,6 +257,17 @@ What landed and was signed off:
   removal dropped per user instruction; breadcrumb nav spun out as its own
   backlog item (`breadcrumb-nav`) — interaction-design decision, not cleanup.
   Review writeup at `docs/reviews/friction-cleanup.md`.
+- **entitlement-enforcement** (`done` 2026-07-03) — the free-tier caps in
+  PRICING.md §4 are now enforced server-side (the billing boundary) + surfaced
+  as calm "Pro feature" paywall moments client-side. Guards on `createProject`,
+  `createGoal`, the triage project path, and all lens-scoped reads
+  (`getTasks`/`getProjects`/`getGoals`/`getTopTask`/`getDoneToday`). Work lens is
+  visible-but-locked for FREE (client gate + server 402). Default lens flipped
+  `Work → Me`. Shared `<ProGate>` component established for future gates. Uses
+  `isPlanActive` (expired PRO → FREE). 285 unit tests + 45/45 e2e (serially,
+  incl. 3 new entitlement cases). Review writeup at
+  `docs/reviews/entitlement-enforcement.md`. **Unblocks** an accurate privacy
+  policy (legal-pages-oauth hedged its data-retention clause on this).
 
 (The core loop, billing, and deploy are shipped but were never tracked as duet
 specs — they predate the protocol.)
@@ -479,7 +483,7 @@ roadmaps forget and most launches stall on.
 - [x] First-run experience → **`first-run-experience`** (`done`)
 - [ ] Observability → **`observability-minimal`** (`ready`)
 - [ ] Google auth → **`social-auth-google`** (`ready`, needs legal + console)
-- [ ] Entitlement caps → **`entitlement-enforcement`** (`ready`)
+- [x] Entitlement caps → **`entitlement-enforcement`** (`done`)
 - [x] Friction cleanup → **`friction-cleanup`** (`done`; breadcrumb-nav spun out)
 - [ ] Command palette + search → **`command-palette-search`** (`ready`)
 - [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup)
