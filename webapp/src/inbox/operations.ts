@@ -89,6 +89,41 @@ export const triageInboxItem = (async (args, context) => {
   const priority = args.priority ?? item.parsedPriority ?? "NORMAL";
   const size = args.size ?? item.parsedSize ?? "M";
 
+  // Resolve captured @tags / #tokens into real Tag records (per-user unique by
+  // name). Tags carry onto Tasks only — Projects and Goals drop them (their
+  // scope is the whole collection, not a single actionable item). The parser
+  // stores tags WITH their prefix (@phone, #mvp); strip it so the Tag name is
+  // the clean word. resolve-or-create: a typo makes a new tag, never a crash.
+  const tagNames = (item.parsedTags ?? [])
+    .map((t) => t.replace(/^[@#]/, "").toLowerCase())
+    .filter((t) => t.length > 0);
+  const tagRecords =
+    tagNames.length > 0
+      ? await Promise.all(
+          tagNames.map((name) =>
+            context.entities.Tag.upsert({
+              where: { userId_name: { userId: context.user!.id, name } },
+              create: { name, color: "teal", userId: context.user!.id },
+              update: {},
+              select: { id: true },
+            }),
+          ),
+        )
+      : [];
+
+  // Default-filing: if no project was chosen (no explicit pick and the #project
+  // hint didn't resolve to an existing project), file under the lens's "General"
+  // project so the task is never projectless. Mirrors how the spec step shows
+  // "General" as the default project row.
+  let effectiveProjectId = args.projectId ?? null;
+  if (!effectiveProjectId) {
+    const general = await context.entities.Project.findFirst({
+      where: { userId: context.user.id, lensId, name: "General" },
+      select: { id: true },
+    });
+    effectiveProjectId = general?.id ?? null;
+  }
+
   let result: { kind: "task" | "project" | "archive"; id: string };
 
   switch (args.decision) {
@@ -108,7 +143,11 @@ export const triageInboxItem = (async (args, context) => {
           size,
           dueDate: item.parsedDate,
           goalId: args.goalId,
-          projectId: args.projectId,
+          projectId: effectiveProjectId,
+          // Tags carry onto tasks only (projects/goals drop them).
+          ...(tagRecords.length > 0
+            ? { tags: { connect: tagRecords.map((t) => ({ id: t.id })) } }
+            : {}),
         },
         select: { id: true },
       });

@@ -163,7 +163,7 @@ export default app({
     action(completeOnboarding, { entities: ["User"], auth: true }),
     query(getInboxItems, { entities: ["InboxItem"], auth: true }),
     action(createInboxItem, { entities: ["InboxItem"], auth: true }),
-    action(triageInboxItem, { entities: ["InboxItem", "Task", "Project", "Resource"], auth: true }),
+    action(triageInboxItem, { entities: ["InboxItem", "Task", "Project", "Resource", "Tag"], auth: true }),
     action(restoreArchivedItem, { entities: ["InboxItem"], auth: true }),
     query(getBillingStatus, { entities: ["Payment"], auth: true }),
     query(getFounding100Status, { entities: ["User"], auth: false }),
