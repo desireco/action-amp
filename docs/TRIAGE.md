@@ -120,13 +120,22 @@ are **one surface at different commitment levels.**
 
 The wizard (per item):
 
-1. **Context (Lens)** — a radio, pre-filled with the active lens. The user
-   must **Continue** to ratify it. *(Reverses WORKFLOW.md §5.5's inherit-active
-   default — triage now asks, explicitly. The active lens is still the
-   pre-selection, so the common case is one Continue.)* Lists the full lens set
-   (user-defined lenses appear for Pro, not just the seeded two). At ≥4 lenses
-   the radio follows the same adaptive pattern as the sidebar switcher (chip +
-   popover); at ≤3 it's today's radio.
+1. **Context (Lens)** — a radio, pre-filled with the active lens, or — when
+   capture provided a hint — the inferred lens. Two inference paths
+   (`docs/specs/capture-grammar.md`, locked 2026-07-04):
+   - **`[[lens]]` token** (explicit): `[[work]]` / `[[personal]]` / `[[me]]` /
+     `[[custom-name]]` resolves to a lens and pre-fills it. Seeded lenses match
+     on `kind` (survives renames); custom lenses match on exact name. Unknown
+     tokens stay literal text (no false positives on pasted wiki-links).
+   - **Project-bridged** (inferred): if the resolver matches a project name in
+     the cleaned text, that project's lens pre-fills this step.
+   The user must **Continue** to ratify either way. *(Reverses WORKFLOW.md
+   §5.5's inherit-active default — triage now asks, explicitly. The active
+   lens is still the pre-selection when no hint is present, so the common case
+   is one Continue. Smarts pre-fill visibly; they never silently file — §5.5
+   stays intact.)* Lists the full lens set (user-defined lenses appear for Pro,
+   not just the seeded two). At ≥4 lenses the radio follows the same adaptive
+   pattern as the sidebar switcher (chip + popover); at ≤3 it's today's radio.
 2. **Type** — what does this become? **Task** (default) · **Project** ·
    **Resource** (a Note) · **Archive** (lossless — kept, recoverable). *Goal is
    not a type-chooser outcome* — goals are filed *into*, never created at
@@ -176,8 +185,10 @@ Today** — the user must actively promote a task to Today.
 | Lens | the active Lens | every entity requires one |
 
 Parser pre-fills any token the user typed at capture (`tomorrow`, `!3`, `~XL`,
-`#ship`, `@phone`) — defaults only fill the gaps. `#` links a project, `@` is a
-context tag (§7.5).
+`#deep-work`, `[[work]]`) — defaults only fill the gaps. `#` is a tag, `@` is
+time only, `[[lens]]` is the explicit lens override (§7.5). Project intent is
+resolver-driven from free text — a matched project name carries its lens into
+this step. `[[ ]]` precedence beats project-inferred lens when they disagree.
 
 ---
 
@@ -311,13 +322,18 @@ analogy. Reversed because capture is usually a one-off, not a session.)*
 | `Shift+Enter` | Expand to full co-author editor (desktop) |
 | `/` (first keystroke) | Command prefix — `/daily review`, `/focus`, `/switch Work` *(Phase 2)* |
 | `Esc` | Close without saving |
-| *(while typing)* | NL sigils: `#` link project/goal · `@` context tag · `!` priority · `~` size · date words |
+| *(while typing)* | NL sigils: `#` tag · `@` time · `[[lens]]` lens override · `!` priority · `~` size · date words |
 | *(expanded, not typing)* | `[` `]` size · `-` `=` priority (same as triage) |
 
-**First-class properties in capture: `#` (project/goal) and `@` (context).**
-Priority (`!`) and size (`~`) are still parsed but are expanded-editor
+**First-class properties in capture: `#` (tags), `@` (time), `[[lens]]`
+(explicit lens override).** Projects are resolver-driven from free text — no
+sigil. Priority (`!`) and size (`~`) are still parsed but are expanded-editor
 territory, not the quick-capture essentials. Choosing *where this goes* beats
-choosing *how urgent/big it is* — that's triage's job. Locked 2026-06-22.
+choosing *how urgent/big it is* — that's triage's job. **Locked 2026-07-04
+(grammar v2 — supersedes the 2026-06-22 `#`/`@` decision).** The old `#` link
+project + `@` context tag split is gone; `#` is tags only, `@` is time only,
+and lens intent lives in `[[ ]]` or the resolver. See
+`docs/specs/capture-grammar.md`.
 
 ### 7.6 Property keys — size & priority
 

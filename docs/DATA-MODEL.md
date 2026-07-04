@@ -33,6 +33,15 @@
 > one short line ("what this lens is for"). Lens configuration (create/rename/
 > recolor/edit-purpose/delete) is Pro-only; FREE gets the seeded two (Me usable,
 > Work visible-but-locked). See `docs/specs/custom-lenses.md`.
+>
+> v5 (2026-07-04): **Capture grammar v2.** The NL sigils are reorganized: `#`
+> is tags (was: project + tags), `@` is time only (was: tags + time), `[[lens]]`
+> is the new explicit lens override, `!`/`~` unchanged. Projects are matched
+> from free text by a resolver (no sigil). `InboxItem.parsedLens` stores the
+> `[[ ]]` token (null when absent or unknown). The legacy `parsedProject` field
+> stays on the model but is no longer populated by the v2 parser — the resolver
+> works off the cleaned text directly. The InboxItem remains unscoped; the lens
+> is confirmed at triage. See `docs/specs/capture-grammar.md`.
 
 ---
 
@@ -46,8 +55,8 @@
              ├─ Task        ← an atomic action (THE focus candidate)
              └─ Resource    ← reference material, not an action  [PARA Resource]
 
-  Tag             ← GTD "@context": @errands, @phone, ~15m, low-energy
-                     (focus refinements — Phase 2 nuance)
+  Tag             ← GTD "@context": #errands, #phone, ~15m, low-energy
+                     (focus refinements — Phase 2 nuance; `#`-prefixed at capture per grammar v2)
   Archive         ← PARa's A: completed/dead items  [Logbook]
   Inbox           ← GTD's Inbox: universal, single queue
 ```
@@ -85,7 +94,12 @@ setting a Task to **XL prompts you to break it down** (convert it to a Project,
 ## 2. The universal Inbox
 
 - **Exactly one** Inbox. All capture (quick-add, email-in, etc.) lands here.
-- An inbox entry is an **InboxItem**: raw text + parsed metadata (dates/tags the NL parser found) + `status: unprocessed`.
+- An inbox entry is an **InboxItem**: raw text + parsed metadata — `parsedDate`,
+  `parsedPriority`, `parsedSize`, `parsedTags`, `parsedProject` (legacy, unused
+  by the server — see v5 below), `parsedLens` (the `[[lens]]` token, or null) —
+  + `status: unprocessed`. The InboxItem itself is still **unscoped** (no
+  `lensId`); `parsedLens` is a *hint* that pre-fills the triage Context step,
+  not an assignment. Capture is universal; the lens is confirmed at triage.
 - Nothing leaves the Inbox by aging or by being dated — it only leaves through **triage**.
 
 ---

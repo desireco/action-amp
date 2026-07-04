@@ -57,10 +57,10 @@ The product bet: **overwhelm happens at step 3, not step 1.** ADHD brains don't 
 Goal: thought → inbox in under 2 seconds, never leaving the keyboard.
 
 - **F1. Global quick-add** — `Cmd+K` opens a floating input from *anywhere* in the app. Type, `Enter`, done. Stays on the current screen.
-- **F2. Natural-language parsing** (Things/TickTick style) — `Email Sarah re: invoice tomorrow #mvp @phone !2 ~20m`
-  - `tomorrow` → due date · `#mvp` → project (resolved at triage if a project by that name exists in the chosen lens) · `@phone` → context tag · `!2` → priority · `~20m` → size (time tokens map to S/M/L/XL, e.g. <15m=S, <1h=M, <2h=L, >2h=XL)
+- **F2. Natural-language parsing** (Things/TickTick style) — `Email Sarah re: invoice tomorrow #deep-work [[work]] !2 ~20m`
+  - `tomorrow` → due date · `#deep-work` → tag · `[[work]]` → lens override (resolved at triage on `kind` for seeded, name for custom) · `!2` → priority · `~20m` → size (time tokens map to S/M/L/XL, e.g. <15m=S, <1h=M, <2h=L, >2h=XL). Project intent is matched from free text by the resolver (no sigil) — "Email Sarah about MVP" suggests the MVP project.
   - Parsed tokens show as chips inline before you hit Enter (so you see what it understood).
-  - `#` links a project, `@` is a context tag (TRIAGE.md §7.5). An explicit `today`/`tonight` token pre-fills When = Today at triage.
+  - Grammar v2 (locked 2026-07-04): `#` is a tag, `@` is time only, `[[lens]]` is the explicit lens override (TRIAGE.md §7.5). An explicit `today`/`tonight` token pre-fills When = Today at triage. See `docs/specs/capture-grammar.md`.
 - **F3. Inbox** — everything lands here unassigned until clarified. The Inbox count is the only "queue" concept.
 - **F4. Capture-with-context** — `Shift+Enter` from quick-add opens the full editor (notes, subtasks, due date pickers) without leaving the palette.
 - **F5. Email-in capture** *(Phase 2)* — a per-user inbox address so forwarding an email creates an item.
@@ -86,7 +86,7 @@ Goal: get items *out* of the inbox and *into* a place where the focus engine can
 - **Lens** — the active life-context switch (Work / Me). Everything is scoped by it.
 - **Goals** — the organizing layer (replaces PARA's "Areas"): active outcomes like "Run a 10k".
 - **Projects** — multi-step outcomes (live under a Goal).
-- **Tags** — cross-cutting: `~15m`, `~1h`, `low-energy`, `high-energy`, `@errands`, `@phone`. **The focus engine leans on these.**
+- **Tags** — cross-cutting: `~15m`, `~1h`, `low-energy`, `high-energy`, `#errands`, `#phone`. **The focus engine leans on these.**
 
 ---
 
