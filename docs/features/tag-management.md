@@ -3,17 +3,17 @@ slug: tag-management
 title: "Tag management UI + reserved tag seeding"
 feature_area: cross-cutting
 status: missing
-spec: —                            # spec not yet written — this is a discovered prerequisite
-gates: focus-engine-v2.md          # the moment matcher is inert without it
+spec: tag-management.md            # ready — written 2026-07-03
+unblocks: focus-engine-v2.md       # the moment matcher is inert without it
 verified: 2026-07-03
 ---
 
 # Tag management UI
 
-**Wanted.** A way to view, add, and remove tags on a Task beyond the
-`@`-parsing that happens at triage — plus seeding the reserved tag names
-(`~15m`, `~30m`, `~1h`, `~2h+`, `low-energy`, `med-energy`, `high-energy`) the
-focus engine v2 leans on.
+**Wanted.** Show + edit tags as chips on Task detail (add via typed input,
+remove via ×), and seed the 7 reserved tag names (`~15m`, `~30m`, `~1h`,
+`~2h+`, `low-energy`, `med-energy`, `high-energy`) once per user so the matcher
+has something to read.
 
 **Today.** **No tag UI exists.** Tags are created *only* at triage via
 `@`-parsing (`inbox/operations.ts:155` connects parsed tag records to the new
@@ -22,17 +22,13 @@ there are no reserved tag names — the `Tag` model (`name`, `color`, per-user
 `@@unique([userId, name])`) supports them but nothing reads/writes them outside
 triage.
 
-**Spec.** **Not yet written.** Surfaced 2026-07-03 as a *missing prerequisite*
-during the focus-engine-v2 review — the moment matcher depends on energy/time
-tags users have no way to set.
+**Spec.** `docs/specs/tag-management.md` — **`ready`** (written 2026-07-03).
+Deliberately **the minimum that unblocks the matcher:** seed the 7 names in
+`ensureOnboarded`, render chips + add/remove on Task detail, two ops
+(`linkTaskTag` / `unlinkTaskTag`). Non-goals: no tag-manager page, no color
+editing, no merge/rename/delete, no other Task-detail fields.
 
 **Why it matters.** Without this, `focus-engine-v2`'s moment-aware matcher is
-inert (users can't tag tasks with the energy/size the matcher reads). It is the
-load-bearing prerequisite for the matcher, and it doesn't exist. The spec needs
-to answer: where tags are edited (Task detail inline? a Tag manager?),
-reserved-name seeding (system tags vs user tags), and how capture's `@`-parsing
-interacts with the reserved time/energy names.
+inert — users can't tag tasks with the energy/time the matcher ranks on. This
+is the load-bearing prerequisite for the project's only moat.
 
-**Status: this catalog entry exists so the gap is visible.** Writing the spec is
-a Discover action; until it lands and is `ready`, `focus-engine-v2` cannot be
-`ready`.

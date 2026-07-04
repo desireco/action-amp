@@ -135,17 +135,14 @@ item; Build pulls `ready`.**
 
 ### Then (earn-the-revenue work — gated on ≥1 paying non-founder user)
 
-1. **breadcrumb-nav** (`draft`, small — was ad-hoc "ready" with no spec) — the
+1. **breadcrumb-nav** (`ready`, small — model locked 2026-07-03) — the
     `Breadcrumb` component works (crumbs are `<button>`s) but is wired only
     into the design-system demo, not the Project/Goal detail pages (both use a
     `← Back` Link). Per BACKLOG.md's BUILD REQUIREMENT (2026-06-16), clicking
-    an ancestor crumb should re-anchor the view at that scope. **Spec written
-    2026-07-03** (`docs/specs/breadcrumb-nav.md`); **`draft` because the
-    blocking interaction-model decision is unresolved** — WORKFLOW.md
-    "zoom/anchor" vs the route model the app uses. Discover leans **route
-    model** (uniform with the rest of the app; the zoom/anchor layer belongs
-    with hard-focus mode if that ever ships). Includes the goal-card
-    hover-implies-clickable nit.
+    an ancestor crumb should re-anchor the view at that scope. **Spec at
+    `docs/specs/breadcrumb-nav.md` — `ready` (route model locked: crumbs
+    navigate to the ancestor's existing route, uniform with the app, no new
+    view-state layer).** Includes the goal-card hover-implies-clickable nit.
 2. **resources-project-owned** (`ready`, confirmed 2026-07-03) — make the
     existing-but-invisible `Resource` entity real: project-owned links+notes,
     surfaced on the Project detail page (add/edit/delete), with tasks
@@ -240,11 +237,11 @@ What landed and was signed off:
 2. The `ready` specs are the queue (2026-07-03 review): **observability-
    minimal** (gated by `gtm-analytics-account`), **retention-criticalpath**
    (depends on observability), **command-palette-search**,
-   **resources-project-owned**, **cli-pat-plumbing** (opportunistic). Flipped
-   to `draft` after review: **focus-engine-v2** (3 gaps + matcher-test gate),
-   **breadcrumb-nav** (model decision unresolved), **cli-package** +
-   **cli-skills**. `tag-management` is a prerequisite spec not yet written
-   (gates focus-engine-v2).
+   **resources-project-owned**, **breadcrumb-nav** (route model locked),
+   **tag-management** (unblocks focus-engine-v2), **cli-pat-plumbing**
+   (opportunistic). Flipped to `draft` after review: **focus-engine-v2** (needs
+   tag-management + a mockup + matcher-test gate), **cli-package** +
+   **cli-skills**.
 
 ## Shipped
 
@@ -533,7 +530,8 @@ roadmaps forget and most launches stall on.
 - [x] Entitlement caps → **`entitlement-enforcement`** (`done`)
 - [x] Friction cleanup → **`friction-cleanup`** (`done`; breadcrumb-nav spun out)
 - [ ] Command palette + search → **`command-palette-search`** (`ready`)
-- [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`draft`, spun out of friction-cleanup; spec written 2026-07-03, model decision unresolved)
+- [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup; route model locked 2026-07-03)
+- [ ] Tag management UI + reserved-tag seeding → **`tag-management`** (`ready`, written 2026-07-03; unblocks `focus-engine-v2`)
 - [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`, confirmed 2026-07-03)
 
 ### B. Non-code items the user owns (no spec — these are setup/decisions)

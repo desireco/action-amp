@@ -96,11 +96,9 @@ items they imply — not built yet, listed here so they're not lost:
   are `<button>`s with `onSelect`) but is wired only into the design-system
   demo, not Project/Goal detail (both use a `← Back` Link). Per the BUILD
   REQUIREMENT below, crumbs should re-anchor the view at the clicked scope.
-  Spun out of `friction-cleanup` at sign-off (2026-07-02) — wiring it is an
-  interaction-design decision (WORKFLOW.md zoom/anchor model vs the route
-  model the app uses). **Spec written 2026-07-03** at
-  `docs/specs/breadcrumb-nav.md` (`draft`); Discover leans **route model**
-  (uniform with the rest of the app). Decision must be locked before `ready`.
+  Spun out of `friction-cleanup` at sign-off (2026-07-02). **Spec at
+  `docs/specs/breadcrumb-nav.md` — `ready` 2026-07-03 (route model locked:
+  crumbs navigate to the ancestor's existing route, no new view-state layer).**
   Tracked as `breadcrumb-nav` in ROADMAP.md.
 - [ ] **Logbook / Review mode screen.** Logbook list shipped (`/app/logbook`,
   incl. the Archived section for lossless triage Archive); **Review/debrief
@@ -118,8 +116,10 @@ items they imply — not built yet, listed here so they're not lost:
   2026-07-03 as a *missing prerequisite* during the focus-engine-v2 review:
   the moment matcher reads energy/time tags users have no way to set (tags are
   only created via `@`-parsing at triage; never listed on Task detail; no
-  reserved names). No spec written yet; catalog entry at
-  `docs/features/tag-management.md`. **Gates `focus-engine-v2`.**
+  reserved names). **Spec at `docs/specs/tag-management.md` — `ready`
+  2026-07-03.** Minimum that unblocks the matcher: seed 7 reserved names in
+  `ensureOnboarded`, chips + add/remove on Task detail, two ops. **Unblocks
+  `focus-engine-v2`.**
 - [x] **Marketing site home** — DONE. Landing page at `/` ("Easiest way to get
   into action"), full pitch, footer. `src/landing/LandingPage.tsx`. *(No
   waitlist/email capture by design — see PRODUCT.md "pure signpost"; the

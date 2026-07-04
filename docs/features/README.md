@@ -50,7 +50,7 @@
 ### Planned (not in code)
 - [command-palette](./command-palette.md) (`missing`, spec `ready`) — `⌘\` fuzzy search.
 - [resources-project-owned](./resources-project-owned.md) (`missing`, spec `ready`) — project-owned links/notes + task refs; explicit `TaskResource` join (resolved 2026-07-03).
-- [breadcrumb-nav](./breadcrumb-nav.md) (`missing`, spec `draft`) — crumbs navigate; blocking model decision captured but unresolved.
+- [breadcrumb-nav](./breadcrumb-nav.md) (`missing`, spec `ready` — route model locked) — crumbs navigate.
 - [focus-engine-v2](./focus-engine-v2.md) (`missing`, spec `draft`) — moment-aware matcher; needs tag-management UI + a mockup + matcher-test gate.
 - [observability-minimal](./observability-minimal.md) (`missing`, spec `ready`, gated by `gtm-analytics-account`) — analytics + funnel.
 - [retention-criticalpath](./retention-criticalpath.md) (`missing`, spec `ready`, depends on observability) — first-7-days instrumentation.
@@ -62,7 +62,7 @@
   - `cli-pat-plumbing` (`ready`, P3 opportunistic) — `ApiKey` + PAT routes + middleware + Settings UI.
   - `cli-package` (`draft`) — the `cli/` package; draft because the op-refactor is unscoped.
   - `cli-skills` (`draft`) — four orchestration skills; depends on `cli-package`.
-- [tag-management](./tag-management.md) (`missing`, spec `not yet written`) — tag view/add/remove UI + reserved tag seeding; **prerequisite for `focus-engine-v2`**.
+- [tag-management](./tag-management.md) (`missing`, spec `ready`) — Task-detail tag chips + reserved-name seeding; **unblocks `focus-engine-v2`**.
 
 ### Deliberately not built (Phase 2 / Icebox)
 - Subtasks, Pomodoro timer, email-in capture, AI-tuned suggestions, native mobile,

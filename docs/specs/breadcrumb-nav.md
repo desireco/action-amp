@@ -2,7 +2,7 @@
 id: breadcrumb-nav
 kind: spec
 title: "Breadcrumb navigation (crumbs navigate, not just zoom)"
-status: draft                # was ad-hoc "ready" with no spec; blocking decision unresolved
+status: ready               # locked to route model + flipped ready 2026-07-03
 feature: breadcrumb-nav
 spec_owner: discover
 build_owner: build
@@ -11,11 +11,9 @@ created: 2026-07-03
 
 # Spec: Breadcrumb navigation
 
-> **Status: `draft`.** This was tracked as `ready` in ROADMAP/BACKLOG with no
-> spec file. Promoted to a real spec 2026-07-03 — but the blocking
-> interaction-design decision (zoom/anchor model vs route model) is unresolved,
-> so it cannot be `ready` until that call is made here. Small surface, real
-> decision.
+> **Status: `ready`** (locked 2026-07-03). Was `draft` pending the model
+> decision; the route model is now locked below. Small surface, real decision,
+> now resolved.
 
 ## Summary
 
@@ -58,52 +56,33 @@ ancestor-navigation surface.
 - **No mobile-specific gesture work here** — two-finger swipe stays as-is.
 - **No breadcrumb on the home screen** — it's a detail-page affordance.
 
-## Open questions (must resolve before `ready`)
+## Decision locked (2026-07-03): the route model
 
-### 1. The blocking decision: zoom/anchor vs route
+The blocking call is resolved. **Breadcrumb clicks navigate to the ancestor's
+existing route** (Project crumb → `/app/projects/:id`, Goal crumb →
+`/app/goals/:id`). The breadcrumb is derived from the route, so it's always
+consistent with the URL and the back button.
 
-The two models disagree on what "navigate into an ancestor" means. This is the
-spec's reason for being `draft`.
+**Why route model over WORKFLOW.md's zoom/anchor.** Every other surface in the
+app uses routes; the zoom/anchor model is aspirational and would need a
+view-state layer separate from routing that the app does not have. Adding that
+layer for breadcrumbs alone is over-engineering. If hard-focus mode (each mode
+as a distinct full-screen layout, Icebox) ever ships, *that* is the right time
+to introduce the zoom/anchor layer — breadcrumbs can adopt it then. A
+forward-note on `work-area-merged` is the only follow-up (it's the other spec
+that gestures at view-state vs route questions).
 
-- **Option A — WORKFLOW.md "zoom/anchor" model.** Clicking a crumb re-anchors
-  the *view* at that scope without a route change. The Goal/Project becomes
-  the new home context; the breadcrumb updates; the URL may not change (or
-  changes only the querystring). Pro: matches the WORKFLOW.md §5 mental model
-  ("zoom/anchor"); preserves the "modal, not menu" principle. Con: diverges
-  from how the rest of the app works (every other navigation is a route);
-  breaks back-button expectations if the URL doesn't change; invents a
-  view-state layer the app doesn't currently have.
-- **Option B — route model (what the rest of the app uses).** Clicking a
-  crumb navigates to the ancestor's existing route: Project crumb →
-  `/app/projects/:id`, Goal crumb → `/app/goals/:id`. The breadcrumb is
-  derived from the route, so it's always consistent with the URL and the
-  back button. Pro: uniform with every other navigation in the app;
-  back-button-correct; no new view-state layer. Con: doesn't deliver the
-  "re-anchor the whole view" feel WORKFLOW.md §5 describes — it's just
-  navigation to a list/detail page.
+**Build implication:** no new view-state layer. Crumbs are plain links to
+existing routes; the chain is derived from the current entity's `projectId` /
+`goalId` (both already on the models). This is the simplest possible wiring.
 
-  **Discover's lean: Option B (route model).** Every other surface in the
-  app uses routes; the WORKFLOW §5 zoom/anchor model is aspirational and
-  would need its own architectural layer (view-state separate from route)
-  that does not exist. Adding that layer for breadcrumbs alone is
-  over-engineering. If hard-focus mode (each mode as a distinct full-screen
-  layout, Icebox) ever ships, *that* is the right time to introduce the
-  zoom/anchor layer — and breadcrumbs can adopt it then. Today, route model.
+## Open questions (resolved at lock)
 
-  This is a Discover call, not Build's. **It must be locked here before
-  `ready`.**
-
-### 2. Crumb derivation source
-
-Where does the breadcrumb chain come from? Task → Project → Goal needs each
-task's `projectId` and that project's `goalId` — both already on the models.
-Trivial once the model decision is made; noted for completeness.
-
-### 3. Breadcrumb on Task detail?
-
-Task detail (`/app/tasks/:id`) currently uses `← Back` too. Including it in
-this spec (Task › Project › Goal) or limiting to Project/Goal detail? Lean:
-include Task detail — it's the same affordance question.
+- **Crumb derivation source.** Task → Project → Goal needs each task's
+  `projectId` and that project's `goalId` — both already on the models.
+  Trivial.
+- **Breadcrumb on Task detail?** Yes — include Task detail (Task › Project ›
+  Goal). Same affordance question, same wiring.
 
 ## Prototypes
 
