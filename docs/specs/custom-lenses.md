@@ -153,10 +153,10 @@ violet = projects/goals, rose = errors):
 - `lime`
 - `magenta`
 
-Final palette + exact ramp values are a `DESIGN-SYSTEM-DRAFT.md` decision (the
-open ActionAmp identity work per AGENTS.md); the spec locks the *mechanism*
-(keyed ramps), not the swatches. Build blocks on the existing `--aa-lens-*`
-pattern: for each new key `K`, add `--aa-lens-K`, `-text`, `-soft`,
+Final palette + exact ramp values are documented in `DESIGN-SYSTEM.md` §2 (and
+live in `tokens.css`); this spec locks the *mechanism* (keyed ramps), not the
+swatches. Build blocks on the existing `--aa-lens-*` pattern: for each new key
+`K`, add `--aa-lens-K`, `-text`, `-soft`,
 `-soft-strong`, `-mid`, plus a `[data-lens="K"] { --aa-active-lens*: …; }` block
 and dark-theme overrides. The color picker in Settings renders the curated set
 as swatches (with reserved hues visibly absent).

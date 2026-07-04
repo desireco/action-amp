@@ -32,9 +32,10 @@ When docs conflict, **higher wins**:
    drafts) is **reference** — useful, but defer to the canonical docs above on
    conflict, and update them when the canonical doc changes.
 
-> `DESIGN.md` (root) and `docs/design.md` are byte-identical. The *Things*
-> reference is the design-system foundation, **not** the final ActionAmp identity
-> — `docs/DESIGN-SYSTEM-DRAFT.md` holds the open ActionAmp-specific decisions.
+> `DESIGN.md` (root) is the *Things* DNA reference — the design-system
+> foundation, not the final ActionAmp identity. ActionAmp's own decided system
+> (teal/amber accents, lens identity, token map) lives in
+> `docs/DESIGN-SYSTEM.md`, mirroring `webapp/src/styles/tokens.css`.
 
 ## Task → doc routing
 
@@ -51,7 +52,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Overlays — popover vs sheet vs modal | `docs/modal-approach.md` |
 | Data model, entities, enums, triage flow | `docs/DATA-MODEL.md` + `webapp/schema.prisma` |
 | A specific page/route | `docs/PAGES.md` + the route in `webapp/main.wasp.ts` |
-| Look/feel, color, type, components, tokens | `DESIGN.md` + `docs/DESIGN-SYSTEM-DRAFT.md` + `webapp/src/styles/tokens.css` |
+| Look/feel, color, type, components, tokens | `docs/DESIGN-SYSTEM.md` (decided) + `DESIGN.md` (Things DNA) + `webapp/src/styles/tokens.css` (source of truth) |
 | A UI component (Button, Card, CompletionCircle, …) | `webapp/src/components/ui/` + `DESIGN.md` |
 | Pricing, plans, feature caps | `docs/PRICING.md` + `docs/FEATURES.md` |
 | Stripe billing implementation | `docs/BILLING-INTEGRATION.md` (plan; **not yet implemented**) |

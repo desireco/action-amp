@@ -38,8 +38,8 @@ action-amp/
 └── AGENTS.md             # Agent-facing index: which doc to read for which task
 ```
 
-> `DESIGN.md` (root) and `docs/design.md` are **byte-identical duplicates**.
-> Treat the root copy as canonical; `docs/design.md` is the same file.
+> `DESIGN.md` (root) is the *Things* DNA reference. ActionAmp's decided design
+> system lives in `docs/DESIGN-SYSTEM.md` (mirrors `tokens.css`).
 
 ---
 
@@ -73,7 +73,7 @@ other docs, these win.
 | [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) | Data model + triage flow (GTD + PARA; Areas → Goals). |
 | [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) | The design philosophy: GTD workflow + PARA storage shape. |
 | [`docs/modal-approach.md`](docs/modal-approach.md) | The four overlay patterns (popover/sheet/modal/…) and when to use each. |
-| [`docs/DESIGN-SYSTEM-DRAFT.md`](docs/DESIGN-SYSTEM-DRAFT.md) | ActionAmp's own design system — open decisions before tokens are written. |
+| [`docs/DESIGN-SYSTEM.md`](docs/DESIGN-SYSTEM.md) | ActionAmp's decided design system — teal/amber accents, lens identity, token map. Mirrors `webapp/src/styles/tokens.css`. |
 
 **🟢 Go-to-market & pricing.**
 
