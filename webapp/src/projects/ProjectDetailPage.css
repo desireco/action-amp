@@ -9,6 +9,20 @@
 
 .aa-project__header {
   align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--aa-space-sm);
+}
+
+.aa-project__header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.aa-project__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-xs);
+  align-items: center;
 }
 
 .aa-project__meta {
@@ -25,6 +39,98 @@
   line-height: 1.5;
   color: var(--aa-text-2);
   margin: var(--aa-space-md) 0;
+}
+
+/* ---- Inline edit (header) ---- */
+.aa-project__edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+  width: 100%;
+}
+.aa-project__edit-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  width: 100%;
+}
+.aa-project__edit-desc {
+  font-size: 0.95rem;
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+}
+.aa-project__edit-err {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--aa-rose-text, var(--aa-text-3));
+}
+.aa-project__edit-actions {
+  display: flex;
+  gap: var(--aa-space-xs);
+}
+
+/* ---- Re-link to a goal (spec §C) ---- */
+.aa-project__relink {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  margin: var(--aa-space-md) 0;
+  font-size: 0.9rem;
+}
+.aa-project__relink-label {
+  color: var(--aa-text-3);
+  flex-shrink: 0;
+}
+.aa-project__relink-value {
+  background: none;
+  border: 1px dashed var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+  color: var(--aa-text-2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  transition: color var(--aa-dur-base) var(--aa-ease-out), border-color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-project__relink-value:hover {
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal-cta);
+}
+.aa-project__relink-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-xs);
+  align-items: center;
+}
+.aa-project__relink-opt {
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-full);
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+  color: var(--aa-text-2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: color var(--aa-dur-base) var(--aa-ease-out), border-color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-project__relink-opt:hover {
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal-cta);
+}
+.aa-project__relink-opt.is-active {
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal-cta);
+  font-weight: 500;
 }
 
 /* A task row + its horizon control, side by side. Mirrors Today's swap-row. */

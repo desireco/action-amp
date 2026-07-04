@@ -9,12 +9,41 @@
 
 .aa-goal__header {
   align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--aa-space-sm);
+}
+
+.aa-goal__header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.aa-goal__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-xs);
+  align-items: center;
 }
 
 .aa-goal__meta {
   margin: var(--aa-space-xs) 0 0;
   font-size: 0.9rem;
   color: var(--aa-text-3);
+}
+
+/* "Next: <project>" — a single muted line under the header (spec §E). Quiet,
+   not a banner; absent when there's no next project. */
+.aa-goal__next {
+  margin: var(--aa-space-xs) 0 0;
+  font-size: 0.85rem;
+  color: var(--aa-text-3);
+}
+.aa-goal__next a {
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+}
+.aa-goal__next a:hover {
+  text-decoration: underline;
 }
 
 .aa-goal__desc {
@@ -24,18 +53,84 @@
   margin: var(--aa-space-md) 0;
 }
 
+/* ---- Inline edit (header) ---- */
+.aa-goal__edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+  width: 100%;
+}
+.aa-goal__edit-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  width: 100%;
+}
+.aa-goal__edit-desc {
+  font-size: 0.95rem;
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+}
+.aa-goal__edit-err {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--aa-rose-text, var(--aa-text-3));
+}
+.aa-goal__edit-actions {
+  display: flex;
+  gap: var(--aa-space-xs);
+}
+
 /* ---- Linked projects list ---- */
 .aa-goal__projects {
   margin: var(--aa-space-lg) 0;
 }
 .aa-goal__project-row {
   padding: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+}
+.aa-goal__project-reorder {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.aa-goal__reorder-btn {
+  background: none;
+  border: none;
+  color: var(--aa-text-3);
+  cursor: pointer;
+  padding: 0 var(--aa-space-xs);
+  font-size: 0.75rem;
+  line-height: 1.1;
+  border-radius: var(--aa-radius-xs);
+  transition: color var(--aa-dur-base) var(--aa-ease-out), background var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-goal__reorder-btn:hover:not(:disabled) {
+  color: var(--aa-teal-cta);
+  background: var(--aa-surface-muted);
+}
+.aa-goal__reorder-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 .aa-goal__project-link {
   display: flex;
   align-items: center;
   gap: var(--aa-space-sm);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: var(--aa-space-sm) 0;
   text-decoration: none;
   color: var(--aa-text);

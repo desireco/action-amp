@@ -20,6 +20,9 @@ interface GoalRow {
   projectCount: number;
   taskCount: number;
   progress: number;
+  // First non-done project in sequence order (goal-planning spec §E). Null
+  // when the goal has no projects or all are done — the card hides the line.
+  nextProject: { id: string; name: string } | null;
 }
 
 /**
@@ -143,6 +146,12 @@ export function GoalsPage() {
               <span className="aa-goal-card__dot" aria-hidden="true">·</span>
               <span>{g.taskCount} task{g.taskCount === 1 ? "" : "s"}</span>
             </div>
+            {g.nextProject && (
+              <p className="aa-goal-card__next">
+                Next:{" "}
+                <Link to={`/app/projects/${g.nextProject.id}`}>{g.nextProject.name}</Link>
+              </p>
+            )}
           </div>
         ))}
       </div>

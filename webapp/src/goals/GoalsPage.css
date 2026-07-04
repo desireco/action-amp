@@ -90,6 +90,21 @@
   opacity: 0.6;
 }
 
+/* "Next: <project>" — a single muted line on the card (goal-planning spec §E).
+   Quiet, not a banner; absent when there's no next project (never lies). */
+.aa-goal-card__next {
+  margin: var(--aa-space-sm) 0 0;
+  font-size: 0.8rem;
+  color: var(--aa-text-3);
+}
+.aa-goal-card__next a {
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+}
+.aa-goal-card__next a:hover {
+  text-decoration: underline;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .aa-goal-card__fill {
     transition-duration: 0.01ms !important;

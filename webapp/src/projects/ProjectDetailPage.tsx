@@ -1,9 +1,24 @@
 import { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getProject, createTask, updateTaskStatus } from "wasp/client/operations";
+import {
+  getProject,
+  getGoals,
+  createTask,
+  updateTaskStatus,
+  setProjectDone,
+  updateProject,
+  deleteProject,
+} from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Chip, TaskRow, CompletionCircle, type TaskRowTask } from "../components/ui";
+import {
+  Button,
+  Chip,
+  TaskRow,
+  CompletionCircle,
+  ConfirmDialog,
+  type TaskRowTask,
+} from "../components/ui";
 import { CreateInline } from "../lists/CreateInline";
 import type { GroupDef } from "../components/ui";
 import "./ProjectDetailPage.css";
@@ -18,17 +33,26 @@ type ProjectData = {
   description: string | null;
   dueDate: Date | string | null;
   isDone: boolean;
+  order: number;
   lensId: string;
   goal: { id: string; name: string } | null;
   tasks: ProjectTask[];
 };
 
+type GoalOption = { id: string; name: string };
+
 /**
  * Project detail — the dedicated URL for working on a single Project. Shows its
  * tasks grouped by horizon (Today / Upcoming / Someday / Done), lets you add a
- * task inline, complete one, or move it between horizons. The project's lensId
- * is taken from the record itself (not the active sidebar lens), so a task you
- * add here always joins the right lens.
+ * task inline, complete one, or move it between horizons.
+ *
+ * Header affordances (goal-planning spec §B, §C): Complete / Reopen, inline
+ * edit of name + description, delete (lossless — child tasks re-parent to
+ * standalone in this Lens, retaining their goalId), and an editable parent
+ * Goal (re-link to a different goal in this Lens, or unlink).
+ *
+ * The project's lensId is taken from the record itself (not the active sidebar
+ * lens), so a task you add here always joins the right lens.
  */
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,9 +63,25 @@ export function ProjectDetailPage() {
   const [creating, setCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Header affordances: edit, re-link picker, confirm-delete.
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [relinkError, setRelinkError] = useState<string | null>(null);
+
+  // Re-link picker: fetch goals in the project's lens for the dropdown. Only
+  // active goals (isDone:false) — you don't re-link to a completed goal.
+  const [pickingGoal, setPickingGoal] = useState(false);
+  const { data: lensGoals } = useQuery(
+    getGoals,
+    project ? { lensId: project.lensId } : undefined,
+    { enabled: !!project && pickingGoal },
+  );
+
   // Group the project's tasks by horizon. Open tasks split into Today / Upcoming
-  // / Someday; done ones collect at the bottom. Empty horizons are hidden (the
-  // project reads as what's actually there, not a wall of empty sections).
+  // / Someday; done ones collect at the bottom.
   const groups = useMemo<GroupDef<ProjectTask>[]>(() => {
     if (!project) return [];
     const buckets: Record<string, ProjectTask[]> = { TODAY: [], UPCOMING: [], SOMEDAY: [], DONE: [] };
@@ -59,8 +99,6 @@ export function ProjectDetailPage() {
   const doneCount = project?.tasks.filter((t) => t.isDone).length ?? 0;
   const total = project?.tasks.length ?? 0;
 
-  // Move a task between horizons. "Next horizon up" cycles Someday→Upcoming→Today;
-  // the row's button reflects the inverse action (the thing you'd do next).
   const setStatus = async (task: ProjectTask, status: ProjectTask["status"]) => {
     await updateTaskStatus({ id: task.id, status });
     queryClient.invalidateQueries({ queryKey: ["getProject"] });
@@ -85,6 +123,74 @@ export function ProjectDetailPage() {
     }
   };
 
+  const handleComplete = async () => {
+    if (!project) return;
+    await setProjectDone({ id: project.id, isDone: !project.isDone });
+    queryClient.invalidateQueries({ queryKey: ["getProject"] });
+    queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+    queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+    // After completing, leave the detail page — the project leaves the active
+    // list. Reopen reachable from the Logbook.
+    if (!project.isDone) navigate("/app/projects");
+  };
+
+  const startEdit = () => {
+    if (!project) return;
+    setEditName(project.name);
+    setEditDesc(project.description ?? "");
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!project) return;
+    setEditError(null);
+    try {
+      await updateProject({
+        id: project.id,
+        name: editName,
+        // Server trims + normalizes empty → null.
+        description: editDesc,
+      });
+      queryClient.invalidateQueries({ queryKey: ["getProject"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
+      setEditing(false);
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : "Couldn't save.");
+    }
+  };
+
+  // Re-link: set goalId (different goal in this Lens) or null (unlink). The
+  // server enforces the same-Lens invariant; an error here surfaces inline.
+  const handleRelink = async (goalId: string | null) => {
+    if (!project) return;
+    setRelinkError(null);
+    try {
+      await updateProject({ id: project.id, goalId });
+      queryClient.invalidateQueries({ queryKey: ["getProject"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getGoals"] });
+      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+      setPickingGoal(false);
+    } catch (e) {
+      setRelinkError(e instanceof Error ? e.message : "Couldn't change the goal.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!project) return;
+    await deleteProject({ id: project.id });
+    queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+    queryClient.invalidateQueries({ queryKey: ["getGoals"] });
+    queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+    setConfirmDelete(false);
+    navigate("/app/projects");
+  };
+
   return (
     <div className="aa-project">
       <Link className="aa-task-back" to="/app/projects">
@@ -98,26 +204,116 @@ export function ProjectDetailPage() {
       {project && (
         <>
           <header className="aa-list-header aa-project__header">
-            <div>
-              <div className="aa-list-header__eyebrow">
-                Project{project.goal ? ` · ${project.goal.name}` : ""}
-              </div>
-              <h1 className="aa-list-header__title">{project.name}</h1>
-              {(total > 0 || project.dueDate) && (
-                <p className="aa-project__meta">
-                  {total > 0 && <span>{doneCount}/{total} done</span>}
-                  {project.dueDate && (
-                    <Chip variant="teal" small>{formatDue(project.dueDate)}</Chip>
+            <div className="aa-project__header-main">
+              {editing ? (
+                <div className="aa-project__edit">
+                  <input
+                    className="aa-project__edit-name"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Project name"
+                    aria-label="Project name"
+                  />
+                  <textarea
+                    className="aa-project__edit-desc"
+                    value={editDesc}
+                    onChange={(e) => setEditDesc(e.target.value)}
+                    placeholder="Description (optional)"
+                    aria-label="Project description"
+                    rows={2}
+                  />
+                  {editError && <p className="aa-project__edit-err">{editError}</p>}
+                  <div className="aa-project__edit-actions">
+                    <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>
+                      Cancel
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={handleSaveEdit}>
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="aa-list-header__eyebrow">
+                    Project{project.goal ? ` · ${project.goal.name}` : ""}
+                  </div>
+                  <h1 className="aa-list-header__title">{project.name}</h1>
+                  {(total > 0 || project.dueDate) && (
+                    <p className="aa-project__meta">
+                      {total > 0 && <span>{doneCount}/{total} done</span>}
+                      {project.dueDate && (
+                        <Chip variant="teal" small>{formatDue(project.dueDate)}</Chip>
+                      )}
+                    </p>
                   )}
-                </p>
+                </>
               )}
             </div>
-            <Button variant="secondary" size="sm" onClick={() => setCreating((v) => !v)}>
-              {creating ? "Cancel" : "Add task"}
-            </Button>
+            {!editing && (
+              <div className="aa-project__header-actions">
+                <Button variant="ghost" size="sm" onClick={startEdit}>Edit</Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleComplete}
+                  title={project.isDone ? "Return to active projects" : "Mark this project done"}
+                >
+                  {project.isDone ? "Reopen" : "Complete"}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
+                  Delete
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => setCreating((v) => !v)}>
+                  {creating ? "Cancel" : "Add task"}
+                </Button>
+              </div>
+            )}
           </header>
 
-          {project.description && <p className="aa-project__desc">{project.description}</p>}
+          {!editing && project.description && (
+            <p className="aa-project__desc">{project.description}</p>
+          )}
+
+          {/* Re-link to a goal (spec §C). An editable parent field, not a
+              birth-only assignment. */}
+          {!editing && (
+            <div className="aa-project__relink">
+              <span className="aa-project__relink-label">Goal</span>
+              {pickingGoal ? (
+                <div className="aa-project__relink-picker">
+                  <button
+                    type="button"
+                    className={`aa-project__relink-opt ${project.goal === null ? "is-active" : ""}`}
+                    onClick={() => void handleRelink(null)}
+                  >
+                    None (standalone)
+                  </button>
+                  {(lensGoals ?? []).map((g: GoalOption) => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      className={`aa-project__relink-opt ${project.goal?.id === g.id ? "is-active" : ""}`}
+                      onClick={() => void handleRelink(g.id)}
+                    >
+                      {g.name}
+                    </button>
+                  ))}
+                  <Button variant="ghost" size="sm" onClick={() => setPickingGoal(false)}>
+                    Cancel
+                  </Button>
+                  {relinkError && <p className="aa-project__edit-err">{relinkError}</p>}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="aa-project__relink-value"
+                  onClick={() => setPickingGoal(true)}
+                >
+                  {project.goal ? project.goal.name : "None — click to link a goal"}
+                </button>
+              )}
+            </div>
+          )}
 
           {creating && (
             <CreateInline
@@ -185,6 +381,21 @@ export function ProjectDetailPage() {
 
       {!isLoading && !error && !project && (
         <p className="aa-task-state">This project doesn't exist — or isn't yours.</p>
+      )}
+
+      {confirmDelete && project && (
+        <ConfirmDialog
+          title="Delete this project?"
+          message={
+            total > 0
+              ? `${total} ${total === 1 ? "task will move" : "tasks will move"} to standalone in this Lens (keeping any goal link). The project itself will be removed.`
+              : "This project will be removed. No tasks are in it."
+          }
+          confirmLabel="Delete project"
+          danger
+          onConfirm={handleDelete}
+          onClose={() => setConfirmDelete(false)}
+        />
       )}
     </div>
   );
