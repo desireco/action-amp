@@ -2,6 +2,7 @@ import type {
   CreateLens,
   UpdateLens,
   DeleteLens,
+  GetLenses,
 } from "wasp/server/operations";
 import { PRO_LIMITS } from "../billing/config";
 import {
@@ -11,12 +12,13 @@ import {
 } from "../billing/entitlementHttp";
 
 /**
- * Lens CRUD — user-defined life contexts (Pro only).
+ * Lens CRUD + list — user-defined life contexts (Pro only).
  *
- * All three actions are tenancy-scoped (every read/write carries `userId`) and
- * enforce entitlements: `assertLensConfigAllowed` gates the whole surface to
- * Pro (FREE configures nothing — they get the seeded two and that's it), and
- * `assertUnderCap` soft-caps Pro at `PRO_LIMITS.lenses` on create.
+ * getLenses returns every lens with per-lens counts (goals/projects/tasks) for
+ * the Settings Lenses tab. The three actions (create/update/delete) are
+ * tenancy-scoped and enforce entitlements: `assertLensConfigAllowed` gates the
+ * whole surface to Pro (FREE configures nothing — they get the seeded two and
+ * that's it), and `assertUnderCap` soft-caps Pro at `PRO_LIMITS.lenses`.
  *
  * The seeded lenses (kind WORK / PERSONAL) are renameable + recolorable (the
  * kind, not the name, carries the entitlement) but NOT deletable — they're the
@@ -25,28 +27,53 @@ import {
  * HTTP errors (404/409/400) go through `throwHttpStatus` from entitlementHttp
  * (the one src/ file licensed to import wasp/server), so this file never
  * imports wasp/server directly and stays unit-testable via the standard mock.
- *
- * Mirrors the createProject/createGoal pattern (auth check → guards → write),
- * with two additions: a name-collision 409 (Lens unique is [userId, name]) and
- * a delete-time choice (hard delete vs. reassign content to another lens).
  */
 
 /**
- * Lens CRUD — user-defined life contexts (Pro only).
- *
- * All three actions are tenancy-scoped (every read/write carries `userId`) and
- * enforce entitlements: `assertLensConfigAllowed` gates the whole surface to
- * Pro (FREE configures nothing — they get the seeded two and that's it), and
- * `assertUnderCap` soft-caps Pro at `PRO_LIMITS.lenses` on create.
- *
- * The seeded lenses (kind WORK / PERSONAL) are renameable + recolorable (the
- * kind, not the name, carries the entitlement) but NOT deletable — they're the
- * stable handles. Only CUSTOM lenses can be deleted.
- *
- * Mirrors the createProject/createGoal pattern (auth check → guards → write),
- * with two additions: a name-collision 409 (Lens unique is [userId, name]) and
- * a delete-time choice (hard delete vs. reassign content to another lens).
+ * All lenses for the Settings Lenses tab, with per-lens counts. Sorted seeded
+ * first (PERSONAL, then WORK) then by createdAt — the stable display order
+ * (no reorder feature yet; that's a non-goal per the spec).
  */
+export const getLenses = (async (_args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const lenses = await context.entities.Lens.findMany({
+    where: { userId: context.user.id },
+    orderBy: [{ kind: "asc" }, { createdAt: "asc" }],
+    include: {
+      _count: {
+        select: {
+          goals: { where: { isDone: false } },
+          projects: { where: { isDone: false } },
+          tasks: { where: { isDone: false } },
+        },
+      },
+    },
+  });
+  return lenses.map((l) => ({
+    id: l.id,
+    name: l.name,
+    kind: l.kind,
+    color: l.color,
+    purpose: l.purpose,
+    counts: {
+      goals: l._count.goals,
+      projects: l._count.projects,
+      tasks: l._count.tasks,
+    },
+  }));
+}) satisfies GetLenses<
+  Record<string, never>,
+  {
+    id: string;
+    name: string;
+    kind: string;
+    color: string | null;
+    purpose: string | null;
+    counts: { goals: number; projects: number; tasks: number };
+  }[]
+>;
 
 /** The curated color palette keys (see styles/tokens.css `--aa-lens-*`).
  * Free-form hex is a non-goal per the spec; the picker renders these only. */

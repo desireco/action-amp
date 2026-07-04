@@ -23,7 +23,7 @@ vi.mock("../billing/entitlementHttp", () => ({
 }));
 
 // Import AFTER the mock so the ops pick up the stubbed guards.
-const { createLens, updateLens, deleteLens } = await import("./operations");
+const { createLens, updateLens, deleteLens, getLenses } = await import("./operations");
 import { mockContext, type MockUser } from "../test/mockContext";
 import { PRO_LIMITS } from "../billing/config";
 
@@ -221,5 +221,38 @@ describe("deleteLens", () => {
 
     await expect(deleteLens({ id: "l", mode: "reassign", targetLensId: "nope" }, m.context)).rejects.toThrow(/Target lens not found/);
     expect(m.entities.Task.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("getLenses", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(getLenses({}, m.context)).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("returns lenses with per-lens counts (non-done only), seeded-first sorted", async () => {
+    const m = mockContext(PRO_USER);
+    // findMany returns rows with _count; the op maps them to a flat shape.
+    // Sort is delegated to Prisma (orderBy kind asc, createdAt asc) — here we
+    // verify the mapping, not the sort.
+    m.entities.Lens.findMany.mockResolvedValue([
+      {
+        id: "l-me", name: "Me", kind: "PERSONAL", color: "emerald", purpose: null,
+        _count: { goals: 1, projects: 2, tasks: 3 },
+      },
+      {
+        id: "l-studio", name: "Studio", kind: "CUSTOM", color: "coral", purpose: "side",
+        _count: { goals: 0, projects: 1, tasks: 4 },
+      },
+    ]);
+    const out = await getLenses({}, m.context);
+    expect(out).toEqual([
+      { id: "l-me", name: "Me", kind: "PERSONAL", color: "emerald", purpose: null, counts: { goals: 1, projects: 2, tasks: 3 } },
+      { id: "l-studio", name: "Studio", kind: "CUSTOM", color: "coral", purpose: "side", counts: { goals: 0, projects: 1, tasks: 4 } },
+    ]);
+    expect(m.entities.Lens.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: "user-1" },
+      orderBy: [{ kind: "asc" }, { createdAt: "asc" }],
+    }));
   });
 });
