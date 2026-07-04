@@ -3,7 +3,8 @@ import { parseCapture } from "./parseCapture";
 
 // Table-driven parser tests. parseCapture is a pure function — the highest-
 // leverage test target in the codebase (every capture + every chip preview
-// runs through it). Covers: tags, priority, size, dates, clean-text collapse.
+// runs through it). Covers grammar v2 (locked 2026-07-04, see
+// docs/specs/capture-grammar.md): #tags, @time-only, [[lens]], priority/size.
 
 describe("parseCapture", () => {
   // Fixed "now" so relative date tests are deterministic: Wed 2026-06-24 10:00
@@ -16,7 +17,7 @@ describe("parseCapture", () => {
     ])("'%s' → project %j", (input, project) => {
       const r = parseCapture(input, NOW);
       expect(r.parsedProject).toBe(project);
-      // A lone #project is NOT a tag anymore.
+      // A lone #project is NOT a tag.
       expect(r.parsedTags).toEqual([]);
     });
 
@@ -24,26 +25,119 @@ describe("parseCapture", () => {
       expect(parseCapture("Email #MVP", NOW).parsedProject).toBe("mvp");
     });
 
+    it("supports bracketed project hints for multi-word autocomplete picks", () => {
+      const r = parseCapture("Email Sarah #[Q3 Launch]", NOW);
+      expect(r.parsedProject).toBe("q3 launch");
+      expect(r.parsedTags).toEqual([]);
+      expect(r.cleanText).toBe("Email Sarah");
+    });
+
     it("only the FIRST #token is the project; extras fall through to tags", () => {
-      // Rare but lossless: a second #token stays as a violet chip.
+      // Rare but lossless: a second #token stays as a tag.
       const r = parseCapture("x #mvp #extra", NOW);
       expect(r.parsedProject).toBe("mvp");
       expect(r.parsedTags).toEqual(["#extra"]);
     });
   });
 
-  describe("context tags (@)", () => {
+  describe("tags (#)", () => {
+    // Under the first-#-wins rule, the first #token is the project hint and
+    // only subsequent #tokens are tags. These tests use a leading #project to
+    // leave the named tokens as tags. The single-# case is in `project (#)`.
     it.each([
-      ["call @phone", ["@phone"], "call"],
-      ["buy milk @errands @home", ["@errands", "@home"], "buy milk"],
+      ["x #proj #errands", ["#errands"], "x"],
+      ["x #proj #errands #home", ["#errands", "#home"], "x"],
     ])("'%s' → tags %j, text %j", (input, tags, text) => {
       const r = parseCapture(input, NOW);
+      expect(r.parsedProject).toBe("proj");
       expect(r.parsedTags).toEqual(tags);
       expect(r.cleanText).toBe(text);
     });
 
     it("lowercases tag names", () => {
-      expect(parseCapture("Email @WORK", NOW).parsedTags).toEqual(["@work"]);
+      // First # → project, second #WORK → tag
+      const r = parseCapture("x #proj #WORK", NOW);
+      expect(r.parsedProject).toBe("proj");
+      expect(r.parsedTags).toEqual(["#work"]);
+    });
+  });
+
+  describe("@ is time-only (grammar v2)", () => {
+    it("@phone stays literal (not a tag)", () => {
+      const r = parseCapture("email @phone", NOW);
+      expect(r.parsedTags).toEqual([]);
+      expect(r.cleanText).toBe("email @phone");
+    });
+
+    it("@errands @home stay literal", () => {
+      const r = parseCapture("buy milk @errands @home", NOW);
+      expect(r.parsedTags).toEqual([]);
+      expect(r.cleanText).toBe("buy milk @errands @home");
+    });
+
+    it("@today sets the date (not a tag)", () => {
+      const r = parseCapture("work on capture @today", NOW);
+      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 9, 0, 0));
+      expect(r.parsedTags).not.toContain("@today");
+      expect(r.cleanText).toBe("work on capture");
+    });
+
+    it("@tomorrow / @tmrw / @tmr set the date", () => {
+      expect(parseCapture("ship @tomorrow", NOW).parsedDate).toEqual(
+        new Date(2026, 5, 25, 9, 0, 0),
+      );
+      expect(parseCapture("ship @tmrw", NOW).parsedDate).toEqual(
+        new Date(2026, 5, 25, 9, 0, 0),
+      );
+      expect(parseCapture("ship @tmr", NOW).parsedDate).toEqual(
+        new Date(2026, 5, 25, 9, 0, 0),
+      );
+    });
+
+    it("@tonight sets today at 8pm", () => {
+      const r = parseCapture("call @tonight", NOW);
+      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 20, 0, 0));
+    });
+  });
+
+  describe("lens override ([[ ]])", () => {
+    it("[[work]] → parsedLens work, stripped from text", () => {
+      const r = parseCapture("call [[work]] about MVP", NOW);
+      expect(r.parsedLens).toBe("work");
+      expect(r.cleanText).toBe("call about MVP");
+    });
+
+    it("[[personal]] and [[me]] both resolve (PERSONAL kind)", () => {
+      expect(parseCapture("[[personal]] errand", NOW).parsedLens).toBe("personal");
+      expect(parseCapture("[[me]] errand", NOW).parsedLens).toBe("me");
+    });
+
+    it("lowercases the lens token", () => {
+      expect(parseCapture("x [[Work]]", NOW).parsedLens).toBe("work");
+    });
+
+    it("unknown token stays literal (no false positive on pasted wiki-links)", () => {
+      const r = parseCapture("[[xyzzy]] thing", NOW);
+      expect(r.parsedLens).toBeNull();
+      expect(r.cleanText).toBe("[[xyzzy]] thing");
+    });
+
+    it("first [[ ]] wins; a second stays literal (lossless)", () => {
+      const r = parseCapture("[[work]] and [[personal]]", NOW);
+      expect(r.parsedLens).toBe("work");
+      expect(r.cleanText).toBe("and [[personal]]");
+    });
+
+    it("custom lens name recognized when passed via knownLensNames", () => {
+      const r = parseCapture("ship [[studio]]", NOW, ["Studio", "Q3 Launch"]);
+      expect(r.parsedLens).toBe("studio");
+      expect(r.cleanText).toBe("ship");
+    });
+
+    it("custom lens name not in knownLensNames stays literal", () => {
+      const r = parseCapture("ship [[studio]]", NOW);
+      expect(r.parsedLens).toBeNull();
+      expect(r.cleanText).toBe("ship [[studio]]");
     });
   });
 
@@ -133,36 +227,6 @@ describe("parseCapture", () => {
       const r = parseCapture("launch next month", NOW);
       expect(r.parsedDate).toEqual(new Date(2026, 6, 24, 9, 0, 0));
     });
-
-    // @today / @tomorrow / @tonight set the DATE, not a tag. A user typing
-    // @today means today-the-date; without this they got a "today" tag and the
-    // triage When defaulted to Upcoming. (Other @words stay tags — see below.)
-    it("@today sets the date (not a tag)", () => {
-      const r = parseCapture("work on capture @today", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 9, 0, 0));
-      expect(r.parsedTags).not.toContain("@today");
-      expect(r.cleanText).toBe("work on capture");
-    });
-
-    it("@tomorrow / @tmrw set the date", () => {
-      expect(parseCapture("ship @tomorrow", NOW).parsedDate).toEqual(
-        new Date(2026, 5, 25, 9, 0, 0),
-      );
-      expect(parseCapture("ship @tmrw", NOW).parsedDate).toEqual(
-        new Date(2026, 5, 25, 9, 0, 0),
-      );
-    });
-
-    it("@tonight sets today at 8pm", () => {
-      const r = parseCapture("call @tonight", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 20, 0, 0));
-    });
-
-    it("@date words coexist with @context tags", () => {
-      const r = parseCapture("Call client @phone @today", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 9, 0, 0));
-      expect(r.parsedTags).toEqual(["@phone"]);
-    });
   });
 
   describe("dates — weekdays (next occurrence)", () => {
@@ -214,7 +278,7 @@ describe("parseCapture", () => {
   });
 
   describe("combined tokens (real capture strings)", () => {
-    it("parses a full Things-style string", () => {
+    it("parses a full Things-style string (#mvp is the project hint)", () => {
       const r = parseCapture(
         "Email Sarah re: invoice tomorrow #mvp !3 ~20m",
         NOW,
@@ -223,14 +287,23 @@ describe("parseCapture", () => {
       expect(r.parsedDate).toEqual(new Date(2026, 5, 25, 9, 0, 0));
       expect(r.parsedPriority).toBe("IMPORTANT");
       expect(r.parsedSize).toBe("M"); // 20m → M
-      expect(r.parsedProject).toBe("mvp");
+      expect(r.parsedProject).toBe("mvp"); // first #token → project
       expect(r.parsedTags).toEqual([]);
     });
 
+    it("parses a [[lens]]-tagged cross-lens capture", () => {
+      const r = parseCapture("[[work]] ship the launch deck tomorrow !2", NOW);
+      expect(r.parsedLens).toBe("work");
+      expect(r.cleanText).toBe("ship the launch deck");
+      expect(r.parsedDate).toEqual(new Date(2026, 5, 25, 9, 0, 0));
+      expect(r.parsedPriority).toBe("NORMAL");
+    });
+
     it("collapses extra whitespace after token removal", () => {
-      const r = parseCapture("  do   @x   something  ", NOW);
+      const r = parseCapture("  do   #x   something  ", NOW);
       expect(r.cleanText).toBe("do something");
-      expect(r.parsedTags).toEqual(["@x"]);
+      expect(r.parsedProject).toBe("x"); // first # → project
+      expect(r.parsedTags).toEqual([]);
     });
   });
 
@@ -238,7 +311,8 @@ describe("parseCapture", () => {
     it("returns original text when input is only tokens", () => {
       const r = parseCapture("#mvp !3 ~XL", NOW);
       expect(r.cleanText).toBe("#mvp !3 ~XL");
-      expect(r.parsedProject).toBe("mvp");
+      expect(r.parsedProject).toBe("mvp"); // first # → project
+      expect(r.parsedTags).toEqual([]);
       expect(r.parsedPriority).toBe("IMPORTANT");
       expect(r.parsedSize).toBe("XL");
     });
@@ -251,6 +325,7 @@ describe("parseCapture", () => {
       expect(r.parsedSize).toBeNull();
       expect(r.parsedTags).toEqual([]);
       expect(r.parsedProject).toBeNull();
+      expect(r.parsedLens).toBeNull();
     });
 
     it("empty string returns empty", () => {
@@ -258,6 +333,7 @@ describe("parseCapture", () => {
       expect(r.cleanText).toBe("");
       expect(r.parsedTags).toEqual([]);
       expect(r.parsedProject).toBeNull();
+      expect(r.parsedLens).toBeNull();
     });
   });
 });

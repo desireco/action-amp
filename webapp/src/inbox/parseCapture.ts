@@ -1,19 +1,24 @@
 /**
- * Natural-language capture parser (FEATURES.md F2, Things/TickTick style).
+ * Natural-language capture parser (grammar v2, locked 2026-07-04).
  *
  * Extracts structured tokens from free-text capture and returns them along
- * with the cleaned (token-stripped) text.
+ * with the cleaned (token-stripped) text. See docs/specs/capture-grammar.md.
  *
- * Syntax:
- *   tomorrow            → date (also: today, next week, weekdays, jun 30, 6/30)
- *   #mvp                → project hint (resolved to a project at triage)
- *   @errands  @phone    → context tags
- *   !1  !low  !high     → priority (1=low, 2=normal, 3=important)
- *   ~20m  ~1h  ~XL      → size (time→S/M/L/XL: <15m=S, <1h=M, <2h=L, else XL)
+ * Grammar:
+ *   #mvp / #[Q3 Launch] → project hint (first # mention wins; lowercased, no prefix)
+ *   #tag               → context tag (any #token after the first; lowercased)
+ *   @today/@tomorrow   → date (also @tonight, @tmrw, @tmr; bare forms work too)
+ *   !1  !low  !!!      → priority (1=low, 2=normal, 3=important)
+ *   ~20m  ~1h  ~XL     → size (time→S/M/L/XL: <15m=S, <1h=M, <2h=L, else XL)
+ *   [[work]]           → lens override (seeded: work/personal/me; custom via
+ *                        knownLensNames). First recognized token wins; unknown
+ *                        tokens stay literal text.
  *
- * `#` and `@` are deliberately different (TRIAGE.md §7.5): `#` links a project,
- * `@` is a context tag. Only the FIRST `#token` is a project hint — any further
- * `#` tokens fall through to parsedTags (rare, kept lossless).
+ * `@` is time-only (grammar v2). `@phone`, `@errands` etc. are NOT extracted —
+ * they stay literal. Only @today/@tomorrow/@tonight (+ aliases) set the date.
+ * `#` is the project sigil: the first `#token`/`#[name]` is the project hint,
+ * and any further `#token`s are tags. The capture `#` autocomplete surfaces
+ * project names.
  *
  * Used at capture time (server) to populate InboxItem.parsed-* fields, and
  * available client-side for live preview in the capture popover.
@@ -29,9 +34,23 @@ export interface ParsedCapture {
   parsedPriority: ParsedPriority | null;
   parsedSize: ParsedSize | null;
   parsedTags: string[];
-  /** The first #token — a project name hint (no prefix, lowercased). */
+  /**
+   * Project name hint — the first `#token`/`#[name]` in the capture (lowercased, no
+   * prefix). Resolved to a real project at triage. The capture `#` autocomplete
+   * surfaces project names to make this intent explicit; typing a project name
+   * that doesn't exist just falls through to "General" at triage.
+   */
   parsedProject: string | null;
+  /** Lens token from `[[name]]` (lowercased); null when absent or unrecognized. */
+  parsedLens: string | null;
 }
+
+// Seeded lens tokens — resolve on `kind` at triage (rename-safe). `[[me]]` and
+// `[[personal]]` both map to the PERSONAL kind; `[[work]]` to WORK. Custom lens
+// tokens are supplied by the caller via `knownLensNames` (the parser can't query
+// the DB). Unknown tokens stay literal so pasted wiki-links (Obsidian/Notion)
+// don't false-positive into lens inference.
+const SEEDED_LENS_TOKENS = new Set(["work", "personal", "me"]);
 
 const WEEKDAYS = [
   { re: /sunday|sun\b/i, dow: 0 },
@@ -104,27 +123,44 @@ const SIZE_WORDS: Record<string, ParsedSize> = {
   xs: "S",
 };
 
-export function parseCapture(raw: string, now: Date = new Date()): ParsedCapture {
+/**
+ * @param raw Raw capture text.
+ * @param now Reference time for relative date resolution (tests).
+ * @param knownLensNames Lowercased names of the user's CUSTOM lenses (beyond the
+ *   seeded work/personal/me). Lets the parser recognize `[[studio]]` when the
+ *   user has a "Studio" lens. Empty by default — tests run with seeded-only.
+ */
+export function parseCapture(
+  raw: string,
+  now: Date = new Date(),
+  knownLensNames: string[] = [],
+): ParsedCapture {
   let text = raw;
   const tags: string[] = [];
-  let project: string | null = null;
+  let project: string | null = null; // first #token → project name hint (resolved at triage)
+  let lens: string | null = null;
   let date: Date | null = null;
   let priority: ParsedPriority | null = null;
   let size: ParsedSize | null = null;
 
-  // ---- Project hint: first #name wins (TRIAGE.md §7.5 — `#` links a project) ----
-  // Further `#` tokens fall through to tags below so nothing is lost.
-  text = text.replace(/#([a-zA-Z0-9_-]+)/, (_, name) => {
-    project = name.toLowerCase();
-    return "";
+  // ---- Lens override: [[name]] — first recognized token wins ----
+  // Seeded tokens (work/personal/me) + caller-supplied custom names. Unknown
+  // tokens stay literal (no false positives on pasted wiki-links). A second
+  // [[ ]] in the same capture is always preserved as literal text.
+  const knownSet = new Set([...SEEDED_LENS_TOKENS, ...knownLensNames.map((n) => n.toLowerCase())]);
+  text = text.replace(/\[\[([a-zA-Z0-9_-]+)\]\]/, (_full, name) => {
+    const lower = String(name).toLowerCase();
+    if (knownSet.has(lower)) {
+      lens = lower;
+      return "";
+    }
+    return _full; // unknown → leave literal
   });
 
-  // ---- @date words: @today / @tomorrow / @tonight also set the date ----
-  // The bare words (today/tomorrow/tonight) already set the date below. These
-  // prefixed forms are treated the same way — a user typing @today means
-  // today-the-date, not a context tag named "today". Stripped before the
-  // generic @tag pass so they never fall through to tags. (Other @words stay
-  // tags: @errands, @phone, etc.)
+  // ---- @date words: @today / @tomorrow / @tonight (also @tmrw / @tmr) ----
+  // `@` is time-only under grammar v2. A user typing @today means
+  // today-the-date. Other @words (@phone, @errands) are NOT extracted — they
+  // stay literal text. Stripped before the #tag pass so they never fall through.
   if (!date) {
     text = text.replace(/@tonight\b/i, () => {
       const d = new Date(now);
@@ -144,9 +180,21 @@ export function parseCapture(raw: string, now: Date = new Date()): ParsedCapture
     });
   }
 
-  // ---- Context tags: @name (and any extra #names) ----
-  text = text.replace(/([#@])([a-zA-Z0-9_-]+)/g, (_, prefix, name) => {
-    tags.push(`${prefix}${name.toLowerCase()}`);
+  // ---- Project hint: first #name wins (TRIAGE.md §7.5 — `#` links a project) ----
+  // The first #token becomes the project hint; any further #tokens fall through
+  // to tags below so nothing is lost. The capture autocomplete surfaces project
+  // names on `#`; the parser decides intent by position: first one is the
+  // project, rest are tags.
+  text = text.replace(/#\[([^\]\r\n]+)\]|#([a-zA-Z0-9_-]+)/, (_match, bracketName, tokenName) => {
+    project = String(bracketName ?? tokenName).trim().toLowerCase();
+    return "";
+  });
+
+  // ---- Tags: leftover #names (any number; lowercased) ----
+  // `@` is intentionally absent — under grammar v2 `@` is time-only. Only
+  // leftover `#tokens` (the ones after the first) collect as tags.
+  text = text.replace(/#\[([^\]\r\n]+)\]|#([a-zA-Z0-9_-]+)/g, (_match, bracketName, tokenName) => {
+    tags.push(`#${String(bracketName ?? tokenName).trim().toLowerCase()}`);
     return "";
   });
 
@@ -278,5 +326,6 @@ export function parseCapture(raw: string, now: Date = new Date()): ParsedCapture
     parsedSize: size,
     parsedTags: tags,
     parsedProject: project,
+    parsedLens: lens,
   };
 }
