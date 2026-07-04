@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-06-27 (Discover — project review + GTM; resources-project-owned spec added; cli spec added 2026-06-27 as item 15; work-area-merged spec added 2026-06-27 as item 16) -->
+<!-- Last reviewed: 2026-07-03 (Discover — feature catalog stood up at docs/features/; SUCCESS.md (the bets) added; GTM prep B promoted to tracked backlog units; matcher-validation spec drafted, gates focus-engine-v2; weekly-monthly-review added to Then tier) -->
 
 ---
 
@@ -126,6 +126,9 @@ item; Build pulls `ready`.**
    ~20 people, 2 days) — the roast (<`docs/research/wedge-defensibility-roast-
    2026-06-27.md`>) found the matcher is the only real moat but currently the
    weakest shipped part. The test decides: build as-spec'd, reshape, or icebox.
+   **The runbook is now a tracked spec** — `docs/specs/matcher-validation.md`
+   (`draft`, Discover+user, zero-code), promoted out of the buried reference so
+   the queue reflects that it is real work with a real outcome.
 4. **command-palette-search** (`ready`) — command palette + full-text search across **all**
     tasks (open + done). The two Pro-tier features most likely to justify the
     price to an existing user. Depends on entitlement-enforcement.
@@ -197,6 +200,19 @@ item; Build pulls `ready`.**
     so it sits in this tier (post-gauntlet), not the validation gauntlet.
     Interactive prototype at `docs/mockups/today-merged.html`. Spec at
     `docs/specs/work-area-merged.md`.
+6. **weekly-monthly-review** (`draft` — needs spec) — the Review area is
+    WORKFLOW.md §2.5's "least-built area, net-new work": today it's just the
+    Logbook (a flat list grouped by day). This adds **weekly + monthly review**
+    surfaces that collect and organize the period's work — completed tasks &
+    projects grouped by Goal/Project, progress made (delta vs. last period),
+    stuck/aged items, deferred-again items. The "actions done" raw data already
+    exists (`Task.completedAt`, `Project.completedAt`, the `getGoals` rollup);
+    the richer "progress" signal (Started/Paused/Completed events) **does not**
+    — it ships with `work-area-merged`'s `kind` enum on `TaskUpdate`, so the
+    two pair naturally. **Calm by rule:** trends yes, streaks/guilt-trip red
+    dots never (PRODUCT.md bans them). Honest framing: like everything in this
+    tier, it sits behind the validation gauntlet — a Review surface earns its
+    keep after someone stays long enough to have a week to look back on.
 
 ## Branch state (2026-06-27)
 
@@ -281,6 +297,22 @@ What landed and was signed off:
   incl. 3 new entitlement cases). Review writeup at
   `docs/reviews/entitlement-enforcement.md`. **Unblocks** an accurate privacy
   policy (legal-pages-oauth hedged its data-retention clause on this).
+- **Feature catalog (`docs/features/`)** — stood up 2026-07-03. The
+  code-verified inventory of what exists (one file per feature, 1:1 with specs);
+  supersedes `FEATURES.md` on "does it exist / what does it do." `AGENTS.md`
+  routing + a `docs/features/README.md` index added. `docs/SUCCESS.md` (the
+  thesis as testable bets) added alongside. **Three doc/reality conflicts the
+  catalog caught — open decisions, not roadmap state:**
+  1. **Newsletter capture is absent.** PRODUCT.md + ROADMAP §GTM both call it
+     "live" (footer + hero); only signup + Founding-100 CTAs exist. → Build it,
+     or fix the prose.
+  2. **Google OAuth is config-disabled.** Code present, spec marked
+     `done (code-side)`, but the provider block is commented in `main.wasp.ts`
+     and `GoogleButton` returns `null`. → Flip on after the Google Cloud client
+     exists (backlog `gtm-google-oauth`), or mark the spec `partial`.
+  3. **`FEATURES.md` is self-flagged stale** (F6 triage keymap, F10 candidate
+     pool, structural framing). Catalog now wins for existence questions;
+     FEATURES.md stays as historical feature-level reference only.
 
 (The core loop, billing, and deploy are shipped but were never tracked as duet
 specs — they predate the protocol.)
@@ -507,6 +539,11 @@ roadmaps forget and most launches stall on.
 
 These are the things Build cannot do. They gate real launch regardless of
 code state.
+
+> **Tracked as lifecycle units in `docs/backlog/`** (promoted out of this prose
+> checklist 2026-07-03). The list below is the summary; the backlog files are
+> the source of truth for status — all `ready` except `gtm-founding100-story`
+> (`draft`).
 
 - [ ] **Google Cloud OAuth client.** Create the OAuth consent screen, register
       `actionamp.com/auth/google/callback` (+ localhost for dev) as authorized

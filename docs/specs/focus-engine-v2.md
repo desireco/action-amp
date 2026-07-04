@@ -1,17 +1,20 @@
 ---
 feature: focus-engine-v2
 status: ready
+gated_by: matcher-validation.md        # must reach a BUILD verdict first
 spec_owner: discover
 build_owner: build
 ---
 
 # Feature: Focus engine v2 — moment-aware matcher
 
-> **Status: ready — but gated on the manual-matcher test
-> (`docs/research/matcher-test-runbook.md`).** The wedge-defensibility roast
-> (<`docs/research/wedge-defensibility-roast-2026-06-27.md`>) found the matcher
-> is the only real moat and currently the weakest shipped part. **Run the
-> zero-cost test before building this:** if the algorithm's pick doesn't
+> **Status: `ready`, but GATED.** Do not pull until `docs/specs/matcher-validation.md`
+> reaches a **BUILD** verdict. The gate is the zero-cost manual-matcher test
+> (`docs/research/matcher-test-runbook.md`) — promoted to a tracked spec so the
+> queue reflects that it is real work. The wedge-defensibility roast
+> (`docs/research/wedge-defensibility-roast-2026-06-27.md`, 4.6/10, RESHAPE)
+> found the matcher is the only real moat and currently the weakest shipped
+> part. **Run the test before building this:** if the algorithm's pick doesn't
 > *surprise* real overwhelmed people, the spec's logic needs reshaping (or the
 > matcher isn't the wedge). The decision rule in the runbook tells Build/Discover
 > whether to build as-spec'd, reshape, or icebox.

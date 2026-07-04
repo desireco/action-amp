@@ -1,11 +1,18 @@
 ---
 feature: observability-minimal
 status: ready
+gated_by: gtm-analytics-account.md     # provider pick + site creation (user-owned)
 spec_owner: discover
 build_owner: build
 ---
 
 # Feature: Minimal observability (the one funnel number)
+
+> **Status: `ready`, but GATED.** The code can be written now, but going live
+> requires a provider pick (Plausible, recommended) + site creation — tracked
+> in `docs/backlog/gtm-analytics-account.md` (P0, user-owned). This is the
+> single highest-leverage spec in the validation gauntlet; the gate is the one
+> non-code action that unlocks SUCCESS.md Bet 1's measurability.
 
 ## Summary
 

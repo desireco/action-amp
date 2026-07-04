@@ -101,7 +101,12 @@ items they imply — not built yet, listed here so they're not lost:
   model the app uses). Tracked as `breadcrumb-nav` in ROADMAP.md.
 - [ ] **Logbook / Review mode screen.** Logbook list shipped (`/app/logbook`,
   incl. the Archived section for lossless triage Archive); **Review/debrief
-  screen unbuilt** — the least-built area (WORKFLOW §2.5).
+  screen unbuilt** — the least-built area (WORKFLOW §2.5). Tracked as
+  `weekly-monthly-review` in ROADMAP.md §Then (`draft` — needs spec): weekly +
+  monthly review surfaces that collect/organize the period's work (actions
+  done grouped by Goal/Project, progress made, stuck + deferred-again items).
+  Pairs with `work-area-merged`'s `kind` enum on `TaskUpdate`, which is the
+  missing "progress" signal beyond bare completions.
 - [x] **Capture palette (`⌘K`)** — DONE. Floating input, NL parsing, inline
   chips, rapid-fire. `components/ui/CapturePopover.tsx`.
 - [ ] **Command palette (`⌘\`)** — fuzzy jump/run. **Unbuilt.** Spec'd at
