@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ActionAmp — Moment Bar (focus-engine-v2 mockup)</title>
+    <style>
+      /* ============================================================
+         Real ActionAmp tokens (from webapp/src/styles/tokens.css).
+         This is a design-fidelity mockup, not a throwaway.
+         ============================================================ */
+      :root {
+        --aa-font:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          Roboto, sans-serif;
+        --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+        --aa-teal: oklch(0.72 0.15 220);
+        --aa-teal-cta: oklch(0.58 0.16 225);
+        --aa-teal-soft: oklch(0.95 0.04 220);
+        --aa-teal-soft-strong: oklch(0.9 0.07 220);
+
+        --aa-amber: oklch(0.78 0.16 70);
+        --aa-amber-text: oklch(0.45 0.13 65);
+
+        --aa-surface: oklch(1 0.003 230);
+        --aa-surface-muted: oklch(0.96 0.008 230);
+        --aa-surface-muted-2: oklch(0.93 0.01 230);
+        --aa-border: oklch(0.91 0.01 230);
+        --aa-border-strong: oklch(0.86 0.012 230);
+        --aa-text: oklch(0.2 0.015 230);
+        --aa-text-2: oklch(0.36 0.015 230);
+        --aa-text-3: oklch(0.5 0.015 230);
+        --aa-text-4: oklch(0.62 0.012 230);
+
+        --aa-radius-sm: 6px;
+        --aa-radius-md: 8px;
+        --aa-radius-lg: 12px;
+        --aa-radius-full: 9999px;
+
+        --aa-space-xs: 4px;
+        --aa-space-sm: 8px;
+        --aa-space-md: 16px;
+        --aa-space-lg: 24px;
+        --aa-space-xl: 32px;
+
+        --aa-shadow-card:
+          0 1px 2px oklch(0.28 0.02 230 / 0.04),
+          0 4px 12px oklch(0.28 0.02 230 / 0.06);
+
+        --bg-page: oklch(0.98 0.005 230);
+      }
+
+      [data-theme="dark"] {
+        --aa-surface: oklch(0.21 0.015 230);
+        --aa-surface-muted: oklch(0.25 0.015 230);
+        --aa-surface-muted-2: oklch(0.3 0.015 230);
+        --aa-border: oklch(0.32 0.012 230);
+        --aa-border-strong: oklch(0.4 0.012 230);
+        --aa-text: oklch(0.95 0.005 230);
+        --aa-text-2: oklch(0.82 0.01 230);
+        --aa-text-3: oklch(0.66 0.012 230);
+        --aa-text-4: oklch(0.52 0.012 230);
+        --aa-teal-soft: oklch(0.3 0.06 220);
+        --aa-teal-soft-strong: oklch(0.38 0.08 220);
+        --bg-page: oklch(0.16 0.015 230);
+        --aa-shadow-card:
+          0 1px 2px oklch(0 0 0 / 0.3),
+          0 4px 12px oklch(0 0 0 / 0.4);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg-page);
+        color: var(--aa-text);
+        font-family: var(--aa-font);
+        font-size: 15px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: var(--aa-space-2xl, 48px) var(--aa-space-lg, 24px) var(--aa-space-3xl, 64px);
+      }
+
+      .page-head {
+        margin-bottom: var(--aa-space-xl, 32px);
+      }
+      .page-head h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 var(--aa-space-xs, 4px);
+        letter-spacing: -0.01em;
+      }
+      .page-head p {
+        margin: 0;
+        color: var(--aa-text-3);
+        font-size: 13.5px;
+        max-width: 56ch;
+      }
+      .page-head code {
+        font-family: var(--aa-font-mono);
+        font-size: 12px;
+        background: var(--aa-surface-muted);
+        padding: 1px 5px;
+        border-radius: 4px;
+        color: var(--aa-text-2);
+      }
+
+      /* ───────────── toolbar (theme toggle) ───────────── */
+      .toolbar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: var(--aa-space-lg, 24px);
+      }
+      .toolbar button {
+        font-family: var(--aa-font);
+        font-size: 12px;
+        color: var(--aa-text-3);
+        background: var(--aa-surface);
+        border: 1px solid var(--aa-border);
+        padding: 5px 10px;
+        border-radius: var(--aa-radius-sm);
+        cursor: pointer;
+      }
+      .toolbar button:hover { color: var(--aa-text); border-color: var(--aa-border-strong); }
+
+      /* ───────────── stage (the mockup surface) ─────────────
+         The card sits on a neutral page bg, centered, ~440px wide —
+         mirroring how /app renders the What Now card. */
+      .stage {
+        background: var(--bg-page);
+        border: 1px solid var(--aa-border);
+        border-radius: var(--aa-radius-lg);
+        padding: var(--aa-space-2xl, 48px) var(--aa-space-xl, 32px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--aa-space-3xl, 64px);
+      }
+      .stage-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--aa-text-4);
+        margin-bottom: calc(-1 * var(--aa-space-lg, 24px));
+      }
+
+      /* ───────────── THE WHAT-NOW CARD (matches shipped visual) ───────────── */
+      .wn-card {
+        width: 100%;
+        max-width: 440px;
+        background: var(--aa-surface);
+        border: 1px solid var(--aa-border);
+        border-radius: var(--aa-radius-lg);
+        padding: var(--aa-space-lg, 24px);
+        box-shadow: var(--aa-shadow-card);
+        position: relative;
+      }
+
+      /* ───── THE MOMENT BAR (the thing this mockup exists to define) ───── */
+      .moment-bar {
+        margin: calc(-1 * var(--aa-space-sm, 8px)) 0 var(--aa-space-md, 16px);
+        /* sits quietly above the card content; tucked into the card's own padding */
+      }
+
+      /* Collapsed state: one quiet line. The whole point. */
+      .moment-bar[data-state="collapsed"] {
+        display: flex;
+        align-items: center;
+        gap: var(--aa-space-xs, 4px);
+        font-size: 12.5px;
+        color: var(--aa-text-3);
+        cursor: pointer;
+      }
+      .moment-bar[data-state="collapsed"]:hover { color: var(--aa-text-2); }
+      .moment-bar[data-state="collapsed"] .moment-summary {
+        font-variant-numeric: tabular-nums;
+      }
+      .moment-bar[data-state="collapsed"] .moment-change {
+        color: var(--aa-text-4);
+        font-size: 11.5px;
+        margin-left: var(--aa-space-xs, 4px);
+        text-decoration: underline;
+        text-decoration-color: var(--aa-border-strong);
+        text-underline-offset: 2px;
+      }
+      .moment-bar[data-state="collapsed"]:hover .moment-change {
+        color: var(--aa-text-3);
+      }
+      .moment-bar[data-state="collapsed"] .moment-inferred {
+        color: var(--aa-text-4);
+        font-size: 11px;
+        margin-left: var(--aa-space-xs, 4px);
+      }
+
+      /* Expanded state: two segmented controls, one row, calm */
+      .moment-bar[data-state="expanded"] {
+        display: flex;
+        flex-direction: column;
+        gap: var(--aa-space-sm, 8px);
+        padding: var(--aa-space-sm, 8px) 0;
+      }
+      .moment-row {
+        display: flex;
+        align-items: center;
+        gap: var(--aa-space-sm, 8px);
+      }
+      .moment-row-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--aa-text-4);
+        width: 52px;
+        flex-shrink: 0;
+      }
+      .segmented {
+        display: inline-flex;
+        background: var(--aa-surface-muted);
+        border-radius: var(--aa-radius-sm);
+        padding: 2px;
+        gap: 1px;
+      }
+      .segmented button {
+        font-family: var(--aa-font);
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--aa-text-3);
+        background: transparent;
+        border: none;
+        padding: 4px 9px;
+        border-radius: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.12s, color 0.12s;
+      }
+      .segmented button:hover { color: var(--aa-text-2); }
+      .segmented button[aria-pressed="true"] {
+        background: var(--aa-surface);
+        color: var(--aa-teal-cta);
+        font-weight: 600;
+        box-shadow: 0 1px 2px oklch(0.28 0.02 230 / 0.06);
+      }
+      .moment-kbd {
+        margin-left: auto;
+        font-family: var(--aa-font-mono);
+        font-size: 10.5px;
+        color: var(--aa-text-4);
+      }
+
+      /* ───── Card content (unchanged from shipped /app) ───── */
+      .wn-context {
+        font-size: 12px;
+        color: var(--aa-text-3);
+        margin-bottom: var(--aa-space-md, 16px);
+      }
+      .wn-task {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        color: var(--aa-text);
+        line-height: 1.25;
+        margin-bottom: var(--aa-space-xs, 4px);
+      }
+      .wn-meta {
+        font-size: 13px;
+        color: var(--aa-text-3);
+        margin-bottom: var(--aa-space-md, 16px);
+      }
+      .wn-meta .sep {
+        color: var(--aa-text-4);
+        margin: 0 6px;
+      }
+      .wn-why {
+        font-size: 13.5px;
+        color: var(--aa-text-2);
+        padding: var(--aa-space-sm, 8px) var(--aa-space-md, 16px);
+        background: var(--aa-surface-muted);
+        border-radius: var(--aa-radius-sm);
+        margin-bottom: var(--aa-space-lg, 24px);
+        line-height: 1.45;
+      }
+      .wn-why strong {
+        color: var(--aa-amber-text);
+        font-weight: 600;
+      }
+      .wn-why .mismatch {
+        color: var(--aa-amber-text);
+        font-weight: 600;
+      }
+      .wn-actions {
+        display: flex;
+        gap: var(--aa-space-sm, 8px);
+      }
+      .btn {
+        font-family: var(--aa-font);
+        font-size: 13.5px;
+        font-weight: 500;
+        padding: 8px 16px;
+        border-radius: var(--aa-radius-sm);
+        border: none;
+        cursor: pointer;
+      }
+      .btn-primary {
+        background: var(--aa-teal-cta);
+        color: white;
+      }
+      .btn-secondary {
+        background: var(--aa-surface-muted);
+        color: var(--aa-text-2);
+      }
+
+      /* ───────────── annotations panel ───────────── */
+      .notes {
+        margin-top: var(--aa-space-2xl, 48px);
+        padding: var(--aa-space-lg, 24px);
+        background: var(--aa-surface);
+        border: 1px solid var(--aa-border);
+        border-radius: var(--aa-radius-lg);
+      }
+      .notes h2 {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--aa-text-3);
+        margin: 0 0 var(--aa-space-md, 16px);
+      }
+      .notes dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: var(--aa-space-xs, 4px) var(--aa-space-md, 16px);
+      }
+      .notes dt {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--aa-text-2);
+        padding-top: 6px;
+      }
+      .notes dd {
+        font-size: 13px;
+        color: var(--aa-text-2);
+        margin: 0;
+        padding-top: 6px;
+        line-height: 1.5;
+      }
+      .notes dd code {
+        font-family: var(--aa-font-mono);
+        font-size: 11.5px;
+        background: var(--aa-surface-muted);
+        padding: 1px 4px;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="page-head">
+        <h1>Moment Bar — focus-engine-v2 mockup</h1>
+        <p>
+          Resolves <code>focus-engine-v2</code> Gap B: the moment bar is the row
+          above the What Now card. Three states shown. The card itself is
+          unchanged from shipped <code>/app</code> — only the bar is new.
+        </p>
+      </div>
+
+      <div class="toolbar">
+        <button id="themeBtn">Dark</button>
+      </div>
+
+      <div class="stage">
+        <div class="stage-label">State 1 · Collapsed, moment inferred from time of day</div>
+
+        <!-- ════════════════════════════════════════════════════════════════
+             STATE 1 — COLLAPSED, INFERRED
+             The default. One quiet line. The bar is barely there until
+             the user touches it. Inference is stated, not hidden.
+             ════════════════════════════════════════════════════════════════ -->
+        <div class="wn-card">
+          <div class="moment-bar" data-state="collapsed" onclick="this.setAttribute('data-state','expanded')">
+            <span class="moment-summary">30m · low energy</span>
+            <span class="moment-inferred">— inferred from time of day</span>
+            <span class="moment-change">change</span>
+          </div>
+
+          <div class="wn-context">Right now · Work</div>
+          <div class="wn-task">Email Sarah re: Q3 invoice</div>
+          <div class="wn-meta">
+            Ship product v2 <span class="sep">·</span> due today
+            <span class="sep">·</span> 15 min
+          </div>
+          <div class="wn-why">
+            Because it's <strong>Important</strong>, fits in 30 min, and due today.
+          </div>
+          <div class="wn-actions">
+            <button class="btn btn-primary">Do this</button>
+            <button class="btn btn-secondary">Not now</button>
+          </div>
+        </div>
+
+        <div class="stage-label">State 2 · Expanded (click the line, or press T / G)</div>
+
+        <!-- ════════════════════════════════════════════════════════════════
+             STATE 2 — EXPANDED
+             Two segmented controls. Teal-soft for the active segment
+             (system/state — never amber; amber is reserved for Important).
+             T cycles time, G cycles energy — existing shortcuts from F9.
+             ════════════════════════════════════════════════════════════════ -->
+        <div class="wn-card">
+          <div class="moment-bar" data-state="expanded">
+            <div class="moment-row">
+              <span class="moment-row-label">Time</span>
+              <div class="segmented" data-control="time">
+                <button>15m</button>
+                <button aria-pressed="true">30m</button>
+                <button>1h</button>
+                <button>2h+</button>
+              </div>
+              <span class="moment-kbd">T</span>
+            </div>
+            <div class="moment-row">
+              <span class="moment-row-label">Energy</span>
+              <div class="segmented" data-control="energy">
+                <button aria-pressed="true">low</button>
+                <button>med</button>
+                <button>high</button>
+              </div>
+              <span class="moment-kbd">G</span>
+            </div>
+          </div>
+
+          <div class="wn-context">Right now · Work</div>
+          <div class="wn-task">Email Sarah re: Q3 invoice</div>
+          <div class="wn-meta">
+            Ship product v2 <span class="sep">·</span> due today
+            <span class="sep">·</span> 15 min
+          </div>
+          <div class="wn-why">
+            Because it's <strong>Important</strong>, fits in 30 min, and due today.
+          </div>
+          <div class="wn-actions">
+            <button class="btn btn-primary">Do this</button>
+            <button class="btn btn-secondary">Not now</button>
+          </div>
+        </div>
+
+        <div class="stage-label">State 3 · Collapsed, user-overridden (the honest mismatch case)</div>
+
+        <!-- ════════════════════════════════════════════════════════════════
+             STATE 3 — COLLAPSED, OVERRIDDEN, MISMATCH
+             The user set something that disagrees with the top task.
+             The bar states it plainly; the "why this" line echoes the
+             mismatch honestly ("sure?"). No nag, no red — calm + truthful.
+             ════════════════════════════════════════════════════════════════ -->
+        <div class="wn-card">
+          <div class="moment-bar" data-state="collapsed" onclick="this.setAttribute('data-state','expanded')">
+            <span class="moment-summary">15m · low energy</span>
+            <span class="moment-change">change</span>
+          </div>
+
+          <div class="wn-context">Right now · Work</div>
+          <div class="wn-task">Draft the Q3 board memo</div>
+          <div class="wn-meta">
+            Ship product v2 <span class="sep">·</span> Important
+            <span class="sep">·</span> XL
+          </div>
+          <div class="wn-why">
+            Because it's <strong>Important</strong> —
+            <span class="mismatch">but it's XL and you have 15 min. Sure?</span>
+          </div>
+          <div class="wn-actions">
+            <button class="btn btn-primary">Do this</button>
+            <button class="btn btn-secondary">Not now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ───────────── DECISIONS LOCKED (Gap B resolution) ───────────── -->
+      <div class="notes">
+        <h2>Gap B — decisions locked by this mockup</h2>
+        <dl>
+          <dt>Placement</dt>
+          <dd>
+            <strong>Above the card, inside the card's top padding.</strong> The
+            bar is metadata about <em>the moment</em>, not about the task — so it
+            sits above the task title, not inside the context line (which would
+            crowd the most-read line) and not below the why-line (which would
+            read as a verdict on the picker).
+          </dd>
+
+          <dt>Format</dt>
+          <dd>
+            <strong>Two segmented controls</strong> (time: 15m / 30m / 1h / 2h+;
+            energy: low / med / high). Not chips (chips imply multi-select);
+            not a form (a form implies commitment). Segmented controls are the
+            calmest way to present 4 + 3 mutually-exclusive options. Active
+            segment uses teal — <em>system/state</em>, never amber (amber is
+            reserved for Important per PRODUCT.md).
+          </dd>
+
+          <dt>Collapse</dt>
+          <dd>
+            <strong>Default-collapsed to one quiet line:</strong>
+            "<code>30m · low energy — change</code>". Click anywhere on the
+            line, or press <code>T</code> / <code>G</code>, to expand. Collapses
+            back on selection or blur. The collapsed line is the whole point —
+            the bar is barely there until you touch it. Calm over features.
+          </dd>
+
+          <dt>Inference</dt>
+          <dd>
+            <strong>Time-of-day default, stated explicitly:</strong>
+            "<code>30m · low energy — inferred from time of day</code>". Morning
+            → high, post-lunch → low, evening → medium. The first time it
+            appears, the inference is named; once the user overrides, the
+            override sticks for the session and the "inferred" tag disappears.
+            Never hidden, always overridable.
+          </dd>
+
+          <dt>Mismatch (State 3)</dt>
+          <dd>
+            When the user's moment disagrees with the top task, the bar stays
+            calm and the <code>wn-why</code> line states it plainly
+            ("<em>...but it's XL and you have 15 min. Sure?</em>"). No red, no
+            nag, no blocking — priority is never demoted by fit (per the spec's
+            core invariant). The matcher explains; the user still clicks
+            <strong>Do this</strong>.
+          </dd>
+
+          <dt>What is <em>not</em> here</dt>
+          <dd>
+            No badge counts, no "you've avoided this," no streak of any kind
+            (PRODUCT.md bans them). No third selector (location, mood, etc.) —
+            two is the cap; a third would crowd the wedge surface. No
+            persistence beyond the session — the moment is now, not a
+            preference.
+          </dd>
+        </dl>
+      </div>
+    </div>
+
+    <script>
+      // Theme toggle
+      const root = document.documentElement;
+      const themeBtn = document.getElementById("themeBtn");
+      themeBtn.addEventListener("click", () => {
+        const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        root.setAttribute("data-theme", next);
+        themeBtn.textContent = next === "dark" ? "Light" : "Dark";
+      });
+
+      // Segmented control interaction (visual only — proves the pattern)
+      document.querySelectorAll(".segmented").forEach((group) => {
+        group.addEventListener("click", (e) => {
+          if (e.target.tagName !== "BUTTON") return;
+          group.querySelectorAll("button").forEach((b) =>
+            b.removeAttribute("aria-pressed")
+          );
+          e.target.setAttribute("aria-pressed", "true");
+        });
+      });
+    </script>
+  </body>
+</html>
