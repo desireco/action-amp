@@ -322,18 +322,18 @@ analogy. Reversed because capture is usually a one-off, not a session.)*
 | `Shift+Enter` | Expand to full co-author editor (desktop) |
 | `/` (first keystroke) | Command prefix — `/daily review`, `/focus`, `/switch Work` *(Phase 2)* |
 | `Esc` | Close without saving |
-| *(while typing)* | NL sigils: `#` tag · `@` time · `[[lens]]` lens override · `!` priority · `~` size · date words |
+| *(while typing)* | NL sigils: first `#` project · later `#` tags · `@` time · `[[lens]]` lens override · `!` priority · `~` size · date words |
 | *(expanded, not typing)* | `[` `]` size · `-` `=` priority (same as triage) |
 
-**First-class properties in capture: `#` (tags), `@` (time), `[[lens]]`
-(explicit lens override).** Projects are resolver-driven from free text — no
-sigil. Priority (`!`) and size (`~`) are still parsed but are expanded-editor
+**First-class properties in capture: `#` (project first, tags after), `@`
+(time), `[[lens]]` (explicit lens override).** The first `#token` or `#[Project
+Name]` is a project hint resolved at triage; any later `#tokens` become tags.
+Priority (`!`) and size (`~`) are still parsed but are expanded-editor
 territory, not the quick-capture essentials. Choosing *where this goes* beats
 choosing *how urgent/big it is* — that's triage's job. **Locked 2026-07-04
-(grammar v2 — supersedes the 2026-06-22 `#`/`@` decision).** The old `#` link
-project + `@` context tag split is gone; `#` is tags only, `@` is time only,
-and lens intent lives in `[[ ]]` or the resolver. See
-`docs/specs/capture-grammar.md`.
+(grammar v2 — supersedes the 2026-06-22 `#`/`@` decision).** The old `@` context
+tag split is gone; `@` is time only, and lens intent lives in `[[ ]]` or project
+inference. See `docs/specs/capture-grammar.md`.
 
 ### 7.6 Property keys — size & priority
 

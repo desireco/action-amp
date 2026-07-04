@@ -10,6 +10,7 @@ import { getProjects } from "wasp/client/operations";
 import { getProjectsForResolver } from "wasp/client/operations";
 import { getGoals } from "wasp/client/operations";
 import type { ParsedPriority, ParsedSize } from "./parseCapture";
+import { resolveProjectCandidate } from "./projectResolver";
 import "./TriagePage.css";
 
 /**
@@ -187,27 +188,14 @@ export function TriagePage() {
   //      exact project name. Exact case-insensitive name match.
   //   2. Free-text resolver — when no explicit pick, match project names from
   //      the inferred lens's project list against the cleaned text. Exact
-  //      word-boundary match; longest wins on ties. No fuzzy/substring.
+  //      whitespace/sentence-boundary match; longest wins on ties. No fuzzy.
   // Link-only: no match → lands in General, user picks manually. No auto-create,
   // so a typo never spawns a stray project. (Declared after `item`/`projects`.)
   const resolvedProjectId = useMemo(() => {
-    const hint = item?.parsedProject;
-    if (hint) {
-      // Path 1: explicit typeahead pick — exact name match wins silently. The
-      // user already chose; the resolver does NOT re-guess.
-      const match = (projects ?? []).find((p) => p.name.toLowerCase() === hint.toLowerCase());
-      return match?.id ?? null;
-    }
-    // Path 2: free-text resolver — scan the inferred lens's project names.
-    const text = item?.text?.toLowerCase() ?? "";
-    if (!text) return null;
-    const matches = (projects ?? []).filter((p) =>
-      new RegExp(`\\b${escapeRegex(p.name.toLowerCase())}\\b`).test(text),
-    );
-    if (matches.length === 0) return null;
-    // Longest name wins (most specific). "Q3 launch" beats "Q3" if both exist.
-    matches.sort((a, b) => b.name.length - a.name.length);
-    return matches[0].id;
+    return resolveProjectCandidate(projects ?? [], {
+      parsedProject: item?.parsedProject,
+      text: item?.text,
+    })?.id ?? null;
   }, [item?.parsedProject, item?.text, projects]);
 
   // ---- Lens inference: [[ ]] token → real lens (explicit path) ----
@@ -239,22 +227,11 @@ export function TriagePage() {
   const projectBridge = useMemo<{ lensId: string; projectName: string } | null>(() => {
     const all = resolverProjects ?? [];
     if (all.length === 0) return null;
-    const text = (item?.text ?? "").toLowerCase();
-    // Path (a): explicit pick — find the project by exact name, use its lens.
-    const hint = item?.parsedProject;
-    if (hint) {
-      const exact = all.find((p) => p.name.toLowerCase() === hint.toLowerCase());
-      if (exact) return { lensId: exact.lensId, projectName: exact.name };
-      return null; // explicit pick that didn't resolve → no bridge (don't guess)
-    }
-    // Path (b): free-text resolver — word-boundary match, longest wins.
-    if (!text) return null;
-    const matches = all.filter((p) =>
-      new RegExp(`\\b${escapeRegex(p.name.toLowerCase())}\\b`).test(text),
-    );
-    if (matches.length === 0) return null;
-    matches.sort((a, b) => b.name.length - a.name.length);
-    return { lensId: matches[0].lensId, projectName: matches[0].name };
+    const match = resolveProjectCandidate(all, {
+      parsedProject: item?.parsedProject,
+      text: item?.text,
+    });
+    return match ? { lensId: match.lensId, projectName: match.name } : null;
   }, [resolverProjects, item?.parsedProject, item?.text]);
 
   // [[ ]] wins over project-bridge. Both pre-fill the Context step visibly.
@@ -983,9 +960,4 @@ function isSameDay(a: Date, b: Date): boolean {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   );
-}
-
-/** Escape regex metachars in a user-provided project name for word-boundary match. */
-function escapeRegex(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

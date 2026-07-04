@@ -42,7 +42,7 @@ export const getProjects = (async (args, context) => {
         orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
         take: 1,
       },
-      _count: { select: { tasks: true } },
+      _count: { select: { tasks: { where: { isDone: false } } } },
     },
   });
 
@@ -182,12 +182,39 @@ export const createTask = (async (args, context) => {
   if (!description) {
     throw new Error("Task description is required.");
   }
+  if (args.projectId && args.goalId) {
+    throw new Error("Task can only be attached to one parent.");
+  }
+
+  let lensId = args.lensId;
+  if (args.projectId) {
+    const project = await context.entities.Project.findUnique({
+      where: { id: args.projectId, userId: context.user.id },
+      select: { id: true, lensId: true },
+    });
+    if (!project) {
+      throw new Error("Project not found.");
+    }
+    lensId = project.lensId;
+  } else if (args.goalId) {
+    const goal = await context.entities.Goal.findUnique({
+      where: { id: args.goalId, userId: context.user.id },
+      select: { id: true, lensId: true },
+    });
+    if (!goal) {
+      throw new Error("Goal not found.");
+    }
+    lensId = goal.lensId;
+  }
+
+  await assertLensAllowed(context, lensId);
+
   const task = await context.entities.Task.create({
     data: {
       description,
       content: null,
       userId: context.user.id,
-      lensId: args.lensId,
+      lensId,
       // A task is filed under a Project OR a Goal (or neither — standalone in
       // the lens). Exactly one of projectId/goalId is typically set; both are
       // nullable at the DB layer to support either parent.

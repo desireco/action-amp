@@ -42,8 +42,8 @@ export const createInboxItem = (async (args, context) => {
       parsedSize: parsed.parsedSize,
       parsedTags: parsed.parsedTags,
       // Explicit typeahead pick overrides anything the parser might extract
-      // (parser returns null for parsedProject under grammar v2; this is the
-      // sole source of the value when the user picks from the picker).
+      // from the first # token. The picker and parser both feed the same
+      // persisted project hint for triage resolution.
       parsedProject: args.projectName?.trim().toLowerCase() || parsed.parsedProject,
       parsedLens: parsed.parsedLens,
     },

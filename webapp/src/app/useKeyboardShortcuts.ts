@@ -12,7 +12,7 @@ import { useEffect } from "react";
  * doesn't type into inputs the way bare letters do. Captures the lot in a
  * single, memorable rule.
  *
- *   ⌘K / ⌘/      → open capture popover (always works, even in text fields)
+ *   ⌘K           → open capture popover (always works, even in text fields)
  *   ⌘L           → toggle the lens switcher (always works; ⌘-chords don't type)
  *   Shift+I/N/T/G/P/R → jump to Inbox / Next / Today / TriaGe / Planning / Review
  *   Shift+C      → capture (typing-safe; ⌘K remains the focus-protector)
@@ -58,11 +58,8 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
     const onKey = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
 
-      // ⌘K or ⌘/ — capture. Works everywhere (even in text fields). Two
-      // chords reach the same place: ⌘K is the primary, ⌘/ the alt for muscle
-      // memory from command-palette conventions. Bare `/` stays excluded — it
-      // collides with browser quick-find and would fire while typing.
-      if (meta && (e.key.toLowerCase() === "k" || e.key === "/")) {
+      // ⌘K — capture. Works everywhere (even in text fields).
+      if (meta && e.key.toLowerCase() === "k") {
         e.preventDefault();
         handlers.onCapture?.();
         return;

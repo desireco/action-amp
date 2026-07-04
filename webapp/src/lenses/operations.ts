@@ -4,12 +4,15 @@ import type {
   DeleteLens,
   GetLenses,
 } from "wasp/server/operations";
+import { PrismaClient } from "@prisma/client";
 import { PRO_LIMITS } from "../billing/config";
 import {
   assertLensConfigAllowed,
   assertUnderCap,
   throwHttpStatus,
 } from "../billing/entitlementHttp";
+
+const prisma = new PrismaClient();
 
 /**
  * Lens CRUD + list — user-defined life contexts (Pro only).
@@ -242,19 +245,23 @@ export const deleteLens = (async (args, context) => {
     if (!target) {
       throwHttpStatus(404, "Target lens not found.");
     }
-    // Move all content to the target lens, then drop the now-empty lens.
-    // GOAL MOVES FIRST: Goal has @@unique([userId, name]) (global, not
-    // per-lens), so a same-named goal in the target lens collides on updateMany
-    // with a Prisma P2002. Catching it BEFORE Task/Project move means nothing
-    // has shifted yet — the user fixes the collision (rename one) and retries,
-    // and the lens is untouched. Task/Project have no name unique, so they
-    // can't collide. Sequential (not $transaction): no transaction precedent in
-    // the codebase; if the lens delete fails after the moves, the lens is empty
-    // but still exists and the user retries.
+    // Move all content to the target lens, then drop the now-empty lens. Keep
+    // the multi-entity move transactional so a later failure rolls back earlier
+    // updates. Goal has @@unique([userId, name]) (global, not per-lens), so a
+    // same-named goal in the target lens can collide on updateMany; rewrite that
+    // Prisma P2002 into guidance the UI can show.
     const moveWhere = { lensId: existing.id };
     const moveData = { lensId: args.targetLensId };
     try {
-      await context.entities.Goal.updateMany({ where: moveWhere, data: moveData });
+      return await prisma.$transaction(async (tx) => {
+        await tx.goal.updateMany({ where: moveWhere, data: moveData });
+        await tx.task.updateMany({ where: moveWhere, data: moveData });
+        await tx.project.updateMany({ where: moveWhere, data: moveData });
+        return await tx.lens.delete({
+          where: { id: existing.id },
+          select: { id: true },
+        });
+      });
     } catch (e) {
       if (e && typeof e === "object" && "code" in e && e.code === "P2002") {
         throwHttpStatus(
@@ -264,12 +271,6 @@ export const deleteLens = (async (args, context) => {
       }
       throw e;
     }
-    await context.entities.Task.updateMany({ where: moveWhere, data: moveData });
-    await context.entities.Project.updateMany({ where: moveWhere, data: moveData });
-    return await context.entities.Lens.delete({
-      where: { id: existing.id },
-      select: { id: true },
-    });
   }
 
   // mode === "delete" (hard) — only allowed when the lens is EMPTY. The spec's

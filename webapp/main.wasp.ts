@@ -157,7 +157,7 @@ export default app({
     query(getProjects, { entities: ["Project", "Task", "Lens"], auth: true }),
     action(createProject, { entities: ["Project", "Lens"], auth: true }),
     query(getProject, { entities: ["Project", "Task"], auth: true }),
-    action(createTask, { entities: ["Task"], auth: true }),
+    action(createTask, { entities: ["Task", "Project", "Goal", "Lens"], auth: true }),
     query(getGoals, { entities: ["Goal", "Project", "Task", "Lens"], auth: true }),
     query(getGoal, { entities: ["Goal", "Project", "Task"], auth: true }),
     action(createGoal, { entities: ["Goal", "Lens"], auth: true }),

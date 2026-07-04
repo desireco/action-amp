@@ -2,8 +2,8 @@
 slug: capture
 title: "Capture (⌘K quick-add + NL parsing)"
 feature_area: capture-triage
-status: shipped       # grammar v2 is draft (see spec); v1 grammar still shipped in code
-spec: docs/specs/capture-grammar.md   # grammar v2 (draft) — supersedes v1 on ship
+status: shipped
+spec: docs/specs/capture-grammar.md
 verified: 2026-07-04
 ---
 
@@ -18,22 +18,23 @@ before commit. Lands in the universal Inbox (no lens until triage).
 
 | Sigil | Means | Examples |
 |---|---|---|
-| `#` | tag | `#deep-work #errands` (any number, lowercased) |
+| `#` | project first, tags after | `#mvp #deep-work`; `#[Q3 Launch] #errands` |
 | `@` | date (time only) | `@today @tomorrow @tonight`; bare `today`/`tomorrow`/`tonight` + weekday/month forms also work |
 | `!` | priority | `!1/!2/!3`, `!low/!normal/!important/!high`, `!/!!/!!!` |
 | `~` | size | `~20m ~1h ~XL`; time tokens map to S/M/L/XL |
 | `[[name]]` | lens override | `[[work]] [[personal]] [[me]] [[studio]]`; resolves on `kind` (seeded) or name (custom); unknown → literal text |
-| *(free text)* | project hint | resolver matches project names in the active/inferred lens; exact word-boundary, longest wins |
+| *(free text)* | project fallback | resolver can still match project names in the active/inferred lens; whitespace/sentence-boundary, longest wins |
 
-Replaces v1 (where `#` linked a project and `@` was a context tag). Projects
-have no sigil in v2 — the resolver bridges capture to lens through a matched
-project's `lensId`. `[[ ]]` precedence beats project-inferred lens.
+Replaces v1's `@` context tags. The first `#` token is the explicit project
+hint; remaining `#` tokens are tags. The resolver bridges capture to lens
+through a matched project's `lensId`. `[[ ]]` precedence beats project-inferred
+lens.
 
 **Files.** `components/ui/CapturePopover.tsx`; `inbox/parseCapture.ts`;
 `createInboxItem` in `inbox/operations.ts`.
 
-**Done?** v1 shipped (thought → inbox, keyboard-only). v2 (grammar rewrite +
-resolver + `[[ ]]` + `InboxItem.parsedLens`) is `draft` — see the spec.
+**Done?** Shipped: thought → inbox, keyboard-only, grammar v2 parser,
+resolver, `[[ ]]`, and `InboxItem.parsedLens`.
 
-**Spec.** `docs/specs/capture-grammar.md` (v2, draft). Reference: FEATURES.md
-F1/F2 (feature-level only).
+**Spec.** `docs/specs/capture-grammar.md` (v2). Reference: FEATURES.md F1/F2
+(feature-level only).

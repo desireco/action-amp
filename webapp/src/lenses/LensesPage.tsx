@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "wasp/client/operations";
 import {
@@ -8,7 +8,7 @@ import {
   deleteLens,
   getAppData,
 } from "wasp/client/operations";
-import { useEntitled, extractEntitlementMessage } from "../billing/useEntitled";
+import { useEntitled } from "../billing/useEntitled";
 import { PRO_LIMITS } from "../billing/config";
 import { SettingsLayout } from "../app/SettingsLayout";
 import { ProGate, ConfirmDialog } from "../components/ui";
@@ -41,6 +41,15 @@ type LensRow = {
   purpose: string | null;
   counts: { goals: number; projects: number; tasks: number };
 };
+
+function operationErrorMessage(err: unknown, fallback: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const e = err as any;
+  const data = e?.data ?? e?.response?.data ?? e?.message?.data;
+  if (data && typeof data.reason === "string") return data.reason;
+  if (typeof e?.message === "string" && e.message.trim()) return e.message;
+  return fallback;
+}
 
 export function LensesPage() {
   const entitled = useEntitled();
@@ -107,7 +116,7 @@ function LensList({
         ) : (
           <div className="aa-lenses-list">
             {lenses.map((lens) => (
-              <LensRowItem key={lens.id} lens={lens} onSaved={refresh} />
+              <LensRowItem key={lens.id} lens={lens} allLenses={lenses} onSaved={refresh} />
             ))}
           </div>
         )}
@@ -147,7 +156,15 @@ const KIND_LABEL: Record<string, string> = {
   CUSTOM: "Custom",
 };
 
-function LensRowItem({ lens, onSaved }: { lens: LensRow; onSaved: () => Promise<void> }) {
+function LensRowItem({
+  lens,
+  allLenses,
+  onSaved,
+}: {
+  lens: LensRow;
+  allLenses: LensRow[];
+  onSaved: () => Promise<void>;
+}) {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const isSeeded = lens.kind !== "CUSTOM";
@@ -200,7 +217,7 @@ function LensRowItem({ lens, onSaved }: { lens: LensRow; onSaved: () => Promise<
       {deleting && (
         <DeleteLensDialog
           lens={lens}
-          allLenses={[]}
+          allLenses={allLenses}
           onClose={() => setDeleting(false)}
           onDeleted={async () => {
             setDeleting(false);
@@ -239,7 +256,7 @@ function EditLensForm({
       });
       await onSaved();
     } catch (e) {
-      setError(extractEntitlementMessage(e).reason || "Couldn't save. Try again.");
+      setError(operationErrorMessage(e, "Couldn't save. Try again."));
     } finally {
       setSaving(false);
     }
@@ -322,7 +339,7 @@ function CreateLensForm({
       await createLens({ name, purpose, color });
       await onCreated();
     } catch (e) {
-      setError(extractEntitlementMessage(e).reason || "Couldn't create. Try again.");
+      setError(operationErrorMessage(e, "Couldn't create. Try again."));
     } finally {
       setSaving(false);
     }
@@ -410,8 +427,18 @@ function DeleteLensDialog({
   const [error, setError] = useState<string | null>(null);
 
   const contentSummary = `${lens.counts.goals} goals, ${lens.counts.projects} projects, ${lens.counts.tasks} tasks`;
+  const cannotReassign = mode === "reassign" && !targetId;
+
+  useEffect(() => {
+    if (targetId || targets.length === 0) return;
+    setTargetId(targets[0].id);
+  }, [targetId, targets]);
 
   async function confirm() {
+    if (cannotReassign) {
+      setError("Choose a lens to move content into.");
+      return;
+    }
     setDeleting(true);
     setError(null);
     try {
@@ -422,7 +449,7 @@ function DeleteLensDialog({
       });
       await onDeleted();
     } catch (e) {
-      setError(extractEntitlementMessage(e).reason || "Couldn't delete. Try again.");
+      setError(operationErrorMessage(e, "Couldn't delete. Try again."));
     } finally {
       setDeleting(false);
     }
@@ -450,7 +477,7 @@ function DeleteLensDialog({
                     className="aa-lenses-delete__select"
                     value={targetId}
                     onChange={(e) => setTargetId(e.target.value)}
-                    disabled={deleting || mode !== "reassign"}
+                    disabled={deleting || mode !== "reassign" || targets.length === 0}
                   >
                     {targets.map((t) => (
                       <option key={t.id} value={t.id}>{t.name}</option>
@@ -481,6 +508,7 @@ function DeleteLensDialog({
       confirmLabel={deleting ? "Deleting…" : `Delete ${lens.name}`}
       cancelLabel="Cancel"
       danger
+      confirmDisabled={deleting || cannotReassign}
       onConfirm={confirm}
       onClose={onClose}
     />

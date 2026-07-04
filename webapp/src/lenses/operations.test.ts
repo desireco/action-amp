@@ -16,10 +16,18 @@ const assertUnderCap = vi.fn().mockResolvedValue(undefined);
 const throwHttpStatus = vi.fn((statusCode: number, message: string) => {
   throw new Error(message);
 });
+const { prismaTransaction } = vi.hoisted(() => ({
+  prismaTransaction: vi.fn(),
+}));
 vi.mock("../billing/entitlementHttp", () => ({
   assertLensConfigAllowed,
   assertUnderCap,
   throwHttpStatus,
+}));
+vi.mock("@prisma/client", () => ({
+  PrismaClient: class MockPrismaClient {
+    $transaction = prismaTransaction;
+  },
 }));
 
 // Import AFTER the mock so the ops pick up the stubbed guards.
@@ -34,6 +42,7 @@ function resetSpies() {
   assertLensConfigAllowed.mockReset();
   assertUnderCap.mockReset();
   assertUnderCap.mockResolvedValue(undefined);
+  prismaTransaction.mockReset();
 }
 
 /** A Prisma P2002 (unique constraint violation) shaped error, so the op's
@@ -188,39 +197,52 @@ describe("deleteLens", () => {
   it("reassigns content to the target lens then deletes (mode: reassign)", async () => {
     resetSpies();
     const m = mockContext(PRO_USER);
+    const tx = {
+      goal: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+      task: { updateMany: vi.fn().mockResolvedValue({ count: 2 }) },
+      project: { updateMany: vi.fn().mockResolvedValue({ count: 3 }) },
+      lens: { delete: vi.fn().mockResolvedValue({ id: "l" }) },
+    };
+    prismaTransaction.mockImplementation(async (fn) => fn(tx));
     m.entities.Lens.findFirst
       .mockResolvedValueOnce({ id: "l", name: "Studio", kind: "CUSTOM" }) // the lens
       .mockResolvedValueOnce({ id: "l-me", name: "Me", kind: "PERSONAL" }); // tenancy-check target
-    m.entities.Lens.delete.mockResolvedValue({ id: "l" });
 
-    await deleteLens({ id: "l", mode: "reassign", targetLensId: "l-me" }, m.context);
+    const out = await deleteLens({ id: "l", mode: "reassign", targetLensId: "l-me" }, m.context);
 
-    // All three entity types moved to the target (Goal first — it's the only one
-    // that can collide on the global name unique), then the lens deleted.
-    expect(m.entities.Goal.updateMany).toHaveBeenCalledWith({ where: { lensId: "l" }, data: { lensId: "l-me" } });
-    expect(m.entities.Task.updateMany).toHaveBeenCalledWith({ where: { lensId: "l" }, data: { lensId: "l-me" } });
-    expect(m.entities.Project.updateMany).toHaveBeenCalledWith({ where: { lensId: "l" }, data: { lensId: "l-me" } });
-    expect(m.entities.Lens.delete).toHaveBeenCalledWith({ where: { id: "l" }, select: { id: true } });
+    expect(out).toEqual({ id: "l" });
+    expect(prismaTransaction).toHaveBeenCalledTimes(1);
+    // All three entity types move to the target and the lens delete happens in
+    // the same transaction, so a later failure rolls back earlier moves.
+    expect(tx.goal.updateMany).toHaveBeenCalledWith({ where: { lensId: "l" }, data: { lensId: "l-me" } });
+    expect(tx.task.updateMany).toHaveBeenCalledWith({ where: { lensId: "l" }, data: { lensId: "l-me" } });
+    expect(tx.project.updateMany).toHaveBeenCalledWith({ where: { lensId: "l" }, data: { lensId: "l-me" } });
+    expect(tx.lens.delete).toHaveBeenCalledWith({ where: { id: "l" }, select: { id: true } });
   });
 
   it("reassign Goal collision (same name in target) → 409, nothing moved", async () => {
     // Goal has @@unique([userId, name]) — a same-named goal in the target lens
-    // makes updateMany throw P2002. The op catches it, 409s with guidance, and
-    // (because Goal moves first) Task/Project haven't moved and the lens stands.
+    // makes updateMany throw P2002. The op catches it and 409s with guidance.
     resetSpies();
     const m = mockContext(PRO_USER);
+    const tx = {
+      goal: { updateMany: vi.fn().mockRejectedValue(p2002()) },
+      task: { updateMany: vi.fn() },
+      project: { updateMany: vi.fn() },
+      lens: { delete: vi.fn() },
+    };
+    prismaTransaction.mockImplementation(async (fn) => fn(tx));
     m.entities.Lens.findFirst
       .mockResolvedValueOnce({ id: "l", name: "Studio", kind: "CUSTOM" })
       .mockResolvedValueOnce({ id: "l-me", name: "Me", kind: "PERSONAL" });
-    m.entities.Goal.updateMany.mockRejectedValue(p2002());
 
     await expect(deleteLens({ id: "l", mode: "reassign", targetLensId: "l-me" }, m.context))
       .rejects.toThrow(/shares a name with one in the target lens/);
-    // Goal moved (and collided) but Task/Project/lens-delete never fired.
-    expect(m.entities.Goal.updateMany).toHaveBeenCalled();
-    expect(m.entities.Task.updateMany).not.toHaveBeenCalled();
-    expect(m.entities.Project.updateMany).not.toHaveBeenCalled();
-    expect(m.entities.Lens.delete).not.toHaveBeenCalled();
+    expect(prismaTransaction).toHaveBeenCalledTimes(1);
+    expect(tx.goal.updateMany).toHaveBeenCalled();
+    expect(tx.task.updateMany).not.toHaveBeenCalled();
+    expect(tx.project.updateMany).not.toHaveBeenCalled();
+    expect(tx.lens.delete).not.toHaveBeenCalled();
   });
 
   it("reassign refuses the same lens as target (400)", async () => {

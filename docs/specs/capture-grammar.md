@@ -2,7 +2,7 @@
 id: capture-grammar
 kind: spec
 title: "Capture grammar v2 (#projects+tags, @time, [[lens]], resolver, inline autocomplete)"
-status: draft
+status: shipped
 priority: P2
 feature: capture-grammar
 spec_owner: discover
@@ -93,9 +93,10 @@ explicit cross-lens path; it pre-fills the Context step but does not skip it.
 The resolver runs at triage, against the lens the Context step is about to
 commit to (the `[[ ]]`-inferred lens, else the active lens):
 
-- **Exact case-insensitive word-boundary match** against the project names in
-  that lens. `"email about MVP"` matches a project literally named "MVP";
-  `"email about MV"` does not.
+- **Exact case-insensitive whitespace/sentence-boundary match** against the
+  project names in that lens. `"email about MVP"` matches a project literally
+  named "MVP"; `"email about MVP2"` does not. Punctuation inside project names
+  is allowed (`C++`, `Q4/OKR`).
 - **If multiple match**, pick the **longest** (most specific). `"Q3 launch"`
   beats `"Q3"` if both exist.
 - **No fuzzy, no substring, no acronym matching.** v1 only. Non-goals below.
@@ -191,8 +192,8 @@ choice, the user ratifies it. The common case is still one Continue.
       selected and a "from `[[ ]]`" chip.
 - [ ] `[[ ]]`-inferred lens overrides the active-lens default in the Context
       step pre-fill.
-- [ ] Project resolver matches the cleaned text against the inferred lens's
-      projects; pre-fills the Project row on exact word-boundary match
+- [x] Project resolver matches the cleaned text against the inferred lens's
+      projects; pre-fills the Project row on exact whitespace/sentence-boundary match
       (longest match wins on ties).
 - [ ] When `[[ ]]` lens and project-inferred lens disagree, the project hint
       does not match; `[[ ]]` wins; project row stays General/unresolved.
@@ -215,7 +216,8 @@ choice, the user ratifies it. The common case is still one Continue.
 ## Non-goals
 
 - **No fuzzy / substring / acronym project matching.** v1 is exact
-  word-boundary only. Revisit when v1 ships and we see real miss patterns.
+  whitespace/sentence-boundary only. Revisit when v1 ships and we see real miss
+  patterns.
 - **No resolver confidence scoring** or "did you mean" disambiguation UI.
 - **No task-shaping hints** (vagueness detection, "this looks too big",
   split-this suggestions). That's a later phase that sits on top of a trusted
@@ -265,5 +267,5 @@ ship *with* the build, not after:
 ## Prototypes
 
 _(none — defer to Build. The resolver is well-scoped enough to implement
-directly; if Build wants a throwaway worktree to tune the word-boundary regex
+directly; if Build wants a throwaway worktree to tune the boundary matcher
 against real project names, that's the right place for one.)_

@@ -2,7 +2,7 @@
 // Server-op tests run in node: ops import entitlement guards that pull
 // `wasp/server` (HttpError), blocked by detectServerImports in jsdom. No DOM
 // APIs here — node is correct.
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 
 // Stub the server-only HttpError layer so this test never loads `wasp/server`.
 // The guards become no-op resolves; the entitlement *throw* path (402 + ProGate
@@ -11,8 +11,13 @@ vi.mock("../billing/entitlementHttp", () => ({
   assertLensAllowed: vi.fn().mockResolvedValue(undefined),
   assertUnderCap: vi.fn().mockResolvedValue(undefined),
 }));
+import { assertLensAllowed } from "../billing/entitlementHttp";
 import { getProjects, createProject, getProject, createTask } from "./operations";
 import { mockContext } from "../test/mockContext";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 /**
  * Projects operations — getProjects (two-query aggregation) + createProject.
@@ -37,7 +42,7 @@ const PROJECT_ROW = {
       isDone: false,
     },
   ],
-  _count: { tasks: 3 },
+  _count: { tasks: 2 },
 };
 
 const PROJECT_TOTALS = {
@@ -70,7 +75,7 @@ describe("getProjects — happy path", () => {
         name: "Ship product v2",
         dueDate: null,
         goal: { id: "goal-1", name: "Grow audience" },
-        openCount: 3,
+        openCount: 2,
         doneCount: 1,
         nextAction: expect.objectContaining({ id: "task-1", description: "Email Sarah" }),
       },
@@ -80,6 +85,13 @@ describe("getProjects — happy path", () => {
     expect(m.entities.Project.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ lensId: "lens-1", userId: "user-1", isDone: false }),
+      }),
+    );
+    expect(m.entities.Project.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({
+          _count: { select: { tasks: { where: { isDone: false } } } },
+        }),
       }),
     );
   });
@@ -225,24 +237,40 @@ describe("createTask — guards", () => {
       createTask({ description: "   ", lensId: "l", projectId: "p" }, m.context),
     ).rejects.toThrow(/description is required/);
   });
+
+  it("throws when the target project is missing or belongs to another user", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue(null);
+
+    await expect(
+      createTask({ description: "x", lensId: "spoofed-lens", projectId: "proj-1" }, m.context),
+    ).rejects.toThrow(/Project not found/);
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
+  });
 });
 
 describe("createTask — happy path", () => {
-  it("creates a task scoped to the project's lens, defaulting Upcoming / Normal / M", async () => {
+  it("creates a project task scoped to the persisted project's lens", async () => {
     const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "proj-1",
+      lensId: "project-lens",
+      userId: "user-1",
+    });
     m.entities.Task.create.mockResolvedValue({ id: "task-9" });
 
     const result = await createTask(
-      { description: "  Set up CI  ", lensId: "lens-1", projectId: "proj-1" },
+      { description: "  Set up CI  ", lensId: "spoofed-lens", projectId: "proj-1" },
       m.context,
     );
 
     expect(result).toEqual({ id: "task-9" });
+    expect(assertLensAllowed).toHaveBeenCalledWith(m.context, "project-lens");
     expect(m.entities.Task.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         description: "Set up CI", // trimmed
         userId: "user-1",
-        lensId: "lens-1", // from the project, not the active lens
+        lensId: "project-lens", // from the persisted project, not client input
         projectId: "proj-1",
         status: "UPCOMING", // the triage default — actionable, surfaces on Next
         priority: "NORMAL",

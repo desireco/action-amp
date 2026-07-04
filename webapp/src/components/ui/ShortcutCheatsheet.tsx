@@ -27,7 +27,7 @@ const SECTIONS: ShortcutSection[] = [
   {
     title: "Global",
     items: [
-      { keys: ["⌘K"], label: "Capture", note: "also ⌘/ · works in text fields" },
+      { keys: ["⌘K"], label: "Capture", note: "works in text fields" },
       { keys: ["Space"], label: "Go to Next" },
       { keys: ["?"], label: "Show this sheet", note: "also ⌘?" },
       { keys: ["Esc"], label: "Close / back" },

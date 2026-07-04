@@ -17,16 +17,17 @@ verified: 2026-07-04
   Note(Resource) / Archive, (3) Spec — inline-expanding rows (When/Size/Priority/
   Project/Goal). Complete is gated until lens + filing target set.
 
-**Resolver pre-fill** (grammar v2, `docs/specs/capture-grammar.md`, draft).
+**Resolver pre-fill** (grammar v2, `docs/specs/capture-grammar.md`, shipped).
 The Context step pre-fills from two inference paths, neither of which silently
 files — the user still hits Continue:
 - **`[[lens]]` token** (explicit): `[[work]]` / `[[personal]]` / `[[me]]` /
   `[[custom-name]]` resolves on `kind` (seeded) or name (custom); pre-fills the
   Context radio with a "from `[[ ]]`" chip.
-- **Project-bridged** (inferred): the resolver matches project names in the
-  cleaned text against the inferred lens's projects (exact word-boundary,
-  longest wins). A matched project pre-fills both the Project row and that
-  project's lens on the Context step. `[[ ]]` precedence wins on disagreement.
+- **Project-bridged** (explicit or inferred): the resolver matches the first
+  `#project` hint or project names in the cleaned text against the inferred
+  lens's projects (whitespace/sentence-boundary, longest wins). A matched
+  project pre-fills both the Project row and that project's lens on the Context
+  step. `[[ ]]` precedence wins on disagreement.
 
 **Archive is lossless.** `triageInboxItem` "archive" sets `InboxItem.status =
 ARCHIVED` (does **not** delete). Recoverable from the Logbook via

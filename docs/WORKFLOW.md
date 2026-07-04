@@ -248,22 +248,23 @@ These were the open structural calls. All resolved:
      caught (409) because Goal has `@@unique([userId, name])`.
    See `docs/specs/custom-lenses.md` + `docs/reviews/custom-lenses.md`.
 9. **Capture grammar v2 + lens token (locked 2026-07-04).** The capture NL
-   grammar moves from five overloaded sigils to a clean semantic split, and
-   projects/lens move from sigils to inference. Three structural calls:
-   - **`#` is tags, `@` is time only.** Reverses the 2026-06-22 `#`/`@` decision
-     (TRIAGE.md §7.5) where `#` linked a project and `@` was a context tag.
-     `@` is freed for its one natural job (when); `@today`/`@tomorrow`/`@tonight`
-     were already special-cased and stay. Tags are now `#`-prefixed, lowercased,
-     any number. See `docs/specs/capture-grammar.md`.
+   grammar keeps `#` as a project-first sigil while cleaning up `@` and lens
+   intent. Three structural calls:
+   - **First `#` is project; later `#` tokens are tags; `@` is time only.**
+     Keeps the 2026-06-22 `#` project affordance while removing `@` context
+     tags. `@` is freed for its one natural job (when);
+     `@today`/`@tomorrow`/`@tonight` were already special-cased and stay. See
+     `docs/specs/capture-grammar.md`.
    - **`[[lens]]` is the explicit lens override.** A new token for the rare
      cross-lens capture (in Work, think of a personal errand). Resolves on
      `kind` for seeded lenses (`[[work]]`/`[[personal]]`/`[[me]]` survive
      renames — same property as the entitlement guard), exact name for custom.
      Unknown tokens stay literal text, so it can't false-positive on pasted
      wiki-link syntax.
-   - **Projects are resolver-driven, no sigil.** Project intent is matched from
-     free text against the active lens's projects (or the `[[ ]]`-overridden
-     lens's) — exact word-boundary, longest match wins. The project's lens is
+   - **Projects are explicit via first `#`, with free-text fallback.** Project
+     intent is matched from the first `#` token or from free text against the
+     active lens's projects (or the `[[ ]]`-overridden lens's) —
+     whitespace/sentence-boundary, longest match wins. The project's lens is
      the bridge from capture to lens. `[[ ]]` precedence beats project-inferred
      lens (explicit beats inference — if they disagree, the project hint does
      not match).

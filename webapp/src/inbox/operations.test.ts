@@ -105,8 +105,8 @@ describe("triageInboxItem — task decisions", () => {
     });
   });
 
-  it("carries parsedTags onto the task (resolve-or-create, prefix stripped)", async () => {
-    const m = arrange({ parsedTags: ["@phone", "#mvp"] });
+  it("carries parsedTags onto the task (resolve-or-create, legacy prefixes stripped)", async () => {
+    const m = arrange({ parsedTags: ["#phone", "#mvp"] });
     m.entities.Tag.upsert
       .mockResolvedValueOnce({ id: "tag-phone" })
       .mockResolvedValueOnce({ id: "tag-mvp" });
@@ -115,7 +115,7 @@ describe("triageInboxItem — task decisions", () => {
     await triageOne({
       inboxItemId: "ix-1", decision: "task-today", lensId: "l" }, m);
 
-    // Two upserts — one per tag, stripped of @/# and lowercased.
+    // Two upserts — one per tag, stripped of # (and legacy @) and lowercased.
     expect(m.entities.Tag.upsert).toHaveBeenCalledTimes(2);
     expect(m.entities.Tag.upsert).toHaveBeenCalledWith({
       where: { userId_name: { userId: "user-1", name: "phone" } },
