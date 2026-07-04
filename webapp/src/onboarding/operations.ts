@@ -25,12 +25,14 @@ import { buildWelcomeEmail } from "./welcomeEmail";
  */
 
 // Each default lens carries an identity color key (see styles/tokens.css
-// `--aa-lens-*` palette). Work = indigo, Me = emerald. The color signals which
-// context is active; it's identity, never system/state (that's teal's job).
+// `--aa-lens-*` palette) and a stable LensKind handle. Work = indigo/WORK,
+// Me = emerald/PERSONAL. The color signals which context is active; the kind
+// is what the entitlement guard branches on (rename-safe — the user-facing
+// name can be anything). It's identity, never system/state (that's teal's job).
 const DEFAULT_LENSES = [
-  { name: "Work", color: "indigo" },
-  { name: "Me", color: "emerald" },
-] as const;
+  { name: "Work", kind: "WORK", color: "indigo" },
+  { name: "Me", kind: "PERSONAL", color: "emerald" },
+] as const satisfies readonly { name: string; kind: "WORK" | "PERSONAL"; color: string }[];
 const STARTER_TASKS = [
   "Try it: complete this task",
   "Capture one real thing on your mind",
@@ -88,20 +90,22 @@ export const ensureOnboarded = (async (_args, context) => {
     // findOrCreate per lens — idempotent across logins
     const existing = await context.entities.Lens.findFirst({
       where: { userId, name: lens.name },
-      select: { id: true, name: true, color: true },
+      select: { id: true, name: true, color: true, kind: true },
     });
     if (!existing) {
       const row = await context.entities.Lens.create({
-        data: { name: lens.name, color: lens.color, userId },
+        data: { name: lens.name, kind: lens.kind, color: lens.color, userId },
         select: { id: true, name: true },
       });
       created.push(row);
-    } else if (existing.color !== lens.color) {
-      // Backfill: existing lenses predate the color column (or drifted). Patch
-      // them up to the default identity color. Safe + idempotent.
+    } else if (existing.color !== lens.color || existing.kind !== lens.kind) {
+      // Backfill: existing lenses predate the color/kind columns (or drifted).
+      // Patch them up to the defaults. Safe + idempotent. The kind backfill is
+      // defense-in-depth — migration lens_kind_and_purpose already tagged
+      // seeded lenses by name; this catches any post-migration drift.
       await context.entities.Lens.update({
         where: { id: existing.id },
-        data: { color: lens.color },
+        data: { color: lens.color, kind: lens.kind },
         select: { id: true },
       });
     }

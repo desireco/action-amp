@@ -68,7 +68,7 @@ export const getAppData = (async (args, context) => {
   const lenses = await context.entities.Lens.findMany({
     where: { userId },
     orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, color: true },
+    select: { id: true, name: true, color: true, kind: true, purpose: true },
   });
   // Resolve the requested lens name to an id; fall back to the first lens so
   // counts are never empty just because the stored name was stale/missing.
@@ -120,7 +120,7 @@ export const getAppData = (async (args, context) => {
 }) satisfies GetAppData<
   { lensName?: string | null },
   {
-    lenses: { id: string; name: string; color: string | null }[];
+    lenses: { id: string; name: string; color: string | null; kind: string; purpose: string | null }[];
     counts: { inbox: number; today: number; projects: number; goals: number };
     todayByLens: Record<string, number>;
   }

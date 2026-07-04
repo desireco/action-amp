@@ -79,10 +79,10 @@ describe("getAppData — happy path", () => {
         where: expect.objectContaining({ lensId: "lens-work", isDone: false }),
       }),
     );
-    // Lenses carry their identity color so the shell can paint per-lens.
+    // Lenses carry their identity color + stable kind handle + purpose.
     expect(m.entities.Lens.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        select: { id: true, name: true, color: true },
+        select: { id: true, name: true, color: true, kind: true, purpose: true },
       }),
     );
     // Per-lens Today counts are NOT scoped to the active lens — every lens gets
