@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
 import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcuts";
 import { FeedbackDialog } from "./FeedbackDialog";
-import { CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate } from "../components/ui";
+import { CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate, LensChip, LensPopover } from "../components/ui";
 import { useEntitled } from "../billing/useEntitled";
 import {
   BrandMark,
@@ -126,6 +126,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const todayByLens = appData?.todayByLens ?? {};
   // The Work lens is "visible-but-locked" for FREE users: shown in the switch
   // with a tiny "Pro" affordance (proLocked), but selecting it shows the gate.
+  // proLocked now branches on kind (WORK/PERSONAL), not the name — rename-safe.
   const workLocked = !entitled;
   const lensOptions =
     lenses.length > 0
@@ -134,27 +135,33 @@ export function AppShell({ children }: { children: ReactNode }) {
           label: l.name,
           color: l.color ?? undefined,
           count: todayByLens[l.id] ?? 0,
-          proLocked: workLocked && l.name !== "Me",
+          purpose: l.purpose ?? undefined,
+          // FREE: only PERSONAL is usable; WORK + CUSTOM are gated.
+          proLocked: workLocked && l.kind !== "PERSONAL",
         }))
       : [
-          { id: "Work", label: "Work", color: "indigo", count: 0, proLocked: workLocked },
-          { id: "Me", label: "Me", color: "emerald", count: 0, proLocked: false },
+          { id: "Work", label: "Work", color: "indigo", count: 0, purpose: undefined, proLocked: workLocked },
+          { id: "Me", label: "Me", color: "emerald", count: 0, purpose: undefined, proLocked: false },
         ];
+  // Adaptive switcher: ≤3 lenses → segmented control (today); ≥4 → chip + popover.
+  // The swap is pure presentational state on lens count, no routing change.
+  const usePopover = lensOptions.length >= 4;
 
   // Keep the active lens valid once lenses load; default to the first.
   // If the stored name no longer matches (e.g. renamed), self-heal: persist
   // the fallback so we don't keep looking up a stale name.
   //
-  // Entitlement clamp: a FREE user must never resolve to the Work lens here —
+  // Entitlement clamp: a FREE user must never resolve to a non-PERSONAL lens —
   // a stored `aa-lens=Work` (a bypass attempt, or stale from a lapsed plan)
   // would otherwise scope their queries to Work and 402 server-side. Fall back
-  // to Me (or the first non-Work lens) so the client never asks for Work data
-  // it isn't entitled to. The server guard is the boundary; this prevents the
-  // broken UX of every query erroring on load.
+  // to PERSONAL so the client never asks for data it isn't entitled to. Branches
+  // on KIND (rename-safe): a renamed Work lens is still kind=WORK, still gated.
+  // The server guard is the boundary; this prevents the broken UX of every
+  // query erroring on load.
   const resolvedLens = lenses.find((l) => l.name === lens) ?? lenses[0];
   const activeLens =
-    !entitled && resolvedLens && resolvedLens.name !== "Me"
-      ? lenses.find((l) => l.name === "Me") ?? lenses.find((l) => l.name !== "Work") ?? resolvedLens
+    !entitled && resolvedLens && resolvedLens.kind !== "PERSONAL"
+      ? lenses.find((l) => l.kind === "PERSONAL") ?? resolvedLens
       : resolvedLens;
   const activeLensName = activeLens?.name ?? lens;
   useEffect(() => {
@@ -216,18 +223,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [mobileLensOpen, setMobileLensOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [lensPopoverOpen, setLensPopoverOpen] = useState(false);
 
   useKeyboardShortcuts({
     onCapture: () => setCaptureOpen(true),
     onGoHome: () => navigate("/app"),
     onNavigate: (dest) => navigate(NAV_ROUTE[dest]),
     onToggleCheatsheet: () => setCheatsheetOpen((v) => !v),
+    onToggleLens: () => setLensPopoverOpen((v) => !v),
     onCloseOverlay: () => {
       setCaptureOpen(false);
       setCheatsheetOpen(false);
       setConfirmLogout(false);
       setMobileLensOpen(false);
       setFeedbackOpen(false);
+      setLensPopoverOpen(false);
     },
   });
 
@@ -326,12 +336,38 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* User footer */}
         <div className="aa-app-user">
-          <LensSwitch
-            options={lensOptions}
-            active={activeLensName}
-            onSelect={(id) => setLens(id)}
-            className="aa-app-lens"
-          />
+          {/* Adaptive lens switcher: segmented control at ≤3 lenses (today,
+              unchanged), chip + popover at ≥4 (when segmented gets crowded).
+              ⌘L toggles the popover; the wrapper is positioned relative so the
+              popover anchors under the chip. */}
+          <div className="aa-app-lens">
+            {usePopover ? (
+              <>
+                <LensChip
+                  label={activeLensName}
+                  color={activeLens?.color ?? undefined}
+                  open={lensPopoverOpen}
+                  onClick={() => setLensPopoverOpen((v) => !v)}
+                />
+                {lensPopoverOpen && (
+                  <LensPopover
+                    options={lensOptions}
+                    active={activeLensName}
+                    onSelect={(id) => setLens(id)}
+                    onClose={() => setLensPopoverOpen(false)}
+                    onNewLens={entitled ? () => navigate("/app/settings/lenses") : undefined}
+                    newLensProLocked={!entitled}
+                  />
+                )}
+              </>
+            ) : (
+              <LensSwitch
+                options={lensOptions}
+                active={activeLensName}
+                onSelect={(id) => setLens(id)}
+              />
+            )}
+          </div>
           <Link
             to="/app/settings"
             className={`aa-app-user-btn ${isActive("/app/settings") ? "active" : ""}`}

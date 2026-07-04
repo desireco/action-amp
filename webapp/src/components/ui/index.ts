@@ -15,6 +15,8 @@ export { FocusMode } from "./FocusMode";
 export type { FocusTask } from "./FocusMode";
 export { LensSwitch } from "./LensSwitch";
 export type { LensSwitchOption } from "./LensSwitch";
+export { LensPopover, LensChip } from "./LensPopover";
+export type { LensPopoverOption } from "./LensPopover";
 export { ModeDial } from "./ModeDial";
 export type { ModeDialItem } from "./ModeDial";
 export { NavItem } from "./NavItem";
