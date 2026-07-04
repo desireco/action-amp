@@ -42,7 +42,7 @@ export function ProjectsPage() {
   const entitled = useEntitled();
   const { data: appData } = useQuery(
     getAppData,
-    { lensName: lens?.name ?? "" },
+    { lensId: lens?.id ?? null },
     { enabled: !!lens },
   );
   const projectCount = appData?.counts.projects ?? 0;

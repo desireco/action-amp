@@ -6,6 +6,7 @@ import { TriagePage } from "./src/inbox/TriagePage" with { type: "ref" };
 import { SettingsPage } from "./src/app/SettingsPage" with { type: "ref" };
 import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
+import { LensesPage } from "./src/lenses/LensesPage" with { type: "ref" };
 import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
 import { getTask, getTasks, getDoneToday, getTopTask, toggleTaskDone, updateTaskStatus, snoozeTask, startTask, pauseTask } from "./src/tasks/operations" with { type: "ref" };
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
@@ -24,6 +25,8 @@ import { GoalsPage } from "./src/goals/GoalsPage" with { type: "ref" };
 import { GoalDetailPage } from "./src/goals/GoalDetailPage" with { type: "ref" };
 import { LogbookPage } from "./src/logbook/LogbookPage" with { type: "ref" };
 import { ensureOnboarded, setPreferredName, completeOnboarding } from "./src/onboarding/operations" with { type: "ref" };
+import { createLens, updateLens, deleteLens } from "./src/lenses/operations" with { type: "ref" };
+import { getLenses } from "./src/lenses/operations" with { type: "ref" };
 import { getAppData } from "./src/app/operations" with { type: "ref" };
 import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status } from "./src/billing/operations" with { type: "ref" };
@@ -113,6 +116,7 @@ export default app({
       "/app/settings/preferences",
       page(PreferencesPage),
     ),
+    route("LensesRoute", "/app/settings/lenses", page(LensesPage)),
     route("TaskDetailRoute", "/app/tasks/:id", page(TaskDetailPage)),
     route("ProjectDetailRoute", "/app/projects/:id", page(ProjectDetailPage)),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
@@ -159,6 +163,10 @@ export default app({
     query(getAppData, { entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(submitFeedback, { entities: ["User", "Feedback"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),
+    action(createLens, { entities: ["Lens"], auth: true }),
+    action(updateLens, { entities: ["Lens"], auth: true }),
+    action(deleteLens, { entities: ["Lens", "Task", "Project", "Goal"], auth: true }),
+    query(getLenses, { entities: ["Lens"], auth: true }),
     action(setPreferredName, { entities: ["User"], auth: true }),
     action(completeOnboarding, { entities: ["User"], auth: true }),
     query(getInboxItems, { entities: ["InboxItem"], auth: true }),

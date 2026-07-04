@@ -123,7 +123,10 @@ The wizard (per item):
 1. **Context (Lens)** — a radio, pre-filled with the active lens. The user
    must **Continue** to ratify it. *(Reverses WORKFLOW.md §5.5's inherit-active
    default — triage now asks, explicitly. The active lens is still the
-   pre-selection, so the common case is one Continue.)*
+   pre-selection, so the common case is one Continue.)* Lists the full lens set
+   (user-defined lenses appear for Pro, not just the seeded two). At ≥4 lenses
+   the radio follows the same adaptive pattern as the sidebar switcher (chip +
+   popover); at ≤3 it's today's radio.
 2. **Type** — what does this become? **Task** (default) · **Project** ·
    **Resource** (a Note) · **Archive** (lossless — kept, recoverable). *Goal is
    not a type-chooser outcome* — goals are filed *into*, never created at

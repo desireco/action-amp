@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
 import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcuts";
 import { FeedbackDialog } from "./FeedbackDialog";
-import { CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate } from "../components/ui";
+import { CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate, LensChip, LensPopover } from "../components/ui";
 import { useEntitled } from "../billing/useEntitled";
 import {
   BrandMark,
@@ -68,21 +68,25 @@ export function AppShell({ children }: { children: ReactNode }) {
   // the boundary; this is the UX.
   const entitled = useEntitled();
   const [workGated, setWorkGated] = useState(false);
-  const [lens, setLensState] = useState<string>(() => {
-    if (typeof window === "undefined") return "Me";
-    return localStorage.getItem("aa-lens") ?? "Me";
+  // Active lens state, keyed by lens ID (the stable handle). Previously this
+  // was keyed by name (localStorage "aa-lens"); id-keying is the rename-safety
+  // fix — renaming the active lens no longer resets it on reload. The one-shot
+  // migration below reads the old name-keyed value and rewrites to "aa-lens-id".
+  // Sentinel `name:<x>` marks a not-yet-resolved migrated value (resolved once
+  // lenses load); null = no stored preference (defaults to first lens).
+  const [lensId, setLensIdState] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    const id = localStorage.getItem("aa-lens-id");
+    if (id) return id;
+    const oldName = localStorage.getItem("aa-lens");
+    return oldName ? `name:${oldName}` : null;
   });
-  const setLens = (name: string) => {
-    // FREE user clicking the Work lens: don't switch (their queries would 402
-    // server-side anyway); show the ProGate in the main area instead. Stay on
-    // the Me lens so the sidebar/data behind the gate stays valid.
-    if (!entitled && name === "Work") {
-      setWorkGated(true);
-      return;
-    }
-    setWorkGated(false);
-    setLensState(name);
-    localStorage.setItem("aa-lens", name);
+  // setLens is assigned in the render below (after `lenses` loads) so the FREE
+  // gate can branch on the selected lens's kind, not its name. The forward decl
+  // keeps the call sites stable.
+  const setLens = (id: string) => {
+    setLensIdState(id);
+    localStorage.setItem("aa-lens-id", id);
   };
   // Theme is controlled from Settings > Preferences. The shell only applies the
   // persisted/system value on app entry so the tokens are active before a
@@ -110,63 +114,101 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [user, ensureOnboarded]);
 
-  // Shell data: lenses (sidebar switch + query scoping) + nav counts. Counts
-  // are scoped to the active lens so the badges match each list page. We pass
-  // the lens *name* (the only thing known before lenses load — it's in
-  // localStorage); getAppData resolves name→id server-side. Disabled until
-  // authenticated (avoids 'Not authenticated' 500s on the pre-auth render
-  // while Wasp resolves the session).
+  // Shell data: lenses (sidebar switch + query scoping) + nav counts. The query
+  // takes the active lens ID directly (id-keyed, like the rest of the state) —
+  // switching lenses changes the query arg → React Query refetches → the focus-
+  // nav badges (Today/Projects/Goals) re-scope to the new lens. Before lenses
+  // load, lensId may be a `name:<x>` migration sentinel; getAppData ignores ids
+  // it can't resolve and falls back to the first lens.
+  const rawId = lensId && !lensId.startsWith("name:") ? lensId : null;
   const { data: appData } = useQuery(
     getAppData,
-    { lensName: lens },
+    { lensId: rawId },
     { enabled: !!user },
   );
   const lenses = appData?.lenses ?? [];
   const counts = appData?.counts ?? { inbox: 0, today: 0, projects: 0, goals: 0 };
   const todayByLens = appData?.todayByLens ?? {};
+
+  // One-shot migration: resolve a `name:X` sentinel to a real lens id once the
+  // lenses load, persist under the new key, and delete the old name key. After
+  // this runs once, lensId is a real id and the sentinel is gone.
+  useEffect(() => {
+    if (!lensId?.startsWith("name:") || lenses.length === 0) return;
+    const oldName = lensId.slice(5);
+    const resolved = lenses.find((l) => l.name === oldName) ?? lenses[0];
+    if (resolved) {
+      setLensIdState(resolved.id);
+      localStorage.setItem("aa-lens-id", resolved.id);
+      localStorage.removeItem("aa-lens");
+    }
+  }, [lensId, lenses]);
+
+  // Resolve the active lens from the stored id (or the sentinel name). Falls
+  // back to the first lens if the id is stale/missing. Entitlement clamp: a
+  // FREE user must never resolve to a non-PERSONAL lens — a stored id pointing
+  // at WORK/CUSTOM (a bypass attempt, or stale from a lapsed plan) falls back to
+  // PERSONAL so their queries don't 402. Branches on KIND (rename-safe). The
+  // server guard is the boundary; this prevents the broken UX of every query
+  // erroring on load.
+  const resolvedLens =
+    (rawId ? lenses.find((l) => l.id === rawId) : undefined) ?? lenses[0];
+  const activeLens =
+    !entitled && resolvedLens && resolvedLens.kind !== "PERSONAL"
+      ? lenses.find((l) => l.kind === "PERSONAL") ?? resolvedLens
+      : resolvedLens;
+  const activeLensName = activeLens?.name ?? "Me";
+  // Self-heal: if the stored id no longer matches a lens (deleted?), persist
+  // the fallback so we don't keep looking up a stale id.
+  useEffect(() => {
+    if (activeLens && activeLens.id !== lensId) {
+      setLensIdState(activeLens.id);
+      localStorage.setItem("aa-lens-id", activeLens.id);
+      setWorkGated(false);
+    }
+  }, [activeLens, lensId]);
+
   // The Work lens is "visible-but-locked" for FREE users: shown in the switch
   // with a tiny "Pro" affordance (proLocked), but selecting it shows the gate.
+  // proLocked branches on kind (WORK/PERSONAL/CUSTOM), not the name — rename-safe.
+  // The option id is the real lens id (so onSelect carries the id to setLens).
   const workLocked = !entitled;
   const lensOptions =
     lenses.length > 0
       ? lenses.map((l) => ({
-          id: l.name,
+          id: l.id,
           label: l.name,
           color: l.color ?? undefined,
           count: todayByLens[l.id] ?? 0,
-          proLocked: workLocked && l.name !== "Me",
+          purpose: l.purpose ?? undefined,
+          // FREE: only PERSONAL is usable; WORK + CUSTOM are gated.
+          proLocked: workLocked && l.kind !== "PERSONAL",
         }))
       : [
-          { id: "Work", label: "Work", color: "indigo", count: 0, proLocked: workLocked },
-          { id: "Me", label: "Me", color: "emerald", count: 0, proLocked: false },
+          { id: "Work", label: "Work", color: "indigo", count: 0, purpose: undefined, proLocked: workLocked },
+          { id: "Me", label: "Me", color: "emerald", count: 0, purpose: undefined, proLocked: false },
         ];
+  // Adaptive switcher: ≤3 lenses → segmented control (today); ≥4 → chip + popover.
+  // The swap is pure presentational state on lens count, no routing change.
+  const usePopover = lensOptions.length >= 4;
 
-  // Keep the active lens valid once lenses load; default to the first.
-  // If the stored name no longer matches (e.g. renamed), self-heal: persist
-  // the fallback so we don't keep looking up a stale name.
-  //
-  // Entitlement clamp: a FREE user must never resolve to the Work lens here —
-  // a stored `aa-lens=Work` (a bypass attempt, or stale from a lapsed plan)
-  // would otherwise scope their queries to Work and 402 server-side. Fall back
-  // to Me (or the first non-Work lens) so the client never asks for Work data
-  // it isn't entitled to. The server guard is the boundary; this prevents the
-  // broken UX of every query erroring on load.
-  const resolvedLens = lenses.find((l) => l.name === lens) ?? lenses[0];
-  const activeLens =
-    !entitled && resolvedLens && resolvedLens.name !== "Me"
-      ? lenses.find((l) => l.name === "Me") ?? lenses.find((l) => l.name !== "Work") ?? resolvedLens
-      : resolvedLens;
-  const activeLensName = activeLens?.name ?? lens;
-  useEffect(() => {
-    if (activeLens && activeLens.name !== lens) {
-      setLensState(activeLens.name);
-      localStorage.setItem("aa-lens", activeLens.name);
-      setWorkGated(false);
+  // Select handler with FREE gating: a non-entitled user picking a non-PERSONAL
+  // lens sees the ProGate in the main area instead of switching (their queries
+  // would 402 server-side anyway). Stays on the current lens so the data behind
+  // the gate stays valid. Branches on KIND, not name — rename-safe.
+  const selectLens = (id: string) => {
+    const target = lenses.find((l) => l.id === id);
+    if (!entitled && target && target.kind !== "PERSONAL") {
+      setWorkGated(true);
+      return;
     }
-  }, [activeLens, lens]);
+    setWorkGated(false);
+    setLens(id);
+  };
+
   // The value pages consume via useActiveLens() to scope their queries.
   const activeLensValue = activeLens
-    ? { id: activeLens.id, name: activeLens.name, color: activeLens.color ?? null }
+    ? { id: activeLens.id, name: activeLens.name, color: activeLens.color ?? null, kind: activeLens.kind, purpose: activeLens.purpose }
     : null;
 
   // Mirror the active lens's identity color onto <html data-lens="..."> so CSS
@@ -216,18 +258,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [mobileLensOpen, setMobileLensOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [lensPopoverOpen, setLensPopoverOpen] = useState(false);
 
   useKeyboardShortcuts({
     onCapture: () => setCaptureOpen(true),
     onGoHome: () => navigate("/app"),
     onNavigate: (dest) => navigate(NAV_ROUTE[dest]),
     onToggleCheatsheet: () => setCheatsheetOpen((v) => !v),
+    onToggleLens: () => setLensPopoverOpen((v) => !v),
     onCloseOverlay: () => {
       setCaptureOpen(false);
       setCheatsheetOpen(false);
       setConfirmLogout(false);
       setMobileLensOpen(false);
       setFeedbackOpen(false);
+      setLensPopoverOpen(false);
     },
   });
 
@@ -326,12 +371,38 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* User footer */}
         <div className="aa-app-user">
-          <LensSwitch
-            options={lensOptions}
-            active={activeLensName}
-            onSelect={(id) => setLens(id)}
-            className="aa-app-lens"
-          />
+          {/* Adaptive lens switcher: segmented control at ≤3 lenses (today,
+              unchanged), chip + popover at ≥4 (when segmented gets crowded).
+              ⌘L toggles the popover; the wrapper is positioned relative so the
+              popover anchors under the chip. */}
+          <div className="aa-app-lens">
+            {usePopover ? (
+              <>
+                <LensChip
+                  label={activeLensName}
+                  color={activeLens?.color ?? undefined}
+                  open={lensPopoverOpen}
+                  onClick={() => setLensPopoverOpen((v) => !v)}
+                />
+                {lensPopoverOpen && (
+                  <LensPopover
+                    options={lensOptions}
+                    active={activeLens?.id ?? ""}
+                    onSelect={selectLens}
+                    onClose={() => setLensPopoverOpen(false)}
+                    onNewLens={entitled ? () => navigate("/app/settings/lenses") : undefined}
+                    newLensProLocked={!entitled}
+                  />
+                )}
+              </>
+            ) : (
+              <LensSwitch
+                options={lensOptions}
+                active={activeLens?.id ?? ""}
+                onSelect={selectLens}
+              />
+            )}
+          </div>
           <Link
             to="/app/settings"
             className={`aa-app-user-btn ${isActive("/app/settings") ? "active" : ""}`}
@@ -377,11 +448,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={l.id}
                 type="button"
                 role="menuitemradio"
-                aria-checked={l.id === activeLensName}
-                className={`aa-mobile-lens-menu__item ${l.id === activeLensName ? "active" : ""}`}
+                aria-checked={l.id === activeLens?.id}
+                className={`aa-mobile-lens-menu__item ${l.id === activeLens?.id ? "active" : ""}`}
                 data-lens-color={l.color}
                 onClick={() => {
-                  setLens(l.id);
+                  selectLens(l.id);
                   setMobileLensOpen(false);
                 }}
               >

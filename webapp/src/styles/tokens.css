@@ -58,6 +58,56 @@
   --aa-lens-emerald-soft-strong: oklch(0.91 0.08 165);
   --aa-lens-emerald-mid: oklch(0.82 0.1 165);
 
+  /* User-defined lens hues (Pro). Each follows the indigo/emerald discipline:
+     lightness/chroma pairs matched for consistent visual weight, hues chosen
+     to avoid the reserved system hues (teal≈220, amber≈75, violet≈295,
+     rose≈15). Curated keys only — no free-form hex (see custom-lenses spec).
+     Reserved hues are deliberately absent from this set and from the picker. */
+
+  /* slate — neutral context (General / Admin). Near-neutral, faint cool tint. */
+  --aa-lens-slate: oklch(0.58 0.03 240);
+  --aa-lens-slate-text: oklch(0.4 0.04 240);
+  --aa-lens-slate-soft: oklch(0.96 0.008 240);
+  --aa-lens-slate-soft-strong: oklch(0.92 0.015 240);
+  --aa-lens-slate-mid: oklch(0.82 0.025 240);
+
+  /* cyan — distinct from teal (cooler hue, higher chroma). Creative/practice. */
+  --aa-lens-cyan: oklch(0.6 0.13 210);
+  --aa-lens-cyan-text: oklch(0.4 0.11 210);
+  --aa-lens-cyan-soft: oklch(0.96 0.035 210);
+  --aa-lens-cyan-soft-strong: oklch(0.92 0.07 210);
+  --aa-lens-cyan-mid: oklch(0.82 0.1 210);
+
+  /* coral — rose-adjacent alt. Pulled toward orange (hue 40) + softened so it
+     never reads as an error (rose≈15 is reserved for errors/overdue). */
+  --aa-lens-coral: oklch(0.65 0.16 40);
+  --aa-lens-coral-text: oklch(0.45 0.14 40);
+  --aa-lens-coral-soft: oklch(0.96 0.04 40);
+  --aa-lens-coral-soft-strong: oklch(0.92 0.08 40);
+  --aa-lens-coral-mid: oklch(0.82 0.11 40);
+
+  /* honey — amber-adjacent alt. Pulled toward yellow (hue 95) + softened so it
+     never reads as Important (amber≈75 is reserved for human emphasis). */
+  --aa-lens-honey: oklch(0.72 0.14 95);
+  --aa-lens-honey-text: oklch(0.5 0.13 95);
+  --aa-lens-honey-soft: oklch(0.96 0.045 95);
+  --aa-lens-honey-soft-strong: oklch(0.92 0.08 95);
+  --aa-lens-honey-mid: oklch(0.84 0.1 95);
+
+  /* lime — green but distinct from emerald (hue 130 vs 165; yellow-green). */
+  --aa-lens-lime: oklch(0.7 0.15 130);
+  --aa-lens-lime-text: oklch(0.48 0.14 130);
+  --aa-lens-lime-soft: oklch(0.96 0.045 130);
+  --aa-lens-lime-soft-strong: oklch(0.92 0.08 130);
+  --aa-lens-lime-mid: oklch(0.84 0.1 130);
+
+  /* magenta — warm pink-violet (hue 350). Distinct from violet(295)/rose(15). */
+  --aa-lens-magenta: oklch(0.58 0.18 350);
+  --aa-lens-magenta-text: oklch(0.42 0.17 350);
+  --aa-lens-magenta-soft: oklch(0.96 0.045 350);
+  --aa-lens-magenta-soft-strong: oklch(0.92 0.08 350);
+  --aa-lens-magenta-mid: oklch(0.82 0.11 350);
+
   /* ---- Active lens (re-pointed per widget via [data-lens-color]) ----
      Defaults to indigo so lenses seeded before colors existed (null color)
      still resolve to something. lensContext.ts documents this fallback. */
@@ -158,6 +208,32 @@
   --aa-lens-emerald-soft-strong: oklch(0.34 0.1 165);
   --aa-lens-emerald-mid: oklch(0.4 0.1 165);
   --aa-lens-emerald-text: oklch(0.78 0.12 165);
+  /* User-defined lens hues: dark overrides mirror indigo/emerald (deeper soft
+     fills, brighter -text for legibility on the dark surface). */
+  --aa-lens-slate-soft: oklch(0.3 0.012 240);
+  --aa-lens-slate-soft-strong: oklch(0.34 0.02 240);
+  --aa-lens-slate-mid: oklch(0.4 0.03 240);
+  --aa-lens-slate-text: oklch(0.78 0.025 240);
+  --aa-lens-cyan-soft: oklch(0.3 0.05 210);
+  --aa-lens-cyan-soft-strong: oklch(0.34 0.09 210);
+  --aa-lens-cyan-mid: oklch(0.4 0.1 210);
+  --aa-lens-cyan-text: oklch(0.78 0.11 210);
+  --aa-lens-coral-soft: oklch(0.3 0.06 40);
+  --aa-lens-coral-soft-strong: oklch(0.34 0.1 40);
+  --aa-lens-coral-mid: oklch(0.4 0.11 40);
+  --aa-lens-coral-text: oklch(0.78 0.13 40);
+  --aa-lens-honey-soft: oklch(0.3 0.06 95);
+  --aa-lens-honey-soft-strong: oklch(0.34 0.1 95);
+  --aa-lens-honey-mid: oklch(0.4 0.11 95);
+  --aa-lens-honey-text: oklch(0.8 0.13 95);
+  --aa-lens-lime-soft: oklch(0.3 0.06 130);
+  --aa-lens-lime-soft-strong: oklch(0.34 0.1 130);
+  --aa-lens-lime-mid: oklch(0.4 0.11 130);
+  --aa-lens-lime-text: oklch(0.8 0.13 130);
+  --aa-lens-magenta-soft: oklch(0.3 0.06 350);
+  --aa-lens-magenta-soft-strong: oklch(0.34 0.1 350);
+  --aa-lens-magenta-mid: oklch(0.4 0.11 350);
+  --aa-lens-magenta-text: oklch(0.78 0.14 350);
 
   /* ---- Shadows: darker, more opaque (still blue-tinted, never pure black) ---- */
   --aa-shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3);
@@ -204,4 +280,55 @@
   --aa-active-lens-soft: var(--aa-lens-emerald-soft);
   --aa-active-lens-soft-strong: var(--aa-lens-emerald-soft-strong);
   --aa-active-lens-mid: var(--aa-lens-emerald-mid);
+}
+
+/* User-defined lens hues — same re-pointing as the seeded two. Adding a new
+   lens color is exactly: a --aa-lens-<k> ramp in :root, dark overrides, and a
+   matching [data-lens="<k>"] block here. The Lens.color value must match <k>. */
+[data-lens="slate"] {
+  --aa-active-lens: var(--aa-lens-slate);
+  --aa-active-lens-text: var(--aa-lens-slate-text);
+  --aa-active-lens-soft: var(--aa-lens-slate-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-slate-soft-strong);
+  --aa-active-lens-mid: var(--aa-lens-slate-mid);
+}
+
+[data-lens="cyan"] {
+  --aa-active-lens: var(--aa-lens-cyan);
+  --aa-active-lens-text: var(--aa-lens-cyan-text);
+  --aa-active-lens-soft: var(--aa-lens-cyan-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-cyan-soft-strong);
+  --aa-active-lens-mid: var(--aa-lens-cyan-mid);
+}
+
+[data-lens="coral"] {
+  --aa-active-lens: var(--aa-lens-coral);
+  --aa-active-lens-text: var(--aa-lens-coral-text);
+  --aa-active-lens-soft: var(--aa-lens-coral-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-coral-soft-strong);
+  --aa-active-lens-mid: var(--aa-lens-coral-mid);
+}
+
+[data-lens="honey"] {
+  --aa-active-lens: var(--aa-lens-honey);
+  --aa-active-lens-text: var(--aa-lens-honey-text);
+  --aa-active-lens-soft: var(--aa-lens-honey-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-honey-soft-strong);
+  --aa-active-lens-mid: var(--aa-lens-honey-mid);
+}
+
+[data-lens="lime"] {
+  --aa-active-lens: var(--aa-lens-lime);
+  --aa-active-lens-text: var(--aa-lens-lime-text);
+  --aa-active-lens-soft: var(--aa-lens-lime-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-lime-soft-strong);
+  --aa-active-lens-mid: var(--aa-lens-lime-mid);
+}
+
+[data-lens="magenta"] {
+  --aa-active-lens: var(--aa-lens-magenta);
+  --aa-active-lens-text: var(--aa-lens-magenta-text);
+  --aa-active-lens-soft: var(--aa-lens-magenta-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-magenta-soft-strong);
+  --aa-active-lens-mid: var(--aa-lens-magenta-mid);
 }

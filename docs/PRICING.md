@@ -173,7 +173,7 @@ Pro = Work + unlimited structure + power.
 | Today (capped at 5, F12) | **Full** | Full (cap configurable/off) |
 | Basic triage (F6) | **Full** | Full |
 | Completion + Logbook (F16/F18) | **Full** (30-day history) | Full (unlimited history) |
-| **Lens** (Work/Me scope) | **Me only** (personal scope) | Work + Me + unlimited custom Lenses |
+| **Lens** (Work/Me scope) | **Me only** (personal scope; Work visible-but-locked) | Work + Me + custom Lenses (soft cap 8) |
 | **Projects** | **3** | Unlimited |
 | **Goals** | **1** | Unlimited |
 | Upcoming / Someday views | **Full** | Full |

@@ -64,6 +64,8 @@
   width: 100%;
   flex: none;
   margin-bottom: var(--aa-space-xs);
+  /* Positioning context for the ≥4-lens popover (LensPopover anchors here). */
+  position: relative;
 }
 
 /* ---- Nav sections ---- */

@@ -13,6 +13,7 @@ import { useEffect } from "react";
  * single, memorable rule.
  *
  *   ⌘K / ⌘/      → open capture popover (always works, even in text fields)
+ *   ⌘L           → toggle the lens switcher (always works; ⌘-chords don't type)
  *   Shift+I/N/T/G/P/R → jump to Inbox / Next / Today / TriaGe / Planning / Review
  *   Shift+C      → capture (typing-safe; ⌘K remains the focus-protector)
  *   Space        → go to Next (home) — the long-standing convention
@@ -37,6 +38,7 @@ export interface ShortcutHandlers {
   onGoHome?: () => void;
   onNavigate?: (dest: NavDestination) => void;
   onToggleCheatsheet?: () => void;
+  onToggleLens?: () => void;
   onCloseOverlay?: () => void;
 }
 
@@ -63,6 +65,17 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       if (meta && (e.key.toLowerCase() === "k" || e.key === "/")) {
         e.preventDefault();
         handlers.onCapture?.();
+        return;
+      }
+
+      // ⌘L — toggle the lens switcher popover (only meaningful at ≥4 lenses,
+      // where the segmented control becomes a chip + popover). Sits with the
+      // other ⌘-chords, above the typing guard, so it fires in fields too —
+      // matches ⌘K. Browser default for ⌘L is "focus the location bar"; we
+      // preventDefault so the app owns it inside the authed shell.
+      if (meta && e.key.toLowerCase() === "l") {
+        e.preventDefault();
+        handlers.onToggleLens?.();
         return;
       }
 

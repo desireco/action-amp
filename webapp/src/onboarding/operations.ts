@@ -25,12 +25,14 @@ import { buildWelcomeEmail } from "./welcomeEmail";
  */
 
 // Each default lens carries an identity color key (see styles/tokens.css
-// `--aa-lens-*` palette). Work = indigo, Me = emerald. The color signals which
-// context is active; it's identity, never system/state (that's teal's job).
+// `--aa-lens-*` palette) and a stable LensKind handle. Work = indigo/WORK,
+// Me = emerald/PERSONAL. The color signals which context is active; the kind
+// is what the entitlement guard branches on (rename-safe — the user-facing
+// name can be anything). It's identity, never system/state (that's teal's job).
 const DEFAULT_LENSES = [
-  { name: "Work", color: "indigo" },
-  { name: "Me", color: "emerald" },
-] as const;
+  { name: "Work", kind: "WORK", color: "indigo" },
+  { name: "Me", kind: "PERSONAL", color: "emerald" },
+] as const satisfies readonly { name: string; kind: "WORK" | "PERSONAL"; color: string }[];
 const STARTER_TASKS = [
   "Try it: complete this task",
   "Capture one real thing on your mind",
@@ -85,20 +87,24 @@ export const ensureOnboarded = (async (_args, context) => {
   const created: { name: string; id: string }[] = [];
 
   for (const lens of DEFAULT_LENSES) {
-    // findOrCreate per lens — idempotent across logins
+    // findOrCreate per lens, keyed on KIND (not name) — rename-safe. The user
+    // can rename a seeded lens (e.g. "Me" → "Life"); looking up by kind means
+    // we find it regardless of its current name, so we never re-seed a second
+    // PERSONAL/WORK lens alongside a renamed one. Idempotent across logins.
     const existing = await context.entities.Lens.findFirst({
-      where: { userId, name: lens.name },
-      select: { id: true, name: true, color: true },
+      where: { userId, kind: lens.kind },
+      select: { id: true, name: true, color: true, kind: true },
     });
     if (!existing) {
       const row = await context.entities.Lens.create({
-        data: { name: lens.name, color: lens.color, userId },
+        data: { name: lens.name, kind: lens.kind, color: lens.color, userId },
         select: { id: true, name: true },
       });
       created.push(row);
     } else if (existing.color !== lens.color) {
-      // Backfill: existing lenses predate the color column (or drifted). Patch
-      // them up to the default identity color. Safe + idempotent.
+      // Backfill the identity color if it drifted. We do NOT touch the name or
+      // kind here — the name is user-editable, and the kind was already the
+      // lookup key (so it's correct by definition).
       await context.entities.Lens.update({
         where: { id: existing.id },
         data: { color: lens.color },
@@ -109,17 +115,16 @@ export const ensureOnboarded = (async (_args, context) => {
 
   // Seed a "General" project per lens — the default target for triage's P key
   // (file-in-project). Gives every triaged task a visible home so none are
-  // orphaned. Idempotent, like the lens loop above.
-  // ponytail: queries all lenses (existing + just-created) via findFirst by name;
-  // a dedicated "all lenses" query would be cleaner but this reuses the loop.
+  // orphaned. Idempotent, like the lens loop above. Looked up by KIND so a
+  // renamed seeded lens still gets its General project (rename-safe).
   let meLensId: string | null = null;
   for (const lens of DEFAULT_LENSES) {
     const existingLens = await context.entities.Lens.findFirst({
-      where: { userId, name: lens.name },
+      where: { userId, kind: lens.kind },
       select: { id: true },
     });
     if (!existingLens) continue;
-    if (lens.name === "Me") meLensId = existingLens.id;
+    if (lens.kind === "PERSONAL") meLensId = existingLens.id;
     const existingProject = await context.entities.Project.findFirst({
       where: { userId, lensId: existingLens.id, name: "General" },
       select: { id: true },

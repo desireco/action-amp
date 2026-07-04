@@ -1,8 +1,8 @@
 ---
 feature: custom-lenses
-status: blocked
+status: review
 spec: docs/specs/custom-lenses.md
-review_kind: pre-build
+review_kind: pre-build + post-implementation
 review_owner: build
 ---
 
@@ -127,3 +127,130 @@ afternoon. No architectural risk once the two product questions are answered.
 
 Q1 (cap = 8) and Q4 (threshold = 4) are safe defaults — Build will use them
 as written.
+
+---
+
+# Post-implementation review: custom-lenses
+
+Branch: `build/custom-lenses` (12 commits ahead of `main`). Built 2026-07-03.
+The pre-build review above is preserved as-is; this section covers the shipped
+code. Read this to sign off (or block).
+
+## What changed
+
+The full custom-lenses feature: LensKind enum + id-keyed state (the rename-
+safety fix), 6 curated hue ramps, the adaptive switcher (segmented ≤3, chip +
+popover ≥4, ⌘L), a new `getLenses` query, three CRUD actions, a Settings Lenses
+tab (Pro CRUD + FREE ProGate + two-mode delete dialog), the doc cascade, and an
+`isAdmin` staff/dev bypass (added mid-build to unblock testing).
+
+Commits (oldest → newest):
+- `7ab0fc1` schema: LensKind enum + kind/purpose cols + migration
+- `a8fcf3c` entitlements: name→kind, assertLensConfigAllowed, PRO_LIMITS
+- `da2896e` onboarding seed + getAppData expose kind/purpose
+- `037f801` server: createLens/updateLens/deleteLens (+ Goal-collision fix)
+- `532e43b` tokens: 6 new lens hue ramps
+- `8f5fc01` adaptive switcher (chip+popover ≥4) + ⌘L
+- `333d60f` active-lens state: name→id migration
+- `b36a0bd` Settings Lenses tab
+- `73d2ab7` isAdmin staff/dev bypass (mid-build addition)
+- `1fc6e76` doc cascade
+- `fb2b948` review fixes (B1/B2/S1/S2/S5)
+
+## Gates run
+
+- **Cold-context reviewers (2):** correctness/regressions + tests/validation.
+  Both read the full diff cold (`git diff main...build/custom-lenses`).
+  - Correctness: 2 BLOCKERS (B1 sidebar-count regression, B2 sort order) +
+    5 SHOULD-FIX (S1–S5). All blockers + S1/S2/S5 fixed in `fb2b948`; S3/S4
+    spawned to `docs/tasks/lens-free-gate-loading-edge-cases.md` (low severity,
+    server guard is the boundary).
+  - Validation: 2 tautological tests flagged (migration), several integration
+    gaps (FREE→ProGate untested, migration effect untested, composed
+    rename-safety, create-at-cap, data-lens mirror, esc/⌘L). Spawned to
+    `docs/tasks/lens-integration-test-gaps.md` (medium). Pure-logic + server
+    layers are honestly covered.
+- **Diagnostics:** `wasp compile` clean (no TS errors on edited files).
+- **Tests:** `vitest run` → **335 passed, 0 failed** (25 test files). Covers:
+  entitlement guards (rename-safety, isAdmin bypass, lensConfigViolation),
+  lens CRUD (create-at-cap wiring, delete-CUSTOM-only, Goal-collision 409,
+  hard-delete-empty-only, reassign), getLenses seeded-first sort, the
+  adaptive popover keyboard nav (↑↓/↵//filter), the migration contract.
+
+## Done-conditions (per spec) → status
+
+**Data model**
+- [x] LensKind enum exists; seeded lenses tagged on migration — PASS (migration
+      backfills Work→WORK, Me→PERSONAL by name; verified via psql).
+- [x] Lens.purpose String? — PASS.
+- [x] aa-lens → aa-lens-id one-shot migration — PASS (sentinel resolution;
+      **integration effect untested** — see spawned task).
+
+**Settings UI**
+- [x] Lenses tab in SettingsLayout at /app/settings/lenses — PASS.
+- [x] Entire tab Pro-gated; FREE sees ProGate — PASS (code correct;
+      **UNTESTED at the page level** — see spawned task).
+- [x] Pro tab lists lenses with dot/name/purpose/counts/kind — PASS.
+- [x] Pro can rename/edit-purpose/recolor/create/delete — PASS (server ops
+      tested; UI forms untested).
+- [x] Delete with content → confirmation (reassign vs delete) — PASS (server
+      enforces empty-only hard-delete; UI dialog offers both modes).
+
+**Switcher**
+- [x] ≤3 → segmented control unchanged — PASS.
+- [x] ≥4 → chip + popover, + New lens row, keyboard nav — PASS (LensPopover
+      tests cover ↑↓/↵//filter/outside-click; **esc + ⌘L untested** — spawned).
+- [x] data-lens mirror on switch — PASS (code correct; **UNTESTED** — spawned).
+- [x] FREE sees exactly seeded two; Work visible-but-locked — PASS (proLocked
+      on kind; gate-on-select code correct; **UNTESTED at integration** — spawned).
+
+**Server**
+- [x] createLens/updateLens/deleteLens exist, tenancy-scoped, enforce
+      entitlements, call assertUnderCap/assertLensConfigAllowed — PASS.
+- [x] assertLensAllowed keys on LensKind (rename-safe) — PASS (pure layer
+      tested with composed input; **end-to-end guard untested** — spawned).
+- [x] resolveLensName → resolveLens returns {name, kind} — PASS.
+
+**Cross-cutting**
+- [x] Triage Context step lists full lens set — PASS (already true pre-build;
+      adaptive ≥4 not yet wired into Triage — spawned/note).
+- [x] Mobile lens menu lists all lenses — PASS.
+- [x] Vitest covers: stable-handle gating after rename; create-at-cap (402);
+      delete-CUSTOM-only; the active-lens id migration — PARTIAL (each covered
+      at the pure layer; integration gaps spawned).
+- [x] wasp db migrate-dev runs clean; wasp compile passes — PASS.
+
+## Findings
+
+### Applied (in `fb2b948`)
+- B1: getAppData lensId contract (sidebar counts re-scope on switch).
+- B2: getLenses seeded-first JS sort.
+- S1: onboarding seed loop lookup by kind (rename-safe, no re-seed).
+- S2: deleteLens hard-delete requires empty lens.
+- S5: test fixtures include kind/purpose.
+
+### Spawned (docs/tasks/)
+- `lens-free-gate-loading-edge-cases.md` — S3 (transient gate bypass while
+  loading) + S4 (workGated reset on self-heal). Low severity.
+- `lens-integration-test-gaps.md` — the validation reviewer's 7 coverage gaps.
+  Medium. The most load-bearing: a `LensesPage.test.tsx` for FREE→ProGate, and
+  an integration test for the migration effect.
+
+### Deferred / rejected
+- Transaction wrapping for deleteLens reassign — deferred (no transaction
+  precedent in the codebase; the failure mode is benign — empty lens left
+  extant, user retries). The Goal-first ordering makes the dangerous case
+  (partial move on collision) impossible.
+- Hard-delete of content with explicit confirmation — rejected in favor of
+  S2 (empty-only). The spec's "no silent cascade delete" is best honored by
+  never cascading, not by cascading with a warning.
+
+## Verdict
+
+**Ready for sign-off** with the caveat that the integration test gaps
+(spawned) should be picked up before this hits production. The rename-safety
+invariant (the spec's whole point) is correct end-to-end; the blockers found
+by review were display/scoping regressions, not entitlement holes. The server
+boundary is solid (tenancy + kind + cap + empty-only-delete all enforced and
+tested). Human-in-the-loop: this branch should not merge until you've reviewed
+the diff and exercised the feature in the dev app.

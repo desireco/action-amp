@@ -40,12 +40,14 @@
    different colors even when nothing is selected. Uses the solid lens color
    (not the dark -text variant) so it stays light enough to read as "available,
    not live" — the active tab is the one filled solid. */
-.aa-lens__btn[data-lens-color="indigo"]:not(.aa-lens__btn--active) {
-  color: var(--aa-lens-indigo);
-}
-.aa-lens__btn[data-lens-color="emerald"]:not(.aa-lens__btn--active) {
-  color: var(--aa-lens-emerald);
-}
+.aa-lens__btn[data-lens-color="indigo"]:not(.aa-lens__btn--active)   { color: var(--aa-lens-indigo); }
+.aa-lens__btn[data-lens-color="emerald"]:not(.aa-lens__btn--active)  { color: var(--aa-lens-emerald); }
+.aa-lens__btn[data-lens-color="slate"]:not(.aa-lens__btn--active)    { color: var(--aa-lens-slate-text); }
+.aa-lens__btn[data-lens-color="cyan"]:not(.aa-lens__btn--active)     { color: var(--aa-lens-cyan-text); }
+.aa-lens__btn[data-lens-color="coral"]:not(.aa-lens__btn--active)    { color: var(--aa-lens-coral-text); }
+.aa-lens__btn[data-lens-color="honey"]:not(.aa-lens__btn--active)    { color: var(--aa-lens-honey-text); }
+.aa-lens__btn[data-lens-color="lime"]:not(.aa-lens__btn--active)     { color: var(--aa-lens-lime-text); }
+.aa-lens__btn[data-lens-color="magenta"]:not(.aa-lens__btn--active)  { color: var(--aa-lens-magenta-text); }
 
 .aa-lens__btn:not(.aa-lens__btn--active):hover {
   background: var(--aa-surface-muted);
@@ -73,6 +75,12 @@
   color: var(--aa-lens-emerald-text);
   box-shadow: inset 0 -2.5px 0 var(--aa-lens-emerald);
 }
+.aa-lens__btn--active[data-lens-color="slate"]   { background: transparent; color: var(--aa-lens-slate-text);   box-shadow: inset 0 -2.5px 0 var(--aa-lens-slate); }
+.aa-lens__btn--active[data-lens-color="cyan"]    { background: transparent; color: var(--aa-lens-cyan-text);    box-shadow: inset 0 -2.5px 0 var(--aa-lens-cyan); }
+.aa-lens__btn--active[data-lens-color="coral"]   { background: transparent; color: var(--aa-lens-coral-text);   box-shadow: inset 0 -2.5px 0 var(--aa-lens-coral); }
+.aa-lens__btn--active[data-lens-color="honey"]   { background: transparent; color: var(--aa-lens-honey-text);   box-shadow: inset 0 -2.5px 0 var(--aa-lens-honey); }
+.aa-lens__btn--active[data-lens-color="lime"]    { background: transparent; color: var(--aa-lens-lime-text);    box-shadow: inset 0 -2.5px 0 var(--aa-lens-lime); }
+.aa-lens__btn--active[data-lens-color="magenta"] { background: transparent; color: var(--aa-lens-magenta-text); box-shadow: inset 0 -2.5px 0 var(--aa-lens-magenta); }
 
 .aa-lens__icon {
   display: inline-flex;
@@ -92,12 +100,14 @@
   flex: none;
   box-shadow: 0 0 0 1.5px oklch(1 0 0 / 0.35);
 }
-.aa-lens__btn[data-lens-color="indigo"] .aa-lens__dot {
-  background: var(--aa-lens-indigo);
-}
-.aa-lens__btn[data-lens-color="emerald"] .aa-lens__dot {
-  background: var(--aa-lens-emerald);
-}
+.aa-lens__btn[data-lens-color="indigo"] .aa-lens__dot   { background: var(--aa-lens-indigo); }
+.aa-lens__btn[data-lens-color="emerald"] .aa-lens__dot  { background: var(--aa-lens-emerald); }
+.aa-lens__btn[data-lens-color="slate"] .aa-lens__dot    { background: var(--aa-lens-slate); }
+.aa-lens__btn[data-lens-color="cyan"] .aa-lens__dot     { background: var(--aa-lens-cyan); }
+.aa-lens__btn[data-lens-color="coral"] .aa-lens__dot    { background: var(--aa-lens-coral); }
+.aa-lens__btn[data-lens-color="honey"] .aa-lens__dot    { background: var(--aa-lens-honey); }
+.aa-lens__btn[data-lens-color="lime"] .aa-lens__dot     { background: var(--aa-lens-lime); }
+.aa-lens__btn[data-lens-color="magenta"] .aa-lens__dot  { background: var(--aa-lens-magenta); }
 
 /* Today-count badge — how many open Today tasks are in this lens. Shown
    only when > 0 (a 0 badge is noise and skirts the no-guilt-trip rule). */
@@ -114,26 +124,26 @@
   border-radius: var(--aa-radius-full);
   margin-left: 1px;
 }
-.aa-lens__btn[data-lens-color="indigo"]:not(.aa-lens__btn--active) .aa-lens__count {
-  background: var(--aa-lens-indigo-soft-strong);
-  color: var(--aa-lens-indigo-text);
-}
-.aa-lens__btn[data-lens-color="emerald"]:not(.aa-lens__btn--active) .aa-lens__count {
-  background: var(--aa-lens-emerald-soft-strong);
-  color: var(--aa-lens-emerald-text);
-}
+.aa-lens__btn[data-lens-color="indigo"]:not(.aa-lens__btn--active) .aa-lens__count   { background: var(--aa-lens-indigo-soft-strong);  color: var(--aa-lens-indigo-text); }
+.aa-lens__btn[data-lens-color="emerald"]:not(.aa-lens__btn--active) .aa-lens__count { background: var(--aa-lens-emerald-soft-strong); color: var(--aa-lens-emerald-text); }
+.aa-lens__btn[data-lens-color="slate"]:not(.aa-lens__btn--active) .aa-lens__count   { background: var(--aa-lens-slate-soft-strong);   color: var(--aa-lens-slate-text); }
+.aa-lens__btn[data-lens-color="cyan"]:not(.aa-lens__btn--active) .aa-lens__count    { background: var(--aa-lens-cyan-soft-strong);    color: var(--aa-lens-cyan-text); }
+.aa-lens__btn[data-lens-color="coral"]:not(.aa-lens__btn--active) .aa-lens__count   { background: var(--aa-lens-coral-soft-strong);   color: var(--aa-lens-coral-text); }
+.aa-lens__btn[data-lens-color="honey"]:not(.aa-lens__btn--active) .aa-lens__count   { background: var(--aa-lens-honey-soft-strong);   color: var(--aa-lens-honey-text); }
+.aa-lens__btn[data-lens-color="lime"]:not(.aa-lens__btn--active) .aa-lens__count    { background: var(--aa-lens-lime-soft-strong);    color: var(--aa-lens-lime-text); }
+.aa-lens__btn[data-lens-color="magenta"]:not(.aa-lens__btn--active) .aa-lens__count { background: var(--aa-lens-magenta-soft-strong); color: var(--aa-lens-magenta-text); }
 .aa-lens__btn--active .aa-lens__count {
   background: var(--aa-active-lens-soft-strong);
   color: var(--aa-active-lens-text);
 }
-.aa-lens__btn--active[data-lens-color="indigo"] .aa-lens__count {
-  background: var(--aa-lens-indigo-soft-strong);
-  color: var(--aa-lens-indigo-text);
-}
-.aa-lens__btn--active[data-lens-color="emerald"] .aa-lens__count {
-  background: var(--aa-lens-emerald-soft-strong);
-  color: var(--aa-lens-emerald-text);
-}
+.aa-lens__btn--active[data-lens-color="indigo"] .aa-lens__count   { background: var(--aa-lens-indigo-soft-strong);  color: var(--aa-lens-indigo-text); }
+.aa-lens__btn--active[data-lens-color="emerald"] .aa-lens__count { background: var(--aa-lens-emerald-soft-strong); color: var(--aa-lens-emerald-text); }
+.aa-lens__btn--active[data-lens-color="slate"] .aa-lens__count   { background: var(--aa-lens-slate-soft-strong);   color: var(--aa-lens-slate-text); }
+.aa-lens__btn--active[data-lens-color="cyan"] .aa-lens__count    { background: var(--aa-lens-cyan-soft-strong);    color: var(--aa-lens-cyan-text); }
+.aa-lens__btn--active[data-lens-color="coral"] .aa-lens__count   { background: var(--aa-lens-coral-soft-strong);   color: var(--aa-lens-coral-text); }
+.aa-lens__btn--active[data-lens-color="honey"] .aa-lens__count   { background: var(--aa-lens-honey-soft-strong);   color: var(--aa-lens-honey-text); }
+.aa-lens__btn--active[data-lens-color="lime"] .aa-lens__count    { background: var(--aa-lens-lime-soft-strong);    color: var(--aa-lens-lime-text); }
+.aa-lens__btn--active[data-lens-color="magenta"] .aa-lens__count { background: var(--aa-lens-magenta-soft-strong); color: var(--aa-lens-magenta-text); }
 
 /* Pro-only lens affordance — a tiny, neutral chip (not a bright badge;
  * PRODUCT.md bans attention-grabbing UI). Signals the gate before the click. */

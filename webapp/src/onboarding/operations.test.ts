@@ -69,14 +69,15 @@ describe("ensureOnboarded — idempotency", () => {
       { id: "lens-work", name: "Work" },
       { id: "lens-me", name: "Me" },
     ]);
-    // Each lens is created with its identity color (Work=indigo, Me=emerald).
+    // Each lens is created with its identity color + stable kind handle
+    // (Work=indigo/WORK, Me=emerald/PERSONAL).
     expect(m.entities.Lens.create).toHaveBeenCalledTimes(2);
     expect(m.entities.Lens.create).toHaveBeenNthCalledWith(1, {
-      data: { name: "Work", color: "indigo", userId: "user-1" },
+      data: { name: "Work", kind: "WORK", color: "indigo", userId: "user-1" },
       select: { id: true, name: true },
     });
     expect(m.entities.Lens.create).toHaveBeenNthCalledWith(2, {
-      data: { name: "Me", color: "emerald", userId: "user-1" },
+      data: { name: "Me", kind: "PERSONAL", color: "emerald", userId: "user-1" },
       select: { id: true, name: true },
     });
     // General project seeded once per lens.
@@ -140,17 +141,18 @@ describe("ensureOnboarded — idempotency", () => {
   });
 
   // Backfill: lenses created before the color column existed have color=null.
-  // ensureOnboarded patches them up to the default identity color (idempotent),
-  // so existing users get lens identity on next load without a manual step.
-  it("backfills the identity color onto pre-existing lenses missing it", async () => {
+  // ensureOnboarded patches the color up to the default (idempotent), so
+  // existing users get lens identity on next load. Looked up by KIND (rename-
+  // safe): a renamed seeded lens is still found, and only its color is touched.
+  it("backfills the identity color onto pre-existing lenses missing it (looked up by kind)", async () => {
     const m = mockContext();
-    // Both lenses exist but predate the color column (color: null).
+    // Both seeded lenses exist (found by kind), color null → needs the default.
     m.entities.Lens.findFirst
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: null })
-      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: null })
-      // project-seeding lookups (General already exists for both):
-      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: null })
-      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: null });
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: null, kind: "WORK" }) // lens loop, kind=WORK
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: null, kind: "PERSONAL" }) // lens loop, kind=PERSONAL
+      // project-seeding lookups (by kind; General already exists for both):
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: null, kind: "WORK" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: null, kind: "PERSONAL" });
     m.entities.Project.findFirst
       .mockResolvedValueOnce({ id: "gen-work" })
       .mockResolvedValueOnce({ id: "gen-me" });
@@ -158,7 +160,9 @@ describe("ensureOnboarded — idempotency", () => {
 
     await ensureOnboarded(undefined as never, m.context);
 
-    // No new lenses created; both existing ones patched to their default color.
+    // No new lenses created; both patched to their default color. Kind is NOT
+    // touched (it was the lookup key — already correct). Name is NOT touched
+    // (user-editable).
     expect(m.entities.Lens.create).not.toHaveBeenCalled();
     expect(m.entities.Lens.update).toHaveBeenCalledTimes(2);
     expect(m.entities.Lens.update).toHaveBeenNthCalledWith(1, {
@@ -171,6 +175,26 @@ describe("ensureOnboarded — idempotency", () => {
       data: { color: "emerald" },
       select: { id: true },
     });
+  });
+
+  it("rename-safe: a renamed seeded lens is still found by kind, never re-seeded", async () => {
+    // The user renamed "Me" → "Life" (allowed). ensureOnboarded looks up by
+    // kind=PERSONAL, finds the renamed lens, and does NOT create a second one.
+    const m = mockContext();
+    m.entities.Lens.findFirst
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo", kind: "WORK" })
+      .mockResolvedValueOnce({ id: "lens-life", name: "Life", color: "emerald", kind: "PERSONAL" }) // renamed!
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo", kind: "WORK" })
+      .mockResolvedValueOnce({ id: "lens-life", name: "Life", color: "emerald", kind: "PERSONAL" });
+    m.entities.Project.findFirst.mockResolvedValue({ id: "gen" });
+    m.entities.Task.count.mockResolvedValue(5);
+
+    await ensureOnboarded(undefined as never, m.context);
+
+    // Colors already match → no updates. Critically: no new lens created (the
+    // renamed "Life" lens was found by kind, not re-seeded as a new "Me").
+    expect(m.entities.Lens.create).not.toHaveBeenCalled();
+    expect(m.entities.Lens.update).not.toHaveBeenCalled();
   });
 });
 

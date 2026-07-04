@@ -126,6 +126,15 @@ missing.
       expired-PRO-is-free, paid-user-unrestricted). Existing tests still pass.
 - [ ] **`wasp compile` passes.**
 
+> **Addendum (2026-07-03): name → kind.** The lens decision (`lensViolation`)
+> originally keyed on the lens *name* string (`"Work"`/`"Me"`). That was safe
+> only because names were hardcoded. Custom lenses made names user-editable, so
+> the guard now branches on **`LensKind`** (`PERSONAL` allowed for FREE;
+> `WORK`/`CUSTOM` restricted) — the stable handle that survives renames.
+> `resolveLensName` became `resolveLens` (returns `{ name, kind }`); a new
+> `assertLensConfigAllowed` gates lens *configuration* (Pro-only). See
+> `docs/specs/custom-lenses.md` §"Stable handle" for the reasoning.
+
 ## Non-goals
 
 - **No Logbook 30-day limit.** Deferred (above).

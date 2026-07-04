@@ -2,6 +2,7 @@
 aa-old/
 
 # wasp / node
+node_modules/
 webapp/node_modules/
 webapp/.wasp/
 webapp/.env*

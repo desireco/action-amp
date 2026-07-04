@@ -35,8 +35,8 @@ triage.
         TASK              PROJECT           RESOURCE          (archive —
        (in a context)    (in a context)    (in a context)     kept, lossless)
 
-  Context = Work or Me lens. Scopes Tasks, Projects, Goals, Resources.
-  Capture + Inbox are NOT scoped — they're universal.
+  Context = a Lens (Work/Me default + user-defined on Pro). Scopes Tasks,
+  Projects, Goals, Resources. Capture + Inbox are NOT scoped — universal.
 ```
 
 Items only flow **left to right**: capture → inbox → triage → a context. Nothing
@@ -116,14 +116,24 @@ appears in Work/Planning/Review except by coming through triage.
 ## 3. Context (Lens) scoping
 
 - Every Task / Project / Goal / Resource belongs to exactly one **Lens**
-  (Work or Me). The active lens scopes every Work / Planning / Review view.
+  (a Work/Me default, plus any number of user-defined lenses on Pro). The
+  active lens scopes every Work / Planning / Review view.
 - **Inbox and Capture are NOT scoped** — they're universal. A captured thought
   has no lens until triage assigns one (implicitly via the active lens, or
   explicitly if we adopt force-choice — §5).
 - Switching lenses swaps the entire Work / Planning / Review content; the Inbox
   count in the sidebar stays the same regardless of lens.
+- **The switcher is adaptive.** At ≤3 lenses the sidebar shows the segmented
+  control (today's `<LensSwitch>`); at ≥4 it collapses to a single chip that
+  opens a keyboard-navigable popover (`⌘L`, `↑↓`/`↵`/`/`/`esc`). The swap is
+  pure presentational state on lens count — no routing change.
+- **Lenses carry a stable `kind` handle** (`PERSONAL` / `WORK` for the seeded
+  two, `CUSTOM` for user-defined). The entitlement guard branches on kind, not
+  the user-facing name, so renaming "Work" → "Studio" can't escape FREE gating.
+  Active-lens client state is keyed by lens id (not name) for the same reason.
 - **Each Lens carries an identity color** (stored on `Lens.color` as a palette
-  key: Work = `indigo`, Me = `emerald`). The active lens's hue is mirrored onto
+  key: Work = `indigo`, Me = `emerald`, plus 6 curated hues for user-defined
+  lenses — see `styles/tokens.css`). The active lens's hue is mirrored onto
   `<html data-lens>` and surfaces immersively — a faint background wash, the
   lens-switch dot + rail, the lens-scoped nav rail (Next/Today/Projects/Goals/
   Someday/Logbook), the NextCard context label, and the Triage context-step.
@@ -131,6 +141,12 @@ appears in Work/Planning/Review except by coming through triage.
   teal = system/state (CTAs, links, the completion circle), amber = Important,
   violet = projects/goals, rose = errors. Inbox and Capture stay neutral — they
   have no lens. See `styles/tokens.css` (`--aa-lens-*`, `--aa-active-lens-*`).
+- **Lens configuration is Pro-only.** Creating, renaming, recoloring,
+  editing-purpose, and deleting lenses all require Pro (the Settings → Lenses
+  tab is `<ProGate>`'d for FREE). FREE gets the seeded two: Me usable, Work
+  visible-but-locked (selecting it shows the gate). Pro is soft-capped at
+  `PRO_LIMITS.lenses`. The seeded two are renameable/recolorable but never
+  deletable — they're the stable handles. See `docs/specs/custom-lenses.md`.
 
 
 ## 4. The three modes
@@ -208,6 +224,24 @@ These were the open structural calls. All resolved:
    - **No effect on Next:** `getTopTask` already pools Today + Upcoming
      (§5.2), so rolled tasks stay focus candidates — this is a list/view
      concern, not a focus-engine concern. Resolves the pending note in §2.3.
+8. **Custom lenses are user-defined + Pro-only (locked 2026-07-03).** A Lens is
+   no longer a hardcoded Work/Me binary — a paying user can create, name, give
+   a purpose, and color additional lenses; the active-lens switcher becomes
+   adaptive (segmented ≤3, chip + popover ≥4). Three structural calls:
+   - **`LensKind` is the stable handle.** The seeded two are tagged `WORK`/
+     `PERSONAL` on the model; user-defined are `CUSTOM`. The entitlement guard
+     branches on kind, not the name, so renaming "Work" → "Studio" can't
+     escape FREE gating. Active-lens client state is keyed by lens id (not
+     name) for the same reason.
+   - **Lens configuration is Pro-only across the board.** FREE gets the seeded
+     two (Me usable, Work visible-but-locked) and can configure nothing; Pro
+     gets full CRUD + custom lenses, soft-capped at `PRO_LIMITS.lenses = 8`.
+     The seeded two are renameable/recolorable but never deletable.
+   - **Delete is two-mode (delete or reassign), user picks at delete time.**
+     No archive infrastructure — reassign moves content to a chosen lens;
+     delete hard-removes (cascade via FK). Goal name-collision on reassign is
+     caught (409) because Goal has `@@unique([userId, name])`.
+   See `docs/specs/custom-lenses.md` + `docs/reviews/custom-lenses.md`.
 
 ## 6. Document cascade
 
@@ -224,6 +258,12 @@ The following were updated to match this doc (commit alongside):
   the §4 "where things live" list aligns with the 5-areas model.
 - `TRIAGE.md` — already aligns on the keymap (canonical as of 2026-06-22); no
   structural change, just a cross-reference to WORKFLOW.md §2.2.
+- `DATA-MODEL.md` (added 2026-07-03) — documents `LensKind`, `Lens.purpose`,
+  and the Work/Me → user-defined evolution; the §4 "where things live" list
+  aligns with the 5-areas model.
+- `TRIAGE.md` §Context step (added 2026-07-03) — notes the radio now lists the
+  full lens set and goes adaptive (popover) when ≥4 lenses exist; the seeded
+  binary is no longer the only options.
 
 ## 7. Code work implied (flagged in `BACKLOG.md`, not built here)
 

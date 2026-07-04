@@ -85,7 +85,7 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
   - `⌘K` / `⌘/` — Capture mode (works in text fields — the focus-protector)
   - `⇧C` — Capture (typing-safe convenience; same as ⌘K)
   - `⌘\` — Command mode
-  - `L` — cycle Lens (Work / Me)
+  - `⌘L` — toggle the Lens switcher (segmented ≤3 lenses; chip + popover ≥4). Works in text fields like the other ⌘-chords.
   - `⇧I` / `⇧N` / `⇧T` / `⇧G` / `⇧P` / `⇧R` — jump to Inbox / Next / Today / TriaGe / Planning / Review
   - `←` / `→` — peek past / future
   - `?` — show keyset
@@ -183,7 +183,7 @@ translate to thumbs.
 | Mark done | `D` / Done ✓ | swipe-down on card |
 | Capture | `⌘K` / `⌘/` | pull-down from top / FAB (FAB stays in working mode as a quiet ghost — the focus-protector exception) |
 | Switch task | `S` | swipe-left-and-hold / "next" affordance |
-| Cycle Lens | `L` | tap lens chip |
+| Switch Lens | `⌘L` | tap lens chip / segmented control |
 | Peek past / future | `←` / `→` | swipe from left/right screen edge |
 | Cancel / exit | `Esc` | tap outside / back gesture |
 

@@ -46,6 +46,14 @@ model User {
   stripeCustomerId String?   // set on first checkout; links to the Stripe customer
   planRenewsAt     DateTime? // null for FREE + FOUNDER (lifetime); set by webhook for PRO
 
+  // ---- Staff / dev bypass ----
+  // isAdmin short-circuits the entitlement layer (treated as fully entitled —
+  // bypasses every Pro/cap/lens gate). For internal accounts that need to test
+  // Pro surfaces without a Stripe checkout. NOT surfaced in any UI; set via the
+  // DB or scripts/create-verified-user.mjs --admin. Stripe remains the source of
+  // truth for real plan state — this only adds a bypass, never overrides down.
+  isAdmin          Boolean @default(false)
+
   // ---- Today rollover (lazy, on app load) ----
   // Tracks the last calendar day the Today→Upcoming rollover ran for this
   // user. getAppData checks it each load: if it's a new day (or null), every
@@ -95,13 +103,18 @@ enum PaymentStatus {
 }
 
 // ============================================================
-// Lens — the top-level scoping switch (Work / Me by default)
+// Lens — the top-level scoping switch (Work / Me by default + user-defined on Pro)
 // ============================================================
-// Defaults seeded for every user: Work + Me. See src/onboarding/ensureLenses.ts
+// Defaults seeded for every user: Work + Me. See src/onboarding/operations.ts.
+// `kind` is the stable handle that survives renames — the user-facing "Work"/"Me"
+// can be anything, but the entitlement keys on LensKind, not the name.
+// `purpose` is one short line: "what this lens is for."
 model Lens {
   id        String   @id @default(uuid())
-  name      String // "Work", "Me", (Phase 2: user-defined)
-  color     String? // identity color key ("indigo", "emerald") from the lens palette in tokens.css
+  name      String // user-facing label (default "Work"/"Me"; user-defined on Pro)
+  kind      LensKind @default(CUSTOM) // stable handle — WORK/PERSONAL for seeded, CUSTOM for user-defined
+  color     String? // identity color key ("indigo", "emerald", …) from the lens palette in tokens.css
+  purpose   String? // one short line: what this lens is for
   createdAt DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -112,6 +125,16 @@ model Lens {
   tasks    Task[] // standalone tasks directly in this lens
 
   @@unique([userId, name]) // one user can't have two lenses with the same name
+}
+
+// Stable handle on a Lens, decoupled from the user-facing name. The two seeded
+// lenses are tagged WORK / PERSONAL at onboarding (and backfilled by name in
+// migration lens_kind_and_purpose); everything else is CUSTOM. The entitlement
+// guard branches on kind, so renaming "Work" → "Studio" can't escape FREE gating.
+enum LensKind {
+  PERSONAL // the seeded "Me" lens
+  WORK     // the seeded "Work" lens
+  CUSTOM   // user-defined (Pro only)
 }
 
 // ============================================================
