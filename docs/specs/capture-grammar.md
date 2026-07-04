@@ -1,7 +1,7 @@
 ---
 id: capture-grammar
 kind: spec
-title: "Capture grammar v2 (#tags, @time, [[lens]], resolver-driven projects + capture typeahead)"
+title: "Capture grammar v2 (#projects+tags, @time, [[lens]], resolver, inline autocomplete)"
 status: draft
 priority: P2
 feature: capture-grammar
@@ -12,16 +12,26 @@ created: 2026-07-04
 
 # Spec: Capture grammar v2
 
+> **Update 2026-07-04 (build):** the "`#` is tags-only" decision was reversed
+> after a usability pass. `#` is back to being the **project sigil** (first
+> `#token` / `#[Project Name]` = project hint, extras = tags), matching the original shipped
+> behavior — but now with **inline caret-anchored autocomplete** showing
+> project names. The picker-row typeahead was removed; text is
+> the single source of truth again. The `@`-time-only and `[[lens]]` decisions
+> survive. Sections below describe the original v2 framing and are left for
+> history; the build reflects the reversal.
+
 ## Summary
 
-Capture moves from five overloaded sigils to a clean semantic split:
-`#` **what** (tags) · `@` **when** (time only) · `!`/`~` **how urgent/big** ·
-`[[lens]]` **which life** (explicit cross-lens override). Projects lose their
-sigil entirely — intent is matched from free text by a **resolver**, with the
-project's lens as the bridge between capture and lens. The triage Context step
-still **confirms every lens assignment** as a visible chip — `[[ ]]` and
-inference **pre-fill, they never silently file** — so WORKFLOW.md §5.5's
-"explicit ratification" reversal stays intact.
+Capture keeps `#` as the project-first sigil while cleaning up the rest of the
+grammar: first `#` mention = project hint, later `#` mentions = tags; `@` is
+time only; `!`/`~` are urgency/size; `[[lens]]` is the explicit cross-lens
+override. Project intent can also be inferred from free text by a resolver,
+with the project's lens as the bridge between capture and lens. The triage
+Context step still **confirms every lens assignment** as a visible chip —
+`[[ ]]` and inference **pre-fill, they never silently file** — so WORKFLOW.md
+§5.5's "explicit ratification" reversal stays intact.
+
 
 ## Why
 
@@ -51,17 +61,17 @@ step they save; visible + overridable is what makes inference safe.
 
 | Sigil | Means | Examples | Notes |
 |---|---|---|---|
-| `#` | tag | `#deep-work #errands` | Any number; lowercased. Was: project + tags. |
+| `#` | project first, then tags | `#mvp`, `#[Q3 Launch]`, `#mvp #deep-work` | First `#` mention is `parsedProject`; later `#` mentions are `parsedTags`. |
 | `@` | date | `@today @tomorrow @tonight` | Time only. Bare `today`/`tomorrow`/`tonight` + weekday/month forms still work. Was: tags + time. |
 | `!` | priority | `!1 !low !!!` | Unchanged |
 | `~` | size | `~20m ~1h ~XL` | Unchanged |
 | `[[name]]` | lens override | `[[work]] [[personal]] [[studio]]` | **New.** Explicit cross-lens path. Unknown → literal text. |
-| *(free text)* | project hint | "email Sarah about MVP" | Resolver matches project names in the active/inferred lens |
+| *(free text)* | inferred project hint | "email Sarah about MVP" | Resolver matches project names in the active/inferred lens when no explicit `#` project exists. |
 
-**No sigil for projects.** Project intent is matched from the cleaned free text
-by the resolver against the active lens's projects (or the `[[ ]]`-overridden
-lens's projects). `[[ ]]` is the only explicit cross-lens path; it pre-fills
-the Context step but does not skip it.
+The first `#` mention is the explicit project path. Project intent can also be
+matched from cleaned free text by the resolver against the active lens's
+projects (or the `[[ ]]`-overridden lens's projects). `[[ ]]` is the only
+explicit cross-lens path; it pre-fills the Context step but does not skip it.
 
 ## `[[ ]]` resolution rules
 
@@ -106,44 +116,24 @@ triage guess entirely. The resolver and typeahead are complements, not
 alternatives: typeahead is the explicit path (user picks), resolver is the
 inferred path (system guesses).
 
-**UI shape — picker row under the textarea (recommended v1):** A small
-`Project: General ▾` element below the textarea, mirroring the dominant
-task-app pattern (Things / Todoist / TickTick all use a separate project
-picker, not inline mention syntax). Click or `Tab` from the textarea opens a
-popover with a searchable list of the active lens's projects. Selecting one
-writes the project name to `parsedProject` (same field the resolver uses) and
-renders a `▣ name` chip in the live preview — same chip that already renders
-today for a parser-detected hint.
+**UI shape — inline `#` mention dropdown:** Typing `#` opens a caret-anchored
+popover of projects. The query is the text after `#`; choosing a project inserts
+`#name` for single-token names or `#[Project Name]` for names with spaces. The
+parser writes that first mention to `parsedProject` and the live preview renders
+the same `▣ name` chip as a manually typed project hint.
 
-- **Scope:** the active lens's projects by default. If the text contains a
-  `[[ ]]` lens token, the picker switches to that lens's projects the moment
-  the token is parsed (live, on parse — same reactivity as the existing
-  preview chips).
-- **Default state:** "General" (or whatever the lens's catch-all project is
-  named). Empty selection is not allowed — the resolver's job is to make the
-  non-pick path smart, the picker's job is to make the pick path fast.
-- **Keyboard:** `Tab` from textarea opens the picker focused; arrow keys move;
-  `Enter` confirms; `Esc` closes without selection and returns focus to the
-  textarea. No new global shortcut — `Tab` is the natural "move to next field"
-  affordance and the picker is the next field.
-- **Search:** exact prefix match (case-insensitive) on project name. No
-  fuzzy — same v1 bar as the resolver. If the lens has ≤8 projects, the list
-  shows all without typing.
-- **Compose with resolver:** an explicit pick at capture sets `parsedProject`
-  and the resolver at triage **does not re-guess** — the pick wins silently
-  (it's already the right answer; no chip needed). If the user didn't pick,
-  the resolver runs as specified in §"Project resolver (v1 bar)".
-- **No new field, no schema change.** Typeahead writes to the existing
-  `parsedProject` column. The picker is a capture-time UI surface over the
-  same storage path.
-
-**Alternative considered and deferred — inline mention dropdown:** a Slack/
-Linear-style suggestion popover anchored to a word being typed that prefix-
-matches a project name. Rejected for v1 because (a) every-word matching is
-noisy when common project names like "Email" collide with ordinary words,
-(b) caret + word-boundary tracking is materially more code than a picker row,
-(c) the picker-row pattern is what users coming from Things/Todoist/Taskpaper
-expect. Revisit if v1 ships and the picker feels too far from the text.
+- **Scope:** all of the user's open projects are visible. If a project lives in
+  another lens, the row shows that lens name; triage then pre-fills Context from
+  the chosen project's lens and still requires confirmation.
+- **Keyboard:** arrow keys move through matches; `Enter`/`Tab` accepts the
+  active match; `Esc` closes the dropdown and returns to normal capture typing.
+- **Search:** prefix match (case-insensitive) on project name. No fuzzy matching
+  or acronym matching.
+- **Compose with resolver:** explicit `#` project mention wins over the free-text
+  resolver. If the user didn't type or accept a `#` project, the resolver runs as
+  specified in §"Project resolver (v1 bar)".
+- **No new field, no schema change.** Typeahead writes through the existing
+  `parsedProject` storage path.
 
 ## Confirmation model (WORKFLOW.md §5.5 preserved)
 
@@ -163,8 +153,12 @@ choice, the user ratifies it. The common case is still one Continue.
 ## Done-conditions
 
 **Parser (`webapp/src/inbox/parseCapture.ts`)**
-- [ ] `parseCapture("#errands call mom")` → `{ parsedTags: ["#errands"], parsedProject: null }`
-      (tags only; no project hint extraction from `#`)
+- [ ] `parseCapture("#mvp call Sarah")` → `{ parsedProject: "mvp", parsedTags: [] }`
+      (first `#` mention is the project hint)
+- [ ] `parseCapture("call Sarah #[Q3 Launch]")` → `{ parsedProject: "q3 launch", parsedTags: [] }`
+      (bracketed form supports autocomplete picks with spaces)
+- [ ] `parseCapture("x #mvp #errands")` → `{ parsedProject: "mvp", parsedTags: ["#errands"] }`
+      (extra `#` mentions are tags)
 - [ ] `parseCapture("email @phone")` → `parsedTags: []`, cleanText `"email @phone"`
       (`@` is time-only; `@phone` is not a recognized time → preserved as literal text, not a tag)
 - [ ] `parseCapture("call [[work]] about MVP")` → `{ parsedLens: "work", cleanText: "call about MVP" }`
@@ -206,15 +200,13 @@ choice, the user ratifies it. The common case is still one Continue.
 
 **UI (`webapp/src/components/ui/CapturePopover.tsx`)**
 - [ ] Live preview shows a lens chip when `[[ ]]` is parsed.
-- [ ] Placeholder text updated to reflect the new grammar (no more `#mvp`
-      example; demonstrate `#tag`, `@time`, `[[lens]]`).
+- [ ] Placeholder text reflects the current grammar: first `#` mention is a
+      project, `@` time tokens are dates, and `[[lens]]` is supported.
 - [ ] Captured-stack chips render the lens token alongside the others.
-- [ ] **Project typeahead picker** below the textarea: shows `Project: <name> ▾`,
-      opens a searchable popover of the active lens's projects (or the `[[ ]]`
-      lens's projects when a lens token is present). `Tab` opens, arrows move,
-      `Enter` confirms, `Esc` closes. Prefix match only; ≤8 projects shows all.
-- [ ] Selecting a project writes to `parsedProject` and renders the `▣ name`
-      chip in the live preview (same chip the parser path uses today).
+- [ ] **Inline project autocomplete** opens on `#`, anchored at the caret.
+      Prefix match only; arrow keys move; `Enter`/`Tab` accepts; `Esc` closes.
+- [ ] Selecting a project inserts `#name` or `#[Project Name]`; the parser writes
+      `parsedProject` and renders the `▣ name` chip in the live preview.
 - [ ] When the picker writes a project, the triage resolver **does not re-guess**
       — the explicit pick wins silently (no "from project X" chip).
 - [ ] `AppShell.tsx` passes the active lens (or its projects) to `CapturePopover`
@@ -236,15 +228,14 @@ choice, the user ratifies it. The common case is still one Continue.
 - **No lens inference from free text without `[[ ]]`.** Only project-bridged
   inference (a matched project carries its lens); explicit `[[ ]]` is required
   for any other cross-lens intent.
-- **No sigil for projects.** Resolver only. (We considered `+project` GTD-style
-  and `#project` first-match; both rejected — the former adds a fifth sigil to
-  learn, the latter keeps the "first # is special" rule nobody remembers.)
+- **No fuzzy / substring / acronym autocomplete.** The inline project list uses
+  prefix matching only.
 
 ## Open questions
 
 _(none)_ — grammar split, `[[ ]]` resolution, resolver v1 bar, `[[ ]]`
-precedence over project-inferred lens, capture-time typeahead (picker row,
-`Tab` to open, prefix-match, explicit pick wins over resolver), and §5.5
+precedence over project-inferred lens, inline `#` project autocomplete
+(prefix-match, `Enter`/`Tab` accepts, explicit pick wins over resolver), and §5.5
 preservation are all locked. Fuzzy matching and task-shaping are explicitly
 non-goals pending v1 evidence.
 
