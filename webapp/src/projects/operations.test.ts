@@ -10,9 +10,21 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 vi.mock("../billing/entitlementHttp", () => ({
   assertLensAllowed: vi.fn().mockResolvedValue(undefined),
   assertUnderCap: vi.fn().mockResolvedValue(undefined),
+  throwHttpStatus: vi.fn((status: number, message: string) => {
+    throw new Error(`[${status}] ${message}`);
+  }),
 }));
 import { assertLensAllowed } from "../billing/entitlementHttp";
-import { getProjects, createProject, getProject, createTask } from "./operations";
+import {
+  getProjects,
+  createProject,
+  getProject,
+  createTask,
+  setProjectDone,
+  updateProject,
+  deleteProject,
+  updateTask,
+} from "./operations";
 import { mockContext } from "../test/mockContext";
 
 beforeEach(() => {
@@ -137,6 +149,7 @@ describe("createProject — happy path", () => {
   it("creates with trimmed name, returns id + name", async () => {
     const m = mockContext();
     m.entities.Project.create.mockResolvedValue({ id: "proj-9", name: "New thing" });
+    m.entities.Project.count.mockResolvedValue(2);
 
     const result = await createProject(
       { name: "  New thing  ", lensId: "lens-1", goalId: "goal-1", description: "desc" },
@@ -151,21 +164,27 @@ describe("createProject — happy path", () => {
         lensId: "lens-1",
         goalId: "goal-1",
         description: "desc",
+        order: 2, // seeded to count of existing projects under this goal
       }),
       select: { id: true, name: true },
     });
   });
 
-  it("works with optional fields omitted", async () => {
+  it("seeds order=0 for a standalone project (no goal)", async () => {
     const m = mockContext();
     m.entities.Project.create.mockResolvedValue({ id: "p", name: "Bare" });
 
     await createProject({ name: "Bare", lensId: "l" }, m.context);
 
     expect(m.entities.Project.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ goalId: undefined, description: undefined }),
+      data: expect.objectContaining({ goalId: undefined, description: undefined, order: 0 }),
       select: { id: true, name: true },
     });
+    // No goal → no goal-scoped count for order seeding. The cap-check count
+    // call still happens (it scopes by lens + isDone, not goalId).
+    expect(m.entities.Project.count).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.not.objectContaining({ goalId: expect.anything() }) }),
+    );
   });
 });
 
@@ -175,6 +194,7 @@ const PROJECT_DETAIL_ROW = {
   description: "The next milestone",
   dueDate: null as Date | null,
   isDone: false,
+  order: 0,
   lensId: "lens-1",
   goal: { id: "goal-1", name: "Grow audience" },
   tasks: [
@@ -277,6 +297,301 @@ describe("createTask — happy path", () => {
         size: "M",
       }),
       select: { id: true },
+    });
+  });
+});
+
+// ================================================================
+// goal-planning spec — new project ops (§A, §B, §C)
+// ================================================================
+
+// ----------------------------------------------------------------
+// setProjectDone — lifecycle
+// ----------------------------------------------------------------
+describe("setProjectDone — guards", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(setProjectDone({ id: "p1", isDone: true }, m.context)).rejects.toThrow(
+      /Not authenticated/,
+    );
+  });
+
+  it("throws on unknown id (tenancy — wrong user looks like not-found)", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue(null);
+    await expect(setProjectDone({ id: "p1", isDone: true }, m.context)).rejects.toThrow(
+      /Project not found/,
+    );
+  });
+
+  it("throws when the project belongs to a different user", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      isDone: false,
+      userId: "other-user",
+      lensId: "lens-1",
+    });
+    await expect(setProjectDone({ id: "p1", isDone: true }, m.context)).rejects.toThrow(
+      /Project not found/,
+    );
+    expect(m.entities.Project.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("setProjectDone — happy path", () => {
+  it("stamps isDone + completedAt when marking done", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      isDone: false,
+      userId: "user-1",
+      lensId: "lens-1",
+    });
+    m.entities.Project.update.mockResolvedValue({ id: "p1" });
+
+    await setProjectDone({ id: "p1", isDone: true }, m.context);
+
+    expect(m.entities.Project.update).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { isDone: true, completedAt: expect.any(Date) },
+      select: { id: true },
+    });
+  });
+
+  it("is idempotent — no update when already in the requested state", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      isDone: true,
+      userId: "user-1",
+      lensId: "lens-1",
+    });
+
+    await setProjectDone({ id: "p1", isDone: true }, m.context);
+    expect(m.entities.Project.update).not.toHaveBeenCalled();
+  });
+});
+
+// ----------------------------------------------------------------
+// updateProject — edit + re-link to goal
+// ----------------------------------------------------------------
+describe("updateProject — guards", () => {
+  it("throws 404 when the project doesn't exist or isn't the user's", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue(null);
+    await expect(updateProject({ id: "p1", name: "X" }, m.context)).rejects.toThrow(
+      /\[404\] Project not found/,
+    );
+  });
+
+  it("throws on empty name", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "Old", lensId: "lens-1" });
+    await expect(updateProject({ id: "p1", name: "" }, m.context)).rejects.toThrow(
+      /cannot be empty/,
+    );
+  });
+
+  it("throws 404 when the target goal doesn't exist", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "X", lensId: "lens-1" });
+    m.entities.Goal.findUnique.mockResolvedValue(null);
+    await expect(
+      updateProject({ id: "p1", goalId: "missing-goal" }, m.context),
+    ).rejects.toThrow(/\[404\] Goal not found/);
+  });
+
+  it("rejects cross-Lens re-link (same-Lens invariant)", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "X", lensId: "lens-1" });
+    m.entities.Goal.findUnique.mockResolvedValue({ id: "g1", lensId: "lens-2" }); // different lens
+
+    await expect(
+      updateProject({ id: "p1", goalId: "g1" }, m.context),
+    ).rejects.toThrow(/\[400\].*same Lens/);
+    expect(m.entities.Project.update).not.toHaveBeenCalled();
+  });
+
+  it("rewrites a Prisma P2002 (name duplicate) into a 409", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "Old", lensId: "lens-1" });
+    const prismaError = Object.assign(new Error("Unique constraint failed"), {
+      code: "P2002",
+    });
+    m.entities.Project.update.mockRejectedValue(prismaError);
+
+    await expect(updateProject({ id: "p1", name: "Dup" }, m.context)).rejects.toThrow(
+      /\[409\].*Dup/,
+    );
+  });
+});
+
+describe("updateProject — happy path", () => {
+  it("re-links a project to a goal in the same Lens", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "X", lensId: "lens-1" });
+    m.entities.Goal.findUnique.mockResolvedValue({ id: "g1", lensId: "lens-1" }); // same lens
+    m.entities.Project.update.mockResolvedValue({
+      id: "p1",
+      name: "X",
+      description: null,
+      goalId: "g1",
+    });
+
+    const result = await updateProject({ id: "p1", goalId: "g1" }, m.context);
+
+    expect(result.goalId).toBe("g1");
+    expect(m.entities.Project.update).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { goalId: "g1" },
+      select: { id: true, name: true, description: true, goalId: true },
+    });
+  });
+
+  it("unlinks a project (goalId → null)", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "X", lensId: "lens-1" });
+    m.entities.Project.update.mockResolvedValue({
+      id: "p1",
+      name: "X",
+      description: null,
+      goalId: null,
+    });
+
+    await updateProject({ id: "p1", goalId: null }, m.context);
+
+    expect(m.entities.Project.update).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { goalId: null },
+      select: { id: true, name: true, description: true, goalId: true },
+    });
+  });
+});
+
+// ----------------------------------------------------------------
+// deleteProject — lossless default
+// ----------------------------------------------------------------
+describe("deleteProject — guards", () => {
+  it("throws 404 when the project doesn't exist or isn't the user's", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue(null);
+    await expect(deleteProject({ id: "p1" }, m.context)).rejects.toThrow(/\[404\]/);
+  });
+});
+
+describe("deleteProject — lossless re-parenting", () => {
+  it("re-parents child tasks to projectId=null (retaining goalId), then deletes the project", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1" });
+    m.entities.Task.count.mockResolvedValue(4);
+
+    const result = await deleteProject({ id: "p1" }, m.context);
+
+    expect(result).toEqual({ id: "p1", reparentedCount: 4 });
+    // Re-parent tasks — projectId cleared, goalId untouched (the update only
+    // sets projectId=null, retaining goalId on the same row).
+    expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
+      where: { projectId: "p1", userId: "user-1" },
+      data: { projectId: null },
+    });
+    expect(m.entities.Project.delete).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      select: { id: true },
+    });
+  });
+
+  it("does not destroy child tasks — only the project is deleted", async () => {
+    const m = mockContext();
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1" });
+    m.entities.Task.count.mockResolvedValue(0);
+
+    await deleteProject({ id: "p1" }, m.context);
+
+    expect(m.entities.Task.deleteMany).not.toHaveBeenCalled();
+  });
+});
+
+// ----------------------------------------------------------------
+// updateTask — re-link a standalone task (§C, narrowed per spec)
+// ----------------------------------------------------------------
+describe("updateTask — guards", () => {
+  it("throws 404 when the task doesn't exist or isn't the user's", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue(null);
+    await expect(
+      updateTask({ id: "t1", projectId: "p1" }, m.context),
+    ).rejects.toThrow(/\[404\] Task not found/);
+  });
+
+  it("throws when both projectId and goalId are set (one-parent rule)", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      id: "t1",
+      lensId: "lens-1",
+      projectId: null,
+      goalId: null,
+    });
+    await expect(
+      updateTask({ id: "t1", projectId: "p1", goalId: "g1" }, m.context),
+    ).rejects.toThrow(/one parent/);
+  });
+
+  it("rejects cross-Lens re-link to a project in a different Lens", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      id: "t1",
+      lensId: "lens-1",
+      projectId: null,
+      goalId: null,
+    });
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", lensId: "lens-2" });
+
+    await expect(
+      updateTask({ id: "t1", projectId: "p1" }, m.context),
+    ).rejects.toThrow(/\[400\].*same Lens/);
+  });
+});
+
+describe("updateTask — happy path", () => {
+  it("moves a task into a project in the same Lens, clearing goalId", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      id: "t1",
+      lensId: "lens-1",
+      projectId: null,
+      goalId: "g1",
+    });
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", lensId: "lens-1" });
+    m.entities.Task.update.mockResolvedValue({ id: "t1", projectId: "p1", goalId: null });
+
+    const result = await updateTask({ id: "t1", projectId: "p1" }, m.context);
+
+    expect(result).toEqual({ id: "t1", projectId: "p1", goalId: null });
+    // One-parent rule enforced on commit too: goalId cleared.
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "t1" },
+      data: { projectId: "p1", goalId: null },
+      select: { id: true, projectId: true, goalId: true },
+    });
+  });
+
+  it("unlinks a task (projectId → null)", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      id: "t1",
+      lensId: "lens-1",
+      projectId: "p1",
+      goalId: null,
+    });
+    m.entities.Task.update.mockResolvedValue({ id: "t1", projectId: null, goalId: null });
+
+    await updateTask({ id: "t1", projectId: null }, m.context);
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "t1" },
+      data: { projectId: null },
+      select: { id: true, projectId: true, goalId: true },
     });
   });
 });
