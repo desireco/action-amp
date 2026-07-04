@@ -63,6 +63,7 @@
   - `cli-package` (`draft`) — the `cli/` package; draft because the op-refactor is unscoped.
   - `cli-skills` (`draft`) — four orchestration skills; depends on `cli-package`.
 - [tag-management](./tag-management.md) (`missing`, spec `ready`) — Task-detail tag chips + reserved-name seeding; **unblocks `focus-engine-v2`**.
+- [task-fields](./task-fields.md) (`missing`, spec `ready`) — the task enhancement pair: **Context** (reuses `Task.content`; what you need *to do* it) + **Outcome** (new `Task.outcome`; what *happened*, captured at completion for Review/Logbook). Markdown-rendered (`react-markdown` + `remark-gfm`); NextCard stays title-only. **Reverses `resources-project-owned`** on the Task↔Resource link (markdown links in Context, no `TaskResource` join).
 
 ### Deliberately not built (Phase 2 / Icebox)
 - Subtasks, Pomodoro timer, email-in capture, AI-tuned suggestions, native mobile,

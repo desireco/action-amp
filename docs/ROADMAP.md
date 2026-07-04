@@ -156,7 +156,17 @@ item; Build pulls `ready`.**
     `cli-comments-resources` (this spec is the source of truth for Resource's
     shape). Spec at `docs/specs/resources-project-owned.md`. Gated on items
     7–11 like the rest of this tier.
-3. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
+3. **task-fields** (`ready`, new 2026-07-04) — the task enhancement pair:
+    **Context** (optional markdown, reuses `Task.content`; what you need *to
+    do* the task — background, links, pointers to project-level Resources) and
+    **Outcome** (optional markdown, new `Task.outcome` column; what *happened*,
+    captured at completion for Review/Logbook). Both render via
+    `react-markdown` + `remark-gfm`; both invisible when empty; NextCard stays
+    title-only. **Reverses** `resources-project-owned` on the Task↔Resource
+    link: markdown links in Context, no `TaskResource` join (see
+    §Resource linking in the spec). No migration for Context; one nullable
+    column for Outcome. Spec at `docs/specs/task-fields.md`.
+4. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
     marketing pack, the real pricing page. Only worth doing once items 7–11
     prove someone stays and pays.
 4. **cli** (`effort split into 3 specs 2026-07-03`, **developer surface — not
