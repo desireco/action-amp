@@ -8,11 +8,24 @@ import type { Plan } from "@prisma/client";
  * See docs/PRICING.md (the decisions) and docs/BILLING-INTEGRATION.md (the plan).
  */
 
-/** Free-tier limits. Pro = unlimited. Enforced server-side, never on the client. */
+/** Free-tier limits. Pro = unlimited on entity counts. Enforced server-side, never on the client. */
 export const FREE_LIMITS = {
   projects: 3,
   goals: 1,
   workLens: false, // free users can't use the Work Lens (personal/Me scope only)
+} as const;
+
+/**
+ * Pro-tier soft caps. Pro is "unlimited" on the everyday entity counts
+ * (projects/goals/tasks) — these caps exist only for resources that have a
+ * real configurability or abuse ceiling (currently: how many lenses a Pro
+ * user can create). Enforced server-side via `assertUnderCap`.
+ *
+ * FREE is not a count for lenses — it's a hard set (the two seeded: Me usable,
+ * Work visible-but-locked). See entitlements.ts `lensConfigViolation`.
+ */
+export const PRO_LIMITS = {
+  lenses: 8, // soft cap — matches the existing soft-cap pattern (projects=3, goals=1)
 } as const;
 
 /** All paid-up plans — i.e. the user has full feature access right now. */

@@ -1,18 +1,25 @@
-import { FREE_LIMITS, isPlanActive } from "./config";
+import { FREE_LIMITS, PRO_LIMITS, isPlanActive } from "./config";
+import type { LensKind } from "@prisma/client";
 export type { EntitlementMessage } from "./entitlement-types";
 import type { EntitlementMessage } from "./entitlement-types";
 
 /**
  * Entitlement enforcement — the billing boundary (pure logic, no `wasp/server`).
  *
- * Two decisions, both server-side (the client gate is the friendly surface; this
+ * Three decisions, all server-side (the client gate is the friendly surface; this
  * is the non-negotiable boundary since lens state is bypassable React +
  * localStorage):
  *
  * 1. **Cap decision** (`capViolation`) — FREE users can create up to
  *    `FREE_LIMITS.projects`/`goals` per lens. Counted on non-done entities so
- *    finishing work always frees a slot.
- * 2. **Lens decision** (`lensViolation`) — FREE users may only read the Me lens.
+ *    finishing work always frees a slot. Pro is unlimited on these counts.
+ * 2. **Lens-scope decision** (`lensViolation`) — FREE users may only read the
+ *    PERSONAL lens. Branches on `LensKind` (NOT the lens name), so renaming
+ *    the seeded "Work" lens → "Studio" cannot escape FREE gating: the kind is
+ *    the stable handle, the name is just a label.
+ * 3. **Lens-config decision** (`lensConfigViolation`) — creating/editing any
+ *    lens is Pro-only. FREE sees the seeded two (Me usable, Work locked) and
+ *    can configure nothing. Pro is capped at `PRO_LIMITS.lenses` (soft cap).
  *
  * This module is PURE: it returns the violation (or null) and never imports
  * `wasp/server`. The companion `entitlementHttp.ts` turns a violation into a
@@ -24,7 +31,8 @@ import type { EntitlementMessage } from "./entitlement-types";
  * `isPlanActive` (not `isPaidPlan`) is the check: a PRO user whose
  * `planRenewsAt` has passed is treated as FREE. FOUNDER never expires.
  *
- * See `docs/specs/entitlement-enforcement.md` (every limit is a paywall moment).
+ * See `docs/specs/entitlement-enforcement.md` (every limit is a paywall moment)
+ * and `docs/specs/custom-lenses.md` (the LensKind rename-safety fix).
  */
 
 /** The subset of a user the entitlement decisions read. Both fields optional
@@ -57,28 +65,53 @@ export function capViolation(
   return null;
 }
 
+/** The subset of a Lens the lens-scope decision reads. */
+export interface EntitlementLens {
+  name: string;
+  kind: LensKind;
+}
+
 /**
- * Returns the lens-violation message if a FREE user is reading a non-Me lens,
- * else null. Paid users may read any lens. `lensName` is the lens's name
- * ("Work"/"Me"); anything not "Me" is restricted for FREE users (future
- * user-defined lenses inherit the Work rule until explicitly opened).
+ * Returns the lens-violation message if a FREE user is reading a non-PERSONAL
+ * lens, else null. Paid users may read any lens.
+ *
+ * Branches on `LensKind`, NOT the lens name — this is the rename-safety fix.
+ * The seeded "Work"/"Me" names are user-editable on Pro, so keying on the name
+ * string would let a rename break FREE gating. `kind` is the stable handle:
+ * `PERSONAL` is allowed for FREE; `WORK` and `CUSTOM` are restricted.
  */
 export function lensViolation(
   user: EntitlementUser | null,
-  lensName: string | null | undefined,
+  lens: EntitlementLens | null,
   msg?: EntitlementMessage,
 ): EntitlementMessage | null {
   if (isEntitled(user?.plan, user?.planRenewsAt ?? null)) return null; // paid → all lenses
-  if (lensName && lensName !== "Me") {
-    return msg ?? { feature: "the Work lens", reason: "bring your work life into ActionAmp" };
+  if (lens && lens.kind !== "PERSONAL") {
+    return msg ?? WORK_LENS_MESSAGE;
   }
   return null;
 }
 
 /**
- * Resolve a lensId → lens name, tenancy-safe (scoped to the user). Returns null
- * for an unknown/missing lens. Used by lens-scoped reads to feed `lensViolation`
- * — they receive a lensId, but the decision keys on the name.
+ * Returns the lens-config-violation message if a non-Pro user attempts any lens
+ * configuration (create / rename / recolor / edit-purpose / delete), else null.
+ *
+ * Lens configuration is Pro-only across the board — FREE gets the seeded two
+ * (Me usable, Work visible-but-locked) and can edit nothing. Pro is subject to
+ * `PRO_LIMITS.lenses` (a count cap, enforced separately via `assertUnderCap`).
+ */
+export function lensConfigViolation(
+  user: EntitlementUser | null,
+  msg?: EntitlementMessage,
+): EntitlementMessage | null {
+  if (isEntitled(user?.plan, user?.planRenewsAt ?? null)) return null; // paid → may configure
+  return msg ?? CUSTOM_LENSES_MESSAGE;
+}
+
+/**
+ * Resolve a lensId → `{ name, kind }`, tenancy-safe (scoped to the user).
+ * Returns null for an unknown/missing lens. Used by lens-scoped reads to feed
+ * `lensViolation` — they receive a lensId, but the decision keys on kind.
  *
  * `findFirst` (not `findUnique`): the Lens unique is on `[userId, name]`, so
  * there's no compound `id+userId` index; `findFirst` on both filters is the
@@ -86,21 +119,21 @@ export function lensViolation(
  *
  * The entities param is typed loosely (the Prisma delegate's findFirst returns
  * the full Lens model type, and matching it exactly across Wasp's generated
- * generics isn't worth it for this one-shot helper). We only read `.name`.
+ * generics isn't worth it for this one-shot helper). We read `.name` + `.kind`.
  */
-export async function resolveLensName(
+export async function resolveLens(
   // Broadly typed: callers pass Wasp's Prisma delegate (per-op entity set) or a
-  // test mock; we only read Lens.findFirst().name. Matching the exact generic
+  // test mock; we only read Lens.findFirst(). Matching the exact generic
   // delegate across ops isn't worth it for this one-shot helper.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entities: { Lens: { findFirst: (a: any) => Promise<any> } } | Record<string, unknown>,
   userId: string,
   lensId: string | undefined | null,
-): Promise<string | null> {
+): Promise<EntitlementLens | null> {
   if (!lensId) return null;
-  const lens = await (entities as { Lens: { findFirst: (a: unknown) => Promise<{ name: string } | null> } })
-    .Lens.findFirst({ where: { id: lensId, userId }, select: { name: true } });
-  return lens?.name ?? null;
+  const lens = await (entities as { Lens: { findFirst: (a: unknown) => Promise<EntitlementLens | null> } })
+    .Lens.findFirst({ where: { id: lensId, userId }, select: { name: true, kind: true } });
+  return lens ?? null;
 }
 
 /** Default ProGate copy for the Work-lens gate (shared by client + server). */
@@ -108,3 +141,11 @@ export const WORK_LENS_MESSAGE: EntitlementMessage = {
   feature: "the Work lens",
   reason: "bring your work life into ActionAmp",
 };
+
+/** Default ProGate copy for the custom-lenses gate (lens configuration). */
+export const CUSTOM_LENSES_MESSAGE: EntitlementMessage = {
+  feature: "Custom lenses",
+  reason: "add more life contexts — a Studio, a side project, a board role — with Pro",
+};
+
+export { PRO_LIMITS };

@@ -3,10 +3,12 @@ import type { EntitlementMessage } from "./entitlement-types";
 import {
   capViolation,
   lensViolation,
-  resolveLensName,
+  lensConfigViolation,
+  resolveLens,
   WORK_LENS_MESSAGE,
+  CUSTOM_LENSES_MESSAGE,
 } from "./entitlements";
-import { FREE_LIMITS } from "./config";
+import { FREE_LIMITS, PRO_LIMITS } from "./config";
 
 /**
  * Server-only entitlement guards — convert a pure violation decision (from
@@ -66,18 +68,31 @@ export async function assertUnderCap(
 }
 
 /**
- * Guard a lens-scoped read against the Work-lens rule. Resolves lensId → name
- * (tenancy-safe), then checks the lens violation.
+ * Guard a lens-scoped read against the FREE-lens rule. Resolves lensId →
+ * `{ name, kind }` (tenancy-safe), then checks the lens violation on KIND
+ * (not name — the rename-safety fix; a renamed Work lens still gates FREE).
  */
 export async function assertLensAllowed(
   context: GuardContext,
   lensId: string,
   msg: EntitlementMessage = WORK_LENS_MESSAGE,
 ): Promise<void> {
-  const lensName = context.user
-    ? await resolveLensName(context.entities, context.user.id, lensId)
+  const lens = context.user
+    ? await resolveLens(context.entities, context.user.id, lensId)
     : null;
-  throwIfViolation(lensViolation(context.user ?? null, lensName, msg));
+  throwIfViolation(lensViolation(context.user ?? null, lens, msg));
 }
 
-export { FREE_LIMITS };
+/**
+ * Guard a lens-CONFIGURATION op (create / rename / recolor / edit-purpose /
+ * delete) — Pro-only across the board. FREE users get the seeded two and can
+ * configure nothing. Call after the auth check, before any Lens write.
+ */
+export function assertLensConfigAllowed(
+  context: GuardContext,
+  msg: EntitlementMessage = CUSTOM_LENSES_MESSAGE,
+): void {
+  throwIfViolation(lensConfigViolation(context.user ?? null, msg));
+}
+
+export { FREE_LIMITS, PRO_LIMITS };
