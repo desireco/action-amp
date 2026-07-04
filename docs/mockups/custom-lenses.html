@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-lens="indigo">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Custom Lenses — prototype</title>
+<!--
+  Prototype for docs/specs/custom-lenses.md.
+
+  NOT production code. A throwaway to settle two design calls BEFORE build:
+    1. The adaptive switcher: segmented (≤3) vs chip + popover (≥4).
+    2. The Lenses settings tab: row layout, kinds, Pro-gating.
+
+  Everything reads from the REAL tokens.css (inlined, verbatim) so colors
+  match production. The 6 proposed new lens hues are appended to the lens
+  block — these are the values this prototype is asking you to sign off on.
+  Use the buttons top-right to flip theme + see each switcher state.
+
+  Per the spec's non-goals: no hex input (curated swatches only), no reorder.
+-->
+<style>
+  /* ===================================================================
+     TOKENS — verbatim from webapp/src/styles/tokens.css (light + dark)
+     =================================================================== */
+  :root {
+    --aa-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Roboto, sans-serif;
+    --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --aa-teal: oklch(0.72 0.15 220);
+    --aa-teal-bright: oklch(0.78 0.14 215);
+    --aa-teal-cta: oklch(0.58 0.16 225);
+    --aa-teal-cta-hover: oklch(0.5 0.16 228);
+    --aa-teal-soft: oklch(0.95 0.04 220);
+    --aa-teal-soft-strong: oklch(0.9 0.07 220);
+
+    --aa-amber: oklch(0.78 0.16 70);
+    --aa-amber-text: oklch(0.45 0.13 65);
+    --aa-amber-soft: oklch(0.95 0.06 75);
+    --aa-amber-soft-strong: oklch(0.92 0.09 75);
+
+    --aa-violet: oklch(0.62 0.2 295);
+    --aa-violet-soft: oklch(0.95 0.04 295);
+    --aa-violet-text: oklch(0.45 0.15 295);
+
+    --aa-rose: oklch(0.6 0.18 15);
+    --aa-rose-soft: oklch(0.95 0.04 15);
+    --aa-rose-text: oklch(0.45 0.16 15);
+
+    /* Existing lens hues */
+    --aa-lens-indigo: oklch(0.58 0.18 275);
+    --aa-lens-indigo-text: oklch(0.4 0.17 275);
+    --aa-lens-indigo-soft: oklch(0.96 0.035 275);
+    --aa-lens-indigo-soft-strong: oklch(0.92 0.07 275);
+    --aa-lens-indigo-mid: oklch(0.82 0.11 275);
+
+    --aa-lens-emerald: oklch(0.6 0.15 165);
+    --aa-lens-emerald-text: oklch(0.38 0.13 165);
+    --aa-lens-emerald-soft: oklch(0.96 0.045 165);
+    --aa-lens-emerald-soft-strong: oklch(0.91 0.08 165);
+    --aa-lens-emerald-mid: oklch(0.82 0.1 165);
+
+    /* ───────────────────────────────────────────────────────────────
+       PROPOSED NEW LENS HUES (this prototype asks you to sign off these)
+
+       Discipline: match indigo/emerald's lightness/chroma pairs so the new
+       ramps sit in the same visual weight. Hues chosen to avoid the reserved
+       system hues (teal ≈ 220, amber ≈ 75, violet ≈ 295, rose ≈ 15).
+       ─────────────────────────────────────────────────────────────── */
+
+    /* slate — neutral context (General / Admin). Very low chroma; reads as
+       a true neutral with a faint cool tint. The -text drops lightness for
+       legibility on the soft fills. */
+    --aa-lens-slate: oklch(0.58 0.03 240);
+    --aa-lens-slate-text: oklch(0.4 0.04 240);
+    --aa-lens-slate-soft: oklch(0.96 0.008 240);
+    --aa-lens-slate-soft-strong: oklch(0.92 0.015 240);
+    --aa-lens-slate-mid: oklch(0.82 0.025 240);
+
+    /* cyan — distinct from teal by sitting ~hue 210 AND running cooler/chroma
+       higher; teal is the system accent so cyan takes a clearly different
+       ramp. Identity color for a creative/practice lens. */
+    --aa-lens-cyan: oklch(0.6 0.13 210);
+    --aa-lens-cyan-text: oklch(0.4 0.11 210);
+    --aa-lens-cyan-soft: oklch(0.96 0.035 210);
+    --aa-lens-cyan-soft-strong: oklch(0.92 0.07 210);
+    --aa-lens-cyan-mid: oklch(0.82 0.1 210);
+
+    /* coral — the spec's "rose-adjacent alt." Distinct from error rose by
+       pulling toward orange (hue 35 vs rose's 15) and softening chroma so
+       it never reads as an error/warning. Warm identity color. */
+    --aa-lens-coral: oklch(0.65 0.16 40);
+    --aa-lens-coral-text: oklch(0.45 0.14 40);
+    --aa-lens-coral-soft: oklch(0.96 0.04 40);
+    --aa-lens-coral-soft-strong: oklch(0.92 0.08 40);
+    --aa-lens-coral-mid: oklch(0.82 0.11 40);
+
+    /* honey — the spec's "amber-adjacent alt." Pulled toward yellow (hue 90
+       vs amber's 75) and softened so it never reads as Important (amber's
+       reserved job). Distinct warm-but-not-amber identity. */
+    --aa-lens-honey: oklch(0.72 0.14 95);
+    --aa-lens-honey-text: oklch(0.5 0.13 95);
+    --aa-lens-honey-soft: oklch(0.96 0.045 95);
+    --aa-lens-honey-soft-strong: oklch(0.92 0.08 95);
+    --aa-lens-honey-mid: oklch(0.84 0.1 95);
+
+    /* lime — green but distinct from emerald (hue 130 vs 165; reads more
+       yellow-green). For a growth/learning/skill lens. */
+    --aa-lens-lime: oklch(0.7 0.15 130);
+    --aa-lens-lime-text: oklch(0.48 0.14 130);
+    --aa-lens-lime-soft: oklch(0.96 0.045 130);
+    --aa-lens-lime-soft-strong: oklch(0.92 0.08 130);
+    --aa-lens-lime-mid: oklch(0.84 0.1 130);
+
+    /* magenta — the warm pink-violet. Distinct from violet (hue 350 vs 295)
+       and from rose (cooler than coral). Bold identity for a brand/stage lens. */
+    --aa-lens-magenta: oklch(0.58 0.18 350);
+    --aa-lens-magenta-text: oklch(0.42 0.17 350);
+    --aa-lens-magenta-soft: oklch(0.96 0.045 350);
+    --aa-lens-magenta-soft-strong: oklch(0.92 0.08 350);
+    --aa-lens-magenta-mid: oklch(0.82 0.11 350);
+
+    --aa-active-lens: var(--aa-lens-indigo);
+    --aa-active-lens-text: var(--aa-lens-indigo-text);
+    --aa-active-lens-soft: var(--aa-lens-indigo-soft);
+    --aa-active-lens-soft-strong: var(--aa-lens-indigo-soft-strong);
+    --aa-active-lens-mid: var(--aa-lens-indigo-mid);
+
+    --aa-bg: oklch(0.99 0.005 230);
+    --aa-bg-soft: oklch(0.97 0.008 230);
+    --aa-bg-deep: oklch(0.94 0.01 230);
+    --aa-surface: oklch(1 0.003 230);
+    --aa-surface-muted: oklch(0.96 0.008 230);
+    --aa-surface-muted-2: oklch(0.93 0.01 230);
+    --aa-border: oklch(0.91 0.01 230);
+    --aa-border-strong: oklch(0.86 0.012 230);
+    --aa-text: oklch(0.2 0.015 230);
+    --aa-text-2: oklch(0.36 0.015 230);
+    --aa-text-3: oklch(0.5 0.015 230);
+    --aa-text-4: oklch(0.62 0.012 230);
+
+    --aa-radius-xs: 4px; --aa-radius-sm: 6px; --aa-radius-md: 8px;
+    --aa-radius-lg: 12px; --aa-radius-xl: 18px; --aa-radius-full: 9999px;
+    --aa-space-xs: 4px; --aa-space-sm: 8px; --aa-space-md: 16px;
+    --aa-space-lg: 24px; --aa-space-xl: 32px; --aa-space-2xl: 48px;
+    --aa-shadow-md: 0 2px 6px oklch(0.2 0.02 230 / 0.06), 0 12px 32px oklch(0.2 0.02 230 / 0.06);
+    --aa-ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  [data-theme="dark"] {
+    --aa-bg: oklch(0.18 0.012 230);
+    --aa-bg-soft: oklch(0.21 0.012 230);
+    --aa-bg-deep: oklch(0.16 0.012 230);
+    --aa-surface: oklch(0.25 0.013 230);
+    --aa-surface-muted: oklch(0.29 0.013 230);
+    --aa-surface-muted-2: oklch(0.33 0.013 230);
+    --aa-border: oklch(0.32 0.013 230);
+    --aa-border-strong: oklch(0.4 0.015 230);
+    --aa-text: oklch(0.96 0.005 230);
+    --aa-text-2: oklch(0.85 0.008 230);
+    --aa-text-3: oklch(0.7 0.012 230);
+    --aa-text-4: oklch(0.58 0.012 230);
+
+    --aa-teal-soft: oklch(0.3 0.05 220);
+    --aa-teal-soft-strong: oklch(0.35 0.08 220);
+    --aa-amber-soft: oklch(0.3 0.06 75);
+    --aa-amber-soft-strong: oklch(0.34 0.1 75);
+    --aa-amber-text: oklch(0.78 0.16 70);
+    --aa-violet-soft: oklch(0.3 0.05 295);
+    --aa-rose-soft: oklch(0.3 0.06 15);
+
+    --aa-lens-indigo-soft: oklch(0.3 0.06 275);
+    --aa-lens-indigo-soft-strong: oklch(0.34 0.1 275);
+    --aa-lens-indigo-mid: oklch(0.4 0.1 275);
+    --aa-lens-indigo-text: oklch(0.78 0.13 275);
+    --aa-lens-emerald-soft: oklch(0.3 0.06 165);
+    --aa-lens-emerald-soft-strong: oklch(0.34 0.1 165);
+    --aa-lens-emerald-mid: oklch(0.4 0.1 165);
+    --aa-lens-emerald-text: oklch(0.78 0.12 165);
+
+    /* New hues: dark overrides — mirrors the indigo/emerald discipline
+       (deeper soft fills, brighter -text for legibility). */
+    --aa-lens-slate-soft: oklch(0.3 0.012 240);
+    --aa-lens-slate-soft-strong: oklch(0.34 0.02 240);
+    --aa-lens-slate-mid: oklch(0.4 0.03 240);
+    --aa-lens-slate-text: oklch(0.78 0.025 240);
+    --aa-lens-cyan-soft: oklch(0.3 0.05 210);
+    --aa-lens-cyan-soft-strong: oklch(0.34 0.09 210);
+    --aa-lens-cyan-mid: oklch(0.4 0.1 210);
+    --aa-lens-cyan-text: oklch(0.78 0.11 210);
+    --aa-lens-coral-soft: oklch(0.3 0.06 40);
+    --aa-lens-coral-soft-strong: oklch(0.34 0.1 40);
+    --aa-lens-coral-mid: oklch(0.4 0.11 40);
+    --aa-lens-coral-text: oklch(0.78 0.13 40);
+    --aa-lens-honey-soft: oklch(0.3 0.06 95);
+    --aa-lens-honey-soft-strong: oklch(0.34 0.1 95);
+    --aa-lens-honey-mid: oklch(0.4 0.11 95);
+    --aa-lens-honey-text: oklch(0.8 0.13 95);
+    --aa-lens-lime-soft: oklch(0.3 0.06 130);
+    --aa-lens-lime-soft-strong: oklch(0.34 0.1 130);
+    --aa-lens-lime-mid: oklch(0.4 0.11 130);
+    --aa-lens-lime-text: oklch(0.8 0.13 130);
+    --aa-lens-magenta-soft: oklch(0.3 0.06 350);
+    --aa-lens-magenta-soft-strong: oklch(0.34 0.1 350);
+    --aa-lens-magenta-mid: oklch(0.4 0.11 350);
+    --aa-lens-magenta-text: oklch(0.78 0.14 350);
+  }
+
+  /* data-lens active blocks — one per key, light + dark safe (they reference
+     the lens vars which the dark block above re-tunes). */
+  [data-lens="indigo"]   { --aa-active-lens: var(--aa-lens-indigo);   --aa-active-lens-text: var(--aa-lens-indigo-text);   --aa-active-lens-soft: var(--aa-lens-indigo-soft);   --aa-active-lens-soft-strong: var(--aa-lens-indigo-soft-strong);   --aa-active-lens-mid: var(--aa-lens-indigo-mid); }
+  [data-lens="emerald"]  { --aa-active-lens: var(--aa-lens-emerald);  --aa-active-lens-text: var(--aa-lens-emerald-text);  --aa-active-lens-soft: var(--aa-lens-emerald-soft);  --aa-active-lens-soft-strong: var(--aa-lens-emerald-soft-strong);  --aa-active-lens-mid: var(--aa-lens-emerald-mid); }
+  [data-lens="slate"]    { --aa-active-lens: var(--aa-lens-slate);    --aa-active-lens-text: var(--aa-lens-slate-text);    --aa-active-lens-soft: var(--aa-lens-slate-soft);    --aa-active-lens-soft-strong: var(--aa-lens-slate-soft-strong);    --aa-active-lens-mid: var(--aa-lens-slate-mid); }
+  [data-lens="cyan"]     { --aa-active-lens: var(--aa-lens-cyan);     --aa-active-lens-text: var(--aa-lens-cyan-text);     --aa-active-lens-soft: var(--aa-lens-cyan-soft);     --aa-active-lens-soft-strong: var(--aa-lens-cyan-soft-strong);     --aa-active-lens-mid: var(--aa-lens-cyan-mid); }
+  [data-lens="coral"]    { --aa-active-lens: var(--aa-lens-coral);    --aa-active-lens-text: var(--aa-lens-coral-text);    --aa-active-lens-soft: var(--aa-lens-coral-soft);    --aa-active-lens-soft-strong: var(--aa-lens-coral-soft-strong);    --aa-active-lens-mid: var(--aa-lens-coral-mid); }
+  [data-lens="honey"]    { --aa-active-lens: var(--aa-lens-honey);    --aa-active-lens-text: var(--aa-lens-honey-text);    --aa-active-lens-soft: var(--aa-lens-honey-soft);    --aa-active-lens-soft-strong: var(--aa-lens-honey-soft-strong);    --aa-active-lens-mid: var(--aa-lens-honey-mid); }
+  [data-lens="lime"]     { --aa-active-lens: var(--aa-lens-lime);     --aa-active-lens-text: var(--aa-lens-lime-text);     --aa-active-lens-soft: var(--aa-lens-lime-soft);     --aa-active-lens-soft-strong: var(--aa-lens-lime-soft-strong);     --aa-active-lens-mid: var(--aa-lens-lime-mid); }
+  [data-lens="magenta"]  { --aa-active-lens: var(--aa-lens-magenta);  --aa-active-lens-text: var(--aa-lens-magenta-text);  --aa-active-lens-soft: var(--aa-lens-magenta-soft);  --aa-active-lens-soft-strong: var(--aa-lens-magenta-soft-strong);  --aa-active-lens-mid: var(--aa-lens-magenta-mid); }
+
+  /* ===================================================================
+     PROTOTYPE PAGE CHROME (not production)
+     =================================================================== */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--aa-font);
+    background: var(--aa-bg);
+    color: var(--aa-text);
+    min-height: 100vh;
+    padding: 48px 40px 96px;
+    line-height: 1.5;
+  }
+
+  .proto-bar {
+    position: fixed;
+    top: 16px; right: 16px;
+    display: flex; gap: 8px;
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-full);
+    padding: 6px;
+    box-shadow: var(--aa-shadow-md);
+    z-index: 100;
+  }
+  .proto-bar button {
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border: none;
+    border-radius: var(--aa-radius-full);
+    background: transparent;
+    color: var(--aa-text-3);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .proto-bar button.on { background: var(--aa-teal-soft); color: var(--aa-teal-cta); }
+
+  h1.proto-h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 4px; }
+  .proto-sub { color: var(--aa-text-3); font-size: 0.95rem; margin: 0 0 40px; max-width: 620px; }
+
+  section.proto-sec { margin-bottom: 64px; }
+  h2.proto-h2 {
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--aa-text-4);
+    margin: 0 0 8px;
+  }
+  .proto-sec > p.lede {
+    font-size: 0.92rem; color: var(--aa-text-2); margin: 0 0 24px; max-width: 620px;
+  }
+  .proto-frame {
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-lg);
+    padding: 32px;
+  }
+  .proto-cap {
+    font-size: 0.78rem; color: var(--aa-text-4); margin-top: 12px;
+    font-family: var(--aa-font-mono);
+  }
+
+  /* ===================================================================
+     LENS SWITCH — segmented (≤3). Verbatim LensSwitch.css behavior.
+     =================================================================== */
+  .aa-lens {
+    display: inline-flex; width: 100%;
+    background: var(--aa-surface-muted);
+    border-radius: var(--aa-radius-md);
+    padding: 3px;
+  }
+  .aa-lens__btn {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center;
+    gap: 7px; font-size: 0.82rem; font-weight: 600; padding: 6px 10px;
+    border-radius: 0; color: var(--aa-text-3); background: none; border: none;
+    cursor: pointer;
+    transition: background 0.2s var(--aa-ease-out), color 0.2s var(--aa-ease-out), box-shadow 0.2s var(--aa-ease-out);
+  }
+  .aa-lens__btn:not(.aa-lens__btn--active):hover { background: var(--aa-surface-muted); }
+  .aa-lens__btn:focus-visible { outline: 2px solid var(--aa-teal); outline-offset: 2px; }
+  .aa-lens__btn--active { background: transparent; color: var(--aa-active-lens-text); box-shadow: inset 0 -2.5px 0 var(--aa-active-lens); }
+
+  .aa-lens__dot { width: 9px; height: 9px; border-radius: var(--aa-radius-full); background: var(--aa-active-lens); flex: none; box-shadow: 0 0 0 1.5px oklch(1 0 0 / 0.35); }
+
+  /* Per-key dot + inactive label color (production hardcodes indigo/emerald;
+     the build will generalize these to all 8 keys via the same selector). */
+  .aa-lens__btn[data-lens-color="indigo"]  .aa-lens__dot { background: var(--aa-lens-indigo); }
+  .aa-lens__btn[data-lens-color="emerald"] .aa-lens__dot { background: var(--aa-lens-emerald); }
+  .aa-lens__btn[data-lens-color="slate"]   .aa-lens__dot { background: var(--aa-lens-slate); }
+  .aa-lens__btn[data-lens-color="cyan"]    .aa-lens__dot { background: var(--aa-lens-cyan); }
+  .aa-lens__btn[data-lens-color="coral"]   .aa-lens__dot { background: var(--aa-lens-coral); }
+  .aa-lens__btn[data-lens-color="honey"]   .aa-lens__dot { background: var(--aa-lens-honey); }
+  .aa-lens__btn[data-lens-color="lime"]    .aa-lens__dot { background: var(--aa-lens-lime); }
+  .aa-lens__btn[data-lens-color="magenta"] .aa-lens__dot { background: var(--aa-lens-magenta); }
+  .aa-lens__btn[data-lens-color="indigo"]:not(.aa-lens__btn--active)  { color: var(--aa-lens-indigo); }
+  .aa-lens__btn[data-lens-color="emerald"]:not(.aa-lens__btn--active) { color: var(--aa-lens-emerald); }
+  .aa-lens__btn[data-lens-color="slate"]:not(.aa-lens__btn--active)   { color: var(--aa-lens-slate-text); }
+  .aa-lens__btn[data-lens-color="cyan"]:not(.aa-lens__btn--active)    { color: var(--aa-lens-cyan-text); }
+  .aa-lens__btn[data-lens-color="coral"]:not(.aa-lens__btn--active)   { color: var(--aa-lens-coral-text); }
+  .aa-lens__btn[data-lens-color="honey"]:not(.aa-lens__btn--active)   { color: var(--aa-lens-honey-text); }
+  .aa-lens__btn[data-lens-color="lime"]:not(.aa-lens__btn--active)    { color: var(--aa-lens-lime-text); }
+  .aa-lens__btn[data-lens-color="magenta"]:not(.aa-lens__btn--active) { color: var(--aa-lens-magenta-text); }
+  .aa-lens__btn--active[data-lens-color="indigo"]  { color: var(--aa-lens-indigo-text);  box-shadow: inset 0 -2.5px 0 var(--aa-lens-indigo); }
+  .aa-lens__btn--active[data-lens-color="emerald"] { color: var(--aa-lens-emerald-text); box-shadow: inset 0 -2.5px 0 var(--aa-lens-emerald); }
+  .aa-lens__btn--active[data-lens-color="slate"]   { color: var(--aa-lens-slate-text);   box-shadow: inset 0 -2.5px 0 var(--aa-lens-slate); }
+  .aa-lens__btn--active[data-lens-color="cyan"]    { color: var(--aa-lens-cyan-text);    box-shadow: inset 0 -2.5px 0 var(--aa-lens-cyan); }
+  .aa-lens__btn--active[data-lens-color="coral"]   { color: var(--aa-lens-coral-text);   box-shadow: inset 0 -2.5px 0 var(--aa-lens-coral); }
+  .aa-lens__btn--active[data-lens-color="honey"]   { color: var(--aa-lens-honey-text);   box-shadow: inset 0 -2.5px 0 var(--aa-lens-honey); }
+  .aa-lens__btn--active[data-lens-color="lime"]    { color: var(--aa-lens-lime-text);    box-shadow: inset 0 -2.5px 0 var(--aa-lens-lime); }
+  .aa-lens__btn--active[data-lens-color="magenta"] { color: var(--aa-lens-magenta-text); box-shadow: inset 0 -2.5px 0 var(--aa-lens-magenta); }
+
+  .aa-lens__count { font-size: 0.64rem; font-weight: 700; line-height: 1; min-width: 15px; height: 15px; padding: 0 4px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--aa-radius-full); margin-left: 1px; }
+  .aa-lens__btn:not(.aa-lens__btn--active)[data-lens-color="indigo"]  .aa-lens__count { background: var(--aa-lens-indigo-soft-strong);  color: var(--aa-lens-indigo-text); }
+  .aa-lens__btn:not(.aa-lens__btn--active)[data-lens-color="emerald"] .aa-lens__count { background: var(--aa-lens-emerald-soft-strong); color: var(--aa-lens-emerald-text); }
+  .aa-lens__btn--active .aa-lens__count { background: var(--aa-active-lens-soft-strong); color: var(--aa-active-lens-text); }
+
+  .aa-lens__pro { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--aa-text-4); background: var(--aa-surface-muted); padding: 1px 5px; border-radius: var(--aa-radius-xs); line-height: 1.3; }
+
+  /* ===================================================================
+     LENS CHIP + POPOVER — new, for ≥4 lenses
+     =================================================================== */
+  .aa-lens-chip {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%;
+    background: var(--aa-surface-muted);
+    border: 1px solid transparent;
+    border-radius: var(--aa-radius-md);
+    padding: 8px 12px;
+    font: inherit; font-size: 0.85rem; font-weight: 600;
+    color: var(--aa-active-lens-text);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .aa-lens-chip:hover { border-color: var(--aa-border-strong); }
+  .aa-lens-chip:focus-visible { outline: 2px solid var(--aa-teal); outline-offset: 2px; }
+  .aa-lens-chip__name { flex: 1; text-align: left; }
+  .aa-lens-chip__dot {
+    width: 10px; height: 10px; border-radius: var(--aa-radius-full);
+    background: var(--aa-active-lens); flex: none;
+    box-shadow: 0 0 0 1.5px oklch(1 0 0 / 0.35);
+  }
+  .aa-lens-chip__caret { color: var(--aa-text-4); font-size: 0.7rem; }
+  .aa-lens-chip__kbd {
+    font-family: var(--aa-font-mono); font-size: 0.68rem; font-weight: 600;
+    color: var(--aa-text-4); padding: 1px 5px; border-radius: var(--aa-radius-xs);
+    background: var(--aa-surface); border: 1px solid var(--aa-border);
+  }
+
+  .aa-lens-pop {
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-lg);
+    box-shadow: var(--aa-shadow-md);
+    width: 320px;
+    overflow: hidden;
+  }
+  .aa-lens-pop__head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--aa-text-4);
+    border-bottom: 1px solid var(--aa-border);
+  }
+  .aa-lens-pop__head .kbd { font-family: var(--aa-font-mono); letter-spacing: 0; }
+  .aa-lens-pop__list { padding: 4px; }
+  .aa-lens-pop__opt {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 10px; border-radius: var(--aa-radius-sm);
+    cursor: pointer; border: none; width: 100%; text-align: left;
+    background: transparent; color: var(--aa-text); font: inherit;
+  }
+  .aa-lens-pop__opt:hover, .aa-lens-pop__opt.is-focused { background: var(--aa-surface-muted); }
+  .aa-lens-pop__opt.is-active { background: var(--aa-active-lens-soft); }
+  .aa-lens-pop__dot { width: 10px; height: 10px; border-radius: var(--aa-radius-full); margin-top: 5px; flex: none; }
+  .aa-lens-pop__opt[data-lens-color="indigo"]  .aa-lens-pop__dot { background: var(--aa-lens-indigo); }
+  .aa-lens-pop__opt[data-lens-color="emerald"] .aa-lens-pop__dot { background: var(--aa-lens-emerald); }
+  .aa-lens-pop__opt[data-lens-color="slate"]   .aa-lens-pop__dot { background: var(--aa-lens-slate); }
+  .aa-lens-pop__opt[data-lens-color="cyan"]    .aa-lens-pop__dot { background: var(--aa-lens-cyan); }
+  .aa-lens-pop__opt[data-lens-color="coral"]   .aa-lens-pop__dot { background: var(--aa-lens-coral); }
+  .aa-lens-pop__opt[data-lens-color="honey"]   .aa-lens-pop__dot { background: var(--aa-lens-honey); }
+  .aa-lens-pop__opt[data-lens-color="lime"]    .aa-lens-pop__dot { background: var(--aa-lens-lime); }
+  .aa-lens-pop__opt[data-lens-color="magenta"] .aa-lens-pop__dot { background: var(--aa-lens-magenta); }
+  .aa-lens-pop__main { flex: 1; min-width: 0; }
+  .aa-lens-pop__name { font-size: 0.88rem; font-weight: 600; color: var(--aa-text); }
+  .aa-lens-pop__purpose { font-size: 0.78rem; color: var(--aa-text-3); margin-top: 1px; }
+  .aa-lens-pop__count {
+    font-size: 0.72rem; font-weight: 600; color: var(--aa-text-3);
+    background: var(--aa-surface-muted); border-radius: var(--aa-radius-full);
+    padding: 1px 8px; margin-top: 3px; flex: none;
+  }
+  .aa-lens-pop__add {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; margin: 4px; border-radius: var(--aa-radius-sm);
+    border-top: 1px solid var(--aa-border);
+    color: var(--aa-text-3); font-size: 0.85rem; font-weight: 500;
+    cursor: pointer; background: transparent; width: calc(100% - 8px);
+  }
+  .aa-lens-pop__add:hover { color: var(--aa-teal-cta); }
+  .aa-lens-pop__add .plus { font-size: 0.9rem; line-height: 1; width: 10px; text-align: center; }
+  .aa-lens-pop__add .pro-tag { margin-left: auto; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--aa-text-4); }
+  .aa-lens-pop__foot {
+    display: flex; gap: 14px; padding: 8px 14px; font-size: 0.7rem;
+    color: var(--aa-text-4); border-top: 1px solid var(--aa-border);
+    font-family: var(--aa-font-mono);
+  }
+
+  /* ===================================================================
+     SETTINGS — Lenses tab
+     =================================================================== */
+  .aa-settings-hub { max-width: 680px; }
+  .aa-settings-back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; color: var(--aa-text-3); margin-bottom: var(--aa-space-lg); text-decoration: none; }
+  .aa-settings-h { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.015em; color: var(--aa-text); margin: 0 0 var(--aa-space-lg); }
+  .aa-settings-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--aa-border); margin-bottom: var(--aa-space-xl); }
+  .aa-settings-tab { padding: var(--aa-space-sm) var(--aa-space-md); font-size: 0.9rem; font-weight: 500; color: var(--aa-text-3); text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .aa-settings-tab.active { color: var(--aa-teal-cta); border-bottom-color: var(--aa-teal-cta); font-weight: 600; }
+  .aa-settings-sh { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--aa-text-4); margin: 0 0 var(--aa-space-md); }
+  .aa-settings-section { padding: var(--aa-space-lg) 0; border-top: 1px solid var(--aa-border); }
+  .aa-settings-section:first-of-type { border-top: none; padding-top: 0; }
+  .aa-settings-note { font-size: 0.88rem; color: var(--aa-text-3); margin: 0; line-height: 1.5; }
+
+  /* Lenses list */
+  .aa-lenses-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--aa-border);
+  }
+  .aa-lenses-row:last-child { border-bottom: none; }
+  .aa-lenses-row__dot { width: 12px; height: 12px; border-radius: var(--aa-radius-full); flex: none; box-shadow: 0 0 0 1.5px oklch(1 0 0 / 0.3); }
+  .aa-lenses-row[data-lens-color="indigo"]  .aa-lenses-row__dot { background: var(--aa-lens-indigo); }
+  .aa-lenses-row[data-lens-color="emerald"] .aa-lenses-row__dot { background: var(--aa-lens-emerald); }
+  .aa-lenses-row[data-lens-color="slate"]   .aa-lenses-row__dot { background: var(--aa-lens-slate); }
+  .aa-lenses-row[data-lens-color="cyan"]    .aa-lenses-row__dot { background: var(--aa-lens-cyan); }
+  .aa-lenses-row[data-lens-color="coral"]   .aa-lenses-row__dot { background: var(--aa-lens-coral); }
+  .aa-lenses-row[data-lens-color="honey"]   .aa-lenses-row__dot { background: var(--aa-lens-honey); }
+  .aa-lenses-row[data-lens-color="lime"]    .aa-lenses-row__dot { background: var(--aa-lens-lime); }
+  .aa-lenses-row[data-lens-color="magenta"] .aa-lenses-row__dot { background: var(--aa-lens-magenta); }
+  .aa-lenses-row__main { flex: 1; min-width: 0; }
+  .aa-lenses-row__name { font-size: 0.95rem; font-weight: 600; color: var(--aa-text); display: flex; align-items: center; gap: 8px; }
+  .aa-lenses-row__purpose { font-size: 0.82rem; color: var(--aa-text-3); margin-top: 2px; }
+  .aa-lenses-row__meta { font-size: 0.75rem; color: var(--aa-text-4); margin-top: 4px; display: flex; gap: 10px; }
+  .aa-lenses-row__kind {
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--aa-text-4);
+    background: var(--aa-surface-muted-2); padding: 1px 6px;
+    border-radius: var(--aa-radius-xs);
+  }
+  .aa-lenses-row__acts { display: flex; gap: 6px; }
+  .aa-iconbtn {
+    font: inherit; font-size: 0.75rem; font-weight: 500;
+    color: var(--aa-text-3); background: transparent;
+    border: 1px solid transparent; border-radius: var(--aa-radius-sm);
+    padding: 5px 9px; cursor: pointer;
+    transition: color 0.12s, background 0.12s, border-color 0.12s;
+  }
+  .aa-iconbtn:hover { color: var(--aa-text); background: var(--aa-surface-muted); }
+  .aa-iconbtn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .aa-iconbtn--danger:hover { color: var(--aa-rose-text); background: var(--aa-rose-soft); }
+
+  .aa-lenses-add {
+    margin-top: 16px;
+    font: inherit; font-size: 0.88rem; font-weight: 600;
+    color: var(--aa-teal-cta); background: var(--aa-teal-soft);
+    border: 1px solid transparent; border-radius: var(--aa-radius-md);
+    padding: 9px 16px; cursor: pointer;
+  }
+  .aa-lenses-add:hover { background: var(--aa-teal-soft-strong); }
+  .aa-lenses-add:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Palette swatches */
+  .aa-palette { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .aa-swatch {
+    border: 1px solid var(--aa-border); border-radius: var(--aa-radius-md);
+    overflow: hidden; cursor: pointer; background: var(--aa-surface);
+    transition: border-color 0.12s, transform 0.12s;
+  }
+  .aa-swatch:hover { border-color: var(--aa-border-strong); }
+  .aa-swatch.selected { border-color: var(--aa-teal-cta); box-shadow: 0 0 0 2px var(--aa-teal-soft); }
+  .aa-swatch__base { height: 36px; }
+  .aa-swatch__ramp { display: flex; height: 14px; }
+  .aa-swatch__ramp > div { flex: 1; }
+  .aa-swatch__label { padding: 8px 10px; font-size: 0.78rem; font-weight: 600; }
+  .aa-swatch__label small { display: block; font-weight: 400; color: var(--aa-text-4); font-size: 0.7rem; font-family: var(--aa-font-mono); margin-top: 1px; }
+
+  /* ProGate panel (tone reference) */
+  .aa-progate {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+    padding: 28px 32px; border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-lg); background: var(--aa-surface); max-width: 420px;
+  }
+  .aa-progate__feature { margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--aa-text); display: flex; align-items: center; gap: 8px; }
+  .aa-progate__lock { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: var(--aa-radius-xs); background: var(--aa-teal-soft); color: var(--aa-teal-cta); font-size: 0.8rem; font-weight: 700; transform: rotate(180deg); flex-shrink: 0; }
+  .aa-progate__reason { margin: 0; font-size: 0.92rem; color: var(--aa-text-2); }
+  .aa-progate__primary { font-size: 0.9rem; font-weight: 600; color: var(--aa-teal-cta); text-decoration: none; border-bottom: 1.5px solid transparent; }
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <button id="btn-light" class="on" onclick="setTheme('light')">Light</button>
+  <button id="btn-dark" onclick="setTheme('dark')">Dark</button>
+</div>
+
+<h1 class="proto-h1">Custom Lenses — prototype</h1>
+<p class="proto-sub">
+  Throwaway for two design calls in <code>docs/specs/custom-lenses.md</code>:
+  the adaptive switcher (segmented ≤3 vs chip+popover ≥4) and the Lenses
+  settings tab. Reads the real tokens; the 6 new lens hues are proposed
+  values — sign off or push back here, before build.
+</p>
+
+<!-- ============= SECTION 1: SWITCHER ============= -->
+<section class="proto-sec">
+  <h2 class="proto-h2">1 · Switcher — adaptive</h2>
+  <p class="lede">
+    The same component, two presentations picked off lens count. The ≤3 case
+    is today's segmented control, unchanged. The ≥4 case is one compact chip
+    that opens a keyboard-navigable popover.
+  </p>
+
+  <div class="proto-frame" style="display:grid; gap:40px;">
+
+    <!-- ≤3 → segmented -->
+    <div>
+      <div class="aa-lens" role="tablist" aria-label="Lens" id="seg-2">
+        <button class="aa-lens__btn aa-lens__btn--active" data-lens-color="indigo" onclick="pickSeg(this)">
+          <span class="aa-lens__dot"></span><span>Work</span>
+        </button>
+        <button class="aa-lens__btn" data-lens-color="emerald" onclick="pickSeg(this)">
+          <span class="aa-lens__dot"></span><span>Me</span>
+        </button>
+      </div>
+      <div class="proto-cap">≤3 lenses → segmented control (today, unchanged)</div>
+    </div>
+
+    <!-- ≤3 → segmented with Pro-lock -->
+    <div>
+      <div class="aa-lens" role="tablist" aria-label="Lens">
+        <button class="aa-lens__btn aa-lens__btn--active" data-lens-color="emerald">
+          <span class="aa-lens__dot"></span><span>Me</span>
+        </button>
+        <button class="aa-lens__btn" data-lens-color="indigo">
+          <span class="aa-lens__dot"></span><span>Work</span><span class="aa-lens__pro">Pro</span>
+        </button>
+      </div>
+      <div class="proto-cap">FREE user, ≤3 → Work shows proLocked chip (today's pattern)</div>
+    </div>
+
+    <!-- ≥4 → chip + popover -->
+    <div>
+      <div style="display:flex; gap:24px; align-items:flex-start;">
+        <!-- chip -->
+        <div style="flex:1; max-width:300px;">
+          <button class="aa-lens-chip" onclick="togglePop()" id="chip" data-lens-color="indigo" aria-haspopup="listbox" aria-expanded="false">
+            <span class="aa-lens-chip__dot"></span>
+            <span class="aa-lens-chip__name">Work</span>
+            <span class="aa-lens-chip__kbd">⌘L</span>
+            <span class="aa-lens-chip__caret">▾</span>
+          </button>
+          <div class="proto-cap">≥4 lenses → chip (collapsed state)</div>
+        </div>
+
+        <!-- popover (shown) -->
+        <div style="flex:none;">
+          <div class="aa-lens-pop" role="listbox" aria-label="Switch lens">
+            <div class="aa-lens-pop__head">
+              <span>Switch lens</span><span class="kbd">⌘L</span>
+            </div>
+            <div class="aa-lens-pop__list">
+              <button class="aa-lens-pop__opt is-active is-focused" data-lens-color="indigo" role="option" aria-selected="true">
+                <span class="aa-lens-pop__dot"></span>
+                <span class="aa-lens-pop__main">
+                  <span class="aa-lens-pop__name">Work</span>
+                  <span class="aa-lens-pop__purpose">deep client work</span>
+                </span>
+                <span class="aa-lens-pop__count">12</span>
+              </button>
+              <button class="aa-lens-pop__opt" data-lens-color="emerald" role="option">
+                <span class="aa-lens-pop__dot"></span>
+                <span class="aa-lens-pop__main">
+                  <span class="aa-lens-pop__name">Me</span>
+                </span>
+                <span class="aa-lens-pop__count">3</span>
+              </button>
+              <button class="aa-lens-pop__opt" data-lens-color="coral" role="option">
+                <span class="aa-lens-pop__dot"></span>
+                <span class="aa-lens-pop__main">
+                  <span class="aa-lens-pop__name">Studio</span>
+                  <span class="aa-lens-pop__purpose">side projects</span>
+                </span>
+                <span class="aa-lens-pop__count">0</span>
+              </button>
+              <button class="aa-lens-pop__opt" data-lens-color="slate" role="option">
+                <span class="aa-lens-pop__dot"></span>
+                <span class="aa-lens-pop__main">
+                  <span class="aa-lens-pop__name">Admin</span>
+                  <span class="aa-lens-pop__purpose">life ops &amp; errands</span>
+                </span>
+                <span class="aa-lens-pop__count">5</span>
+              </button>
+            </div>
+            <button class="aa-lens-pop__add">
+              <span class="plus">+</span><span>New lens…</span><span class="pro-tag">Pro</span>
+            </button>
+            <div class="aa-lens-pop__foot">
+              <span>↑↓ move</span><span>↵ select</span><span>/ filter</span><span>esc</span>
+            </div>
+          </div>
+          <div class="proto-cap">≥4 lenses → popover (open). ↑↓ · ↵ · / · esc</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============= SECTION 2: SETTINGS — LENSES TAB ============= -->
+<section class="proto-sec">
+  <h2 class="proto-h2">2 · Settings → Lenses tab (Pro)</h2>
+  <p class="lede">
+    New tab at the end of the settings sub-nav. Lists every lens with its
+    identity color, purpose, counts, and kind. Rename / edit-purpose /
+    recolor apply to all lenses; delete is CUSTOM only (the two seeded
+    lenses can't be deleted — they're the stable handles).
+  </p>
+
+  <div class="proto-frame">
+    <div class="aa-settings-hub">
+      <a class="aa-settings-back" href="#">← Next</a>
+      <h1 class="aa-settings-h">Settings</h1>
+      <nav class="aa-settings-tabs" aria-label="Settings">
+        <a class="aa-settings-tab" href="#">Account</a>
+        <a class="aa-settings-tab" href="#">Billing</a>
+        <a class="aa-settings-tab" href="#">Preferences</a>
+        <a class="aa-settings-tab active" href="#">Lenses</a>
+      </nav>
+
+      <div class="aa-settings-section">
+        <p class="aa-settings-note">
+          A lens is one life context — one identity and one focused surface.
+          The two defaults (Work, Me) can be renamed and recolored but not
+          deleted. Add more on Pro (soft cap 8).
+        </p>
+      </div>
+
+      <div class="aa-settings-section">
+        <h3 class="aa-settings-sh">Your lenses</h3>
+
+        <div class="aa-lenses-row" data-lens-color="indigo">
+          <span class="aa-lenses-row__dot"></span>
+          <div class="aa-lenses-row__main">
+            <div class="aa-lenses-row__name">Work <span class="aa-lenses-row__kind">Work</span></div>
+            <div class="aa-lenses-row__purpose">deep client work</div>
+            <div class="aa-lenses-row__meta"><span>2 goals</span><span>3 projects</span><span>12 tasks</span></div>
+          </div>
+          <div class="aa-lenses-row__acts">
+            <button class="aa-iconbtn">Rename</button>
+            <button class="aa-iconbtn">Color</button>
+            <button class="aa-iconbtn" disabled title="Seeded lenses can't be deleted">Delete</button>
+          </div>
+        </div>
+
+        <div class="aa-lenses-row" data-lens-color="emerald">
+          <span class="aa-lenses-row__dot"></span>
+          <div class="aa-lenses-row__main">
+            <div class="aa-lenses-row__name">Me <span class="aa-lenses-row__kind">Personal</span></div>
+            <div class="aa-lenses-row__purpose">health, reading, life</div>
+            <div class="aa-lenses-row__meta"><span>1 goal</span><span>1 project</span><span>3 tasks</span></div>
+          </div>
+          <div class="aa-lenses-row__acts">
+            <button class="aa-iconbtn">Rename</button>
+            <button class="aa-iconbtn">Color</button>
+            <button class="aa-iconbtn" disabled title="Seeded lenses can't be deleted">Delete</button>
+          </div>
+        </div>
+
+        <div class="aa-lenses-row" data-lens-color="coral">
+          <span class="aa-lenses-row__dot"></span>
+          <div class="aa-lenses-row__main">
+            <div class="aa-lenses-row__name">Studio <span class="aa-lenses-row__kind">Custom</span></div>
+            <div class="aa-lenses-row__purpose">side projects &amp; experiments</div>
+            <div class="aa-lenses-row__meta"><span>0 goals</span><span>2 projects</span><span>0 tasks</span></div>
+          </div>
+          <div class="aa-lenses-row__acts">
+            <button class="aa-iconbtn">Rename</button>
+            <button class="aa-iconbtn">Color</button>
+            <button class="aa-iconbtn aa-iconbtn--danger">Delete</button>
+          </div>
+        </div>
+
+        <div class="aa-lenses-row" data-lens-color="slate">
+          <span class="aa-lenses-row__dot"></span>
+          <div class="aa-lenses-row__main">
+            <div class="aa-lenses-row__name">Admin <span class="aa-lenses-row__kind">Custom</span></div>
+            <div class="aa-lenses-row__purpose">life ops, errands, paperwork</div>
+            <div class="aa-lenses-row__meta"><span>0 goals</span><span>0 projects</span><span>5 tasks</span></div>
+          </div>
+          <div class="aa-lenses-row__acts">
+            <button class="aa-iconbtn">Rename</button>
+            <button class="aa-iconbtn">Color</button>
+            <button class="aa-iconbtn aa-iconbtn--danger">Delete</button>
+          </div>
+        </div>
+
+        <button class="aa-lenses-add">+ New lens</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= SECTION 3: SETTINGS — FREE / PROGATE ============= -->
+<section class="proto-sec">
+  <h2 class="proto-h2">3 · Settings → Lenses tab (FREE)</h2>
+  <p class="lede">
+    A FREE user lands on the tab and sees the shared ProGate — calm copy,
+    no bright badge (PRODUCT.md). No edits, no create, no list. They keep
+    the seeded two everywhere else: Me usable, Work visible-but-locked.
+  </p>
+
+  <div class="proto-frame">
+    <div class="aa-settings-hub">
+      <a class="aa-settings-back" href="#">← Next</a>
+      <h1 class="aa-settings-h">Settings</h1>
+      <nav class="aa-settings-tabs" aria-label="Settings">
+        <a class="aa-settings-tab" href="#">Account</a>
+        <a class="aa-settings-tab" href="#">Billing</a>
+        <a class="aa-settings-tab" href="#">Preferences</a>
+        <a class="aa-settings-tab active" href="#">Lenses</a>
+      </nav>
+
+      <div class="aa-progate">
+        <p class="aa-progate__feature">
+          <span class="aa-progate__lock">⌃</span>
+          Custom lenses are a Pro feature.
+        </p>
+        <p class="aa-progate__reason">
+          Keep one context for work, one for life — or add a Studio, a side
+          project, a board role. Each lens carries its own focus.
+        </p>
+        <a class="aa-progate__primary" href="#">See Pro →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= SECTION 4: PALETTE ============= -->
+<section class="proto-sec">
+  <h2 class="proto-h2">4 · Proposed palette (sign off these values)</h2>
+  <p class="lede">
+    Each lens is a keyed ramp (base, -text, -soft, -soft-strong, -mid) — never
+    a hex value. Below: the 8 keys the build would ship, with the ramp visible.
+    Reserved hues (teal/amber/violet/rose) are NOT in the picker. Click a
+    swatch to set <code>data-lens</code> on the page and see the active state
+    in the switcher above.
+  </p>
+
+  <div class="proto-frame">
+    <div class="aa-palette" id="palette"></div>
+  </div>
+  <div class="proto-cap" style="margin-top:14px;">
+    Reserved (NOT in picker): teal (system) · amber (Important) · violet (projects/goals) · rose (errors)
+  </div>
+</section>
+
+<script>
+  const PALETTE = [
+    { key: "indigo",  label: "Indigo",  note: "Work · seeded",    seeded: true },
+    { key: "emerald", label: "Emerald", note: "Me · seeded",      seeded: true },
+    { key: "slate",   label: "Slate",   note: "neutral / admin" },
+    { key: "cyan",    label: "Cyan",    note: "creative" },
+    { key: "coral",   label: "Coral",   note: "warm, not-rose" },
+    { key: "honey",   label: "Honey",   note: "warm, not-amber" },
+    { key: "lime",    label: "Lime",    note: "growth / skill" },
+    { key: "magenta", label: "Magenta", note: "brand / stage" },
+  ];
+  const ramp = (k) => ([
+    ["var(--aa-lens-" + k + "-soft)", "soft"],
+    ["var(--aa-lens-" + k + "-soft-strong)", "soft-strong"],
+    ["var(--aa-lens-" + k + "-mid)", "mid"],
+    ["var(--aa-lens-" + k + ")", "base"],
+    ["var(--aa-lens-" + k + "-text)", "text"],
+  ]);
+  const pal = document.getElementById("palette");
+  PALETTE.forEach((p, i) => {
+    const el = document.createElement("div");
+    el.className = "aa-swatch" + (i === 0 ? " selected" : "");
+    el.dataset.key = p.key;
+    el.tabIndex = 0;
+    el.innerHTML =
+      '<div class="aa-swatch__base" style="background:var(--aa-lens-' + p.key + ')"></div>' +
+      '<div class="aa-swatch__ramp">' +
+        ramp(p.key).map(([bg]) => '<div style="background:' + bg + '"></div>').join("") +
+      '</div>' +
+      '<div class="aa-swatch__label">' + p.label + '<small>' + p.note + '</small></div>';
+    el.onclick = () => {
+      document.querySelectorAll(".aa-swatch").forEach(s => s.classList.remove("selected"));
+      el.classList.add("selected");
+      document.documentElement.setAttribute("data-lens", p.key);
+    };
+    pal.appendChild(el);
+  });
+
+  // Segmented pick (sec 1, row 1) — flips active + page data-lens
+  function pickSeg(btn) {
+    btn.parentElement.querySelectorAll(".aa-lens__btn").forEach(b => b.classList.remove("aa-lens__btn--active"));
+    btn.classList.add("aa-lens__btn--active");
+    const k = btn.dataset.lensColor;
+    document.documentElement.setAttribute("data-lens", k);
+    const chip = document.getElementById("chip");
+    chip.setAttribute("data-lens-color", k);
+    chip.querySelector(".aa-lens-chip__name").textContent = btn.querySelector("span:not(.aa-lens__dot)").textContent;
+  }
+
+  // Theme toggle
+  function setTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    document.getElementById("btn-light").classList.toggle("on", t === "light");
+    document.getElementById("btn-dark").classList.toggle("on", t === "dark");
+  }
+
+  // Popover (visual only — the build wires real keyboard nav)
+  let popOpen = true;
+  function togglePop() {
+    popOpen = !popOpen;
+    alert("(prototype) popover toggle + ⌘L are wired in the build. " +
+          "Real ↑↓/↵// filter/esc per INTERACTION.md.");
+  }
+
+  // ⌘L / ctrl+L opens the popover
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "l") {
+      e.preventDefault();
+      togglePop();
+    }
+  });
+</script>
+
+</body>
+</html>
