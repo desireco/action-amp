@@ -57,7 +57,7 @@ serves.
    Goal), not a sidebar of nouns. (This is in the app; the landing page
    gestures at it but doesn't have to teach it.)
 
-## Visual Identity (see DESIGN.md / docs/design.md for full tokens)
+## Visual Identity (see `docs/DESIGN-SYSTEM.md` for ActionAmp's tokens; `DESIGN.md` for Things DNA)
 - **Things DNA**: cool-tinted neutrals (never pure gray), soft blue-tinted
   layered shadows, 4–8px radii, generous whitespace, system font.
 - **Two-accent system**: Teal (#0EA5E9) = system/state (completion,
