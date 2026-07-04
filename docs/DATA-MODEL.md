@@ -21,17 +21,26 @@
 >
 > v3: **Goals replace PARA's Areas** as the organizing layer (Goals are active /
 > outcome-oriented; Areas are passive buckets — this app is about action).
-> **Lens** (Work / Me by default) is the top-level scoping switch. See
-> `METHODOLOGY.md` for the full GTD/PARA mapping.
+> **Lens** (Work / Me by default, plus user-defined on Pro) is the top-level
+> scoping switch. See `METHODOLOGY.md` for the full GTD/PARA mapping.
 > Naming: the Work/Me switch is called **Lens** (not "Context") to avoid
 > colliding with GTD's "@context" (errands/phone — which we use Tags for).
+>
+> v4 (2026-07-03): **Lenses are user-defined on Pro.** A `LensKind` enum tags
+> each lens — `PERSONAL`/`WORK` for the seeded two, `CUSTOM` for user-defined.
+> The kind (not the name) is the stable handle the entitlement guard branches
+> on, so renaming a seeded lens can't escape FREE gating. `Lens.purpose` adds
+> one short line ("what this lens is for"). Lens configuration (create/rename/
+> recolor/edit-purpose/delete) is Pro-only; FREE gets the seeded two (Me usable,
+> Work visible-but-locked). See `docs/specs/custom-lenses.md`.
 
 ---
 
 ## 1. The entity hierarchy
 
 ```
-  Lens            ← the scoping switch: Work / Me (defaults)  [ActionAmp addition]
+  Lens            ← the scoping switch: Work/Me (defaults) + user-defined on Pro
+                   carries a stable kind (PERSONAL/WORK/CUSTOM) + identity color + purpose
    └─ Goal        ← the organizing layer — replaces PARA's Areas
         └─ Project ← an outcome that needs >1 step  [PARA Project / GTD outcome]
              ├─ Task        ← an atomic action (THE focus candidate)
