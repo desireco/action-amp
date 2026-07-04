@@ -1,23 +1,22 @@
 ---
 feature: focus-engine-v2
-status: ready
+status: draft                  # was ready; flipped 2026-07-03 (review found 3 definition gaps)
 gated_by: matcher-validation.md        # must reach a BUILD verdict first
+depends_on: tag-management.md          # the moment tags need a UI that doesn't exist
 spec_owner: discover
 build_owner: build
 ---
 
 # Feature: Focus engine v2 — moment-aware matcher
 
-> **Status: `ready`, but GATED.** Do not pull until `docs/specs/matcher-validation.md`
-> reaches a **BUILD** verdict. The gate is the zero-cost manual-matcher test
-> (`docs/research/matcher-test-runbook.md`) — promoted to a tracked spec so the
-> queue reflects that it is real work. The wedge-defensibility roast
-> (`docs/research/wedge-defensibility-roast-2026-06-27.md`, 4.6/10, RESHAPE)
-> found the matcher is the only real moat and currently the weakest shipped
-> part. **Run the test before building this:** if the algorithm's pick doesn't
-> *surprise* real overwhelmed people, the spec's logic needs reshaping (or the
-> matcher isn't the wedge). The decision rule in the runbook tells Build/Discover
-> whether to build as-spec'd, reshape, or icebox.
+> **Status: `draft`** (flipped from `ready` 2026-07-03). Two things keep it out
+> of `ready`: (1) the **matcher-validation gate** — run
+> `docs/specs/matcher-validation.md` (the zero-cost manual test) and reach a
+> **BUILD** verdict before pulling; (2) **three definition gaps** the review
+> found, documented below. The wedge-defensibility roast (4.6/10, RESHAPE) says
+> the matcher is the only real moat and currently the weakest shipped part —
+> which is exactly why this spec can't be `ready` with the surface composition
+> and a core prerequisite undefined.
 
 ## Summary
 
@@ -129,8 +128,55 @@ differentiation. It's built on the product's own terms below, not on theirs.
   affordance), never required at capture. Inference from size is a later
   refinement if tagging proves too much friction — not in this spec.
 
-## Prototypes
+## Definition gaps (2026-07-03 review — why this is `draft`, not `ready`)
 
-_(none yet, but the moment bar should be eyeballed against the existing What
-Now card before locking the placement. See `docs/mockups/` for the current
-card visual; the bar is a new row, not a redesign.)_
+The rest of the spec is sound, but three things would cause Build to guess or
+build the wrong thing. None is resolved; all must be before flipping back to
+`ready`.
+
+### Gap A — depends on a tag-management UI that does not exist
+
+The spec leans on reserved tag names (`~15m`, `~30m`, `~1h`, `~2h+`,
+`low-energy`, `med-energy`, `high-energy`) on the existing `Tag` model. **But
+there is no tag UI anywhere in the app today.** Verified 2026-07-03: tags are
+only created at triage via `@`-parsing (`inbox/operations.ts:155`), never
+edited, never listed on Task detail, and there are no reserved tag names. The
+moment matcher is inert if users cannot tag tasks with energy/time.
+
+This is a **missing prerequisite, not an open question.** The "tags are
+optional and set later (on the task detail / via the moment bar's 'this task
+is...' affordance)" line in Open Questions hand-waves a UI that does not exist.
+
+**Resolution path:** `tag-management` becomes its own spec (UI to view/add/
+remove tags on a Task, plus seeding the reserved names). `focus-engine-v2`
+hard-depends on it (`depends_on` above). Until that spec exists and is `ready`,
+this spec cannot be `ready`.
+
+### Gap B — the moment bar is under-designed for the wedge surface
+
+The home screen is the product's most load-bearing surface — the roast's whole
+point is that it has to *surprise*. This spec leans hard on "calm, not crowded"
+and then leaves the actual composition to Build or "a finding in review":
+placement (above-card vs inline), format (segmented controls vs chips), the
+collapse behavior, the time-of-day default-inference logic. For the home
+screen, that is too much undefined.
+
+**Resolution path:** a mockup at `docs/mockups/moment-bar.html` (or equivalent)
+locked before `ready`. The composition decision is Discover's job, not Build's
+guess. The spec even admits "no prototypes yet" — for the wedge surface, that
+is the gap, not a nice-to-have.
+
+### Gap C — the fallback-invariant test claim is incorrect
+
+The spec asserts: "if time/energy are unset, behavior is identical to today,
+verified by the existing `getTopTask` tests passing unchanged." But adding a
+within-tier re-rank changes the comparator structure of `getTopTask`; the
+existing tests will need **rewriting** to assert the new within-tier ordering
+(they currently assert a strict priority → size → age order). The invariant
+*behavior* (no moment set → same ranking as today) is the right thing to
+verify; the claim that the *existing tests* verify it unchanged is wrong.
+
+**Resolution path:** rewrite the done-condition to "the existing `getTopTask`
+tests are updated to assert both: (a) moment-unset → identical ranking to
+today; (b) moment-set → within-tier re-rank, priority never crossed. The tests
+as written today will change; that's expected, not a regression."

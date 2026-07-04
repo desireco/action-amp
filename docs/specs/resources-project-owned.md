@@ -1,11 +1,16 @@
 ---
 feature: resources-project-owned
-status: ready
+status: ready                # confirmed ready 2026-07-03 after resolving Gap A + B
+reconciles_with: cli-comments-resources.md   # the CLI spec deferred until this lands
 spec_owner: discover
 build_owner: build
 ---
 
 # Feature: Project-owned Resources with Task references
+
+> **Resolved 2026-07-03 (review).** Two structural questions were open in the
+> prior version; both are now decided (see "Structural decisions resolved"
+> below). Status confirmed `ready`.
 
 ## Summary
 
@@ -60,10 +65,28 @@ reference it, and deleting it shows you the dependent tasks first.
 - [ ] **`Resource` is project-owned.** `projectId` becomes required
       (`String`, `NOT NULL`); the `goalId` field and its `Goal` relation are
       **removed**. The `project` relation stays `onDelete: Cascade`.
-- [ ] **`Resource.tasks` and `Task.resources` form an implicit many-to-many.**
-      Prisma auto-generates the join table. Verify the cascade semantics:
-      deleting a Resource severs its task references (tasks survive); deleting a
-      Task severs its resource references (resources survive).
+- [ ] **An explicit `TaskResource` join model** (resolved 2026-07-03 — was
+      "implicit M:N") carries the Task↔Resource link:
+      ```prisma
+      model TaskResource {
+        id          String   @id @default(uuid())
+        createdAt   DateTime @default(now())
+        task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+        taskId      String
+        resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+        resourceId  String
+        // same-project invariant, DB-enforced (see Structural decisions resolved §A):
+        project     Project  @relation(fields: [projectId], references: [id])
+        projectId   String
+
+        @@unique([taskId, resourceId])           // a task references a resource at most once
+        @@index([projectId])
+      }
+      ```
+      The `projectId` on the join row **DB-enforces the same-project
+      invariant** (see Structural decisions resolved §A). Cascade on both
+      sides: deleting a Resource severs its task links (tasks survive);
+      deleting a Task severs its resource links (resources survive).
 - [ ] **Remove the now-stale `resources Resource[]` back-relation on `Goal`**
       (it referenced the removed `goalId`).
 - [ ] **Update the schema header comment** (lines 14–22): "Every Resource is
@@ -88,10 +111,13 @@ the correct `entities` array.
 - [ ] **`updateResource({ id, title?, url?, notes? })`** — edit; tenancy-safe.
 - [ ] **`deleteResource({ id })`** — delete (join rows cascade away). Tenancy-
       safe via `userId` check before delete.
-- [ ] **`linkTaskResource({ taskId, resourceId })`** — add a reference.
-      **App-layer guard: `task.projectId === resource.projectId`** — a task may
-      only reference resources in its own project. Reject (throw) otherwise.
-      Idempotent (linking an already-linked pair is a no-op, not an error).
+- [ ] **`linkTaskResource({ taskId, resourceId })`** — add a reference. The
+      same-project invariant is **DB-enforced** by `TaskResource.projectId`
+      (the row can't exist otherwise — the op writes `projectId` from the
+      task's project and the DB rejects if the resource belongs to a different
+      one). The op still throws a clear, calm error if the inputs mismatch
+      (better message than a Prisma FK error). Idempotent (linking an
+      already-linked pair is a no-op via the `@@unique`, not an error).
 - [ ] **`unlinkTaskResource({ taskId, resourceId })`** — remove a reference.
       The resource stays on the project; only the link is removed.
 
@@ -220,27 +246,33 @@ Update the canonical doc first, then cascade to the docs it governs.
 ## Open questions
 
 - **`getProject` widening vs. a separate `getProjectResources` call.** Build
-  chooses: either include resources in `getProject`'s return, or have the page
-  call `getProjectResources` separately. The latter keeps `getProject` lean and
-  avoids over-fetching when only tasks are needed. Lean: separate call.
+      chooses: either include resources in `getProject`'s return, or have the page
+      call `getProjectResources` separately. The latter keeps `getProject` lean and
+      avoids over-fetching when only tasks are needed. Lean: separate call.
 - **"Use existing" picker empty state on the Task detail sheet.** If a project
-  has no unlinked resources, the "Use existing" path is empty — show calm copy
-  ("No other resources on this project yet.") rather than hiding the path.
+      has no unlinked resources, the "Use existing" path is empty — show calm copy
+      ("No other resources on this project yet.") rather than hiding the path.
 - **External-link safety.** When a resource `url` is set, open in a new tab with
-  `rel="noopener noreferrer"`. Confirm the design-system `Link`/anchor pattern;
-  this is the one place user-controlled URLs are rendered as hrefs.
+      `rel="noopener noreferrer"`. Confirm the design-system `Link`/anchor pattern;
+      this is the one place user-controlled URLs are rendered as hrefs.
+
+_(The "implicit M:N vs explicit join" question that was here is now resolved —
+see Structural decisions resolved §A. Explicit `TaskResource`.)_
 
 ## Implementation notes (for Build)
 
-- **Implicit M:N is the right call here** over a hand-written `TaskResource`
-  join model: no extra fields on the link are needed, Prisma manages the join
-  table, and the cascade semantics are exactly what we want (sever on either
-  side's deletion). If a future spec wants per-link metadata (e.g. "why this
-  resource matters for this task"), promote to an explicit join model then.
-- **The same-project guard is app-layer, not DB-layer.** A DB-level check would
-  need a composite constraint that Prisma's implicit M:N can't express cleanly.
-  The `linkTaskResource` operation enforces it; keep the guard co-located with
-  the link mutation so there's one chokepoint.
+- **Explicit `TaskResource` join model is the call** (resolved 2026-07-03; the
+  prior version leaned implicit M:N). The explicit join is right *because* it
+  lets the same-project invariant be DB-enforced via `projectId` on the link
+  row — implicit M:N could not express it, leaving the invariant to live in one
+  TS function. The cost (one extra model) is small; the integrity gain is the
+  point. If a future spec wants per-link metadata (e.g. "why this resource
+  matters for this task"), add fields to `TaskResource` then.
+- **The same-project guard is now DB-layer, with a calm app-layer pre-check.**
+  The DB rejects a mismatched row; the op still validates inputs first and
+  throws a friendlier message ("This task and resource are in different
+  projects") so the user doesn't see a raw Prisma error. Two layers, friendly
+  on top, integrity at the bottom.
 - **Reuse, don't rebuild.** `BottomSheet` + `Overlays.css` (`aa-picker__*`,
   `aa-snooze__*`) already cover the sheet/form styling. `GoalDetailPage`'s
   secondary-section markup (`aa-goal__projects`) is the structural template for
@@ -251,6 +283,37 @@ Update the canonical doc first, then cascade to the docs it governs.
   violet used for Project/Goal (`--aa-violet`). Status chips on the
   delete-impact sheet reuse the existing `Chip` variants (`teal` for Today,
   `muted` for Someday/done) — no new color.
+
+## Structural decisions resolved (2026-07-03 review)
+
+Two questions were open in the prior version, deferring structural calls to
+Build. Both are now decided — which is why the spec is `ready`.
+
+### A. Join model: explicit `TaskResource` (was: implicit M:N deferred)
+
+The prior version chose Prisma's implicit M:N *and* a same-project app-layer
+guard, then admitted (in its own Implementation Notes) "a DB-level check would
+need a composite constraint that Prisma's implicit M:N can't express." That
+left the load-bearing "a task only references its own project's resources"
+invariant to one TS function — the first op that forgot it, or a future bulk
+link, would silently corrupt it.
+
+**Decision:** explicit `TaskResource` join model with `projectId` on the row
+(enforced via the relation to `Project`). The invariant is DB-level. See the
+data-model done-condition above for the schema.
+
+### B. Reconciles with `cli-comments-resources` (deferred)
+
+The deferred `cli-comments-resources.md` promises "full Resource CRUD" on the
+CLI. This spec narrows Resource from "Project or Goal" to **project-owned** and
+adds the `TaskResource` link. If both ship without reconciliation, the CLI spec
+builds against a model this spec changed.
+
+**Decision:** `resources-project-owned` is the **source of truth** for the
+Resource model's shape (project-owned, explicit `TaskResource` join).
+`cli-comments-resources.md` inherits this and must be updated to match before
+it leaves `deferred`. The `reconciles_with` frontmatter above makes the
+dependency explicit.
 
 ## Prototypes
 

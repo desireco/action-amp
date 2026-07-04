@@ -98,19 +98,28 @@ items they imply — not built yet, listed here so they're not lost:
   REQUIREMENT below, crumbs should re-anchor the view at the clicked scope.
   Spun out of `friction-cleanup` at sign-off (2026-07-02) — wiring it is an
   interaction-design decision (WORKFLOW.md zoom/anchor model vs the route
-  model the app uses). Tracked as `breadcrumb-nav` in ROADMAP.md.
+  model the app uses). **Spec written 2026-07-03** at
+  `docs/specs/breadcrumb-nav.md` (`draft`); Discover leans **route model**
+  (uniform with the rest of the app). Decision must be locked before `ready`.
+  Tracked as `breadcrumb-nav` in ROADMAP.md.
 - [ ] **Logbook / Review mode screen.** Logbook list shipped (`/app/logbook`,
   incl. the Archived section for lossless triage Archive); **Review/debrief
   screen unbuilt** — the least-built area (WORKFLOW §2.5). Tracked as
-  `weekly-monthly-review` in ROADMAP.md §Then (`draft` — needs spec): weekly +
-  monthly review surfaces that collect/organize the period's work (actions
-  done grouped by Goal/Project, progress made, stuck + deferred-again items).
-  Pairs with `work-area-merged`'s `kind` enum on `TaskUpdate`, which is the
-  missing "progress" signal beyond bare completions.
+  `weekly-monthly-review` in ROADMAP.md §Then; spec at
+  `docs/specs/weekly-monthly-review.md` (`draft`). v1 (range review:
+  completions grouped by Goal/Project, prior-period delta, stuck/aging) builds
+  on the current schema; v2 (activity timeline) is gated on `work-area-merged`'s
+  `kind` enum on `TaskUpdate`. Entitlement lean: Pro-only.
 - [x] **Capture palette (`⌘K`)** — DONE. Floating input, NL parsing, inline
   chips, rapid-fire. `components/ui/CapturePopover.tsx`.
 - [ ] **Command palette (`⌘\`)** — fuzzy jump/run. **Unbuilt.** Spec'd at
   `docs/specs/command-palette-search.md`.
+- [ ] **Tag management UI + reserved-tag seeding.** **Unbuilt.** Surfaced
+  2026-07-03 as a *missing prerequisite* during the focus-engine-v2 review:
+  the moment matcher reads energy/time tags users have no way to set (tags are
+  only created via `@`-parsing at triage; never listed on Task detail; no
+  reserved names). No spec written yet; catalog entry at
+  `docs/features/tag-management.md`. **Gates `focus-engine-v2`.**
 - [x] **Marketing site home** — DONE. Landing page at `/` ("Easiest way to get
   into action"), full pitch, footer. `src/landing/LandingPage.tsx`. *(No
   waitlist/email capture by design — see PRODUCT.md "pure signpost"; the
@@ -163,18 +172,27 @@ items they imply — not built yet, listed here so they're not lost:
 > out to `actionamp <cmd> --json`. This is a power-user / developer surface —
 > **not** part of the validation gauntlet; `ready` for Build to pull
 > opportunistically. Tracked as roadmap item 15 in `docs/ROADMAP.md`.
+> **Effort split into 3 specs 2026-07-03** (the original single spec was too
+> large for one `ready` unit):
 
-- [ ] **`cli`** (`ready`, spec: `docs/specs/cli.md`) — PAT plumbing on the
-      backend (`ApiKey` model + `/api/cli/*` transport), the `cli/` package
-      (`now`, `task`, `today`, `inbox`, `project`, `goal`, `logbook`), and
-      three unblocked skills (inbox-triage, goal-breakdown, today-balancer) +
-      one scaffolded-blocked (task-research).
+- [ ] **`cli-pat-plumbing`** (`ready`, spec: `docs/specs/cli-pat-plumbing.md`)
+      — `ApiKey` model + 3 PAT routes + Bearer middleware + Settings UI.
+      Self-contained backend slice; the natural first pull.
+- [ ] **`cli-package`** (`draft`, spec: `docs/specs/cli-package.md`) — the
+      `cli/` package (~14 commands + `--json`). Draft because the op-refactor
+      scope is unscoped (its Open Question 1).
+- [ ] **`cli-skills`** (`draft`, spec: `docs/specs/cli-skills.md`) — four
+      orchestration skills. Depends on `cli-package`; one skill blocked on
+      `cli-comments-resources`.
+- [ ] Umbrella + cross-cutting decisions: `docs/specs/cli.md`.
 - [ ] **`cli-write-ops`** (`deferred`, spec: `docs/specs/cli-write-ops.md`) —
       the missing writes: edit task description/priority/size, edit/delete
       project + goal. Unblocks refinement flows.
 - [ ] **`cli-comments-resources`** (`deferred`, spec:
       `docs/specs/cli-comments-resources.md`) — a Comment model + full Resource
-      CRUD. Unblocks the `task-research` skill. Reconciles with
+      CRUD. Unblocks the `task-research` skill. **Inherits the
+      `resources-project-owned` model** (project-owned, explicit `TaskResource`
+      join) — must be updated to match before it leaves `deferred`. Reconciles with
       `resources-project-owned`.
 
 ---

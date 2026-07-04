@@ -49,14 +49,20 @@
 
 ### Planned (not in code)
 - [command-palette](./command-palette.md) (`missing`, spec `ready`) — `⌘\` fuzzy search.
-- [resources-project-owned](./resources-project-owned.md) (`missing`, spec `ready`) — project-owned links/notes.
-- [breadcrumb-nav](./breadcrumb-nav.md) (`missing`, spec `ready`) — crumbs navigate, not just zoom.
-- [focus-engine-v2](./focus-engine-v2.md) (`missing`, spec `ready` gated) — moment-aware matcher.
-- [observability-minimal](./observability-minimal.md) (`missing`, spec `ready`) — analytics + funnel.
-- [retention-criticalpath](./retention-criticalpath.md) (`missing`, spec `ready`) — first-7-days instrumentation.
+- [resources-project-owned](./resources-project-owned.md) (`missing`, spec `ready`) — project-owned links/notes + task refs; explicit `TaskResource` join (resolved 2026-07-03).
+- [breadcrumb-nav](./breadcrumb-nav.md) (`missing`, spec `draft`) — crumbs navigate; blocking model decision captured but unresolved.
+- [focus-engine-v2](./focus-engine-v2.md) (`missing`, spec `draft`) — moment-aware matcher; needs tag-management UI + a mockup + matcher-test gate.
+- [observability-minimal](./observability-minimal.md) (`missing`, spec `ready`, gated by `gtm-analytics-account`) — analytics + funnel.
+- [retention-criticalpath](./retention-criticalpath.md) (`missing`, spec `ready`, depends on observability) — first-7-days instrumentation.
 - [work-area-merged](./work-area-merged.md) (`missing`, spec `draft`) — merged Work area + activity log.
 - [custom-lenses](./custom-lenses.md) (`missing`, spec `draft`) — user-defined lenses.
+- [weekly-monthly-review](./weekly-monthly-review.md) (`missing`, spec `draft`) — period debriefs; v2 gated on `work-area-merged`.
 - [newsletter](./newsletter.md) (`missing`, spec `draft`) — landing-page email capture (footer + quiet hero).
+- [cli](./cli.md) (`missing`, **effort split into 3 specs 2026-07-03**) — power-user terminal surface:
+  - `cli-pat-plumbing` (`ready`, P3 opportunistic) — `ApiKey` + PAT routes + middleware + Settings UI.
+  - `cli-package` (`draft`) — the `cli/` package; draft because the op-refactor is unscoped.
+  - `cli-skills` (`draft`) — four orchestration skills; depends on `cli-package`.
+- [tag-management](./tag-management.md) (`missing`, spec `not yet written`) — tag view/add/remove UI + reserved tag seeding; **prerequisite for `focus-engine-v2`**.
 
 ### Deliberately not built (Phase 2 / Icebox)
 - Subtasks, Pomodoro timer, email-in capture, AI-tuned suggestions, native mobile,

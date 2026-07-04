@@ -3,7 +3,7 @@ slug: breadcrumb-nav
 title: "Breadcrumb navigation (crumbs navigate)"
 feature_area: cross-cutting
 status: missing
-spec: —                  # no spec file; spun out of friction-cleanup
+spec: breadcrumb-nav.md            # draft — written 2026-07-03
 verified: 2026-07-03
 ---
 
@@ -19,9 +19,14 @@ hover-implies-clickable nit.
 sign-off (2026-07-02) because wiring it is an interaction-design decision, not
 a cleanup finish.
 
-**Spec.** **None yet.** The blocking decision: WORKFLOW.md "zoom/anchor" model
-vs the route-based model the rest of the app uses. A spec cannot be `ready`
-until that is called.
+**Spec.** `docs/specs/breadcrumb-nav.md` — **`draft`** (written 2026-07-03; was
+ad-hoc "ready" with no spec). The blocking decision is captured but unresolved:
+WORKFLOW.md "zoom/anchor" model vs the route-based model the rest of the app
+uses. **Discover's lean: route model** (uniform with the rest of the app; the
+zoom/anchor layer is over-engineering for breadcrumbs alone — it belongs with
+hard-focus mode, if that ever ships). The decision must be locked before
+`ready`.
 
 **Why it matters.** Small, but the "list ↔ detail" affordance question recurs
 across surfaces; resolving it here sets the pattern.
+
