@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-03 (Discover — feature catalog stood up at docs/features/; SUCCESS.md (the bets) added; GTM prep B promoted to tracked backlog units; matcher-validation spec drafted, gates focus-engine-v2; weekly-monthly-review added to Then tier) -->
+<!-- Last reviewed: 2026-07-04 (roadmap cleanup — capture-grammar moved to shipped; newsletter corrected to missing/intended; free-tier audit marked historical after entitlement/onboarding fixes; validation queue clarified around observability → newsletter → retention → distribution) -->
 
 ---
 
@@ -10,7 +10,7 @@
 This is not a pre-launch product. It is a **soft-launched product with no
 audience yet**. That distinction changes the whole roadmap.
 
-**What's actually shipped and verified (2026-06-27):**
+**What's actually shipped and verified (updated 2026-07-04):**
 
 - **Deployed to Railway**, live at `actionamp.com` + `api.actionamp.com` (both
   return HTTP 200). Postgres on Railway, Resend SMTP for auth email.
@@ -24,28 +24,26 @@ audience yet**. That distinction changes the whole roadmap.
 - **The wedge is built**: `getTopTask` priority-first matcher, Now/Next state
   machine (`startedAt` persists across navigation), the Next single-task
   home screen, focus-mode overlay.
-- **Test suite green**: 183 unit/component tests (13 files), 8 Playwright e2e
-  specs (capture, login, inbox, triage, projects, today, next).
+- **Test suite green in the latest cleanup pass**: 366 Vitest tests pass and
+  `wasp compile` is clean. E2E coverage exists for capture, login, inbox,
+  triage, projects, today, and next; run it before public-launch changes.
 - **Polished landing page**, design-system page, onboarding, dark mode,
   keyboard-shortcut system, focus-switch nav (Work/Plan/Review expanding
   sections).
 
-**The docs are stale relative to the code.** `BACKLOG.md` (dated 2026-06-23)
-still lists as "not built" items that are demonstrably shipped (deploy,
-triage, focus engine, lists, billing). The duet `specs/` and `reviews/`
-folders are empty (templates only). The first piece of real work this roadmap
-implies is **reconciling the docs with reality** so Build doesn't work off a
-lie.
+**The docs are better, but this roadmap still needs active grooming.**
+`docs/features/` is the code-verified source of truth for what exists. This
+file is the strategy queue; when it conflicts with the feature catalog, fix
+this file rather than treating stale roadmap prose as implementation truth.
 
 ### The single most important fact
 
 **ActionAmp is live, and almost nobody is using it.** The landing page carries
-a newsletter capture (footer + hero) and the Founding 100 checkout, both live —
-but there is **no distribution, no analytics, and no evidence of a single
-external user yet**. (There is also no waitlist, by deliberate choice — see
-PRODUCT.md §"Fair to users.") So the binding constraint on the business is
-**not engineering**. It is **attention**. A roadmap that adds more features
-before proving anyone wants the existing ones is malpractice.
+signup and Founding 100 CTAs; newsletter capture is intended but not built.
+There is **no distribution, no analytics, and no evidence of a single external
+user yet**. So the binding constraint on the business is **not engineering**.
+It is **attention + measurement**. A roadmap that adds more features before
+proving anyone wants the existing ones is malpractice.
 
 ---
 
@@ -72,8 +70,8 @@ item; Build pulls `ready`.**
 ### Now (the validation gauntlet — do these before anything new)
 
 > Specs live at `docs/specs/<slug>.md`. `ready` = Build may pull; `draft` =
-> Discover still owes product decisions. Statuses reflect branch state as of
-> 2026-06-27 — see §Branch state below for what's in flight.
+> Discover still owes product decisions. Statuses reflect roadmap state as of
+> 2026-07-04 — see §Queue notes below for known stale/historical sections.
 
 1. **doc-reconciliation** (`done` 2026-06-27) — canonical docs reconciled with
    shipped reality: Trash→Archive leftovers fixed in WORKFLOW/TRIAGE/DATA-MODEL;
@@ -89,17 +87,20 @@ item; Build pulls `ready`.**
    OAuth-incomplete and stale. Fixed: third-party disclosure (Google/Stripe/
    Resend), "Plans and billing," consent links at signup. **Open item:** confirm
    contact addresses are real before launch (§GTM prep B). → §Shipped.
-4. **observability-minimal** (`ready`) — ship one privacy-respecting tracker +
+4. **observability-minimal** (`ready`, gated by user-owned analytics account) — ship one privacy-respecting tracker +
    the 4 funnel events (land → signup → app-open → checkout). The one number
    that matters: visitor → checkout %.
-5. **social-auth-google** (`done` 2026-06-27, code-side) — Google OAuth added
+5. **newsletter** (`draft`) — add the quiet hero/footer email capture the GTM
+   prose already assumes, or remove the newsletter promise everywhere. Owned
+   audience capture matters before community distribution.
+6. **social-auth-google** (`done` 2026-06-27, code-side) — Google OAuth added
    alongside email; config verified, never-throws name resolution. **Non-code
    gate outstanding (your side):** create the Google Cloud OAuth client +
    register redirect URIs + add a test user — see §GTM prep B. The callback
    verifies once the client exists. → §Shipped.
-6. **distribution-quietlaunch** — (no spec; it's a campaign, not a build item)
+7. **distribution-quietlaunch** — (no spec; it's a campaign, not a build item)
    get the existing product in front of ~500 of the right people in 4 weeks.
-7. **in-app-feedback** (`done` 2026-06-30) — shell loudspeaker opens a simple
+8. **in-app-feedback** (`done` 2026-06-30) — shell loudspeaker opens a simple
    feedback modal. Feedback is stored with user, route, Work/Plan/Review
    section, lens context, and user agent; production sends an admin email to
    `ACTIONAMP_ADMIN_EMAIL` (default `zeljko@dakic.com`) after the DB write. Dev
@@ -220,54 +221,21 @@ item; Build pulls `ready`.**
     streaks/guilt-trip red dots never (PRODUCT.md bans them). Spec at
     `docs/specs/weekly-monthly-review.md` — `ready` needs the entitlement call
     confirmed + a `docs/mockups/review-week.html` throwaway.
-7. **capture-grammar** (`draft`, new 2026-07-04) — grammar v2 for the shipped
-   `⌘K` capture path: `#` tags (was: project + tags), `@` time only (was: tags
-   + time), `!`/`~` unchanged, `[[lens]]` new explicit cross-lens override,
-   projects resolver-driven from free text (no sigil). The resolver fixes a
-   real gap — `parsedProject` is stored on `InboxItem` today but never
-   resolved server-side (`inbox/operations.ts:124-131` drops to "General"
-   regardless of the hint). `[[ ]]` resolves on `kind` for seeded lenses
-   (rename-safe) and name for custom; unknown tokens stay literal. Pre-fills
-   the triage Context step visibly; never silently files (§5.5 preserved).
-   Unblocks the broader "smart triage as copy editor" thesis — resolver is the
-   foundation; opinionated task-shaping (vagueness detection, split hints) is a
-   later phase on top. Spec at `docs/specs/capture-grammar.md`. Gated on the
-   `### Then` tier's "≥1 paying non-founder user" rule like the rest.
 
-## Branch state (2026-06-27)
+## Queue notes
 
-**Working directly on `main` — no feature branches.** The three in-flight
-branches were rebased onto main and deleted; their work is in main's history.
-Verified after consolidation + signoff: `wasp compile` clean, **195 unit
-tests and 37 e2e tests pass**, migrations applied.
+**Open actions on main:**
 
-What landed and was signed off:
-
-- **`first-run-experience` → `done`** (signed off 2026-06-27). Onboarding
-  routing + `hasSeenOnboarding` migration + magic-moment seed task. e2e suite
-  (the one open caveat in Build's review) run and green.
-- **`legal-pages-oauth` → `done`** (signed off 2026-06-27). Privacy/terms
-  rewrite + consent links. Data-retention overclaim caught + fixed during
-  review. Contact-address confirmation carried to §GTM prep B.
-- **`fix/what-now-surfaces-triaged-tasks` → merged (no spec).** Added: Project
-  detail page + `/app/projects/:id` route (satisfies part of `friction-cleanup`),
-  triage co-author wizard with lossless Archive (`archive_inbox_items`
-  migration + `ARCHIVED` status), Next surfacing triaged tasks. It also
-  edited `WORKFLOW.md` / `TRIAGE.md` / `DATA-MODEL.md` — `doc-reconciliation`
-  should review those edits against the canonical docs.
-
-**Open Discover actions on main:**
-
-1. `doc-reconciliation` is now the priority — the merged fix branch edited
-   canonical docs; reconcile them so planning isn't split-brain.
-2. The `ready` specs are the queue (2026-07-03 review): **observability-
-   minimal** (gated by `gtm-analytics-account`), **retention-criticalpath**
-   (depends on observability), **command-palette-search**,
-   **resources-project-owned**, **breadcrumb-nav** (route model locked),
-   **tag-management** (unblocks focus-engine-v2), **cli-pat-plumbing**
-   (opportunistic). Flipped to `draft` after review: **focus-engine-v2** (needs
-   tag-management + a mockup + matcher-test gate), **cli-package** +
-   **cli-skills**.
+1. The validation queue is **observability-minimal → newsletter →
+   retention-criticalpath → distribution-quietlaunch**. Observability is gated
+   by the user-owned analytics-provider setup.
+2. The product-depth queue after validation signal is **command-palette-search
+   → tag-management → matcher-validation → focus-engine-v2**. Focus-engine-v2
+   stays draft until the tag UI, matcher test, and moment-bar design are closed.
+3. Opportunistic small ready work: **breadcrumb-nav**. Useful depth work once
+   there is signal: **goal-planning**, then **resources-project-owned**.
+4. Developer-surface work (**cli-pat-plumbing**, then `cli-package` /
+   `cli-skills`) remains explicitly opportunistic, not validation-critical.
 
 ## Shipped
 
@@ -322,6 +290,12 @@ What landed and was signed off:
   incl. 3 new entitlement cases). Review writeup at
   `docs/reviews/entitlement-enforcement.md`. **Unblocks** an accurate privacy
   policy (legal-pages-oauth hedged its data-retention clause on this).
+- **capture-grammar** (`shipped` 2026-07-04) — grammar v2 is live for the
+  `⌘K` capture path: first `#` is a project hint, later `#` tokens are tags,
+  `@` is time only, and `[[lens]]` is the explicit cross-lens override.
+  Inline project autocomplete and the triage resolver now share the same
+  persisted `parsedProject` hint. + project resolver tests for punctuation
+  names (`C++`, `Q4/OKR`).
 - **Feature catalog (`docs/features/`)** — stood up 2026-07-03. The
   code-verified inventory of what exists (one file per feature, 1:1 with specs);
   supersedes `FEATURES.md` on "does it exist / what does it do." `AGENTS.md`
@@ -399,72 +373,53 @@ patron-on-ramp and is already live; lean on it, don't discount the ladder.
 
 ---
 
-## Free-tier audit (2026-06-27)
+## Free-tier audit (current read, 2026-07-04)
 
 > Question: what are the limits for free users, and do they have a good
 > experience? Two audits: **(A) are the intended caps enforced?** and
 > **(B) does a free user reach the product's value before bouncing?**
 
-### A. Entitlement enforcement — none of it exists
+### A. Entitlement enforcement — substantially fixed
 
-`billing/config.ts` defines `FREE_LIMITS = { projects: 3, goals: 1, workLens: false }`
-and the comment claims *"Enforced server-side, never on the client."* It is
-**imported nowhere in `src/`.** Every cap in PRICING.md §4 is documentation or
-marketing copy, not code:
+`entitlement-enforcement` shipped 2026-07-03. The Free → Pro boundary now
+exists server-side for the surfaces that matter most to conversion: Work lens
+access, project/goal caps, lens-scoped reads, and custom lens configuration.
+That means distribution no longer points strangers at an unlimited product with
+no upgrade trigger.
 
-| Intended cap (PRICING.md §4) | Status | Evidence |
-|---|---|---|
-| Work Lens disabled for Free | **NOT ENFORCED** | `ensureOnboarded` seeds Work+Me for *every* user; AppShell renders all lenses; `LensSwitch` has no plan awareness. Work is even the hardcoded default. |
-| Max 3 Projects | **NOT ENFORCED** | `createProject` (`projects/operations.ts:67`) — no count, no plan check, unconditional `create`. |
-| Max 1 Goal | **NOT ENFORCED** | `createGoal` (`goals/operations.ts:47`) — same: auth + trim, then `create`. |
-| Logbook ≤ 30 days | **NOT ENFORCED** | `getLogbook` filters only `isDone`; no date range. |
-| Multi-device: 1 device | **NOT ENFORCED** | No device model exists at all. |
-| Command palette / search: Pro-only | **N/A** | The feature doesn't exist. `⌘K` is capture (available to all). |
-| Energy/time matcher tags: Pro-only | **N/A** | The feature doesn't exist. |
+Known remaining entitlement questions are product-scope, not launch blockers:
 
-`isPlanActive()` is dead code. The **only** plan-gated behavior in the whole
-app is the Founding-100 spot cap — a sales-scarcity limit, not an entitlement.
+| Limit / gate | Current read |
+|---|---|
+| Logbook ≤ 30 days | Still not enforced; defer until Review/logbook becomes a paid surface. |
+| Multi-device: 1 device | No device model exists; not worth building before usage signal. |
+| Command palette / search | Feature missing; spec is ready and should be Pro-gated when built. |
+| Energy/time matcher tags | Feature missing; gated behind tag-management + focus-engine-v2. |
 
-**Read:** today a free user gets the *entire* product — unlimited projects,
-goals, both lenses, full history. There is **no upgrade trigger anywhere in
-the app.** The only place limits are even *mentioned* is the marketing copy on
-the billing page (`FreeUpgradeScreen`). PRICING.md's thesis ("personal-only
-Lens is the strongest upgrade trigger") is unimplemented end to end.
+### B. Free-user experience — improved, still unmeasured
 
-### B. The free-user experience — broken at the front door
+The worst front-door problems were fixed by `first-run-experience`: onboarding
+routes correctly, no longer teaches non-existent mobile gestures, and gives new
+users a seed task so they can feel the Next loop without doing setup homework.
+That does not prove activation works. It only removes obvious self-inflicted
+friction.
 
-The bigger problem is not the missing wall; it's that a new user may never
-reach the value that wall would protect.
+The current unknowns are exactly what `observability-minimal` and
+`retention-criticalpath` must answer:
 
-1. **Onboarding is dead code.** `hasCompletedOnboarding()` is defined in
-   `OnboardingPage.tsx:342` and **never called anywhere.**
-   `onAuthSucceededRedirectTo: "/app"` skips `/welcome` entirely. The
-   `OnboardingRoute` exists but nothing routes a new signup to it.
-2. **Onboarding teaches the wrong thing.** Its 4 "lessons" are the **mobile
-   prototype gestures** (long-press to start working, two-finger swipe to zoom,
-   one-finger swipe for modes) — see `docs/mockups/`. The webapp does not
-   implement these; real interaction is keyboard + buttons (per the e2e suite).
-   It teaches gestures the product lacks, and teaches nothing about the actual
-   loop: capture → triage → Next.
-3. **No seed data.** `ensureOnboarded` creates only empty Work+Me lenses and
-   empty "General" projects. A brand-new user lands on Next showing
-   *"Nothing on the table"* with an empty Inbox — no example task, no obvious
-   first move. The empty state copy ("Capture something with ⌘K, then triage it
-   to Today") is correct *instructions*, but a user who hasn't felt the magic
-   won't do homework to feel it.
-4. **Auth is email-only** (no Google). For a calm, no-reputation app, asking a
-   stranger to create and verify a password before they've seen value is the
-   cheapest bounce to eliminate.
+- Do visitors sign up?
+- Do signups reach the app?
+- Do new users complete the seed task?
+- Do they create a real capture?
+- Do they triage it?
+- Do they return on day 1 / day 7?
 
 ### The verdict on "good experience"
 
-The free tier is **unlimited** (which is generous) but **unwelcoming** (which
-is fatal). The two findings compound: a new user gets everything for free and
-still has no reason to stay, because the magic moment (Next picking your
-next task) requires them to first capture, then triage, then set Today — with
-nothing guiding them there. **There is no wall, and there is no welcome.**
-Fixing the welcome (item 2) is more urgent than fixing the wall (item 9),
-because a wall behind a door nobody enters protects nothing.
+The free tier now has a real upgrade boundary and a less hostile first run.
+The remaining risk is empirical: we do not yet know whether strangers reach the
+magic moment or come back. Do not add broad product surface area to answer that.
+Measure it, then fix the largest leak.
 
 ---
 
@@ -478,14 +433,14 @@ sequenced as audience-first.
 ### Motion: Product-Led Growth (self-serve, free → paid)
 
 - **Free tier** is the wedge (Next, full focus loop, personal scope). It
-  exists. The leak is that entitlement isn't enforced (roadmap item 8) — free
-  currently gives away the Pro structure. Fix the trigger before driving
-  traffic, or you drive traffic to a product that can't convert.
+  exists, and the main entitlement boundary is now enforced. The next leak to
+  find is not theoretical; it is funnel data: do visitors sign up, activate,
+  and return?
 - **Channels (ORB):**
-  - **Owned (build first):** the email list is now live (newsletter capture
-    on the landing page — footer + hero), so the job is **growing it**, not
-    standing it up. Still needed: a blog/SEO surface for ADHD+focus+GTD
-    intent (deferred — see PUBLIC-PAGES.md Tier 4 → BACKLOG).
+  - **Owned (build first):** newsletter capture is intended but not shipped.
+    Add the quiet hero/footer form before community distribution, then grow it.
+    Still needed later: a blog/SEO surface for ADHD+focus+GTD intent (deferred
+    — see PUBLIC-PAGES.md Tier 4 → BACKLOG).
   - **Rented (drive to owned):** r/ADHD, r/productivity, r/gtd (carefully —
     these ban self-promo; lead with value, not links); ADHD/focus Twitter &
     TikTok where Llama Life/Tiimo already play.
@@ -495,9 +450,9 @@ sequenced as audience-first.
 
 | Phase | Goal | Trigger to advance |
 |---|---|---|
-| **0 — Quiet (now)** | Reconcile docs, add analytics, fix auth friction, enforce entitlement. | Analytics live; Google auth live; caps enforced. |
+| **0 — Quiet (now)** | Add analytics, add newsletter capture, finish non-code launch setup. | Analytics live; newsletter live; Google/Stripe/contact/email gates clear. |
 | **1 — Friends & alpha (wks 1–2)** | Get 20–50 humans you can talk to, by direct ask. Founding 100 as the patron ask. | ≥20 external signups; ≥3 used Next on day 3. |
-| **2 — Community (wks 3–6)** | Item 4: put it in front of ~500 of the right people via communities + a small owned list. | ≥500 unique visitors; known visitor→signup rate. |
+| **2 — Community (wks 3–6)** | Quiet distribution: put it in front of ~500 of the right people via communities + a small owned list. | ≥500 unique visitors; known visitor→signup rate. |
 | **3 — Paid open (wk ~8)** | Only if Phase 2 shows the funnel isn't broken: pricing page live, Product Hunt launch, the launch-marketing-pack from the GTM skill. | Known signup→paid rate ≥ 3%; or a clear reshape signal. |
 
 **The rule:** no phase advances until its trigger is met. If Phase 2 shows a
@@ -509,7 +464,8 @@ harder" — it's go fix retention (item 5) or the matcher (item 6).
 > **Of unique landing-page visitors, what % reach the checkout page?**
 
 Today this is unmeasurable (no analytics). Until it's measurable, every GTM
-decision is a guess. This is why `observability-minimal` is item 2, not item 9.
+decision is a guess. This is why `observability-minimal` stays at the front of
+the queue.
 
 ## Open strategic questions (for Discover to resolve, not Build)
 
@@ -528,12 +484,12 @@ decision is a guess. This is why `observability-minimal` is item 2, not item 9.
    audience** in parallel (items 1–6), new features after. The alternative
    (ship more features, then seek audience) is the classic indie death spiral.
    Push back hard if you think a specific feature is the unlock.
-3. **The landing-page CTA.** ~~Correct pre-deploy; now arguably leaving money
-   on the table…~~ **RESOLVED 2026-07-03** — newsletter capture (footer + quiet
-   hero) and the Founding 100 link are the live CTAs. The principle that
-   governs them is **fairness**, not "no nudge ever" — see PRODUCT.md §"Fair to
-   users" (revised). Signup, paid-plan push, and the honest Founding 100 cap
-   are all in-bounds; deception, trapping, and guilt-tripping are out.
+3. **The landing-page CTA.** **Resolved in principle, incomplete in code** —
+   signup + Founding 100 are live; newsletter capture is intended but missing.
+   The principle that governs them is **fairness**, not "no nudge ever" — see
+   PRODUCT.md §"Fair to users" (revised). Signup, paid-plan push, newsletter,
+   and the honest Founding 100 cap are all in-bounds; deception, trapping, and
+   guilt-tripping are out.
 4. **$80 anchor, eyes-open.** PRICING.md already flags this as the loneliest
    spot. Keep it — but the data prerequisite (item 3) is what lets us move it
    without guessing.
@@ -548,14 +504,17 @@ roadmaps forget and most launches stall on.
 
 ### A. Code items (each has a spec in `docs/specs/`)
 
-- [x] Legal pages exist (`/privacy`, `/terms`) — but need OAuth + billing
-      accuracy fixes → **`legal-pages-oauth`** (`ready`)
+- [x] Legal pages exist (`/privacy`, `/terms`) + OAuth/billing accuracy fixes
+      → **`legal-pages-oauth`** (`done`)
 - [x] First-run experience → **`first-run-experience`** (`done`)
 - [ ] Observability → **`observability-minimal`** (`ready`)
-- [ ] Google auth → **`social-auth-google`** (`ready`, needs legal + console)
+- [ ] Google auth → **`social-auth-google`** (`done code-side`, blocked on
+      Google console + Railway env vars)
 - [x] Entitlement caps → **`entitlement-enforcement`** (`done`)
 - [x] Friction cleanup → **`friction-cleanup`** (`done`; breadcrumb-nav spun out)
 - [ ] Command palette + search → **`command-palette-search`** (`ready`)
+- [ ] Newsletter capture → **`newsletter`** (`draft`; product copy + provider
+      decision still needed)
 - [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup; route model locked 2026-07-03)
 - [ ] Tag management UI + reserved-tag seeding → **`tag-management`** (`ready`, written 2026-07-03; unblocks `focus-engine-v2`)
 - [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`, confirmed 2026-07-03)
@@ -594,8 +553,8 @@ code state.
 - [ ] **Analytics provider account.** Pick Plausible or PostHog (lean: Plausible),
       create the site, get the key — gates `observability-minimal` going live.
 - [ ] **The Founding-100 story.** The page + checkout + 100-cap are live; the
-      remaining question is *how the first 100 are found* (item 6,
-      distribution). This is a campaign decision, not code.
+      remaining question is *how the first 100 are found* through quiet
+      distribution. This is a campaign decision, not code.
 - [ ] **Backup + DB snapshot policy.** Railway Postgres — confirm automated
       backups are on and you know how to restore. One paying user makes this
       non-optional.
@@ -610,7 +569,6 @@ section B in parallel — they're independent tracks.
 
 ---
 
-<!-- Each draft item above will get its own docs/specs/<feature>.md with testable
-     done-conditions before it advances to `ready`. Discover's next action: write
-     the spec for item 1 (doc-reconciliation) — it's the cheapest and unblocks an
-     honest everything-else. -->
+<!-- Each draft item above should get testable done-conditions before it advances
+     to `ready`. Current Discover priority: make newsletter concrete enough to
+     build, then close focus-engine-v2's tag/mockup/matcher gates. -->
