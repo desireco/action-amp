@@ -115,14 +115,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [user, ensureOnboarded]);
 
   // Shell data: lenses (sidebar switch + query scoping) + nav counts. The query
-  // takes a lens NAME (its contract — server resolves name→id); we derive the
-  // name from the resolved active lens below. On first render (before lenses
-  // load) we pass the migrated name sentinel if present, so the server can
-  // resolve the same lens the user had selected.
-  const lensNameForQuery = lensId?.startsWith("name:") ? lensId.slice(5) : undefined;
+  // takes the active lens ID directly (id-keyed, like the rest of the state) —
+  // switching lenses changes the query arg → React Query refetches → the focus-
+  // nav badges (Today/Projects/Goals) re-scope to the new lens. Before lenses
+  // load, lensId may be a `name:<x>` migration sentinel; getAppData ignores ids
+  // it can't resolve and falls back to the first lens.
+  const rawId = lensId && !lensId.startsWith("name:") ? lensId : null;
   const { data: appData } = useQuery(
     getAppData,
-    { lensName: lensNameForQuery },
+    { lensId: rawId },
     { enabled: !!user },
   );
   const lenses = appData?.lenses ?? [];
@@ -150,7 +151,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   // PERSONAL so their queries don't 402. Branches on KIND (rename-safe). The
   // server guard is the boundary; this prevents the broken UX of every query
   // erroring on load.
-  const rawId = lensId && !lensId.startsWith("name:") ? lensId : null;
   const resolvedLens =
     (rawId ? lenses.find((l) => l.id === rawId) : undefined) ?? lenses[0];
   const activeLens =
@@ -208,7 +208,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   // The value pages consume via useActiveLens() to scope their queries.
   const activeLensValue = activeLens
-    ? { id: activeLens.id, name: activeLens.name, color: activeLens.color ?? null }
+    ? { id: activeLens.id, name: activeLens.name, color: activeLens.color ?? null, kind: activeLens.kind, purpose: activeLens.purpose }
     : null;
 
   // Mirror the active lens's identity color onto <html data-lens="..."> so CSS

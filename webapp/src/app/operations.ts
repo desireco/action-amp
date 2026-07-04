@@ -70,12 +70,12 @@ export const getAppData = (async (args, context) => {
     orderBy: { createdAt: "asc" },
     select: { id: true, name: true, color: true, kind: true, purpose: true },
   });
-  // Resolve the requested lens name to an id; fall back to the first lens so
-  // counts are never empty just because the stored name was stale/missing.
-  // If the user somehow has no lenses yet, lensWhere stays empty — but every
+  // Resolve the requested lens id to a real lens; fall back to the first so
+  // counts are never empty just because the stored id was stale/deleted/missing.
+  // If the user has no lenses yet, lensWhere stays empty — but every
   // Task/Project/Goal requires a lensId, so the counts are 0 regardless.
   const activeLensId =
-    (args?.lensName && lenses.find((l) => l.name === args.lensName)?.id) ||
+    (args?.lensId && lenses.find((l) => l.id === args.lensId)?.id) ||
     lenses[0]?.id;
   const lensWhere = activeLensId ? { lensId: activeLensId } : {};
 
@@ -118,7 +118,7 @@ export const getAppData = (async (args, context) => {
     todayByLens,
   };
 }) satisfies GetAppData<
-  { lensName?: string | null },
+  { lensId?: string | null },
   {
     lenses: { id: string; name: string; color: string | null; kind: string; purpose: string | null }[];
     counts: { inbox: number; today: number; projects: number; goals: number };

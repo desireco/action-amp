@@ -44,7 +44,7 @@ export function GoalsPage() {
   const entitled = useEntitled();
   const { data: appData } = useQuery(
     getAppData,
-    { lensName: lens?.name ?? "" },
+    { lensId: lens?.id ?? null },
     { enabled: !!lens },
   );
   const goalCount = appData?.counts.goals ?? 0;

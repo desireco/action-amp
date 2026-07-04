@@ -20,6 +20,14 @@ export interface ActiveLens {
    * locally (see LensSwitch, TriagePage context radio).
    */
   color: string | null;
+  /**
+   * Stable kind handle (PERSONAL / WORK / CUSTOM). The entitlement guard
+   * branches on this, not the name, so renaming a seeded lens can't escape
+   * FREE gating. See docs/specs/custom-lenses.md §"Stable handle".
+   */
+  kind: string;
+  /** One short line: what this lens is for. */
+  purpose: string | null;
 }
 
 export const LensContext = createContext<ActiveLens | null>(null);

@@ -40,7 +40,7 @@ export const getLenses = (async (_args, context) => {
   }
   const lenses = await context.entities.Lens.findMany({
     where: { userId: context.user.id },
-    orderBy: [{ kind: "asc" }, { createdAt: "asc" }],
+    orderBy: { createdAt: "asc" },
     include: {
       _count: {
         select: {
@@ -51,6 +51,11 @@ export const getLenses = (async (_args, context) => {
       },
     },
   });
+  // Sort seeded-first (PERSONAL, then WORK), then CUSTOM by createdAt. Prisma
+  // can't express "seeded first" cleanly (kind is an enum, alphabetical order
+  // is CUSTOM < PERSONAL < WORK — the opposite of what we want), so sort in JS.
+  const KIND_ORDER: Record<string, number> = { PERSONAL: 0, WORK: 1, CUSTOM: 2 };
+  lenses.sort((a, b) => (KIND_ORDER[a.kind] ?? 9) - (KIND_ORDER[b.kind] ?? 9));
   return lenses.map((l) => ({
     id: l.id,
     name: l.name,
@@ -267,9 +272,24 @@ export const deleteLens = (async (args, context) => {
     });
   }
 
-  // mode === "delete" (hard) — content cascade-deletes with the lens (the
-  // Goal/Project/Task FKs are ON DELETE CASCADE in schema.prisma). The UI
-  // confirms the user understands content goes with it before reaching here.
+  // mode === "delete" (hard) — only allowed when the lens is EMPTY. The spec's
+  // "no silent cascade delete" rule: a lens with content must be reassigned
+  // (mode: "reassign"), not hard-deleted, so nothing is lost by accident. The
+  // UI enforces this too (the dialog defaults to reassign when content exists),
+  // but the server is the boundary. Cascade via the Goal/Project/Task FKs
+  // (ON DELETE CASCADE in schema.prisma) removes any stragglers an empty lens
+  // wouldn't have anyway.
+  const [goalCount, projectCount, taskCount] = await Promise.all([
+    context.entities.Goal.count({ where: { lensId: existing.id } }),
+    context.entities.Project.count({ where: { lensId: existing.id } }),
+    context.entities.Task.count({ where: { lensId: existing.id } }),
+  ]);
+  if (goalCount + projectCount + taskCount > 0) {
+    return throwHttpStatus(
+      409,
+      "This lens still has content. Move it to another lens first, then delete.",
+    );
+  }
   return await context.entities.Lens.delete({
     where: { id: existing.id },
     select: { id: true },

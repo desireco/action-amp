@@ -154,16 +154,35 @@ describe("deleteLens", () => {
     expect(m.entities.Lens.delete).not.toHaveBeenCalled();
   });
 
-  it("hard-deletes a CUSTOM lens (mode: delete) — content cascades via FK", async () => {
+  it("hard-deletes an EMPTY CUSTOM lens (mode: delete)", async () => {
     resetSpies();
     const m = mockContext(PRO_USER);
     m.entities.Lens.findFirst.mockResolvedValue({ id: "l", name: "Studio", kind: "CUSTOM" });
+    // Empty lens: all counts return 0.
+    m.entities.Goal.count.mockResolvedValue(0);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(0);
     m.entities.Lens.delete.mockResolvedValue({ id: "l" });
 
     const out = await deleteLens({ id: "l", mode: "delete" }, m.context);
     expect(out).toEqual({ id: "l" });
     expect(m.entities.Task.updateMany).not.toHaveBeenCalled(); // no reassign
     expect(m.entities.Lens.delete).toHaveBeenCalledWith({ where: { id: "l" }, select: { id: true } });
+  });
+
+  it("refuses hard-delete when the lens has content → 409 (no silent cascade)", async () => {
+    // Spec: "No silent cascade delete." A lens with content must be reassigned,
+    // not hard-deleted. The server enforces it even if the client bypasses the
+    // dialog's "move first" default.
+    resetSpies();
+    const m = mockContext(PRO_USER);
+    m.entities.Lens.findFirst.mockResolvedValue({ id: "l", name: "Studio", kind: "CUSTOM" });
+    m.entities.Goal.count.mockResolvedValue(1);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(3);
+
+    await expect(deleteLens({ id: "l", mode: "delete" }, m.context)).rejects.toThrow(/still has content/);
+    expect(m.entities.Lens.delete).not.toHaveBeenCalled();
   });
 
   it("reassigns content to the target lens then deletes (mode: reassign)", async () => {
@@ -230,29 +249,30 @@ describe("getLenses", () => {
     await expect(getLenses({}, m.context)).rejects.toThrow(/Not authenticated/);
   });
 
-  it("returns lenses with per-lens counts (non-done only), seeded-first sorted", async () => {
+  it("returns lenses with per-lens counts, seeded-first sorted (PERSONAL, WORK, then CUSTOM)", async () => {
     const m = mockContext(PRO_USER);
-    // findMany returns rows with _count; the op maps them to a flat shape.
-    // Sort is delegated to Prisma (orderBy kind asc, createdAt asc) — here we
-    // verify the mapping, not the sort.
+    // findMany returns rows in arbitrary order (Prisma orderBy is createdAt
+    // only); the op re-sorts in JS to seeded-first. Feed an out-of-order list
+    // (CUSTOM first) and assert the output is PERSONAL → CUSTOM.
     m.entities.Lens.findMany.mockResolvedValue([
-      {
-        id: "l-me", name: "Me", kind: "PERSONAL", color: "emerald", purpose: null,
-        _count: { goals: 1, projects: 2, tasks: 3 },
-      },
       {
         id: "l-studio", name: "Studio", kind: "CUSTOM", color: "coral", purpose: "side",
         _count: { goals: 0, projects: 1, tasks: 4 },
       },
+      {
+        id: "l-me", name: "Me", kind: "PERSONAL", color: "emerald", purpose: null,
+        _count: { goals: 1, projects: 2, tasks: 3 },
+      },
     ]);
     const out = await getLenses({}, m.context);
-    expect(out).toEqual([
-      { id: "l-me", name: "Me", kind: "PERSONAL", color: "emerald", purpose: null, counts: { goals: 1, projects: 2, tasks: 3 } },
-      { id: "l-studio", name: "Studio", kind: "CUSTOM", color: "coral", purpose: "side", counts: { goals: 0, projects: 1, tasks: 4 } },
-    ]);
+    // Seeded-first: PERSONAL before CUSTOM, despite the input order.
+    expect(out.map((l) => l.kind)).toEqual(["PERSONAL", "CUSTOM"]);
+    expect(out[0]).toEqual({ id: "l-me", name: "Me", kind: "PERSONAL", color: "emerald", purpose: null, counts: { goals: 1, projects: 2, tasks: 3 } });
+    expect(out[1]).toEqual({ id: "l-studio", name: "Studio", kind: "CUSTOM", color: "coral", purpose: "side", counts: { goals: 0, projects: 1, tasks: 4 } });
+    // Prisma query is scoped by user + ordered by createdAt (the JS sort handles kind).
     expect(m.entities.Lens.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { userId: "user-1" },
-      orderBy: [{ kind: "asc" }, { createdAt: "asc" }],
+      orderBy: { createdAt: "asc" },
     }));
   });
 });

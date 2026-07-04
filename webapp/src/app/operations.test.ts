@@ -27,8 +27,8 @@ describe("getAppData — happy path", () => {
     // on the count aggregation (covered in the rollover describe block).
     m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
     const lenses = [
-      { id: "lens-work", name: "Work", color: "indigo" },
-      { id: "lens-me", name: "Me", color: "emerald" },
+      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
+      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
     ];
 
     // Lens.findMany resolves first (awaited before the counts); the four count
@@ -45,7 +45,7 @@ describe("getAppData — happy path", () => {
       { lensId: "lens-me", _count: { _all: 1 } },
     ]);
 
-    const result = await getAppData({ lensName: "Work" }, m.context);
+    const result = await getAppData({ lensId: "lens-work" }, m.context);
 
     expect(result).toEqual({
       lenses,
@@ -112,14 +112,14 @@ describe("getAppData — happy path", () => {
     const m = mockContext();
     m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-me", name: "Me", color: "emerald" },
+      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Task.count.mockResolvedValue(1);
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Goal.count.mockResolvedValue(0);
 
-    await getAppData({ lensName: "Work" }, m.context); // "Work" not present
+    await getAppData({ lensId: "stale-id" }, m.context); // id not present → first lens
 
     expect(m.entities.Task.count).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -146,7 +146,7 @@ describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Goal.count.mockResolvedValue(0);
 
-    await getAppData({ lensName: "Work" }, m.context);
+    await getAppData({ lensId: "Work" }, m.context);
 
     // Bulk flip: every incomplete TODAY task for this user → UPCOMING.
     expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
@@ -170,7 +170,7 @@ describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Goal.count.mockResolvedValue(0);
 
-    await getAppData({ lensName: "Work" }, m.context);
+    await getAppData({ lensId: "Work" }, m.context);
 
     // Same calendar day → rollover short-circuits; no flip, no re-stamp.
     expect(m.entities.Task.updateMany).not.toHaveBeenCalled();
@@ -190,7 +190,7 @@ describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Goal.count.mockResolvedValue(0);
 
-    await getAppData({ lensName: "Work" }, m.context);
+    await getAppData({ lensId: "Work" }, m.context);
 
     expect(m.entities.Task.updateMany).toHaveBeenCalled();
     expect(m.entities.User.update).toHaveBeenCalledWith({
@@ -212,7 +212,7 @@ describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Goal.count.mockResolvedValue(0);
 
-    await getAppData({ lensName: "Work" }, m.context);
+    await getAppData({ lensId: "Work" }, m.context);
 
     const call = m.entities.Task.updateMany.mock.calls[0][0];
     expect(call.data).toEqual({ status: "UPCOMING" });
@@ -232,7 +232,7 @@ describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Goal.count.mockResolvedValue(0);
 
-    await getAppData({ lensName: "Work" }, m.context);
+    await getAppData({ lensId: "Work" }, m.context);
 
     expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
       where: expect.objectContaining({
