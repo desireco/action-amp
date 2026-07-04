@@ -67,7 +67,6 @@ other docs, these win.
 
 | Doc | Subject |
 |-----|---------|
-| [`docs/SPEC.md`](docs/SPEC.md) | Top-level spec + stack decision (Wasp). |
 | [`docs/FEATURES.md`](docs/FEATURES.md) | Feature-level reference (F-numbered list). Status note defers to WORKFLOW on structure. |
 | [`docs/PAGES.md`](docs/PAGES.md) | Pages & routes, organized into Work/Plan/Review clusters. |
 | [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) | Data model + triage flow (GTD + PARA; Areas → Goals). |
@@ -82,7 +81,7 @@ other docs, these win.
 | [`docs/MARKETING.md`](docs/MARKETING.md) | Public marketing site — wedge, conversion, page roles. |
 | [`docs/PUBLIC-PAGES.md`](docs/PUBLIC-PAGES.md) | Spec for every public surface (landing, onboarding, legal). |
 | [`docs/PRICING.md`](docs/PRICING.md) | Pricing & billing strategy (decisions + reasoning). |
-| [`docs/BILLING-INTEGRATION.md`](docs/BILLING-INTEGRATION.md) | Stripe integration **plan** (schema, endpoints, settings) — not yet implemented. |
+| [`docs/BILLING-INTEGRATION.md`](docs/BILLING-INTEGRATION.md) | Stripe billing **implementation** (architecture, schema, webhook, entitlement). |
 
 **📋 Planning & tracking.**
 
@@ -95,9 +94,9 @@ other docs, these win.
 
 | Doc | Subject | Verdict |
 |-----|---------|---------|
-| [`docs/wasp-research.md`](docs/wasp-research.md) | Can we build the API with wasp.sh? | **Yes, proceed.** |
-| [`docs/wasp-report.md`](docs/wasp-report.md) | Review of the project's Wasp skills after building the full app. | Improvement report |
-| [`docs/deployment-research.md`](docs/deployment-research.md) | Where to host (Wasp + VoidZero & Bun). | **Fly.io or Railway.** Cloudflare is client-only. |
+| [`docs/research/wasp-research.md`](docs/research/wasp-research.md) | Can we build the API with wasp.sh? | **Yes, proceed.** |
+| [`docs/research/wasp-report.md`](docs/research/wasp-report.md) | Review of the project's Wasp skills after building the full app. | Improvement report |
+| [`docs/research/deployment-research.md`](docs/research/deployment-research.md) | Where to host (Wasp + VoidZero & Bun). | **Fly.io or Railway.** Cloudflare is client-only. |
 
 **🎨 Mockups — `docs/mockups/`**
 
@@ -154,7 +153,7 @@ Requires Node.js (LTS) and Wasp (`npm i -g @wasp.sh/wasp-cli@latest`).
 See [`webapp/README.md`](webapp/README.md) and [`webapp/AGENTS.md`](webapp/AGENTS.md) for Wasp conventions.
 
 **Tests:** `npm test` (Vitest) · `npm run test:e2e` (Playwright).
-**Deploy:** `npm run deploy` (Railway; see `docs/deployment-research.md`).
+**Deploy:** `npm run deploy` (Railway; see `docs/research/deployment-research.md`).
 
 ---
 
