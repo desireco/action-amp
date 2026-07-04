@@ -10,6 +10,7 @@ import type {
 } from "wasp/server/operations";
 import { FREE_LIMITS } from "../billing/config";
 import { assertLensAllowed, assertUnderCap, throwHttpStatus } from "../billing/entitlementHttp";
+import { uniquePermalink } from "../shared/permalinks";
 
 /**
  * Projects list for the Projects page, scoped to the active Lens.
@@ -66,7 +67,9 @@ export const getProjects = (async (args, context) => {
 
   return projects.map((p) => ({
     id: p.id,
+    permalink: p.permalink,
     name: p.name,
+    description: p.description,
     dueDate: p.dueDate,
     goal: p.goal,
     openCount: p._count.tasks, // open (non-done) tasks
@@ -109,23 +112,32 @@ export const createProject = (async (args, context) => {
     });
   }
 
+  const permalink = await uniquePermalink(name, async (candidate) => {
+    const existing = await context.entities.Project.findFirst({
+      where: { userId: context.user!.id, permalink: candidate },
+      select: { id: true },
+    });
+    return !!existing;
+  });
+
   return await context.entities.Project.create({
     data: {
       name,
+      permalink,
       userId: context.user.id,
       lensId: args.lensId,
       goalId: args.goalId,
       description: args.description,
       order,
     },
-    select: { id: true, name: true },
+    select: { id: true, permalink: true, name: true },
   });
 }) satisfies CreateProject<{
   name: string;
   lensId: string;
   goalId?: string;
   description?: string;
-}, { id: string; name: string }>;
+}, { id: string; permalink: string; name: string }>;
 
 // ----------------------------------------------------------------
 // Read: a single project for the detail page, with its tasks
@@ -148,10 +160,13 @@ export const getProject = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const project = await context.entities.Project.findUnique({
-    where: { id: args.id, userId: context.user.id },
+  const project = await context.entities.Project.findFirst({
+    where: {
+      userId: context.user.id,
+      OR: [{ id: args.id }, { permalink: args.id }],
+    },
     include: {
-      goal: { select: { id: true, name: true } },
+      goal: { select: { id: true, permalink: true, name: true } },
       tasks: {
         orderBy: [{ isDone: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
         select: {
@@ -173,6 +188,7 @@ export const getProject = (async (args, context) => {
   // projects. The lens guard applies to list/create, not to detail reads.
   return {
     id: project.id,
+    permalink: project.permalink,
     name: project.name,
     description: project.description,
     dueDate: project.dueDate,

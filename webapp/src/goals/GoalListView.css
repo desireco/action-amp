@@ -1,0 +1,19 @@
+@import "../styles/tokens.css";
+
+.aa-goals {
+  max-width: 760px;
+}
+
+.aa-goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--aa-space-lg);
+}
+
+.aa-goals-grid--with-create {
+  margin-top: var(--aa-space-xl);
+}
+
+.aa-goals__dot {
+  opacity: 0.6;
+}

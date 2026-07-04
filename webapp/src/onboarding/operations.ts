@@ -5,6 +5,7 @@ import type {
 } from "wasp/server/operations";
 import { PrismaClient } from "@prisma/client";
 import { buildWelcomeEmail } from "./welcomeEmail";
+import { uniquePermalink } from "../shared/permalinks";
 
 /**
  * Onboarding — the one-time first-run flow (runs when a user signs up).
@@ -130,8 +131,15 @@ export const ensureOnboarded = (async (_args, context) => {
       select: { id: true },
     });
     if (!existingProject) {
+      const permalink = await uniquePermalink("General", async (candidate) => {
+        const existing = await context.entities.Project.findFirst({
+          where: { userId, permalink: candidate },
+          select: { id: true },
+        });
+        return !!existing;
+      });
       await context.entities.Project.create({
-        data: { name: "General", userId, lensId: existingLens.id },
+        data: { name: "General", permalink, userId, lensId: existingLens.id },
         select: { id: true },
       });
     }
@@ -217,4 +225,3 @@ export const completeOnboarding = (async (_args, context) => {
 
   return { hasSeenOnboarding: true };
 }) satisfies CompleteOnboarding<never, { hasSeenOnboarding: boolean }>;
-

@@ -1,18 +1,25 @@
-import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { Link } from "react-router";
+import { useState } from "react";
 import { useQuery } from "wasp/client/operations";
 import { getGoals, createGoal, getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { useActiveLens } from "../app/lensContext";
-import { Button, Chip, GoalsIcon, PlusIcon, ProGate } from "../components/ui";
+import {
+  Chip,
+  EntityComposer,
+  EntityCreateButton,
+  GoalsIcon,
+  ProgressCard,
+  ProGate,
+} from "../components/ui";
 import { ListEmpty } from "../lists/ListShell";
 import { FREE_LIMITS } from "../billing/config";
 import { useEntitled, extractEntitlementMessage } from "../billing/useEntitled";
 import type { EntitlementMessage } from "../billing/entitlement-types";
-import "./GoalsPage.css";
+import "./GoalListView.css";
 
 interface GoalRow {
   id: string;
+  permalink: string;
   name: string;
   description: string | null;
   projectCount: number;
@@ -20,7 +27,7 @@ interface GoalRow {
   progress: number;
   // First non-done project in sequence order (goal-planning spec §E). Null
   // when the goal has no projects or all are done — the card hides the line.
-  nextProject: { id: string; name: string } | null;
+  nextProject: { id: string; permalink: string; name: string } | null;
 }
 
 /**
@@ -76,14 +83,11 @@ export function GoalsPage() {
         <span className="aa-progate-trigger__cta">Upgrade →</span>
       </ProGate>
     ) : (
-      <Button
-        variant="secondary"
-        className="aa-goals-new"
-        icon={<GoalCreateMark />}
+      <EntityCreateButton
+        label="New goal"
+        icon={GoalsIcon}
         onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}
-      >
-        New goal
-      </Button>
+      />
     );
 
   const AllowanceChip = () =>
@@ -126,7 +130,14 @@ export function GoalsPage() {
       </header>
       {gate && <ProGate feature={gate.feature} reason={gate.reason} />}
       {creating && (
-        <GoalComposer
+        <EntityComposer
+          title="New goal"
+          subtitle="Name the outcome. Add the why if it helps."
+          nameLabel="Outcome"
+          namePlaceholder="Grow audience"
+          descriptionLabel="Why this matters"
+          descriptionPlaceholder="So launches do not depend on one-off posts"
+          submitLabel="Create goal"
           onCreate={handleCreate}
           onCancel={() => setCreating(false)}
           submitting={submitting}
@@ -134,114 +145,24 @@ export function GoalsPage() {
       )}
       <div className="aa-goals-grid aa-goals-grid--with-create">
         {(goals ?? []).map((g: GoalRow) => (
-          <Link key={g.id} to={`/app/goals/${g.id}`} className="aa-goal-card">
-            <span className="aa-goal-card__name">{g.name}</span>
-            {g.description && <p className="aa-goal-card__desc">{g.description}</p>}
-            <div className="aa-goal-card__progress">
-              <div className="aa-goal-card__bar">
-                <div className="aa-goal-card__fill" style={{ width: `${g.progress}%` }} />
-              </div>
-              <span className="aa-goal-card__pct">{g.progress}%</span>
-            </div>
-            <div className="aa-goal-card__meta">
-              <span>{g.projectCount} project{g.projectCount === 1 ? "" : "s"}</span>
-              <span className="aa-goal-card__dot" aria-hidden="true">·</span>
-              <span>{g.taskCount} task{g.taskCount === 1 ? "" : "s"}</span>
-            </div>
-            {g.nextProject && (
-              <p className="aa-goal-card__next">
-                Focus: <span>{g.nextProject.name}</span>
-              </p>
-            )}
-          </Link>
+          <ProgressCard
+            key={g.id}
+            to={`/app/goals/${g.permalink}`}
+            title={g.name}
+            description={g.description}
+            progress={g.progress}
+            meta={
+              <>
+                <span>{g.projectCount} project{g.projectCount === 1 ? "" : "s"}</span>
+                <span className="aa-goals__dot" aria-hidden="true">·</span>
+                <span>{g.taskCount} task{g.taskCount === 1 ? "" : "s"}</span>
+              </>
+            }
+            focusLabel={g.nextProject ? "Focus" : undefined}
+            focusValue={g.nextProject?.name}
+          />
         ))}
       </div>
     </div>
-  );
-}
-
-function GoalCreateMark() {
-  return (
-    <span className="aa-goals-new__mark" aria-hidden="true">
-      <GoalsIcon className="aa-goals-new__goal" />
-      <PlusIcon className="aa-goals-new__plus" />
-    </span>
-  );
-}
-
-function GoalComposer({
-  onCreate,
-  onCancel,
-  submitting,
-}: {
-  onCreate: (name: string, description?: string) => Promise<void> | void;
-  onCancel: () => void;
-  submitting: boolean;
-}) {
-  const formRef = useRef<HTMLFormElement>(null);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-
-  const canSubmit = !!name.trim() && !submitting;
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    const trimmedName = name.trim();
-    if (!trimmedName || submitting) return;
-
-    const trimmedDescription = description.trim();
-    await onCreate(trimmedName, trimmedDescription || undefined);
-    setName("");
-    setDescription("");
-  };
-
-  const submitFromTextarea = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-      event.preventDefault();
-      formRef.current?.requestSubmit();
-    }
-  };
-
-  return (
-    <form ref={formRef} className="aa-goal-composer" onSubmit={submit}>
-      <div className="aa-goal-composer__head">
-        <div>
-          <h2 className="aa-goal-composer__title">New goal</h2>
-          <p className="aa-goal-composer__sub">Name the outcome. Add the why if it helps.</p>
-        </div>
-      </div>
-
-      <label className="aa-goal-composer__field">
-        <span className="aa-goal-composer__label">Outcome</span>
-        <input
-          className="aa-goal-composer__input"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Grow audience"
-          autoFocus
-        />
-      </label>
-
-      <label className="aa-goal-composer__field">
-        <span className="aa-goal-composer__label">Why this matters</span>
-        <textarea
-          className="aa-goal-composer__textarea"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          onKeyDown={submitFromTextarea}
-          placeholder="So launches do not depend on one-off posts"
-          rows={3}
-        />
-      </label>
-
-      <div className="aa-goal-composer__actions">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" size="sm" disabled={!canSubmit}>
-          Create goal
-        </Button>
-      </div>
-    </form>
   );
 }

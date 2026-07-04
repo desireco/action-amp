@@ -1,5 +1,5 @@
 // Component test for GoalDetailPage — the goal-planning spec UI flows that
-// live entirely on the page (header affordances + the "Next:" line + reorder).
+// live entirely on the page (header affordances + the "Focus:" line + reorder).
 // The op-level behavior (tenancy, cross-Lens rejection, re-parenting) is
 // covered in operations.test.ts; this pins the wiring.
 //
@@ -18,9 +18,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // works because it's a plain object.
 const goalData: { current: unknown } = { current: null };
 const getGoal = vi.fn();
-const createTask = vi.fn();
-const createProject = vi.fn();
-const updateTaskStatus = vi.fn();
 const setGoalDone = vi.fn();
 const updateGoal = vi.fn();
 const deleteGoal = vi.fn();
@@ -36,9 +33,6 @@ vi.mock("wasp/client/operations", () => ({
     return { data: undefined, isLoading: false, error: null };
   },
   getGoal,
-  createTask,
-  createProject,
-  updateTaskStatus,
   setGoalDone,
   updateGoal,
   deleteGoal,
@@ -52,6 +46,7 @@ const { GoalDetailPage } = await import("./GoalDetailPage");
 function makeGoal(overrides: Record<string, unknown> = {}) {
   return {
     id: "g1",
+    permalink: "grow-audience",
     name: "Grow audience",
     description: "Reach 10k followers",
     isDone: false,
@@ -60,8 +55,8 @@ function makeGoal(overrides: Record<string, unknown> = {}) {
       { id: "t1", description: "Email Sarah", isDone: false, status: "UPCOMING", priority: "NORMAL", size: "M", tags: [], project: null, goal: { id: "g1", name: "Grow audience" } },
     ],
     projects: [
-      { id: "p1", name: "Newsletter", isDone: true, order: 0, dueDate: null, tasks: [{ id: "t2", isDone: true }] },
-      { id: "p2", name: "Twitter", isDone: false, order: 1, dueDate: null, tasks: [{ id: "t3", isDone: false }] },
+      { id: "p1", permalink: "newsletter", name: "Newsletter", isDone: true, order: 0, dueDate: null, tasks: [{ id: "t2", isDone: true }] },
+      { id: "p2", permalink: "twitter", name: "Twitter", isDone: false, order: 1, dueDate: null, tasks: [{ id: "t3", isDone: false }] },
     ],
     ...overrides,
   };
@@ -76,9 +71,9 @@ function renderAt(path: string) {
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[path]}>
           <Routes>
-            <Route path="/app/goals/:id" element={<GoalDetailPage />} />
+            <Route path="/app/goals/:permalink" element={<GoalDetailPage />} />
             <Route path="/app/goals" element={<div data-testid="goals-list" />} />
-            <Route path="/app/projects/:id" element={<div data-testid="project-detail" />} />
+            <Route path="/app/projects/:permalink" element={<div data-testid="project-detail" />} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
@@ -92,8 +87,6 @@ beforeEach(() => {
   updateGoal.mockResolvedValue({ id: "g1", name: "X", description: null });
   deleteGoal.mockResolvedValue({ id: "g1", reparentedCount: 0 });
   reorderGoalProjects.mockResolvedValue({ goalId: "g1" });
-  createTask.mockResolvedValue({ id: "new-task" });
-  createProject.mockResolvedValue({ id: "new-project", name: "X" });
 });
 
 describe("GoalDetailPage — header affordances (goal-planning spec §B, §C)", () => {
@@ -126,11 +119,11 @@ describe("GoalDetailPage — inline edit (§C)", () => {
     renderAt("/app/goals/g1");
     fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
 
-    const nameInput = await screen.findByLabelText(/goal name/i);
-    const descInput = screen.getByLabelText(/goal description/i);
+    const nameInput = await screen.findByLabelText(/outcome/i);
+    const descInput = screen.getByLabelText(/why this matters/i);
     fireEvent.change(nameInput, { target: { value: "Grow audience fast" } });
     fireEvent.change(descInput, { target: { value: "Reach 20k" } });
-    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^save changes$/i }));
 
     await waitFor(() =>
       expect(updateGoal).toHaveBeenCalledWith(
@@ -149,9 +142,10 @@ describe("GoalDetailPage — delete confirm copy (§C)", () => {
     goalData.current = makeGoal();
     renderAt("/app/goals/g1");
     fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
-    // 2 projects + 1 standalone task = 3 children.
+    // Goals only own aligned projects. Standalone task creation from goals was
+    // removed; tasks live in Inbox or Projects.
     const dialog = screen.getByRole("dialog", { name: /delete this goal/i });
-    expect(dialog.textContent).toMatch(/3 items will move to standalone/);
+    expect(dialog.textContent).toMatch(/2 items will move to standalone/);
   });
 
   it("the delete dialog fires deleteGoal on confirm", async () => {
@@ -163,33 +157,33 @@ describe("GoalDetailPage — delete confirm copy (§C)", () => {
   });
 });
 
-describe("GoalDetailPage — Next: line (spec §E)", () => {
-  it("surfaces the first non-done project as 'Next: <name>' with a link", () => {
+describe("GoalDetailPage — Focus line (spec §E)", () => {
+  it("surfaces the first non-done project as 'Focus: <name>' with a link", () => {
     goalData.current = makeGoal();
     renderAt("/app/goals/g1");
-    // p1 is done, p2 (Twitter) is the first non-done → "Next: Twitter".
-    const nextLine = screen.getByText(/Next:/);
-    expect(nextLine.textContent).toMatch(/Twitter/);
+    // p1 is done, p2 (Twitter) is the first non-done → "Focus: Twitter".
+    const focusLine = screen.getByText(/Focus:/);
+    expect(focusLine.textContent).toMatch(/Twitter/);
     expect(screen.getByRole("link", { name: "Twitter" })).toHaveAttribute(
       "href",
-      "/app/projects/p2",
+      "/app/projects/twitter",
     );
   });
 
-  it("hides the Next: line when every project under the goal is done", () => {
+  it("hides the Focus line when every project under the goal is done", () => {
     goalData.current = makeGoal({
       projects: [
-        { id: "p1", name: "Done one", isDone: true, order: 0, dueDate: null, tasks: [] },
+        { id: "p1", permalink: "done-one", name: "Done one", isDone: true, order: 0, dueDate: null, tasks: [] },
       ],
     });
     renderAt("/app/goals/g1");
-    expect(screen.queryByText(/Next:/)).toBeNull();
+    expect(screen.queryByText(/Focus:/)).toBeNull();
   });
 
-  it("hides the Next: line when the goal has no projects", () => {
+  it("hides the Focus line when the goal has no projects", () => {
     goalData.current = makeGoal({ projects: [] });
     renderAt("/app/goals/g1");
-    expect(screen.queryByText(/Next:/)).toBeNull();
+    expect(screen.queryByText(/Focus:/)).toBeNull();
   });
 });
 
@@ -222,22 +216,11 @@ describe("GoalDetailPage — reorder (spec §E)", () => {
   });
 });
 
-describe("GoalDetailPage — create-from-goal (§C)", () => {
-  it("'Add project' reveals the create field and creating fires createProject with the goal link", async () => {
+describe("GoalDetailPage — project alignment only", () => {
+  it("does not expose project/task creation controls from the goal page", () => {
     goalData.current = makeGoal();
     renderAt("/app/goals/g1");
-    fireEvent.click(screen.getByRole("button", { name: /^add project$/i }));
-    const input = await screen.findByPlaceholderText(/project name/i);
-    fireEvent.change(input, { target: { value: "Podcast relaunch" } });
-    fireEvent.click(screen.getByRole("button", { name: /^create$/i }));
-    await waitFor(() =>
-      expect(createProject).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: "Podcast relaunch",
-          lensId: "lens-1",
-          goalId: "g1",
-        }),
-      ),
-    );
+    expect(screen.queryByRole("button", { name: /^add project$/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^add task$/i })).toBeNull();
   });
 });

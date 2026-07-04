@@ -41,9 +41,10 @@ beforeEach(() => {
 
 const PROJECT_ROW = {
   id: "proj-1",
+  permalink: "ship-product-v2",
   name: "Ship product v2",
   dueDate: null as Date | null,
-  goal: { id: "goal-1", name: "Grow audience" },
+  goal: { id: "goal-1", permalink: "grow-audience", name: "Grow audience" },
   tasks: [
     {
       id: "task-1",
@@ -84,9 +85,10 @@ describe("getProjects — happy path", () => {
     expect(result).toEqual([
       {
         id: "proj-1",
+        permalink: "ship-product-v2",
         name: "Ship product v2",
         dueDate: null,
-        goal: { id: "goal-1", name: "Grow audience" },
+        goal: { id: "goal-1", permalink: "grow-audience", name: "Grow audience" },
         openCount: 2,
         doneCount: 1,
         nextAction: expect.objectContaining({ id: "task-1", description: "Email Sarah" }),
@@ -148,7 +150,7 @@ describe("createProject — guards", () => {
 describe("createProject — happy path", () => {
   it("creates with trimmed name, returns id + name", async () => {
     const m = mockContext();
-    m.entities.Project.create.mockResolvedValue({ id: "proj-9", name: "New thing" });
+    m.entities.Project.create.mockResolvedValue({ id: "proj-9", permalink: "new-thing", name: "New thing" });
     m.entities.Project.count.mockResolvedValue(2);
 
     const result = await createProject(
@@ -156,29 +158,30 @@ describe("createProject — happy path", () => {
       m.context,
     );
 
-    expect(result).toEqual({ id: "proj-9", name: "New thing" });
+    expect(result).toEqual({ id: "proj-9", permalink: "new-thing", name: "New thing" });
     expect(m.entities.Project.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         name: "New thing",
+        permalink: "new-thing",
         userId: "user-1",
         lensId: "lens-1",
         goalId: "goal-1",
         description: "desc",
         order: 2, // seeded to count of existing projects under this goal
       }),
-      select: { id: true, name: true },
+      select: { id: true, permalink: true, name: true },
     });
   });
 
   it("seeds order=0 for a standalone project (no goal)", async () => {
     const m = mockContext();
-    m.entities.Project.create.mockResolvedValue({ id: "p", name: "Bare" });
+    m.entities.Project.create.mockResolvedValue({ id: "p", permalink: "bare", name: "Bare" });
 
     await createProject({ name: "Bare", lensId: "l" }, m.context);
 
     expect(m.entities.Project.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ goalId: undefined, description: undefined, order: 0 }),
-      select: { id: true, name: true },
+      data: expect.objectContaining({ permalink: "bare", goalId: undefined, description: undefined, order: 0 }),
+      select: { id: true, permalink: true, name: true },
     });
     // No goal → no goal-scoped count for order seeding. The cap-check count
     // call still happens (it scopes by lens + isDone, not goalId).
@@ -190,13 +193,14 @@ describe("createProject — happy path", () => {
 
 const PROJECT_DETAIL_ROW = {
   id: "proj-1",
+  permalink: "ship-product-v2",
   name: "Ship product v2",
   description: "The next milestone",
   dueDate: null as Date | null,
   isDone: false,
   order: 0,
   lensId: "lens-1",
-  goal: { id: "goal-1", name: "Grow audience" },
+  goal: { id: "goal-1", permalink: "grow-audience", name: "Grow audience" },
   tasks: [
     { id: "t-1", description: "Email Sarah", isDone: false, priority: "IMPORTANT", size: "S", status: "TODAY", dueDate: null },
     { id: "t-2", description: "Draft spec", isDone: true, priority: "NORMAL", size: "M", status: "SOMEDAY", dueDate: null },
@@ -213,15 +217,16 @@ describe("getProject — guards", () => {
 describe("getProject — happy path", () => {
   it("returns the project with its tasks + lensId for scoping", async () => {
     const m = mockContext();
-    m.entities.Project.findUnique.mockResolvedValue(PROJECT_DETAIL_ROW);
+    m.entities.Project.findFirst.mockResolvedValue(PROJECT_DETAIL_ROW);
 
     const result = await getProject({ id: "proj-1" }, m.context);
 
     expect(result).toMatchObject({
       id: "proj-1",
+      permalink: "ship-product-v2",
       name: "Ship product v2",
       lensId: "lens-1",
-      goal: { id: "goal-1", name: "Grow audience" },
+      goal: { id: "goal-1", permalink: "grow-audience", name: "Grow audience" },
       tasks: expect.arrayContaining([
         expect.objectContaining({ id: "t-1", description: "Email Sarah" }),
         expect.objectContaining({ id: "t-2", description: "Draft spec", isDone: true }),
@@ -229,14 +234,19 @@ describe("getProject — happy path", () => {
     });
 
     // Tenancy-safe: scoped by id AND userId.
-    expect(m.entities.Project.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "proj-1", userId: "user-1" } }),
+    expect(m.entities.Project.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          userId: "user-1",
+          OR: [{ id: "proj-1" }, { permalink: "proj-1" }],
+        },
+      }),
     );
   });
 
   it("returns null when the project isn't found (or isn't the user's)", async () => {
     const m = mockContext();
-    m.entities.Project.findUnique.mockResolvedValue(null);
+    m.entities.Project.findFirst.mockResolvedValue(null);
 
     const result = await getProject({ id: "nope" }, m.context);
     expect(result).toBeNull();

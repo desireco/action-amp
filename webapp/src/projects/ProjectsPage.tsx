@@ -3,19 +3,28 @@ import { useNavigate, useLocation } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getProjects, createProject, triageInboxItem, getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Chip, GroupedList, ProGate, type GroupDef } from "../components/ui";
+import {
+  Chip,
+  EntityComposer,
+  EntityCreateButton,
+  GroupedList,
+  ProgressCard,
+  ProjectsIcon,
+  ProGate,
+  type GroupDef,
+} from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "../lists/ListShell";
-import { CreateInline } from "../lists/CreateInline";
 import { FREE_LIMITS } from "../billing/config";
 import { useEntitled, extractEntitlementMessage } from "../billing/useEntitled";
 import type { EntitlementMessage } from "../billing/entitlement-types";
 import "./ProjectsPage.css";
-import "../lists/CreateInline.css";
 
 interface ProjectRow {
   id: string;
+  permalink: string;
   name: string;
+  description: string | null;
   dueDate: Date | string | null;
   goal: { id: string; name: string } | null;
   openCount: number;
@@ -24,8 +33,8 @@ interface ProjectRow {
 }
 
 /**
- * Projects — grouped by Goal (or "Standalone"). Each row shows progress
- * (X/Y done), due date, and a next-action preview (or a "no next action" badge).
+ * Projects — grouped by Goal (or "Standalone"). Each card shows progress,
+ * due date, and a focus preview.
  */
 export function ProjectsPage() {
   const lens = useActiveLens();
@@ -71,7 +80,7 @@ export function ProjectsPage() {
     { enabled: !!lens },
   );
 
-  const handleCreate = async (name: string) => {
+  const handleCreate = async (name: string, description?: string) => {
     if (!lens) return;
     setSubmitting(true);
     setGate(null);
@@ -86,7 +95,7 @@ export function ProjectsPage() {
         });
         fromInboxRef.current = null;
       } else {
-        await createProject({ name, lensId: lens.id });
+        await createProject({ name, lensId: lens.id, description });
       }
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
@@ -116,7 +125,7 @@ export function ProjectsPage() {
   // The create affordance: a normal button, OR — for a FREE user at the cap —
   // a ProGate trigger so the cap is a quiet upgrade path, not a dead button.
   const CreateControl = ({ empty }: { empty: boolean }) =>
-    atCap ? (
+    creating ? null : atCap ? (
       <ProGate
         asTrigger
         feature="New project"
@@ -126,9 +135,11 @@ export function ProjectsPage() {
         <span className="aa-progate-trigger__cta">Upgrade →</span>
       </ProGate>
     ) : (
-      <Button variant="secondary" size="sm" onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}>
-        {creating ? "Cancel" : "New project"}
-      </Button>
+      <EntityCreateButton
+        label="New project"
+        icon={ProjectsIcon}
+        onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}
+      />
     );
 
   // Allowance chip for FREE users (PRO sees no cap UI). Only when not at cap —
@@ -154,12 +165,18 @@ export function ProjectsPage() {
           <ProGate feature={gate.feature} reason={gate.reason} />
         )}
         {creating && (
-          <CreateInline
-            placeholder="Project name (e.g. ‘Ship product v2’)"
+          <EntityComposer
+            title="New project"
+            subtitle="Name the outcome. Add the shape of done if it helps."
+            nameLabel="Project"
+            namePlaceholder="Ship product v2"
+            descriptionLabel="What makes it done"
+            descriptionPlaceholder="The concrete result this project should create"
+            submitLabel="Create project"
             onCreate={handleCreate}
             onCancel={() => setCreating(false)}
             submitting={submitting}
-            initialValue={initialName}
+            initialName={initialName}
           />
         )}
         <ListEmpty
@@ -186,45 +203,46 @@ export function ProjectsPage() {
         <ProGate feature={gate.feature} reason={gate.reason} />
       )}
       {creating && (
-        <CreateInline
-          placeholder="Project name (e.g. ‘Ship product v2’)"
+        <EntityComposer
+          title="New project"
+          subtitle="Name the outcome. Add the shape of done if it helps."
+          nameLabel="Project"
+          namePlaceholder="Ship product v2"
+          descriptionLabel="What makes it done"
+          descriptionPlaceholder="The concrete result this project should create"
+          submitLabel="Create project"
           onCreate={handleCreate}
           onCancel={() => setCreating(false)}
           submitting={submitting}
-          initialValue={initialName}
+          initialName={initialName}
         />
       )}
       <GroupedList
+        className="aa-projects__groups"
         groups={groups}
         renderItem={(p) => {
           const total = p.openCount + p.doneCount;
           const pct = total === 0 ? 0 : Math.round((p.doneCount / total) * 100);
           return (
-            <button
-              type="button"
-              className="aa-project-row"
-              onClick={() => navigate(`/app/projects/${p.id}`)}
-            >
-              <div className="aa-project-row__head">
-                <span className="aa-project-row__name">{p.name}</span>
-                {p.dueDate && <Chip variant="teal" small>{formatDue(p.dueDate)}</Chip>}
-              </div>
-              <div className="aa-project-row__progress">
-                <div className="aa-project-row__bar">
-                  <div className="aa-project-row__fill" style={{ width: `${pct}%` }} />
-                </div>
-                <span className="aa-project-row__count">
-                  {p.doneCount}/{total} done
-                </span>
-              </div>
-              <div className="aa-project-row__next">
-                {p.nextAction ? (
-                  <span className="aa-project-row__next-action">→ {p.nextAction.description}</span>
-                ) : (
-                  <Chip variant="muted" small>No next action</Chip>
-                )}
-              </div>
-            </button>
+            <ProgressCard
+              className="aa-project-card"
+              to={`/app/projects/${p.permalink}`}
+              title={p.name}
+              description={p.description}
+              progress={pct}
+              progressLabel={`${p.doneCount}/${total} done`}
+              meta={
+                <>
+                  <span>{p.openCount} open</span>
+                  <span className="aa-projects__dot" aria-hidden="true">·</span>
+                  <span>{p.doneCount} done</span>
+                  {p.dueDate && <Chip variant="teal" small>{formatDue(p.dueDate)}</Chip>}
+                </>
+              }
+              focusLabel={p.nextAction ? "Focus" : "Status"}
+              focusValue={p.nextAction?.description ?? "No next action"}
+              focusTone={p.nextAction ? "amber" : "muted"}
+            />
           );
         }}
       />

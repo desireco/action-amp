@@ -9,13 +9,14 @@ import type {
 } from "wasp/server/operations";
 import { FREE_LIMITS } from "../billing/config";
 import { assertLensAllowed, assertUnderCap, throwHttpStatus } from "../billing/entitlementHttp";
+import { uniquePermalink } from "../shared/permalinks";
 
 /**
  * Goals list for the Goals page, scoped to the active Lens.
  * Each goal rolls up: linked project count + standalone task count + aggregate
- * completion progress across all its projects + tasks. Also returns the "next"
+ * completion progress across all its projects + tasks. Also returns the focus
  * project (first non-done in `order`) so the goal card can surface a single
- * muted "Next: <name>" line (goal-planning spec §E).
+ * muted "Focus: <name>" line (goal-planning spec §E).
  */
 export const getGoals = (async (args, context) => {
   if (!context.user) {
@@ -36,7 +37,7 @@ export const getGoals = (async (args, context) => {
       // Projects carry `order` so we can pick the first non-done one as "next".
       projects: {
         orderBy: [{ order: "asc" }, { name: "asc" }],
-        select: { id: true, name: true, isDone: true, order: true },
+        select: { id: true, permalink: true, name: true, isDone: true, order: true },
       },
       tasks: { select: { id: true, isDone: true } },
     },
@@ -49,18 +50,19 @@ export const getGoals = (async (args, context) => {
     const tasksTotal = g.tasks.length;
     const doneCount = projectsDone + tasksDone;
     const totalCount = projectsTotal + tasksTotal;
-    // "Next" = first non-done project in sequence order. Absent when the goal
+    // Focus = first non-done project in sequence order. Absent when the goal
     // has no projects or all are done (the "never lies" rule — no fabricated
     // content). The goal-planning spec §E.
     const nextProject = g.projects.find((p) => !p.isDone) ?? null;
     return {
       id: g.id,
+      permalink: g.permalink,
       name: g.name,
       description: g.description,
       projectCount: projectsTotal,
       taskCount: tasksTotal,
       progress: totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100),
-      nextProject: nextProject ? { id: nextProject.id, name: nextProject.name } : null,
+      nextProject: nextProject ? { id: nextProject.id, permalink: nextProject.permalink, name: nextProject.name } : null,
     };
   });
 }) satisfies GetGoals<{ lensId: string }>;
@@ -77,15 +79,18 @@ export const getGoal = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  return await context.entities.Goal.findUnique({
-    where: { id: args.id, userId: context.user.id },
+  return await context.entities.Goal.findFirst({
+    where: {
+      userId: context.user.id,
+      OR: [{ id: args.id }, { permalink: args.id }],
+    },
     include: {
       // Standalone tasks under this goal, with project/goal for TaskRow.
       tasks: {
         orderBy: [{ order: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
         include: {
           tags: true,
-          project: { select: { id: true, name: true } },
+          project: { select: { id: true, permalink: true, name: true } },
           goal: { select: { id: true, name: true } },
         },
       },
@@ -95,6 +100,7 @@ export const getGoal = (async (args, context) => {
         orderBy: [{ order: "asc" }, { name: "asc" }],
         select: {
           id: true,
+          permalink: true,
           name: true,
           isDone: true,
           order: true,
@@ -128,20 +134,29 @@ export const createGoal = (async (args, context) => {
     reason: "link work to more than one outcome with Pro",
   });
 
+  const permalink = await uniquePermalink(name, async (candidate) => {
+    const existing = await context.entities.Goal.findFirst({
+      where: { userId: context.user!.id, permalink: candidate },
+      select: { id: true },
+    });
+    return !!existing;
+  });
+
   return await context.entities.Goal.create({
     data: {
       name,
+      permalink,
       userId: context.user.id,
       lensId: args.lensId,
       description: args.description,
     },
-    select: { id: true, name: true },
+    select: { id: true, permalink: true, name: true },
   });
 }) satisfies CreateGoal<{
   name: string;
   lensId: string;
   description?: string;
-}, { id: string; name: string }>;
+}, { id: string; permalink: string; name: string }>;
 
 // ----------------------------------------------------------------
 // Lifecycle: complete / reopen a goal (spec §A, §B)

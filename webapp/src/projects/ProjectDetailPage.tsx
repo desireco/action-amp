@@ -31,18 +31,19 @@ type ProjectTask = TaskRowTask & {
 
 type ProjectData = {
   id: string;
+  permalink: string;
   name: string;
   description: string | null;
   dueDate: Date | string | null;
   isDone: boolean;
   order: number;
   lensId: string;
-  goal: { id: string; name: string } | null;
+  goal: { id: string; permalink: string; name: string } | null;
   tasks: ProjectTask[];
 };
 
-type GoalOption = { id: string; name: string };
-type ProjectOption = { id: string; name: string };
+type GoalOption = { id: string; permalink: string; name: string };
+type ProjectOption = { id: string; permalink: string; name: string };
 
 /**
  * Project detail — the dedicated URL for working on a single Project. Shows its
@@ -58,11 +59,11 @@ type ProjectOption = { id: string; name: string };
  * lens), so a task you add here always joins the right lens.
  */
 export function ProjectDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { permalink } = useParams<{ permalink: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: project, isLoading, error } = useQuery(getProject, { id: id! });
+  const { data: project, isLoading, error } = useQuery(getProject, { id: permalink! });
   const [creating, setCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 

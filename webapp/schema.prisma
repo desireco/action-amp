@@ -146,6 +146,7 @@ enum LensKind {
 model Goal {
   id          String   @id @default(uuid())
   name        String
+  permalink   String
   description String?
   isDone      Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -162,6 +163,7 @@ model Goal {
   resources Resource[] // resources filed directly under the goal
 
   @@unique([userId, name]) // unique goal names per user
+  @@unique([userId, permalink])
 }
 
 // ============================================================
@@ -172,6 +174,7 @@ model Goal {
 model Project {
   id          String    @id @default(uuid())
   name        String
+  permalink   String
   description String?
   dueDate     DateTime?
   isDone      Boolean   @default(false)
@@ -193,6 +196,8 @@ model Project {
 
   tasks     Task[]
   resources Resource[]
+
+  @@unique([userId, permalink])
 }
 
 // ============================================================

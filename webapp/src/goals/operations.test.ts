@@ -29,11 +29,12 @@ import { mockContext } from "../test/mockContext";
 
 const GOAL_ROW = {
   id: "goal-1",
+  permalink: "grow-audience",
   name: "Grow audience",
   description: "Reach 10k followers" as string | null,
   projects: [
-    { id: "p1", name: "Newsletter", isDone: true, order: 0 },
-    { id: "p2", name: "Twitter", isDone: false, order: 1 },
+    { id: "p1", permalink: "newsletter", name: "Newsletter", isDone: true, order: 0 },
+    { id: "p2", permalink: "twitter", name: "Twitter", isDone: false, order: 1 },
   ],
   tasks: [
     { id: "t1", isDone: true },
@@ -69,12 +70,13 @@ describe("getGoals — happy path", () => {
     expect(result).toEqual([
       {
         id: "goal-1",
+        permalink: "grow-audience",
         name: "Grow audience",
         description: "Reach 10k followers",
         projectCount: 2,
         taskCount: 2,
         progress: 50,
-        nextProject: { id: "p2", name: "Twitter" },
+        nextProject: { id: "p2", permalink: "twitter", name: "Twitter" },
       },
     ]);
   });
@@ -99,9 +101,9 @@ describe("getGoals — happy path", () => {
       {
         ...GOAL_ROW,
         projects: [
-          { id: "p1", name: "A", isDone: true, order: 0 },
-          { id: "p2", name: "B", isDone: false, order: 1 },
-          { id: "p3", name: "C", isDone: false, order: 2 },
+          { id: "p1", permalink: "a", name: "A", isDone: true, order: 0 },
+          { id: "p2", permalink: "b", name: "B", isDone: false, order: 1 },
+          { id: "p3", permalink: "c", name: "C", isDone: false, order: 2 },
         ],
         tasks: [],
       },
@@ -116,7 +118,7 @@ describe("getGoals — happy path", () => {
     m.entities.Goal.findMany.mockResolvedValue([
       {
         ...GOAL_ROW,
-        projects: [{ id: "p1", name: "Done one", isDone: true, order: 0 }],
+        projects: [{ id: "p1", permalink: "done-one", name: "Done one", isDone: true, order: 0 }],
         tasks: [],
       },
     ]);
@@ -144,34 +146,35 @@ describe("createGoal — guards", () => {
 describe("createGoal — happy path", () => {
   it("creates with trimmed name, returns id + name", async () => {
     const m = mockContext();
-    m.entities.Goal.create.mockResolvedValue({ id: "goal-9", name: "New goal" });
+    m.entities.Goal.create.mockResolvedValue({ id: "goal-9", permalink: "new-goal", name: "New goal" });
 
     const result = await createGoal(
       { name: "  New goal  ", lensId: "lens-1", description: "some desc" },
       m.context,
     );
 
-    expect(result).toEqual({ id: "goal-9", name: "New goal" });
+    expect(result).toEqual({ id: "goal-9", permalink: "new-goal", name: "New goal" });
     expect(m.entities.Goal.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         name: "New goal",
+        permalink: "new-goal",
         userId: "user-1",
         lensId: "lens-1",
         description: "some desc",
       }),
-      select: { id: true, name: true },
+      select: { id: true, permalink: true, name: true },
     });
   });
 
   it("works without optional description", async () => {
     const m = mockContext();
-    m.entities.Goal.create.mockResolvedValue({ id: "g", name: "Bare" });
+    m.entities.Goal.create.mockResolvedValue({ id: "g", permalink: "bare", name: "Bare" });
 
     await createGoal({ name: "Bare", lensId: "l" }, m.context);
 
     expect(m.entities.Goal.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ description: undefined }),
-      select: { id: true, name: true },
+      data: expect.objectContaining({ permalink: "bare", description: undefined }),
+      select: { id: true, permalink: true, name: true },
     });
   });
 });

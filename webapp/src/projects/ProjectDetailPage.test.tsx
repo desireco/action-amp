@@ -55,6 +55,7 @@ const { ProjectDetailPage } = await import("./ProjectDetailPage");
 function makeProject(overrides: Record<string, unknown> = {}) {
   return {
     id: "p1",
+    permalink: "ship-product-v2",
     name: "Ship product v2",
     description: "Next milestone",
     dueDate: null,
@@ -77,9 +78,9 @@ function renderAt(path: string) {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
-          <Route path="/app/projects/:id" element={<ProjectDetailPage />} />
+          <Route path="/app/projects/:permalink" element={<ProjectDetailPage />} />
           <Route path="/app/projects" element={<div data-testid="projects-list" />} />
-          <Route path="/app/goals/:id" element={<div data-testid="goal-detail" />} />
+          <Route path="/app/goals/:permalink" element={<div data-testid="goal-detail" />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,

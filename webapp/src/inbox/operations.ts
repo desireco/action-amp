@@ -2,6 +2,7 @@ import type { CreateInboxItem, GetInboxItems, TriageInboxItem, RestoreArchivedIt
 import { parseCapture, type ParsedPriority, type ParsedSize } from "./parseCapture";
 import { FREE_LIMITS } from "../billing/config";
 import { assertLensAllowed, assertUnderCap } from "../billing/entitlementHttp";
+import { uniquePermalink } from "../shared/permalinks";
 
 /**
  * Inbox operations — the capture destination + the triage transformation.
@@ -187,9 +188,18 @@ export const triageInboxItem = (async (args, context) => {
         feature: "a 4th project",
         reason: "organize more than 3 projects with Pro",
       });
+      const name = args.name?.trim() || item.text;
+      const permalink = await uniquePermalink(name, async (candidate) => {
+        const existing = await context.entities.Project.findFirst({
+          where: { userId: context.user!.id, permalink: candidate },
+          select: { id: true },
+        });
+        return !!existing;
+      });
       const project = await context.entities.Project.create({
         data: {
-          name: args.name?.trim() || item.text,
+          name,
+          permalink,
           userId: context.user.id,
           lensId,
           goalId: args.goalId,

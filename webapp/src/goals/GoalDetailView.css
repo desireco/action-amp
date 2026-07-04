@@ -67,7 +67,7 @@
   color: var(--aa-text-3);
 }
 
-/* "Next: <project>" — a single muted line under the header (spec §E). Quiet,
+/* "Focus: <project>" — a single muted line under the header (spec §E). Quiet,
    not a banner; absent when there's no next project. */
 .aa-goal__next {
   margin: var(--aa-space-xs) 0 0;

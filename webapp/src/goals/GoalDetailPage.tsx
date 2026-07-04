@@ -15,7 +15,7 @@ import {
   ConfirmDialog,
   type TaskRowTask,
 } from "../components/ui";
-import "./GoalDetailPage.css";
+import "./GoalDetailView.css";
 
 type GoalTask = TaskRowTask & {
   status: "TODAY" | "UPCOMING" | "SOMEDAY";
@@ -23,6 +23,7 @@ type GoalTask = TaskRowTask & {
 
 type LinkedProject = {
   id: string;
+  permalink: string;
   name: string;
   isDone: boolean;
   order: number;
@@ -32,6 +33,7 @@ type LinkedProject = {
 
 type GoalData = {
   id: string;
+  permalink: string;
   name: string;
   description: string | null;
   isDone: boolean;
@@ -48,14 +50,14 @@ type GoalData = {
  *
  * Header affordances (goal-planning spec §B, §C, §E): Complete / Reopen, inline
  * edit of name + description, delete/archive flow, the muted
- * "Next: <project>" line, and the linked projects/progress list.
+ * "Focus: <project>" line, and the linked projects/progress list.
  */
 export function GoalDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { permalink } = useParams<{ permalink: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: goal, isLoading, error } = useQuery(getGoal, { id: id! });
+  const { data: goal, isLoading, error } = useQuery(getGoal, { id: permalink! });
 
   // Header affordances: edit, confirm-delete. Each opens a small inline surface
   // or the centered ConfirmDialog (the codebase's standard confirm pattern).
@@ -85,9 +87,9 @@ export function GoalDetailPage() {
     };
   }, [goal]);
 
-  // "Next" project — first non-done in sequence order (goal-planning spec §E).
+  // "Focus" project — first non-done in sequence order (goal-planning spec §E).
   // The list is already ordered [order, name] by getGoal, so the first non-done
-  // entry is the next toward this goal. Absent when all projects are done or
+  // entry is the focus toward this goal. Absent when all projects are done or
   // there are none — no fabricated content.
   const nextProject = useMemo(
     () => goal?.projects.find((p) => !p.isDone) ?? null,
@@ -229,7 +231,7 @@ export function GoalDetailPage() {
                   )}
                   {nextProject && (
                     <p className="aa-goal__next">
-                      Next: <Link to={`/app/projects/${nextProject.id}`}>{nextProject.name}</Link>
+                      Focus: <Link to={`/app/projects/${nextProject.permalink}`}>{nextProject.name}</Link>
                     </p>
                   )}
                 </>
@@ -289,7 +291,7 @@ export function GoalDetailPage() {
                           ↓
                         </button>
                       </div>
-                      <Link to={`/app/projects/${p.id}`} className="aa-goal__project-link">
+                      <Link to={`/app/projects/${p.permalink}`} className="aa-goal__project-link">
                         <span className="aa-goal__project-name">{p.name}</span>
                         {p.isDone && <Chip variant="muted" small>Done</Chip>}
                         {pTotal > 0 && <span className="aa-goal__project-pct">{pct}%</span>}
