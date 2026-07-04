@@ -118,74 +118,78 @@ item; Build pulls `ready`.**
    "never lies" invariant verified across all input combinations; rendering
    blocker caught + fixed. Prerequisite for focus-engine-v2 (which extends
    this line to explain moment-fit). → §Shipped.
-3. **focus-engine-v2** (`ready`, **gated on the matcher test**) — the
-   moment-aware matcher: time-available + energy refinement *on top of* the
-   existing priority sort (FEATURES.md F10's planned layer). The matcher
-   re-ranks within a priority tier only — never demotes priority. Pro-gated.
-   **Before building: run `docs/research/matcher-test-runbook.md`** (zero-cost,
-   ~20 people, 2 days) — the roast (<`docs/research/wedge-defensibility-roast-
-   2026-06-27.md`>) found the matcher is the only real moat but currently the
-   weakest shipped part. The test decides: build as-spec'd, reshape, or icebox.
-   **The runbook is now a tracked spec** — `docs/specs/matcher-validation.md`
-   (`draft`, Discover+user, zero-code), promoted out of the buried reference so
-   the queue reflects that it is real work with a real outcome.
+3. **focus-engine-v2** (`draft`, **gated on the matcher test + 3 definition
+   gaps**) — the moment-aware matcher: time-available + energy refinement *on
+   top of* the existing priority sort (FEATURES.md F10's planned layer). The
+   matcher re-ranks within a priority tier only — never demotes priority.
+   Pro-gated. **Flipped `ready → draft` 2026-07-03 (review):** the matcher-test
+   gate still holds (`docs/specs/matcher-validation.md` — run it first), plus
+   three definition gaps — (A) depends on a `tag-management` UI that doesn't
+   exist (the matcher reads energy/time tags users can't set); (B) the moment
+   bar is under-designed for the wedge surface (needs a locked mockup); (C) the
+   fallback-invariant test claim was incorrect. Details in the spec; the
+   matcher-test run resolves the gate while Discover closes the gaps.
 4. **command-palette-search** (`ready`) — command palette + full-text search across **all**
     tasks (open + done). The two Pro-tier features most likely to justify the
     price to an existing user. Depends on entitlement-enforcement.
 
 ### Then (earn-the-revenue work — gated on ≥1 paying non-founder user)
 
-1. **breadcrumb-nav** (`ready`, small) — the `Breadcrumb` component works
-    (crumbs are `<button>`s) but is wired only into the design-system demo, not
-    the Project/Goal detail pages (both use a `← Back` Link). Per BACKLOG.md's
-    BUILD REQUIREMENT (2026-06-16), clicking an ancestor crumb should re-anchor
-    the view at that scope. Spun out of `friction-cleanup` at sign-off: wiring
-    it means choosing the WORKFLOW.md "zoom/anchor" model vs the route-based
-    model the rest of the app already uses — an interaction-design decision,
-    not a cleanup finish. Includes the goal-card hover-implies-clickable nit
-    (same "list ↔ detail" affordance question).
-2. **resources-project-owned** (`ready`) — make the existing-but-invisible
-    `Resource` entity real: project-owned links+notes, surfaced on the Project
-    detail page (add/edit/delete), with tasks referencing their project's
-    resources (many-to-many) and a **delete-with-impact** flow that shows which
-    tasks depend on a resource before you remove it. Closes the gap `PAGES.md`
-    already promises, and lands the PARA "reference material" leg of the
-    structure-depth differentiator named in §"The threat the docs under-price."
-    Narrowing resources from "Project or Goal" to **project-owned** is a
-    structural simplification (DB-enforceable invariant, no picker). Spec at
-    `docs/specs/resources-project-owned.md`. Gated on items 7–11 like the rest
-    of this tier — depth earns its keep after retention + the matcher prove
-    someone stays.
+1. **breadcrumb-nav** (`ready`, small — model locked 2026-07-03) — the
+    `Breadcrumb` component works (crumbs are `<button>`s) but is wired only
+    into the design-system demo, not the Project/Goal detail pages (both use a
+    `← Back` Link). Per BACKLOG.md's BUILD REQUIREMENT (2026-06-16), clicking
+    an ancestor crumb should re-anchor the view at that scope. **Spec at
+    `docs/specs/breadcrumb-nav.md` — `ready` (route model locked: crumbs
+    navigate to the ancestor's existing route, uniform with the app, no new
+    view-state layer).** Includes the goal-card hover-implies-clickable nit.
+2. **resources-project-owned** (`ready`, confirmed 2026-07-03) — make the
+    existing-but-invisible `Resource` entity real: project-owned links+notes,
+    surfaced on the Project detail page (add/edit/delete), with tasks
+    referencing their project's resources and a **delete-with-impact** flow
+    that shows which tasks depend on a resource before you remove it. Closes
+    the gap `PAGES.md` already promises; lands the PARA "reference material"
+    leg of the structure-depth differentiator (§"The threat the docs
+    under-price"). **Two structural questions resolved 2026-07-03:** (A) the
+    Task↔Resource link is an **explicit `TaskResource` join** (DB-enforces the
+    same-project invariant, not an app-layer guard); (B) reconciles with
+    `cli-comments-resources` (this spec is the source of truth for Resource's
+    shape). Spec at `docs/specs/resources-project-owned.md`. Gated on items
+    7–11 like the rest of this tier.
 3. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
     marketing pack, the real pricing page. Only worth doing once items 7–11
     prove someone stays and pays.
-4. **cli** (`ready`, **developer surface — not validation-critical**) — a
-    top-level `cli/` package (typed library + thin binary) that talks to the
-    HTTP API via **Personal Access Tokens** added to the backend, plus four
-    paired orchestration skills (inbox-triage, goal-breakdown, today-balancer,
-    task-research) that shell out to `actionamp <cmd> --json`. Headline command
-    is `actionamp now`. **Honest framing:** this is a power-user / developer
-    surface, not part of the validation gauntlet (§"Now") — the roadmap's own
-    thesis is that adding surfaces before proving anyone wants the existing
-    product is malpractice. So it's `ready` for Build to pull
+4. **cli** (`effort split into 3 specs 2026-07-03`, **developer surface — not
+    validation-critical**) — a top-level `cli/` package (typed library + thin
+    binary) that talks to the HTTP API via **Personal Access Tokens** added to
+    the backend, plus four paired orchestration skills (inbox-triage,
+    goal-breakdown, today-balancer, task-research) that shell out to
+    `actionamp <cmd> --json`. Headline command is `actionamp now`. **Honest
+    framing:** this is a power-user / developer surface, not part of the
+    validation gauntlet (§"Now") — the roadmap's own thesis is that adding
+    surfaces before proving anyone wants the existing
+    product is malpractice. So the effort is `ready` for Build to pull
     **opportunistically** (a self-contained, well-scoped piece of work; or when
     the skills need a machine interface), not a jump-the-queue item. Ships only
     what the backend already exposes; missing writes filed as
     `cli-write-ops.md` (`deferred`) + `cli-comments-resources.md` (`deferred`,
-    unblocks the `task-research` skill). Spec at `docs/specs/cli.md`.
+    unblocks the `task-research` skill). **Split into three specs 2026-07-03:**
+    `cli-pat-plumbing` (`ready`, the natural first pull), `cli-package`
+    (`draft` — op-refactor scope unscoped), `cli-skills` (`draft` — depends on
+    cli-package). Umbrella + cross-cutting decisions: `docs/specs/cli.md`.
 5. **goal-planning** (`ready`, new 2026-07-03) — the Planning area is
-    **read-mostly today**: you can create Goals/Projects and read roll-ups, but
-    cannot complete, reopen, edit, delete, or re-link them, and cannot start a
-    Project from inside a Goal (`isDone`/`completedAt` on both models are
-    write-only-by-hand; `grep updateProject|completeGoal|deleteGoal` → zero
-    matches). This closes the lifecycle + alignment holes and adds one
-    lightweight planning affordance: an explicit **sequence** of Projects under
-    a Goal, with the first one surfaced as "the next project toward this goal."
-    Pure Planning-area completion — no new routes, no matcher impact (independent
-    of `focus-engine-v2`). Same tier as `resources-project-owned` + `breadcrumb-nav`
-    per user decision 2026-07-03: depth/polish on a shipped surface, gated like
-    the rest of this tier. Spec at `docs/specs/goal-planning.md`; catalog at
-    `docs/features/goal-planning.md`.
+   **read-mostly today**: you can create Goals/Projects and read roll-ups, but
+   cannot complete, reopen, edit, delete, or re-link them, and cannot start a
+   Project from inside a Goal (`isDone`/`completedAt` on both models are
+   write-only-by-hand; `grep updateProject|completeGoal|deleteGoal` → zero
+   matches). This closes the lifecycle + alignment holes and adds one
+   lightweight planning affordance: an explicit **sequence** of Projects under
+   a Goal, with the first one surfaced as "the next project toward this goal."
+   Pure Planning-area completion — no new routes, no matcher impact (independent
+   of `focus-engine-v2`). Same tier as `resources-project-owned` + `breadcrumb-nav`
+   per user decision 2026-07-03: depth/polish on a shipped surface, gated like
+   the rest of this tier. Spec at `docs/specs/goal-planning.md`; catalog at
+   `docs/features/goal-planning.md`.
 6. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
     Lens-scoped page (hero + Today | Done columns), and reshapes how a task is
     worked: **no completion circle anywhere** (complete only from focus mode —
@@ -200,19 +204,22 @@ item; Build pulls `ready`.**
     so it sits in this tier (post-gauntlet), not the validation gauntlet.
     Interactive prototype at `docs/mockups/today-merged.html`. Spec at
     `docs/specs/work-area-merged.md`.
-6. **weekly-monthly-review** (`draft` — needs spec) — the Review area is
+6. **weekly-monthly-review** (`draft`, spec written) — the Review area is
     WORKFLOW.md §2.5's "least-built area, net-new work": today it's just the
-    Logbook (a flat list grouped by day). This adds **weekly + monthly review**
-    surfaces that collect and organize the period's work — completed tasks &
-    projects grouped by Goal/Project, progress made (delta vs. last period),
-    stuck/aged items, deferred-again items. The "actions done" raw data already
-    exists (`Task.completedAt`, `Project.completedAt`, the `getGoals` rollup);
-    the richer "progress" signal (Started/Paused/Completed events) **does not**
-    — it ships with `work-area-merged`'s `kind` enum on `TaskUpdate`, so the
-    two pair naturally. **Calm by rule:** trends yes, streaks/guilt-trip red
-    dots never (PRODUCT.md bans them). Honest framing: like everything in this
-    tier, it sits behind the validation gauntlet — a Review surface earns its
-    keep after someone stays long enough to have a week to look back on.
+    Logbook (a flat list grouped by day). Adds `/app/review/weekly` +
+    `/app/review/monthly` — period debriefs that group the window's completed
+    tasks/projects **by Goal/Project** (not by day), show a **progress delta**
+    vs. the prior period reusing `getGoals`' rollup math, and surface
+    **stuck/aging** items (overdue, interrupted-Now >7d, never-Today >30d) —
+    all inspectable today, surfaced nowhere. Split: **v1 range review**
+    (completions + stuck, buildable on the current schema) and **v2 activity
+    review** (timeline progress), **gated on `work-area-merged`'s `kind` enum
+    on `TaskUpdate`** — the Started/Paused/Completed events don't exist yet.
+    Entitlement lean: **Pro-only** (sidesteps the half-enforced 30-day Logbook
+    cap in PRICING.md §4, fits the tier). Calm by rule: trends yes,
+    streaks/guilt-trip red dots never (PRODUCT.md bans them). Spec at
+    `docs/specs/weekly-monthly-review.md` — `ready` needs the entitlement call
+    confirmed + a `docs/mockups/review-week.html` throwaway.
 
 ## Branch state (2026-06-27)
 
@@ -240,9 +247,14 @@ What landed and was signed off:
 
 1. `doc-reconciliation` is now the priority — the merged fix branch edited
    canonical docs; reconcile them so planning isn't split-brain.
-2. The `ready` specs are the queue: observability, social-auth,
-   focus-why-transparent, focus-engine-v2, command-palette, breadcrumb-nav,
-   resources-project-owned.
+2. The `ready` specs are the queue (2026-07-03 review): **observability-
+   minimal** (gated by `gtm-analytics-account`), **retention-criticalpath**
+   (depends on observability), **command-palette-search**,
+   **resources-project-owned**, **breadcrumb-nav** (route model locked),
+   **tag-management** (unblocks focus-engine-v2), **cli-pat-plumbing**
+   (opportunistic). Flipped to `draft` after review: **focus-engine-v2** (needs
+   tag-management + a mockup + matcher-test gate), **cli-package** +
+   **cli-skills**.
 
 ## Shipped
 
@@ -531,8 +543,9 @@ roadmaps forget and most launches stall on.
 - [x] Entitlement caps → **`entitlement-enforcement`** (`done`)
 - [x] Friction cleanup → **`friction-cleanup`** (`done`; breadcrumb-nav spun out)
 - [ ] Command palette + search → **`command-palette-search`** (`ready`)
-- [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup)
-- [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`)
+- [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup; route model locked 2026-07-03)
+- [ ] Tag management UI + reserved-tag seeding → **`tag-management`** (`ready`, written 2026-07-03; unblocks `focus-engine-v2`)
+- [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`, confirmed 2026-07-03)
 - [ ] Goal/Project lifecycle (complete/edit/relink/sequence) → **`goal-planning`** (`ready`)
 
 ### B. Non-code items the user owns (no spec — these are setup/decisions)
