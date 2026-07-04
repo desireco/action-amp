@@ -1,7 +1,7 @@
 ---
 id: capture-grammar
 kind: spec
-title: "Capture grammar v2 (#tags, @time, [[lens]], resolver-driven projects)"
+title: "Capture grammar v2 (#tags, @time, [[lens]], resolver-driven projects + capture typeahead)"
 status: draft
 priority: P2
 feature: capture-grammar
@@ -97,6 +97,54 @@ commit to (the `[[ ]]`-inferred lens, else the active lens):
 This replaces the dead `parsedProject` resolution path: the project is found
 from free text, not from a sigil, and it's resolved in the right lens.
 
+## Capture-time project typeahead
+
+The resolver surfaces a project match one step later, at triage. **Typeahead
+brings discovery forward to capture** — closes the original "I can't see my
+projects when I'm typing" gap, and lets a confident pick at capture skip the
+triage guess entirely. The resolver and typeahead are complements, not
+alternatives: typeahead is the explicit path (user picks), resolver is the
+inferred path (system guesses).
+
+**UI shape — picker row under the textarea (recommended v1):** A small
+`Project: General ▾` element below the textarea, mirroring the dominant
+task-app pattern (Things / Todoist / TickTick all use a separate project
+picker, not inline mention syntax). Click or `Tab` from the textarea opens a
+popover with a searchable list of the active lens's projects. Selecting one
+writes the project name to `parsedProject` (same field the resolver uses) and
+renders a `▣ name` chip in the live preview — same chip that already renders
+today for a parser-detected hint.
+
+- **Scope:** the active lens's projects by default. If the text contains a
+  `[[ ]]` lens token, the picker switches to that lens's projects the moment
+  the token is parsed (live, on parse — same reactivity as the existing
+  preview chips).
+- **Default state:** "General" (or whatever the lens's catch-all project is
+  named). Empty selection is not allowed — the resolver's job is to make the
+  non-pick path smart, the picker's job is to make the pick path fast.
+- **Keyboard:** `Tab` from textarea opens the picker focused; arrow keys move;
+  `Enter` confirms; `Esc` closes without selection and returns focus to the
+  textarea. No new global shortcut — `Tab` is the natural "move to next field"
+  affordance and the picker is the next field.
+- **Search:** exact prefix match (case-insensitive) on project name. No
+  fuzzy — same v1 bar as the resolver. If the lens has ≤8 projects, the list
+  shows all without typing.
+- **Compose with resolver:** an explicit pick at capture sets `parsedProject`
+  and the resolver at triage **does not re-guess** — the pick wins silently
+  (it's already the right answer; no chip needed). If the user didn't pick,
+  the resolver runs as specified in §"Project resolver (v1 bar)".
+- **No new field, no schema change.** Typeahead writes to the existing
+  `parsedProject` column. The picker is a capture-time UI surface over the
+  same storage path.
+
+**Alternative considered and deferred — inline mention dropdown:** a Slack/
+Linear-style suggestion popover anchored to a word being typed that prefix-
+matches a project name. Rejected for v1 because (a) every-word matching is
+noisy when common project names like "Email" collide with ordinary words,
+(b) caret + word-boundary tracking is materially more code than a picker row,
+(c) the picker-row pattern is what users coming from Things/Todoist/Taskpaper
+expect. Revisit if v1 ships and the picker feels too far from the text.
+
 ## Confirmation model (WORKFLOW.md §5.5 preserved)
 
 `[[ ]]` and project-inferred lens both **pre-fill** the Context step:
@@ -161,6 +209,16 @@ choice, the user ratifies it. The common case is still one Continue.
 - [ ] Placeholder text updated to reflect the new grammar (no more `#mvp`
       example; demonstrate `#tag`, `@time`, `[[lens]]`).
 - [ ] Captured-stack chips render the lens token alongside the others.
+- [ ] **Project typeahead picker** below the textarea: shows `Project: <name> ▾`,
+      opens a searchable popover of the active lens's projects (or the `[[ ]]`
+      lens's projects when a lens token is present). `Tab` opens, arrows move,
+      `Enter` confirms, `Esc` closes. Prefix match only; ≤8 projects shows all.
+- [ ] Selecting a project writes to `parsedProject` and renders the `▣ name`
+      chip in the live preview (same chip the parser path uses today).
+- [ ] When the picker writes a project, the triage resolver **does not re-guess**
+      — the explicit pick wins silently (no "from project X" chip).
+- [ ] `AppShell.tsx` passes the active lens (or its projects) to `CapturePopover`
+      so the picker has its source list without a new query.
 
 ## Non-goals
 
@@ -185,8 +243,10 @@ choice, the user ratifies it. The common case is still one Continue.
 ## Open questions
 
 _(none)_ — grammar split, `[[ ]]` resolution, resolver v1 bar, `[[ ]]`
-precedence over project-inferred lens, and §5.5 preservation are all locked.
-Fuzzy matching and task-shaping are explicitly non-goals pending v1 evidence.
+precedence over project-inferred lens, capture-time typeahead (picker row,
+`Tab` to open, prefix-match, explicit pick wins over resolver), and §5.5
+preservation are all locked. Fuzzy matching and task-shaping are explicitly
+non-goals pending v1 evidence.
 
 ## Doc cascade
 
