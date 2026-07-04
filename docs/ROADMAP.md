@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-03 (Discover — feature catalog stood up at docs/features/; SUCCESS.md (the bets) added; GTM prep B promoted to tracked backlog units; matcher-validation spec drafted, gates focus-engine-v2) -->
+<!-- Last reviewed: 2026-07-03 (Discover — feature catalog stood up at docs/features/; SUCCESS.md (the bets) added; GTM prep B promoted to tracked backlog units; matcher-validation spec drafted, gates focus-engine-v2; weekly-monthly-review added to Then tier) -->
 
 ---
 
@@ -187,6 +187,19 @@ item; Build pulls `ready`.**
     so it sits in this tier (post-gauntlet), not the validation gauntlet.
     Interactive prototype at `docs/mockups/today-merged.html`. Spec at
     `docs/specs/work-area-merged.md`.
+6. **weekly-monthly-review** (`draft` — needs spec) — the Review area is
+    WORKFLOW.md §2.5's "least-built area, net-new work": today it's just the
+    Logbook (a flat list grouped by day). This adds **weekly + monthly review**
+    surfaces that collect and organize the period's work — completed tasks &
+    projects grouped by Goal/Project, progress made (delta vs. last period),
+    stuck/aged items, deferred-again items. The "actions done" raw data already
+    exists (`Task.completedAt`, `Project.completedAt`, the `getGoals` rollup);
+    the richer "progress" signal (Started/Paused/Completed events) **does not**
+    — it ships with `work-area-merged`'s `kind` enum on `TaskUpdate`, so the
+    two pair naturally. **Calm by rule:** trends yes, streaks/guilt-trip red
+    dots never (PRODUCT.md bans them). Honest framing: like everything in this
+    tier, it sits behind the validation gauntlet — a Review surface earns its
+    keep after someone stays long enough to have a week to look back on.
 
 ## Branch state (2026-06-27)
 
