@@ -157,6 +157,21 @@
   text-align: center;
 }
 
+.aa-triage-step__hint {
+  font-size: 0.8rem;
+  color: var(--aa-text-muted);
+  margin: var(--aa-space-xs) 0 0;
+  text-align: center;
+}
+
+.aa-triage-step__hint code {
+  font-family: inherit;
+  background: var(--aa-bg-chip, var(--aa-bg-elevated));
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  color: var(--aa-accent-teal);
+}
+
 .aa-triage-step__continue {
   align-self: center;
   margin-top: var(--aa-space-xs);

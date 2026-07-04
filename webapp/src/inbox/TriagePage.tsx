@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems, triageInboxItem } from "wasp/client/operations";
@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { TriageCard, Button, BottomSheet, type TriageExit, type TriageChip } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { getProjects } from "wasp/client/operations";
+import { getProjectsForResolver } from "wasp/client/operations";
 import { getGoals } from "wasp/client/operations";
 import type { ParsedPriority, ParsedSize } from "./parseCapture";
 import "./TriagePage.css";
@@ -110,6 +111,8 @@ export function TriagePage() {
   const [chosenLensId, setChosenLensId] = useState<string | null>(null);
   const [working, setWorking] = useState<Working | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null); // expanded spec row
+  const initializedItemId = useRef<string | null>(null);
+  const lensTouchedRef = useRef(false);
 
   // Pickers for Project (file-into) / Goal (link) — reuse the bottom-sheet UI.
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
@@ -169,6 +172,7 @@ export function TriagePage() {
     if (!item) return [];
     const chips: TriageChip[] = [];
     if (item.parsedDate) chips.push({ tone: "date", label: `📅 ${formatChipDate(item.parsedDate)}` });
+    if (item.parsedLens) chips.push({ tone: "tag", label: `[[${item.parsedLens}]]` });
     if (item.parsedProject) chips.push({ tone: "tag", label: `▣ ${item.parsedProject}` });
     if (item.parsedPriority === "IMPORTANT") chips.push({ tone: "priority", label: "★ Important" });
     if (item.parsedPriority === "LOW") chips.push({ tone: "priority", label: "low" });
@@ -177,17 +181,92 @@ export function TriagePage() {
     return chips;
   }, [item]);
 
-  // Resolve a `#project` capture token to an actual project in the confirmed
-  // lens — case-insensitive name match. Link-only: if there's no match (typo, or
-  // the project lives in another lens), the task lands in General and the user
-  // picks manually. No auto-create, so a typo never spawns a stray project.
-  // (Declared after `item`/`projects` — both are read here.)
+  // Resolve a captured project hint to an actual project in the confirmed lens.
+  // Two paths under grammar v2 (docs/specs/capture-grammar.md):
+  //   1. Explicit pick at capture (typeahead) — item.parsedProject holds the
+  //      exact project name. Exact case-insensitive name match.
+  //   2. Free-text resolver — when no explicit pick, match project names from
+  //      the inferred lens's project list against the cleaned text. Exact
+  //      word-boundary match; longest wins on ties. No fuzzy/substring.
+  // Link-only: no match → lands in General, user picks manually. No auto-create,
+  // so a typo never spawns a stray project. (Declared after `item`/`projects`.)
   const resolvedProjectId = useMemo(() => {
     const hint = item?.parsedProject;
-    if (!hint) return null;
-    const match = (projects ?? []).find((p) => p.name.toLowerCase() === hint);
-    return match?.id ?? null;
-  }, [item?.parsedProject, projects]);
+    if (hint) {
+      // Path 1: explicit typeahead pick — exact name match wins silently. The
+      // user already chose; the resolver does NOT re-guess.
+      const match = (projects ?? []).find((p) => p.name.toLowerCase() === hint.toLowerCase());
+      return match?.id ?? null;
+    }
+    // Path 2: free-text resolver — scan the inferred lens's project names.
+    const text = item?.text?.toLowerCase() ?? "";
+    if (!text) return null;
+    const matches = (projects ?? []).filter((p) =>
+      new RegExp(`\\b${escapeRegex(p.name.toLowerCase())}\\b`).test(text),
+    );
+    if (matches.length === 0) return null;
+    // Longest name wins (most specific). "Q3 launch" beats "Q3" if both exist.
+    matches.sort((a, b) => b.name.length - a.name.length);
+    return matches[0].id;
+  }, [item?.parsedProject, item?.text, projects]);
+
+  // ---- Lens inference: [[ ]] token → real lens (explicit path) ----
+  // Seeded tokens (work/personal/me) resolve on `kind`; custom on exact name.
+  // `[[ ]]` overrides the active-lens default AND the project-bridge inference
+  // (explicit beats inferred). Null when absent or unrecognized (the parser
+  // already drops unknown tokens, so any parsedLens value is a real candidate).
+  const inferredLensFromToken = useMemo(() => {
+    const token = item?.parsedLens;
+    if (!token) return null;
+    return (lenses ?? []).find((l) => {
+      if (token === "work") return l.kind === "WORK";
+      if (token === "personal" || token === "me") return l.kind === "PERSONAL";
+      return l.name.toLowerCase() === token;
+    }) ?? null;
+  }, [item?.parsedLens, lenses]);
+
+  // ---- Project-bridged lens inference (inferred path) ----
+  // The resolver source: lightweight project tuples across all entitled lenses.
+  // Two sub-paths: (a) explicit typeahead pick at capture (parsedProject carries
+  // the name), (b) free-text resolver matching the cleaned text. When a project
+  // matches, its lens pre-fills the Context step — but only if no `[[ ]]` token
+  // won (explicit beats inference). The same scan also drives resolvedProjectId
+  // for the picker, but the lens bridge only fires on path (b): path (a) stores
+  // the name, and the lens is implied by wherever that name resolves.
+  const { data: resolverProjects } = useQuery(getProjectsForResolver, undefined, {
+    enabled: !!activeLens,
+  });
+  const projectBridge = useMemo<{ lensId: string; projectName: string } | null>(() => {
+    const all = resolverProjects ?? [];
+    if (all.length === 0) return null;
+    const text = (item?.text ?? "").toLowerCase();
+    // Path (a): explicit pick — find the project by exact name, use its lens.
+    const hint = item?.parsedProject;
+    if (hint) {
+      const exact = all.find((p) => p.name.toLowerCase() === hint.toLowerCase());
+      if (exact) return { lensId: exact.lensId, projectName: exact.name };
+      return null; // explicit pick that didn't resolve → no bridge (don't guess)
+    }
+    // Path (b): free-text resolver — word-boundary match, longest wins.
+    if (!text) return null;
+    const matches = all.filter((p) =>
+      new RegExp(`\\b${escapeRegex(p.name.toLowerCase())}\\b`).test(text),
+    );
+    if (matches.length === 0) return null;
+    matches.sort((a, b) => b.name.length - a.name.length);
+    return { lensId: matches[0].lensId, projectName: matches[0].name };
+  }, [resolverProjects, item?.parsedProject, item?.text]);
+
+  // [[ ]] wins over project-bridge. Both pre-fill the Context step visibly.
+  const inferredLens = inferredLensFromToken
+    ?? (projectBridge ? (lenses ?? []).find((l) => l.id === projectBridge.lensId) ?? null : null)
+    ?? null;
+  // Drives the chip label: "from [[work]]" vs "from project MVP".
+  const lensInferenceLabel = inferredLensFromToken
+    ? `from [[${item?.parsedLens}]] in your capture`
+    : projectBridge && (!inferredLensFromToken) && inferredLens
+      ? `from project ${projectBridge.projectName}`
+      : null;
 
   // ---- Initialize a fresh working spec for a new item ----
   // Precedence on the property defaults: capture-parser token > app default.
@@ -218,11 +297,26 @@ export function TriagePage() {
   // Reset the wizard for the current item whenever the index advances.
   useEffect(() => {
     if (!item) return;
+    if (initializedItemId.current === item.id) return;
+    initializedItemId.current = item.id;
+    lensTouchedRef.current = false;
     setStep("lens");
-    setChosenLensId(activeLens?.id ?? null);
+    // Lens pre-fill: `[[ ]]` token (resolved to a real lens) wins over the
+    // active-lens default. Both are still pre-fills — the user hits Continue
+    // to ratify (WORKFLOW.md §5.5: explicit confirmation, never silent filing).
+    setChosenLensId(inferredLens?.id ?? activeLens?.id ?? null);
     setWorking(initWorking());
     setOpenKey(null);
-  }, [idx, item, activeLens?.id, initWorking]);
+  }, [item, activeLens?.id, initWorking, inferredLens]);
+
+  useEffect(() => {
+    if (!item || step !== "lens" || lensTouchedRef.current) return;
+    const targetLensId = inferredLens?.id ?? activeLens?.id ?? null;
+    if (!targetLensId) return;
+    setChosenLensId((current) =>
+      !current || current === activeLens?.id ? targetLensId : current,
+    );
+  }, [item, step, inferredLens?.id, activeLens?.id]);
 
   // ---- Derive the committed outcome from the working spec ----
   // `decision` is what triageInboxItem expects; we build it from When (Task) or
@@ -459,6 +553,11 @@ export function TriagePage() {
               <div className="aa-triage-step">
                 <div className="aa-triage-step__label">1 · Context</div>
                 <p className="aa-triage-step__q">Which life does this belong to?</p>
+                {lensInferenceLabel && inferredLens && (
+                  <p className="aa-triage-step__hint" aria-live="polite">
+                    {lensInferenceLabel}
+                  </p>
+                )}
                 <div className="aa-triage-radio" role="radiogroup" aria-label="Lens">
                   {(lenses.length > 0
                     ? lenses
@@ -474,7 +573,10 @@ export function TriagePage() {
                       aria-checked={chosenLensId === l.id}
                       data-lens-color={l.color ?? undefined}
                       className={`aa-triage-radio__opt ${chosenLensId === l.id ? "active" : ""}`}
-                      onClick={() => setChosenLensId(l.id)}
+                      onClick={() => {
+                        lensTouchedRef.current = true;
+                        setChosenLensId(l.id);
+                      }}
                     >
                       <span className="aa-triage-radio__dot" aria-hidden="true" />
                       {l.name}
@@ -881,4 +983,9 @@ function isSameDay(a: Date, b: Date): boolean {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   );
+}
+
+/** Escape regex metachars in a user-provided project name for word-boundary match. */
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
