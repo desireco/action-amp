@@ -39,6 +39,18 @@ function throwIfViolation(violation: EntitlementMessage | null): void {
 }
 
 /**
+ * Throw an HttpError with a status + message (the non-entitlement HTTP errors
+ * ops need — 404 not-found, 409 conflict, 400 bad-request). Lives here, next to
+ * `throwIfViolation`, because this is the one `src/` file licensed to import
+ * `wasp/server` — keeping the throw surface centralized means ops that need to
+ * raise a real HTTP status import this helper instead of `wasp/server`
+ * directly, so they stay unit-testable (op tests mock this module).
+ */
+export function throwHttpStatus(statusCode: number, message: string): never {
+  throw new HttpError(statusCode, message);
+}
+
+/**
  * The context shape the guards read. `user` may be undefined (Wasp's context
  * types it as optional) — the auth check in each op runs first, so by the time
  * a guard is called the user is present; we accept undefined defensively and

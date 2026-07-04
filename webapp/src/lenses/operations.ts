@@ -1,0 +1,253 @@
+import type {
+  CreateLens,
+  UpdateLens,
+  DeleteLens,
+} from "wasp/server/operations";
+import { PRO_LIMITS } from "../billing/config";
+import {
+  assertLensConfigAllowed,
+  assertUnderCap,
+  throwHttpStatus,
+} from "../billing/entitlementHttp";
+
+/**
+ * Lens CRUD — user-defined life contexts (Pro only).
+ *
+ * All three actions are tenancy-scoped (every read/write carries `userId`) and
+ * enforce entitlements: `assertLensConfigAllowed` gates the whole surface to
+ * Pro (FREE configures nothing — they get the seeded two and that's it), and
+ * `assertUnderCap` soft-caps Pro at `PRO_LIMITS.lenses` on create.
+ *
+ * The seeded lenses (kind WORK / PERSONAL) are renameable + recolorable (the
+ * kind, not the name, carries the entitlement) but NOT deletable — they're the
+ * stable handles. Only CUSTOM lenses can be deleted.
+ *
+ * HTTP errors (404/409/400) go through `throwHttpStatus` from entitlementHttp
+ * (the one src/ file licensed to import wasp/server), so this file never
+ * imports wasp/server directly and stays unit-testable via the standard mock.
+ *
+ * Mirrors the createProject/createGoal pattern (auth check → guards → write),
+ * with two additions: a name-collision 409 (Lens unique is [userId, name]) and
+ * a delete-time choice (hard delete vs. reassign content to another lens).
+ */
+
+/**
+ * Lens CRUD — user-defined life contexts (Pro only).
+ *
+ * All three actions are tenancy-scoped (every read/write carries `userId`) and
+ * enforce entitlements: `assertLensConfigAllowed` gates the whole surface to
+ * Pro (FREE configures nothing — they get the seeded two and that's it), and
+ * `assertUnderCap` soft-caps Pro at `PRO_LIMITS.lenses` on create.
+ *
+ * The seeded lenses (kind WORK / PERSONAL) are renameable + recolorable (the
+ * kind, not the name, carries the entitlement) but NOT deletable — they're the
+ * stable handles. Only CUSTOM lenses can be deleted.
+ *
+ * Mirrors the createProject/createGoal pattern (auth check → guards → write),
+ * with two additions: a name-collision 409 (Lens unique is [userId, name]) and
+ * a delete-time choice (hard delete vs. reassign content to another lens).
+ */
+
+/** The curated color palette keys (see styles/tokens.css `--aa-lens-*`).
+ * Free-form hex is a non-goal per the spec; the picker renders these only. */
+const LENS_COLORS = [
+  "indigo",
+  "emerald",
+  "slate",
+  "cyan",
+  "coral",
+  "honey",
+  "lime",
+  "magenta",
+] as const;
+type LensColor = (typeof LENS_COLORS)[number];
+
+function isLensColor(s: unknown): s is LensColor {
+  return typeof s === "string" && (LENS_COLORS as readonly string[]).includes(s);
+}
+
+export const createLens = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const name = args.name?.trim();
+  if (!name) {
+    throw new Error("Lens name is required.");
+  }
+  if (args.color !== undefined && args.color !== null && !isLensColor(args.color)) {
+    throwHttpStatus(400, "Unknown lens color.");
+  }
+  const purpose = args.purpose?.trim() || null;
+
+  // Entitlement: lens configuration is Pro-only. Cap check uses Pro because
+  // FREE never reaches here (the config gate above throws first).
+  assertLensConfigAllowed(context);
+  const lensCount = await context.entities.Lens.count({
+    where: { userId: context.user.id },
+  });
+  await assertUnderCap(context, "", lensCount, PRO_LIMITS.lenses, {
+    feature: `a ${PRO_LIMITS.lenses + 1}th lens`,
+    reason: "more life contexts unlock with Pro",
+  });
+
+  try {
+    return await context.entities.Lens.create({
+      data: {
+        name,
+        kind: "CUSTOM",
+        color: args.color ?? null,
+        purpose,
+        userId: context.user.id,
+      },
+      select: { id: true, name: true, kind: true, color: true, purpose: true },
+    });
+  } catch (e) {
+    // Prisma P2002 = unique constraint violation on [userId, name].
+    if (e && typeof e === "object" && "code" in e && e.code === "P2002") {
+      throwHttpStatus(409, `You already have a lens named "${name}".`);
+    }
+    throw e;
+  }
+}) satisfies CreateLens<
+  { name: string; color?: string | null; purpose?: string },
+  { id: string; name: string; kind: string; color: string | null; purpose: string | null }
+>;
+
+export const updateLens = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  assertLensConfigAllowed(context);
+
+  // Tenancy-scoped lookup (Lens has no compound id+userId index → findFirst).
+  const existing = await context.entities.Lens.findFirst({
+    where: { id: args.id, userId: context.user.id },
+    select: { id: true, name: true, kind: true },
+  });
+  if (!existing) {
+    throwHttpStatus(404, "Lens not found.");
+  }
+
+  // Build the patch from the provided fields only (partial update).
+  const data: { name?: string; purpose?: string | null; color?: string | null } = {};
+  if (args.name !== undefined) {
+    const name = args.name.trim();
+    if (!name) throw new Error("Lens name cannot be empty.");
+    data.name = name;
+  }
+  if (args.purpose !== undefined) {
+    data.purpose = args.purpose.trim() || null;
+  }
+  if (args.color !== undefined) {
+    if (args.color !== null && !isLensColor(args.color)) {
+      throwHttpStatus(400, "Unknown lens color.");
+    }
+    data.color = args.color;
+  }
+
+  if (args.name !== undefined && args.name.trim() !== existing.name) {
+    // Rename: enforce [userId, name] uniqueness. A collision throws P2002 on
+    // update — catch and rethrow as a 409 so the UI can show a clean message.
+    try {
+      return await context.entities.Lens.update({
+        where: { id: existing.id },
+        data,
+        select: { id: true, name: true, kind: true, color: true, purpose: true },
+      });
+    } catch (e) {
+      if (e && typeof e === "object" && "code" in e && e.code === "P2002") {
+        throwHttpStatus(409, `You already have a lens named "${data.name}".`);
+      }
+      throw e;
+    }
+  }
+
+  return await context.entities.Lens.update({
+    where: { id: existing.id },
+    data,
+    select: { id: true, name: true, kind: true, color: true, purpose: true },
+  });
+}) satisfies UpdateLens<
+  {
+    id: string;
+    name?: string;
+    purpose?: string;
+    color?: string | null;
+  },
+  { id: string; name: string; kind: string; color: string | null; purpose: string | null }
+>;
+
+export const deleteLens = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  assertLensConfigAllowed(context);
+
+  const existing = await context.entities.Lens.findFirst({
+    where: { id: args.id, userId: context.user.id },
+    select: { id: true, kind: true, name: true },
+  });
+  if (!existing) {
+    throwHttpStatus(404, "Lens not found.");
+  }
+  // The seeded lenses are the stable handles — never deletable.
+  if (existing.kind !== "CUSTOM") {
+    throwHttpStatus(
+      409,
+      `The "${existing.name}" lens can't be deleted — it's one of your defaults.`,
+    );
+  }
+
+  if (args.mode === "reassign") {
+    if (!args.targetLensId || args.targetLensId === args.id) {
+      throwHttpStatus(400, "Choose a different lens to move content into.");
+    }
+    // Tenancy-check the target.
+    const target = await context.entities.Lens.findFirst({
+      where: { id: args.targetLensId, userId: context.user.id },
+      select: { id: true },
+    });
+    if (!target) {
+      throwHttpStatus(404, "Target lens not found.");
+    }
+    // Move all content to the target lens, then drop the now-empty lens.
+    // GOAL MOVES FIRST: Goal has @@unique([userId, name]) (global, not
+    // per-lens), so a same-named goal in the target lens collides on updateMany
+    // with a Prisma P2002. Catching it BEFORE Task/Project move means nothing
+    // has shifted yet — the user fixes the collision (rename one) and retries,
+    // and the lens is untouched. Task/Project have no name unique, so they
+    // can't collide. Sequential (not $transaction): no transaction precedent in
+    // the codebase; if the lens delete fails after the moves, the lens is empty
+    // but still exists and the user retries.
+    const moveWhere = { lensId: existing.id };
+    const moveData = { lensId: args.targetLensId };
+    try {
+      await context.entities.Goal.updateMany({ where: moveWhere, data: moveData });
+    } catch (e) {
+      if (e && typeof e === "object" && "code" in e && e.code === "P2002") {
+        throwHttpStatus(
+          409,
+          "A goal in this lens shares a name with one in the target lens. Rename it first, then retry.",
+        );
+      }
+      throw e;
+    }
+    await context.entities.Task.updateMany({ where: moveWhere, data: moveData });
+    await context.entities.Project.updateMany({ where: moveWhere, data: moveData });
+    return await context.entities.Lens.delete({
+      where: { id: existing.id },
+      select: { id: true },
+    });
+  }
+
+  // mode === "delete" (hard) — content cascade-deletes with the lens (the
+  // Goal/Project/Task FKs are ON DELETE CASCADE in schema.prisma). The UI
+  // confirms the user understands content goes with it before reaching here.
+  return await context.entities.Lens.delete({
+    where: { id: existing.id },
+    select: { id: true },
+  });
+}) satisfies DeleteLens<
+  { id: string; mode: "delete" | "reassign"; targetLensId?: string },
+  { id: string }
+>;
