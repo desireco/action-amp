@@ -33,6 +33,7 @@ model User {
   goals      Goal[]
   projects   Project[]
   tasks      Task[]
+  taskUpdates TaskUpdate[] // activity-log entries authored by this user
   resources  Resource[]
   inboxItems InboxItem[]
   tags       Tag[]
@@ -256,13 +257,31 @@ enum TaskStatus {
 // ============================================================
 // A time-ordered list of progress notes / status updates. Think Linear's
 // activity feed or a lightweight changelog per task. Deleted with the task.
+//
+// `kind` discriminates user-authored notes (NOTE) from system events written
+// by server ops (e.g. COMPLETED on focus-mode completion). Default NOTE so
+// every legacy row and every plain note reads as a note; one query yields the
+// full interleaved timeline. See docs/specs/task-notes-completion-log.md.
 model TaskUpdate {
-  id        String   @id @default(uuid())
+  id        String         @id @default(uuid())
   body      String // the update / note text (markdown ok)
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
+  kind      TaskUpdateKind @default(NOTE)
 
   task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+}
+
+// Discriminator for the TaskUpdate timeline.
+// NOTE = user-authored progress note; COMPLETED = system event from focus-mode
+// completion. (STARTED / PAUSED / NOT_DOING belong to the broader
+// work-area-merged follow-up — not added here.)
+enum TaskUpdateKind {
+  NOTE
+  COMPLETED
 }
 
 // ============================================================
