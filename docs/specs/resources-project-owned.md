@@ -11,6 +11,18 @@ build_owner: build
 > **Resolved 2026-07-03 (review).** Two structural questions were open in the
 > prior version; both are now decided (see "Structural decisions resolved"
 > below). Status confirmed `ready`.
+>
+> **Partial reversal 2026-07-04 — the `TaskResource` join.** The Task↔Resource
+> link decided in §A ("explicit `TaskResource` join model") is **reversed** by
+> `docs/specs/task-fields.md`: tasks reference Resources as **markdown links
+> inside the new Context field**, not via a structured join. The project-
+> ownership change, the Project-detail Resources section, and the
+> delete-with-impact flow all **stand as written**; only the Task↔Resource link
+> shape changes (drop the `TaskResource` model + `linkTaskResource` /
+> `unlinkTaskResource` ops + the same-project invariant). When Build lands
+> `task-fields`, this spec is edited in the same PR to remove the join pieces;
+> `task-fields.md` §"Resource linking" is the source of truth for the
+> reconciliation.
 
 ## Summary
 
