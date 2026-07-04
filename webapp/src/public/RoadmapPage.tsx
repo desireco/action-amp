@@ -32,7 +32,7 @@ export function RoadmapPage() {
           </p>
           <div className="aa-roadmap-stats">
             <span className="aa-roadmap-stat">
-              <strong>213</strong> commits
+              <strong>227</strong> commits
             </span>
             <span className="aa-roadmap-stat">
               <strong>6</strong> major trunks
@@ -95,20 +95,20 @@ export function RoadmapPage() {
                 <li className="aa-roadmap-item">
                   <span className="aa-roadmap-dot aa-roadmap-dot--progress" />
                   <span>
-                    <span className="aa-roadmap-item-name">Quiet launch</span>
+                    <span className="aa-roadmap-item-name">Newsletter capture</span>
                     <br />
                     <span className="aa-roadmap-item-note">
-                      Put the product in front of ~500 of the right people.
+                      Quiet hero/footer email capture before distribution.
                     </span>
                   </span>
                 </li>
                 <li className="aa-roadmap-item">
                   <span className="aa-roadmap-dot aa-roadmap-dot--progress" />
                   <span>
-                    <span className="aa-roadmap-item-name">In-app feedback</span>
+                    <span className="aa-roadmap-item-name">Retention critical-path</span>
                     <br />
                     <span className="aa-roadmap-item-note">
-                      Live — context-aware capture to the team inbox.
+                      First-7-days funnel; close the activation leaks.
                     </span>
                   </span>
                 </li>
@@ -135,12 +135,10 @@ export function RoadmapPage() {
                 <li className="aa-roadmap-item">
                   <span className="aa-roadmap-dot aa-roadmap-dot--planned" />
                   <span>
-                    <span className="aa-roadmap-item-name">
-                      Moment-aware matcher v2
-                    </span>
+                    <span className="aa-roadmap-item-name">Quiet launch</span>
                     <br />
                     <span className="aa-roadmap-item-note">
-                      Time + energy re-rank within a priority tier.
+                      Put the product in front of ~500 of the right people.
                     </span>
                   </span>
                 </li>
@@ -160,11 +158,11 @@ export function RoadmapPage() {
                   <span className="aa-roadmap-dot aa-roadmap-dot--planned" />
                   <span>
                     <span className="aa-roadmap-item-name">
-                      Retention critical-path
+                      Tag management + matcher validation
                     </span>
                     <br />
                     <span className="aa-roadmap-item-note">
-                      First-7-days funnel; close the dead-ends.
+                      The gate before moment-aware matcher v2.
                     </span>
                   </span>
                 </li>
@@ -178,6 +176,22 @@ export function RoadmapPage() {
                 <span className="aa-roadmap-card-tag">Q3 2026</span>
               </div>
               <ul className="aa-roadmap-items">
+                <li className="aa-roadmap-item">
+                  <span className="aa-roadmap-dot aa-roadmap-dot--planned" />
+                  <span>
+                    <span className="aa-roadmap-item-name">
+                      Moment-aware matcher v2
+                    </span>
+                  </span>
+                </li>
+                <li className="aa-roadmap-item">
+                  <span className="aa-roadmap-dot aa-roadmap-dot--planned" />
+                  <span>
+                    <span className="aa-roadmap-item-name">
+                      Goal & project lifecycle
+                    </span>
+                  </span>
+                </li>
                 <li className="aa-roadmap-item">
                   <span className="aa-roadmap-dot aa-roadmap-dot--planned" />
                   <span>
@@ -203,14 +217,6 @@ export function RoadmapPage() {
                 <li className="aa-roadmap-item">
                   <span className="aa-roadmap-dot aa-roadmap-dot--planned" />
                   <span>
-                    <span className="aa-roadmap-item-name">
-                      Goal & project lifecycle
-                    </span>
-                  </span>
-                </li>
-                <li className="aa-roadmap-item">
-                  <span className="aa-roadmap-dot aa-roadmap-dot--planned" />
-                  <span>
                     <span className="aa-roadmap-item-name">CLI + agent skills</span>
                   </span>
                 </li>
@@ -226,6 +232,11 @@ export function RoadmapPage() {
             <span className="aa-roadmap-rule" />
           </div>
           <div className="aa-roadmap-timeline">
+            <ShippedEntry
+              date="Jul 4"
+              trunk="Capture grammar + roadmap cleanup"
+              summary="Inline project autocomplete landed: first # is a project hint, later # tokens are tags, @ is time, and [[lens]] handles cross-lens capture."
+            />
             <ShippedEntry
               date="Jul 3"
               trunk="Entitlements + custom lenses"
