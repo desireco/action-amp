@@ -3,9 +3,6 @@ import { useParams, Link, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import {
   getGoal,
-  createTask,
-  createProject,
-  updateTaskStatus,
   setGoalDone,
   updateGoal,
   deleteGoal,
@@ -15,13 +12,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Chip,
-  TaskRow,
-  CompletionCircle,
   ConfirmDialog,
   type TaskRowTask,
 } from "../components/ui";
-import { CreateInline } from "../lists/CreateInline";
-import type { GroupDef } from "../components/ui";
 import "./GoalDetailPage.css";
 
 type GoalTask = TaskRowTask & {
@@ -49,17 +42,13 @@ type GoalData = {
 
 /**
  * Goal detail — the dedicated URL for working on a single Goal. Mirrors
- * ProjectDetailPage's shape, scoped to a Goal: header with aggregate progress,
- * the goal's standalone tasks grouped by horizon (Today/Upcoming/Someday/Done),
- * and the list of projects linked to this goal (each its own linkable detail).
+ * Goal detail — the dedicated URL for understanding why a set of Projects
+ * exists. Goals do not own Tasks; undefined work goes through Inbox, and
+ * actionable work lives inside Projects.
  *
  * Header affordances (goal-planning spec §B, §C, §E): Complete / Reopen, inline
- * edit of name + description, delete (lossless — children re-parent to
- * standalone in this Lens), add-task AND add-project (auto-linked), the muted
- * "Next: <project>" line, and up/down reorder of the linked-projects sequence.
- *
- * The goal's lensId is taken from the record itself (not the active sidebar
- * lens), so anything added here always joins the right lens.
+ * edit of name + description, delete/archive flow, the muted
+ * "Next: <project>" line, and the linked projects/progress list.
  */
 export function GoalDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -67,9 +56,6 @@ export function GoalDetailPage() {
   const queryClient = useQueryClient();
 
   const { data: goal, isLoading, error } = useQuery(getGoal, { id: id! });
-  // createMode drives CreateInline: "task" (standalone) or "project".
-  const [createMode, setCreateMode] = useState<"task" | "project" | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   // Header affordances: edit, confirm-delete. Each opens a small inline surface
   // or the centered ConfirmDialog (the codebase's standard confirm pattern).
@@ -80,21 +66,6 @@ export function GoalDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Reorder in-flight count, used to disable the buttons while a write settles.
   const [reordering, setReordering] = useState(false);
-
-  // Standalone tasks grouped by horizon (same buckets as Project detail).
-  const groups = useMemo<GroupDef<GoalTask>[]>(() => {
-    if (!goal) return [];
-    const buckets: Record<string, GoalTask[]> = { TODAY: [], UPCOMING: [], SOMEDAY: [], DONE: [] };
-    for (const t of goal.tasks) {
-      (t.isDone ? buckets.DONE : buckets[t.status] ?? buckets.SOMEDAY).push(t);
-    }
-    return [
-      { key: "TODAY", label: "Today", items: buckets.TODAY },
-      { key: "UPCOMING", label: "Upcoming", items: buckets.UPCOMING },
-      { key: "SOMEDAY", label: "Someday", items: buckets.SOMEDAY },
-      { key: "DONE", label: "Done", items: buckets.DONE },
-    ];
-  }, [goal]);
 
   // Aggregate progress — MUST match getGoals' rollup so the list-card % and
   // this header % agree. (See the long comment in the prior revision; the
@@ -122,47 +93,6 @@ export function GoalDetailPage() {
     () => goal?.projects.find((p) => !p.isDone) ?? null,
     [goal],
   );
-
-  const setStatus = async (task: GoalTask, status: GoalTask["status"]) => {
-    await updateTaskStatus({ id: task.id, status });
-    queryClient.invalidateQueries({ queryKey: ["getGoal"] });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-  };
-
-  const handleCreateTask = async (description: string) => {
-    if (!goal) return;
-    setSubmitting(true);
-    try {
-      await createTask({ description, lensId: goal.lensId, goalId: goal.id });
-      queryClient.invalidateQueries({ queryKey: ["getGoal"] });
-      queryClient.invalidateQueries({ queryKey: ["getGoals"] });
-      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-      queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-      setCreateMode(null);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Create a project auto-linked to this goal (spec §C). The new project seeds
-  // at the end of the goal's sequence (createProject handles order seeding).
-  const handleCreateProject = async (name: string) => {
-    if (!goal) return;
-    setSubmitting(true);
-    try {
-      await createProject({ name, lensId: goal.lensId, goalId: goal.id });
-      queryClient.invalidateQueries({ queryKey: ["getGoal"] });
-      queryClient.invalidateQueries({ queryKey: ["getGoals"] });
-      queryClient.invalidateQueries({ queryKey: ["getProjects"] });
-      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-      setCreateMode(null);
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleComplete = async () => {
     if (!goal) return;
@@ -236,9 +166,8 @@ export function GoalDetailPage() {
     }
   };
 
-  const standaloneTotal = goal?.tasks.length ?? 0;
   // Counts for the delete confirm copy: "N children will move to standalone."
-  const childCount = (goal?.projects.length ?? 0) + standaloneTotal;
+  const childCount = goal?.projects.length ?? 0;
 
   return (
     <div className="aa-goal">
@@ -256,28 +185,36 @@ export function GoalDetailPage() {
             <div className="aa-goal__header-main">
               {editing ? (
                 <div className="aa-goal__edit">
-                  <input
-                    className="aa-goal__edit-name"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Goal name"
-                    aria-label="Goal name"
-                  />
-                  <textarea
-                    className="aa-goal__edit-desc"
-                    value={editDesc}
-                    onChange={(e) => setEditDesc(e.target.value)}
-                    placeholder="Description (optional)"
-                    aria-label="Goal description"
-                    rows={2}
-                  />
+                  <div className="aa-goal__edit-head">
+                    <h2>Refine goal</h2>
+                    <p>Keep the outcome clear. The why can stay plain.</p>
+                  </div>
+                  <label className="aa-goal__edit-field">
+                    <span>Outcome</span>
+                    <input
+                      className="aa-goal__edit-name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Goal name"
+                    />
+                  </label>
+                  <label className="aa-goal__edit-field">
+                    <span>Why this matters</span>
+                    <textarea
+                      className="aa-goal__edit-desc"
+                      value={editDesc}
+                      onChange={(e) => setEditDesc(e.target.value)}
+                      placeholder="Description (optional)"
+                      rows={3}
+                    />
+                  </label>
                   {editError && <p className="aa-goal__edit-err">{editError}</p>}
                   <div className="aa-goal__edit-actions">
-                    <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>
+                    <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
                       Cancel
                     </Button>
                     <Button variant="primary" size="sm" onClick={handleSaveEdit}>
-                      Save
+                      Save changes
                     </Button>
                   </div>
                 </div>
@@ -300,8 +237,9 @@ export function GoalDetailPage() {
             </div>
             {!editing && (
               <div className="aa-goal__header-actions">
-                <Button variant="ghost" size="sm" onClick={startEdit}>Edit</Button>
+                <Button className="aa-goal-action" variant="ghost" size="sm" onClick={startEdit}>Edit</Button>
                 <Button
+                  className="aa-goal-action"
                   variant="ghost"
                   size="sm"
                   onClick={handleComplete}
@@ -309,22 +247,8 @@ export function GoalDetailPage() {
                 >
                   {goal.isDone ? "Reopen" : "Complete"}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
+                <Button className="aa-goal-action aa-goal-action--danger" variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
                   Delete
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setCreateMode((m) => (m === "project" ? null : "project"))}
-                >
-                  {createMode === "project" ? "Cancel" : "Add project"}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setCreateMode((m) => (m === "task" ? null : "task"))}
-                >
-                  {createMode === "task" ? "Cancel" : "Add task"}
                 </Button>
               </div>
             )}
@@ -332,17 +256,8 @@ export function GoalDetailPage() {
 
           {!editing && goal.description && <p className="aa-goal__desc">{goal.description}</p>}
 
-          {createMode && (
-            <CreateInline
-              placeholder={createMode === "task" ? "What needs doing?" : "Project name"}
-              onCreate={createMode === "task" ? handleCreateTask : handleCreateProject}
-              onCancel={() => setCreateMode(null)}
-              submitting={submitting}
-            />
-          )}
-
           {/* Linked projects — each linkable, with up/down reorder (spec §E). */}
-          {goal.projects.length > 0 && (
+          {goal.projects.length > 0 ? (
             <section className="aa-goal__projects">
               <h3 className="aa-grouped__heading">
                 Projects <span className="aa-grouped__count">{goal.projects.length}</span>
@@ -385,62 +300,11 @@ export function GoalDetailPage() {
                 })}
               </ul>
             </section>
-          )}
-
-          {/* Standalone tasks under this goal, grouped by horizon. */}
-          {standaloneTotal === 0 ? (
-            <div className="aa-list-empty aa-goal__empty">
-              <div className="aa-list-empty__icon"><CompletionCircle size="md" /></div>
-              <h2 className="aa-list-empty__title">No standalone tasks.</h2>
-              <p className="aa-list-empty__text">
-                {goal.projects.length > 0
-                  ? "Tasks live in this goal's projects — or add a standalone one here."
-                  : "Add the first step — a task lands on Upcoming and shows on Next."}
-              </p>
-            </div>
           ) : (
-            <div className="aa-grouped">
-              {groups.map((group) => {
-                if (group.items.length === 0) return null;
-                return (
-                  <section key={group.key} className="aa-grouped__group">
-                    <h3 className="aa-grouped__heading">
-                      {group.label}
-                      <span className="aa-grouped__count">{group.items.length}</span>
-                    </h3>
-                    <ul className="aa-grouped__list">
-                      {group.items.map((task) => (
-                        <li key={task.id} className="aa-grouped__item aa-goal__row">
-                          <TaskRow
-                            task={task}
-                            muted={task.status === "SOMEDAY" || task.isDone}
-                            onOpen={() => navigate(`/app/tasks/${task.id}`)}
-                          />
-                          {!task.isDone && (
-                            <div className="aa-goal__horizon">
-                              {task.status !== "TODAY" && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setStatus(task, task.status === "SOMEDAY" ? "UPCOMING" : "TODAY")}
-                                >
-                                  {task.status === "SOMEDAY" ? "Upcoming" : "Today"}
-                                </Button>
-                              )}
-                              {task.status === "TODAY" && (
-                                <Button variant="ghost" size="sm" onClick={() => setStatus(task, "UPCOMING")}>
-                                  Not today
-                                </Button>
-                              )}
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                );
-              })}
-            </div>
+            <section className="aa-goal__projects-empty">
+              <h2>No supporting projects yet.</h2>
+              <p>Assign projects to this goal from their Project detail page.</p>
+            </section>
           )}
         </>
       )}

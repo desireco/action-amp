@@ -4,13 +4,18 @@
    .aa-grouped / .aa-list-header / .aa-list-empty styles. Only the
    goal-specific layout lives here. Mirrors ProjectDetailPage.css. */
 .aa-goal {
-  max-width: 620px;
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-2xl);
 }
 
 .aa-goal__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-items: flex-start;
-  flex-wrap: wrap;
-  gap: var(--aa-space-sm);
+  gap: var(--aa-space-xl);
+  margin-bottom: 0;
 }
 
 .aa-goal__header-main {
@@ -21,13 +26,44 @@
 .aa-goal__header-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--aa-space-xs);
+  gap: var(--aa-space-sm);
   align-items: center;
+  justify-content: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow:
+    0 1px 2px oklch(0.2 0.02 230 / 0.04),
+    0 10px 28px oklch(0.58 0.16 225 / 0.1);
+}
+
+.aa-goal-action {
+  min-height: 38px;
+  padding-inline: 14px !important;
+  border-color: transparent;
+  color: var(--aa-text-2);
+}
+
+.aa-goal-action:hover:not(:disabled) {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text);
+}
+
+.aa-goal-action--danger {
+  color: var(--aa-rose-text);
+}
+
+.aa-goal-action--danger:hover:not(:disabled) {
+  background: var(--aa-rose-soft);
+  color: var(--aa-rose-text);
 }
 
 .aa-goal__meta {
-  margin: var(--aa-space-xs) 0 0;
-  font-size: 0.9rem;
+  margin: var(--aa-space-lg) 0 0;
+  font-size: 1rem;
   color: var(--aa-text-3);
 }
 
@@ -35,7 +71,7 @@
    not a banner; absent when there's no next project. */
 .aa-goal__next {
   margin: var(--aa-space-xs) 0 0;
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--aa-text-3);
 }
 .aa-goal__next a {
@@ -47,39 +83,97 @@
 }
 
 .aa-goal__desc {
-  font-size: 1rem;
-  line-height: 1.5;
+  max-width: 58ch;
+  font-size: 1.1rem;
+  line-height: 1.58;
   color: var(--aa-text-2);
-  margin: var(--aa-space-md) 0;
+  margin: calc(-1 * var(--aa-space-xs)) 0 0;
 }
 
 /* ---- Inline edit (header) ---- */
 .aa-goal__edit {
-  display: flex;
-  flex-direction: column;
-  gap: var(--aa-space-xs);
+  display: grid;
+  gap: var(--aa-space-md);
   width: 100%;
+  padding: var(--aa-space-lg);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow:
+    0 1px 2px oklch(0.2 0.02 230 / 0.04),
+    0 12px 32px oklch(0.58 0.16 225 / 0.1);
 }
+
+.aa-goal__edit-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.aa-goal__edit-head p {
+  margin: 4px 0 0;
+  color: var(--aa-text-3);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.aa-goal__edit-field {
+  display: grid;
+  gap: 6px;
+}
+
+.aa-goal__edit-field span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--aa-text-3);
+}
+
 .aa-goal__edit-name {
-  font-size: 1.25rem;
-  font-weight: 600;
-  padding: var(--aa-space-xs) var(--aa-space-sm);
+  min-height: 44px;
+  box-sizing: border-box;
+  font-family: var(--aa-font);
+  font-size: 1rem;
+  font-weight: 650;
+  padding: 10px 12px;
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-sm);
-  background: var(--aa-surface);
+  background: var(--aa-surface-muted);
   color: var(--aa-text);
   width: 100%;
+  transition:
+    background 0.15s var(--aa-ease-out),
+    border-color 0.15s var(--aa-ease-out),
+    box-shadow 0.15s var(--aa-ease-out);
 }
 .aa-goal__edit-desc {
-  font-size: 0.95rem;
-  padding: var(--aa-space-xs) var(--aa-space-sm);
+  min-height: 84px;
+  box-sizing: border-box;
+  font-family: var(--aa-font);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  padding: 10px 12px;
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-sm);
-  background: var(--aa-surface);
+  background: var(--aa-surface-muted);
   color: var(--aa-text);
   width: 100%;
   resize: vertical;
-  font-family: inherit;
+  transition:
+    background 0.15s var(--aa-ease-out),
+    border-color 0.15s var(--aa-ease-out),
+    box-shadow 0.15s var(--aa-ease-out);
+}
+.aa-goal__edit-name::placeholder,
+.aa-goal__edit-desc::placeholder {
+  color: var(--aa-text-4);
+  font-weight: 500;
+}
+.aa-goal__edit-name:focus,
+.aa-goal__edit-desc:focus {
+  outline: none;
+  background: var(--aa-surface);
+  border-color: var(--aa-teal);
+  box-shadow: 0 0 0 3px var(--aa-teal-soft);
 }
 .aa-goal__edit-err {
   margin: 0;
@@ -88,12 +182,34 @@
 }
 .aa-goal__edit-actions {
   display: flex;
+  justify-content: flex-end;
   gap: var(--aa-space-xs);
 }
 
 /* ---- Linked projects list ---- */
 .aa-goal__projects {
-  margin: var(--aa-space-lg) 0;
+  margin: 0;
+}
+
+.aa-goal__projects-empty {
+  margin: 0;
+  padding: var(--aa-space-lg);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-goal__projects-empty h2 {
+  margin: 0 0 var(--aa-space-xs);
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.aa-goal__projects-empty p {
+  margin: 0;
+  color: var(--aa-text-3);
+  line-height: 1.5;
 }
 .aa-goal__project-row {
   padding: 0;
@@ -149,22 +265,12 @@
   color: var(--aa-text-3);
 }
 
-/* A task row + its horizon control, side by side. Mirrors Project's swap-row. */
-.aa-goal__row {
-  display: flex;
-  align-items: center;
-  gap: var(--aa-space-sm);
-}
-.aa-goal__row > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-.aa-goal__horizon {
-  flex-shrink: 0;
-  display: flex;
-  gap: var(--aa-space-xs);
-}
+@media (max-width: 640px) {
+  .aa-goal__header-actions {
+    width: 100%;
+  }
 
-.aa-goal__empty {
-  margin-top: var(--aa-space-lg);
+  .aa-goal-action {
+    flex: 1;
+  }
 }

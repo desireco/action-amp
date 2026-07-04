@@ -1,17 +1,15 @@
-import { useState } from "react";
+import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Link } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getGoals, createGoal, getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { useActiveLens } from "../app/lensContext";
-import { Button, Chip, ProGate } from "../components/ui";
+import { Button, Chip, GoalsIcon, PlusIcon, ProGate } from "../components/ui";
 import { ListEmpty } from "../lists/ListShell";
-import { CreateInline } from "../lists/CreateInline";
 import { FREE_LIMITS } from "../billing/config";
 import { useEntitled, extractEntitlementMessage } from "../billing/useEntitled";
 import type { EntitlementMessage } from "../billing/entitlement-types";
 import "./GoalsPage.css";
-import "../lists/CreateInline.css";
 
 interface GoalRow {
   id: string;
@@ -53,12 +51,12 @@ export function GoalsPage() {
   const goalCount = appData?.counts.goals ?? 0;
   const atCap = !entitled && goalCount >= FREE_LIMITS.goals;
 
-  const handleCreate = async (name: string) => {
+  const handleCreate = async (name: string, description?: string) => {
     if (!lens) return;
     setSubmitting(true);
     setGate(null);
     try {
-      await createGoal({ name, lensId: lens.id });
+      await createGoal({ name, lensId: lens.id, description });
       queryClient.invalidateQueries({ queryKey: ["getGoals"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
       setCreating(false);
@@ -72,14 +70,19 @@ export function GoalsPage() {
 
   // Create affordance: button, or ProGate trigger when a FREE user is at cap.
   const CreateControl = ({ empty }: { empty: boolean }) =>
-    atCap ? (
+    creating ? null : atCap ? (
       <ProGate asTrigger feature="New goal" reason="link work to more than one outcome with Pro">
         <span className="aa-progate-trigger__label">New goal</span>
         <span className="aa-progate-trigger__cta">Upgrade →</span>
       </ProGate>
     ) : (
-      <Button variant="secondary" size="sm" onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}>
-        {creating ? "Cancel" : "New goal"}
+      <Button
+        variant="secondary"
+        className="aa-goals-new"
+        icon={<GoalCreateMark />}
+        onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}
+      >
+        New goal
       </Button>
     );
 
@@ -123,17 +126,16 @@ export function GoalsPage() {
       </header>
       {gate && <ProGate feature={gate.feature} reason={gate.reason} />}
       {creating && (
-        <CreateInline
-          placeholder="Goal name (e.g. ‘Grow audience’)"
+        <GoalComposer
           onCreate={handleCreate}
           onCancel={() => setCreating(false)}
           submitting={submitting}
         />
       )}
-      <div className="aa-goals-grid">
+      <div className="aa-goals-grid aa-goals-grid--with-create">
         {(goals ?? []).map((g: GoalRow) => (
-          <div key={g.id} className="aa-goal-card">
-            <Link to={`/app/goals/${g.id}`} className="aa-goal-card__name">{g.name}</Link>
+          <Link key={g.id} to={`/app/goals/${g.id}`} className="aa-goal-card">
+            <span className="aa-goal-card__name">{g.name}</span>
             {g.description && <p className="aa-goal-card__desc">{g.description}</p>}
             <div className="aa-goal-card__progress">
               <div className="aa-goal-card__bar">
@@ -148,13 +150,98 @@ export function GoalsPage() {
             </div>
             {g.nextProject && (
               <p className="aa-goal-card__next">
-                Next:{" "}
-                <Link to={`/app/projects/${g.nextProject.id}`}>{g.nextProject.name}</Link>
+                Focus: <span>{g.nextProject.name}</span>
               </p>
             )}
-          </div>
+          </Link>
         ))}
       </div>
     </div>
+  );
+}
+
+function GoalCreateMark() {
+  return (
+    <span className="aa-goals-new__mark" aria-hidden="true">
+      <GoalsIcon className="aa-goals-new__goal" />
+      <PlusIcon className="aa-goals-new__plus" />
+    </span>
+  );
+}
+
+function GoalComposer({
+  onCreate,
+  onCancel,
+  submitting,
+}: {
+  onCreate: (name: string, description?: string) => Promise<void> | void;
+  onCancel: () => void;
+  submitting: boolean;
+}) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+
+  const canSubmit = !!name.trim() && !submitting;
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    const trimmedName = name.trim();
+    if (!trimmedName || submitting) return;
+
+    const trimmedDescription = description.trim();
+    await onCreate(trimmedName, trimmedDescription || undefined);
+    setName("");
+    setDescription("");
+  };
+
+  const submitFromTextarea = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      event.preventDefault();
+      formRef.current?.requestSubmit();
+    }
+  };
+
+  return (
+    <form ref={formRef} className="aa-goal-composer" onSubmit={submit}>
+      <div className="aa-goal-composer__head">
+        <div>
+          <h2 className="aa-goal-composer__title">New goal</h2>
+          <p className="aa-goal-composer__sub">Name the outcome. Add the why if it helps.</p>
+        </div>
+      </div>
+
+      <label className="aa-goal-composer__field">
+        <span className="aa-goal-composer__label">Outcome</span>
+        <input
+          className="aa-goal-composer__input"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Grow audience"
+          autoFocus
+        />
+      </label>
+
+      <label className="aa-goal-composer__field">
+        <span className="aa-goal-composer__label">Why this matters</span>
+        <textarea
+          className="aa-goal-composer__textarea"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          onKeyDown={submitFromTextarea}
+          placeholder="So launches do not depend on one-off posts"
+          rows={3}
+        />
+      </label>
+
+      <div className="aa-goal-composer__actions">
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" size="sm" disabled={!canSubmit}>
+          Create goal
+        </Button>
+      </div>
+    </form>
   );
 }
