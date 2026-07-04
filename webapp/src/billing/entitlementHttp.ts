@@ -57,7 +57,7 @@ export function throwHttpStatus(statusCode: number, message: string): never {
  * treat its absence as "not entitled."
  */
 interface GuardContext {
-  user?: { id: string; plan?: string | null; planRenewsAt?: Date | null } | null;
+  user?: { id: string; plan?: string | null; planRenewsAt?: Date | null; isAdmin?: boolean | null } | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entities: any;
 }

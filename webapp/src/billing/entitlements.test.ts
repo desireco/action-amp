@@ -51,6 +51,18 @@ describe("isEntitled", () => {
     expect(isEntitled("FOUNDER", null)).toBe(true);
     expect(isEntitled("FOUNDER", PAST)).toBe(true); // never expires
   });
+
+  it("admin bypass → true regardless of plan (FREE admin is fully entitled)", () => {
+    expect(isEntitled("FREE", null, true)).toBe(true);
+    expect(isEntitled(undefined, null, true)).toBe(true);
+    expect(isEntitled("PRO", PAST, true)).toBe(true); // expired PRO, but admin
+  });
+
+  it("admin flag false/absent → falls through to the plan check", () => {
+    expect(isEntitled("FREE", null, false)).toBe(false);
+    expect(isEntitled("FREE", null, undefined)).toBe(false);
+    expect(isEntitled("PRO", FUTURE, false)).toBe(true);
+  });
 });
 
 describe("capViolation", () => {
@@ -83,6 +95,12 @@ describe("capViolation", () => {
       capViolation({ plan: "FOUNDER", planRenewsAt: null }, 999, FREE_LIMITS.goals, MSG),
     ).toBeNull();
   });
+
+  it("admin bypass — null even over the cap (FREE plan, but isAdmin)", () => {
+    expect(
+      capViolation({ plan: "FREE", planRenewsAt: null, isAdmin: true }, 999, FREE_LIMITS.projects, MSG),
+    ).toBeNull();
+  });
 });
 
 describe("lensViolation", () => {
@@ -100,6 +118,11 @@ describe("lensViolation", () => {
 
   it("active PRO + WORK lens → null (all lenses)", () => {
     expect(lensViolation({ plan: "PRO", planRenewsAt: FUTURE }, { name: "Work", kind: "WORK" })).toBeNull();
+  });
+
+  it("admin bypass + WORK lens → null (FREE plan, but isAdmin)", () => {
+    expect(lensViolation({ plan: "FREE", planRenewsAt: null, isAdmin: true }, { name: "Work", kind: "WORK" })).toBeNull();
+    expect(lensViolation({ plan: "FREE", planRenewsAt: null, isAdmin: true }, { name: "Studio", kind: "CUSTOM" })).toBeNull();
   });
 
   it("expired PRO + WORK lens → message (treated as FREE)", () => {

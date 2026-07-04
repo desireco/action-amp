@@ -36,17 +36,25 @@ import type { EntitlementMessage } from "./entitlement-types";
  */
 
 /** The subset of a user the entitlement decisions read. Both fields optional
- * (Wasp's AuthUser types them as `Plan` with a FREE default; we accept absent). */
+ * (Wasp's AuthUser types them as `Plan` with a FREE default; we accept absent).
+ * `isAdmin` is the staff/dev bypass — true short-circuits every gate. */
 interface EntitlementUser {
   plan?: string | null;
   planRenewsAt?: Date | null;
+  isAdmin?: boolean | null;
 }
 
 /**
  * Is this user entitled to paid features right now?
  * Server mirror of the client `useAuth`-based check — same `isPlanActive`.
+ * Admins (isAdmin=true) are always entitled — the staff/dev bypass.
  */
-export function isEntitled(plan: string | undefined | null, planRenewsAt: Date | null): boolean {
+export function isEntitled(
+  plan: string | undefined | null,
+  planRenewsAt: Date | null,
+  isAdmin?: boolean | null,
+): boolean {
+  if (isAdmin) return true; // staff/dev bypass — no Stripe checkout needed
   return isPlanActive(plan as never, planRenewsAt);
 }
 
@@ -60,7 +68,7 @@ export function capViolation(
   cap: number,
   msg: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (isEntitled(user?.plan, user?.planRenewsAt ?? null)) return null; // paid → unlimited
+  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)) return null; // paid → unlimited
   if (currentCount >= cap) return msg;
   return null;
 }
@@ -85,7 +93,7 @@ export function lensViolation(
   lens: EntitlementLens | null,
   msg?: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (isEntitled(user?.plan, user?.planRenewsAt ?? null)) return null; // paid → all lenses
+  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)) return null; // paid → all lenses
   if (lens && lens.kind !== "PERSONAL") {
     return msg ?? WORK_LENS_MESSAGE;
   }
@@ -104,7 +112,7 @@ export function lensConfigViolation(
   user: EntitlementUser | null,
   msg?: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (isEntitled(user?.plan, user?.planRenewsAt ?? null)) return null; // paid → may configure
+  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)) return null; // paid → may configure
   return msg ?? CUSTOM_LENSES_MESSAGE;
 }
 

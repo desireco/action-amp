@@ -46,6 +46,14 @@ model User {
   stripeCustomerId String?   // set on first checkout; links to the Stripe customer
   planRenewsAt     DateTime? // null for FREE + FOUNDER (lifetime); set by webhook for PRO
 
+  // ---- Staff / dev bypass ----
+  // isAdmin short-circuits the entitlement layer (treated as fully entitled —
+  // bypasses every Pro/cap/lens gate). For internal accounts that need to test
+  // Pro surfaces without a Stripe checkout. NOT surfaced in any UI; set via the
+  // DB or scripts/create-verified-user.mjs --admin. Stripe remains the source of
+  // truth for real plan state — this only adds a bypass, never overrides down.
+  isAdmin          Boolean @default(false)
+
   // ---- Today rollover (lazy, on app load) ----
   // Tracks the last calendar day the Today→Upcoming rollover ran for this
   // user. getAppData checks it each load: if it's a new day (or null), every

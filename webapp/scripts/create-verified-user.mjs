@@ -24,11 +24,13 @@ const get = (flag) => {
   const i = argv.indexOf(flag);
   return i >= 0 ? argv[i + 1] : undefined;
 };
+const has = (flag) => argv.includes(flag);
 const email = get("--email");
 const password = get("--password");
 const fullName = get("--fullName") ?? "E2E User";
+const admin = has("--admin"); // staff/dev bypass — fully entitled, no Stripe checkout
 if (!email || !password) {
-  console.error("Usage: node scripts/create-verified-user.mjs --email X --password 'Y' [--fullName 'Z']");
+  console.error("Usage: node scripts/create-verified-user.mjs --email X --password 'Y' [--fullName 'Z'] [--admin]");
   process.exit(1);
 }
 const firstName = fullName.split(/\s+/)[0];
@@ -51,9 +53,10 @@ try {
     });
     // Ensure onboarding is marked complete so the first-run gate (App.tsx)
     // doesn't redirect this user to /welcome — e2e tests expect to land on /app.
+    // --admin flips isAdmin (the entitlement bypass) if requested.
     await db.user.update({
       where: { id: existing.auth.userId },
-      data: { hasSeenOnboarding: true },
+      data: { hasSeenOnboarding: true, ...(admin ? { isAdmin: true } : {}) },
     });
     console.log(email);
     process.exit(0);
@@ -74,6 +77,7 @@ try {
       fullName,
       firstName,
       hasSeenOnboarding: true,
+      ...(admin ? { isAdmin: true } : {}),
       auth: {
         create: {
           identities: {
