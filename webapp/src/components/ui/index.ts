@@ -12,6 +12,7 @@ export { ConfirmDialog } from "./ConfirmDialog";
 export { DispatchButton } from "./DispatchButton";
 export type { DispatchTone } from "./DispatchButton";
 export { EntityComposer } from "./EntityComposer";
+export { EntityCardGrid } from "./EntityCardGrid";
 export { EntityCreateButton } from "./EntityCreateButton";
 export { FocusMode } from "./FocusMode";
 export type { FocusTask } from "./FocusMode";

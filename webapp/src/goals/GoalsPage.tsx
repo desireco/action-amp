@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useActiveLens } from "../app/lensContext";
 import {
   Chip,
+  EntityCardGrid,
   EntityComposer,
   EntityCreateButton,
   GoalsIcon,
@@ -143,7 +144,7 @@ export function GoalsPage() {
           submitting={submitting}
         />
       )}
-      <div className="aa-goals-grid aa-goals-grid--with-create">
+      <EntityCardGrid>
         {(goals ?? []).map((g: GoalRow) => (
           <ProgressCard
             key={g.id}
@@ -162,7 +163,7 @@ export function GoalsPage() {
             focusValue={g.nextProject?.name}
           />
         ))}
-      </div>
+      </EntityCardGrid>
     </div>
   );
 }

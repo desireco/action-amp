@@ -1,13 +1,7 @@
 @import "../styles/tokens.css";
 
 .aa-projects {
-  max-width: 860px;
-}
-
-.aa-projects__groups .aa-grouped__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--aa-space-lg);
+  max-width: 980px;
 }
 
 .aa-project-card {

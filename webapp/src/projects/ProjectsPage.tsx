@@ -1,17 +1,16 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getProjects, createProject, triageInboxItem, getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Chip,
+  EntityCardGrid,
   EntityComposer,
   EntityCreateButton,
-  GroupedList,
   ProgressCard,
   ProjectsIcon,
   ProGate,
-  type GroupDef,
 } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "../lists/ListShell";
@@ -111,17 +110,6 @@ export function ProjectsPage() {
     }
   };
 
-  const groups = useMemo<GroupDef<ProjectRow>[]>(() => {
-    if (!projects) return [];
-    const byGoal = new Map<string, ProjectRow[]>();
-    for (const p of projects) {
-      const key = p.goal?.name ?? "Standalone";
-      if (!byGoal.has(key)) byGoal.set(key, []);
-      byGoal.get(key)!.push(p);
-    }
-    return Array.from(byGoal, ([name, items]) => ({ key: name, label: name, items }));
-  }, [projects]);
-
   // The create affordance: a normal button, OR — for a FREE user at the cap —
   // a ProGate trigger so the cap is a quiet upgrade path, not a dead button.
   const CreateControl = ({ empty }: { empty: boolean }) =>
@@ -217,10 +205,8 @@ export function ProjectsPage() {
           initialName={initialName}
         />
       )}
-      <GroupedList
-        className="aa-projects__groups"
-        groups={groups}
-        renderItem={(p) => {
+      <EntityCardGrid>
+        {(projects ?? []).map((p: ProjectRow) => {
           const total = p.openCount + p.doneCount;
           const pct = total === 0 ? 0 : Math.round((p.doneCount / total) * 100);
           return (
@@ -233,6 +219,8 @@ export function ProjectsPage() {
               progressLabel={`${p.doneCount}/${total} done`}
               meta={
                 <>
+                  <span>{p.goal?.name ?? "Standalone"}</span>
+                  <span className="aa-projects__dot" aria-hidden="true">·</span>
                   <span>{p.openCount} open</span>
                   <span className="aa-projects__dot" aria-hidden="true">·</span>
                   <span>{p.doneCount} done</span>
@@ -244,8 +232,8 @@ export function ProjectsPage() {
               focusTone={p.nextAction ? "amber" : "muted"}
             />
           );
-        }}
-      />
+        })}
+      </EntityCardGrid>
     </div>
   );
 }
