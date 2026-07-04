@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "wasp/client/operations";
-import { getLogbook, restoreArchivedItem } from "wasp/client/operations";
+import { getLogbook, restoreArchivedItem, setGoalDone, setProjectDone } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { BrandMark, Chip, GroupedList, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
@@ -10,8 +10,8 @@ import "./LogbookPage.css";
 interface LogItem {
   id: string;
   title: string;
-  when: Date; // completedAt for tasks/projects, archivedAt for archived notes
-  kind: "task" | "project" | "archived";
+  when: Date; // completedAt for tasks/projects/goals, archivedAt for archived notes
+  kind: "task" | "project" | "goal" | "archived";
   size?: string;
   project?: { id: string; name: string } | null;
   goal?: { id: string; name: string } | null;
@@ -19,9 +19,10 @@ interface LogItem {
 
 /**
  * Logbook — the record of things no longer active, grouped by day.
- * Three categories share this view: completed tasks, completed projects, and
- * archived notes ("I will not do now"). Archived rows carry a Restore action
- * that returns the note to the inbox for re-triage.
+ * Four categories share this view: completed tasks, completed projects,
+ * completed goals, and archived notes ("I will not do now"). Archived rows
+ * carry a Restore action (returns the note to the inbox); completed goals and
+ * projects carry a Reopen action (returns them to the active list).
  */
 export function LogbookPage() {
   const lens = useActiveLens();
@@ -37,6 +38,7 @@ export function LogbookPage() {
     const all: LogItem[] = [
       ...logbook.tasks.map((t) => ({ ...t, when: new Date(t.completedAt) })),
       ...logbook.projects.map((p) => ({ ...p, when: new Date(p.completedAt) })),
+      ...logbook.goals.map((g) => ({ ...g, when: new Date(g.completedAt) })),
       ...logbook.archived.map((a) => ({ ...a, when: new Date(a.archivedAt) })),
     ].sort((a, b) => b.when.getTime() - a.when.getTime());
 
@@ -67,6 +69,21 @@ export function LogbookPage() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
   }
 
+  async function handleReopenGoal(id: string) {
+    await setGoalDone({ id, isDone: false });
+    // Reopened goal leaves the Logbook and returns to the active list.
+    queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
+    queryClient.invalidateQueries({ queryKey: ["getGoals"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+  }
+
+  async function handleReopenProject(id: string) {
+    await setProjectDone({ id, isDone: false });
+    queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
+    queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+  }
+
   return (
     <div className="aa-logbook">
       <header className="aa-list-header">
@@ -85,7 +102,9 @@ export function LogbookPage() {
             <div className="aa-logbook-row__main">
               <span className="aa-logbook-row__title">{item.title}</span>
               <div className="aa-logbook-row__meta">
-                {item.kind === "project" ? (
+                {item.kind === "goal" ? (
+                  <Chip variant="teal" small>Goal</Chip>
+                ) : item.kind === "project" ? (
                   <Chip variant="violet" small>Project</Chip>
                 ) : item.kind === "archived" ? (
                   <Chip variant="muted" small>Archived</Chip>
@@ -103,6 +122,26 @@ export function LogbookPage() {
                 title="Send back to the inbox"
               >
                 Restore
+              </button>
+            )}
+            {item.kind === "goal" && (
+              <button
+                type="button"
+                className="aa-logbook-row__restore"
+                onClick={() => void handleReopenGoal(item.id)}
+                title="Return to active goals"
+              >
+                Reopen
+              </button>
+            )}
+            {item.kind === "project" && (
+              <button
+                type="button"
+                className="aa-logbook-row__restore"
+                onClick={() => void handleReopenProject(item.id)}
+                title="Return to active projects"
+              >
+                Reopen
               </button>
             )}
           </div>

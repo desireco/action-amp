@@ -3,23 +3,26 @@ import type { GetLogbook } from "wasp/server/operations";
 /**
  * Logbook — the record of things no longer active, scoped to the active Lens.
  *
- * Three categories, all read-only here (restore/delete are separate actions):
+ * Four categories, all read-only here (restore/reopen/delete are separate
+ * actions):
  *  - completed Tasks  (isDone, completedAt)
  *  - completed Projects
+ *  - completed Goals  (goal-planning spec §D — same shape as projects, with
+ *                      goal: null since a goal has no parent goal)
  *  - archived InboxItems ("I will not do now") — status ARCHIVED, archivedAt.
  *                      Kept (not deleted) so the user never loses a captured
  *                      note for declining to act on it.
  *
- * Note on scoping: Tasks and Projects carry a lensId; archived InboxItems do
- * NOT (the inbox is universal). Archived notes are returned regardless of the
- * active lens — they belong to the user, not a context.
+ * Note on scoping: Tasks, Projects, and Goals carry a lensId; archived
+ * InboxItems do NOT (the inbox is universal). Archived notes are returned
+ * regardless of the active lens — they belong to the user, not a context.
  */
 export const getLogbook = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
 
-  const [tasks, projects, archived] = await Promise.all([
+  const [tasks, projects, goals, archived] = await Promise.all([
     context.entities.Task.findMany({
       where: {
         userId: context.user.id,
@@ -49,6 +52,21 @@ export const getLogbook = (async (args, context) => {
         name: true,
         completedAt: true,
         goal: { select: { id: true, name: true } },
+      },
+    }),
+    // Completed Goals — lens-scoped like tasks/projects (goal-planning spec §D).
+    context.entities.Goal.findMany({
+      where: {
+        userId: context.user.id,
+        lensId: args.lensId,
+        isDone: true,
+        completedAt: { not: null },
+      },
+      orderBy: { completedAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        completedAt: true,
       },
     }),
     // Archived notes — universal (no lens filter).
@@ -81,6 +99,13 @@ export const getLogbook = (async (args, context) => {
       completedAt: p.completedAt!,
       goal: p.goal,
       kind: "project" as const,
+    })),
+    goals: goals.map((g) => ({
+      id: g.id,
+      title: g.name,
+      completedAt: g.completedAt!,
+      goal: null,
+      kind: "goal" as const,
     })),
     archived: archived.map((a) => ({
       id: a.id,

@@ -173,7 +173,7 @@ export default app({
     action(updateGoal, { entities: ["Goal"], auth: true }),
     action(deleteGoal, { entities: ["Goal", "Project", "Task", "Resource"], auth: true }),
     action(reorderGoalProjects, { entities: ["Goal", "Project"], auth: true }),
-    query(getLogbook, { entities: ["Task", "Project", "InboxItem"], auth: true }),
+    query(getLogbook, { entities: ["Task", "Project", "Goal", "InboxItem"], auth: true }),
     query(getAppData, { entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(submitFeedback, { entities: ["User", "Feedback"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),

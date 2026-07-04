@@ -20,7 +20,7 @@ describe("getLogbook — guards", () => {
 });
 
 describe("getLogbook — query + return shape", () => {
-  it("fetches done tasks + projects (scoped) and archived notes (universal)", async () => {
+  it("fetches done tasks + projects + goals (scoped) and archived notes (universal)", async () => {
     const m = mockContext();
     const taskRow = {
       id: "t1",
@@ -35,6 +35,11 @@ describe("getLogbook — query + return shape", () => {
       completedAt: new Date("2026-06-23"),
       goal: { id: "g1", name: "Grow audience" },
     };
+    const goalRow = {
+      id: "g1",
+      name: "Grow audience",
+      completedAt: new Date("2026-06-22"),
+    };
     const archivedRow = {
       id: "ix1",
       text: "Decline this for now",
@@ -42,11 +47,12 @@ describe("getLogbook — query + return shape", () => {
     };
     m.entities.Task.findMany.mockResolvedValue([taskRow]);
     m.entities.Project.findMany.mockResolvedValue([projectRow]);
+    m.entities.Goal.findMany.mockResolvedValue([goalRow]);
     m.entities.InboxItem.findMany.mockResolvedValue([archivedRow]);
 
     const result = await getLogbook({ lensId: "lens-1" }, m.context);
 
-    // Tasks + projects scoped to user + lens; archived notes universal.
+    // Tasks + projects + goals scoped to user + lens; archived notes universal.
     expect(m.entities.Task.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",
@@ -63,13 +69,24 @@ describe("getLogbook — query + return shape", () => {
         project: { select: { id: true, name: true } },
       },
     });
+    // Goals lens-scoped, same shape as projects (goal-planning spec §D).
+    expect(m.entities.Goal.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: "user-1",
+        lensId: "lens-1",
+        isDone: true,
+        completedAt: { not: null },
+      },
+      orderBy: { completedAt: "desc" },
+      select: { id: true, name: true, completedAt: true },
+    });
     expect(m.entities.InboxItem.findMany).toHaveBeenCalledWith({
       where: { userId: "user-1", status: "ARCHIVED" },
       orderBy: { archivedAt: "desc" },
       select: { id: true, text: true, archivedAt: true },
     });
 
-    // Return shape — fields mapped, kind tagged
+    // Return shape — fields mapped, kind tagged. Goals carry goal: null.
     expect(result).toEqual({
       tasks: [
         {
@@ -90,6 +107,15 @@ describe("getLogbook — query + return shape", () => {
           kind: "project",
         },
       ],
+      goals: [
+        {
+          id: "g1",
+          title: "Grow audience",
+          completedAt: goalRow.completedAt,
+          goal: null,
+          kind: "goal",
+        },
+      ],
       archived: [
         {
           id: "ix1",
@@ -105,10 +131,11 @@ describe("getLogbook — query + return shape", () => {
     const m = mockContext();
     m.entities.Task.findMany.mockResolvedValue([]);
     m.entities.Project.findMany.mockResolvedValue([]);
+    m.entities.Goal.findMany.mockResolvedValue([]);
     m.entities.InboxItem.findMany.mockResolvedValue([]);
 
     const result = await getLogbook({ lensId: "lens-1" }, m.context);
 
-    expect(result).toEqual({ tasks: [], projects: [], archived: [] });
+    expect(result).toEqual({ tasks: [], projects: [], goals: [], archived: [] });
   });
 });
