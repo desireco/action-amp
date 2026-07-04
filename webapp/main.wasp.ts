@@ -52,6 +52,7 @@ import { Founding100Page } from "./src/public/Founding100Page" with { type: "ref
 import { Founding100WelcomePage } from "./src/public/Founding100WelcomePage" with { type: "ref" };
 import { PrivacyPage } from "./src/public/PrivacyPage" with { type: "ref" };
 import { TermsPage } from "./src/public/TermsPage" with { type: "ref" };
+import { RoadmapPage } from "./src/public/RoadmapPage" with { type: "ref" };
 
 export default app({
   name: "ActionAmp",
@@ -130,6 +131,7 @@ export default app({
       page(PrivacyPage, { authRequired: false }),
     ),
     route("TermsRoute", "/terms", page(TermsPage, { authRequired: false })),
+    route("RoadmapRoute", "/roadmap", page(RoadmapPage, { authRequired: false })),
     route("LoginRoute", "/login", page(LoginPage)),
     route("SignupRoute", "/signup", page(SignupPage)),
     route(
