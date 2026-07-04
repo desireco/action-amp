@@ -220,6 +220,19 @@ item; Build pulls `ready`.**
     streaks/guilt-trip red dots never (PRODUCT.md bans them). Spec at
     `docs/specs/weekly-monthly-review.md` — `ready` needs the entitlement call
     confirmed + a `docs/mockups/review-week.html` throwaway.
+7. **capture-grammar** (`draft`, new 2026-07-04) — grammar v2 for the shipped
+   `⌘K` capture path: `#` tags (was: project + tags), `@` time only (was: tags
+   + time), `!`/`~` unchanged, `[[lens]]` new explicit cross-lens override,
+   projects resolver-driven from free text (no sigil). The resolver fixes a
+   real gap — `parsedProject` is stored on `InboxItem` today but never
+   resolved server-side (`inbox/operations.ts:124-131` drops to "General"
+   regardless of the hint). `[[ ]]` resolves on `kind` for seeded lenses
+   (rename-safe) and name for custom; unknown tokens stay literal. Pre-fills
+   the triage Context step visibly; never silently files (§5.5 preserved).
+   Unblocks the broader "smart triage as copy editor" thesis — resolver is the
+   foundation; opinionated task-shaping (vagueness detection, split hints) is a
+   later phase on top. Spec at `docs/specs/capture-grammar.md`. Gated on the
+   `### Then` tier's "≥1 paying non-founder user" rule like the rest.
 
 ## Branch state (2026-06-27)
 

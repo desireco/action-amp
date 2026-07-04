@@ -52,10 +52,15 @@ appears in Work/Planning/Review except by coming through triage.
   **⌘Enter** commits and keeps the popover open to add another (rapid-fire).
   (Keymap reversed 2026-06-30 — see TRIAGE.md §7.5.)
 - Destination is the **Inbox**, which is **universal** (not scoped to a lens).
-- Natural-language parsing (date/tag/priority/size tokens) shows chips before
-  Enter so you see what it understood.
-- Capture never asks "where does this go?" — that's triage's job. Capture is
-  about speed (target: thought → inbox in under 2 seconds).
+- Natural-language parsing shows chips before Enter so you see what it
+  understood. Grammar (locked 2026-07-04, §5.9): `#` tags · `@` time only ·
+  `!`/`~` priority/size · `[[lens]]` explicit cross-lens override. Projects
+  have no sigil — the resolver matches them from free text (a matched project
+  carries its lens into the triage Context step). See `docs/specs/capture-grammar.md`.
+- Capture never asks "where does this go?" — that's triage's job. But capture
+  *can* hint: `[[work]]` / `[[personal]]` / `[[custom]]` pre-fills the lens at
+  triage (visible chip, still requires Continue). Capture is about speed
+  (target: thought → inbox in under 2 seconds).
 
 ### 2.2 Triage — the transfer
 
@@ -242,6 +247,30 @@ These were the open structural calls. All resolved:
      delete hard-removes (cascade via FK). Goal name-collision on reassign is
      caught (409) because Goal has `@@unique([userId, name])`.
    See `docs/specs/custom-lenses.md` + `docs/reviews/custom-lenses.md`.
+9. **Capture grammar v2 + lens token (locked 2026-07-04).** The capture NL
+   grammar moves from five overloaded sigils to a clean semantic split, and
+   projects/lens move from sigils to inference. Three structural calls:
+   - **`#` is tags, `@` is time only.** Reverses the 2026-06-22 `#`/`@` decision
+     (TRIAGE.md §7.5) where `#` linked a project and `@` was a context tag.
+     `@` is freed for its one natural job (when); `@today`/`@tomorrow`/`@tonight`
+     were already special-cased and stay. Tags are now `#`-prefixed, lowercased,
+     any number. See `docs/specs/capture-grammar.md`.
+   - **`[[lens]]` is the explicit lens override.** A new token for the rare
+     cross-lens capture (in Work, think of a personal errand). Resolves on
+     `kind` for seeded lenses (`[[work]]`/`[[personal]]`/`[[me]]` survive
+     renames — same property as the entitlement guard), exact name for custom.
+     Unknown tokens stay literal text, so it can't false-positive on pasted
+     wiki-link syntax.
+   - **Projects are resolver-driven, no sigil.** Project intent is matched from
+     free text against the active lens's projects (or the `[[ ]]`-overridden
+     lens's) — exact word-boundary, longest match wins. The project's lens is
+     the bridge from capture to lens. `[[ ]]` precedence beats project-inferred
+     lens (explicit beats inference — if they disagree, the project hint does
+     not match).
+   - **§5.5 stays intact.** `[[ ]]` and project-inferred lens **pre-fill** the
+     triage Context step as visible chips; they never silently file. The user
+     still hits Continue to ratify. The 2026-06-25 reversal (kill silent
+     auto-filing) is preserved — smarts pre-fill, the user ratifies.
 
 ## 6. Document cascade
 
@@ -264,6 +293,14 @@ The following were updated to match this doc (commit alongside):
 - `TRIAGE.md` §Context step (added 2026-07-03) — notes the radio now lists the
   full lens set and goes adaptive (popover) when ≥4 lenses exist; the seeded
   binary is no longer the only options.
+- `TRIAGE.md` §5 + §7.5 (added 2026-07-04) — supersede the 2026-06-22 `#`/`@`
+  sigil decision; `#` is now tags, `@` is time only, `[[lens]]` is the explicit
+  lens override, projects are resolver-driven. Capture grammar v2 per
+  `docs/specs/capture-grammar.md`.
+- `DATA-MODEL.md` (added 2026-07-04) — documents `InboxItem.parsedLens`; v5
+  note records grammar v2.
+- `docs/features/capture.md` + `docs/features/inbox-triage.md` (added
+  2026-07-04) — grammar block rewritten; resolver pre-fill behavior noted.
 
 ## 7. Code work implied (flagged in `BACKLOG.md`, not built here)
 

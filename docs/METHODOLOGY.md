@@ -71,7 +71,7 @@ Lens             (ActionAmp addition — "Work" / "Me")
       ├─ Task    (GTD next action) ← THE focus candidate
       └─ Resource (PARA "Resource")
 
-Tag              (GTD "@context": @errands, ~15m, low-energy)
+Tag              (GTD "@context": #errands, ~15m, low-energy)
 Archive/Logbook  (PARA "Archive")
 Inbox            (GTD "Inbox" — universal, single)
 ```
