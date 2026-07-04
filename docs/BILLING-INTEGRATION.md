@@ -1,29 +1,31 @@
-# ActionAmp — Billing Integration Plan (Stripe)
+# ActionAmp — Billing Integration (Stripe)
 
-> Status: PLAN v1 — not implemented. Companion to `PRICING.md` (the pricing
-> *decisions*) and `FEATURES.md` (the feature caps). This file is the
-> **implementation plan**: architecture, schema, endpoints, settings structure,
-> and a phased build order.
-> Authority for *how* billing is built. `PRICING.md` remains authority for *what*
-> it costs.
+> Status: **Implemented** (shipped 2026-07-03). The architecture, schema shape,
+> webhook-owns-truth invariant, and cap-enforcement boundary below describe the
+> live system in `webapp/src/billing/`. Sections marked *[as planned]* below
+> were the pre-build design; the code is authoritative where they differ.
+>
+> Companion docs: `PRICING.md` (the pricing *decisions* — what it costs),
+> `webapp/src/billing/` (the implementation), `docs/specs/entitlement-enforcement.md`
+> (the cap-enforcement spec). Authority for *how* billing works; `PRICING.md`
+> remains authority for *what* it costs.
 
 ---
 
 ## 0. TL;DR
 
-- **Engine: Stripe (DECIDED).** The maker already uses Stripe.
+- **Engine: Stripe.** The maker already uses Stripe.
 - **No Wasp built-in payments.** Wasp 0.24 has no payment/subscription support
-  in the framework (no spec constructor, no docs section, no SDK refs). We wire
-  Stripe ourselves using Wasp's `api` constructor for the webhook + server
-  actions for Checkout. This is standard Stripe; nothing exotic.
-- **Stripe-hosted UI, minimal custom payment UI.** We use **Checkout Sessions**
-  for upgrades and the **Customer Portal** for self-service management (cancel,
-  card, invoices). We build almost no payment form UI ourselves — just buttons
-  that create sessions and redirect.
+  in the framework. We wire Stripe ourselves using Wasp's `api` constructor for
+  the webhook + server actions for Checkout. Standard Stripe; nothing exotic.
+- **Stripe-hosted UI, minimal custom payment UI.** **Checkout Sessions** for
+  upgrades and the **Customer Portal** for self-service management (cancel,
+  card, invoices). Almost no payment form UI of our own — just buttons that
+  create sessions and redirect.
 - **Webhook is the source of truth** for entitlement. Client-facing actions only
-  create sessions; the `User.plan` field is only ever mutated by verified webhook
-  handlers. Never trust the client for who-is-pro.
-- **Settings grows a Billing section.** Full structure in §5.
+  create sessions; `User.plan` is only ever mutated by verified webhook handlers
+  (`webhook.ts` → `webhookMiddleware.ts`). Never trust the client for who-is-pro.
+- **Settings has a Billing section** at `/app/settings/billing`.
 
 ---
 
@@ -64,32 +66,39 @@
 
 ## 2. Schema additions (the load-bearing change)
 
-Add subscription state to the **`User`** entity (a dedicated `Subscription`
+Subscription state lives on the **`User`** entity (a dedicated `Subscription`
 model is overkill for a solo launch — one field + two timestamps is enough).
+This is exactly what shipped — see `webapp/schema.prisma`:
 
 ```prisma
-// In schema.prisma — model User
+// In schema.prisma — model User (billing fields only; other fields omitted)
 model User {
-  id        String @id @default(uuid())
-  firstName String
-  lastName  String
+  // … identity fields (fullName, firstName, preferredName, …) …
 
   // ---- Billing (Stripe) ----
-  plan            Plan   @default(FREE)
-  stripeCustomerId String?  // set on first checkout; links to Stripe customer
-  planRenewsAt     DateTime?  // null for FREE; set by webhook for PRO; null for FOUNDER (lifetime)
-  // NOTE: history/invoices live in Stripe (via the Customer Portal). We don't
-  // duplicate them.
-  tasks Task[]
-  tags  Tag[]
+  // Entitlement state. Mutated ONLY by the Stripe webhook (the source of
+  // truth) — never by client actions. See docs/BILLING-INTEGRATION.md.
+  payments        Payment[]
+  plan            Plan    @default(FREE)
+  stripeCustomerId String?   // set on first checkout; links to the Stripe customer
+  planRenewsAt     DateTime? // null for FREE + FOUNDER (lifetime); set by webhook for PRO
+
+  // ---- Staff / dev bypass ----
+  isAdmin          Boolean @default(false) // short-circuits the entitlement layer; internal only
+  // … lastTodayRolloverAt, etc. …
 }
 
 enum Plan {
-  FREE       // default; personal scope, 3 projects, 1 goal
-  PRO        // recurring or prepaid active; full features
-  FOUNDER    // Founding 100: one-time $139, lifetime, capped at 100 spots
+  FREE
+  PRO
+  FOUNDER
 }
 ```
+
+> The earlier draft also proposed a `lastName` field; the real `User` uses
+> `fullName` + `firstName` + `preferredName` (set during onboarding). A
+> separate `Payment` model **does** exist (one row per checkout event) — see
+> `schema.prisma`.
 
 **Why an enum + `planRenewsAt` instead of a richer model:**
 

@@ -55,9 +55,9 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Look/feel, color, type, components, tokens | `docs/DESIGN-SYSTEM.md` (decided) + `DESIGN.md` (Things DNA) + `webapp/src/styles/tokens.css` (source of truth) |
 | A UI component (Button, Card, CompletionCircle, …) | `webapp/src/components/ui/` + `DESIGN.md` |
 | Pricing, plans, feature caps | `docs/PRICING.md` + `docs/FEATURES.md` |
-| Stripe billing implementation | `docs/BILLING-INTEGRATION.md` (plan; **not yet implemented**) |
+| Stripe billing implementation | `docs/BILLING-INTEGRATION.md` (implemented) + `webapp/src/billing/` |
 | Marketing/public site | `docs/MARKETING.md` + `docs/PUBLIC-PAGES.md` |
-| Deployment / hosting | `docs/deployment-research.md` |
+| Deployment / hosting | `docs/research/deployment-research.md` |
 | What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/BACKLOG.md` |
 | What success means (the bets + their measurable triggers) | `docs/SUCCESS.md` |
 | A specific feature spec (ready/draft status, done-conditions) | `docs/specs/<feature>.md` (index + order in `docs/ROADMAP.md`) |
