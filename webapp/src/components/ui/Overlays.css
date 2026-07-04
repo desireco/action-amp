@@ -353,6 +353,7 @@
 .aa-capture {
   max-width: 480px;
   padding: var(--aa-space-md);
+  position: relative; /* anchors the absolutely-positioned mention dropdown */
 }
 
 .aa-capture__head {
@@ -506,6 +507,60 @@
   padding-top: var(--aa-space-sm);
   border-top: 1px solid var(--aa-border);
   margin-top: var(--aa-space-sm);
+}
+
+/* Inline `#`-mention dropdown — absolutely positioned at the caret inside the
+   textarea. Anchored to .aa-capture__head (which is position: relative) so it
+   overlays the textarea cleanly. */
+.aa-capture__mention {
+  position: absolute;
+  z-index: 10;
+  min-width: 200px;
+  max-width: 280px;
+  margin-top: 2px;
+  border: 1px solid var(--aa-border);
+  border-radius: 8px;
+  background: var(--aa-bg-elevated, var(--aa-bg));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  padding: 4px;
+}
+.aa-capture__mention-item {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  gap: var(--aa-space-xs);
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--aa-text);
+  width: 100%;
+}
+.aa-capture__mention-mark {
+  flex-shrink: 0;
+  color: var(--aa-text-4);
+  width: 1em;
+  text-align: center;
+}
+.aa-capture__mention-name {
+  flex: 1;
+}
+.aa-capture__mention-lens {
+  font-size: 0.7rem;
+  color: var(--aa-text-4);
+  flex-shrink: 0;
+}
+.aa-capture__mention-item:hover,
+.aa-capture__mention-item.active {
+  background: var(--aa-bg-hover, rgba(0, 0, 0, 0.04));
+}
+.aa-capture__mention-item.active {
+  color: var(--aa-accent-teal);
 }
 
 .aa-capture__hint {

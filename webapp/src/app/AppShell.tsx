@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuth, logout } from "wasp/client/auth";
-import { useQuery, ensureOnboarded, getAppData, createInboxItem, submitFeedback } from "wasp/client/operations";
+import { useQuery, ensureOnboarded, getAppData, createInboxItem, submitFeedback, getProjectsForResolver } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
 import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcuts";
@@ -129,6 +129,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const lenses = appData?.lenses ?? [];
   const counts = appData?.counts ?? { inbox: 0, today: 0, projects: 0, goals: 0 };
   const todayByLens = appData?.todayByLens ?? {};
+
+  // Capture autocomplete sources — fetched here (gated on user, same as
+  // getAppData) and passed as props to CapturePopover so the popover stays a
+  // pure-UI component with no queries/auth of its own. CapturePopover renders
+  // outside the LensContext provider, so making it do its own queries was racy
+  // (auth not resolved at mount → 500s). One query site, one auth gate.
+  const { data: resolverProjects } = useQuery(getProjectsForResolver, undefined, {
+    enabled: !!user,
+  });
+  // Lens names for the [[ ]] parser — seeded (work/personal/me) are always
+  // known to the parser; custom names must be supplied.
+  const customLensNames = lenses
+    .filter((l) => l.kind === "CUSTOM")
+    .map((l) => l.name);
 
   // One-shot migration: resolve a `name:X` sentinel to a real lens id once the
   // lenses load, persist under the new key, and delete the old name key. After
@@ -534,6 +548,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       {captureOpen && (
         <CapturePopover
           onClose={() => setCaptureOpen(false)}
+          projects={resolverProjects ?? []}
+          customLensNames={customLensNames}
+          activeLensName={activeLens?.name ?? null}
           onSubmit={async (text) => {
             // Belt-and-suspenders: the App.tsx gate should make this
             // unreachable without a user, but never fire an auth-required
