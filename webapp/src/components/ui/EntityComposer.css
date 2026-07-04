@@ -1,0 +1,116 @@
+@import "../../styles/tokens.css";
+
+.aa-entity-composer {
+  display: grid;
+  gap: var(--aa-space-md);
+  margin: 0 0 var(--aa-space-xl);
+  padding: var(--aa-space-lg);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow:
+    0 1px 2px oklch(0.2 0.02 230 / 0.04),
+    0 8px 24px var(--aa-teal-tint-shadow);
+}
+
+.aa-entity-composer__head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+}
+
+.aa-entity-composer__title {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.2;
+  color: var(--aa-text);
+}
+
+.aa-entity-composer__sub {
+  margin: 4px 0 0;
+  color: var(--aa-text-3);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.aa-entity-composer__field {
+  display: grid;
+  gap: 6px;
+}
+
+.aa-entity-composer__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--aa-text-3);
+}
+
+.aa-entity-composer__input,
+.aa-entity-composer__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--aa-font);
+  color: var(--aa-text);
+  background: var(--aa-surface-muted);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  transition:
+    background 0.15s var(--aa-ease-out),
+    border-color 0.15s var(--aa-ease-out),
+    box-shadow 0.15s var(--aa-ease-out);
+}
+
+.aa-entity-composer__input {
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.aa-entity-composer__textarea {
+  min-height: 84px;
+  resize: vertical;
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.aa-entity-composer__input::placeholder,
+.aa-entity-composer__textarea::placeholder {
+  color: var(--aa-text-4);
+  font-weight: 500;
+}
+
+.aa-entity-composer__input:focus,
+.aa-entity-composer__textarea:focus {
+  outline: none;
+  background: var(--aa-surface);
+  border-color: var(--aa-teal);
+  box-shadow: 0 0 0 3px var(--aa-teal-soft);
+}
+
+.aa-entity-composer__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--aa-space-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-entity-composer__input,
+  .aa-entity-composer__textarea {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .aa-entity-composer {
+    padding: var(--aa-space-md);
+  }
+
+  .aa-entity-composer__actions {
+    justify-content: stretch;
+  }
+
+  .aa-entity-composer__actions .aa-btn {
+    flex: 1;
+  }
+}
