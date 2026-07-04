@@ -1,4 +1,4 @@
-import { Outlet, useLocation, Navigate } from "react-router";
+import { Outlet, useLocation, Navigate, ScrollRestoration } from "react-router";
 import { useAuth } from "wasp/client/auth";
 import { AppShell } from "./app/AppShell";
 import "./App.css";
@@ -56,6 +56,15 @@ export function App() {
       <Outlet />
     </AppShell>
   ) : (
-    <Outlet />
+    <>
+      {/* Scroll to top on route change. Without this, navigating between
+          public pages inherits the previous page's scroll offset — so
+          clicking a footer link (bottom of page) landed you at the bottom
+          of /roadmap or /founding-100. The landing page's scroll-snap
+          masked this on `/`, but content pages exposed it. This component
+          belongs at the root layout; it handles every route in one place. */}
+      <ScrollRestoration />
+      <Outlet />
+    </>
   );
 }
