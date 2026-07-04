@@ -19,21 +19,21 @@ top of** the existing priority sort (FEATURES.md F10's planned layer). Re-ranks
 → age). No moment/energy factor.
 
 **Spec.** `docs/specs/focus-engine-v2.md` — **`draft`** (flipped from `ready`
-2026-07-03). The review found three definition gaps:
+2026-07-03). The review found three definition gaps; **two are now resolved**:
 
 1. **Depends on a tag-management UI that doesn't exist.** The matcher leans on
-   reserved tag names (`~15m`, `low-energy`, …) but there's no tag UI today —
-   tags are only created via `@`-parsing at triage. The missing UI is a
-   prerequisite, not an open question. Tracked as a spec to write
-   (`tag-management`).
-2. **The moment bar is under-designed for the home screen.** Placement, format,
-   collapse, default-inference left to Build — too much undefined for the
-   wedge surface. A mockup must be locked before `ready`.
-3. **The fallback-invariant test claim is wrong.** Adding within-tier re-rank
-   changes the comparator; existing tests need rewriting, not re-passing.
+   reserved tag names (`~15m`, `low-energy`, …) but there's no tag UI today.
+   **Resolution: `tag-management` spec is now `ready`** — ships first, then
+   this can pull.
+2. ~~**The moment bar is under-designed for the home screen.**~~ **RESOLVED
+   2026-07-04** — mockup locked at `docs/mockups/moment-bar.html`. Placement
+   (above card), format (two segmented controls), collapse (default-collapsed
+   to one quiet line), inference (time-of-day, stated explicitly) all decided.
+3. ~~**The fallback-invariant test claim is wrong.**~~ **RESOLVED 2026-07-04**
+   — done-condition rewritten (existing tests updated, not re-passed).
 
-**Gate (still in force):** the matcher-validation manual test must reach a
-BUILD verdict before this pulls.
+**Only the matcher-test gate remains** (plus `tag-management` shipping).
+Run `docs/specs/matcher-validation.md` → BUILD verdict → pull.
 
 **Why it matters.** This + the transparent "why this?" line is what makes the
 $79.50 price coherent. Until the matcher surprises, the price is "off the

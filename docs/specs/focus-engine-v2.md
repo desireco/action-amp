@@ -77,8 +77,11 @@ differentiation. It's built on the product's own terms below, not on theirs.
       penalized). No schema migration.
 - [ ] **If time/energy are unset, behavior is identical to today** (priority →
       size → oldest). The refinement is strictly additive; the MVP fallback is
-      preserved. Verified by the existing `getTopTask` tests still passing
-      unchanged when no moment is selected.
+      preserved. The existing `getTopTask` tests are **updated** to assert both:
+      (a) moment-unset → identical ranking to today; (b) moment-set →
+      within-tier re-rank, priority never crossed. *(Adding a within-tier
+      re-rank changes the comparator; the tests as written today will change —
+      that's expected, not a regression.)*
 - [ ] **The "why this" line reflects the moment** (depends on
       `focus-why-transparent` shipping): e.g. *"Important, fits in 30 min, and
       you said energy is low."* When the top task *doesn't* fit the moment,
@@ -118,21 +121,21 @@ differentiation. It's built on the product's own terms below, not on theirs.
 
 ## Open questions
 
-- **Moment bar placement/format.** Above the card (lean) vs inline in the
-  context line. Build: implement above-card first (simplest, least likely to
-  crowd the card); if review finds it heavy, move to the context line. Note
-  the choice.
+- **Moment bar placement/format.** ~~Above the card (lean) vs inline in the
+  context line.~~ **RESOLVED 2026-07-04** — see Definition gaps §B below and
+  `docs/mockups/moment-bar.html`. Above-card, segmented controls, default-
+  collapsed, time-of-day inference stated explicitly.
 - **Tag input friction.** Energy/time tags set at triage add a step (mild
   tension with the capture-thesis). Resolution for v1: **tags are optional and
-  set later** (on the task detail / via the moment bar's "this task is..."
-  affordance), never required at capture. Inference from size is a later
-  refinement if tagging proves too much friction — not in this spec.
+  set later** (via `tag-management`'s Task-detail chips, now `ready`), never
+  required at capture. Inference from size is a later refinement if tagging
+  proves too much friction — not in this spec.
 
 ## Definition gaps (2026-07-03 review — why this is `draft`, not `ready`)
 
 The rest of the spec is sound, but three things would cause Build to guess or
-build the wrong thing. None is resolved; all must be before flipping back to
-`ready`.
+build the wrong thing. **Gap B is now resolved (2026-07-04); A and C remain.**
+All three must be resolved before flipping back to `ready`.
 
 ### Gap A — depends on a tag-management UI that does not exist
 
@@ -152,19 +155,39 @@ remove tags on a Task, plus seeding the reserved names). `focus-engine-v2`
 hard-depends on it (`depends_on` above). Until that spec exists and is `ready`,
 this spec cannot be `ready`.
 
-### Gap B — the moment bar is under-designed for the wedge surface
+### Gap B — RESOLVED 2026-07-04 (moment-bar mockup locked)
 
 The home screen is the product's most load-bearing surface — the roast's whole
-point is that it has to *surprise*. This spec leans hard on "calm, not crowded"
-and then leaves the actual composition to Build or "a finding in review":
-placement (above-card vs inline), format (segmented controls vs chips), the
-collapse behavior, the time-of-day default-inference logic. For the home
-screen, that is too much undefined.
+point is that it has to *surprise*. This spec previously left the moment bar's
+composition (placement, format, collapse, inference) to Build or "a finding in
+review" — too much undefined for the wedge surface.
 
-**Resolution path:** a mockup at `docs/mockups/moment-bar.html` (or equivalent)
-locked before `ready`. The composition decision is Discover's job, not Build's
-guess. The spec even admits "no prototypes yet" — for the wedge surface, that
-is the gap, not a nice-to-have.
+**Resolved:** the mockup at `docs/mockups/moment-bar.html` is locked. It
+renders all three states (collapsed-inferred, expanded, collapsed-mismatch)
+against the real `--aa-*` tokens and the shipped What Now card. The decisions:
+
+- **Placement: above the card, inside the card's top padding.** The bar is
+  metadata about the moment, not the task — so it sits above the title, not
+  inside the context line (would crowd the most-read line) and not below the
+  why-line (would read as a verdict on the picker).
+- **Format: two segmented controls** (time: 15m / 30m / 1h / 2h+; energy:
+  low / med / high). Not chips (imply multi-select), not a form (implies
+  commitment). Active segment in teal — system/state, never amber.
+- **Collapse: default-collapsed to one quiet line** —
+  `30m · low energy — change`. Click the line or press `T`/`G` to expand;
+  collapses on selection/blur. The collapsed line is the whole point.
+- **Inference: time-of-day default, stated explicitly** —
+  `30m · low energy — inferred from time of day`. Morning→high, post-lunch→low,
+  evening→medium. Once overridden, the override sticks for the session and the
+  "inferred" tag disappears. Never hidden, always overridable.
+- **Mismatch: calm + truthful, never blocking.** When the moment disagrees
+  with the top task, the why-line says so ("...but it's XL and you have 15
+  min. Sure?"). No red, no nag; priority is never demoted by fit.
+- **Not here: no badges/streaks (banned), no third selector (two is the cap),
+  no persistence beyond the session.**
+
+Build implements to the mockup. The "above-card first, move if review finds it
+heavy" open question below is closed — above-card is locked.
 
 ### Gap C — the fallback-invariant test claim is incorrect
 
@@ -180,3 +203,7 @@ verify; the claim that the *existing tests* verify it unchanged is wrong.
 tests are updated to assert both: (a) moment-unset → identical ranking to
 today; (b) moment-set → within-tier re-rank, priority never crossed. The tests
 as written today will change; that's expected, not a regression."
+
+**RESOLVED 2026-07-04** — the done-condition above is rewritten as suggested.
+Gap C is closed; only Gap A (tag-management shipping) and the matcher-test
+gate remain.
