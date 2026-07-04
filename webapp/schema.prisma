@@ -175,6 +175,10 @@ model Project {
   description String?
   dueDate     DateTime?
   isDone      Boolean   @default(false)
+  // Per-Goal sequence (goal-planning spec §E). Projects with no goal sort by
+  // name as before; projects under a goal sort by `order` then name. The first
+  // non-done project in this order is surfaced as "Next: <name>".
+  order       Int       @default(0)
   createdAt   DateTime  @default(now())
   completedAt DateTime?
 
