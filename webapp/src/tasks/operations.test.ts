@@ -18,6 +18,8 @@ import {
   snoozeTask,
   startTask,
   pauseTask,
+  addTaskUpdate,
+  completeTaskFromFocus,
 } from "./operations";
 import { mockContext } from "../test/mockContext";
 
@@ -67,7 +69,7 @@ describe("getTask", () => {
     expect(result).toEqual(found);
     expect(m.entities.Task.findUnique).toHaveBeenCalledWith({
       where: { id: "task-1", userId: "user-1" },
-      include: { tags: true, updates: { orderBy: { createdAt: "desc" } } },
+      include: { tags: true, updates: { orderBy: { createdAt: "asc" } } },
     });
   });
 });
@@ -429,3 +431,141 @@ describe("getTopTask — Now state ordering", () => {
 });
 
 /** Helper dropped — the existing `candidate()` above covers this. */
+
+// ----------------------------------------------------------------
+// addTaskUpdate — append a user-authored NOTE to the thread
+// (task-notes-completion-log.md)
+// ----------------------------------------------------------------
+describe("addTaskUpdate", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(
+      addTaskUpdate({ taskId: "task-1", body: "hello" }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("rejects a task that belongs to another user", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
+    await expect(
+      addTaskUpdate({ taskId: "task-1", body: "hello" }, m.context),
+    ).rejects.toThrow(/not found/i);
+  });
+
+  it("rejects a whitespace-only body", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    await expect(
+      addTaskUpdate({ taskId: "task-1", body: "   \n  " }, m.context),
+    ).rejects.toThrow(/empty/i);
+    expect(m.entities.TaskUpdate.create).not.toHaveBeenCalled();
+  });
+
+  it("creates a NOTE row, trimming the body, without mutating task fields", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.TaskUpdate.create.mockResolvedValue({ id: "tu-1" });
+
+    const result = await addTaskUpdate({ taskId: "task-1", body: "  Ship it  " }, m.context);
+
+    expect(result).toEqual({ id: "tu-1" });
+    expect(m.entities.TaskUpdate.create).toHaveBeenCalledWith({
+      data: {
+        body: "Ship it",
+        kind: "NOTE",
+        taskId: "task-1",
+        userId: "user-1",
+      },
+    });
+    // Never touches task status, startedAt, completedAt, or filing fields.
+    expect(m.entities.Task.update).not.toHaveBeenCalled();
+  });
+});
+
+// ----------------------------------------------------------------
+// completeTaskFromFocus — complete from focus + COMPLETED log event
+// (task-notes-completion-log.md)
+// ----------------------------------------------------------------
+describe("completeTaskFromFocus", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(
+      completeTaskFromFocus({ taskId: "task-1" }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("rejects a task that belongs to another user", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
+    await expect(
+      completeTaskFromFocus({ taskId: "task-1" }, m.context),
+    ).rejects.toThrow(/not found/i);
+  });
+
+  it("rejects an unstarted task (must Start before Complete)", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      isDone: false,
+      completedAt: null,
+      startedAt: null,
+      userId: "user-1",
+    });
+    await expect(
+      completeTaskFromFocus({ taskId: "task-1" }, m.context),
+    ).rejects.toThrow(/start the task/i);
+    expect(m.entities.Task.update).not.toHaveBeenCalled();
+    expect(m.entities.TaskUpdate.create).not.toHaveBeenCalled();
+  });
+
+  it("writes completion fields + exactly one COMPLETED row", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      isDone: false,
+      completedAt: null,
+      startedAt: new Date("2026-07-04T09:00:00Z"),
+      userId: "user-1",
+    });
+    m.entities.Task.update.mockResolvedValue({
+      id: "task-1",
+      completedAt: new Date("2026-07-04T09:41:00Z"),
+    });
+
+    const result = await completeTaskFromFocus({ taskId: "task-1" }, m.context);
+
+    expect(result).toEqual({
+      id: "task-1",
+      completedAt: expect.any(Date),
+    });
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { isDone: true, completedAt: expect.any(Date), startedAt: null },
+      select: { id: true, completedAt: true },
+    });
+    expect(m.entities.TaskUpdate.create).toHaveBeenCalledTimes(1);
+    expect(m.entities.TaskUpdate.create).toHaveBeenCalledWith({
+      data: {
+        body: "Completed",
+        kind: "COMPLETED",
+        taskId: "task-1",
+        userId: "user-1",
+      },
+    });
+  });
+
+  it("is idempotent: an already-done task returns its completion without a second event", async () => {
+    const m = mockContext();
+    const doneAt = new Date("2026-07-04T09:41:00Z");
+    m.entities.Task.findUnique.mockResolvedValue({
+      isDone: true,
+      completedAt: doneAt,
+      startedAt: null,
+      userId: "user-1",
+    });
+
+    const result = await completeTaskFromFocus({ taskId: "task-1" }, m.context);
+
+    expect(result).toEqual({ id: "task-1", completedAt: doneAt });
+    expect(m.entities.Task.update).not.toHaveBeenCalled();
+    expect(m.entities.TaskUpdate.create).not.toHaveBeenCalled();
+  });
+});

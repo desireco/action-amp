@@ -1,4 +1,4 @@
-import type { GetTask, GetTasks, GetDoneToday, GetTopTask, SnoozeTask, StartTask, PauseTask, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
+import type { GetTask, GetTasks, GetDoneToday, GetTopTask, SnoozeTask, StartTask, PauseTask, ToggleTaskDone, UpdateTaskStatus, AddTaskUpdate, CompleteTaskFromFocus } from "wasp/server/operations";
 import { assertLensAllowed } from "../billing/entitlementHttp";
 
 /**
@@ -12,13 +12,16 @@ import { assertLensAllowed } from "../billing/entitlementHttp";
 // ----------------------------------------------------------------
 // Read: single task (existing — kept for the detail page)
 // ----------------------------------------------------------------
+// `updates` ordered oldest → newest so every consumer gets a chronological
+// activity thread by default (focus mode, task detail). task-notes-
+// completion-log spec.
 export const getTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
   return await context.entities.Task.findUnique({
     where: { id: args.id, userId: context.user.id },
-    include: { tags: true, updates: { orderBy: { createdAt: "desc" } } },
+    include: { tags: true, updates: { orderBy: { createdAt: "asc" } } },
   });
 }) satisfies GetTask<{ id: string }>;
 
@@ -305,3 +308,85 @@ export const pauseTask = (async (args, context) => {
     select: { id: true, startedAt: true },
   });
 }) satisfies PauseTask<{ id: string }, { id: string; startedAt: Date | null }>;
+
+// ----------------------------------------------------------------
+// Task notes + completion log (task-notes-completion-log.md)
+// ----------------------------------------------------------------
+// Two ops that make the TaskUpdate timeline real: a plain append for user
+// notes, and a typed focus-mode completion that stamps Task.completedAt AND
+// writes a COMPLETED event in the same transaction. completionAt stays the
+// source of truth for "when did this finish" (Today, Review); the COMPLETED
+// row is the auditable activity-log record for the thread.
+
+// Append a user-authored NOTE to a task's thread. Does not mutate task status
+// or any filing field — append-only progress notes only.
+export const addTaskUpdate = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.taskId },
+    select: { userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+  const body = args.body.trim();
+  if (!body) {
+    throw new Error("Note cannot be empty.");
+  }
+  return await context.entities.TaskUpdate.create({
+    data: {
+      body,
+      kind: "NOTE",
+      taskId: args.taskId,
+      userId: context.user.id,
+    },
+  });
+}) satisfies AddTaskUpdate<{ taskId: string; body: string }>;
+
+// Complete a task from focus mode. Requires startedAt != null (focus is only
+// reachable via Start, so this holds by construction — the guard keeps the
+// product rule explicit in code). Idempotent: an already-done task returns its
+// existing completion without writing a second COMPLETED event. Otherwise, in
+// one transaction: isDone=true, completedAt=now, startedAt=null, and exactly
+// one TaskUpdate(kind=COMPLETED).
+export const completeTaskFromFocus = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.taskId },
+    select: { isDone: true, completedAt: true, startedAt: true, userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+  // Idempotent: double-clicking Complete must not double-log. Return the
+  // existing completion timestamp; no second event row.
+  if (task.isDone) {
+    return { id: args.taskId, completedAt: task.completedAt };
+  }
+  // Product rule: completion happens from focus, after Start.
+  if (!task.startedAt) {
+    throw new Error("Start the task before completing it.");
+  }
+  const completedAt = new Date();
+  const updated = await context.entities.Task.update({
+    where: { id: args.taskId },
+    data: { isDone: true, completedAt, startedAt: null },
+    select: { id: true, completedAt: true },
+  });
+  await context.entities.TaskUpdate.create({
+    data: {
+      body: "Completed",
+      kind: "COMPLETED",
+      taskId: args.taskId,
+      userId: context.user.id,
+    },
+  });
+  return { id: updated.id, completedAt: updated.completedAt };
+}) satisfies CompleteTaskFromFocus<
+  { taskId: string },
+  { id: string; completedAt: Date | null }
+>;
