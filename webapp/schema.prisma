@@ -338,8 +338,9 @@ model InboxItem {
   parsedDate     DateTime?
   parsedPriority Priority?
   parsedSize     Size?
-  parsedTags     String[] // raw tag strings: ["#work", "@phone"]
-  parsedProject  String?  // guess at project name (resolved to projectId at triage)
+  parsedTags     String[] // raw tag strings: ["#work"] — grammar v2: @ is time-only, extra # mentions are tags
+  parsedProject  String?  // first # mention / explicit autocomplete pick (resolved to projectId at triage)
+  parsedLens     String?  // lens token from `[[name]]` (lowercased); resolved against the user's lenses at triage
 }
 
 enum InboxItemStatus {
