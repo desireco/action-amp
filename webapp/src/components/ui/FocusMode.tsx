@@ -1,6 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./index";
 import "./Overlays.css";
+
+export type TaskUpdateKind = "NOTE" | "COMPLETED";
+
+export interface TaskUpdateEntry {
+  id: string;
+  body: string;
+  createdAt: Date;
+  kind: TaskUpdateKind;
+}
 
 export interface FocusTask {
   id: string;
@@ -9,6 +18,7 @@ export interface FocusTask {
   due?: string | null;
   size?: string | null;
   content?: string | null;
+  updates: TaskUpdateEntry[];
 }
 
 /**
@@ -16,17 +26,23 @@ export interface FocusTask {
  *
  * Overlay pattern #01: takes over the viewport. Entered via `F` on a task (or
  * from Next's "Do this"). Esc exits, returning to Next.
- * From FEATURES.md F13.
+ * From FEATURES.md F13. The activity thread + composer come from
+ * docs/specs/task-notes-completion-log.md.
  */
 export function FocusMode({
   task,
   onClose,
   onComplete,
+  onAddNote,
 }: {
   task: FocusTask;
   onClose: () => void;
   onComplete?: () => void;
+  onAddNote?: (body: string) => Promise<void> | void;
 }) {
+  const [draft, setDraft] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
   // Esc exits focus mode (scoped handler — the global handler only knows about
   // capture/cheatsheet since focus mode is page-rendered).
   useEffect(() => {
@@ -36,6 +52,29 @@ export function FocusMode({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  // Enter posts the note; Shift+Enter inserts a newline. Plain Enter never
+  // reaches the textarea (we preventDefault), so it can't accidentally submit
+  // a half-finished thought via blur.
+  const handleComposerKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      void submitNote();
+    }
+  };
+
+  const submitNote = async () => {
+    if (!onAddNote) return;
+    const body = draft.trim();
+    if (!body || submitting) return;
+    setSubmitting(true);
+    try {
+      await onAddNote(body);
+      setDraft("");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="aa-focus" role="dialog" aria-modal="true" aria-label={`Focus: ${task.title}`}>
@@ -54,6 +93,37 @@ export function FocusMode({
           </p>
         )}
         {task.content && <div className="aa-focus__content">{task.content}</div>}
+
+        <ol className="aa-focus__thread" aria-label="Activity">
+          {task.updates.length === 0 && (
+            <li className="aa-focus__thread-empty">No notes yet.</li>
+          )}
+          {task.updates.map((u) =>
+            u.kind === "COMPLETED" ? (
+              <li key={u.id} className="aa-focus__event">
+                Completed · {formatTime(u.createdAt)}
+              </li>
+            ) : (
+              <li key={u.id} className="aa-focus__note">
+                <div className="aa-focus__note-body">{u.body}</div>
+                <div className="aa-focus__note-time">{formatTime(u.createdAt)}</div>
+              </li>
+            ),
+          )}
+        </ol>
+
+        {onAddNote && (
+          <textarea
+            className="aa-focus__composer"
+            placeholder="Add a note — Enter to post, Shift+Enter for a new line"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleComposerKey}
+            rows={1}
+            disabled={submitting}
+          />
+        )}
+
         <div className="aa-focus__actions">
           <Button variant="primary" onClick={onComplete}>Done</Button>
           <Button variant="secondary" onClick={onClose}>Exit focus</Button>
@@ -61,4 +131,13 @@ export function FocusMode({
       </div>
     </div>
   );
+}
+
+// Compact time label for a thread entry: "9:41 AM". Stays calm — no seconds,
+// no relative-time verbosity.
+function formatTime(date: Date): string {
+  return new Date(date).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }

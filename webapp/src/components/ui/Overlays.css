@@ -648,6 +648,81 @@
   margin-top: var(--aa-space-2xl);
 }
 
+/* Activity thread (notes + system events) — a calm timeline, not a comments
+   product. Sits below the content, full width of the focus column. */
+.aa-focus__thread {
+  list-style: none;
+  margin: var(--aa-space-2xl) 0 0;
+  padding: 0;
+  width: 100%;
+  max-width: 620px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+}
+
+.aa-focus__thread-empty {
+  color: var(--aa-text-4);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* User-authored note: body + a quiet timestamp. */
+.aa-focus__note {
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  padding: var(--aa-space-sm) var(--aa-space-md);
+}
+
+.aa-focus__note-body {
+  font-size: 0.92rem;
+  color: var(--aa-text-2);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.aa-focus__note-time {
+  font-size: 0.78rem;
+  color: var(--aa-text-4);
+  margin-top: var(--aa-space-xs);
+}
+
+/* System event (e.g. Completed): muted, single line, no card chrome — the
+   timeline reads as activity, not as more content. */
+.aa-focus__event {
+  font-size: 0.82rem;
+  color: var(--aa-text-4);
+  padding: 0 var(--aa-space-xs);
+}
+
+.aa-focus__composer {
+  width: 100%;
+  max-width: 620px;
+  margin-top: var(--aa-space-md);
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--aa-text-2);
+  resize: vertical;
+  min-height: 2.5rem;
+  text-align: left;
+}
+
+.aa-focus__composer:focus {
+  outline: none;
+  border-color: var(--aa-accent);
+}
+
+.aa-focus__composer::placeholder {
+  color: var(--aa-text-4);
+}
+
 /* ============================================================
    Bottom sheet (overlay pattern #03)
    ============================================================ */

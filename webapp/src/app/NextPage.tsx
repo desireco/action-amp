@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "wasp/client/operations";
-import { getTopTask, toggleTaskDone, snoozeTask, startTask, pauseTask } from "wasp/client/operations";
+import { getTopTask, getTask, snoozeTask, startTask, pauseTask, addTaskUpdate, completeTaskFromFocus } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { NextCard, FocusMode, SnoozeSheet, type FocusTask, type SnoozePreset } from "../components/ui";
 import { useActiveLens } from "./lensContext";
@@ -21,22 +21,42 @@ export function NextPage() {
     lens ? { lensId: lens.id } : undefined,
     { enabled: !!lens },
   );
-  const [focusTask, setFocusTask] = useState<FocusTask | null>(null);
+  const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [snoozeOpen, setSnoozeOpen] = useState(false);
+
+  // Focus mode shows the activity thread, which the topTask query doesn't
+  // include. Fetch the full task (with updates) only while focus is open so we
+  // don't widen the home-screen query.
+  const { data: focusTaskFull } = useQuery(
+    getTask,
+    focusTaskId ? { id: focusTaskId } : undefined,
+    { enabled: !!focusTaskId },
+  );
 
   const handleComplete = async () => {
     if (!topTask) return;
     try {
-      await toggleTaskDone({ id: topTask.id });
+      // Focus completion writes both the durable completion field (completedAt
+      // — used by Today/Review) and a COMPLETED activity-log event. Idempotent.
+      await completeTaskFromFocus({ taskId: topTask.id });
       // Refresh the focus candidates + dependent lists so the completed task
       // leaves Next and the nav counts update.
       queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
       queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["getDoneToday"] });
       queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     } catch {
       // reverts via refetch
     }
+  };
+
+  const handleAddNote = async (body: string) => {
+    if (!focusTaskId) return;
+    await addTaskUpdate({ taskId: focusTaskId, body });
+    // The task thread is rendered from the getTask result; refresh it so the
+    // new note appears at the bottom of the timeline.
+    queryClient.invalidateQueries({ queryKey: ["getTask"] });
   };
 
   const handleSnooze = async (preset: SnoozePreset) => {
@@ -90,9 +110,6 @@ export function NextPage() {
       : topTask.dueDate
         ? `due ${formatWhen(topTask.dueDate)}`
         : null;
-  const metaParts = [topTask.project?.name, dueLabel, sizeLabel(topTask.size)].filter(
-    Boolean,
-  ) as string[];
 
   // The honest "why this?" — composed from the same fields getTopTask ranked on
   // (startedAt → priority → due → size). Empty when there's nothing truthful
@@ -129,16 +146,10 @@ export function NextPage() {
         onStart={handleStart}
         onPause={handlePause}
         onDo={() => {
-          // "Do this" starts the task (Now) AND enters focus mode.
+          // "Do this" starts the task (Now) AND enters focus mode. We stash
+          // just the id; the thread is fetched via getTask (see focusTaskFull).
           if (!isNow) void handleStart();
-          setFocusTask({
-            id: topTask.id,
-            title: topTask.description,
-            project: topTask.project?.name ?? null,
-            due: metaParts.find((p) => p.includes("due")) ?? null,
-            size: sizeLabel(topTask.size),
-            content: topTask.content ?? null,
-          });
+          setFocusTaskId(topTask.id);
         }}
         onNotNow={() => setSnoozeOpen(true)}
       />
@@ -149,14 +160,15 @@ export function NextPage() {
           onClose={() => setSnoozeOpen(false)}
         />
       )}
-      {focusTask && (
+      {focusTaskId && focusTaskFull && (
         <FocusMode
-          task={focusTask}
-          onClose={() => setFocusTask(null)}
+          task={toFocusTask(focusTaskFull)}
+          onClose={() => setFocusTaskId(null)}
           onComplete={() => {
-            setFocusTask(null);
+            setFocusTaskId(null);
             handleComplete();
           }}
+          onAddNote={handleAddNote}
         />
       )}
     </>
@@ -181,4 +193,40 @@ function formatWhen(date: Date): string {
   if (diffDays === 1) return "tomorrow";
   if (diffDays <= 7) return d.toLocaleDateString("en-US", { weekday: "short" });
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// Map a getTask result (with the updates thread) to FocusMode's prop shape.
+// getTask already returns updates oldest → newest, so the timeline renders
+// chronologically without re-sorting here.
+function toFocusTask(task: {
+  id: string;
+  description: string;
+  content?: string | null;
+  status: string;
+  dueDate?: Date | null;
+  size?: string | null;
+  project?: { name: string } | null;
+  updates?: { id: string; body: string; createdAt: Date; kind: string }[];
+}): FocusTask {
+  const due =
+    task.status === "TODAY"
+      ? "due today"
+      : task.dueDate
+        ? `due ${formatWhen(task.dueDate)}`
+        : null;
+  return {
+    id: task.id,
+    title: task.description,
+    project: task.project?.name ?? null,
+    due,
+    size: sizeLabel(task.size ?? null),
+    content: task.content ?? null,
+    updates:
+      task.updates?.map((u) => ({
+        id: u.id,
+        body: u.body,
+        createdAt: u.createdAt,
+        kind: u.kind as "NOTE" | "COMPLETED",
+      })) ?? [],
+  };
 }
