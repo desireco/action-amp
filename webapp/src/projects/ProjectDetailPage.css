@@ -133,10 +133,12 @@
   font-weight: 500;
 }
 
-/* A task row + its horizon control, side by side. Mirrors Today's swap-row. */
+/* A task row + its horizon control, side by side. Mirrors Today's swap-row.
+   The move-picker (when expanded) wraps below via flex-wrap + width:100%. */
 .aa-project__row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--aa-space-sm);
 }
 
@@ -149,6 +151,28 @@
   flex-shrink: 0;
   display: flex;
   gap: var(--aa-space-xs);
+}
+
+/* ---- Move-task picker (§C "move to project" affordance) ----
+   Wraps below the row (flex-wrap + width:100% on the row). Reuses the
+   .aa-project__relink-opt pill style for option buttons. */
+.aa-project__move-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-xs);
+  align-items: center;
+  width: 100%;
+  padding-top: var(--aa-space-xs);
+  border-top: 1px dashed var(--aa-border);
+}
+.aa-project__move-hint {
+  font-size: 0.8rem;
+  color: var(--aa-text-3);
+}
+.aa-project__move-empty {
+  font-size: 0.8rem;
+  color: var(--aa-text-3);
+  font-style: italic;
 }
 
 .aa-project__empty {

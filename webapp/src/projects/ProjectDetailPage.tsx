@@ -4,11 +4,13 @@ import { useQuery } from "wasp/client/operations";
 import {
   getProject,
   getGoals,
+  getProjects,
   createTask,
   updateTaskStatus,
   setProjectDone,
   updateProject,
   deleteProject,
+  updateTask,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -40,6 +42,7 @@ type ProjectData = {
 };
 
 type GoalOption = { id: string; name: string };
+type ProjectOption = { id: string; name: string };
 
 /**
  * Project detail — the dedicated URL for working on a single Project. Shows its
@@ -79,6 +82,21 @@ export function ProjectDetailPage() {
     project ? { lensId: project.lensId } : undefined,
     { enabled: !!project && pickingGoal },
   );
+
+  // Move-task picker (§C "move to project" affordance on task rows). When set,
+  // this is the id of the task whose row is showing the picker; at most one row
+  // expands at a time. We fetch the project's siblings (same Lens) and offer
+  // them + an unlink-to-standalone option.
+  const [movingTaskId, setMovingTaskId] = useState<string | null>(null);
+  const [moveError, setMoveError] = useState<string | null>(null);
+  const { data: lensProjects } = useQuery(
+    getProjects,
+    project ? { lensId: project.lensId } : undefined,
+    { enabled: !!project && movingTaskId !== null },
+  );
+  // Siblings only — a task can't move to the project it's already in.
+  const moveTargets: ProjectOption[] = (lensProjects ?? [])
+    .filter((p: ProjectOption) => p.id !== project?.id);
 
   // Group the project's tasks by horizon. Open tasks split into Today / Upcoming
   // / Someday; done ones collect at the bottom.
@@ -176,6 +194,24 @@ export function ProjectDetailPage() {
       setPickingGoal(false);
     } catch (e) {
       setRelinkError(e instanceof Error ? e.message : "Couldn't change the goal.");
+    }
+  };
+
+  // Move a task out of this project (§C). targetProjectId === null means
+  // unlink to standalone (keep any goal link). The op enforces one-parent +
+  // same-Lens rules; an error surfaces inline on the row's picker.
+  const handleMoveTask = async (taskId: string, targetProjectId: string | null) => {
+    setMoveError(null);
+    try {
+      await updateTask({ id: taskId, projectId: targetProjectId });
+      queryClient.invalidateQueries({ queryKey: ["getProject"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["getGoals"] });
+      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+      setMovingTaskId(null);
+    } catch (e) {
+      setMoveError(e instanceof Error ? e.message : "Couldn't move the task.");
     }
   };
 
@@ -366,6 +402,52 @@ export function ProjectDetailPage() {
                                   Not today
                                 </Button>
                               )}
+                              {/* §C "move to project" affordance — opens an inline
+                                  picker scoped to the project's Lens. */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setMovingTaskId((cur) => (cur === task.id ? null : task.id));
+                                  setMoveError(null);
+                                }}
+                                aria-expanded={movingTaskId === task.id}
+                                aria-label={`Move ${task.description} to another project`}
+                              >
+                                Move
+                              </Button>
+                            </div>
+                          )}
+                          {movingTaskId === task.id && (
+                            <div className="aa-project__move-picker">
+                              <span className="aa-project__move-hint">Move to:</span>
+                              {/* Unlink to standalone (keep any goal link). */}
+                              <button
+                                type="button"
+                                className="aa-project__relink-opt"
+                                onClick={() => void handleMoveTask(task.id, null)}
+                              >
+                                Standalone
+                              </button>
+                              {moveTargets.length === 0 && (
+                                <span className="aa-project__move-empty">
+                                  No other projects in this Lens.
+                                </span>
+                              )}
+                              {moveTargets.map((p) => (
+                                <button
+                                  key={p.id}
+                                  type="button"
+                                  className="aa-project__relink-opt"
+                                  onClick={() => void handleMoveTask(task.id, p.id)}
+                                >
+                                  {p.name}
+                                </button>
+                              ))}
+                              <Button variant="ghost" size="sm" onClick={() => setMovingTaskId(null)}>
+                                Cancel
+                              </Button>
+                              {moveError && <p className="aa-project__edit-err">{moveError}</p>}
                             </div>
                           )}
                         </li>
