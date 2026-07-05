@@ -16,13 +16,14 @@ created: 2026-07-04
 
 Replace Triage's separate **Context** and **Type** wizard steps with one
 keyboard-optimized **Classify** step. Classify lets the user confirm or change
-both decisions at once: what the inbox item becomes, and which Lens it belongs
-to. Inferred context remains visible and reversible, but the user no longer
-pays a dedicated "Context → Continue" toll for obvious items.
+both decisions at once: what the inbox item becomes, and where it will land.
+When capture or free text resolves to a concrete Project, that Project is a
+strong destination signal: Triage uses the Project's Lens and does not show a
+standalone lens-selection toll by default.
 
 The new triage flow is:
 
-1. **Classify** — Type + Context together.
+1. **Classify** — Type + Destination together.
 2. **Spec** — Type-specific property rows.
 3. **Complete** — Commit the transformed entity.
 
@@ -38,8 +39,10 @@ interaction feel like a ratification tax.
 
 Context and Type are both classification decisions. Putting them on one screen
 preserves the deliberate "co-author the spec" model while removing a step from
-the common path. The user can still see the inferred context, understand why it
-was chosen, and change it before the item leaves the Inbox.
+the common path. A resolved Project is even stronger than a lens hint: if the
+user captured or typed enough for the app to know "MVP", the app also knows
+MVP's Lens. The user should see that destination, not be asked to confirm Work
+again.
 
 ## Current Behavior
 
@@ -71,7 +74,7 @@ completion behavior:
 
 | Step | Purpose | Commit behavior |
 |---|---|---|
-| Classify | Pick Type and Context together | `Enter` advances to Spec, or archives immediately when Type is Archive |
+| Classify | Pick Type and Destination together | `Enter` advances to Spec, or archives immediately when Type is Archive |
 | Spec | Edit type-specific rows | `Enter` completes when valid |
 | Complete | Existing completion/dispatch animation and next item advance | No separate visible screen required |
 
@@ -108,7 +111,19 @@ Notes:
 - The card title/body remains the captured text from `TriageCard`.
 - The Type row uses the current four outcomes: Task, Project, Resource/Note,
   Archive.
-- The Context row shows lenses available to the user.
+- The Context row shows lenses available to the user only when the destination
+  is not already known from a resolved Project.
+- When a Project is resolved, show a compact destination line instead of the
+  lens row:
+
+  ```text
+  Destination
+  MVP · Work
+  Change project
+  ```
+
+  This is not silent filing: the destination is visible, and the user can
+  still change the Project from the Spec step.
 - The inferred summary is plain English and compact. It must not become a chip
   pile.
 - The primary action is still a button for pointer users:
@@ -129,7 +144,21 @@ Type options:
 The existing rule remains: triage never creates a Goal. Goals are linked in
 Spec, not selected as a Type.
 
-### Context Options
+### Destination / Context Options
+
+Classify chooses the filing destination at the right level of certainty:
+
+| Situation | Classify behavior |
+|---|---|
+| Concrete Project resolved | Select that Project and Lens; show `Destination: Project · Lens`; do not show the lens radio by default |
+| Explicit Project selected during capture | Same as concrete Project resolved |
+| `[[lens]]` token only | Preselect that Lens; show the lens choices so the user can change it |
+| No inference | Preselect active Lens; show the lens choices |
+| Ambiguous Project | Do not hide ambiguity; show lens/project choice before Spec |
+
+The phrase "skip lens selection" means the standalone lens row is hidden when a
+concrete Project has already supplied the Lens. It does not mean hiding the
+destination.
 
 For up to four visible lenses, show inline context choices with keycaps:
 
@@ -161,7 +190,7 @@ Do not make custom lens management available from triage.
 ## Inference Rules
 
 Classify starts with inferred defaults. The user can change either Type or
-Context before advancing.
+Destination before advancing.
 
 ### Type Default
 
@@ -172,21 +201,26 @@ inference.
 Reason: false type guesses are more expensive than false property guesses.
 Keep the first version predictable.
 
-### Context Default
+### Destination Default
 
-Context default precedence:
+Destination default precedence:
 
-1. Explicit `[[lens]]` token resolved to a real Lens.
-2. Project-bridged inference from a uniquely matched project.
-3. Active lens.
-4. First available lens only as a last resort when active lens is unavailable.
+1. Concrete Project resolution from capture picker or unique project match.
+2. Explicit `[[lens]]` token resolved to a real Lens.
+3. Project-bridged lens inference when only the Lens is known.
+4. Active lens.
+5. First available lens only as a last resort when active lens is unavailable.
 
-`[[lens]]` continues to win over project inference when they disagree.
+Concrete Project resolution wins over `[[lens]]` because it is the more
+specific destination. If the text explicitly names/selects a real Project in
+Work and also contains `[[personal]]`, Classify must surface the conflict
+instead of silently choosing the Lens token.
 
 ### Confidence and Visibility
 
-The context choice may be auto-selected, but it is not silent. The Classify
-screen must show the selected context before the item can be dispatched.
+The destination choice may be auto-selected, but it is not silent. The
+Classify screen must show the selected destination before the item can be
+dispatched.
 
 Show a short explanation when context was inferred from something other than
 the active lens:
@@ -194,12 +228,12 @@ the active lens:
 | Source | Example copy |
 |---|---|
 | `[[lens]]` token | `Context from [[work]]` |
-| Project bridge | `Context from project Q3 Launch` |
+| Project bridge | `Destination from project Q3 Launch` |
 | Active lens | No explanation required |
 
-If the user changes context manually, hide the inference explanation or replace
-it with neutral selected-context copy. Do not continue claiming the old
-inference.
+If the user changes destination manually, hide the inference explanation or
+replace it with neutral selected-destination copy. Do not continue claiming the
+old inference.
 
 ### Ambiguity
 
@@ -208,7 +242,7 @@ Ambiguous context must not be hidden behind a confident-looking default.
 Show Classify with a visible ambiguity hint when:
 
 - Multiple projects with the same matched name exist across lenses.
-- A project match conflicts with an explicit `[[lens]]`.
+- A concrete project match conflicts with an explicit `[[lens]]`.
 - An explicit `[[lens]]` token is unknown and preserved as literal text.
 - The active lens is unavailable or locked.
 
@@ -230,10 +264,10 @@ text field, contenteditable title, open spec row, or picker that owns keys.
 | `2` | Select Project, if visible |
 | `3` | Select Note/Resource |
 | `Backspace` / `Delete` | Select Archive |
-| `A` | Select first visible lens |
-| `S` | Select second visible lens |
-| `D` | Select third visible lens |
-| `F` | Select fourth visible lens |
+| `A` | Select first visible lens when lens choices are visible |
+| `S` | Select second visible lens when lens choices are visible |
+| `D` | Select third visible lens when lens choices are visible |
+| `F` | Select fourth visible lens when lens choices are visible |
 | `/` | Open full lens picker when there are more lenses |
 | `Enter` | Accept current Classify choices; archive immediately if Archive is selected |
 | `Esc` | Return to Inbox |
@@ -241,7 +275,9 @@ text field, contenteditable title, open spec row, or picker that owns keys.
 | `←` / `→` | Previous / next inbox item, preserving current session semantics |
 
 `A/S/D/F` are positional keys. They do not have semantic meaning and should be
-shown as visible keycaps on the context options.
+shown as visible keycaps on the context options. When a concrete Project hides
+the lens row, these keys no-op unless the user has opened a destination/lens
+change control.
 
 ### Spec Keys
 
@@ -266,7 +302,9 @@ Classify keyset plus preserving current Enter/Esc behavior.
 Every shortcut must have an equivalent clickable control:
 
 - Type options are buttons.
-- Context options are radio-style buttons.
+- Context options are radio-style buttons when shown.
+- Concrete Project destinations are shown as a selected destination line with a
+  Project change affordance.
 - `/ More` has a clickable "More" button.
 - The primary button advances or archives.
 
@@ -285,11 +323,14 @@ The existing `triageInboxItem` API already accepts:
 - `priority`
 - `size`
 
-Classify changes when `lensId` is selected in the UI, not how it is submitted.
+Classify changes when `lensId` and optionally `projectId` are selected in the
+UI, not how the server operation is submitted.
 
-The builder should keep project and goal queries scoped to the selected
-Classify context, matching the current behavior that scopes filing targets to
-`chosenLensId`.
+The builder should keep project and goal queries scoped to the selected Lens
+within the Classify destination, matching the current behavior that scopes
+filing targets to `chosenLensId`. When a resolved Project supplies the
+destination, the selected Lens is that Project's `lensId` and the task's
+selected Project is that Project's `id`.
 
 ## Implementation Notes
 
@@ -312,15 +353,17 @@ Recommended implementation shape:
 4. Keep `chosenLensId`, but treat it as selected context rather than a
    separately confirmed value.
 5. Keep `working.type`, but allow it to be changed on the Classify screen.
-6. Update `Esc` behavior:
+6. Introduce a small derived "resolved destination" concept for uniquely
+   matched Projects so Classify can hide the lens row and seed `projectId`.
+7. Update `Esc` behavior:
    - from Classify: leave triage
    - from Spec: return to Classify
-7. Update `Enter` behavior:
+8. Update `Enter` behavior:
    - from Classify: go to Spec, or dispatch Archive
    - from Spec: dispatch when valid
-8. Add Classify keyboard handlers for `1/2/3`, `Backspace/Delete`, `A/S/D/F`,
+9. Add Classify keyboard handlers for `1/2/3`, `Backspace/Delete`, `A/S/D/F`,
    `/`, `Q`, and previous/next where supported.
-9. Preserve existing guards that ignore shortcuts while text/editing/pickers
+10. Preserve existing guards that ignore shortcuts while text/editing/pickers
    own focus.
 
 Avoid broad refactors. This should be a focused change to the triage wizard
@@ -336,6 +379,7 @@ Use calm, direct labels:
 - Question: `What is this?`
 - Type row label: `Becomes`
 - Context row label: `Context`
+- Destination row label when a Project is resolved: `Destination`
 - Inference row label: `Inferred`
 
 Do not use congratulatory, gamified, or guilt-oriented language.
@@ -352,6 +396,12 @@ If a project is already resolved:
 
 ```text
 Task · Work · Q3 Launch · Tomorrow
+```
+
+If a Project supplied the destination, prefer destination-first copy:
+
+```text
+Task · MVP · Work · Upcoming
 ```
 
 If Archive is selected:
@@ -374,9 +424,9 @@ Archive is lossless.
 
 ### Resource/Note
 
-When Type is Note/Resource, Classify chooses context only. The required parent
-Project/Goal is still selected in Spec. Complete remains gated until a parent
-is set.
+When Type is Note/Resource, Classify chooses the Lens destination only. The
+required parent Project/Goal is still selected in Spec. Complete remains gated
+until a parent is set.
 
 ## Edge Cases
 
@@ -386,6 +436,9 @@ is set.
   inline error.
 - If Project type is hidden because `item.parsedProject` exists, pressing `2`
   should no-op or flash the hint; it must not select a hidden Project option.
+- If a Project is resolved and the user changes context manually, clear the
+  resolved Project unless the same Project exists in the new Lens. Do not carry
+  a project id across lenses.
 - If there are fewer than four lenses, unused `A/S/D/F` keys no-op.
 - If there are more than four lenses and the selected lens is not in the first
   four, show it as selected in the row or in a compact selected-context chip so
@@ -397,15 +450,23 @@ is set.
 
 - [ ] `TriagePage` no longer has a separate visible Context step and Type step;
       the first visible step is Classify.
-- [ ] Classify renders Type and Context controls together.
+- [ ] Classify renders Type and destination/context controls together.
+- [ ] When capture or free text resolves one concrete Project, Classify shows
+      `Destination: <Project> · <Lens>` and does not show the lens selector by
+      default.
+- [ ] The resolved Project's `lensId` becomes the selected context and its `id`
+      becomes the selected Project for Task dispatch.
+- [ ] The user can still change the Project from Spec; changing to a Project in
+      another Lens updates the selected context.
 - [ ] `Enter` from Classify advances to Spec for Task, Project, and Resource.
 - [ ] `Enter` from Classify dispatches Archive only when Archive is selected.
 - [ ] Type shortcuts work on Classify: `1`, `2`, `3`, `Backspace`, `Delete`.
 - [ ] Context shortcuts work on Classify for visible lenses: `A`, `S`, `D`,
       `F`.
 - [ ] `/` opens the full lens picker when there are more than four lenses.
-- [ ] Context default precedence is implemented:
-      `[[lens]]` → project-bridged lens → active lens → first available lens.
+- [ ] Destination default precedence is implemented:
+      concrete Project → `[[lens]]` → project-bridged lens → active lens →
+      first available lens.
 - [ ] Inference copy appears for `[[lens]]` and project-bridged context, and
       updates or disappears after manual context change.
 - [ ] Spec rows remain scoped to the selected context, not necessarily the
@@ -441,9 +502,12 @@ helpers and test those directly.
 
 Minimum useful cases:
 
-- `[[work]]` selects the Work lens on Classify.
-- A unique matched project selects that project's lens.
-- `[[me]]` beats a conflicting Work project match.
+- `[[work]]` selects the Work lens on Classify and still shows Lens choices.
+- Concrete project resolution selects the matched Project and Lens on Classify,
+  hides the lens row, and sends that `projectId` on Task dispatch.
+- Project name conflict across lenses does not hide the lens/project choice.
+- A `[[me]]` token conflicting with a concrete Work project surfaces the
+  conflict instead of silently choosing either side.
 - Active lens is selected when there is no explicit or project inference.
 - Pressing `1/2/3` changes Type.
 - Pressing `A/S/D/F` changes Context by visible position.
@@ -464,6 +528,8 @@ When implemented, update:
 
 The new structural statement should be:
 
-> Triage begins with Classify: a combined Type + Context step. Context may be
-> inferred from `[[lens]]`, a matched project, or the active lens, but it is
-> always visible and reversible before dispatch.
+> Triage begins with Classify: a combined Type + Destination step. Destination
+> may be inferred from a matched Project, `[[lens]]`, or the active Lens. A
+> concrete Project destination shows `Destination: Project · Lens` and skips the
+> standalone Lens picker by default; Lens-only inference remains visible and
+> reversible before dispatch.

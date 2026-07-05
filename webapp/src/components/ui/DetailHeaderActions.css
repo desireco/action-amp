@@ -1,0 +1,39 @@
+@import "../../styles/tokens.css";
+
+.aa-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-sm);
+  align-items: center;
+  justify-content: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow:
+    0 1px 2px oklch(0.2 0.02 230 / 0.04),
+    0 10px 28px oklch(0.58 0.16 225 / 0.1);
+}
+
+.aa-detail-action {
+  min-height: 38px;
+  padding-inline: 14px !important;
+  border-color: transparent;
+  color: var(--aa-text-2);
+}
+
+.aa-detail-action:hover:not(:disabled) {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text);
+}
+
+.aa-detail-action--danger {
+  color: var(--aa-rose-text);
+}
+
+.aa-detail-action--danger:hover:not(:disabled) {
+  background: var(--aa-rose-soft);
+  color: var(--aa-rose-text);
+}

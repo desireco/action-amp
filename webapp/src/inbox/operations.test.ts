@@ -181,6 +181,21 @@ describe("triageInboxItem — task decisions", () => {
       select: { id: true },
     });
   });
+
+  it("does not align triaged tasks directly to goals", async () => {
+    const m = arrange();
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triageOne({
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+      goalId: "goal-should-not-attach",
+    }, m);
+
+    const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(call.data.goalId).toBeUndefined();
+  });
 });
 
 /** Thin wrapper so the new tests read clearly and stay DRY. */

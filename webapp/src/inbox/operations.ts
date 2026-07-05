@@ -166,7 +166,6 @@ export const triageInboxItem = (async (args, context) => {
           priority,
           size,
           dueDate: item.parsedDate,
-          goalId: args.goalId,
           projectId: effectiveProjectId,
           // Tags carry onto tasks only (projects/goals drop them).
           ...(tagRecords.length > 0

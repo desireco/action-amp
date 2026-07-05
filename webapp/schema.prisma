@@ -141,8 +141,9 @@ enum LensKind {
 // ============================================================
 // Goal — the organizing layer (replaces PARA's Areas)
 // ============================================================
-// Active, outcome-oriented ("Run a 10k"). Projects + standalone Tasks link to a
-// Goal to express WHY they matter. Standalone projects/tasks (goalId = null) are allowed.
+// Active, outcome-oriented ("Run a 10k"). Projects link to a Goal to express
+// WHY they matter. Legacy direct-goal Tasks may exist, but new product flows
+// should align goals through Projects.
 model Goal {
   id          String   @id @default(uuid())
   name        String
@@ -159,7 +160,7 @@ model Goal {
   lensId String
 
   projects  Project[]
-  tasks     Task[]     // standalone tasks linked to this goal
+  tasks     Task[]     // legacy direct-goal tasks
   resources Resource[] // resources filed directly under the goal
 
   @@unique([userId, name]) // unique goal names per user

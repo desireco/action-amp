@@ -1,0 +1,114 @@
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter, Route, Routes } from "react-router";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const inboxItems = {
+  current: [
+    {
+      id: "ix-1",
+      text: "Email Sarah",
+      createdAt: new Date(),
+      parsedDate: null,
+      parsedLens: null,
+      parsedProject: null,
+      parsedPriority: null,
+      parsedSize: null,
+      parsedTags: [],
+    },
+  ],
+};
+
+const appData = {
+  current: {
+    lenses: [{ id: "lens-1", name: "Work", kind: "WORK", color: "indigo" }],
+  },
+};
+
+const getInboxItems = vi.fn();
+const triageInboxItem = vi.fn();
+const getAppData = vi.fn();
+const getProjects = vi.fn();
+const getProjectsForResolver = vi.fn();
+const getGoals = vi.fn();
+
+vi.mock("wasp/client/operations", () => ({
+  useQuery: (fn: unknown) => {
+    if (fn === getInboxItems) return { data: inboxItems.current, isLoading: false, error: null };
+    if (fn === getAppData) return { data: appData.current, isLoading: false, error: null };
+    if (fn === getProjects || fn === getProjectsForResolver || fn === getGoals) {
+      return { data: [], isLoading: false, error: null };
+    }
+    return { data: undefined, isLoading: false, error: null };
+  },
+  getInboxItems,
+  triageInboxItem,
+  getAppData,
+  getProjects,
+  getProjectsForResolver,
+  getGoals,
+}));
+
+vi.mock("../app/lensContext", () => ({
+  useActiveLens: () => ({ id: "lens-1", name: "Work", kind: "WORK", color: "indigo" }),
+}));
+
+const { TriagePage } = await import("./TriagePage");
+
+function renderTriagePage() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={["/app/inbox/review"]}>
+        <Routes>
+          <Route path="/app/inbox/review" element={<TriagePage />} />
+          <Route path="/app/inbox" element={<div>Inbox</div>} />
+          <Route path="/app" element={<div>App home</div>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.useRealTimers();
+  inboxItems.current = [
+    {
+      id: "ix-1",
+      text: "Email Sarah",
+      createdAt: new Date(),
+      parsedDate: null,
+      parsedLens: null,
+      parsedProject: null,
+      parsedPriority: null,
+      parsedSize: null,
+      parsedTags: [],
+    },
+  ];
+  triageInboxItem.mockRejectedValue(new Error("Server unavailable"));
+});
+
+describe("TriagePage", () => {
+  it("keeps the current item visible when dispatch fails", async () => {
+    renderTriagePage();
+
+    expect(screen.getByText("Email Sarah")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+
+    await waitFor(() => expect(screen.getByText("Server unavailable")).toBeInTheDocument());
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+
+    expect(screen.getByText("Email Sarah")).toBeInTheDocument();
+    expect(screen.queryByText(/inbox zero/i)).not.toBeInTheDocument();
+  });
+});

@@ -13,8 +13,8 @@ import { uniquePermalink } from "../shared/permalinks";
 
 /**
  * Goals list for the Goals page, scoped to the active Lens.
- * Each goal rolls up: linked project count + standalone task count + aggregate
- * completion progress across all its projects + tasks. Also returns the focus
+ * Each goal rolls up linked project count + aggregate completion progress
+ * across its projects. Also returns the focus
  * project (first non-done in `order`) so the goal card can surface a single
  * muted "Focus: <name>" line (goal-planning spec §E).
  */
@@ -39,17 +39,12 @@ export const getGoals = (async (args, context) => {
         orderBy: [{ order: "asc" }, { name: "asc" }],
         select: { id: true, permalink: true, name: true, isDone: true, order: true },
       },
-      tasks: { select: { id: true, isDone: true } },
     },
   });
 
   return goals.map((g) => {
     const projectsDone = g.projects.filter((p) => p.isDone).length;
     const projectsTotal = g.projects.length;
-    const tasksDone = g.tasks.filter((t) => t.isDone).length;
-    const tasksTotal = g.tasks.length;
-    const doneCount = projectsDone + tasksDone;
-    const totalCount = projectsTotal + tasksTotal;
     // Focus = first non-done project in sequence order. Absent when the goal
     // has no projects or all are done (the "never lies" rule — no fabricated
     // content). The goal-planning spec §E.
@@ -60,8 +55,7 @@ export const getGoals = (async (args, context) => {
       name: g.name,
       description: g.description,
       projectCount: projectsTotal,
-      taskCount: tasksTotal,
-      progress: totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100),
+      progress: projectsTotal === 0 ? 0 : Math.round((projectsDone / projectsTotal) * 100),
       nextProject: nextProject ? { id: nextProject.id, permalink: nextProject.permalink, name: nextProject.name } : null,
     };
   });
@@ -70,11 +64,10 @@ export const getGoals = (async (args, context) => {
 // ----------------------------------------------------------------
 // Read: single goal (for the Goal detail page)
 // ----------------------------------------------------------------
-// Returns the goal + its standalone tasks (horizon-groupable like Project
-// detail) + its linked projects (name + progress, for the "linked projects"
-// list). Scoped by userId for tenancy. Standalone tasks are the ones filed
-// directly under the goal (goalId set, projectId null); project tasks are
-// reached via the project list, not duplicated here.
+// Returns the goal + its linked projects (name + progress, for the "linked
+// projects" list). Scoped by userId for tenancy. Legacy direct goal tasks may
+// still exist in old data, but the goal surface no longer treats Tasks as goal
+// children; Projects are the unit that supports a Goal.
 export const getGoal = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
@@ -85,15 +78,6 @@ export const getGoal = (async (args, context) => {
       OR: [{ id: args.id }, { permalink: args.id }],
     },
     include: {
-      // Standalone tasks under this goal, with project/goal for TaskRow.
-      tasks: {
-        orderBy: [{ order: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
-        include: {
-          tags: true,
-          project: { select: { id: true, permalink: true, name: true } },
-          goal: { select: { id: true, name: true } },
-        },
-      },
       // Linked projects: name + done/total for a per-project progress read.
       // Ordered by `order` then name — the goal-scoped sequence (spec §E).
       projects: {
@@ -237,11 +221,11 @@ export const updateGoal = (async (args, context) => {
 // ----------------------------------------------------------------
 // Delete: lossless default (spec §C)
 // ----------------------------------------------------------------
-// Re-parents child Projects + standalone Tasks to goalId=null (same Lens),
-// then deletes the Goal. Neither destroys Tasks or Resources — children keep
-// their projectId/goalId otherwise. Transactional so a late failure rolls
-// back the re-parenting. The confirm copy lives in the UI ("N children will
-// move to standalone in this Lens"); the server is the boundary.
+// Re-parents child Projects + any legacy direct-goal Tasks to goalId=null
+// (same Lens), then deletes the Goal. Neither destroys Tasks or Resources.
+// Transactional so a late failure rolls back the re-parenting. The confirm
+// copy lives in the UI ("N children will move to standalone in this Lens");
+// the server is the boundary.
 export const deleteGoal = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");

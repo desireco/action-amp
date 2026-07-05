@@ -56,11 +56,11 @@ appears in Work/Planning/Review except by coming through triage.
   understood. Grammar (locked 2026-07-04, §5.9): `#` tags · `@` time only ·
   `!`/`~` priority/size · `[[lens]]` explicit cross-lens override. Projects
   have no sigil — the resolver matches them from free text (a matched project
-  carries its lens into the triage Context step). See `docs/specs/capture-grammar.md`.
+  carries its Project + Lens into triage Classify). See `docs/specs/capture-grammar.md`.
 - Capture never asks "where does this go?" — that's triage's job. But capture
-  *can* hint: `[[work]]` / `[[personal]]` / `[[custom]]` pre-fills the lens at
-  triage (visible chip, still requires Continue). Capture is about speed
-  (target: thought → inbox in under 2 seconds).
+  *can* hint: `[[work]]` / `[[personal]]` / `[[custom]]` preselects the Lens on
+  triage's Classify step, and a matched Project can supply both Project and
+  Lens. Capture is about speed (target: thought → inbox in under 2 seconds).
 
 ### 2.2 Triage — the transfer
 
@@ -69,14 +69,16 @@ appears in Work/Planning/Review except by coming through triage.
   (`inbox/TriagePage.tsx`; see `TRIAGE.md` §4 for the canonical pattern).
 - Outcomes: Task / Project / Resource / **Archive** (lossless — the note is
   kept, not deleted; recoverable from the Logbook).
-- Filing targets are scoped — triaging an item into a Project or Goal places it
-  in the **Lens confirmed on the wizard's Context step** (§5.5).
+- Filing targets are scoped — triaging an item places it in the **Lens selected
+  or inferred on the wizard's Classify step** (§5.5). If a concrete Project is
+  resolved, that Project supplies both the Project and Lens destination and the
+  standalone lens picker is skipped by default.
 - Triage never auto-clutters the Work area: a triaged Task defaults to
   **Upcoming** (the bench), which surfaces on Next only if undated or due
   (§5.2). Committing to Today is an explicit choice; demoting to Someday is, too.
 - The single-card one-key dispatch (`1/2/3/P/R/Del`) is **gone** — replaced by
-  the wizard steps (Context → Type → Spec → Complete). The old keymap survives
-  only as step shortcuts where noted in `TRIAGE.md` §7.
+  the wizard steps (Classify → Spec → Complete). The old keymap survives only
+  as step shortcuts where noted in `TRIAGE.md` §7.
 
 ### 2.3 Work Area — doing, right now
 
@@ -194,14 +196,14 @@ These were the open structural calls. All resolved:
 4. **Work Area = Next (Now/Next chooser) + Today (committed list).** No
    third surface. Next shows the single focus task with its Next→Now state
    machine; Today shows the committed-for-today list with the 5-item cap.
-5. **Triage lens assignment = an explicit step (revised 2026-06-25).** Triage
-   now opens on a **Context (Lens)** step: a radio pre-filled with the active
-   lens, which the user confirms with Continue before proceeding. *(Previously
-   locked 2026-06-23 as "inherit the active lens, no extra step"; reversed
-   because triage is a deliberate specification flow, not a speed dispatch —
-   see `TRIAGE.md` §4. The active lens is still the default pre-selection, so
-   the common case is one Continue.)* The output entity still lands in whatever
-   Lens the user confirms.
+5. **Triage lens assignment lives in Classify (revised 2026-07-04).** Triage
+   now opens on **Classify**, a combined Type + Destination step. Lens remains
+   visible and reversible, but no longer gets its own standalone step. The
+   active lens is the fallback default. `[[lens]]` preselects a Lens and still
+   shows the lens choices. A concrete resolved Project is stronger: it supplies
+   both `projectId` and `lensId`, and Classify shows `Destination: Project ·
+   Lens` while skipping the standalone lens picker by default. See
+   `docs/specs/triage-classify-step.md`.
 6. **Focus switch = expanding-section nav (one section open at a time).** The
    sidebar has two orthogonal switches at the top:
    - **Context switch** (Lens: Work / Me) — always available, orthogonal to
@@ -268,10 +270,11 @@ These were the open structural calls. All resolved:
      the bridge from capture to lens. `[[ ]]` precedence beats project-inferred
      lens (explicit beats inference — if they disagree, the project hint does
      not match).
-   - **§5.5 stays intact.** `[[ ]]` and project-inferred lens **pre-fill** the
-     triage Context step as visible chips; they never silently file. The user
-     still hits Continue to ratify. The 2026-06-25 reversal (kill silent
-     auto-filing) is preserved — smarts pre-fill, the user ratifies.
+   - **§5.5 stays intact, with Classify replacing Context.** `[[ ]]` and
+     project-inferred context remain visible and reversible. Concrete Project
+     resolution can skip standalone lens selection because the Project already
+     supplies the Lens, but Classify still shows the actual destination before
+     dispatch.
 
 ## 6. Document cascade
 
@@ -286,14 +289,15 @@ The following were updated to match this doc (commit alongside):
 - `DATA-MODEL.md` — status note confirms InboxItem stays unscoped; Task status
   enum keeps `UPCOMING` (used by snooze; surfaced from Today, not as an area);
   the §4 "where things live" list aligns with the 5-areas model.
-- `TRIAGE.md` — already aligns on the keymap (canonical as of 2026-06-22); no
-  structural change, just a cross-reference to WORKFLOW.md §2.2.
+- `TRIAGE.md` — aligns the step-aware Classify keymap with WORKFLOW.md §2.2
+  and §5.5.
 - `DATA-MODEL.md` (added 2026-07-03) — documents `LensKind`, `Lens.purpose`,
   and the Work/Me → user-defined evolution; the §4 "where things live" list
   aligns with the 5-areas model.
-- `TRIAGE.md` §Context step (added 2026-07-03) — notes the radio now lists the
-  full lens set and goes adaptive (popover) when ≥4 lenses exist; the seeded
-  binary is no longer the only options.
+- `TRIAGE.md` §Classify step (revised 2026-07-04) — notes that Lens choices
+  live inside Classify, go adaptive (popover) when there are many lenses, and
+  are skipped by default when a concrete Project already supplies Project +
+  Lens.
 - `TRIAGE.md` §5 + §7.5 (added 2026-07-04) — supersede the 2026-06-22 `#`/`@`
   sigil decision; `#` is now tags, `@` is time only, `[[lens]]` is the explicit
   lens override, projects are resolver-driven. Capture grammar v2 per

@@ -24,7 +24,6 @@ interface GoalRow {
   name: string;
   description: string | null;
   projectCount: number;
-  taskCount: number;
   progress: number;
   // First non-done project in sequence order (goal-planning spec §E). Null
   // when the goal has no projects or all are done — the card hides the line.
@@ -155,8 +154,6 @@ export function GoalsPage() {
             meta={
               <>
                 <span>{g.projectCount} project{g.projectCount === 1 ? "" : "s"}</span>
-                <span className="aa-goals__dot" aria-hidden="true">·</span>
-                <span>{g.taskCount} task{g.taskCount === 1 ? "" : "s"}</span>
               </>
             }
             focusLabel={g.nextProject ? "Focus" : undefined}

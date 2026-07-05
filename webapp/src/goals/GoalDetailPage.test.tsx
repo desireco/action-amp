@@ -42,7 +42,7 @@ vi.mock("wasp/client/operations", () => ({
 // Import AFTER vi.mock so the page picks up the mocked module.
 const { GoalDetailPage } = await import("./GoalDetailPage");
 
-/** Fixture goal with two linked projects (one done, one not) + a standalone task. */
+/** Fixture goal with two linked projects (one done, one not). */
 function makeGoal(overrides: Record<string, unknown> = {}) {
   return {
     id: "g1",
@@ -51,9 +51,6 @@ function makeGoal(overrides: Record<string, unknown> = {}) {
     description: "Reach 10k followers",
     isDone: false,
     lensId: "lens-1",
-    tasks: [
-      { id: "t1", description: "Email Sarah", isDone: false, status: "UPCOMING", priority: "NORMAL", size: "M", tags: [], project: null, goal: { id: "g1", name: "Grow audience" } },
-    ],
     projects: [
       { id: "p1", permalink: "newsletter", name: "Newsletter", isDone: true, order: 0, dueDate: null, tasks: [{ id: "t2", isDone: true }] },
       { id: "p2", permalink: "twitter", name: "Twitter", isDone: false, order: 1, dueDate: null, tasks: [{ id: "t3", isDone: false }] },

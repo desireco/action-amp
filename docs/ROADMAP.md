@@ -133,6 +133,12 @@ item; Build pulls `ready`.**
 4. **command-palette-search** (`ready`) — command palette + full-text search across **all**
     tasks (open + done). The two Pro-tier features most likely to justify the
     price to an existing user. Depends on entitlement-enforcement.
+5. **triage-classify-step** (`ready`, new 2026-07-04) — replace the separate
+   Context + Type triage steps with **Classify** (`Classify → Spec → Complete`).
+   Concrete Project resolution shows `Destination: Project · Lens` and skips
+   the standalone lens selection by default, while `[[lens]]` still preselects
+   a visible, reversible Lens choice. Spec at
+   `docs/specs/triage-classify-step.md`.
 
 ### Then (earn-the-revenue work — gated on ≥1 paying non-founder user)
 

@@ -43,7 +43,9 @@ the $79.50 price.
 - `grep updateProject|updateGoal|completeProject|completeGoal|deleteProject|deleteGoal` → **zero matches** anywhere in `webapp/src`.
 - `Project.isDone`/`completedAt` and `Goal.isDone`/`completedAt` exist on the model and are read by `getLogbook` and `getGoals`, but **no UI action writes them**.
 - `ProjectDetailPage` and `GoalDetailPage` headers have no Done/Edit/Delete control — only "Add task."
-- The only `goalId` assignment paths are *at creation*: `TriagePage` (line ~265), `createProject` (`projects/operations.ts:102`), and `createTask`. There is **no** re-link path post-creation.
+- The only supported `goalId` assignment path for active work is Project →
+  Goal. Triage can align a new Project to a Goal; Tasks do not align directly
+  to Goals.
 - The docs already promise this and we owe it: PAGES.md **D2** ("Edit/delete Goal"), **P7** ("Create/edit Goal inline"), **D1** (Project header shows "parent Goal" — implies it's editable).
 
 **Scope fork, resolved with the user (2026-07-03):** "CRUD + intent/sequencing" —
@@ -76,7 +78,7 @@ matcher, command-palette).
       keep the existing FREE-Work-lens invariant honest on the read-back path
       (no cap check on a lifecycle toggle).
 - [ ] `getGoals` (`goals/operations.ts`) still filters `isDone: false` and its
-      roll-up math is unchanged — a completed goal simply stops appearing in
+      roll-up is project-only — a completed goal simply stops appearing in
       the active list.
 - [ ] `getProjects` filters `isDone: false` and is likewise unchanged.
 
@@ -91,7 +93,7 @@ matcher, command-palette).
 - [ ] Both headers expose **Reopen** when the entity is already done
       (reachable via Logbook; see §D).
 - [ ] Completing a Goal does **not** auto-complete or archive its child
-      Projects/Tasks (explicit non-goal — see below). Children are left
+      Projects (explicit non-goal — see below). Children are left
       exactly as they are.
 
 ### C. Edit + Delete + Re-link
@@ -111,21 +113,13 @@ matcher, command-palette).
 - [ ] **Re-link UI:** `ProjectDetailPage` shows the current parent Goal and
       lets the user change it (or unlink) via an existing-picker-style control.
       Goal options are limited to the project's own Lens.
-- [ ] **Re-link a standalone task:** the task edit surface lets a task move
-      between standalone-under-goal / project / unlinked. (If the task detail
-      page does not yet exist as a place for this control, narrow this
-      condition to: the operation `updateTask` accepts `goalId` and
-      `projectId`, same-Lens enforced, and `ProjectDetailPage`'s task rows
-      gain a "move to project" affordance. Build picks the surface; the
-      capability is the predicate.)
-- [ ] **Create a Project from inside a Goal:** `GoalDetailPage` gains an
-      "Add project" affordance alongside the existing "Add task." Creating it
-      auto-links the project to the goal and seeds it in the goal's Lens.
+- [ ] **Move task between projects:** Tasks can move between Projects or
+      standalone within the same Lens. They do not align directly to Goals.
 - [ ] **Delete (lossless default):** `deleteGoal({ id })` re-parents its child
-      Projects + standalone Tasks to `goalId=null` (same Lens), then deletes
-      the Goal. `deleteProject({ id })` re-parents child Tasks to
-      `projectId=null` (same Lens, retaining their `goalId` if any), then
-      deletes the Project. Neither destroys Tasks or Resources.
+      Projects to `goalId=null` (same Lens), then deletes the Goal. It also
+      clears any legacy direct-goal Tasks. `deleteProject({ id })` re-parents
+      child Tasks to `projectId=null` (same Lens), then deletes the Project.
+      Neither destroys Tasks or Resources.
 - [ ] Delete is gated behind an explicit confirm whose copy states the
       re-parenting outcome ("N tasks will move to standalone in this Lens") —
       no surprise data movement.

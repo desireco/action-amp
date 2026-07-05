@@ -23,8 +23,7 @@ import { mockContext } from "../test/mockContext";
  * Goals operations — getGoals (aggregation with progress calc) + createGoal.
  *
  * getGoals is interesting because it computes an aggregate progress percentage
- * across projects + tasks. We test the math: 1 done project + 1 done task out
- * of 3 total items → 67%.
+ * across projects. Tasks do not align directly to goals.
  */
 
 const GOAL_ROW = {
@@ -35,10 +34,6 @@ const GOAL_ROW = {
   projects: [
     { id: "p1", permalink: "newsletter", name: "Newsletter", isDone: true, order: 0 },
     { id: "p2", permalink: "twitter", name: "Twitter", isDone: false, order: 1 },
-  ],
-  tasks: [
-    { id: "t1", isDone: true },
-    { id: "t2", isDone: false },
   ],
 };
 
@@ -52,7 +47,7 @@ describe("getGoals — guards", () => {
 });
 
 describe("getGoals — happy path", () => {
-  it("scopes by lens, computes aggregate progress across projects + tasks", async () => {
+  it("scopes by lens, computes aggregate progress across projects", async () => {
     const m = mockContext();
     m.entities.Goal.findMany.mockResolvedValue([GOAL_ROW]);
 
@@ -65,7 +60,7 @@ describe("getGoals — happy path", () => {
       }),
     );
 
-    // 1 done project + 1 done task = 2 done; 2 projects + 2 tasks = 4 total → 50%.
+    // 1 done project; 2 projects total → 50%.
     // "next" = first non-done project in order → Twitter.
     expect(result).toEqual([
       {
@@ -74,23 +69,21 @@ describe("getGoals — happy path", () => {
         name: "Grow audience",
         description: "Reach 10k followers",
         projectCount: 2,
-        taskCount: 2,
         progress: 50,
         nextProject: { id: "p2", permalink: "twitter", name: "Twitter" },
       },
     ]);
   });
 
-  it("returns progress 0 + nextProject null for a goal with no projects or tasks", async () => {
+  it("returns progress 0 + nextProject null for a goal with no projects", async () => {
     const m = mockContext();
     m.entities.Goal.findMany.mockResolvedValue([
-      { ...GOAL_ROW, projects: [], tasks: [] },
+      { ...GOAL_ROW, projects: [] },
     ]);
 
     const result = await getGoals({ lensId: "lens-1" }, m.context);
     expect(result[0].progress).toBe(0);
     expect(result[0].projectCount).toBe(0);
-    expect(result[0].taskCount).toBe(0);
     expect(result[0].nextProject).toBeNull();
   });
 
@@ -105,7 +98,6 @@ describe("getGoals — happy path", () => {
           { id: "p2", permalink: "b", name: "B", isDone: false, order: 1 },
           { id: "p3", permalink: "c", name: "C", isDone: false, order: 2 },
         ],
-        tasks: [],
       },
     ]);
 
@@ -119,7 +111,6 @@ describe("getGoals — happy path", () => {
       {
         ...GOAL_ROW,
         projects: [{ id: "p1", permalink: "done-one", name: "Done one", isDone: true, order: 0 }],
-        tasks: [],
       },
     ]);
     const result = await getGoals({ lensId: "lens-1" }, m.context);

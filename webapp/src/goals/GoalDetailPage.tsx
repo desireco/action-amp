@@ -13,13 +13,8 @@ import {
   Button,
   Chip,
   ConfirmDialog,
-  type TaskRowTask,
 } from "../components/ui";
 import "./GoalDetailView.css";
-
-type GoalTask = TaskRowTask & {
-  status: "TODAY" | "UPCOMING" | "SOMEDAY";
-};
 
 type LinkedProject = {
   id: string;
@@ -38,7 +33,6 @@ type GoalData = {
   description: string | null;
   isDone: boolean;
   lensId: string;
-  tasks: GoalTask[];
   projects: LinkedProject[];
 };
 
@@ -76,14 +70,10 @@ export function GoalDetailPage() {
     if (!goal) return { progress: 0, totalItems: 0, doneItems: 0 };
     const projectsDone = goal.projects.filter((p) => p.isDone).length;
     const projectsTotal = goal.projects.length;
-    const tasksDone = goal.tasks.filter((t) => t.isDone).length;
-    const tasksTotal = goal.tasks.length;
-    const done = projectsDone + tasksDone;
-    const total = projectsTotal + tasksTotal;
     return {
-      progress: total === 0 ? 0 : Math.round((done / total) * 100),
-      totalItems: total,
-      doneItems: done,
+      progress: projectsTotal === 0 ? 0 : Math.round((projectsDone / projectsTotal) * 100),
+      totalItems: projectsTotal,
+      doneItems: projectsDone,
     };
   }, [goal]);
 
