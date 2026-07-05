@@ -177,6 +177,32 @@
   margin-top: var(--aa-space-xs);
 }
 
+.aa-triage-destination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  padding: 12px 14px;
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-teal-soft);
+  border: 1px solid var(--aa-teal-soft-strong);
+}
+
+.aa-triage-destination__label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+}
+
+.aa-triage-destination__value {
+  color: var(--aa-teal-cta);
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-align: right;
+}
+
 /* ---- Step 1: Lens radio ---- */
 .aa-triage-radio {
   display: flex;

@@ -2,7 +2,7 @@
 id: triage-classify-step
 kind: spec
 title: "Triage Classify step: merge context and type selection"
-status: ready
+status: in-progress
 priority: P1
 feature: inbox-triage
 spec_owner: discover
@@ -44,17 +44,17 @@ user captured or typed enough for the app to know "MVP", the app also knows
 MVP's Lens. The user should see that destination, not be asked to confirm Work
 again.
 
-## Current Behavior
+## Prior Behavior
 
-Canonical docs currently describe a four-stage wizard:
+Before the 2026-07-04 core implementation, canonical docs described a
+four-stage wizard:
 
 1. Context
 2. Type
 3. Spec
 4. Complete
 
-The implementation lives in `webapp/src/inbox/TriagePage.tsx` and models this
-as:
+The implementation modeled this as:
 
 - `type Step = "lens" | "type" | "spec"`
 - `chosenLensId` for the confirmed lens
@@ -63,7 +63,9 @@ as:
 - explicit `[[lens]]` and project-bridged inference pre-fill Context, but still
   require Continue
 
-This spec intentionally changes that model.
+The 2026-07-04 core implementation changed this to
+`type Step = "classify" | "spec"` and merged visible Type + Destination choice
+onto the first card. Remaining follow-up items are tracked in Done Conditions.
 
 ## Target Behavior
 

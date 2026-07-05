@@ -25,6 +25,27 @@ const appData = {
   },
 };
 
+const activeLens = {
+  current: { id: "lens-1", name: "Work", kind: "WORK", color: "indigo" },
+};
+
+const projects = {
+  current: [] as Array<{
+    id: string;
+    name: string;
+    lensId: string;
+    goal?: { name: string } | null;
+  }>,
+};
+
+const resolverProjects = {
+  current: [] as Array<{
+    id: string;
+    name: string;
+    lensId: string;
+  }>,
+};
+
 const getInboxItems = vi.fn();
 const triageInboxItem = vi.fn();
 const getAppData = vi.fn();
@@ -36,9 +57,9 @@ vi.mock("wasp/client/operations", () => ({
   useQuery: (fn: unknown) => {
     if (fn === getInboxItems) return { data: inboxItems.current, isLoading: false, error: null };
     if (fn === getAppData) return { data: appData.current, isLoading: false, error: null };
-    if (fn === getProjects || fn === getProjectsForResolver || fn === getGoals) {
-      return { data: [], isLoading: false, error: null };
-    }
+    if (fn === getProjects) return { data: projects.current, isLoading: false, error: null };
+    if (fn === getProjectsForResolver) return { data: resolverProjects.current, isLoading: false, error: null };
+    if (fn === getGoals) return { data: [], isLoading: false, error: null };
     return { data: undefined, isLoading: false, error: null };
   },
   getInboxItems,
@@ -50,7 +71,7 @@ vi.mock("wasp/client/operations", () => ({
 }));
 
 vi.mock("../app/lensContext", () => ({
-  useActiveLens: () => ({ id: "lens-1", name: "Work", kind: "WORK", color: "indigo" }),
+  useActiveLens: () => activeLens.current,
 }));
 
 const { TriagePage } = await import("./TriagePage");
@@ -76,6 +97,12 @@ function renderTriagePage() {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.useRealTimers();
+  appData.current = {
+    lenses: [{ id: "lens-1", name: "Work", kind: "WORK", color: "indigo" }],
+  };
+  activeLens.current = { id: "lens-1", name: "Work", kind: "WORK", color: "indigo" };
+  projects.current = [];
+  resolverProjects.current = [];
   inboxItems.current = [
     {
       id: "ix-1",
@@ -93,12 +120,78 @@ beforeEach(() => {
 });
 
 describe("TriagePage", () => {
+  it("starts on Classify and advances straight to Spec with one Continue", async () => {
+    renderTriagePage();
+
+    expect(screen.getByText("1 · Classify")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /task/i })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Work" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+
+    expect(await screen.findByText(/2 · Specify the task/i)).toBeInTheDocument();
+  });
+
+  it("uses a resolved Project as the destination and skips standalone Lens selection", async () => {
+    appData.current = {
+      lenses: [
+        { id: "lens-1", name: "Work", kind: "WORK", color: "indigo" },
+        { id: "lens-2", name: "Me", kind: "PERSONAL", color: "emerald" },
+      ],
+    };
+    activeLens.current = { id: "lens-2", name: "Me", kind: "PERSONAL", color: "emerald" };
+    inboxItems.current = [
+      {
+        id: "ix-1",
+        text: "Draft MVP plan",
+        createdAt: new Date(),
+        parsedDate: null,
+        parsedLens: null,
+        parsedProject: null,
+        parsedPriority: null,
+        parsedSize: null,
+        parsedTags: [],
+      },
+    ];
+    projects.current = [{ id: "project-1", name: "MVP", lensId: "lens-1", goal: null }];
+    resolverProjects.current = [{ id: "project-1", name: "MVP", lensId: "lens-1" }];
+    triageInboxItem.mockResolvedValue({ id: "task-1" });
+
+    renderTriagePage();
+
+    expect(await screen.findByText("Destination")).toBeInTheDocument();
+    expect(screen.getByText("MVP · Work")).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Work" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Me" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /^complete$/i }));
+
+    await waitFor(() =>
+      expect(triageInboxItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inboxItemId: "ix-1",
+          lensId: "lens-1",
+          projectId: "project-1",
+        }),
+      ),
+    );
+  });
+
+  it("uses Classify number keys to choose the type before Continue", async () => {
+    renderTriagePage();
+
+    fireEvent.keyDown(window, { key: "2" });
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+
+    expect(await screen.findByText(/2 · Specify the project/i)).toBeInTheDocument();
+  });
+
   it("keeps the current item visible when dispatch fails", async () => {
     renderTriagePage();
 
     expect(screen.getByText("Email Sarah")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
 

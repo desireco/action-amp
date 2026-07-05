@@ -38,12 +38,10 @@ import "./TriagePage.css";
  * So the review is a per-item wizard with explicit Continue steps and a final
  * Complete that commits the spec:
  *
- *   1. Context (Lens)  — radio, pre-filled with the active lens, user confirms.
- *   2. Type            — what does this become? Task (default) · Project ·
- *                        Resource (a Note) · Archive.
- *   3. Spec            — inline-expanding property rows (When / Size / Priority
+ *   1. Classify        — what it becomes plus the Lens/Project destination.
+ *   2. Spec            — inline-expanding property rows (When / Size / Priority
  *                        / Project for a Task), value-tinted.
- *   4. Complete        — commits the spec; gated until lens + filing target
+ *   3. Complete        — commits the spec; gated until destination + filing target
  *                        (for Task/Resource) are set.
  *
  * Each Complete calls `triageInboxItem` (transforms the InboxItem into its
@@ -80,9 +78,9 @@ export function TriagePage() {
   const [error, setError] = useState<string | null>(null);
 
   // ---- Wizard state ----
-  const [step, setStep] = useState<Step>("lens");
-  // The lens the user confirmed at step 1. Pre-filled with the active lens so
-  // the radio isn't blank, but the user must press Continue to ratify it.
+  const [step, setStep] = useState<Step>("classify");
+  // The Lens chosen by Classify. It may come from a visible Lens choice, a
+  // `[[lens]]` token, or a concrete Project destination.
   const [chosenLensId, setChosenLensId] = useState<string | null>(null);
   const [working, setWorking] = useState<Working | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null); // expanded spec row
@@ -181,32 +179,33 @@ export function TriagePage() {
   // The resolver source: lightweight project tuples across all entitled lenses.
   // Two sub-paths: (a) explicit typeahead pick at capture (parsedProject carries
   // the name), (b) free-text resolver matching the cleaned text. When a project
-  // matches, its lens pre-fills the Context step — but only if no `[[ ]]` token
-  // won (explicit beats inference). The same scan also drives resolvedProjectId
-  // for the picker, but the lens bridge only fires on path (b): path (a) stores
-  // the name, and the lens is implied by wherever that name resolves.
+  // matches, its Project + Lens becomes the Classify destination.
   const { data: resolverProjects } = useQuery(getProjectsForResolver, undefined, {
     enabled: !!activeLens,
   });
-  const projectBridge = useMemo<{ lensId: string; projectName: string } | null>(() => {
+  const projectBridge = useMemo<{ projectId: string; lensId: string; projectName: string } | null>(() => {
     const all = resolverProjects ?? [];
     if (all.length === 0) return null;
     const match = resolveProjectCandidate(all, {
       parsedProject: item?.parsedProject,
       text: item?.text,
     });
-    return match ? { lensId: match.lensId, projectName: match.name } : null;
+    return match ? { projectId: match.id, lensId: match.lensId, projectName: match.name } : null;
   }, [resolverProjects, item?.parsedProject, item?.text]);
 
-  // [[ ]] wins over project-bridge. Both pre-fill the Context step visibly.
-  const inferredLens = inferredLensFromToken
-    ?? (projectBridge ? (lenses ?? []).find((l) => l.id === projectBridge.lensId) ?? null : null)
-    ?? null;
-  // Drives the chip label: "from [[work]]" vs "from project MVP".
-  const lensInferenceLabel = inferredLensFromToken
-    ? `from [[${item?.parsedLens}]] in your capture`
-    : projectBridge && (!inferredLensFromToken) && inferredLens
+  // A concrete Project is the strongest destination signal: it supplies both
+  // Project and Lens. A Lens token still preselects a visible Lens choice when
+  // there is no concrete Project destination.
+  const projectDestinationLens = projectBridge
+    ? (lenses ?? []).find((l) => l.id === projectBridge.lensId) ?? null
+    : null;
+  const inferredLens = projectDestinationLens ?? inferredLensFromToken ?? null;
+  const hasProjectDestination = !!projectBridge && !!projectDestinationLens;
+  // Drives the hint label: "from project MVP" vs "from [[work]]".
+  const lensInferenceLabel = projectBridge && inferredLens
       ? `from project ${projectBridge.projectName}`
+      : inferredLensFromToken
+        ? `from [[${item?.parsedLens}]] in your capture`
       : null;
 
   // ---- Initialize a fresh working spec for a new item ----
@@ -240,17 +239,17 @@ export function TriagePage() {
     if (initializedItemId.current === item.id) return;
     initializedItemId.current = item.id;
     lensTouchedRef.current = false;
-    setStep("lens");
-    // Lens pre-fill: `[[ ]]` token (resolved to a real lens) wins over the
-    // active-lens default. Both are still pre-fills — the user hits Continue
-    // to ratify (WORKFLOW.md §5.5: explicit confirmation, never silent filing).
+    setStep("classify");
     setChosenLensId(inferredLens?.id ?? activeLens?.id ?? null);
-    setWorking(initWorking());
+    setWorking({
+      ...initWorking(),
+      projectId: hasProjectDestination ? projectBridge.projectId : null,
+    });
     setOpenKey(null);
-  }, [item, activeLens?.id, initWorking, inferredLens]);
+  }, [item, activeLens?.id, initWorking, inferredLens, hasProjectDestination, projectBridge?.projectId]);
 
   useEffect(() => {
-    if (!item || step !== "lens" || lensTouchedRef.current) return;
+    if (!item || step !== "classify" || lensTouchedRef.current) return;
     const targetLensId = inferredLens?.id ?? activeLens?.id ?? null;
     if (!targetLensId) return;
     setChosenLensId((current) =>
@@ -258,9 +257,46 @@ export function TriagePage() {
     );
   }, [item, step, inferredLens?.id, activeLens?.id]);
 
+  useEffect(() => {
+    if (!item || !hasProjectDestination || !projectBridge || !projectDestinationLens) return;
+    setChosenLensId(projectDestinationLens.id);
+    setWorking((current) =>
+      current && current.projectId !== projectBridge.projectId
+        ? { ...current, projectId: projectBridge.projectId }
+      : current,
+    );
+  }, [item, hasProjectDestination, projectBridge, projectDestinationLens]);
+
+  const setW = useCallback(
+    (patch: Partial<Working>) => setWorking((w) => (w ? { ...w, ...patch } : w)),
+    [],
+  );
+
   const canComplete = useCallback(
     (w: Working | null): boolean => canCompleteWorking(w, chosenLensId),
     [chosenLensId],
+  );
+
+  const classifyLensOptions = useMemo(
+    () =>
+      lenses.length > 0
+        ? lenses
+        : [
+            { id: "Work", name: "Work", color: "indigo" },
+            { id: "Me", name: "Me", color: "emerald" },
+          ],
+    [lenses],
+  );
+
+  const selectLensByIndex = useCallback(
+    (index: number) => {
+      if (hasProjectDestination) return;
+      const lens = classifyLensOptions[index];
+      if (!lens) return;
+      lensTouchedRef.current = true;
+      setChosenLensId(lens.id);
+    },
+    [classifyLensOptions, hasProjectDestination],
   );
 
   const dispatch = useCallback(async () => {
@@ -328,6 +364,11 @@ export function TriagePage() {
     navigateToInbox: () => navigate("/app/inbox"),
     setOpenKey,
     setStep,
+    setWorkingType: (type) => {
+      if (type === "project" && hasProjectDestination) return;
+      setW({ type });
+    },
+    selectLensByIndex,
   });
 
   if (isComplete) {
@@ -362,9 +403,6 @@ export function TriagePage() {
       </div>
     );
   }
-
-  // ---- Helpers for the spec rows ----
-  const setW = (patch: Partial<Working>) => setWorking((w) => (w ? { ...w, ...patch } : w));
 
   // Effective project = manual picker choice > resolved #token link. Drives both
   // the SpecRow display and what dispatch sends; a manual pick always wins.
@@ -433,56 +471,51 @@ export function TriagePage() {
             dispatched={dispatched}
             entering={entering}
           >
-            {/* ============ STEP 1: Context (Lens) ============ */}
-            {step === "lens" && (
+            {/* ============ STEP 1: Classify ============ */}
+            {step === "classify" && (
               <div className="aa-triage-step">
-                <div className="aa-triage-step__label">1 · Context</div>
-                <p className="aa-triage-step__q">Which life does this belong to?</p>
-                {lensInferenceLabel && inferredLens && (
-                  <p className="aa-triage-step__hint" aria-live="polite">
-                    {lensInferenceLabel}
-                  </p>
+                <div className="aa-triage-step__label">1 · Classify</div>
+                {hasProjectDestination ? (
+                  <div className="aa-triage-destination">
+                    <span className="aa-triage-destination__label">Destination</span>
+                    <span className="aa-triage-destination__value">
+                      {projectBridge?.projectName} · {projectDestinationLens?.name}
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    {lensInferenceLabel && inferredLens && (
+                      <p className="aa-triage-step__hint" aria-live="polite">
+                        {lensInferenceLabel}
+                      </p>
+                    )}
+                    <div className="aa-triage-radio" role="radiogroup" aria-label="Lens">
+                      {(lenses.length > 0
+                        ? lenses
+                        : [
+                            { id: "Work", name: "Work", color: "indigo" },
+                            { id: "Me", name: "Me", color: "emerald" },
+                          ]
+                      ).map((l) => (
+                        <button
+                          key={l.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={chosenLensId === l.id}
+                          data-lens-color={l.color ?? undefined}
+                          className={`aa-triage-radio__opt ${chosenLensId === l.id ? "active" : ""}`}
+                          onClick={() => {
+                            lensTouchedRef.current = true;
+                            setChosenLensId(l.id);
+                          }}
+                        >
+                          <span className="aa-triage-radio__dot" aria-hidden="true" />
+                          {l.name}
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
-                <div className="aa-triage-radio" role="radiogroup" aria-label="Lens">
-                  {(lenses.length > 0
-                    ? lenses
-                    : [
-                        { id: "Work", name: "Work", color: "indigo" },
-                        { id: "Me", name: "Me", color: "emerald" },
-                      ]
-                  ).map((l) => (
-                    <button
-                      key={l.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={chosenLensId === l.id}
-                      data-lens-color={l.color ?? undefined}
-                      className={`aa-triage-radio__opt ${chosenLensId === l.id ? "active" : ""}`}
-                      onClick={() => {
-                        lensTouchedRef.current = true;
-                        setChosenLensId(l.id);
-                      }}
-                    >
-                      <span className="aa-triage-radio__dot" aria-hidden="true" />
-                      {l.name}
-                    </button>
-                  ))}
-                </div>
-                <Button
-                  variant="primary"
-                  className="aa-triage-step__continue"
-                  disabled={!chosenLensId}
-                  onClick={() => setStep("type")}
-                >
-                  Continue
-                </Button>
-              </div>
-            )}
-
-            {/* ============ STEP 2: Type ============ */}
-            {step === "type" && (
-              <div className="aa-triage-step">
-                <div className="aa-triage-step__label">2 · What does this become?</div>
                 <div className="aa-triage-types">
                   {([
                     ["task", "Task", "an action — something to do"],
@@ -490,9 +523,11 @@ export function TriagePage() {
                     ["resource", "Note", "reference material — not an action"],
                     ["archive", "Archive", "I will not do now — keep it for later"],
                   ] as const)
-                    // A captured `#project` token means this is a task *in* that
-                    // project — it can't itself be a new project. Hide that option.
-                    .filter(([t]) => !(t === "project" && item.parsedProject))
+                    // A captured/resolved project means this is a task *in*
+                    // that project by default, not a new project by the same
+                    // name. Hide that option here; the project can still be
+                    // changed from Spec.
+                    .filter(([t]) => !(t === "project" && (item.parsedProject || hasProjectDestination)))
                     .map(([t, label, sub]) => (
                     <button
                       key={t}
@@ -509,17 +544,18 @@ export function TriagePage() {
                   variant="primary"
                   className="aa-triage-step__continue"
                   onClick={() => (working.type === "archive" ? void dispatch() : setStep("spec"))}
+                  disabled={!chosenLensId}
                 >
                   {working.type === "archive" ? "Archive" : "Continue"}
                 </Button>
               </div>
             )}
 
-            {/* ============ STEP 3: Spec ============ */}
+            {/* ============ STEP 2: Spec ============ */}
             {step === "spec" && (
               <div className="aa-triage-step">
                 <div className="aa-triage-step__label">
-                  3 · {working.type === "task" ? "Specify the task" : working.type === "project" ? "Specify the project" : "File the note"}
+                  2 · {working.type === "task" ? "Specify the task" : working.type === "project" ? "Specify the project" : "File the note"}
                 </div>
 
                 <div className="aa-spec-list">

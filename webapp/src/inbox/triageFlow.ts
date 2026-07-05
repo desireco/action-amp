@@ -3,7 +3,7 @@ import type { ParsedPriority, ParsedSize } from "./parseCapture";
 
 export type Outcome = "task-today" | "upcoming" | "someday" | "project" | "resource" | "archive";
 export type ChosenType = "task" | "project" | "resource" | "archive";
-export type Step = "lens" | "type" | "spec";
+export type Step = "classify" | "spec";
 
 export const OUTCOME_EXIT: Record<Outcome, TriageExit> = {
   "task-today": "right",

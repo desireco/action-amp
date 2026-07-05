@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { Step, Working } from "./triageFlow";
+import type { ChosenType, Step, Working } from "./triageFlow";
 
 interface UseTriageKeyboardArgs {
   isComplete: boolean;
@@ -14,6 +14,8 @@ interface UseTriageKeyboardArgs {
   navigateToInbox: () => void;
   setOpenKey: (key: string | null) => void;
   setStep: (step: Step) => void;
+  setWorkingType: (type: ChosenType) => void;
+  selectLensByIndex: (index: number) => void;
 }
 
 export function useTriageKeyboard({
@@ -29,6 +31,8 @@ export function useTriageKeyboard({
   navigateToInbox,
   setOpenKey,
   setStep,
+  setWorkingType,
+  selectLensByIndex,
 }: UseTriageKeyboardArgs) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -42,19 +46,49 @@ export function useTriageKeyboard({
       }
 
       if (e.key === "Escape") {
-        if (step === "lens") navigateToInbox();
-        else setStep(step === "spec" ? "type" : "lens");
+        if (step === "classify") navigateToInbox();
+        else setStep("classify");
         return;
       }
 
-      if (e.key !== "Enter") return;
       const editingTitle = document.activeElement?.getAttribute("contenteditable") === "true";
       if (editingTitle) return;
 
+      if (step === "classify") {
+        const typeByKey: Record<string, ChosenType> = {
+          "1": "task",
+          "2": "project",
+          "3": "resource",
+        };
+        const lensIndexByKey: Record<string, number> = {
+          a: 0,
+          s: 1,
+          d: 2,
+          f: 3,
+        };
+        const type = typeByKey[e.key];
+        if (type) {
+          e.preventDefault();
+          setWorkingType(type);
+          return;
+        }
+        if (e.key === "Backspace" || e.key === "Delete") {
+          e.preventDefault();
+          setWorkingType("archive");
+          return;
+        }
+        const lensIndex = lensIndexByKey[e.key.toLowerCase()];
+        if (lensIndex !== undefined) {
+          e.preventDefault();
+          selectLensByIndex(lensIndex);
+          return;
+        }
+      }
+
+      if (e.key !== "Enter") return;
+
       e.preventDefault();
-      if (step === "lens" && chosenLensId) {
-        setStep("type");
-      } else if (step === "type" && working) {
+      if (step === "classify" && chosenLensId && working) {
         if (working.type === "archive") {
           dispatch();
         } else {
@@ -80,5 +114,7 @@ export function useTriageKeyboard({
     navigateToInbox,
     setOpenKey,
     setStep,
+    setWorkingType,
+    selectLensByIndex,
   ]);
 }
