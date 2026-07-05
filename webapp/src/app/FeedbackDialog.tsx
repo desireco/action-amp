@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Kbd, submitOnModEnter } from "../components/ui";
+import { Button, CloseButton, Kbd, submitOnModEnter } from "../components/ui";
 import "../components/ui/Overlays.css";
 
 type FeedbackDialogProps = {
@@ -49,16 +49,7 @@ export function FeedbackDialog({ onSubmit, onClose }: FeedbackDialogProps) {
             <h2 className="aa-feedback__title">Leave feedback</h2>
             <p className="aa-feedback__sub">Tell us what happened, what felt off, or what would help.</p>
           </div>
-          <button
-            type="button"
-            className="aa-overlay__close"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-          </button>
+          <CloseButton onClose={onClose} />
         </div>
 
         <textarea

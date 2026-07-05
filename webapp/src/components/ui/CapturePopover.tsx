@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { BrandMark } from "./BrandMark";
 import { Chip } from "./Chip";
+import { CloseButton } from "./CloseButton";
 import { parseCapture, type ParsedCapture } from "../../inbox/parseCapture";
 import { detectMention, type MentionState } from "./detectMention";
 import { getCaretCoordinates } from "./caretCoords";
@@ -279,17 +280,12 @@ export function CapturePopover({
             disabled={submitting}
             aria-label="Capture"
           />
-          <button
-            type="button"
-            className="aa-overlay__close aa-capture__close"
-            onClick={onClose}
-            aria-label="Close without saving"
+          <CloseButton
+            onClose={onClose}
+            label="Close without saving"
+            className="aa-capture__close"
             title="Close (Esc)"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-          </button>
+          />
         </div>
 
         {mention && mentionMatches.length > 0 && mentionPos && (

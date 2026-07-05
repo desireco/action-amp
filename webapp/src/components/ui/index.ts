@@ -8,6 +8,7 @@ export { CapturePopover } from "./CapturePopover";
 export { Card } from "./Card";
 export { Chip } from "./Chip";
 export { CompletionCircle } from "./CompletionCircle";
+export { CloseButton } from "./CloseButton";
 export { ConfirmDialog } from "./ConfirmDialog";
 export { DetailHeaderActions } from "./DetailHeaderActions";
 export type { DetailHeaderAction } from "./DetailHeaderActions";

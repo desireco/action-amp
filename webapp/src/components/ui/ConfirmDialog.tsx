@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Button } from "./Button";
+import { CloseButton } from "./CloseButton";
 import "./Overlays.css";
 
 /**
@@ -47,21 +48,7 @@ export function ConfirmDialog({
       >
         <div className="aa-confirm__head">
           <h2 className="aa-confirm__title">{title}</h2>
-          <button
-            type="button"
-            className="aa-overlay__close"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M4 4l8 8M12 4l-8 8"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
+          <CloseButton onClose={onClose} />
         </div>
 
         <div className="aa-confirm__body">{message}</div>
