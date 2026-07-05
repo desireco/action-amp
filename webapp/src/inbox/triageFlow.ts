@@ -57,7 +57,7 @@ export function buildTriageChips(item: ParsedChipSource | null): TriageChip[] {
   return chips;
 }
 
-export function buildOutcome(w: Working): Outcome {
+function buildOutcome(w: Working): Outcome {
   if (w.type === "archive") return "archive";
   if (w.type === "project") return "project";
   if (w.type === "resource") return "resource";
