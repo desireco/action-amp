@@ -34,6 +34,7 @@ model User {
   projects   Project[]
   tasks      Task[]
   taskUpdates TaskUpdate[] // activity-log entries authored by this user
+  taskSessions TaskSession[] // focus-segment rows authored by this user
   resources  Resource[]
   inboxItems InboxItem[]
   tags       Tag[]
@@ -238,6 +239,7 @@ model Task {
 
   tags   Tag[]
   updates TaskUpdate[] // activity log / progress notes
+  sessions TaskSession[] // per-task focus-segment accounting (the clock totals)
 
   @@unique([userId, permalink])
 }
@@ -295,6 +297,28 @@ model TaskUpdate {
 enum TaskUpdateKind {
   NOTE
   COMPLETED
+}
+
+// ============================================================
+// TaskSession — a single focused-work segment on a Task
+// ============================================================
+// Each Start opens a session (endedAt = null); each Pause/Complete closes it
+// (endedAt = now). The focus clock's "total" is SUM(endedAt - startedAt) across
+// a task's sessions; the live "session" is the elapsed-since on the open one.
+// Separate from TaskUpdate so the notes timeline stays narrative while this
+// stays pure accounting. Single open session per task is the invariant,
+// enforced by close-before-open in startTask/pauseTask/completeTaskFromFocus.
+model TaskSession {
+  id        String   @id @default(uuid())
+  startedAt DateTime @default(now())
+  endedAt   DateTime? // null = open/active; set on pause/complete
+
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([taskId, startedAt])
 }
 
 // ============================================================
