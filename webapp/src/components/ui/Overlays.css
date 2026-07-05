@@ -588,7 +588,10 @@
 }
 
 /* ============================================================
-   Focus mode (full-screen single task)
+   Focus mode (full-screen single task) — Variant F
+   The task is the protagonist; the clock is chrome.
+   See docs/mockups/focus-f-final.html and
+   docs/specs/focus-engine-v2.md § "RESOLVED 2026-07-05".
    ============================================================ */
 .aa-focus {
   position: fixed;
@@ -600,45 +603,193 @@
   animation: aa-overlay-fade 0.25s var(--aa-ease-out) both;
 }
 
+/* ---- Top bar: margin clock (left) + session footprint + close (right) ---- */
 .aa-focus__top {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: var(--aa-space-md) var(--aa-space-xl);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--aa-space-lg) var(--aa-space-xl);
 }
 
+/* Margin clock — informational elapsed time. Reads like a wall clock:
+   present, glanceable, never between the eye and the title. */
+.aa-clock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1;
+}
+.aa-clock__row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.aa-clock__num {
+  font-size: 1.375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--aa-text-2);
+  letter-spacing: -0.02em;
+}
+.aa-clock__unit {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--aa-text-4);
+}
+.aa-clock__label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--aa-text-4);
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.aa-clock__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  /* Gentle pulse — the only motion at rest. Sub-perceptible. */
+  animation: aa-focus-breathe-dot 4s var(--aa-ease-out-quart) infinite;
+}
+@keyframes aa-focus-breathe-dot {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.2); }
+}
+
+.aa-focus__top-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--aa-space-sm);
+}
+.aa-session {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--aa-text-4);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.aa-session__sep {
+  color: var(--aa-border-strong);
+  margin: 0 6px;
+}
+
+/* Focus-specific close button. Distinct from .aa-overlay__close (which is
+   shared with other overlays) so we can place it in the top-right cluster
+   without affecting ConfirmDialog/BottomSheet. */
+.aa-focus__close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--aa-text-3);
+  border-radius: var(--aa-radius-full);
+  cursor: pointer;
+  transition: background var(--aa-dur-base) var(--aa-ease-out),
+              color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-focus__close:hover {
+  background: var(--aa-surface);
+  color: var(--aa-text);
+}
+
+/* ---- Body: hero circle → title → meta ---- */
 .aa-focus__body {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0 var(--aa-space-xl) var(--aa-space-4xl);
+  padding: 0 var(--aa-space-xl) var(--aa-space-2xl);
   text-align: center;
+  gap: var(--aa-space-xl);
 }
 
-.aa-focus__title {
-  font-size: clamp(1.5rem, 4vw, 2.25rem);
+/* Hero presence: breathing halo behind the completion circle. */
+.aa-presence {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+}
+.aa-presence__halo {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--aa-radius-full);
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--aa-teal-tint-shadow) 0%,
+    transparent 70%
+  );
+  animation: aa-focus-breathe-halo 5s var(--aa-ease-out-quart) infinite;
+  pointer-events: none;
+}
+@keyframes aa-focus-breathe-halo {
+  0%, 100% { transform: scale(0.85); opacity: 0.45; }
+  50%      { transform: scale(1.08); opacity: 0.9; }
+}
+/* When the task is completed locally, hold the halo steady at full. */
+.aa-focus--done .aa-presence__halo {
+  animation: none;
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.aa-presence__circle {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+}
+/* The CompletionCircle component is 44px at `lg`; the hero scale-up is local
+   so we don't touch CompletionCircle's API. The check is sized at 55% of
+   the button, so it scales with this override automatically. */
+.aa-presence__circle .aa-cc {
+  width: 72px;
+  height: 72px;
+  border-width: 3px;
+}
+
+.aa-title {
+  font-size: clamp(1.625rem, 3.2vw, 2.125rem);
   font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  letter-spacing: -0.015em;
+  line-height: 1.18;
   color: var(--aa-text);
-  margin: var(--aa-space-lg) 0 var(--aa-space-md);
+  margin: 0;
   max-width: 620px;
 }
-
-.aa-focus__meta {
-  font-size: 0.9rem;
+.aa-focus--done .aa-title {
   color: var(--aa-text-3);
-  margin-bottom: var(--aa-space-xl);
+  text-decoration: line-through;
+  text-decoration-color: var(--aa-text-4);
 }
 
+.aa-meta {
+  font-size: 0.85rem;
+  color: var(--aa-text-3);
+  margin: calc(-1 * var(--aa-space-md)) 0 0;
+}
+.aa-meta__sep {
+  color: var(--aa-text-4);
+}
+
+/* ---- Durable content (working notes) — editable, separate from thread ---- */
 .aa-focus__notes {
   width: 100%;
   max-width: 620px;
   text-align: left;
 }
-
 .aa-focus__notes-top {
   display: flex;
   align-items: center;
@@ -646,154 +797,246 @@
   gap: var(--aa-space-md);
   margin-bottom: var(--aa-space-xs);
 }
-
 .aa-focus__notes-label {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--aa-text-4);
   text-transform: uppercase;
-  letter-spacing: 0;
+  letter-spacing: 0.08em;
 }
-
 .aa-focus__notes-action {
   border: 0;
   background: transparent;
   color: var(--aa-teal-cta);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   padding: var(--aa-space-2xs) 0;
   cursor: pointer;
 }
-
 .aa-focus__notes-action:hover {
   color: var(--aa-teal-cta-hover);
 }
-
 .aa-focus__content {
-  font-size: 0.95rem;
-  color: var(--aa-text-2);
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.aa-focus__content-empty {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--aa-text-4);
-  font-style: italic;
-}
-
-.aa-focus__notes-editor {
-  display: flex;
-  flex-direction: column;
-  gap: var(--aa-space-sm);
-}
-
-.aa-focus__content-editor {
-  width: 100%;
-  min-height: 8rem;
-  padding: var(--aa-space-sm) var(--aa-space-md);
-  background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-md);
-  font: inherit;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: var(--aa-text-2);
-  resize: vertical;
-}
-
-.aa-focus__content-editor:focus {
-  outline: none;
-  border-color: var(--aa-accent);
-}
-
-.aa-focus__notes-actions {
-  display: flex;
-  gap: var(--aa-space-sm);
-}
-
-.aa-focus__actions {
-  display: flex;
-  gap: var(--aa-space-sm);
-  margin-top: var(--aa-space-2xl);
-}
-
-/* Activity thread (notes + system events) — a calm timeline, not a comments
-   product. Sits below the content, full width of the focus column. */
-.aa-focus__thread {
-  list-style: none;
-  margin: var(--aa-space-2xl) 0 0;
-  padding: 0;
-  width: 100%;
-  max-width: 620px;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: var(--aa-space-sm);
-}
-
-.aa-focus__thread-empty {
-  color: var(--aa-text-4);
-  font-style: italic;
-  font-size: 0.9rem;
-}
-
-/* User-authored note: body + a quiet timestamp. */
-.aa-focus__note {
-  background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-md);
-  padding: var(--aa-space-sm) var(--aa-space-md);
-}
-
-.aa-focus__note-body {
   font-size: 0.92rem;
   color: var(--aa-text-2);
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
 }
-
-.aa-focus__note-time {
-  font-size: 0.78rem;
+.aa-focus__content-empty {
+  margin: 0;
+  font-size: 0.88rem;
   color: var(--aa-text-4);
-  margin-top: var(--aa-space-xs);
+  font-style: italic;
 }
-
-/* System event (e.g. Completed): muted, single line, no card chrome — the
-   timeline reads as activity, not as more content. */
-.aa-focus__event {
-  font-size: 0.82rem;
-  color: var(--aa-text-4);
-  padding: 0 var(--aa-space-xs);
+.aa-focus__notes-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
 }
-
-.aa-focus__composer {
+.aa-focus__content-editor {
   width: 100%;
-  max-width: 620px;
-  margin-top: var(--aa-space-md);
+  min-height: 7rem;
   padding: var(--aa-space-sm) var(--aa-space-md);
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-md);
   font: inherit;
   font-size: 0.92rem;
+  line-height: 1.5;
   color: var(--aa-text-2);
   resize: vertical;
-  min-height: 2.5rem;
-  text-align: left;
 }
-
-.aa-focus__composer:focus {
+.aa-focus__content-editor:focus {
   outline: none;
   border-color: var(--aa-accent);
 }
+.aa-focus__notes-actions {
+  display: flex;
+  gap: var(--aa-space-sm);
+}
 
-.aa-focus__composer::placeholder {
+/* ---- Progress thread (append-only notes + system events) ----
+   Newest first via flex-direction: column-reverse on the <ol>. The source
+   order stays chronological so screen readers and DOM tests read oldest →
+   newest; visually, the newest sits closest to the title. */
+.aa-thread {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 620px;
+  text-align: left;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0;
+}
+.aa-thread__empty {
   color: var(--aa-text-4);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: var(--aa-space-xs) 0;
+}
+.aa-thread__note {
+  padding: var(--aa-space-sm) 0;
+  border-bottom: 1px solid var(--aa-border);
+  animation: aa-thread-in 0.3s var(--aa-ease-out-quart);
+}
+.aa-thread__note:last-child {
+  border-bottom: none;
+}
+@keyframes aa-thread-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.aa-thread__note-body {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--aa-text-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.aa-thread__event {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  padding: var(--aa-space-xs) 0;
+  border-bottom: 1px solid var(--aa-border);
+  font-size: 0.8rem;
+  color: var(--aa-text-4);
+}
+.aa-thread__event:last-child {
+  border-bottom: none;
+}
+.aa-thread__event-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  flex-shrink: 0;
+}
+.aa-thread__event-text {
+  color: var(--aa-teal-cta);
+  font-weight: 600;
+}
+.aa-thread__time {
+  font-size: 0.72rem;
+  color: var(--aa-text-4);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.aa-thread__event .aa-thread__time {
+  margin-top: 0;
+  margin-left: auto;
+}
+
+/* ---- Bottom rail: subtle keyboard map ---- */
+.aa-focus__rail {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--aa-space-lg);
+  padding: var(--aa-space-md) var(--aa-space-xl) var(--aa-space-lg);
+  opacity: 0.55;
+  transition: opacity var(--aa-dur-slow) var(--aa-ease-out);
+}
+.aa-focus__rail:hover {
+  opacity: 1;
+}
+.aa-hint {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--aa-text-4);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-hint:hover {
+  color: var(--aa-text-2);
+}
+
+/* Shared kbd chip — used in hints, composer foot, empty state. */
+.aa-kbd {
+  font-family: var(--aa-font-mono);
+  font-size: 0.68rem;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  padding: 1px 5px;
+  border-radius: var(--aa-radius-sm);
+  color: var(--aa-text-3);
+}
+
+/* ---- Summoned notes composer (press N) ---- */
+.aa-composer {
+  position: fixed;
+  left: 50%;
+  bottom: var(--aa-space-2xl);
+  transform: translateX(-50%);
+  width: min(620px, calc(100% - 48px));
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  box-shadow: var(--aa-shadow-lg);
+  padding: var(--aa-space-md);
+  z-index: 110;
+  animation: aa-composer-up 0.25s var(--aa-ease-out-quart);
+}
+@keyframes aa-composer-up {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.aa-composer__label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--aa-text-4);
+  margin-bottom: var(--aa-space-xs);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.aa-composer__dismiss {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.aa-composer__text {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--aa-text);
+  resize: none;
+  outline: none;
+  min-height: 56px;
+}
+.aa-composer__text::placeholder {
+  color: var(--aa-text-4);
+}
+.aa-composer__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--aa-space-xs);
+}
+.aa-composer__hint {
+  font-size: 0.72rem;
+  color: var(--aa-text-4);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* ============================================================
@@ -968,7 +1211,12 @@
 @media (prefers-reduced-motion: reduce) {
   .aa-overlay,
   .aa-overlay-card,
-  .aa-focus {
+  .aa-focus,
+  .aa-composer,
+  .aa-thread__note,
+  .aa-presence__halo,
+  .aa-clock__dot {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

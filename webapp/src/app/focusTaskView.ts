@@ -24,6 +24,7 @@ export function toFocusTask(task: {
   status: string;
   dueDate?: Date | string | null;
   size?: string | null;
+  startedAt?: Date | string | null;
   project?: { name: string } | null;
   updates?: { id: string; body: string; createdAt: Date; kind: string }[];
 }): FocusTask {
@@ -40,6 +41,7 @@ export function toFocusTask(task: {
     due,
     size: sizeLabel(task.size ?? null),
     content: task.content ?? null,
+    startedAt: task.startedAt ? new Date(task.startedAt) : null,
     updates:
       task.updates?.map((u) => ({
         id: u.id,
