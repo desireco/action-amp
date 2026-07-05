@@ -337,6 +337,43 @@
   text-align: left;
 }
 
+.aa-triage-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+}
+
+.aa-triage-notes__label {
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+}
+
+.aa-triage-notes__textarea {
+  width: 100%;
+  min-height: 6.5rem;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  color: var(--aa-text-2);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.aa-triage-notes__textarea:focus {
+  outline: none;
+  border-color: var(--aa-accent);
+}
+
+.aa-triage-notes__textarea::placeholder {
+  color: var(--aa-text-4);
+}
+
 /* ============================================================
    Empty state — inbox zero
    ============================================================ */

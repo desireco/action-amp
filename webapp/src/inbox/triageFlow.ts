@@ -25,6 +25,7 @@ export interface Working {
   when: (typeof WHEN_OPTS)[number];
   size: ParsedSize;
   priority: ParsedPriority;
+  content: string;
   projectId: string | null;
   projectGoalId: string | null;
   due: (typeof DUE_OPTS)[number];

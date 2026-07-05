@@ -223,6 +223,7 @@ export function TriagePage() {
       when: item?.parsedDate && isSameDay(item.parsedDate, new Date()) ? "Today" : "Upcoming",
       size: item?.parsedSize ?? "M",
       priority: item?.parsedPriority ?? "NORMAL",
+      content: "",
       projectId: null,
       projectGoalId: null,
       due: "—",
@@ -324,6 +325,7 @@ export function TriagePage() {
               : undefined,
         priority: w.type === "task" ? w.priority : undefined,
         size: w.type === "task" ? w.size : undefined,
+        content: w.type === "task" ? w.content.trim() : undefined,
       });
       queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
@@ -586,6 +588,17 @@ export function TriagePage() {
                         options={[]}
                         onPick={() => { setOpenKey(null); setProjectPickerOpen(true); }}
                       />
+                      <label className="aa-triage-notes">
+                        <span className="aa-triage-notes__label">Notes</span>
+                        <textarea
+                          className="aa-triage-notes__textarea"
+                          aria-label="Task notes"
+                          value={working.content}
+                          onChange={(e) => setW({ content: e.target.value })}
+                          rows={4}
+                          placeholder="Add details, criteria, or reminders"
+                        />
+                      </label>
                     </>
                   )}
 

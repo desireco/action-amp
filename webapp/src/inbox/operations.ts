@@ -111,6 +111,7 @@ export const triageInboxItem = (async (args, context) => {
   // have typed at capture time.
   const priority = args.priority ?? item.parsedPriority ?? "NORMAL";
   const size = args.size ?? item.parsedSize ?? "M";
+  const content = args.content?.trim() || null;
 
   // Resolve captured extra #tokens into real Tag records (per-user unique by
   // name). Tags carry onto Tasks only — Projects and Goals drop them (their
@@ -159,7 +160,7 @@ export const triageInboxItem = (async (args, context) => {
       const task = await context.entities.Task.create({
         data: {
           description: item.text,
-          content: null,
+          content,
           userId: context.user.id,
           lensId,
           status,
@@ -259,6 +260,7 @@ export const triageInboxItem = (async (args, context) => {
   name?: string; // override the project name (defaults to the item text)
   priority?: ParsedPriority; // override parsed priority (set deliberately in the triage spec step)
   size?: ParsedSize; // override parsed size (set deliberately in the triage spec step)
+  content?: string; // durable task notes/body captured during triage
 }>;
 
 // ----------------------------------------------------------------

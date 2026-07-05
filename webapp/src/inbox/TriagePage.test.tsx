@@ -204,4 +204,23 @@ describe("TriagePage", () => {
     expect(screen.getByText("Email Sarah")).toBeInTheDocument();
     expect(screen.queryByText(/inbox zero/i)).not.toBeInTheDocument();
   });
+
+  it("lets task notes be added during Spec and sends them to triage", async () => {
+    triageInboxItem.mockResolvedValue({ id: "task-1" });
+    renderTriagePage();
+
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    const notes = await screen.findByLabelText(/task notes/i);
+    fireEvent.change(notes, { target: { value: "  Call out invoice terms  " } });
+    fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+
+    await waitFor(() =>
+      expect(triageInboxItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inboxItemId: "ix-1",
+          content: "Call out invoice terms",
+        }),
+      ),
+    );
+  });
 });

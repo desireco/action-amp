@@ -196,6 +196,40 @@ describe("triageInboxItem — task decisions", () => {
     const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(call.data.goalId).toBeUndefined();
   });
+
+  it("saves task notes as Task.content, trimmed", async () => {
+    const m = arrange();
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triageOne({
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+      content: "  Bring the contract notes  ",
+    }, m);
+
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ content: "Bring the contract notes" }),
+      select: { id: true },
+    });
+  });
+
+  it("stores blank task notes as null", async () => {
+    const m = arrange();
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triageOne({
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+      content: "   \n  ",
+    }, m);
+
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ content: null }),
+      select: { id: true },
+    });
+  });
 });
 
 /** Thin wrapper so the new tests read clearly and stay DRY. */
