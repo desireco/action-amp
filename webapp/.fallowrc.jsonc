@@ -1,0 +1,46 @@
+{
+  "$schema": "https://fallow.tools/schema.json",
+  // ── Entry points ────────────────────────────────────────────────────────
+  // Wasp wires pages/operations/auth via string config in main.wasp.ts using
+  // `import … with { type: "ref" }`. Fallow needs main.wasp.ts named as an
+  // entry point or every page/op reads as "unused." Scripts and e2e are also
+  // standalone roots. (See webapp/AGENTS.md for the Wasp layout.)
+  "entry": [
+    "main.wasp.ts",
+    "scripts/**/*.mjs",
+    "e2e/**/*.ts"
+  ],
+
+  // ── Ignore generated / vendored / scratch trees ─────────────────────────
+  // .wasp/out is Wasp's generated app + bundled SDK — not source we maintain.
+  // The src/auth/google/* files are *intentionally parked*: Google social auth
+  // is disabled in main.wasp.ts (imports commented out) and the code is kept
+  // for re-enablement. Suppress them so they don't read as dead code.
+  "ignorePatterns": [
+    ".wasp/**",
+    "node_modules/**",
+    ".playwright-cli/**",
+    "test-results/**",
+    "src/auth/google/**"
+  ],
+
+  // ── Packages provided by the Wasp runtime / test harness ────────────────
+  // These are resolvable at runtime but live in .wasp/out/sdk and aren't in
+  // this package.json, so fallow would otherwise flag them as "unlisted."
+  "ignoreDependencies": [
+    "@wasp.sh/api",
+    "@wasp.sh/lib-auth",
+    "@tanstack/react-query",
+    "@testing-library/react",
+    "express"
+  ],
+
+  // ── Dead code: parked features ──────────────────────────────────────────
+  // Google social auth is intentionally retained but disabled — the imports
+  // in main.wasp.ts are commented out. Suppress until it's flipped back on.
+  // (Search main.wasp.ts for "Google social auth — disabled".)
+  // Individual files are left to in-file `// fallow-ignore-file` markers so
+  // the suppressions travel with the code that knows why it's parked.
+
+  "ignoreExportsUsedInFile": false
+}
