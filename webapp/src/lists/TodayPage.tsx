@@ -27,6 +27,27 @@ import "./TodayPage.css";
 const TODAY_CAP = 5;
 
 /**
+ * Group tasks by their Goal (or "General" when a task carries none). When the
+ * only group is the default "General", the heading carries no information —
+ * blank the label and GroupedList renders the rows without it. Used for both
+ * the open-task groups and the done-today groups so they render identically.
+ */
+function groupByGoal(tasks: TaskRowTask[]): GroupDef<TaskRowTask>[] {
+  const byGoal = new Map<string, TaskRowTask[]>();
+  for (const t of tasks) {
+    const key = t.goal?.name ?? "General";
+    if (!byGoal.has(key)) byGoal.set(key, []);
+    byGoal.get(key)!.push(t);
+  }
+  const soloGeneral = byGoal.size === 1 && byGoal.has("General");
+  return Array.from(byGoal, ([name, items]) => ({
+    key: name,
+    label: soloGeneral ? "" : name,
+    items,
+  }));
+}
+
+/**
  * Today — the committed-for-today list. Tasks with status=TODAY (not done),
  * grouped by Goal. Enforces a 5-item cap (FEATURES.md F12): items beyond the
  * cap are flagged as "over capacity" and must be bumped out to add more.
@@ -56,46 +77,18 @@ export function TodayPage() {
     { enabled: !!lens },
   );
 
-  const groups = useMemo<GroupDef<TaskRowTask>[]>(() => {
-    if (!tasks) return [];
-    // Group the CAPPED set (first TODAY_CAP) by Goal (or "General"). When the
-    // only group is the default "General" (no task carries an explicit Goal),
-    // the heading carries no information — blank the label and GroupedList
-    // renders the rows without it.
-    const capped = tasks.slice(0, TODAY_CAP);
-    const byGoal = new Map<string, TaskRowTask[]>();
-    for (const t of capped) {
-      const key = t.goal?.name ?? "General";
-      if (!byGoal.has(key)) byGoal.set(key, []);
-      byGoal.get(key)!.push(t);
-    }
-    const soloGeneral = byGoal.size === 1 && byGoal.has("General");
-    return Array.from(byGoal, ([name, items]) => ({
-      key: name,
-      label: soloGeneral ? "" : name,
-      items,
-    }));
-  }, [tasks]);
+  // Open tasks: group the CAPPED set (first TODAY_CAP) by Goal.
+  const groups = useMemo<GroupDef<TaskRowTask>[]>(
+    () => (tasks ? groupByGoal(tasks.slice(0, TODAY_CAP)) : []),
+    [tasks],
+  );
 
-  // Done-today grouped by Goal (or "General"), same shape as the open-task
-  // groups so GroupedList + TaskRow render identically (muted). Empty until
-  // the eager getDoneToday query resolves (fetched on mount so the collapsed
-  // count is known without expanding). Same solo-General suppression.
-  const doneGroups = useMemo<GroupDef<TaskRowTask>[]>(() => {
-    if (!doneToday) return [];
-    const byGoal = new Map<string, TaskRowTask[]>();
-    for (const t of doneToday) {
-      const key = t.goal?.name ?? "General";
-      if (!byGoal.has(key)) byGoal.set(key, []);
-      byGoal.get(key)!.push(t);
-    }
-    const soloGeneral = byGoal.size === 1 && byGoal.has("General");
-    return Array.from(byGoal, ([name, items]) => ({
-      key: name,
-      label: soloGeneral ? "" : name,
-      items,
-    }));
-  }, [doneToday]);
+  // Done-today grouped by Goal, same shape so GroupedList + TaskRow render
+  // identically (muted). Empty until the eager getDoneToday query resolves.
+  const doneGroups = useMemo<GroupDef<TaskRowTask>[]>(
+    () => (doneToday ? groupByGoal(doneToday) : []),
+    [doneToday],
+  );
 
   // Demote a Today task to Upcoming (it moves to /app/upcoming, never
   // "disappears"). Promote happens on the Upcoming page now — Today only
