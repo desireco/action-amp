@@ -7,20 +7,12 @@ import {
   snoozeTask,
   startTask,
   pauseTask,
-  addTaskUpdate,
-  updateTaskContent,
-  completeTaskFromFocus,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  NextCard,
-  FocusMode,
-  SnoozeSheet,
-  type SnoozePreset,
-} from "../components/ui";
+import { NextCard, SnoozeSheet, type SnoozePreset } from "../components/ui";
 import { useActiveLens } from "./lensContext";
 import { composeWhy } from "./focusWhy";
-import { formatWhen, sizeLabel, toFocusTask } from "./focusTaskView";
+import { formatWhen, sizeLabel } from "./focusTaskView";
 import "./NextPage.css";
 
 /**
@@ -47,7 +39,6 @@ export function NextPage() {
     selectedTaskToken ? { id: selectedTaskToken } : undefined,
     { enabled: !!selectedTaskToken },
   );
-  const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [snoozeOpen, setSnoozeOpen] = useState(false);
   const task = selectedTaskToken ? selectedTask : topTask;
 
@@ -58,47 +49,6 @@ export function NextPage() {
       });
     }
   }, [navigate, permalink, queryTaskToken]);
-
-  // Focus mode shows the activity thread, which the topTask query doesn't
-  // include. Fetch the full task (with updates) only while focus is open so we
-  // don't widen the home-screen query.
-  const { data: focusTaskFull } = useQuery(
-    getTask,
-    focusTaskId ? { id: focusTaskId } : undefined,
-    { enabled: !!focusTaskId },
-  );
-
-  const handleComplete = async (taskId: string) => {
-    try {
-      // Focus completion writes both the durable completion field (completedAt
-      // — used by Today/Review) and a COMPLETED activity-log event. Idempotent.
-      await completeTaskFromFocus({ taskId });
-      // Refresh the focus candidates + dependent lists so the completed task
-      // leaves Next and the nav counts update.
-      queryClient.invalidateQueries({ queryKey: ["getTask"] });
-      queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-      queryClient.invalidateQueries({ queryKey: ["getDoneToday"] });
-      queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
-      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-    } catch {
-      // reverts via refetch
-    }
-  };
-
-  const handleAddNote = async (body: string) => {
-    if (!focusTaskId) return;
-    await addTaskUpdate({ taskId: focusTaskId, body });
-    // The task thread is rendered from the getTask result; refresh it so the
-    // new note appears at the bottom of the timeline.
-    queryClient.invalidateQueries({ queryKey: ["getTask"] });
-  };
-
-  const handleSaveContent = async (content: string) => {
-    if (!focusTaskId) return;
-    await updateTaskContent({ taskId: focusTaskId, content });
-    queryClient.invalidateQueries({ queryKey: ["getTask"] });
-  };
 
   const handleSnooze = async (preset: SnoozePreset) => {
     if (!task) return;
@@ -113,17 +63,21 @@ export function NextPage() {
 
   // Start / Pause the "Now" state. Started tasks persist as #1 across nav.
   const isNow = !!task?.startedAt;
-  const handleStart = async () => {
+  const handleStart = async (openFocus = true) => {
     if (!task) return;
     await startTask({ id: task.id });
     queryClient.invalidateQueries({ queryKey: ["getTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+    if (openFocus) navigate("/focus");
   };
   const handlePause = async () => {
     if (!task) return;
     await pauseTask({ id: task.id });
     queryClient.invalidateQueries({ queryKey: ["getTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
   };
 
   // ---- Empty / loading states ----
@@ -202,13 +156,14 @@ export function NextPage() {
           </>
         }
         state={isNow ? "now" : "next"}
-        onStart={handleStart}
+        onStart={() => void handleStart(true)}
         onPause={handlePause}
         onDo={() => {
-          // "Do this" starts the task (Now) AND enters focus mode. We stash
-          // just the id; the thread is fetched via getTask (see focusTaskFull).
-          if (!isNow) void handleStart();
-          setFocusTaskId(task.id);
+          if (isNow) {
+            navigate("/focus");
+            return;
+          }
+          void handleStart(true);
         }}
         onNotNow={() => setSnoozeOpen(true)}
       />
@@ -217,18 +172,6 @@ export function NextPage() {
           taskTitle={task.description}
           onSnooze={handleSnooze}
           onClose={() => setSnoozeOpen(false)}
-        />
-      )}
-      {focusTaskId && focusTaskFull && (
-        <FocusMode
-          task={toFocusTask(focusTaskFull)}
-          onClose={() => setFocusTaskId(null)}
-          onComplete={() => {
-            setFocusTaskId(null);
-            handleComplete(focusTaskFull.id);
-          }}
-          onAddNote={handleAddNote}
-          onSaveContent={handleSaveContent}
         />
       )}
     </>

@@ -15,6 +15,7 @@ import {
   toggleTaskDone,
   updateTaskStatus,
   getTopTask,
+  getFocusedTask,
   snoozeTask,
   startTask,
   pauseTask,
@@ -83,6 +84,50 @@ describe("getTask", () => {
         userId: "user-1",
         OR: [{ id: "task-1" }, { permalink: "task-1" }],
       },
+      include: {
+        tags: true,
+        updates: { orderBy: { createdAt: "asc" } },
+        project: { select: { id: true, permalink: true, name: true } },
+        goal: { select: { id: true, permalink: true, name: true } },
+      },
+    });
+  });
+});
+
+// ----------------------------------------------------------------
+// getFocusedTask
+// ----------------------------------------------------------------
+
+describe("getFocusedTask", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(getFocusedTask(undefined, m.context)).rejects.toThrow(
+      /Not authenticated/,
+    );
+  });
+
+  it("returns the user's one started task with its thread", async () => {
+    const m = mockContext();
+    const found = {
+      ...BASE_TASK,
+      startedAt: new Date("2026-07-04T10:00:00Z"),
+      tags: [],
+      updates: [],
+      project: null,
+      goal: null,
+    };
+    m.entities.Task.findFirst.mockResolvedValue(found);
+
+    const result = await getFocusedTask(undefined, m.context);
+
+    expect(result).toEqual(found);
+    expect(m.entities.Task.findFirst).toHaveBeenCalledWith({
+      where: {
+        userId: "user-1",
+        isDone: false,
+        startedAt: { not: null },
+      },
+      orderBy: { startedAt: "desc" },
       include: {
         tags: true,
         updates: { orderBy: { createdAt: "asc" } },
@@ -432,9 +477,10 @@ describe("startTask", () => {
     );
   });
 
-  it("sets startedAt to now", async () => {
+  it("clears any prior focus and sets startedAt to now", async () => {
     const m = mockContext();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.updateMany.mockResolvedValue({ count: 1 });
     m.entities.Task.update.mockResolvedValue({
       id: "task-1",
       startedAt: new Date(),
@@ -443,6 +489,10 @@ describe("startTask", () => {
     const result = await startTask({ id: "task-1" }, m.context);
 
     expect(result).toEqual({ id: "task-1", startedAt: expect.any(Date) });
+    expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
+      where: { userId: "user-1", startedAt: { not: null } },
+      data: { startedAt: null },
+    });
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
       data: { startedAt: expect.any(Date) },

@@ -1,6 +1,7 @@
 import { action, api, app, page, query, route } from "@wasp.sh/spec";
 import { App } from "./src/App" with { type: "ref" };
 import { NextPage } from "./src/app/NextPage" with { type: "ref" };
+import { FocusPage } from "./src/app/FocusPage" with { type: "ref" };
 import { InboxPage } from "./src/inbox/InboxPage" with { type: "ref" };
 import { TriagePage } from "./src/inbox/TriagePage" with { type: "ref" };
 import { SettingsPage } from "./src/app/SettingsPage" with { type: "ref" };
@@ -8,7 +9,7 @@ import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
 import { LensesPage } from "./src/lenses/LensesPage" with { type: "ref" };
 import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
-import { getTask, getTasks, getDoneToday, getTopTask, toggleTaskDone, updateTaskStatus, snoozeTask, startTask, pauseTask, addTaskUpdate, updateTaskContent, updateTaskDetails, completeTaskFromFocus } from "./src/tasks/operations" with { type: "ref" };
+import { getTask, getTasks, getDoneToday, getTopTask, getFocusedTask, toggleTaskDone, updateTaskStatus, snoozeTask, startTask, pauseTask, addTaskUpdate, updateTaskContent, updateTaskDetails, completeTaskFromFocus } from "./src/tasks/operations" with { type: "ref" };
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { createProject } from "./src/projects/operations" with { type: "ref" };
 import { getProject, createTask } from "./src/projects/operations" with { type: "ref" };
@@ -104,6 +105,7 @@ export default app({
   spec: [
     route("LandingRoute", "/", page(LandingPage, { authRequired: false })),
     route("AppRoute", "/app", page(NextPage)),
+    route("FocusRoute", "/focus", page(FocusPage)),
     route("InboxRoute", "/app/inbox", page(InboxPage)),
     route("InboxTriageRoute", "/app/inbox/review", page(TriagePage)),
     route("TodayRoute", "/app/today", page(TodayPage)),
@@ -154,6 +156,7 @@ export default app({
     query(getTasks, { entities: ["Task", "Lens"], auth: true }),
     query(getDoneToday, { entities: ["Task", "Lens"], auth: true }),
     query(getTopTask, { entities: ["Task", "Lens"], auth: true }),
+    query(getFocusedTask, { entities: ["Task"], auth: true }),
     action(toggleTaskDone, { entities: ["Task"], auth: true }),
     action(updateTaskStatus, { entities: ["Task"], auth: true }),
     action(snoozeTask, { entities: ["Task"], auth: true }),

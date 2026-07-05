@@ -3,6 +3,7 @@ import type {
   GetTasks,
   GetDoneToday,
   GetTopTask,
+  GetFocusedTask,
   SnoozeTask,
   StartTask,
   PauseTask,
@@ -241,6 +242,31 @@ export const getTopTask = (async (args, context) => {
 }) satisfies GetTopTask<{ lensId: string }>;
 
 // ----------------------------------------------------------------
+// Read: the single task currently in focus
+// ----------------------------------------------------------------
+// Focus is a global mode, not a task-specific URL. The focused task is the
+// user's one started task (startedAt != null), with the full activity thread.
+export const getFocusedTask = (async (_args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  return await context.entities.Task.findFirst({
+    where: {
+      userId: context.user.id,
+      isDone: false,
+      startedAt: { not: null },
+    },
+    orderBy: { startedAt: "desc" },
+    include: {
+      tags: true,
+      updates: { orderBy: { createdAt: "asc" } },
+      project: { select: { id: true, permalink: true, name: true } },
+      goal: { select: { id: true, permalink: true, name: true } },
+    },
+  });
+}) satisfies GetFocusedTask<void>;
+
+// ----------------------------------------------------------------
 // Snooze — "Not now" flow (FEATURES.md F11)
 // ----------------------------------------------------------------
 // Presets: 1h / 3h / tomorrow / weekend → Task(status=UPCOMING, dueDate=then)
@@ -305,9 +331,10 @@ export const snoozeTask = (async (args, context) => {
 // ----------------------------------------------------------------
 // Start / Pause — the "Now" state (FEATURES.md F14: in-progress persists)
 // ----------------------------------------------------------------
-// Start → Now (startedAt = now). The task becomes #1 in getTopTask and stays
-// there across navigation. Pause → back to Next (startedAt = null); the task
-// remains a candidate but no longer holds the focus slot.
+// Start → Now (startedAt = now). Only one task can be Now/Focus at a time, so
+// starting one clears every other started task for the same user. Pause → back
+// to Next (startedAt = null); the task remains a candidate but no longer holds
+// the focus slot.
 export const startTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
@@ -319,6 +346,10 @@ export const startTask = (async (args, context) => {
   if (!task || task.userId !== context.user.id) {
     throw new Error("Task not found.");
   }
+  await context.entities.Task.updateMany({
+    where: { userId: context.user.id, startedAt: { not: null } },
+    data: { startedAt: null },
+  });
   return await context.entities.Task.update({
     where: { id: args.id },
     data: { startedAt: new Date() },
