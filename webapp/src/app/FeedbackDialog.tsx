@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "../components/ui";
+import { Button, Kbd, submitOnModEnter } from "../components/ui";
 import "../components/ui/Overlays.css";
 
 type FeedbackDialogProps = {
@@ -67,6 +67,10 @@ export function FeedbackDialog({ onSubmit, onClose }: FeedbackDialogProps) {
           rows={5}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => {
+            // ⌘/Ctrl+Enter submits; plain Enter inserts a newline (multi-line box).
+            submitOnModEnter(e, () => void submit());
+          }}
           placeholder="What should we know?"
           maxLength={4000}
           disabled={submitting}
@@ -77,6 +81,7 @@ export function FeedbackDialog({ onSubmit, onClose }: FeedbackDialogProps) {
         <div className="aa-feedback__foot">
           <span className="aa-feedback__count">{message.length}/4000</span>
           <div className="aa-feedback__actions">
+            <Kbd>⌘↵</Kbd>
             <Button variant="secondary" size="sm" onClick={onClose} disabled={submitting}>
               Cancel
             </Button>

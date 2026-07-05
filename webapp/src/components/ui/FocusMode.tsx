@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, CompletionCircle, ConfirmDialog } from "./index";
+import { Button, CompletionCircle, ConfirmDialog, Kbd, submitOnModEnter } from "./index";
 import "./Overlays.css";
 
 export type TaskUpdateKind = "NOTE" | "COMPLETED";
@@ -151,13 +151,11 @@ export function FocusMode({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, onComplete, onAddNote, composerOpen, confirmOpen, editingContent, content]);
 
-  // Composer: ⌘↵ / Ctrl+↵ posts. Plain Enter inserts a newline — the
-  // composer is summoned and dedicated, so multi-line input is expected.
+  // Composer: ⌘↵ / Ctrl+↵ posts (shared helper). Plain Enter inserts a
+  // newline — the composer is summoned and dedicated, so multi-line input
+  // is expected.
   const handleComposerKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      void submitNote();
-    }
+    submitOnModEnter(e, () => void submitNote());
   };
 
   const submitNote = async () => {
@@ -405,7 +403,7 @@ export function FocusMode({
           />
           <div className="aa-composer__foot">
             <span className="aa-composer__hint">
-              <kbd className="aa-kbd">⌘↵</kbd> to post
+              <Kbd>⌘↵</Kbd> to post
             </span>
             <Button
               variant="primary"

@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button } from "./Button";
+import { submitOnModEnter } from "./keyboard";
 import "./RecordComposer.css";
 
 interface RecordComposerProps {
@@ -51,10 +52,7 @@ export function RecordComposer({
   };
 
   const submitFromTextarea = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-      event.preventDefault();
-      formRef.current?.requestSubmit();
-    }
+    submitOnModEnter(event, () => formRef.current?.requestSubmit());
   };
 
   return (
