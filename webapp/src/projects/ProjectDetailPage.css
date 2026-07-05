@@ -1,8 +1,10 @@
 @import "../styles/tokens.css";
 
-/* Project detail shares the .aa-task container width + the global
-   .aa-grouped / .aa-list-header / .aa-list-empty styles. Only the
-   project-specific layout lives here. */
+/* Project detail — Direction D redesign: momentum header without a card.
+   Violet = project/goal identity (rail dot, progress fill, why link).
+   Teal = system/state (CTAs, Do-this, due chip). The list is calmed: per-row
+   controls are hover/focus-revealed so a long task list reads as a list, not a
+   wall of buttons. Shares the global .aa-grouped / .aa-list-empty styles. */
 .aa-project {
   max-width: 860px;
   display: flex;
@@ -10,26 +12,40 @@
   gap: var(--aa-space-2xl);
 }
 
+/* ---- Header ----
+   Stacked type flow, no card. The header is the page, not a widget on it. */
 .aa-project__header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: flex-start;
-  gap: var(--aa-space-xl);
-  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
 }
 
-.aa-project__header-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.aa-project__meta {
+/* Identity rail — violet dot + "Project". Identity, not decoration. */
+.aa-project__rail {
   display: flex;
   align-items: center;
   gap: var(--aa-space-sm);
-  margin: var(--aa-space-lg) 0 0;
-  font-size: var(--aa-text-md);
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
+  font-weight: var(--aa-weight-medium);
+  margin-bottom: 2px;
+}
+.aa-project__rail-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-violet);
+  box-shadow: 0 0 0 3px var(--aa-violet-soft);
+  flex-shrink: 0;
+}
+
+.aa-project__title {
+  font-size: var(--aa-text-2xl);
+  font-weight: var(--aa-weight-bold);
+  line-height: var(--aa-leading-tight);
+  letter-spacing: -0.01em;
+  color: var(--aa-text);
+  margin: 0;
 }
 
 .aa-project__desc {
@@ -37,60 +53,88 @@
   font-size: var(--aa-text-lg);
   line-height: var(--aa-leading-relaxed);
   color: var(--aa-text-2);
-  margin: calc(-1 * var(--aa-space-xs)) 0 0;
-}
-
-.aa-project__inline-err {
   margin: 0;
-  font-size: var(--aa-text-sm);
-  color: var(--aa-rose-text, var(--aa-text-3));
 }
 
-/* ---- Re-link to a goal (spec §C) ---- */
-.aa-project__relink {
+/* ---- WHY line (the goal — the project's reason for existing) ---- */
+.aa-project__why {
   display: flex;
-  align-items: center;
-  gap: var(--aa-space-sm);
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--aa-space-sm);
+}
+.aa-project__why-eyebrow {
+  font-size: var(--aa-text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  font-weight: var(--aa-weight-semibold);
+}
+.aa-project__why-value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-md);
   flex-wrap: wrap;
-  width: fit-content;
-  max-width: 100%;
-  margin: calc(-1 * var(--aa-space-lg)) 0 0;
-  padding: 6px;
-  background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-md);
-  box-shadow: var(--aa-shadow-sm);
-  font-size: var(--aa-text-base);
 }
-
-.aa-project__relink-label {
-  color: var(--aa-text-3);
-  flex-shrink: 0;
-  padding-left: var(--aa-space-xs);
+.aa-project__why-link {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-violet-text);
+  text-decoration: none;
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
 }
-
-.aa-project__relink-value {
-  background: var(--aa-surface-muted);
-  border: 1px solid transparent;
-  border-radius: var(--aa-radius-sm);
-  padding: 7px 10px;
-  color: var(--aa-text-2);
-  cursor: pointer;
+.aa-project__why-link:hover {
+  color: var(--aa-violet);
+  text-decoration: underline;
+}
+.aa-project__why-edit {
+  background: transparent;
+  border: none;
   font-family: inherit;
-  font-size: inherit;
-  transition: color var(--aa-dur-base) var(--aa-ease-out), border-color var(--aa-dur-base) var(--aa-ease-out);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  cursor: pointer;
+  padding: 2px 0;
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
 }
-.aa-project__relink-value:hover {
-  color: var(--aa-teal-cta);
-  border-color: var(--aa-teal-soft-strong);
-  background: var(--aa-teal-soft);
+.aa-project__why-edit:hover {
+  color: var(--aa-text);
+}
+/* Empty state — calm "Link a goal" affordance in the same slot. */
+.aa-project__why-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-violet-text);
+  cursor: pointer;
+  padding: 2px 0;
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-project__why-empty:hover {
+  color: var(--aa-violet);
+}
+.aa-project__why-empty svg {
+  width: 13px;
+  height: 13px;
+  transition: transform var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-project__why-empty:hover svg {
+  transform: translateX(2px);
 }
 
+/* Re-link picker (used in the WHY line when open) — reuses the pill option
+   pattern. Wraps below the WHY label. */
 .aa-project__relink-picker {
   display: flex;
   flex-wrap: wrap;
   gap: var(--aa-space-xs);
   align-items: center;
+  padding: 4px 0;
 }
 .aa-project__relink-opt {
   background: var(--aa-surface);
@@ -101,19 +145,192 @@
   cursor: pointer;
   font-family: inherit;
   font-size: var(--aa-text-sm);
-  transition: color var(--aa-dur-base) var(--aa-ease-out), border-color var(--aa-dur-base) var(--aa-ease-out);
+  transition:
+    color var(--aa-dur-base) var(--aa-ease-out),
+    border-color var(--aa-dur-base) var(--aa-ease-out),
+    background var(--aa-dur-base) var(--aa-ease-out);
 }
 .aa-project__relink-opt:hover {
-  color: var(--aa-teal-cta);
-  border-color: var(--aa-teal-cta);
+  color: var(--aa-violet-text);
+  border-color: var(--aa-violet);
+  background: var(--aa-violet-soft);
 }
 .aa-project__relink-opt.is-active {
-  color: var(--aa-teal-cta);
-  border-color: var(--aa-teal-cta);
+  color: var(--aa-violet-text);
+  border-color: var(--aa-violet);
   font-weight: var(--aa-weight-medium);
+  background: var(--aa-violet-soft);
+}
+.aa-project__inline-err {
+  margin: 0;
+  font-size: var(--aa-text-sm);
+  color: var(--aa-rose-text, var(--aa-text-3));
+  width: 100%;
 }
 
-/* A task row + its horizon control, side by side. Mirrors Today's swap-row.
+/* ---- Progress band — honest violet fill + teal due chip ---- */
+.aa-project__progress {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-md);
+  margin-top: var(--aa-space-xs);
+  flex-wrap: wrap;
+}
+.aa-project__progress-track {
+  flex: 0 1 260px;
+  height: 5px;
+  background: var(--aa-surface-muted-2);
+  border-radius: var(--aa-radius-full);
+  overflow: hidden;
+}
+.aa-project__progress-fill {
+  height: 100%;
+  background: var(--aa-violet);
+  border-radius: var(--aa-radius-full);
+  transition: width 0.3s var(--aa-ease-out-quart);
+}
+.aa-project__progress-label {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  font-weight: var(--aa-weight-medium);
+  white-space: nowrap;
+}
+.aa-project__progress-label strong {
+  color: var(--aa-text-2);
+  font-weight: var(--aa-weight-semibold);
+}
+
+/* ---- NEXT STEP — pure type, no card. Only renders for exactly one Today
+   task. Teal eyebrow points at the one thing to do. ---- */
+.aa-project__next {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--aa-space-md);
+  padding: 2px 0;
+}
+.aa-project__next-eyebrow {
+  font-size: var(--aa-text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--aa-teal-cta);
+  font-weight: var(--aa-weight-semibold);
+  margin-bottom: 4px;
+}
+.aa-project__next-title {
+  font-size: var(--aa-text-lg);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+.aa-project__next-row {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-md);
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.aa-project__next-meta {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+}
+.aa-project__next-sep {
+  color: var(--aa-text-4);
+  margin: 0 5px;
+}
+.aa-project__next-skip {
+  margin-left: auto;
+}
+
+/* ---- Action row — borderless. Teal + Add step leads. ---- */
+.aa-project__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  margin-top: var(--aa-space-sm);
+}
+.aa-project__add.aa-btn {
+  /* Slightly heavier than a plain ghost, lighter than a full CTA — it's the
+     primary constructive action on the page but shouldn't out-shout Do-this. */
+  box-shadow: 0 1px 2px var(--aa-teal-tint-shadow);
+}
+.aa-project__calm.aa-btn {
+  color: var(--aa-text-3);
+}
+.aa-project__calm.aa-btn:hover:not(:disabled) {
+  color: var(--aa-text);
+  background: var(--aa-surface-muted);
+}
+
+/* Overflow (⋯) — holds Delete so it can't be hit by accident. */
+.aa-project__overflow-wrap {
+  position: relative;
+  margin-left: auto;
+}
+.aa-project__overflow {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--aa-radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--aa-text-3);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--aa-dur-base) var(--aa-ease-out),
+    color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-project__overflow:hover {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text);
+}
+.aa-project__overflow-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 180px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow: var(--aa-shadow-md);
+  padding: 4px;
+  z-index: 10;
+}
+.aa-project__overflow-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--aa-radius-sm);
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-2);
+  cursor: pointer;
+  transition:
+    background var(--aa-dur-base) var(--aa-ease-out),
+    color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-project__overflow-item:hover {
+  background: var(--aa-surface-muted);
+}
+.aa-project__overflow-item--danger {
+  color: var(--aa-rose-text);
+}
+.aa-project__overflow-item--danger:hover {
+  background: var(--aa-rose-soft);
+  color: var(--aa-rose-text);
+}
+
+/* ---- Task rows ----
+   A task row + its horizon control, side by side. Mirrors Today's swap-row.
    The move-picker (when expanded) wraps below via flex-wrap + width:100%. */
 .aa-project__row {
   display: flex;
@@ -121,16 +338,27 @@
   flex-wrap: wrap;
   gap: var(--aa-space-sm);
 }
-
 .aa-project__row > :first-child {
   flex: 1;
   min-width: 0;
 }
-
 .aa-project__horizon {
   flex-shrink: 0;
   display: flex;
   gap: var(--aa-space-xs);
+}
+
+/* Per-row controls are calm by default — they appear on hover / keyboard focus
+   so a long list reads as a list, not a wall of buttons. When the move picker
+   is open for a row, that row's controls stay visible. */
+.aa-project__row-ctrl {
+  opacity: 0;
+  transition: opacity var(--aa-dur-fast) var(--aa-ease-out);
+}
+.aa-grouped__item:hover .aa-project__row-ctrl,
+.aa-grouped__item:focus-within .aa-project__row-ctrl,
+.aa-project__row-ctrl[aria-expanded="true"] {
+  opacity: 1;
 }
 
 /* ---- Move-task picker (§C "move to project" affordance) ----
@@ -157,4 +385,15 @@
 
 .aa-project__empty {
   margin-top: var(--aa-space-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-project__progress-fill,
+  .aa-project__row-ctrl,
+  .aa-project__why-empty svg {
+    transition-duration: 0.01ms !important;
+  }
+  .aa-project__why-empty:hover svg {
+    transform: none !important;
+  }
 }

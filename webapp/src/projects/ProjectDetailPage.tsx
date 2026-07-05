@@ -7,6 +7,7 @@ import {
   getProjects,
   createTask,
   updateTaskStatus,
+  startTask,
   setProjectDone,
   updateProject,
   deleteProject,
@@ -20,8 +21,9 @@ import {
   TaskRow,
   CompletionCircle,
   ConfirmDialog,
-  DetailHeaderActions,
   InlineEntityEditForm,
+  PlusIcon,
+  ArrowRightIcon,
   type TaskRowTask,
 } from "../components/ui";
 import { CreateInline } from "../lists/CreateInline";
@@ -31,6 +33,14 @@ import "./ProjectDetailPage.css";
 
 type ProjectTask = TaskRowTask & {
   status: "TODAY" | "UPCOMING" | "SOMEDAY";
+};
+
+/** Size → human duration, matching the home screen (focusTaskView.sizeLabel). */
+const SIZE_DURATION: Record<string, string> = {
+  S: "15 min",
+  M: "30 min",
+  L: "1 hr",
+  XL: "2 hr+",
 };
 
 type ProjectData = {
@@ -98,6 +108,10 @@ export function ProjectDetailPage() {
   // them + an unlink-to-standalone option.
   const [movingTaskId, setMovingTaskId] = useState<string | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
+
+  // Header overflow menu (Edit/Complete/Add are surfaced; Delete is destructive
+  // and lives behind ⋯ so it can't be tapped by accident).
+  const [overflowOpen, setOverflowOpen] = useState(false);
   const { data: lensProjects } = useQuery(
     getProjects,
     project ? { lensId: project.lensId } : undefined,
@@ -133,6 +147,17 @@ export function ProjectDetailPage() {
 
   const doneCount = project?.tasks.filter((t) => t.isDone).length ?? 0;
   const total = project?.tasks.length ?? 0;
+  const progressPct =
+    project && total > 0 ? Math.round((doneCount / total) * 100) : 0;
+
+  // Next-step candidate: the single TODAY task, lifted out as a pointer only
+  // when there is exactly one. With zero or 2+ TODAY tasks the Today group
+  // renders normally — we don't fabricate a winner from a tie.
+  const todayTasks = useMemo(
+    () => (project?.tasks ?? []).filter((t) => !t.isDone && t.status === "TODAY"),
+    [project],
+  );
+  const nextStep = todayTasks.length === 1 ? todayTasks[0] : null;
 
   const setStatus = async (
     task: ProjectTask,
@@ -143,6 +168,20 @@ export function ProjectDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+  };
+
+  // Do-this on the Next-step region: start the task and drop into focus mode.
+  // Mirrors NextPage.handleStart (webapp/src/app/NextPage.tsx) — same ops, same
+  // invalidations, same /app/focus navigation — so the project page's Do-this
+  // is the same loop as the home screen's.
+  const handleStart = async (task: ProjectTask) => {
+    await startTask({ id: task.id });
+    queryClient.invalidateQueries({ queryKey: ["getTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getProject"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+    navigate("/app/focus");
   };
 
   const handleCreate = async (description: string) => {
@@ -279,124 +318,228 @@ export function ProjectDetailPage() {
 
       {project && (
         <>
-          <header className="aa-list-header aa-project__header">
-            <div className="aa-project__header-main">
-              {editing ? (
-                <InlineEntityEditForm
-                  title="Refine project"
-                  subtitle="Keep the outcome concrete. The notes can stay practical."
-                  nameLabel="Project"
-                  name={editName}
-                  namePlaceholder="Project name"
-                  descriptionLabel="What makes it done"
-                  description={editDesc}
-                  descriptionPlaceholder="Description (optional)"
-                  error={editError}
-                  onNameChange={setEditName}
-                  onDescriptionChange={setEditDesc}
-                  onCancel={() => setEditing(false)}
-                  onSave={handleSaveEdit}
-                />
-              ) : (
-                <>
-                  <div className="aa-list-header__eyebrow">
-                    Project{project.goal ? ` · ${project.goal.name}` : ""}
-                  </div>
-                  <h1 className="aa-list-header__title">{project.name}</h1>
-                  {(total > 0 || project.dueDate) && (
-                    <p className="aa-project__meta">
-                      {total > 0 && (
-                        <span>
-                          {doneCount}/{total} done
-                        </span>
-                      )}
-                      {project.dueDate && (
-                        <Chip variant="teal" small>
-                          {formatRelativeDue(project.dueDate)}
-                        </Chip>
-                      )}
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-            {!editing && (
-              <DetailHeaderActions
-                actions={[
-                  { label: "Edit", onClick: startEdit },
-                  {
-                    label: project.isDone ? "Reopen" : "Complete",
-                    onClick: handleComplete,
-                    title: project.isDone
-                      ? "Return to active projects"
-                      : "Mark this project done",
-                  },
-                  {
-                    label: "Delete",
-                    onClick: () => setConfirmDelete(true),
-                    danger: true,
-                  },
-                  {
-                    label: creating ? "Cancel" : "Add task",
-                    onClick: () => setCreating((v) => !v),
-                  },
-                ]}
+          <header className="aa-project__header">
+            {editing ? (
+              <InlineEntityEditForm
+                title="Refine project"
+                subtitle="Keep the outcome concrete. The notes can stay practical."
+                nameLabel="Project"
+                name={editName}
+                namePlaceholder="Project name"
+                descriptionLabel="What makes it done"
+                description={editDesc}
+                descriptionPlaceholder="Description (optional)"
+                error={editError}
+                onNameChange={setEditName}
+                onDescriptionChange={setEditDesc}
+                onCancel={() => setEditing(false)}
+                onSave={handleSaveEdit}
               />
-            )}
-          </header>
+            ) : (
+              <>
+                {/* Identity rail — violet is project/goal identity, never the CTA. */}
+                <div className="aa-project__rail">
+                  <span className="aa-project__rail-dot" aria-hidden="true" />
+                  Project
+                </div>
+                <h1 className="aa-project__title">{project.name}</h1>
+                {project.description && (
+                  <p className="aa-project__desc">{project.description}</p>
+                )}
 
-          {!editing && project.description && (
-            <p className="aa-project__desc">{project.description}</p>
-          )}
-
-          {/* Re-link to a goal (spec §C). An editable parent field, not a
-              birth-only assignment. */}
-          {!editing && (
-            <div className="aa-project__relink">
-              <span className="aa-project__relink-label">Goal</span>
-              {pickingGoal ? (
-                <div className="aa-project__relink-picker">
-                  <button
-                    type="button"
-                    className={`aa-project__relink-opt ${project.goal === null ? "is-active" : ""}`}
-                    onClick={() => void handleRelink(null)}
-                  >
-                    None (standalone)
-                  </button>
-                  {(lensGoals ?? []).map((g: GoalOption) => (
+                {/* WHY — the goal is the project's reason for existing. Its own
+                    line, not tucked into the eyebrow. The name links to the goal
+                    detail page; a calm control opens the re-link picker (spec §C),
+                    where the link can be changed or broken (None / standalone). */}
+                <div className="aa-project__why">
+                  <span className="aa-project__why-eyebrow">Why</span>
+                  {pickingGoal ? (
+                    <div className="aa-project__relink-picker">
+                      <button
+                        type="button"
+                        className={`aa-project__relink-opt ${project.goal === null ? "is-active" : ""}`}
+                        onClick={() => void handleRelink(null)}
+                      >
+                        None (standalone)
+                      </button>
+                      {(lensGoals ?? []).map((g: GoalOption) => (
+                        <button
+                          key={g.id}
+                          type="button"
+                          className={`aa-project__relink-opt ${project.goal?.id === g.id ? "is-active" : ""}`}
+                          onClick={() => void handleRelink(g.id)}
+                        >
+                          {g.name}
+                        </button>
+                      ))}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPickingGoal(false)}
+                      >
+                        Cancel
+                      </Button>
+                      {relinkError && (
+                        <p className="aa-project__inline-err">{relinkError}</p>
+                      )}
+                    </div>
+                  ) : project.goal ? (
+                    <div className="aa-project__why-value">
+                      <Link
+                        to={`/app/goals/${project.goal.permalink}`}
+                        className="aa-project__why-link"
+                      >
+                        {project.goal.name}
+                      </Link>
+                      <button
+                        type="button"
+                        className="aa-project__why-edit"
+                        onClick={() => setPickingGoal(true)}
+                      >
+                        Edit goal
+                      </button>
+                    </div>
+                  ) : (
                     <button
-                      key={g.id}
                       type="button"
-                      className={`aa-project__relink-opt ${project.goal?.id === g.id ? "is-active" : ""}`}
-                      onClick={() => void handleRelink(g.id)}
+                      className="aa-project__why-empty"
+                      onClick={() => setPickingGoal(true)}
                     >
-                      {g.name}
+                      Link a goal
+                      <ArrowRightIcon />
                     </button>
-                  ))}
+                  )}
+                </div>
+
+                {/* Honest progress band — violet fill (project identity), teal due
+                    chip (system/state). Hidden when there are no tasks; never
+                    fabricates progress. */}
+                {(total > 0 || project.dueDate) && (
+                  <div className="aa-project__progress">
+                    {total > 0 && (
+                      <>
+                        <div className="aa-project__progress-track">
+                          <div
+                            className="aa-project__progress-fill"
+                            style={{ width: `${progressPct}%` }}
+                          />
+                        </div>
+                        <span className="aa-project__progress-label">
+                          <strong>{doneCount}</strong> of {total} done
+                        </span>
+                      </>
+                    )}
+                    {project.dueDate && (
+                      <Chip variant="teal" small>
+                        {formatRelativeDue(project.dueDate)}
+                      </Chip>
+                    )}
+                  </div>
+                )}
+
+                {/* NEXT STEP — only when there is exactly one Today task. The page
+                    points at the one thing to do, same loop as the home screen's
+                    Do-this (startTask → /app/focus). With 0 or 2+ Today tasks the
+                    Today group below carries the load; we don't fabricate a
+                    winner from a tie. */}
+                {nextStep && (
+                  <div className="aa-project__next">
+                    <div className="aa-project__next-eyebrow">Next step</div>
+                    <h2 className="aa-project__next-title">
+                      {nextStep.description}
+                    </h2>
+                    <div className="aa-project__next-row">
+                      <span className="aa-project__next-meta">
+                        Today
+                        {nextStep.size && (
+                          <>
+                            <span className="aa-project__next-sep" aria-hidden="true">·</span>
+                            {SIZE_DURATION[nextStep.size] ?? nextStep.size}
+                          </>
+                        )}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="aa-project__next-skip"
+                        onClick={() => void setStatus(nextStep, "UPCOMING")}
+                      >
+                        Not now
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="aa-project__next-do"
+                        icon={<ArrowRightIcon />}
+                        iconEnd
+                        onClick={() => void handleStart(nextStep)}
+                      >
+                        Do this
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action row — borderless. Teal + Add step leads; Edit / Complete
+                    are calm; Delete is destructive and lives behind ⋯ so it can't
+                    be tapped by accident. */}
+                <div className="aa-project__actions">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="aa-project__add"
+                    icon={<PlusIcon />}
+                    onClick={() => setCreating((v) => !v)}
+                  >
+                    {creating ? "Cancel" : "Add step"}
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setPickingGoal(false)}
+                    className="aa-project__calm"
+                    onClick={startEdit}
                   >
-                    Cancel
+                    Edit
                   </Button>
-                  {relinkError && (
-                    <p className="aa-project__inline-err">{relinkError}</p>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="aa-project__calm"
+                    onClick={handleComplete}
+                    title={project.isDone ? "Return to active projects" : "Mark this project done"}
+                  >
+                    {project.isDone ? "Reopen" : "Complete"}
+                  </Button>
+                  <div className="aa-project__overflow-wrap">
+                    <button
+                      type="button"
+                      className="aa-project__overflow"
+                      aria-label="More actions"
+                      aria-expanded={overflowOpen}
+                      onClick={() => setOverflowOpen((v) => !v)}
+                    >
+                      ⋯
+                    </button>
+                    {overflowOpen && (
+                      <div className="aa-project__overflow-menu" role="menu">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="aa-project__overflow-item aa-project__overflow-item--danger"
+                          onClick={() => {
+                            setOverflowOpen(false);
+                            setConfirmDelete(true);
+                          }}
+                        >
+                          Delete project
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  className="aa-project__relink-value"
-                  onClick={() => setPickingGoal(true)}
-                >
-                  {project.goal
-                    ? project.goal.name
-                    : "None — click to link a goal"}
-                </button>
-              )}
-            </div>
-          )}
+              </>
+            )}
+          </header>
 
           {creating && (
             <CreateInline
@@ -421,6 +564,15 @@ export function ProjectDetailPage() {
             <div className="aa-grouped">
               {groups.map((group) => {
                 if (group.items.length === 0) return null;
+                // When the single Today task is lifted into the Next-step
+                // region, the Today group would be empty / duplicate — skip it.
+                if (
+                  group.key === "TODAY" &&
+                  nextStep &&
+                  group.items.every((t) => t.id === nextStep.id)
+                ) {
+                  return null;
+                }
                 return (
                   <section key={group.key} className="aa-grouped__group">
                     <h3 className="aa-grouped__heading">
@@ -447,6 +599,7 @@ export function ProjectDetailPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  className="aa-project__row-ctrl"
                                   onClick={() =>
                                     setStatus(
                                       task,
@@ -465,6 +618,7 @@ export function ProjectDetailPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  className="aa-project__row-ctrl"
                                   onClick={() => setStatus(task, "UPCOMING")}
                                 >
                                   Not today
@@ -475,6 +629,7 @@ export function ProjectDetailPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="aa-project__row-ctrl"
                                 onClick={() => {
                                   setMovingTaskId((cur) =>
                                     cur === task.id ? null : task.id,
