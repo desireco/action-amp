@@ -8,7 +8,6 @@ import {
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Chip } from "../components/ui";
-import { FeedbackDialog } from "../app/FeedbackDialog";
 import { useActiveLens } from "../app/lensContext";
 import "./TaskDetailPage.css";
 
@@ -37,7 +36,9 @@ export function TaskDetailPage() {
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const state = location.state as { returnTo?: unknown } | null;
   const returnTo =
     typeof state?.returnTo === "string" && state.returnTo.startsWith("/app")
@@ -80,6 +81,30 @@ export function TaskDetailPage() {
       setSaveError("Could not save task.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const canSendFeedback =
+    feedbackMessage.trim().length > 0 && !feedbackSubmitting;
+
+  const sendFeedback = async () => {
+    if (!task || !canSendFeedback) return;
+    setFeedbackSubmitting(true);
+    setFeedbackError(null);
+    try {
+      await submitFeedback({
+        message: `Done task feedback: ${task.description}\n\n${feedbackMessage.trim()}`,
+        route: location.pathname,
+        section: "work",
+        lens: lens ? { id: lens.id, name: lens.name, color: lens.color } : null,
+        userAgent:
+          typeof navigator === "undefined" ? null : navigator.userAgent,
+      });
+      setFeedbackMessage("");
+    } catch {
+      setFeedbackError("Could not send feedback. Try again.");
+    } finally {
+      setFeedbackSubmitting(false);
     }
   };
 
@@ -178,22 +203,50 @@ export function TaskDetailPage() {
           {task.isDone ? (
             <section
               className="aa-task-done-panel"
-              aria-labelledby="task-done-title"
+              aria-label="Completed task feedback"
             >
-              <div>
-                <h2 id="task-done-title">Completed tasks are closed.</h2>
-                <p>
-                  This task is kept as a record of what got done. If something
-                  felt wrong or should be improved, leave feedback instead of
-                  editing the task.
-                </p>
-              </div>
+              <p className="aa-task-done-panel__notice">
+                Completed tasks are closed; leave feedback if something should
+                improve.
+              </p>
               {content && (
                 <div className="aa-task-done-panel__notes">
                   <span className="aa-task-label">Notes</span>
                   <p>{content}</p>
                 </div>
               )}
+              <div className="aa-task-feedback-inline">
+                <label className="aa-task-label" htmlFor="task-feedback">
+                  Feedback
+                </label>
+                <textarea
+                  id="task-feedback"
+                  className="aa-task-feedback-inline__textarea"
+                  rows={5}
+                  value={feedbackMessage}
+                  onChange={(event) => setFeedbackMessage(event.target.value)}
+                  placeholder="What should we know?"
+                  maxLength={4000}
+                  disabled={feedbackSubmitting}
+                />
+                {feedbackError && (
+                  <p className="aa-task-edit__err">{feedbackError}</p>
+                )}
+                <div className="aa-task-feedback-inline__footer">
+                  <span>{feedbackMessage.length}/4000</span>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      void sendFeedback();
+                    }}
+                    disabled={!canSendFeedback}
+                  >
+                    {feedbackSubmitting ? "Sending" : "Send feedback"}
+                  </Button>
+                </div>
+              </div>
             </section>
           ) : (
             <section
@@ -222,39 +275,13 @@ export function TaskDetailPage() {
             >
               {task.isDone ? "Back" : "Cancel"}
             </Button>
-            {task.isDone ? (
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => setFeedbackOpen(true)}
-              >
-                Leave feedback
-              </Button>
-            ) : (
+            {task.isDone ? null : (
               <Button type="submit" variant="primary" disabled={!canSave}>
                 {saving ? "Saving" : "Save task"}
               </Button>
             )}
           </div>
         </form>
-      )}
-
-      {task && feedbackOpen && (
-        <FeedbackDialog
-          onClose={() => setFeedbackOpen(false)}
-          onSubmit={async (message) => {
-            await submitFeedback({
-              message: `Done task feedback: ${task.description}\n\n${message}`,
-              route: location.pathname,
-              section: "work",
-              lens: lens
-                ? { id: lens.id, name: lens.name, color: lens.color }
-                : null,
-              userAgent:
-                typeof navigator === "undefined" ? null : navigator.userAgent,
-            });
-          }}
-        />
       )}
 
       {!isLoading && !error && !task && (
