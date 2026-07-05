@@ -100,19 +100,11 @@
   gap: var(--aa-space-xs);
 }
 
-.aa-task-edit__context-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 22px;
-  border-radius: var(--aa-radius-sm);
-  color: var(--aa-teal-cta);
-  font-size: var(--aa-text-sm);
-  font-weight: var(--aa-weight-bold);
-  text-decoration: none;
-}
-
-.aa-task-edit__context-link:hover {
-  color: var(--aa-teal);
+.aa-task-edit__help {
+  margin: var(--aa-space-xs) 0 0;
+  text-align: right;
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-xs);
 }
 
 .aa-task-edit__notes {

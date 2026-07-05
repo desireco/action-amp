@@ -164,7 +164,7 @@ export default app({
     action(pauseTask, { entities: ["Task", "TaskSession"], auth: true }),
     action(addTaskUpdate, { entities: ["Task", "TaskUpdate"], auth: true }),
     action(updateTaskContent, { entities: ["Task"], auth: true }),
-    action(updateTaskDetails, { entities: ["Task"], auth: true }),
+    action(updateTaskDetails, { entities: ["Task", "Project", "Goal"], auth: true }),
     action(completeTaskFromFocus, { entities: ["Task", "TaskUpdate", "TaskSession"], auth: true }),
     query(getProjects, { entities: ["Project", "Task", "Lens"], auth: true }),
     action(createProject, { entities: ["Project", "Lens"], auth: true }),

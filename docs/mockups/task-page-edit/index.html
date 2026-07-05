@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-lens="indigo">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ActionAmp — Task Page Edit (chip-driven)</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--aa-bg-soft);
+    font-family: var(--aa-font);
+    color: var(--aa-text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .gallery {
+    display: flex; flex-direction: column; gap: 56px;
+    padding: 56px 32px 96px; align-items: center;
+  }
+  .direction { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .direction__label {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--aa-text-4); font-weight: 600;
+  }
+  .direction__title { font-size: 19px; font-weight: 600; color: var(--aa-text); margin: 0; }
+  .direction__sub {
+    margin: 0; font-size: 13px; color: var(--aa-text-3);
+    max-width: 58ch; text-align: center; line-height: 1.5;
+  }
+  .themes { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; }
+  .theme-block { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .theme-tag {
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--aa-text-4); font-weight: 600; padding-left: 4px;
+  }
+  .frame {
+    width: 680px; max-width: 100%;
+    background: var(--aa-bg);
+    border-radius: 18px;
+    border: 1px solid var(--aa-border);
+    box-shadow: var(--aa-shadow-md);
+    padding: 48px 56px 56px;
+    overflow: visible;
+    position: relative;
+  }
+
+  /* ===== Task page ===== */
+  .aa-task-edit { display: flex; flex-direction: column; gap: var(--aa-space-2xl); }
+  .aa-task-edit__topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: var(--aa-space-sm);
+  }
+  .aa-task-edit__back { color: var(--aa-text-3); text-decoration: none; font-size: var(--aa-text-sm); }
+  .aa-task-edit__back:hover { color: var(--aa-teal-cta); }
+  .aa-task-edit__permalink {
+    font-family: var(--aa-font-mono); font-size: var(--aa-text-xs); color: var(--aa-text-4);
+  }
+
+  .aa-task-edit__kicker {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: var(--aa-text-xs); color: var(--aa-text-4);
+    margin-bottom: var(--aa-space-sm); letter-spacing: 0.04em;
+  }
+  .aa-task-edit__kicker span:first-child {
+    text-transform: uppercase; font-weight: var(--aa-weight-semibold); color: var(--aa-text-3);
+  }
+  .aa-task-input {
+    width: 100%; font-family: inherit;
+    font-size: var(--aa-text-xl); font-weight: var(--aa-weight-semibold);
+    color: var(--aa-text); background: transparent; border: none;
+    border-bottom: 1px solid transparent; padding: 4px 0 6px; outline: none;
+    line-height: 1.25; transition: border-color var(--aa-dur-base) var(--aa-ease-out);
+  }
+  .aa-task-input:hover { border-bottom-color: var(--aa-border); }
+  .aa-task-input:focus { border-bottom-color: var(--aa-teal-cta); }
+
+  /* ---- Chips row — now the primary edit surface. Each chip is a button.
+     Click → opens a small popover anchored to THAT chip with just its options.
+     No permanent block of dropdowns; the page reads as a task, not a form. ---- */
+  .aa-task-edit__chips {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin-top: var(--aa-space-md);
+  }
+  .chip-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px;
+    border-radius: var(--aa-radius-full);
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-medium);
+    cursor: pointer;
+    line-height: 1.3;
+    transition:
+      background var(--aa-dur-fast) var(--aa-ease-out),
+      border-color var(--aa-dur-fast) var(--aa-ease-out),
+      transform var(--aa-dur-fast) var(--aa-ease-out);
+  }
+  .chip-btn:hover { transform: translateY(-1px); }
+  .chip-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--aa-focus-ring);
+  }
+  .chip-btn[aria-expanded="true"] { transform: translateY(0); }
+
+  /* Variant tints — color carries meaning (the system) */
+  .chip-btn--today { background: var(--aa-teal-soft); color: var(--aa-teal-cta); }
+  .chip-btn--today:hover { background: var(--aa-teal-soft-strong); }
+  .chip-btn--when { background: var(--aa-teal-soft); color: var(--aa-teal-cta); }
+  .chip-btn--when:hover { background: var(--aa-teal-soft-strong); }
+
+  .chip-btn--priority-normal { background: var(--aa-surface-muted); color: var(--aa-text-3); }
+  .chip-btn--priority-normal:hover { background: var(--aa-surface-muted-2); color: var(--aa-text-2); }
+  .chip-btn--priority-important { background: var(--aa-amber-soft); color: var(--aa-amber-text); }
+  .chip-btn--priority-important:hover { background: var(--aa-amber-soft-strong); }
+
+  .chip-btn--size { background: var(--aa-surface-muted); color: var(--aa-text-3); }
+  .chip-btn--size:hover { background: var(--aa-surface-muted-2); color: var(--aa-text-2); }
+
+  .chip-btn--project { background: var(--aa-violet-soft); color: var(--aa-violet-text); }
+  .chip-btn--project:hover { background: var(--aa-violet-soft); filter: brightness(0.97); }
+
+  /* The small chev inside a chip — signals "opens something" */
+  .chip-chev {
+    width: 11px; height: 11px;
+    opacity: 0.6;
+    transition: transform var(--aa-dur-base) var(--aa-ease-out);
+  }
+  .chip-btn[aria-expanded="true"] .chip-chev { transform: rotate(180deg); opacity: 1; }
+
+  /* Plus chip — add a property that isn't set yet (due, goal). Quiet. */
+  .chip-btn--add {
+    background: transparent;
+    color: var(--aa-text-4);
+    border: 1px dashed var(--aa-border-strong);
+  }
+  .chip-btn--add:hover {
+    color: var(--aa-teal-cta);
+    border-color: var(--aa-teal-cta);
+    background: var(--aa-teal-soft);
+  }
+
+  /* ---- Popover — anchored under the chip. One property at a time. ---- */
+  .chip-popover {
+    position: absolute;
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-md);
+    box-shadow: var(--aa-shadow-md);
+    padding: 6px;
+    min-width: 200px;
+    z-index: 20;
+  }
+  .chip-popover__title {
+    font-size: var(--aa-text-xs);
+    font-weight: var(--aa-weight-semibold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--aa-text-4);
+    padding: 6px 10px 4px;
+  }
+  .chip-popover__opt {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; text-align: left;
+    padding: 8px 10px;
+    border: none; background: none;
+    border-radius: var(--aa-radius-sm);
+    font-family: inherit;
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-medium);
+    color: var(--aa-text-2);
+    cursor: pointer;
+    transition: background var(--aa-dur-fast) var(--aa-ease-out);
+  }
+  .chip-popover__opt:hover { background: var(--aa-surface-muted); }
+  .chip-popover__opt.active {
+    background: var(--aa-teal-soft);
+    color: var(--aa-teal-cta);
+  }
+  .chip-popover__opt-hint {
+    font-size: var(--aa-text-xs); font-weight: var(--aa-weight-regular);
+    color: var(--aa-text-4); margin-left: var(--aa-space-sm);
+  }
+  .chip-popover__check {
+    opacity: 0; color: var(--aa-teal-cta); flex-shrink: 0;
+  }
+  .chip-popover__opt.active .chip-popover__check { opacity: 1; }
+  .chip-popover__divider {
+    height: 1px; background: var(--aa-border); margin: 4px 6px;
+  }
+  .chip-popover__none {
+    color: var(--aa-text-3); font-size: var(--aa-text-sm);
+  }
+
+  /* Notes */
+  .aa-task-edit__notes { display: flex; flex-direction: column; gap: var(--aa-space-sm); }
+  .aa-task-label {
+    font-size: var(--aa-text-xs); font-weight: var(--aa-weight-semibold);
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--aa-text-4);
+  }
+  .aa-task-textarea {
+    width: 100%; font-family: inherit;
+    font-size: var(--aa-text-base); line-height: var(--aa-leading-normal);
+    color: var(--aa-text); background: var(--aa-surface);
+    border: 1px solid var(--aa-border); border-radius: var(--aa-radius-md);
+    padding: 12px 14px; resize: vertical; min-height: 88px; outline: none;
+    transition:
+      border-color var(--aa-dur-base) var(--aa-ease-out),
+      box-shadow var(--aa-dur-base) var(--aa-ease-out);
+  }
+  .aa-task-textarea:hover { border-color: var(--aa-border-strong); }
+  .aa-task-textarea:focus { border-color: var(--aa-teal); box-shadow: var(--aa-focus-ring); }
+  .aa-task-textarea::placeholder { color: var(--aa-text-4); }
+
+  /* Footer — title + notes only now. Chips are live. */
+  .aa-task-edit__actions {
+    display: flex; justify-content: flex-end; gap: var(--aa-space-sm);
+    padding-top: var(--aa-space-md); border-top: 1px solid var(--aa-border);
+  }
+  .btn {
+    font-family: inherit; font-size: var(--aa-text-base);
+    font-weight: var(--aa-weight-medium); border-radius: var(--aa-radius-sm);
+    cursor: pointer; transition: all var(--aa-dur-base) var(--aa-ease-out);
+    display: inline-flex; align-items: center; gap: 6px; line-height: 1;
+    padding: 10px 16px;
+  }
+  .btn--primary {
+    background: var(--aa-teal-cta); color: white;
+    border: 1px solid var(--aa-teal-cta);
+    box-shadow: 0 1px 2px var(--aa-teal-tint-shadow);
+  }
+  .btn--primary:hover:not(:disabled) { background: var(--aa-teal-cta-hover); border-color: var(--aa-teal-cta-hover); }
+  .btn--primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn--secondary { background: var(--aa-surface); color: var(--aa-text-2); border: 1px solid var(--aa-border-strong); }
+  .btn--secondary:hover { background: var(--aa-surface-muted); color: var(--aa-text); }
+  .aa-task-edit__help {
+    font-size: var(--aa-text-xs); color: var(--aa-text-4);
+    margin: var(--aa-space-sm) 0 0; text-align: right;
+  }
+
+  /* The "Done" task read-only state — chips become static (no hover, no chev) */
+  .chip-btn--static { cursor: default; }
+  .chip-btn--static:hover { transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    .chip-btn:hover, .chip-btn[aria-expanded="true"] { transform: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="gallery">
+
+  <!-- ============================================================
+       DIRECTION B — Chip-driven editing
+       The chips ARE the editors. Click one → a small popover opens
+       anchored to that chip, with just that property's options.
+       No permanent block of dropdowns.
+       ============================================================ -->
+  <div class="direction">
+    <div class="direction__label">Direction B · chip-driven</div>
+    <h2 class="direction__title">Click a chip, change that property</h2>
+    <p class="direction__sub">
+      The chips under the title ARE the editors. Click <em>today</em>, <em>Normal</em>, <em>L</em>, or <em>Dol Hunt</em> and a small popover opens anchored to that chip with just that property's options — pick one, it writes instantly, popover closes. No permanent block of dropdowns; the page reads as a task, not a settings form. Title + notes still save via the footer.
+    </p>
+
+    <div class="themes">
+
+      <!-- LIGHT — closed state -->
+      <div class="theme-block">
+        <div class="theme-tag">Light · closed</div>
+        <div class="frame">
+          <div class="aa-task-edit">
+            <header class="aa-task-edit__topbar">
+              <a class="aa-task-edit__back" href="#">← Back</a>
+              <span class="aa-task-edit__permalink">/tasks/sketch-trophy-rig</span>
+            </header>
+
+            <div>
+              <div class="aa-task-edit__kicker">
+                <span>Edit task</span>
+                <span>Added Jul 5</span>
+              </div>
+              <input class="aa-task-input" value="Sketch the trophy rig" />
+
+              <!-- The chips row IS the editor surface now -->
+              <div class="aa-task-edit__chips">
+                <button class="chip-btn chip-btn--today" aria-expanded="false">
+                  Today
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--priority-normal" aria-expanded="false">
+                  Normal
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--size" aria-expanded="false">
+                  L
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--project" aria-expanded="false">
+                  Dol Hunt
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <!-- Quiet "+ add" chips for unset properties -->
+                <button class="chip-btn chip-btn--add" aria-expanded="false">+ Due</button>
+                <button class="chip-btn chip-btn--add" aria-expanded="false">+ Goal</button>
+              </div>
+            </div>
+
+            <div class="aa-task-edit__notes">
+              <span class="aa-task-label">Notes</span>
+              <textarea class="aa-task-textarea" placeholder="Add details, links, or next steps.">Three angles: front, side, 3/4. Reference the bronze finish from the temple assets.</textarea>
+            </div>
+
+            <div>
+              <div class="aa-task-edit__actions">
+                <button class="btn btn--secondary">Cancel</button>
+                <button class="btn btn--primary" disabled>Save task</button>
+              </div>
+              <p class="aa-task-edit__help">Save writes the title and notes. Chips above are live.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIGHT — Priority popover open -->
+      <div class="theme-block">
+        <div class="theme-tag">Light · Priority popover open</div>
+        <div class="frame">
+          <div class="aa-task-edit">
+            <header class="aa-task-edit__topbar">
+              <a class="aa-task-edit__back" href="#">← Back</a>
+              <span class="aa-task-edit__permalink">/tasks/sketch-trophy-rig</span>
+            </header>
+
+            <div style="position: relative;">
+              <div class="aa-task-edit__kicker">
+                <span>Edit task</span>
+                <span>Added Jul 5</span>
+              </div>
+              <input class="aa-task-input" value="Sketch the trophy rig" />
+
+              <div class="aa-task-edit__chips">
+                <button class="chip-btn chip-btn--today" aria-expanded="false">
+                  Today
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <!-- This chip is "open" — popover anchored beneath it -->
+                <button class="chip-btn chip-btn--priority-normal" aria-expanded="true" style="position: relative;">
+                  Normal
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <!-- The popover itself -->
+                <div class="chip-popover" style="top: calc(100% + 6px); left: 92px;">
+                  <div class="chip-popover__title">Priority</div>
+                  <button class="chip-popover__opt">
+                    <span>Low <span class="chip-popover__opt-hint">when you can</span></span>
+                    <svg class="chip-popover__check" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <button class="chip-popover__opt active">
+                    <span>Normal <span class="chip-popover__opt-hint">default</span></span>
+                    <svg class="chip-popover__check" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <button class="chip-popover__opt">
+                    <span>Important <span class="chip-popover__opt-hint">today matters</span></span>
+                    <svg class="chip-popover__check" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+                <button class="chip-btn chip-btn--size" aria-expanded="false">
+                  L
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--project" aria-expanded="false">
+                  Dol Hunt
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--add" aria-expanded="false">+ Due</button>
+                <button class="chip-btn chip-btn--add" aria-expanded="false">+ Goal</button>
+              </div>
+            </div>
+
+            <div class="aa-task-edit__notes">
+              <span class="aa-task-label">Notes</span>
+              <textarea class="aa-task-textarea">Three angles: front, side, 3/4. Reference the bronze finish from the temple assets.</textarea>
+            </div>
+
+            <div>
+              <div class="aa-task-edit__actions">
+                <button class="btn btn--secondary">Cancel</button>
+                <button class="btn btn--primary">Save task</button>
+              </div>
+              <p class="aa-task-edit__help">Picking Important writes instantly.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIGHT — When popover open (shows the horizon options) -->
+      <div class="theme-block">
+        <div class="theme-tag">Light · When popover open</div>
+        <div class="frame">
+          <div class="aa-task-edit">
+            <header class="aa-task-edit__topbar">
+              <a class="aa-task-edit__back" href="#">← Back</a>
+              <span class="aa-task-edit__permalink">/tasks/sketch-trophy-rig</span>
+            </header>
+
+            <div style="position: relative;">
+              <div class="aa-task-edit__kicker">
+                <span>Edit task</span>
+                <span>Added Jul 5</span>
+              </div>
+              <input class="aa-task-input" value="Sketch the trophy rig" />
+
+              <div class="aa-task-edit__chips">
+                <button class="chip-btn chip-btn--today" aria-expanded="true" style="position: relative;">
+                  Today
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <div class="chip-popover" style="top: calc(100% + 6px); left: 0;">
+                  <div class="chip-popover__title">When</div>
+                  <button class="chip-popover__opt active">
+                    <span>Today <span class="chip-popover__opt-hint">on the table now</span></span>
+                    <svg class="chip-popover__check" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <button class="chip-popover__opt">
+                    <span>Upcoming <span class="chip-popover__opt-hint">the bench</span></span>
+                    <svg class="chip-popover__check" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <button class="chip-popover__opt">
+                    <span>Someday <span class="chip-popover__opt-hint">maybe later</span></span>
+                    <svg class="chip-popover__check" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+                <button class="chip-btn chip-btn--priority-normal" aria-expanded="false">
+                  Normal
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--size" aria-expanded="false">
+                  L
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--project" aria-expanded="false">
+                  Dol Hunt
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--add" aria-expanded="false">+ Due</button>
+                <button class="chip-btn chip-btn--add" aria-expanded="false">+ Goal</button>
+              </div>
+            </div>
+
+            <div class="aa-task-edit__notes">
+              <span class="aa-task-label">Notes</span>
+              <textarea class="aa-task-textarea">Three angles: front, side, 3/4.</textarea>
+            </div>
+
+            <div>
+              <div class="aa-task-edit__actions">
+                <button class="btn btn--secondary">Cancel</button>
+                <button class="btn btn--primary">Save task</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DARK -->
+      <div class="theme-block">
+        <div class="theme-tag">Dark · closed</div>
+        <div class="frame" data-theme="dark">
+          <div class="aa-task-edit">
+            <header class="aa-task-edit__topbar">
+              <a class="aa-task-edit__back" href="#">← Back</a>
+              <span class="aa-task-edit__permalink">/tasks/sketch-trophy-rig</span>
+            </header>
+            <div>
+              <div class="aa-task-edit__kicker">
+                <span>Edit task</span>
+                <span>Added Jul 5</span>
+              </div>
+              <input class="aa-task-input" value="Sketch the trophy rig" />
+              <div class="aa-task-edit__chips">
+                <button class="chip-btn chip-btn--today">
+                  Today
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--priority-important">
+                  Important
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--size">
+                  L
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--project">
+                  Dol Hunt
+                  <svg class="chip-chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="chip-btn chip-btn--add">+ Due</button>
+              </div>
+            </div>
+            <div class="aa-task-edit__notes">
+              <span class="aa-task-label">Notes</span>
+              <textarea class="aa-task-textarea">Three angles: front, side, 3/4.</textarea>
+            </div>
+            <div>
+              <div class="aa-task-edit__actions">
+                <button class="btn btn--secondary">Cancel</button>
+                <button class="btn btn--primary" disabled>Save task</button>
+              </div>
+              <p class="aa-task-edit__help">Save writes the title and notes. Chips above are live.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DONE state — chips become static (read-only) -->
+      <div class="theme-block">
+        <div class="theme-tag">Light · Done (read-only)</div>
+        <div class="frame">
+          <div class="aa-task-edit">
+            <header class="aa-task-edit__topbar">
+              <a class="aa-task-edit__back" href="#">← Back</a>
+              <span class="aa-task-edit__permalink">/tasks/sketch-trophy-rig</span>
+            </header>
+            <div>
+              <div class="aa-task-edit__kicker">
+                <span>Done task</span>
+                <span>Added Jul 5</span>
+              </div>
+              <h1 style="font-size: var(--aa-text-xl); font-weight: var(--aa-weight-semibold); margin: 0; padding: 4px 0 6px; line-height: 1.25;">Sketch the trophy rig</h1>
+              <div class="aa-task-edit__chips">
+                <span class="chip-btn chip-btn--today chip-btn--static">done</span>
+                <span class="chip-btn chip-btn--priority-normal chip-btn--static">Normal</span>
+                <span class="chip-btn chip-btn--size chip-btn--static">L</span>
+                <span class="chip-btn chip-btn--project chip-btn--static">Dol Hunt</span>
+              </div>
+            </div>
+            <div class="aa-task-edit__notes">
+              <span class="aa-task-label">Notes</span>
+              <p style="margin: 0; font-size: var(--aa-text-base); line-height: var(--aa-leading-normal); color: var(--aa-text-2);">Three angles: front, side, 3/4. Reference the bronze finish from the temple assets.</p>
+            </div>
+            <div>
+              <div class="aa-task-edit__actions">
+                <button class="btn btn--secondary">Back</button>
+              </div>
+              <p class="aa-task-edit__help">Completed tasks are closed.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

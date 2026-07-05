@@ -1,23 +1,39 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams, Link } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import {
   useQuery,
   getTask,
+  getProjects,
+  getGoals,
   submitFeedback,
   updateTaskDetails,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Chip } from "../components/ui";
+import { Button } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
+import {
+  TaskChipEditor,
+  type TaskChipProject,
+  type TaskChipGoal,
+  type TaskChipState,
+  type TaskPriority,
+  type TaskSize,
+  type TaskStatus,
+} from "./TaskChipEditor";
 import "./TaskDetailPage.css";
 
 /**
- * Task detail — the dedicated URL for a single Task (what the focus engine
- * points at). Real entity, real query, user-scoped. The shell is rendered by
- * the root App component, so this page renders only its content.
+ * Task detail — the dedicated URL for a single Task.
  *
- * The remaining fields (priority, size, due, notes) arrive when the full Task
- * model lands.
+ * The page reads as a task, not a settings form. Under the title sits a row of
+ * chips (When / Priority / Size / Project / Due / Goal) — each chip IS the
+ * editor for that property. Click a chip, a small popover opens with just that
+ * property's options; pick one and it saves instantly (live). Title and notes
+ * stay on the working-copy + Save footer (you don't want a write per
+ * keystroke). Done tasks render read-only.
+ *
+ * Project / Goal chips open a bottom sheet (PickerSheet) since those lists are
+ * data-driven (the lens's projects / goals).
  */
 export function TaskDetailPage() {
   const lens = useActiveLens();
@@ -32,6 +48,9 @@ export function TaskDetailPage() {
   } = useQuery(getTask, {
     id: permalink!,
   });
+
+  // Buffered prose: title + notes sit in local state, written by the Save
+  // footer. Structural fields don't touch this — they live-edit directly.
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
@@ -51,6 +70,20 @@ export function TaskDetailPage() {
     setContent(task.content ?? "");
     setSaveError(null);
   }, [task]);
+
+  // Lens projects / goals for the bottom-sheet pickers. Only fetched when the
+  // task is loaded and not done (done tasks have no editors).
+  const lensId = task?.lensId;
+  const { data: lensProjects } = useQuery(
+    getProjects,
+    lensId ? { lensId } : undefined,
+    { enabled: !!lensId && !task?.isDone },
+  );
+  const { data: lensGoals } = useQuery(
+    getGoals,
+    lensId ? { lensId } : undefined,
+    { enabled: !!lensId && !task?.isDone },
+  );
 
   const canSave =
     Boolean(task) &&
@@ -75,12 +108,46 @@ export function TaskDetailPage() {
         queryClient.invalidateQueries({ queryKey: ["getTasks"] }),
         queryClient.invalidateQueries({ queryKey: ["getDoneToday"] }),
         queryClient.invalidateQueries({ queryKey: ["getTopTask"] }),
+        queryClient.invalidateQueries({ queryKey: ["getProjects"] }),
+        queryClient.invalidateQueries({ queryKey: ["getProject"] }),
       ]);
       navigate(returnTo);
     } catch {
       setSaveError("Could not save task.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Live-edit a structural field via a chip pick. Writes immediately; the
+  // optimistic state is the server response, so we invalidate rather than
+  // patch locally. Errors surface inline on the page.
+  const [chipError, setChipError] = useState<string | null>(null);
+  const handleChipChange = async (
+    patch: Omit<
+      Partial<TaskChipState>,
+      "project" | "goal" | "dueDate"
+    > & {
+      projectId?: string | null;
+      goalId?: string | null;
+      dueDate?: Date | null;
+    },
+  ) => {
+    if (!task) return;
+    setChipError(null);
+    try {
+      await updateTaskDetails({ taskId: task.id, ...patch });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["getTask"] }),
+        queryClient.invalidateQueries({ queryKey: ["getTasks"] }),
+        queryClient.invalidateQueries({ queryKey: ["getTopTask"] }),
+        queryClient.invalidateQueries({ queryKey: ["getProjects"] }),
+        queryClient.invalidateQueries({ queryKey: ["getProject"] }),
+        queryClient.invalidateQueries({ queryKey: ["getGoals"] }),
+        queryClient.invalidateQueries({ queryKey: ["getAppData"] }),
+      ]);
+    } catch {
+      setChipError("Couldn't update that. Try again.");
     }
   };
 
@@ -119,9 +186,16 @@ export function TaskDetailPage() {
   return (
     <div className="aa-task-edit">
       <header className="aa-task-edit__topbar">
-        <Link className="aa-task-edit__back" to={returnTo}>
+        <a
+          href={returnTo}
+          className="aa-task-edit__back"
+          onClick={(e) => {
+            e.preventDefault();
+            navigate(returnTo);
+          }}
+        >
           ← Back
-        </Link>
+        </a>
         {task && (
           <span className="aa-task-edit__permalink">
             /tasks/{task.permalink}
@@ -138,13 +212,7 @@ export function TaskDetailPage() {
       )}
 
       {task && (
-        <form
-          className="aa-task-edit__form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void saveTask();
-          }}
-        >
+        <div className="aa-task-edit__form">
           <section className="aa-task-edit__hero" aria-labelledby="task-title">
             <div className="aa-task-edit__kicker">
               <span>{task.isDone ? "Done task" : "Edit task"}</span>
@@ -163,41 +231,32 @@ export function TaskDetailPage() {
                 onChange={(event) => setDescription(event.target.value)}
               />
             )}
-            <div className="aa-task-edit__chips">
-              {task.isDone && (
-                <Chip variant="teal" small>
-                  done
-                </Chip>
-              )}
-              <Chip variant={task.status === "TODAY" ? "teal" : "muted"} small>
-                {task.status?.toLowerCase() ?? "task"}
-              </Chip>
-              <Chip
-                variant={task.priority === "IMPORTANT" ? "amber" : "muted"}
-                small
-              >
-                {task.priority?.toLowerCase() ?? "normal"}
-              </Chip>
-              <Chip variant="muted" small>
-                {task.size}
-              </Chip>
-              {task.project && (
-                <Link
-                  className="aa-task-edit__context-link"
-                  to={`/app/projects/${task.project.permalink}`}
-                >
-                  {task.project.name}
-                </Link>
-              )}
-              {!task.project && task.goal && (
-                <Link
-                  className="aa-task-edit__context-link"
-                  to={`/app/goals/${task.goal.permalink}`}
-                >
-                  {task.goal.name}
-                </Link>
-              )}
-            </div>
+
+            {/* The chip row IS the editor for every structural field. */}
+            <TaskChipEditor
+              task={{
+                status: (task.status as TaskStatus) ?? "UPCOMING",
+                priority: (task.priority as TaskPriority) ?? "NORMAL",
+                size: (task.size as TaskSize) ?? "M",
+                dueDate: task.dueDate,
+                project: (task.project as TaskChipProject | null) ?? null,
+                goal: (task.goal as TaskChipGoal | null) ?? null,
+              }}
+              projects={(lensProjects ?? []).map((p: { id: string; name: string; goal?: { name: string } | null }) => ({
+                id: p.id,
+                label: p.name,
+                meta: p.goal?.name ?? null,
+              }))}
+              goals={(lensGoals ?? []).map((g: { id: string; name: string }) => ({
+                id: g.id,
+                label: g.name,
+              }))}
+              readOnly={task.isDone}
+              onChange={(patch) => void handleChipChange(patch)}
+            />
+            {chipError && !task.isDone && (
+              <p className="aa-task-edit__err">{chipError}</p>
+            )}
           </section>
 
           {task.isDone ? (
@@ -276,12 +335,22 @@ export function TaskDetailPage() {
               {task.isDone ? "Back" : "Cancel"}
             </Button>
             {task.isDone ? null : (
-              <Button type="submit" variant="primary" disabled={!canSave}>
+              <Button
+                type="button"
+                variant="primary"
+                disabled={!canSave}
+                onClick={() => void saveTask()}
+              >
                 {saving ? "Saving" : "Save task"}
               </Button>
             )}
           </div>
-        </form>
+          {!task.isDone && (
+            <p className="aa-task-edit__help">
+              Save writes the title and notes. Chips above are live.
+            </p>
+          )}
+        </div>
       )}
 
       {!isLoading && !error && !task && (

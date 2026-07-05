@@ -1,0 +1,210 @@
+@import "../styles/tokens.css";
+
+/* TaskChipEditor — the chip row on the task detail page.
+   Each chip IS an editor: click → anchored popover with that property's
+   options. Pick → live save. No permanent block of dropdowns. */
+
+.aa-task-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  position: relative;
+}
+
+/* Wrapper that holds a chip button + its popover as SIBLINGS (invalid HTML to
+   nest <button> inside <button>). The popover anchors to this slot. */
+.aa-task-chip-slot {
+  position: relative;
+  display: inline-flex;
+}
+
+.aa-task-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: var(--aa-radius-full);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  cursor: pointer;
+  line-height: 1.3;
+  position: relative; /* anchor point for the popover */
+  transition:
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    transform var(--aa-dur-fast) var(--aa-ease-out);
+}
+.aa-task-chip:hover {
+  transform: translateY(-1px);
+}
+.aa-task-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--aa-focus-ring);
+}
+
+/* Variant tints — color carries meaning (the four-accent system). */
+.aa-task-chip--when,
+.aa-task-chip--today {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+.aa-task-chip--when:hover,
+.aa-task-chip--today:hover {
+  background: var(--aa-teal-soft-strong);
+}
+
+.aa-task-chip--normal {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text-3);
+}
+.aa-task-chip--normal:hover {
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-2);
+}
+.aa-task-chip--important {
+  background: var(--aa-amber-soft);
+  color: var(--aa-amber-text);
+}
+.aa-task-chip--important:hover {
+  background: var(--aa-amber-soft-strong);
+}
+
+.aa-task-chip--size {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text-3);
+}
+.aa-task-chip--size:hover {
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-2);
+}
+
+.aa-task-chip--project {
+  background: var(--aa-violet-soft);
+  color: var(--aa-violet-text);
+}
+.aa-task-chip--project:hover {
+  background: var(--aa-violet-soft);
+  filter: brightness(0.97);
+}
+
+/* The small chev inside a chip — signals "opens something". */
+.aa-task-chip-chev {
+  opacity: 0.6;
+  transition: transform var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-task-chip.is-open {
+  transform: translateY(0);
+}
+.aa-task-chip.is-open .aa-task-chip-chev {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+/* Plus chip — add a property that isn't set yet (Due, Goal). Quiet, dashed. */
+.aa-task-chip--add {
+  background: transparent;
+  color: var(--aa-text-4);
+  border: 1px dashed var(--aa-border-strong);
+}
+.aa-task-chip--add:hover {
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal-cta);
+  background: var(--aa-teal-soft);
+}
+
+/* Done-task state — static chips (no hover, no chev, no editor). */
+.aa-task-chip--static {
+  cursor: default;
+}
+.aa-task-chip--static:hover {
+  transform: none;
+}
+
+/* ---- Popover — anchored under the chip. One property at a time. ---- */
+.aa-task-chip-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow: var(--aa-shadow-md);
+  padding: 6px;
+  min-width: 200px;
+  z-index: 20;
+  /* Entrance — calm, not bouncy. */
+  animation: aa-chip-popover-in var(--aa-dur-base) var(--aa-ease-out) both;
+}
+@keyframes aa-chip-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.aa-task-chip-popover__title {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  padding: 6px 10px 4px;
+}
+
+.aa-task-chip-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--aa-radius-sm);
+  font-family: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-2);
+  cursor: pointer;
+  transition: background var(--aa-dur-fast) var(--aa-ease-out);
+}
+.aa-task-chip-opt:hover {
+  background: var(--aa-surface-muted);
+}
+.aa-task-chip-opt.active {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+.aa-task-chip-opt-hint {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-regular);
+  color: var(--aa-text-4);
+  margin-left: var(--aa-space-sm);
+}
+.aa-task-chip-check {
+  opacity: 0;
+  color: var(--aa-teal-cta);
+  flex-shrink: 0;
+}
+.aa-task-chip-opt.active .aa-task-chip-check {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-task-chip,
+  .aa-task-chip-chev,
+  .aa-task-chip-popover {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  .aa-task-chip:hover,
+  .aa-task-chip.is-open {
+    transform: none !important;
+  }
+}

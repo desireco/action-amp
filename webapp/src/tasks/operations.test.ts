@@ -809,8 +809,137 @@ describe("updateTaskDetails", () => {
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
       data: { description: "Email Sarah", content: "Prep notes" },
-      select: { id: true, description: true, content: true },
+      select: {
+        id: true,
+        description: true,
+        content: true,
+        priority: true,
+        size: true,
+        status: true,
+        dueDate: true,
+        projectId: true,
+        goalId: true,
+      },
     });
+  });
+
+  // ---- Structural-field live edits (from the chip popovers) ----
+
+  it("writes priority alone when only priority is passed", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.update.mockResolvedValue({ id: "task-1", priority: "IMPORTANT" });
+    await updateTaskDetails(
+      { taskId: "task-1", priority: "IMPORTANT" },
+      m.context,
+    );
+    expect(m.entities.Task.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { priority: "IMPORTANT" } }),
+    );
+  });
+
+  it("writes size alone when only size is passed", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    await updateTaskDetails({ taskId: "task-1", size: "XL" }, m.context);
+    expect(m.entities.Task.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { size: "XL" } }),
+    );
+  });
+
+  it("writes status alone when only status is passed", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    await updateTaskDetails(
+      { taskId: "task-1", status: "TODAY" },
+      m.context,
+    );
+    expect(m.entities.Task.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "TODAY" } }),
+    );
+  });
+
+  it("writes dueDate alone (null clears it)", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    await updateTaskDetails(
+      { taskId: "task-1", dueDate: null },
+      m.context,
+    );
+    expect(m.entities.Task.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { dueDate: null } }),
+    );
+  });
+
+  it("rejects a project in a different Lens", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      userId: "user-1",
+      lensId: "lens-a",
+      projectId: null,
+      goalId: null,
+    });
+    m.entities.Project.findUnique.mockResolvedValue({
+      userId: "user-1",
+      lensId: "lens-b",
+    });
+    await expect(
+      updateTaskDetails(
+        { taskId: "task-1", projectId: "p-other-lens" },
+        m.context,
+      ),
+    ).rejects.toThrow(/same Lens/i);
+  });
+
+  it("assigning a project clears the direct goal link (one-parent rule)", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      userId: "user-1",
+      lensId: "lens-a",
+      projectId: null,
+      goalId: "g-old",
+    });
+    m.entities.Project.findUnique.mockResolvedValue({
+      userId: "user-1",
+      lensId: "lens-a",
+    });
+    await updateTaskDetails(
+      { taskId: "task-1", projectId: "p1" },
+      m.context,
+    );
+    expect(m.entities.Task.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ projectId: "p1", goalId: null }),
+      }),
+    );
+  });
+
+  it("rejects a goal on a task that already has a project", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      userId: "user-1",
+      lensId: "lens-a",
+      projectId: "p1",
+      goalId: null,
+    });
+    m.entities.Goal.findUnique.mockResolvedValue({
+      userId: "user-1",
+      lensId: "lens-a",
+    });
+    await expect(
+      updateTaskDetails({ taskId: "task-1", goalId: "g1" }, m.context),
+    ).rejects.toThrow(/both a project and a goal/i);
+  });
+
+  it("does NOT enforce title-required when description is omitted", async () => {
+    // A structural-only edit (no description) must not throw on title.
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    await updateTaskDetails(
+      { taskId: "task-1", priority: "LOW" },
+      m.context,
+    );
+    expect(m.entities.Task.update).toHaveBeenCalled();
   });
 });
 

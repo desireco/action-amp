@@ -462,30 +462,140 @@ export const updateTaskContent = (async (args, context) => {
 
 // Edit the core task fields shown on the task detail page. This is the full
 // "edit task" path; list rows should navigate here instead of editing notes.
+// Title + notes arrive together from the Save footer (buffered prose), while
+// structural fields (priority/size/status/dueDate/projectId/goalId) arrive
+// one at a time from the chip popovers (live edits). Any subset of the
+// structural fields may be present; only the passed ones are written.
+// Server enforces: title required (when description is present + non-empty
+// after trim — but if a structural-only call omits description, we skip the
+// title check), one-parent rule (project XOR goal), and same-Lens invariant
+// on project/goal reassignment.
 export const updateTaskDetails = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
   const task = await context.entities.Task.findUnique({
     where: { id: args.taskId },
-    select: { userId: true },
+    select: { userId: true, lensId: true, projectId: true, goalId: true },
   });
   if (!task || task.userId !== context.user.id) {
     throw new Error("Task not found.");
   }
-  const description = args.description.trim();
-  if (!description) {
-    throw new Error("Task title is required.");
+
+  // Build the write payload from whichever fields are present.
+  const data: Record<string, unknown> = {};
+
+  if (args.description !== undefined) {
+    const description = args.description.trim();
+    if (!description) {
+      throw new Error("Task title is required.");
+    }
+    data.description = description;
   }
-  const content = args.content.trim() || null;
+  if (args.content !== undefined) {
+    data.content = args.content.trim() || null;
+  }
+  if (args.priority !== undefined) {
+    data.priority = args.priority;
+  }
+  if (args.size !== undefined) {
+    data.size = args.size;
+  }
+  if (args.status !== undefined) {
+    data.status = args.status;
+  }
+  if (args.dueDate !== undefined) {
+    data.dueDate = args.dueDate;
+  }
+
+  // Project / goal reassignment — enforce one-parent + same-Lens invariants.
+  // Resolve the next-state projectId / goalId (use the new value if passed,
+  // otherwise carry the existing one) so we can validate the rule against the
+  // post-write state, not just the delta.
+  const nextProjectId =
+    args.projectId === undefined ? task.projectId : args.projectId;
+  const nextGoalId = args.goalId === undefined ? task.goalId : args.goalId;
+
+  if (args.projectId !== undefined) {
+    if (args.projectId === null) {
+      data.projectId = null;
+    } else {
+      const project = await context.entities.Project.findUnique({
+        where: { id: args.projectId },
+        select: { userId: true, lensId: true },
+      });
+      if (!project || project.userId !== context.user.id) {
+        throw new Error("Project not found.");
+      }
+      if (project.lensId !== task.lensId) {
+        throw new Error("Project must be in the same Lens.");
+      }
+      data.projectId = args.projectId;
+      // One-parent rule: a task with a project clears its direct goal link
+      // (the project carries the goal). Mirrors createTask / updateTask.
+      data.goalId = null;
+    }
+  }
+  if (args.goalId !== undefined) {
+    if (args.goalId === null) {
+      data.goalId = null;
+    } else {
+      // A task can't hold both a project and a goal directly.
+      if (nextProjectId !== null) {
+        throw new Error("A task can't have both a project and a goal.");
+      }
+      const goal = await context.entities.Goal.findUnique({
+        where: { id: args.goalId },
+        select: { userId: true, lensId: true },
+      });
+      if (!goal || goal.userId !== context.user.id) {
+        throw new Error("Goal not found.");
+      }
+      if (goal.lensId !== task.lensId) {
+        throw new Error("Goal must be in the same Lens.");
+      }
+      data.goalId = args.goalId;
+    }
+  }
+
   return await context.entities.Task.update({
     where: { id: args.taskId },
-    data: { description, content },
-    select: { id: true, description: true, content: true },
+    data,
+    select: {
+      id: true,
+      description: true,
+      content: true,
+      priority: true,
+      size: true,
+      status: true,
+      dueDate: true,
+      projectId: true,
+      goalId: true,
+    },
   });
 }) satisfies UpdateTaskDetails<
-  { taskId: string; description: string; content: string },
-  { id: string; description: string; content: string | null }
+  {
+    taskId: string;
+    description?: string;
+    content?: string;
+    priority?: "LOW" | "NORMAL" | "IMPORTANT";
+    size?: "S" | "M" | "L" | "XL";
+    status?: "TODAY" | "UPCOMING" | "SOMEDAY";
+    dueDate?: Date | null;
+    projectId?: string | null;
+    goalId?: string | null;
+  },
+  {
+    id: string;
+    description: string;
+    content: string | null;
+    priority: string;
+    size: string;
+    status: string;
+    dueDate: Date | null;
+    projectId: string | null;
+    goalId: string | null;
+  }
 >;
 
 // Complete a task from focus mode. Requires startedAt != null (focus is only
