@@ -80,3 +80,10 @@
   font-size: var(--aa-text-base);
   text-align: center;
 }
+
+/* Reduced motion — kill the item hover transition. */
+@media (prefers-reduced-motion: reduce) {
+  .aa-picker-sheet__item {
+    transition-duration: 0.01ms !important;
+  }
+}

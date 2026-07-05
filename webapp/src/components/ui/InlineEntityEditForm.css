@@ -99,3 +99,11 @@
   justify-content: flex-end;
   gap: var(--aa-space-xs);
 }
+
+/* Reduced motion — kill the focus-state transitions on the inputs. */
+@media (prefers-reduced-motion: reduce) {
+  .aa-inline-edit__name,
+  .aa-inline-edit__desc {
+    transition-duration: 0.01ms !important;
+  }
+}

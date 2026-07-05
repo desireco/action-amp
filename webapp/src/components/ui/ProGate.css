@@ -112,6 +112,14 @@
   font-weight: var(--aa-weight-medium);
 }
 
+/* Reduced motion — kill the trigger hover transition. The caret's static
+   rotate(180deg) stays; it's not motion, just orientation. */
+@media (prefers-reduced-motion: reduce) {
+  .aa-progate-trigger {
+    transition-duration: 0.01ms !important;
+  }
+}
+
 .aa-progate-trigger__cta {
   color: var(--aa-teal-cta);
 }

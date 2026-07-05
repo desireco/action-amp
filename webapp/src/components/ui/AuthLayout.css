@@ -283,3 +283,13 @@
     border-radius: var(--aa-radius-lg);
   }
 }
+
+/* Reduced motion — kill the focus + Google-button transitions. */
+@media (prefers-reduced-motion: reduce) {
+  .aa-auth-card input[type="email"],
+  .aa-auth-card input[type="password"],
+  .aa-auth-card input[type="text"],
+  .aa-auth-google {
+    transition-duration: 0.01ms !important;
+  }
+}
