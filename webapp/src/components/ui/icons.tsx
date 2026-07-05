@@ -149,3 +149,22 @@ export function ArrowRightIcon(p: IconProps) {
     </svg>
   );
 }
+
+/* Hash — tag chip prefix */
+export function HashIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M3 6h10M3 10h10M6.5 2l-1.5 12M11 2l-1.5 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/* Box — project chip prefix */
+export function BoxIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M2 5l6-3 6 3v6l-6 3-6-3V5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M2 5l6 3 6-3M8 8v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

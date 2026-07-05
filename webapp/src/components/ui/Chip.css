@@ -18,6 +18,13 @@
   padding: 1px 6px;
 }
 
+/* Leading icon — sized to match small text, inherits chip color */
+.aa-chip__icon {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
 /* Clickable */
 .aa-chip--clickable {
   cursor: pointer;
