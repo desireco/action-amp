@@ -36,6 +36,43 @@ describe("FocusMode", () => {
       renderInContext(<FocusMode task={BASE_TASK} onClose={() => {}} />);
       expect(screen.getByText(/Follow up on the launch retro/)).toBeInTheDocument();
     });
+
+    it("can save edited durable task content", async () => {
+      const onSaveContent = vi.fn().mockResolvedValue(undefined);
+      renderInContext(
+        <FocusMode task={BASE_TASK} onClose={() => {}} onSaveContent={onSaveContent} />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /edit notes/i }));
+      const editor = screen.getByLabelText(/task notes/i) as HTMLTextAreaElement;
+      fireEvent.change(editor, { target: { value: "  Bring the contract notes  " } });
+      fireEvent.click(screen.getByRole("button", { name: /save notes/i }));
+
+      await waitFor(() =>
+        expect(onSaveContent).toHaveBeenCalledWith("Bring the contract notes"),
+      );
+    });
+
+    it("can add durable task content when none exists yet", async () => {
+      const onSaveContent = vi.fn().mockResolvedValue(undefined);
+      renderInContext(
+        <FocusMode
+          task={{ ...BASE_TASK, content: null }}
+          onClose={() => {}}
+          onSaveContent={onSaveContent}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /add notes/i }));
+      fireEvent.change(screen.getByLabelText(/task notes/i), {
+        target: { value: "Opening call bullets" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /save notes/i }));
+
+      await waitFor(() =>
+        expect(onSaveContent).toHaveBeenCalledWith("Opening call bullets"),
+      );
+    });
   });
 
   // ---- Flow 1: the activity thread + composer ----

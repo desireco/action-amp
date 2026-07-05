@@ -19,6 +19,7 @@ import {
   startTask,
   pauseTask,
   addTaskUpdate,
+  updateTaskContent,
   completeTaskFromFocus,
 } from "./operations";
 import { mockContext } from "../test/mockContext";
@@ -479,6 +480,58 @@ describe("addTaskUpdate", () => {
     });
     // Never touches task status, startedAt, completedAt, or filing fields.
     expect(m.entities.Task.update).not.toHaveBeenCalled();
+  });
+});
+
+// ----------------------------------------------------------------
+// updateTaskContent — edit the durable task notes/body
+// ----------------------------------------------------------------
+describe("updateTaskContent", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(
+      updateTaskContent({ taskId: "task-1", content: "hello" }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("rejects a task that belongs to another user", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
+    await expect(
+      updateTaskContent({ taskId: "task-1", content: "hello" }, m.context),
+    ).rejects.toThrow(/not found/i);
+  });
+
+  it("trims and saves durable task content", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.update.mockResolvedValue({ id: "task-1", content: "Prep notes" });
+
+    const result = await updateTaskContent(
+      { taskId: "task-1", content: "  Prep notes  " },
+      m.context,
+    );
+
+    expect(result).toEqual({ id: "task-1", content: "Prep notes" });
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { content: "Prep notes" },
+      select: { id: true, content: true },
+    });
+  });
+
+  it("clears durable task content when saved as whitespace", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.update.mockResolvedValue({ id: "task-1", content: null });
+
+    await updateTaskContent({ taskId: "task-1", content: "   \n  " }, m.context);
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { content: null },
+      select: { id: true, content: true },
+    });
   });
 });
 

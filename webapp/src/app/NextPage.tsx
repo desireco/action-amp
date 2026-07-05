@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "wasp/client/operations";
-import { getTopTask, getTask, snoozeTask, startTask, pauseTask, addTaskUpdate, completeTaskFromFocus } from "wasp/client/operations";
+import { getTopTask, getTask, snoozeTask, startTask, pauseTask, addTaskUpdate, updateTaskContent, completeTaskFromFocus } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { NextCard, FocusMode, SnoozeSheet, type FocusTask, type SnoozePreset } from "../components/ui";
 import { useActiveLens } from "./lensContext";
@@ -56,6 +56,12 @@ export function NextPage() {
     await addTaskUpdate({ taskId: focusTaskId, body });
     // The task thread is rendered from the getTask result; refresh it so the
     // new note appears at the bottom of the timeline.
+    queryClient.invalidateQueries({ queryKey: ["getTask"] });
+  };
+
+  const handleSaveContent = async (content: string) => {
+    if (!focusTaskId) return;
+    await updateTaskContent({ taskId: focusTaskId, content });
     queryClient.invalidateQueries({ queryKey: ["getTask"] });
   };
 
@@ -169,6 +175,7 @@ export function NextPage() {
             handleComplete();
           }}
           onAddNote={handleAddNote}
+          onSaveContent={handleSaveContent}
         />
       )}
     </>
