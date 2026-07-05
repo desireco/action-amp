@@ -49,7 +49,7 @@ describe("getAppData — happy path", () => {
 
     expect(result).toEqual({
       lenses,
-      counts: { inbox: 5, today: 3, projects: 7, goals: 2 },
+      counts: { inbox: 5, today: 3, upcoming: 3, projects: 7, goals: 2 },
       todayByLens: { "lens-work": 3, "lens-me": 1 },
     });
 
