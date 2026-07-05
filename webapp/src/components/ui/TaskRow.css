@@ -13,7 +13,7 @@
 }
 
 .aa-task-row--surface {
-  padding: var(--aa-space-md);
+  padding: var(--aa-space-sm) var(--aa-space-md);
   background: var(--aa-bg);
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-sm);
