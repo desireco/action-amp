@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import {
   getTopTask,
@@ -31,9 +31,12 @@ import "./NextPage.css";
  */
 export function NextPage() {
   const lens = useActiveLens();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { permalink } = useParams<{ permalink: string }>();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const selectedTaskToken = searchParams.get("task");
+  const queryTaskToken = searchParams.get("task");
+  const selectedTaskToken = permalink ?? queryTaskToken;
   const { data: topTask, isLoading } = useQuery(
     getTopTask,
     lens ? { lensId: lens.id } : undefined,
@@ -47,6 +50,14 @@ export function NextPage() {
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [snoozeOpen, setSnoozeOpen] = useState(false);
   const task = selectedTaskToken ? selectedTask : topTask;
+
+  useEffect(() => {
+    if (!permalink && queryTaskToken) {
+      navigate(`/app/today/${encodeURIComponent(queryTaskToken)}`, {
+        replace: true,
+      });
+    }
+  }, [navigate, permalink, queryTaskToken]);
 
   // Focus mode shows the activity thread, which the topTask query doesn't
   // include. Fetch the full task (with updates) only while focus is open so we
@@ -97,7 +108,7 @@ export function NextPage() {
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-    if (selectedTaskToken) setSearchParams({}, { replace: true });
+    if (selectedTaskToken) navigate("/app/today", { replace: true });
   };
 
   // Start / Pause the "Now" state. Started tasks persist as #1 across nav.

@@ -107,6 +107,7 @@ export default app({
     route("InboxRoute", "/app/inbox", page(InboxPage)),
     route("InboxTriageRoute", "/app/inbox/review", page(TriagePage)),
     route("TodayRoute", "/app/today", page(TodayPage)),
+    route("TodayTaskRoute", "/app/today/:permalink", page(NextPage)),
     route("UpcomingRoute", "/app/upcoming", page(UpcomingPage)),
     route("SomedayRoute", "/app/someday", page(SomedayPage)),
     route("ProjectsRoute", "/app/projects", page(ProjectsPage)),

@@ -123,7 +123,7 @@ export function TodayPage() {
     });
   };
   const pickTask = (task: TaskRowTask) => {
-    navigate(`/app?task=${encodeURIComponent(task.permalink ?? task.id)}`);
+    navigate(`/app/today/${encodeURIComponent(task.permalink ?? task.id)}`);
   };
 
   // Note: no early empty-state return — the header (with the See-upcoming
