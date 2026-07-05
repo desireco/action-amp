@@ -70,7 +70,7 @@ export function NextPage() {
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
     queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-    if (openFocus) navigate("/focus");
+    if (openFocus) navigate("/app/focus");
   };
   const handlePause = async () => {
     if (!task) return;
@@ -160,7 +160,7 @@ export function NextPage() {
         onPause={handlePause}
         onDo={() => {
           if (isNow) {
-            navigate("/focus");
+            navigate("/app/focus");
             return;
           }
           void handleStart(true);

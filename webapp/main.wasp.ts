@@ -105,7 +105,7 @@ export default app({
   spec: [
     route("LandingRoute", "/", page(LandingPage, { authRequired: false })),
     route("AppRoute", "/app", page(NextPage)),
-    route("FocusRoute", "/focus", page(FocusPage)),
+    route("FocusRoute", "/app/focus", page(FocusPage)),
     route("InboxRoute", "/app/inbox", page(InboxPage)),
     route("InboxTriageRoute", "/app/inbox/review", page(TriagePage)),
     route("TodayRoute", "/app/today", page(TodayPage)),
