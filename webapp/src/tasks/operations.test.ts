@@ -20,6 +20,7 @@ import {
   pauseTask,
   addTaskUpdate,
   updateTaskContent,
+  updateTaskDetails,
   completeTaskFromFocus,
 } from "./operations";
 import { mockContext } from "../test/mockContext";
@@ -531,6 +532,60 @@ describe("updateTaskContent", () => {
       where: { id: "task-1" },
       data: { content: null },
       select: { id: true, content: true },
+    });
+  });
+});
+
+// ----------------------------------------------------------------
+// updateTaskDetails — edit task title + notes from the detail page
+// ----------------------------------------------------------------
+describe("updateTaskDetails", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(
+      updateTaskDetails({ taskId: "task-1", description: "hello", content: "" }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("rejects a task that belongs to another user", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
+    await expect(
+      updateTaskDetails({ taskId: "task-1", description: "hello", content: "" }, m.context),
+    ).rejects.toThrow(/not found/i);
+  });
+
+  it("requires a non-empty task title", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    await expect(
+      updateTaskDetails({ taskId: "task-1", description: "   ", content: "" }, m.context),
+    ).rejects.toThrow(/title is required/i);
+  });
+
+  it("trims and saves title plus durable task content", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.update.mockResolvedValue({
+      id: "task-1",
+      description: "Email Sarah",
+      content: "Prep notes",
+    });
+
+    const result = await updateTaskDetails(
+      { taskId: "task-1", description: "  Email Sarah  ", content: "  Prep notes  " },
+      m.context,
+    );
+
+    expect(result).toEqual({
+      id: "task-1",
+      description: "Email Sarah",
+      content: "Prep notes",
+    });
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { description: "Email Sarah", content: "Prep notes" },
+      select: { id: true, description: true, content: true },
     });
   });
 });

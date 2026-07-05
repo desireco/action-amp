@@ -456,7 +456,7 @@ export function DesignSystemPage() {
         </Sec>
 
         {/* TASK ROW */}
-        <Sec id="task-row" title="Task Row" desc="Reusable task-list element with meta chips, inline task update, and optional right-side actions.">
+        <Sec id="task-row" title="Task Row" desc="Reusable task-list element with meta chips, optional notes preview, and right-side actions.">
           <Sub h="Plain row">
             <ul className="ds-task-row-demo">
               <TaskRow
@@ -469,24 +469,22 @@ export function DesignSystemPage() {
               />
             </ul>
           </Sub>
-          <Sub h="Surface row with actions">
+          <Sub h="List row with actions">
             <div className="ds-task-row-demo">
               <TaskRow
                 as="div"
-                variant="surface"
+                variant="list"
                 task={{
-                  id: "task-row-surface",
+                  id: "task-row-list",
                   description: "I want to work on",
                   content: "I want to work on executing projects",
                   project: { id: "project", name: "General" },
                   dueDate: new Date(),
                   size: "M",
                 }}
-                notesToggleLabel="Update task"
-                notesTogglePlacement="actions"
-                onSaveContent={() => {}}
+                showContent
               >
-                <Button variant="ghost" size="sm">Not today</Button>
+                <Button variant="ghost" size="sm">Edit task</Button>
               </TaskRow>
             </div>
           </Sub>

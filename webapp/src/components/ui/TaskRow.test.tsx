@@ -50,6 +50,25 @@ describe("TaskRow", () => {
       expect(row.tagName).toBe("DIV");
       expect(row).toHaveClass("aa-task-row--surface");
     });
+
+    it("can render the unboxed list variant and show content without editing", () => {
+      const { container } = renderInContext(
+        <TaskRow
+          as="div"
+          variant="list"
+          task={{ ...BASE_TASK, content: "Confirm the latest number." }}
+          showContent
+        />,
+      );
+      const row = container.querySelector(".aa-task-row")!;
+      expect(row).toHaveClass("aa-task-row--list");
+      expect(
+        screen.getByText("Confirm the latest number."),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /edit notes|add notes/i }),
+      ).toBeNull();
+    });
   });
 
   describe("row click (onOpen)", () => {

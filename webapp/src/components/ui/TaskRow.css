@@ -30,6 +30,18 @@
   transform: translateY(-1px);
 }
 
+.aa-task-row--list {
+  align-items: center;
+  padding: 10px var(--aa-space-sm);
+  border-bottom: 1px solid var(--aa-border);
+  background: transparent;
+  border-radius: var(--aa-radius-sm);
+}
+
+.aa-task-row--list:hover {
+  background: var(--aa-surface-muted);
+}
+
 .aa-task-row:last-child {
   border-bottom: none;
 }
@@ -201,6 +213,11 @@
 
 @media (max-width: 720px) {
   .aa-task-row--surface {
+    flex-direction: column;
+  }
+
+  .aa-task-row--list {
+    align-items: stretch;
     flex-direction: column;
   }
 

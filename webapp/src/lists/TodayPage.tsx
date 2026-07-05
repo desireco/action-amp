@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import {
   getTasks,
   getDoneToday,
   updateTaskStatus,
-  updateTaskContent,
+  submitFeedback,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -17,6 +17,7 @@ import {
 } from "../components/ui";
 import { GroupedList, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
+import { FeedbackDialog } from "../app/FeedbackDialog";
 import { ListEmpty } from "./ListShell";
 import "./ListShell.css";
 import "./TodayPage.css";
@@ -31,6 +32,7 @@ const TODAY_CAP = 5;
 export function TodayPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
@@ -107,12 +109,7 @@ export function TodayPage() {
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
   };
-  const handleSaveTaskContent = async (task: TaskRowTask, content: string) => {
-    await updateTaskContent({ taskId: task.id, content });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-    queryClient.invalidateQueries({ queryKey: ["getDoneToday"] });
-    queryClient.invalidateQueries({ queryKey: ["getTask"] });
-  };
+  const [feedbackTask, setFeedbackTask] = useState<TaskRowTask | null>(null);
 
   const overCapacity = (tasks?.length ?? 0) > TODAY_CAP;
   const overflow = useMemo(() => (tasks ?? []).slice(TODAY_CAP), [tasks]);
@@ -177,10 +174,10 @@ export function TodayPage() {
                 <li key={task.id} className="aa-grouped__item">
                   <TaskRow
                     as="div"
-                    variant="surface"
+                    variant="list"
                     task={task}
+                    showContent
                     onOpen={() => navigate(`/app/tasks/${task.id}`)}
-                    onSaveContent={handleSaveTaskContent}
                   >
                     <Button
                       variant="secondary"
@@ -222,14 +219,19 @@ export function TodayPage() {
                 renderItem={(task) => (
                   <TaskRow
                     as="div"
-                    variant="surface"
+                    variant="list"
                     key={task.id}
                     task={task}
+                    showContent
                     onOpen={() => navigate(`/app/tasks/${task.id}`)}
-                    onSaveContent={handleSaveTaskContent}
-                    notesToggleLabel="Update task"
-                    notesTogglePlacement="actions"
                   >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/app/tasks/${task.id}`)}
+                    >
+                      Edit task
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -253,13 +255,11 @@ export function TodayPage() {
                       <li key={task.id} className="aa-grouped__item">
                         <TaskRow
                           as="div"
-                          variant="surface"
+                          variant="list"
                           task={task}
                           muted
+                          showContent
                           onOpen={() => navigate(`/app/tasks/${task.id}`)}
-                          onSaveContent={handleSaveTaskContent}
-                          notesToggleLabel="Update task"
-                          notesTogglePlacement="actions"
                         />
                       </li>
                     ))}
@@ -293,19 +293,42 @@ export function TodayPage() {
               renderItem={(task) => (
                 <TaskRow
                   as="div"
-                  variant="surface"
+                  variant="list"
                   key={task.id}
                   task={task}
                   muted
+                  showContent
                   onOpen={() => navigate(`/app/tasks/${task.id}`)}
-                  onSaveContent={handleSaveTaskContent}
-                  notesToggleLabel="Update task"
-                  notesTogglePlacement="actions"
-                />
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFeedbackTask(task)}
+                  >
+                    Leave feedback
+                  </Button>
+                </TaskRow>
               )}
             />
           )}
         </section>
+      )}
+      {feedbackTask && (
+        <FeedbackDialog
+          onClose={() => setFeedbackTask(null)}
+          onSubmit={async (message) => {
+            await submitFeedback({
+              message: `Done task feedback: ${feedbackTask.description}\n\n${message}`,
+              route: location.pathname,
+              section: "work",
+              lens: lens
+                ? { id: lens.id, name: lens.name, color: lens.color }
+                : null,
+              userAgent:
+                typeof navigator === "undefined" ? null : navigator.userAgent,
+            });
+          }}
+        />
       )}
     </div>
   );

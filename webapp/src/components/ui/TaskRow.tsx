@@ -26,13 +26,14 @@ export interface TaskRowTask {
 interface TaskRowProps {
   task: TaskRowTask;
   as?: "li" | "div";
-  variant?: "plain" | "surface";
+  variant?: "plain" | "surface" | "list";
   /** Lighter visual weight (for Someday / Done) */
   muted?: boolean;
   /** Open the task detail on row click */
   onOpen?: (task: TaskRowTask) => void;
   /** Save durable task notes/body inline */
   onSaveContent?: (task: TaskRowTask, content: string) => Promise<void> | void;
+  showContent?: boolean;
   notesToggleLabel?: string;
   notesTogglePlacement?: "inline" | "actions";
   className?: string;
@@ -56,6 +57,7 @@ export function TaskRow({
   muted = false,
   onOpen,
   onSaveContent,
+  showContent = false,
   notesToggleLabel,
   notesTogglePlacement = "inline",
   className = "",
@@ -119,6 +121,7 @@ export function TaskRow({
       className={[
         "aa-task-row",
         variant === "surface" ? "aa-task-row--surface" : "",
+        variant === "list" ? "aa-task-row--list" : "",
         done ? "aa-task-row--done" : "",
         muted ? "aa-task-row--muted" : "",
         clickableOnRoot ? "aa-task-row--clickable" : "",
@@ -178,13 +181,13 @@ export function TaskRow({
             )}
           </div>
         )}
-        {hasInlineNotes && (
+        {(hasInlineNotes || showContent) && (
           <div
             className="aa-task-row__notes"
             onClick={stopRowClick}
             onKeyDown={stopRowKey}
           >
-            {editingNotes ? (
+            {hasInlineNotes && editingNotes ? (
               <>
                 <textarea
                   className="aa-task-row__notes-editor"
@@ -221,7 +224,9 @@ export function TaskRow({
                 {content && (
                   <p className="aa-task-row__notes-preview">{content}</p>
                 )}
-                {notesTogglePlacement === "inline" && notesToggle}
+                {hasInlineNotes &&
+                  notesTogglePlacement === "inline" &&
+                  notesToggle}
               </>
             )}
           </div>

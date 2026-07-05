@@ -1,4 +1,4 @@
-import type { GetTask, GetTasks, GetDoneToday, GetTopTask, SnoozeTask, StartTask, PauseTask, ToggleTaskDone, UpdateTaskStatus, AddTaskUpdate, UpdateTaskContent, CompleteTaskFromFocus } from "wasp/server/operations";
+import type { GetTask, GetTasks, GetDoneToday, GetTopTask, SnoozeTask, StartTask, PauseTask, ToggleTaskDone, UpdateTaskStatus, AddTaskUpdate, UpdateTaskContent, UpdateTaskDetails, CompleteTaskFromFocus } from "wasp/server/operations";
 import { assertLensAllowed } from "../billing/entitlementHttp";
 
 /**
@@ -367,6 +367,34 @@ export const updateTaskContent = (async (args, context) => {
 }) satisfies UpdateTaskContent<
   { taskId: string; content: string },
   { id: string; content: string | null }
+>;
+
+// Edit the core task fields shown on the task detail page. This is the full
+// "edit task" path; list rows should navigate here instead of editing notes.
+export const updateTaskDetails = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.taskId },
+    select: { userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+  const description = args.description.trim();
+  if (!description) {
+    throw new Error("Task title is required.");
+  }
+  const content = args.content.trim() || null;
+  return await context.entities.Task.update({
+    where: { id: args.taskId },
+    data: { description, content },
+    select: { id: true, description: true, content: true },
+  });
+}) satisfies UpdateTaskDetails<
+  { taskId: string; description: string; content: string },
+  { id: string; description: string; content: string | null }
 >;
 
 // Complete a task from focus mode. Requires startedAt != null (focus is only
