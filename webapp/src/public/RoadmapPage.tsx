@@ -32,10 +32,10 @@ export function RoadmapPage() {
           </p>
           <div className="aa-roadmap-stats">
             <span className="aa-roadmap-stat">
-              <strong>227</strong> commits
+              <strong>249</strong> commits
             </span>
             <span className="aa-roadmap-stat">
-              <strong>6</strong> major trunks
+              <strong>7</strong> major trunks
             </span>
             <span className="aa-roadmap-stat">Jun 16 → today</span>
           </div>
@@ -188,7 +188,7 @@ export function RoadmapPage() {
                   <span className="aa-roadmap-dot aa-roadmap-dot--planned" />
                   <span>
                     <span className="aa-roadmap-item-name">
-                      Goal & project lifecycle
+                      Breadcrumb navigation
                     </span>
                   </span>
                 </li>
@@ -232,6 +232,11 @@ export function RoadmapPage() {
             <span className="aa-roadmap-rule" />
           </div>
           <div className="aa-roadmap-timeline">
+            <ShippedEntry
+              date="Jul 4"
+              trunk="Planning + triage polish"
+              summary="Goals and projects gained calmer lifecycle controls, shared record surfaces, and better task-row composition. Triage now starts with Classify and uses a resolved Project as the visible destination."
+            />
             <ShippedEntry
               date="Jul 4"
               trunk="Capture grammar + roadmap cleanup"
