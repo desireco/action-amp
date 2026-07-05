@@ -83,6 +83,16 @@
   outline: none;
 }
 
+.aa-task-readonly-title {
+  margin: 0;
+  padding: 0 0 var(--aa-space-md);
+  border-bottom: 1px solid var(--aa-border-strong);
+  color: var(--aa-text);
+  font-size: 2.6rem;
+  font-weight: 760;
+  line-height: 1.08;
+}
+
 .aa-task-edit__chips {
   display: flex;
   flex-wrap: wrap;
@@ -136,6 +146,35 @@
   border-color: var(--aa-teal);
   outline: 2px solid var(--aa-teal);
   outline-offset: 2px;
+}
+
+.aa-task-done-panel {
+  display: grid;
+  gap: var(--aa-space-lg);
+  padding: var(--aa-space-lg);
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-task-done-panel h2 {
+  margin: 0 0 var(--aa-space-xs);
+  color: var(--aa-text);
+  font-size: 1.05rem;
+}
+
+.aa-task-done-panel p {
+  margin: 0;
+  color: var(--aa-text-2);
+  line-height: 1.55;
+}
+
+.aa-task-done-panel__notes {
+  display: grid;
+  gap: var(--aa-space-sm);
+  padding-top: var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
 }
 
 .aa-task-edit__actions {
@@ -216,6 +255,10 @@
   }
 
   .aa-task-input {
+    font-size: 2rem;
+  }
+
+  .aa-task-readonly-title {
     font-size: 2rem;
   }
 

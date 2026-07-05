@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams, Link } from "react-router";
-import { useQuery, getTask, updateTaskDetails } from "wasp/client/operations";
+import {
+  useQuery,
+  getTask,
+  submitFeedback,
+  updateTaskDetails,
+} from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Chip } from "../components/ui";
+import { FeedbackDialog } from "../app/FeedbackDialog";
+import { useActiveLens } from "../app/lensContext";
 import "./TaskDetailPage.css";
 
 /**
@@ -14,6 +21,7 @@ import "./TaskDetailPage.css";
  * model lands.
  */
 export function TaskDetailPage() {
+  const lens = useActiveLens();
   const { permalink } = useParams<{ permalink: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,6 +37,7 @@ export function TaskDetailPage() {
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const state = location.state as { returnTo?: unknown } | null;
   const returnTo =
     typeof state?.returnTo === "string" && state.returnTo.startsWith("/app")
@@ -44,6 +53,7 @@ export function TaskDetailPage() {
 
   const canSave =
     Boolean(task) &&
+    !task!.isDone &&
     description.trim().length > 0 &&
     !saving &&
     (description.trim() !== task!.description ||
@@ -115,14 +125,25 @@ export function TaskDetailPage() {
               <span>{task.isDone ? "Done task" : "Edit task"}</span>
               <span>Added {createdLabel}</span>
             </div>
-            <input
-              id="task-title"
-              className="aa-task-input"
-              aria-label="Task title"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
+            {task.isDone ? (
+              <h1 id="task-title" className="aa-task-readonly-title">
+                {task.description}
+              </h1>
+            ) : (
+              <input
+                id="task-title"
+                className="aa-task-input"
+                aria-label="Task title"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+            )}
             <div className="aa-task-edit__chips">
+              {task.isDone && (
+                <Chip variant="teal" small>
+                  done
+                </Chip>
+              )}
               <Chip variant={task.status === "TODAY" ? "teal" : "muted"} small>
                 {task.status?.toLowerCase() ?? "task"}
               </Chip>
@@ -154,17 +175,42 @@ export function TaskDetailPage() {
             </div>
           </section>
 
-          <section className="aa-task-edit__notes" aria-labelledby="task-notes">
-            <label className="aa-task-label" id="task-notes">
-              Notes
-            </label>
-            <textarea
-              className="aa-task-textarea"
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              placeholder="Add details, links, or next steps."
-            />
-          </section>
+          {task.isDone ? (
+            <section
+              className="aa-task-done-panel"
+              aria-labelledby="task-done-title"
+            >
+              <div>
+                <h2 id="task-done-title">Completed tasks are closed.</h2>
+                <p>
+                  This task is kept as a record of what got done. If something
+                  felt wrong or should be improved, leave feedback instead of
+                  editing the task.
+                </p>
+              </div>
+              {content && (
+                <div className="aa-task-done-panel__notes">
+                  <span className="aa-task-label">Notes</span>
+                  <p>{content}</p>
+                </div>
+              )}
+            </section>
+          ) : (
+            <section
+              className="aa-task-edit__notes"
+              aria-labelledby="task-notes"
+            >
+              <label className="aa-task-label" id="task-notes">
+                Notes
+              </label>
+              <textarea
+                className="aa-task-textarea"
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+                placeholder="Add details, links, or next steps."
+              />
+            </section>
+          )}
 
           {saveError && <p className="aa-task-edit__err">{saveError}</p>}
 
@@ -174,13 +220,41 @@ export function TaskDetailPage() {
               variant="secondary"
               onClick={() => navigate(returnTo)}
             >
-              Cancel
+              {task.isDone ? "Back" : "Cancel"}
             </Button>
-            <Button type="submit" variant="primary" disabled={!canSave}>
-              {saving ? "Saving" : "Save task"}
-            </Button>
+            {task.isDone ? (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => setFeedbackOpen(true)}
+              >
+                Leave feedback
+              </Button>
+            ) : (
+              <Button type="submit" variant="primary" disabled={!canSave}>
+                {saving ? "Saving" : "Save task"}
+              </Button>
+            )}
           </div>
         </form>
+      )}
+
+      {task && feedbackOpen && (
+        <FeedbackDialog
+          onClose={() => setFeedbackOpen(false)}
+          onSubmit={async (message) => {
+            await submitFeedback({
+              message: `Done task feedback: ${task.description}\n\n${message}`,
+              route: location.pathname,
+              section: "work",
+              lens: lens
+                ? { id: lens.id, name: lens.name, color: lens.color }
+                : null,
+              userAgent:
+                typeof navigator === "undefined" ? null : navigator.userAgent,
+            });
+          }}
+        />
       )}
 
       {!isLoading && !error && !task && (
