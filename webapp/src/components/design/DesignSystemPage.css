@@ -509,7 +509,7 @@
 .ds-input:focus {
   outline: none;
   border-color: var(--aa-teal);
-  box-shadow: 0 0 0 3px var(--aa-teal-soft);
+  box-shadow: var(--aa-focus-ring);
 }
 
 .ds-input--error {
@@ -538,7 +538,7 @@
 .ds-select:focus {
   outline: none;
   border-color: var(--aa-teal);
-  box-shadow: 0 0 0 3px var(--aa-teal-soft);
+  box-shadow: var(--aa-focus-ring);
 }
 
 .ds-textarea {
@@ -563,7 +563,7 @@
 .ds-textarea:focus {
   outline: none;
   border-color: var(--aa-teal);
-  box-shadow: 0 0 0 3px var(--aa-teal-soft);
+  box-shadow: var(--aa-focus-ring);
 }
 
 /* ============================================================

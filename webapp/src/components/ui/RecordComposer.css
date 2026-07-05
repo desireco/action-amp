@@ -85,7 +85,7 @@
   outline: none;
   background: var(--aa-surface);
   border-color: var(--aa-teal);
-  box-shadow: 0 0 0 3px var(--aa-teal-soft);
+  box-shadow: var(--aa-focus-ring);
 }
 
 .aa-record-composer__actions {

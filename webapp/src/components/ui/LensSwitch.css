@@ -98,7 +98,7 @@
   border-radius: var(--aa-radius-full);
   background: var(--aa-active-lens);
   flex: none;
-  box-shadow: 0 0 0 1.5px oklch(1 0 0 / 0.35);
+  box-shadow: var(--aa-ring-halo);
 }
 .aa-lens__btn[data-lens-color="indigo"] .aa-lens__dot   { background: var(--aa-lens-indigo); }
 .aa-lens__btn[data-lens-color="emerald"] .aa-lens__dot  { background: var(--aa-lens-emerald); }

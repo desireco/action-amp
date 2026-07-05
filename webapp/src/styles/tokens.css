@@ -15,6 +15,25 @@
     "SF Pro Display", Roboto, sans-serif;
   --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
+  /* Type scale — calibrated to existing usage. The buckets collapse ~290 ad-hoc
+     font-size declarations to seven named steps. Migrate components as you
+     touch them; do not bulk-rewrite. */
+  --aa-text-xs: 0.7rem;     /* kbd, micro-labels, eyebrow overlines */
+  --aa-text-sm: 0.78rem;    /* chips, meta, secondary text (most common) */
+  --aa-text-base: 0.9rem;   /* body, list rows */
+  --aa-text-md: 1rem;       /* primary body, button labels */
+  --aa-text-lg: 1.1rem;     /* card titles, hero subtitles */
+  --aa-text-xl: 1.5rem;     /* page titles */
+  --aa-text-2xl: 2rem;      /* hero, detail-page title */
+
+  --aa-weight-medium: 500;
+  --aa-weight-semibold: 600;
+  --aa-weight-bold: 700;
+
+  --aa-leading-tight: 1.25;
+  --aa-leading-normal: 1.5;
+  --aa-leading-relaxed: 1.6;
+
   /* ---- Teal: system / state (the primary accent) ---- */
   --aa-teal: oklch(0.72 0.15 220);
   --aa-teal-bright: oklch(0.78 0.14 215);
@@ -23,6 +42,23 @@
   --aa-teal-soft: oklch(0.95 0.04 220);
   --aa-teal-soft-strong: oklch(0.9 0.07 220);
   --aa-teal-tint-shadow: oklch(0.58 0.16 225 / 0.22);
+
+  /* Semantic aliases — the indirection layer. Lets us re-point "primary" /
+     "accent" without touching every component. New code should prefer these
+     over --aa-teal-* directly when the intent is "primary" or "focus accent". */
+  --aa-primary: var(--aa-teal-cta);
+  --aa-primary-hover: var(--aa-teal-cta-hover);
+  --aa-accent: var(--aa-teal);        /* selection / focus accent (the bright end) */
+  --aa-accent-soft: var(--aa-teal-soft);
+
+  /* Focus ring recipe — used everywhere; tokenized here so it can't drift. */
+  --aa-focus-ring: 0 0 0 3px var(--aa-teal-soft);
+  /* Halo ring for small lens dots (1.5px white-on-color, legible on any lens). */
+  --aa-ring-halo: 0 0 0 1.5px oklch(1 0 0 / 0.35);
+
+  /* Elevation steps between surface and surface-muted-2. Used by raised
+     textareas (notes editor) and inline edit surfaces. */
+  --aa-surface-raised: var(--aa-surface);
 
   /* ---- Amber: human emphasis (rare) ---- */
   --aa-amber: oklch(0.78 0.16 70);

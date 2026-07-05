@@ -24,20 +24,13 @@ html {
 }
 
 body {
-  font-family:
-    ui-sans-serif,
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF Pro Text",
-    "SF Pro Display",
-    Roboto,
-    sans-serif;
+  font-family: var(--aa-font);
   background: var(--aa-bg);
   color: var(--aa-text);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
   transition:
-    background 0.3s var(--aa-ease-out),
-    color 0.3s var(--aa-ease-out);
+    background var(--aa-dur-slow) var(--aa-ease-out),
+    color var(--aa-dur-slow) var(--aa-ease-out);
 }
 
 a {
@@ -52,4 +45,26 @@ button {
 
 svg {
   display: block;
+}
+
+/* ---- Shared utilities ---- */
+
+/* Empty-state mark: the 64×64 teal disc with tint shadow that signals "nothing
+   here yet." Extracted so inbox/triage/lists can't drift. Logbook uses a
+   shadowless variant passed as an icon prop, so it stays local. */
+.aa-empty-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  box-shadow: 0 12px 32px var(--aa-teal-tint-shadow);
+  color: var(--aa-surface);
+}
+
+.aa-empty-mark svg {
+  width: 30px;
+  height: 30px;
 }

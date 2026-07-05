@@ -390,22 +390,9 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.aa-triage-empty__circle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border-radius: var(--aa-radius-full);
-  background: var(--aa-teal);
-  box-shadow: 0 12px 32px var(--aa-teal-tint-shadow);
-  color: var(--aa-surface);
+/* Layout spacing around the shared .aa-empty-mark utility. */
+.aa-triage-empty .aa-empty-mark {
   margin-bottom: var(--aa-space-lg);
-}
-
-.aa-triage-empty__circle svg {
-  width: 30px;
-  height: 30px;
 }
 
 .aa-triage-empty__title {

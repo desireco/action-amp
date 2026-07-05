@@ -28,5 +28,5 @@
 .aa-create-inline__input:focus {
   outline: none;
   border-color: var(--aa-teal);
-  box-shadow: 0 0 0 3px var(--aa-teal-soft);
+  box-shadow: var(--aa-focus-ring);
 }

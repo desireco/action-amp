@@ -80,7 +80,7 @@
 .aa-btn--primary {
   background: var(--aa-teal-cta);
   color: var(--aa-surface);
-  box-shadow: 0 1px 2px oklch(0.2 0.02 230 / 0.06);
+  box-shadow: var(--aa-shadow-sm);
 }
 .aa-btn--primary:hover:not(:disabled) {
   background: var(--aa-teal-cta-hover);

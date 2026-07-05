@@ -38,7 +38,7 @@ export function InboxPage() {
 
       {list.length === 0 ? (
         <div className="aa-inbox__empty">
-          <div className="aa-inbox__empty-circle" aria-hidden="true">
+          <div className="aa-empty-mark" aria-hidden="true">
             <svg viewBox="0 0 16 16" fill="none">
               <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

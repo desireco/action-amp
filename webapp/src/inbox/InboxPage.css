@@ -102,22 +102,9 @@
   padding: var(--aa-space-3xl) 0;
 }
 
-.aa-inbox__empty-circle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border-radius: var(--aa-radius-full);
-  background: var(--aa-teal);
-  box-shadow: 0 12px 32px var(--aa-teal-tint-shadow);
-  color: var(--aa-surface);
+/* Layout spacing around the shared .aa-empty-mark utility. */
+.aa-inbox__empty .aa-empty-mark {
   margin-bottom: var(--aa-space-lg);
-}
-
-.aa-inbox__empty-circle svg {
-  width: 30px;
-  height: 30px;
 }
 
 .aa-inbox__empty-title {

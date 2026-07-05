@@ -153,8 +153,8 @@
 
 .aa-auth-dev__hint code {
   color: var(--aa-text-2);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.75rem;
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
 }
 
 .aa-auth-dev__status {
@@ -205,7 +205,7 @@
 .aa-auth-card input[type="password"]:focus,
 .aa-auth-card input[type="text"]:focus {
   border-color: var(--aa-teal) !important;
-  box-shadow: 0 0 0 3px var(--aa-teal-soft) !important;
+  box-shadow: var(--aa-focus-ring) !important;
   outline: none !important;
 }
 
