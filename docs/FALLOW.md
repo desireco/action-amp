@@ -43,11 +43,11 @@ config (false positives suppressed), and after the cleanup pass.
 | Signal | Raw | After config | After cleanup | Notes |
 |---|---|---|---|---|
 | Unused files | 72 | 1 | **0** | The 72 were false positives (Wasp ref-imports + parked Google auth); the last was a stray empty `App.tsx`. |
-| Unused exports | 60+ | 13 | **2** | Barrel `BottomSheet` re-export (intentional API) + `formatChipDate` (queued). |
+| Unused exports | 60+ | 13 | **1** | Just the barrel `BottomSheet` re-export (intentional API). |
 | Unused type exports | 23 | 23 | **23** | Mostly `index.ts` barrel re-exports — low value to chase. |
 | Unused dependencies | 29 | 1 | **0** | `react-hook-form` removed (was a transitive dep of Wasp's SDK; we never imported it). |
 | Circular dependencies | 7 | 7 | **0** | All were barrel cycles; fixed by direct relative imports. |
-| Duplication | 5.6% / 1,456 lines | unchanged | **5.1% / 1,355 lines** | Someday/Upcoming handler clone + TodayPage grouping clone extracted. |
+| Duplication | 5.6% / 1,456 lines | unchanged | **5.0% / 1,307 lines** | Someday/Upcoming handlers, TodayPage grouping, overlay close buttons extracted. |
 | Maintainability | — | 92.6 | **93.0 / 100 (good)** | Avg cyclomatic 2.1, p90 4. |
 
 `@wasp.sh/spec` still shows as an unused devDep — that's a **false positive**
@@ -56,8 +56,9 @@ config (false positives suppressed), and after the cleanup pass.
 
 ## What the cleanup pass did
 
-Seven commits on `chore/fallow-cleanup` (see `git log main..HEAD`):
+Ten commits on `chore/fallow-cleanup` across two passes (see `git log main..HEAD`):
 
+**Pass 1:**
 - **A1** removed `react-hook-form` (zero imports; transitive via Wasp SDK).
 - **A2** deleted the vestigial `SettingsPage.css` placeholder.
 - **B** broke 7 barrel-file cycles in `components/ui/` (direct relative imports).
@@ -67,6 +68,12 @@ Seven commits on `chore/fallow-cleanup` (see `git log main..HEAD`):
 - **D** reduced complexity in TaskRow (`TaskRowNotes` + `clickableProps`),
   TodayPage (`groupByGoal`), and TriagePage (`buildDispatchPayload`).
 
+**Pass 2 (re-ran fallow on the cleaned tree):**
+- Un-exported `buildOutcome` — surfaced as dead once its only external
+  caller moved to `buildDispatchPayload` in pass 1.
+- Extracted `CloseButton` — the X-icon overlay close affordance was inlined
+  verbatim in 4 overlays; dedupes a 28-line cross-file clone.
+
 All behavior-preserving — `wasp compile` + 488 tests pass at every commit.
 
 ## Remaining items (queued, not blocking)
@@ -74,8 +81,6 @@ All behavior-preserving — `wasp compile` + 488 tests pass at every commit.
 After the cleanup pass the signal is mostly noise or intentional. These are
 the items worth a second look when next convenient:
 
-- **`formatChipDate`** (`src/inbox/triageFlow.ts`) — one unused export left.
-  Verify whether it's referenced from a test or mock before removing.
 - **23 unused *type* re-exports** in `components/ui/index.ts` — these are
   barrel re-exports (`BreadcrumbItem`, `DispatchTone`, …) that no consumer
   imports through the barrel. Low value to chase; the barrel is the public
