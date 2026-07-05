@@ -50,6 +50,7 @@ export function TodayPage() {
 
   // Done-today: tasks completed since local midnight. Fetched on mount and
   // shown inline so completed work stays visible without another click.
+  const [showDone, setShowDone] = useState(true);
   const { data: doneToday } = useQuery(
     getDoneToday,
     lens ? { lensId: lens.id } : undefined,
@@ -273,25 +274,37 @@ export function TodayPage() {
       {(doneToday?.length ?? 0) > 0 && (
         <section className="aa-today__done-section">
           <div className="aa-today__done-header">
-            <span>Done today</span>
-            <span className="aa-today__done-count">{doneToday!.length}</span>
+            <div className="aa-today__done-title">
+              <span>Done today</span>
+              <span className="aa-today__done-count">{doneToday!.length}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDone((value) => !value)}
+              aria-expanded={showDone}
+            >
+              {showDone ? "Hide" : "Show"}
+            </Button>
           </div>
-          <GroupedList
-            groups={doneGroups}
-            renderItem={(task) => (
-              <TaskRow
-                as="div"
-                variant="surface"
-                key={task.id}
-                task={task}
-                muted
-                onOpen={() => navigate(`/app/tasks/${task.id}`)}
-                onSaveContent={handleSaveTaskContent}
-                notesToggleLabel="Update task"
-                notesTogglePlacement="actions"
-              />
-            )}
-          />
+          {showDone && (
+            <GroupedList
+              groups={doneGroups}
+              renderItem={(task) => (
+                <TaskRow
+                  as="div"
+                  variant="surface"
+                  key={task.id}
+                  task={task}
+                  muted
+                  onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                  onSaveContent={handleSaveTaskContent}
+                  notesToggleLabel="Update task"
+                  notesTogglePlacement="actions"
+                />
+              )}
+            />
+          )}
         </section>
       )}
     </div>

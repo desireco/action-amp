@@ -115,7 +115,8 @@
 }
 .aa-today__done-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--aa-space-sm);
   width: 100%;
   padding: 0;
@@ -124,6 +125,11 @@
   font-weight: 600;
   color: var(--aa-text-3);
   text-align: left;
+}
+.aa-today__done-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
 }
 .aa-today__done-count {
   font-size: 0.8rem;
