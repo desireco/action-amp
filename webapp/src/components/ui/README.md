@@ -19,6 +19,13 @@ Every component here is documented live at **`/design-system`**.
 | **Card** | Surface container, 4 variants × 4 padding presets | `Card.tsx` + `Card.css` |
 | **Chip** | Inline pill (tags, dates, priority, status) | `Chip.tsx` + `Chip.css` |
 | **CompletionCircle** | Signature empty→filled toggle, 3 sizes | `CompletionCircle.tsx` + `CompletionCircle.css` |
+| **DetailHeaderActions** | Compact action tray for detail page headers | `DetailHeaderActions.tsx` + `DetailHeaderActions.css` |
+| **RecordCardGrid** | Responsive grid for record summary cards such as Goals and Projects | `RecordCardGrid.tsx` + `RecordCardGrid.css` |
+| **RecordComposer** | Raised create surface for named app records | `RecordComposer.tsx` + `RecordComposer.css` |
+| **RecordCreateButton** | Prominent create affordance for first-class records | `RecordCreateButton.tsx` + `RecordCreateButton.css` |
+| **InlineEntityEditForm** | Raised in-place edit surface for named app objects | `InlineEntityEditForm.tsx` + `InlineEntityEditForm.css` |
+| **PickerSheet** | Bottom-sheet list picker for projects, goals, and destinations | `PickerSheet.tsx` + `PickerSheet.css` |
+| **SpecRow** | Compact property row with inline options or picker-backed behavior | `SpecRow.tsx` + `SpecRow.css` |
 | **ModeDial** | Bottom-center persistent nav (Plan/Do/Review) | `ModeDial.tsx` + `ModeDial.css` |
 | **ZoomDock** | Task/Project/Goal zoom controls | `ZoomDock.tsx` + `ZoomDock.css` |
 | **Breadcrumb** | Zoom orientation crumbs (Goal › Project › Task) | `Breadcrumb.tsx` + `Breadcrumb.css` |

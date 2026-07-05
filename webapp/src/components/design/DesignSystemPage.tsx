@@ -8,13 +8,17 @@ import {
   Chip,
   CompletionCircle,
   DispatchButton,
+  DetailHeaderActions,
+  InlineEntityEditForm,
   LensSwitch,
   ModeDial,
   NavItem,
   Table,
   Toggle,
   TriageCard,
+  PickerSheet,
   NextCard,
+  SpecRow,
   ZoomDock,
   StarIcon,
   InboxIcon,
@@ -45,6 +49,7 @@ const SECTIONS = [
   { id: "chips", label: "Chips & Badges" },
   { id: "completion", label: "Completion Circle" },
   { id: "forms", label: "Form Elements" },
+  { id: "inline-edit", label: "Inline Edit" },
   { id: "toggle", label: "Toggle" },
   { id: "table", label: "Table" },
   { id: "shadows", label: "Shadows & Motion" },
@@ -55,6 +60,7 @@ const SECTIONS = [
   { id: "utilities", label: "Floating Utility" },
   { id: "dispatch", label: "Dispatch Buttons" },
   { id: "triage-card", label: "Triage Card" },
+  { id: "spec-row", label: "Spec Row" },
   { id: "progress", label: "Progress Bar" },
   { id: "empty", label: "Empty States" },
   { id: "wn-card", label: "Next Card" },
@@ -62,6 +68,8 @@ const SECTIONS = [
   { id: "zoom-dock", label: "Zoom Dock" },
   { id: "breadcrumb", label: "Breadcrumb" },
   { id: "overlays", label: "Overlays & Modals" },
+  { id: "picker-sheet", label: "Picker Sheet" },
+  { id: "detail-actions", label: "Detail Actions" },
   { id: "auth-layout", label: "Auth Layout" },
 ] as const;
 
@@ -218,6 +226,8 @@ function T({ token, value }: { token: string; value: string }) {
 
 export function DesignSystemPage() {
   const [active, setActive] = useState<SectionId>("overview");
+  const [specOpen, setSpecOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Route-specific tab title — restores the global app title on unmount.
   useEffect(() => {
@@ -462,6 +472,25 @@ export function DesignSystemPage() {
               <textarea className="ds-textarea" placeholder="Notes…" rows={3} />
             </div>
           </Sub>
+        </Sec>
+
+        <Sec id="inline-edit" title="Inline Edit" desc="Raised in-place edit surface for Project and Goal detail headers.">
+          <div className="ds-demo-row">
+            <InlineEntityEditForm
+              title="Refine project"
+              subtitle="Keep the outcome concrete. The notes can stay practical."
+              nameLabel="Project"
+              name="Ship product v2"
+              namePlaceholder="Project name"
+              descriptionLabel="What makes it done"
+              description="Next milestone"
+              descriptionPlaceholder="Description (optional)"
+              onNameChange={() => {}}
+              onDescriptionChange={() => {}}
+              onCancel={() => {}}
+              onSave={() => {}}
+            />
+          </div>
         </Sec>
 
         {/* ============================================================
@@ -729,6 +758,32 @@ export function DesignSystemPage() {
           </Sub>
         </Sec>
 
+        <Sec id="spec-row" title="Spec Row" desc="Compact property row with inline options or a picker-backed row action.">
+          <div className="ds-demo-stack">
+            <SpecRow
+              label="Priority"
+              value="Important"
+              open={specOpen}
+              onToggle={() => setSpecOpen((value) => !value)}
+              options={[
+                { value: "LOW", label: "Low" },
+                { value: "NORMAL", label: "Normal" },
+                { value: "IMPORTANT", label: "Important" },
+              ]}
+              onPick={() => setSpecOpen(false)}
+            />
+            <SpecRow
+              label="Project"
+              value="MVP"
+              open={false}
+              onToggle={() => {}}
+              options={[]}
+              onPick={() => setPickerOpen(true)}
+              isProject
+            />
+          </div>
+        </Sec>
+
         {/* ============================================================
            PROGRESS BAR (from triage-tinder.html)
            ============================================================ */}
@@ -883,6 +938,34 @@ export function DesignSystemPage() {
               <p className="ds-usage__p"><strong>Motion:</strong> backdrop fades 150ms; content rises 250ms with <code className="ds-inline-code">--aa-ease-out-quart</code>. Exit is ~60% of enter duration.</p>
             </div>
           </Sub>
+        </Sec>
+
+        <Sec id="picker-sheet" title="Picker Sheet" desc="Shared BottomSheet list for choosing a Project, Goal, or destination.">
+          <Button variant="secondary" onClick={() => setPickerOpen(true)}>
+            Open picker
+          </Button>
+          {pickerOpen && (
+            <PickerSheet
+              title="File in"
+              items={[
+                { id: "mvp", label: "MVP", meta: "Grow audience", current: true },
+                { id: "ops", label: "Operations" },
+              ]}
+              action={{ label: "…or file under a goal", onPick: () => setPickerOpen(false) }}
+              onPick={() => setPickerOpen(false)}
+              onClose={() => setPickerOpen(false)}
+            />
+          )}
+        </Sec>
+
+        <Sec id="detail-actions" title="Detail Actions" desc="Compact action tray for Project and Goal detail headers.">
+          <DetailHeaderActions
+            actions={[
+              { label: "Edit", onClick: () => {} },
+              { label: "Complete", onClick: () => {} },
+              { label: "Delete", danger: true, onClick: () => {} },
+            ]}
+          />
         </Sec>
 
         {/* AUTH LAYOUT */}

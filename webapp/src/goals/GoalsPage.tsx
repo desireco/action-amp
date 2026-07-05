@@ -5,9 +5,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useActiveLens } from "../app/lensContext";
 import {
   Chip,
-  EntityCardGrid,
-  EntityComposer,
-  EntityCreateButton,
+  RecordCardGrid,
+  RecordComposer,
+  RecordCreateButton,
   GoalsIcon,
   ProgressCard,
   ProGate,
@@ -83,7 +83,7 @@ export function GoalsPage() {
         <span className="aa-progate-trigger__cta">Upgrade →</span>
       </ProGate>
     ) : (
-      <EntityCreateButton
+      <RecordCreateButton
         label="New goal"
         icon={GoalsIcon}
         onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}
@@ -130,7 +130,7 @@ export function GoalsPage() {
       </header>
       {gate && <ProGate feature={gate.feature} reason={gate.reason} />}
       {creating && (
-        <EntityComposer
+        <RecordComposer
           title="New goal"
           subtitle="Name the outcome. Add the why if it helps."
           nameLabel="Outcome"
@@ -143,7 +143,7 @@ export function GoalsPage() {
           submitting={submitting}
         />
       )}
-      <EntityCardGrid>
+      <RecordCardGrid>
         {(goals ?? []).map((g: GoalRow) => (
           <ProgressCard
             key={g.id}
@@ -160,7 +160,7 @@ export function GoalsPage() {
             focusValue={g.nextProject?.name}
           />
         ))}
-      </EntityCardGrid>
+      </RecordCardGrid>
     </div>
   );
 }

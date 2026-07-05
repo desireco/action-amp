@@ -13,7 +13,10 @@ import {
   Button,
   Chip,
   ConfirmDialog,
+  DetailHeaderActions,
+  InlineEntityEditForm,
 } from "../components/ui";
+import { formatRelativeDue } from "../shared/dateFormat";
 import "./GoalDetailView.css";
 
 type LinkedProject = {
@@ -176,40 +179,21 @@ export function GoalDetailPage() {
           <header className="aa-list-header aa-goal__header">
             <div className="aa-goal__header-main">
               {editing ? (
-                <div className="aa-goal__edit">
-                  <div className="aa-goal__edit-head">
-                    <h2>Refine goal</h2>
-                    <p>Keep the outcome clear. The why can stay plain.</p>
-                  </div>
-                  <label className="aa-goal__edit-field">
-                    <span>Outcome</span>
-                    <input
-                      className="aa-goal__edit-name"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      placeholder="Goal name"
-                    />
-                  </label>
-                  <label className="aa-goal__edit-field">
-                    <span>Why this matters</span>
-                    <textarea
-                      className="aa-goal__edit-desc"
-                      value={editDesc}
-                      onChange={(e) => setEditDesc(e.target.value)}
-                      placeholder="Description (optional)"
-                      rows={3}
-                    />
-                  </label>
-                  {editError && <p className="aa-goal__edit-err">{editError}</p>}
-                  <div className="aa-goal__edit-actions">
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
-                      Cancel
-                    </Button>
-                    <Button variant="primary" size="sm" onClick={handleSaveEdit}>
-                      Save changes
-                    </Button>
-                  </div>
-                </div>
+                <InlineEntityEditForm
+                  title="Refine goal"
+                  subtitle="Keep the outcome clear. The why can stay plain."
+                  nameLabel="Outcome"
+                  name={editName}
+                  namePlaceholder="Goal name"
+                  descriptionLabel="Why this matters"
+                  description={editDesc}
+                  descriptionPlaceholder="Description (optional)"
+                  error={editError}
+                  onNameChange={setEditName}
+                  onDescriptionChange={setEditDesc}
+                  onCancel={() => setEditing(false)}
+                  onSave={handleSaveEdit}
+                />
               ) : (
                 <>
                   <div className="aa-list-header__eyebrow">Goal</div>
@@ -228,21 +212,17 @@ export function GoalDetailPage() {
               )}
             </div>
             {!editing && (
-              <div className="aa-goal__header-actions">
-                <Button className="aa-goal-action" variant="ghost" size="sm" onClick={startEdit}>Edit</Button>
-                <Button
-                  className="aa-goal-action"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleComplete}
-                  title={goal.isDone ? "Return to active goals" : "Mark this goal done"}
-                >
-                  {goal.isDone ? "Reopen" : "Complete"}
-                </Button>
-                <Button className="aa-goal-action aa-goal-action--danger" variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
-                  Delete
-                </Button>
-              </div>
+              <DetailHeaderActions
+                actions={[
+                  { label: "Edit", onClick: startEdit },
+                  {
+                    label: goal.isDone ? "Reopen" : "Complete",
+                    onClick: handleComplete,
+                    title: goal.isDone ? "Return to active goals" : "Mark this goal done",
+                  },
+                  { label: "Delete", onClick: () => setConfirmDelete(true), danger: true },
+                ]}
+              />
             )}
           </header>
 
@@ -285,7 +265,7 @@ export function GoalDetailPage() {
                         <span className="aa-goal__project-name">{p.name}</span>
                         {p.isDone && <Chip variant="muted" small>Done</Chip>}
                         {pTotal > 0 && <span className="aa-goal__project-pct">{pct}%</span>}
-                        {p.dueDate && <Chip variant="teal" small>{formatDue(p.dueDate)}</Chip>}
+                        {p.dueDate && <Chip variant="teal" small>{formatRelativeDue(p.dueDate)}</Chip>}
                       </Link>
                     </li>
                   );
@@ -321,18 +301,4 @@ export function GoalDetailPage() {
       )}
     </div>
   );
-}
-
-function formatDue(d: Date | string): string {
-  const date = typeof d === "string" ? new Date(d) : d;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(date);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
-  if (diffDays === 0) return "today";
-  if (diffDays === 1) return "tomorrow";
-  if (diffDays < 0) return `${Math.abs(diffDays)}d overdue`;
-  if (diffDays < 7) return `in ${diffDays}d`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }

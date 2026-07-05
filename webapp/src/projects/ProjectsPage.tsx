@@ -5,9 +5,9 @@ import { getProjects, createProject, triageInboxItem, getAppData } from "wasp/cl
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Chip,
-  EntityCardGrid,
-  EntityComposer,
-  EntityCreateButton,
+  RecordCardGrid,
+  RecordComposer,
+  RecordCreateButton,
   ProgressCard,
   ProjectsIcon,
   ProGate,
@@ -17,6 +17,7 @@ import { ListEmpty } from "../lists/ListShell";
 import { FREE_LIMITS } from "../billing/config";
 import { useEntitled, extractEntitlementMessage } from "../billing/useEntitled";
 import type { EntitlementMessage } from "../billing/entitlement-types";
+import { formatRelativeDue } from "../shared/dateFormat";
 import "./ProjectsPage.css";
 
 interface ProjectRow {
@@ -123,7 +124,7 @@ export function ProjectsPage() {
         <span className="aa-progate-trigger__cta">Upgrade →</span>
       </ProGate>
     ) : (
-      <EntityCreateButton
+      <RecordCreateButton
         label="New project"
         icon={ProjectsIcon}
         onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}
@@ -153,7 +154,7 @@ export function ProjectsPage() {
           <ProGate feature={gate.feature} reason={gate.reason} />
         )}
         {creating && (
-          <EntityComposer
+          <RecordComposer
             title="New project"
             subtitle="Name the outcome. Add the shape of done if it helps."
             nameLabel="Project"
@@ -191,7 +192,7 @@ export function ProjectsPage() {
         <ProGate feature={gate.feature} reason={gate.reason} />
       )}
       {creating && (
-        <EntityComposer
+        <RecordComposer
           title="New project"
           subtitle="Name the outcome. Add the shape of done if it helps."
           nameLabel="Project"
@@ -205,7 +206,7 @@ export function ProjectsPage() {
           initialName={initialName}
         />
       )}
-      <EntityCardGrid>
+      <RecordCardGrid>
         {(projects ?? []).map((p: ProjectRow) => {
           const total = p.openCount + p.doneCount;
           const pct = total === 0 ? 0 : Math.round((p.doneCount / total) * 100);
@@ -224,7 +225,7 @@ export function ProjectsPage() {
                   <span>{p.openCount} open</span>
                   <span className="aa-projects__dot" aria-hidden="true">·</span>
                   <span>{p.doneCount} done</span>
-                  {p.dueDate && <Chip variant="teal" small>{formatDue(p.dueDate)}</Chip>}
+                  {p.dueDate && <Chip variant="teal" small>{formatRelativeDue(p.dueDate)}</Chip>}
                 </>
               }
               focusLabel={p.nextAction ? "Focus" : "Status"}
@@ -233,12 +234,7 @@ export function ProjectsPage() {
             />
           );
         })}
-      </EntityCardGrid>
+      </RecordCardGrid>
     </div>
   );
-}
-
-function formatDue(d: Date | string): string {
-  const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }

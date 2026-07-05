@@ -1,8 +1,8 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button } from "./Button";
-import "./EntityComposer.css";
+import "./RecordComposer.css";
 
-interface EntityComposerProps {
+interface RecordComposerProps {
   title: string;
   subtitle?: string;
   nameLabel: string;
@@ -17,10 +17,10 @@ interface EntityComposerProps {
 }
 
 /**
- * EntityComposer — small raised create surface for named app objects. Supports
- * an optional description field for entities that carry a "why" note.
+ * RecordComposer — small raised create surface for named app objects. Supports
+ * an optional description field for records that carry a "why" note.
  */
-export function EntityComposer({
+export function RecordComposer({
   title,
   subtitle,
   nameLabel,
@@ -32,7 +32,7 @@ export function EntityComposer({
   submitting,
   onCreate,
   onCancel,
-}: EntityComposerProps) {
+}: RecordComposerProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState("");
@@ -58,18 +58,18 @@ export function EntityComposer({
   };
 
   return (
-    <form ref={formRef} className="aa-entity-composer" onSubmit={submit}>
-      <div className="aa-entity-composer__head">
+    <form ref={formRef} className="aa-record-composer" onSubmit={submit}>
+      <div className="aa-record-composer__head">
         <div>
-          <h2 className="aa-entity-composer__title">{title}</h2>
-          {subtitle && <p className="aa-entity-composer__sub">{subtitle}</p>}
+          <h2 className="aa-record-composer__title">{title}</h2>
+          {subtitle && <p className="aa-record-composer__sub">{subtitle}</p>}
         </div>
       </div>
 
-      <label className="aa-entity-composer__field">
-        <span className="aa-entity-composer__label">{nameLabel}</span>
+      <label className="aa-record-composer__field">
+        <span className="aa-record-composer__label">{nameLabel}</span>
         <input
-          className="aa-entity-composer__input"
+          className="aa-record-composer__input"
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder={namePlaceholder}
@@ -78,10 +78,10 @@ export function EntityComposer({
       </label>
 
       {hasDescription && (
-        <label className="aa-entity-composer__field">
-          <span className="aa-entity-composer__label">{descriptionLabel}</span>
+        <label className="aa-record-composer__field">
+          <span className="aa-record-composer__label">{descriptionLabel}</span>
           <textarea
-            className="aa-entity-composer__textarea"
+            className="aa-record-composer__textarea"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             onKeyDown={submitFromTextarea}
@@ -91,7 +91,7 @@ export function EntityComposer({
         </label>
       )}
 
-      <div className="aa-entity-composer__actions">
+      <div className="aa-record-composer__actions">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>

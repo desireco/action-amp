@@ -1,11 +1,11 @@
 import type { ComponentType, SVGProps } from "react";
 import { Button } from "./Button";
 import { PlusIcon } from "./icons";
-import "./EntityCreateButton.css";
+import "./RecordCreateButton.css";
 
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
-interface EntityCreateButtonProps {
+interface RecordCreateButtonProps {
   label: string;
   icon: IconComponent;
   onClick: () => void;
@@ -13,23 +13,23 @@ interface EntityCreateButtonProps {
 }
 
 /**
- * EntityCreateButton — prominent create affordance for first-class objects
+ * RecordCreateButton — prominent create affordance for first-class objects
  * such as Projects and Goals.
  */
-export function EntityCreateButton({
+export function RecordCreateButton({
   label,
   icon: Icon,
   onClick,
   className = "",
-}: EntityCreateButtonProps) {
+}: RecordCreateButtonProps) {
   return (
     <Button
       variant="secondary"
-      className={["aa-entity-create", className].filter(Boolean).join(" ")}
+      className={["aa-record-create", className].filter(Boolean).join(" ")}
       icon={
-        <span className="aa-entity-create__mark" aria-hidden="true">
-          <Icon className="aa-entity-create__icon" />
-          <PlusIcon className="aa-entity-create__plus" />
+        <span className="aa-record-create__mark" aria-hidden="true">
+          <Icon className="aa-record-create__icon" />
+          <PlusIcon className="aa-record-create__plus" />
         </span>
       }
       onClick={onClick}

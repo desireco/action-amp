@@ -1,4 +1,5 @@
 import { Chip } from "../ui";
+import { formatRelativeDue } from "../../shared/dateFormat";
 import "./TaskRow.css";
 
 export interface TaskRowTask {
@@ -59,7 +60,7 @@ export function TaskRow({ task, muted = false, onOpen, className = "" }: TaskRow
             {task.project && <Chip variant="violet" small>{task.project.name}</Chip>}
             {task.dueDate && (
               <Chip variant="teal" small>
-                {formatDue(task.dueDate)}
+                {formatRelativeDue(task.dueDate)}
               </Chip>
             )}
             {task.size && <span className="aa-task-row__size">{SIZE_LABEL[task.size]}</span>}
@@ -68,19 +69,4 @@ export function TaskRow({ task, muted = false, onOpen, className = "" }: TaskRow
       </div>
     </li>
   );
-}
-
-function formatDue(d: Date | string): string {
-  const date = typeof d === "string" ? new Date(d) : d;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(date);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
-  if (diffDays === 0) return "today";
-  if (diffDays === 1) return "tomorrow";
-  if (diffDays === -1) return "yesterday";
-  if (diffDays < 0) return `${Math.abs(diffDays)}d overdue`;
-  if (diffDays < 7) return `in ${diffDays}d`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }

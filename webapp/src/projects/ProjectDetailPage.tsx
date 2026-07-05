@@ -19,10 +19,13 @@ import {
   TaskRow,
   CompletionCircle,
   ConfirmDialog,
+  DetailHeaderActions,
+  InlineEntityEditForm,
   type TaskRowTask,
 } from "../components/ui";
 import { CreateInline } from "../lists/CreateInline";
 import type { GroupDef } from "../components/ui";
+import { formatRelativeDue } from "../shared/dateFormat";
 import "./ProjectDetailPage.css";
 
 type ProjectTask = TaskRowTask & {
@@ -243,40 +246,21 @@ export function ProjectDetailPage() {
           <header className="aa-list-header aa-project__header">
             <div className="aa-project__header-main">
               {editing ? (
-                <div className="aa-project__edit">
-                  <div className="aa-project__edit-head">
-                    <h2>Refine project</h2>
-                    <p>Keep the outcome concrete. The notes can stay practical.</p>
-                  </div>
-                  <label className="aa-project__edit-field">
-                    <span>Project</span>
-                    <input
-                      className="aa-project__edit-name"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      placeholder="Project name"
-                    />
-                  </label>
-                  <label className="aa-project__edit-field">
-                    <span>What makes it done</span>
-                    <textarea
-                      className="aa-project__edit-desc"
-                      value={editDesc}
-                      onChange={(e) => setEditDesc(e.target.value)}
-                      placeholder="Description (optional)"
-                      rows={3}
-                    />
-                  </label>
-                  {editError && <p className="aa-project__edit-err">{editError}</p>}
-                  <div className="aa-project__edit-actions">
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
-                      Cancel
-                    </Button>
-                    <Button variant="primary" size="sm" onClick={handleSaveEdit}>
-                      Save changes
-                    </Button>
-                  </div>
-                </div>
+                <InlineEntityEditForm
+                  title="Refine project"
+                  subtitle="Keep the outcome concrete. The notes can stay practical."
+                  nameLabel="Project"
+                  name={editName}
+                  namePlaceholder="Project name"
+                  descriptionLabel="What makes it done"
+                  description={editDesc}
+                  descriptionPlaceholder="Description (optional)"
+                  error={editError}
+                  onNameChange={setEditName}
+                  onDescriptionChange={setEditDesc}
+                  onCancel={() => setEditing(false)}
+                  onSave={handleSaveEdit}
+                />
               ) : (
                 <>
                   <div className="aa-list-header__eyebrow">
@@ -287,7 +271,7 @@ export function ProjectDetailPage() {
                     <p className="aa-project__meta">
                       {total > 0 && <span>{doneCount}/{total} done</span>}
                       {project.dueDate && (
-                        <Chip variant="teal" small>{formatDue(project.dueDate)}</Chip>
+                        <Chip variant="teal" small>{formatRelativeDue(project.dueDate)}</Chip>
                       )}
                     </p>
                   )}
@@ -295,24 +279,18 @@ export function ProjectDetailPage() {
               )}
             </div>
             {!editing && (
-              <div className="aa-project__header-actions">
-                <Button className="aa-project-action" variant="ghost" size="sm" onClick={startEdit}>Edit</Button>
-                <Button
-                  className="aa-project-action"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleComplete}
-                  title={project.isDone ? "Return to active projects" : "Mark this project done"}
-                >
-                  {project.isDone ? "Reopen" : "Complete"}
-                </Button>
-                <Button className="aa-project-action aa-project-action--danger" variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
-                  Delete
-                </Button>
-                <Button className="aa-project-action" variant="ghost" size="sm" onClick={() => setCreating((v) => !v)}>
-                  {creating ? "Cancel" : "Add task"}
-                </Button>
-              </div>
+              <DetailHeaderActions
+                actions={[
+                  { label: "Edit", onClick: startEdit },
+                  {
+                    label: project.isDone ? "Reopen" : "Complete",
+                    onClick: handleComplete,
+                    title: project.isDone ? "Return to active projects" : "Mark this project done",
+                  },
+                  { label: "Delete", onClick: () => setConfirmDelete(true), danger: true },
+                  { label: creating ? "Cancel" : "Add task", onClick: () => setCreating((v) => !v) },
+                ]}
+              />
             )}
           </header>
 
@@ -347,7 +325,7 @@ export function ProjectDetailPage() {
                   <Button variant="ghost" size="sm" onClick={() => setPickingGoal(false)}>
                     Cancel
                   </Button>
-                  {relinkError && <p className="aa-project__edit-err">{relinkError}</p>}
+                  {relinkError && <p className="aa-project__inline-err">{relinkError}</p>}
                 </div>
               ) : (
                 <button
@@ -457,7 +435,7 @@ export function ProjectDetailPage() {
                               <Button variant="ghost" size="sm" onClick={() => setMovingTaskId(null)}>
                                 Cancel
                               </Button>
-                              {moveError && <p className="aa-project__edit-err">{moveError}</p>}
+                              {moveError && <p className="aa-project__inline-err">{moveError}</p>}
                             </div>
                           )}
                         </li>
@@ -491,18 +469,4 @@ export function ProjectDetailPage() {
       )}
     </div>
   );
-}
-
-function formatDue(d: Date | string): string {
-  const date = typeof d === "string" ? new Date(d) : d;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(date);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
-  if (diffDays === 0) return "today";
-  if (diffDays === 1) return "tomorrow";
-  if (diffDays < 0) return `${Math.abs(diffDays)}d overdue`;
-  if (diffDays < 7) return `in ${diffDays}d`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
