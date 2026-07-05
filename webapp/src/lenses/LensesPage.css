@@ -8,7 +8,7 @@
 }
 
 .aa-lenses-empty {
-  font-size: 0.88rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-3);
   margin: 0;
 }
@@ -51,16 +51,16 @@
   min-width: 0;
 }
 .aa-lenses-row__name {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 .aa-lenses-row__kind {
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -69,12 +69,12 @@
   border-radius: var(--aa-radius-xs);
 }
 .aa-lenses-row__purpose {
-  font-size: 0.82rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   margin-top: 2px;
 }
 .aa-lenses-row__meta {
-  font-size: 0.75rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   margin-top: 4px;
   display: flex;
@@ -90,8 +90,8 @@
 /* ---- Action buttons (shared by row + forms) ---- */
 .aa-lenses-act {
   font-family: var(--aa-font);
-  font-size: 0.78rem;
-  font-weight: 500;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-3);
   background: transparent;
   border: 1px solid transparent;
@@ -129,8 +129,8 @@
 .aa-lenses-add {
   margin-top: var(--aa-space-md);
   font-family: var(--aa-font);
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-teal-cta);
   background: var(--aa-teal-soft);
   border: 1px solid transparent;
@@ -147,7 +147,7 @@
   cursor: not-allowed;
 }
 .aa-lenses-cap-note {
-  font-size: 0.78rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
   margin: var(--aa-space-sm) 0 0;
 }
@@ -180,15 +180,15 @@
   gap: 4px;
 }
 .aa-lenses-edit__label {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--aa-text-4);
 }
 .aa-lenses-edit__input {
   font-family: var(--aa-font);
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
   padding: 8px 10px;
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-sm);
@@ -249,7 +249,7 @@
 }
 
 .aa-lenses-error {
-  font-size: 0.82rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-rose-text);
   margin: 0;
 }
@@ -263,7 +263,7 @@
 }
 .aa-lenses-delete p {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-2);
   line-height: 1.5;
 }
@@ -271,7 +271,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--aa-space-sm);
-  font-size: 0.88rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text);
   cursor: pointer;
 }
@@ -286,12 +286,12 @@
 }
 .aa-lenses-delete__opt em {
   font-style: normal;
-  font-size: 0.78rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
 }
 .aa-lenses-delete__select {
   font-family: var(--aa-font);
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   padding: 5px 8px;
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-sm);
