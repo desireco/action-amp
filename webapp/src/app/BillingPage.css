@@ -13,7 +13,7 @@
 }
 
 .aa-billing-state {
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-3);
   margin: 0;
 }
@@ -27,20 +27,20 @@
   display: inline-flex;
   align-items: center;
   gap: var(--aa-space-sm);
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-teal-cta);
 }
 
 .aa-billing-banner-muted {
-  font-size: 0.88rem;
-  font-weight: 500;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-3);
 }
 
 /* ---- Current tier line (free users) ---- */
 .aa-billing-current-tier {
-  font-size: 0.92rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-3);
   margin: 0;
   line-height: 1.5;
@@ -48,7 +48,7 @@
 
 .aa-billing-current-tier strong {
   color: var(--aa-text);
-  font-weight: 600;
+  font-weight: var(--aa-weight-semibold);
 }
 
 /* ---- Active plan (inside Card) ---- */
@@ -60,7 +60,7 @@
 }
 
 .aa-billing-active-renewal {
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   margin: var(--aa-space-xs) 0 0;
 }
@@ -100,8 +100,8 @@
 }
 
 .aa-billing-plan-badge {
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--aa-teal-cta);
@@ -119,27 +119,27 @@
 }
 
 .aa-billing-plan-amount {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
   color: var(--aa-text);
   letter-spacing: -0.02em;
   line-height: 1;
 }
 
 .aa-billing-plan-period {
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
 }
 
 .aa-billing-plan-name {
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
   margin-bottom: 2px;
 }
 
 .aa-billing-plan-pitch {
-  font-size: 0.8rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   line-height: 1.4;
   margin-bottom: var(--aa-space-lg);
@@ -147,8 +147,8 @@
 }
 
 .aa-billing-plan-cta {
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-teal-cta);
 }
 

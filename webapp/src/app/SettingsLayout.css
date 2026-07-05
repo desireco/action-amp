@@ -9,8 +9,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-3);
   margin-bottom: var(--aa-space-lg);
   text-decoration: none;
@@ -33,8 +33,8 @@
 
 /* ---- Heading ---- */
 .aa-settings-h {
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: var(--aa-text-2xl);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: -0.015em;
   color: var(--aa-text);
   margin: 0 0 var(--aa-space-lg);
@@ -50,8 +50,8 @@
 
 .aa-settings-tab {
   padding: var(--aa-space-sm) var(--aa-space-md);
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-3);
   text-decoration: none;
   border-bottom: 2px solid transparent;
@@ -74,13 +74,13 @@
 .aa-settings-tab.active {
   color: var(--aa-teal-cta);
   border-bottom-color: var(--aa-teal-cta);
-  font-weight: 600;
+  font-weight: var(--aa-weight-semibold);
 }
 
 /* ---- Section heading (shared by Account + Preferences + Billing) ---- */
 .aa-settings-sh {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -99,7 +99,7 @@
 }
 
 .aa-settings-note {
-  font-size: 0.88rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-3);
   margin: 0;
   line-height: 1.5;
@@ -111,7 +111,7 @@
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
-  font-size: 0.7rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   background: var(--aa-surface-muted-2);
   padding: 1px 6px;

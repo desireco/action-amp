@@ -34,8 +34,8 @@
   display: flex;
   align-items: center;
   gap: var(--aa-space-sm);
-  font-weight: 700;
-  font-size: 0.95rem;
+  font-weight: var(--aa-weight-bold);
+  font-size: var(--aa-text-base);
   color: var(--aa-text);
   padding: var(--aa-space-xs) var(--aa-space-sm);
   margin-bottom: var(--aa-space-md);
@@ -111,7 +111,7 @@
 .aa-app-user-btn.active {
   background: var(--aa-teal-soft);
   color: var(--aa-teal-cta);
-  font-weight: 600;
+  font-weight: var(--aa-weight-semibold);
 }
 
 .aa-app-user-btn:focus-visible {
@@ -128,14 +128,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   flex-shrink: 0;
 }
 
 .aa-app-user-name {
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -147,7 +147,7 @@
   background: none;
   border: none;
   font-family: var(--aa-font);
-  font-size: 0.78rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
   padding: 2px var(--aa-space-sm);
   border-radius: var(--aa-radius-xs);
@@ -193,8 +193,8 @@
   color: var(--aa-text-3);
   box-shadow: var(--aa-shadow-sm);
   font-family: var(--aa-font);
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
   cursor: pointer;
   transition:
     background 0.15s var(--aa-ease-out),
@@ -242,8 +242,8 @@
   color: var(--aa-surface);
   box-shadow: var(--aa-shadow-md);
   font-family: var(--aa-font);
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-bold);
   cursor: pointer;
   transition:
     transform 0.15s var(--aa-ease-out),
@@ -272,8 +272,8 @@
 
 .aa-app-capture-fab kbd {
   font-family: var(--aa-font-mono);
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   padding: 2px 5px;
   border-radius: var(--aa-radius-xs);
   background: rgba(255, 255, 255, 0.18);
@@ -366,8 +366,8 @@
     background: transparent;
     color: var(--aa-text-2);
     font: inherit;
-    font-size: 0.82rem;
-    font-weight: 650;
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-bold);
     cursor: pointer;
   }
   .aa-mobile-lens-menu__item.active {
@@ -406,7 +406,7 @@
     border-radius: var(--aa-radius-full);
     background: var(--aa-surface-muted-2);
     color: var(--aa-text-3);
-    font-size: 0.64rem;
+    font-size: var(--aa-text-xs);
     line-height: 1;
   }
   .aa-mobile-dock__item {
@@ -424,8 +424,8 @@
     border: none;
     text-decoration: none;
     font-family: var(--aa-font);
-    font-size: 0.66rem;
-    font-weight: 650;
+    font-size: var(--aa-text-xs);
+    font-weight: var(--aa-weight-bold);
     line-height: 1;
     -webkit-tap-highlight-color: transparent;
   }
@@ -497,8 +497,8 @@
   border: none;
   background: transparent;
   font-family: inherit;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   color: var(--aa-text-3);
   cursor: pointer;
   border-radius: var(--aa-radius-md);
