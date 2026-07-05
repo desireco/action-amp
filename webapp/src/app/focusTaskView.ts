@@ -27,6 +27,7 @@ export function toFocusTask(task: {
   startedAt?: Date | string | null;
   project?: { name: string } | null;
   updates?: { id: string; body: string; createdAt: Date; kind: string }[];
+  sessions?: { startedAt: Date | string; endedAt?: Date | string | null }[];
 }): FocusTask {
   const due =
     task.status === "TODAY"
@@ -34,6 +35,22 @@ export function toFocusTask(task: {
       : task.dueDate
         ? `due ${formatWhen(task.dueDate)}`
         : null;
+
+  // Focus-segment accounting. Each session row is either closed (endedAt set)
+  // or open (endedAt null — at most one). The total includes the open
+  // segment's elapsed-so-far so the clock's total ticks alongside the live
+  // session number.
+  const sessions = (task.sessions ?? []).map((s) => ({
+    startedAt: new Date(s.startedAt),
+    endedAt: s.endedAt ? new Date(s.endedAt) : null,
+  }));
+  const openSession = sessions.find((s) => s.endedAt === null) ?? null;
+  const now = Date.now();
+  const totalFocusedMs = sessions.reduce((sum, s) => {
+    const end = s.endedAt ? s.endedAt.getTime() : now;
+    return sum + Math.max(0, end - s.startedAt.getTime());
+  }, 0);
+
   return {
     id: task.id,
     title: task.description,
@@ -42,6 +59,8 @@ export function toFocusTask(task: {
     size: sizeLabel(task.size ?? null),
     content: task.content ?? null,
     startedAt: task.startedAt ? new Date(task.startedAt) : null,
+    sessionStartedAt: openSession?.startedAt ?? null,
+    totalFocusedMs,
     updates:
       task.updates?.map((u) => ({
         id: u.id,

@@ -114,6 +114,7 @@ describe("getFocusedTask", () => {
       startedAt: new Date("2026-07-04T10:00:00Z"),
       tags: [],
       updates: [],
+      sessions: [],
       project: null,
       goal: null,
     };
@@ -132,6 +133,7 @@ describe("getFocusedTask", () => {
       include: {
         tags: true,
         updates: { orderBy: { createdAt: "asc" } },
+        sessions: { orderBy: { startedAt: "asc" } },
         project: { select: { id: true, permalink: true, name: true } },
         goal: { select: { id: true, permalink: true, name: true } },
       },
@@ -535,6 +537,30 @@ describe("startTask", () => {
       select: { id: true, startedAt: true },
     });
   });
+
+  it("opens a TaskSession for the task and closes any prior open sessions", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.updateMany.mockResolvedValue({ count: 0 });
+    m.entities.Task.update.mockResolvedValue({ id: "task-1", startedAt: new Date() });
+
+    await startTask({ id: "task-1" }, m.context);
+
+    // Defensive close on whatever session was open for this user before
+    // switching focus — keeps totals honest across task switches.
+    expect(m.entities.TaskSession.updateMany).toHaveBeenCalledWith({
+      where: { userId: "user-1", endedAt: null },
+      data: { endedAt: expect.any(Date) },
+    });
+    // New open session on the started task.
+    expect(m.entities.TaskSession.create).toHaveBeenCalledWith({
+      data: {
+        taskId: "task-1",
+        userId: "user-1",
+        startedAt: expect.any(Date),
+      },
+    });
+  });
 });
 
 describe("pauseTask", () => {
@@ -557,6 +583,21 @@ describe("pauseTask", () => {
       where: { id: "task-1" },
       data: { startedAt: null },
       select: { id: true, startedAt: true },
+    });
+  });
+
+  it("closes the task's open TaskSession (idempotent if none)", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.update.mockResolvedValue({ id: "task-1", startedAt: null });
+
+    await pauseTask({ id: "task-1" }, m.context);
+
+    // updateMany is the close — it's a no-op if no session was open, which is
+    // the right behavior for pausing an already-paused task.
+    expect(m.entities.TaskSession.updateMany).toHaveBeenCalledWith({
+      where: { taskId: "task-1", endedAt: null },
+      data: { endedAt: expect.any(Date) },
     });
   });
 });
@@ -840,6 +881,12 @@ describe("completeTaskFromFocus", () => {
         taskId: "task-1",
         userId: "user-1",
       },
+    });
+    // Completion also closes the open TaskSession so the focused segment
+    // counts toward the task's total.
+    expect(m.entities.TaskSession.updateMany).toHaveBeenCalledWith({
+      where: { taskId: "task-1", endedAt: null },
+      data: { endedAt: expect.any(Date) },
     });
   });
 

@@ -267,6 +267,7 @@ export const getFocusedTask = (async (_args, context) => {
     include: {
       tags: true,
       updates: { orderBy: { createdAt: "asc" } },
+      sessions: { orderBy: { startedAt: "asc" } },
       project: { select: { id: true, permalink: true, name: true } },
       goal: { select: { id: true, permalink: true, name: true } },
     },
@@ -357,9 +358,20 @@ export const startTask = (async (args, context) => {
     where: { userId: context.user.id, startedAt: { not: null } },
     data: { startedAt: null },
   });
+  // Defensive close on any prior task's open session — the updateMany above
+  // cleared the startedAt pointer on whatever was running, but its session row
+  // is still open. Close it so the totals stay honest across task switches.
+  await context.entities.TaskSession.updateMany({
+    where: { userId: context.user.id, endedAt: null },
+    data: { endedAt: new Date() },
+  });
+  const now = new Date();
+  await context.entities.TaskSession.create({
+    data: { taskId: args.id, userId: context.user.id, startedAt: now },
+  });
   return await context.entities.Task.update({
     where: { id: args.id },
-    data: { startedAt: new Date() },
+    data: { startedAt: now },
     select: { id: true, startedAt: true },
   });
 }) satisfies StartTask<{ id: string }, { id: string; startedAt: Date | null }>;
@@ -375,6 +387,12 @@ export const pauseTask = (async (args, context) => {
   if (!task || task.userId !== context.user.id) {
     throw new Error("Task not found.");
   }
+  // Close this task's open session (if any) before clearing the pointer.
+  // updateMany is idempotent — pausing an already-paused task is a no-op here.
+  await context.entities.TaskSession.updateMany({
+    where: { taskId: args.id, endedAt: null },
+    data: { endedAt: new Date() },
+  });
   return await context.entities.Task.update({
     where: { id: args.id },
     data: { startedAt: null },
@@ -501,6 +519,11 @@ export const completeTaskFromFocus = (async (args, context) => {
     where: { id: args.taskId },
     data: { isDone: true, completedAt, startedAt: null },
     select: { id: true, completedAt: true },
+  });
+  // Close the open session so the focused time on this segment counts.
+  await context.entities.TaskSession.updateMany({
+    where: { taskId: args.taskId, endedAt: null },
+    data: { endedAt: completedAt },
   });
   await context.entities.TaskUpdate.create({
     data: {
