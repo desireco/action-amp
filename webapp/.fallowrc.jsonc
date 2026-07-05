@@ -42,5 +42,13 @@
   // Individual files are left to in-file `// fallow-ignore-file` markers so
   // the suppressions travel with the code that knows why it's parked.
 
+  // ResourcePickerSheet is built but not yet wired — the Resources feature
+  // (docs/specs/resources-project-owned.md) has spec status `ready` but isn't
+  // shipped. Suppress the export + barrel re-export until the feature lands.
+  "ignoreExports": [
+    { "file": "src/components/ui/ResourcePickerSheet.tsx", "exports": ["ResourcePickerSheet"] },
+    { "file": "src/components/ui/index.ts", "exports": ["ResourcePickerSheet"] }
+  ],
+
   "ignoreExportsUsedInFile": false
 }

@@ -41,14 +41,3 @@ export function getPriceId(key: PriceKey): string {
   }
   return id;
 }
-
-/**
- * Metadata plan label embedded in Stripe prices (matches setup-stripe.mjs).
- * Used by the webhook to map a price back to a plan/interval.
- */
-export const PRICE_PLAN_LABEL: Record<PriceKey, string> = {
-  proYearly: "Pro Yearly",
-  proMonthly: "Pro Monthly",
-  proPrepaid: "Pro Prepaid (12 mo, no auto-renew)",
-  founder: "Founding 100 (lifetime)",
-};

@@ -1,6 +1,6 @@
 const FALLBACK = "item";
 
-export function permalinkBase(input: string): string {
+function permalinkBase(input: string): string {
   const slug = input
     .trim()
     .toLowerCase()

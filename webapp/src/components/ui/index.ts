@@ -23,7 +23,7 @@ export type { LensSwitchOption } from "./LensSwitch";
 export { LensPopover, LensChip } from "./LensPopover";
 export type { LensPopoverOption } from "./LensPopover";
 export { InlineEntityEditForm } from "./InlineEntityEditForm";
-export { isModEnter, submitOnModEnter, Kbd } from "./keyboard";
+export { submitOnModEnter, Kbd } from "./keyboard";
 export { ModeDial } from "./ModeDial";
 export type { ModeDialItem } from "./ModeDial";
 export { NavItem } from "./NavItem";

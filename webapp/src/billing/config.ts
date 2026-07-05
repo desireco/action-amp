@@ -33,11 +33,6 @@ export function isPaidPlan(plan: Plan | undefined | null): plan is "PRO" | "FOUN
   return plan === "PRO" || plan === "FOUNDER";
 }
 
-/** Founding 100 — the one-time $139 lifetime tier (capped at 100 spots). */
-export function isFounder(plan: Plan | undefined | null): boolean {
-  return plan === "FOUNDER";
-}
-
 /**
  * Is the user's plan currently active (entitled to paid features)?
  * - FREE → no
@@ -56,13 +51,6 @@ export const PLAN_LABEL: Record<Plan, string> = {
   FREE: "Free",
   PRO: "Pro",
   FOUNDER: "Founding Member",
-};
-
-/** Plan badge copy shown next to the plan label. */
-export const PLAN_BADGE: Record<Plan, string> = {
-  FREE: "Free plan",
-  PRO: "Pro",
-  FOUNDER: "Founding 100",
 };
 
 /**

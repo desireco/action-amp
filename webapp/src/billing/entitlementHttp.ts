@@ -106,5 +106,3 @@ export function assertLensConfigAllowed(
 ): void {
   throwIfViolation(lensConfigViolation(context.user ?? null, msg));
 }
-
-export { FREE_LIMITS, PRO_LIMITS };

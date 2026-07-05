@@ -8,7 +8,7 @@ import type { ReactNode, KeyboardEvent } from "react";
  */
 
 /** True when the event is ⌘Enter (Mac) or Ctrl+Enter (Win/Linux). */
-export function isModEnter<T extends Element>(e: KeyboardEvent<T>): boolean {
+function isModEnter<T extends Element>(e: KeyboardEvent<T>): boolean {
   return e.key === "Enter" && (e.metaKey || e.ctrlKey);
 }
 

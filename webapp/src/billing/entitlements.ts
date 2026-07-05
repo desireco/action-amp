@@ -155,5 +155,3 @@ export const CUSTOM_LENSES_MESSAGE: EntitlementMessage = {
   feature: "Custom lenses",
   reason: "add more life contexts — a Studio, a side project, a board role — with Pro",
 };
-
-export { PRO_LIMITS };
