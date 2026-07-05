@@ -207,3 +207,52 @@ as written today will change; that's expected, not a regression."
 **RESOLVED 2026-07-04** — the done-condition above is rewritten as suggested.
 Gap C is closed; only Gap A (tag-management shipping) and the matcher-test
 gate remain.
+
+### Focus screen — RESOLVED 2026-07-05 (Variant F locked)
+
+The full-screen focus surface (`/app/focus`, `FocusMode.tsx`) was a
+detail-panel layout centered with extra margins: title, meta line, notes
+editor, activity thread, composer, two buttons. The take-over was bigger than
+the content — whitespace alone was doing the work of "focus," and the
+completion circle (the system's emotional climax) was demoted to a button.
+
+Six prototypes explored the surface
+(`docs/mockups/focus-{a..f}-*.html`, gallery at `docs/mockups/focus-redesign.html`):
+
+| Variant | Thesis | Outcome |
+|---------|--------|---------|
+| A · Calm Presence | breathing halo + elapsed time, no countdown | **Basis for F** |
+| B · Sprint ring | opt-in pomodoro at visual center | **Rejected** — ring competed with the task for the eye |
+| C · Ambient Field | radical minimal: title + circle + key hints | **Mined** — keyboard-hint pattern lifted into F |
+| D · Margin Clock | A's hero, elapsed time relocated to top-left | **Basis for F** |
+| E · Hidden Sprint | timer invisible unless summoned via `T` | **Deferred** — adds a state machine no user has asked for |
+| F · Final | D's margin clock + C's hints + summoned notes + confirm | **Locked** |
+
+**Resolved:** Variant F is locked. The decisions:
+
+- **No pomodoro.** Countdowns are guilt mechanics (same energy as the banned
+  streaks and red dots); they also dilute the one invariant that matters
+  (only one started task). Elapsed time only, never a countdown. A future
+  user request for a timer should reconsider E (opt-in, hidden by default)
+  before any always-visible countdown.
+- **The clock is chrome, not content.** Elapsed time lives in the top-left
+  margin ("18 min in"), like a wall clock. It never sits on the central axis
+  between the eye and the title. The center circle is purely the completion
+  affordance — never a clock ring (de-conflation was the lesson from B).
+- **Notes are summoned, not always-visible.** Press `N` → composer slides up;
+  `⌘↵` posts to an append-only progress thread beneath the title. The
+  keyboard map (`N` note · `↵` complete · `esc` exit) is the only chrome,
+  lifted from Variant C, and sits at low opacity until hovered.
+- **Completion asks first.** Clicking the circle (or pressing `↵`) opens a
+  calm confirm: *"Mark this done? You've been at it for 18 min."* No red,
+  no nag — the elapsed time is honest context, not pressure.
+- **The circle stays static at rest.** It fills teal with a spring check only
+  on confirmed completion. Not a progress ring; if a fill-as-progress signal
+  is ever wanted, the meaningful axis is elapsed-vs-`Size` estimate
+  (15 min / 30 min / 1 hr / 2 hr+), not raw time.
+
+Build implements to `docs/mockups/focus-f-final.html`. The rejected variants
+are kept in `docs/mockups/` as reference, not for re-litigation — the
+exploration is closed unless the build surfaces something the prototypes
+couldn't anticipate.
+
