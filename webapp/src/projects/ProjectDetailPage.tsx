@@ -244,28 +244,36 @@ export function ProjectDetailPage() {
             <div className="aa-project__header-main">
               {editing ? (
                 <div className="aa-project__edit">
-                  <input
-                    className="aa-project__edit-name"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Project name"
-                    aria-label="Project name"
-                  />
-                  <textarea
-                    className="aa-project__edit-desc"
-                    value={editDesc}
-                    onChange={(e) => setEditDesc(e.target.value)}
-                    placeholder="Description (optional)"
-                    aria-label="Project description"
-                    rows={2}
-                  />
+                  <div className="aa-project__edit-head">
+                    <h2>Refine project</h2>
+                    <p>Keep the outcome concrete. The notes can stay practical.</p>
+                  </div>
+                  <label className="aa-project__edit-field">
+                    <span>Project</span>
+                    <input
+                      className="aa-project__edit-name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Project name"
+                    />
+                  </label>
+                  <label className="aa-project__edit-field">
+                    <span>What makes it done</span>
+                    <textarea
+                      className="aa-project__edit-desc"
+                      value={editDesc}
+                      onChange={(e) => setEditDesc(e.target.value)}
+                      placeholder="Description (optional)"
+                      rows={3}
+                    />
+                  </label>
                   {editError && <p className="aa-project__edit-err">{editError}</p>}
                   <div className="aa-project__edit-actions">
-                    <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>
+                    <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
                       Cancel
                     </Button>
                     <Button variant="primary" size="sm" onClick={handleSaveEdit}>
-                      Save
+                      Save changes
                     </Button>
                   </div>
                 </div>
@@ -288,8 +296,9 @@ export function ProjectDetailPage() {
             </div>
             {!editing && (
               <div className="aa-project__header-actions">
-                <Button variant="ghost" size="sm" onClick={startEdit}>Edit</Button>
+                <Button className="aa-project-action" variant="ghost" size="sm" onClick={startEdit}>Edit</Button>
                 <Button
+                  className="aa-project-action"
                   variant="ghost"
                   size="sm"
                   onClick={handleComplete}
@@ -297,10 +306,10 @@ export function ProjectDetailPage() {
                 >
                   {project.isDone ? "Reopen" : "Complete"}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
+                <Button className="aa-project-action aa-project-action--danger" variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
                   Delete
                 </Button>
-                <Button variant="secondary" size="sm" onClick={() => setCreating((v) => !v)}>
+                <Button className="aa-project-action" variant="ghost" size="sm" onClick={() => setCreating((v) => !v)}>
                   {creating ? "Cancel" : "Add task"}
                 </Button>
               </div>
