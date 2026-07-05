@@ -14,6 +14,7 @@ import {
   ModeDial,
   NavItem,
   Table,
+  TaskRow,
   Toggle,
   TriageCard,
   PickerSheet,
@@ -48,6 +49,7 @@ const SECTIONS = [
   { id: "cards", label: "Cards" },
   { id: "chips", label: "Chips & Badges" },
   { id: "completion", label: "Completion Circle" },
+  { id: "task-row", label: "Task Row" },
   { id: "forms", label: "Form Elements" },
   { id: "inline-edit", label: "Inline Edit" },
   { id: "toggle", label: "Toggle" },
@@ -133,16 +135,70 @@ const COLOR_GROUPS = [
 ];
 
 const FONT_SIZES = [
-  { label: "Hero", s: { fontSize: "4.75rem", fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 0.98 } },
-  { label: "Display", s: { fontSize: "3.5rem", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.02 } },
-  { label: "Soul statement", s: { fontSize: "4rem", fontWeight: 300, letterSpacing: "-0.025em", lineHeight: 1.08 } },
-  { label: "H1", s: { fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.02em" } },
-  { label: "H2", s: { fontSize: "1.35rem", fontWeight: 700, letterSpacing: "-0.015em" } },
-  { label: "Task title", s: { fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.02em" } },
-  { label: "Card title", s: { fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.02em" } },
+  {
+    label: "Hero",
+    s: {
+      fontSize: "4.75rem",
+      fontWeight: 800,
+      letterSpacing: "-0.035em",
+      lineHeight: 0.98,
+    },
+  },
+  {
+    label: "Display",
+    s: {
+      fontSize: "3.5rem",
+      fontWeight: 800,
+      letterSpacing: "-0.03em",
+      lineHeight: 1.02,
+    },
+  },
+  {
+    label: "Soul statement",
+    s: {
+      fontSize: "4rem",
+      fontWeight: 300,
+      letterSpacing: "-0.025em",
+      lineHeight: 1.08,
+    },
+  },
+  {
+    label: "H1",
+    s: { fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.02em" },
+  },
+  {
+    label: "H2",
+    s: { fontSize: "1.35rem", fontWeight: 700, letterSpacing: "-0.015em" },
+  },
+  {
+    label: "Task title",
+    s: { fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.02em" },
+  },
+  {
+    label: "Card title",
+    s: { fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.02em" },
+  },
   { label: "H3", s: { fontSize: "1.1rem", fontWeight: 600 } },
-  { label: "Section heading", s: { fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: "var(--aa-text-4)" } },
-  { label: "Eyebrow", s: { fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--aa-teal-cta)" } },
+  {
+    label: "Section heading",
+    s: {
+      fontSize: "0.8rem",
+      fontWeight: 600,
+      letterSpacing: "0.04em",
+      textTransform: "uppercase" as const,
+      color: "var(--aa-text-4)",
+    },
+  },
+  {
+    label: "Eyebrow",
+    s: {
+      fontSize: "0.75rem",
+      fontWeight: 600,
+      letterSpacing: "0.12em",
+      textTransform: "uppercase" as const,
+      color: "var(--aa-teal-cta)",
+    },
+  },
   { label: "Body", s: { fontSize: "0.95rem", color: "var(--aa-text-2)" } },
   { label: "Small", s: { fontSize: "0.85rem", color: "var(--aa-text-3)" } },
   { label: "Caption", s: { fontSize: "0.75rem", color: "var(--aa-text-4)" } },
@@ -192,7 +248,17 @@ const DURATIONS = [
    Helpers
    ================================================================ */
 
-function Sec({ id, title, desc, children }: { id: SectionId; title: string; desc?: string; children: ReactNode }) {
+function Sec({
+  id,
+  title,
+  desc,
+  children,
+}: {
+  id: SectionId;
+  title: string;
+  desc?: string;
+  children: ReactNode;
+}) {
   return (
     <section id={id} className="ds-section">
       <h2 className="ds-section__title">{title}</h2>
@@ -244,7 +310,9 @@ export function DesignSystemPage() {
       {/* ---- Sidebar nav ---- */}
       <aside className="ds-nav">
         <div className="ds-nav__brand">
-          <div className="ds-nav__mark"><BrandMark size="sm" /></div>
+          <div className="ds-nav__mark">
+            <BrandMark size="sm" />
+          </div>
           <span className="ds-nav__name">ActionAmp · Design System</span>
         </div>
         <nav className="ds-nav__list">
@@ -252,7 +320,12 @@ export function DesignSystemPage() {
             <button
               key={s.id}
               className={`ds-nav__item ${active === s.id ? "ds-nav__item--active" : ""}`}
-              onClick={() => { setActive(s.id); document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" }); }}
+              onClick={() => {
+                setActive(s.id);
+                document
+                  .getElementById(s.id)
+                  ?.scrollIntoView({ behavior: "smooth" });
+              }}
             >
               {s.label}
             </button>
@@ -264,23 +337,45 @@ export function DesignSystemPage() {
       <main className="ds-main">
         {/* HEADER */}
         <div className="ds-hero">
-          <div className="ds-hero__mark"><BrandMark size="lg" /></div>
+          <div className="ds-hero__mark">
+            <BrandMark size="lg" />
+          </div>
           <h1 className="ds-hero__title">ActionAmp Design System</h1>
           <p className="ds-hero__sub">
-            Things-inspired DNA. Cool-tinted neutrals, teal primary accent, amber human emphasis.
-            System fonts, 4/8 spacing grid, OKLCH color space.
+            Things-inspired DNA. Cool-tinted neutrals, teal primary accent,
+            amber human emphasis. System fonts, 4/8 spacing grid, OKLCH color
+            space.
           </p>
         </div>
 
         {/* OVERVIEW */}
-        <Sec id="overview" title="Design Principles" desc="Five principles that guide every decision.">
+        <Sec
+          id="overview"
+          title="Design Principles"
+          desc="Five principles that guide every decision."
+        >
           <div className="ds-principles">
             {[
-              { p: "The list is demoted", d: "Next is the home screen. Not a list — a chooser. Focus on the next action, not everything." },
-              { p: "Teal carries 30%", d: "Every surface should feel teal-touched. It's the system color — states, actions, structure. Amber is rare: only for human emphasis." },
-              { p: "Cool-tinted calm", d: "All neutrals lean blue. Never pure gray, never pure black, never pure white. The app should feel like Things — calm, confident, quiet." },
-              { p: "Native system fonts", d: "SF Pro on Apple, Segoe on Windows, Roboto on Android. No custom font loading. Fast, native, familiar." },
-              { p: "Motion with meaning", d: "Spring-based transitions. Every animation answers a question: 'Where did this come from?' 'What happened?'" },
+              {
+                p: "The list is demoted",
+                d: "Next is the home screen. Not a list — a chooser. Focus on the next action, not everything.",
+              },
+              {
+                p: "Teal carries 30%",
+                d: "Every surface should feel teal-touched. It's the system color — states, actions, structure. Amber is rare: only for human emphasis.",
+              },
+              {
+                p: "Cool-tinted calm",
+                d: "All neutrals lean blue. Never pure gray, never pure black, never pure white. The app should feel like Things — calm, confident, quiet.",
+              },
+              {
+                p: "Native system fonts",
+                d: "SF Pro on Apple, Segoe on Windows, Roboto on Android. No custom font loading. Fast, native, familiar.",
+              },
+              {
+                p: "Motion with meaning",
+                d: "Spring-based transitions. Every animation answers a question: 'Where did this come from?' 'What happened?'",
+              },
             ].map((x) => (
               <div key={x.p} className="ds-principle">
                 <h3 className="ds-principle__title">{x.p}</h3>
@@ -291,33 +386,59 @@ export function DesignSystemPage() {
         </Sec>
 
         {/* TYPOGRAPHY */}
-        <Sec id="typography" title="Typography" desc="System font stack. Matches the type scale used across all prototypes (landing hero, Next card, triage).">
+        <Sec
+          id="typography"
+          title="Typography"
+          desc="System font stack. Matches the type scale used across all prototypes (landing hero, Next card, triage)."
+        >
           <div className="ds-type-scale">
             {FONT_SIZES.map((f) => (
               <div key={f.label} className="ds-type-row">
                 <span className="ds-type-row__label">{f.label}</span>
-                <span className="ds-type-row__sample" style={f.s as React.CSSProperties}>The quick brown fox</span>
+                <span
+                  className="ds-type-row__sample"
+                  style={f.s as React.CSSProperties}
+                >
+                  The quick brown fox
+                </span>
                 <code className="ds-type-row__css">{JSON.stringify(f.s)}</code>
               </div>
             ))}
           </div>
           <Sub h="Font Stacks">
             <div className="ds-font-stacks">
-              <div className="ds-font-stack"><T token="--aa-font" value="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', Roboto, sans-serif" /></div>
-              <div className="ds-font-stack"><T token="--aa-font-mono" value="ui-monospace, SFMono-Regular, Menlo, monospace" /></div>
+              <div className="ds-font-stack">
+                <T
+                  token="--aa-font"
+                  value="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', Roboto, sans-serif"
+                />
+              </div>
+              <div className="ds-font-stack">
+                <T
+                  token="--aa-font-mono"
+                  value="ui-monospace, SFMono-Regular, Menlo, monospace"
+                />
+              </div>
             </div>
           </Sub>
         </Sec>
 
         {/* COLORS */}
-        <Sec id="colors" title="Colors" desc="OKLCH color space. All neutrals cool-tinted (hue 230). Teal primary, amber rare.">
+        <Sec
+          id="colors"
+          title="Colors"
+          desc="OKLCH color space. All neutrals cool-tinted (hue 230). Teal primary, amber rare."
+        >
           {COLOR_GROUPS.map((g) => (
             <div key={g.name} className="ds-color-group">
               <h3 className="ds-color-group__name">{g.name}</h3>
               <div className="ds-color-grid">
                 {g.tokens.map((t) => (
                   <div key={t.v} className="ds-swatch">
-                    <div className="ds-swatch__box" style={{ background: `var(${t.v})` }} />
+                    <div
+                      className="ds-swatch__box"
+                      style={{ background: `var(${t.v})` }}
+                    />
                     <div className="ds-swatch__info">
                       <span className="ds-swatch__label">{t.label}</span>
                       <code className="ds-swatch__code">{t.v}</code>
@@ -330,12 +451,19 @@ export function DesignSystemPage() {
         </Sec>
 
         {/* SPACING & RADIUS */}
-        <Sec id="spacing" title="Spacing & Radius" desc="4px base unit. 4/8 grid. Radii from subtle (4px) to full (pill).">
+        <Sec
+          id="spacing"
+          title="Spacing & Radius"
+          desc="4px base unit. 4/8 grid. Radii from subtle (4px) to full (pill)."
+        >
           <Sub h="Spacing Scale">
             <div className="ds-spacing-grid">
               {SPACING.map((s) => (
                 <div key={s.t} className="ds-spacing-item">
-                  <div className="ds-spacing-item__bar" style={{ width: `var(${s.t})` }} />
+                  <div
+                    className="ds-spacing-item__bar"
+                    style={{ width: `var(${s.t})` }}
+                  />
                   <code className="ds-spacing-item__code">{s.t}</code>
                   <span className="ds-spacing-item__val">{s.v}</span>
                 </div>
@@ -346,7 +474,10 @@ export function DesignSystemPage() {
             <div className="ds-radius-grid">
               {RADII.map((r) => (
                 <div key={r.t} className="ds-radius-item">
-                  <div className="ds-radius-item__box" style={{ borderRadius: `var(${r.t})` }} />
+                  <div
+                    className="ds-radius-item__box"
+                    style={{ borderRadius: `var(${r.t})` }}
+                  />
                   <code className="ds-radius-item__code">{r.t}</code>
                   <span className="ds-radius-item__val">{r.v}</span>
                 </div>
@@ -356,7 +487,11 @@ export function DesignSystemPage() {
         </Sec>
 
         {/* BUTTONS */}
-        <Sec id="buttons" title="Buttons" desc="Four variants. Three sizes. Icon + kbd hint support. From app-shell + landing + triage prototypes.">
+        <Sec
+          id="buttons"
+          title="Buttons"
+          desc="Four variants. Three sizes. Icon + kbd hint support. From app-shell + landing + triage prototypes."
+        >
           <Sub h="Variants">
             <div className="ds-btn-row">
               <Button variant="primary">Primary</Button>
@@ -375,34 +510,74 @@ export function DesignSystemPage() {
           <Sub h="With Icon + Kbd">
             <div className="ds-btn-row">
               <Button icon={<BrandMark size="sm" />}>Capture</Button>
-              <Button variant="ghost" kbd="⌘K">Quick Add</Button>
-              <Button variant="secondary" disabled>Disabled</Button>
+              <Button variant="ghost" kbd="⌘K">
+                Quick Add
+              </Button>
+              <Button variant="secondary" disabled>
+                Disabled
+              </Button>
             </div>
           </Sub>
           <Sub h="Usage">
             <div className="ds-usage">
-              <p className="ds-usage__p"><strong>Primary</strong> — main CTAs: "Do this", "Save", "Upgrade", "Start triage".</p>
-              <p className="ds-usage__p"><strong>Secondary</strong> — supporting actions: "Not now", "Manage billing", "Cancel".</p>
-              <p className="ds-usage__p"><strong>Ghost</strong> — minimal actions: "Skip", nav items, toolbar buttons.</p>
-              <p className="ds-usage__p"><strong>Danger</strong> — destructive: "Delete account", "Remove project".</p>
+              <p className="ds-usage__p">
+                <strong>Primary</strong> — main CTAs: "Do this", "Save",
+                "Upgrade", "Start triage".
+              </p>
+              <p className="ds-usage__p">
+                <strong>Secondary</strong> — supporting actions: "Not now",
+                "Manage billing", "Cancel".
+              </p>
+              <p className="ds-usage__p">
+                <strong>Ghost</strong> — minimal actions: "Skip", nav items,
+                toolbar buttons.
+              </p>
+              <p className="ds-usage__p">
+                <strong>Danger</strong> — destructive: "Delete account", "Remove
+                project".
+              </p>
             </div>
           </Sub>
         </Sec>
 
         {/* CARDS */}
-        <Sec id="cards" title="Cards" desc="Surface card with elevation and interactivity options.">
+        <Sec
+          id="cards"
+          title="Cards"
+          desc="Surface card with elevation and interactivity options."
+        >
           <Sub h="Variants">
             <div className="ds-card-row">
-              <Card variant="default"><p style={{ margin: 0, color: "var(--aa-text-2)" }}>Default — subtle border, flat surface.</p></Card>
-              <Card variant="elevated"><p style={{ margin: 0, color: "var(--aa-text-2)" }}>Elevated — no border, medium shadow.</p></Card>
-              <Card variant="interactive"><p style={{ margin: 0, color: "var(--aa-text-2)" }}>Interactive — hover lift effect.</p></Card>
-              <Card variant="highlighted"><p style={{ margin: 0, color: "var(--aa-text-2)" }}>Highlighted — teal border + glow.</p></Card>
+              <Card variant="default">
+                <p style={{ margin: 0, color: "var(--aa-text-2)" }}>
+                  Default — subtle border, flat surface.
+                </p>
+              </Card>
+              <Card variant="elevated">
+                <p style={{ margin: 0, color: "var(--aa-text-2)" }}>
+                  Elevated — no border, medium shadow.
+                </p>
+              </Card>
+              <Card variant="interactive">
+                <p style={{ margin: 0, color: "var(--aa-text-2)" }}>
+                  Interactive — hover lift effect.
+                </p>
+              </Card>
+              <Card variant="highlighted">
+                <p style={{ margin: 0, color: "var(--aa-text-2)" }}>
+                  Highlighted — teal border + glow.
+                </p>
+              </Card>
             </div>
           </Sub>
         </Sec>
 
         {/* CHIPS */}
-        <Sec id="chips" title="Chips & Badges" desc="Inline pills for tags, dates, priorities, status. From triage prototype chip taxonomy.">
+        <Sec
+          id="chips"
+          title="Chips & Badges"
+          desc="Inline pills for tags, dates, priorities, status. From triage prototype chip taxonomy."
+        >
           <Sub h="Chip Variants">
             <div className="ds-chip-row">
               <Chip variant="default">Default</Chip>
@@ -419,7 +594,13 @@ export function DesignSystemPage() {
             <div className="ds-chip-context">
               <p style={{ margin: 0, color: "var(--aa-text-2)" }}>
                 Email Sarah re: Q3 invoice
-                <span style={{ display: "inline-flex", gap: "4px", marginLeft: "8px" }}>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    gap: "4px",
+                    marginLeft: "8px",
+                  }}
+                >
                   <Chip variant="teal">📅 Tomorrow</Chip>
                   <Chip variant="amber">★ Important</Chip>
                 </span>
@@ -428,7 +609,12 @@ export function DesignSystemPage() {
           </Sub>
           <Sub h="Methodology Badges (landing)">
             <div className="ds-chip-row">
-              {["Inbox → triage", "Goals over areas", "Projects & tasks", "Priority + size"].map((b) => (
+              {[
+                "Inbox → triage",
+                "Goals over areas",
+                "Projects & tasks",
+                "Priority + size",
+              ].map((b) => (
                 <span key={b} className="ds-badge">
                   <span className="ds-badge__slash">/</span>
                   {b}
@@ -439,13 +625,29 @@ export function DesignSystemPage() {
         </Sec>
 
         {/* COMPLETION CIRCLE */}
-        <Sec id="completion" title="Completion Circle" desc="The signature empty→filled interaction. Used in Next, Today, and landing hero.">
+        <Sec
+          id="completion"
+          title="Completion Circle"
+          desc="The signature empty→filled interaction. Used in Next, Today, and landing hero."
+        >
           <Sub h="States">
             <div className="ds-cc-row">
-              <div className="ds-cc-demo"><CompletionCircle size="sm" /><span className="ds-cc-demo__label">Empty (sm)</span></div>
-              <div className="ds-cc-demo"><CompletionCircle size="sm" filled /><span className="ds-cc-demo__label">Filled (sm)</span></div>
-              <div className="ds-cc-demo"><CompletionCircle size="md" /><span className="ds-cc-demo__label">Empty (md)</span></div>
-              <div className="ds-cc-demo"><CompletionCircle size="md" filled /><span className="ds-cc-demo__label">Filled (md)</span></div>
+              <div className="ds-cc-demo">
+                <CompletionCircle size="sm" />
+                <span className="ds-cc-demo__label">Empty (sm)</span>
+              </div>
+              <div className="ds-cc-demo">
+                <CompletionCircle size="sm" filled />
+                <span className="ds-cc-demo__label">Filled (sm)</span>
+              </div>
+              <div className="ds-cc-demo">
+                <CompletionCircle size="md" />
+                <span className="ds-cc-demo__label">Empty (md)</span>
+              </div>
+              <div className="ds-cc-demo">
+                <CompletionCircle size="md" filled />
+                <span className="ds-cc-demo__label">Filled (md)</span>
+              </div>
             </div>
           </Sub>
           <Sub h="Interactive Demo">
@@ -453,18 +655,80 @@ export function DesignSystemPage() {
           </Sub>
         </Sec>
 
+        {/* TASK ROW */}
+        <Sec
+          id="task-row"
+          title="Task Row"
+          desc="Reusable task-list element with meta chips, inline task update, and optional right-side actions."
+        >
+          <Sub h="Plain row">
+            <ul className="ds-task-row-demo">
+              <TaskRow
+                task={{
+                  id: "task-row-plain",
+                  description: "Draft launch notes",
+                  project: { id: "project", name: "Launch" },
+                  size: "M",
+                }}
+              />
+            </ul>
+          </Sub>
+          <Sub h="Surface row with actions">
+            <div className="ds-task-row-demo">
+              <TaskRow
+                as="div"
+                variant="surface"
+                task={{
+                  id: "task-row-surface",
+                  description: "I want to work on",
+                  content: "I want to work on executing projects",
+                  project: { id: "project", name: "General" },
+                  dueDate: new Date(),
+                  size: "M",
+                }}
+                notesToggleLabel="Update task"
+                notesTogglePlacement="actions"
+                onSaveContent={() => {}}
+              >
+                <Button variant="ghost" size="sm">
+                  Not today
+                </Button>
+              </TaskRow>
+            </div>
+          </Sub>
+        </Sec>
+
         {/* FORMS */}
-        <Sec id="forms" title="Form Elements" desc="Input, select, textarea — styled via design tokens.">
+        <Sec
+          id="forms"
+          title="Form Elements"
+          desc="Input, select, textarea — styled via design tokens."
+        >
           <Sub h="Text Input">
             <div className="ds-form-row">
-              <input className="ds-input" type="text" placeholder="Default input" />
-              <input className="ds-input" type="email" placeholder="Email address" />
-              <input className="ds-input ds-input--error" type="text" placeholder="Error state" />
+              <input
+                className="ds-input"
+                type="text"
+                placeholder="Default input"
+              />
+              <input
+                className="ds-input"
+                type="email"
+                placeholder="Email address"
+              />
+              <input
+                className="ds-input ds-input--error"
+                type="text"
+                placeholder="Error state"
+              />
             </div>
           </Sub>
           <Sub h="Select">
             <div className="ds-form-row">
-              <select className="ds-select"><option>Default select</option><option>Option B</option></select>
+              <select className="ds-select">
+                <option>Default select</option>
+                <option>Option B</option>
+              </select>
             </div>
           </Sub>
           <Sub h="Textarea">
@@ -474,7 +738,11 @@ export function DesignSystemPage() {
           </Sub>
         </Sec>
 
-        <Sec id="inline-edit" title="Inline Edit" desc="Raised in-place edit surface for Project and Goal detail headers.">
+        <Sec
+          id="inline-edit"
+          title="Inline Edit"
+          desc="Raised in-place edit surface for Project and Goal detail headers."
+        >
           <div className="ds-demo-row">
             <InlineEntityEditForm
               title="Refine project"
@@ -496,11 +764,19 @@ export function DesignSystemPage() {
         {/* ============================================================
            TOGGLE — boolean switch
            ============================================================ */}
-        <Sec id="toggle" title="Toggle" desc="Boolean switch for preferences. Teal when on, neutral when off.">
+        <Sec
+          id="toggle"
+          title="Toggle"
+          desc="Boolean switch for preferences. Teal when on, neutral when off."
+        >
           <ToggleDemo />
           <Sub h="Usage">
             <div className="ds-usage">
-              <p className="ds-usage__p"><strong>role=switch</strong> with aria-checked — fully keyboard-accessible. Used by the Preferences page (dark mode, sounds, momentum).</p>
+              <p className="ds-usage__p">
+                <strong>role=switch</strong> with aria-checked — fully
+                keyboard-accessible. Used by the Preferences page (dark mode,
+                sounds, momentum).
+              </p>
             </div>
           </Sub>
         </Sec>
@@ -508,19 +784,30 @@ export function DesignSystemPage() {
         {/* ============================================================
            TABLE — data grid
            ============================================================ */}
-        <Sec id="table" title="Table" desc="Striped rows, token-driven headers, responsive overflow. Column render fns or row[key] fallback.">
+        <Sec
+          id="table"
+          title="Table"
+          desc="Striped rows, token-driven headers, responsive overflow. Column render fns or row[key] fallback."
+        >
           <Sub h="Example (payment history)">
             <TableDemo />
           </Sub>
         </Sec>
 
         {/* SHADOWS & MOTION */}
-        <Sec id="shadows" title="Shadows & Motion" desc="Blue-tinted layered shadows. Spring-based easing.">
+        <Sec
+          id="shadows"
+          title="Shadows & Motion"
+          desc="Blue-tinted layered shadows. Spring-based easing."
+        >
           <Sub h="Shadows">
             <div className="ds-shadow-grid">
               {SHADOWS.map((s) => (
                 <div key={s.t} className="ds-shadow-item">
-                  <div className="ds-shadow-item__box" style={{ boxShadow: `var(${s.t})` }} />
+                  <div
+                    className="ds-shadow-item__box"
+                    style={{ boxShadow: `var(${s.t})` }}
+                  />
                   <code className="ds-shadow-item__code">{s.t}</code>
                   <span className="ds-shadow-item__label">{s.l}</span>
                 </div>
@@ -552,64 +839,176 @@ export function DesignSystemPage() {
         {/* ============================================================
            SIDEBAR (from app-shell-whatnow.html prototype)
            ============================================================ */}
-        <Sec id="sidebar" title="Sidebar" desc="The app shell sidebar — lens switch, nav items with icons + active bar + count badges. From app-shell-whatnow.html.">
+        <Sec
+          id="sidebar"
+          title="Sidebar"
+          desc="The app shell sidebar — lens switch, nav items with icons + active bar + count badges. From app-shell-whatnow.html."
+        >
           <Sub h="Lens Switch (Work / Me)">
             <div className="ds-lens">
-              <button className={`ds-lens__btn ${lensActive === "work" ? "ds-lens__btn--active" : ""}`} onClick={() => setLensActive("work")}>Work</button>
-              <button className={`ds-lens__btn ${lensActive === "me" ? "ds-lens__btn--active" : ""}`} onClick={() => setLensActive("me")}>Me</button>
+              <button
+                className={`ds-lens__btn ${lensActive === "work" ? "ds-lens__btn--active" : ""}`}
+                onClick={() => setLensActive("work")}
+              >
+                Work
+              </button>
+              <button
+                className={`ds-lens__btn ${lensActive === "me" ? "ds-lens__btn--active" : ""}`}
+                onClick={() => setLensActive("me")}
+              >
+                Me
+              </button>
             </div>
           </Sub>
           <Sub h="Nav Items">
             <div className="ds-navitems">
               {/* Next — active */}
               <a className="ds-navitem ds-navitem--active">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.8 4.2 4.5.4-3.4 3 1 4.4L8 11.3 4.1 13.5l1-4.4-3.4-3 4.5-.4z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 1.5l1.8 4.2 4.5.4-3.4 3 1 4.4L8 11.3 4.1 13.5l1-4.4-3.4-3 4.5-.4z"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 Next
               </a>
               {/* Inbox — with urgent count */}
               <a className="ds-navitem">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M3 8h10M3 12h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3 4h10M3 8h10M3 12h6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
                 Inbox
-                <span className="ds-navitem__count ds-navitem__count--urgent">4</span>
+                <span className="ds-navitem__count ds-navitem__count--urgent">
+                  4
+                </span>
               </a>
               {/* Today — with count */}
               <a className="ds-navitem">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4" /><path d="M8 5v3.5l2 1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle
+                    cx="8"
+                    cy="8"
+                    r="6"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                  />
+                  <path
+                    d="M8 5v3.5l2 1"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
+                </svg>
                 Today
                 <span className="ds-navitem__count">3</span>
               </a>
               {/* Upcoming */}
               <a className="ds-navitem">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" /><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <rect
+                    x="2.5"
+                    y="3.5"
+                    width="11"
+                    height="10"
+                    rx="1.5"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                  />
+                  <path
+                    d="M2.5 6.5h11M5.5 2v3M10.5 2v3"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
+                </svg>
                 Upcoming
               </a>
               {/* Someday */}
               <a className="ds-navitem">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 8c0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5-2.5 5.5-5.5 5.5-5.5-2.5-5.5-5.5z" stroke="currentColor" strokeWidth="1.4" /><path d="M8 5v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeDasharray="1 1.5" /></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2.5 8c0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5-2.5 5.5-5.5 5.5-5.5-2.5-5.5-5.5z"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                  />
+                  <path
+                    d="M8 5v3"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeDasharray="1 1.5"
+                  />
+                </svg>
                 Someday
               </a>
               {/* Projects — with count */}
               <a className="ds-navitem">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h3l1.5 8h6L14 6H5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /><circle cx="6.5" cy="13.5" r="1" fill="currentColor" /><circle cx="11.5" cy="13.5" r="1" fill="currentColor" /></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2 4h3l1.5 8h6L14 6H5"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="6.5" cy="13.5" r="1" fill="currentColor" />
+                  <circle cx="11.5" cy="13.5" r="1" fill="currentColor" />
+                </svg>
                 Projects
                 <span className="ds-navitem__count">6</span>
               </a>
               {/* Goals — with count */}
               <a className="ds-navitem">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l2.2 4.5 5 .7-3.6 3.5.85 5L8 12.3 3.55 14.7l.85-5L.8 6.2l5-.7z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" /></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 1l2.2 4.5 5 .7-3.6 3.5.85 5L8 12.3 3.55 14.7l.85-5L.8 6.2l5-.7z"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 Goals
                 <span className="ds-navitem__count">3</span>
               </a>
               {/* Logbook */}
               <a className="ds-navitem">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 13.5V4l4-1.5v11M6 8h4M10 13.5V6l4-1.5v9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2 13.5V4l4-1.5v11M6 8h4M10 13.5V6l4-1.5v9"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 Logbook
               </a>
             </div>
           </Sub>
           <Sub h="User Footer">
             <div className="ds-navitem ds-navitem--user">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.4" /><path d="M3 13.5c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle
+                  cx="8"
+                  cy="5.5"
+                  r="2.5"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                />
+                <path
+                  d="M3 13.5c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+              </svg>
               Jake
             </div>
           </Sub>
@@ -618,7 +1017,11 @@ export function DesignSystemPage() {
         {/* ============================================================
            LENS SWITCH — Work/Me toggle
            ============================================================ */}
-        <Sec id="lens" title="Lens Switch" desc="Segmented control for switching between life contexts (Work / Me). Sits at the top of the sidebar. Distinct from ModeDial (operational modes). From app-shell-whatnow.html.">
+        <Sec
+          id="lens"
+          title="Lens Switch"
+          desc="Segmented control for switching between life contexts (Work / Me). Sits at the top of the sidebar. Distinct from ModeDial (operational modes). From app-shell-whatnow.html."
+        >
           <Sub h="Default">
             <LensSwitchDemo />
           </Sub>
@@ -627,11 +1030,20 @@ export function DesignSystemPage() {
         {/* ============================================================
            NAV ITEM — sidebar nav element
            ============================================================ */}
-        <Sec id="nav-item" title="Nav Item" desc="Sidebar navigation item with icon, optional count badge, and the signature teal left-edge active bar. From app-shell-whatnow.html.">
+        <Sec
+          id="nav-item"
+          title="Nav Item"
+          desc="Sidebar navigation item with icon, optional count badge, and the signature teal left-edge active bar. From app-shell-whatnow.html."
+        >
           <Sub h="States">
             <div className="ds-navitems">
               <NavItem icon={<StarIcon />} label="Next" active />
-              <NavItem icon={<InboxIcon />} label="Inbox" count={4} countVariant="urgent" />
+              <NavItem
+                icon={<InboxIcon />}
+                label="Inbox"
+                count={4}
+                countVariant="urgent"
+              />
               <NavItem icon={<ClockIcon />} label="Today" count={3} />
               <NavItem icon={<ProjectsIcon />} label="Projects" soon />
             </div>
@@ -641,7 +1053,11 @@ export function DesignSystemPage() {
         {/* ============================================================
            ICON SET — nav + UI icons
            ============================================================ */}
-        <Sec id="icons" title="Icon Set" desc="Thin 1.4-stroke SVG icons, 16×16 viewBox. All use currentColor for theming. Source: app-shell-whatnow.html.">
+        <Sec
+          id="icons"
+          title="Icon Set"
+          desc="Thin 1.4-stroke SVG icons, 16×16 viewBox. All use currentColor for theming. Source: app-shell-whatnow.html."
+        >
           <Sub h="Navigation">
             <div className="ds-icon-grid">
               {[
@@ -681,14 +1097,25 @@ export function DesignSystemPage() {
         {/* ============================================================
            FLOATING UTILITY
            ============================================================ */}
-        <Sec id="utilities" title="Floating Utility" desc="Small shell utility controls float over the workspace; Capture lives as a lower-right floating action button.">
+        <Sec
+          id="utilities"
+          title="Floating Utility"
+          desc="Small shell utility controls float over the workspace; Capture lives as a lower-right floating action button."
+        >
           <Sub h="Icon Button">
             <div className="ds-btn-row">
               <button className="ds-icon-btn" title="Shortcuts (?)">
                 ?
               </button>
               <button className="ds-icon-btn" title="Close">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M4 4l8 8M12 4l-8 8"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
               </button>
             </div>
           </Sub>
@@ -697,7 +1124,11 @@ export function DesignSystemPage() {
         {/* ============================================================
            DISPATCH BUTTONS (from triage-tinder.html)
            ============================================================ */}
-        <Sec id="dispatch" title="Dispatch Buttons" desc="Triage action buttons — icon + label + sublabel + kbd shortcut. From triage-tinder.html prototype.">
+        <Sec
+          id="dispatch"
+          title="Dispatch Buttons"
+          desc="Triage action buttons — icon + label + sublabel + kbd shortcut. From triage-tinder.html prototype."
+        >
           <Sub h="Primary Dispatch">
             <div className="ds-dispatch-grid">
               <DispatchButton
@@ -705,21 +1136,65 @@ export function DesignSystemPage() {
                 label="Task · Today"
                 sub="a quick action, due today"
                 kbd="1"
-                icon={<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" /><path d="M8 5v3.5l2 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>}
+                icon={
+                  <svg viewBox="0 0 16 16" fill="none">
+                    <circle
+                      cx="8"
+                      cy="8"
+                      r="6"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M8 5v3.5l2 1"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                }
               />
               <DispatchButton
                 tone="violet"
                 label="Project"
                 sub="a big outcome, multi-step"
                 kbd="P"
-                icon={<svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5" /><path d="M2 6h12" stroke="currentColor" strokeWidth="1.5" /></svg>}
+                icon={
+                  <svg viewBox="0 0 16 16" fill="none">
+                    <rect
+                      x="2"
+                      y="3"
+                      width="12"
+                      height="10"
+                      rx="1.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <path d="M2 6h12" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                }
               />
               <DispatchButton
                 tone="amber"
                 label="Resource"
                 sub="reference — link or note, filed under a project or goal"
                 kbd="R"
-                icon={<svg viewBox="0 0 16 16" fill="none"><path d="M3.5 13.5V3.5a1 1 0 011-1h5.5L13 5.5v8a1 1 0 01-1 1H4.5a1 1 0 01-1-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /><path d="M9.5 2.5V6h3.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>}
+                icon={
+                  <svg viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M3.5 13.5V3.5a1 1 0 011-1h5.5L13 5.5v8a1 1 0 01-1 1H4.5a1 1 0 01-1-1z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M9.5 2.5V6h3.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                }
               />
             </div>
           </Sub>
@@ -735,7 +1210,11 @@ export function DesignSystemPage() {
         {/* ============================================================
            TRIAGE CARD — single item during the triage walkthrough
            ============================================================ */}
-        <Sec id="triage-card" title="Triage Card" desc="A single captured item during the Tinder-style triage walkthrough. Shows text, 'captured X ago' meta, and parsed-token chips. From triage-tinder.html.">
+        <Sec
+          id="triage-card"
+          title="Triage Card"
+          desc="A single captured item during the Tinder-style triage walkthrough. Shows text, 'captured X ago' meta, and parsed-token chips. From triage-tinder.html."
+        >
           <Sub h="Default">
             <div style={{ maxWidth: 400 }}>
               <TriageCard
@@ -750,15 +1229,31 @@ export function DesignSystemPage() {
           </Sub>
           <Sub h="Chips Taxonomy">
             <div className="ds-usage">
-              <p className="ds-usage__p"><strong>date</strong> — teal. Parsed due dates (📅 tomorrow, 📅 Jun 30).</p>
-              <p className="ds-usage__p"><strong>project</strong> — teal. The first `#project` capture hint, resolved at triage (▣ mvp).</p>
-              <p className="ds-usage__p"><strong>tag</strong> — teal. Additional `#tag` capture tokens after the project hint (#deep-work, #errands).</p>
-              <p className="ds-usage__p"><strong>priority</strong> — amber. Importance flags (★ Important).</p>
+              <p className="ds-usage__p">
+                <strong>date</strong> — teal. Parsed due dates (📅 tomorrow, 📅
+                Jun 30).
+              </p>
+              <p className="ds-usage__p">
+                <strong>project</strong> — teal. The first `#project` capture
+                hint, resolved at triage (▣ mvp).
+              </p>
+              <p className="ds-usage__p">
+                <strong>tag</strong> — teal. Additional `#tag` capture tokens
+                after the project hint (#deep-work, #errands).
+              </p>
+              <p className="ds-usage__p">
+                <strong>priority</strong> — amber. Importance flags (★
+                Important).
+              </p>
             </div>
           </Sub>
         </Sec>
 
-        <Sec id="spec-row" title="Spec Row" desc="Compact property row with inline options or a picker-backed row action.">
+        <Sec
+          id="spec-row"
+          title="Spec Row"
+          desc="Compact property row with inline options or a picker-backed row action."
+        >
           <div className="ds-demo-stack">
             <SpecRow
               label="Priority"
@@ -787,20 +1282,39 @@ export function DesignSystemPage() {
         {/* ============================================================
            PROGRESS BAR (from triage-tinder.html)
            ============================================================ */}
-        <Sec id="progress" title="Progress Bar" desc="Triage progress indicator — count text + fill bar. From triage-tinder.html.">
+        <Sec
+          id="progress"
+          title="Progress Bar"
+          desc="Triage progress indicator — count text + fill bar. From triage-tinder.html."
+        >
           <Sub h="States">
             <div className="ds-progress-row">
               <div className="ds-progress-item">
-                <span className="ds-progress__count"><b>1</b> of <b>7</b></span>
-                <div className="ds-progress__bar"><div className="ds-progress__fill" style={{ width: "14%" }} /></div>
+                <span className="ds-progress__count">
+                  <b>1</b> of <b>7</b>
+                </span>
+                <div className="ds-progress__bar">
+                  <div className="ds-progress__fill" style={{ width: "14%" }} />
+                </div>
               </div>
               <div className="ds-progress-item">
-                <span className="ds-progress__count"><b>4</b> of <b>7</b></span>
-                <div className="ds-progress__bar"><div className="ds-progress__fill" style={{ width: "57%" }} /></div>
+                <span className="ds-progress__count">
+                  <b>4</b> of <b>7</b>
+                </span>
+                <div className="ds-progress__bar">
+                  <div className="ds-progress__fill" style={{ width: "57%" }} />
+                </div>
               </div>
               <div className="ds-progress-item">
-                <span className="ds-progress__count"><b>7</b> of <b>7</b> · done</span>
-                <div className="ds-progress__bar"><div className="ds-progress__fill" style={{ width: "100%" }} /></div>
+                <span className="ds-progress__count">
+                  <b>7</b> of <b>7</b> · done
+                </span>
+                <div className="ds-progress__bar">
+                  <div
+                    className="ds-progress__fill"
+                    style={{ width: "100%" }}
+                  />
+                </div>
               </div>
             </div>
           </Sub>
@@ -809,20 +1323,42 @@ export function DesignSystemPage() {
         {/* ============================================================
            EMPTY STATES (from triage-tinder.html)
            ============================================================ */}
-        <Sec id="empty" title="Empty States" desc="Inbox zero. Next empty. From triage-tinder + Next prototypes.">
+        <Sec
+          id="empty"
+          title="Empty States"
+          desc="Inbox zero. Next empty. From triage-tinder + Next prototypes."
+        >
           <Sub h="Inbox Zero (Triage Complete)">
             <div className="ds-empty-state">
               <div className="ds-empty-state__circle">
-                <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3.5 8.5l3 3 6-7"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </div>
               <h3 className="ds-empty-state__title">Inbox zero.</h3>
-              <p className="ds-empty-state__text">Nothing left to decide. Go do something.</p>
+              <p className="ds-empty-state__text">
+                Nothing left to decide. Go do something.
+              </p>
             </div>
           </Sub>
           <Sub h="Next Empty">
             <div className="ds-empty-state">
-              <h3 className="ds-empty-state__title" style={{ fontSize: "2rem" }}>What now?</h3>
-              <p className="ds-empty-state__text">Your inbox is empty. Capture something with <span className="ds-inline-kbd">⌘K</span></p>
+              <h3
+                className="ds-empty-state__title"
+                style={{ fontSize: "2rem" }}
+              >
+                What now?
+              </h3>
+              <p className="ds-empty-state__text">
+                Your inbox is empty. Capture something with{" "}
+                <span className="ds-inline-kbd">⌘K</span>
+              </p>
             </div>
           </Sub>
         </Sec>
@@ -830,7 +1366,11 @@ export function DesignSystemPage() {
         {/* ============================================================
            WHAT NOW CARD (composite from all 3 prototypes)
            ============================================================ */}
-        <Sec id="wn-card" title="Next Card" desc="The composite task card — context pill, completion circle, task, meta, why badge, actions. From app-shell + landing + triage prototypes.">
+        <Sec
+          id="wn-card"
+          title="Next Card"
+          desc="The composite task card — context pill, completion circle, task, meta, why badge, actions. From app-shell + landing + triage prototypes."
+        >
           <Sub h="Full Card (App Shell Version)">
             <NextCardDemo />
           </Sub>
@@ -845,10 +1385,14 @@ export function DesignSystemPage() {
               </div>
               <div className="ds-wn-title">Email Sarah re: Q3 invoice</div>
               <div className="ds-wn-meta">Due today · 15 min</div>
-              <div className="ds-wn-why">★ Important · the reason this is next</div>
+              <div className="ds-wn-why">
+                ★ Important · the reason this is next
+              </div>
               <div className="ds-wn-actions">
                 <Button size="sm">Do this</Button>
-                <Button variant="secondary" size="sm">Switch</Button>
+                <Button variant="secondary" size="sm">
+                  Switch
+                </Button>
               </div>
             </div>
           </Sub>
@@ -857,7 +1401,11 @@ export function DesignSystemPage() {
         {/* ============================================================
            MODE DIAL (bottom nav) — foundation of navigation
            ============================================================ */}
-        <Sec id="mode-dial" title="Mode Dial — Bottom Nav" desc="The foundation of navigation. Bottom-center persistent pill holding mode switchers (Plan / Do / Review). Active mode gets teal. From mode-zoom-unified + approach-c-time-adaptive + mobile-gesture-modal.">
+        <Sec
+          id="mode-dial"
+          title="Mode Dial — Bottom Nav"
+          desc="The foundation of navigation. Bottom-center persistent pill holding mode switchers (Plan / Do / Review). Active mode gets teal. From mode-zoom-unified + approach-c-time-adaptive + mobile-gesture-modal."
+        >
           <Sub h="Default (Desktop)">
             <ModeDialDemo variant="default" />
           </Sub>
@@ -872,7 +1420,11 @@ export function DesignSystemPage() {
         {/* ============================================================
            ZOOM DOCK — Task/Project/Goal zoom controls
            ============================================================ */}
-        <Sec id="zoom-dock" title="Zoom Dock" desc="Task / Project / Goal zoom controls. Icon-only pill docked beside the ModeDial. Active level gets teal. From mode-zoom-unified + approach-a-zoom-pan.">
+        <Sec
+          id="zoom-dock"
+          title="Zoom Dock"
+          desc="Task / Project / Goal zoom controls. Icon-only pill docked beside the ModeDial. Active level gets teal. From mode-zoom-unified + approach-a-zoom-pan."
+        >
           <Sub h="Default">
             <ZoomDockDemo />
           </Sub>
@@ -881,7 +1433,11 @@ export function DesignSystemPage() {
         {/* ============================================================
            BREADCRUMB — zoom orientation
            ============================================================ */}
-        <Sec id="breadcrumb" title="Breadcrumb" desc="Zoom orientation crumbs (Goal › Project › Task). Current scope highlighted teal; ancestors dim. From mode-zoom-unified + mobile-gesture-modal + approach-a-zoom-pan.">
+        <Sec
+          id="breadcrumb"
+          title="Breadcrumb"
+          desc="Zoom orientation crumbs (Goal › Project › Task). Current scope highlighted teal; ancestors dim. From mode-zoom-unified + mobile-gesture-modal + approach-a-zoom-pan."
+        >
           <Sub h="Default">
             <BreadcrumbDemo />
           </Sub>
@@ -890,13 +1446,22 @@ export function DesignSystemPage() {
         {/* ============================================================
            OVERLAYS & MODALS — the app's overlay approach
            ============================================================ */}
-        <Sec id="overlays" title="Overlays & Modals" desc="The app uses four overlay patterns. Each has a specific use — don't mix them. See docs/modal-approach.md for the full spec.">
+        <Sec
+          id="overlays"
+          title="Overlays & Modals"
+          desc="The app uses four overlay patterns. Each has a specific use — don't mix them. See docs/modal-approach.md for the full spec."
+        >
           <div className="ds-overlay-grid">
             <div className="ds-overlay-card">
               <div className="ds-overlay-card__num">01</div>
               <h3 className="ds-overlay-card__title">Full-screen overlay</h3>
-              <p className="ds-overlay-card__use"><strong>Use:</strong> immersive flows that take over the whole screen</p>
-              <p className="ds-overlay-card__ex">Triage · Focus mode · Onboarding coach</p>
+              <p className="ds-overlay-card__use">
+                <strong>Use:</strong> immersive flows that take over the whole
+                screen
+              </p>
+              <p className="ds-overlay-card__ex">
+                Triage · Focus mode · Onboarding coach
+              </p>
               <div className="ds-overlay-preview ds-overlay-preview--full">
                 <span className="ds-overlay-preview__label">Full viewport</span>
               </div>
@@ -904,8 +1469,13 @@ export function DesignSystemPage() {
             <div className="ds-overlay-card">
               <div className="ds-overlay-card__num">02</div>
               <h3 className="ds-overlay-card__title">Capture popover</h3>
-              <p className="ds-overlay-card__use"><strong>Use:</strong> quick input, dismissable, never blocks flow</p>
-              <p className="ds-overlay-card__ex">⌘K capture · quick add · inline edit</p>
+              <p className="ds-overlay-card__use">
+                <strong>Use:</strong> quick input, dismissable, never blocks
+                flow
+              </p>
+              <p className="ds-overlay-card__ex">
+                ⌘K capture · quick add · inline edit
+              </p>
               <div className="ds-overlay-preview ds-overlay-preview--pop">
                 <span className="ds-overlay-preview__label">Centered card</span>
               </div>
@@ -913,34 +1483,71 @@ export function DesignSystemPage() {
             <div className="ds-overlay-card">
               <div className="ds-overlay-card__num">03</div>
               <h3 className="ds-overlay-card__title">Bottom sheet</h3>
-              <p className="ds-overlay-card__use"><strong>Use:</strong> mobile-first actions anchored to thumb zone</p>
-              <p className="ds-overlay-card__ex">Snooze options · action menus · "Not now" flow</p>
+              <p className="ds-overlay-card__use">
+                <strong>Use:</strong> mobile-first actions anchored to thumb
+                zone
+              </p>
+              <p className="ds-overlay-card__ex">
+                Snooze options · action menus · "Not now" flow
+              </p>
               <div className="ds-overlay-preview ds-overlay-preview--sheet">
-                <span className="ds-overlay-preview__label">Anchored bottom</span>
+                <span className="ds-overlay-preview__label">
+                  Anchored bottom
+                </span>
               </div>
             </div>
             <div className="ds-overlay-card">
               <div className="ds-overlay-card__num">04</div>
               <h3 className="ds-overlay-card__title">Confirm dialog</h3>
-              <p className="ds-overlay-card__use"><strong>Use:</strong> destructive or irreversible actions (rare)</p>
-              <p className="ds-overlay-card__ex">Delete account · Discard changes</p>
+              <p className="ds-overlay-card__use">
+                <strong>Use:</strong> destructive or irreversible actions (rare)
+              </p>
+              <p className="ds-overlay-card__ex">
+                Delete account · Discard changes
+              </p>
               <div className="ds-overlay-preview ds-overlay-preview--confirm">
-                <span className="ds-overlay-preview__label">Small centered</span>
+                <span className="ds-overlay-preview__label">
+                  Small centered
+                </span>
               </div>
             </div>
           </div>
           <Sub h="Shared behaviors">
             <div className="ds-usage">
-              <p className="ds-usage__p"><strong>Backdrop:</strong> semi-transparent surface tint, <code className="ds-inline-code">oklch(0.2 0.02 230 / 0.4)</code>. Click dismisses non-blocking overlays only.</p>
-              <p className="ds-usage__p"><strong>Escape:</strong> every overlay closes on <span className="ds-inline-kbd">Esc</span>. Never trap the user.</p>
-              <p className="ds-usage__p"><strong>Focus:</strong> focus moves into the overlay on open, returns to trigger on close. Trap focus inside while open.</p>
-              <p className="ds-usage__p"><strong>Scroll lock:</strong> body scroll locks while any overlay is open.</p>
-              <p className="ds-usage__p"><strong>Motion:</strong> backdrop fades 150ms; content rises 250ms with <code className="ds-inline-code">--aa-ease-out-quart</code>. Exit is ~60% of enter duration.</p>
+              <p className="ds-usage__p">
+                <strong>Backdrop:</strong> semi-transparent surface tint,{" "}
+                <code className="ds-inline-code">
+                  oklch(0.2 0.02 230 / 0.4)
+                </code>
+                . Click dismisses non-blocking overlays only.
+              </p>
+              <p className="ds-usage__p">
+                <strong>Escape:</strong> every overlay closes on{" "}
+                <span className="ds-inline-kbd">Esc</span>. Never trap the user.
+              </p>
+              <p className="ds-usage__p">
+                <strong>Focus:</strong> focus moves into the overlay on open,
+                returns to trigger on close. Trap focus inside while open.
+              </p>
+              <p className="ds-usage__p">
+                <strong>Scroll lock:</strong> body scroll locks while any
+                overlay is open.
+              </p>
+              <p className="ds-usage__p">
+                <strong>Motion:</strong> backdrop fades 150ms; content rises
+                250ms with{" "}
+                <code className="ds-inline-code">--aa-ease-out-quart</code>.
+                Exit is ~60% of enter duration.
+              </p>
             </div>
           </Sub>
         </Sec>
 
-        <Sec id="picker-sheet" title="Picker Sheet" desc="Shared BottomSheet list for choosing a Project, Goal, or destination.">
+        <Sec
+          id="picker-sheet"
+          title="Picker Sheet"
+          desc="Shared BottomSheet list for choosing a Project, Goal, or destination."
+        >
           <Button variant="secondary" onClick={() => setPickerOpen(true)}>
             Open picker
           </Button>
@@ -948,17 +1555,29 @@ export function DesignSystemPage() {
             <PickerSheet
               title="File in"
               items={[
-                { id: "mvp", label: "MVP", meta: "Grow audience", current: true },
+                {
+                  id: "mvp",
+                  label: "MVP",
+                  meta: "Grow audience",
+                  current: true,
+                },
                 { id: "ops", label: "Operations" },
               ]}
-              action={{ label: "…or file under a goal", onPick: () => setPickerOpen(false) }}
+              action={{
+                label: "…or file under a goal",
+                onPick: () => setPickerOpen(false),
+              }}
               onPick={() => setPickerOpen(false)}
               onClose={() => setPickerOpen(false)}
             />
           )}
         </Sec>
 
-        <Sec id="detail-actions" title="Detail Actions" desc="Compact action tray for Project and Goal detail headers.">
+        <Sec
+          id="detail-actions"
+          title="Detail Actions"
+          desc="Compact action tray for Project and Goal detail headers."
+        >
           <DetailHeaderActions
             actions={[
               { label: "Edit", onClick: () => {} },
@@ -969,40 +1588,125 @@ export function DesignSystemPage() {
         </Sec>
 
         {/* AUTH LAYOUT */}
-        <Sec id="auth-layout" title="Auth Layout" desc="Full-screen calm stage wrapping a single centered card. The shell for every unauthenticated entry screen.">
+        <Sec
+          id="auth-layout"
+          title="Auth Layout"
+          desc="Full-screen calm stage wrapping a single centered card. The shell for every unauthenticated entry screen."
+        >
           <Sub h="Role">
             <div className="ds-usage">
-              <p className="ds-usage__p"><strong>One job:</strong> frame a single Wasp auth form (login, signup, email verification, password reset) in a focused, brand-marked card on a calm full-screen stage.</p>
-              <p className="ds-usage__p"><strong>Use when:</strong> building an unauthenticated entry screen that needs a focused single-card layout.</p>
-              <p className="ds-usage__p"><strong>Don't use for:</strong> authenticated app surfaces (use <code className="ds-inline-code">AppShell</code>); modal flows (use <code className="ds-inline-code">BottomSheet</code> or the overlay patterns above); multi-step wizards (onboarding uses its own full-screen stage).</p>
+              <p className="ds-usage__p">
+                <strong>One job:</strong> frame a single Wasp auth form (login,
+                signup, email verification, password reset) in a focused,
+                brand-marked card on a calm full-screen stage.
+              </p>
+              <p className="ds-usage__p">
+                <strong>Use when:</strong> building an unauthenticated entry
+                screen that needs a focused single-card layout.
+              </p>
+              <p className="ds-usage__p">
+                <strong>Don't use for:</strong> authenticated app surfaces (use{" "}
+                <code className="ds-inline-code">AppShell</code>); modal flows
+                (use <code className="ds-inline-code">BottomSheet</code> or the
+                overlay patterns above); multi-step wizards (onboarding uses its
+                own full-screen stage).
+              </p>
             </div>
           </Sub>
           <Sub h="Anatomy">
             <div className="ds-usage">
-              <p className="ds-usage__p"><strong>Brand mark</strong> — centered teal checkmark tile, anchors the brand.</p>
-              <p className="ds-usage__p"><strong>Title + subtitle</strong> — one short, on-voice headline + optional supporting line. No marketing copy.</p>
-              <p className="ds-usage__p"><strong>Children</strong> — a Wasp auth form (LoginForm, SignupForm, …) themed via <code className="ds-inline-code">aaAuthAppearance</code>.</p>
-              <p className="ds-usage__p"><strong>Footer</strong> — optional flat stack of secondary links ("forgot password", "make an account").</p>
+              <p className="ds-usage__p">
+                <strong>Brand mark</strong> — centered teal checkmark tile,
+                anchors the brand.
+              </p>
+              <p className="ds-usage__p">
+                <strong>Title + subtitle</strong> — one short, on-voice headline
+                + optional supporting line. No marketing copy.
+              </p>
+              <p className="ds-usage__p">
+                <strong>Children</strong> — a Wasp auth form (LoginForm,
+                SignupForm, …) themed via{" "}
+                <code className="ds-inline-code">aaAuthAppearance</code>.
+              </p>
+              <p className="ds-usage__p">
+                <strong>Footer</strong> — optional flat stack of secondary links
+                ("forgot password", "make an account").
+              </p>
             </div>
           </Sub>
           <Sub h="Live preview">
             {/* Statically render a representative auth card so the pattern is
                 visible at /design-system without mounting a live Wasp form. */}
-            <div style={{ minHeight: 360, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div
+              style={{
+                minHeight: 360,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <AuthLayout
                 title="Welcome back."
                 subtitle="Pick up where you left off."
                 footer={
                   <>
-                    <span>New here? <strong style={{ color: "var(--aa-teal-cta)" }}>Make an account</strong></span>
-                    <span>Forgot your password? <strong style={{ color: "var(--aa-teal-cta)" }}>Reset it</strong></span>
+                    <span>
+                      New here?{" "}
+                      <strong style={{ color: "var(--aa-teal-cta)" }}>
+                        Make an account
+                      </strong>
+                    </span>
+                    <span>
+                      Forgot your password?{" "}
+                      <strong style={{ color: "var(--aa-teal-cta)" }}>
+                        Reset it
+                      </strong>
+                    </span>
                   </>
                 }
               >
-                <div style={{ display: "flex", flexDirection: "column", gap: "var(--aa-space-md)", marginTop: "var(--aa-space-lg)" }}>
-                  <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--aa-text-2)" }}>Email</label>
-                  <div style={{ padding: "10px 12px", border: "1px solid var(--aa-border-strong)", borderRadius: "var(--aa-radius-sm)", color: "var(--aa-text-4)", fontSize: "0.95rem" }}>you@example.com</div>
-                  <div style={{ marginTop: "var(--aa-space-md)", padding: "11px 14px", background: "var(--aa-teal-cta)", color: "white", borderRadius: "var(--aa-radius-sm)", textAlign: "center", fontWeight: 600, fontSize: "0.95rem" }}>Log in</div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--aa-space-md)",
+                    marginTop: "var(--aa-space-lg)",
+                  }}
+                >
+                  <label
+                    style={{
+                      fontSize: "0.875rem",
+                      fontWeight: 500,
+                      color: "var(--aa-text-2)",
+                    }}
+                  >
+                    Email
+                  </label>
+                  <div
+                    style={{
+                      padding: "10px 12px",
+                      border: "1px solid var(--aa-border-strong)",
+                      borderRadius: "var(--aa-radius-sm)",
+                      color: "var(--aa-text-4)",
+                      fontSize: "0.95rem",
+                    }}
+                  >
+                    you@example.com
+                  </div>
+                  <div
+                    style={{
+                      marginTop: "var(--aa-space-md)",
+                      padding: "11px 14px",
+                      background: "var(--aa-teal-cta)",
+                      color: "white",
+                      borderRadius: "var(--aa-radius-sm)",
+                      textAlign: "center",
+                      fontWeight: 600,
+                      fontSize: "0.95rem",
+                    }}
+                  >
+                    Log in
+                  </div>
                 </div>
               </AuthLayout>
             </div>
@@ -1030,7 +1734,12 @@ function InteractiveCCDemo() {
   };
   return (
     <div className="ds-cc-demo ds-cc-demo--hero">
-      <CompletionCircle size="md" filled={filled} onClick={handleClick} className={burst ? "aa-cc--burst" : ""} />
+      <CompletionCircle
+        size="md"
+        filled={filled}
+        onClick={handleClick}
+        className={burst ? "aa-cc--burst" : ""}
+      />
       <span className="ds-cc-demo__label">Click to complete (auto-resets)</span>
     </div>
   );
@@ -1095,7 +1804,13 @@ function BottomClusterDemo() {
             label: "Goal (Z)",
             icon: (
               <svg viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="5" stroke="currentColor" strokeWidth="1.5" />
+                <circle
+                  cx="8"
+                  cy="8"
+                  r="5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
                 <circle cx="8" cy="8" r="1.5" fill="currentColor" />
               </svg>
             ),
@@ -1105,7 +1820,15 @@ function BottomClusterDemo() {
             label: "Project",
             icon: (
               <svg viewBox="0 0 16 16" fill="none">
-                <rect x="3" y="3" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                <rect
+                  x="3"
+                  y="3"
+                  width="10"
+                  height="10"
+                  rx="2"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
               </svg>
             ),
           },
@@ -1122,7 +1845,12 @@ function BottomClusterDemo() {
         active={zoom}
         onSelect={setZoom}
       />
-      <Button variant="primary" icon={<span style={{ fontSize: "1rem", lineHeight: 1 }}>+</span>} kbd="⌘K" bare>
+      <Button
+        variant="primary"
+        icon={<span style={{ fontSize: "1rem", lineHeight: 1 }}>+</span>}
+        kbd="⌘K"
+        bare
+      >
         <span className="ds-fab-label">Capture</span>
       </Button>
     </div>
@@ -1143,7 +1871,13 @@ function ZoomDockDemo() {
           label: "Goal (Z)",
           icon: (
             <svg viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="5" stroke="currentColor" strokeWidth="1.5" />
+              <circle
+                cx="8"
+                cy="8"
+                r="5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
               <circle cx="8" cy="8" r="1.5" fill="currentColor" />
             </svg>
           ),
@@ -1153,7 +1887,15 @@ function ZoomDockDemo() {
           label: "Project",
           icon: (
             <svg viewBox="0 0 16 16" fill="none">
-              <rect x="3" y="3" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+              <rect
+                x="3"
+                y="3"
+                width="10"
+                height="10"
+                rx="2"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
             </svg>
           ),
         },
@@ -1220,14 +1962,25 @@ function ToggleDemo() {
   const [on1, setOn1] = useState(true);
   const [on2, setOn2] = useState(false);
   return (
-    <div className="ds-btn-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: "var(--aa-space-md)" }}>
+    <div
+      className="ds-btn-row"
+      style={{
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: "var(--aa-space-md)",
+      }}
+    >
       <div className="ds-toggle-row">
         <Toggle checked={on1} onChange={setOn1} label="Dark mode" />
-        <span className="ds-toggle-label">Dark mode — {on1 ? "on" : "off"}</span>
+        <span className="ds-toggle-label">
+          Dark mode — {on1 ? "on" : "off"}
+        </span>
       </div>
       <div className="ds-toggle-row">
         <Toggle checked={on2} onChange={setOn2} label="Completion sounds" />
-        <span className="ds-toggle-label">Completion sounds — {on2 ? "on" : "off"}</span>
+        <span className="ds-toggle-label">
+          Completion sounds — {on2 ? "on" : "off"}
+        </span>
       </div>
     </div>
   );
@@ -1246,21 +1999,55 @@ interface DemoPayment {
 }
 
 const DEMO_PAYMENTS: DemoPayment[] = [
-  { id: "1", description: "Pro Yearly", amount: 7950, status: "succeeded", date: "Jun 1, 2026" },
-  { id: "2", description: "Pro Yearly", amount: 7950, status: "succeeded", date: "Jun 1, 2025" },
+  {
+    id: "1",
+    description: "Pro Yearly",
+    amount: 7950,
+    status: "succeeded",
+    date: "Jun 1, 2026",
+  },
+  {
+    id: "2",
+    description: "Pro Yearly",
+    amount: 7950,
+    status: "succeeded",
+    date: "Jun 1, 2025",
+  },
 ];
 
 function TableDemo() {
-  const fmt = (cents: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
-  const variant = (s: string) => s === "succeeded" ? "teal" : s === "failed" ? "rose" : "muted";
+  const fmt = (cents: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(cents / 100);
+  const variant = (s: string) =>
+    s === "succeeded" ? "teal" : s === "failed" ? "rose" : "muted";
   return (
     <div style={{ maxWidth: 480 }}>
       <Table
         columns={[
           { key: "date", header: "Date", render: (p) => p.date },
           { key: "description", header: "Plan" },
-          { key: "amount", header: "Amount", align: "right", render: (p) => fmt(p.amount) },
-          { key: "status", header: "Status", align: "center", render: (p) => <Chip variant={variant(p.status) as "teal" | "rose" | "muted"} small>{p.status}</Chip> },
+          {
+            key: "amount",
+            header: "Amount",
+            align: "right",
+            render: (p) => fmt(p.amount),
+          },
+          {
+            key: "status",
+            header: "Status",
+            align: "center",
+            render: (p) => (
+              <Chip
+                variant={variant(p.status) as "teal" | "rose" | "muted"}
+                small
+              >
+                {p.status}
+              </Chip>
+            ),
+          },
         ]}
         rows={DEMO_PAYMENTS}
         rowKey={(p) => p.id}

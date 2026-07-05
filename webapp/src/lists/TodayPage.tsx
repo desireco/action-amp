@@ -1,9 +1,20 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getTasks, getDoneToday, updateTaskStatus, updateTaskContent } from "wasp/client/operations";
+import {
+  getTasks,
+  getDoneToday,
+  updateTaskStatus,
+  updateTaskContent,
+} from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, TaskRow, CompletionCircle, Chip, type TaskRowTask } from "../components/ui";
+import {
+  Button,
+  TaskRow,
+  CompletionCircle,
+  Chip,
+  type TaskRowTask,
+} from "../components/ui";
 import { GroupedList, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
@@ -58,7 +69,11 @@ export function TodayPage() {
       if (!byGoal.has(key)) byGoal.set(key, []);
       byGoal.get(key)!.push(t);
     }
-    return Array.from(byGoal, ([name, items]) => ({ key: name, label: name, items }));
+    return Array.from(byGoal, ([name, items]) => ({
+      key: name,
+      label: name,
+      items,
+    }));
   }, [tasks]);
 
   // Done-today grouped by Goal (or "General"), same shape as the open-task
@@ -73,7 +88,11 @@ export function TodayPage() {
       if (!byGoal.has(key)) byGoal.set(key, []);
       byGoal.get(key)!.push(t);
     }
-    return Array.from(byGoal, ([name, items]) => ({ key: name, label: name, items }));
+    return Array.from(byGoal, ([name, items]) => ({
+      key: name,
+      label: name,
+      items,
+    }));
   }, [doneToday]);
 
   // Promote an Upcoming task onto Today; demote a Today task to Upcoming
@@ -99,6 +118,7 @@ export function TodayPage() {
 
   const overCapacity = (tasks?.length ?? 0) > TODAY_CAP;
   const overflow = useMemo(() => (tasks ?? []).slice(TODAY_CAP), [tasks]);
+  const committedCount = Math.min(tasks?.length ?? 0, TODAY_CAP);
 
   // Note: no early empty-state return — the header (with the See-upcoming
   // toggle) renders even when Today is empty, so the bench is always reachable.
@@ -106,15 +126,33 @@ export function TodayPage() {
 
   return (
     <div className="aa-today">
-      <header className="aa-list-header">
-        <div>
+      <header className="aa-list-header aa-today__hero">
+        <div className="aa-today__hero-copy">
           <div className="aa-list-header__eyebrow">Today</div>
-          <h1 className="aa-list-header__title">
+          <h1 className="aa-list-header__title aa-today__title">
             {tasks?.length ?? 0} of {TODAY_CAP} committed
           </h1>
+          <p className="aa-today__subtitle">
+            Keep the day small enough to finish.
+          </p>
+          <div
+            className="aa-today__meter"
+            aria-label={`${committedCount} of ${TODAY_CAP} Today slots committed`}
+          >
+            {Array.from({ length: TODAY_CAP }, (_, i) => (
+              <span
+                key={i}
+                className={
+                  i < committedCount
+                    ? "aa-today__meter-dot aa-today__meter-dot--filled"
+                    : "aa-today__meter-dot"
+                }
+              />
+            ))}
+          </div>
         </div>
         <Button
-          variant="ghost"
+          variant="secondary"
           size="sm"
           onClick={() => setShowUpcoming((v) => !v)}
           aria-expanded={showUpcoming}
@@ -132,23 +170,28 @@ export function TodayPage() {
         <section className="aa-today__upcoming">
           <h3 className="aa-grouped__heading">Upcoming</h3>
           {(upcoming ?? []).length === 0 ? (
-            <p className="aa-today__upcoming-empty">Nothing on the bench. Snooze a task and it'll show up here.</p>
+            <p className="aa-today__upcoming-empty">
+              Nothing on the bench. Snooze a task and it'll show up here.
+            </p>
           ) : (
             <ul className="aa-grouped__list">
               {(upcoming ?? []).map((task) => (
-                <li key={task.id} className="aa-grouped__item aa-today__swap-row">
+                <li key={task.id} className="aa-grouped__item">
                   <TaskRow
+                    as="div"
+                    variant="surface"
                     task={task}
                     onOpen={() => navigate(`/app/tasks/${task.id}`)}
                     onSaveContent={handleSaveTaskContent}
-                  />
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handlePromote(task)}
                   >
-                    Today
-                  </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handlePromote(task)}
+                    >
+                      Today
+                    </Button>
+                  </TaskRow>
                 </li>
               ))}
             </ul>
@@ -168,52 +211,63 @@ export function TodayPage() {
                 <div className="aa-today__overflow-banner">
                   <Chip variant="amber">Over capacity</Chip>
                   <span>
-                    {overflow.length} task{overflow.length === 1 ? "" : "s"} beyond the cap of {TODAY_CAP}. Bump one to
-                    Upcoming or Someday to make room.
+                    {overflow.length} task{overflow.length === 1 ? "" : "s"}{" "}
+                    beyond the cap of {TODAY_CAP}. Bump one to Upcoming or
+                    Someday to make room.
                   </span>
                 </div>
               )}
 
               <GroupedList
-            groups={groups}
-            renderItem={(task) => (
-              <div className="aa-today__swap-row" key={task.id}>
-                <TaskRow
-                  task={task}
-                  onOpen={() => navigate(`/app/tasks/${task.id}`)}
-                  onSaveContent={handleSaveTaskContent}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDemote(task)}
-                  title="Move back to Upcoming"
-                >
-                  Not today
-                </Button>
-              </div>
-            )}
-          />
+                className="aa-today__list"
+                groups={groups}
+                renderItem={(task) => (
+                  <TaskRow
+                    as="div"
+                    variant="surface"
+                    key={task.id}
+                    task={task}
+                    onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                    onSaveContent={handleSaveTaskContent}
+                    notesToggleLabel="Update task"
+                    notesTogglePlacement="actions"
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDemote(task)}
+                      title="Move back to Upcoming"
+                    >
+                      Not today
+                    </Button>
+                  </TaskRow>
+                )}
+              />
 
-          {overflow.length > 0 && (
-            <section className="aa-today__overflow">
-              <h3 className="aa-grouped__heading">
-                Beyond the cap <span className="aa-grouped__count">{overflow.length}</span>
-              </h3>
-              <ul className="aa-grouped__list">
-                {overflow.map((task) => (
-                  <li key={task.id} className="aa-grouped__item">
-                    <TaskRow
-                      task={task}
-                      muted
-                      onOpen={() => navigate(`/app/tasks/${task.id}`)}
-                      onSaveContent={handleSaveTaskContent}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+              {overflow.length > 0 && (
+                <section className="aa-today__overflow">
+                  <h3 className="aa-grouped__heading">
+                    Beyond the cap{" "}
+                    <span className="aa-grouped__count">{overflow.length}</span>
+                  </h3>
+                  <ul className="aa-grouped__list">
+                    {overflow.map((task) => (
+                      <li key={task.id} className="aa-grouped__item">
+                        <TaskRow
+                          as="div"
+                          variant="surface"
+                          task={task}
+                          muted
+                          onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                          onSaveContent={handleSaveTaskContent}
+                          notesToggleLabel="Update task"
+                          notesTogglePlacement="actions"
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </>
           )}
         </>
@@ -235,11 +289,15 @@ export function TodayPage() {
               groups={doneGroups}
               renderItem={(task) => (
                 <TaskRow
+                  as="div"
+                  variant="surface"
                   key={task.id}
                   task={task}
                   muted
                   onOpen={() => navigate(`/app/tasks/${task.id}`)}
                   onSaveContent={handleSaveTaskContent}
+                  notesToggleLabel="Update task"
+                  notesTogglePlacement="actions"
                 />
               )}
             />

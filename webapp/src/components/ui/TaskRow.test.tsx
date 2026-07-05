@@ -22,7 +22,9 @@ describe("TaskRow", () => {
 
     it("shows project chip when a project is provided", () => {
       renderInContext(
-        <TaskRow task={{ ...BASE_TASK, project: { id: "p1", name: "Ship v2" } }} />,
+        <TaskRow
+          task={{ ...BASE_TASK, project: { id: "p1", name: "Ship v2" } }}
+        />,
       );
       expect(screen.getByText("Ship v2")).toBeInTheDocument();
     });
@@ -38,6 +40,15 @@ describe("TaskRow", () => {
       );
       const li = container.querySelector(".aa-task-row")!;
       expect(li).toHaveClass("aa-task-row--done");
+    });
+
+    it("can render the reusable surface variant as a div", () => {
+      const { container } = renderInContext(
+        <TaskRow as="div" variant="surface" task={BASE_TASK} />,
+      );
+      const row = container.querySelector(".aa-task-row")!;
+      expect(row.tagName).toBe("DIV");
+      expect(row).toHaveClass("aa-task-row--surface");
     });
   });
 
@@ -88,7 +99,9 @@ describe("TaskRow", () => {
 
     it("can add notes when a task has no content yet", async () => {
       const onSaveContent = vi.fn().mockResolvedValue(undefined);
-      renderInContext(<TaskRow task={BASE_TASK} onSaveContent={onSaveContent} />);
+      renderInContext(
+        <TaskRow task={BASE_TASK} onSaveContent={onSaveContent} />,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /add notes/i }));
       fireEvent.change(screen.getByLabelText(/task notes/i), {
@@ -97,7 +110,32 @@ describe("TaskRow", () => {
       fireEvent.click(screen.getByRole("button", { name: /save notes/i }));
 
       await waitFor(() =>
-        expect(onSaveContent).toHaveBeenCalledWith(BASE_TASK, "First useful detail"),
+        expect(onSaveContent).toHaveBeenCalledWith(
+          BASE_TASK,
+          "First useful detail",
+        ),
+      );
+    });
+
+    it("can place the update control in the action rail", () => {
+      const onSaveContent = vi.fn().mockResolvedValue(undefined);
+      const { container } = renderInContext(
+        <TaskRow
+          task={BASE_TASK}
+          onSaveContent={onSaveContent}
+          notesToggleLabel="Update task"
+          notesTogglePlacement="actions"
+        />,
+      );
+
+      const actions = container.querySelector(".aa-task-row__actions")!;
+      expect(actions).toContainElement(
+        screen.getByRole("button", { name: /update task/i }),
+      );
+      expect(
+        container.querySelector(".aa-task-row__notes"),
+      ).not.toContainElement(
+        screen.getByRole("button", { name: /update task/i }),
       );
     });
   });

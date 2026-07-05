@@ -1,4 +1,10 @@
-import { useEffect, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import { Button } from "./Button";
 import { Chip } from "./Chip";
 import { formatRelativeDue } from "../../shared/dateFormat";
@@ -19,12 +25,16 @@ export interface TaskRowTask {
 
 interface TaskRowProps {
   task: TaskRowTask;
+  as?: "li" | "div";
+  variant?: "plain" | "surface";
   /** Lighter visual weight (for Someday / Done) */
   muted?: boolean;
   /** Open the task detail on row click */
   onOpen?: (task: TaskRowTask) => void;
   /** Save durable task notes/body inline */
   onSaveContent?: (task: TaskRowTask, content: string) => Promise<void> | void;
+  notesToggleLabel?: string;
+  notesTogglePlacement?: "inline" | "actions";
   className?: string;
   children?: ReactNode;
 }
@@ -39,7 +49,18 @@ const SIZE_LABEL: Record<string, string> = { S: "S", M: "M", L: "L", XL: "XL" };
  * by ticking a row. A done task reads as such via the `--done` class (struck
  * through, muted), driven by `task.isDone`.
  */
-export function TaskRow({ task, muted = false, onOpen, onSaveContent, className = "", children }: TaskRowProps) {
+export function TaskRow({
+  task,
+  as: Element = "li",
+  variant = "plain",
+  muted = false,
+  onOpen,
+  onSaveContent,
+  notesToggleLabel,
+  notesTogglePlacement = "inline",
+  className = "",
+  children,
+}: TaskRowProps) {
   const done = task.isDone ?? false;
   const hasChildren = Boolean(children);
   const hasInlineNotes = Boolean(onSaveContent);
@@ -80,11 +101,24 @@ export function TaskRow({ task, muted = false, onOpen, onSaveContent, className 
       setSavingNotes(false);
     }
   };
+  const showNotesToggle = hasInlineNotes && !editingNotes;
+  const notesToggleText =
+    notesToggleLabel ?? (content ? "Edit notes" : "Add notes");
+  const notesToggle = showNotesToggle ? (
+    <button
+      type="button"
+      className="aa-task-row__notes-toggle"
+      onClick={() => setEditingNotes(true)}
+    >
+      {notesToggleText}
+    </button>
+  ) : null;
 
   return (
-    <li
+    <Element
       className={[
         "aa-task-row",
+        variant === "surface" ? "aa-task-row--surface" : "",
         done ? "aa-task-row--done" : "",
         muted ? "aa-task-row--muted" : "",
         clickableOnRoot ? "aa-task-row--clickable" : "",
@@ -99,29 +133,57 @@ export function TaskRow({ task, muted = false, onOpen, onSaveContent, className 
       onKeyDown={clickableOnRoot ? openTaskOnEnter : undefined}
     >
       <div
-        className={["aa-task-row__main", onOpen && (hasChildren || hasInlineNotes) ? "aa-task-row__main--clickable" : ""]
+        className={[
+          "aa-task-row__main",
+          onOpen && (hasChildren || hasInlineNotes)
+            ? "aa-task-row__main--clickable"
+            : "",
+        ]
           .filter(Boolean)
           .join(" ")}
-        onClick={onOpen && (hasChildren || hasInlineNotes) ? openTask : undefined}
+        onClick={
+          onOpen && (hasChildren || hasInlineNotes) ? openTask : undefined
+        }
         role={onOpen && (hasChildren || hasInlineNotes) ? "button" : undefined}
         tabIndex={onOpen && (hasChildren || hasInlineNotes) ? 0 : undefined}
-        onKeyDown={onOpen && (hasChildren || hasInlineNotes) ? openTaskOnEnter : undefined}
+        onKeyDown={
+          onOpen && (hasChildren || hasInlineNotes)
+            ? openTaskOnEnter
+            : undefined
+        }
       >
         <span className="aa-task-row__title">{task.description}</span>
-        {(task.project || task.dueDate || task.size || task.priority === "IMPORTANT") && (
+        {(task.project ||
+          task.dueDate ||
+          task.size ||
+          task.priority === "IMPORTANT") && (
           <div className="aa-task-row__meta">
-            {task.priority === "IMPORTANT" && <Chip variant="amber" small>★</Chip>}
-            {task.project && <Chip variant="violet" small>{task.project.name}</Chip>}
+            {task.priority === "IMPORTANT" && (
+              <Chip variant="amber" small>
+                ★
+              </Chip>
+            )}
+            {task.project && (
+              <Chip variant="violet" small>
+                {task.project.name}
+              </Chip>
+            )}
             {task.dueDate && (
               <Chip variant="teal" small>
                 {formatRelativeDue(task.dueDate)}
               </Chip>
             )}
-            {task.size && <span className="aa-task-row__size">{SIZE_LABEL[task.size]}</span>}
+            {task.size && (
+              <span className="aa-task-row__size">{SIZE_LABEL[task.size]}</span>
+            )}
           </div>
         )}
         {hasInlineNotes && (
-          <div className="aa-task-row__notes" onClick={stopRowClick} onKeyDown={stopRowKey}>
+          <div
+            className="aa-task-row__notes"
+            onClick={stopRowClick}
+            onKeyDown={stopRowKey}
+          >
             {editingNotes ? (
               <>
                 <textarea
@@ -133,7 +195,12 @@ export function TaskRow({ task, muted = false, onOpen, onSaveContent, className 
                   disabled={savingNotes}
                 />
                 <div className="aa-task-row__notes-actions">
-                  <Button variant="primary" size="sm" onClick={saveNotes} disabled={savingNotes}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={saveNotes}
+                    disabled={savingNotes}
+                  >
                     Save notes
                   </Button>
                   <Button
@@ -151,20 +218,25 @@ export function TaskRow({ task, muted = false, onOpen, onSaveContent, className 
               </>
             ) : (
               <>
-                {content && <p className="aa-task-row__notes-preview">{content}</p>}
-                <button
-                  type="button"
-                  className="aa-task-row__notes-toggle"
-                  onClick={() => setEditingNotes(true)}
-                >
-                  {content ? "Edit notes" : "Add notes"}
-                </button>
+                {content && (
+                  <p className="aa-task-row__notes-preview">{content}</p>
+                )}
+                {notesTogglePlacement === "inline" && notesToggle}
               </>
             )}
           </div>
         )}
       </div>
-      {children}
-    </li>
+      {(children || (notesTogglePlacement === "actions" && notesToggle)) && (
+        <div
+          className="aa-task-row__actions"
+          onClick={stopRowClick}
+          onKeyDown={stopRowKey}
+        >
+          {children}
+          {notesTogglePlacement === "actions" && notesToggle}
+        </div>
+      )}
+    </Element>
   );
 }
