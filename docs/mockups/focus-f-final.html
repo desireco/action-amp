@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Focus · F · Final</title>
+<style>
+/* ActionAmp design tokens — inlined from tokens.css */
+/* ActionAmp tokens — pulled verbatim from webapp/src/styles/tokens.css */
+:root {
+  --aa-teal: oklch(0.72 0.15 220);
+  --aa-teal-bright: oklch(0.78 0.14 215);
+  --aa-teal-cta: oklch(0.58 0.16 225);
+  --aa-teal-cta-hover: oklch(0.5 0.16 228);
+  --aa-teal-soft: oklch(0.95 0.04 220);
+  --aa-teal-soft-strong: oklch(0.9 0.07 220);
+  --aa-teal-tint-shadow: oklch(0.58 0.16 225 / 0.22);
+
+  --aa-amber: oklch(0.78 0.16 70);
+  --aa-amber-text: oklch(0.45 0.13 65);
+  --aa-amber-soft: oklch(0.95 0.06 75);
+
+  --aa-bg: oklch(0.99 0.005 230);
+  --aa-surface: oklch(1 0.003 230);
+  --aa-border: oklch(0.91 0.01 230);
+  --aa-border-strong: oklch(0.86 0.012 230);
+
+  --aa-text: oklch(0.2 0.015 230);
+  --aa-text-2: oklch(0.36 0.013 230);
+  --aa-text-3: oklch(0.5 0.012 230);
+  --aa-text-4: oklch(0.62 0.01 230);
+
+  --aa-radius-sm: 6px;
+  --aa-radius-md: 8px;
+  --aa-radius-lg: 12px;
+  --aa-radius-xl: 18px;
+  --aa-radius-full: 9999px;
+
+  --aa-shadow-sm: 0 1px 2px oklch(0.25 0.015 230 / 0.06), 0 1px 1px oklch(0.25 0.015 230 / 0.04);
+  --aa-shadow-md: 0 4px 12px oklch(0.25 0.015 230 / 0.08), 0 2px 4px oklch(0.25 0.015 230 / 0.04);
+  --aa-hero-shadow: 0 12px 32px oklch(0.25 0.015 230 / 0.08), 0 40px 96px var(--aa-teal-tint-shadow);
+
+  --aa-ease-out: cubic-bezier(0.4,0,0.2,1);
+  --aa-ease-out-quart: cubic-bezier(0.2,0.7,0.3,1);
+  --aa-ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+
+  --aa-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Roboto, sans-serif;
+  --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--aa-font);
+  color: var(--aa-text);
+  background: var(--aa-bg);
+  -webkit-font-smoothing: antialiased;
+}
+</style>
+<style>
+  /* ============================================================
+     VARIANT F · FOCUS FINAL
+     D's margin-clock layout, plus three things D was missing:
+       (1) C's subtle keyboard hints — N for note, ↵ for complete, esc to exit
+       (2) A summoned notes composer — press N, type, ⌘↵ to post
+       (3) An append-only progress thread showing notes you've posted
+       (4) A confirmation dialog when the completion circle is clicked
+     The circle stays static — it's the completion affordance, not a clock.
+     The only clock is the margin elapsed-time, by design.
+     ============================================================ */
+
+  .aa-focus {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--aa-bg);
+    display: flex; flex-direction: column;
+    animation: aa-fade 0.4s var(--aa-ease-out-quart);
+  }
+  @keyframes aa-fade { from { opacity: 0 } to { opacity: 1 } }
+
+  /* ---- Top bar ---- */
+  .aa-focus__top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 24px 32px;
+  }
+  .aa-clock { display: flex; flex-direction: column; gap: 2px; line-height: 1; }
+  .aa-clock__row { display: inline-flex; align-items: baseline; gap: 6px; }
+  .aa-clock__num {
+    font-family: var(--aa-font);
+    font-size: 22px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--aa-text-2);
+    letter-spacing: -0.02em;
+  }
+  .aa-clock__unit {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--aa-text-4);
+  }
+  .aa-clock__label {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--aa-text-4);
+    margin-top: 4px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .aa-clock__label .dot {
+    width: 5px; height: 5px; border-radius: var(--aa-radius-full);
+    background: var(--aa-teal);
+    animation: breathe-dot 4s var(--aa-ease-out-quart) infinite;
+  }
+  @keyframes breathe-dot {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .aa-focus__top-right {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+  }
+  .aa-session {
+    font-size: 11px; font-weight: 500;
+    color: var(--aa-text-4);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .aa-session__sep { color: var(--aa-border-strong); margin: 0 6px; }
+  .aa-close {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; background: transparent;
+    color: var(--aa-text-3);
+    border-radius: var(--aa-radius-full);
+    cursor: pointer;
+    transition: background 0.2s var(--aa-ease-out), color 0.2s var(--aa-ease-out);
+  }
+  .aa-close:hover { background: var(--aa-surface); color: var(--aa-text); }
+  .aa-close svg { width: 16px; height: 16px; }
+
+  /* ---- Body ---- */
+  .aa-focus__body {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 0 32px 32px;
+    text-align: center;
+    gap: 28px;
+  }
+
+  .aa-presence {
+    position: relative;
+    width: 132px; height: 132px;
+    display: grid; place-items: center;
+  }
+  .aa-presence__halo {
+    position: absolute; inset: 0;
+    border-radius: var(--aa-radius-full);
+    background: radial-gradient(circle at 50% 50%,
+      var(--aa-teal-tint-shadow) 0%, transparent 70%);
+    animation: breathe-halo 5s var(--aa-ease-out-quart) infinite;
+    pointer-events: none;
+  }
+  @keyframes breathe-halo {
+    0%, 100% { transform: scale(0.85); opacity: 0.45; }
+    50%      { transform: scale(1.08); opacity: 0.9; }
+  }
+
+  /* Static completion circle — clicking opens a confirm dialog */
+  .aa-presence__circle {
+    position: relative; z-index: 1;
+    width: 88px; height: 88px;
+    border-radius: var(--aa-radius-full);
+    border: 3px solid var(--aa-border-strong);
+    background: var(--aa-surface);
+    box-shadow: var(--aa-shadow-md);
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: border-color 0.2s var(--aa-ease-out),
+                background 0.2s var(--aa-ease-out),
+                transform 0.18s var(--aa-ease-spring);
+  }
+  .aa-presence__circle:hover {
+    border-color: var(--aa-teal);
+    background: var(--aa-teal-soft);
+    transform: scale(1.02);
+  }
+  .aa-presence__circle:active { transform: scale(0.97); }
+  .aa-presence__circle svg {
+    width: 28px; height: 28px;
+    opacity: 0;
+    transition: opacity 0.18s var(--aa-ease-out);
+    stroke: var(--aa-teal-cta);
+  }
+  .aa-presence__circle:hover svg { opacity: 0.45; }
+
+  .aa-title {
+    font-size: clamp(1.625rem, 3.2vw, 2.125rem);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+    color: var(--aa-text);
+    max-width: 620px;
+    margin: 0;
+  }
+
+  .aa-meta {
+    font-size: 13px;
+    color: var(--aa-text-3);
+    display: inline-flex; align-items: center; gap: 8px;
+    flex-wrap: wrap; justify-content: center;
+    margin-top: -16px;
+  }
+  .aa-meta__sep { color: var(--aa-text-4); }
+
+  /* ---- Progress thread (append-only notes you've posted) ----
+     Visible at rest if there are notes. Empty state: a quiet prompt
+     that doubles as a hint ("press N to add a note"). */
+  .aa-thread {
+    width: 100%; max-width: 620px;
+    text-align: left;
+    display: flex; flex-direction: column-reverse; /* newest near the title */
+    gap: 0;
+  }
+  .aa-thread__item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--aa-border);
+    display: flex; gap: 12px;
+    animation: thread-in 0.3s var(--aa-ease-out-quart);
+  }
+  @keyframes thread-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .aa-thread__dot {
+    width: 6px; height: 6px; border-radius: var(--aa-radius-full);
+    background: var(--aa-border-strong);
+    margin-top: 7px; flex-shrink: 0;
+  }
+  .aa-thread__body { flex: 1; }
+  .aa-thread__text {
+    font-size: 13px; line-height: 1.5;
+    color: var(--aa-text-2);
+  }
+  .aa-thread__time {
+    font-size: 11px;
+    color: var(--aa-text-4);
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+  }
+  .aa-thread__empty {
+    font-size: 13px;
+    color: var(--aa-text-4);
+    text-align: center;
+    padding: 8px 0;
+    display: inline-flex; align-items: center; gap: 8px;
+    margin: 0 auto;
+  }
+  .aa-thread__empty .kbd {
+    font-family: var(--aa-font-mono);
+    font-size: 10px;
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    padding: 1px 5px;
+    border-radius: var(--aa-radius-sm);
+    color: var(--aa-text-3);
+  }
+
+  /* ---- Bottom rail with subtle keyboard hints ----
+     Borrowed from C: the hints are the only chrome.
+     They sit at low opacity until you hover the rail. */
+  .aa-focus__rail {
+    display: flex; justify-content: center; align-items: center;
+    gap: 24px;
+    padding: 16px 32px 24px;
+    opacity: 0.55;
+    transition: opacity 0.3s var(--aa-ease-out);
+  }
+  .aa-focus__rail:hover { opacity: 1; }
+  .aa-hint {
+    font-size: 11px;
+    color: var(--aa-text-4);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .aa-hint button {
+    background: transparent; border: none; padding: 0;
+    font: inherit; font-size: 11px; color: var(--aa-text-4);
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    transition: color 0.15s var(--aa-ease-out);
+  }
+  .aa-hint button:hover { color: var(--aa-text-2); }
+  .aa-hint .kbd {
+    font-family: var(--aa-font-mono);
+    font-size: 10px;
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    padding: 1px 5px;
+    border-radius: var(--aa-radius-sm);
+    color: var(--aa-text-3);
+  }
+
+  /* ---- Summoned notes composer (press N) ---- */
+  .aa-composer {
+    position: fixed; left: 50%; bottom: 64px;
+    transform: translateX(-50%) translateY(12px);
+    width: min(620px, calc(100% - 48px));
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-lg);
+    box-shadow: var(--aa-hero-shadow);
+    padding: 16px;
+    z-index: 150;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s var(--aa-ease-out),
+                transform 0.25s var(--aa-ease-out-quart);
+  }
+  .aa-composer.is-open {
+    opacity: 1; pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+  .aa-composer__label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--aa-text-4);
+    margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .aa-composer__label .esc {
+    font-family: var(--aa-font-mono); font-size: 10px;
+    text-transform: none; letter-spacing: 0;
+    background: var(--aa-bg);
+    border: 1px solid var(--aa-border);
+    padding: 1px 5px; border-radius: var(--aa-radius-sm);
+    color: var(--aa-text-3); font-weight: 400;
+  }
+  .aa-composer textarea {
+    width: 100%;
+    border: none; background: transparent;
+    font: inherit; font-size: 14px; line-height: 1.5;
+    color: var(--aa-text);
+    resize: none; outline: none;
+    min-height: 56px;
+  }
+  .aa-composer textarea::placeholder { color: var(--aa-text-4); }
+  .aa-composer__foot {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px;
+  }
+  .aa-composer__hint {
+    font-size: 11px; color: var(--aa-text-4);
+  }
+  .aa-composer__hint .kbd {
+    font-family: var(--aa-font-mono); font-size: 10px;
+    background: var(--aa-bg); border: 1px solid var(--aa-border);
+    padding: 1px 5px; border-radius: var(--aa-radius-sm);
+    color: var(--aa-text-3);
+  }
+  .aa-composer__post {
+    background: var(--aa-teal-cta); color: white;
+    border: none; cursor: pointer;
+    font: inherit; font-size: 12px; font-weight: 600;
+    padding: 6px 14px;
+    border-radius: var(--aa-radius-md);
+    transition: background 0.2s var(--aa-ease-out), transform 0.18s var(--aa-ease-spring);
+  }
+  .aa-composer__post:hover { background: var(--aa-teal-cta-hover); }
+  .aa-composer__post:active { transform: scale(0.97); }
+  .aa-composer__post:disabled {
+    background: var(--aa-border-strong); cursor: not-allowed;
+  }
+
+  /* ---- Confirmation dialog (clicking the circle) ---- */
+  .aa-confirm-overlay {
+    position: fixed; inset: 0; z-index: 250;
+    background: oklch(0.2 0.015 230 / 0.4);
+    backdrop-filter: blur(2px);
+    display: grid; place-items: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s var(--aa-ease-out);
+  }
+  .aa-confirm-overlay.is-open { opacity: 1; pointer-events: auto; }
+  .aa-confirm {
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-xl);
+    box-shadow: var(--aa-hero-shadow);
+    padding: 24px;
+    width: min(380px, calc(100% - 48px));
+    text-align: center;
+    transform: scale(0.96);
+    transition: transform 0.2s var(--aa-ease-spring);
+  }
+  .aa-confirm-overlay.is-open .aa-confirm { transform: scale(1); }
+  .aa-confirm__circle {
+    width: 56px; height: 56px;
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-teal);
+    display: inline-grid; place-items: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 0 32px var(--aa-teal-tint-shadow);
+    animation: confirm-pulse 2.4s var(--aa-ease-out-quart) infinite;
+  }
+  @keyframes confirm-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  .aa-confirm__circle svg {
+    width: 24px; height: 24px;
+    stroke: white; fill: none;
+    stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .aa-confirm__title {
+    font-size: 16px; font-weight: 700;
+    color: var(--aa-text);
+    margin: 0 0 6px;
+  }
+  .aa-confirm__sub {
+    font-size: 13px;
+    color: var(--aa-text-3);
+    margin: 0 0 20px;
+    line-height: 1.4;
+  }
+  .aa-confirm__sub strong { color: var(--aa-text-2); font-weight: 600; }
+  .aa-confirm__actions {
+    display: flex; gap: 8px; justify-content: center;
+  }
+  .aa-confirm__btn {
+    font: inherit; font-size: 13px; font-weight: 600;
+    padding: 9px 18px;
+    border-radius: var(--aa-radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.2s var(--aa-ease-out), transform 0.18s var(--aa-ease-spring);
+  }
+  .aa-confirm__btn:active { transform: scale(0.97); }
+  .aa-confirm__btn--ghost {
+    background: transparent; color: var(--aa-text-2);
+    border-color: var(--aa-border-strong);
+  }
+  .aa-confirm__btn--ghost:hover { background: var(--aa-bg); }
+  .aa-confirm__btn--primary {
+    background: var(--aa-teal-cta); color: white;
+  }
+  .aa-confirm__btn--primary:hover { background: var(--aa-teal-cta-hover); }
+
+  /* Completed state — the payoff.
+     Circle fills teal with the spring check, halo holds steady. */
+  .aa-focus.is-complete .aa-presence__circle {
+    background: var(--aa-teal);
+    border-color: var(--aa-teal);
+  }
+  .aa-focus.is-complete .aa-presence__circle svg {
+    opacity: 1;
+    stroke: white;
+  }
+  .aa-focus.is-complete .aa-presence__halo {
+    animation: none;
+    opacity: 0.9; transform: scale(1.05);
+  }
+  .aa-focus.is-complete .aa-title {
+    color: var(--aa-text-3);
+    text-decoration: line-through;
+    text-decoration-color: var(--aa-text-4);
+  }
+
+  .canvas-tag {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    padding: 6px 14px;
+    border-radius: var(--aa-radius-full);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    color: var(--aa-text-3);
+    text-transform: uppercase;
+    z-index: 200;
+    box-shadow: var(--aa-shadow-sm);
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-tag">F · Focus Final</div>
+
+<div class="aa-focus" id="focus" role="dialog" aria-modal="true">
+  <div class="aa-focus__top">
+    <div class="aa-clock">
+      <div class="aa-clock__row">
+        <span class="aa-clock__num" id="clockNum">18</span>
+        <span class="aa-clock__unit">min in</span>
+      </div>
+      <div class="aa-clock__label">
+        <span class="dot" aria-hidden="true"></span>
+        in focus
+      </div>
+    </div>
+
+    <div class="aa-focus__top-right">
+      <div class="aa-session">
+        started 9:23<span class="aa-session__sep">·</span>on Onboarding
+      </div>
+      <button class="aa-close" id="closeBtn" aria-label="Exit focus">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+          <path d="M4 4l8 8M12 4l-8 8"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="aa-focus__body">
+    <div class="aa-presence">
+      <div class="aa-presence__halo" aria-hidden="true"></div>
+      <button class="aa-presence__circle" id="circle" aria-label="Complete task">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12.5l4.5 4.5L19 7"/>
+        </svg>
+      </button>
+    </div>
+
+    <h1 class="aa-title" id="title">Write the onboarding copy for the first-run lens picker</h1>
+
+    <div class="aa-meta">
+      <span>due today</span>
+      <span class="aa-meta__sep">·</span>
+      <span>30 min</span>
+    </div>
+
+    <div class="aa-thread" id="thread">
+      <!-- seeded with one note so the pattern is visible -->
+      <div class="aa-thread__item">
+        <div class="aa-thread__dot"></div>
+        <div class="aa-thread__body">
+          <div class="aa-thread__text">Lead with the question, not the feature. "What do you want to make space for?" — then offer lens presets.</div>
+          <div class="aa-thread__time">9:31 AM</div>
+        </div>
+      </div>
+      <div class="aa-thread__item">
+        <div class="aa-thread__dot"></div>
+        <div class="aa-thread__body">
+          <div class="aa-thread__text">Started.</div>
+          <div class="aa-thread__time">9:23 AM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- bottom rail: subtle keyboard map (from C) -->
+  <div class="aa-focus__rail">
+    <span class="aa-hint">
+      <button id="hintNote"><span class="kbd">N</span> note</button>
+    </span>
+    <span class="aa-hint">
+      <button id="hintComplete"><span class="kbd">↵</span> complete</button>
+    </span>
+    <span class="aa-hint">
+      <button id="hintExit"><span class="kbd">esc</span> exit</button>
+    </span>
+  </div>
+</div>
+
+<!-- Summoned notes composer -->
+<div class="aa-composer" id="composer">
+  <div class="aa-composer__label">
+    <span>Progress note</span>
+    <span class="esc">esc to dismiss</span>
+  </div>
+  <textarea id="composerText" placeholder="What did you learn, decide, or get stuck on?"></textarea>
+  <div class="aa-composer__foot">
+    <span class="aa-composer__hint"><span class="kbd">⌘↵</span> to post</span>
+    <button class="aa-composer__post" id="postBtn" disabled>Post note</button>
+  </div>
+</div>
+
+<!-- Confirmation dialog -->
+<div class="aa-confirm-overlay" id="confirmOverlay">
+  <div class="aa-confirm" role="alertdialog" aria-modal="true">
+    <div class="aa-confirm__circle">
+      <svg viewBox="0 0 24 24">
+        <path d="M5 12.5l4.5 4.5L19 7"/>
+      </svg>
+    </div>
+    <h2 class="aa-confirm__title">Mark this done?</h2>
+    <p class="aa-confirm__sub" id="confirmSub">You've been at it for <strong id="confirmMins">18 min</strong>.</p>
+    <div class="aa-confirm__actions">
+      <button class="aa-confirm__btn aa-confirm__btn--ghost" id="confirmCancel">Not yet</button>
+      <button class="aa-confirm__btn aa-confirm__btn--primary" id="confirmGo">Complete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const focus = document.getElementById('focus');
+    const circle = document.getElementById('circle');
+    const title = document.getElementById('title');
+    const thread = document.getElementById('thread');
+    const composer = document.getElementById('composer');
+    const composerText = document.getElementById('composerText');
+    const postBtn = document.getElementById('postBtn');
+    const confirmOverlay = document.getElementById('confirmOverlay');
+    const confirmCancel = document.getElementById('confirmCancel');
+    const confirmGo = document.getElementById('confirmGo');
+    const confirmMins = document.getElementById('confirmMins');
+    const closeBtn = document.getElementById('closeBtn');
+    const hintNote = document.getElementById('hintNote');
+    const hintComplete = document.getElementById('hintComplete');
+    const hintExit = document.getElementById('hintExit');
+
+    // ---- Margin clock ----
+    const startedAt = Date.now() - 18 * 60 * 1000;
+    const clockNum = document.getElementById('clockNum');
+    function elapsedMins() { return Math.floor((Date.now() - startedAt) / 60000); }
+    function tickClock() { clockNum.textContent = String(elapsedMins()); }
+    tickClock();
+    setInterval(tickClock, 15000);
+
+    // ---- Composer (press N) ----
+    function openComposer() {
+      if (focus.classList.contains('is-complete')) return;
+      if (confirmOverlay.classList.contains('is-open')) return;
+      composer.classList.add('is-open');
+      setTimeout(() => composerText.focus(), 60);
+    }
+    function closeComposer() {
+      composer.classList.remove('is-open');
+      composerText.value = '';
+      postBtn.disabled = true;
+      composerText.blur();
+    }
+    function postNote() {
+      const body = composerText.value.trim();
+      if (!body) { closeComposer(); return; }
+      const item = document.createElement('div');
+      item.className = 'aa-thread__item';
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      item.innerHTML = `
+        <div class="aa-thread__dot"></div>
+        <div class="aa-thread__body">
+          <div class="aa-thread__text"></div>
+          <div class="aa-thread__time">${timeStr}</div>
+        </div>`;
+      item.querySelector('.aa-thread__text').textContent = body;
+      // column-reverse: prepend visually places newest at top
+      thread.prepend(item);
+      closeComposer();
+    }
+
+    composerText.addEventListener('input', () => {
+      postBtn.disabled = !composerText.value.trim();
+    });
+    postBtn.addEventListener('click', postNote);
+    hintNote.addEventListener('click', openComposer);
+
+    // ---- Confirm dialog (click the circle) ----
+    function openConfirm() {
+      if (focus.classList.contains('is-complete')) return;
+      if (composer.classList.contains('is-open')) return;
+      confirmMins.textContent = elapsedMins() + ' min';
+      confirmOverlay.classList.add('is-open');
+      setTimeout(() => confirmGo.focus(), 60);
+    }
+    function closeConfirm() {
+      confirmOverlay.classList.remove('is-open');
+    }
+    function doComplete() {
+      closeConfirm();
+      focus.classList.add('is-complete');
+      // append a COMPLETED event to the thread
+      const item = document.createElement('div');
+      item.className = 'aa-thread__item';
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      item.innerHTML = `
+        <div class="aa-thread__dot" style="background:var(--aa-teal)"></div>
+        <div class="aa-thread__body">
+          <div class="aa-thread__text" style="color:var(--aa-teal-cta);font-weight:600">Completed</div>
+          <div class="aa-thread__time">${timeStr}</div>
+        </div>`;
+      thread.prepend(item);
+    }
+    circle.addEventListener('click', openConfirm);
+    hintComplete.addEventListener('click', openConfirm);
+    confirmCancel.addEventListener('click', closeConfirm);
+    confirmGo.addEventListener('click', doComplete);
+    confirmOverlay.addEventListener('click', (e) => {
+      if (e.target === confirmOverlay) closeConfirm();
+    });
+
+    // ---- Exit ----
+    function doExit() {
+      // in the real app this calls onClose() → navigate("/app")
+      focus.style.transition = 'opacity 0.25s var(--aa-ease-out-quart)';
+      focus.style.opacity = '0';
+      setTimeout(() => { /* navigate away */ }, 250);
+    }
+    closeBtn.addEventListener('click', doExit);
+    hintExit.addEventListener('click', doExit);
+
+    // ---- Keyboard ----
+    document.addEventListener('keydown', (e) => {
+      const typing = document.activeElement === composerText;
+      const inDialog = confirmOverlay.classList.contains('is-open');
+
+      if (e.key === 'Escape') {
+        if (inDialog) { closeConfirm(); return; }
+        if (composer.classList.contains('is-open')) { closeComposer(); return; }
+        doExit();
+        return;
+      }
+      if (typing) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          e.preventDefault(); postNote();
+        }
+        return;
+      }
+      if (inDialog) {
+        if (e.key === 'Enter') { e.preventDefault(); doComplete(); }
+        return;
+      }
+      if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openComposer(); }
+      if (e.key === 'Enter') { e.preventDefault(); openConfirm(); }
+    });
+  })();
+</script>
+</body>
+</html>

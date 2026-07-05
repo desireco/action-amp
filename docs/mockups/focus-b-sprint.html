@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Focus · B · Focus Sprint</title>
+<style>
+/* ActionAmp design tokens — inlined from tokens.css */
+/* ActionAmp tokens — pulled verbatim from webapp/src/styles/tokens.css */
+:root {
+  --aa-teal: oklch(0.72 0.15 220);
+  --aa-teal-bright: oklch(0.78 0.14 215);
+  --aa-teal-cta: oklch(0.58 0.16 225);
+  --aa-teal-cta-hover: oklch(0.5 0.16 228);
+  --aa-teal-soft: oklch(0.95 0.04 220);
+  --aa-teal-soft-strong: oklch(0.9 0.07 220);
+  --aa-teal-tint-shadow: oklch(0.58 0.16 225 / 0.22);
+
+  --aa-amber: oklch(0.78 0.16 70);
+  --aa-amber-text: oklch(0.45 0.13 65);
+  --aa-amber-soft: oklch(0.95 0.06 75);
+
+  --aa-bg: oklch(0.99 0.005 230);
+  --aa-surface: oklch(1 0.003 230);
+  --aa-border: oklch(0.91 0.01 230);
+  --aa-border-strong: oklch(0.86 0.012 230);
+
+  --aa-text: oklch(0.2 0.015 230);
+  --aa-text-2: oklch(0.36 0.013 230);
+  --aa-text-3: oklch(0.5 0.012 230);
+  --aa-text-4: oklch(0.62 0.01 230);
+
+  --aa-radius-sm: 6px;
+  --aa-radius-md: 8px;
+  --aa-radius-lg: 12px;
+  --aa-radius-xl: 18px;
+  --aa-radius-full: 9999px;
+
+  --aa-shadow-sm: 0 1px 2px oklch(0.25 0.015 230 / 0.06), 0 1px 1px oklch(0.25 0.015 230 / 0.04);
+  --aa-shadow-md: 0 4px 12px oklch(0.25 0.015 230 / 0.08), 0 2px 4px oklch(0.25 0.015 230 / 0.04);
+  --aa-hero-shadow: 0 12px 32px oklch(0.25 0.015 230 / 0.08), 0 40px 96px var(--aa-teal-tint-shadow);
+
+  --aa-ease-out: cubic-bezier(0.4,0,0.2,1);
+  --aa-ease-out-quart: cubic-bezier(0.2,0.7,0.3,1);
+  --aa-ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+
+  --aa-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Roboto, sans-serif;
+  --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--aa-font);
+  color: var(--aa-text);
+  background: var(--aa-bg);
+  -webkit-font-smoothing: antialiased;
+}
+</style>
+<style>
+  /* ============================================================
+     VARIANT B · FOCUS SPRINT (opt-in)
+     Same calm base as A, but with an OPTIONAL timed session.
+     Philosophy: the pomodoro instinct is real (some people genuinely
+     focus better with structure), but it must be:
+       (1) opt-in — never forced,
+       (2) a FILLING ring, not an emptying countdown (no urgency),
+       (3) paused by default — you start the clock, it never starts you.
+
+     When paused: identical to Variant A.
+     When running: the halo tightens, the ring fills toward teal.
+     No red. No buzzer. When the sprint ends, the ring just completes —
+     no alarm, no "time's up" verdict.
+     ============================================================ */
+
+  .aa-focus {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--aa-bg);
+    display: flex; flex-direction: column;
+    animation: aa-fade 0.4s var(--aa-ease-out-quart);
+  }
+  @keyframes aa-fade { from { opacity: 0 } to { opacity: 1 } }
+
+  .aa-focus__top {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 28px;
+  }
+  .aa-focus__top-meta {
+    font-size: 12px; font-weight: 600;
+    color: var(--aa-text-4);
+    letter-spacing: 0.04em;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .aa-focus__top-meta .dot {
+    width: 6px; height: 6px; border-radius: var(--aa-radius-full);
+    background: var(--aa-teal);
+    animation: breathe-dot 4s var(--aa-ease-out-quart) infinite;
+  }
+  .aa-focus__top-meta.is-sprinting .dot {
+    background: var(--aa-amber);
+    animation-duration: 2.4s; /* slightly faster when sprinting — but still slow */
+  }
+  @keyframes breathe-dot {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .aa-close {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; background: transparent;
+    color: var(--aa-text-3);
+    border-radius: var(--aa-radius-full);
+    cursor: pointer;
+    transition: background 0.2s var(--aa-ease-out), color 0.2s var(--aa-ease-out);
+  }
+  .aa-close:hover { background: var(--aa-surface); color: var(--aa-text); }
+  .aa-close svg { width: 16px; height: 16px; }
+
+  .aa-focus__body {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 0 32px 64px;
+    text-align: center;
+    gap: 28px;
+  }
+
+  /* ---- SPRINT RING ----
+     A single SVG ring that does two jobs:
+       - PAUSED: empty ring, hover reveals the check (completion), like Variant A.
+       - RUNNING: ring fills clockwise in teal. The remaining arc is the
+         countdown, but visually it reads as "filling up" not "running out."
+     The numeric in the center flips meaning with state:
+       PAUSED  → elapsed ("18 min in")
+       RUNNING → remaining ("12 min left")
+     The user always knows which mode they're in by reading the unit. */
+  .aa-presence {
+    position: relative;
+    width: 132px; height: 132px;
+    display: grid; place-items: center;
+    margin-bottom: 4px;
+  }
+  .aa-presence__halo {
+    position: absolute; inset: 0;
+    border-radius: var(--aa-radius-full);
+    background: radial-gradient(circle at 50% 50%,
+      var(--aa-teal-tint-shadow) 0%, transparent 70%);
+    animation: breathe-halo 5s var(--aa-ease-out-quart) infinite;
+    pointer-events: none;
+  }
+  @keyframes breathe-halo {
+    0%, 100% { transform: scale(0.85); opacity: 0.45; }
+    50%      { transform: scale(1.08); opacity: 0.9; }
+  }
+
+  .aa-ring {
+    position: relative; z-index: 1;
+    width: 132px; height: 132px;
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: transform 0.18s var(--aa-ease-spring);
+  }
+  .aa-ring:hover { transform: scale(1.02); }
+  .aa-ring:active { transform: scale(0.97); }
+
+  .aa-ring__svg {
+    position: absolute; inset: 0;
+    width: 132px; height: 132px;
+    transform: rotate(-90deg); /* start at top */
+  }
+  .aa-ring__track {
+    fill: var(--aa-surface);
+    stroke: var(--aa-border-strong);
+    stroke-width: 3;
+  }
+  .aa-ring__fill {
+    fill: none;
+    stroke: var(--aa-teal);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 377; /* 2π × 60 */
+    stroke-dashoffset: 377;
+    transition: stroke-dashoffset 0.4s var(--aa-ease-out-quart);
+    filter: drop-shadow(0 0 6px var(--aa-teal-tint-shadow));
+  }
+  .aa-ring.is-running .aa-ring__fill {
+    transition: stroke-dashoffset 1s linear;
+  }
+
+  .aa-ring__center {
+    position: relative; z-index: 1;
+    display: grid; place-items: center;
+    width: 88px; height: 88px;
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-surface);
+    box-shadow: var(--aa-shadow-md);
+  }
+  .aa-ring__num {
+    font-variant-numeric: tabular-nums;
+    font-size: 22px; font-weight: 700;
+    color: var(--aa-text);
+    letter-spacing: -0.02em;
+  }
+  .aa-ring__unit {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--aa-text-4);
+    margin-top: 2px;
+  }
+  /* When running, center shows remaining time. When paused, shows elapsed. */
+  .aa-ring.is-running .aa-ring__num { color: var(--aa-teal-cta); }
+
+  /* Small play/pause affordance below the ring */
+  .aa-sprint-toggle {
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    color: var(--aa-text-2);
+    font: inherit; font-size: 12px; font-weight: 600;
+    padding: 6px 14px;
+    border-radius: var(--aa-radius-full);
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: -10px;
+    transition: all 0.2s var(--aa-ease-out);
+  }
+  .aa-sprint-toggle:hover { background: var(--aa-teal-soft); border-color: var(--aa-teal); color: var(--aa-teal-cta); }
+  .aa-sprint-toggle svg { width: 10px; height: 10px; }
+  .aa-sprint-toggle .presets {
+    display: inline-flex; gap: 4px; margin-left: 4px;
+    border-left: 1px solid var(--aa-border); padding-left: 8px;
+  }
+  .aa-sprint-toggle .preset {
+    background: transparent; border: none; color: var(--aa-text-4);
+    font: inherit; font-size: 11px; padding: 2px 6px; cursor: pointer;
+    border-radius: var(--aa-radius-sm);
+    font-variant-numeric: tabular-nums;
+  }
+  .aa-sprint-toggle .preset.is-active { background: var(--aa-teal-soft); color: var(--aa-teal-cta); }
+
+  .aa-title {
+    font-size: clamp(1.625rem, 3.2vw, 2.125rem);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+    color: var(--aa-text);
+    max-width: 620px;
+    margin: 0;
+  }
+
+  .aa-meta {
+    font-size: 13px;
+    color: var(--aa-text-3);
+    display: inline-flex; align-items: center; gap: 8px;
+    flex-wrap: wrap; justify-content: center;
+    margin-top: -12px;
+  }
+  .aa-meta__sep { color: var(--aa-text-4); }
+
+  .aa-below {
+    width: 100%; max-width: 620px;
+    display: flex; flex-direction: column; gap: 16px;
+    margin-top: 8px;
+  }
+  .aa-notes {
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-lg);
+    padding: 14px 16px;
+    text-align: left;
+  }
+  .aa-notes__label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--aa-text-4);
+    margin-bottom: 8px;
+  }
+  .aa-notes__body {
+    font-size: 14px; line-height: 1.5;
+    color: var(--aa-text-2);
+    white-space: pre-wrap;
+  }
+
+  .aa-focus__rail {
+    display: flex; justify-content: center; gap: 12px;
+    padding: 0 32px 28px;
+  }
+  .aa-btn {
+    font: inherit;
+    font-size: 0.875rem; font-weight: 600;
+    padding: 10px 20px;
+    border-radius: var(--aa-radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.2s var(--aa-ease-out), transform 0.18s var(--aa-ease-spring);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .aa-btn:active { transform: scale(0.97); }
+  .aa-btn--ghost { background: transparent; color: var(--aa-text-3); }
+  .aa-btn--ghost:hover { background: var(--aa-surface); color: var(--aa-text); }
+  .aa-btn .kbd {
+    font-family: var(--aa-font-mono);
+    font-size: 11px;
+    background: oklch(0.96 0.01 230);
+    border: 1px solid var(--aa-border);
+    padding: 1px 6px;
+    border-radius: var(--aa-radius-sm);
+    color: var(--aa-text-3);
+  }
+
+  .canvas-tag {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    padding: 6px 14px;
+    border-radius: var(--aa-radius-full);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    color: var(--aa-text-3);
+    text-transform: uppercase;
+    z-index: 200;
+    box-shadow: var(--aa-shadow-sm);
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-tag">B · Focus Sprint (opt-in)</div>
+
+<div class="aa-focus" role="dialog" aria-modal="true">
+  <div class="aa-focus__top">
+    <div class="aa-focus__top-meta" id="topMeta">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="topMetaText">In focus</span>
+    </div>
+    <button class="aa-close" aria-label="Exit focus">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+        <path d="M4 4l8 8M12 4l-8 8"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="aa-focus__body">
+    <div class="aa-presence">
+      <div class="aa-presence__halo" aria-hidden="true"></div>
+      <div class="aa-ring" id="ring">
+        <svg class="aa-ring__svg" viewBox="0 0 132 132">
+          <circle class="aa-ring__track" cx="66" cy="66" r="60" />
+          <circle class="aa-ring__fill" cx="66" cy="66" r="60" id="ringFill" />
+        </svg>
+        <div class="aa-ring__center">
+          <div class="aa-ring__num" id="ringNum">18</div>
+          <div class="aa-ring__unit" id="ringUnit">min in</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="aa-sprint-toggle" id="sprintToggle">
+      <svg viewBox="0 0 10 10" fill="currentColor"><path d="M2 1l6 4-6 4z"/></svg>
+      <span id="toggleLabel">Start a sprint</span>
+      <span class="presets">
+        <button class="preset is-active" data-mins="25">25</button>
+        <button class="preset" data-mins="45">45</button>
+        <button class="preset" data-mins="60">60</button>
+      </span>
+    </button>
+
+    <h1 class="aa-title">Write the onboarding copy for the first-run lens picker</h1>
+
+    <div class="aa-meta">
+      <span>Onboarding</span>
+      <span class="aa-meta__sep">·</span>
+      <span>due today</span>
+      <span class="aa-meta__sep">·</span>
+      <span>30 min</span>
+    </div>
+
+    <div class="aa-below">
+      <div class="aa-notes">
+        <div class="aa-notes__label">Working notes</div>
+        <div class="aa-notes__body">Lead with the question, not the feature. "What do you want to make space for?" — then offer lens presets. Keep it under 60 words.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="aa-focus__rail">
+    <button class="aa-btn aa-btn--ghost">Exit focus <span class="kbd">esc</span></button>
+  </div>
+</div>
+
+<script>
+  // Sprint state machine. Paused by default — the user starts the clock, never the other way.
+  (function () {
+    const ring = document.getElementById('ring');
+    const ringFill = document.getElementById('ringFill');
+    const ringNum = document.getElementById('ringNum');
+    const ringUnit = document.getElementById('ringUnit');
+    const toggle = document.getElementById('sprintToggle');
+    const toggleLabel = document.getElementById('toggleLabel');
+    const topMeta = document.getElementById('topMeta');
+    const topMetaText = document.getElementById('topMetaText');
+    const presets = toggle.querySelectorAll('.preset');
+
+    const CIRC = 377; // 2π × 60
+    const STARTED_AT = Date.now() - 18 * 60 * 1000; // 18 min already in
+
+    let sprintMins = 25;
+    let sprinting = false;
+    let sprintStartedAt = null;
+    let sprintRemainingMs = sprintMins * 60 * 1000;
+
+    function renderPaused() {
+      const elapsedMin = Math.floor((Date.now() - STARTED_AT) / 60000);
+      ringNum.textContent = elapsedMin;
+      ringUnit.textContent = 'min in';
+      ringFill.style.strokeDashoffset = CIRC; // empty
+      toggleLabel.textContent = 'Start a sprint';
+      topMetaText.textContent = 'In focus';
+      topMeta.classList.remove('is-sprinting');
+      ring.classList.remove('is-running');
+    }
+
+    function renderRunning() {
+      const remainingMin = Math.max(0, Math.ceil(sprintRemainingMs / 60000));
+      ringNum.textContent = remainingMin;
+      ringUnit.textContent = remainingMin === 1 ? 'min left' : 'min left';
+      const progress = 1 - (sprintRemainingMs / (sprintMins * 60000));
+      ringFill.style.strokeDashoffset = CIRC * (1 - progress);
+      toggleLabel.textContent = 'Pause';
+      topMetaText.textContent = 'Sprinting · ' + sprintMins + ' min';
+      topMeta.classList.add('is-sprinting');
+      ring.classList.add('is-running');
+    }
+
+    function tick() {
+      if (sprinting) {
+        sprintRemainingMs = sprintMins * 60000 - (Date.now() - sprintStartedAt);
+        if (sprintRemainingMs <= 0) {
+          sprinting = false;
+          sprintRemainingMs = sprintMins * 60000;
+          ringFill.style.strokeDashoffset = 0; // ring completes
+          renderPaused();
+          return;
+        }
+        renderRunning();
+      } else {
+        renderPaused();
+      }
+    }
+
+    toggle.addEventListener('click', (e) => {
+      if (e.target.classList.contains('preset')) {
+        e.stopPropagation();
+        const newMins = parseInt(e.target.dataset.mins, 10);
+        if (sprinting) return; // can't change length mid-sprint
+        sprintMins = newMins;
+        sprintRemainingMs = sprintMins * 60000;
+        presets.forEach(p => p.classList.toggle('is-active', p === e.target));
+        renderPaused();
+        return;
+      }
+      if (sprinting) {
+        sprinting = false;
+        sprintRemainingMs = sprintMins * 60000 - (Date.now() - sprintStartedAt);
+        if (sprintRemainingMs < 0) sprintRemainingMs = sprintMins * 60000;
+      } else {
+        sprinting = true;
+        sprintStartedAt = Date.now();
+      }
+      tick();
+    });
+
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
+</body>
+</html>

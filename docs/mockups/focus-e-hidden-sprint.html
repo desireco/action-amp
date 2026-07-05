@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Focus · E · Hidden Sprint</title>
+<style>
+/* ActionAmp design tokens — inlined from tokens.css */
+/* ActionAmp tokens — pulled verbatim from webapp/src/styles/tokens.css */
+:root {
+  --aa-teal: oklch(0.72 0.15 220);
+  --aa-teal-bright: oklch(0.78 0.14 215);
+  --aa-teal-cta: oklch(0.58 0.16 225);
+  --aa-teal-cta-hover: oklch(0.5 0.16 228);
+  --aa-teal-soft: oklch(0.95 0.04 220);
+  --aa-teal-soft-strong: oklch(0.9 0.07 220);
+  --aa-teal-tint-shadow: oklch(0.58 0.16 225 / 0.22);
+
+  --aa-amber: oklch(0.78 0.16 70);
+  --aa-amber-text: oklch(0.45 0.13 65);
+  --aa-amber-soft: oklch(0.95 0.06 75);
+
+  --aa-bg: oklch(0.99 0.005 230);
+  --aa-surface: oklch(1 0.003 230);
+  --aa-border: oklch(0.91 0.01 230);
+  --aa-border-strong: oklch(0.86 0.012 230);
+
+  --aa-text: oklch(0.2 0.015 230);
+  --aa-text-2: oklch(0.36 0.013 230);
+  --aa-text-3: oklch(0.5 0.012 230);
+  --aa-text-4: oklch(0.62 0.01 230);
+
+  --aa-radius-sm: 6px;
+  --aa-radius-md: 8px;
+  --aa-radius-lg: 12px;
+  --aa-radius-xl: 18px;
+  --aa-radius-full: 9999px;
+
+  --aa-shadow-sm: 0 1px 2px oklch(0.25 0.015 230 / 0.06), 0 1px 1px oklch(0.25 0.015 230 / 0.04);
+  --aa-shadow-md: 0 4px 12px oklch(0.25 0.015 230 / 0.08), 0 2px 4px oklch(0.25 0.015 230 / 0.04);
+  --aa-hero-shadow: 0 12px 32px oklch(0.25 0.015 230 / 0.08), 0 40px 96px var(--aa-teal-tint-shadow);
+
+  --aa-ease-out: cubic-bezier(0.4,0,0.2,1);
+  --aa-ease-out-quart: cubic-bezier(0.2,0.7,0.3,1);
+  --aa-ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+
+  --aa-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Roboto, sans-serif;
+  --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--aa-font);
+  color: var(--aa-text);
+  background: var(--aa-bg);
+  -webkit-font-smoothing: antialiased;
+}
+</style>
+<style>
+  /* ============================================================
+     VARIANT E · HIDDEN SPRINT
+     Default state IS Variant A — calm, no timer visible.
+     The timer only exists when explicitly summoned, and even then
+     it stays peripheral: a 2px hairline at the very top edge of the
+     screen, completely out of the reading flow.
+
+     The bet: people who want a timer can have one. People who don't
+     will never see it. The clock NEVER sits on the central axis.
+
+     Three states:
+       1. DEFAULT  — pure Variant A. No sprint affordance visible.
+       2. ARMED    — user pressed 'T'. A small 'start a 25-min sprint'
+                     chip appears bottom-center. Still no clock running.
+       3. RUNNING  — user confirmed. Top edge gets a 2px teal progress
+                     hairline. Nothing else changes. The hairline is
+                     the entire clock.
+     ============================================================ */
+
+  .aa-focus {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--aa-bg);
+    display: flex; flex-direction: column;
+    animation: aa-fade 0.4s var(--aa-ease-out-quart);
+  }
+  @keyframes aa-fade { from { opacity: 0 } to { opacity: 1 } }
+
+  /* ---- THE HAIRLINE CLOCK ----
+     This is the entire visible timer when a sprint is running.
+     2px tall, full viewport width, pinned to the absolute top edge.
+     Fills left-to-right in teal. Sits above every other layer.
+     It is impossible to stare at — it's at the physical frame edge. */
+  .aa-hairline {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--aa-border);
+    z-index: 300;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s var(--aa-ease-out);
+  }
+  .aa-hairline.is-running { opacity: 1; }
+  .aa-hairline__fill {
+    height: 100%;
+    background: linear-gradient(90deg,
+      var(--aa-teal) 0%,
+      var(--aa-teal-bright) 100%);
+    width: 0%;
+    box-shadow: 0 0 8px var(--aa-teal-tint-shadow);
+    transition: width 1s linear;
+  }
+
+  .aa-focus__top {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 32px;
+  }
+  .aa-focus__top-meta {
+    font-size: 12px; font-weight: 600;
+    color: var(--aa-text-4);
+    letter-spacing: 0.04em;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .aa-focus__top-meta .dot {
+    width: 6px; height: 6px; border-radius: var(--aa-radius-full);
+    background: var(--aa-teal);
+    animation: breathe-dot 4s var(--aa-ease-out-quart) infinite;
+  }
+  .aa-focus__top-meta.is-sprinting .dot {
+    background: var(--aa-amber);
+    animation-duration: 2.4s;
+  }
+  .aa-focus__top-meta.is-sprinting {
+    color: var(--aa-amber-text);
+  }
+  @keyframes breathe-dot {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* When sprinting, the meta shows the remaining time as small text.
+     This is the ONLY numeric clock readout — and it's tiny, in the corner. */
+  .aa-sprint-remaining {
+    display: none;
+    font-variant-numeric: tabular-nums;
+    color: var(--aa-text-3);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+  .aa-focus__top-meta.is-sprinting .aa-sprint-remaining { display: inline; }
+  .aa-focus__top-meta.is-sprinting .aa-sprint-label { display: none; }
+  .aa-sprint-remaining::before {
+    content: "·";
+    margin-right: 6px;
+    color: var(--aa-text-4);
+  }
+
+  .aa-close {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; background: transparent;
+    color: var(--aa-text-3);
+    border-radius: var(--aa-radius-full);
+    cursor: pointer;
+    transition: background 0.2s var(--aa-ease-out), color 0.2s var(--aa-ease-out);
+  }
+  .aa-close:hover { background: var(--aa-surface); color: var(--aa-text); }
+  .aa-close svg { width: 16px; height: 16px; }
+
+  .aa-focus__body {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 0 32px 64px;
+    text-align: center;
+    gap: 32px;
+  }
+
+  .aa-presence {
+    position: relative;
+    width: 132px; height: 132px;
+    display: grid; place-items: center;
+  }
+  .aa-presence__halo {
+    position: absolute; inset: 0;
+    border-radius: var(--aa-radius-full);
+    background: radial-gradient(circle at 50% 50%,
+      var(--aa-teal-tint-shadow) 0%,
+      transparent 70%);
+    animation: breathe-halo 5s var(--aa-ease-out-quart) infinite;
+    pointer-events: none;
+  }
+  @keyframes breathe-halo {
+    0%, 100% { transform: scale(0.85); opacity: 0.45; }
+    50%      { transform: scale(1.08); opacity: 0.9; }
+  }
+
+  .aa-presence__circle {
+    position: relative; z-index: 1;
+    width: 88px; height: 88px;
+    border-radius: var(--aa-radius-full);
+    border: 3px solid var(--aa-border-strong);
+    background: var(--aa-surface);
+    box-shadow: var(--aa-shadow-md);
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: border-color 0.2s var(--aa-ease-out),
+                background 0.2s var(--aa-ease-out),
+                transform 0.18s var(--aa-ease-spring);
+  }
+  .aa-presence__circle:hover {
+    border-color: var(--aa-teal);
+    background: var(--aa-teal-soft);
+    transform: scale(1.02);
+  }
+  .aa-presence__circle:active { transform: scale(0.97); }
+  .aa-presence__circle svg {
+    width: 28px; height: 28px;
+    opacity: 0;
+    transition: opacity 0.18s var(--aa-ease-out);
+    stroke: var(--aa-teal-cta);
+  }
+  .aa-presence__circle:hover svg { opacity: 0.45; }
+
+  .aa-title {
+    font-size: clamp(1.625rem, 3.2vw, 2.125rem);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+    color: var(--aa-text);
+    max-width: 620px;
+    margin: 0;
+  }
+
+  .aa-meta {
+    font-size: 13px;
+    color: var(--aa-text-3);
+    display: inline-flex; align-items: center; gap: 8px;
+    flex-wrap: wrap; justify-content: center;
+    margin-top: -16px;
+  }
+  .aa-meta__sep { color: var(--aa-text-4); }
+
+  .aa-below {
+    width: 100%; max-width: 620px;
+    display: flex; flex-direction: column; gap: 16px;
+    margin-top: 0;
+  }
+  .aa-notes {
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-lg);
+    padding: 14px 16px;
+    text-align: left;
+  }
+  .aa-notes__label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--aa-text-4);
+    margin-bottom: 8px;
+  }
+  .aa-notes__body {
+    font-size: 14px; line-height: 1.5;
+    color: var(--aa-text-2);
+    white-space: pre-wrap;
+  }
+
+  /* ARMED state chip — appears bottom-center when user presses T.
+     Asks for confirmation, offers presets. Dismissible. */
+  .aa-sprint-chip {
+    position: fixed; bottom: 80px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-full);
+    box-shadow: var(--aa-shadow-md);
+    padding: 8px 8px 8px 16px;
+    display: inline-flex; align-items: center; gap: 10px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s var(--aa-ease-out), transform 0.25s var(--aa-ease-out-quart);
+    z-index: 150;
+  }
+  .aa-sprint-chip.is-open {
+    opacity: 1; pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+  .aa-sprint-chip__label {
+    font-size: 13px; font-weight: 500; color: var(--aa-text-2);
+  }
+  .aa-sprint-chip__presets {
+    display: inline-flex; gap: 2px;
+    background: var(--aa-bg);
+    border-radius: var(--aa-radius-full);
+    padding: 2px;
+  }
+  .aa-sprint-chip__preset {
+    background: transparent; border: none;
+    font: inherit; font-size: 12px; font-weight: 600;
+    padding: 4px 10px;
+    border-radius: var(--aa-radius-full);
+    color: var(--aa-text-3);
+    cursor: pointer;
+    transition: all 0.15s var(--aa-ease-out);
+    font-variant-numeric: tabular-nums;
+  }
+  .aa-sprint-chip__preset.is-active {
+    background: var(--aa-surface);
+    color: var(--aa-teal-cta);
+    box-shadow: var(--aa-shadow-sm);
+  }
+  .aa-sprint-chip__start {
+    background: var(--aa-teal-cta);
+    color: white;
+    border: none;
+    font: inherit; font-size: 12px; font-weight: 600;
+    padding: 6px 14px;
+    border-radius: var(--aa-radius-full);
+    cursor: pointer;
+    transition: background 0.2s var(--aa-ease-out);
+  }
+  .aa-sprint-chip__start:hover { background: var(--aa-teal-cta-hover); }
+  .aa-sprint-chip__dismiss {
+    background: transparent; border: none;
+    color: var(--aa-text-4);
+    cursor: pointer; padding: 4px;
+    font-size: 14px; line-height: 1;
+  }
+
+  .aa-focus__rail {
+    display: flex; justify-content: center; gap: 12px;
+    padding: 0 32px 28px;
+  }
+  .aa-btn {
+    font: inherit;
+    font-size: 0.875rem; font-weight: 600;
+    padding: 10px 20px;
+    border-radius: var(--aa-radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.2s var(--aa-ease-out), transform 0.18s var(--aa-ease-spring);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .aa-btn:active { transform: scale(0.97); }
+  .aa-btn--ghost { background: transparent; color: var(--aa-text-3); }
+  .aa-btn--ghost:hover { background: var(--aa-surface); color: var(--aa-text); }
+  .aa-btn .kbd {
+    font-family: var(--aa-font-mono);
+    font-size: 11px;
+    background: oklch(0.96 0.01 230);
+    border: 1px solid var(--aa-border);
+    padding: 1px 6px;
+    border-radius: var(--aa-radius-sm);
+    color: var(--aa-text-3);
+  }
+
+  /* subtle 'press T for sprint' hint that appears after a few seconds
+     of being in focus — only once per session, dismissible */
+  .aa-timer-hint {
+    position: fixed; bottom: 28px; right: 32px;
+    font-size: 11px;
+    color: var(--aa-text-4);
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    padding: 6px 10px;
+    border-radius: var(--aa-radius-full);
+    box-shadow: var(--aa-shadow-sm);
+    display: inline-flex; align-items: center; gap: 6px;
+    opacity: 0;
+    animation: hint-in 0.4s var(--aa-ease-out) 4s forwards;
+  }
+  .aa-timer-hint .kbd {
+    font-family: var(--aa-font-mono);
+    background: var(--aa-bg);
+    padding: 1px 5px;
+    border-radius: var(--aa-radius-sm);
+    color: var(--aa-text-3);
+    font-size: 10px;
+  }
+  @keyframes hint-in { to { opacity: 1; } }
+
+  .canvas-tag {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    padding: 6px 14px;
+    border-radius: var(--aa-radius-full);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    color: var(--aa-text-3);
+    text-transform: uppercase;
+    z-index: 200;
+    box-shadow: var(--aa-shadow-sm);
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-tag">E · Hidden Sprint</div>
+
+<!-- The hairline clock — entire visible timer when sprinting -->
+<div class="aa-hairline" id="hairline">
+  <div class="aa-hairline__fill" id="hairlineFill"></div>
+</div>
+
+<div class="aa-focus" role="dialog" aria-modal="true">
+  <div class="aa-focus__top">
+    <div class="aa-focus__top-meta" id="topMeta">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="aa-sprint-label">In focus</span>
+      <span class="aa-sprint-remaining" id="sprintRemaining">25 min</span>
+    </div>
+    <button class="aa-close" aria-label="Exit focus">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+        <path d="M4 4l8 8M12 4l-8 8"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="aa-focus__body">
+    <div class="aa-presence">
+      <div class="aa-presence__halo" aria-hidden="true"></div>
+      <button class="aa-presence__circle" aria-label="Complete task">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12.5l4.5 4.5L19 7"/>
+        </svg>
+      </button>
+    </div>
+
+    <h1 class="aa-title">Write the onboarding copy for the first-run lens picker</h1>
+
+    <div class="aa-meta">
+      <span>Onboarding</span>
+      <span class="aa-meta__sep">·</span>
+      <span>due today</span>
+      <span class="aa-meta__sep">·</span>
+      <span>30 min</span>
+    </div>
+
+    <div class="aa-below">
+      <div class="aa-notes">
+        <div class="aa-notes__label">Working notes</div>
+        <div class="aa-notes__body">Lead with the question, not the feature. "What do you want to make space for?" — then offer lens presets. Keep it under 60 words.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="aa-focus__rail">
+    <button class="aa-btn aa-btn--ghost">Exit focus <span class="kbd">esc</span></button>
+  </div>
+</div>
+
+<!-- ARMED chip — appears when user presses T -->
+<div class="aa-sprint-chip" id="sprintChip">
+  <span class="aa-sprint-chip__label">Sprint for</span>
+  <div class="aa-sprint-chip__presets" id="presets">
+    <button class="aa-sprint-chip__preset is-active" data-mins="25">25</button>
+    <button class="aa-sprint-chip__preset" data-mins="45">45</button>
+    <button class="aa-sprint-chip__preset" data-mins="60">60</button>
+  </div>
+  <button class="aa-sprint-chip__start" id="startBtn">Start</button>
+  <button class="aa-sprint-chip__dismiss" id="dismissBtn" aria-label="Dismiss">×</button>
+</div>
+
+<!-- subtle discoverability hint -->
+<div class="aa-timer-hint" id="timerHint">
+  <span class="kbd">T</span> for an optional sprint
+</div>
+
+<script>
+  (function () {
+    const hairline = document.getElementById('hairline');
+    const hairlineFill = document.getElementById('hairlineFill');
+    const topMeta = document.getElementById('topMeta');
+    const sprintRemaining = document.getElementById('sprintRemaining');
+    const chip = document.getElementById('sprintChip');
+    const presets = document.getElementById('presets');
+    const startBtn = document.getElementById('startBtn');
+    const dismissBtn = document.getElementById('dismissBtn');
+    const timerHint = document.getElementById('timerHint');
+
+    let sprintMins = 25;
+    let running = false;
+    let sprintEndsAt = null;
+
+    function openChip() {
+      chip.classList.add('is-open');
+      timerHint.style.display = 'none';
+    }
+    function closeChip() {
+      chip.classList.remove('is-open');
+    }
+
+    function startSprint() {
+      running = true;
+      sprintEndsAt = Date.now() + sprintMins * 60000;
+      closeChip();
+      hairline.classList.add('is-running');
+      topMeta.classList.add('is-sprinting');
+      tick();
+    }
+
+    function stopSprint() {
+      running = false;
+      hairline.classList.remove('is-running');
+      hairlineFill.style.transition = 'width 0.3s var(--aa-ease-out-quart)';
+      hairlineFill.style.width = '0%';
+      topMeta.classList.remove('is-sprinting');
+      setTimeout(() => { hairlineFill.style.transition = ''; }, 300);
+    }
+
+    function tick() {
+      if (!running) return;
+      const remaining = sprintEndsAt - Date.now();
+      if (remaining <= 0) {
+        // Sprint completes — no alarm, just stops.
+        // The hairline is full, the meta returns to "In focus".
+        stopSprint();
+        return;
+      }
+      const remainingMin = Math.ceil(remaining / 60000);
+      sprintRemaining.textContent = remainingMin + ' min';
+      const elapsed = sprintMins * 60000 - remaining;
+      const progress = elapsed / (sprintMins * 60000);
+      hairlineFill.style.width = (progress * 100) + '%';
+    }
+
+    presets.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('aa-sprint-chip__preset')) return;
+      sprintMins = parseInt(e.target.dataset.mins, 10);
+      presets.querySelectorAll('.aa-sprint-chip__preset').forEach(p =>
+        p.classList.toggle('is-active', p === e.target));
+    });
+
+    startBtn.addEventListener('click', startSprint);
+    dismissBtn.addEventListener('click', closeChip);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        if (running) {
+          stopSprint();
+        } else if (chip.classList.contains('is-open')) {
+          closeChip();
+        } else {
+          openChip();
+        }
+      }
+    });
+
+    setInterval(tick, 1000);
+  })();
+</script>
+</body>
+</html>

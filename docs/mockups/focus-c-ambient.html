@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Focus · C · Ambient Field</title>
+<style>
+/* ActionAmp design tokens — inlined from tokens.css */
+/* ActionAmp tokens — pulled verbatim from webapp/src/styles/tokens.css */
+:root {
+  --aa-teal: oklch(0.72 0.15 220);
+  --aa-teal-bright: oklch(0.78 0.14 215);
+  --aa-teal-cta: oklch(0.58 0.16 225);
+  --aa-teal-cta-hover: oklch(0.5 0.16 228);
+  --aa-teal-soft: oklch(0.95 0.04 220);
+  --aa-teal-soft-strong: oklch(0.9 0.07 220);
+  --aa-teal-tint-shadow: oklch(0.58 0.16 225 / 0.22);
+
+  --aa-amber: oklch(0.78 0.16 70);
+  --aa-amber-text: oklch(0.45 0.13 65);
+  --aa-amber-soft: oklch(0.95 0.06 75);
+
+  --aa-bg: oklch(0.99 0.005 230);
+  --aa-surface: oklch(1 0.003 230);
+  --aa-border: oklch(0.91 0.01 230);
+  --aa-border-strong: oklch(0.86 0.012 230);
+
+  --aa-text: oklch(0.2 0.015 230);
+  --aa-text-2: oklch(0.36 0.013 230);
+  --aa-text-3: oklch(0.5 0.012 230);
+  --aa-text-4: oklch(0.62 0.01 230);
+
+  --aa-radius-sm: 6px;
+  --aa-radius-md: 8px;
+  --aa-radius-lg: 12px;
+  --aa-radius-xl: 18px;
+  --aa-radius-full: 9999px;
+
+  --aa-shadow-sm: 0 1px 2px oklch(0.25 0.015 230 / 0.06), 0 1px 1px oklch(0.25 0.015 230 / 0.04);
+  --aa-shadow-md: 0 4px 12px oklch(0.25 0.015 230 / 0.08), 0 2px 4px oklch(0.25 0.015 230 / 0.04);
+  --aa-hero-shadow: 0 12px 32px oklch(0.25 0.015 230 / 0.08), 0 40px 96px var(--aa-teal-tint-shadow);
+
+  --aa-ease-out: cubic-bezier(0.4,0,0.2,1);
+  --aa-ease-out-quart: cubic-bezier(0.2,0.7,0.3,1);
+  --aa-ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+
+  --aa-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Roboto, sans-serif;
+  --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--aa-font);
+  color: var(--aa-text);
+  background: var(--aa-bg);
+  -webkit-font-smoothing: antialiased;
+}
+</style>
+<style>
+  /* ============================================================
+     VARIANT C · AMBIENT FIELD  (the radical one)
+     Thesis: focus is REMOVAL. The current page removes the list but
+     keeps every other affordance visible (meta, notes, thread,
+     composer, two buttons). Variant C removes almost everything.
+
+     What stays on screen at rest:
+       - the task title
+       - a hero completion circle
+       - a single ambient line ("on Onboarding · due today")
+
+     What's hidden, summoned by key when needed:
+       - N → notes (composer)
+       - J/K → cycle earlier notes
+       - ↵ enter → complete
+       - esc → exit
+
+     The bet (and the risk): a focus surface should reward looking at
+     the work, not at the app. By removing the chrome we make the
+     page into a quiet workbench. Notes are one keystroke away — never
+     gone, just not in the way.
+
+     This is deliberately not "shippable as-is" — it's here to stretch
+     the axis so A and B don't feel like the only options.
+     ============================================================ */
+
+  .aa-focus {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--aa-bg);
+    display: grid;
+    place-items: center;
+    animation: aa-fade 0.5s var(--aa-ease-out-quart);
+  }
+  @keyframes aa-fade { from { opacity: 0 } to { opacity: 1 } }
+
+  /* extremely faint ambient tint at the edges — like soft daylight */
+  .aa-focus::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 30%,
+        oklch(0.96 0.015 220 / 0.6) 0%,
+        transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* close — minimal, top-right, near-invisible until hovered */
+  .aa-close {
+    position: fixed; top: 20px; right: 24px; z-index: 5;
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; background: transparent;
+    color: var(--aa-text-4);
+    border-radius: var(--aa-radius-full);
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.4s var(--aa-ease-out), background 0.2s var(--aa-ease-out);
+  }
+  .aa-close:hover { opacity: 1; background: var(--aa-surface); color: var(--aa-text); }
+  .aa-close svg { width: 14px; height: 14px; }
+
+  .aa-field {
+    position: relative; z-index: 1;
+    text-align: center;
+    max-width: 720px;
+    padding: 0 32px;
+    display: flex; flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  /* The completion circle, oversized — the silent centerpiece.
+     Empty state is mostly transparent; on hover it fills gently.
+     Click = complete (spring check). */
+  .aa-circle {
+    position: relative;
+    width: 96px; height: 96px;
+    border-radius: var(--aa-radius-full);
+    border: 2.5px solid var(--aa-border-strong);
+    background: transparent;
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: border-color 0.25s var(--aa-ease-out),
+                background 0.25s var(--aa-ease-out),
+                transform 0.18s var(--aa-ease-spring),
+                box-shadow 0.4s var(--aa-ease-out);
+  }
+  .aa-circle::before {
+    /* very faint halo that intensifies on hover */
+    content: "";
+    position: absolute; inset: -8px;
+    border-radius: var(--aa-radius-full);
+    background: radial-gradient(circle, var(--aa-teal-tint-shadow) 0%, transparent 70%);
+    opacity: 0.3;
+    transition: opacity 0.5s var(--aa-ease-out);
+    pointer-events: none;
+  }
+  .aa-circle:hover {
+    border-color: var(--aa-teal);
+    background: var(--aa-teal-soft);
+    box-shadow: 0 0 32px var(--aa-teal-tint-shadow);
+  }
+  .aa-circle:hover::before { opacity: 0.8; }
+  .aa-circle:active { transform: scale(0.96); }
+
+  .aa-circle svg {
+    width: 28px; height: 28px;
+    stroke: var(--aa-teal-cta);
+    opacity: 0;
+    transform: scale(0.7);
+    transition: opacity 0.25s var(--aa-ease-out), transform 0.25s var(--aa-ease-spring);
+  }
+  .aa-circle:hover svg { opacity: 0.5; transform: scale(1); }
+
+  /* Task title — the only large element on the page. */
+  .aa-title {
+    font-size: clamp(1.75rem, 3.8vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--aa-text);
+    margin: 0;
+    max-width: 640px;
+  }
+
+  /* One ambient line. No badges. No chips. Just the context. */
+  .aa-ambient {
+    font-size: 13px;
+    color: var(--aa-text-3);
+    margin-top: -16px;
+  }
+  .aa-ambient__sep { color: var(--aa-text-4); margin: 0 6px; }
+
+  /* Hidden hints — appear on hover of the field, fade otherwise.
+     These are the keyboard map. They're the only chrome. */
+  .aa-hints {
+    margin-top: 16px;
+    display: inline-flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+    opacity: 0.4;
+    transition: opacity 0.4s var(--aa-ease-out);
+  }
+  .aa-field:hover .aa-hints { opacity: 1; }
+  .aa-hint {
+    font-size: 11px;
+    color: var(--aa-text-4);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .aa-hint .kbd {
+    font-family: var(--aa-font-mono);
+    font-size: 10px;
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    padding: 1px 5px;
+    border-radius: var(--aa-radius-sm);
+    color: var(--aa-text-3);
+  }
+
+  /* Notes panel — slides in from the bottom when summoned (N).
+     Until then it doesn't exist in the visual hierarchy. */
+  .aa-notes-panel {
+    position: fixed; left: 50%; bottom: 32px;
+    transform: translateX(-50%) translateY(20px);
+    width: min(620px, calc(100% - 48px));
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-lg);
+    box-shadow: var(--aa-shadow-md);
+    padding: 14px 16px;
+    z-index: 4;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s var(--aa-ease-out), transform 0.3s var(--aa-ease-out-quart);
+  }
+  .aa-notes-panel.is-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+  .aa-notes-panel__label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--aa-text-4);
+    margin-bottom: 8px;
+    display: flex; justify-content: space-between;
+  }
+  .aa-notes-panel__label .esc-hint {
+    text-transform: none; letter-spacing: 0;
+    font-weight: 400;
+  }
+  .aa-notes-panel textarea {
+    width: 100%;
+    border: none; background: transparent;
+    font: inherit; font-size: 14px; line-height: 1.5;
+    color: var(--aa-text);
+    resize: none; outline: none;
+    min-height: 60px;
+  }
+  .aa-notes-panel textarea::placeholder { color: var(--aa-text-4); }
+  .aa-notes-panel__save {
+    margin-top: 10px;
+    font: inherit; font-size: 12px; font-weight: 600;
+    color: var(--aa-teal-cta);
+    background: transparent; border: none; cursor: pointer;
+    padding: 4px 0;
+  }
+
+  .canvas-tag {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    padding: 6px 14px;
+    border-radius: var(--aa-radius-full);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    color: var(--aa-text-3);
+    text-transform: uppercase;
+    z-index: 200;
+    box-shadow: var(--aa-shadow-sm);
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-tag">C · Ambient Field (radical)</div>
+
+<div class="aa-focus" role="dialog" aria-modal="true">
+  <button class="aa-close" aria-label="Exit focus">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+      <path d="M4 4l8 8M12 4l-8 8"/>
+    </svg>
+  </button>
+
+  <div class="aa-field">
+    <button class="aa-circle" aria-label="Complete task">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12.5l4.5 4.5L19 7"/>
+      </svg>
+    </button>
+
+    <h1 class="aa-title">Write the onboarding copy for the first-run lens picker</h1>
+
+    <div class="aa-ambient">
+      Onboarding
+      <span class="aa-ambient__sep">·</span>
+      due today
+      <span class="aa-ambient__sep">·</span>
+      30 min
+    </div>
+
+    <div class="aa-hints">
+      <span class="aa-hint"><span class="kbd">N</span> note</span>
+      <span class="aa-hint"><span class="kbd">↵</span> complete</span>
+      <span class="aa-hint"><span class="kbd">esc</span> exit</span>
+    </div>
+  </div>
+
+  <div class="aa-notes-panel" id="notesPanel">
+    <div class="aa-notes-panel__label">
+      <span>Note</span>
+      <span class="esc-hint"><span style="font-family:var(--aa-font-mono);font-size:10px;background:var(--aa-bg);border:1px solid var(--aa-border);padding:1px 5px;border-radius:var(--aa-radius-sm);color:var(--aa-text-3);">esc</span> to dismiss</span>
+    </div>
+    <textarea placeholder="What's on your mind? — ⌘↵ to save"></textarea>
+    <button class="aa-notes-panel__save">Save note</button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const notesPanel = document.getElementById('notesPanel');
+    const ta = notesPanel.querySelector('textarea');
+
+    function openNotes() {
+      notesPanel.classList.add('is-open');
+      setTimeout(() => ta.focus(), 60);
+    }
+    function closeNotes() {
+      notesPanel.classList.remove('is-open');
+      ta.blur();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      // Ignore when typing in the textarea (except esc / cmd-enter)
+      const inField = document.activeElement === ta;
+      if (e.key === 'Escape') {
+        if (notesPanel.classList.contains('is-open')) { closeNotes(); }
+        return;
+      }
+      if (inField) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          e.preventDefault();
+          closeNotes();
+        }
+        return;
+      }
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        openNotes();
+      }
+    });
+  })();
+</script>
+</body>
+</html>
