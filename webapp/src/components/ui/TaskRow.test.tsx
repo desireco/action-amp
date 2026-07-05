@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { TaskRow, type TaskRowTask } from "./TaskRow";
 import { renderInContext } from "wasp/client/test";
 
@@ -57,6 +57,48 @@ describe("TaskRow", () => {
       const li = screen.getByText("Email Sarah").closest("li")!;
       expect(li).not.toHaveAttribute("role");
       expect(li).not.toHaveAttribute("tabindex");
+    });
+  });
+
+  describe("notes editing", () => {
+    it("shows existing task notes and saves edits inline", async () => {
+      const onSaveContent = vi.fn().mockResolvedValue(undefined);
+      renderInContext(
+        <TaskRow
+          task={{ ...BASE_TASK, content: "Bring the contract notes." }}
+          onSaveContent={onSaveContent}
+        />,
+      );
+
+      expect(screen.getByText("Bring the contract notes.")).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: /edit notes/i }));
+      fireEvent.change(screen.getByLabelText(/task notes/i), {
+        target: { value: "  Updated notes  " },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /save notes/i }));
+
+      await waitFor(() =>
+        expect(onSaveContent).toHaveBeenCalledWith(
+          { ...BASE_TASK, content: "Bring the contract notes." },
+          "Updated notes",
+        ),
+      );
+    });
+
+    it("can add notes when a task has no content yet", async () => {
+      const onSaveContent = vi.fn().mockResolvedValue(undefined);
+      renderInContext(<TaskRow task={BASE_TASK} onSaveContent={onSaveContent} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /add notes/i }));
+      fireEvent.change(screen.getByLabelText(/task notes/i), {
+        target: { value: "First useful detail" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /save notes/i }));
+
+      await waitFor(() =>
+        expect(onSaveContent).toHaveBeenCalledWith(BASE_TASK, "First useful detail"),
+      );
     });
   });
 });

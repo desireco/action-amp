@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getTasks, getDoneToday, updateTaskStatus } from "wasp/client/operations";
+import { getTasks, getDoneToday, updateTaskStatus, updateTaskContent } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, TaskRow, CompletionCircle, Chip, type TaskRowTask } from "../components/ui";
 import { GroupedList, type GroupDef } from "../components/ui";
@@ -90,6 +90,12 @@ export function TodayPage() {
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
   };
+  const handleSaveTaskContent = async (task: TaskRowTask, content: string) => {
+    await updateTaskContent({ taskId: task.id, content });
+    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+    queryClient.invalidateQueries({ queryKey: ["getDoneToday"] });
+    queryClient.invalidateQueries({ queryKey: ["getTask"] });
+  };
 
   const overCapacity = (tasks?.length ?? 0) > TODAY_CAP;
   const overflow = useMemo(() => (tasks ?? []).slice(TODAY_CAP), [tasks]);
@@ -131,7 +137,11 @@ export function TodayPage() {
             <ul className="aa-grouped__list">
               {(upcoming ?? []).map((task) => (
                 <li key={task.id} className="aa-grouped__item aa-today__swap-row">
-                  <TaskRow task={task} onOpen={() => navigate(`/app/tasks/${task.id}`)} />
+                  <TaskRow
+                    task={task}
+                    onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                    onSaveContent={handleSaveTaskContent}
+                  />
                   <Button
                     variant="secondary"
                     size="sm"
@@ -171,6 +181,7 @@ export function TodayPage() {
                 <TaskRow
                   task={task}
                   onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                  onSaveContent={handleSaveTaskContent}
                 />
                 <Button
                   variant="ghost"
@@ -196,6 +207,7 @@ export function TodayPage() {
                       task={task}
                       muted
                       onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                      onSaveContent={handleSaveTaskContent}
                     />
                   </li>
                 ))}
@@ -227,6 +239,7 @@ export function TodayPage() {
                   task={task}
                   muted
                   onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                  onSaveContent={handleSaveTaskContent}
                 />
               )}
             />

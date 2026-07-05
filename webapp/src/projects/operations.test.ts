@@ -240,6 +240,11 @@ describe("getProject — happy path", () => {
           userId: "user-1",
           OR: [{ id: "proj-1" }, { permalink: "proj-1" }],
         },
+        include: expect.objectContaining({
+          tasks: expect.objectContaining({
+            select: expect.objectContaining({ content: true }),
+          }),
+        }),
       }),
     );
   });

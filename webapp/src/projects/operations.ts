@@ -149,6 +149,7 @@ export const createProject = (async (args, context) => {
 type ProjectTask = {
   id: string;
   description: string;
+  content: string | null;
   isDone: boolean;
   priority: "LOW" | "NORMAL" | "IMPORTANT";
   size: "S" | "M" | "L" | "XL";
@@ -172,6 +173,7 @@ export const getProject = (async (args, context) => {
         select: {
           id: true,
           description: true,
+          content: true,
           isDone: true,
           priority: true,
           size: true,

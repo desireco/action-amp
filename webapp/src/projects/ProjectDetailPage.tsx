@@ -11,6 +11,7 @@ import {
   updateProject,
   deleteProject,
   updateTask,
+  updateTaskContent,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -143,6 +144,13 @@ export function ProjectDetailPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSaveTaskContent = async (task: TaskRowTask, content: string) => {
+    await updateTaskContent({ taskId: task.id, content });
+    queryClient.invalidateQueries({ queryKey: ["getProject"] });
+    queryClient.invalidateQueries({ queryKey: ["getTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
   };
 
   const handleComplete = async () => {
@@ -374,6 +382,7 @@ export function ProjectDetailPage() {
                           task={task}
                           muted={task.status === "SOMEDAY" || task.isDone}
                           onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                          onSaveContent={handleSaveTaskContent}
                         >
                           {!task.isDone && (
                             <div className="aa-project__horizon">
