@@ -18,7 +18,7 @@ import {
   PRIORITY_OPTS,
   SIZE_OPTS,
   WHEN_OPTS,
-  buildOutcome,
+  buildDispatchPayload,
   buildTriageChips,
   canComplete as canCompleteWorking,
   formatPriority,
@@ -302,30 +302,15 @@ export function TriagePage() {
   const dispatch = useCallback(async () => {
     if (idx >= total || exit || !activeLens || !working || !chosenLensId) return;
     const w = working;
-    const outcome = buildOutcome(w);
+    const payload = buildDispatchPayload(w, {
+      inboxItemId: item.id,
+      lensId: chosenLensId,
+      resolvedProjectId,
+    });
     setDispatched(true);
-    setExit(OUTCOME_EXIT[outcome]);
+    setExit(OUTCOME_EXIT[payload.decision]);
     try {
-      await triageInboxItem({
-        inboxItemId: item.id,
-        decision: outcome,
-        lensId: chosenLensId,
-        projectId:
-          w.type === "task"
-            ? w.projectId ?? resolvedProjectId ?? undefined
-            : w.type === "resource"
-              ? w.parentProjectId ?? undefined
-              : undefined,
-        goalId:
-          w.type === "project"
-            ? w.projectGoalId ?? undefined
-            : w.type === "resource"
-              ? w.parentGoalId ?? undefined
-              : undefined,
-        priority: w.type === "task" ? w.priority : undefined,
-        size: w.type === "task" ? w.size : undefined,
-        content: w.type === "task" ? w.content.trim() : undefined,
-      });
+      await triageInboxItem(payload);
       queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
