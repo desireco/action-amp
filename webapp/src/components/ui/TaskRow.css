@@ -35,6 +35,21 @@
   background: var(--aa-surface-muted);
 }
 
+.aa-task-row__main--clickable {
+  cursor: pointer;
+  border-radius: var(--aa-radius-sm);
+}
+
+.aa-task-row__main--clickable:hover {
+  background: var(--aa-surface-muted);
+}
+
+.aa-task-row__main--clickable:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+  background: var(--aa-surface-muted);
+}
+
 /* Circle — extend the hit area upward so adjacent rows are easy to tap */
 .aa-task-row__circle {
   padding-top: 1px;

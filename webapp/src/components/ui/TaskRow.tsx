@@ -1,3 +1,4 @@
+import type { KeyboardEvent, ReactNode } from "react";
 import { Chip } from "../ui";
 import { formatRelativeDue } from "../../shared/dateFormat";
 import "./TaskRow.css";
@@ -21,6 +22,7 @@ interface TaskRowProps {
   /** Open the task detail on row click */
   onOpen?: (task: TaskRowTask) => void;
   className?: string;
+  children?: ReactNode;
 }
 
 const SIZE_LABEL: Record<string, string> = { S: "S", M: "M", L: "L", XL: "XL" };
@@ -33,8 +35,14 @@ const SIZE_LABEL: Record<string, string> = { S: "S", M: "M", L: "L", XL: "XL" };
  * by ticking a row. A done task reads as such via the `--done` class (struck
  * through, muted), driven by `task.isDone`.
  */
-export function TaskRow({ task, muted = false, onOpen, className = "" }: TaskRowProps) {
+export function TaskRow({ task, muted = false, onOpen, className = "", children }: TaskRowProps) {
   const done = task.isDone ?? false;
+  const hasChildren = Boolean(children);
+  const clickableOnRoot = Boolean(onOpen && !hasChildren);
+  const openTask = () => onOpen?.(task);
+  const openTaskOnEnter = (e: KeyboardEvent) => {
+    if (e.key === "Enter") openTask();
+  };
 
   return (
     <li
@@ -42,17 +50,26 @@ export function TaskRow({ task, muted = false, onOpen, className = "" }: TaskRow
         "aa-task-row",
         done ? "aa-task-row--done" : "",
         muted ? "aa-task-row--muted" : "",
-        onOpen ? "aa-task-row--clickable" : "",
+        clickableOnRoot ? "aa-task-row--clickable" : "",
+        onOpen && hasChildren ? "aa-task-row--split" : "",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
-      onClick={onOpen ? () => onOpen(task) : undefined}
-      role={onOpen ? "button" : undefined}
-      tabIndex={onOpen ? 0 : undefined}
-      onKeyDown={onOpen ? (e) => e.key === "Enter" && onOpen(task) : undefined}
+      onClick={clickableOnRoot ? openTask : undefined}
+      role={clickableOnRoot ? "button" : undefined}
+      tabIndex={clickableOnRoot ? 0 : undefined}
+      onKeyDown={clickableOnRoot ? openTaskOnEnter : undefined}
     >
-      <div className="aa-task-row__main">
+      <div
+        className={["aa-task-row__main", onOpen && hasChildren ? "aa-task-row__main--clickable" : ""]
+          .filter(Boolean)
+          .join(" ")}
+        onClick={onOpen && hasChildren ? openTask : undefined}
+        role={onOpen && hasChildren ? "button" : undefined}
+        tabIndex={onOpen && hasChildren ? 0 : undefined}
+        onKeyDown={onOpen && hasChildren ? openTaskOnEnter : undefined}
+      >
         <span className="aa-task-row__title">{task.description}</span>
         {(task.project || task.dueDate || task.size || task.priority === "IMPORTANT") && (
           <div className="aa-task-row__meta">
@@ -67,6 +84,7 @@ export function TaskRow({ task, muted = false, onOpen, className = "" }: TaskRow
           </div>
         )}
       </div>
+      {children}
     </li>
   );
 }

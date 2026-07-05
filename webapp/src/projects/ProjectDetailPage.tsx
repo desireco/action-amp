@@ -368,12 +368,13 @@ export function ProjectDetailPage() {
                     </h3>
                     <ul className="aa-grouped__list">
                       {group.items.map((task) => (
-                        <li key={task.id} className="aa-grouped__item aa-project__row">
-                          <TaskRow
-                            task={task}
-                            muted={task.status === "SOMEDAY" || task.isDone}
-                            onOpen={() => navigate(`/app/tasks/${task.id}`)}
-                          />
+                        <TaskRow
+                          key={task.id}
+                          className="aa-grouped__item aa-project__row"
+                          task={task}
+                          muted={task.status === "SOMEDAY" || task.isDone}
+                          onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                        >
                           {!task.isDone && (
                             <div className="aa-project__horizon">
                               {task.status !== "TODAY" && (
@@ -438,7 +439,7 @@ export function ProjectDetailPage() {
                               {moveError && <p className="aa-project__inline-err">{moveError}</p>}
                             </div>
                           )}
-                        </li>
+                        </TaskRow>
                       ))}
                     </ul>
                   </section>
