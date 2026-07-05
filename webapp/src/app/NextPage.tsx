@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import {
   getTopTask,
@@ -30,14 +31,22 @@ import "./NextPage.css";
  */
 export function NextPage() {
   const lens = useActiveLens();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const selectedTaskToken = searchParams.get("task");
   const { data: topTask, isLoading } = useQuery(
     getTopTask,
     lens ? { lensId: lens.id } : undefined,
     { enabled: !!lens },
   );
+  const { data: selectedTask, isLoading: isSelectedTaskLoading } = useQuery(
+    getTask,
+    selectedTaskToken ? { id: selectedTaskToken } : undefined,
+    { enabled: !!selectedTaskToken },
+  );
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [snoozeOpen, setSnoozeOpen] = useState(false);
+  const task = selectedTaskToken ? selectedTask : topTask;
 
   // Focus mode shows the activity thread, which the topTask query doesn't
   // include. Fetch the full task (with updates) only while focus is open so we
@@ -48,14 +57,14 @@ export function NextPage() {
     { enabled: !!focusTaskId },
   );
 
-  const handleComplete = async () => {
-    if (!topTask) return;
+  const handleComplete = async (taskId: string) => {
     try {
       // Focus completion writes both the durable completion field (completedAt
       // — used by Today/Review) and a COMPLETED activity-log event. Idempotent.
-      await completeTaskFromFocus({ taskId: topTask.id });
+      await completeTaskFromFocus({ taskId });
       // Refresh the focus candidates + dependent lists so the completed task
       // leaves Next and the nav counts update.
+      queryClient.invalidateQueries({ queryKey: ["getTask"] });
       queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
       queryClient.invalidateQueries({ queryKey: ["getTasks"] });
       queryClient.invalidateQueries({ queryKey: ["getDoneToday"] });
@@ -81,29 +90,33 @@ export function NextPage() {
   };
 
   const handleSnooze = async (preset: SnoozePreset) => {
-    if (!topTask) return;
-    await snoozeTask({ id: topTask.id, preset });
+    if (!task) return;
+    await snoozeTask({ id: task.id, preset });
     // Snoozed task leaves Today → refresh focus + Upcoming/Someday + counts.
+    queryClient.invalidateQueries({ queryKey: ["getTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+    if (selectedTaskToken) setSearchParams({}, { replace: true });
   };
 
   // Start / Pause the "Now" state. Started tasks persist as #1 across nav.
-  const isNow = !!topTask?.startedAt;
+  const isNow = !!task?.startedAt;
   const handleStart = async () => {
-    if (!topTask) return;
-    await startTask({ id: topTask.id });
+    if (!task) return;
+    await startTask({ id: task.id });
+    queryClient.invalidateQueries({ queryKey: ["getTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
   };
   const handlePause = async () => {
-    if (!topTask) return;
-    await pauseTask({ id: topTask.id });
+    if (!task) return;
+    await pauseTask({ id: task.id });
+    queryClient.invalidateQueries({ queryKey: ["getTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
   };
 
   // ---- Empty / loading states ----
-  if (!lens || isLoading) {
+  if (!lens || isLoading || (selectedTaskToken && isSelectedTaskLoading)) {
     return (
       <div className="aa-wn">
         <div className="aa-wn-eyebrow">What now</div>
@@ -112,25 +125,38 @@ export function NextPage() {
     );
   }
 
-  if (!topTask) {
+  if (!task) {
     return (
       <div className="aa-wn">
         <div className="aa-wn-eyebrow">What now</div>
-        <h1 className="aa-wn-empty">Nothing on the table.</h1>
+        <h1 className="aa-wn-empty">
+          {selectedTaskToken
+            ? "That task isn't available."
+            : "Nothing on the table."}
+        </h1>
         <p className="aa-wn-empty-sub">
-          You're all caught up. Capture something with{" "}
-          <span className="aa-wn-kbd">⌘K</span>, then triage it to Today to put
-          it on the table.
+          {selectedTaskToken ? (
+            <>
+              It may have moved or been completed. Go back to Today, or clear
+              the selected task.
+            </>
+          ) : (
+            <>
+              You're all caught up. Capture something with{" "}
+              <span className="aa-wn-kbd">⌘K</span>, then triage it to Today to
+              put it on the table.
+            </>
+          )}
         </p>
       </div>
     );
   }
 
   const dueLabel =
-    topTask.status === "TODAY"
+    task.status === "TODAY"
       ? "due today"
-      : topTask.dueDate
-        ? `due ${formatWhen(topTask.dueDate)}`
+      : task.dueDate
+        ? `due ${formatWhen(task.dueDate)}`
         : null;
 
   // The honest "why this?" — composed from the same fields getTopTask ranked on
@@ -143,7 +169,7 @@ export function NextPage() {
   // detail carries the whole reason and should render as plain text — so we
   // promote it to `why`. This keeps the visual weight correct: amber emphasis
   // marks an *appended* clause, not a standalone reason.
-  const why = composeWhy(topTask);
+  const why = composeWhy(task);
   const whyLead = why.lead || why.detail;
   const whyDetail = why.lead ? why.detail : "";
 
@@ -151,16 +177,16 @@ export function NextPage() {
     <>
       <NextCard
         task={{
-          title: topTask.description,
-          project: topTask.project?.name,
+          title: task.description,
+          project: task.project?.name,
           due: dueLabel ?? undefined,
-          size: sizeLabel(topTask.size),
+          size: sizeLabel(task.size),
           why: whyLead || undefined,
           whyEmphasis: whyDetail || undefined,
         }}
         context={
           <>
-            {isNow ? "Now" : "Next"} ·{" "}
+            {isNow ? "Now" : selectedTaskToken ? "Picked" : "Next"} ·{" "}
             <span className="aa-wn-card__context-lens">{lens.name}</span>
           </>
         }
@@ -171,13 +197,13 @@ export function NextPage() {
           // "Do this" starts the task (Now) AND enters focus mode. We stash
           // just the id; the thread is fetched via getTask (see focusTaskFull).
           if (!isNow) void handleStart();
-          setFocusTaskId(topTask.id);
+          setFocusTaskId(task.id);
         }}
         onNotNow={() => setSnoozeOpen(true)}
       />
-      {snoozeOpen && topTask && (
+      {snoozeOpen && task && (
         <SnoozeSheet
-          taskTitle={topTask.description}
+          taskTitle={task.description}
           onSnooze={handleSnooze}
           onClose={() => setSnoozeOpen(false)}
         />
@@ -188,7 +214,7 @@ export function NextPage() {
           onClose={() => setFocusTaskId(null)}
           onComplete={() => {
             setFocusTaskId(null);
-            handleComplete();
+            handleComplete(focusTaskFull.id);
           }}
           onAddNote={handleAddNote}
           onSaveContent={handleSaveContent}

@@ -4,11 +4,6 @@ import { useQuery } from "wasp/client/operations";
 import {
   getTasks,
   getDoneToday,
-  getTask,
-  startTask,
-  addTaskUpdate,
-  updateTaskContent,
-  completeTaskFromFocus,
   updateTaskStatus,
   submitFeedback,
 } from "wasp/client/operations";
@@ -19,13 +14,11 @@ import {
   CompletionCircle,
   Chip,
   ConfirmDialog,
-  FocusMode,
   type TaskRowTask,
 } from "../components/ui";
 import { GroupedList, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { FeedbackDialog } from "../app/FeedbackDialog";
-import { toFocusTask } from "../app/focusTaskView";
 import { ListEmpty } from "./ListShell";
 import "./ListShell.css";
 import "./TodayPage.css";
@@ -119,12 +112,6 @@ export function TodayPage() {
   };
   const [feedbackTask, setFeedbackTask] = useState<TaskRowTask | null>(null);
   const [demoteTask, setDemoteTask] = useState<TaskRowTask | null>(null);
-  const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
-  const { data: focusTaskFull } = useQuery(
-    getTask,
-    focusTaskId ? { id: focusTaskId } : undefined,
-    { enabled: !!focusTaskId },
-  );
 
   const overCapacity = (tasks?.length ?? 0) > TODAY_CAP;
   const overflow = useMemo(() => (tasks ?? []).slice(TODAY_CAP), [tasks]);
@@ -135,31 +122,8 @@ export function TodayPage() {
       state: { returnTo },
     });
   };
-  const playTask = async (task: TaskRowTask) => {
-    await startTask({ id: task.id });
-    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-    setFocusTaskId(task.id);
-  };
-  const handleCompleteFocusTask = async () => {
-    if (!focusTaskId) return;
-    await completeTaskFromFocus({ taskId: focusTaskId });
-    setFocusTaskId(null);
-    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-    queryClient.invalidateQueries({ queryKey: ["getDoneToday"] });
-    queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
-    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-  };
-  const handleAddFocusNote = async (body: string) => {
-    if (!focusTaskId) return;
-    await addTaskUpdate({ taskId: focusTaskId, body });
-    queryClient.invalidateQueries({ queryKey: ["getTask"] });
-  };
-  const handleSaveFocusContent = async (content: string) => {
-    if (!focusTaskId) return;
-    await updateTaskContent({ taskId: focusTaskId, content });
-    queryClient.invalidateQueries({ queryKey: ["getTask"] });
+  const pickTask = (task: TaskRowTask) => {
+    navigate(`/app?task=${encodeURIComponent(task.permalink ?? task.id)}`);
   };
 
   // Note: no early empty-state return — the header (with the See-upcoming
@@ -271,7 +235,7 @@ export function TodayPage() {
                     task={task}
                     showContent
                     onOpen={() => {
-                      void playTask(task);
+                      pickTask(task);
                     }}
                   >
                     <Button
@@ -309,7 +273,7 @@ export function TodayPage() {
                           muted
                           showContent
                           onOpen={() => {
-                            void playTask(task);
+                            pickTask(task);
                           }}
                         />
                       </li>
@@ -398,17 +362,6 @@ export function TodayPage() {
             setDemoteTask(null);
             await handleDemote(task);
           }}
-        />
-      )}
-      {focusTaskId && focusTaskFull && (
-        <FocusMode
-          task={toFocusTask(focusTaskFull)}
-          onClose={() => setFocusTaskId(null)}
-          onComplete={() => {
-            void handleCompleteFocusTask();
-          }}
-          onAddNote={handleAddFocusNote}
-          onSaveContent={handleSaveFocusContent}
         />
       )}
     </div>
