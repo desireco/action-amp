@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems } from "wasp/client/operations";
-import { Button, Chip, ArrowRightIcon } from "../components/ui";
+import { Button, Chip, ArrowRightIcon, CalendarIcon, BoxIcon, HashIcon, StarIcon } from "../components/ui";
 import "./InboxPage.css";
 /**
  * Inbox — the capture destination. Untriaged items, newest first.
@@ -58,18 +58,41 @@ export function InboxPage() {
                 onClick={go}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && go()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    go();
+                  }
+                }}
               >
                 <p className="aa-inbox__row-text">{item.text}</p>
                 <div className="aa-inbox__row-meta">
                   <span className="aa-inbox__row-ago">captured {formatAgo(item.createdAt)}</span>
-                  {item.parsedDate && <Chip variant="teal" small>📅 {formatParsedDate(item.parsedDate)}</Chip>}
-                  {item.parsedProject && <Chip variant="teal" small>▣ {item.parsedProject}</Chip>}
-                  {item.parsedPriority === "IMPORTANT" && <Chip variant="amber" small>★ Important</Chip>}
+                  {item.parsedDate && (
+                    <Chip variant="teal" small>
+                      <CalendarIcon className="aa-chip__icon" />
+                      {formatParsedDate(item.parsedDate)}
+                    </Chip>
+                  )}
+                  {item.parsedProject && (
+                    <Chip variant="teal" small>
+                      <BoxIcon className="aa-chip__icon" />
+                      {item.parsedProject}
+                    </Chip>
+                  )}
+                  {item.parsedPriority === "IMPORTANT" && (
+                    <Chip variant="amber" small>
+                      <StarIcon className="aa-chip__icon" />
+                      Important
+                    </Chip>
+                  )}
                   {item.parsedPriority === "LOW" && <Chip variant="muted" small>low</Chip>}
                   {item.parsedSize && <Chip variant="default" small>{item.parsedSize}</Chip>}
                   {item.parsedTags.map((t) => (
-                    <Chip key={t} variant={t.startsWith("@") ? "amber" : "violet"} small>{t}</Chip>
+                    <Chip key={t} variant={t.startsWith("@") ? "amber" : "violet"} small>
+                      <HashIcon className="aa-chip__icon" />
+                      {t}
+                    </Chip>
                   ))}
                 </div>
               </li>
