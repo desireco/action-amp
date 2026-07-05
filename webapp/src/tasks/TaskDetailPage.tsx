@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router";
+import { useLocation, useNavigate, useParams, Link } from "react-router";
 import { useQuery, getTask, updateTaskDetails } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../components/ui";
@@ -15,12 +15,19 @@ import "./TaskDetailPage.css";
  */
 export function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: task, isLoading, error } = useQuery(getTask, { id: id! });
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const state = location.state as { returnTo?: unknown } | null;
+  const returnTo =
+    typeof state?.returnTo === "string" && state.returnTo.startsWith("/app")
+      ? state.returnTo
+      : "/app";
 
   useEffect(() => {
     if (!task) return;
@@ -52,6 +59,7 @@ export function TaskDetailPage() {
         queryClient.invalidateQueries({ queryKey: ["getDoneToday"] }),
         queryClient.invalidateQueries({ queryKey: ["getTopTask"] }),
       ]);
+      navigate(returnTo);
     } catch {
       setSaveError("Could not save task.");
     } finally {
@@ -61,8 +69,8 @@ export function TaskDetailPage() {
 
   return (
     <div className="aa-task">
-      <Link className="aa-task-back" to="/app">
-        ← Next
+      <Link className="aa-task-back" to={returnTo}>
+        ← Back
       </Link>
 
       {isLoading && <p className="aa-task-state">Loading…</p>}

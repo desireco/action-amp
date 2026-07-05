@@ -116,6 +116,10 @@ export function TodayPage() {
   const overCapacity = (tasks?.length ?? 0) > TODAY_CAP;
   const overflow = useMemo(() => (tasks ?? []).slice(TODAY_CAP), [tasks]);
   const committedCount = Math.min(tasks?.length ?? 0, TODAY_CAP);
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
+  const openTask = (task: TaskRowTask) => {
+    navigate(`/app/tasks/${task.id}`, { state: { returnTo } });
+  };
 
   // Note: no early empty-state return — the header (with the See-upcoming
   // toggle) renders even when Today is empty, so the bench is always reachable.
@@ -179,7 +183,7 @@ export function TodayPage() {
                     variant="list"
                     task={task}
                     showContent
-                    onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                    onOpen={() => openTask(task)}
                   >
                     <Button
                       variant="secondary"
@@ -225,12 +229,12 @@ export function TodayPage() {
                     key={task.id}
                     task={task}
                     showContent
-                    onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                    onOpen={() => openTask(task)}
                   >
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => navigate(`/app/tasks/${task.id}`)}
+                      onClick={() => openTask(task)}
                     >
                       Edit task
                     </Button>
@@ -261,7 +265,7 @@ export function TodayPage() {
                           task={task}
                           muted
                           showContent
-                          onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                          onOpen={() => openTask(task)}
                         />
                       </li>
                     ))}
@@ -300,7 +304,7 @@ export function TodayPage() {
                   task={task}
                   muted
                   showContent
-                  onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                  onOpen={() => openTask(task)}
                 >
                   <Button
                     variant="secondary"
