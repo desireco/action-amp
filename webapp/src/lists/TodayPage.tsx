@@ -48,11 +48,8 @@ export function TodayPage() {
     { enabled: !!lens },
   );
 
-  // Done-today: tasks completed since local midnight. Fetched on mount (not
-  // lazy) so the collapsed header can show the count; the rows render only when
-  // the section is expanded. The set is small (lens-scoped, today-only), so the
-  // cost on a normal Today load is negligible.
-  const [showDone, setShowDone] = useState(false);
+  // Done-today: tasks completed since local midnight. Fetched on mount and
+  // shown inline so completed work stays visible without another click.
   const { data: doneToday } = useQuery(
     getDoneToday,
     lens ? { lensId: lens.id } : undefined,
@@ -275,33 +272,26 @@ export function TodayPage() {
 
       {(doneToday?.length ?? 0) > 0 && (
         <section className="aa-today__done-section">
-          <button
-            type="button"
-            className="aa-today__done-header"
-            onClick={() => setShowDone((v) => !v)}
-            aria-expanded={showDone}
-          >
+          <div className="aa-today__done-header">
             <span>Done today</span>
             <span className="aa-today__done-count">{doneToday!.length}</span>
-          </button>
-          {showDone && (
-            <GroupedList
-              groups={doneGroups}
-              renderItem={(task) => (
-                <TaskRow
-                  as="div"
-                  variant="surface"
-                  key={task.id}
-                  task={task}
-                  muted
-                  onOpen={() => navigate(`/app/tasks/${task.id}`)}
-                  onSaveContent={handleSaveTaskContent}
-                  notesToggleLabel="Update task"
-                  notesTogglePlacement="actions"
-                />
-              )}
-            />
-          )}
+          </div>
+          <GroupedList
+            groups={doneGroups}
+            renderItem={(task) => (
+              <TaskRow
+                as="div"
+                variant="surface"
+                key={task.id}
+                task={task}
+                muted
+                onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                onSaveContent={handleSaveTaskContent}
+                notesToggleLabel="Update task"
+                notesTogglePlacement="actions"
+              />
+            )}
+          />
         </section>
       )}
     </div>

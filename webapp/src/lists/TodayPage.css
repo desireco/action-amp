@@ -105,10 +105,10 @@
   border-top: 1px dashed var(--aa-border-strong);
 }
 
-/* ---- "Done today" — collapsed by default, expands to show completed rows ---- */
+/* ---- "Done today" — visible record of completed work ---- */
 .aa-today__done-section {
   margin-top: var(--aa-space-xl);
-  padding: var(--aa-space-lg);
+  padding: var(--aa-space-md);
   background: var(--aa-surface);
   border: 1px dashed var(--aa-border-strong);
   border-radius: var(--aa-radius-md);
@@ -119,17 +119,11 @@
   gap: var(--aa-space-sm);
   width: 100%;
   padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
+  margin-bottom: var(--aa-space-md);
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--aa-text-3);
   text-align: left;
-  transition: color var(--aa-dur-base) var(--aa-ease-out);
-}
-.aa-today__done-header:hover {
-  color: var(--aa-text);
 }
 .aa-today__done-count {
   font-size: 0.8rem;
