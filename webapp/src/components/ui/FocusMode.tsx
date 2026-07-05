@@ -269,12 +269,7 @@ export function FocusMode({
 
         {(task.project || task.due || task.size) && (
           <p className="aa-meta">
-            {[task.project, task.due, task.size].filter(Boolean).map((part, i) => (
-              <span key={i} className="aa-meta__part">
-                {i > 0 && <span className="aa-meta__sep"> · </span>}
-                {part}
-              </span>
-            ))}
+            {[task.project, task.due, task.size].filter(Boolean).join(" · ")}
           </p>
         )}
 

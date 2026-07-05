@@ -780,9 +780,6 @@
   color: var(--aa-text-3);
   margin: calc(-1 * var(--aa-space-md)) 0 0;
 }
-.aa-meta__sep {
-  color: var(--aa-text-4);
-}
 
 /* ---- Durable content (working notes) — editable, separate from thread ---- */
 .aa-focus__notes {
