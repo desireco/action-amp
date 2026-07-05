@@ -21,15 +21,15 @@
    the lens name carries the identity color, so the hue reads as context, not
    urgency. Demoted in size; the color is the signal, not loudness. */
 .aa-wn-card__context {
-  font-size: 0.78rem;
-  font-weight: 500;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-3);
   margin-bottom: 36px;
   letter-spacing: 0.01em;
 }
 
 .aa-wn-card__context-lens {
-  font-weight: 600;
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-active-lens-text);
 }
 
@@ -42,8 +42,8 @@
 
 /* Task title */
 .aa-wn-card__title {
-  font-size: 1.875rem;
-  font-weight: 700;
+  font-size: var(--aa-text-2xl);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: -0.02em;
   line-height: 1.2;
   color: var(--aa-text);
@@ -52,7 +52,7 @@
 
 /* Meta line (project · due · size) */
 .aa-wn-card__meta {
-  font-size: 0.88rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-3);
   margin-bottom: 36px;
   display: flex;
@@ -68,7 +68,7 @@
 
 /* "Why this" line — amber emphasis */
 .aa-wn-card__why {
-  font-size: 0.78rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   margin: 0 0 32px;
   line-height: 1.5;
@@ -76,7 +76,7 @@
 
 .aa-wn-card__why strong {
   color: var(--aa-amber-text);
-  font-weight: 600;
+  font-weight: var(--aa-weight-semibold);
 }
 
 /* Actions */

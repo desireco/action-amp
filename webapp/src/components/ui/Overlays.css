@@ -83,14 +83,14 @@
 }
 
 .aa-confirm__title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-bold);
   color: var(--aa-text);
   margin: 0;
 }
 
 .aa-confirm__body {
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
   line-height: 1.5;
   color: var(--aa-text-2);
   margin: var(--aa-space-xs) 0 var(--aa-space-lg);
@@ -119,14 +119,14 @@
 }
 
 .aa-feedback__title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-bold);
   color: var(--aa-text);
   margin: 0;
 }
 
 .aa-feedback__sub {
-  font-size: 0.84rem;
+  font-size: var(--aa-text-sm);
   line-height: 1.4;
   color: var(--aa-text-3);
   margin: 4px 0 0;
@@ -141,7 +141,7 @@
   background: var(--aa-bg-soft);
   color: var(--aa-text);
   font-family: var(--aa-font);
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   line-height: 1.45;
   padding: var(--aa-space-sm);
 }
@@ -159,7 +159,7 @@
 .aa-feedback__error {
   margin: var(--aa-space-xs) 0 0;
   color: var(--aa-rose-text);
-  font-size: 0.82rem;
+  font-size: var(--aa-text-sm);
 }
 
 .aa-feedback__foot {
@@ -172,7 +172,7 @@
 
 .aa-feedback__count {
   color: var(--aa-text-4);
-  font-size: 0.74rem;
+  font-size: var(--aa-text-sm);
 }
 
 .aa-feedback__actions {
@@ -221,15 +221,15 @@
 }
 
 .aa-cheatsheet__title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-bold);
   color: var(--aa-text);
   margin: 0;
 }
 
 .aa-cheatsheet__sub {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -250,8 +250,8 @@
 }
 
 .aa-cheatsheet__section-title {
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -278,12 +278,12 @@
 }
 
 .aa-cheatsheet__label {
-  font-size: 0.88rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-2);
 }
 
 .aa-cheatsheet__note {
-  font-size: 0.74rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
   font-weight: 400;
 }
@@ -297,8 +297,8 @@
 
 .aa-cheatsheet__kbd {
   font-family: var(--aa-font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   background: var(--aa-surface-muted-2);
   color: var(--aa-text-2);
   padding: 2px 7px;
@@ -318,7 +318,7 @@
 }
 
 .aa-cheatsheet__tip {
-  font-size: 0.74rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
   font-style: italic;
   line-height: 1.4;
@@ -327,8 +327,8 @@
 
 .aa-cheatsheet__done {
   font-family: var(--aa-font);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-surface);
   background: var(--aa-teal-cta);
   padding: 7px 16px;
@@ -377,7 +377,7 @@
 .aa-capture__textarea {
   flex: 1;
   font-family: var(--aa-font);
-  font-size: 1rem;
+  font-size: var(--aa-text-md);
   line-height: 1.5;
   background: transparent;
   border: none;
@@ -412,7 +412,7 @@
   background: var(--aa-teal-soft);
   border-radius: var(--aa-radius-sm);
   animation: aa-capture-slidein 0.2s var(--aa-ease-out) both;
-  font-size: 0.78rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-2);
 }
 
@@ -472,8 +472,8 @@
 
 .aa-capture__save {
   font-family: var(--aa-font);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-surface);
   background: var(--aa-teal-cta);
   padding: 7px 18px;
@@ -537,7 +537,7 @@
   border-radius: 6px;
   cursor: pointer;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text);
   width: 100%;
 }
@@ -551,7 +551,7 @@
   flex: 1;
 }
 .aa-capture__mention-lens {
-  font-size: 0.7rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   flex-shrink: 0;
 }
@@ -564,14 +564,14 @@
 }
 
 .aa-capture__hint {
-  font-size: 0.75rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
 }
 
 .aa-capture__kbd {
   font-family: var(--aa-font-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   background: var(--aa-surface-muted-2);
   color: var(--aa-text-3);
   padding: 1px 5px;
@@ -583,7 +583,7 @@
    system's rare-emphasis accent — used only for the rare negative case, so
    it carries meaning instead of alarming. No red dot, no exclamation. */
 .aa-capture__error {
-  font-size: 0.78rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-rose-text);
 }
 
@@ -625,22 +625,22 @@
   gap: 6px;
 }
 .aa-clock__num {
-  font-size: 1.375rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
   font-variant-numeric: tabular-nums;
   color: var(--aa-text-2);
   letter-spacing: -0.02em;
 }
 .aa-clock__unit {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--aa-text-4);
 }
 .aa-clock__label {
-  font-size: 0.65rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--aa-text-4);
@@ -669,8 +669,8 @@
   gap: var(--aa-space-sm);
 }
 .aa-session {
-  font-size: 0.72rem;
-  font-weight: 500;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-4);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
@@ -762,7 +762,7 @@
 
 .aa-title {
   font-size: clamp(1.625rem, 3.2vw, 2.125rem);
-  font-weight: 700;
+  font-weight: var(--aa-weight-bold);
   letter-spacing: -0.015em;
   line-height: 1.18;
   color: var(--aa-text);
@@ -776,7 +776,7 @@
 }
 
 .aa-meta {
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   margin: calc(-1 * var(--aa-space-md)) 0 0;
 }
@@ -795,8 +795,8 @@
   margin-bottom: var(--aa-space-xs);
 }
 .aa-focus__notes-label {
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   color: var(--aa-text-4);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -806,8 +806,8 @@
   background: transparent;
   color: var(--aa-teal-cta);
   font: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   padding: var(--aa-space-2xs) 0;
   cursor: pointer;
 }
@@ -815,7 +815,7 @@
   color: var(--aa-teal-cta-hover);
 }
 .aa-focus__content {
-  font-size: 0.92rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-2);
   line-height: 1.55;
   white-space: pre-wrap;
@@ -823,7 +823,7 @@
 }
 .aa-focus__content-empty {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-4);
   font-style: italic;
 }
@@ -840,7 +840,7 @@
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-md);
   font: inherit;
-  font-size: 0.92rem;
+  font-size: var(--aa-text-base);
   line-height: 1.5;
   color: var(--aa-text-2);
   resize: vertical;
@@ -871,7 +871,7 @@
 }
 .aa-thread__empty {
   color: var(--aa-text-4);
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   text-align: center;
   padding: var(--aa-space-xs) 0;
 }
@@ -888,7 +888,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 .aa-thread__note-body {
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   line-height: 1.5;
   color: var(--aa-text-2);
   white-space: pre-wrap;
@@ -900,7 +900,7 @@
   gap: var(--aa-space-xs);
   padding: var(--aa-space-xs) 0;
   border-bottom: 1px solid var(--aa-border);
-  font-size: 0.8rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
 }
 .aa-thread__event:last-child {
@@ -915,10 +915,10 @@
 }
 .aa-thread__event-text {
   color: var(--aa-teal-cta);
-  font-weight: 600;
+  font-weight: var(--aa-weight-semibold);
 }
 .aa-thread__time {
-  font-size: 0.72rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   font-variant-numeric: tabular-nums;
   margin-top: 2px;
@@ -946,7 +946,7 @@
   background: transparent;
   padding: 0;
   font: inherit;
-  font-size: 0.72rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   cursor: pointer;
   display: inline-flex;
@@ -961,7 +961,7 @@
 /* Shared kbd chip — used in hints, composer foot, empty state. */
 .aa-kbd {
   font-family: var(--aa-font-mono);
-  font-size: 0.68rem;
+  font-size: var(--aa-text-xs);
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
   padding: 1px 5px;
@@ -989,8 +989,8 @@
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 .aa-composer__label {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--aa-text-4);
@@ -1012,7 +1012,7 @@
   border: none;
   background: transparent;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--aa-text-base);
   line-height: 1.5;
   color: var(--aa-text);
   resize: none;
@@ -1029,7 +1029,7 @@
   margin-top: var(--aa-space-xs);
 }
 .aa-composer__hint {
-  font-size: 0.72rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   display: inline-flex;
   align-items: center;
@@ -1070,8 +1070,8 @@
 }
 
 .aa-bottom-sheet__title {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -1133,13 +1133,13 @@
 }
 
 .aa-snooze__option-label {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
 }
 
 .aa-snooze__option-hint {
-  font-size: 0.78rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
 }
 
@@ -1154,8 +1154,8 @@
 }
 
 .aa-picker__group-label {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -1193,13 +1193,13 @@
 }
 
 .aa-picker__option-label {
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text);
 }
 
 .aa-picker__option-hint {
-  font-size: 0.72rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   font-style: italic;
 }

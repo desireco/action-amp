@@ -10,7 +10,7 @@
   gap: 2px;
   flex-wrap: wrap;
   font-family: var(--aa-font);
-  font-size: 0.75rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
 }
 
@@ -57,7 +57,7 @@
 /* Current zoom position */
 .aa-breadcrumb__crumb--active {
   color: var(--aa-teal-cta);
-  font-weight: 700;
+  font-weight: var(--aa-weight-bold);
   background: var(--aa-teal-soft);
 }
 

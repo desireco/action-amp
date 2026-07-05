@@ -22,8 +22,8 @@
   justify-content: center;
   gap: 7px;
   font-family: var(--aa-font);
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   padding: 6px 10px;
   border-radius: 0;
   color: var(--aa-text-3);
@@ -112,8 +112,8 @@
 /* Today-count badge — how many open Today tasks are in this lens. Shown
    only when > 0 (a 0 badge is noise and skirts the no-guilt-trip rule). */
 .aa-lens__count {
-  font-size: 0.64rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   line-height: 1;
   min-width: 15px;
   height: 15px;
@@ -148,8 +148,8 @@
 /* Pro-only lens affordance — a tiny, neutral chip (not a bright badge;
  * PRODUCT.md bans attention-grabbing UI). Signals the gate before the click. */
 .aa-lens__pro {
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--aa-text-4);

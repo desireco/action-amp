@@ -12,8 +12,8 @@
 }
 
 .aa-grouped__heading {
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -24,8 +24,8 @@
 }
 
 .aa-grouped__count {
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   color: var(--aa-text-4);
   background: var(--aa-surface-muted-2);
   padding: 1px 7px;
@@ -45,7 +45,7 @@
 
 .aa-grouped__empty {
   list-style: none;
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
   font-style: italic;
   padding: var(--aa-space-sm) 0;

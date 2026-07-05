@@ -10,8 +10,8 @@
   gap: 10px;
   width: 100%;
   font-family: var(--aa-font);
-  font-size: 0.88rem;
-  font-weight: 500;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-2);
   padding: 7px 8px;
   border-radius: var(--aa-radius-sm);
@@ -40,7 +40,7 @@
 .aa-nav-item--active {
   background: var(--aa-teal-soft);
   color: var(--aa-teal-cta);
-  font-weight: 600;
+  font-weight: var(--aa-weight-semibold);
 }
 
 .aa-nav-item--active::before {
@@ -108,8 +108,8 @@
 
 .aa-nav-item__soon {
   font-style: normal;
-  font-size: 0.65rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text-4);
   background: var(--aa-surface-muted-2);
   padding: 1px 6px;
@@ -120,8 +120,8 @@
 /* Count badge */
 .aa-nav-item__count {
   margin-left: auto;
-  font-size: 0.69rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   background: var(--aa-surface-muted-2);
   color: var(--aa-text-3);
   padding: 1px 7px;

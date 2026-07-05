@@ -14,14 +14,14 @@
   width: 100%;
   border-collapse: collapse;
   font-family: var(--aa-font);
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
 }
 
 /* Header */
 .aa-table__th {
   text-align: left;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--aa-text-4);

@@ -19,8 +19,8 @@
 }
 
 .aa-triage-card__body {
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: var(--aa-text-lg);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: -0.01em;
   color: var(--aa-text);
   line-height: 1.35;
@@ -28,7 +28,7 @@
 }
 
 .aa-triage-card__meta {
-  font-size: 0.75rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   margin: 0 0 var(--aa-space-md);
 }
@@ -46,8 +46,8 @@
    from the base .aa-chip so they read alongside the 1.2rem body, not as an
    afterthought. Scoped here so the shared Chip stays small elsewhere. */
 .aa-triage-card__chips .aa-chip {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
   padding: 6px 14px;
   border-radius: var(--aa-radius-md);
   line-height: 1.3;

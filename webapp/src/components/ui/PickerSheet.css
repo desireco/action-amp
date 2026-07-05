@@ -19,8 +19,8 @@
   border-radius: var(--aa-radius-md);
   background: transparent;
   color: var(--aa-text);
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
   text-align: left;
   cursor: pointer;
   transition: background var(--aa-dur-fast) var(--aa-ease-out);
@@ -36,7 +36,7 @@
 }
 
 .aa-picker-sheet__meta {
-  font-size: 0.8rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   font-weight: 400;
   margin-right: auto;
@@ -56,8 +56,8 @@
   border-radius: var(--aa-radius-sm);
   background: var(--aa-surface-muted);
   color: var(--aa-text-3);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   font-variant-numeric: tabular-nums;
 }
 
@@ -77,6 +77,6 @@
   margin: 0;
   padding: var(--aa-space-md) var(--aa-space-sm);
   color: var(--aa-text-3);
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
   text-align: center;
 }

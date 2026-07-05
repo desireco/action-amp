@@ -65,15 +65,15 @@
 
 .aa-disp__label {
   display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
   line-height: 1.2;
 }
 
 .aa-disp__sub {
   display: block;
-  font-size: 0.69rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   margin-top: 1px;
   line-height: 1.3;
@@ -82,7 +82,7 @@
 .aa-disp__key {
   margin-left: auto;
   font-family: var(--aa-font-mono);
-  font-size: 0.63rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   background: var(--aa-surface-muted);
   padding: 2px 6px;
@@ -98,8 +98,8 @@
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
   font-family: var(--aa-font);
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text-3);
   text-align: center;
   cursor: pointer;
@@ -131,7 +131,7 @@
 .aa-disp-mini__key {
   display: block;
   font-family: var(--aa-font-mono);
-  font-size: 0.6rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   margin-top: 2px;
 }

@@ -15,8 +15,8 @@
 
 .aa-progate__feature {
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 600;
+  font-size: var(--aa-text-lg);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
   display: flex;
   align-items: center;
@@ -35,15 +35,15 @@
   border-radius: var(--aa-radius-xs);
   background: var(--aa-teal-soft);
   color: var(--aa-teal-cta);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-bold);
   transform: rotate(180deg); /* ⌃ reads as a roof/caret — subtle */
   flex-shrink: 0;
 }
 
 .aa-progate__reason {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-2);
   line-height: 1.5;
 }
@@ -57,8 +57,8 @@
 }
 
 .aa-progate__primary {
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-teal-cta);
   text-decoration: none;
   padding: 6px 0;
@@ -71,7 +71,7 @@
 }
 
 .aa-progate__secondary {
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   text-decoration: none;
   transition: color 0.12s var(--aa-ease-out);
@@ -89,8 +89,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-teal-cta);
   text-decoration: none;
   padding: 6px 12px;
@@ -109,7 +109,7 @@
 
 .aa-progate-trigger__label {
   color: var(--aa-text-2);
-  font-weight: 500;
+  font-weight: var(--aa-weight-medium);
 }
 
 .aa-progate-trigger__cta {

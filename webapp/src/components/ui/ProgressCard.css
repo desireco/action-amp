@@ -31,8 +31,8 @@
 
 .aa-progress-card__title {
   display: block;
-  font-size: 1.45rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
   line-height: 1.12;
   color: var(--aa-text);
   margin: 0;
@@ -45,7 +45,7 @@
 
 .aa-progress-card__desc {
   max-width: 28ch;
-  font-size: 0.98rem;
+  font-size: var(--aa-text-md);
   color: var(--aa-text-3);
   margin: 0;
   line-height: 1.55;
@@ -77,8 +77,8 @@
 .aa-progress-card__pct {
   min-width: 44px;
   text-align: left;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-bold);
   color: var(--aa-teal-cta);
   white-space: nowrap;
 }
@@ -93,8 +93,8 @@
   background: var(--aa-surface-muted);
   border-radius: var(--aa-radius-full);
   color: var(--aa-text-3);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
 }
 
 .aa-progress-card__focus {
@@ -104,8 +104,8 @@
   margin: 0;
   padding: 5px 10px;
   border-radius: var(--aa-radius-sm);
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text-3);
 }
 

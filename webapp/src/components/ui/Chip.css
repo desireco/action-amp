@@ -4,8 +4,8 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   padding: 2px 8px;
   border-radius: var(--aa-radius-full);
   white-space: nowrap;
@@ -14,7 +14,7 @@
 
 /* Small variant */
 .aa-chip--sm {
-  font-size: 0.65rem;
+  font-size: var(--aa-text-xs);
   padding: 1px 6px;
 }
 

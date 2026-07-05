@@ -13,8 +13,8 @@
   border-radius: var(--aa-radius-md);
   padding: 8px 12px;
   font-family: var(--aa-font);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-active-lens-text);
   cursor: pointer;
   transition: border-color 0.12s var(--aa-ease-out), background 0.12s var(--aa-ease-out);
@@ -58,8 +58,8 @@
 
 .aa-lens-chip__kbd {
   font-family: var(--aa-font-mono);
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text-4);
   padding: 1px 5px;
   border-radius: var(--aa-radius-xs);
@@ -69,7 +69,7 @@
 
 .aa-lens-chip__caret {
   color: var(--aa-text-4);
-  font-size: 0.7rem;
+  font-size: var(--aa-text-xs);
 }
 
 /* ============================================================
@@ -112,8 +112,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -121,7 +121,7 @@
 }
 .aa-lens-popover__kbd {
   font-family: var(--aa-font-mono);
-  font-size: 0.68rem;
+  font-size: var(--aa-text-xs);
   letter-spacing: 0;
   text-transform: none;
   color: var(--aa-text-4);
@@ -134,7 +134,7 @@
 .aa-lens-popover__filter input {
   width: 100%;
   font-family: var(--aa-font);
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   padding: 6px 10px;
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-sm);
@@ -155,7 +155,7 @@
 
 .aa-lens-popover__empty {
   padding: 16px;
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
   text-align: center;
 }
@@ -203,13 +203,13 @@
 }
 .aa-lens-popover__name {
   display: block;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
 }
 .aa-lens-popover__purpose {
   display: block;
-  font-size: 0.78rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   margin-top: 1px;
   overflow: hidden;
@@ -218,8 +218,8 @@
 }
 
 .aa-lens-popover__count {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text-3);
   background: var(--aa-surface-muted);
   border-radius: var(--aa-radius-full);
@@ -229,8 +229,8 @@
 }
 
 .aa-lens-popover__pro {
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -253,8 +253,8 @@
   background: transparent;
   border-radius: var(--aa-radius-sm);
   font-family: var(--aa-font);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-3);
   cursor: pointer;
 }
@@ -263,15 +263,15 @@
   background: var(--aa-teal-soft);
 }
 .aa-lens-popover__plus {
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
   line-height: 1;
   width: 10px;
   text-align: center;
 }
 .aa-lens-popover__pro-tag {
   margin-left: auto;
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -281,7 +281,7 @@
   display: flex;
   gap: 14px;
   padding: 8px 14px;
-  font-size: 0.7rem;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   border-top: 1px solid var(--aa-border);
   font-family: var(--aa-font-mono);

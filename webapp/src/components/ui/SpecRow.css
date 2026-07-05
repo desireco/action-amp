@@ -32,8 +32,8 @@
 }
 
 .aa-spec-key {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -43,8 +43,8 @@
 
 .aa-spec-val {
   flex: 1;
-  font-size: 0.86rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
   text-align: right;
 }
@@ -69,7 +69,7 @@
 .aa-spec-row.is-default .aa-spec-val,
 .aa-spec-row.v-Someday .aa-spec-val {
   color: var(--aa-text-3);
-  font-weight: 500;
+  font-weight: var(--aa-weight-medium);
 }
 
 .aa-spec-chev {
@@ -111,8 +111,8 @@
   border-radius: var(--aa-radius-sm);
   border: none;
   background: none;
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-2);
   cursor: pointer;
   transition: background var(--aa-dur-fast) var(--aa-ease-out);
@@ -125,12 +125,12 @@
 .aa-spec-opt.active {
   background: var(--aa-teal-soft);
   color: var(--aa-teal-cta);
-  font-weight: 600;
+  font-weight: var(--aa-weight-semibold);
 }
 
 .aa-spec-opt-hint {
   margin-left: var(--aa-space-sm);
-  font-size: 0.72rem;
+  font-size: var(--aa-text-xs);
   font-weight: 400;
   color: var(--aa-text-4);
 }

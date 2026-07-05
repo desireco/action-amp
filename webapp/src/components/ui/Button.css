@@ -9,7 +9,7 @@
   justify-content: center;
   gap: 8px;
   font-family: var(--aa-font);
-  font-weight: 600;
+  font-weight: var(--aa-weight-semibold);
   border: 1px solid transparent;
   border-radius: var(--aa-radius-sm);
   cursor: pointer;
@@ -53,7 +53,7 @@
   align-items: center;
   gap: 6px;
   font-family: var(--aa-font);
-  font-weight: 600;
+  font-weight: var(--aa-weight-semibold);
   background: none;
   border: none;
   cursor: pointer;
@@ -63,16 +63,16 @@
 }
 
 /* ---- Sizes ---- */
-.aa-btn--sm { font-size: 0.78rem; padding: 6px 12px; }
+.aa-btn--sm { font-size: var(--aa-text-sm); padding: 6px 12px; }
 .aa-btn--lg {
-  font-size: 1rem;
+  font-size: var(--aa-text-md);
   padding: 12px 28px;
   border-radius: var(--aa-radius-md);
 }
 
 /* md (default) */
 .aa-btn:not(.aa-btn--sm):not(.aa-btn--lg):not(.aa-btn--bare) {
-  font-size: 0.875rem;
+  font-size: var(--aa-text-base);
   padding: 9px 18px;
 }
 
@@ -129,8 +129,8 @@
 /* ---- Kbd hint ---- */
 .aa-btn__kbd {
   font-family: var(--aa-font-mono);
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   background: var(--aa-surface-muted-2);
   color: var(--aa-text-4);
   padding: 2px 5px;

@@ -48,8 +48,8 @@
 /* ---- Headline ---- */
 .aa-auth-title {
   text-align: center;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
   line-height: 1.2;
   letter-spacing: -0.01em;
   color: var(--aa-text);
@@ -58,7 +58,7 @@
 
 .aa-auth-subtitle {
   text-align: center;
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   line-height: 1.4;
   color: var(--aa-text-3);
   margin: var(--aa-space-sm) 0 0;
@@ -71,13 +71,13 @@
   flex-direction: column;
   gap: var(--aa-space-sm);
   text-align: center;
-  font-size: 0.875rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-3);
 }
 
 .aa-auth-footer a {
   color: var(--aa-teal-cta);
-  font-weight: 500;
+  font-weight: var(--aa-weight-medium);
   text-decoration: none;
 }
 
@@ -106,8 +106,8 @@
 .aa-auth-dev__label {
   margin-bottom: var(--aa-space-xs);
   color: var(--aa-text-3);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -121,8 +121,8 @@
   color: var(--aa-text);
   cursor: pointer;
   font: inherit;
-  font-size: 0.875rem;
-  font-weight: 650;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-bold);
   padding: 9px 10px;
   text-align: center;
   text-decoration: none;
@@ -143,7 +143,7 @@
 .aa-auth-dev__status,
 .aa-auth-dev__error {
   margin: var(--aa-space-xs) 0 0;
-  font-size: 0.78rem;
+  font-size: var(--aa-text-sm);
   line-height: 1.35;
 }
 
@@ -179,8 +179,8 @@
 /* Labels */
 .aa-auth-card label {
   color: var(--aa-text-2) !important;
-  font-weight: 500 !important;
-  font-size: 0.875rem !important;
+  font-weight: var(--aa-weight-medium) !important;
+  font-size: var(--aa-text-base) !important;
   margin-bottom: 6px !important;
 }
 
@@ -192,7 +192,7 @@
   border: 1px solid var(--aa-border-strong) !important;
   border-radius: var(--aa-radius-sm) !important;
   padding: 10px 12px !important;
-  font-size: 0.95rem !important;
+  font-size: var(--aa-text-base) !important;
   line-height: 1.4 !important;
   color: var(--aa-text) !important;
   box-shadow: none !important;
@@ -218,8 +218,8 @@
 .aa-auth-card button[type="submit"] {
   border-radius: var(--aa-radius-sm) !important;
   padding: 11px 14px !important;
-  font-weight: 600 !important;
-  font-size: 0.95rem !important;
+  font-weight: var(--aa-weight-semibold) !important;
+  font-size: var(--aa-text-base) !important;
 }
 
 /* ============================================================
@@ -239,8 +239,8 @@
   border: 1px solid var(--aa-border-strong);
   background: var(--aa-surface);
   color: var(--aa-text);
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -259,7 +259,7 @@
   gap: var(--aa-space-sm);
   margin: 0 0 var(--aa-space-lg);
   color: var(--aa-text-4);
-  font-size: 0.75rem;
+  font-size: var(--aa-text-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
