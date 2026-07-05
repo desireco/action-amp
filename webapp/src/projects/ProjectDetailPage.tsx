@@ -666,6 +666,22 @@ export function ProjectDetailPage() {
                               </Button>
                             </div>
                           )}
+                          {/* Edit — opens the task's own page (title + notes
+                              editable there today; full-field editing is
+                              pending on the destination). Surfaced on every row
+                              including done ones, so a completed task is still
+                              reachable. */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="aa-project__row-ctrl"
+                            onClick={() =>
+                              navigate(`/app/tasks/${task.permalink ?? task.id}`)
+                            }
+                            aria-label={`Edit ${task.description}`}
+                          >
+                            Edit
+                          </Button>
                           {movingTaskId === task.id && (
                             <div className="aa-project__move-picker">
                               <span className="aa-project__move-hint">

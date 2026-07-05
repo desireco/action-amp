@@ -85,6 +85,8 @@ function renderAt(path: string) {
           <Route path="/app/projects/:permalink" element={<ProjectDetailPage />} />
           <Route path="/app/projects" element={<div data-testid="projects-list" />} />
           <Route path="/app/goals/:permalink" element={<div data-testid="goal-detail" />} />
+          <Route path="/app/tasks/:permalink" element={<div data-testid="task-detail" />} />
+          <Route path="/app/focus" element={<div data-testid="focus" />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -183,6 +185,30 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /move email sarah to another project/i }));
     expect(screen.getByText(/no other projects in this lens/i)).toBeInTheDocument();
+  });
+});
+
+describe("ProjectDetailPage — Edit affordance on task rows", () => {
+  it("each task row has an Edit button that opens the task page", () => {
+    projectData.current = makeProjectMultiToday();
+    renderAt("/app/projects/p1");
+
+    const editBtn = screen.getByRole("button", { name: /edit email sarah/i });
+    fireEvent.click(editBtn);
+
+    expect(screen.getByTestId("task-detail")).toBeInTheDocument();
+  });
+
+  it("done tasks still show an Edit button (read-only on the destination)", () => {
+    projectData.current = makeProject({
+      tasks: [
+        { id: "t1", description: "Email Sarah", isDone: true, status: "TODAY", priority: "NORMAL", size: "M" },
+      ],
+    });
+    renderAt("/app/projects/p1");
+
+    // Done tasks show in the Done group; the Edit affordance is still there.
+    expect(screen.getByRole("button", { name: /edit email sarah/i })).toBeInTheDocument();
   });
 });
 
