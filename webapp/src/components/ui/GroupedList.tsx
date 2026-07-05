@@ -18,6 +18,13 @@ interface GroupedListProps<T> {
   renderEmptyGroup?: (group: GroupDef<T>) => ReactNode;
   /** Show the group heading even if empty */
   keepEmptyGroups?: boolean;
+  /** Heading level for the group label. Defaults to 3. Use 2 when the list is
+   * a top-level section peer (e.g. Today's open list sits beside "Done today"
+   * and "Beyond the cap" as h2). Nested lists under an h2 section keep 3. */
+  headingLevel?: 2 | 3 | 4 | 5 | 6;
+  /** Per-group class. Receives the group label; return a class name to mark a
+   * specific group (e.g. tint the "Overdue" bucket). */
+  groupClassName?: (label: string) => string | undefined;
   className?: string;
 }
 
@@ -33,20 +40,27 @@ export function GroupedList<T>({
   renderItem,
   renderEmptyGroup,
   keepEmptyGroups = false,
+  headingLevel = 3,
+  groupClassName,
   className = "",
 }: GroupedListProps<T>) {
+  const Heading = (`h${headingLevel}` as unknown) as "h3";
   return (
     <div className={["aa-grouped", className].filter(Boolean).join(" ")}>
       {groups.map((group) => {
         if (group.items.length === 0 && !keepEmptyGroups) return null;
+        const extra = groupClassName?.(group.label);
         return (
-          <section key={group.key} className="aa-grouped__group">
-            <h3 className="aa-grouped__heading">
+          <section
+            key={group.key}
+            className={["aa-grouped__group", extra].filter(Boolean).join(" ")}
+          >
+            <Heading className="aa-grouped__heading">
               {group.label}
               {group.items.length > 0 && (
                 <span className="aa-grouped__count">{group.items.length}</span>
               )}
-            </h3>
+            </Heading>
             <ul className="aa-grouped__list">
               {group.items.length === 0 && renderEmptyGroup ? (
                 <li className="aa-grouped__empty">{renderEmptyGroup(group)}</li>

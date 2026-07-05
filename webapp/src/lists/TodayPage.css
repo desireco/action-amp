@@ -37,13 +37,14 @@
 
 .aa-today__meter {
   display: grid;
-  grid-template-columns: repeat(5, minmax(24px, 1fr));
+  grid-template-columns: repeat(5, 24px);
+  justify-content: start;
   gap: var(--aa-space-xs);
-  width: min(18rem, 100%);
   margin-top: var(--aa-space-md);
 }
 
 .aa-today__meter-dot {
+  width: 24px;
   height: 6px;
   border-radius: var(--aa-radius-full);
   background: var(--aa-surface-muted-2);
@@ -102,15 +103,16 @@
 .aa-today__overflow {
   margin-top: var(--aa-space-xl);
   padding-top: var(--aa-space-xl);
-  border-top: 1px dashed var(--aa-border-strong);
+  border-top: 1px solid var(--aa-border);
 }
 
-/* ---- "Done today" — visible record of completed work ---- */
+/* ---- "Done today" — settled work, so a solid border (dashed reads as
+   draft/tentative, the opposite of completed). ---- */
 .aa-today__done-section {
   margin-top: var(--aa-space-xl);
   padding: var(--aa-space-md);
   background: var(--aa-surface);
-  border: 1px dashed var(--aa-border-strong);
+  border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-md);
 }
 .aa-today__done-header {
@@ -143,6 +145,80 @@
   color: var(--aa-text-3);
   font-size: 0.9rem;
   text-align: center;
+}
+
+/* ---- Row action declutter: secondary actions are present in the a11y tree
+   but visually quiet until the row is attended to (hover/focus/keyboard).
+   On touch (no hover) the actions stay visible so there's no hidden UI. The
+   row itself stays the primary affordance (click → focus on this task). ---- */
+.aa-today__list .aa-task-row__actions,
+.aa-today__done-section .aa-task-row__actions {
+  /* The shared TaskRow layout sets min-width: 7rem for stacked edit/save
+     pairs; we only have ghost link-buttons here, so collapse to content. */
+  min-width: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--aa-space-xs);
+}
+
+.aa-today__list .aa-task-row__actions .aa-btn,
+.aa-today__done-section .aa-task-row__actions .aa-btn {
+  width: auto;
+}
+
+@media (hover: hover) {
+  .aa-today__list .aa-task-row__actions,
+  .aa-today__done-section .aa-task-row__actions {
+    opacity: 0;
+    transition: opacity var(--aa-dur-base) var(--aa-ease-out);
+  }
+  .aa-today__list .aa-grouped__item:hover .aa-task-row__actions,
+  .aa-today__list .aa-grouped__item:focus-within .aa-task-row__actions,
+  .aa-today__done-section .aa-grouped__item:hover .aa-task-row__actions,
+  .aa-today__done-section .aa-grouped__item:focus-within .aa-task-row__actions {
+    opacity: 1;
+  }
+  /* Touch fallback below resets opacity back to 1. */
+}
+
+@media (hover: none) {
+  .aa-today__list .aa-task-row__actions,
+  .aa-today__done-section .aa-task-row__actions {
+    opacity: 1;
+  }
+}
+
+/* ---- Loading skeleton (until getTasks resolves) ---- */
+.aa-today__loading {
+  padding: var(--aa-space-md);
+}
+.aa-today__skeleton-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-md);
+}
+.aa-today__skeleton {
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface-muted);
+  animation: aa-today-skeleton-pulse 1.6s var(--aa-ease-out) infinite;
+}
+.aa-today__skeleton--heading {
+  width: 7rem;
+  height: 0.8rem;
+}
+.aa-today__skeleton--row {
+  width: 100%;
+  height: 2.5rem;
+}
+@keyframes aa-today-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aa-today__skeleton {
+    animation: none;
+    opacity: 0.7;
+  }
 }
 
 @media (max-width: 720px) {
