@@ -35,7 +35,10 @@ const BASE_ITEM = {
 /** Arrange the common precondition: the inbox item exists and is ours. */
 function arrange(overrides: Partial<typeof BASE_ITEM> = {}) {
   const m = mockContext();
-  m.entities.InboxItem.findUnique.mockResolvedValue({ ...BASE_ITEM, ...overrides });
+  m.entities.InboxItem.findUnique.mockResolvedValue({
+    ...BASE_ITEM,
+    ...overrides,
+  });
   return m;
 }
 
@@ -43,7 +46,10 @@ describe("triageInboxItem — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
     await expect(
-      triageInboxItem({ inboxItemId: "ix-1", decision: "archive", lensId: "l" }, m.context),
+      triageInboxItem(
+        { inboxItemId: "ix-1", decision: "archive", lensId: "l" },
+        m.context,
+      ),
     ).rejects.toThrow(/Not authenticated/);
   });
 
@@ -54,7 +60,10 @@ describe("triageInboxItem — guards", () => {
       userId: "someone-else",
     });
     await expect(
-      triageInboxItem({ inboxItemId: "ix-1", decision: "archive", lensId: "l" }, m.context),
+      triageInboxItem(
+        { inboxItemId: "ix-1", decision: "archive", lensId: "l" },
+        m.context,
+      ),
     ).rejects.toThrow(/not found/i);
   });
 });
@@ -86,7 +95,9 @@ describe("triageInboxItem — task decisions", () => {
         }),
         select: { id: true },
       });
-      expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({ where: { id: "ix-1" } });
+      expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({
+        where: { id: "ix-1" },
+      });
     },
   );
 
@@ -112,8 +123,14 @@ describe("triageInboxItem — task decisions", () => {
       .mockResolvedValueOnce({ id: "tag-mvp" });
     m.entities.Task.create.mockResolvedValue({ id: "t" });
 
-    await triageOne({
-      inboxItemId: "ix-1", decision: "task-today", lensId: "l" }, m);
+    await triageOne(
+      {
+        inboxItemId: "ix-1",
+        decision: "task-today",
+        lensId: "l",
+      },
+      m,
+    );
 
     // Two upserts — one per tag, stripped of # (and legacy @) and lowercased.
     expect(m.entities.Tag.upsert).toHaveBeenCalledTimes(2);
@@ -142,42 +159,78 @@ describe("triageInboxItem — task decisions", () => {
     const m = arrange({ parsedTags: [] });
     m.entities.Task.create.mockResolvedValue({ id: "t" });
 
-    await triageOne({
-      inboxItemId: "ix-1", decision: "task-today", lensId: "l" }, m);
+    await triageOne(
+      {
+        inboxItemId: "ix-1",
+        decision: "task-today",
+        lensId: "l",
+      },
+      m,
+    );
 
     expect(m.entities.Tag.upsert).not.toHaveBeenCalled();
-    const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
     expect(call.data.tags).toBeUndefined();
   });
 
   it("files under the lens General project when no project is chosen", async () => {
     const m = arrange();
-    m.entities.Project.findFirst.mockResolvedValue({ id: "general-1" });
+    m.entities.Project.findFirst.mockResolvedValue({
+      id: "general-1",
+      permalink: "general",
+    });
     m.entities.Task.create.mockResolvedValue({ id: "t" });
 
-    await triageOne({
-      inboxItemId: "ix-1", decision: "task-today", lensId: "l" }, m);
+    await triageOne(
+      {
+        inboxItemId: "ix-1",
+        decision: "task-today",
+        lensId: "l",
+      },
+      m,
+    );
 
     expect(m.entities.Project.findFirst).toHaveBeenCalledWith({
       where: { userId: "user-1", lensId: "l", name: "General" },
-      select: { id: true },
+      select: { id: true, permalink: true },
     });
     expect(m.entities.Task.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ projectId: "general-1" }),
+      data: expect.objectContaining({
+        projectId: "general-1",
+        permalink: "general-email-sarah",
+      }),
       select: { id: true },
     });
   });
 
   it("uses the explicit projectId when provided (no General lookup needed)", async () => {
     const m = arrange();
+    m.entities.Project.findFirst.mockResolvedValue({
+      id: "explicit-1",
+      permalink: "mvp",
+    });
     m.entities.Task.create.mockResolvedValue({ id: "t" });
 
-    await triageOne({
-      inboxItemId: "ix-1", decision: "task-today", lensId: "l", projectId: "explicit-1" }, m);
+    await triageOne(
+      {
+        inboxItemId: "ix-1",
+        decision: "task-today",
+        lensId: "l",
+        projectId: "explicit-1",
+      },
+      m,
+    );
 
-    expect(m.entities.Project.findFirst).not.toHaveBeenCalled();
+    expect(m.entities.Project.findFirst).toHaveBeenCalledWith({
+      where: { id: "explicit-1", userId: "user-1", lensId: "l" },
+      select: { id: true, permalink: true },
+    });
     expect(m.entities.Task.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ projectId: "explicit-1" }),
+      data: expect.objectContaining({
+        projectId: "explicit-1",
+        permalink: "mvp-email-sarah",
+      }),
       select: { id: true },
     });
   });
@@ -186,14 +239,18 @@ describe("triageInboxItem — task decisions", () => {
     const m = arrange();
     m.entities.Task.create.mockResolvedValue({ id: "t" });
 
-    await triageOne({
-      inboxItemId: "ix-1",
-      decision: "task-today",
-      lensId: "l",
-      goalId: "goal-should-not-attach",
-    }, m);
+    await triageOne(
+      {
+        inboxItemId: "ix-1",
+        decision: "task-today",
+        lensId: "l",
+        goalId: "goal-should-not-attach",
+      },
+      m,
+    );
 
-    const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
     expect(call.data.goalId).toBeUndefined();
   });
 
@@ -201,12 +258,15 @@ describe("triageInboxItem — task decisions", () => {
     const m = arrange();
     m.entities.Task.create.mockResolvedValue({ id: "t" });
 
-    await triageOne({
-      inboxItemId: "ix-1",
-      decision: "task-today",
-      lensId: "l",
-      content: "  Bring the contract notes  ",
-    }, m);
+    await triageOne(
+      {
+        inboxItemId: "ix-1",
+        decision: "task-today",
+        lensId: "l",
+        content: "  Bring the contract notes  ",
+      },
+      m,
+    );
 
     expect(m.entities.Task.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ content: "Bring the contract notes" }),
@@ -218,12 +278,15 @@ describe("triageInboxItem — task decisions", () => {
     const m = arrange();
     m.entities.Task.create.mockResolvedValue({ id: "t" });
 
-    await triageOne({
-      inboxItemId: "ix-1",
-      decision: "task-today",
-      lensId: "l",
-      content: "   \n  ",
-    }, m);
+    await triageOne(
+      {
+        inboxItemId: "ix-1",
+        decision: "task-today",
+        lensId: "l",
+        content: "   \n  ",
+      },
+      m,
+    );
 
     expect(m.entities.Task.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ content: null }),
@@ -233,7 +296,10 @@ describe("triageInboxItem — task decisions", () => {
 });
 
 /** Thin wrapper so the new tests read clearly and stay DRY. */
-async function triageOne(args: Parameters<typeof triageInboxItem>[0], m: ReturnType<typeof mockContext>) {
+async function triageOne(
+  args: Parameters<typeof triageInboxItem>[0],
+  m: ReturnType<typeof mockContext>,
+) {
   return triageInboxItem(args, m.context);
 }
 
@@ -258,7 +324,10 @@ describe("triageInboxItem — project / resource / archive", () => {
   it("resource requires a parent project or goal", async () => {
     const m = arrange();
     await expect(
-      triageInboxItem({ inboxItemId: "ix-1", decision: "resource", lensId: "l" }, m.context),
+      triageInboxItem(
+        { inboxItemId: "ix-1", decision: "resource", lensId: "l" },
+        m.context,
+      ),
     ).rejects.toThrow(/project or goal/i);
   });
 

@@ -3,7 +3,13 @@ import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getTasks, updateTaskContent } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { TaskRow, CompletionCircle, GroupedList, type GroupDef, type TaskRowTask } from "../components/ui";
+import {
+  TaskRow,
+  CompletionCircle,
+  GroupedList,
+  type GroupDef,
+  type TaskRowTask,
+} from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
 import "./ListShell.css";
@@ -24,7 +30,11 @@ export function UpcomingPage() {
 
   const groups = useMemo<GroupDef<TaskRowTask>[]>(() => {
     if (!tasks) return [];
-    const buckets: Record<string, TaskRowTask[]> = { "This week": [], "Next week": [], Later: [] };
+    const buckets: Record<string, TaskRowTask[]> = {
+      "This week": [],
+      "Next week": [],
+      Later: [],
+    };
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     for (const t of tasks) {
@@ -39,7 +49,11 @@ export function UpcomingPage() {
       else if (diffDays <= 14) buckets["Next week"].push(t);
       else buckets["Later"].push(t);
     }
-    return Object.entries(buckets).map(([label, items]) => ({ key: label, label, items }));
+    return Object.entries(buckets).map(([label, items]) => ({
+      key: label,
+      label,
+      items,
+    }));
   }, [tasks]);
 
   const handleSaveTaskContent = async (task: TaskRowTask, content: string) => {
@@ -63,7 +77,9 @@ export function UpcomingPage() {
       <header className="aa-list-header">
         <div>
           <div className="aa-list-header__eyebrow">Upcoming</div>
-          <h1 className="aa-list-header__title">{tasks?.length ?? 0} scheduled</h1>
+          <h1 className="aa-list-header__title">
+            {tasks?.length ?? 0} scheduled
+          </h1>
         </div>
       </header>
       <GroupedList
@@ -72,7 +88,7 @@ export function UpcomingPage() {
         renderItem={(task) => (
           <TaskRow
             task={task}
-            onOpen={() => navigate(`/app/tasks/${task.id}`)}
+            onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
             onSaveContent={handleSaveTaskContent}
           />
         )}

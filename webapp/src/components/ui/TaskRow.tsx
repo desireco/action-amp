@@ -12,6 +12,7 @@ import "./TaskRow.css";
 
 export interface TaskRowTask {
   id: string;
+  permalink?: string | null;
   description: string;
   content?: string | null;
   isDone?: boolean;

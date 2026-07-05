@@ -9,8 +9,12 @@ import type {
   UpdateTask,
 } from "wasp/server/operations";
 import { FREE_LIMITS } from "../billing/config";
-import { assertLensAllowed, assertUnderCap, throwHttpStatus } from "../billing/entitlementHttp";
-import { uniquePermalink } from "../shared/permalinks";
+import {
+  assertLensAllowed,
+  assertUnderCap,
+  throwHttpStatus,
+} from "../billing/entitlementHttp";
+import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
 
 /**
  * Projects list for the Projects page, scoped to the active Lens.
@@ -38,6 +42,7 @@ export const getProjects = (async (args, context) => {
         where: { isDone: false },
         select: {
           id: true,
+          permalink: true,
           description: true,
           priority: true,
           size: true,
@@ -96,10 +101,16 @@ export const createProject = (async (args, context) => {
   const projectCount = await context.entities.Project.count({
     where: { userId: context.user.id, lensId: args.lensId, isDone: false },
   });
-  await assertUnderCap(context, args.lensId, projectCount, FREE_LIMITS.projects, {
-    feature: "a 4th project",
-    reason: "organize more than 3 projects with Pro",
-  });
+  await assertUnderCap(
+    context,
+    args.lensId,
+    projectCount,
+    FREE_LIMITS.projects,
+    {
+      feature: "a 4th project",
+      reason: "organize more than 3 projects with Pro",
+    },
+  );
 
   // Seed `order` so a new project lands at the end of its goal's sequence
   // (goal-planning spec §E). Standalone projects (no goal) keep order=0;
@@ -132,12 +143,15 @@ export const createProject = (async (args, context) => {
     },
     select: { id: true, permalink: true, name: true },
   });
-}) satisfies CreateProject<{
-  name: string;
-  lensId: string;
-  goalId?: string;
-  description?: string;
-}, { id: string; permalink: string; name: string }>;
+}) satisfies CreateProject<
+  {
+    name: string;
+    lensId: string;
+    goalId?: string;
+    description?: string;
+  },
+  { id: string; permalink: string; name: string }
+>;
 
 // ----------------------------------------------------------------
 // Read: a single project for the detail page, with its tasks
@@ -148,6 +162,7 @@ export const createProject = (async (args, context) => {
 // lens — NOT the active sidebar lens, which may differ.
 type ProjectTask = {
   id: string;
+  permalink: string;
   description: string;
   content: string | null;
   isDone: boolean;
@@ -169,9 +184,14 @@ export const getProject = (async (args, context) => {
     include: {
       goal: { select: { id: true, permalink: true, name: true } },
       tasks: {
-        orderBy: [{ isDone: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
+        orderBy: [
+          { isDone: "asc" },
+          { priority: "desc" },
+          { createdAt: "asc" },
+        ],
         select: {
           id: true,
+          permalink: true,
           description: true,
           content: true,
           isDone: true,
@@ -222,15 +242,17 @@ export const createTask = (async (args, context) => {
   }
 
   let lensId = args.lensId;
+  let projectPermalink: string | null = null;
   if (args.projectId) {
     const project = await context.entities.Project.findUnique({
       where: { id: args.projectId, userId: context.user.id },
-      select: { id: true, lensId: true },
+      select: { id: true, lensId: true, permalink: true },
     });
     if (!project) {
       throw new Error("Project not found.");
     }
     lensId = project.lensId;
+    projectPermalink = project.permalink;
   } else if (args.goalId) {
     const goal = await context.entities.Goal.findUnique({
       where: { id: args.goalId, userId: context.user.id },
@@ -244,9 +266,21 @@ export const createTask = (async (args, context) => {
 
   await assertLensAllowed(context, lensId);
 
+  const permalink = await uniquePermalink(
+    taskPermalinkSource(description, projectPermalink),
+    async (candidate) => {
+      const existing = await context.entities.Task.findFirst({
+        where: { userId: context.user!.id, permalink: candidate },
+        select: { id: true },
+      });
+      return !!existing;
+    },
+  );
+
   const task = await context.entities.Task.create({
     data: {
       description,
+      permalink,
       content: null,
       userId: context.user.id,
       lensId,
@@ -259,15 +293,18 @@ export const createTask = (async (args, context) => {
       priority: "NORMAL",
       size: "M",
     },
-    select: { id: true },
+    select: { id: true, permalink: true },
   });
-  return { id: task.id };
-}) satisfies CreateTask<{
-  description: string;
-  lensId: string;
-  projectId?: string;
-  goalId?: string;
-}, { id: string }>;
+  return { id: task.id, permalink: task.permalink };
+}) satisfies CreateTask<
+  {
+    description: string;
+    lensId: string;
+    projectId?: string;
+    goalId?: string;
+  },
+  { id: string; permalink: string }
+>;
 
 // ----------------------------------------------------------------
 // Lifecycle: complete / reopen a project (spec §A, §B)
@@ -314,7 +351,12 @@ export const updateProject = (async (args, context) => {
   if (!existing) {
     throwHttpStatus(404, "Project not found.");
   }
-  const data: { name?: string; description?: string | null; goalId?: string | null; dueDate?: Date | null } = {};
+  const data: {
+    name?: string;
+    description?: string | null;
+    goalId?: string | null;
+    dueDate?: Date | null;
+  } = {};
   if (args.name !== undefined) {
     const name = args.name.trim();
     if (!name) throw new Error("Project name cannot be empty.");
@@ -359,8 +401,19 @@ export const updateProject = (async (args, context) => {
     throw e;
   }
 }) satisfies UpdateProject<
-  { id: string; name?: string; description?: string; goalId?: string | null; dueDate?: Date | null },
-  { id: string; name: string; description: string | null; goalId: string | null }
+  {
+    id: string;
+    name?: string;
+    description?: string;
+    goalId?: string | null;
+    dueDate?: Date | null;
+  },
+  {
+    id: string;
+    name: string;
+    description: string | null;
+    goalId: string | null;
+  }
 >;
 
 // ----------------------------------------------------------------
@@ -437,7 +490,10 @@ export const updateTask = (async (args, context) => {
       });
       if (!project) throwHttpStatus(404, "Project not found.");
       if (project!.lensId !== task.lensId) {
-        throwHttpStatus(400, "A task and its project must be in the same Lens.");
+        throwHttpStatus(
+          400,
+          "A task and its project must be in the same Lens.",
+        );
       }
     }
     // Clear goalId when moving into a project — one-parent rule on commit too.

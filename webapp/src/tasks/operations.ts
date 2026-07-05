@@ -1,4 +1,18 @@
-import type { GetTask, GetTasks, GetDoneToday, GetTopTask, SnoozeTask, StartTask, PauseTask, ToggleTaskDone, UpdateTaskStatus, AddTaskUpdate, UpdateTaskContent, UpdateTaskDetails, CompleteTaskFromFocus } from "wasp/server/operations";
+import type {
+  GetTask,
+  GetTasks,
+  GetDoneToday,
+  GetTopTask,
+  SnoozeTask,
+  StartTask,
+  PauseTask,
+  ToggleTaskDone,
+  UpdateTaskStatus,
+  AddTaskUpdate,
+  UpdateTaskContent,
+  UpdateTaskDetails,
+  CompleteTaskFromFocus,
+} from "wasp/server/operations";
 import { assertLensAllowed } from "../billing/entitlementHttp";
 
 /**
@@ -19,9 +33,17 @@ export const getTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  return await context.entities.Task.findUnique({
-    where: { id: args.id, userId: context.user.id },
-    include: { tags: true, updates: { orderBy: { createdAt: "asc" } } },
+  return await context.entities.Task.findFirst({
+    where: {
+      userId: context.user.id,
+      OR: [{ id: args.id }, { permalink: args.id }],
+    },
+    include: {
+      tags: true,
+      updates: { orderBy: { createdAt: "asc" } },
+      project: { select: { id: true, permalink: true, name: true } },
+      goal: { select: { id: true, permalink: true, name: true } },
+    },
   });
 }) satisfies GetTask<{ id: string }>;
 
@@ -56,7 +78,11 @@ export const getTasks = (async (args, context) => {
       goal: { select: { id: true, name: true } },
     },
   });
-}) satisfies GetTasks<{ lensId: string; status?: "TODAY" | "UPCOMING" | "SOMEDAY"; isDone?: boolean }>;
+}) satisfies GetTasks<{
+  lensId: string;
+  status?: "TODAY" | "UPCOMING" | "SOMEDAY";
+  isDone?: boolean;
+}>;
 
 // ----------------------------------------------------------------
 // Read: tasks completed today (for the Today "Done today" section)
@@ -111,7 +137,11 @@ export const toggleTaskDone = (async (args, context) => {
   const next = !task.isDone;
   return await context.entities.Task.update({
     where: { id: args.id },
-    data: { isDone: next, completedAt: next ? new Date() : null, startedAt: null },
+    data: {
+      isDone: next,
+      completedAt: next ? new Date() : null,
+      startedAt: null,
+    },
   });
 }) satisfies ToggleTaskDone<{ id: string }>;
 
@@ -152,7 +182,11 @@ export const updateTaskStatus = (async (args, context) => {
 // puts real work in front of you, not behind a toggle (WORKFLOW.md §5.2).
 // Rank by priority (IMPORTANT > NORMAL > LOW), then size (smaller = quick win),
 // then oldest. Returns the top 1, or null when nothing's on the table.
-const PRIORITY_RANK: Record<string, number> = { IMPORTANT: 0, NORMAL: 1, LOW: 2 };
+const PRIORITY_RANK: Record<string, number> = {
+  IMPORTANT: 0,
+  NORMAL: 1,
+  LOW: 2,
+};
 const SIZE_RANK: Record<string, number> = { S: 0, M: 1, L: 2, XL: 3 };
 
 export const getTopTask = (async (args, context) => {
@@ -195,7 +229,8 @@ export const getTopTask = (async (args, context) => {
     const aToday = a.status === "TODAY" ? 0 : 1;
     const bToday = b.status === "TODAY" ? 0 : 1;
     if (aToday !== bToday) return aToday - bToday;
-    const pr = (PRIORITY_RANK[a.priority] ?? 1) - (PRIORITY_RANK[b.priority] ?? 1);
+    const pr =
+      (PRIORITY_RANK[a.priority] ?? 1) - (PRIORITY_RANK[b.priority] ?? 1);
     if (pr !== 0) return pr;
     const sr = (SIZE_RANK[a.size] ?? 1) - (SIZE_RANK[b.size] ?? 1);
     if (sr !== 0) return sr;

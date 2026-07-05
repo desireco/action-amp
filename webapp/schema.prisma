@@ -210,6 +210,7 @@ model Project {
 model Task {
   id          String   @id @default(uuid())
   description String // the title — what to do
+  permalink   String // stable human-readable route key
   content     String? // longer notes / markdown body
   isDone      Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -237,6 +238,8 @@ model Task {
 
   tags   Tag[]
   updates TaskUpdate[] // activity log / progress notes
+
+  @@unique([userId, permalink])
 }
 
 // Primary sort key for the focus engine. Important > Normal > Low.

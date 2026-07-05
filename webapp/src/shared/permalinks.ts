@@ -29,3 +29,10 @@ export async function uniquePermalink(
 
   return candidate;
 }
+
+export function taskPermalinkSource(
+  description: string,
+  projectPermalink?: string | null,
+): string {
+  return projectPermalink ? `${projectPermalink}-${description}` : description;
+}

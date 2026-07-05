@@ -88,17 +88,28 @@ describe("getProjects — happy path", () => {
         permalink: "ship-product-v2",
         name: "Ship product v2",
         dueDate: null,
-        goal: { id: "goal-1", permalink: "grow-audience", name: "Grow audience" },
+        goal: {
+          id: "goal-1",
+          permalink: "grow-audience",
+          name: "Grow audience",
+        },
         openCount: 2,
         doneCount: 1,
-        nextAction: expect.objectContaining({ id: "task-1", description: "Email Sarah" }),
+        nextAction: expect.objectContaining({
+          id: "task-1",
+          description: "Email Sarah",
+        }),
       },
     ]);
 
     // Both calls scoped by lens + user.
     expect(m.entities.Project.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ lensId: "lens-1", userId: "user-1", isDone: false }),
+        where: expect.objectContaining({
+          lensId: "lens-1",
+          userId: "user-1",
+          isDone: false,
+        }),
       }),
     );
     expect(m.entities.Project.findMany).toHaveBeenCalledWith(
@@ -150,15 +161,28 @@ describe("createProject — guards", () => {
 describe("createProject — happy path", () => {
   it("creates with trimmed name, returns id + name", async () => {
     const m = mockContext();
-    m.entities.Project.create.mockResolvedValue({ id: "proj-9", permalink: "new-thing", name: "New thing" });
+    m.entities.Project.create.mockResolvedValue({
+      id: "proj-9",
+      permalink: "new-thing",
+      name: "New thing",
+    });
     m.entities.Project.count.mockResolvedValue(2);
 
     const result = await createProject(
-      { name: "  New thing  ", lensId: "lens-1", goalId: "goal-1", description: "desc" },
+      {
+        name: "  New thing  ",
+        lensId: "lens-1",
+        goalId: "goal-1",
+        description: "desc",
+      },
       m.context,
     );
 
-    expect(result).toEqual({ id: "proj-9", permalink: "new-thing", name: "New thing" });
+    expect(result).toEqual({
+      id: "proj-9",
+      permalink: "new-thing",
+      name: "New thing",
+    });
     expect(m.entities.Project.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         name: "New thing",
@@ -175,18 +199,29 @@ describe("createProject — happy path", () => {
 
   it("seeds order=0 for a standalone project (no goal)", async () => {
     const m = mockContext();
-    m.entities.Project.create.mockResolvedValue({ id: "p", permalink: "bare", name: "Bare" });
+    m.entities.Project.create.mockResolvedValue({
+      id: "p",
+      permalink: "bare",
+      name: "Bare",
+    });
 
     await createProject({ name: "Bare", lensId: "l" }, m.context);
 
     expect(m.entities.Project.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ permalink: "bare", goalId: undefined, description: undefined, order: 0 }),
+      data: expect.objectContaining({
+        permalink: "bare",
+        goalId: undefined,
+        description: undefined,
+        order: 0,
+      }),
       select: { id: true, permalink: true, name: true },
     });
     // No goal → no goal-scoped count for order seeding. The cap-check count
     // call still happens (it scopes by lens + isDone, not goalId).
     expect(m.entities.Project.count).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.not.objectContaining({ goalId: expect.anything() }) }),
+      expect.objectContaining({
+        where: expect.not.objectContaining({ goalId: expect.anything() }),
+      }),
     );
   });
 });
@@ -202,15 +237,33 @@ const PROJECT_DETAIL_ROW = {
   lensId: "lens-1",
   goal: { id: "goal-1", permalink: "grow-audience", name: "Grow audience" },
   tasks: [
-    { id: "t-1", description: "Email Sarah", isDone: false, priority: "IMPORTANT", size: "S", status: "TODAY", dueDate: null },
-    { id: "t-2", description: "Draft spec", isDone: true, priority: "NORMAL", size: "M", status: "SOMEDAY", dueDate: null },
+    {
+      id: "t-1",
+      description: "Email Sarah",
+      isDone: false,
+      priority: "IMPORTANT",
+      size: "S",
+      status: "TODAY",
+      dueDate: null,
+    },
+    {
+      id: "t-2",
+      description: "Draft spec",
+      isDone: true,
+      priority: "NORMAL",
+      size: "M",
+      status: "SOMEDAY",
+      dueDate: null,
+    },
   ],
 };
 
 describe("getProject — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
-    await expect(getProject({ id: "proj-1" }, m.context)).rejects.toThrow(/Not authenticated/);
+    await expect(getProject({ id: "proj-1" }, m.context)).rejects.toThrow(
+      /Not authenticated/,
+    );
   });
 });
 
@@ -229,7 +282,11 @@ describe("getProject — happy path", () => {
       goal: { id: "goal-1", permalink: "grow-audience", name: "Grow audience" },
       tasks: expect.arrayContaining([
         expect.objectContaining({ id: "t-1", description: "Email Sarah" }),
-        expect.objectContaining({ id: "t-2", description: "Draft spec", isDone: true }),
+        expect.objectContaining({
+          id: "t-2",
+          description: "Draft spec",
+          isDone: true,
+        }),
       ]),
     });
 
@@ -269,7 +326,10 @@ describe("createTask — guards", () => {
   it("throws on empty description", async () => {
     const m = mockContext();
     await expect(
-      createTask({ description: "   ", lensId: "l", projectId: "p" }, m.context),
+      createTask(
+        { description: "   ", lensId: "l", projectId: "p" },
+        m.context,
+      ),
     ).rejects.toThrow(/description is required/);
   });
 
@@ -278,7 +338,10 @@ describe("createTask — guards", () => {
     m.entities.Project.findUnique.mockResolvedValue(null);
 
     await expect(
-      createTask({ description: "x", lensId: "spoofed-lens", projectId: "proj-1" }, m.context),
+      createTask(
+        { description: "x", lensId: "spoofed-lens", projectId: "proj-1" },
+        m.context,
+      ),
     ).rejects.toThrow(/Project not found/);
     expect(m.entities.Task.create).not.toHaveBeenCalled();
   });
@@ -291,15 +354,23 @@ describe("createTask — happy path", () => {
       id: "proj-1",
       lensId: "project-lens",
       userId: "user-1",
+      permalink: "mvp",
     });
-    m.entities.Task.create.mockResolvedValue({ id: "task-9" });
+    m.entities.Task.create.mockResolvedValue({
+      id: "task-9",
+      permalink: "mvp-set-up-ci",
+    });
 
     const result = await createTask(
-      { description: "  Set up CI  ", lensId: "spoofed-lens", projectId: "proj-1" },
+      {
+        description: "  Set up CI  ",
+        lensId: "spoofed-lens",
+        projectId: "proj-1",
+      },
       m.context,
     );
 
-    expect(result).toEqual({ id: "task-9" });
+    expect(result).toEqual({ id: "task-9", permalink: "mvp-set-up-ci" });
     expect(assertLensAllowed).toHaveBeenCalledWith(m.context, "project-lens");
     expect(m.entities.Task.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -307,11 +378,12 @@ describe("createTask — happy path", () => {
         userId: "user-1",
         lensId: "project-lens", // from the persisted project, not client input
         projectId: "proj-1",
+        permalink: "mvp-set-up-ci",
         status: "UPCOMING", // the triage default — actionable, surfaces on Next
         priority: "NORMAL",
         size: "M",
       }),
-      select: { id: true },
+      select: { id: true, permalink: true },
     });
   });
 });
@@ -326,17 +398,17 @@ describe("createTask — happy path", () => {
 describe("setProjectDone — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
-    await expect(setProjectDone({ id: "p1", isDone: true }, m.context)).rejects.toThrow(
-      /Not authenticated/,
-    );
+    await expect(
+      setProjectDone({ id: "p1", isDone: true }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
   });
 
   it("throws on unknown id (tenancy — wrong user looks like not-found)", async () => {
     const m = mockContext();
     m.entities.Project.findUnique.mockResolvedValue(null);
-    await expect(setProjectDone({ id: "p1", isDone: true }, m.context)).rejects.toThrow(
-      /Project not found/,
-    );
+    await expect(
+      setProjectDone({ id: "p1", isDone: true }, m.context),
+    ).rejects.toThrow(/Project not found/);
   });
 
   it("throws when the project belongs to a different user", async () => {
@@ -347,9 +419,9 @@ describe("setProjectDone — guards", () => {
       userId: "other-user",
       lensId: "lens-1",
     });
-    await expect(setProjectDone({ id: "p1", isDone: true }, m.context)).rejects.toThrow(
-      /Project not found/,
-    );
+    await expect(
+      setProjectDone({ id: "p1", isDone: true }, m.context),
+    ).rejects.toThrow(/Project not found/);
     expect(m.entities.Project.update).not.toHaveBeenCalled();
   });
 });
@@ -395,22 +467,30 @@ describe("updateProject — guards", () => {
   it("throws 404 when the project doesn't exist or isn't the user's", async () => {
     const m = mockContext();
     m.entities.Project.findUnique.mockResolvedValue(null);
-    await expect(updateProject({ id: "p1", name: "X" }, m.context)).rejects.toThrow(
-      /\[404\] Project not found/,
-    );
+    await expect(
+      updateProject({ id: "p1", name: "X" }, m.context),
+    ).rejects.toThrow(/\[404\] Project not found/);
   });
 
   it("throws on empty name", async () => {
     const m = mockContext();
-    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "Old", lensId: "lens-1" });
-    await expect(updateProject({ id: "p1", name: "" }, m.context)).rejects.toThrow(
-      /cannot be empty/,
-    );
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      name: "Old",
+      lensId: "lens-1",
+    });
+    await expect(
+      updateProject({ id: "p1", name: "" }, m.context),
+    ).rejects.toThrow(/cannot be empty/);
   });
 
   it("throws 404 when the target goal doesn't exist", async () => {
     const m = mockContext();
-    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "X", lensId: "lens-1" });
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      name: "X",
+      lensId: "lens-1",
+    });
     m.entities.Goal.findUnique.mockResolvedValue(null);
     await expect(
       updateProject({ id: "p1", goalId: "missing-goal" }, m.context),
@@ -419,8 +499,15 @@ describe("updateProject — guards", () => {
 
   it("rejects cross-Lens re-link (same-Lens invariant)", async () => {
     const m = mockContext();
-    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "X", lensId: "lens-1" });
-    m.entities.Goal.findUnique.mockResolvedValue({ id: "g1", lensId: "lens-2" }); // different lens
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      name: "X",
+      lensId: "lens-1",
+    });
+    m.entities.Goal.findUnique.mockResolvedValue({
+      id: "g1",
+      lensId: "lens-2",
+    }); // different lens
 
     await expect(
       updateProject({ id: "p1", goalId: "g1" }, m.context),
@@ -430,23 +517,34 @@ describe("updateProject — guards", () => {
 
   it("rewrites a Prisma P2002 (name duplicate) into a 409", async () => {
     const m = mockContext();
-    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "Old", lensId: "lens-1" });
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      name: "Old",
+      lensId: "lens-1",
+    });
     const prismaError = Object.assign(new Error("Unique constraint failed"), {
       code: "P2002",
     });
     m.entities.Project.update.mockRejectedValue(prismaError);
 
-    await expect(updateProject({ id: "p1", name: "Dup" }, m.context)).rejects.toThrow(
-      /\[409\].*Dup/,
-    );
+    await expect(
+      updateProject({ id: "p1", name: "Dup" }, m.context),
+    ).rejects.toThrow(/\[409\].*Dup/);
   });
 });
 
 describe("updateProject — happy path", () => {
   it("re-links a project to a goal in the same Lens", async () => {
     const m = mockContext();
-    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "X", lensId: "lens-1" });
-    m.entities.Goal.findUnique.mockResolvedValue({ id: "g1", lensId: "lens-1" }); // same lens
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      name: "X",
+      lensId: "lens-1",
+    });
+    m.entities.Goal.findUnique.mockResolvedValue({
+      id: "g1",
+      lensId: "lens-1",
+    }); // same lens
     m.entities.Project.update.mockResolvedValue({
       id: "p1",
       name: "X",
@@ -466,7 +564,11 @@ describe("updateProject — happy path", () => {
 
   it("unlinks a project (goalId → null)", async () => {
     const m = mockContext();
-    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", name: "X", lensId: "lens-1" });
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      name: "X",
+      lensId: "lens-1",
+    });
     m.entities.Project.update.mockResolvedValue({
       id: "p1",
       name: "X",
@@ -491,7 +593,9 @@ describe("deleteProject — guards", () => {
   it("throws 404 when the project doesn't exist or isn't the user's", async () => {
     const m = mockContext();
     m.entities.Project.findUnique.mockResolvedValue(null);
-    await expect(deleteProject({ id: "p1" }, m.context)).rejects.toThrow(/\[404\]/);
+    await expect(deleteProject({ id: "p1" }, m.context)).rejects.toThrow(
+      /\[404\]/,
+    );
   });
 });
 
@@ -560,7 +664,10 @@ describe("updateTask — guards", () => {
       projectId: null,
       goalId: null,
     });
-    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", lensId: "lens-2" });
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      lensId: "lens-2",
+    });
 
     await expect(
       updateTask({ id: "t1", projectId: "p1" }, m.context),
@@ -577,8 +684,15 @@ describe("updateTask — happy path", () => {
       projectId: null,
       goalId: "g1",
     });
-    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", lensId: "lens-1" });
-    m.entities.Task.update.mockResolvedValue({ id: "t1", projectId: "p1", goalId: null });
+    m.entities.Project.findUnique.mockResolvedValue({
+      id: "p1",
+      lensId: "lens-1",
+    });
+    m.entities.Task.update.mockResolvedValue({
+      id: "t1",
+      projectId: "p1",
+      goalId: null,
+    });
 
     const result = await updateTask({ id: "t1", projectId: "p1" }, m.context);
 
@@ -599,7 +713,11 @@ describe("updateTask — happy path", () => {
       projectId: "p1",
       goalId: null,
     });
-    m.entities.Task.update.mockResolvedValue({ id: "t1", projectId: null, goalId: null });
+    m.entities.Task.update.mockResolvedValue({
+      id: "t1",
+      projectId: null,
+      goalId: null,
+    });
 
     await updateTask({ id: "t1", projectId: null }, m.context);
 

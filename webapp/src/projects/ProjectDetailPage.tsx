@@ -67,7 +67,11 @@ export function ProjectDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: project, isLoading, error } = useQuery(getProject, { id: permalink! });
+  const {
+    data: project,
+    isLoading,
+    error,
+  } = useQuery(getProject, { id: permalink! });
   const [creating, setCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -100,16 +104,24 @@ export function ProjectDetailPage() {
     { enabled: !!project && movingTaskId !== null },
   );
   // Siblings only — a task can't move to the project it's already in.
-  const moveTargets: ProjectOption[] = (lensProjects ?? [])
-    .filter((p: ProjectOption) => p.id !== project?.id);
+  const moveTargets: ProjectOption[] = (lensProjects ?? []).filter(
+    (p: ProjectOption) => p.id !== project?.id,
+  );
 
   // Group the project's tasks by horizon. Open tasks split into Today / Upcoming
   // / Someday; done ones collect at the bottom.
   const groups = useMemo<GroupDef<ProjectTask>[]>(() => {
     if (!project) return [];
-    const buckets: Record<string, ProjectTask[]> = { TODAY: [], UPCOMING: [], SOMEDAY: [], DONE: [] };
+    const buckets: Record<string, ProjectTask[]> = {
+      TODAY: [],
+      UPCOMING: [],
+      SOMEDAY: [],
+      DONE: [],
+    };
     for (const t of project.tasks) {
-      (t.isDone ? buckets.DONE : buckets[t.status] ?? buckets.SOMEDAY).push(t);
+      (t.isDone ? buckets.DONE : (buckets[t.status] ?? buckets.SOMEDAY)).push(
+        t,
+      );
     }
     return [
       { key: "TODAY", label: "Today", items: buckets.TODAY },
@@ -122,7 +134,10 @@ export function ProjectDetailPage() {
   const doneCount = project?.tasks.filter((t) => t.isDone).length ?? 0;
   const total = project?.tasks.length ?? 0;
 
-  const setStatus = async (task: ProjectTask, status: ProjectTask["status"]) => {
+  const setStatus = async (
+    task: ProjectTask,
+    status: ProjectTask["status"],
+  ) => {
     await updateTaskStatus({ id: task.id, status });
     queryClient.invalidateQueries({ queryKey: ["getProject"] });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
@@ -134,7 +149,11 @@ export function ProjectDetailPage() {
     if (!project) return;
     setSubmitting(true);
     try {
-      await createTask({ description, lensId: project.lensId, projectId: project.id });
+      await createTask({
+        description,
+        lensId: project.lensId,
+        projectId: project.id,
+      });
       queryClient.invalidateQueries({ queryKey: ["getProject"] });
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
       queryClient.invalidateQueries({ queryKey: ["getTasks"] });
@@ -205,14 +224,19 @@ export function ProjectDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
       setPickingGoal(false);
     } catch (e) {
-      setRelinkError(e instanceof Error ? e.message : "Couldn't change the goal.");
+      setRelinkError(
+        e instanceof Error ? e.message : "Couldn't change the goal.",
+      );
     }
   };
 
   // Move a task out of this project (§C). targetProjectId === null means
   // unlink to standalone (keep any goal link). The op enforces one-parent +
   // same-Lens rules; an error surfaces inline on the row's picker.
-  const handleMoveTask = async (taskId: string, targetProjectId: string | null) => {
+  const handleMoveTask = async (
+    taskId: string,
+    targetProjectId: string | null,
+  ) => {
     setMoveError(null);
     try {
       await updateTask({ id: taskId, projectId: targetProjectId });
@@ -247,7 +271,11 @@ export function ProjectDetailPage() {
 
       {isLoading && <p className="aa-task-state">Loading…</p>}
 
-      {error && <div className="aa-task-state aa-task-err">Couldn't load this project.</div>}
+      {error && (
+        <div className="aa-task-state aa-task-err">
+          Couldn't load this project.
+        </div>
+      )}
 
       {project && (
         <>
@@ -277,9 +305,15 @@ export function ProjectDetailPage() {
                   <h1 className="aa-list-header__title">{project.name}</h1>
                   {(total > 0 || project.dueDate) && (
                     <p className="aa-project__meta">
-                      {total > 0 && <span>{doneCount}/{total} done</span>}
+                      {total > 0 && (
+                        <span>
+                          {doneCount}/{total} done
+                        </span>
+                      )}
                       {project.dueDate && (
-                        <Chip variant="teal" small>{formatRelativeDue(project.dueDate)}</Chip>
+                        <Chip variant="teal" small>
+                          {formatRelativeDue(project.dueDate)}
+                        </Chip>
                       )}
                     </p>
                   )}
@@ -293,10 +327,19 @@ export function ProjectDetailPage() {
                   {
                     label: project.isDone ? "Reopen" : "Complete",
                     onClick: handleComplete,
-                    title: project.isDone ? "Return to active projects" : "Mark this project done",
+                    title: project.isDone
+                      ? "Return to active projects"
+                      : "Mark this project done",
                   },
-                  { label: "Delete", onClick: () => setConfirmDelete(true), danger: true },
-                  { label: creating ? "Cancel" : "Add task", onClick: () => setCreating((v) => !v) },
+                  {
+                    label: "Delete",
+                    onClick: () => setConfirmDelete(true),
+                    danger: true,
+                  },
+                  {
+                    label: creating ? "Cancel" : "Add task",
+                    onClick: () => setCreating((v) => !v),
+                  },
                 ]}
               />
             )}
@@ -330,10 +373,16 @@ export function ProjectDetailPage() {
                       {g.name}
                     </button>
                   ))}
-                  <Button variant="ghost" size="sm" onClick={() => setPickingGoal(false)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPickingGoal(false)}
+                  >
                     Cancel
                   </Button>
-                  {relinkError && <p className="aa-project__inline-err">{relinkError}</p>}
+                  {relinkError && (
+                    <p className="aa-project__inline-err">{relinkError}</p>
+                  )}
                 </div>
               ) : (
                 <button
@@ -341,7 +390,9 @@ export function ProjectDetailPage() {
                   className="aa-project__relink-value"
                   onClick={() => setPickingGoal(true)}
                 >
-                  {project.goal ? project.goal.name : "None — click to link a goal"}
+                  {project.goal
+                    ? project.goal.name
+                    : "None — click to link a goal"}
                 </button>
               )}
             </div>
@@ -358,7 +409,9 @@ export function ProjectDetailPage() {
 
           {total === 0 ? (
             <div className="aa-list-empty aa-project__empty">
-              <div className="aa-list-empty__icon"><CompletionCircle size="md" /></div>
+              <div className="aa-list-empty__icon">
+                <CompletionCircle size="md" />
+              </div>
               <h2 className="aa-list-empty__title">No tasks yet.</h2>
               <p className="aa-list-empty__text">
                 Add the first step — a task lands on Upcoming and shows on Next.
@@ -372,7 +425,9 @@ export function ProjectDetailPage() {
                   <section key={group.key} className="aa-grouped__group">
                     <h3 className="aa-grouped__heading">
                       {group.label}
-                      <span className="aa-grouped__count">{group.items.length}</span>
+                      <span className="aa-grouped__count">
+                        {group.items.length}
+                      </span>
                     </h3>
                     <ul className="aa-grouped__list">
                       {group.items.map((task) => (
@@ -381,7 +436,9 @@ export function ProjectDetailPage() {
                           className="aa-grouped__item aa-project__row"
                           task={task}
                           muted={task.status === "SOMEDAY" || task.isDone}
-                          onOpen={() => navigate(`/app/tasks/${task.id}`)}
+                          onOpen={() =>
+                            navigate(`/app/tasks/${task.permalink ?? task.id}`)
+                          }
                           onSaveContent={handleSaveTaskContent}
                         >
                           {!task.isDone && (
@@ -390,13 +447,26 @@ export function ProjectDetailPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => setStatus(task, task.status === "SOMEDAY" ? "UPCOMING" : "TODAY")}
+                                  onClick={() =>
+                                    setStatus(
+                                      task,
+                                      task.status === "SOMEDAY"
+                                        ? "UPCOMING"
+                                        : "TODAY",
+                                    )
+                                  }
                                 >
-                                  {task.status === "SOMEDAY" ? "Upcoming" : "Today"}
+                                  {task.status === "SOMEDAY"
+                                    ? "Upcoming"
+                                    : "Today"}
                                 </Button>
                               )}
                               {task.status === "TODAY" && (
-                                <Button variant="ghost" size="sm" onClick={() => setStatus(task, "UPCOMING")}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setStatus(task, "UPCOMING")}
+                                >
                                   Not today
                                 </Button>
                               )}
@@ -406,7 +476,9 @@ export function ProjectDetailPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => {
-                                  setMovingTaskId((cur) => (cur === task.id ? null : task.id));
+                                  setMovingTaskId((cur) =>
+                                    cur === task.id ? null : task.id,
+                                  );
                                   setMoveError(null);
                                 }}
                                 aria-expanded={movingTaskId === task.id}
@@ -418,12 +490,16 @@ export function ProjectDetailPage() {
                           )}
                           {movingTaskId === task.id && (
                             <div className="aa-project__move-picker">
-                              <span className="aa-project__move-hint">Move to:</span>
+                              <span className="aa-project__move-hint">
+                                Move to:
+                              </span>
                               {/* Unlink to standalone (keep any goal link). */}
                               <button
                                 type="button"
                                 className="aa-project__relink-opt"
-                                onClick={() => void handleMoveTask(task.id, null)}
+                                onClick={() =>
+                                  void handleMoveTask(task.id, null)
+                                }
                               >
                                 Standalone
                               </button>
@@ -437,15 +513,25 @@ export function ProjectDetailPage() {
                                   key={p.id}
                                   type="button"
                                   className="aa-project__relink-opt"
-                                  onClick={() => void handleMoveTask(task.id, p.id)}
+                                  onClick={() =>
+                                    void handleMoveTask(task.id, p.id)
+                                  }
                                 >
                                   {p.name}
                                 </button>
                               ))}
-                              <Button variant="ghost" size="sm" onClick={() => setMovingTaskId(null)}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setMovingTaskId(null)}
+                              >
                                 Cancel
                               </Button>
-                              {moveError && <p className="aa-project__inline-err">{moveError}</p>}
+                              {moveError && (
+                                <p className="aa-project__inline-err">
+                                  {moveError}
+                                </p>
+                              )}
                             </div>
                           )}
                         </TaskRow>
@@ -460,7 +546,9 @@ export function ProjectDetailPage() {
       )}
 
       {!isLoading && !error && !project && (
-        <p className="aa-task-state">This project doesn't exist — or isn't yours.</p>
+        <p className="aa-task-state">
+          This project doesn't exist — or isn't yours.
+        </p>
       )}
 
       {confirmDelete && project && (

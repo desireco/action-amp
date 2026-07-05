@@ -1,8 +1,18 @@
-import type { CreateInboxItem, GetInboxItems, TriageInboxItem, RestoreArchivedItem, GetProjectsForResolver } from "wasp/server/operations";
-import { parseCapture, type ParsedPriority, type ParsedSize } from "./parseCapture";
+import type {
+  CreateInboxItem,
+  GetInboxItems,
+  TriageInboxItem,
+  RestoreArchivedItem,
+  GetProjectsForResolver,
+} from "wasp/server/operations";
+import {
+  parseCapture,
+  type ParsedPriority,
+  type ParsedSize,
+} from "./parseCapture";
 import { FREE_LIMITS } from "../billing/config";
 import { assertLensAllowed, assertUnderCap } from "../billing/entitlementHttp";
-import { uniquePermalink } from "../shared/permalinks";
+import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
 
 /**
  * Inbox operations — the capture destination + the triage transformation.
@@ -33,7 +43,11 @@ export const createInboxItem = (async (args, context) => {
     where: { userId: context.user.id, kind: "CUSTOM" },
     select: { name: true },
   });
-  const parsed = parseCapture(raw, new Date(), customLenses.map((l) => l.name));
+  const parsed = parseCapture(
+    raw,
+    new Date(),
+    customLenses.map((l) => l.name),
+  );
   return await context.entities.InboxItem.create({
     data: {
       text: parsed.cleanText,
@@ -45,7 +59,8 @@ export const createInboxItem = (async (args, context) => {
       // Explicit typeahead pick overrides anything the parser might extract
       // from the first # token. The picker and parser both feed the same
       // persisted project hint for triage resolution.
-      parsedProject: args.projectName?.trim().toLowerCase() || parsed.parsedProject,
+      parsedProject:
+        args.projectName?.trim().toLowerCase() || parsed.parsedProject,
       parsedLens: parsed.parsedLens,
     },
     select: { id: true, text: true, createdAt: true },
@@ -141,12 +156,24 @@ export const triageInboxItem = (async (args, context) => {
   // projectless. Project resolution happens client-side (TriagePage) and
   // arrives as args.projectId; this is the fallback when nothing matched.
   let effectiveProjectId = args.projectId ?? null;
-  if (!effectiveProjectId) {
+  let effectiveProjectPermalink: string | null = null;
+  if (effectiveProjectId) {
+    const project = await context.entities.Project.findFirst({
+      where: { id: effectiveProjectId, userId: context.user.id, lensId },
+      select: { id: true, permalink: true },
+    });
+    if (!project) {
+      throw new Error("Project not found.");
+    }
+    effectiveProjectId = project.id;
+    effectiveProjectPermalink = project.permalink;
+  } else {
     const general = await context.entities.Project.findFirst({
       where: { userId: context.user.id, lensId, name: "General" },
-      select: { id: true },
+      select: { id: true, permalink: true },
     });
     effectiveProjectId = general?.id ?? null;
+    effectiveProjectPermalink = general?.permalink ?? null;
   }
 
   let result: { kind: "task" | "project" | "archive"; id: string };
@@ -156,10 +183,25 @@ export const triageInboxItem = (async (args, context) => {
     case "upcoming":
     case "someday": {
       const status =
-        args.decision === "task-today" ? "TODAY" : args.decision === "upcoming" ? "UPCOMING" : "SOMEDAY";
+        args.decision === "task-today"
+          ? "TODAY"
+          : args.decision === "upcoming"
+            ? "UPCOMING"
+            : "SOMEDAY";
+      const permalink = await uniquePermalink(
+        taskPermalinkSource(item.text, effectiveProjectPermalink),
+        async (candidate) => {
+          const existing = await context.entities.Task.findFirst({
+            where: { userId: context.user!.id, permalink: candidate },
+            select: { id: true },
+          });
+          return !!existing;
+        },
+      );
       const task = await context.entities.Task.create({
         data: {
           description: item.text,
+          permalink,
           content,
           userId: context.user.id,
           lensId,
@@ -184,10 +226,16 @@ export const triageInboxItem = (async (args, context) => {
       const projectCount = await context.entities.Project.count({
         where: { userId: context.user.id, lensId, isDone: false },
       });
-      await assertUnderCap(context, lensId, projectCount, FREE_LIMITS.projects, {
-        feature: "a 4th project",
-        reason: "organize more than 3 projects with Pro",
-      });
+      await assertUnderCap(
+        context,
+        lensId,
+        projectCount,
+        FREE_LIMITS.projects,
+        {
+          feature: "a 4th project",
+          reason: "organize more than 3 projects with Pro",
+        },
+      );
       const name = args.name?.trim() || item.text;
       const permalink = await uniquePermalink(name, async (candidate) => {
         const existing = await context.entities.Project.findFirst({
@@ -253,7 +301,13 @@ export const triageInboxItem = (async (args, context) => {
   return result;
 }) satisfies TriageInboxItem<{
   inboxItemId: string;
-  decision: "task-today" | "upcoming" | "someday" | "project" | "resource" | "archive";
+  decision:
+    | "task-today"
+    | "upcoming"
+    | "someday"
+    | "project"
+    | "resource"
+    | "archive";
   lensId: string;
   goalId?: string;
   projectId?: string;

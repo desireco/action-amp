@@ -121,7 +121,7 @@ export default app({
       page(PreferencesPage),
     ),
     route("LensesRoute", "/app/settings/lenses", page(LensesPage)),
-    route("TaskDetailRoute", "/app/tasks/:id", page(TaskDetailPage)),
+    route("TaskDetailRoute", "/app/tasks/:permalink", page(TaskDetailPage)),
     route("ProjectDetailRoute", "/app/projects/:permalink", page(ProjectDetailPage)),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
     route("DesignSystemRoute", "/design-system", page(DesignSystemPage, { authRequired: false })),

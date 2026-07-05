@@ -118,7 +118,9 @@ export function TodayPage() {
   const committedCount = Math.min(tasks?.length ?? 0, TODAY_CAP);
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
   const openTask = (task: TaskRowTask) => {
-    navigate(`/app/tasks/${task.id}`, { state: { returnTo } });
+    navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+      state: { returnTo },
+    });
   };
 
   // Note: no early empty-state return — the header (with the See-upcoming
