@@ -18,6 +18,7 @@ import {
   StarIcon,
   InboxIcon,
   ClockIcon,
+  CalendarIcon,
   SomedayIcon,
   ProjectsIcon,
   GoalsIcon,
@@ -53,7 +54,7 @@ const NAV_ROUTE: Record<NavDestination, string> = {
 
 function sectionForPath(pathname: string): FocusSection {
   if (pathname === "/app" || pathname.startsWith("/app/today")) return "work";
-  if (pathname.startsWith("/app/projects") || pathname.startsWith("/app/goals") || pathname.startsWith("/app/someday")) return "plan";
+  if (pathname.startsWith("/app/upcoming") || pathname.startsWith("/app/projects") || pathname.startsWith("/app/goals") || pathname.startsWith("/app/someday")) return "plan";
   if (pathname.startsWith("/app/logbook")) return "review";
   return "work";
 }
@@ -127,7 +128,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { enabled: !!user },
   );
   const lenses = appData?.lenses ?? [];
-  const counts = appData?.counts ?? { inbox: 0, today: 0, projects: 0, goals: 0 };
+  const counts = appData?.counts ?? { inbox: 0, today: 0, upcoming: 0, projects: 0, goals: 0 };
   const todayByLens = appData?.todayByLens ?? {};
 
   // Capture autocomplete sources — fetched here (gated on user, same as
@@ -358,6 +359,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
             {expandedFocus === "plan" && (
               <div className="aa-focus-items">
+                <NavItem icon={<CalendarIcon />} label="Upcoming" active={isActive("/app/upcoming")} to="/app/upcoming" count={counts.upcoming} />
                 <NavItem icon={<ProjectsIcon />} label="Projects" active={isActive("/app/projects")} to="/app/projects" count={counts.projects} />
                 <NavItem icon={<GoalsIcon />} label="Goals" active={isActive("/app/goals")} to="/app/goals" count={counts.goals} />
                 <NavItem icon={<SomedayIcon />} label="Someday" active={isActive("/app/someday")} to="/app/someday" />

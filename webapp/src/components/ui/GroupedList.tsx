@@ -34,6 +34,10 @@ interface GroupedListProps<T> {
  * Shared layout for Today (grouped by Goal), Upcoming (by date), Projects (by
  * Goal), Logbook (by completion day). The parent computes the groups; this
  * component just renders them with consistent spacing.
+ *
+ * A group with an empty-string `label` renders its rows without a heading —
+ * used when a list has a single default group (e.g. Today's "General" when no
+ * task carries an explicit Goal) and the heading would carry no information.
  */
 export function GroupedList<T>({
   groups,
@@ -50,17 +54,20 @@ export function GroupedList<T>({
       {groups.map((group) => {
         if (group.items.length === 0 && !keepEmptyGroups) return null;
         const extra = groupClassName?.(group.label);
+        const showHeading = group.label !== "";
         return (
           <section
             key={group.key}
             className={["aa-grouped__group", extra].filter(Boolean).join(" ")}
           >
-            <Heading className="aa-grouped__heading">
-              {group.label}
-              {group.items.length > 0 && (
-                <span className="aa-grouped__count">{group.items.length}</span>
-              )}
-            </Heading>
+            {showHeading && (
+              <Heading className="aa-grouped__heading">
+                {group.label}
+                {group.items.length > 0 && (
+                  <span className="aa-grouped__count">{group.items.length}</span>
+                )}
+              </Heading>
+            )}
             <ul className="aa-grouped__list">
               {group.items.length === 0 && renderEmptyGroup ? (
                 <li className="aa-grouped__empty">{renderEmptyGroup(group)}</li>

@@ -89,13 +89,24 @@ appears in Work/Planning/Review except by coming through triage.
     (`Task.startedAt`) persists across navigation.
   - **Today** — the committed-for-today list, capped at 5 (F12). The cap is a
     feature, not a limit — it forces the "what actually matters today" decision.
-- **Eliminating:** the separate "Upcoming" area. Time-deferred tasks will roll
-  up into Today on their day (decision on the exact mechanism pending — §5).
-  At the start of each new calendar day, incomplete **Today** tasks roll to
-  **Upcoming** so Today starts fresh — a deliberate re-commitment, not a
-  backlog. Lazy: runs on app load (in `getAppData`), idempotent within a day
-  via `User.lastTodayRolloverAt`. Done tasks are left alone; `startedAt` (the
-  Now state) is preserved. Locked 2026-06-30.
+- **Two Upcoming surfaces, two intents.** `UPCOMING` is the Task status for
+  the bench — what's not yet committed to Today but still on the radar. It
+  has **two surfaces** (locked 2026-07-05, reversing the 2026-06-23 call):
+  - **The Today "see upcoming" toggle** — a same-page swap surface inside
+    Today. Pull one onto Today without leaving the page. The list-page-as-
+    chooser-for-the-day interaction; lives in the Work area.
+  - **The `/app/upcoming` page under Planning** — the forward-planning view:
+    date-bucketed (Overdue / This week / Next week / Later / Unscheduled),
+    rose-tinted overdue, inline notes. Lives in the Plan area alongside
+    Projects / Goals / Someday. Mental model: the bench as a status feeds
+    both; Today's toggle is for *now* (swap), the page is for *planning*
+    (horizon).
+- **Daily rollover (locked 2026-06-30).** At the start of each new calendar
+  day, incomplete **Today** tasks roll to **Upcoming** so Today starts fresh
+  — a deliberate re-commitment, not a backlog. Lazy: runs on app load (in
+  `getAppData`), idempotent within a day via
+  `User.lastTodayRolloverAt`. Done tasks are left alone; `startedAt` (the
+  Now state) is preserved.
 - This is the only area with a focus mode (`F`) and a Now state.
 
 ### 2.4 Planning Area — organizing
@@ -173,13 +184,18 @@ between Capture and any of them.
 
 These were the open structural calls. All resolved:
 
-1. **Upcoming is not a top-level area.** No `/upcoming` route, no sidebar nav
-   item. `UPCOMING` survives as a **Task status** (the snooze flow sets it) and
-   is reachable as a **view from inside Today** (a "see upcoming" toggle that
-   lets you promote tasks onto today). Mental model: Upcoming = the bench; Today
-   = the court. You pull from the bench deliberately for the *Today* list, but a
-   bench task with no future due date is also a Next candidate on Next (§5.2)
-   — triage should put real work in front of you, not hide it behind a toggle.
+1. **Upcoming is a top-level Planning area, with a same-page swap surface on
+   Today.** (Reversed 2026-07-05 — originally locked 2026-06-23 as "not a
+   top-level area"; reversed because the bench toggle and the forward-planning
+   page serve different intents and the page already existed from the
+   2026-07-02 friction-cleanup reversal.) `UPCOMING` is the Task status — the
+   bench. The `/app/upcoming` page lives under Planning (date-bucketed,
+   rose-tinted overdue) and a Today "see upcoming" toggle does same-page
+   promote-to-Today swaps. Both surfaces promote onto Today with one click.
+   Mental model: Upcoming = the bench; Today = the court. You pull from the
+   bench deliberately for the *Today* list, but a bench task with no future due
+   date is also a Next candidate on Next (§5.2) — triage should put real work
+   in front of you, not hide it behind a toggle.
 2. **Next's Next candidate pool = Today + Upcoming (revised 2026-06-25).**
    `getTopTask` selects `status ∈ {TODAY, UPCOMING}` **and** (`dueDate` is null
    or `dueDate ≤ now`), in the active Lens, not done. So a freshly triaged task
@@ -213,7 +229,7 @@ These were the open structural calls. All resolved:
      This delivers the "when you're in a view, you don't see other things"
      property with plain nav state (no routing-layer change).
    - Expanding **Work** shows: Next, Today.
-   - Expanding **Plan** shows: Projects, Goals, Someday.
+   - Expanding **Plan** shows: Upcoming, Projects, Goals, Someday.
    - Expanding **Review** shows: Logbook, reports (when built).
    - **Capture stays pinned outside both switches** — it's pervasive.
    - This is **soft focus now**. A future **hard focus** (each mode as a
@@ -284,11 +300,12 @@ The following were updated to match this doc (commit alongside):
   defers to WORKFLOW.md on structure. The F-numbered feature list stays useful
   for feature-level reference.
 - `PAGES.md` — route map reorganized into Work / Planning / Review clusters;
-  Upcoming demoted (no top-level route/nav item; reachable from Today);
-  Someday relocated to Planning.
+  Someday relocated to Planning. (Upcoming's framing flipped 2026-07-05: it
+  is a top-level Planning route/nav item, not demoted — see §5.1.)
 - `DATA-MODEL.md` — status note confirms InboxItem stays unscoped; Task status
-  enum keeps `UPCOMING` (used by snooze; surfaced from Today, not as an area);
-  the §4 "where things live" list aligns with the 5-areas model.
+  enum keeps `UPCOMING` (used by snooze; surfaced as the `/app/upcoming`
+  Planning page and the Today swap toggle); the §4 "where things live" list
+  aligns with the 5-areas model.
 - `TRIAGE.md` — aligns the step-aware Classify keymap with WORKFLOW.md §2.2
   and §5.5.
 - `DATA-MODEL.md` (added 2026-07-03) — documents `LensKind`, `Lens.purpose`,
@@ -306,6 +323,11 @@ The following were updated to match this doc (commit alongside):
   note records grammar v2.
 - `docs/features/capture.md` + `docs/features/inbox-triage.md` (added
   2026-07-04) — grammar block rewritten; resolver pre-fill behavior noted.
+- `docs/features/upcoming-someday.md` (revised 2026-07-05) — Upcoming framed
+  as a Planning page (`/app/upcoming`) that coexists with the Today swap
+  toggle, reversing the 2026-06-23 non-area call. Aligns with §5.1.
+- `PAGES.md` + `DATA-MODEL.md` + `BACKLOG.md` (revised 2026-07-05) — Upcoming
+  framing flipped from demoted to promoted-into-Planning, matching §5.1.
 
 ## 7. Code work implied (flagged in `BACKLOG.md`, not built here)
 
@@ -314,10 +336,12 @@ The following were updated to match this doc (commit alongside):
   Capture pinned outside. No route changes.
 - **Upcoming → Today toggle** — add a "see upcoming" affordance on the Today
   page that surfaces `status=UPCOMING` tasks (scoped to the active lens) for
-  promotion onto today.
-- **Drop the Upcoming nav entry + route** — remove `/app/upcoming` from the
-  sidebar and `main.wasp.ts` (keep `getTasks` able to query `UPCOMING` for the
-  Today toggle; just no dedicated page/area).
+  promotion onto today. *(Done.)*
+- **Add Upcoming to the Plan nav** (reverses the 2026-06-23 "drop the route"
+  item, superseded 2026-07-05) — `/app/upcoming` already exists; add it under
+  the Plan section in `AppShell.tsx`, add `counts.upcoming` to `getAppData`,
+  wire `/app/upcoming` into `sectionForPath`'s plan branch. The Today swap
+  toggle stays as a separate, same-page surface.
 - **Someday nav relocation** — move the Someday entry under the Plan section of
   the new focus-switch nav (route stays `/app/someday`).
 - **(Done 2026-06-25)** `getTopTask` scope — widened from `status=TODAY` to

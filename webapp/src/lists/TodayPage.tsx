@@ -62,7 +62,10 @@ export function TodayPage() {
 
   const groups = useMemo<GroupDef<TaskRowTask>[]>(() => {
     if (!tasks) return [];
-    // Group the CAPPED set (first TODAY_CAP) by Goal (or "General").
+    // Group the CAPPED set (first TODAY_CAP) by Goal (or "General"). When the
+    // only group is the default "General" (no task carries an explicit Goal),
+    // the heading carries no information — blank the label and GroupedList
+    // renders the rows without it.
     const capped = tasks.slice(0, TODAY_CAP);
     const byGoal = new Map<string, TaskRowTask[]>();
     for (const t of capped) {
@@ -70,9 +73,10 @@ export function TodayPage() {
       if (!byGoal.has(key)) byGoal.set(key, []);
       byGoal.get(key)!.push(t);
     }
+    const soloGeneral = byGoal.size === 1 && byGoal.has("General");
     return Array.from(byGoal, ([name, items]) => ({
       key: name,
-      label: name,
+      label: soloGeneral ? "" : name,
       items,
     }));
   }, [tasks]);
@@ -80,7 +84,7 @@ export function TodayPage() {
   // Done-today grouped by Goal (or "General"), same shape as the open-task
   // groups so GroupedList + TaskRow render identically (muted). Empty until
   // the eager getDoneToday query resolves (fetched on mount so the collapsed
-  // count is known without expanding).
+  // count is known without expanding). Same solo-General suppression.
   const doneGroups = useMemo<GroupDef<TaskRowTask>[]>(() => {
     if (!doneToday) return [];
     const byGoal = new Map<string, TaskRowTask[]>();
@@ -89,9 +93,10 @@ export function TodayPage() {
       if (!byGoal.has(key)) byGoal.set(key, []);
       byGoal.get(key)!.push(t);
     }
+    const soloGeneral = byGoal.size === 1 && byGoal.has("General");
     return Array.from(byGoal, ([name, items]) => ({
       key: name,
-      label: name,
+      label: soloGeneral ? "" : name,
       items,
     }));
   }, [doneToday]);
@@ -224,10 +229,10 @@ export function TodayPage() {
           // Skeleton: title row already rendered "—" above; show muted list
           // placeholders so the page doesn't snap in once data resolves.
           <div className="aa-today__loading" aria-hidden="true">
-            <div className="aa-today__skeleton-group">
-              <div className="aa-today__skeleton aa-today__skeleton--heading" />
+            <div className="aa-list-skeleton-group">
+              <div className="aa-list-skeleton aa-list-skeleton--heading" />
               {[0, 1].map((i) => (
-                <div key={i} className="aa-today__skeleton aa-today__skeleton--row" />
+                <div key={i} className="aa-list-skeleton aa-list-skeleton--row" />
               ))}
             </div>
           </div>

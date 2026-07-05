@@ -8,14 +8,15 @@
 >
 > Key changes from the route map below (see `WORKFLOW.md` §5–§7):
 >
-> - **`/app/upcoming` is removed as a top-level route/nav item.** `UPCOMING`
->   survives as a Task status; an upcoming-list view is reachable from Today
->   ("see upcoming" toggle) for promoting tasks onto today.
+> - **`/app/upcoming` is a top-level Planning route/nav item** (framing
+>   flipped 2026-07-05, reversing the 2026-06-23 demotion). It's the
+>   forward-planning view of `status=UPCOMING` tasks; the Today "see upcoming"
+>   toggle stays as a separate same-page swap surface.
 > - **Someday (`/app/someday`) relocates under the Plan section.**
 > - The **Next / Today** split stays, both under Work.
 >
 > The page-by-page descriptions below stay accurate for each route's contents;
-> only the *grouping* and the Upcoming demotion are superseded.
+> only the *grouping* and the Upcoming framing are superseded.
 
 > Status: DRAFT v1
 > Authority: derived from `DATA-MODEL.md` + `FEATURES.md`.

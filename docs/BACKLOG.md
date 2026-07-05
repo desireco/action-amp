@@ -21,11 +21,16 @@ items they imply — not built yet, listed here so they're not lost:
   three expanding sections — **Work** (Next, Today), **Plan** (Projects,
   Goals, Someday), **Review** (Logbook, reports). One section expanded at a
   time. Capture pinned outside both switches. Pure nav state, no routes.
-- [~] **Drop the Upcoming top-level route + nav entry.** ~~Remove `/app/upcoming`
-  from `main.wasp.ts` and the sidebar.~~ **DROPPED 2026-07-02** per user
-  instruction ("let's keep upcoming") at `friction-cleanup` sign-off. The route,
-  page, and `getTasks status=UPCOMING` query all stay. Recorded so this doesn't
-  resurface as a "decided but undone" item.
+- [x] **Add Upcoming to the Plan nav.** DONE 2026-07-05 (reverses the 2026-06-23
+  "drop the route" item, which itself superseded the original "drop" call —
+  see history below). `/app/upcoming` is now a top-level Planning route/nav
+  item alongside Projects / Goals / Someday, with a count chip. The Today
+  "See upcoming" swap toggle stays as a separate same-page surface. See
+  `WORKFLOW.md` §5.1.
+  - *History:* the 2026-06-23 call was "drop the Upcoming nav entry + route."
+    That was reversed once at sign-off (2026-07-02, "let's keep upcoming"),
+    which kept the route/page/query but didn't promote it into nav. The
+    2026-07-05 reversal finishes the job: nav item + count + promote-on-row.
 - [x] **Upcoming → Today toggle.** DONE 2026-06-23. Today page has a "See
   upcoming" / "Back to Today" toggle in the header; the Upcoming bench shows
   `status=UPCOMING` tasks (active-lens-scoped) with a per-row "Today" promote
@@ -80,9 +85,10 @@ items they imply — not built yet, listed here so they're not lost:
 - [x] **Today list view** (planning, cap, priority/size chips, done section). DONE 2026-06-16; **"Done today" section built 2026-07-02** (`friction-cleanup` — was a `TODO` stub). **Today IS the Plan mode card** (not a separate page). Same Mode×Scope position as Next — three renderings of one card position: Plan=Today list, Do=Next hero, Review=debrief. Card DNA preserved (border/shadow/radius), just list-shaped. Cap badge amber at 4/5, rose at full. Tasks grouped by Goal (violet dot), General (gray), Overdue (rose). Per-row Important/XL chips tinted. "Done today (N)" collapsed section at bottom — `getDoneToday` query (`completedAt >= local-midnight`), grouped by Goal, muted rows; gated on count > 0. Tap task to select → "Start doing" promotes to Do mode. See `docs/mockups/plan-today-card.html`.
 - [x] **Upcoming + Someday views.** Someday page at `/app/someday`; **each row
   has a "Today" promote** (DONE 2026-07-02 via `friction-cleanup`, reuses
-  `updateTaskStatus`). Upcoming stays a dedicated page at `/app/upcoming`
-  (decision reversed 2026-07-02 — "let's keep upcoming"); also reachable via
-  the Today "see upcoming" toggle.
+  `updateTaskStatus`). Upcoming at `/app/upcoming` is a top-level Planning
+  page (promoted into Plan nav 2026-07-05; see `WORKFLOW.md` §5.1) —
+  date-bucketed with a per-row "Today" promote; also reachable via the Today
+  "see upcoming" same-page swap toggle.
 - [x] **Projects list + Project detail.** DONE 2026-06-27. Projects list at
   `/app/projects`; **Project detail at `/app/projects/:id`** (`ProjectDetailPage.tsx`)
   — work a project's tasks, add + complete inline, progress roll-up. e2e at

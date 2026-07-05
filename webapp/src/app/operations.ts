@@ -79,12 +79,17 @@ export const getAppData = (async (args, context) => {
     lenses[0]?.id;
   const lensWhere = activeLensId ? { lensId: activeLensId } : {};
 
-  const [inboxCount, todayCount, projectCount, goalCount, todayByLensRows] =
+  const [inboxCount, todayCount, upcomingCount, projectCount, goalCount, todayByLensRows] =
     await Promise.all([
       context.entities.InboxItem.count({ where: { userId, status: "UNPROCESSED" } }),
       // Focus-nav counts: lens-scoped to match the list pages.
       context.entities.Task.count({
         where: { userId, ...lensWhere, status: "TODAY", isDone: false },
+      }),
+      // Upcoming count mirrors the Today list scope (lens-scoped, not done) so
+      // the Plan nav chip matches what /app/upcoming actually shows.
+      context.entities.Task.count({
+        where: { userId, ...lensWhere, status: "UPCOMING", isDone: false },
       }),
       context.entities.Project.count({
         where: { userId, ...lensWhere, isDone: false },
@@ -112,6 +117,7 @@ export const getAppData = (async (args, context) => {
     counts: {
       inbox: inboxCount,
       today: todayCount,
+      upcoming: upcomingCount,
       projects: projectCount,
       goals: goalCount,
     },
@@ -121,7 +127,7 @@ export const getAppData = (async (args, context) => {
   { lensId?: string | null },
   {
     lenses: { id: string; name: string; color: string | null; kind: string; purpose: string | null }[];
-    counts: { inbox: number; today: number; projects: number; goals: number };
+    counts: { inbox: number; today: number; upcoming: number; projects: number; goals: number };
     todayByLens: Record<string, number>;
   }
 >;

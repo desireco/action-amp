@@ -6,9 +6,10 @@
 >
 > - **`InboxItem` stays unscoped** (no `lensId`) — capture is universal; the
 >   Lens is assigned at triage (inheriting the active lens).
-> - **`Task.status` keeps `UPCOMING`** — used by the snooze flow. It's no longer
->   a top-level area (no dedicated page/nav), but the enum value stays; an
->   upcoming-list view is surfaced from Today.
+> - **`Task.status` keeps `UPCOMING`** — used by the snooze flow. It surfaces as
+>   the `/app/upcoming` Planning page (date-bucketed) and the Today "see
+>   upcoming" same-page swap toggle. (Framing flipped 2026-07-05 from
+>   "non-area"; see `WORKFLOW.md` §5.1.)
 > - **Someday moves under the Planning Area** in nav grouping (the `SOMEDAY`
 >   status and `/app/someday` route are unchanged).
 >
