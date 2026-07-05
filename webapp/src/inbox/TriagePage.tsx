@@ -21,13 +21,12 @@ import {
   buildOutcome,
   buildTriageChips,
   canComplete as canCompleteWorking,
-  formatAgo,
   formatPriority,
-  isSameDay,
   summaryFor,
   type Step,
   type Working,
 } from "./triageFlow";
+import { formatAgo, isSameDay } from "../shared/dateFormat";
 import { useTriageKeyboard } from "./useTriageKeyboard";
 import "./TriagePage.css";
 

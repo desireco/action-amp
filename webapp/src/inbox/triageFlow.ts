@@ -1,5 +1,6 @@
 import type { TriageChip, TriageExit } from "../components/ui";
 import type { ParsedPriority, ParsedSize } from "./parseCapture";
+import { formatRelativeDay } from "../shared/dateFormat";
 
 export type Outcome = "task-today" | "upcoming" | "someday" | "project" | "resource" | "archive";
 export type ChosenType = "task" | "project" | "resource" | "archive";
@@ -46,7 +47,7 @@ interface ParsedChipSource {
 export function buildTriageChips(item: ParsedChipSource | null): TriageChip[] {
   if (!item) return [];
   const chips: TriageChip[] = [];
-  if (item.parsedDate) chips.push({ tone: "date", label: `📅 ${formatChipDate(item.parsedDate)}` });
+  if (item.parsedDate) chips.push({ tone: "date", label: `📅 ${formatRelativeDay(item.parsedDate)}` });
   if (item.parsedLens) chips.push({ tone: "tag", label: `[[${item.parsedLens}]]` });
   if (item.parsedProject) chips.push({ tone: "tag", label: `▣ ${item.parsedProject}` });
   if (item.parsedPriority === "IMPORTANT") chips.push({ tone: "priority", label: "★ Important" });
@@ -89,34 +90,4 @@ export function formatPriority(priority: ParsedPriority): string {
   if (priority === "LOW") return "Low";
   if (priority === "IMPORTANT") return "Important";
   return "Normal";
-}
-
-export function formatAgo(date: Date | string): string {
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
-  return `${Math.floor(seconds / 86400)} days ago`;
-}
-
-export function formatChipDate(date: Date | string): string {
-  const d = new Date(date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(d);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
-  if (diffDays === 0) return "today";
-  if (diffDays === 1) return "tomorrow";
-  if (diffDays === -1) return "yesterday";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-export function isSameDay(a: Date | string, b: Date): boolean {
-  const left = new Date(a);
-  return (
-    left.getFullYear() === b.getFullYear() &&
-    left.getMonth() === b.getMonth() &&
-    left.getDate() === b.getDate()
-  );
 }

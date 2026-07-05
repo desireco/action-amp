@@ -11,3 +11,44 @@ export function formatRelativeDue(d: Date | string): string {
   if (diffDays < 7) return `in ${diffDays}d`;
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
+
+/**
+ * Relative elapsed time for "X ago" labels — Inbox row timestamps, capture
+ * chips. Resolves to "just now" / "N min ago" / "N hr ago" / "N days ago".
+ */
+export function formatAgo(date: Date | string): string {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
+  return `${Math.floor(seconds / 86400)} days ago`;
+}
+
+/**
+ * Neutral day label — used for parsed-date chips and inbox contexts where the
+ * deadline framing of `formatRelativeDue` ("in Nd" / "Nd overdue") is wrong.
+ * Resolves to "today" / "yesterday" / "tomorrow" / "Mon D".
+ */
+export function formatRelativeDay(d: Date | string): string {
+  const date = typeof d === "string" ? new Date(d) : d;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  if (diffDays === 0) return "today";
+  if (diffDays === 1) return "tomorrow";
+  if (diffDays === -1) return "yesterday";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+/** Same calendar day, ignoring time. */
+export function isSameDay(a: Date | string, b: Date | string): boolean {
+  const left = new Date(a);
+  const right = new Date(b);
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth() &&
+    left.getDate() === right.getDate()
+  );
+}

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems } from "wasp/client/operations";
 import { Button, Chip, ArrowRightIcon, CalendarIcon, BoxIcon, HashIcon, StarIcon } from "../components/ui";
+import { formatAgo, formatRelativeDay } from "../shared/dateFormat";
 import "./InboxPage.css";
 /**
  * Inbox — the capture destination. Untriaged items, newest first.
@@ -71,7 +72,7 @@ export function InboxPage() {
                   {item.parsedDate && (
                     <Chip variant="teal" small>
                       <CalendarIcon className="aa-chip__icon" />
-                      {formatParsedDate(item.parsedDate)}
+                      {formatRelativeDay(item.parsedDate)}
                     </Chip>
                   )}
                   {item.parsedProject && (
@@ -102,25 +103,4 @@ export function InboxPage() {
       )}
     </div>
   );
-}
-
-function formatAgo(date: Date): string {
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
-  return `${Math.floor(seconds / 86400)} days ago`;
-}
-
-function formatParsedDate(date: Date): string {
-  const d = new Date(date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(d);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
-  if (diffDays === 0) return "today";
-  if (diffDays === 1) return "tomorrow";
-  if (diffDays === -1) return "yesterday";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
