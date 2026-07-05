@@ -190,12 +190,12 @@ describe("FocusMode", () => {
   // completed tasks via completedAt. This asserts the button actually fires
   // the wired handler.
   describe("Complete from focus", () => {
-    it("the Done button fires onComplete (the focus → complete path)", () => {
+    it("the Complete button fires onComplete (the focus → complete path)", () => {
       const onComplete = vi.fn();
       renderInContext(
         <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /done/i }));
+      fireEvent.click(screen.getByRole("button", { name: /complete/i }));
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
 

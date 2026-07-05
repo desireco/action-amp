@@ -197,7 +197,7 @@ export function FocusMode({
         )}
 
         <div className="aa-focus__actions">
-          <Button variant="primary" onClick={onComplete}>Done</Button>
+          <Button variant="primary" onClick={onComplete}>Complete</Button>
           <Button variant="secondary" onClick={onClose}>Exit focus</Button>
         </div>
       </div>
