@@ -80,6 +80,18 @@ Pick the task; read the doc(s) on the right **before** writing code.
   - `src/styles/tokens.css` — design tokens (teal/amber, neutrals, dark mode)
 - **Tests:** Vitest (`*.test.ts(x)`) + Playwright e2e (`webapp/e2e/`).
 
+## Agent browser access
+
+- For authenticated page inspection in local dev, use the dev autologin route:
+  `http://localhost:4000/login?devEmail=zeljko%40dakic.com`.
+- To inspect as a different local user, replace the query value:
+  `/login?devEmail=name@example.com`. The local-only action creates or verifies
+  that email identity, sets a temporary dev password, logs in through Wasp's
+  normal email auth, and redirects to `/app`.
+- Use this before Playwright/browser QA so you can examine authenticated pages
+  yourself. The server-side guard lives in `webapp/src/auth/devAutologin.ts` and
+  only allows the bypass when `NODE_ENV === "development"`.
+
 ## Rules that always apply
 
 - **Calm over features.** Whitespace is the point. If a section feels crowded,

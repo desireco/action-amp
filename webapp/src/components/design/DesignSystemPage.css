@@ -830,7 +830,7 @@
   font-weight: 500;
   color: var(--aa-text-2);
   background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
+   border: 1px solid var(--aa-border);
   padding: 6px 11px 6px 10px;
   border-radius: var(--aa-radius-sm);
   cursor: pointer;
@@ -894,7 +894,7 @@
   padding: 12px 14px;
   border-radius: var(--aa-radius-md);
   background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
+   border: 1px solid var(--aa-border);
   box-shadow: var(--aa-shadow-md);
   cursor: pointer;
   text-align: left;
@@ -933,18 +933,9 @@
   height: 16px;
 }
 
-.ds-disp-btn__icon--teal {
-  background: var(--aa-teal-soft);
-  color: var(--aa-teal-cta);
-}
-.ds-disp-btn__icon--amber {
-  background: var(--aa-amber-soft);
-  color: var(--aa-amber-text);
-}
-.ds-disp-btn__icon--violet {
-  background: var(--aa-violet-soft);
-  color: var(--aa-violet-text);
-}
+.ds-disp-btn__icon--teal { background: var(--aa-teal-soft); color: var(--aa-teal-cta); }
+.ds-disp-btn__icon--amber { background: var(--aa-amber-soft); color: var(--aa-amber-text); }
+.ds-disp-btn__icon--violet { background: var(--aa-violet-soft); color: var(--aa-violet-text); }
 
 .ds-disp-btn__text {
   min-width: 0;
@@ -1006,7 +997,7 @@
 }
 
 .ds-disp-mini--danger:hover {
-  background: var(--aa-rose-soft);
+ background: var(--aa-rose-soft);
   color: var(--aa-rose-text);
 }
 
@@ -1025,7 +1016,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--aa-space-lg);
-  max-width: 240px;
+   max-width: 240px;
 }
 
 .ds-progress-item {
@@ -1121,7 +1112,7 @@
 .ds-wn-card {
   width: 100%;
   max-width: 520px;
-  margin: 0 auto;
+   margin: 0 auto;
   text-align: center;
   padding: var(--aa-space-xl);
 }
@@ -1183,8 +1174,8 @@
   text-align: center;
   padding: var(--aa-space-xl);
   background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-2xl);
+   border: 1px solid var(--aa-border);
+   border-radius: var(--aa-radius-2xl);
   box-shadow: var(--aa-hero-shadow);
 }
 
@@ -1198,7 +1189,7 @@
   background: var(--aa-surface-muted);
   padding: 5px 12px;
   border-radius: var(--aa-radius-full);
-  margin-bottom: 32px;
+   margin-bottom: 32px;
 }
 
 .ds-wn-ctx__dot {

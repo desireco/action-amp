@@ -40,6 +40,7 @@ import { PasswordResetPage } from "./src/auth/email/PasswordResetPage" with { ty
 import { RequestPasswordResetPage } from "./src/auth/email/RequestPasswordResetPage" with { type: "ref" };
 import { SignupPage } from "./src/auth/email/SignupPage" with { type: "ref" };
 import { userSignupFields } from "./src/auth/email/userSignupFields" with { type: "ref" };
+import { prepareDevAutologin } from "./src/auth/devAutologin" with { type: "ref" };
 // Google social auth — disabled to skip GOOGLE_CLIENT_ID/SECRET setup for now.
 // All supporting code (config, GoogleButton, userSignupFields) stays in place;
 // flip the block below back on + re-add <GoogleButton /> to Login/Signup pages
@@ -147,6 +148,7 @@ export default app({
       "/email-verification",
       page(EmailVerificationPage),
     ),
+    action(prepareDevAutologin, { auth: false }),
     query(getTask, { entities: ["Task"], auth: true }),
     query(getTasks, { entities: ["Task", "Lens"], auth: true }),
     query(getDoneToday, { entities: ["Task", "Lens"], auth: true }),
