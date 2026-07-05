@@ -26,6 +26,8 @@ const BASE_TASK: FocusTask = {
   size: "15 min",
   content: "Follow up on the launch retro.",
   startedAt: new Date(STARTED_MS),
+  sessionStartedAt: new Date(STARTED_MS),
+  totalFocusedMs: 0,
   updates: [],
 };
 
@@ -43,19 +45,57 @@ describe("FocusMode", () => {
       expect(screen.getByText(/Follow up on the launch retro/)).toBeInTheDocument();
     });
 
-    it("renders the margin clock with elapsed minutes from startedAt", () => {
+    it("renders the margin clock with the live session duration", () => {
       renderInContext(<FocusMode task={BASE_TASK} onClose={() => {}} />);
-      // 18 minutes elapsed (STARTED_MS is 18 min ago). The clock shows the
-      // number + the "min in" unit.
-      const clock = screen.getByText("18");
+      // BASE_TASK.sessionStartedAt is 18 min ago. The session clock shows the
+      // formatted duration ("18 min") + the "in" unit + the "in focus" label.
+      const clock = screen.getByText("18 min");
       expect(clock).toHaveClass("aa-clock__num");
-      expect(screen.getByText(/min in/i)).toBeInTheDocument();
+      expect(screen.getByText("in")).toBeInTheDocument();
       expect(screen.getByText(/in focus/i)).toBeInTheDocument();
     });
 
-    it("renders a placeholder when startedAt is null", () => {
+    it("renders the per-task total when totalFocusedMs > 0", () => {
+      // Two closed 30-min sessions + the open 18-min one = ~1h 18m total.
       renderInContext(
-        <FocusMode task={{ ...BASE_TASK, startedAt: null }} onClose={() => {}} />,
+        <FocusMode
+          task={{
+            ...BASE_TASK,
+            totalFocusedMs: 78 * 60_000,
+          }}
+          onClose={() => {}}
+        />,
+      );
+      // 78 min = 1h 18m. The total reads "total 1h 18m" and is distinct from
+      // the session number ("18 min").
+      expect(screen.getByText(/total 1h 18m/i)).toBeInTheDocument();
+    });
+
+    it("hides the total when there is no prior focused time", () => {
+      renderInContext(<FocusMode task={BASE_TASK} onClose={() => {}} />);
+      // BASE_TASK has no sessions, so no total line should render — "total 0
+      // min" would be noise on a fresh start.
+      expect(screen.queryByText(/^total /i)).toBeNull();
+    });
+
+    it("falls back to startedAt for the session clock when no open session is present", () => {
+      // Legacy task that has startedAt but no matching session row (migration
+      // gap). The clock should still tick using startedAt.
+      renderInContext(
+        <FocusMode
+          task={{ ...BASE_TASK, sessionStartedAt: null }}
+          onClose={() => {}}
+        />,
+      );
+      expect(screen.getByText("18 min")).toBeInTheDocument();
+    });
+
+    it("renders a placeholder when neither session nor startedAt is set", () => {
+      renderInContext(
+        <FocusMode
+          task={{ ...BASE_TASK, startedAt: null, sessionStartedAt: null }}
+          onClose={() => {}}
+        />,
       );
       expect(screen.getByText("—")).toBeInTheDocument();
     });

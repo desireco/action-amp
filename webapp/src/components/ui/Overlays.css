@@ -638,6 +638,14 @@
   letter-spacing: 0.08em;
   color: var(--aa-text-4);
 }
+/* Total across all sessions — the honest record. Smaller and dimmer than
+   the session number so the live segment stays the protagonist. Hidden
+   until totalMs > 0 (no "total 0 min" on a fresh start). */
+.aa-clock__total {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  margin-top: 2px;
+}
 .aa-clock__label {
   font-size: var(--aa-text-xs);
   font-weight: var(--aa-weight-semibold);

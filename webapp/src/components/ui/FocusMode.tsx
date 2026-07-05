@@ -3,6 +3,7 @@ import { Button } from "./Button";
 import { CompletionCircle } from "./CompletionCircle";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Kbd, submitOnModEnter } from "./keyboard";
+import { formatDuration } from "../../shared/timeFormat";
 import "./Overlays.css";
 
 export type TaskUpdateKind = "NOTE" | "COMPLETED";
@@ -22,6 +23,11 @@ export interface FocusTask {
   size?: string | null;
   content?: string | null;
   startedAt?: Date | null;
+  /** When the current open session began (drives the live session clock). */
+  sessionStartedAt?: Date | null;
+  /** Total focused time across all sessions for this task, in ms. Includes
+   *  elapsed-so-far on the open session so the total ticks alongside. */
+  totalFocusedMs?: number;
   updates: TaskUpdateEntry[];
 }
 
@@ -101,9 +107,15 @@ export function FocusMode({
     }
   }, [composerOpen]);
 
-  const elapsedMin = task.startedAt
-    ? Math.max(0, Math.floor((Date.now() - task.startedAt.getTime()) / 60_000))
-    : null;
+  // Session clock — elapsed since the current open session began (resets on
+  // each Start). Falls back to startedAt for the rare case where a task has
+  // the pointer but no matching session row (e.g. migration legacy).
+  const sessionElapsedMs = task.sessionStartedAt
+    ? Math.max(0, Date.now() - task.sessionStartedAt.getTime())
+    : task.startedAt
+      ? Math.max(0, Date.now() - task.startedAt.getTime())
+      : null;
+  const totalMs = task.totalFocusedMs ?? 0;
 
   // Window-scoped keyboard handler. Order matters: composer/confirm swallow
   // Esc before it falls through to exit. The global handler in AppShell
@@ -212,12 +224,19 @@ export function FocusMode({
       aria-label={`Focus: ${task.title}`}
     >
       <div className="aa-focus__top">
-        {/* LEFT: margin clock — informational elapsed time, peripheral. */}
+        {/* LEFT: margin clock — session (live, motivating) + total (honest record). */}
         <div className="aa-clock">
           <div className="aa-clock__row">
-            <span className="aa-clock__num">{elapsedMin ?? "—"}</span>
-            <span className="aa-clock__unit">min in</span>
+            <span className="aa-clock__num">
+              {sessionElapsedMs !== null ? formatDuration(sessionElapsedMs) : "—"}
+            </span>
+            <span className="aa-clock__unit">in</span>
           </div>
+          {totalMs > 0 && (
+            <div className="aa-clock__total">
+              total {formatDuration(totalMs)}
+            </div>
+          )}
           <div className="aa-clock__label">
             <span className="aa-clock__dot" aria-hidden="true" />
             in focus
@@ -420,8 +439,10 @@ export function FocusMode({
         <ConfirmDialog
           title="Mark this done?"
           message={
-            elapsedMin !== null
-              ? `You've been at it for ${elapsedMin} min.`
+            sessionElapsedMs !== null
+              ? totalMs > 0
+                ? `${formatDuration(sessionElapsedMs)} this session · ${formatDuration(totalMs)} total`
+                : `${formatDuration(sessionElapsedMs)} this session`
               : "This will mark the task complete."
           }
           confirmLabel="Complete"
