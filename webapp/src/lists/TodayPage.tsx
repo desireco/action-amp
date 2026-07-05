@@ -226,14 +226,14 @@ export function TodayPage() {
                     onOpen={() => navigate(`/app/tasks/${task.id}`)}
                   >
                     <Button
-                      variant="ghost"
+                      variant="secondary"
                       size="sm"
                       onClick={() => navigate(`/app/tasks/${task.id}`)}
                     >
                       Edit task
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleDemote(task)}
                       title="Move back to Upcoming"
@@ -301,7 +301,7 @@ export function TodayPage() {
                   onOpen={() => navigate(`/app/tasks/${task.id}`)}
                 >
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="sm"
                     onClick={() => setFeedbackTask(task)}
                   >

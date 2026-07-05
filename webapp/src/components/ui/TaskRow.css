@@ -200,6 +200,10 @@
   min-width: 7rem;
 }
 
+.aa-task-row__actions .aa-btn {
+  width: 8.5rem;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .aa-task-row {
