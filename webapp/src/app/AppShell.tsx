@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
 import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcuts";
 import { FeedbackDialog } from "./FeedbackDialog";
-import { CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate, LensChip, LensPopover } from "../components/ui";
+import { CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate, LensChip, LensPopover, Kbd } from "../components/ui";
 import { useEntitled } from "../billing/useEntitled";
 import {
   BrandMark,
@@ -543,7 +543,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <PlusIcon width={18} height={18} />
         <span>Capture</span>
-        <kbd>⌘K</kbd>
+        <Kbd>⌘K</Kbd>
       </button>
 
       {/* ---- Global overlays (capture popover + shortcut cheatsheet) ---- */}
