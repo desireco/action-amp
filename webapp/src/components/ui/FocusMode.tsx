@@ -332,7 +332,7 @@ export function FocusMode({
             <li className="aa-thread__empty">
               {onAddNote ? (
                 <>
-                  press <kbd className="aa-kbd">n</kbd> to add a note
+                  press <Kbd>n</Kbd> to add a note
                 </>
               ) : (
                 "No notes yet."
@@ -364,16 +364,16 @@ export function FocusMode({
             className="aa-hint"
             onClick={() => setComposerOpen((v) => !v)}
           >
-            <kbd className="aa-kbd">n</kbd> note
+            <Kbd>n</Kbd> note
           </button>
         )}
         {onComplete && (
           <button type="button" className="aa-hint" onClick={openConfirm}>
-            <kbd className="aa-kbd">↵</kbd> complete
+            <Kbd>↵</Kbd> complete
           </button>
         )}
         <button type="button" className="aa-hint" onClick={onClose}>
-          <kbd className="aa-kbd">esc</kbd> exit
+          <Kbd>esc</Kbd> exit
         </button>
       </div>
 
@@ -388,7 +388,7 @@ export function FocusMode({
               onClick={() => setComposerOpen(false)}
               aria-label="Dismiss"
             >
-              <kbd className="aa-kbd">esc</kbd>
+              <Kbd>esc</Kbd>
             </button>
           </div>
           <textarea
