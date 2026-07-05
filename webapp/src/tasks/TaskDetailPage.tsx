@@ -206,8 +206,8 @@ export function TaskDetailPage() {
               aria-label="Completed task feedback"
             >
               <p className="aa-task-done-panel__notice">
-                Completed tasks are closed; leave feedback if something should
-                improve.
+                Completed tasks are closed; leave feedback about your experience
+                doing it.
               </p>
               {content && (
                 <div className="aa-task-done-panel__notes">
