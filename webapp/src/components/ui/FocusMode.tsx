@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, CompletionCircle, ConfirmDialog, Kbd, submitOnModEnter } from "./index";
+import { Button } from "./Button";
+import { CompletionCircle } from "./CompletionCircle";
+import { ConfirmDialog } from "./ConfirmDialog";
+import { Kbd, submitOnModEnter } from "./keyboard";
 import "./Overlays.css";
 
 export type TaskUpdateKind = "NOTE" | "COMPLETED";

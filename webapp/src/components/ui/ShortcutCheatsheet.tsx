@@ -1,4 +1,4 @@
-import { BrandMark } from "./index";
+import { BrandMark } from "./BrandMark";
 import "./Overlays.css";
 
 /**

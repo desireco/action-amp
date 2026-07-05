@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { BottomSheet, Chip } from "./index";
+import { BottomSheet } from "./BottomSheet";
+import { Chip } from "./Chip";
 import "./Overlays.css";
 
 export type SnoozePreset = "1h" | "3h" | "tomorrow" | "weekend" | "someday";

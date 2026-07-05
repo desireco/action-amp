@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Chip } from "../ui";
+import { Chip } from "./Chip";
 import "./TriageCard.css";
 
 export type TriageChipTone = "date" | "priority" | "tag";

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button } from "./index";
+import { Button } from "./Button";
 import "./Overlays.css";
 
 /**
