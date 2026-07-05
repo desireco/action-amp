@@ -13,6 +13,7 @@ import {
   TaskRow,
   CompletionCircle,
   Chip,
+  ConfirmDialog,
   type TaskRowTask,
 } from "../components/ui";
 import { GroupedList, type GroupDef } from "../components/ui";
@@ -110,6 +111,7 @@ export function TodayPage() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
   };
   const [feedbackTask, setFeedbackTask] = useState<TaskRowTask | null>(null);
+  const [demoteTask, setDemoteTask] = useState<TaskRowTask | null>(null);
 
   const overCapacity = (tasks?.length ?? 0) > TODAY_CAP;
   const overflow = useMemo(() => (tasks ?? []).slice(TODAY_CAP), [tasks]);
@@ -235,7 +237,7 @@ export function TodayPage() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => handleDemote(task)}
+                      onClick={() => setDemoteTask(task)}
                       title="Move back to Upcoming"
                     >
                       Not today
@@ -327,6 +329,25 @@ export function TodayPage() {
               userAgent:
                 typeof navigator === "undefined" ? null : navigator.userAgent,
             });
+          }}
+        />
+      )}
+      {demoteTask && (
+        <ConfirmDialog
+          title="Move this off Today?"
+          message={
+            <>
+              <strong>{demoteTask.description}</strong> will move to Upcoming.
+              It stays available from the upcoming bench.
+            </>
+          }
+          confirmLabel="Move to Upcoming"
+          cancelLabel="Keep today"
+          onClose={() => setDemoteTask(null)}
+          onConfirm={async () => {
+            const task = demoteTask;
+            setDemoteTask(null);
+            await handleDemote(task);
           }}
         />
       )}
