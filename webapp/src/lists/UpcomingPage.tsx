@@ -146,6 +146,7 @@ export function UpcomingPage() {
           }
           renderItem={(task) => (
             <TaskRow
+              as="div"
               task={task}
               variant="list"
               onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
