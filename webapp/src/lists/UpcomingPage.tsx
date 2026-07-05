@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getTasks, updateTaskContent, updateTaskStatus } from "wasp/client/operations";
-import { useQueryClient } from "@tanstack/react-query";
+import { getTasks } from "wasp/client/operations";
 import {
   Button,
   TaskRow,
@@ -13,6 +12,7 @@ import {
 } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
+import { useTaskListActions } from "./useTaskListActions";
 import "./ListShell.css";
 import "./UpcomingPage.css";
 
@@ -32,7 +32,7 @@ import "./UpcomingPage.css";
 export function UpcomingPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { promoteToToday, saveTaskContent } = useTaskListActions();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "UPCOMING", isDone: false } : undefined,
@@ -69,22 +69,6 @@ export function UpcomingPage() {
       items,
     }));
   }, [tasks]);
-
-  const handleSaveTaskContent = async (task: TaskRowTask, content: string) => {
-    await updateTaskContent({ taskId: task.id, content });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-    queryClient.invalidateQueries({ queryKey: ["getTask"] });
-  };
-
-  // Promote onto Today — same motion as the Today bench's swap and Someday's
-  // promote. Reuses updateTaskStatus; invalidates getTasks (the Today + bench
-  // lists), getTopTask (Next candidate pool), and getAppData (nav counts).
-  const handlePromote = async (task: TaskRowTask) => {
-    await updateTaskStatus({ id: task.id, status: "TODAY" });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-  };
 
   const count = tasks?.length ?? 0;
   const overdueCount =
@@ -157,12 +141,12 @@ export function UpcomingPage() {
               task={task}
               variant="list"
               onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
-              onSaveContent={handleSaveTaskContent}
+              onSaveContent={saveTaskContent}
             >
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => handlePromote(task)}
+                onClick={() => promoteToToday(task)}
                 title="Promote to Today"
               >
                 Today

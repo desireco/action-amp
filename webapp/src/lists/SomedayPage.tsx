@@ -1,19 +1,14 @@
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import {
-  getTasks,
-  updateTaskStatus,
-  updateTaskContent,
-} from "wasp/client/operations";
-import { useQueryClient } from "@tanstack/react-query";
+import { getTasks } from "wasp/client/operations";
 import {
   TaskRow,
   Button,
   CompletionCircle,
-  type TaskRowTask,
 } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
+import { useTaskListActions } from "./useTaskListActions";
 import "./ListShell.css";
 import "./SomedayPage.css";
 
@@ -27,27 +22,12 @@ import "./SomedayPage.css";
 export function SomedayPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { promoteToToday, saveTaskContent } = useTaskListActions();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "SOMEDAY", isDone: false } : undefined,
     { enabled: !!lens },
   );
-
-  // Promote a parked task onto Today. Same op as the Today bench promote;
-  // invalidates the same keys so both lists + the Next engine refresh.
-  const handlePromote = async (task: TaskRowTask) => {
-    await updateTaskStatus({ id: task.id, status: "TODAY" });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-  };
-
-  const handleSaveTaskContent = async (task: TaskRowTask, content: string) => {
-    await updateTaskContent({ taskId: task.id, content });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-    queryClient.invalidateQueries({ queryKey: ["getTask"] });
-  };
 
   if (!isLoading && (tasks?.length ?? 0) === 0) {
     return (
@@ -74,12 +54,12 @@ export function SomedayPage() {
               task={task}
               muted
               onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
-              onSaveContent={handleSaveTaskContent}
+              onSaveContent={saveTaskContent}
             />
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => handlePromote(task)}
+              onClick={() => promoteToToday(task)}
               title="Move to Today"
             >
               Today
