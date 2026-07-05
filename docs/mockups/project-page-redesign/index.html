@@ -1,0 +1,1293 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-lens="indigo">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ActionAmp — Project Page Redesign</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  /* Gallery chrome — NOT part of the design. Just lets us view 3 directions. */
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--aa-bg-soft);
+    font-family: var(--aa-font);
+    color: var(--aa-text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+    padding: 56px 32px 96px;
+    align-items: center;
+  }
+  .direction {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .direction__label {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--aa-text-4);
+    font-weight: 600;
+  }
+  .direction__title {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--aa-text);
+    margin: 0;
+  }
+  .direction__sub {
+    margin: 0;
+    font-size: 13px;
+    color: var(--aa-text-3);
+    max-width: 52ch;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .themes {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .theme-block { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .theme-tag {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--aa-text-4);
+    font-weight: 600;
+    padding-left: 4px;
+  }
+  .frame {
+    width: 860px;
+    max-width: 100%;
+    background: var(--aa-bg);
+    border-radius: 18px;
+    border: 1px solid var(--aa-border);
+    box-shadow: var(--aa-shadow-md);
+    padding: 56px 64px 72px;
+    overflow: hidden;
+  }
+  .frame--dark {
+    /* simulates dark theme within light gallery — set inline via data-theme wrapper.
+     The .frame--dark class is just a hook; actual theming comes from
+     [data-theme="dark"] on the wrapper element below. */
+  }
+  /* Wrap each dark frame in its own data-theme scope so tokens re-resolve. */
+  [data-theme="dark"].frame {
+    background: var(--aa-bg);
+  }
+
+  /* ===== Page content (shared) — pulled straight from ProjectDetailPage ===== */
+  .aa-task-back {
+    color: var(--aa-text-3);
+    text-decoration: none;
+    font-size: var(--aa-text-sm);
+    display: inline-flex;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .aa-task-back:hover { color: var(--aa-teal-cta); }
+
+  /* =====================================================================
+     DIRECTION A — MOMENTUM HEADER
+     ===================================================================== */
+  .aa-project-a {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* Identity rail: violet dot + eyebrow. Identity, not decoration. */
+  .aa-project-a__rail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--aa-text-sm);
+    color: var(--aa-text-3);
+    font-weight: var(--aa-weight-medium);
+  }
+  .aa-project-a__dot {
+    width: 8px; height: 8px;
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-violet);
+    box-shadow: 0 0 0 3px var(--aa-violet-soft);
+    flex-shrink: 0;
+  }
+  .aa-project-a__rail-link {
+    color: var(--aa-violet-text);
+    text-decoration: none;
+    font-weight: var(--aa-weight-medium);
+  }
+  .aa-project-a__rail-link:hover { text-decoration: underline; }
+
+  .aa-project-a__title {
+    font-size: var(--aa-text-2xl);
+    font-weight: var(--aa-weight-bold);
+    line-height: var(--aa-leading-tight);
+    color: var(--aa-text);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .aa-project-a__desc {
+    max-width: 58ch;
+    font-size: var(--aa-text-lg);
+    line-height: var(--aa-leading-relaxed);
+    color: var(--aa-text-2);
+    margin: -8px 0 0;
+  }
+
+  /* Progress band — violet, honest. Not a bar that fills with completion,
+     but with ratio of done:open. */
+  .aa-project-a__progress {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 4px;
+  }
+  .aa-project-a__progress-track {
+    flex: 1;
+    height: 6px;
+    background: var(--aa-surface-muted-2);
+    border-radius: var(--aa-radius-full);
+    overflow: hidden;
+    max-width: 320px;
+  }
+  .aa-project-a__progress-fill {
+    height: 100%;
+    background: var(--aa-violet);
+    border-radius: var(--aa-radius-full);
+    transition: width 0.3s var(--aa-ease-out-quart);
+  }
+  .aa-project-a__progress-label {
+    font-size: var(--aa-text-sm);
+    color: var(--aa-text-3);
+    font-weight: var(--aa-weight-medium);
+    white-space: nowrap;
+  }
+  .aa-project-a__progress-label strong {
+    color: var(--aa-text-2);
+    font-weight: var(--aa-weight-semibold);
+  }
+
+  /* NEXT STEP — the motivational core. Lifts the top TODAY task into a hero. */
+  .aa-project-a__next {
+    margin-top: 8px;
+    padding: 24px 26px;
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-xl);
+    box-shadow: var(--aa-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+  }
+  .aa-project-a__next-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--aa-teal-cta);
+    font-weight: var(--aa-weight-semibold);
+  }
+  .aa-project-a__next-title {
+    font-size: var(--aa-text-xl);
+    font-weight: var(--aa-weight-semibold);
+    color: var(--aa-text);
+    margin: 0;
+    line-height: 1.25;
+  }
+  .aa-project-a__next-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: var(--aa-text-sm);
+    color: var(--aa-text-3);
+  }
+  .aa-project-a__next-meta .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    background: var(--aa-surface-muted);
+    border-radius: var(--aa-radius-sm);
+    font-size: var(--aa-text-xs);
+    font-weight: var(--aa-weight-medium);
+    color: var(--aa-text-3);
+  }
+  .aa-project-a__next-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  /* Buttons (inline because the gallery isolates per-direction) */
+  .btn {
+    font-family: inherit;
+    font-size: var(--aa-text-base);
+    font-weight: var(--aa-weight-medium);
+    border-radius: var(--aa-radius-sm);
+    cursor: pointer;
+    transition: all var(--aa-dur-base) var(--aa-ease-out);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1;
+  }
+  .btn--primary {
+    background: var(--aa-teal-cta);
+    color: white;
+    border: 1px solid var(--aa-teal-cta);
+    padding: 10px 16px;
+    box-shadow: 0 1px 2px var(--aa-teal-tint-shadow);
+  }
+  .btn--primary:hover { background: var(--aa-teal-cta-hover); border-color: var(--aa-teal-cta-hover); }
+  .btn--secondary {
+    background: var(--aa-surface);
+    color: var(--aa-text-2);
+    border: 1px solid var(--aa-border-strong);
+    padding: 10px 16px;
+  }
+  .btn--secondary:hover { background: var(--aa-surface-muted); color: var(--aa-text); }
+
+  /* Action row: teal "+ Add step" leads; the rest are calm. */
+  .aa-project-a__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 4px;
+    border-top: 1px solid var(--aa-border);
+    margin-top: 8px;
+    padding-top: 20px;
+  }
+  .aa-project-a__add {
+    background: var(--aa-teal-cta);
+    color: white;
+    border: 1px solid var(--aa-teal-cta);
+    border-radius: var(--aa-radius-sm);
+    padding: 9px 14px 9px 12px;
+    font-size: var(--aa-text-base);
+    font-weight: var(--aa-weight-medium);
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 2px var(--aa-teal-tint-shadow);
+  }
+  .aa-project-a__add:hover { background: var(--aa-teal-cta-hover); }
+  .aa-project-a__add-plus { font-size: 16px; line-height: 1; }
+  .aa-project-a__calm {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--aa-text-3);
+    font-family: inherit;
+    font-size: var(--aa-text-sm);
+    padding: 9px 10px;
+    border-radius: var(--aa-radius-sm);
+    cursor: pointer;
+  }
+  .aa-project-a__calm:hover { background: var(--aa-surface-muted); color: var(--aa-text); }
+  .aa-project-a__overflow {
+    margin-left: auto;
+    width: 34px; height: 34px;
+    border-radius: var(--aa-radius-sm);
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--aa-text-3);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .aa-project-a__overflow:hover { background: var(--aa-surface-muted); color: var(--aa-text); }
+
+  /* Grouped list — calmed. Per-row controls appear on hover only. */
+  .aa-grouped { display: flex; flex-direction: column; gap: 28px; }
+  .aa-grouped__group { display: flex; flex-direction: column; gap: 4px; }
+  .aa-grouped__heading {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--aa-text-4);
+    font-weight: var(--aa-weight-semibold);
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .aa-grouped__count {
+    font-size: 11px;
+    color: var(--aa-text-4);
+    font-weight: var(--aa-weight-semibold);
+    background: var(--aa-surface-muted);
+    border-radius: var(--aa-radius-full);
+    padding: 1px 7px;
+  }
+  .aa-grouped__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .aa-task-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 6px;
+    border-bottom: 1px solid var(--aa-border);
+  }
+  .aa-task-row:last-child { border-bottom: none; }
+  .aa-task-row__circle {
+    width: 16px; height: 16px;
+    border-radius: var(--aa-radius-full);
+    border: 1.5px solid var(--aa-border-strong);
+    flex-shrink: 0;
+    background: transparent;
+    transition: all var(--aa-dur-base) var(--aa-ease-out);
+    cursor: pointer;
+  }
+  .aa-task-row__circle:hover { border-color: var(--aa-teal-cta); }
+  .aa-task-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .aa-task-row__title { font-size: var(--aa-text-base); color: var(--aa-text); line-height: 1.4; }
+  .aa-task-row__meta { display: flex; gap: 6px; align-items: center; font-size: var(--aa-text-xs); color: var(--aa-text-4); }
+  .aa-task-row__meta .sz {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    border: 1px solid var(--aa-border-strong);
+    border-radius: var(--aa-radius-xs);
+    font-size: 10px; font-weight: 600; color: var(--aa-text-3);
+  }
+  .aa-task-row--muted .aa-task-row__title { color: var(--aa-text-3); }
+  .aa-task-row--muted .aa-task-row__circle { border-style: dashed; }
+
+  /* Hover-revealed controls */
+  .aa-task-row__ctrl {
+    opacity: 0;
+    transition: opacity var(--aa-dur-fast) var(--aa-ease-out);
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--aa-text-3);
+    font-size: 12px;
+    padding: 5px 9px;
+    border-radius: var(--aa-radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .aa-task-row:hover .aa-task-row__ctrl,
+  .aa-task-row:focus-within .aa-task-row__ctrl { opacity: 1; }
+  .aa-task-row__ctrl:hover { background: var(--aa-surface-muted); color: var(--aa-text); border-color: var(--aa-border); }
+
+  /* Empty-state lift placeholder for TODAY group (A's hero borrows the top task) */
+  .aa-project-a__lifted-note {
+    font-size: 11px;
+    color: var(--aa-text-4);
+    font-style: italic;
+    padding: 4px 6px;
+  }
+
+  /* =====================================================================
+     DIRECTION B — PROGRESS-LED
+     ===================================================================== */
+  .aa-project-b { display: flex; flex-direction: column; gap: 32px; }
+  .aa-project-b__hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    padding: 8px 0 12px;
+  }
+  .aa-project-b__arc-wrap {
+    position: relative;
+    width: 160px; height: 160px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .aa-project-b__arc {
+    transform: rotate(-90deg);
+  }
+  .aa-project-b__arc-bg { stroke: var(--aa-surface-muted-2); }
+  .aa-project-b__arc-fill { stroke: var(--aa-violet); transition: stroke-dashoffset 0.5s var(--aa-ease-out-quart); }
+  .aa-project-b__pct {
+    position: absolute;
+    font-size: 32px;
+    font-weight: var(--aa-weight-bold);
+    color: var(--aa-text);
+    letter-spacing: -0.02em;
+  }
+  .aa-project-b__count {
+    position: absolute;
+    bottom: 38px;
+    font-size: var(--aa-text-sm);
+    color: var(--aa-text-3);
+    font-weight: var(--aa-weight-medium);
+  }
+  .aa-project-b__name {
+    font-size: var(--aa-text-xl);
+    font-weight: var(--aa-weight-bold);
+    color: var(--aa-text);
+    margin: 4px 0 0;
+  }
+  .aa-project-b__desc {
+    max-width: 38ch;
+    font-size: var(--aa-text-md);
+    color: var(--aa-text-3);
+    line-height: var(--aa-leading-normal);
+    margin: 0;
+  }
+  .aa-project-b__meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: var(--aa-text-sm);
+    color: var(--aa-text-3);
+    margin-top: 2px;
+  }
+  .aa-project-b__meta-link {
+    color: var(--aa-violet-text);
+    text-decoration: none;
+    font-weight: var(--aa-weight-medium);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .aa-project-b__meta-link::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-violet);
+  }
+  .aa-project-b__meta-sep { color: var(--aa-text-4); }
+  .aa-project-b__meta-chip {
+    display: inline-flex;
+    padding: 3px 9px;
+    background: var(--aa-teal-soft);
+    color: var(--aa-teal-cta);
+    border-radius: var(--aa-radius-sm);
+    font-size: var(--aa-text-xs);
+    font-weight: var(--aa-weight-semibold);
+  }
+
+  .aa-project-b__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 1px solid var(--aa-border);
+    padding-top: 20px;
+  }
+  /* reuse .aa-project-a__add + .aa-project-a__calm + .aa-project-a__overflow via dup */
+
+  /* =====================================================================
+     DIRECTION C — RESTRAINT (smallest change)
+     ===================================================================== */
+  .aa-project-c { display: flex; flex-direction: column; gap: 28px; }
+  .aa-project-c__rail {
+    display: flex; align-items: center; gap: 8px;
+    font-size: var(--aa-text-sm);
+    color: var(--aa-text-3);
+    font-weight: var(--aa-weight-medium);
+  }
+  .aa-project-c__dot {
+    width: 8px; height: 8px;
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-violet);
+    box-shadow: 0 0 0 3px var(--aa-violet-soft);
+  }
+  .aa-project-c__title {
+    font-size: var(--aa-text-2xl);
+    font-weight: var(--aa-weight-bold);
+    color: var(--aa-text);
+    margin: 0;
+    line-height: var(--aa-leading-tight);
+    letter-spacing: -0.01em;
+  }
+  .aa-project-c__meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    font-size: var(--aa-text-sm);
+    color: var(--aa-text-3);
+  }
+  .aa-project-c__mini-track {
+    flex: 1;
+    height: 4px;
+    background: var(--aa-surface-muted-2);
+    border-radius: var(--aa-radius-full);
+    overflow: hidden;
+    max-width: 180px;
+  }
+  .aa-project-c__mini-fill {
+    height: 100%;
+    background: var(--aa-violet);
+  }
+  .aa-project-c__chip {
+    display: inline-flex;
+    padding: 3px 9px;
+    background: var(--aa-teal-soft);
+    color: var(--aa-teal-cta);
+    border-radius: var(--aa-radius-sm);
+    font-size: var(--aa-text-xs);
+    font-weight: var(--aa-weight-semibold);
+  }
+
+  .aa-project-c__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* =====================================================================
+     DIRECTION D — REFINED (A's momentum, C's simplicity)
+     Next step loses its card entirely; reads as type. Action row borderless.
+     ===================================================================== */
+  .aa-project-d {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .aa-project-d__rail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--aa-text-sm);
+    color: var(--aa-text-3);
+    font-weight: var(--aa-weight-medium);
+  }
+  .aa-project-d__dot {
+    width: 8px; height: 8px;
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-violet);
+    box-shadow: 0 0 0 3px var(--aa-violet-soft);
+    flex-shrink: 0;
+  }
+  .aa-project-d__rail-link {
+    color: var(--aa-violet-text);
+    text-decoration: none;
+    font-weight: var(--aa-weight-medium);
+  }
+  .aa-project-d__rail-link:hover { text-decoration: underline; }
+  .aa-project-d__title {
+    font-size: var(--aa-text-2xl);
+    font-weight: var(--aa-weight-bold);
+    line-height: var(--aa-leading-tight);
+    color: var(--aa-text);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .aa-project-d__desc {
+    max-width: 58ch;
+    font-size: var(--aa-text-lg);
+    line-height: var(--aa-leading-relaxed);
+    color: var(--aa-text-2);
+    margin: -6px 0 0;
+  }
+
+  /* Progress band — honest violet, inline. No card. */
+  .aa-project-d__progress {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .aa-project-d__progress-track {
+    flex: 0 1 260px;
+    height: 5px;
+    background: var(--aa-surface-muted-2);
+    border-radius: var(--aa-radius-full);
+    overflow: hidden;
+  }
+  .aa-project-d__progress-fill {
+    height: 100%;
+    background: var(--aa-violet);
+    border-radius: var(--aa-radius-full);
+  }
+  .aa-project-d__progress-label {
+    font-size: var(--aa-text-sm);
+    color: var(--aa-text-3);
+    font-weight: var(--aa-weight-medium);
+  }
+  .aa-project-d__progress-label strong {
+    color: var(--aa-text-2);
+    font-weight: var(--aa-weight-semibold);
+  }
+  .aa-project-d__progress-chip {
+    display: inline-flex;
+    padding: 2px 8px;
+    background: var(--aa-teal-soft);
+    color: var(--aa-teal-cta);
+    border-radius: var(--aa-radius-sm);
+    font-size: var(--aa-text-xs);
+    font-weight: var(--aa-weight-semibold);
+  }
+
+  /* NEXT STEP — pure type, no card chrome. Sits in the page like prose.
+     The motivational core (one task, one teal action) without the widget weight. */
+  .aa-project-d__next {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 2px 0 2px;
+  }
+  .aa-project-d__next-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--aa-teal-cta);
+    font-weight: var(--aa-weight-semibold);
+    margin-bottom: 4px;
+  }
+  .aa-project-d__next-title {
+    font-size: var(--aa-text-lg);
+    font-weight: var(--aa-weight-semibold);
+    color: var(--aa-text);
+    margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+  .aa-project-d__next-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .aa-project-d__next-meta {
+    font-size: var(--aa-text-sm);
+    color: var(--aa-text-3);
+  }
+  .aa-project-d__next-meta-sep { color: var(--aa-text-4); margin: 0 5px; }
+  .aa-project-d__next-do {
+    background: var(--aa-teal-cta);
+    color: white;
+    border: 1px solid var(--aa-teal-cta);
+    border-radius: var(--aa-radius-sm);
+    padding: 7px 14px;
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-medium);
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 2px var(--aa-teal-tint-shadow);
+    margin-left: auto;
+  }
+  .aa-project-d__next-do:hover { background: var(--aa-teal-cta-hover); border-color: var(--aa-teal-cta-hover); }
+  .aa-project-d__next-skip {
+    background: transparent;
+    border: none;
+    color: var(--aa-text-3);
+    font-size: var(--aa-text-sm);
+    font-family: inherit;
+    cursor: pointer;
+    padding: 7px 4px;
+  }
+  .aa-project-d__next-skip:hover { color: var(--aa-text); text-decoration: underline; }
+
+  /* Action row — borderless (like C). Teal + Add step leads. */
+  .aa-project-d__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="gallery">
+
+  <!-- ============================================================
+       DIRECTION A — MOMENTUM HEADER
+       ============================================================ -->
+  <div class="direction">
+    <div class="direction__label">Direction A</div>
+    <h2 class="direction__title">Momentum header</h2>
+    <p class="direction__sub">
+      Violet identity rail · honest progress band · the page lifts your top Today task into a "Next step" hero with a teal Do-this that drops into focus mode. Add-step leads; Delete moved to overflow. Most motivational — biggest change.
+    </p>
+
+    <div class="themes">
+      <!-- LIGHT -->
+      <div class="theme-block">
+        <div class="theme-tag">Light</div>
+        <div class="frame">
+          <a class="aa-task-back" href="#">← Projects</a>
+          <div class="aa-project-a">
+            <div>
+              <div class="aa-project-a__rail">
+                <span class="aa-project-a__dot"></span>
+                Project · <a class="aa-project-a__rail-link" href="#">Build the dol hunt</a>
+              </div>
+              <h1 class="aa-project-a__title">Dol Hunt</h1>
+              <p class="aa-project-a__desc">Ship a playable hunt scene by Friday — the player enters, the dol reacts, the trophy drops.</p>
+            </div>
+
+            <div class="aa-project-a__progress">
+              <div class="aa-project-a__progress-track">
+                <div class="aa-project-a__progress-fill" style="width: 43%"></div>
+              </div>
+              <div class="aa-project-a__progress-label"><strong>3 of 7</strong> done · due Fri</div>
+            </div>
+
+            <!-- NEXT STEP hero -->
+            <div class="aa-project-a__next">
+              <div class="aa-project-a__next-eyebrow">Next step</div>
+              <h3 class="aa-project-a__next-title">Sketch the trophy rig</h3>
+              <div class="aa-project-a__next-meta">
+                <span>Today</span> ·
+                <span class="chip">L · 15 min</span>
+              </div>
+              <div class="aa-project-a__next-actions">
+                <button class="btn btn--secondary">Not now</button>
+                <button class="btn btn--primary">▸ Do this</button>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="aa-project-a__actions">
+              <button class="aa-project-a__add"><span class="aa-project-a__add-plus">+</span> Add step</button>
+              <button class="aa-project-a__calm">Edit</button>
+              <button class="aa-project-a__calm">Complete</button>
+              <button class="aa-project-a__overflow" title="More">⋯</button>
+            </div>
+
+            <!-- Grouped list -->
+            <div class="aa-grouped">
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Today <span class="aa-grouped__count">0</span></h3>
+                <p class="aa-project-a__lifted-note">Lifted into Next step above.</p>
+              </section>
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Upcoming <span class="aa-grouped__count">3</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main">
+                      <span class="aa-task-row__title">Wire the door logic</span>
+                    </div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main">
+                      <span class="aa-task-row__title">Pick the audio cues</span>
+                      <div class="aa-task-row__meta"><span class="sz">S</span></div>
+                    </div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main">
+                      <span class="aa-task-row__title">Tune the dol's idle anim</span>
+                    </div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                </ul>
+              </section>
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Someday <span class="aa-grouped__count">1</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row aa-task-row--muted">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main">
+                      <span class="aa-task-row__title">Maybe a leaderboard</span>
+                    </div>
+                    <button class="aa-task-row__ctrl">Upcoming</button>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DARK -->
+      <div class="theme-block">
+        <div class="theme-tag">Dark</div>
+        <div class="frame" data-theme="dark">
+          <a class="aa-task-back" href="#">← Projects</a>
+          <div class="aa-project-a">
+            <div>
+              <div class="aa-project-a__rail">
+                <span class="aa-project-a__dot"></span>
+                Project · <a class="aa-project-a__rail-link" href="#">Build the dol hunt</a>
+              </div>
+              <h1 class="aa-project-a__title">Dol Hunt</h1>
+              <p class="aa-project-a__desc">Ship a playable hunt scene by Friday — the player enters, the dol reacts, the trophy drops.</p>
+            </div>
+            <div class="aa-project-a__progress">
+              <div class="aa-project-a__progress-track">
+                <div class="aa-project-a__progress-fill" style="width: 43%"></div>
+              </div>
+              <div class="aa-project-a__progress-label"><strong>3 of 7</strong> done · due Fri</div>
+            </div>
+            <div class="aa-project-a__next">
+              <div class="aa-project-a__next-eyebrow">Next step</div>
+              <h3 class="aa-project-a__next-title">Sketch the trophy rig</h3>
+              <div class="aa-project-a__next-meta"><span>Today</span> · <span class="chip">L · 15 min</span></div>
+              <div class="aa-project-a__next-actions">
+                <button class="btn btn--secondary">Not now</button>
+                <button class="btn btn--primary">▸ Do this</button>
+              </div>
+            </div>
+            <div class="aa-project-a__actions">
+              <button class="aa-project-a__add"><span class="aa-project-a__add-plus">+</span> Add step</button>
+              <button class="aa-project-a__calm">Edit</button>
+              <button class="aa-project-a__calm">Complete</button>
+              <button class="aa-project-a__overflow" title="More">⋯</button>
+            </div>
+            <div class="aa-grouped">
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Today <span class="aa-grouped__count">0</span></h3>
+                <p class="aa-project-a__lifted-note">Lifted into Next step above.</p>
+              </section>
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Upcoming <span class="aa-grouped__count">3</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Wire the door logic</span></div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Pick the audio cues</span></div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       DIRECTION B — PROGRESS-LED
+       ============================================================ -->
+  <div class="direction">
+    <div class="direction__label">Direction B</div>
+    <h2 class="direction__title">Progress-led</h2>
+    <p class="direction__sub">
+      A large centered violet arc with %, count, description, due date, and goal link is the hero — visceral "look how far you've come". No next-step hero; the list stays the entry point. More dashboard, more passive. Calmer than A.
+    </p>
+
+    <div class="themes">
+      <div class="theme-block">
+        <div class="theme-tag">Light</div>
+        <div class="frame">
+          <a class="aa-task-back" href="#">← Projects</a>
+          <div class="aa-project-b">
+            <div class="aa-project-b__hero">
+              <div class="aa-project-b__arc-wrap">
+                <svg class="aa-project-b__arc" width="160" height="160" viewBox="0 0 160 160">
+                  <circle class="aa-project-b__arc-bg" cx="80" cy="80" r="68" fill="none" stroke-width="10" />
+                  <circle class="aa-project-b__arc-fill" cx="80" cy="80" r="68" fill="none" stroke-width="10"
+                          stroke-linecap="round"
+                          stroke-dasharray="427.26"
+                          stroke-dashoffset="243.5" />
+                </svg>
+                <div class="aa-project-b__pct">43%</div>
+                <div class="aa-project-b__count">3 of 7 done</div>
+              </div>
+              <h2 class="aa-project-b__name">Dol Hunt</h2>
+              <p class="aa-project-b__desc">Ship a playable hunt scene — the player enters, the dol reacts, the trophy drops.</p>
+              <div class="aa-project-b__meta">
+                <a class="aa-project-b__meta-link" href="#">Build the dol hunt</a>
+                <span class="aa-project-b__meta-sep">·</span>
+                <span class="aa-project-b__meta-chip">due Fri</span>
+              </div>
+            </div>
+
+            <div class="aa-project-b__actions">
+              <button class="aa-project-a__add"><span class="aa-project-a__add-plus">+</span> Add step</button>
+              <button class="aa-project-a__calm">Edit</button>
+              <button class="aa-project-a__calm">Complete</button>
+              <button class="aa-project-a__overflow" title="More">⋯</button>
+            </div>
+
+            <div class="aa-grouped">
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Today <span class="aa-grouped__count">1</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Sketch the trophy rig</span></div>
+                    <button class="aa-task-row__ctrl">Not today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                </ul>
+              </section>
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Upcoming <span class="aa-grouped__count">3</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Wire the door logic</span></div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Pick the audio cues</span></div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-block">
+        <div class="theme-tag">Dark</div>
+        <div class="frame" data-theme="dark">
+          <a class="aa-task-back" href="#">← Projects</a>
+          <div class="aa-project-b">
+            <div class="aa-project-b__hero">
+              <div class="aa-project-b__arc-wrap">
+                <svg class="aa-project-b__arc" width="160" height="160" viewBox="0 0 160 160">
+                  <circle class="aa-project-b__arc-bg" cx="80" cy="80" r="68" fill="none" stroke-width="10" />
+                  <circle class="aa-project-b__arc-fill" cx="80" cy="80" r="68" fill="none" stroke-width="10"
+                          stroke-linecap="round"
+                          stroke-dasharray="427.26"
+                          stroke-dashoffset="243.5" />
+                </svg>
+                <div class="aa-project-b__pct">43%</div>
+                <div class="aa-project-b__count">3 of 7 done</div>
+              </div>
+              <h2 class="aa-project-b__name">Dol Hunt</h2>
+              <p class="aa-project-b__desc">Ship a playable hunt scene — the player enters, the dol reacts, the trophy drops.</p>
+              <div class="aa-project-b__meta">
+                <a class="aa-project-b__meta-link" href="#">Build the dol hunt</a>
+                <span class="aa-project-b__meta-sep">·</span>
+                <span class="aa-project-b__meta-chip">due Fri</span>
+              </div>
+            </div>
+            <div class="aa-project-b__actions">
+              <button class="aa-project-a__add"><span class="aa-project-a__add-plus">+</span> Add step</button>
+              <button class="aa-project-a__calm">Edit</button>
+              <button class="aa-project-a__calm">Complete</button>
+              <button class="aa-project-a__overflow" title="More">⋯</button>
+            </div>
+            <div class="aa-grouped">
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Today <span class="aa-grouped__count">1</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Sketch the trophy rig</span></div>
+                  </li>
+                </ul>
+              </section>
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Upcoming <span class="aa-grouped__count">3</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Wire the door logic</span></div>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       DIRECTION C — RESTRAINT
+       ============================================================ -->
+  <div class="direction">
+    <div class="direction__label">Direction C</div>
+    <h2 class="direction__title">Restraint</h2>
+    <p class="direction__sub">
+      Smallest change. Keeps current layout, but: cleans the action hierarchy (teal + Add step leads, Delete to overflow), adds a violet identity dot + eyebrow, and an inline mini progress bar. No next-step hero. Calmest, lowest risk, least "exciting".
+    </p>
+
+    <div class="themes">
+      <div class="theme-block">
+        <div class="theme-tag">Light</div>
+        <div class="frame">
+          <a class="aa-task-back" href="#">← Projects</a>
+          <div class="aa-project-c">
+            <div>
+              <div class="aa-project-c__rail">
+                <span class="aa-project-c__dot"></span>
+                Project · Build the dol hunt
+              </div>
+              <h1 class="aa-project-c__title">Dol Hunt</h1>
+              <div class="aa-project-c__meta">
+                <span>3 of 7 done</span>
+                <div class="aa-project-c__mini-track"><div class="aa-project-c__mini-fill" style="width: 43%"></div></div>
+                <span class="aa-project-c__chip">due Fri</span>
+              </div>
+            </div>
+
+            <div class="aa-project-c__actions">
+              <button class="aa-project-a__add"><span class="aa-project-a__add-plus">+</span> Add step</button>
+              <button class="aa-project-a__calm">Edit</button>
+              <button class="aa-project-a__calm">Complete</button>
+              <button class="aa-project-a__overflow" title="More">⋯</button>
+            </div>
+
+            <div class="aa-grouped">
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Today <span class="aa-grouped__count">1</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Sketch the trophy rig</span></div>
+                    <button class="aa-task-row__ctrl">Not today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                </ul>
+              </section>
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Upcoming <span class="aa-grouped__count">3</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Wire the door logic</span></div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Pick the audio cues</span></div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                </ul>
+              </section>
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Someday <span class="aa-grouped__count">1</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row aa-task-row--muted">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Maybe a leaderboard</span></div>
+                    <button class="aa-task-row__ctrl">Upcoming</button>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-block">
+        <div class="theme-tag">Dark</div>
+        <div class="frame" data-theme="dark">
+          <a class="aa-task-back" href="#">← Projects</a>
+          <div class="aa-project-c">
+            <div>
+              <div class="aa-project-c__rail">
+                <span class="aa-project-c__dot"></span>
+                Project · Build the dol hunt
+              </div>
+              <h1 class="aa-project-c__title">Dol Hunt</h1>
+              <div class="aa-project-c__meta">
+                <span>3 of 7 done</span>
+                <div class="aa-project-c__mini-track"><div class="aa-project-c__mini-fill" style="width: 43%"></div></div>
+                <span class="aa-project-c__chip">due Fri</span>
+              </div>
+            </div>
+            <div class="aa-project-c__actions">
+              <button class="aa-project-a__add"><span class="aa-project-a__add-plus">+</span> Add step</button>
+              <button class="aa-project-a__calm">Edit</button>
+              <button class="aa-project-a__calm">Complete</button>
+              <button class="aa-project-a__overflow" title="More">⋯</button>
+            </div>
+            <div class="aa-grouped">
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Today <span class="aa-grouped__count">1</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Sketch the trophy rig</span></div>
+                  </li>
+                </ul>
+              </section>
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Upcoming <span class="aa-grouped__count">3</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Wire the door logic</span></div>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       DIRECTION D — REFINED (A's momentum, C's simplicity)
+       ============================================================ -->
+  <div class="direction">
+    <div class="direction__label">Direction D · refined</div>
+    <h2 class="direction__title">Momentum, no card</h2>
+    <p class="direction__sub">
+      Direction A's momentum (violet identity, honest progress band, Next step with teal Do this) but the Next-step card is gone — it reads as type that sits in the page, like C. Action row is borderless. Keeps the motivational core, drops the widget weight.
+    </p>
+
+    <div class="themes">
+      <!-- LIGHT -->
+      <div class="theme-block">
+        <div class="theme-tag">Light</div>
+        <div class="frame">
+          <a class="aa-task-back" href="#">← Projects</a>
+          <div class="aa-project-d">
+            <div>
+              <div class="aa-project-d__rail">
+                <span class="aa-project-d__dot"></span>
+                Project · <a class="aa-project-d__rail-link" href="#">Build the dol hunt</a>
+              </div>
+              <h1 class="aa-project-d__title">Dol Hunt</h1>
+              <p class="aa-project-d__desc">Ship a playable hunt scene by Friday — the player enters, the dol reacts, the trophy drops.</p>
+            </div>
+
+            <div class="aa-project-d__progress">
+              <div class="aa-project-d__progress-track">
+                <div class="aa-project-d__progress-fill" style="width: 43%"></div>
+              </div>
+              <div class="aa-project-d__progress-label"><strong>3 of 7</strong> done</div>
+              <span class="aa-project-d__progress-chip">due Fri</span>
+            </div>
+
+            <!-- NEXT STEP — pure type, no card -->
+            <div class="aa-project-d__next">
+              <div class="aa-project-d__next-eyebrow">Next step</div>
+              <h3 class="aa-project-d__next-title">Sketch the trophy rig</h3>
+              <div class="aa-project-d__next-row">
+                <div class="aa-project-d__next-meta">
+                  Today <span class="aa-project-d__next-meta-sep">·</span> L <span class="aa-project-d__next-meta-sep">·</span> 15 min
+                </div>
+                <button class="aa-project-d__next-skip">Not now</button>
+                <button class="aa-project-d__next-do">▸ Do this</button>
+              </div>
+            </div>
+
+            <!-- Actions — borderless, teal leads -->
+            <div class="aa-project-d__actions">
+              <button class="aa-project-a__add"><span class="aa-project-a__add-plus">+</span> Add step</button>
+              <button class="aa-project-a__calm">Edit</button>
+              <button class="aa-project-a__calm">Complete</button>
+              <button class="aa-project-a__overflow" title="More">⋯</button>
+            </div>
+
+            <!-- Grouped list -->
+            <div class="aa-grouped">
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Upcoming <span class="aa-grouped__count">3</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Wire the door logic</span></div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main">
+                      <span class="aa-task-row__title">Pick the audio cues</span>
+                      <div class="aa-task-row__meta"><span class="sz">S</span></div>
+                    </div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Tune the dol's idle anim</span></div>
+                    <button class="aa-task-row__ctrl">Today</button>
+                    <button class="aa-task-row__ctrl">Move</button>
+                  </li>
+                </ul>
+              </section>
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Someday <span class="aa-grouped__count">1</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row aa-task-row--muted">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Maybe a leaderboard</span></div>
+                    <button class="aa-task-row__ctrl">Upcoming</button>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DARK -->
+      <div class="theme-block">
+        <div class="theme-tag">Dark</div>
+        <div class="frame" data-theme="dark">
+          <a class="aa-task-back" href="#">← Projects</a>
+          <div class="aa-project-d">
+            <div>
+              <div class="aa-project-d__rail">
+                <span class="aa-project-d__dot"></span>
+                Project · <a class="aa-project-d__rail-link" href="#">Build the dol hunt</a>
+              </div>
+              <h1 class="aa-project-d__title">Dol Hunt</h1>
+              <p class="aa-project-d__desc">Ship a playable hunt scene by Friday — the player enters, the dol reacts, the trophy drops.</p>
+            </div>
+            <div class="aa-project-d__progress">
+              <div class="aa-project-d__progress-track">
+                <div class="aa-project-d__progress-fill" style="width: 43%"></div>
+              </div>
+              <div class="aa-project-d__progress-label"><strong>3 of 7</strong> done</div>
+              <span class="aa-project-d__progress-chip">due Fri</span>
+            </div>
+            <div class="aa-project-d__next">
+              <div class="aa-project-d__next-eyebrow">Next step</div>
+              <h3 class="aa-project-d__next-title">Sketch the trophy rig</h3>
+              <div class="aa-project-d__next-row">
+                <div class="aa-project-d__next-meta">
+                  Today <span class="aa-project-d__next-meta-sep">·</span> L <span class="aa-project-d__next-meta-sep">·</span> 15 min
+                </div>
+                <button class="aa-project-d__next-skip">Not now</button>
+                <button class="aa-project-d__next-do">▸ Do this</button>
+              </div>
+            </div>
+            <div class="aa-project-d__actions">
+              <button class="aa-project-a__add"><span class="aa-project-a__add-plus">+</span> Add step</button>
+              <button class="aa-project-a__calm">Edit</button>
+              <button class="aa-project-a__calm">Complete</button>
+              <button class="aa-project-a__overflow" title="More">⋯</button>
+            </div>
+            <div class="aa-grouped">
+              <section class="aa-grouped__group">
+                <h3 class="aa-grouped__heading">Upcoming <span class="aa-grouped__count">3</span></h3>
+                <ul class="aa-grouped__list">
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Wire the door logic</span></div>
+                  </li>
+                  <li class="aa-task-row">
+                    <div class="aa-task-row__circle"></div>
+                    <div class="aa-task-row__main"><span class="aa-task-row__title">Pick the audio cues</span></div>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

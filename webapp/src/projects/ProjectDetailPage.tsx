@@ -159,6 +159,18 @@ export function ProjectDetailPage() {
   );
   const nextStep = todayTasks.length === 1 ? todayTasks[0] : null;
 
+  // "Nothing queued for today" cue — shown only when there are zero open Today
+  // tasks AND at least one open Upcoming task to promote. Today is a commitment
+  // in this app (WORKFLOW §2.2), so we never auto-pull an Upcoming task into a
+  // hero; the cue just names the situation and points at the rows below.
+  const hasUpcoming = useMemo(
+    () =>
+      (project?.tasks ?? []).some((t) => !t.isDone && t.status === "UPCOMING"),
+    [project],
+  );
+  const showNoTodayCue =
+    !nextStep && todayTasks.length === 0 && hasUpcoming;
+
   const setStatus = async (
     task: ProjectTask,
     status: ProjectTask["status"],
@@ -478,6 +490,17 @@ export function ProjectDetailPage() {
                       </Button>
                     </div>
                   </div>
+                )}
+
+                {/* Calm empty cue — only when nothing is queued for Today but
+                    there are Upcoming tasks to promote. Honest, not pushy: we
+                    don't fabricate a hero from an Upcoming task (Today is a
+                    commitment). The cue names the situation; the horizon
+                    controls on each Upcoming row below do the promoting. */}
+                {showNoTodayCue && (
+                  <p className="aa-project__cue">
+                    Nothing queued for today. Promote one from Upcoming below.
+                  </p>
                 )}
 
                 {/* Action row — borderless. Teal + Add step leads; Edit / Complete

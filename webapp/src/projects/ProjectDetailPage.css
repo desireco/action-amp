@@ -244,6 +244,18 @@
   margin-left: auto;
 }
 
+/* ---- Calm empty cue (0 Today + Upcoming exists) ----
+   Sits where the Next-step hero would have been. Honest, not pushy: doesn't
+   fabricate a winner from Upcoming (Today is a commitment). Just names the
+   situation; the rows below carry the action. */
+.aa-project__cue {
+  margin: var(--aa-space-md) 0 0;
+  font-size: var(--aa-text-md);
+  color: var(--aa-text-3);
+  max-width: 52ch;
+  line-height: var(--aa-leading-normal);
+}
+
 /* ---- Action row — borderless. Teal + Add step leads. ---- */
 .aa-project__actions {
   display: flex;

@@ -283,4 +283,28 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
 
     expect(screen.queryByText(/next step/i)).not.toBeInTheDocument();
   });
+
+  it("shows the calm cue when there are zero Today tasks but Upcoming exists", () => {
+    projectData.current = makeProject({
+      tasks: [
+        { id: "t1", description: "Email Sarah", isDone: false, status: "UPCOMING", priority: "NORMAL", size: "M" },
+      ],
+    });
+    renderAt("/app/projects/p1");
+
+    expect(screen.getByText(/nothing queued for today/i)).toBeInTheDocument();
+    // And the hero is still absent — we don't fabricate one from Upcoming.
+    expect(screen.queryByText(/next step/i)).not.toBeInTheDocument();
+  });
+
+  it("does not show the calm cue when there are zero Today and zero Upcoming tasks", () => {
+    projectData.current = makeProject({
+      tasks: [
+        { id: "t1", description: "Maybe a leaderboard", isDone: false, status: "SOMEDAY", priority: "NORMAL", size: "M" },
+      ],
+    });
+    renderAt("/app/projects/p1");
+
+    expect(screen.queryByText(/nothing queued for today/i)).not.toBeInTheDocument();
+  });
 });
