@@ -9,8 +9,8 @@
 }
 
 .aa-list-header__eyebrow {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -18,8 +18,8 @@
 }
 
 .aa-list-header__title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: -0.015em;
   color: var(--aa-text);
   margin: 0;
@@ -84,15 +84,15 @@
 }
 
 .aa-list-empty__title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: -0.02em;
   color: var(--aa-text);
   margin: 0 0 var(--aa-space-sm);
 }
 
 .aa-list-empty__text {
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-3);
   margin: 0;
   line-height: 1.5;

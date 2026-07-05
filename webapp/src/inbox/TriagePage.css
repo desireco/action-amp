@@ -57,8 +57,8 @@
 }
 
 .aa-triage__progress-count {
-  font-size: 0.69rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text-4);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -90,8 +90,8 @@
 }
 
 .aa-triage__title h1 {
-  font-size: 1.375rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: -0.015em;
   color: var(--aa-text);
   margin: 0;
@@ -99,7 +99,7 @@
 }
 
 .aa-triage__title p {
-  font-size: 0.82rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   margin: 4px 0 0;
 }
@@ -114,7 +114,7 @@
   background: var(--aa-rose-soft);
   border: 1px solid var(--aa-rose);
   border-radius: var(--aa-radius-sm);
-  font-size: 0.82rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-rose-text);
   line-height: 1.4;
 }
@@ -141,8 +141,8 @@
 }
 
 .aa-triage-step__label {
-  font-size: 0.65rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -150,15 +150,15 @@
 }
 
 .aa-triage-step__q {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
   margin: 0;
   text-align: center;
 }
 
 .aa-triage-step__hint {
-  font-size: 0.8rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   margin: var(--aa-space-xs) 0 0;
   text-align: center;
@@ -189,8 +189,8 @@
 }
 
 .aa-triage-destination__label {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -198,8 +198,8 @@
 
 .aa-triage-destination__value {
   color: var(--aa-teal-cta);
-  font-size: 0.9rem;
-  font-weight: 650;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-bold);
   text-align: right;
 }
 
@@ -220,8 +220,8 @@
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
   color: var(--aa-text);
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
   text-align: left;
   cursor: pointer;
   transition:
@@ -311,12 +311,12 @@
 }
 
 .aa-triage-type__label {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
 }
 
 .aa-triage-type__sub {
-  font-size: 0.78rem;
+  font-size: var(--aa-text-sm);
   font-weight: 400;
   opacity: 0.85;
 }
@@ -331,7 +331,7 @@
 
 .aa-triage-confirm__summary {
   flex: 1;
-  font-size: 0.76rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
   line-height: 1.4;
   text-align: left;
@@ -344,8 +344,8 @@
 }
 
 .aa-triage-notes__label {
-  font-size: 0.7rem;
-  font-weight: 650;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: 0;
   text-transform: uppercase;
   color: var(--aa-text-4);
@@ -360,7 +360,7 @@
   border-radius: var(--aa-radius-md);
   color: var(--aa-text-2);
   font: inherit;
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
   line-height: 1.5;
   resize: vertical;
 }
@@ -396,15 +396,15 @@
 }
 
 .aa-triage-empty__title {
-  font-size: 1.65rem;
-  font-weight: 700;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
   letter-spacing: -0.02em;
   color: var(--aa-text);
   margin: 0 0 var(--aa-space-sm);
 }
 
 .aa-triage-empty__text {
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-3);
   margin: 0 auto var(--aa-space-xl);
   max-width: 28ch;

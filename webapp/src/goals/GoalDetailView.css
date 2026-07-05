@@ -25,7 +25,7 @@
 
 .aa-goal__meta {
   margin: var(--aa-space-lg) 0 0;
-  font-size: 1rem;
+  font-size: var(--aa-text-md);
   color: var(--aa-text-3);
 }
 
@@ -33,7 +33,7 @@
    not a banner; absent when there's no next project. */
 .aa-goal__next {
   margin: var(--aa-space-xs) 0 0;
-  font-size: 1rem;
+  font-size: var(--aa-text-md);
   color: var(--aa-text-3);
 }
 .aa-goal__next a {
@@ -46,7 +46,7 @@
 
 .aa-goal__desc {
   max-width: 58ch;
-  font-size: 1.1rem;
+  font-size: var(--aa-text-lg);
   line-height: 1.58;
   color: var(--aa-text-2);
   margin: calc(-1 * var(--aa-space-xs)) 0 0;
@@ -68,7 +68,7 @@
 
 .aa-goal__projects-empty h2 {
   margin: 0 0 var(--aa-space-xs);
-  font-size: 1.05rem;
+  font-size: var(--aa-text-lg);
   line-height: 1.25;
 }
 
@@ -94,7 +94,7 @@
   color: var(--aa-text-3);
   cursor: pointer;
   padding: 0 var(--aa-space-xs);
-  font-size: 0.75rem;
+  font-size: var(--aa-text-xs);
   line-height: 1.1;
   border-radius: var(--aa-radius-xs);
   transition: color var(--aa-dur-base) var(--aa-ease-out), background var(--aa-dur-base) var(--aa-ease-out);
@@ -123,10 +123,10 @@
 }
 .aa-goal__project-name {
   flex: 1;
-  font-weight: 500;
+  font-weight: var(--aa-weight-medium);
 }
 .aa-goal__project-pct {
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-3);
 }

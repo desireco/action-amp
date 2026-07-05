@@ -10,7 +10,7 @@
 .aa-create-inline__input {
   flex: 1;
   font-family: var(--aa-font);
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   padding: 9px 12px;
   background: var(--aa-surface);
   border: 1px solid var(--aa-border-strong);

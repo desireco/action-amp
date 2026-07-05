@@ -28,13 +28,13 @@
   align-items: center;
   gap: var(--aa-space-sm);
   margin: var(--aa-space-lg) 0 0;
-  font-size: 1rem;
+  font-size: var(--aa-text-md);
   color: var(--aa-text-3);
 }
 
 .aa-project__desc {
   max-width: 58ch;
-  font-size: 1.1rem;
+  font-size: var(--aa-text-lg);
   line-height: 1.58;
   color: var(--aa-text-2);
   margin: calc(-1 * var(--aa-space-xs)) 0 0;
@@ -42,7 +42,7 @@
 
 .aa-project__inline-err {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-rose-text, var(--aa-text-3));
 }
 
@@ -60,7 +60,7 @@
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-md);
   box-shadow: var(--aa-shadow-sm);
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
 }
 
 .aa-project__relink-label {
@@ -100,7 +100,7 @@
   color: var(--aa-text-2);
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   transition: color var(--aa-dur-base) var(--aa-ease-out), border-color var(--aa-dur-base) var(--aa-ease-out);
 }
 .aa-project__relink-opt:hover {
@@ -110,7 +110,7 @@
 .aa-project__relink-opt.is-active {
   color: var(--aa-teal-cta);
   border-color: var(--aa-teal-cta);
-  font-weight: 500;
+  font-weight: var(--aa-weight-medium);
 }
 
 /* A task row + its horizon control, side by side. Mirrors Today's swap-row.
@@ -146,11 +146,11 @@
   border-top: 1px dashed var(--aa-border);
 }
 .aa-project__move-hint {
-  font-size: 0.8rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
 }
 .aa-project__move-empty {
-  font-size: 0.8rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   font-style: italic;
 }

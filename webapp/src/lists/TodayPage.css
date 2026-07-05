@@ -23,7 +23,7 @@
 }
 
 .aa-today__title {
-  font-size: 2rem;
+  font-size: var(--aa-text-2xl);
   letter-spacing: 0;
 }
 
@@ -31,7 +31,7 @@
   max-width: 28rem;
   margin: var(--aa-space-xs) 0 0;
   color: var(--aa-text-3);
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   line-height: 1.45;
 }
 
@@ -78,8 +78,8 @@
 }
 
 .aa-today__list .aa-task-row__title {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
 }
 
 .aa-today__overflow-banner {
@@ -92,7 +92,7 @@
   background: var(--aa-amber-soft);
   border: 1px solid var(--aa-amber-soft-strong);
   border-radius: var(--aa-radius-sm);
-  font-size: 0.85rem;
+  font-size: var(--aa-text-sm);
   color: var(--aa-amber-text);
   line-height: 1.5;
 }
@@ -120,8 +120,8 @@
   width: 100%;
   padding: 0;
   margin-bottom: var(--aa-space-md);
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
   color: var(--aa-text-3);
   text-align: left;
 }
@@ -131,8 +131,8 @@
   gap: var(--aa-space-sm);
 }
 .aa-today__done-count {
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-4);
 }
 
@@ -197,7 +197,7 @@
   }
 
   .aa-today__title {
-    font-size: 1.65rem;
+    font-size: var(--aa-text-xl);
   }
 
   .aa-today__list .aa-grouped__group,

@@ -17,8 +17,8 @@
   display: inline-flex;
   align-items: center;
   color: var(--aa-text-3);
-  font-size: 0.9rem;
-  font-weight: 650;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-bold);
   text-decoration: none;
 }
 
@@ -32,8 +32,8 @@
   max-width: 46%;
   overflow: hidden;
   color: var(--aa-text-4);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -54,8 +54,8 @@
   gap: var(--aa-space-sm);
   justify-content: space-between;
   color: var(--aa-text-4);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-bold);
   text-transform: uppercase;
 }
 
@@ -68,8 +68,8 @@
   border-radius: 0;
   color: var(--aa-text);
   font: inherit;
-  font-size: 2.6rem;
-  font-weight: 760;
+  font-size: var(--aa-text-2xl);
+  font-weight: var(--aa-weight-bold);
   line-height: 1.08;
   padding: 0 0 var(--aa-space-md);
 }
@@ -88,8 +88,8 @@
   padding: 0 0 var(--aa-space-md);
   border-bottom: 1px solid var(--aa-border-strong);
   color: var(--aa-text);
-  font-size: 2.6rem;
-  font-weight: 760;
+  font-size: var(--aa-text-2xl);
+  font-weight: var(--aa-weight-bold);
   line-height: 1.08;
 }
 
@@ -106,8 +106,8 @@
   min-height: 22px;
   border-radius: var(--aa-radius-sm);
   color: var(--aa-teal-cta);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-bold);
   text-decoration: none;
 }
 
@@ -122,8 +122,8 @@
 
 .aa-task-label {
   color: var(--aa-text-4);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-bold);
   text-transform: uppercase;
 }
 
@@ -209,7 +209,7 @@
   justify-content: space-between;
   gap: var(--aa-space-sm);
   color: var(--aa-text-4);
-  font-size: 0.8rem;
+  font-size: var(--aa-text-sm);
 }
 
 .aa-task-edit__actions {
@@ -222,7 +222,7 @@
 .aa-task-edit__state,
 .aa-task-state {
   color: var(--aa-text-3);
-  font-size: 1rem;
+  font-size: var(--aa-text-md);
 }
 
 .aa-task-edit__err,
@@ -262,7 +262,7 @@
 .aa-task-meta {
   margin: 0 0 var(--aa-space-lg);
   color: var(--aa-text-3);
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
 }
 
 .aa-task-field {
@@ -290,11 +290,11 @@
   }
 
   .aa-task-input {
-    font-size: 2rem;
+    font-size: var(--aa-text-2xl);
   }
 
   .aa-task-readonly-title {
-    font-size: 2rem;
+    font-size: var(--aa-text-2xl);
   }
 
   .aa-task-edit__actions {

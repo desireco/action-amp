@@ -10,16 +10,16 @@
 }
 
 .aa-project-card .aa-progress-card__title {
-  font-size: 1.2rem;
+  font-size: var(--aa-text-lg);
 }
 
 .aa-project-card .aa-progress-card__desc {
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
 }
 
 .aa-project-card .aa-progress-card__pct {
   min-width: 70px;
-  font-size: 0.82rem;
+  font-size: var(--aa-text-sm);
 }
 
 .aa-project-card .aa-progress-card__meta {

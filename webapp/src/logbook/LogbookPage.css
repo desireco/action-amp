@@ -47,7 +47,7 @@
 
 .aa-logbook-row__title {
   display: block;
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-text-3);
   text-decoration: line-through;
   line-height: 1.4;
@@ -75,8 +75,8 @@
   border: 1px solid var(--aa-border);
   background: transparent;
   color: var(--aa-text-2);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
   cursor: pointer;
   transition:
     background var(--aa-dur-fast) var(--aa-ease-out),
