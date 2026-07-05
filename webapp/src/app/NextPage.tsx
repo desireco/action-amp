@@ -1,10 +1,25 @@
 import { useState } from "react";
 import { useQuery } from "wasp/client/operations";
-import { getTopTask, getTask, snoozeTask, startTask, pauseTask, addTaskUpdate, updateTaskContent, completeTaskFromFocus } from "wasp/client/operations";
+import {
+  getTopTask,
+  getTask,
+  snoozeTask,
+  startTask,
+  pauseTask,
+  addTaskUpdate,
+  updateTaskContent,
+  completeTaskFromFocus,
+} from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { NextCard, FocusMode, SnoozeSheet, type FocusTask, type SnoozePreset } from "../components/ui";
+import {
+  NextCard,
+  FocusMode,
+  SnoozeSheet,
+  type SnoozePreset,
+} from "../components/ui";
 import { useActiveLens } from "./lensContext";
 import { composeWhy } from "./focusWhy";
+import { formatWhen, sizeLabel, toFocusTask } from "./focusTaskView";
 import "./NextPage.css";
 
 /**
@@ -104,7 +119,8 @@ export function NextPage() {
         <h1 className="aa-wn-empty">Nothing on the table.</h1>
         <p className="aa-wn-empty-sub">
           You're all caught up. Capture something with{" "}
-          <span className="aa-wn-kbd">⌘K</span>, then triage it to Today to put it on the table.
+          <span className="aa-wn-kbd">⌘K</span>, then triage it to Today to put
+          it on the table.
         </p>
       </div>
     );
@@ -180,60 +196,4 @@ export function NextPage() {
       )}
     </>
   );
-}
-
-function sizeLabel(size: string | null | undefined): string {
-  if (!size) return "";
-  return { S: "15 min", M: "30 min", L: "1 hr", XL: "2 hr+" }[size] ?? size;
-}
-
-// Relative day label for a due date: "today", "tomorrow", "Fri", or "Jun 30".
-// The "why" line and meta use this so an Upcoming task reads truthfully (not a
-// hardcoded "due today" when it has no date at all).
-function formatWhen(date: Date): string {
-  const d = new Date(date);
-  const now = new Date();
-  d.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((d.getTime() - now.getTime()) / 86_400_000);
-  if (diffDays <= 0) return "today";
-  if (diffDays === 1) return "tomorrow";
-  if (diffDays <= 7) return d.toLocaleDateString("en-US", { weekday: "short" });
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-// Map a getTask result (with the updates thread) to FocusMode's prop shape.
-// getTask already returns updates oldest → newest, so the timeline renders
-// chronologically without re-sorting here.
-function toFocusTask(task: {
-  id: string;
-  description: string;
-  content?: string | null;
-  status: string;
-  dueDate?: Date | null;
-  size?: string | null;
-  project?: { name: string } | null;
-  updates?: { id: string; body: string; createdAt: Date; kind: string }[];
-}): FocusTask {
-  const due =
-    task.status === "TODAY"
-      ? "due today"
-      : task.dueDate
-        ? `due ${formatWhen(task.dueDate)}`
-        : null;
-  return {
-    id: task.id,
-    title: task.description,
-    project: task.project?.name ?? null,
-    due,
-    size: sizeLabel(task.size ?? null),
-    content: task.content ?? null,
-    updates:
-      task.updates?.map((u) => ({
-        id: u.id,
-        body: u.body,
-        createdAt: u.createdAt,
-        kind: u.kind as "NOTE" | "COMPLETED",
-      })) ?? [],
-  };
 }
