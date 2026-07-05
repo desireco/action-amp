@@ -7,6 +7,11 @@ build_owner: build
 
 # Feature: Merged Work Area (Next + Today on one page), complete-only-from-focus, and a timestamped activity log
 
+> **Extracted 2026-07-04:** the independently buildable notes + completion-log
+> slice now lives in `docs/specs/task-notes-completion-log.md` (`ready`). Keep
+> this draft for the larger route merge, complete-only-from-focus cleanup,
+> Not Doing/archive semantics, and full activity-log expansion.
+
 ## Summary
 
 Collapse the Work Area's two separate routes — `/app` (the Next Now/Next

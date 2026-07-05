@@ -1,8 +1,17 @@
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getTasks, updateTaskStatus } from "wasp/client/operations";
+import {
+  getTasks,
+  updateTaskStatus,
+  updateTaskContent,
+} from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { TaskRow, Button, CompletionCircle, type TaskRowTask } from "../components/ui";
+import {
+  TaskRow,
+  Button,
+  CompletionCircle,
+  type TaskRowTask,
+} from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
 import "./ListShell.css";
@@ -34,6 +43,12 @@ export function SomedayPage() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
   };
 
+  const handleSaveTaskContent = async (task: TaskRowTask, content: string) => {
+    await updateTaskContent({ taskId: task.id, content });
+    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+    queryClient.invalidateQueries({ queryKey: ["getTask"] });
+  };
+
   if (!isLoading && (tasks?.length ?? 0) === 0) {
     return (
       <ListEmpty
@@ -58,7 +73,8 @@ export function SomedayPage() {
             <TaskRow
               task={task}
               muted
-              onOpen={() => navigate(`/app/tasks/${task.id}`)}
+              onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
+              onSaveContent={handleSaveTaskContent}
             />
             <Button
               variant="secondary"

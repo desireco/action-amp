@@ -1,0 +1,152 @@
+@import "../../styles/tokens.css";
+
+.aa-spec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aa-spec-row {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  cursor: pointer;
+  transition:
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    border-color var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-spec-row:hover {
+  background: var(--aa-surface-muted);
+  border-color: var(--aa-border-strong);
+}
+
+.aa-spec-row.open {
+  background: var(--aa-surface-muted);
+  border-color: var(--aa-teal);
+}
+
+.aa-spec-key {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  width: 72px;
+  flex-shrink: 0;
+}
+
+.aa-spec-val {
+  flex: 1;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--aa-text);
+  text-align: right;
+}
+
+.aa-spec-row.v-Today .aa-spec-val,
+.aa-spec-row.v-Upcoming .aa-spec-val,
+.aa-spec-row.v-Thisweek .aa-spec-val,
+.aa-spec-row.v-Nextweek .aa-spec-val,
+.aa-spec-row.v-Nextmonth .aa-spec-val {
+  color: var(--aa-teal-cta);
+}
+
+.aa-spec-row.v-Important .aa-spec-val,
+.aa-spec-row.v-XL .aa-spec-val {
+  color: var(--aa-amber-text);
+}
+
+.aa-spec-row.is-project .aa-spec-val {
+  color: var(--aa-violet-text);
+}
+
+.aa-spec-row.is-default .aa-spec-val,
+.aa-spec-row.v-Someday .aa-spec-val {
+  color: var(--aa-text-3);
+  font-weight: 500;
+}
+
+.aa-spec-chev {
+  color: var(--aa-text-4);
+  transition: transform var(--aa-dur-base) var(--aa-ease-out);
+  flex-shrink: 0;
+}
+
+.aa-spec-row.open .aa-spec-chev {
+  transform: rotate(180deg);
+}
+
+.aa-spec-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--aa-surface-muted);
+  border-radius: var(--aa-radius-md);
+  animation: aa-spec-fade var(--aa-dur-base) var(--aa-ease-out) both;
+}
+
+@keyframes aa-spec-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aa-spec-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: var(--aa-radius-sm);
+  border: none;
+  background: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--aa-text-2);
+  cursor: pointer;
+  transition: background var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-spec-opt:hover {
+  background: var(--aa-surface);
+}
+
+.aa-spec-opt.active {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+  font-weight: 600;
+}
+
+.aa-spec-opt-hint {
+  margin-left: var(--aa-space-sm);
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--aa-text-4);
+}
+
+.aa-spec-opt .opt-check {
+  opacity: 0;
+  color: var(--aa-teal-cta);
+}
+
+.aa-spec-opt.active .opt-check {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-spec-options {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

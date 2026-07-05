@@ -353,6 +353,7 @@
 .aa-capture {
   max-width: 480px;
   padding: var(--aa-space-md);
+  position: relative; /* anchors the absolutely-positioned mention dropdown */
 }
 
 .aa-capture__head {
@@ -508,6 +509,60 @@
   margin-top: var(--aa-space-sm);
 }
 
+/* Inline `#`-mention dropdown — absolutely positioned at the caret inside the
+   textarea. Anchored to .aa-capture__head (which is position: relative) so it
+   overlays the textarea cleanly. */
+.aa-capture__mention {
+  position: absolute;
+  z-index: 10;
+  min-width: 200px;
+  max-width: 280px;
+  margin-top: 2px;
+  border: 1px solid var(--aa-border);
+  border-radius: 8px;
+  background: var(--aa-surface);
+  box-shadow: var(--aa-shadow-md);
+  overflow: hidden;
+  padding: 4px;
+}
+.aa-capture__mention-item {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  gap: var(--aa-space-xs);
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--aa-text);
+  width: 100%;
+}
+.aa-capture__mention-mark {
+  flex-shrink: 0;
+  color: var(--aa-text-4);
+  width: 1em;
+  text-align: center;
+}
+.aa-capture__mention-name {
+  flex: 1;
+}
+.aa-capture__mention-lens {
+  font-size: 0.7rem;
+  color: var(--aa-text-4);
+  flex-shrink: 0;
+}
+.aa-capture__mention-item:hover,
+.aa-capture__mention-item.active {
+  background: var(--aa-surface-muted);
+}
+.aa-capture__mention-item.active {
+  color: var(--aa-teal-cta);
+}
+
 .aa-capture__hint {
   font-size: 0.75rem;
   color: var(--aa-text-4);
@@ -578,19 +633,167 @@
   margin-bottom: var(--aa-space-xl);
 }
 
+.aa-focus__notes {
+  width: 100%;
+  max-width: 620px;
+  text-align: left;
+}
+
+.aa-focus__notes-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  margin-bottom: var(--aa-space-xs);
+}
+
+.aa-focus__notes-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--aa-text-4);
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.aa-focus__notes-action {
+  border: 0;
+  background: transparent;
+  color: var(--aa-teal-cta);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: var(--aa-space-2xs) 0;
+  cursor: pointer;
+}
+
+.aa-focus__notes-action:hover {
+  color: var(--aa-teal-cta-hover);
+}
+
 .aa-focus__content {
   font-size: 0.95rem;
   color: var(--aa-text-2);
   line-height: 1.6;
-  max-width: 620px;
-  text-align: left;
   white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.aa-focus__content-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--aa-text-4);
+  font-style: italic;
+}
+
+.aa-focus__notes-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+}
+
+.aa-focus__content-editor {
+  width: 100%;
+  min-height: 8rem;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--aa-text-2);
+  resize: vertical;
+}
+
+.aa-focus__content-editor:focus {
+  outline: none;
+  border-color: var(--aa-accent);
+}
+
+.aa-focus__notes-actions {
+  display: flex;
+  gap: var(--aa-space-sm);
 }
 
 .aa-focus__actions {
   display: flex;
   gap: var(--aa-space-sm);
   margin-top: var(--aa-space-2xl);
+}
+
+/* Activity thread (notes + system events) — a calm timeline, not a comments
+   product. Sits below the content, full width of the focus column. */
+.aa-focus__thread {
+  list-style: none;
+  margin: var(--aa-space-2xl) 0 0;
+  padding: 0;
+  width: 100%;
+  max-width: 620px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+}
+
+.aa-focus__thread-empty {
+  color: var(--aa-text-4);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* User-authored note: body + a quiet timestamp. */
+.aa-focus__note {
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  padding: var(--aa-space-sm) var(--aa-space-md);
+}
+
+.aa-focus__note-body {
+  font-size: 0.92rem;
+  color: var(--aa-text-2);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.aa-focus__note-time {
+  font-size: 0.78rem;
+  color: var(--aa-text-4);
+  margin-top: var(--aa-space-xs);
+}
+
+/* System event (e.g. Completed): muted, single line, no card chrome — the
+   timeline reads as activity, not as more content. */
+.aa-focus__event {
+  font-size: 0.82rem;
+  color: var(--aa-text-4);
+  padding: 0 var(--aa-space-xs);
+}
+
+.aa-focus__composer {
+  width: 100%;
+  max-width: 620px;
+  margin-top: var(--aa-space-md);
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--aa-text-2);
+  resize: vertical;
+  min-height: 2.5rem;
+  text-align: left;
+}
+
+.aa-focus__composer:focus {
+  outline: none;
+  border-color: var(--aa-accent);
+}
+
+.aa-focus__composer::placeholder {
+  color: var(--aa-text-4);
 }
 
 /* ============================================================

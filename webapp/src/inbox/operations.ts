@@ -1,7 +1,18 @@
-import type { CreateInboxItem, GetInboxItems, TriageInboxItem, RestoreArchivedItem } from "wasp/server/operations";
-import { parseCapture, type ParsedPriority, type ParsedSize } from "./parseCapture";
+import type {
+  CreateInboxItem,
+  GetInboxItems,
+  TriageInboxItem,
+  RestoreArchivedItem,
+  GetProjectsForResolver,
+} from "wasp/server/operations";
+import {
+  parseCapture,
+  type ParsedPriority,
+  type ParsedSize,
+} from "./parseCapture";
 import { FREE_LIMITS } from "../billing/config";
 import { assertLensAllowed, assertUnderCap } from "../billing/entitlementHttp";
+import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
 
 /**
  * Inbox operations — the capture destination + the triage transformation.
@@ -24,7 +35,19 @@ export const createInboxItem = (async (args, context) => {
   if (!raw) {
     throw new Error("Capture text is required.");
   }
-  const parsed = parseCapture(raw);
+  // Pull the user's custom lens names so `[[studio]]` is recognized at parse
+  // time. Seeded lenses (work/personal/me) are always known to the parser;
+  // custom names are user-defined and must be supplied per-call. (Grammar v2:
+  // unknown [[ ]] tokens stay literal — see parseCapture.ts.)
+  const customLenses = await context.entities.Lens.findMany({
+    where: { userId: context.user.id, kind: "CUSTOM" },
+    select: { name: true },
+  });
+  const parsed = parseCapture(
+    raw,
+    new Date(),
+    customLenses.map((l) => l.name),
+  );
   return await context.entities.InboxItem.create({
     data: {
       text: parsed.cleanText,
@@ -33,11 +56,19 @@ export const createInboxItem = (async (args, context) => {
       parsedPriority: parsed.parsedPriority,
       parsedSize: parsed.parsedSize,
       parsedTags: parsed.parsedTags,
-      parsedProject: parsed.parsedProject,
+      // Explicit typeahead pick overrides anything the parser might extract
+      // from the first # token. The picker and parser both feed the same
+      // persisted project hint for triage resolution.
+      parsedProject:
+        args.projectName?.trim().toLowerCase() || parsed.parsedProject,
+      parsedLens: parsed.parsedLens,
     },
     select: { id: true, text: true, createdAt: true },
   });
-}) satisfies CreateInboxItem<{ text: string }, { id: string; text: string; createdAt: Date }>;
+}) satisfies CreateInboxItem<
+  { text: string; projectName?: string },
+  { id: string; text: string; createdAt: Date }
+>;
 
 // ----------------------------------------------------------------
 // Read — the inbox list (newest first)
@@ -58,6 +89,7 @@ export const getInboxItems = (async (_args, context) => {
       parsedSize: true,
       parsedTags: true,
       parsedProject: true,
+      parsedLens: true,
     },
   });
 }) satisfies GetInboxItems<never>;
@@ -94,11 +126,12 @@ export const triageInboxItem = (async (args, context) => {
   // have typed at capture time.
   const priority = args.priority ?? item.parsedPriority ?? "NORMAL";
   const size = args.size ?? item.parsedSize ?? "M";
+  const content = args.content?.trim() || null;
 
-  // Resolve captured @tags / #tokens into real Tag records (per-user unique by
+  // Resolve captured extra #tokens into real Tag records (per-user unique by
   // name). Tags carry onto Tasks only — Projects and Goals drop them (their
   // scope is the whole collection, not a single actionable item). The parser
-  // stores tags WITH their prefix (@phone, #mvp); strip it so the Tag name is
+  // stores tags WITH their prefix (#phone, #mvp); strip it so the Tag name is
   // the clean word. resolve-or-create: a typo makes a new tag, never a crash.
   const tagNames = (item.parsedTags ?? [])
     .map((t) => t.replace(/^[@#]/, "").toLowerCase())
@@ -117,17 +150,30 @@ export const triageInboxItem = (async (args, context) => {
         )
       : [];
 
-  // Default-filing: if no project was chosen (no explicit pick and the #project
-  // hint didn't resolve to an existing project), file under the lens's "General"
-  // project so the task is never projectless. Mirrors how the spec step shows
-  // "General" as the default project row.
+  // Default-filing: if no project was chosen at triage and the capture
+  // typeahead didn't set parsedProject (or it didn't resolve in the inferred
+  // lens), file under the lens's "General" project so the task is never
+  // projectless. Project resolution happens client-side (TriagePage) and
+  // arrives as args.projectId; this is the fallback when nothing matched.
   let effectiveProjectId = args.projectId ?? null;
-  if (!effectiveProjectId) {
+  let effectiveProjectPermalink: string | null = null;
+  if (effectiveProjectId) {
+    const project = await context.entities.Project.findFirst({
+      where: { id: effectiveProjectId, userId: context.user.id, lensId },
+      select: { id: true, permalink: true },
+    });
+    if (!project) {
+      throw new Error("Project not found.");
+    }
+    effectiveProjectId = project.id;
+    effectiveProjectPermalink = project.permalink;
+  } else {
     const general = await context.entities.Project.findFirst({
       where: { userId: context.user.id, lensId, name: "General" },
-      select: { id: true },
+      select: { id: true, permalink: true },
     });
     effectiveProjectId = general?.id ?? null;
+    effectiveProjectPermalink = general?.permalink ?? null;
   }
 
   let result: { kind: "task" | "project" | "archive"; id: string };
@@ -137,18 +183,32 @@ export const triageInboxItem = (async (args, context) => {
     case "upcoming":
     case "someday": {
       const status =
-        args.decision === "task-today" ? "TODAY" : args.decision === "upcoming" ? "UPCOMING" : "SOMEDAY";
+        args.decision === "task-today"
+          ? "TODAY"
+          : args.decision === "upcoming"
+            ? "UPCOMING"
+            : "SOMEDAY";
+      const permalink = await uniquePermalink(
+        taskPermalinkSource(item.text, effectiveProjectPermalink),
+        async (candidate) => {
+          const existing = await context.entities.Task.findFirst({
+            where: { userId: context.user!.id, permalink: candidate },
+            select: { id: true },
+          });
+          return !!existing;
+        },
+      );
       const task = await context.entities.Task.create({
         data: {
           description: item.text,
-          content: null,
+          permalink,
+          content,
           userId: context.user.id,
           lensId,
           status,
           priority,
           size,
           dueDate: item.parsedDate,
-          goalId: args.goalId,
           projectId: effectiveProjectId,
           // Tags carry onto tasks only (projects/goals drop them).
           ...(tagRecords.length > 0
@@ -166,13 +226,28 @@ export const triageInboxItem = (async (args, context) => {
       const projectCount = await context.entities.Project.count({
         where: { userId: context.user.id, lensId, isDone: false },
       });
-      await assertUnderCap(context, lensId, projectCount, FREE_LIMITS.projects, {
-        feature: "a 4th project",
-        reason: "organize more than 3 projects with Pro",
+      await assertUnderCap(
+        context,
+        lensId,
+        projectCount,
+        FREE_LIMITS.projects,
+        {
+          feature: "a 4th project",
+          reason: "organize more than 3 projects with Pro",
+        },
+      );
+      const name = args.name?.trim() || item.text;
+      const permalink = await uniquePermalink(name, async (candidate) => {
+        const existing = await context.entities.Project.findFirst({
+          where: { userId: context.user!.id, permalink: candidate },
+          select: { id: true },
+        });
+        return !!existing;
       });
       const project = await context.entities.Project.create({
         data: {
-          name: args.name?.trim() || item.text,
+          name,
+          permalink,
           userId: context.user.id,
           lensId,
           goalId: args.goalId,
@@ -226,13 +301,20 @@ export const triageInboxItem = (async (args, context) => {
   return result;
 }) satisfies TriageInboxItem<{
   inboxItemId: string;
-  decision: "task-today" | "upcoming" | "someday" | "project" | "resource" | "archive";
+  decision:
+    | "task-today"
+    | "upcoming"
+    | "someday"
+    | "project"
+    | "resource"
+    | "archive";
   lensId: string;
   goalId?: string;
   projectId?: string;
   name?: string; // override the project name (defaults to the item text)
   priority?: ParsedPriority; // override parsed priority (set deliberately in the triage spec step)
   size?: ParsedSize; // override parsed size (set deliberately in the triage spec step)
+  content?: string; // durable task notes/body captured during triage
 }>;
 
 // ----------------------------------------------------------------
@@ -257,3 +339,45 @@ export const restoreArchivedItem = (async (args, context) => {
   });
   return { id: item.id };
 }) satisfies RestoreArchivedItem<{ inboxItemId: string }, { id: string }>;
+
+// ----------------------------------------------------------------
+// Project resolver source — lightweight project tuples across ALL the user's
+// lenses, for capture typeahead + triage project-bridged lens inference
+// (docs/specs/capture-grammar.md). Lens-agnostic by design: at capture the
+// user is typing free text and may not know which lens a project lives in;
+// the dropdown shows all matches, and the chosen project's lens flows into
+// triage as the project-bridged inference. Returns just {id, name, lensId,
+// lensName} — no task counts or goal includes; the heavy `getProjects` is
+// still the per-lens page source.
+//
+// Note: visibility ≠ write access. The `assertLensAllowed` filing guard in
+// `triageInboxItem` still rejects a FREE user's attempt to file into a
+// WORK/CUSTOM lens at commit time (402). Surfacing those projects here lets
+// the user see and pick them; if they're not entitled, triage surfaces the
+// entitlement error rather than silently hiding the project.
+// ----------------------------------------------------------------
+export const getProjectsForResolver = (async (_args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const user = context.user;
+  const lenses = await context.entities.Lens.findMany({
+    where: { userId: user.id },
+    select: { id: true, name: true },
+  });
+  const lensNameById = new Map(lenses.map((l) => [l.id, l.name]));
+  const projects = await context.entities.Project.findMany({
+    where: { userId: user.id, isDone: false },
+    select: { id: true, name: true, lensId: true },
+    orderBy: [{ name: "asc" }],
+  });
+  return projects.map((p) => ({
+    id: p.id,
+    name: p.name,
+    lensId: p.lensId,
+    lensName: lensNameById.get(p.lensId) ?? null,
+  }));
+}) satisfies GetProjectsForResolver<
+  never,
+  { id: string; name: string; lensId: string; lensName: string | null }[]
+>;

@@ -2,11 +2,11 @@ import { test, expect } from "@playwright/test";
 import { signupNewUser, openCapture } from "./helpers";
 
 /**
- * Capture — FEATURES.md §1 (F1 quick-add, F2 NL parsing, F3 lands in inbox).
+ * Capture — docs/features/capture.md (F1 quick-add, F2 NL parsing, F3 lands in inbox).
  *
  * These tests encode the spec, not the current code. A failure is a real gap.
  *
- * F1: Cmd+K (or ⌘/) opens a floating input from anywhere. Type, Enter, done.
+ * F1: Cmd+K opens a floating input from anywhere. Type, Enter, done.
  *     Stays on the current screen.
  * F2: Natural-language parsing — tokens show as chips inline BEFORE Enter.
  * F3: Everything lands in the Inbox unassigned.
@@ -20,17 +20,6 @@ test.describe("F1 — quick capture", () => {
     await page.locator("body").click();
 
     await page.keyboard.press("Meta+K");
-
-    await expect(
-      page.getByRole("dialog", { name: /quick capture/i }),
-    ).toBeVisible({ timeout: 5_000 });
-  });
-
-  test("⌘/ (the primary shortcut per TRIAGE.md) also opens capture", async ({ page }) => {
-    await signupNewUser(page);
-    await page.locator("body").click();
-
-    await page.keyboard.press("Meta+/");
 
     await expect(
       page.getByRole("dialog", { name: /quick capture/i }),

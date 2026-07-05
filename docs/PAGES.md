@@ -112,16 +112,16 @@ No-date, not-forgotten, not-nagging Tasks. (GTD "Someday/Maybe".)
 
 ### P6. Projects  →  `/projects`
 
-All Projects in the active Lens, grouped by Goal.
+All Projects in the active Lens, with Goal alignment shown on each card.
 
 - Each row: name, progress (X/Y tasks done), due date if any, next-action preview.
 - "No next action" badge if a Project has no actionable Task — a GTD health nudge.
 
 ### P7. Goals  →  `/goals`
 
-All Goals in the active Lens, with roll-up. *(First-class in MVP.)*
+All Goals in the active Lens, with project roll-up. *(First-class in MVP.)*
 
-- Each Goal: linked Projects + standalone Tasks, aggregate progress.
+- Each Goal: linked Projects, aggregate progress, current Focus project.
 - Create/edit Goal inline.
 
 ### P8. Logbook  →  `/logbook`
@@ -135,7 +135,7 @@ Completed + archived items. (PARA "Archive" / FEATURES F18.)
 
 ## 2. Detail pages
 
-### D1. Project detail  →  `/projects/:id`
+### D1. Project detail  →  `/projects/:permalink`
 
 - Header: name, parent Goal, due date, status.
 - **Tasks** list (the focus candidates) — sortable, inline-edit.
@@ -143,11 +143,11 @@ Completed + archived items. (PARA "Archive" / FEATURES F18.)
 - Convert Task → Project (XL break-down path). Promote Resource → Task.
 - "Next action" highlighted.
 
-### D2. Goal detail  →  `/goals/:id`
+### D2. Goal detail  →  `/goals/:permalink`
 
 - Header: name, description ("the why").
-- Linked Projects (with progress) + standalone Tasks.
-- Aggregate roll-up: % complete across everything under this Goal.
+- Linked Projects (with progress).
+- Aggregate roll-up: % complete across linked Projects.
 - Edit/delete Goal.
 
 ### D3. Task focus mode  →  `/tasks/:id/focus` *(or full-screen overlay)*

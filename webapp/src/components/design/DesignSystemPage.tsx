@@ -8,13 +8,18 @@ import {
   Chip,
   CompletionCircle,
   DispatchButton,
+  DetailHeaderActions,
+  InlineEntityEditForm,
   LensSwitch,
   ModeDial,
   NavItem,
   Table,
+  TaskRow,
   Toggle,
   TriageCard,
+  PickerSheet,
   NextCard,
+  SpecRow,
   ZoomDock,
   StarIcon,
   InboxIcon,
@@ -44,7 +49,9 @@ const SECTIONS = [
   { id: "cards", label: "Cards" },
   { id: "chips", label: "Chips & Badges" },
   { id: "completion", label: "Completion Circle" },
+  { id: "task-row", label: "Task Row" },
   { id: "forms", label: "Form Elements" },
+  { id: "inline-edit", label: "Inline Edit" },
   { id: "toggle", label: "Toggle" },
   { id: "table", label: "Table" },
   { id: "shadows", label: "Shadows & Motion" },
@@ -55,6 +62,7 @@ const SECTIONS = [
   { id: "utilities", label: "Floating Utility" },
   { id: "dispatch", label: "Dispatch Buttons" },
   { id: "triage-card", label: "Triage Card" },
+  { id: "spec-row", label: "Spec Row" },
   { id: "progress", label: "Progress Bar" },
   { id: "empty", label: "Empty States" },
   { id: "wn-card", label: "Next Card" },
@@ -62,6 +70,8 @@ const SECTIONS = [
   { id: "zoom-dock", label: "Zoom Dock" },
   { id: "breadcrumb", label: "Breadcrumb" },
   { id: "overlays", label: "Overlays & Modals" },
+  { id: "picker-sheet", label: "Picker Sheet" },
+  { id: "detail-actions", label: "Detail Actions" },
   { id: "auth-layout", label: "Auth Layout" },
 ] as const;
 
@@ -218,6 +228,8 @@ function T({ token, value }: { token: string; value: string }) {
 
 export function DesignSystemPage() {
   const [active, setActive] = useState<SectionId>("overview");
+  const [specOpen, setSpecOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Route-specific tab title — restores the global app title on unmount.
   useEffect(() => {
@@ -399,8 +411,8 @@ export function DesignSystemPage() {
               <Chip variant="teal">📅 Tomorrow</Chip>
               <Chip variant="teal">Today</Chip>
               <Chip variant="teal">▣ mvp</Chip>
+              <Chip variant="teal">#deep-work</Chip>
               <Chip variant="amber">★ Important</Chip>
-              <Chip variant="amber">@phone</Chip>
               <Chip variant="rose">Overdue</Chip>
               <Chip variant="muted">Someday</Chip>
             </div>
@@ -443,6 +455,41 @@ export function DesignSystemPage() {
           </Sub>
         </Sec>
 
+        {/* TASK ROW */}
+        <Sec id="task-row" title="Task Row" desc="Reusable task-list element with meta chips, optional notes preview, and right-side actions.">
+          <Sub h="Plain row">
+            <ul className="ds-task-row-demo">
+              <TaskRow
+                task={{
+                  id: "task-row-plain",
+                  description: "Draft launch notes",
+                  project: { id: "project", name: "Launch" },
+                  size: "M",
+                }}
+              />
+            </ul>
+          </Sub>
+          <Sub h="List row with actions">
+            <div className="ds-task-row-demo">
+              <TaskRow
+                as="div"
+                variant="list"
+                task={{
+                  id: "task-row-list",
+                  description: "I want to work on",
+                  content: "I want to work on executing projects",
+                  project: { id: "project", name: "General" },
+                  dueDate: new Date(),
+                  size: "M",
+                }}
+                showContent
+              >
+                <Button variant="ghost" size="sm">Edit task</Button>
+              </TaskRow>
+            </div>
+          </Sub>
+        </Sec>
+
         {/* FORMS */}
         <Sec id="forms" title="Form Elements" desc="Input, select, textarea — styled via design tokens.">
           <Sub h="Text Input">
@@ -462,6 +509,25 @@ export function DesignSystemPage() {
               <textarea className="ds-textarea" placeholder="Notes…" rows={3} />
             </div>
           </Sub>
+        </Sec>
+
+        <Sec id="inline-edit" title="Inline Edit" desc="Raised in-place edit surface for Project and Goal detail headers.">
+          <div className="ds-demo-row">
+            <InlineEntityEditForm
+              title="Refine project"
+              subtitle="Keep the outcome concrete. The notes can stay practical."
+              nameLabel="Project"
+              name="Ship product v2"
+              namePlaceholder="Project name"
+              descriptionLabel="What makes it done"
+              description="Next milestone"
+              descriptionPlaceholder="Description (optional)"
+              onNameChange={() => {}}
+              onDescriptionChange={() => {}}
+              onCancel={() => {}}
+              onSave={() => {}}
+            />
+          </div>
         </Sec>
 
         {/* ============================================================
@@ -722,11 +788,37 @@ export function DesignSystemPage() {
           <Sub h="Chips Taxonomy">
             <div className="ds-usage">
               <p className="ds-usage__p"><strong>date</strong> — teal. Parsed due dates (📅 tomorrow, 📅 Jun 30).</p>
-              <p className="ds-usage__p"><strong>project</strong> — teal. A `#project` capture hint, resolved at triage (▣ mvp).</p>
+              <p className="ds-usage__p"><strong>project</strong> — teal. The first `#project` capture hint, resolved at triage (▣ mvp).</p>
+              <p className="ds-usage__p"><strong>tag</strong> — teal. Additional `#tag` capture tokens after the project hint (#deep-work, #errands).</p>
               <p className="ds-usage__p"><strong>priority</strong> — amber. Importance flags (★ Important).</p>
-              <p className="ds-usage__p"><strong>context tag</strong> — amber. `@context` capture tags (@phone, @errands).</p>
             </div>
           </Sub>
+        </Sec>
+
+        <Sec id="spec-row" title="Spec Row" desc="Compact property row with inline options or a picker-backed row action.">
+          <div className="ds-demo-stack">
+            <SpecRow
+              label="Priority"
+              value="Important"
+              open={specOpen}
+              onToggle={() => setSpecOpen((value) => !value)}
+              options={[
+                { value: "LOW", label: "Low" },
+                { value: "NORMAL", label: "Normal" },
+                { value: "IMPORTANT", label: "Important" },
+              ]}
+              onPick={() => setSpecOpen(false)}
+            />
+            <SpecRow
+              label="Project"
+              value="MVP"
+              open={false}
+              onToggle={() => {}}
+              options={[]}
+              onPick={() => setPickerOpen(true)}
+              isProject
+            />
+          </div>
         </Sec>
 
         {/* ============================================================
@@ -883,6 +975,34 @@ export function DesignSystemPage() {
               <p className="ds-usage__p"><strong>Motion:</strong> backdrop fades 150ms; content rises 250ms with <code className="ds-inline-code">--aa-ease-out-quart</code>. Exit is ~60% of enter duration.</p>
             </div>
           </Sub>
+        </Sec>
+
+        <Sec id="picker-sheet" title="Picker Sheet" desc="Shared BottomSheet list for choosing a Project, Goal, or destination.">
+          <Button variant="secondary" onClick={() => setPickerOpen(true)}>
+            Open picker
+          </Button>
+          {pickerOpen && (
+            <PickerSheet
+              title="File in"
+              items={[
+                { id: "mvp", label: "MVP", meta: "Grow audience", current: true },
+                { id: "ops", label: "Operations" },
+              ]}
+              action={{ label: "…or file under a goal", onPick: () => setPickerOpen(false) }}
+              onPick={() => setPickerOpen(false)}
+              onClose={() => setPickerOpen(false)}
+            />
+          )}
+        </Sec>
+
+        <Sec id="detail-actions" title="Detail Actions" desc="Compact action tray for Project and Goal detail headers.">
+          <DetailHeaderActions
+            actions={[
+              { label: "Edit", onClick: () => {} },
+              { label: "Complete", onClick: () => {} },
+              { label: "Delete", danger: true, onClick: () => {} },
+            ]}
+          />
         </Sec>
 
         {/* AUTH LAYOUT */}

@@ -5,6 +5,7 @@ import type {
 } from "wasp/server/operations";
 import { PrismaClient } from "@prisma/client";
 import { buildWelcomeEmail } from "./welcomeEmail";
+import { uniquePermalink } from "../shared/permalinks";
 
 /**
  * Onboarding — the one-time first-run flow (runs when a user signs up).
@@ -32,7 +33,11 @@ import { buildWelcomeEmail } from "./welcomeEmail";
 const DEFAULT_LENSES = [
   { name: "Work", kind: "WORK", color: "indigo" },
   { name: "Me", kind: "PERSONAL", color: "emerald" },
-] as const satisfies readonly { name: string; kind: "WORK" | "PERSONAL"; color: string }[];
+] as const satisfies readonly {
+  name: string;
+  kind: "WORK" | "PERSONAL";
+  color: string;
+}[];
 const STARTER_TASKS = [
   "Try it: complete this task",
   "Capture one real thing on your mind",
@@ -61,10 +66,15 @@ async function sendWelcomeEmail(user: {
   // Map Wasp's flat AuthIdentity rows into the {email, google} shape
   // buildWelcomeEmail expects. providerUserId is the address for the email
   // provider; for google it's a sub id (filtered out by the @ check inside).
-  const identities = { email: null as { id: string } | null, google: null as { id: string } | null };
+  const identities = {
+    email: null as { id: string } | null,
+    google: null as { id: string } | null,
+  };
   for (const identity of auth.identities) {
-    if (identity.providerName === "email") identities.email = { id: identity.providerUserId };
-    else if (identity.providerName === "google") identities.google = { id: identity.providerUserId };
+    if (identity.providerName === "email")
+      identities.email = { id: identity.providerUserId };
+    else if (identity.providerName === "google")
+      identities.google = { id: identity.providerUserId };
   }
 
   const email = buildWelcomeEmail({ ...user, identities });
@@ -130,8 +140,15 @@ export const ensureOnboarded = (async (_args, context) => {
       select: { id: true },
     });
     if (!existingProject) {
+      const permalink = await uniquePermalink("General", async (candidate) => {
+        const existing = await context.entities.Project.findFirst({
+          where: { userId, permalink: candidate },
+          select: { id: true },
+        });
+        return !!existing;
+      });
       await context.entities.Project.create({
-        data: { name: "General", userId, lensId: existingLens.id },
+        data: { name: "General", permalink, userId, lensId: existingLens.id },
         select: { id: true },
       });
     }
@@ -145,9 +162,20 @@ export const ensureOnboarded = (async (_args, context) => {
     const taskCount = await context.entities.Task.count({ where: { userId } });
     if (taskCount === 0) {
       for (const description of STARTER_TASKS) {
+        const permalink = await uniquePermalink(
+          description,
+          async (candidate) => {
+            const existing = await context.entities.Task.findFirst({
+              where: { userId, permalink: candidate },
+              select: { id: true },
+            });
+            return !!existing;
+          },
+        );
         await context.entities.Task.create({
           data: {
             description,
+            permalink,
             userId,
             lensId: meLensId,
             status: "TODAY",
@@ -217,4 +245,3 @@ export const completeOnboarding = (async (_args, context) => {
 
   return { hasSeenOnboarding: true };
 }) satisfies CompleteOnboarding<never, { hasSeenOnboarding: boolean }>;
-

@@ -3,8 +3,8 @@ slug: capture
 title: "Capture (⌘K quick-add + NL parsing)"
 feature_area: capture-triage
 status: shipped
-spec: —             # no spec; predates the duet protocol
-verified: 2026-07-03
+spec: docs/specs/capture-grammar.md
+verified: 2026-07-04
 ---
 
 # Capture
@@ -13,17 +13,28 @@ verified: 2026-07-03
 `⌘Enter` saves + keeps open (rapid-fire). Parsed tokens show as inline chips
 before commit. Lands in the universal Inbox (no lens until triage).
 
-**NL tokens parsed** (`inbox/parseCapture.ts`):
-- Dates: `today`, `tomorrow`/`tmrw`, `tonight`, `next week`/`next month`, weekday
-  names, `jun 30`, `6/30`, plus `@today`/`@tomorrow`/`@tonight` prefixed forms.
-- `#mvp` → project hint (first `#` only); resolved at triage.
-- `@errands @phone` → context tags.
-- Priority: `!1/!2/!3`, `!low/!normal/!important/!high`, `!/!!/!!!`.
-- Size: `~20m ~1h ~XL`; time tokens map to S/M/L/XL.
+**NL tokens parsed** (`inbox/parseCapture.ts`) — **grammar v2** (locked
+2026-07-04, `docs/specs/capture-grammar.md`):
+
+| Sigil | Means | Examples |
+|---|---|---|
+| `#` | project first, tags after | `#mvp #deep-work`; `#[Q3 Launch] #errands` |
+| `@` | date (time only) | `@today @tomorrow @tonight`; bare `today`/`tomorrow`/`tonight` + weekday/month forms also work |
+| `!` | priority | `!1/!2/!3`, `!low/!normal/!important/!high`, `!/!!/!!!` |
+| `~` | size | `~20m ~1h ~XL`; time tokens map to S/M/L/XL |
+| `[[name]]` | lens override | `[[work]] [[personal]] [[me]] [[studio]]`; resolves on `kind` (seeded) or name (custom); unknown → literal text |
+| *(free text)* | project fallback | resolver can still match project names in the active/inferred lens; whitespace/sentence-boundary, longest wins |
+
+Replaces v1's `@` context tags. The first `#` token is the explicit project
+hint; remaining `#` tokens are tags. The resolver bridges capture to lens
+through a matched project's `lensId`. `[[ ]]` precedence beats project-inferred
+lens.
 
 **Files.** `components/ui/CapturePopover.tsx`; `inbox/parseCapture.ts`;
 `createInboxItem` in `inbox/operations.ts`.
 
-**Done?** Shipped. Target met: thought → inbox, keyboard-only.
+**Done?** Shipped: thought → inbox, keyboard-only, grammar v2 parser,
+resolver, `[[ ]]`, and `InboxItem.parsedLens`.
 
-**Spec.** None (predates duet). Reference: FEATURES.md F1/F2 (feature-level only).
+**Spec.** `docs/specs/capture-grammar.md` (v2). Reference: FEATURES.md F1/F2
+(feature-level only).

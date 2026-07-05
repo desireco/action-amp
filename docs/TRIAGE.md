@@ -15,9 +15,13 @@
 > toggle the shortcut cheatsheet (`⌘?` = Cmd+Shift+`/`) ·
 > `[`/`]` = size down/up · `-`/`=` = priority down/up. See §7.2, §7.6.
 >
-> **Decisions locked 2026-06-23** (see `WORKFLOW.md` §5):
+> **Decision revised 2026-07-04** (see `WORKFLOW.md` §5.5):
 >
-> - Triage inherits the active lens (no force-choice).
+> - Triage begins with **Classify**, a combined Type + Destination step.
+> - Lens is selected or inferred in Classify, not on a separate Context step.
+> - A concrete Project destination supplies both Project and Lens, so the
+>   standalone lens choice is skipped by default while the destination remains
+>   visible and reversible.
 > - Triage never auto-clutters Work — the default Task outcome is Upcoming
 >   (the bench); committing to Today is explicit. Demoting to Someday is, too.
 
@@ -64,8 +68,8 @@ and **deletes the original InboxItem** — the transformed entity *is* the recor
      │  │                            [ Confirm ]│   │
      │  └──────────────────────────────────────┘   │
      │                                              │
-     │  ← prev   type: Task · Project · Resource · Archive →  │  ← wizard steps
-     │           (Context → Type → Spec → Complete)           │
+     │  ← prev   classify: Task · Work · MVP →                │  ← wizard steps
+     │           (Classify → Spec → Complete)                 │
      └─────────────────────────────────────────────────────────┘
           ↓ (exit animation encodes the decision →/←/↑/↓)
    Next item appears.
@@ -89,7 +93,7 @@ What an InboxItem can become (DATA-MODEL.md §3). One input shape, five outputs.
 | big outcome | **Project** (text becomes the Project name) | "Plan Q3 launch" → new Project |
 | step in existing work | **Task** inside an existing **Project** | "Draft press release" → "Q3 launch" |
 | reference, not action | **Resource** (link/note) under a **Project or Goal** | "Competitor PDF" → "Q3 launch" |
-| supports a bigger goal | **Task/Project** linked to a **Goal** | "Write blog" → Goal: "Grow audience" |
+| supports a bigger goal | **Project** linked to a **Goal** | "Launch newsletter" → Goal: "Grow audience" |
 | I will not do now | **Archive** — the note is kept (status=ARCHIVED), not deleted | "Maybe later idea" → Logbook |
 
 > **Archive is lossless (decided 2026-06-25).** The old "Trash" decision deleted
@@ -120,19 +124,26 @@ are **one surface at different commitment levels.**
 
 The wizard (per item):
 
-1. **Context (Lens)** — a radio, pre-filled with the active lens. The user
-   must **Continue** to ratify it. *(Reverses WORKFLOW.md §5.5's inherit-active
-   default — triage now asks, explicitly. The active lens is still the
-   pre-selection, so the common case is one Continue.)* Lists the full lens set
-   (user-defined lenses appear for Pro, not just the seeded two). At ≥4 lenses
-   the radio follows the same adaptive pattern as the sidebar switcher (chip +
-   popover); at ≤3 it's today's radio.
-2. **Type** — what does this become? **Task** (default) · **Project** ·
-   **Resource** (a Note) · **Archive** (lossless — kept, recoverable). *Goal is
-   not a type-chooser outcome* — goals are filed *into*, never created at
-   triage (§9.3).
-3. **Spec** — the property rows, per type (see table below).
-4. **Complete** — commits the spec; gated until the lens is confirmed and
+1. **Classify** — one surface for **what this becomes** and **where it lands**:
+   Task / Project / Resource / Archive plus the selected Lens or resolved
+   Project destination. Two inference paths
+   (`docs/specs/capture-grammar.md`, locked 2026-07-04):
+   - **`[[lens]]` token** (explicit): `[[work]]` / `[[personal]]` / `[[me]]` /
+     `[[custom-name]]` resolves to a lens and pre-fills it. Seeded lenses match
+     on `kind` (survives renames); custom lenses match on exact name. Unknown
+     tokens stay literal text (no false positives on pasted wiki-links). A lens
+     token still shows Lens choices so the user can change it.
+   - **Project-resolved** (strong): if capture selected a Project or the
+     resolver uniquely matches a Project in the cleaned text, that Project
+     supplies both `projectId` and `lensId`. Classify shows
+     `Destination: Project · Lens` and skips the standalone lens selection by
+     default.
+   The active lens remains the default when there is no hint. User-defined
+   lenses appear for Pro. At ≥4 lenses the lens control follows the same
+   adaptive pattern as the sidebar switcher (chip + popover); at ≤3 it's
+   today's radio.
+2. **Spec** — the property rows, per type (see table below).
+3. **Complete** — commits the spec; gated until the destination is valid and
    (for Task/Resource) a filing target is set.
 
 The spec rows are **inline-expanding**: tap a row → the options expand beneath
@@ -151,12 +162,13 @@ Important/XL, violet = Project/Goal, gray = default.
 
 | Type | Rows |
 |---|---|
-| Task | When · Size · Priority · Project (file into) · Goal (link) |
+| Task | When · Size · Priority · Project (file into) |
 | Project | Goal (supports, optional) · Due |
 | Resource (Note) | Parent (Project/Goal) · Kind (Link/Note) |
 
-> "Goal" appears as a **spec row** (link an existing goal) on Task and Project,
-> not as a type the item can *become*. Triage never creates a Goal.
+> "Goal" appears as a **spec row** only on Project (supports an existing goal),
+> not on Task. Projects make goals happen; tasks happen inside projects or
+> standalone. Triage never creates a Goal.
 
 ---
 
@@ -172,12 +184,14 @@ Today** — the user must actively promote a task to Today.
 | Size | **M** | |
 | Priority | **Normal** | |
 | Project | **General** (= no `projectId`) | scoped per Lens, not global. A `#project` capture token links if a project by that name exists in the chosen Lens; otherwise General (no auto-create). |
-| Goal | none | |
+| Goal | none | Tasks do not align directly to goals; projects can support goals. |
 | Lens | the active Lens | every entity requires one |
 
 Parser pre-fills any token the user typed at capture (`tomorrow`, `!3`, `~XL`,
-`#ship`, `@phone`) — defaults only fill the gaps. `#` links a project, `@` is a
-context tag (§7.5).
+`#deep-work`, `[[work]]`) — defaults only fill the gaps. `#` is a tag, `@` is
+time only, `[[lens]]` is the explicit lens override (§7.5). Project intent is
+resolver-driven from free text — a matched project name carries its lens into
+this step. `[[ ]]` precedence beats project-inferred lens when they disagree.
 
 ---
 
@@ -266,33 +280,41 @@ with bare `?`.
 
 ### 7.4 Triage mode
 
-**Dispatch (what it becomes):**
+Triage is step-aware. The first step is **Classify**: choose what the inbox item
+becomes and where it lands.
+
+**Classify:**
 
 | Key | Action |
 |---|---|
-| `1` | Task · **Today** |
-| `2` | Task · Upcoming |
-| `3` | Task · Someday |
-| `T` | Cycle type: Task → Project → Resource |
-| `P` | Becomes Project (direct) |
-| `R` | Becomes Resource (opens parent picker) |
-| `G` | Assign/link Goal |
+| `1` | Type = Task |
+| `2` | Type = Project |
+| `3` | Type = Resource / Note |
+| `A` / `S` / `D` / `F` | Select the visible Lens choice in that position |
+| `/` | Open the full Lens picker when there are more choices |
+| `Enter` | Continue to Spec, or archive immediately when Archive is selected |
 | `Del` / `Backspace` | Archive (lossless — kept, recoverable from the Logbook) |
 
-**Navigation:**
+When Classify has a concrete Project destination, it shows
+`Destination: Project · Lens` and hides the standalone lens choices by default.
+The destination can still be changed from Spec.
 
-| Key | Action |
-|---|---|
-| `←` / `→` | Previous / next Inbox item |
-| `Esc` / `Q` | Done triaging |
-
-**Property adjust (the new scheme — §7.6):**
+**Spec:**
 
 | Key | Action |
 |---|---|
 | `[` / `]` | Size down / up |
 | `-` / `=` | Priority down / up |
 | `H` | Set When (cycles Today → Upcoming → Someday) |
+| `G` | Assign/link Goal for Project specs |
+
+**Navigation:**
+
+| Key | Action |
+|---|---|
+| `←` / `→` | Previous / next Inbox item |
+| `Esc` | From Spec, return to Classify; from Classify, leave triage |
+| `Q` | Done triaging |
 
 ### 7.5 Capture mode
 
@@ -311,13 +333,18 @@ analogy. Reversed because capture is usually a one-off, not a session.)*
 | `Shift+Enter` | Expand to full co-author editor (desktop) |
 | `/` (first keystroke) | Command prefix — `/daily review`, `/focus`, `/switch Work` *(Phase 2)* |
 | `Esc` | Close without saving |
-| *(while typing)* | NL sigils: `#` link project/goal · `@` context tag · `!` priority · `~` size · date words |
+| *(while typing)* | NL sigils: first `#` project · later `#` tags · `@` time · `[[lens]]` lens override · `!` priority · `~` size · date words |
 | *(expanded, not typing)* | `[` `]` size · `-` `=` priority (same as triage) |
 
-**First-class properties in capture: `#` (project/goal) and `@` (context).**
+**First-class properties in capture: `#` (project first, tags after), `@`
+(time), `[[lens]]` (explicit lens override).** The first `#token` or `#[Project
+Name]` is a project hint resolved at triage; any later `#tokens` become tags.
 Priority (`!`) and size (`~`) are still parsed but are expanded-editor
 territory, not the quick-capture essentials. Choosing *where this goes* beats
-choosing *how urgent/big it is* — that's triage's job. Locked 2026-06-22.
+choosing *how urgent/big it is* — that's triage's job. **Locked 2026-07-04
+(grammar v2 — supersedes the 2026-06-22 `#`/`@` decision).** The old `@` context
+tag split is gone; `@` is time only, and lens intent lives in `[[ ]]` or project
+inference. See `docs/specs/capture-grammar.md`.
 
 ### 7.6 Property keys — size & priority
 
@@ -356,10 +383,13 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 - ✅ Inbox list + triage walkthrough (`inbox/TriagePage.tsx`)
 - ✅ Triage card (`components/ui/TriageCard.tsx`)
 - ✅ **Co-author spec list in triage** — DONE 2026-06-25. Triage is now a
-  deliberate per-item wizard (lens → type → spec → Complete), with
-  inline-expanding property rows ported from `triage-coauthor.html`. Priority
-  and Size set in the spec step are carried to the created task (they override
-  any parsed capture token — see `inbox/operations.ts :: triageInboxItem`).
+  deliberate per-item wizard. Next pass: merge lens + type into Classify
+  (`Classify → Spec → Complete`) per `docs/specs/triage-classify-step.md`,
+  with project-resolved items skipping standalone lens selection by default.
+  Inline-expanding property rows remain ported from `triage-coauthor.html`.
+  Priority and Size set in the spec step are carried to the created task (they
+  override any parsed capture token — see `inbox/operations.ts ::
+  triageInboxItem`).
 - ✅ Type dispatch (Task/Project/Resource/Archive) + exit animations
 - ✅ Resource/Note parent picker (file under a Project or Goal)
 - ✅ Transform action (`inbox/operations.ts :: triageInboxItem`)

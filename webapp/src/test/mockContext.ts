@@ -70,6 +70,7 @@ export function mockContext(userId: string | MockUser | null = "user-1"): MockCo
   const entities = {
     User: entitySpy(),
     Task: entitySpy(),
+    TaskUpdate: entitySpy(),
     Project: entitySpy(),
     Goal: entitySpy(),
     InboxItem: entitySpy(),

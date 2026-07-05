@@ -20,7 +20,7 @@ function typeIntoInput(text: string) {
 describe("CapturePopover", () => {
   describe("rendering", () => {
     it("shows the input with the NL-parse example in the placeholder", () => {
-      renderInContext(<CapturePopover onClose={() => {}} onSubmit={() => {}} />);
+      renderInContext(<CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />);
       const input = screen.getByLabelText("Capture");
       expect(input).toBeInTheDocument();
       expect(input).toHaveAttribute(
@@ -30,21 +30,21 @@ describe("CapturePopover", () => {
     });
 
     it("auto-focuses the input on open", () => {
-      renderInContext(<CapturePopover onClose={() => {}} onSubmit={() => {}} />);
+      renderInContext(<CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />);
       expect(screen.getByLabelText("Capture")).toHaveFocus();
     });
   });
 
   describe("live NL parsing → preview chips (F2)", () => {
     it("shows no chips when the input is empty", () => {
-      renderInContext(<CapturePopover onClose={() => {}} onSubmit={() => {}} />);
+      renderInContext(<CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />);
       typeIntoInput("");
       expect(screen.queryByText(/tomorrow/i)).not.toBeInTheDocument();
     });
 
     it("shows chips as tokens are typed", () => {
       const { container } = renderInContext(
-        <CapturePopover onClose={() => {}} onSubmit={() => {}} />,
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       typeIntoInput("Email Sarah tomorrow !3 ~20m #mvp");
 
@@ -58,7 +58,7 @@ describe("CapturePopover", () => {
     });
 
     it("plain text (no tokens) produces no chips", () => {
-      renderInContext(<CapturePopover onClose={() => {}} onSubmit={() => {}} />);
+      renderInContext(<CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />);
       typeIntoInput("just a thought");
       expect(
         screen.queryByText(/today|tomorrow|important|#/i),
@@ -71,7 +71,7 @@ describe("CapturePopover", () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const onClose = vi.fn();
       renderInContext(
-        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
 
       const input = typeIntoInput("A real thought");
@@ -87,7 +87,7 @@ describe("CapturePopover", () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const onClose = vi.fn();
       renderInContext(
-        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
 
       const input = typeIntoInput("Another thought");
@@ -102,7 +102,7 @@ describe("CapturePopover", () => {
     it("⌘Enter rapid-fire stacks captured items at the top", async () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       renderInContext(
-        <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
 
       const input = typeIntoInput("first thought");
@@ -122,7 +122,7 @@ describe("CapturePopover", () => {
       const onSubmit = vi.fn();
       const onClose = vi.fn();
       renderInContext(
-        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
 
       fireEvent.keyDown(screen.getByLabelText("Capture"), { key: "Enter" });
@@ -133,7 +133,7 @@ describe("CapturePopover", () => {
     it("whitespace-only input does not capture", () => {
       const onSubmit = vi.fn();
       renderInContext(
-        <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
 
       const input = typeIntoInput("   ");
@@ -144,7 +144,7 @@ describe("CapturePopover", () => {
     it("Shift+Enter does NOT capture (reserved for newline / Phase 3 expand)", () => {
       const onSubmit = vi.fn();
       renderInContext(
-        <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
 
       const input = typeIntoInput("draft");
@@ -164,7 +164,7 @@ describe("CapturePopover", () => {
       const onClose = vi.fn();
       const onSubmit = vi.fn();
       renderInContext(
-        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       typeIntoInput("a draft I'll discard");
       fireEvent.click(screen.getByLabelText(/close without saving/i));
@@ -176,7 +176,7 @@ describe("CapturePopover", () => {
       const onClose = vi.fn();
       const onSubmit = vi.fn();
       const { container } = renderInContext(
-        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       fireEvent.click(container.querySelector(".aa-overlay")!);
       expect(onClose).toHaveBeenCalled();
@@ -186,7 +186,7 @@ describe("CapturePopover", () => {
     it("clicking inside the card does NOT close", () => {
       const onClose = vi.fn();
       const { container } = renderInContext(
-        <CapturePopover onClose={onClose} onSubmit={() => {}} />,
+        <CapturePopover onClose={onClose} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       fireEvent.click(container.querySelector(".aa-overlay-card")!);
       expect(onClose).not.toHaveBeenCalled();
@@ -198,7 +198,7 @@ describe("CapturePopover", () => {
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const onClose = vi.fn();
       renderInContext(
-        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       typeIntoInput("final thought");
       fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
@@ -208,14 +208,14 @@ describe("CapturePopover", () => {
 
     it("Save is disabled when the input is empty", () => {
       renderInContext(
-        <CapturePopover onClose={() => {}} onSubmit={() => {}} />,
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled();
     });
 
     it("Save is disabled for whitespace-only input", () => {
       renderInContext(
-        <CapturePopover onClose={() => {}} onSubmit={() => {}} />,
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       typeIntoInput("   ");
       expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled();
@@ -231,7 +231,7 @@ describe("CapturePopover", () => {
       const onSubmit = vi.fn().mockRejectedValue(new Error("Not authenticated."));
       const onClose = vi.fn();
       renderInContext(
-        <CapturePopover onClose={onClose} onSubmit={onSubmit} />,
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
 
       const input = typeIntoInput("a thought that won't save");
@@ -248,7 +248,7 @@ describe("CapturePopover", () => {
     it("falls back to a calm default when the error carries no message", async () => {
       const onSubmit = vi.fn().mockRejectedValue(new Error(""));
       renderInContext(
-        <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
 
       fireEvent.keyDown(typeIntoInput("x"), { key: "Enter" });
@@ -261,7 +261,7 @@ describe("CapturePopover", () => {
     it("clears the error once the user edits the text", async () => {
       const onSubmit = vi.fn().mockRejectedValue(new Error("Not authenticated."));
       renderInContext(
-        <CapturePopover onClose={() => {}} onSubmit={onSubmit} />,
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
 
       const input = typeIntoInput("a thought");

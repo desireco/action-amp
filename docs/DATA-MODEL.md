@@ -33,6 +33,15 @@
 > one short line ("what this lens is for"). Lens configuration (create/rename/
 > recolor/edit-purpose/delete) is Pro-only; FREE gets the seeded two (Me usable,
 > Work visible-but-locked). See `docs/specs/custom-lenses.md`.
+>
+> v5 (2026-07-04): **Capture grammar v2.** The NL sigils are reorganized: `#`
+> is tags (was: project + tags), `@` is time only (was: tags + time), `[[lens]]`
+> is the new explicit lens override, `!`/`~` unchanged. Projects are matched
+> from free text by a resolver (no sigil). `InboxItem.parsedLens` stores the
+> `[[ ]]` token (null when absent or unknown). The legacy `parsedProject` field
+> stays on the model but is no longer populated by the v2 parser — the resolver
+> works off the cleaned text directly. The InboxItem remains unscoped; the lens
+> is confirmed at triage. See `docs/specs/capture-grammar.md`.
 
 ---
 
@@ -46,8 +55,8 @@
              ├─ Task        ← an atomic action (THE focus candidate)
              └─ Resource    ← reference material, not an action  [PARA Resource]
 
-  Tag             ← GTD "@context": @errands, @phone, ~15m, low-energy
-                     (focus refinements — Phase 2 nuance)
+  Tag             ← GTD "@context": #errands, #phone, ~15m, low-energy
+                     (focus refinements — Phase 2 nuance; `#`-prefixed at capture per grammar v2)
   Archive         ← PARa's A: completed/dead items  [Logbook]
   Inbox           ← GTD's Inbox: universal, single queue
 ```
@@ -66,8 +75,8 @@
   (PARA "Resource".)
 - **Goal** = the organizing layer — **replaces PARA's Areas.** Active &
   outcome-oriented ("Run a 10k", "Ship product v2") rather than passive buckets
-  ("Health", "Work"). Projects and standalone Tasks link to a Goal to express
-  *why* they matter.
+  ("Health", "Work"). Projects link to a Goal to express *why* they matter;
+  Tasks do not align directly to Goals.
 - **Lens** = the scoping switch (Work / Me). **Every Goal, Project, and
   standalone Task belongs to exactly one Lens.** Switching Lens re-scopes the
   whole UI and the focus engine.
@@ -85,7 +94,12 @@ setting a Task to **XL prompts you to break it down** (convert it to a Project,
 ## 2. The universal Inbox
 
 - **Exactly one** Inbox. All capture (quick-add, email-in, etc.) lands here.
-- An inbox entry is an **InboxItem**: raw text + parsed metadata (dates/tags the NL parser found) + `status: unprocessed`.
+- An inbox entry is an **InboxItem**: raw text + parsed metadata — `parsedDate`,
+  `parsedPriority`, `parsedSize`, `parsedTags`, `parsedProject` (legacy, unused
+  by the server — see v5 below), `parsedLens` (the `[[lens]]` token, or null) —
+  + `status: unprocessed`. The InboxItem itself is still **unscoped** (no
+  `lensId`); `parsedLens` is a *hint* that pre-fills the triage Context step,
+  not an assignment. Capture is universal; the lens is confirmed at triage.
 - Nothing leaves the Inbox by aging or by being dated — it only leaves through **triage**.
 
 ---
@@ -100,7 +114,7 @@ This is the heart of the model. During triage, each InboxItem is transformed int
 | **"This is actually a big outcome"** | → **Project** (the text becomes the Project name) | "Plan Q3 launch" → new Project |
 | **"This is a step in something I'm already doing"** | → **Task** inside an existing **Project** | "Draft press release" → "Q3 launch" project |
 | **"This is reference, not an action"** | → **Resource** filed under a **Project** | "Competitor pricing PDF" → "Q3 launch" resources |
-| **"This supports a bigger goal"** | → **Task/Project** linked to a **Goal** | "Write blog post" → Goal: "Grow audience" |
+| **"This supports a bigger goal"** | → **Project** linked to a **Goal** | "Launch newsletter" → Goal: "Grow audience" |
 
 So the InboxItem is **polymorphic at rest, concrete after triage.** One input shape, five possible output shapes.
 
@@ -132,7 +146,7 @@ Once triaged, items live in views defined by their attributes — *not* by folde
 - **Upcoming** — Tasks/Projects with a future date.
 - **Someday** — Tasks with no date and no Project (GTD "Someday/Maybe").
 - **Projects** — all Projects, grouped by Goal.
-- **Goals** — all Goals in the active Lens, with their linked Projects/Tasks rolled up.
+- **Goals** — all Goals in the active Lens, with their linked Projects rolled up.
 - **Archive / Logbook** — completed/dead items (PARA "Archive").
 
 The Inbox is the *only* queue. Everything else is a *view* derived from each item's attributes and relationships.
@@ -145,7 +159,8 @@ The matcher only ever considers **Tasks** (never Resources, never bare Projects)
 
 - A **Task** inside a **Project** is a candidate.
 - A **Project** with no Tasks is invisible to focus (it's a container, not an action) — though the UI can show "this Project has no next action" as a nudge.
-- A **Goal** is never surfaced directly; it's shown as supporting detail ("Email Sarah · supports: Grow audience").
+- A **Goal** is never surfaced directly; it's shown as supporting detail through
+  a Project ("Email Sarah · DOL Hunt · supports: Grow audience").
 
 ---
 

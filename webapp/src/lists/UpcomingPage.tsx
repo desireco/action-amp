@@ -1,19 +1,38 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getTasks } from "wasp/client/operations";
-import { TaskRow, CompletionCircle, GroupedList, type GroupDef, type TaskRowTask } from "../components/ui";
+import { getTasks, updateTaskContent } from "wasp/client/operations";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  Button,
+  TaskRow,
+  CompletionCircle,
+  GroupedList,
+  type GroupDef,
+  type TaskRowTask,
+} from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
 import "./ListShell.css";
+import "./UpcomingPage.css";
 
 /**
  * Upcoming — tasks with status=UPCOMING (or a future dueDate), grouped by
- * how far out they are: This week / Next week / Later.
+ * how far out they are: Overdue / This week / Next week / Later / Unscheduled.
+ *
+ * Buckets:
+ *   - Overdue:     dueDate in the past. Surfaced at the top in rose so a
+ *                  forward-looking list never quietly hides something past due.
+ *   - This week:   due in 0–7 days (inclusive of today).
+ *   - Next week:   due in 8–14 days.
+ *   - Later:       due beyond 14 days.
+ *   - Unscheduled: no dueDate. Tasks with no date don't pretend to be "this
+ *                  week" — they get a clear bucket of their own.
  */
 export function UpcomingPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "UPCOMING", isDone: false } : undefined,
@@ -22,52 +41,108 @@ export function UpcomingPage() {
 
   const groups = useMemo<GroupDef<TaskRowTask>[]>(() => {
     if (!tasks) return [];
-    const buckets: Record<string, TaskRowTask[]> = { "This week": [], "Next week": [], Later: [] };
+    const buckets: Record<string, TaskRowTask[]> = {
+      Overdue: [],
+      "This week": [],
+      "Next week": [],
+      Later: [],
+      Unscheduled: [],
+    };
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     for (const t of tasks) {
       const due = t.dueDate ? new Date(t.dueDate) : null;
       if (!due) {
-        buckets["This week"].push(t);
+        buckets["Unscheduled"].push(t);
         continue;
       }
       due.setHours(0, 0, 0, 0);
       const diffDays = Math.round((due.getTime() - now.getTime()) / 86_400_000);
-      if (diffDays <= 7) buckets["This week"].push(t);
+      if (diffDays < 0) buckets["Overdue"].push(t);
+      else if (diffDays <= 7) buckets["This week"].push(t);
       else if (diffDays <= 14) buckets["Next week"].push(t);
       else buckets["Later"].push(t);
     }
-    return Object.entries(buckets).map(([label, items]) => ({ key: label, label, items }));
+    return Object.entries(buckets).map(([label, items]) => ({
+      key: label,
+      label,
+      items,
+    }));
   }, [tasks]);
 
-  if (!isLoading && (tasks?.length ?? 0) === 0) {
-    return (
-      <ListEmpty
-        icon={<CompletionCircle size="md" />}
-        title="Nothing upcoming."
-        text="Tasks with a future date land here. Add a due date from triage or edit a task to schedule it."
-      />
-    );
-  }
+  const handleSaveTaskContent = async (task: TaskRowTask, content: string) => {
+    await updateTaskContent({ taskId: task.id, content });
+    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+    queryClient.invalidateQueries({ queryKey: ["getTask"] });
+  };
+
+  const count = tasks?.length ?? 0;
+  const overdueCount =
+    groups.find((g) => g.key === "Overdue")?.items.length ?? 0;
+
+  // Hero copy adapts to what's on the page. The verb is always forward-looking.
+  const heroSubtitle = (() => {
+    if (isLoading) return "Tasks with a future date land here.";
+    if (overdueCount > 0) {
+      return `${overdueCount} overdue — these slipped past their date.`;
+    }
+    if (count === 0) return "Tasks with a future date land here.";
+    return "The bench. Snoozed or scheduled — pull one onto Today when it's time.";
+  })();
 
   return (
-    <div className="aa-list-shell">
-      <header className="aa-list-header">
-        <div>
+    <section className="aa-upcoming" aria-label="Upcoming">
+      <header className="aa-list-header aa-upcoming__hero">
+        <div className="aa-upcoming__hero-copy">
           <div className="aa-list-header__eyebrow">Upcoming</div>
-          <h1 className="aa-list-header__title">{tasks?.length ?? 0} scheduled</h1>
+          <h1 className="aa-list-header__title aa-upcoming__title">
+            {isLoading ? "—" : `${count} scheduled`}
+          </h1>
+          <p className="aa-upcoming__subtitle">{heroSubtitle}</p>
         </div>
       </header>
-      <GroupedList
-        groups={groups}
-        keepEmptyGroups={false}
-        renderItem={(task) => (
-          <TaskRow
-            task={task}
-            onOpen={() => navigate(`/app/tasks/${task.id}`)}
-          />
-        )}
-      />
-    </div>
+
+      {isLoading ? (
+        <div className="aa-upcoming__loading" aria-hidden="true">
+          <div className="aa-upcoming__skeleton-group">
+            <div className="aa-upcoming__skeleton aa-upcoming__skeleton--heading" />
+            {[0, 1].map((i) => (
+              <div
+                key={i}
+                className="aa-upcoming__skeleton aa-upcoming__skeleton--row"
+              />
+            ))}
+          </div>
+        </div>
+      ) : count === 0 ? (
+        <ListEmpty
+          icon={<CompletionCircle size="md" />}
+          title="Nothing upcoming."
+          text="Tasks with a future date land here. Add a due date from triage or edit a task to schedule it."
+          action={
+            <Button variant="secondary" size="md" onClick={() => navigate("/app/inbox")}>
+              Go to Inbox
+            </Button>
+          }
+        />
+      ) : (
+        <GroupedList
+          className="aa-upcoming__list"
+          groups={groups}
+          keepEmptyGroups={false}
+          headingLevel={2}
+          groupClassName={(label) =>
+            label === "Overdue" ? "aa-grouped__group--overdue" : undefined
+          }
+          renderItem={(task) => (
+            <TaskRow
+              task={task}
+              onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
+              onSaveContent={handleSaveTaskContent}
+            />
+          )}
+        />
+      )}
+    </section>
   );
 }

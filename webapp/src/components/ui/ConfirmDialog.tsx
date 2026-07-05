@@ -18,6 +18,7 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   /** Use the rose danger style for the confirm button (destructive actions). */
   danger?: boolean;
+  confirmDisabled?: boolean;
   onConfirm: () => void;
   onClose: () => void;
 }
@@ -28,6 +29,7 @@ export function ConfirmDialog({
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
   danger = false,
+  confirmDisabled = false,
   onConfirm,
   onClose,
 }: ConfirmDialogProps) {
@@ -68,7 +70,12 @@ export function ConfirmDialog({
           <Button variant="secondary" size="sm" onClick={onClose}>
             {cancelLabel}
           </Button>
-          <Button variant={danger ? "danger" : "primary"} size="sm" onClick={onConfirm}>
+          <Button
+            variant={danger ? "danger" : "primary"}
+            size="sm"
+            onClick={onConfirm}
+            disabled={confirmDisabled}
+          >
             {confirmLabel}
           </Button>
         </div>

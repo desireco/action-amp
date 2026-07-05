@@ -82,7 +82,7 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
   - `Z` / `X` — zoom out / in (scope)
   - `1` `2` `3` — Plan / Do / Review (mode)
   - `S` — Switch task (opens confirm)
-  - `⌘K` / `⌘/` — Capture mode (works in text fields — the focus-protector)
+  - `⌘K` — Capture mode (works in text fields — the focus-protector)
   - `⇧C` — Capture (typing-safe convenience; same as ⌘K)
   - `⌘\` — Command mode
   - `⌘L` — toggle the Lens switcher (segmented ≤3 lenses; chip + popover ≥4). Works in text fields like the other ⌘-chords.
@@ -101,16 +101,16 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
 - **Keyset (intentionally tiny):**
   - `Esc` or `Space` — pause
   - `D` — done
-  - `⌘K` / `⌘/` — **capture (the one exception)** — protects focus from stray thoughts
+  - `⌘K` — **capture (the one exception)** — protects focus from stray thoughts
   - That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 - **Sub-states:** `working ⇄ paused → done`. Paused = amber pulse, timer frozen. Done = checkmark fills.
 - **Mobile:** long-press the card → enters working. Tap the circle = pause/resume. Swipe-down = done.
 - **Chrome:** **all chrome hidden** (not dimmed — gone). Only the task card, timer, feelings, note, and the exit controls.
 - **Indicator:** `WORKING` (teal) or `PAUSED` (amber).
 
-### CAPTURE mode (`⌘K` / `⌘/`)
+### CAPTURE mode (`⌘K`)
 - **Purpose:** dump a thought into the universal Inbox, fast, from anywhere.
-- **Entry:** `⌘K` or `⌘/` (even inside Working mode — the focus-protector).
+- **Entry:** `⌘K` (even inside Working mode — the focus-protector).
 - **Exit:** `Enter` (saves to Inbox, returns to prior mode) / `Esc` (cancels).
 - **Keyset:** type freely; NL parsing chips appear inline; `Tab` cycles field focus.
 - **Mobile:** pull-down-from-top gesture (iOS-standard) or FAB.
@@ -181,7 +181,7 @@ translate to thumbs.
 | Start working | `Enter` / Do this | long-press card |
 | Pause/resume | `Esc` / `Space` | tap circle |
 | Mark done | `D` / Done ✓ | swipe-down on card |
-| Capture | `⌘K` / `⌘/` | pull-down from top / FAB (FAB stays in working mode as a quiet ghost — the focus-protector exception) |
+| Capture | `⌘K` | pull-down from top / FAB (FAB stays in working mode as a quiet ghost — the focus-protector exception) |
 | Switch task | `S` | swipe-left-and-hold / "next" affordance |
 | Switch Lens | `⌘L` | tap lens chip / segmented control |
 | Peek past / future | `←` / `→` | swipe from left/right screen edge |

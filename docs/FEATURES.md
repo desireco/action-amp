@@ -35,7 +35,7 @@ The product bet: **overwhelm happens at step 3, not step 1.** The home screen is
 | # | Feature | Status | Notes |
 |---|---|---|---|
 | **F1** | Global quick-add (`⌘K`) | ✅ Shipped | `CapturePopover.tsx`. Floating input from anywhere; stays on current screen. |
-| **F2** | Natural-language parsing | ✅ Shipped | `parseCapture.ts`. `tomorrow` → date, `#x` → project, `@x` → tag, `!2` → priority, `~20m` → size. Tokens show as inline chips. |
+| **F2** | Natural-language parsing | ✅ Shipped | `parseCapture.ts`. Grammar v2 (locked 2026-07-04): `tomorrow` → date, `#x` → tag, `@x` → time, `[[x]]` → lens override, `!2` → priority, `~20m` → size (maps to S/M/L/XL). Tokens show as inline chips. See `docs/specs/capture-grammar.md`. |
 | **F3** | Inbox | ✅ Shipped | Everything lands here unassigned until triaged. The only "queue" concept. |
 | **F4** | Capture-with-context (`Shift+Enter`) | 🟡 Phase 2 | Full editor from the palette (notes, subtasks, date pickers). |
 | **F5** | Email-in capture | 🟡 Phase 2 | Per-user inbox address; forwarding creates an item. |
@@ -60,7 +60,7 @@ Goal: move items *out* of the inbox into a place the focus engine can use. This 
 - **Lens** — active life-context switch (Work / Me; custom lenses are Pro — F26).
 - **Goals** — organizing layer (replaces PARA's "Areas"): active outcomes.
 - **Projects** — multi-step outcomes (live under a Goal).
-- **Tags** — cross-cutting: `~15m`, `low-energy`, `@errands`. The focus engine leans on these.
+- **Tags** — cross-cutting: `~15m`, `~1h`, `low-energy`, `high-energy`, `#errands`, `#phone`. **The focus engine leans on these.**
 
 ---
 

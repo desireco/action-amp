@@ -1,0 +1,9 @@
+@import "../styles/tokens.css";
+
+.aa-goals {
+  max-width: 760px;
+}
+
+.aa-goals__dot {
+  opacity: 0.6;
+}

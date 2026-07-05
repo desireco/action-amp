@@ -1,20 +1,23 @@
-import { useEffect, useRef, useState } from "react";
-import { BrandMark, Chip } from "./index";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { BrandMark } from "./BrandMark";
+import { Chip } from "./Chip";
 import { parseCapture, type ParsedCapture } from "../../inbox/parseCapture";
+import { detectMention, type MentionState } from "./detectMention";
+import { getCaretCoordinates } from "./caretCoords";
 import "./Overlays.css";
 
 /**
  * CapturePopover — the universal quick-capture input (⌘K).
  *
- * Phase 1: rapid-fire + auto-grow.
- *   - Enter       → capture + close (commit this one and get back to work)
- *   - ⌘Enter      → capture + clear + keep open (add to the list, rapid-fire)
- *   - Shift+Enter → literal newline (textarea default; expand reclaims this in Phase 3)
- *   - Esc         → close without saving (handled by the parent keymap)
+ * Pure-UI component: all data (projects, lens names) arrives as props
+ * from AppShell, which gates the queries on auth. The popover owns only input
+ * state + the # autocomplete interaction.
  *
- * The input is an auto-growing textarea: one line, wraps, grows to ~4 lines,
- * then scrolls internally. Same element on mobile and desktop (TRIAGE.md §6).
- * A "✓ captured" stack at the top shows this session's captures, newest first.
+ *   Enter       → capture + close
+ *   ⌘Enter      → capture + clear + keep open (rapid-fire)
+ *   Shift+Enter → literal newline
+ *   #           → opens autocomplete dropdown (projects ▣)
+ *                 Arrow keys navigate, Enter/Tab accepts, Esc closes
  */
 
 interface CapturedItem {
@@ -23,33 +26,100 @@ interface CapturedItem {
   parsed: ParsedCapture;
 }
 
-const MAX_HEIGHT_PX = 96; // ~4 lines at 1rem / 1.5 line-height
+interface Mention {
+  name: string;
+  kind: "project";
+  lensName?: string | null;
+}
+
+const MAX_HEIGHT_PX = 96;
+const MENTION_LIMIT = 8;
 
 export function CapturePopover({
   onClose,
   onSubmit,
+  projects,
+  customLensNames,
+  activeLensName,
 }: {
   onClose: () => void;
   onSubmit: (text: string) => Promise<void> | void;
+  projects: { id: string; name: string; lensName: string | null }[];
+  customLensNames: string[];
+  activeLensName: string | null;
 }) {
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [captured, setCaptured] = useState<CapturedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [caretIndex, setCaretIndex] = useState(0);
+  const [mentionSel, setMentionSel] = useState(0);
+  const [mentionPos, setMentionPos] = useState<{ top: number; left: number } | null>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  // Live parse for the inline preview chips (F2).
-  const parsed = text.trim() ? parseCapture(text) : null;
+  const parsed = text.trim()
+    ? parseCapture(text, new Date(), customLensNames)
+    : null;
 
-  // Focus on open, then grow to fit any initial value.
+  // Detect an open `#`-mention at the caret.
+  const mention: MentionState | null = useMemo(
+    () => detectMention(text, caretIndex),
+    [text, caretIndex],
+  );
+
+  // Filter projects by the mention query. Dedupe by name —
+  // each lens seeds its own "General", but the dropdown should show one row per
+  // name (the parser only stores the name anyway).
+  const mentionMatches: Mention[] = useMemo(() => {
+    if (!mention) return [];
+    const q = mention.query;
+    const seen = new Set<string>();
+    const picks: Mention[] = [];
+    for (const p of projects) {
+      const key = p.name.toLowerCase();
+      if (seen.has(key) || !key.startsWith(q)) continue;
+      seen.add(key);
+      picks.push({ name: p.name, kind: "project", lensName: p.lensName });
+    }
+    return picks.slice(0, MENTION_LIMIT);
+  }, [mention, projects]);
+
+  useEffect(() => {
+    setMentionSel(0);
+  }, [mentionMatches.length]);
+
+  // Position the dropdown at the caret. Coordinates are card-relative (the
+  // dropdown is a sibling of the head, absolutely positioned against the card).
+  useEffect(() => {
+    if (!mention || mentionMatches.length === 0) {
+      setMentionPos(null);
+      return;
+    }
+    const ta = taRef.current;
+    const card = cardRef.current;
+    if (!ta || !card) {
+      setMentionPos({ top: 56, left: 16 });
+      return;
+    }
+    try {
+      const { top, left, lineHeight } = getCaretCoordinates(ta, mention.end);
+      const taRect = ta.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      setMentionPos({
+        top: taRect.top - cardRect.top + top + lineHeight,
+        left: Math.max(taRect.left - cardRect.left + left, 0),
+      });
+    } catch {
+      setMentionPos({ top: 56, left: 16 });
+    }
+  }, [mention, mentionMatches.length]);
+
   useEffect(() => {
     taRef.current?.focus();
     grow();
   }, []);
 
-  // ponytail: JS auto-grow. `field-sizing: content` (native CSS) lacks Firefox
-  // support as of 2025, so 5 lines of JS wins for universal behavior. Upgrade
-  // to field-sizing once Firefox ships it.
   function grow() {
     const el = taRef.current;
     if (!el) return;
@@ -59,11 +129,33 @@ export function CapturePopover({
 
   function resetInput() {
     setText("");
-    // shrink back to one line after clearing
+    setCaretIndex(0);
+    setMentionSel(0);
+    setMentionPos(null);
     const el = taRef.current;
     if (el) el.style.height = "auto";
     requestAnimationFrame(() => taRef.current?.focus());
   }
+
+  const acceptMention = useCallback((m: Mention) => {
+    const ta = taRef.current;
+    if (!ta || !mention) return;
+    const before = text.slice(0, mention.at);
+    const after = text.slice(mention.end);
+    const inserted = /\s/.test(m.name)
+      ? `#[${m.name}] `
+      : `#${m.name} `;
+    const next = before + inserted + after;
+    const newCaret = (before + inserted).length;
+    setText(next);
+    setCaretIndex(newCaret);
+    setMentionPos(null);
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(newCaret, newCaret);
+      grow();
+    });
+  }, [text, mention]);
 
   async function capture(close: boolean) {
     const trimmed = text.trim();
@@ -75,16 +167,12 @@ export function CapturePopover({
         onClose();
         return;
       }
-      // rapid-fire: record the capture, clear, keep going
-      const p = parseCapture(trimmed);
+      const p = parseCapture(trimmed, new Date(), customLensNames);
       setCaptured((prev) =>
         [{ id: Date.now(), text: p.cleanText, parsed: p }, ...prev].slice(0, 3),
       );
       resetInput();
     } catch (err) {
-      // Leave the text in place so the user can edit and retry. Surface the
-      // message inline — there is no other channel, and a silent catch turns
-      // every server failure into "nothing happened."
       console.error("[capture] submit failed:", err);
       setError(
         err instanceof Error && err.message
@@ -97,13 +185,34 @@ export function CapturePopover({
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (mention && mentionMatches.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMentionSel((i) => (i + 1) % mentionMatches.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMentionSel((i) => (i - 1 + mentionMatches.length) % mentionMatches.length);
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        const choice = mentionMatches[mentionSel] ?? mentionMatches[0];
+        if (choice) acceptMention(choice);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setMentionPos(null);
+        return;
+      }
+    }
     if (e.key !== "Enter") return;
     if (e.metaKey || e.ctrlKey) {
-      // ⌘Enter → capture + keep open (add to the list, rapid-fire)
       e.preventDefault();
       void capture(false);
     } else if (!e.shiftKey) {
-      // Enter → capture + close (Shift+Enter = literal newline)
       e.preventDefault();
       void capture(true);
     }
@@ -118,10 +227,10 @@ export function CapturePopover({
       onClick={onClose}
     >
       <div
+        ref={cardRef}
         className="aa-overlay-card aa-capture"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* rapid-fire captured stack (newest first) */}
         {captured.length > 0 && (
           <div className="aa-capture__captured" aria-live="polite">
             {captured.map((item) => (
@@ -152,13 +261,20 @@ export function CapturePopover({
             ref={taRef}
             rows={1}
             className="aa-capture__textarea"
-            placeholder={`What's on your mind?  (try: "Email Sarah #mvp today !3")`}
+            placeholder={`What's on your mind?  (try: "Email Sarah tomorrow #mvp !3")`}
             value={text}
             onChange={(e) => {
               setText(e.target.value);
               setError(null);
+              setCaretIndex(e.target.selectionStart ?? e.target.value.length);
               grow();
             }}
+            onKeyUp={(e) =>
+              setCaretIndex(e.currentTarget.selectionStart ?? e.currentTarget.value.length)
+            }
+            onClick={(e) =>
+              setCaretIndex(e.currentTarget.selectionStart ?? e.currentTarget.value.length)
+            }
             onKeyDown={handleKeyDown}
             disabled={submitting}
             aria-label="Capture"
@@ -176,13 +292,51 @@ export function CapturePopover({
           </button>
         </div>
 
+        {mention && mentionMatches.length > 0 && mentionPos && (
+          <div
+            className="aa-capture__mention"
+            style={{ top: mentionPos.top, left: mentionPos.left }}
+            role="listbox"
+            aria-label="Projects"
+          >
+            {mentionMatches.map((m, i) => (
+              <button
+                key={m.name}
+                type="button"
+                role="option"
+                aria-selected={i === mentionSel}
+                className={`aa-capture__mention-item ${i === mentionSel ? "active" : ""}`}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  acceptMention(m);
+                }}
+                onMouseEnter={() => setMentionSel(i)}
+              >
+                <span className="aa-capture__mention-mark" aria-hidden="true">
+                  ▣
+                </span>
+                <span className="aa-capture__mention-name">{m.name}</span>
+                {m.lensName && m.lensName !== activeLensName && (
+                  <span className="aa-capture__mention-lens">{m.lensName}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
         {parsed &&
           (parsed.parsedDate ||
             parsed.parsedPriority ||
             parsed.parsedSize ||
+            parsed.parsedLens ||
             parsed.parsedProject ||
             parsed.parsedTags.length > 0) && (
             <div className="aa-capture__preview">
+              {parsed.parsedLens && (
+                <Chip variant="teal" small>
+                  [[{parsed.parsedLens}]]
+                </Chip>
+              )}
               {parsed.parsedDate && (
                 <Chip variant="teal" small>
                   📅 {formatPreviewDate(parsed.parsedDate)}
@@ -209,11 +363,7 @@ export function CapturePopover({
                 </Chip>
               )}
               {parsed.parsedTags.map((t) => (
-                <Chip
-                  key={t}
-                  variant={t.startsWith("@") ? "amber" : "violet"}
-                  small
-                >
+                <Chip key={t} variant="violet" small>
                   {t}
                 </Chip>
               ))}
@@ -248,10 +398,14 @@ export function CapturePopover({
   );
 }
 
-/** Chips for a captured-stack row — same tokens as the live preview. */
 function CapturedChips({ parsed }: { parsed: ParsedCapture }) {
   return (
     <span className="aa-capture__captured-chips">
+      {parsed.parsedLens && (
+        <Chip variant="teal" small>
+          [[{parsed.parsedLens}]]
+        </Chip>
+      )}
       {parsed.parsedDate && (
         <Chip variant="teal" small>
           {formatPreviewDate(parsed.parsedDate)}
@@ -268,7 +422,7 @@ function CapturedChips({ parsed }: { parsed: ParsedCapture }) {
         </Chip>
       )}
       {parsed.parsedTags.slice(0, 2).map((t) => (
-        <Chip key={t} variant={t.startsWith("@") ? "amber" : "violet"} small>
+        <Chip key={t} variant="violet" small>
           {t}
         </Chip>
       ))}

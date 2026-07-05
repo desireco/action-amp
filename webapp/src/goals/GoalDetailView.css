@@ -1,0 +1,132 @@
+@import "../styles/tokens.css";
+
+/* Goal detail shares the .aa-task container width + the global
+   .aa-grouped / .aa-list-header / .aa-list-empty styles. Only the
+   goal-specific layout lives here. Mirrors ProjectDetailPage.css. */
+.aa-goal {
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-2xl);
+}
+
+.aa-goal__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: flex-start;
+  gap: var(--aa-space-xl);
+  margin-bottom: 0;
+}
+
+.aa-goal__header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.aa-goal__meta {
+  margin: var(--aa-space-lg) 0 0;
+  font-size: 1rem;
+  color: var(--aa-text-3);
+}
+
+/* "Focus: <project>" — a single muted line under the header (spec §E). Quiet,
+   not a banner; absent when there's no next project. */
+.aa-goal__next {
+  margin: var(--aa-space-xs) 0 0;
+  font-size: 1rem;
+  color: var(--aa-text-3);
+}
+.aa-goal__next a {
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+}
+.aa-goal__next a:hover {
+  text-decoration: underline;
+}
+
+.aa-goal__desc {
+  max-width: 58ch;
+  font-size: 1.1rem;
+  line-height: 1.58;
+  color: var(--aa-text-2);
+  margin: calc(-1 * var(--aa-space-xs)) 0 0;
+}
+
+/* ---- Linked projects list ---- */
+.aa-goal__projects {
+  margin: 0;
+}
+
+.aa-goal__projects-empty {
+  margin: 0;
+  padding: var(--aa-space-lg);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-goal__projects-empty h2 {
+  margin: 0 0 var(--aa-space-xs);
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.aa-goal__projects-empty p {
+  margin: 0;
+  color: var(--aa-text-3);
+  line-height: 1.5;
+}
+.aa-goal__project-row {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+}
+.aa-goal__project-reorder {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.aa-goal__reorder-btn {
+  background: none;
+  border: none;
+  color: var(--aa-text-3);
+  cursor: pointer;
+  padding: 0 var(--aa-space-xs);
+  font-size: 0.75rem;
+  line-height: 1.1;
+  border-radius: var(--aa-radius-xs);
+  transition: color var(--aa-dur-base) var(--aa-ease-out), background var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-goal__reorder-btn:hover:not(:disabled) {
+  color: var(--aa-teal-cta);
+  background: var(--aa-surface-muted);
+}
+.aa-goal__reorder-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.aa-goal__project-link {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  flex: 1;
+  min-width: 0;
+  padding: var(--aa-space-sm) 0;
+  text-decoration: none;
+  color: var(--aa-text);
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-goal__project-link:hover {
+  color: var(--aa-teal-cta);
+}
+.aa-goal__project-name {
+  flex: 1;
+  font-weight: 500;
+}
+.aa-goal__project-pct {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--aa-text-3);
+}

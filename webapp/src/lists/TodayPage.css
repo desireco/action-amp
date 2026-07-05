@@ -3,7 +3,86 @@
 /* Today-specific styles — the list chrome lives in ListShell.css + GroupedList.css */
 
 .aa-today {
-  max-width: 680px;
+  max-width: 840px;
+}
+
+.aa-today__hero {
+  align-items: center;
+  padding: var(--aa-space-xl);
+  margin-bottom: var(--aa-space-2xl);
+  background:
+    linear-gradient(135deg, var(--aa-active-lens-soft), transparent 58%),
+    var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow: var(--aa-shadow-md);
+}
+
+.aa-today__hero-copy {
+  min-width: 0;
+}
+
+.aa-today__title {
+  font-size: 2rem;
+  letter-spacing: 0;
+}
+
+.aa-today__subtitle {
+  max-width: 28rem;
+  margin: var(--aa-space-xs) 0 0;
+  color: var(--aa-text-3);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.aa-today__meter {
+  display: grid;
+  grid-template-columns: repeat(5, 24px);
+  justify-content: start;
+  gap: var(--aa-space-xs);
+  margin-top: var(--aa-space-md);
+}
+
+.aa-today__meter-dot {
+  width: 24px;
+  height: 6px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-surface-muted-2);
+}
+
+.aa-today__meter-dot--filled {
+  background: var(--aa-teal);
+  box-shadow: 0 0 0 1px var(--aa-teal-soft-strong);
+}
+
+.aa-today__list {
+  gap: var(--aa-space-lg);
+}
+
+.aa-today__list .aa-grouped__group,
+.aa-today__upcoming {
+  padding: var(--aa-space-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-today__list .aa-grouped__heading,
+.aa-today__upcoming .aa-grouped__heading {
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-today__list .aa-grouped__list,
+.aa-today__upcoming .aa-grouped__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+}
+
+.aa-today__list .aa-task-row__title {
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .aa-today__overflow-banner {
@@ -24,50 +103,40 @@
 .aa-today__overflow {
   margin-top: var(--aa-space-xl);
   padding-top: var(--aa-space-xl);
-  border-top: 1px dashed var(--aa-border-strong);
+  border-top: 1px solid var(--aa-border);
 }
 
-/* ---- "Done today" — collapsed by default, expands to show completed rows ---- */
+/* ---- "Done today" — settled work, so a solid border (dashed reads as
+   draft/tentative, the opposite of completed). ---- */
 .aa-today__done-section {
   margin-top: var(--aa-space-xl);
-  padding-top: var(--aa-space-xl);
-  border-top: 1px dashed var(--aa-border-strong);
+  padding: var(--aa-space-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
 }
 .aa-today__done-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--aa-space-sm);
   width: 100%;
   padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
+  margin-bottom: var(--aa-space-md);
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--aa-text-3);
   text-align: left;
-  transition: color var(--aa-dur-base) var(--aa-ease-out);
 }
-.aa-today__done-header:hover {
-  color: var(--aa-text);
+.aa-today__done-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
 }
 .aa-today__done-count {
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--aa-text-4);
-}
-
-/* ---- Today ↔ Upcoming swap UI ---- */
-.aa-today__swap-row {
-  display: flex;
-  align-items: center;
-  gap: var(--aa-space-sm);
-  /* TaskRow is a <li>; we wrap it + the swap button in a flex row. The row
-     fills the list item so the button right-aligns. */
-}
-.aa-today__swap-row > :first-child {
-  flex: 1;
-  min-width: 0;
 }
 
 .aa-today__upcoming-empty {
@@ -76,4 +145,101 @@
   color: var(--aa-text-3);
   font-size: 0.9rem;
   text-align: center;
+}
+
+/* ---- Row action declutter: secondary actions are present in the a11y tree
+   but visually quiet until the row is attended to (hover/focus/keyboard).
+   On touch (no hover) the actions stay visible so there's no hidden UI. The
+   row itself stays the primary affordance (click → focus on this task). ---- */
+.aa-today__list .aa-task-row__actions,
+.aa-today__done-section .aa-task-row__actions {
+  /* The shared TaskRow layout sets min-width: 7rem for stacked edit/save
+     pairs; we only have ghost link-buttons here, so collapse to content. */
+  min-width: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--aa-space-xs);
+}
+
+.aa-today__list .aa-task-row__actions .aa-btn,
+.aa-today__done-section .aa-task-row__actions .aa-btn {
+  width: auto;
+}
+
+@media (hover: hover) {
+  .aa-today__list .aa-task-row__actions,
+  .aa-today__done-section .aa-task-row__actions {
+    opacity: 0;
+    transition: opacity var(--aa-dur-base) var(--aa-ease-out);
+  }
+  .aa-today__list .aa-grouped__item:hover .aa-task-row__actions,
+  .aa-today__list .aa-grouped__item:focus-within .aa-task-row__actions,
+  .aa-today__done-section .aa-grouped__item:hover .aa-task-row__actions,
+  .aa-today__done-section .aa-grouped__item:focus-within .aa-task-row__actions {
+    opacity: 1;
+  }
+  /* Touch fallback below resets opacity back to 1. */
+}
+
+@media (hover: none) {
+  .aa-today__list .aa-task-row__actions,
+  .aa-today__done-section .aa-task-row__actions {
+    opacity: 1;
+  }
+}
+
+/* ---- Loading skeleton (until getTasks resolves) ---- */
+.aa-today__loading {
+  padding: var(--aa-space-md);
+}
+.aa-today__skeleton-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-md);
+}
+.aa-today__skeleton {
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface-muted);
+  animation: aa-today-skeleton-pulse 1.6s var(--aa-ease-out) infinite;
+}
+.aa-today__skeleton--heading {
+  width: 7rem;
+  height: 0.8rem;
+}
+.aa-today__skeleton--row {
+  width: 100%;
+  height: 2.5rem;
+}
+@keyframes aa-today-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aa-today__skeleton {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+@media (max-width: 720px) {
+  .aa-today__hero {
+    align-items: stretch;
+    flex-direction: column;
+    padding: var(--aa-space-lg);
+    margin-bottom: var(--aa-space-xl);
+  }
+
+  .aa-today__hero .aa-btn {
+    width: 100%;
+  }
+
+  .aa-today__title {
+    font-size: 1.65rem;
+  }
+
+  .aa-today__list .aa-grouped__group,
+  .aa-today__upcoming,
+  .aa-today__done-section {
+    padding: var(--aa-space-md);
+  }
 }

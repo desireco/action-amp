@@ -3,9 +3,18 @@ import type {
   CreateProject,
   GetProject,
   CreateTask,
+  SetProjectDone,
+  UpdateProject,
+  DeleteProject,
+  UpdateTask,
 } from "wasp/server/operations";
 import { FREE_LIMITS } from "../billing/config";
-import { assertLensAllowed, assertUnderCap } from "../billing/entitlementHttp";
+import {
+  assertLensAllowed,
+  assertUnderCap,
+  throwHttpStatus,
+} from "../billing/entitlementHttp";
+import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
 
 /**
  * Projects list for the Projects page, scoped to the active Lens.
@@ -33,6 +42,7 @@ export const getProjects = (async (args, context) => {
         where: { isDone: false },
         select: {
           id: true,
+          permalink: true,
           description: true,
           priority: true,
           size: true,
@@ -42,7 +52,7 @@ export const getProjects = (async (args, context) => {
         orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
         take: 1,
       },
-      _count: { select: { tasks: true } },
+      _count: { select: { tasks: { where: { isDone: false } } } },
     },
   });
 
@@ -62,7 +72,9 @@ export const getProjects = (async (args, context) => {
 
   return projects.map((p) => ({
     id: p.id,
+    permalink: p.permalink,
     name: p.name,
+    description: p.description,
     dueDate: p.dueDate,
     goal: p.goal,
     openCount: p._count.tasks, // open (non-done) tasks
@@ -89,27 +101,57 @@ export const createProject = (async (args, context) => {
   const projectCount = await context.entities.Project.count({
     where: { userId: context.user.id, lensId: args.lensId, isDone: false },
   });
-  await assertUnderCap(context, args.lensId, projectCount, FREE_LIMITS.projects, {
-    feature: "a 4th project",
-    reason: "organize more than 3 projects with Pro",
+  await assertUnderCap(
+    context,
+    args.lensId,
+    projectCount,
+    FREE_LIMITS.projects,
+    {
+      feature: "a 4th project",
+      reason: "organize more than 3 projects with Pro",
+    },
+  );
+
+  // Seed `order` so a new project lands at the end of its goal's sequence
+  // (goal-planning spec §E). Standalone projects (no goal) keep order=0;
+  // they sort by name. We count existing projects under the goal — including
+  // done ones, since sequence order spans both.
+  let order = 0;
+  if (args.goalId) {
+    order = await context.entities.Project.count({
+      where: { userId: context.user.id, goalId: args.goalId },
+    });
+  }
+
+  const permalink = await uniquePermalink(name, async (candidate) => {
+    const existing = await context.entities.Project.findFirst({
+      where: { userId: context.user!.id, permalink: candidate },
+      select: { id: true },
+    });
+    return !!existing;
   });
 
   return await context.entities.Project.create({
     data: {
       name,
+      permalink,
       userId: context.user.id,
       lensId: args.lensId,
       goalId: args.goalId,
       description: args.description,
+      order,
     },
-    select: { id: true, name: true },
+    select: { id: true, permalink: true, name: true },
   });
-}) satisfies CreateProject<{
-  name: string;
-  lensId: string;
-  goalId?: string;
-  description?: string;
-}, { id: string; name: string }>;
+}) satisfies CreateProject<
+  {
+    name: string;
+    lensId: string;
+    goalId?: string;
+    description?: string;
+  },
+  { id: string; permalink: string; name: string }
+>;
 
 // ----------------------------------------------------------------
 // Read: a single project for the detail page, with its tasks
@@ -120,7 +162,9 @@ export const createProject = (async (args, context) => {
 // lens — NOT the active sidebar lens, which may differ.
 type ProjectTask = {
   id: string;
+  permalink: string;
   description: string;
+  content: string | null;
   isDone: boolean;
   priority: "LOW" | "NORMAL" | "IMPORTANT";
   size: "S" | "M" | "L" | "XL";
@@ -132,15 +176,24 @@ export const getProject = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const project = await context.entities.Project.findUnique({
-    where: { id: args.id, userId: context.user.id },
+  const project = await context.entities.Project.findFirst({
+    where: {
+      userId: context.user.id,
+      OR: [{ id: args.id }, { permalink: args.id }],
+    },
     include: {
-      goal: { select: { id: true, name: true } },
+      goal: { select: { id: true, permalink: true, name: true } },
       tasks: {
-        orderBy: [{ isDone: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
+        orderBy: [
+          { isDone: "asc" },
+          { priority: "desc" },
+          { createdAt: "asc" },
+        ],
         select: {
           id: true,
+          permalink: true,
           description: true,
+          content: true,
           isDone: true,
           priority: true,
           size: true,
@@ -157,10 +210,12 @@ export const getProject = (async (args, context) => {
   // projects. The lens guard applies to list/create, not to detail reads.
   return {
     id: project.id,
+    permalink: project.permalink,
     name: project.name,
     description: project.description,
     dueDate: project.dueDate,
     isDone: project.isDone,
+    order: project.order,
     lensId: project.lensId,
     goal: project.goal,
     tasks: project.tasks as ProjectTask[],
@@ -182,12 +237,53 @@ export const createTask = (async (args, context) => {
   if (!description) {
     throw new Error("Task description is required.");
   }
+  if (args.projectId && args.goalId) {
+    throw new Error("Task can only be attached to one parent.");
+  }
+
+  let lensId = args.lensId;
+  let projectPermalink: string | null = null;
+  if (args.projectId) {
+    const project = await context.entities.Project.findUnique({
+      where: { id: args.projectId, userId: context.user.id },
+      select: { id: true, lensId: true, permalink: true },
+    });
+    if (!project) {
+      throw new Error("Project not found.");
+    }
+    lensId = project.lensId;
+    projectPermalink = project.permalink;
+  } else if (args.goalId) {
+    const goal = await context.entities.Goal.findUnique({
+      where: { id: args.goalId, userId: context.user.id },
+      select: { id: true, lensId: true },
+    });
+    if (!goal) {
+      throw new Error("Goal not found.");
+    }
+    lensId = goal.lensId;
+  }
+
+  await assertLensAllowed(context, lensId);
+
+  const permalink = await uniquePermalink(
+    taskPermalinkSource(description, projectPermalink),
+    async (candidate) => {
+      const existing = await context.entities.Task.findFirst({
+        where: { userId: context.user!.id, permalink: candidate },
+        select: { id: true },
+      });
+      return !!existing;
+    },
+  );
+
   const task = await context.entities.Task.create({
     data: {
       description,
+      permalink,
       content: null,
       userId: context.user.id,
-      lensId: args.lensId,
+      lensId,
       // A task is filed under a Project OR a Goal (or neither — standalone in
       // the lens). Exactly one of projectId/goalId is typically set; both are
       // nullable at the DB layer to support either parent.
@@ -197,12 +293,233 @@ export const createTask = (async (args, context) => {
       priority: "NORMAL",
       size: "M",
     },
+    select: { id: true, permalink: true },
+  });
+  return { id: task.id, permalink: task.permalink };
+}) satisfies CreateTask<
+  {
+    description: string;
+    lensId: string;
+    projectId?: string;
+    goalId?: string;
+  },
+  { id: string; permalink: string }
+>;
+
+// ----------------------------------------------------------------
+// Lifecycle: complete / reopen a project (spec §A, §B)
+// ----------------------------------------------------------------
+// Mirror of setGoalDone. Hygiene, not a power feature — no cap check, only
+// the FREE-Work-lens read invariant. Stamps completedAt on done, clears on
+// reopen. Children (tasks) are left as-is.
+export const setProjectDone = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const project = await context.entities.Project.findUnique({
+    where: { id: args.id },
+    select: { id: true, isDone: true, userId: true, lensId: true },
+  });
+  if (!project || project.userId !== context.user.id) {
+    throw new Error("Project not found.");
+  }
+  await assertLensAllowed(context, project.lensId);
+  const next = args.isDone;
+  if (project.isDone === next) return { id: project.id };
+  return await context.entities.Project.update({
+    where: { id: project.id },
+    data: { isDone: next, completedAt: next ? new Date() : null },
     select: { id: true },
   });
-  return { id: task.id };
-}) satisfies CreateTask<{
-  description: string;
-  lensId: string;
-  projectId?: string;
-  goalId?: string;
-}, { id: string }>;
+}) satisfies SetProjectDone<{ id: string; isDone: boolean }, { id: string }>;
+
+// ----------------------------------------------------------------
+// Edit: rename + description + re-link to goal (spec §C)
+// ----------------------------------------------------------------
+// Partial update. name trim + unique rule (@@unique([userId, name])). The
+// re-link path enforces the same-Lens invariant: a goal and its project must
+// share a Lens. goalId may be a different goal (same Lens), null (unlink), or
+// omitted (unchanged). Cross-Lens re-link is rejected with a 400 — structural.
+export const updateProject = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const existing = await context.entities.Project.findUnique({
+    where: { id: args.id, userId: context.user.id },
+    select: { id: true, name: true, lensId: true },
+  });
+  if (!existing) {
+    throwHttpStatus(404, "Project not found.");
+  }
+  const data: {
+    name?: string;
+    description?: string | null;
+    goalId?: string | null;
+    dueDate?: Date | null;
+  } = {};
+  if (args.name !== undefined) {
+    const name = args.name.trim();
+    if (!name) throw new Error("Project name cannot be empty.");
+    data.name = name;
+  }
+  if (args.description !== undefined) {
+    data.description = args.description.trim() || null;
+  }
+  if (args.dueDate !== undefined) {
+    data.dueDate = args.dueDate;
+  }
+  // Re-link: same-Lens invariant. Resolve the target goal and compare lensId.
+  // goalId === null is valid (unlink to standalone in the same Lens).
+  if (args.goalId !== undefined) {
+    if (args.goalId !== null) {
+      const targetGoal = await context.entities.Goal.findUnique({
+        where: { id: args.goalId, userId: context.user.id },
+        select: { id: true, lensId: true },
+      });
+      if (!targetGoal) {
+        throwHttpStatus(404, "Goal not found.");
+      }
+      if (targetGoal.lensId !== existing.lensId) {
+        throwHttpStatus(
+          400,
+          "A project and its goal must be in the same Lens.",
+        );
+      }
+    }
+    data.goalId = args.goalId;
+  }
+  try {
+    return await context.entities.Project.update({
+      where: { id: existing.id },
+      data,
+      select: { id: true, name: true, description: true, goalId: true },
+    });
+  } catch (e) {
+    if (e && typeof e === "object" && "code" in e && e.code === "P2002") {
+      throwHttpStatus(409, `You already have a project named "${data.name}".`);
+    }
+    throw e;
+  }
+}) satisfies UpdateProject<
+  {
+    id: string;
+    name?: string;
+    description?: string;
+    goalId?: string | null;
+    dueDate?: Date | null;
+  },
+  {
+    id: string;
+    name: string;
+    description: string | null;
+    goalId: string | null;
+  }
+>;
+
+// ----------------------------------------------------------------
+// Delete: lossless default (spec §C)
+// ----------------------------------------------------------------
+// Re-parents child Tasks to projectId=null (same Lens, retaining their goalId
+// if any), then deletes the Project. Does NOT destroy Tasks or Resources —
+// the spec's "no surprise data movement" rule. The confirm copy lives in UI.
+export const deleteProject = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const existing = await context.entities.Project.findUnique({
+    where: { id: args.id, userId: context.user.id },
+    select: { id: true },
+  });
+  if (!existing) {
+    throwHttpStatus(404, "Project not found.");
+  }
+  const taskCount = await context.entities.Task.count({
+    where: { projectId: existing.id, userId: context.user.id },
+  });
+  // Re-parent tasks to standalone (projectId=null) but retain their goalId if
+  // any — the task keeps its "why" when its "how" (the project) goes away.
+  await context.entities.Task.updateMany({
+    where: { projectId: existing.id, userId: context.user.id },
+    data: { projectId: null },
+  });
+  // Resources are owned by exactly one Project OR Goal (DATA-MODEL). With their
+  // project gone, they'd be orphaned — detach to goalId=null is invalid (loose
+  // resource), so we delete them. This is a known edge: the confirm copy
+  // counts only tasks (the common case), and resource-only projects are rare.
+  await context.entities.Resource.deleteMany({
+    where: { projectId: existing.id, userId: context.user.id },
+  });
+  await context.entities.Project.delete({
+    where: { id: existing.id },
+    select: { id: true },
+  });
+  return { id: existing.id, reparentedCount: taskCount };
+}) satisfies DeleteProject<
+  { id: string },
+  { id: string; reparentedCount: number }
+>;
+
+// ----------------------------------------------------------------
+// Edit: re-link a standalone task to a project / goal / neither (spec §C)
+// ----------------------------------------------------------------
+// Build picks the surface — this op is the predicate. Same-Lens invariant
+// enforced: projectId/goalId (whichever is being set) must share the task's
+// Lens. One-parent rule: setting both throws. Tenancy-safe throughout.
+export const updateTask = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.id, userId: context.user.id },
+    select: { id: true, lensId: true, projectId: true, goalId: true },
+  });
+  if (!task) {
+    throwHttpStatus(404, "Task not found.");
+  }
+  // Reject setting both parents — a task is filed under Project OR Goal (or
+  // neither), never both. One of the args being undefined means "leave as-is".
+  if (args.projectId && args.goalId) {
+    throw new Error("Task can only be attached to one parent.");
+  }
+  const data: { projectId?: string | null; goalId?: string | null } = {};
+  if (args.projectId !== undefined) {
+    if (args.projectId !== null) {
+      const project = await context.entities.Project.findUnique({
+        where: { id: args.projectId, userId: context.user.id },
+        select: { id: true, lensId: true },
+      });
+      if (!project) throwHttpStatus(404, "Project not found.");
+      if (project!.lensId !== task.lensId) {
+        throwHttpStatus(
+          400,
+          "A task and its project must be in the same Lens.",
+        );
+      }
+    }
+    // Clear goalId when moving into a project — one-parent rule on commit too.
+    data.projectId = args.projectId;
+    if (args.projectId !== null) data.goalId = null;
+  }
+  if (args.goalId !== undefined) {
+    if (args.goalId !== null) {
+      const goal = await context.entities.Goal.findUnique({
+        where: { id: args.goalId, userId: context.user.id },
+        select: { id: true, lensId: true },
+      });
+      if (!goal) throwHttpStatus(404, "Goal not found.");
+      if (goal!.lensId !== task.lensId) {
+        throwHttpStatus(400, "A task and its goal must be in the same Lens.");
+      }
+    }
+    data.goalId = args.goalId;
+    if (args.goalId !== null) data.projectId = null;
+  }
+  return await context.entities.Task.update({
+    where: { id: task.id },
+    data,
+    select: { id: true, projectId: true, goalId: true },
+  });
+}) satisfies UpdateTask<
+  { id: string; projectId?: string | null; goalId?: string | null },
+  { id: string; projectId: string | null; goalId: string | null }
+>;

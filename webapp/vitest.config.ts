@@ -8,6 +8,11 @@ export default defineConfig({
   plugins: [wasp()],
   test: {
     environment: "jsdom",
+    environmentOptions: {
+      jsdom: {
+        url: "http://localhost",
+      },
+    },
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     exclude: ["node_modules", ".wasp"],

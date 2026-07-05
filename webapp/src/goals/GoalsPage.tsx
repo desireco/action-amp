@@ -1,25 +1,33 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getGoals, createGoal, getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { useActiveLens } from "../app/lensContext";
-import { Button, Chip, ProGate } from "../components/ui";
+import {
+  Chip,
+  RecordCardGrid,
+  RecordComposer,
+  RecordCreateButton,
+  GoalsIcon,
+  ProgressCard,
+  ProGate,
+} from "../components/ui";
 import { ListEmpty } from "../lists/ListShell";
-import { CreateInline } from "../lists/CreateInline";
 import { FREE_LIMITS } from "../billing/config";
 import { useEntitled, extractEntitlementMessage } from "../billing/useEntitled";
 import type { EntitlementMessage } from "../billing/entitlement-types";
-import "./GoalsPage.css";
-import "../lists/CreateInline.css";
+import "./GoalListView.css";
 
 interface GoalRow {
   id: string;
+  permalink: string;
   name: string;
   description: string | null;
   projectCount: number;
-  taskCount: number;
   progress: number;
+  // First non-done project in sequence order (goal-planning spec §E). Null
+  // when the goal has no projects or all are done — the card hides the line.
+  nextProject: { id: string; permalink: string; name: string } | null;
 }
 
 /**
@@ -50,12 +58,12 @@ export function GoalsPage() {
   const goalCount = appData?.counts.goals ?? 0;
   const atCap = !entitled && goalCount >= FREE_LIMITS.goals;
 
-  const handleCreate = async (name: string) => {
+  const handleCreate = async (name: string, description?: string) => {
     if (!lens) return;
     setSubmitting(true);
     setGate(null);
     try {
-      await createGoal({ name, lensId: lens.id });
+      await createGoal({ name, lensId: lens.id, description });
       queryClient.invalidateQueries({ queryKey: ["getGoals"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
       setCreating(false);
@@ -69,15 +77,17 @@ export function GoalsPage() {
 
   // Create affordance: button, or ProGate trigger when a FREE user is at cap.
   const CreateControl = ({ empty }: { empty: boolean }) =>
-    atCap ? (
+    creating ? null : atCap ? (
       <ProGate asTrigger feature="New goal" reason="link work to more than one outcome with Pro">
         <span className="aa-progate-trigger__label">New goal</span>
         <span className="aa-progate-trigger__cta">Upgrade →</span>
       </ProGate>
     ) : (
-      <Button variant="secondary" size="sm" onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}>
-        {creating ? "Cancel" : "New goal"}
-      </Button>
+      <RecordCreateButton
+        label="New goal"
+        icon={GoalsIcon}
+        onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}
+      />
     );
 
   const AllowanceChip = () =>
@@ -120,32 +130,37 @@ export function GoalsPage() {
       </header>
       {gate && <ProGate feature={gate.feature} reason={gate.reason} />}
       {creating && (
-        <CreateInline
-          placeholder="Goal name (e.g. ‘Grow audience’)"
+        <RecordComposer
+          title="New goal"
+          subtitle="Name the outcome. Add the why if it helps."
+          nameLabel="Outcome"
+          namePlaceholder="Grow audience"
+          descriptionLabel="Why this matters"
+          descriptionPlaceholder="So launches do not depend on one-off posts"
+          submitLabel="Create goal"
           onCreate={handleCreate}
           onCancel={() => setCreating(false)}
           submitting={submitting}
         />
       )}
-      <div className="aa-goals-grid">
+      <RecordCardGrid>
         {(goals ?? []).map((g: GoalRow) => (
-          <div key={g.id} className="aa-goal-card">
-            <Link to={`/app/goals/${g.id}`} className="aa-goal-card__name">{g.name}</Link>
-            {g.description && <p className="aa-goal-card__desc">{g.description}</p>}
-            <div className="aa-goal-card__progress">
-              <div className="aa-goal-card__bar">
-                <div className="aa-goal-card__fill" style={{ width: `${g.progress}%` }} />
-              </div>
-              <span className="aa-goal-card__pct">{g.progress}%</span>
-            </div>
-            <div className="aa-goal-card__meta">
-              <span>{g.projectCount} project{g.projectCount === 1 ? "" : "s"}</span>
-              <span className="aa-goal-card__dot" aria-hidden="true">·</span>
-              <span>{g.taskCount} task{g.taskCount === 1 ? "" : "s"}</span>
-            </div>
-          </div>
+          <ProgressCard
+            key={g.id}
+            to={`/app/goals/${g.permalink}`}
+            title={g.name}
+            description={g.description}
+            progress={g.progress}
+            meta={
+              <>
+                <span>{g.projectCount} project{g.projectCount === 1 ? "" : "s"}</span>
+              </>
+            }
+            focusLabel={g.nextProject ? "Focus" : undefined}
+            focusValue={g.nextProject?.name}
+          />
         ))}
-      </div>
+      </RecordCardGrid>
     </div>
   );
 }

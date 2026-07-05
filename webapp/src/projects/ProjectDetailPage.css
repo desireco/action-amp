@@ -4,33 +4,121 @@
    .aa-grouped / .aa-list-header / .aa-list-empty styles. Only the
    project-specific layout lives here. */
 .aa-project {
-  max-width: 620px;
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-2xl);
 }
 
 .aa-project__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-items: flex-start;
+  gap: var(--aa-space-xl);
+  margin-bottom: 0;
+}
+
+.aa-project__header-main {
+  flex: 1;
+  min-width: 0;
 }
 
 .aa-project__meta {
   display: flex;
   align-items: center;
   gap: var(--aa-space-sm);
-  margin: var(--aa-space-xs) 0 0;
-  font-size: 0.9rem;
+  margin: var(--aa-space-lg) 0 0;
+  font-size: 1rem;
   color: var(--aa-text-3);
 }
 
 .aa-project__desc {
-  font-size: 1rem;
-  line-height: 1.5;
+  max-width: 58ch;
+  font-size: 1.1rem;
+  line-height: 1.58;
   color: var(--aa-text-2);
-  margin: var(--aa-space-md) 0;
+  margin: calc(-1 * var(--aa-space-xs)) 0 0;
 }
 
-/* A task row + its horizon control, side by side. Mirrors Today's swap-row. */
+.aa-project__inline-err {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--aa-rose-text, var(--aa-text-3));
+}
+
+/* ---- Re-link to a goal (spec §C) ---- */
+.aa-project__relink {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
+  margin: calc(-1 * var(--aa-space-lg)) 0 0;
+  padding: 6px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow: var(--aa-shadow-sm);
+  font-size: 0.95rem;
+}
+
+.aa-project__relink-label {
+  color: var(--aa-text-3);
+  flex-shrink: 0;
+  padding-left: var(--aa-space-xs);
+}
+
+.aa-project__relink-value {
+  background: var(--aa-surface-muted);
+  border: 1px solid transparent;
+  border-radius: var(--aa-radius-sm);
+  padding: 7px 10px;
+  color: var(--aa-text-2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  transition: color var(--aa-dur-base) var(--aa-ease-out), border-color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-project__relink-value:hover {
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal-soft-strong);
+  background: var(--aa-teal-soft);
+}
+
+.aa-project__relink-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-xs);
+  align-items: center;
+}
+.aa-project__relink-opt {
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-full);
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+  color: var(--aa-text-2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: color var(--aa-dur-base) var(--aa-ease-out), border-color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-project__relink-opt:hover {
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal-cta);
+}
+.aa-project__relink-opt.is-active {
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal-cta);
+  font-weight: 500;
+}
+
+/* A task row + its horizon control, side by side. Mirrors Today's swap-row.
+   The move-picker (when expanded) wraps below via flex-wrap + width:100%. */
 .aa-project__row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--aa-space-sm);
 }
 
@@ -43,6 +131,28 @@
   flex-shrink: 0;
   display: flex;
   gap: var(--aa-space-xs);
+}
+
+/* ---- Move-task picker (§C "move to project" affordance) ----
+   Wraps below the row (flex-wrap + width:100% on the row). Reuses the
+   .aa-project__relink-opt pill style for option buttons. */
+.aa-project__move-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-xs);
+  align-items: center;
+  width: 100%;
+  padding-top: var(--aa-space-xs);
+  border-top: 1px dashed var(--aa-border);
+}
+.aa-project__move-hint {
+  font-size: 0.8rem;
+  color: var(--aa-text-3);
+}
+.aa-project__move-empty {
+  font-size: 0.8rem;
+  color: var(--aa-text-3);
+  font-style: italic;
 }
 
 .aa-project__empty {

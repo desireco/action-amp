@@ -1,4 +1,19 @@
-import type { GetTask, GetTasks, GetDoneToday, GetTopTask, SnoozeTask, StartTask, PauseTask, ToggleTaskDone, UpdateTaskStatus } from "wasp/server/operations";
+import type {
+  GetTask,
+  GetTasks,
+  GetDoneToday,
+  GetTopTask,
+  GetFocusedTask,
+  SnoozeTask,
+  StartTask,
+  PauseTask,
+  ToggleTaskDone,
+  UpdateTaskStatus,
+  AddTaskUpdate,
+  UpdateTaskContent,
+  UpdateTaskDetails,
+  CompleteTaskFromFocus,
+} from "wasp/server/operations";
 import { assertLensAllowed } from "../billing/entitlementHttp";
 
 /**
@@ -12,13 +27,24 @@ import { assertLensAllowed } from "../billing/entitlementHttp";
 // ----------------------------------------------------------------
 // Read: single task (existing — kept for the detail page)
 // ----------------------------------------------------------------
+// `updates` ordered oldest → newest so every consumer gets a chronological
+// activity thread by default (focus mode, task detail). task-notes-
+// completion-log spec.
 export const getTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  return await context.entities.Task.findUnique({
-    where: { id: args.id, userId: context.user.id },
-    include: { tags: true, updates: { orderBy: { createdAt: "desc" } } },
+  return await context.entities.Task.findFirst({
+    where: {
+      userId: context.user.id,
+      OR: [{ id: args.id }, { permalink: args.id }],
+    },
+    include: {
+      tags: true,
+      updates: { orderBy: { createdAt: "asc" } },
+      project: { select: { id: true, permalink: true, name: true } },
+      goal: { select: { id: true, permalink: true, name: true } },
+    },
   });
 }) satisfies GetTask<{ id: string }>;
 
@@ -53,7 +79,11 @@ export const getTasks = (async (args, context) => {
       goal: { select: { id: true, name: true } },
     },
   });
-}) satisfies GetTasks<{ lensId: string; status?: "TODAY" | "UPCOMING" | "SOMEDAY"; isDone?: boolean }>;
+}) satisfies GetTasks<{
+  lensId: string;
+  status?: "TODAY" | "UPCOMING" | "SOMEDAY";
+  isDone?: boolean;
+}>;
 
 // ----------------------------------------------------------------
 // Read: tasks completed today (for the Today "Done today" section)
@@ -108,7 +138,11 @@ export const toggleTaskDone = (async (args, context) => {
   const next = !task.isDone;
   return await context.entities.Task.update({
     where: { id: args.id },
-    data: { isDone: next, completedAt: next ? new Date() : null, startedAt: null },
+    data: {
+      isDone: next,
+      completedAt: next ? new Date() : null,
+      startedAt: null,
+    },
   });
 }) satisfies ToggleTaskDone<{ id: string }>;
 
@@ -149,7 +183,11 @@ export const updateTaskStatus = (async (args, context) => {
 // puts real work in front of you, not behind a toggle (WORKFLOW.md §5.2).
 // Rank by priority (IMPORTANT > NORMAL > LOW), then size (smaller = quick win),
 // then oldest. Returns the top 1, or null when nothing's on the table.
-const PRIORITY_RANK: Record<string, number> = { IMPORTANT: 0, NORMAL: 1, LOW: 2 };
+const PRIORITY_RANK: Record<string, number> = {
+  IMPORTANT: 0,
+  NORMAL: 1,
+  LOW: 2,
+};
 const SIZE_RANK: Record<string, number> = { S: 0, M: 1, L: 2, XL: 3 };
 
 export const getTopTask = (async (args, context) => {
@@ -192,7 +230,8 @@ export const getTopTask = (async (args, context) => {
     const aToday = a.status === "TODAY" ? 0 : 1;
     const bToday = b.status === "TODAY" ? 0 : 1;
     if (aToday !== bToday) return aToday - bToday;
-    const pr = (PRIORITY_RANK[a.priority] ?? 1) - (PRIORITY_RANK[b.priority] ?? 1);
+    const pr =
+      (PRIORITY_RANK[a.priority] ?? 1) - (PRIORITY_RANK[b.priority] ?? 1);
     if (pr !== 0) return pr;
     const sr = (SIZE_RANK[a.size] ?? 1) - (SIZE_RANK[b.size] ?? 1);
     if (sr !== 0) return sr;
@@ -201,6 +240,31 @@ export const getTopTask = (async (args, context) => {
 
   return candidates[0];
 }) satisfies GetTopTask<{ lensId: string }>;
+
+// ----------------------------------------------------------------
+// Read: the single task currently in focus
+// ----------------------------------------------------------------
+// Focus is a global mode, not a task-specific URL. The focused task is the
+// user's one started task (startedAt != null), with the full activity thread.
+export const getFocusedTask = (async (_args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  return await context.entities.Task.findFirst({
+    where: {
+      userId: context.user.id,
+      isDone: false,
+      startedAt: { not: null },
+    },
+    orderBy: { startedAt: "desc" },
+    include: {
+      tags: true,
+      updates: { orderBy: { createdAt: "asc" } },
+      project: { select: { id: true, permalink: true, name: true } },
+      goal: { select: { id: true, permalink: true, name: true } },
+    },
+  });
+}) satisfies GetFocusedTask<void>;
 
 // ----------------------------------------------------------------
 // Snooze — "Not now" flow (FEATURES.md F11)
@@ -267,9 +331,10 @@ export const snoozeTask = (async (args, context) => {
 // ----------------------------------------------------------------
 // Start / Pause — the "Now" state (FEATURES.md F14: in-progress persists)
 // ----------------------------------------------------------------
-// Start → Now (startedAt = now). The task becomes #1 in getTopTask and stays
-// there across navigation. Pause → back to Next (startedAt = null); the task
-// remains a candidate but no longer holds the focus slot.
+// Start → Now (startedAt = now). Only one task can be Now/Focus at a time, so
+// starting one clears every other started task for the same user. Pause → back
+// to Next (startedAt = null); the task remains a candidate but no longer holds
+// the focus slot.
 export const startTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
@@ -281,6 +346,10 @@ export const startTask = (async (args, context) => {
   if (!task || task.userId !== context.user.id) {
     throw new Error("Task not found.");
   }
+  await context.entities.Task.updateMany({
+    where: { userId: context.user.id, startedAt: { not: null } },
+    data: { startedAt: null },
+  });
   return await context.entities.Task.update({
     where: { id: args.id },
     data: { startedAt: new Date() },
@@ -305,3 +374,137 @@ export const pauseTask = (async (args, context) => {
     select: { id: true, startedAt: true },
   });
 }) satisfies PauseTask<{ id: string }, { id: string; startedAt: Date | null }>;
+
+// ----------------------------------------------------------------
+// Task notes + completion log (task-notes-completion-log.md)
+// ----------------------------------------------------------------
+// Two ops that make the TaskUpdate timeline real: a plain append for user
+// notes, and a typed focus-mode completion that stamps Task.completedAt AND
+// writes a COMPLETED event in the same transaction. completionAt stays the
+// source of truth for "when did this finish" (Today, Review); the COMPLETED
+// row is the auditable activity-log record for the thread.
+
+// Append a user-authored NOTE to a task's thread. Does not mutate task status
+// or any filing field — append-only progress notes only.
+export const addTaskUpdate = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.taskId },
+    select: { userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+  const body = args.body.trim();
+  if (!body) {
+    throw new Error("Note cannot be empty.");
+  }
+  return await context.entities.TaskUpdate.create({
+    data: {
+      body,
+      kind: "NOTE",
+      taskId: args.taskId,
+      userId: context.user.id,
+    },
+  });
+}) satisfies AddTaskUpdate<{ taskId: string; body: string }>;
+
+// Edit the durable task notes/body. This is separate from TaskUpdate: content
+// is the current working note, while updates are the append-only activity log.
+export const updateTaskContent = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.taskId },
+    select: { userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+  const content = args.content.trim() || null;
+  return await context.entities.Task.update({
+    where: { id: args.taskId },
+    data: { content },
+    select: { id: true, content: true },
+  });
+}) satisfies UpdateTaskContent<
+  { taskId: string; content: string },
+  { id: string; content: string | null }
+>;
+
+// Edit the core task fields shown on the task detail page. This is the full
+// "edit task" path; list rows should navigate here instead of editing notes.
+export const updateTaskDetails = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.taskId },
+    select: { userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+  const description = args.description.trim();
+  if (!description) {
+    throw new Error("Task title is required.");
+  }
+  const content = args.content.trim() || null;
+  return await context.entities.Task.update({
+    where: { id: args.taskId },
+    data: { description, content },
+    select: { id: true, description: true, content: true },
+  });
+}) satisfies UpdateTaskDetails<
+  { taskId: string; description: string; content: string },
+  { id: string; description: string; content: string | null }
+>;
+
+// Complete a task from focus mode. Requires startedAt != null (focus is only
+// reachable via Start, so this holds by construction — the guard keeps the
+// product rule explicit in code). Idempotent: an already-done task returns its
+// existing completion without writing a second COMPLETED event. Otherwise, in
+// one transaction: isDone=true, completedAt=now, startedAt=null, and exactly
+// one TaskUpdate(kind=COMPLETED).
+export const completeTaskFromFocus = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.taskId },
+    select: { isDone: true, completedAt: true, startedAt: true, userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+  // Idempotent: double-clicking Complete must not double-log. Return the
+  // existing completion timestamp; no second event row.
+  if (task.isDone) {
+    return { id: args.taskId, completedAt: task.completedAt };
+  }
+  // Product rule: completion happens from focus, after Start.
+  if (!task.startedAt) {
+    throw new Error("Start the task before completing it.");
+  }
+  const completedAt = new Date();
+  const updated = await context.entities.Task.update({
+    where: { id: args.taskId },
+    data: { isDone: true, completedAt, startedAt: null },
+    select: { id: true, completedAt: true },
+  });
+  await context.entities.TaskUpdate.create({
+    data: {
+      body: "Completed",
+      kind: "COMPLETED",
+      taskId: args.taskId,
+      userId: context.user.id,
+    },
+  });
+  return { id: updated.id, completedAt: updated.completedAt };
+}) satisfies CompleteTaskFromFocus<
+  { taskId: string },
+  { id: string; completedAt: Date | null }
+>;

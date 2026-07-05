@@ -19,9 +19,8 @@ goal?") — without turning ActionAmp into a project-management tool.
 Lens → Goal → Project → {Task, Resource}
 ```
 
-A Goal owns zero or more Projects and zero or more standalone Tasks. A Project
-owns Tasks + Resources. This feature does **not** change that shape; it makes
-the links editable and adds lifecycle + ordering.
+A Goal owns zero or more Projects. A Project owns Tasks + Resources. This
+feature makes those links editable and adds lifecycle + ordering.
 
 ## Capabilities (what the user can do)
 
@@ -40,11 +39,8 @@ the links editable and adds lifecycle + ordering.
 ### Alignment (the goal ↔ project link)
 - **Re-link** a Project to a different Goal, or to no Goal, from the Project
   detail page (an editable parent field, not a birth-only assignment).
-- **Re-link** a standalone Task to a Goal, to a Project (becoming a project
-  task), or to nothing — from the task's detail/edit surface.
-- **Create a Project from inside a Goal** — the goal page gets the same
-  "add" affordance it already has for standalone tasks, but for a project
-  that is auto-linked to the goal.
+- **Re-link** a Project to a Goal or unlink it. Tasks move between Projects or
+  standalone, but do not align directly to Goals.
 
 ### Sequence (the planning affordance)
 - **Order Projects under a Goal.** A goal's project list reflects an explicit,
@@ -61,8 +57,8 @@ the links editable and adds lifecycle + ordering.
 - Not AI goal-breakdown (that's the `cli` skill lane, deferred).
 
 ## Where it lives
-- Pages: `/app/goals`, `/app/goals/:id`, `/app/projects/:id` (all exist; this
-  feature adds controls to them, no new routes).
+- Pages: `/app/goals`, `/app/goals/:permalink`, `/app/projects/:permalink`
+  (all exist; this feature adds controls to them, no new routes).
 - Logbook (`/app/logbook`): gains Goal rows alongside the existing completed-
   task / completed-project / archived rows, each with a Restore action.
 - No new top-level nav, no new modes. Pure Planning-area completion.

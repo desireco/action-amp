@@ -71,10 +71,10 @@ describe("useKeyboardShortcuts — capture", () => {
     expect(handlers.onCapture).toHaveBeenCalledTimes(1);
   });
 
-  it("⌘/ opens capture (alternate chord, same as ⌘K)", () => {
+  it("⌘/ does NOT open capture (retired — capture has one command chord)", () => {
     render(<Harness {...handlers} />);
     press("/", { meta: true });
-    expect(handlers.onCapture).toHaveBeenCalledTimes(1);
+    expect(handlers.onCapture).not.toHaveBeenCalled();
   });
 
   it("bare / does NOT open capture (retired — Firefox quick-find conflict)", () => {

@@ -438,6 +438,9 @@
   padding: 0 56px;
   max-width: 1180px;
   margin: 0 auto;
+  /* Offset anchor scrolls for the sticky nav (~72px) + breathing room, so
+     a #how / #method / #faq jump doesn't tuck the heading under the bar. */
+  scroll-margin-top: 80px;
 }
 .aa-eyebrow {
   font-size: 12px;
@@ -553,6 +556,8 @@
       transparent 70%
     ),
     var(--aa-bg);
+  /* Same offset as .aa-section for the #soul anchor. */
+  scroll-margin-top: 80px;
 }
 .aa-soul-statement {
   font-size: 64px;

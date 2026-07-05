@@ -33,6 +33,7 @@ model User {
   goals      Goal[]
   projects   Project[]
   tasks      Task[]
+  taskUpdates TaskUpdate[] // activity-log entries authored by this user
   resources  Resource[]
   inboxItems InboxItem[]
   tags       Tag[]
@@ -140,11 +141,13 @@ enum LensKind {
 // ============================================================
 // Goal — the organizing layer (replaces PARA's Areas)
 // ============================================================
-// Active, outcome-oriented ("Run a 10k"). Projects + standalone Tasks link to a
-// Goal to express WHY they matter. Standalone projects/tasks (goalId = null) are allowed.
+// Active, outcome-oriented ("Run a 10k"). Projects link to a Goal to express
+// WHY they matter. Legacy direct-goal Tasks may exist, but new product flows
+// should align goals through Projects.
 model Goal {
   id          String   @id @default(uuid())
   name        String
+  permalink   String
   description String?
   isDone      Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -157,10 +160,11 @@ model Goal {
   lensId String
 
   projects  Project[]
-  tasks     Task[]     // standalone tasks linked to this goal
+  tasks     Task[]     // legacy direct-goal tasks
   resources Resource[] // resources filed directly under the goal
 
   @@unique([userId, name]) // unique goal names per user
+  @@unique([userId, permalink])
 }
 
 // ============================================================
@@ -171,9 +175,14 @@ model Goal {
 model Project {
   id          String    @id @default(uuid())
   name        String
+  permalink   String
   description String?
   dueDate     DateTime?
   isDone      Boolean   @default(false)
+  // Per-Goal sequence (goal-planning spec §E). Projects with no goal sort by
+  // name as before; projects under a goal sort by `order` then name. The first
+  // non-done project in this order is surfaced as "Next: <name>".
+  order       Int       @default(0)
   createdAt   DateTime  @default(now())
   completedAt DateTime?
 
@@ -188,6 +197,8 @@ model Project {
 
   tasks     Task[]
   resources Resource[]
+
+  @@unique([userId, permalink])
 }
 
 // ============================================================
@@ -199,6 +210,7 @@ model Project {
 model Task {
   id          String   @id @default(uuid())
   description String // the title — what to do
+  permalink   String // stable human-readable route key
   content     String? // longer notes / markdown body
   isDone      Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -226,6 +238,8 @@ model Task {
 
   tags   Tag[]
   updates TaskUpdate[] // activity log / progress notes
+
+  @@unique([userId, permalink])
 }
 
 // Primary sort key for the focus engine. Important > Normal > Low.
@@ -256,13 +270,31 @@ enum TaskStatus {
 // ============================================================
 // A time-ordered list of progress notes / status updates. Think Linear's
 // activity feed or a lightweight changelog per task. Deleted with the task.
+//
+// `kind` discriminates user-authored notes (NOTE) from system events written
+// by server ops (e.g. COMPLETED on focus-mode completion). Default NOTE so
+// every legacy row and every plain note reads as a note; one query yields the
+// full interleaved timeline. See docs/specs/task-notes-completion-log.md.
 model TaskUpdate {
-  id        String   @id @default(uuid())
+  id        String         @id @default(uuid())
   body      String // the update / note text (markdown ok)
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
+  kind      TaskUpdateKind @default(NOTE)
 
   task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+}
+
+// Discriminator for the TaskUpdate timeline.
+// NOTE = user-authored progress note; COMPLETED = system event from focus-mode
+// completion. (STARTED / PAUSED / NOT_DOING belong to the broader
+// work-area-merged follow-up — not added here.)
+enum TaskUpdateKind {
+  NOTE
+  COMPLETED
 }
 
 // ============================================================
@@ -338,8 +370,9 @@ model InboxItem {
   parsedDate     DateTime?
   parsedPriority Priority?
   parsedSize     Size?
-  parsedTags     String[] // raw tag strings: ["#work", "@phone"]
-  parsedProject  String?  // guess at project name (resolved to projectId at triage)
+  parsedTags     String[] // raw tag strings: ["#work"] — grammar v2: @ is time-only, extra # mentions are tags
+  parsedProject  String?  // first # mention / explicit autocomplete pick (resolved to projectId at triage)
+  parsedLens     String?  // lens token from `[[name]]` (lowercased); resolved against the user's lenses at triage
 }
 
 enum InboxItemStatus {

@@ -95,6 +95,76 @@
   display: none !important;
 }
 
+.aa-auth-dev {
+  margin: var(--aa-space-lg) 0;
+  padding: var(--aa-space-md);
+  border: 1px dashed var(--aa-border-strong);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface-muted);
+}
+
+.aa-auth-dev__label {
+  margin-bottom: var(--aa-space-xs);
+  color: var(--aa-text-3);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.aa-auth-dev__button {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  padding: 9px 10px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.aa-auth-dev__button:hover:not([aria-disabled="true"]) {
+  border-color: var(--aa-teal);
+  color: var(--aa-teal-cta);
+}
+
+.aa-auth-dev__button[aria-disabled="true"] {
+  cursor: wait;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.aa-auth-dev__hint,
+.aa-auth-dev__status,
+.aa-auth-dev__error {
+  margin: var(--aa-space-xs) 0 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.aa-auth-dev__hint {
+  color: var(--aa-text-4);
+}
+
+.aa-auth-dev__hint code {
+  color: var(--aa-text-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.aa-auth-dev__status {
+  color: var(--aa-teal-cta);
+}
+
+.aa-auth-dev__error {
+  color: var(--aa-rose-text);
+}
+
 /* Hide Wasp's stock social-auth block + its "Or continue with" divider.
    We render our own themed Google button + "or with email" divider above the
    form (see GoogleButton.tsx), and Wasp offers no prop to disable its stock

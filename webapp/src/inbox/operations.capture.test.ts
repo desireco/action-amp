@@ -10,7 +10,7 @@ vi.mock("../billing/entitlementHttp", () => ({
   assertUnderCap: vi.fn().mockResolvedValue(undefined),
 }));
 import { mockContext } from "../test/mockContext";
-import { createInboxItem, getInboxItems } from "./operations";
+import { createInboxItem, getInboxItems, getProjectsForResolver } from "./operations";
 
 /**
  * Capture + read — the lighter half of inbox operations (triage is covered in
@@ -48,6 +48,8 @@ describe("createInboxItem — happy path", () => {
     const m = mockContext();
     const created = { id: "ix-1", text: "Email Sarah", createdAt: new Date("2026-06-24") };
     m.entities.InboxItem.create.mockResolvedValue(created);
+    // createInboxItem queries the user's CUSTOM lenses to recognize [[ ]] tokens.
+    m.entities.Lens.findMany.mockResolvedValue([]);
 
     const result = await createInboxItem({ text: "Email Sarah !important #work" }, m.context);
 
@@ -56,11 +58,35 @@ describe("createInboxItem — happy path", () => {
     // parseCapture strips tokens — cleanText should not contain !important or #work
     expect(call.data.text).toBe("Email Sarah");
     expect(call.data.userId).toBe("user-1");
-    // Parsed tokens are threaded through. #work is a project hint, not a tag.
+    // #work is the project hint (first #token wins).
     expect(call.data.parsedPriority).toBe("IMPORTANT");
     expect(call.data.parsedProject).toBe("work");
     expect(call.data.parsedTags).toEqual([]);
+    expect(call.data.parsedLens).toBeNull();
     expect(call.select).toEqual({ id: true, text: true, createdAt: true });
+  });
+
+  it("recognizes a custom [[lens]] token via the user's CUSTOM lenses", async () => {
+    const m = mockContext();
+    m.entities.InboxItem.create.mockResolvedValue({ id: "ix-2", text: "ship", createdAt: new Date() });
+    m.entities.Lens.findMany.mockResolvedValue([{ name: "Studio" }]);
+
+    await createInboxItem({ text: "ship [[studio]]" }, m.context);
+
+    const call = m.entities.InboxItem.create.mock.calls[0][0];
+    expect(call.data.parsedLens).toBe("studio");
+    expect(call.data.text).toBe("ship");
+  });
+
+  it("persists an explicit projectName override from the typeahead", async () => {
+    const m = mockContext();
+    m.entities.InboxItem.create.mockResolvedValue({ id: "ix-3", text: "x", createdAt: new Date() });
+    m.entities.Lens.findMany.mockResolvedValue([]);
+
+    await createInboxItem({ text: "do the thing", projectName: "MVP" }, m.context);
+
+    const call = m.entities.InboxItem.create.mock.calls[0][0];
+    expect(call.data.parsedProject).toBe("mvp");
   });
 });
 
@@ -95,7 +121,67 @@ describe("getInboxItems — scoping", () => {
         parsedSize: true,
         parsedTags: true,
         parsedProject: true,
+        parsedLens: true,
       },
     });
+  });
+});
+
+describe("getProjectsForResolver — lens-agnostic source for capture + triage", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(getProjectsForResolver({} as never, m.context)).rejects.toThrow(
+      /Not authenticated/,
+    );
+  });
+
+  it("returns all projects across all lenses with lensName attached", async () => {
+    // No entitlement filter — all the user's projects surface regardless of
+    // plan. Visibility ≠ write access (triageInboxItem's assertLensAllowed
+    // still gates filing at commit time).
+    const m = mockContext();
+    m.entities.Lens.findMany.mockResolvedValue([
+      { id: "lens-me", name: "Me", kind: "PERSONAL" },
+      { id: "lens-work", name: "Work", kind: "WORK" },
+    ]);
+    m.entities.Project.findMany.mockResolvedValue([
+      { id: "p-1", name: "MVP", lensId: "lens-work" },
+      { id: "p-2", name: "Groceries", lensId: "lens-me" },
+    ]);
+
+    const result = await getProjectsForResolver({} as never, m.context);
+
+    expect(result).toEqual([
+      { id: "p-1", name: "MVP", lensId: "lens-work", lensName: "Work" },
+      { id: "p-2", name: "Groceries", lensId: "lens-me", lensName: "Me" },
+    ]);
+    // No lensId filter — all projects, all lenses.
+    expect(m.entities.Project.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: "user-1",
+        isDone: false,
+      },
+      select: { id: true, name: true, lensId: true },
+      orderBy: [{ name: "asc" }],
+    });
+  });
+
+  it("FREE user: WORK/CUSTOM lens projects surface (filter removed)", async () => {
+    const m = mockContext(); // no plan → FREE
+    m.entities.Lens.findMany.mockResolvedValue([
+      { id: "lens-me", name: "Me" },
+      { id: "lens-work", name: "Work" },
+      { id: "lens-studio", name: "Studio" },
+    ]);
+    m.entities.Project.findMany.mockResolvedValue([
+      { id: "p-1", name: "MVP", lensId: "lens-work" },
+      { id: "p-2", name: "Studio work", lensId: "lens-studio" },
+    ]);
+
+    const result = await getProjectsForResolver({} as never, m.context);
+
+    // All lenses visible — no lensId { in: [...] } filter at all.
+    expect(m.entities.Project.findMany.mock.calls[0][0].where).not.toHaveProperty("lensId");
+    expect(result).toHaveLength(2);
   });
 });
