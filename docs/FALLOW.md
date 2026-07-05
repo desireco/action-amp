@@ -35,86 +35,64 @@ here — we use the static layer only.
 - **Cache:** `.fallow/` exists at repo root and in `webapp/`. Both
   self-ignore via an inner `.gitignore` (`*`), so cache never lands in git.
 
-## Headline numbers (post-config)
+## Headline numbers
 
-| Signal | Before config | After config | Notes |
-|---|---|---|---|
-| Unused files | 72 | **1** | The 71 were false positives (Wasp ref-imports + parked Google auth). |
-| Unused exports | 60+ | **12** | Real signal — see below. |
-| Unused type exports | 23 | **23** | Mostly `index.ts` barrel re-exports. |
-| Unused dependencies | 29 | **1** | `react-hook-form` (zero imports). The other 28 were `.wasp/out` SDK deps. |
-| Unused devDependencies | 3 | **2** | `@wasp.sh/spec` is a **false positive** — it's the Wasp DSL imported in `main.wasp.ts:1`; fallow doesn't resolve the `file:.wasp/spec/` workspace symlink. `@tsconfig/*` are real but harmless (Wasp-generated `.wasp/out` packages). Don't auto-fix these. |
-| Circular dependencies | 7 | **7** | All `component → index.ts → component` barrel cycles. |
-| Duplication | 5.6% / 1,456 lines | unchanged | 64 clone groups, 13 families. |
-| Maintainability | — | **92.6 / 100 (good)** | Avg cyclomatic 2.1, p90 4. |
+Tracked across three points: the raw analyzer run (no config), the tuned
+config (false positives suppressed), and after the cleanup pass.
 
-## Verified findings worth acting on
+| Signal | Raw | After config | After cleanup | Notes |
+|---|---|---|---|---|
+| Unused files | 72 | 1 | **0** | The 72 were false positives (Wasp ref-imports + parked Google auth); the last was a stray empty `App.tsx`. |
+| Unused exports | 60+ | 13 | **2** | Barrel `BottomSheet` re-export (intentional API) + `formatChipDate` (queued). |
+| Unused type exports | 23 | 23 | **23** | Mostly `index.ts` barrel re-exports — low value to chase. |
+| Unused dependencies | 29 | 1 | **0** | `react-hook-form` removed (was a transitive dep of Wasp's SDK; we never imported it). |
+| Circular dependencies | 7 | 7 | **0** | All were barrel cycles; fixed by direct relative imports. |
+| Duplication | 5.6% / 1,456 lines | unchanged | **5.1% / 1,355 lines** | Someday/Upcoming handler clone + TodayPage grouping clone extracted. |
+| Maintainability | — | 92.6 | **93.0 / 100 (good)** | Avg cyclomatic 2.1, p90 4. |
 
-Each was hand-checked against the source — these are **not** raw analyzer noise.
+`@wasp.sh/spec` still shows as an unused devDep — that's a **false positive**
+(it's the Wasp DSL imported in `main.wasp.ts:1`; fallow can't resolve the
+`file:.wasp/spec/` workspace symlink). Don't auto-fix it.
 
-### A. Dead code (high confidence, low effort)
+## What the cleanup pass did
 
-1. **`react-hook-form` is an unused dependency.** Declared in
-   `webapp/package.json` line 18, zero imports across `src/` and `e2e/`.
-   Remove from `dependencies`.
-2. **`src/app/SettingsPage.css` is a vestigial placeholder** — a 3-line
-   comment file. Its own header says all styles moved to
-   `SettingsLayout.css` (verified: `.aa-settings-section` /
-   `.aa-settings-note` live there). Delete it.
-3. **12 unused exports** — the meaningful ones (not barrel re-exports):
-   - `src/billing/config.ts` — `isFounder`, `PLAN_BADGE`
-   - `src/billing/stripe.ts` — `PRICE_PLAN_LABEL`
-   - `src/feedback/config.ts` — `DEFAULT_ADMIN_EMAIL`
-   - `src/shared/permalinks.ts` — `permalinkBase`
-   - `src/inbox/triageFlow.ts` — `formatChipDate`
-   - `src/lists/ListShell.tsx` — `ListHeader`
-   - `src/components/ui/ResourcePickerSheet.tsx` — the whole component
-     (re-exported from `index.ts` but never imported by a page).
+Seven commits on `chore/fallow-cleanup` (see `git log main..HEAD`):
 
-   `fallow fix --dry-run` will show the auto-removal diff; review before
-   applying. The billing/feedback ones may be intentional public API —
-   confirm against `docs/` before deleting.
+- **A1** removed `react-hook-form` (zero imports; transitive via Wasp SDK).
+- **A2** deleted the vestigial `SettingsPage.css` placeholder.
+- **B** broke 7 barrel-file cycles in `components/ui/` (direct relative imports).
+- **A3** removed 12 dead exports + a stray empty `App.tsx`; suppressed
+  `ResourcePickerSheet` in config (spec `ready`, not yet shipped).
+- **C** extracted `useTaskListActions` (Someday/Upcoming handler dedup).
+- **D** reduced complexity in TaskRow (`TaskRowNotes` + `clickableProps`),
+  TodayPage (`groupByGoal`), and TriagePage (`buildDispatchPayload`).
 
-### B. Circular dependencies (7, all the same shape)
+All behavior-preserving — `wasp compile` + 488 tests pass at every commit.
 
-Every cycle is `Foo.tsx → components/ui/index.ts → Foo.tsx` — a barrel file
-re-exporting a component that itself imports from the barrel. Seven
-components: `ConfirmDialog, FocusMode, NextCard, ResourcePickerSheet,
-ShortcutCheatsheet, SnoozeSheet, TriageCard`. Fix: have those components
-import siblings via **relative paths** (`./Card`) instead of through
-`./index`. Low effort, removes a whole class of tree-shaking /
-init-order risk.
+## Remaining items (queued, not blocking)
 
-### C. Duplication (5.6%, two patterns)
+After the cleanup pass the signal is mostly noise or intentional. These are
+the items worth a second look when next convenient:
 
-The 64 clone groups cluster into two repeatable shapes:
-
-- **Test setup boilerplate** — the same mock-context / email-factory /
-  seed-task blocks copied across `operations.test.ts` files
-  (inbox, tasks, goals, projects, onboarding, app). Extract a shared
-  `src/test/fixtures.ts`. This is the single biggest dedup win and the
-  lowest-risk one.
+- **`formatChipDate`** (`src/inbox/triageFlow.ts`) — one unused export left.
+  Verify whether it's referenced from a test or mock before removing.
+- **23 unused *type* re-exports** in `components/ui/index.ts` — these are
+  barrel re-exports (`BreadcrumbItem`, `DispatchTone`, …) that no consumer
+  imports through the barrel. Low value to chase; the barrel is the public
+  API and the types are documented there.
 - **`DesignSystemPage.tsx`** — 5 internal clone groups (66 lines). It's a
-  design-system showcase page; the repetition is *literal* component
-  demos. Acceptable, or factor into a `<DemoRow>` helper.
-
-### D. Complexity hotspots (refactor candidates)
-
-Maintainability is already 92.6 (good) — these are the long-tail items,
-ranked by fallow's priority score. All are "extract sub-component /
-helper" work, not rewrites.
-
-| Priority | File | Why |
-|---|---|---|
-| 36.8 | `src/lists/TodayPage.tsx` | 411 LOC, cognitive 48 — extract grouping helpers. |
-| 36.6 | `src/app/focusTaskView.ts` | 100% dead exports — pair with finding A.3. |
-| 32.5 | `src/tasks/TaskDetailPage.tsx` | 295 LOC, cognitive 30. |
-| 29.4 | `src/components/ui/ResourcePickerSheet.tsx` | Cycle (B) + unused export (A.3). |
-| 28.5 | `src/billing/operations.ts` | 4 unused exports. |
-| 27.2 | `src/billing/stripe.ts` | 3 unused exports. |
-| 25.5 | `src/inbox/TriagePage.tsx` | 742 LOC, cognitive 67 — the biggest single refactor. |
-| 19.4 | `src/components/ui/TaskRow.tsx` | cognitive 50. |
-| 18.2 | `src/inbox/operations.ts` | `triageInboxItem` cognitive 30. |
+  design-system showcase; the repetition is literal component demos. Acceptable,
+  or factor into a `<DemoRow>` helper if it grows.
+- **Test-setup boilerplate** — the `vi.mock("../billing/entitlementHttp", …)`
+  block appears across 7 `operations.test.ts` files, but with per-file comment
+  variants. A shared helper would lose the per-file rationale for ~15 lines
+  saved; left as-is.
+- **Inherent complexity** — `TriagePage` (675 LOC) and `TodayPage` (296 LOC)
+  are still rated CRITICAL/HIGH. Both are actively-iterated core surfaces
+  (`triage-classify-step` spec branch, recent Today polish); their remaining
+  complexity is largely inherent to their feature set (many states × data
+  sources × dialogs), not duplication. Decompose further only when a feature
+  change touches them.
 
 ## How to use fallow day-to-day
 
