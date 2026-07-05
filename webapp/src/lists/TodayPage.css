@@ -32,7 +32,7 @@
   margin: var(--aa-space-xs) 0 0;
   color: var(--aa-text-3);
   font-size: var(--aa-text-base);
-  line-height: 1.45;
+  line-height: var(--aa-leading-snug);
 }
 
 .aa-today__meter {
@@ -94,7 +94,7 @@
   border-radius: var(--aa-radius-sm);
   font-size: var(--aa-text-sm);
   color: var(--aa-amber-text);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
 }
 
 .aa-today__overflow {

@@ -136,7 +136,7 @@
   border-radius: var(--aa-radius-md);
   color: var(--aa-text-2);
   font: inherit;
-  line-height: 1.55;
+  line-height: var(--aa-leading-normal);
   padding: var(--aa-space-lg);
   resize: vertical;
   box-shadow: var(--aa-shadow-sm);
@@ -161,13 +161,13 @@
 .aa-task-done-panel__notice {
   margin: 0;
   color: var(--aa-text-2);
-  line-height: 1.55;
+  line-height: var(--aa-leading-normal);
 }
 
 .aa-task-done-panel p {
   margin: 0;
   color: var(--aa-text-2);
-  line-height: 1.55;
+  line-height: var(--aa-leading-normal);
 }
 
 .aa-task-done-panel__notes {
@@ -193,7 +193,7 @@
   background: var(--aa-surface-raised);
   color: var(--aa-text);
   font: inherit;
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
   resize: vertical;
 }
 

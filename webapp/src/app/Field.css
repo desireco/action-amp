@@ -30,7 +30,7 @@
 .aa-field__desc {
   font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
-  line-height: 1.4;
+  line-height: var(--aa-leading-snug);
 }
 
 .aa-field__value {

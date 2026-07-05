@@ -26,11 +26,16 @@
   --aa-text-xl: 1.5rem;     /* page titles */
   --aa-text-2xl: 2rem;      /* hero, detail-page title */
 
+  --aa-weight-regular: 400;
   --aa-weight-medium: 500;
   --aa-weight-semibold: 600;
   --aa-weight-bold: 700;
 
+  /* Line-heights. Five buckets: tight for headings, snug for chips/inputs/body
+     rows (the dense surfaces), normal for paragraphs, relaxed for long-form.
+     Line-height is contextual — values outside this set stay local. */
   --aa-leading-tight: 1.25;
+  --aa-leading-snug: 1.4;
   --aa-leading-normal: 1.5;
   --aa-leading-relaxed: 1.6;
 

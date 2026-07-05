@@ -91,7 +91,7 @@
 
 .aa-confirm__body {
   font-size: var(--aa-text-base);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
   color: var(--aa-text-2);
   margin: var(--aa-space-xs) 0 var(--aa-space-lg);
 }
@@ -127,7 +127,7 @@
 
 .aa-feedback__sub {
   font-size: var(--aa-text-sm);
-  line-height: 1.4;
+  line-height: var(--aa-leading-snug);
   color: var(--aa-text-3);
   margin: 4px 0 0;
 }
@@ -142,7 +142,7 @@
   color: var(--aa-text);
   font-family: var(--aa-font);
   font-size: var(--aa-text-base);
-  line-height: 1.45;
+  line-height: var(--aa-leading-snug);
   padding: var(--aa-space-sm);
 }
 
@@ -285,7 +285,7 @@
 .aa-cheatsheet__note {
   font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
-  font-weight: 400;
+  font-weight: var(--aa-weight-regular);
 }
 
 .aa-cheatsheet__keys {
@@ -304,7 +304,7 @@
   padding: 2px 7px;
   border-radius: var(--aa-radius-xs);
   border: 1px solid var(--aa-border);
-  line-height: 1.4;
+  line-height: var(--aa-leading-snug);
 }
 
 .aa-cheatsheet__foot {
@@ -321,7 +321,7 @@
   font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
   font-style: italic;
-  line-height: 1.4;
+  line-height: var(--aa-leading-snug);
   flex: 1;
 }
 
@@ -378,7 +378,7 @@
   flex: 1;
   font-family: var(--aa-font);
   font-size: var(--aa-text-md);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
   background: transparent;
   border: none;
   outline: none;
@@ -817,7 +817,7 @@
 .aa-focus__content {
   font-size: var(--aa-text-base);
   color: var(--aa-text-2);
-  line-height: 1.55;
+  line-height: var(--aa-leading-normal);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -841,7 +841,7 @@
   border-radius: var(--aa-radius-md);
   font: inherit;
   font-size: var(--aa-text-base);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
   color: var(--aa-text-2);
   resize: vertical;
 }
@@ -889,7 +889,7 @@
 }
 .aa-thread__note-body {
   font-size: var(--aa-text-sm);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
   color: var(--aa-text-2);
   white-space: pre-wrap;
   word-break: break-word;
@@ -1013,7 +1013,7 @@
   background: transparent;
   font: inherit;
   font-size: var(--aa-text-base);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
   color: var(--aa-text);
   resize: none;
   outline: none;

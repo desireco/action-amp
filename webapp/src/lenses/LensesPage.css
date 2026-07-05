@@ -265,7 +265,7 @@
   margin: 0;
   font-size: var(--aa-text-base);
   color: var(--aa-text-2);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
 }
 .aa-lenses-delete__opt {
   display: flex;

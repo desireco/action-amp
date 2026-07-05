@@ -33,7 +33,7 @@
   margin: var(--aa-space-xs) 0 0;
   color: var(--aa-text-3);
   font-size: var(--aa-text-base);
-  line-height: 1.45;
+  line-height: var(--aa-leading-snug);
 }
 
 /* The Overdue bucket is a contradiction on a forward-looking list — surface

@@ -95,7 +95,7 @@
   font-size: var(--aa-text-base);
   color: var(--aa-text-3);
   margin: 0;
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
 }
 
 .aa-list-empty__action {

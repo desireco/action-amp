@@ -38,7 +38,7 @@
 .aa-picker-sheet__meta {
   font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
-  font-weight: 400;
+  font-weight: var(--aa-weight-regular);
   margin-right: auto;
 }
 

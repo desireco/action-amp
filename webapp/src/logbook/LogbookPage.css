@@ -50,7 +50,7 @@
   font-size: var(--aa-text-base);
   color: var(--aa-text-3);
   text-decoration: line-through;
-  line-height: 1.4;
+  line-height: var(--aa-leading-snug);
 }
 
 .aa-logbook-row__meta {

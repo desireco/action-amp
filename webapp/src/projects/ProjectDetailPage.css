@@ -35,7 +35,7 @@
 .aa-project__desc {
   max-width: 58ch;
   font-size: var(--aa-text-lg);
-  line-height: 1.58;
+  line-height: var(--aa-leading-relaxed);
   color: var(--aa-text-2);
   margin: calc(-1 * var(--aa-space-xs)) 0 0;
 }

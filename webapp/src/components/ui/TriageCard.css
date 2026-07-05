@@ -23,7 +23,7 @@
   font-weight: var(--aa-weight-semibold);
   letter-spacing: -0.01em;
   color: var(--aa-text);
-  line-height: 1.35;
+  line-height: var(--aa-leading-snug);
   margin: 0 0 var(--aa-space-md);
 }
 

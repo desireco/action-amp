@@ -9,7 +9,7 @@
   padding: 2px 8px;
   border-radius: var(--aa-radius-full);
   white-space: nowrap;
-  line-height: 1.4;
+  line-height: var(--aa-leading-snug);
 }
 
 /* Small variant */

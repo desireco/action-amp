@@ -59,7 +59,7 @@
 .aa-auth-subtitle {
   text-align: center;
   font-size: var(--aa-text-base);
-  line-height: 1.4;
+  line-height: var(--aa-leading-snug);
   color: var(--aa-text-3);
   margin: var(--aa-space-sm) 0 0;
 }
@@ -144,7 +144,7 @@
 .aa-auth-dev__error {
   margin: var(--aa-space-xs) 0 0;
   font-size: var(--aa-text-sm);
-  line-height: 1.35;
+  line-height: var(--aa-leading-snug);
 }
 
 .aa-auth-dev__hint {
@@ -193,7 +193,7 @@
   border-radius: var(--aa-radius-sm) !important;
   padding: 10px 12px !important;
   font-size: var(--aa-text-base) !important;
-  line-height: 1.4 !important;
+  line-height: var(--aa-leading-snug) !important;
   color: var(--aa-text) !important;
   box-shadow: none !important;
   transition:

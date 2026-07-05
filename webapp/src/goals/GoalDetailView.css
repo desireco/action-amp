@@ -47,7 +47,7 @@
 .aa-goal__desc {
   max-width: 58ch;
   font-size: var(--aa-text-lg);
-  line-height: 1.58;
+  line-height: var(--aa-leading-relaxed);
   color: var(--aa-text-2);
   margin: calc(-1 * var(--aa-space-xs)) 0 0;
 }
@@ -69,13 +69,13 @@
 .aa-goal__projects-empty h2 {
   margin: 0 0 var(--aa-space-xs);
   font-size: var(--aa-text-lg);
-  line-height: 1.25;
+  line-height: var(--aa-leading-tight);
 }
 
 .aa-goal__projects-empty p {
   margin: 0;
   color: var(--aa-text-3);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
 }
 .aa-goal__project-row {
   padding: 0;

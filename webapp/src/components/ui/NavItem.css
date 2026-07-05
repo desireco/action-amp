@@ -126,7 +126,7 @@
   color: var(--aa-text-3);
   padding: 1px 7px;
   border-radius: var(--aa-radius-full);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
 }
 
 .aa-nav-item--active .aa-nav-item__count {

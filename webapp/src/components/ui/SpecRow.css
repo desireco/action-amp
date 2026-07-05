@@ -131,7 +131,7 @@
 .aa-spec-opt-hint {
   margin-left: var(--aa-space-sm);
   font-size: var(--aa-text-xs);
-  font-weight: 400;
+  font-weight: var(--aa-weight-regular);
   color: var(--aa-text-4);
 }
 

@@ -21,7 +21,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  line-height: 1.35;
+  line-height: var(--aa-leading-snug);
 }
 
 /* A quiet key-cap mark — not a bright lock badge (PRODUCT.md bans attention-
@@ -45,7 +45,7 @@
   margin: 0;
   font-size: var(--aa-text-base);
   color: var(--aa-text-2);
-  line-height: 1.5;
+  line-height: var(--aa-leading-normal);
 }
 
 .aa-progate__actions {

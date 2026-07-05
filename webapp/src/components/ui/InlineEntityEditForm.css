@@ -23,7 +23,7 @@
   margin: 4px 0 0;
   color: var(--aa-text-3);
   font-size: var(--aa-text-sm);
-  line-height: 1.45;
+  line-height: var(--aa-leading-snug);
 }
 
 .aa-inline-edit__field {
@@ -60,7 +60,7 @@
   box-sizing: border-box;
   font-family: var(--aa-font);
   font-size: var(--aa-text-base);
-  line-height: 1.45;
+  line-height: var(--aa-leading-snug);
   padding: 10px 12px;
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-sm);
