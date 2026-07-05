@@ -89,18 +89,20 @@ appears in Work/Planning/Review except by coming through triage.
     (`Task.startedAt`) persists across navigation.
   - **Today** — the committed-for-today list, capped at 5 (F12). The cap is a
     feature, not a limit — it forces the "what actually matters today" decision.
-- **Two Upcoming surfaces, two intents.** `UPCOMING` is the Task status for
-  the bench — what's not yet committed to Today but still on the radar. It
-  has **two surfaces** (locked 2026-07-05, reversing the 2026-06-23 call):
-  - **The Today "see upcoming" toggle** — a same-page swap surface inside
-    Today. Pull one onto Today without leaving the page. The list-page-as-
-    chooser-for-the-day interaction; lives in the Work area.
-  - **The `/app/upcoming` page under Planning** — the forward-planning view:
-    date-bucketed (Overdue / This week / Next week / Later / Unscheduled),
-    rose-tinted overdue, inline notes. Lives in the Plan area alongside
-    Projects / Goals / Someday. Mental model: the bench as a status feeds
-    both; Today's toggle is for *now* (swap), the page is for *planning*
-    (horizon).
+- **One Upcoming surface.** `UPCOMING` is the Task status for the bench —
+  what's not yet committed to Today but still on the radar. It lives on a
+  single page, `/app/upcoming` under Planning (locked 2026-07-05; re-reversed
+  later that day to drop the same-page swap toggle that briefly coexisted
+  with it). Date-bucketed (Overdue / This week / Next week / Later /
+  Unscheduled), rose-tinted overdue, inline notes, per-row promote-to-Today.
+  Today and Upcoming cross-link to each other from their heroes — Today's
+  hero links to `/app/upcoming` (with the bench count), Upcoming's links
+  back to `/app/today`. No same-page swap; one page per intent.
+- **Done today is scoped to Today** (locked 2026-07-05). The "Done today"
+  section on `/app/today` only shows tasks whose `status === "TODAY"` — not
+  any task completed since midnight. Completion (from focus mode) leaves
+  `status` untouched, so an Upcoming task finished via focus stays
+  `status=UPCOMING` and is correctly excluded from Today's Done section.
 - **Daily rollover (locked 2026-06-30).** At the start of each new calendar
   day, incomplete **Today** tasks roll to **Upcoming** so Today starts fresh
   — a deliberate re-commitment, not a backlog. Lazy: runs on app load (in
@@ -184,18 +186,18 @@ between Capture and any of them.
 
 These were the open structural calls. All resolved:
 
-1. **Upcoming is a top-level Planning area, with a same-page swap surface on
-   Today.** (Reversed 2026-07-05 — originally locked 2026-06-23 as "not a
-   top-level area"; reversed because the bench toggle and the forward-planning
-   page serve different intents and the page already existed from the
-   2026-07-02 friction-cleanup reversal.) `UPCOMING` is the Task status — the
+1. **Upcoming is one top-level Planning page.** (History: locked 2026-06-23
+   as "not a top-level area"; reversed 2026-07-02 to keep the route; reversed
+   again 2026-07-05 to promote it into the Plan nav *with* a same-page
+   Today swap toggle; simplified later 2026-07-05 to **drop the toggle**
+   — one surface per intent was clearer than two surfaces rendering the same
+   `UPCOMING` data in different shapes.) `UPCOMING` is the Task status — the
    bench. The `/app/upcoming` page lives under Planning (date-bucketed,
-   rose-tinted overdue) and a Today "see upcoming" toggle does same-page
-   promote-to-Today swaps. Both surfaces promote onto Today with one click.
-   Mental model: Upcoming = the bench; Today = the court. You pull from the
-   bench deliberately for the *Today* list, but a bench task with no future due
-   date is also a Next candidate on Next (§5.2) — triage should put real work
-   in front of you, not hide it behind a toggle.
+   rose-tinted overdue, per-row promote-to-Today). Today and Upcoming
+   cross-link from their heroes; no same-page swap. Mental model: Upcoming =
+   the bench; Today = the court. A bench task with no future due date is also
+   a Next candidate on Next (§5.2) — triage should put real work in front of
+   you, not hide it behind a toggle.
 2. **Next's Next candidate pool = Today + Upcoming (revised 2026-06-25).**
    `getTopTask` selects `status ∈ {TODAY, UPCOMING}` **and** (`dueDate` is null
    or `dueDate ≤ now`), in the active Lens, not done. So a freshly triaged task
@@ -324,8 +326,8 @@ The following were updated to match this doc (commit alongside):
 - `docs/features/capture.md` + `docs/features/inbox-triage.md` (added
   2026-07-04) — grammar block rewritten; resolver pre-fill behavior noted.
 - `docs/features/upcoming-someday.md` (revised 2026-07-05) — Upcoming framed
-  as a Planning page (`/app/upcoming`) that coexists with the Today swap
-  toggle, reversing the 2026-06-23 non-area call. Aligns with §5.1.
+  as a single Planning page (`/app/upcoming`) that cross-links with Today
+  (no same-page swap toggle). Aligns with §5.1.
 - `PAGES.md` + `DATA-MODEL.md` + `BACKLOG.md` (revised 2026-07-05) — Upcoming
   framing flipped from demoted to promoted-into-Planning, matching §5.1.
 

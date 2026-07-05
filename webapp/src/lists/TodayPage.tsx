@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import {
   getTasks,
   getDoneToday,
+  getAppData,
   updateTaskStatus,
   submitFeedback,
 } from "wasp/client/operations";
@@ -40,16 +41,11 @@ export function TodayPage() {
     lens ? { lensId: lens.id, status: "TODAY", isDone: false } : undefined,
     { enabled: !!lens },
   );
-  // Upcoming bench: status=UPCOMING tasks in the active lens, surfaced when
-  // the user swaps to pull one onto today. Fetched on mount so the closed
-  // "See upcoming" control can show a count; otherwise rolled/bench tasks can
-  // look like they disappeared when Today is empty.
-  const [showUpcoming, setShowUpcoming] = useState(false);
-  const { data: upcoming } = useQuery(
-    getTasks,
-    lens ? { lensId: lens.id, status: "UPCOMING", isDone: false } : undefined,
-    { enabled: !!lens },
-  );
+  // Upcoming count for the hero cross-link — comes from getAppData (already
+  // lens-scoped and shared with the Plan nav chip) instead of a second
+  // status=UPCOMING query. Upcoming lives on its own page now; Today just
+  // links over.
+  const { data: appData } = useQuery(getAppData, undefined, { enabled: !!lens });
 
   // Done-today: tasks completed since local midnight. Fetched on mount and
   // shown inline so completed work stays visible without another click.
@@ -101,14 +97,9 @@ export function TodayPage() {
     }));
   }, [doneToday]);
 
-  // Promote an Upcoming task onto Today; demote a Today task to Upcoming
-  // (the bench — keeps it reachable via the swap, never "disappears").
-  const handlePromote = async (task: TaskRowTask) => {
-    await updateTaskStatus({ id: task.id, status: "TODAY" });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-  };
+  // Demote a Today task to Upcoming (it moves to /app/upcoming, never
+  // "disappears"). Promote happens on the Upcoming page now — Today only
+  // links over.
   const handleDemote = async (task: TaskRowTask) => {
     await updateTaskStatus({ id: task.id, status: "UPCOMING" });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
@@ -121,7 +112,7 @@ export function TodayPage() {
   const overCapacity = (tasks?.length ?? 0) > TODAY_CAP;
   const overflow = useMemo(() => (tasks ?? []).slice(TODAY_CAP), [tasks]);
   const committedCount = Math.min(tasks?.length ?? 0, TODAY_CAP);
-  const upcomingCount = upcoming?.length ?? 0;
+  const upcomingCount = appData?.counts.upcoming ?? 0;
   const doneCount = doneToday?.length ?? 0;
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
   const editTask = (task: TaskRowTask) => {
@@ -133,20 +124,14 @@ export function TodayPage() {
     navigate(`/app/today/${encodeURIComponent(task.permalink ?? task.id)}`);
   };
 
-  // Note: no early empty-state return — the header (with the See-upcoming
-  // toggle) renders even when Today is empty, so the bench is always reachable.
   const isEmpty = !isLoading && (tasks?.length ?? 0) === 0;
-  // Hero copy adapts to the surface (Today vs Upcoming bench) and to how full
-  // Today is. The verb always matches the list the user is actually looking at.
-  const heroEyebrow = showUpcoming ? "Today · Upcoming" : "Today";
-  const heroTitle = showUpcoming
-    ? `${upcomingCount} on the bench`
-    : isLoading
-      ? "—"
-      : `${tasks?.length ?? 0} of ${TODAY_CAP} committed`;
-  const heroSubtitle = showUpcoming
-    ? "Pull one in to fill a slot on Today."
-    : committedCount >= TODAY_CAP
+  // Hero copy describes Today — how full the day is. Upcoming is one click
+  // away via the hero link, no same-page swap.
+  const heroTitle = isLoading
+    ? "—"
+    : `${tasks?.length ?? 0} of ${TODAY_CAP} committed`;
+  const heroSubtitle =
+    committedCount >= TODAY_CAP
       ? "Day's full. Finish one to make room."
       : "Keep the day small enough to finish.";
 
@@ -154,78 +139,37 @@ export function TodayPage() {
     <section className="aa-today" aria-label="Today">
       <header className="aa-list-header aa-today__hero">
         <div className="aa-today__hero-copy">
-          <div className="aa-list-header__eyebrow">{heroEyebrow}</div>
+          <div className="aa-list-header__eyebrow">Today</div>
           <h1 className="aa-list-header__title aa-today__title">{heroTitle}</h1>
           <p className="aa-today__subtitle">{heroSubtitle}</p>
-          {/* The meter is a Today concept — hide it while the bench is open so
-              the hero describes the surface the user is actually looking at. */}
-          {!showUpcoming && (
-            <div
-              className="aa-today__meter"
-              aria-label={`${committedCount} of ${TODAY_CAP} Today slots committed`}
-            >
-              {Array.from({ length: TODAY_CAP }, (_, i) => (
-                <span
-                  key={i}
-                  className={
-                    i < committedCount
-                      ? "aa-today__meter-dot aa-today__meter-dot--filled"
-                      : "aa-today__meter-dot"
-                  }
-                />
-              ))}
-            </div>
-          )}
+          <div
+            className="aa-today__meter"
+            aria-label={`${committedCount} of ${TODAY_CAP} Today slots committed`}
+          >
+            {Array.from({ length: TODAY_CAP }, (_, i) => (
+              <span
+                key={i}
+                className={
+                  i < committedCount
+                    ? "aa-today__meter-dot aa-today__meter-dot--filled"
+                    : "aa-today__meter-dot"
+                }
+              />
+            ))}
+          </div>
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setShowUpcoming((v) => !v)}
-          aria-expanded={showUpcoming}
-          aria-controls="aa-today-body"
-        >
-          {showUpcoming
-            ? "Back to Today"
-            : `See upcoming${upcomingCount > 0 ? ` ${upcomingCount}` : ""}`}
-        </Button>
+        {/* Cross-link to the Upcoming page — the only way over. Upcoming count
+            rides the shared getAppData query (same one feeding the Plan nav
+            chip), so it stays accurate without a second status=UPCOMING fetch. */}
+        <Link to="/app/upcoming" title="Open Upcoming" aria-label="Open Upcoming">
+          <Button variant="secondary" size="sm">
+            Upcoming{upcomingCount > 0 ? ` ${upcomingCount}` : ""}
+          </Button>
+        </Link>
       </header>
 
       <div id="aa-today-body">
-        {showUpcoming ? (
-          // Upcoming bench: status=UPCOMING tasks in the active lens. Each row
-          // has a "Today" control to promote it onto today. Empty state is calm
-          // — nothing's been deferred, nothing to swap in.
-          <section className="aa-today__upcoming" aria-label="Upcoming bench">
-            <h2 className="aa-grouped__heading">Upcoming</h2>
-            {upcomingCount === 0 ? (
-              <p className="aa-today__upcoming-empty">
-                Nothing on the bench. Snooze a task and it'll show up here.
-              </p>
-            ) : (
-              <ul className="aa-grouped__list">
-                {(upcoming ?? []).map((task) => (
-                  <li key={task.id} className="aa-grouped__item">
-                    <TaskRow
-                      as="div"
-                      variant="list"
-                      task={task}
-                      showContent
-                      onOpen={() => editTask(task)}
-                    >
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handlePromote(task)}
-                      >
-                        Today
-                      </Button>
-                    </TaskRow>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        ) : isLoading ? (
+        {isLoading ? (
           // Skeleton: title row already rendered "—" above; show muted list
           // placeholders so the page doesn't snap in once data resolves.
           <div className="aa-today__loading" aria-hidden="true">
@@ -243,13 +187,11 @@ export function TodayPage() {
             text="Pull one in from Upcoming, or triage something from the Inbox."
             action={
               upcomingCount > 0 ? (
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setShowUpcoming(true)}
-                >
-                  See upcoming {upcomingCount}
-                </Button>
+                <Link to="/app/upcoming">
+                  <Button variant="secondary" size="md">
+                    See upcoming {upcomingCount}
+                  </Button>
+                </Link>
               ) : undefined
             }
           />
@@ -397,7 +339,7 @@ export function TodayPage() {
           message={
             <>
               <strong>{demoteTask.description}</strong> will move to Upcoming.
-              It stays available from the upcoming bench.
+              It moves to Upcoming.
             </>
           }
           confirmLabel="Move to Upcoming"

@@ -23,20 +23,24 @@ items they imply — not built yet, listed here so they're not lost:
   time. Capture pinned outside both switches. Pure nav state, no routes.
 - [x] **Add Upcoming to the Plan nav.** DONE 2026-07-05 (reverses the 2026-06-23
   "drop the route" item, which itself superseded the original "drop" call —
-  see history below). `/app/upcoming` is now a top-level Planning route/nav
-  item alongside Projects / Goals / Someday, with a count chip. The Today
-  "See upcoming" swap toggle stays as a separate same-page surface. See
-  `WORKFLOW.md` §5.1.
+  see history below). `/app/upcoming` is a top-level Planning route/nav item
+  alongside Projects / Goals / Someday, with a count chip. The Today
+  "See upcoming" same-page swap toggle was added in the same pass, then
+  dropped later 2026-07-05 in favor of Today ↔ Upcoming hero cross-links
+  (one surface per intent). See `WORKFLOW.md` §5.1 + the "Upcoming → Today
+  toggle" item below.
   - *History:* the 2026-06-23 call was "drop the Upcoming nav entry + route."
     That was reversed once at sign-off (2026-07-02, "let's keep upcoming"),
     which kept the route/page/query but didn't promote it into nav. The
     2026-07-05 reversal finishes the job: nav item + count + promote-on-row.
-- [x] **Upcoming → Today toggle.** DONE 2026-06-23. Today page has a "See
-  upcoming" / "Back to Today" toggle in the header; the Upcoming bench shows
-  `status=UPCOMING` tasks (active-lens-scoped) with a per-row "Today" promote
-  button; each Today row has a "Not today" demote button (→ bench, never
-  vanishes). Header renders even when Today is empty so the bench is always
-  reachable. No schema change — reuses `updateTaskStatus` to flip TODAY↔UPCOMING.
+- [x] **Upcoming → Today toggle.** DONE 2026-06-23; **same-page toggle dropped
+  2026-07-05** in favor of one Upcoming surface (`/app/upcoming` under Plan)
+  with Today ↔ Upcoming hero cross-links. The original swap bench was the only
+  way to reach Upcoming when it had no nav entry; once Upcoming became a Plan
+  page with its own nav item + count chip, the toggle duplicated the same
+  `UPCOMING` data in a second shape and confused users. Promote-to-Today now
+  lives on `/app/upcoming` (per-row button); demote-to-Upcoming stays on Today
+  (per-row "Move to Upcoming" + confirm). See `WORKFLOW.md` §5.1.
 - [x] **Someday nav relocation.** DONE 2026-06-27 (with the focus-switch nav).
   Someday lives under the **Plan** expanding section; route `/app/someday`
   unchanged.
@@ -87,8 +91,10 @@ items they imply — not built yet, listed here so they're not lost:
   has a "Today" promote** (DONE 2026-07-02 via `friction-cleanup`, reuses
   `updateTaskStatus`). Upcoming at `/app/upcoming` is a top-level Planning
   page (promoted into Plan nav 2026-07-05; see `WORKFLOW.md` §5.1) —
-  date-bucketed with a per-row "Today" promote; also reachable via the Today
-  "see upcoming" same-page swap toggle.
+  date-bucketed with a per-row "Today" promote. Today ↔ Upcoming cross-link
+  from their heroes (same-page swap toggle dropped 2026-07-05; one surface
+  per intent). `Done today` on `/app/today` is scoped to `status=TODAY` so
+  Upcoming tasks finished via focus no longer pollute Today's Done section.
 - [x] **Projects list + Project detail.** DONE 2026-06-27. Projects list at
   `/app/projects`; **Project detail at `/app/projects/:id`** (`ProjectDetailPage.tsx`)
   — work a project's tasks, add + complete inline, progress roll-up. e2e at

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getTasks, updateTaskContent, updateTaskStatus } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
@@ -110,6 +110,13 @@ export function UpcomingPage() {
           </h1>
           <p className="aa-upcoming__subtitle">{heroSubtitle}</p>
         </div>
+        {/* Symmetric cross-link — Today ↔ Upcoming. Mirrors the Upcoming link
+            on Today's hero so the two pages point at each other. */}
+        <Link to="/app/today" title="Open Today" aria-label="Open Today">
+          <Button variant="secondary" size="sm">
+            Today
+          </Button>
+        </Link>
       </header>
 
       {isLoading ? (

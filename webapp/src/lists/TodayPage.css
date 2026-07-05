@@ -59,8 +59,7 @@
   gap: var(--aa-space-lg);
 }
 
-.aa-today__list .aa-grouped__group,
-.aa-today__upcoming {
+.aa-today__list .aa-grouped__group {
   padding: var(--aa-space-md);
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
@@ -68,13 +67,11 @@
   box-shadow: var(--aa-shadow-sm);
 }
 
-.aa-today__list .aa-grouped__heading,
-.aa-today__upcoming .aa-grouped__heading {
+.aa-today__list .aa-grouped__heading {
   margin-bottom: var(--aa-space-md);
 }
 
-.aa-today__list .aa-grouped__list,
-.aa-today__upcoming .aa-grouped__list {
+.aa-today__list .aa-grouped__list {
   display: flex;
   flex-direction: column;
   gap: var(--aa-space-sm);
@@ -137,14 +134,6 @@
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--aa-text-4);
-}
-
-.aa-today__upcoming-empty {
-  margin: 0;
-  padding: var(--aa-space-lg) var(--aa-space-sm);
-  color: var(--aa-text-3);
-  font-size: 0.9rem;
-  text-align: center;
 }
 
 /* ---- Row action declutter: secondary actions are present in the a11y tree
@@ -212,7 +201,6 @@
   }
 
   .aa-today__list .aa-grouped__group,
-  .aa-today__upcoming,
   .aa-today__done-section {
     padding: var(--aa-space-md);
   }

@@ -100,6 +100,12 @@ export const getDoneToday = (async (args, context) => {
   // Local-midnight boundary: completedAt is stamped server-side on toggle; we
   // compare against the start of "today" in the server's locale. Day-granular
   // is the right resolution for a "done today" section.
+  // Status scoping: only tasks that were committed to Today (status=TODAY)
+  // belong here. Completion (completeTaskFromFocus) sets isDone + completedAt
+  // but leaves status untouched, so an Upcoming task finished via focus stays
+  // status=UPCOMING and is correctly excluded. A Today task that rolls to
+  // Upcoming at midnight and is then completed no longer counts as "today's
+  // work" — by then it wasn't committed to the day.
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
@@ -107,6 +113,7 @@ export const getDoneToday = (async (args, context) => {
     where: {
       userId: context.user.id,
       lensId: args.lensId,
+      status: "TODAY",
       isDone: true,
       completedAt: { gte: startOfToday },
     },

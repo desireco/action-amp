@@ -12,6 +12,7 @@ vi.mock("../billing/entitlementHttp", () => ({
 import {
   getTask,
   getTasks,
+  getDoneToday,
   toggleTaskDone,
   updateTaskStatus,
   getTopTask,
@@ -182,6 +183,41 @@ describe("getTasks", () => {
         goal: { select: { id: true, name: true } },
       },
     });
+  });
+});
+
+// ----------------------------------------------------------------
+// getDoneToday
+// ----------------------------------------------------------------
+
+describe("getDoneToday", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(getDoneToday({ lensId: "lens-1" }, m.context)).rejects.toThrow(
+      /Not authenticated/,
+    );
+  });
+
+  it("scopes to TODAY status — excludes Upcoming tasks completed via focus", async () => {
+    // Completion (completeTaskFromFocus) leaves status untouched, so an
+    // Upcoming task finished from focus stays status=UPCOMING. The Done-today
+    // section is "what I finished from today's committed list" — Upcoming
+    // completions don't belong here.
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([]);
+
+    await getDoneToday({ lensId: "lens-1" }, m.context);
+
+    const call = m.entities.Task.findMany.mock.calls[0][0];
+    expect(call.where).toMatchObject({
+      userId: "user-1",
+      lensId: "lens-1",
+      status: "TODAY",
+      isDone: true,
+    });
+    expect(call.where.completedAt).toHaveProperty("gte");
+    expect(call.where.completedAt.gte).toBeInstanceOf(Date);
+    expect(call.orderBy).toEqual({ completedAt: "desc" });
   });
 });
 
