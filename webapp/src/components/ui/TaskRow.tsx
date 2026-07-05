@@ -43,6 +43,37 @@ interface TaskRowProps {
 
 const SIZE_LABEL: Record<string, string> = { S: "S", M: "M", L: "L", XL: "XL" };
 
+/** Stop click/keyboard from bubbling into the parent row's onOpen handler. */
+function stopRowEvent(event: MouseEvent | KeyboardEvent) {
+  event.stopPropagation();
+}
+
+/**
+ * Builds the click/keyboard/a11y props for a clickable region (the root row or
+ * its main area). Centralized so the same logic doesn't get re-derived in two
+ * places — both regions toggle on click + Enter, and expose role/tabIndex only
+ * when interactive.
+ */
+function clickableProps(
+  active: boolean,
+  onActivate: () => void,
+): {
+  onClick?: (e: MouseEvent) => void;
+  onKeyDown?: (e: KeyboardEvent) => void;
+  role?: "button";
+  tabIndex?: number;
+} {
+  if (!active) return {};
+  return {
+    onClick: onActivate,
+    onKeyDown: (e: KeyboardEvent) => {
+      if (e.key === "Enter") onActivate();
+    },
+    role: "button",
+    tabIndex: 0,
+  };
+}
+
 /**
  * TaskRow — the universal task list row. Title + meta chips.
  *
@@ -68,10 +99,9 @@ export function TaskRow({
   const hasChildren = Boolean(children);
   const hasInlineNotes = Boolean(onSaveContent);
   const clickableOnRoot = Boolean(onOpen && !hasChildren && !hasInlineNotes);
+  const mainClickable = Boolean(onOpen && (hasChildren || hasInlineNotes));
   const openTask = () => onOpen?.(task);
-  const openTaskOnEnter = (e: KeyboardEvent) => {
-    if (e.key === "Enter") openTask();
-  };
+
   const [content, setContent] = useState(task.content ?? "");
   const [draft, setDraft] = useState(task.content ?? "");
   const [editingNotes, setEditingNotes] = useState(false);
@@ -84,78 +114,32 @@ export function TaskRow({
     setEditingNotes(false);
   }, [task.id, task.content]);
 
-  const stopRowClick = (event: MouseEvent) => {
-    event.stopPropagation();
-  };
-  const stopRowKey = (event: KeyboardEvent) => {
-    event.stopPropagation();
-  };
+  const rootClass = [
+    "aa-task-row",
+    variant === "surface" ? "aa-task-row--surface" : "",
+    variant === "list" ? "aa-task-row--list" : "",
+    done ? "aa-task-row--done" : "",
+    muted ? "aa-task-row--muted" : "",
+    clickableOnRoot ? "aa-task-row--clickable" : "",
+    onOpen && hasChildren ? "aa-task-row--split" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-  const saveNotes = async () => {
-    if (!onSaveContent || savingNotes) return;
-    const nextContent = draft.trim();
-    setSavingNotes(true);
-    try {
-      await onSaveContent(task, nextContent);
-      setContent(nextContent);
-      setDraft(nextContent);
-      setEditingNotes(false);
-    } finally {
-      setSavingNotes(false);
-    }
-  };
-  const showNotesToggle = hasInlineNotes && !editingNotes;
-  const notesToggleText =
-    notesToggleLabel ?? (content ? "Edit notes" : "Add notes");
-  const notesToggle = showNotesToggle ? (
-    <button
-      type="button"
-      className="aa-task-row__notes-toggle"
-      onClick={() => setEditingNotes(true)}
-    >
-      {notesToggleText}
-    </button>
-  ) : null;
+  const mainClass = [
+    "aa-task-row__main",
+    mainClickable ? "aa-task-row__main--clickable" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Element
-      className={[
-        "aa-task-row",
-        variant === "surface" ? "aa-task-row--surface" : "",
-        variant === "list" ? "aa-task-row--list" : "",
-        done ? "aa-task-row--done" : "",
-        muted ? "aa-task-row--muted" : "",
-        clickableOnRoot ? "aa-task-row--clickable" : "",
-        onOpen && hasChildren ? "aa-task-row--split" : "",
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      onClick={clickableOnRoot ? openTask : undefined}
-      role={clickableOnRoot ? "button" : undefined}
-      tabIndex={clickableOnRoot ? 0 : undefined}
-      onKeyDown={clickableOnRoot ? openTaskOnEnter : undefined}
+      className={rootClass}
+      {...clickableProps(clickableOnRoot, openTask)}
     >
-      <div
-        className={[
-          "aa-task-row__main",
-          onOpen && (hasChildren || hasInlineNotes)
-            ? "aa-task-row__main--clickable"
-            : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        onClick={
-          onOpen && (hasChildren || hasInlineNotes) ? openTask : undefined
-        }
-        role={onOpen && (hasChildren || hasInlineNotes) ? "button" : undefined}
-        tabIndex={onOpen && (hasChildren || hasInlineNotes) ? 0 : undefined}
-        onKeyDown={
-          onOpen && (hasChildren || hasInlineNotes)
-            ? openTaskOnEnter
-            : undefined
-        }
-      >
+      <div className={mainClass} {...clickableProps(mainClickable, openTask)}>
         <span className="aa-task-row__title">{task.description}</span>
         {(task.project ||
           task.dueDate ||
@@ -183,66 +167,130 @@ export function TaskRow({
           </div>
         )}
         {(hasInlineNotes || showContent) && (
-          <div
-            className="aa-task-row__notes"
-            onClick={stopRowClick}
-            onKeyDown={stopRowKey}
-          >
-            {hasInlineNotes && editingNotes ? (
-              <>
-                <textarea
-                  className="aa-task-row__notes-editor"
-                  aria-label="Task notes"
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  rows={3}
-                  disabled={savingNotes}
-                />
-                <div className="aa-task-row__notes-actions">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={saveNotes}
-                    disabled={savingNotes}
-                  >
-                    Save notes
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setDraft(content);
-                      setEditingNotes(false);
-                    }}
-                    disabled={savingNotes}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                {content && (
-                  <p className="aa-task-row__notes-preview">{content}</p>
-                )}
-                {hasInlineNotes &&
-                  notesTogglePlacement === "inline" &&
-                  notesToggle}
-              </>
-            )}
-          </div>
+          <TaskRowNotes
+            content={content}
+            draft={draft}
+            editing={editingNotes}
+            saving={savingNotes}
+            editable={hasInlineNotes}
+            showToggle={
+              hasInlineNotes && !editingNotes && notesTogglePlacement === "inline"
+            }
+            toggleLabel={
+              notesToggleLabel ?? (content ? "Edit notes" : "Add notes")
+            }
+            onDraftChange={setDraft}
+            onStartEdit={() => setEditingNotes(true)}
+            onCancel={() => {
+              setDraft(content);
+              setEditingNotes(false);
+            }}
+            onSave={async () => {
+              if (!onSaveContent || savingNotes) return;
+              const nextContent = draft.trim();
+              setSavingNotes(true);
+              try {
+                await onSaveContent(task, nextContent);
+                setContent(nextContent);
+                setDraft(nextContent);
+                setEditingNotes(false);
+              } finally {
+                setSavingNotes(false);
+              }
+            }}
+          />
         )}
       </div>
-      {(children || (notesTogglePlacement === "actions" && notesToggle)) && (
+      {(children ||
+        (notesTogglePlacement === "actions" &&
+          hasInlineNotes &&
+          !editingNotes)) && (
         <div
           className="aa-task-row__actions"
-          onClick={stopRowClick}
-          onKeyDown={stopRowKey}
+          onClick={stopRowEvent}
+          onKeyDown={stopRowEvent}
         >
           {children}
-          {notesTogglePlacement === "actions" && notesToggle}
+          {notesTogglePlacement === "actions" && hasInlineNotes && !editingNotes && (
+            <button
+              type="button"
+              className="aa-task-row__notes-toggle"
+              onClick={() => setEditingNotes(true)}
+            >
+              {notesToggleLabel ?? (content ? "Edit notes" : "Add notes")}
+            </button>
+          )}
         </div>
       )}
     </Element>
+  );
+}
+
+/**
+ * The notes region of a TaskRow. Read-only preview, or an inline editor with
+ * Save / Cancel. Extracted from the main render to keep the row's structural
+ * logic (click regions, class composition) legible.
+ */
+function TaskRowNotes({
+  content,
+  draft,
+  editing,
+  saving,
+  editable,
+  showToggle,
+  toggleLabel,
+  onDraftChange,
+  onStartEdit,
+  onCancel,
+  onSave,
+}: {
+  content: string;
+  draft: string;
+  editing: boolean;
+  saving: boolean;
+  editable: boolean;
+  showToggle: boolean;
+  toggleLabel: string;
+  onDraftChange: (value: string) => void;
+  onStartEdit: () => void;
+  onCancel: () => void;
+  onSave: () => Promise<void> | void;
+}) {
+  return (
+    <div className="aa-task-row__notes" onClick={stopRowEvent} onKeyDown={stopRowEvent}>
+      {editable && editing ? (
+        <>
+          <textarea
+            className="aa-task-row__notes-editor"
+            aria-label="Task notes"
+            value={draft}
+            onChange={(e) => onDraftChange(e.target.value)}
+            rows={3}
+            disabled={saving}
+          />
+          <div className="aa-task-row__notes-actions">
+            <Button variant="primary" size="sm" onClick={onSave} disabled={saving}>
+              Save notes
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
+              Cancel
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          {content && <p className="aa-task-row__notes-preview">{content}</p>}
+          {showToggle && (
+            <button
+              type="button"
+              className="aa-task-row__notes-toggle"
+              onClick={onStartEdit}
+            >
+              {toggleLabel}
+            </button>
+          )}
+        </>
+      )}
+    </div>
   );
 }
