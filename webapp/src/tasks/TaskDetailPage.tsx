@@ -9,17 +9,19 @@ import {
   updateTaskDetails,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "../components/ui";
+import { Button, PropertyChips } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
+import { usePropertyKeys } from "../components/ui/usePropertyKeys";
 import {
-  TaskChipEditor,
-  type TaskChipProject,
+  taskPropertyFields,
+  chipPickToTaskPatch,
   type TaskChipGoal,
+  type TaskChipProject,
   type TaskChipState,
   type TaskPriority,
   type TaskSize,
   type TaskStatus,
-} from "./TaskChipEditor";
+} from "./taskPropertyFields";
 import "./TaskDetailPage.css";
 
 /**
@@ -119,20 +121,23 @@ export function TaskDetailPage() {
     }
   };
 
-  // Live-edit a structural field via a chip pick. Writes immediately; the
-  // optimistic state is the server response, so we invalidate rather than
-  // patch locally. Errors surface inline on the page.
+  // Live-edit a structural field. Chip picks (When/Priority/Size/Due) arrive
+  // here via PropertyChips' onPick; picker picks (Project/Goal) via
+  // onPickerPick. Both write immediately through updateTaskDetails. The same
+  // write path is used by the property-key shortcuts (usePropertyKeys below).
   const [chipError, setChipError] = useState<string | null>(null);
-  const handleChipChange = async (
-    patch: Omit<
-      Partial<TaskChipState>,
-      "project" | "goal" | "dueDate"
-    > & {
-      projectId?: string | null;
-      goalId?: string | null;
-      dueDate?: Date | null;
-    },
-  ) => {
+  // Tracks whether any chip popover / picker sheet is open — the property-key
+  // shortcuts disable themselves while one is (you can't cycle size with "]"
+  // while the size popover is open).
+  const [chipOpen, setChipOpen] = useState(false);
+
+  // The set of structural fields we can live-edit. Omit taskId (added below).
+  type TaskPatch = Omit<
+    Parameters<typeof updateTaskDetails>[0],
+    "taskId"
+  >;
+
+  const writeTaskPatch = async (patch: TaskPatch) => {
     if (!task) return;
     setChipError(null);
     try {
@@ -150,6 +155,38 @@ export function TaskDetailPage() {
       setChipError("Couldn't update that. Try again.");
     }
   };
+
+  // Inline popover pick — When/Priority/Size/Due.
+  const handlePick = (fieldKey: string, value: string): void => {
+    const patch = chipPickToTaskPatch(fieldKey, value);
+    if (Object.keys(patch).length === 0) return;
+    void writeTaskPatch(patch as TaskPatch);
+  };
+  // Bottom-sheet pick — Project/Goal. value is an id, or null for "None".
+  const handlePickerPick = (fieldKey: string, value: string | null): void => {
+    if (fieldKey === "project") void writeTaskPatch({ projectId: value });
+    else if (fieldKey === "goal") void writeTaskPatch({ goalId: value });
+  };
+
+  // Property-key shortcuts (TRIAGE.md §7.4/§7.6): [ / ] = size, - / = =
+  // priority, H = cycle When. Same scheme as triage; disabled while a chip
+  // popover/sheet is open OR the title/notes inputs are focused OR the task is
+  // done. The hook guards typing targets itself. The hook is intentionally
+  // string-typed (it serves triage + task page); cast to the op's enums here.
+  usePropertyKeys({
+    enabled: !!task && !task.isDone && !chipOpen,
+    get: () => ({
+      status: (task?.status as TaskStatus) ?? "UPCOMING",
+      priority: (task?.priority as TaskPriority) ?? "NORMAL",
+      size: (task?.size as TaskSize) ?? "M",
+    }),
+    set: (patch) =>
+      void writeTaskPatch({
+        status: patch.status as TaskStatus | undefined,
+        priority: patch.priority as TaskPriority | undefined,
+        size: patch.size as TaskSize | undefined,
+      }),
+  });
 
   const canSendFeedback =
     feedbackMessage.trim().length > 0 && !feedbackSubmitting;
@@ -233,26 +270,32 @@ export function TaskDetailPage() {
             )}
 
             {/* The chip row IS the editor for every structural field. */}
-            <TaskChipEditor
-              task={{
-                status: (task.status as TaskStatus) ?? "UPCOMING",
-                priority: (task.priority as TaskPriority) ?? "NORMAL",
-                size: (task.size as TaskSize) ?? "M",
-                dueDate: task.dueDate,
-                project: (task.project as TaskChipProject | null) ?? null,
-                goal: (task.goal as TaskChipGoal | null) ?? null,
-              }}
-              projects={(lensProjects ?? []).map((p: { id: string; name: string; goal?: { name: string } | null }) => ({
-                id: p.id,
-                label: p.name,
-                meta: p.goal?.name ?? null,
-              }))}
-              goals={(lensGoals ?? []).map((g: { id: string; name: string }) => ({
-                id: g.id,
-                label: g.name,
-              }))}
+            <PropertyChips
+              fields={taskPropertyFields({
+                task: {
+                  status: (task.status as TaskStatus) ?? "UPCOMING",
+                  priority: (task.priority as TaskPriority) ?? "NORMAL",
+                  size: (task.size as TaskSize) ?? "M",
+                  dueDate: task.dueDate,
+                  project: (task.project as TaskChipProject | null) ?? null,
+                  goal: (task.goal as TaskChipGoal | null) ?? null,
+                },
+                projects: (lensProjects ?? []).map(
+                  (p: { id: string; name: string; goal?: { name: string } | null }) => ({
+                    id: p.id,
+                    label: p.name,
+                    meta: p.goal?.name ?? null,
+                  }),
+                ),
+                goals: (lensGoals ?? []).map((g: { id: string; name: string }) => ({
+                  id: g.id,
+                  label: g.name,
+                })),
+              })}
               readOnly={task.isDone}
-              onChange={(patch) => void handleChipChange(patch)}
+              onPick={handlePick}
+              onPickerPick={handlePickerPick}
+              onOpenChange={setChipOpen}
             />
             {chipError && !task.isDone && (
               <p className="aa-task-edit__err">{chipError}</p>

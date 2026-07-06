@@ -7,15 +7,35 @@ interface UseTriageKeyboardArgs {
   step: Step;
   chosenLensId: string | null;
   working: Working | null;
-  openKey: string | null;
+  /** Whether any PropertyChips popover or picker sheet is open. While true,
+   *  the property-key shortcuts are suppressed (don't cycle size with "]" while
+   *  the size popover is open) — Escape still closes it. */
+  chipOpen: boolean;
   pickerOpen: boolean;
   canComplete: (working: Working | null) => boolean;
   dispatch: () => void;
   navigateToInbox: () => void;
-  setOpenKey: (key: string | null) => void;
+  setChipOpen: (open: boolean) => void;
   setStep: (step: Step) => void;
   setWorkingType: (type: ChosenType) => void;
   selectLensByIndex: (index: number) => void;
+  /** Apply a property-key patch (size/priority/when) to the working draft.
+   *  Called from the spec step when [ / ] / - / = / H are pressed. */
+  applyPropertyKey: (patch: Partial<Working>) => void;
+}
+
+const SIZE_ORDER = ["S", "M", "L", "XL"] as const;
+const PRIORITY_ORDER = ["LOW", "NORMAL", "IMPORTANT"] as const;
+const WHEN_ORDER = ["Today", "Upcoming", "Someday"] as const;
+
+function cycleValue<T extends string>(
+  value: T,
+  order: readonly T[],
+  step: 1 | -1,
+): T {
+  const idx = order.indexOf(value);
+  if (idx === -1) return order[0];
+  return order[(idx + step + order.length) % order.length];
 }
 
 export function useTriageKeyboard({
@@ -24,23 +44,27 @@ export function useTriageKeyboard({
   step,
   chosenLensId,
   working,
-  openKey,
+  chipOpen,
   pickerOpen,
   canComplete,
   dispatch,
   navigateToInbox,
-  setOpenKey,
+  setChipOpen,
   setStep,
   setWorkingType,
   selectLensByIndex,
+  applyPropertyKey,
 }: UseTriageKeyboardArgs) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isComplete || !hasItem) return;
 
-      if (openKey || pickerOpen) {
+      // While a chip popover OR bottom-sheet picker is open: only Escape closes
+      // it (PropertyChips handles its own Escape for popovers; the pickers
+      // handle theirs). Property-key cycling is suppressed here.
+      if (chipOpen || pickerOpen) {
         if (e.key === "Escape") {
-          setOpenKey(null);
+          setChipOpen(false);
         }
         return;
       }
@@ -51,8 +75,53 @@ export function useTriageKeyboard({
         return;
       }
 
-      const editingTitle = document.activeElement?.getAttribute("contenteditable") === "true";
+      const editingTitle =
+        document.activeElement?.getAttribute("contenteditable") === "true" ||
+        isTypingTarget(document.activeElement);
       if (editingTitle) return;
+
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      // ---- Spec step: property keys (TRIAGE.md §7.4 / §7.6) ----
+      // [ / ] size, - / = priority, H cycle when. Only meaningful for tasks
+      // (size/priority/when are task fields); ignored for project/resource.
+      if (step === "spec" && working?.type === "task") {
+        const w = working;
+        switch (e.key) {
+          case "[":
+            e.preventDefault();
+            applyPropertyKey({
+              size: cycleValue(w.size, SIZE_ORDER, -1),
+            });
+            return;
+          case "]":
+            e.preventDefault();
+            applyPropertyKey({
+              size: cycleValue(w.size, SIZE_ORDER, 1),
+            });
+            return;
+          case "-":
+            e.preventDefault();
+            applyPropertyKey({
+              priority: cycleValue(w.priority, PRIORITY_ORDER, -1),
+            });
+            return;
+          case "=":
+          case "+":
+            e.preventDefault();
+            applyPropertyKey({
+              priority: cycleValue(w.priority, PRIORITY_ORDER, 1),
+            });
+            return;
+          case "h":
+          case "H":
+            e.preventDefault();
+            applyPropertyKey({
+              when: cycleValue(w.when, WHEN_ORDER, 1),
+            });
+            return;
+        }
+      }
 
       if (step === "classify") {
         const typeByKey: Record<string, ChosenType> = {
@@ -107,14 +176,26 @@ export function useTriageKeyboard({
     step,
     chosenLensId,
     working,
-    openKey,
+    chipOpen,
     pickerOpen,
     canComplete,
     dispatch,
     navigateToInbox,
-    setOpenKey,
+    setChipOpen,
     setStep,
     setWorkingType,
     selectLensByIndex,
+    applyPropertyKey,
   ]);
+}
+
+function isTypingTarget(el: EventTarget | null): boolean {
+  if (!(el instanceof HTMLElement)) return false;
+  const tag = el.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "SELECT" ||
+    el.isContentEditable
+  );
 }

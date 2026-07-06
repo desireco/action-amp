@@ -22,7 +22,7 @@ import "./SomedayPage.css";
 export function SomedayPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
-  const { promoteToToday, saveTaskContent } = useTaskListActions();
+  const { promoteToToday } = useTaskListActions();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "SOMEDAY", isDone: false } : undefined,
@@ -54,16 +54,16 @@ export function SomedayPage() {
               task={task}
               muted
               onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
-              onSaveContent={saveTaskContent}
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => promoteToToday(task)}
-              title="Move to Today"
             >
-              Today
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => promoteToToday(task)}
+                title="Move to Today"
+              >
+                Today
+              </Button>
+            </TaskRow>
           </li>
         ))}
       </ul>

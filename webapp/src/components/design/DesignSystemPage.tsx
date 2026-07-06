@@ -477,12 +477,11 @@ export function DesignSystemPage() {
                 task={{
                   id: "task-row-list",
                   description: "I want to work on",
-                  content: "I want to work on executing projects",
                   project: { id: "project", name: "General" },
                   dueDate: new Date(),
                   size: "M",
+                  status: "TODAY",
                 }}
-                showContent
               >
                 <Button variant="ghost" size="sm">Edit task</Button>
               </TaskRow>

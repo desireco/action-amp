@@ -4,7 +4,14 @@ import { useQuery } from "wasp/client/operations";
 import { getInboxItems, triageInboxItem } from "wasp/client/operations";
 import { getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { TriageCard, Button, PickerSheet, SpecRow, type TriageExit } from "../components/ui";
+import {
+  TriageCard,
+  Button,
+  PickerSheet,
+  PropertyChips,
+  type TriageExit,
+} from "../components/ui";
+import { usePropertyKeys } from "../components/ui/usePropertyKeys";
 import { useActiveLens } from "../app/lensContext";
 import { getProjects } from "wasp/client/operations";
 import { getProjectsForResolver } from "wasp/client/operations";
@@ -12,20 +19,20 @@ import { getGoals } from "wasp/client/operations";
 import type { ParsedPriority, ParsedSize } from "./parseCapture";
 import { resolveProjectCandidate } from "./projectResolver";
 import {
-  DUE_OPTS,
-  KIND_OPTS,
   OUTCOME_EXIT,
-  PRIORITY_OPTS,
-  SIZE_OPTS,
-  WHEN_OPTS,
   buildDispatchPayload,
   buildTriageChips,
   canComplete as canCompleteWorking,
-  formatPriority,
   summaryFor,
   type Step,
   type Working,
 } from "./triageFlow";
+import {
+  taskFields,
+  projectFields,
+  resourceFields,
+  chipPickToWorkingPatch,
+} from "./triagePropertyFields";
 import { formatAgo, isSameDay } from "../shared/dateFormat";
 import { useTriageKeyboard } from "./useTriageKeyboard";
 import "./TriagePage.css";
@@ -82,7 +89,11 @@ export function TriagePage() {
   // `[[lens]]` token, or a concrete Project destination.
   const [chosenLensId, setChosenLensId] = useState<string | null>(null);
   const [working, setWorking] = useState<Working | null>(null);
-  const [openKey, setOpenKey] = useState<string | null>(null); // expanded spec row
+  // Tracks whether any PropertyChips popover / picker sheet is open — used to
+  // gate the property-key shortcuts (don't fire [ / ] / - / = / H while a
+  // chip popover is open). The chip editor owns its own open state; this is
+  // just the page-level mirror via onOpenChange.
+  const [chipOpen, setChipOpen] = useState(false);
   const initializedItemId = useRef<string | null>(null);
   const lensTouchedRef = useRef(false);
 
@@ -245,7 +256,7 @@ export function TriagePage() {
       ...initWorking(),
       projectId: hasProjectDestination ? projectBridge.projectId : null,
     });
-    setOpenKey(null);
+    setChipOpen(false);
   }, [item, activeLens?.id, initWorking, inferredLens, hasProjectDestination, projectBridge?.projectId]);
 
   useEffect(() => {
@@ -343,18 +354,21 @@ export function TriagePage() {
     step,
     chosenLensId,
     working,
-    openKey,
+    chipOpen,
     pickerOpen: projectPickerOpen || goalPickerOpen || parentProjectPickerOpen || parentGoalPickerOpen,
     canComplete,
     dispatch,
     navigateToInbox: () => navigate("/app/inbox"),
-    setOpenKey,
+    setChipOpen,
     setStep,
     setWorkingType: (type) => {
       if (type === "project" && hasProjectDestination) return;
       setW({ type });
     },
     selectLensByIndex,
+    // Property-key shortcuts in the spec step — [ / ] size, - / = priority,
+    // H cycle when. Patched straight into the working draft via setW.
+    applyPropertyKey: (patch) => setW(patch),
   });
 
   if (isComplete) {
@@ -544,33 +558,28 @@ export function TriagePage() {
                   2 · {working.type === "task" ? "Specify the task" : working.type === "project" ? "Specify the project" : "File the note"}
                 </div>
 
-                <div className="aa-spec-list">
-                  {/* ---- Task: When · Size · Priority · Project ---- */}
+                <div className="aa-triage-spec">
+                  {/* The chip row IS the editor — same component as the task
+                      page. Project/Goal/Parent are externalPicker (triage owns
+                      those sheets — they have rich, item-specific semantics).
+                      Notes (task) stay a textarea — prose, not a chip. */}
                   {working.type === "task" && (
                     <>
-                      <SpecRow
-                        label="When" value={working.when}
-                        open={openKey === "when"} onToggle={() => setOpenKey(openKey === "when" ? null : "when")}
-                        options={WHEN_OPTS.map((o) => ({ value: o, label: o }))}
-                        onPick={(v) => { setW({ when: v as Working["when"] }); setOpenKey(null); }}
-                      />
-                      <SpecRow
-                        label="Size" value={working.size}
-                        open={openKey === "size"} onToggle={() => setOpenKey(openKey === "size" ? null : "size")}
-                        options={SIZE_OPTS.map((o) => ({ value: o, label: o }))}
-                        onPick={(v) => { setW({ size: v as ParsedSize }); setOpenKey(null); }}
-                      />
-                      <SpecRow
-                        label="Priority" value={formatPriority(working.priority)}
-                        open={openKey === "priority"} onToggle={() => setOpenKey(openKey === "priority" ? null : "priority")}
-                        options={PRIORITY_OPTS.map((o) => ({ value: o, label: formatPriority(o) }))}
-                        onPick={(v) => { setW({ priority: v as ParsedPriority }); setOpenKey(null); }}
-                      />
-                      <SpecRow
-                        label="Project" value={projectName ?? "General"} isDefault={!projectName} isProject
-                        open={openKey === "project"} onToggle={() => setOpenKey(openKey === "project" ? null : "project")}
-                        options={[]}
-                        onPick={() => { setOpenKey(null); setProjectPickerOpen(true); }}
+                      <PropertyChips
+                        fields={taskFields({
+                          working,
+                          projectName,
+                          projectGoalName,
+                          parentName,
+                          projectIsDefault: !projectName,
+                        })}
+                        onPick={(key, value) =>
+                          setW(chipPickToWorkingPatch(key, value))
+                        }
+                        onPickerOpen={(key) => {
+                          if (key === "project") setProjectPickerOpen(true);
+                        }}
+                        onOpenChange={(open) => setChipOpen(open)}
                       />
                       <label className="aa-triage-notes">
                         <span className="aa-triage-notes__label">Notes</span>
@@ -586,41 +595,42 @@ export function TriagePage() {
                     </>
                   )}
 
-                  {/* ---- Project: Goal · Due ---- */}
                   {working.type === "project" && (
-                    <>
-                      <SpecRow
-                        label="Supports goal" value={projectGoalName ?? "—"}
-                        isDefault={!working.projectGoalId} isProject
-                        open={openKey === "goal"} onToggle={() => setOpenKey(openKey === "goal" ? null : "goal")}
-                        options={[]}
-                        onPick={() => { setOpenKey(null); setGoalPickerOpen(true); }}
-                      />
-                      <SpecRow
-                        label="Due" value={working.due}
-                        open={openKey === "due"} onToggle={() => setOpenKey(openKey === "due" ? null : "due")}
-                        options={DUE_OPTS.map((o) => ({ value: o, label: o }))}
-                        onPick={(v) => { setW({ due: v as Working["due"] }); setOpenKey(null); }}
-                      />
-                    </>
+                    <PropertyChips
+                      fields={projectFields({
+                        working,
+                        projectName,
+                        projectGoalName,
+                        parentName,
+                        projectIsDefault: !projectName,
+                      })}
+                      onPick={(key, value) =>
+                        setW(chipPickToWorkingPatch(key, value))
+                      }
+                      onPickerOpen={(key) => {
+                        if (key === "goal") setGoalPickerOpen(true);
+                      }}
+                      onOpenChange={(open) => setChipOpen(open)}
+                    />
                   )}
 
-                  {/* ---- Resource (Note): Parent · Kind ---- */}
                   {working.type === "resource" && (
-                    <>
-                      <SpecRow
-                        label="File under" value={parentName ?? "Pick parent…"} isDefault={!parentName} isProject
-                        open={openKey === "parent"} onToggle={() => setOpenKey(openKey === "parent" ? null : "parent")}
-                        options={[]}
-                        onPick={() => { setOpenKey(null); setParentProjectPickerOpen(true); }}
-                      />
-                      <SpecRow
-                        label="Kind" value={working.kind}
-                        open={openKey === "kind"} onToggle={() => setOpenKey(openKey === "kind" ? null : "kind")}
-                        options={KIND_OPTS.map((o) => ({ value: o, label: o }))}
-                        onPick={(v) => { setW({ kind: v as Working["kind"] }); setOpenKey(null); }}
-                      />
-                    </>
+                    <PropertyChips
+                      fields={resourceFields({
+                        working,
+                        projectName,
+                        projectGoalName,
+                        parentName,
+                        projectIsDefault: !projectName,
+                      })}
+                      onPick={(key, value) =>
+                        setW(chipPickToWorkingPatch(key, value))
+                      }
+                      onPickerOpen={(key) => {
+                        if (key === "parent") setParentProjectPickerOpen(true);
+                      }}
+                      onOpenChange={(open) => setChipOpen(open)}
+                    />
                   )}
                 </div>
 

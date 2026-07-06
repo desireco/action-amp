@@ -41,6 +41,13 @@ export { SnoozeSheet } from "./SnoozeSheet";
 export type { SnoozePreset } from "./SnoozeSheet";
 export { SpecRow } from "./SpecRow";
 export type { SpecOption } from "./SpecRow";
+export { PropertyChips } from "./PropertyChips";
+export type {
+  PropertyField,
+  PropertyOption,
+  PropertyPickerItem,
+  PropertyVariant,
+} from "./PropertyChips";
 export { Table } from "./Table";
 export type { TableColumn } from "./Table";
 export { TaskRow } from "./TaskRow";

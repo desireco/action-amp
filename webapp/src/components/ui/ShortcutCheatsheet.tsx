@@ -57,18 +57,19 @@ const SECTIONS: ShortcutSection[] = [
   {
     title: "In triage",
     items: [
-      { keys: ["1", "2", "3"], label: "Today / Upcoming / Someday" },
-      { keys: ["P"], label: "Make a Project" },
-      { keys: ["R"], label: "Make a Resource" },
-      { keys: ["Del"], label: "Trash" },
-      { keys: ["←", "→"], label: "Previous / next item" },
+      { keys: ["1", "2", "3"], label: "Task / Project / Resource", note: "classify step" },
+      { keys: ["a", "s", "d", "f"], label: "Pick a lens", note: "by index" },
+      { keys: ["⌫"], label: "Archive", note: "Backspace" },
+      { keys: ["↵"], label: "Continue / Complete" },
+      { keys: ["Esc"], label: "Back a step / exit" },
     ],
   },
   {
     title: "Properties",
     items: [
-      { keys: ["[", "]"], label: "Size down / up" },
-      { keys: ["-", "="], label: "Priority down / up" },
+      { keys: ["[", "]"], label: "Size down / up", note: "triage + task page" },
+      { keys: ["-", "="], label: "Priority down / up", note: "triage + task page" },
+      { keys: ["H"], label: "Cycle When", note: "Today → Upcoming → Someday" },
     ],
   },
 ];

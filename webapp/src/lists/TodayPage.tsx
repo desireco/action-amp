@@ -211,7 +211,6 @@ export function TodayPage() {
                   variant="list"
                   key={task.id}
                   task={task}
-                  showContent
                   onOpen={() => {
                     pickTask(task);
                   }}
@@ -253,7 +252,6 @@ export function TodayPage() {
                       variant="list"
                       task={task}
                       muted
-                      showContent
                       onOpen={() => {
                         pickTask(task);
                       }}
@@ -293,7 +291,6 @@ export function TodayPage() {
                   key={task.id}
                   task={task}
                   muted
-                  showContent
                   onOpen={() => editTask(task)}
                 >
                   <Button

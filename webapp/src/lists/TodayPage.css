@@ -103,14 +103,12 @@
   border-top: 1px solid var(--aa-border);
 }
 
-/* ---- "Done today" — settled work, so a solid border (dashed reads as
-   draft/tentative, the opposite of completed). ---- */
+/* ---- "Done today" — a plain divider, lighter than a card. Settled work
+   doesn't need a frame; the section label + top border is enough separation. ---- */
 .aa-today__done-section {
   margin-top: var(--aa-space-xl);
-  padding: var(--aa-space-md);
-  background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-md);
+  padding-top: var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
 }
 .aa-today__done-header {
   display: flex;
@@ -119,10 +117,12 @@
   gap: var(--aa-space-sm);
   width: 100%;
   padding: 0;
-  margin-bottom: var(--aa-space-md);
-  font-size: var(--aa-text-base);
+  margin-bottom: var(--aa-space-sm);
+  font-size: var(--aa-text-sm);
   font-weight: var(--aa-weight-semibold);
-  color: var(--aa-text-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
   text-align: left;
 }
 .aa-today__done-title {
@@ -131,7 +131,8 @@
   gap: var(--aa-space-sm);
 }
 .aa-today__done-count {
-  font-size: var(--aa-text-sm);
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
   font-weight: var(--aa-weight-medium);
   color: var(--aa-text-4);
 }

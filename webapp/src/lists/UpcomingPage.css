@@ -45,7 +45,6 @@
 
 .aa-upcoming__list .aa-grouped__group--overdue .aa-grouped__count {
   color: var(--aa-rose-text);
-  background: var(--aa-rose-soft);
 }
 
 /* ---- Loading skeleton. Layout + pulse live in ListShell.css as the shared

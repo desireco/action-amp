@@ -5,6 +5,38 @@
    Teal = system/state (CTAs, Do-this, due chip). The list is calmed: per-row
    controls are hover/focus-revealed so a long task list reads as a list, not a
    wall of buttons. Shares the global .aa-grouped / .aa-list-empty styles. */
+
+/* Momentum — three compact stats above the task groups. Smaller than the
+   prototype's version: text-base numbers, micro labels, tight gap. Reads as
+   a glance, not a dashboard. */
+.aa-project__momentum {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-lg);
+  padding: 0 var(--aa-space-xs) var(--aa-space-md);
+  margin-bottom: var(--aa-space-md);
+  border-bottom: 1px solid var(--aa-border);
+}
+.aa-project__momentum-stat {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-xs);
+}
+.aa-project__momentum-num {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-bold);
+  color: var(--aa-text);
+  line-height: 1;
+  font-feature-settings: "tnum" 1;
+}
+.aa-project__momentum-label {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-4);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .aa-project {
   max-width: 860px;
   display: flex;

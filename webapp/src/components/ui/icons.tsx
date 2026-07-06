@@ -168,3 +168,12 @@ export function BoxIcon(p: IconProps) {
     </svg>
   );
 }
+
+/* Chevron down — signals "this chip opens something". Used by PropertyChips. */
+export function ChevronIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

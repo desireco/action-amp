@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { TaskRow, type TaskRowTask } from "./TaskRow";
 import { renderInContext } from "wasp/client/test";
 
-// TaskRow — the universal task list row. Title + meta chips + row click (onOpen).
-// There is no completion control here; a done task reads as such via the
-// `--done` class (driven by task.isDone). Uses fireEvent over user-event (no dep).
+// TaskRow — the universal task list row (variant: HoverCompact). Title leads,
+// meta chips wrap below, status is a leading dot, actions hover-reveal on the
+// right. No completion control here; a done task reads as such via the
+// `--done` class. Notes are not edited in the row — that moved to the detail
+// page. Uses fireEvent over user-event (no dep).
 
 const BASE_TASK: TaskRowTask = {
   id: "task-1",
@@ -51,23 +53,97 @@ describe("TaskRow", () => {
       expect(row).toHaveClass("aa-task-row--surface");
     });
 
-    it("can render the unboxed list variant and show content without editing", () => {
+    it("can render the unboxed list variant", () => {
       const { container } = renderInContext(
-        <TaskRow
-          as="div"
-          variant="list"
-          task={{ ...BASE_TASK, content: "Confirm the latest number." }}
-          showContent
-        />,
+        <TaskRow as="div" variant="list" task={BASE_TASK} />,
       );
       const row = container.querySelector(".aa-task-row")!;
       expect(row).toHaveClass("aa-task-row--list");
+    });
+  });
+
+  describe("status dot", () => {
+    it("renders a teal-filled dot for TODAY", () => {
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, status: "TODAY" }} />,
+      );
+      expect(container.querySelector(".aa-task-row__dot--today")).toBeTruthy();
+    });
+
+    it("renders an open-ring dot for UPCOMING", () => {
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, status: "UPCOMING" }} />,
+      );
       expect(
-        screen.getByText("Confirm the latest number."),
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByRole("button", { name: /edit notes|add notes/i }),
-      ).toBeNull();
+        container.querySelector(".aa-task-row__dot--upcoming"),
+      ).toBeTruthy();
+    });
+
+    it("renders a faint dot for SOMEDAY", () => {
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, status: "SOMEDAY" }} />,
+      );
+      expect(container.querySelector(".aa-task-row__dot--someday")).toBeTruthy();
+    });
+
+    it("renders a filled-checkmark dot for done tasks (and overrides status)", () => {
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, status: "TODAY", isDone: true }} />,
+      );
+      expect(container.querySelector(".aa-task-row__dot--done")).toBeTruthy();
+      // Done wins over Today — the dot is one or the other, not both.
+      expect(container.querySelector(".aa-task-row__dot--today")).toBeNull();
+    });
+
+    it("renders no dot when status and isDone are both unset", () => {
+      const { container } = renderInContext(<TaskRow task={BASE_TASK} />);
+      expect(container.querySelector(".aa-task-row__dot")).toBeNull();
+    });
+  });
+
+  describe("meta chips", () => {
+    it("shows a muted chip with the size label", () => {
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, size: "L" }} />,
+      );
+      const chip = container.querySelector(".aa-task-row__size-chip");
+      expect(chip).toHaveTextContent("L");
+    });
+
+    it("shows an amber star chip only when priority is IMPORTANT", () => {
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, priority: "IMPORTANT" }} />,
+      );
+      expect(container.querySelector(".aa-chip--amber")).toBeTruthy();
+    });
+
+    it("does not render a priority chip for NORMAL/LOW (calm-system rule)", () => {
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, priority: "NORMAL" }} />,
+      );
+      expect(container.querySelector(".aa-chip--amber")).toBeNull();
+    });
+
+    it("shows due date as a teal chip when in the future", () => {
+      const future = new Date();
+      future.setDate(future.getDate() + 3);
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, dueDate: future }} />,
+      );
+      const teal = container.querySelector(".aa-chip--teal");
+      expect(teal).toBeTruthy();
+      expect(teal!.textContent).toMatch(/in 3d/);
+    });
+
+    it("shows due date as a rose chip when overdue", () => {
+      const past = new Date();
+      past.setDate(past.getDate() - 2);
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, dueDate: past }} />,
+      );
+      const rose = container.querySelector(".aa-chip--rose");
+      expect(rose).toBeTruthy();
+      expect(rose!.textContent).toMatch(/2d overdue/);
     });
   });
 
@@ -88,73 +164,33 @@ describe("TaskRow", () => {
       expect(li).not.toHaveAttribute("role");
       expect(li).not.toHaveAttribute("tabindex");
     });
+
+    it("delegates click to the main region when the row has children (actions)", () => {
+      const onOpen = vi.fn();
+      renderInContext(
+        <TaskRow task={BASE_TASK} onOpen={onOpen}>
+          <button type="button">Edit</button>
+        </TaskRow>,
+      );
+      // Root is no longer the click target when actions are present.
+      const root = screen.getByText("Email Sarah").closest("li")!;
+      expect(root).not.toHaveAttribute("role");
+      // The title click still opens.
+      fireEvent.click(screen.getByText("Email Sarah"));
+      expect(onOpen).toHaveBeenCalledWith(BASE_TASK);
+    });
   });
 
-  describe("notes editing", () => {
-    it("shows existing task notes and saves edits inline", async () => {
-      const onSaveContent = vi.fn().mockResolvedValue(undefined);
-      renderInContext(
-        <TaskRow
-          task={{ ...BASE_TASK, content: "Bring the contract notes." }}
-          onSaveContent={onSaveContent}
-        />,
-      );
-
-      expect(screen.getByText("Bring the contract notes.")).toBeInTheDocument();
-
-      fireEvent.click(screen.getByRole("button", { name: /edit notes/i }));
-      fireEvent.change(screen.getByLabelText(/task notes/i), {
-        target: { value: "  Updated notes  " },
-      });
-      fireEvent.click(screen.getByRole("button", { name: /save notes/i }));
-
-      await waitFor(() =>
-        expect(onSaveContent).toHaveBeenCalledWith(
-          { ...BASE_TASK, content: "Bring the contract notes." },
-          "Updated notes",
-        ),
-      );
-    });
-
-    it("can add notes when a task has no content yet", async () => {
-      const onSaveContent = vi.fn().mockResolvedValue(undefined);
-      renderInContext(
-        <TaskRow task={BASE_TASK} onSaveContent={onSaveContent} />,
-      );
-
-      fireEvent.click(screen.getByRole("button", { name: /add notes/i }));
-      fireEvent.change(screen.getByLabelText(/task notes/i), {
-        target: { value: "First useful detail" },
-      });
-      fireEvent.click(screen.getByRole("button", { name: /save notes/i }));
-
-      await waitFor(() =>
-        expect(onSaveContent).toHaveBeenCalledWith(
-          BASE_TASK,
-          "First useful detail",
-        ),
-      );
-    });
-
-    it("can place the update control in the action rail", () => {
-      const onSaveContent = vi.fn().mockResolvedValue(undefined);
+  describe("actions slot", () => {
+    it("renders children inside the hover-revealed actions region", () => {
       const { container } = renderInContext(
-        <TaskRow
-          task={BASE_TASK}
-          onSaveContent={onSaveContent}
-          notesToggleLabel="Update task"
-          notesTogglePlacement="actions"
-        />,
+        <TaskRow task={BASE_TASK}>
+          <button type="button">Edit</button>
+        </TaskRow>,
       );
-
       const actions = container.querySelector(".aa-task-row__actions")!;
       expect(actions).toContainElement(
-        screen.getByRole("button", { name: /update task/i }),
-      );
-      expect(
-        container.querySelector(".aa-task-row__notes"),
-      ).not.toContainElement(
-        screen.getByRole("button", { name: /update task/i }),
+        screen.getByRole("button", { name: "Edit" }),
       );
     });
   });

@@ -170,6 +170,7 @@ type ProjectTask = {
   size: "S" | "M" | "L" | "XL";
   status: "SOMEDAY" | "UPCOMING" | "TODAY";
   dueDate: Date | null;
+  completedAt: Date | null;
 };
 
 export const getProject = (async (args, context) => {
@@ -199,6 +200,7 @@ export const getProject = (async (args, context) => {
           size: true,
           status: true,
           dueDate: true,
+          completedAt: true,
         },
       },
     },

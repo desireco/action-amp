@@ -32,7 +32,7 @@ import "./UpcomingPage.css";
 export function UpcomingPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
-  const { promoteToToday, saveTaskContent } = useTaskListActions();
+  const { promoteToToday } = useTaskListActions();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "UPCOMING", isDone: false } : undefined,
@@ -141,7 +141,6 @@ export function UpcomingPage() {
               task={task}
               variant="list"
               onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
-              onSaveContent={saveTaskContent}
             >
               <Button
                 variant="secondary"

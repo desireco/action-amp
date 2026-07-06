@@ -24,12 +24,10 @@
 }
 
 .aa-grouped__count {
+  font-family: var(--aa-font-mono);
   font-size: var(--aa-text-xs);
-  font-weight: var(--aa-weight-bold);
+  font-weight: var(--aa-weight-medium);
   color: var(--aa-text-4);
-  background: var(--aa-surface-muted-2);
-  padding: 1px 7px;
-  border-radius: var(--aa-radius-full);
   line-height: var(--aa-leading-normal);
 }
 

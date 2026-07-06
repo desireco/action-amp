@@ -12,7 +12,6 @@ import {
   updateProject,
   deleteProject,
   updateTask,
-  updateTaskContent,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -33,6 +32,7 @@ import "./ProjectDetailPage.css";
 
 type ProjectTask = TaskRowTask & {
   status: "TODAY" | "UPCOMING" | "SOMEDAY";
+  completedAt: Date | string | null;
 };
 
 /** Size → human duration, matching the home screen (focusTaskView.sizeLabel). */
@@ -150,6 +150,21 @@ export function ProjectDetailPage() {
   const progressPct =
     project && total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
+  // Momentum header stats — Open, Done this week, Today. Computed from the
+  // already-loaded task list (no extra query). "This week" = last 7 days,
+  // measured from completedAt (set when a task is marked done).
+  const openCount = total - doneCount;
+  const todayOpenCount =
+    (project?.tasks ?? []).filter(
+      (t) => !t.isDone && t.status === "TODAY",
+    ).length;
+  const doneThisWeek =
+    (project?.tasks ?? []).filter((t) => {
+      if (!t.isDone || !t.completedAt) return false;
+      const ageMs = Date.now() - new Date(t.completedAt).getTime();
+      return ageMs <= 7 * 86_400_000;
+    }).length ?? 0;
+
   // Next-step candidate: the single TODAY task, lifted out as a pointer only
   // when there is exactly one. With zero or 2+ TODAY tasks the Today group
   // renders normally — we don't fabricate a winner from a tie.
@@ -214,13 +229,6 @@ export function ProjectDetailPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleSaveTaskContent = async (task: TaskRowTask, content: string) => {
-    await updateTaskContent({ taskId: task.id, content });
-    queryClient.invalidateQueries({ queryKey: ["getProject"] });
-    queryClient.invalidateQueries({ queryKey: ["getTask"] });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
   };
 
   const handleComplete = async () => {
@@ -585,6 +593,23 @@ export function ProjectDetailPage() {
             </div>
           ) : (
             <div className="aa-grouped">
+              {/* Momentum — three small stats computed from the loaded list.
+                  Compact by design: the row redesign is the page's main visual,
+                  this is just a glance. */}
+              <div className="aa-project__momentum" aria-label="Project momentum">
+                <div className="aa-project__momentum-stat">
+                  <span className="aa-project__momentum-num">{openCount}</span>
+                  <span className="aa-project__momentum-label">Open</span>
+                </div>
+                <div className="aa-project__momentum-stat">
+                  <span className="aa-project__momentum-num">{doneThisWeek}</span>
+                  <span className="aa-project__momentum-label">Done this week</span>
+                </div>
+                <div className="aa-project__momentum-stat">
+                  <span className="aa-project__momentum-num">{todayOpenCount}</span>
+                  <span className="aa-project__momentum-label">Today</span>
+                </div>
+              </div>
               {groups.map((group) => {
                 if (group.items.length === 0) return null;
                 // When the single Today task is lifted into the Next-step
@@ -614,7 +639,6 @@ export function ProjectDetailPage() {
                           onOpen={() =>
                             navigate(`/app/tasks/${task.permalink ?? task.id}`)
                           }
-                          onSaveContent={handleSaveTaskContent}
                         >
                           {!task.isDone && (
                             <div className="aa-project__horizon">

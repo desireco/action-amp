@@ -3,8 +3,8 @@
 .aa-task-row {
   display: flex;
   align-items: flex-start;
-  gap: var(--aa-space-md);
-  padding: var(--aa-space-md) 0;
+  gap: 12px;
+  padding: var(--aa-space-md) var(--aa-space-sm);
   border-bottom: 1px solid var(--aa-border);
   transition:
     background 0.12s var(--aa-ease-out),
@@ -31,14 +31,15 @@
 }
 
 .aa-task-row--list {
-  align-items: center;
-  padding: 10px var(--aa-space-sm);
+  align-items: flex-start;
+  padding: 11px var(--aa-space-sm);
   border-bottom: 1px solid var(--aa-border);
   background: transparent;
   border-radius: var(--aa-radius-sm);
 }
 
-.aa-task-row--list:hover {
+.aa-task-row--list:hover,
+.aa-task-row:hover {
   background: var(--aa-surface-muted);
 }
 
@@ -48,18 +49,10 @@
 
 .aa-task-row--clickable {
   cursor: pointer;
-  border-radius: var(--aa-radius-sm);
 }
 
-.aa-task-row--clickable:hover {
-  background: var(--aa-surface-muted);
-  margin: 0 calc(-1 * var(--aa-space-md));
-  padding-left: var(--aa-space-md);
-  padding-right: var(--aa-space-md);
-  border-bottom-color: transparent;
-}
-
-.aa-task-row--clickable:focus-visible {
+.aa-task-row--clickable:focus-visible,
+.aa-task-row__main--clickable:focus-visible {
   outline: 2px solid var(--aa-teal);
   outline-offset: 2px;
   background: var(--aa-surface-muted);
@@ -74,16 +67,47 @@
   background: var(--aa-surface-muted);
 }
 
-.aa-task-row__main--clickable:focus-visible {
-  outline: 2px solid var(--aa-teal);
-  outline-offset: 2px;
-  background: var(--aa-surface-muted);
+/* ---- Status dot — leading indicator of where the task sits ----
+   Filled teal = Today (with a soft halo), open ring = Upcoming,
+   faint solid = Someday. Done is a filled checkmark. Purely visual — the
+   dot carries no a11y role (status is exposed via row context). */
+.aa-task-row__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--aa-radius-full);
+  flex-shrink: 0;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: var(--aa-weight-bold);
+  color: white;
+  line-height: 1;
 }
 
-/* Circle — extend the hit area upward so adjacent rows are easy to tap */
-.aa-task-row__circle {
-  padding-top: 1px;
-  flex-shrink: 0;
+.aa-task-row__dot--today {
+  background: var(--aa-teal-cta);
+  box-shadow: 0 0 0 2.5px var(--aa-teal-soft);
+}
+
+.aa-task-row__dot--upcoming {
+  background: transparent;
+  border: 1.5px solid var(--aa-border-strong);
+  margin-top: 7px;
+  width: 8px;
+  height: 8px;
+}
+
+.aa-task-row__dot--someday {
+  background: var(--aa-border-strong);
+}
+
+.aa-task-row__dot--done {
+  width: 14px;
+  height: 14px;
+  margin-top: 4px;
+  background: var(--aa-teal-cta);
 }
 
 .aa-task-row__main {
@@ -117,91 +141,43 @@
 .aa-task-row__meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
   margin-top: 5px;
 }
 
-/* Size indicator — a subtle uppercase label, not a chip */
-.aa-task-row__size {
+/* Size chip — mono badge inside a muted pill. Reads as data, not decoration. */
+.aa-task-row__size-chip {
   font-family: var(--aa-font-mono);
-  font-size: var(--aa-text-xs);
-  font-weight: var(--aa-weight-semibold);
-  color: var(--aa-text-4);
-  background: var(--aa-surface-muted);
-  padding: 1px 5px;
-  border-radius: var(--aa-radius-xs);
-}
-
-.aa-task-row__notes {
-  margin-top: var(--aa-space-xs);
-  display: flex;
-  flex-direction: column;
-  gap: var(--aa-space-xs);
-}
-
-.aa-task-row__notes-preview {
-  margin: 0;
-  color: var(--aa-text-3);
-  font-size: var(--aa-text-sm);
-  line-height: var(--aa-leading-snug);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.aa-task-row__notes-toggle {
-  align-self: flex-start;
-  border: 0;
-  background: transparent;
-  color: var(--aa-teal-cta);
-  font: inherit;
-  font-size: var(--aa-text-sm);
   font-weight: var(--aa-weight-bold);
-  padding: 0;
-  cursor: pointer;
+  letter-spacing: 0.04em;
 }
 
-.aa-task-row__notes-toggle:hover {
-  color: var(--aa-teal-cta-hover);
-}
-
-.aa-task-row__notes-editor {
-  width: 100%;
-  min-height: 5.5rem;
-  padding: var(--aa-space-sm) var(--aa-space-md);
-  background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-md);
-  color: var(--aa-text-2);
-  font: inherit;
-  font-size: var(--aa-text-base);
-  line-height: var(--aa-leading-normal);
-  resize: vertical;
-}
-
-.aa-task-row__notes-editor:focus {
-  outline: none;
-  border-color: var(--aa-accent);
-}
-
-.aa-task-row__notes-actions {
+/* ---- Actions — row of compact buttons, hover-revealed ----
+   Stays a row so the project page's full-width move-picker (when expanded)
+   can drop onto its own line via flex-wrap. On touch (no hover), always shown. */
+.aa-task-row__actions {
   display: flex;
   align-items: center;
   gap: var(--aa-space-xs);
-}
-
-.aa-task-row__actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  gap: var(--aa-space-xs);
+  flex-wrap: wrap;
+  justify-content: flex-end;
   flex-shrink: 0;
-  min-width: 7rem;
+  align-self: center;
+  opacity: 0;
+  transition: opacity var(--aa-dur-fast) var(--aa-ease-out);
 }
 
-.aa-task-row__actions .aa-btn {
-  width: 8.5rem;
+.aa-task-row:hover .aa-task-row__actions,
+.aa-task-row:focus-within .aa-task-row__actions {
+  opacity: 1;
+}
+
+/* Touch devices have no hover — keep actions visible. */
+@media (hover: none) {
+  .aa-task-row__actions {
+    opacity: 1;
+  }
 }
 
 /* Reduced motion */
@@ -220,18 +196,8 @@
     flex-direction: column;
   }
 
-  .aa-task-row--list {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .aa-task-row__actions {
-    align-items: stretch;
     width: 100%;
-    min-width: 0;
-  }
-
-  .aa-task-row__actions .aa-btn {
-    width: 100%;
+    justify-content: flex-start;
   }
 }
