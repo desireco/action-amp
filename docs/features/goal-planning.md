@@ -1,6 +1,6 @@
 # Feature: Goal planning & Project alignment
 
-> Catalog entry (1:1 with `docs/specs/goal-planning.md`). **Shipped 2026-07-05.**
+> Catalog entry (1:1 with `docs/specs/done/goal-planning.md`). **Shipped 2026-07-05.**
 > WHAT the feature does, not how it's built. Discover owns; Build reads.
 
 ## What it is

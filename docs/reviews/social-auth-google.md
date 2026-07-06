@@ -62,7 +62,7 @@ Commits:
 
 ## Done-conditions
 
-Each predicate from `docs/specs/social-auth-google.md` → verdict + evidence.
+Each predicate from `docs/specs/done/social-auth-google.md` → verdict + evidence.
 
 - [x] `main.wasp.ts` declares the Google method with its own `userSignupFields`
       — **PASS** — `main.wasp.ts:75-78` `google: { configFn, userSignupFields }`;

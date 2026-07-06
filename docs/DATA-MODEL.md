@@ -33,7 +33,7 @@
 > on, so renaming a seeded lens can't escape FREE gating. `Lens.purpose` adds
 > one short line ("what this lens is for"). Lens configuration (create/rename/
 > recolor/edit-purpose/delete) is Pro-only; FREE gets the seeded two (Me usable,
-> Work visible-but-locked). See `docs/specs/custom-lenses.md`.
+> Work visible-but-locked). See `docs/specs/done/custom-lenses.md`.
 >
 > v5 (2026-07-04): **Capture grammar v2.** The NL sigils are reorganized: `#`
 > is tags (was: project + tags), `@` is time only (was: tags + time), `[[lens]]`
@@ -42,7 +42,7 @@
 > `[[ ]]` token (null when absent or unknown). The legacy `parsedProject` field
 > stays on the model but is no longer populated by the v2 parser — the resolver
 > works off the cleaned text directly. The InboxItem remains unscoped; the lens
-> is confirmed at triage. See `docs/specs/capture-grammar.md`.
+> is confirmed at triage. See `docs/specs/done/capture-grammar.md`.
 >
 > v6 (2026-07-05): **Task lifecycle logging.** `TaskUpdate` gained a `kind`
 > discriminator (`TaskUpdateKind = NOTE | COMPLETED`); completing a task now
@@ -52,7 +52,7 @@
 > across interruptions. **`Project.order`** (Int) added for goal-scoped
 > sequencing — projects under a goal sort by `order` then name; the first
 > non-done project surfaces as "Next: <name>". See `docs/specs/task-notes-
-> completion-log.md` and `docs/specs/goal-planning.md`.
+> completion-log.md` and `docs/specs/done/goal-planning.md`.
 
 ---
 

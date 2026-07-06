@@ -57,7 +57,7 @@ upgrade trigger ("personal-only Lens") now exists.
 
 ## Done-conditions
 
-Each predicate from `docs/specs/entitlement-enforcement.md` → verdict + evidence.
+Each predicate from `docs/specs/done/entitlement-enforcement.md` → verdict + evidence.
 
 - [x] **`FREE_LIMITS` read in `createProject` — server refuses, client invites.**
       PASS — `assertUnderCap(context, lensId, count, FREE_LIMITS.projects, …)`

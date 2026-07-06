@@ -2,7 +2,9 @@
 
 > Verdict: **Yes. Proceed.** Wasp is a strong fit. The "API" is Operations
 > (RPC + full-stack types) by default, with escape hatches to raw HTTP when needed.
-> Sources: wasp.sh docs (v0.24), pulled `2026-06-15`. Raw copies in `docs/wasp-ref/`.
+> Sources: wasp.sh docs (v0.24), pulled `2026-06-15`. (The raw doc copies that
+> lived at `docs/wasp-ref/` were removed 2026-07-05 — the project's `wasp` skill
+> and `webapp/AGENTS.md`'s documentation protocol are the live grounding source.)
 
 ## 1. What Wasp is
 - **Spec-driven full-stack framework.** You write a `main.wasp.ts` spec (new TS-based format, replaces the old `.wasp` DSL) + `schema.prisma` + your TS in `src/`. A **compiler** reads the spec and generates client + server + glue code.

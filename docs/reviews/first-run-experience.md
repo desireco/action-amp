@@ -71,7 +71,7 @@ Commits:
 
 ## Done-conditions
 
-Each predicate from `docs/specs/first-run-experience.md` → verdict + evidence.
+Each predicate from `docs/specs/done/first-run-experience.md` → verdict + evidence.
 
 - [x] New signups routed to onboarding — **PASS** — `App.tsx` gate: authenticated
       + `hasSeenOnboarding===false` + on `/app*` → `<Navigate to="/welcome">`.

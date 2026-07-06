@@ -1,7 +1,7 @@
 ---
 feature: custom-lenses
 status: review
-spec: docs/specs/custom-lenses.md
+spec: docs/specs/done/custom-lenses.md
 review_kind: pre-build + post-implementation
 review_owner: build
 ---
@@ -123,7 +123,7 @@ afternoon. No architectural risk once the two product questions are answered.
 3. **Refresh or drop** the four stale `file:line` references (prefer
    `file :: symbol`).
 4. **Reword** the Triage radio done-condition to "adaptive at ≥4."
-5. Then flip `docs/specs/custom-lenses.md` `draft → ready`.
+5. Then flip `docs/specs/done/custom-lenses.md` `draft → ready`.
 
 Q1 (cap = 8) and Q4 (threshold = 4) are safe defaults — Build will use them
 as written.

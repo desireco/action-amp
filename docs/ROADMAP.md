@@ -140,7 +140,7 @@ item; Build pulls `ready`.**
    default, while `[[lens]]` still preselects a visible, reversible Lens choice.
    Remaining polish: full `/` Lens picker and cross-lens Project change from
    Spec. Spec at
-   `docs/specs/triage-classify-step.md`.
+   `docs/specs/done/triage-classify-step.md`.
 
 ### Then (earn-the-revenue work — gated on ≥1 paying non-founder user)
 
@@ -201,7 +201,7 @@ item; Build pulls `ready`.**
    `Project.order` sequencing under a Goal + Logbook surfacing of completed
    goals + Reopen affordance + e2e (full sequence → complete → logbook →
    reopen). Server ops, UI, and tests all landed. → §Shipped. Spec at
-   `docs/specs/goal-planning.md`; catalog at `docs/features/goal-planning.md`.
+   `docs/specs/done/goal-planning.md`; catalog at `docs/features/goal-planning.md`.
 6. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
     Lens-scoped page (hero + Today | Done columns), and reshapes how a task is
     worked: **no completion circle anywhere** (complete only from focus mode —

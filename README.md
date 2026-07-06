@@ -27,8 +27,7 @@ action-amp/
 ├── PRODUCT.md            # Product thesis, users, tone, strategic principles
 ├── DESIGN.md             # Design DNA (Things reference) — canonical design system ref
 ├── docs/                 # All strategy, spec, mockups, research (see Table of Contents)
-│   ├── mockups/          # 20 standalone HTML prototypes (visual + interaction R&D)
-│   ├── wasp-ref/         # Raw copies of official Wasp docs (versioned, for grounding)
+│   ├── mockups/          # Standalone HTML prototypes (visual + interaction R&D)
 │   └── *.md              # The canonical docs (WORKFLOW, INTERACTION, TRIAGE, …)
 ├── webapp/               # The Wasp app
 │   ├── main.wasp.ts      # Wasp config: routes, pages, auth, operations
@@ -101,25 +100,26 @@ other docs, these win.
 
 **🎨 Mockups — `docs/mockups/`**
 
-Standalone HTML prototypes for visual + interaction R&D. Open [`docs/mockups/index.html`](docs/mockups/index.html) for the workbench gallery. Notable:
+Standalone HTML prototypes for visual + interaction R&D — only the surfaces
+still referenced from live docs. Open [`docs/mockups/index.html`](docs/mockups/index.html)
+for the gallery. Rejected approaches and superseded explorations were archived
+to `archive/mockups/` on 2026-07-05 (see [`archive/README.md`](archive/README.md)).
 
 | File | What it explores |
 |------|------------------|
-| `mode-zoom-unified.html` | The unified Mode × Zoom spine + working state (the app's core interaction). |
-| `focus-switch-nav.html` | The Work/Plan/Review expanding-section nav (latest nav prototype). |
+| `focus-f-final.html` | **Canonical focus-screen prototype (Variant F, locked).** |
+| `focus-redesign.html` | Comparison canvas of all six focus redesign variants (A–F). |
+| `mode-zoom-unified.html` | The unified Mode × Zoom spine + working state. |
+| `focus-switch-nav.html` | The Work/Plan/Review expanding-section nav. |
 | `capture-palette.html` | The `⌘K` capture palette with NL parsing. |
 | `triage-coauthor.html` | Canonical triage layout — triage as *co-authoring the spec*. |
+| `today-merged.html` | The merged Work Area prototype (draft spec). |
+| `moment-bar.html` | Focus-engine v2 moment-bar mockup. |
 | `plan-today-card.html` | Today as the Plan-mode card (cap, grouping, done section). |
 | `landing-home.html` | Marketing landing page. |
-| `mobile-gesture-modal.html` / `mobile-coach.html` | Mobile gestures + first-launch coach. |
+| `mobile-coach.html` | First-launch mobile coach (gesture walkthrough). |
 | `project-anchor-layouts.html` | Project/Goal "Open →" anchor navigation. |
-| `teal-amber-system.html` / `accent-candidates.html` | The two-accent (teal/amber) system + accent exploration. |
-| `interaction-approaches.html` + `approach-{a,b,c}-*.html` | Three early interaction approaches (zoom-pan / focus-blur / time-adaptive). |
-
-**📚 Raw references — `docs/wasp-ref/`**
-
-Verbatim copies of official Wasp docs, pulled 2026-06-15 (v0.24). Used to ground
-agent knowledge against the project's exact Wasp version. See `docs/wasp-ref/introduction_introduction.md`.
+| `approach-{a,b,c}-*.html` | Three early interaction approaches (zoom-pan / focus-blur / time-adaptive). |
 
 ### webapp/ — the implementation
 

@@ -1,6 +1,7 @@
 ---
 feature: custom-lenses
-status: draft
+status: done
+shipped: 2026-07-03
 spec_owner: discover
 build_owner: build
 ---

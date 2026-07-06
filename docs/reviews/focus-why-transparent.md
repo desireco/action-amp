@@ -54,7 +54,7 @@ Commits:
 
 ## Done-conditions
 
-Each predicate from `docs/specs/focus-why-transparent.md` → verdict + evidence.
+Each predicate from `docs/specs/done/focus-why-transparent.md` → verdict + evidence.
 
 - [x] "Why" composed from the actual ranking factors — **PASS** — `focusWhy.ts`
       `composeWhy`, signal priority mirrors `getTopTask`'s sort:

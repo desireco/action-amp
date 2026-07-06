@@ -2,7 +2,8 @@
 id: task-notes-completion-log
 kind: spec
 title: "Task notes and completion log"
-status: ready
+status: done
+shipped: 2026-07-05
 priority: P1
 feature: task-notes-completion-log
 spec_owner: discover

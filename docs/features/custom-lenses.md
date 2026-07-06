@@ -19,7 +19,7 @@ gated on `LensKind` (Work lens visible-but-locked for FREE). Six curated hue
 ramps in `tokens.css`. FREE gets a `<ProGate>` moment on the Work lens + lens
 config. `isAdmin` staff/dev bypass in the entitlement layer for testing.
 
-**Spec.** `docs/specs/custom-lenses.md` (shipped); review at
+**Spec.** `docs/specs/done/custom-lenses.md` (shipped); review at
 `docs/reviews/custom-lenses.md`.
 
 **Why it matters.** Lenses are the top of the ActionAmp hierarchy

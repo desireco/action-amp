@@ -6,7 +6,7 @@
 > were the pre-build design; the code is authoritative where they differ.
 >
 > Companion docs: `PRICING.md` (the pricing *decisions* — what it costs),
-> `webapp/src/billing/` (the implementation), `docs/specs/entitlement-enforcement.md`
+> `webapp/src/billing/` (the implementation), `docs/specs/done/entitlement-enforcement.md`
 > (the cap-enforcement spec). Authority for *how* billing works; `PRICING.md`
 > remains authority for *what* it costs.
 

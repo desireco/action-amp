@@ -56,7 +56,7 @@ appears in Work/Planning/Review except by coming through triage.
   understood. Grammar (locked 2026-07-04, §5.9): `#` tags · `@` time only ·
   `!`/`~` priority/size · `[[lens]]` explicit cross-lens override. Projects
   have no sigil — the resolver matches them from free text (a matched project
-  carries its Project + Lens into triage Classify). See `docs/specs/capture-grammar.md`.
+  carries its Project + Lens into triage Classify). See `docs/specs/done/capture-grammar.md`.
 - Capture never asks "where does this go?" — that's triage's job. But capture
   *can* hint: `[[work]]` / `[[personal]]` / `[[custom]]` preselects the Lens on
   triage's Classify step, and a matched Project can supply both Project and
@@ -185,7 +185,7 @@ appears in Work/Planning/Review except by coming through triage.
   tab is `<ProGate>`'d for FREE). FREE gets the seeded two: Me usable, Work
   visible-but-locked (selecting it shows the gate). Pro is soft-capped at
   `PRO_LIMITS.lenses`. The seeded two are renameable/recolorable but never
-  deletable — they're the stable handles. See `docs/specs/custom-lenses.md`.
+  deletable — they're the stable handles. See `docs/specs/done/custom-lenses.md`.
 
 
 ## 4. The three modes
@@ -240,7 +240,7 @@ These were the open structural calls. All resolved:
    shows the lens choices. A concrete resolved Project is stronger: it supplies
    both `projectId` and `lensId`, and Classify shows `Destination: Project ·
    Lens` while skipping the standalone lens picker by default. See
-   `docs/specs/triage-classify-step.md`.
+   `docs/specs/done/triage-classify-step.md`.
 6. **Focus switch = expanding-section nav (one section open at a time).** The
    sidebar has two orthogonal switches at the top:
    - **Context switch** (Lens: Work / Me) — always available, orthogonal to
@@ -285,7 +285,7 @@ These were the open structural calls. All resolved:
      No archive infrastructure — reassign moves content to a chosen lens;
      delete hard-removes (cascade via FK). Goal name-collision on reassign is
      caught (409) because Goal has `@@unique([userId, name])`.
-   See `docs/specs/custom-lenses.md` + `docs/reviews/custom-lenses.md`.
+   See `docs/specs/done/custom-lenses.md` + `docs/reviews/custom-lenses.md`.
 9. **Capture grammar v2 + lens token (locked 2026-07-04).** The capture NL
    grammar keeps `#` as a project-first sigil while cleaning up `@` and lens
    intent. Three structural calls:
@@ -293,7 +293,7 @@ These were the open structural calls. All resolved:
      Keeps the 2026-06-22 `#` project affordance while removing `@` context
      tags. `@` is freed for its one natural job (when);
      `@today`/`@tomorrow`/`@tonight` were already special-cased and stay. See
-     `docs/specs/capture-grammar.md`.
+     `docs/specs/done/capture-grammar.md`.
    - **`[[lens]]` is the explicit lens override.** A new token for the rare
      cross-lens capture (in Work, think of a personal errand). Resolves on
      `kind` for seeded lenses (`[[work]]`/`[[personal]]`/`[[me]]` survive
@@ -355,7 +355,7 @@ The following were updated to match this doc (commit alongside):
 - `TRIAGE.md` §5 + §7.5 (added 2026-07-04) — supersede the 2026-06-22 `#`/`@`
   sigil decision; `#` is now tags, `@` is time only, `[[lens]]` is the explicit
   lens override, projects are resolver-driven. Capture grammar v2 per
-  `docs/specs/capture-grammar.md`.
+  `docs/specs/done/capture-grammar.md`.
 - `DATA-MODEL.md` (added 2026-07-04) — documents `InboxItem.parsedLens`; v5
   note records grammar v2.
 - `docs/features/capture.md` + `docs/features/inbox-triage.md` (added

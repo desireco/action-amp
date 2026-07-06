@@ -1,6 +1,7 @@
 ---
 feature: goal-planning
-status: ready
+status: done
+shipped: 2026-07-05
 spec_owner: discover
 build_owner: build
 ---

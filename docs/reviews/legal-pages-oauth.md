@@ -52,7 +52,7 @@ Commits:
 
 ## Done-conditions
 
-Each predicate from `docs/specs/legal-pages-oauth.md` → verdict + evidence.
+Each predicate from `docs/specs/done/legal-pages-oauth.md` → verdict + evidence.
 
 - [x] privacy.md discloses all third-party processors w/ plain-language purpose
       — **PASS** — `privacy.md` "Third parties we use": Google (auth, name+email

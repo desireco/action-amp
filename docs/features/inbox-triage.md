@@ -17,7 +17,7 @@ verified: 2026-07-04
   Note(Resource) / Archive, (3) Spec — inline-expanding rows (When/Size/Priority/
   Project/Goal). Complete is gated until lens + filing target set.
 
-**Resolver pre-fill** (grammar v2, `docs/specs/capture-grammar.md`, shipped).
+**Resolver pre-fill** (grammar v2, `docs/specs/done/capture-grammar.md`, shipped).
 The Context step pre-fills from two inference paths, neither of which silently
 files — the user still hits Continue:
 - **`[[lens]]` token** (explicit): `[[work]]` / `[[personal]]` / `[[me]]` /
@@ -40,5 +40,5 @@ ARCHIVED` (does **not** delete). Recoverable from the Logbook via
 
 **Spec.** None (predates duet) for the wizard itself. The v2 capture grammar +
 resolver that feeds the Context pre-fill is spec'd at
-`docs/specs/capture-grammar.md` (draft). Note: FEATURES.md F6's one-key keymap
+`docs/specs/done/capture-grammar.md` (draft). Note: FEATURES.md F6's one-key keymap
 is obsolete.

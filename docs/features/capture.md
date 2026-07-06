@@ -3,7 +3,7 @@ slug: capture
 title: "Capture (⌘K quick-add + NL parsing)"
 feature_area: capture-triage
 status: shipped
-spec: docs/specs/capture-grammar.md
+spec: docs/specs/done/capture-grammar.md
 verified: 2026-07-04
 ---
 
@@ -14,7 +14,7 @@ verified: 2026-07-04
 before commit. Lands in the universal Inbox (no lens until triage).
 
 **NL tokens parsed** (`inbox/parseCapture.ts`) — **grammar v2** (locked
-2026-07-04, `docs/specs/capture-grammar.md`):
+2026-07-04, `docs/specs/done/capture-grammar.md`):
 
 | Sigil | Means | Examples |
 |---|---|---|
@@ -36,5 +36,5 @@ lens.
 **Done?** Shipped: thought → inbox, keyboard-only, grammar v2 parser,
 resolver, `[[ ]]`, and `InboxItem.parsedLens`.
 
-**Spec.** `docs/specs/capture-grammar.md` (v2). Reference: FEATURES.md F1/F2
+**Spec.** `docs/specs/done/capture-grammar.md` (v2). Reference: FEATURES.md F1/F2
 (feature-level only).

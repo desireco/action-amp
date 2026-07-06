@@ -64,7 +64,7 @@ Commits:
 
 ## Done-conditions
 
-Each predicate from `docs/specs/friction-cleanup.md` → verdict + evidence.
+Each predicate from `docs/specs/done/friction-cleanup.md` → verdict + evidence.
 
 - [ ] **`/app/upcoming` route removed** — **DROPPED per user instruction**
       ("let's keep upcoming"). The route, `UpcomingPage`, and the

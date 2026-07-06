@@ -27,7 +27,7 @@ becomes, and where it will land.
 - **Complete** — Commit the transformed entity.
 
 **Remaining polish** (not blocking): full `/` Lens picker from Spec, and
-cross-lens Project change from Spec. Spec at `docs/specs/triage-classify-step.md`.
+cross-lens Project change from Spec. Spec at `docs/specs/done/triage-classify-step.md`.
 
 **Why it matters.** Before Classify, every triaged item landed on a standalone
 Context step even when the destination was obvious from the active lens, an

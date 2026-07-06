@@ -127,7 +127,7 @@ The wizard (per item):
 1. **Classify** — one surface for **what this becomes** and **where it lands**:
    Task / Project / Resource / Archive plus the selected Lens or resolved
    Project destination. Two inference paths
-   (`docs/specs/capture-grammar.md`, locked 2026-07-04):
+   (`docs/specs/done/capture-grammar.md`, locked 2026-07-04):
    - **`[[lens]]` token** (explicit): `[[work]]` / `[[personal]]` / `[[me]]` /
      `[[custom-name]]` resolves to a lens and pre-fills it. Seeded lenses match
      on `kind` (survives renames); custom lenses match on exact name. Unknown
@@ -350,7 +350,7 @@ territory, not the quick-capture essentials. Choosing *where this goes* beats
 choosing *how urgent/big it is* — that's triage's job. **Locked 2026-07-04
 (grammar v2 — supersedes the 2026-06-22 `#`/`@` decision).** The old `@` context
 tag split is gone; `@` is time only, and lens intent lives in `[[ ]]` or project
-inference. See `docs/specs/capture-grammar.md`.
+inference. See `docs/specs/done/capture-grammar.md`.
 
 ### 7.6 Property keys — size & priority
 
@@ -390,7 +390,7 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 - ✅ Triage card (`components/ui/TriageCard.tsx`)
 - ✅ **Co-author spec list in triage** — DONE 2026-06-25. **Classify step
   merged lens + type into one step 2026-07-04–05** (`Classify → Spec →
-  Complete` per `docs/specs/triage-classify-step.md`): project-resolved items
+  Complete` per `docs/specs/done/triage-classify-step.md`): project-resolved items
   skip standalone lens selection by default; the lens pill and goal meta appear
   on all pickers; type chooser is one-line rows with a leading icon.
 - ✅ **Property keys `[` `]` `-` `=`** (§7.6) — DONE 2026-07-05 via the shared

@@ -2,7 +2,8 @@
 id: triage-classify-step
 kind: spec
 title: "Triage Classify step: merge context and type selection"
-status: in-progress
+status: done
+shipped: 2026-07-04   # core flow; polish below remains
 priority: P1
 feature: inbox-triage
 spec_owner: discover

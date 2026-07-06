@@ -25,7 +25,7 @@ completion event into the same thread.
 - This is the focused slice extracted from the broader `work-area-merged.md`
   spec; route merging, NOT_DOING, and task archive remain out of scope.
 
-**Spec.** `docs/specs/task-notes-completion-log.md` — `done`.
+**Spec.** `docs/specs/done/task-notes-completion-log.md` — `done`.
 
 **Why it matters.** Before this, `TaskUpdate` existed in the schema but no
 operation ever created a note and no UI rendered the thread — a task was a
