@@ -1,13 +1,17 @@
 # ActionAmp — Feature Reference
 
-> **Status: Reference (code-verified 2026-07-04).** The F-numbered list below is
-> the stable cross-reference scheme used across the codebase and specs (e.g.
-> `getTopTask` is commented "F10"; `TodayPage` enforces "F12"). Each entry's
-> status is checked against the live code, not the original plan.
+> **Status: HISTORICAL REFERENCE ONLY.** Kept for the F-numbered cross-reference
+> scheme still used in code/specs (e.g. `getTopTask` is commented "F10";
+> `TodayPage` enforces "F12"). The F-numbered list itself predates the
+> 2026-07-04/05 weekend and is **not** reconciled to recent shipments
+> (Variant F focus redesign, task notes + completion log, Upcoming top-level
+> nav, goal-planning lifecycle, custom lenses, capture grammar v2, triage
+> Classify step).
 >
 > **For "does feature X exist / what does it do?"** use the per-feature catalog
-> at [`docs/features/`](features/) — 1 file per feature, 1:1 with specs, more
-> detail than this list. This doc is the flat index.
+> at [`docs/features/`](features/) — 1 file per feature, 1:1 with specs,
+> code-verified, and the source of truth. **This catalog wins over FEATURES.md**
+> on existence/status questions; FEATURES.md wins only on the F-number scheme.
 >
 > **For *where* things live** (areas, modes, routing), `WORKFLOW.md` is
 > canonical and overrides this doc. This doc describes *what* each feature does,

@@ -87,8 +87,8 @@ other docs, these win.
 
 | Doc | Subject |
 |-----|---------|
-| [`docs/BACKLOG.md`](docs/BACKLOG.md) | Single source of truth for what's left to do/decide. Check off as you go. |
-| [`docs/IMPLEMENTATION-CHECKLIST.md`](docs/IMPLEMENTATION-CHECKLIST.md) | UI implementation checklist, ordered by dependency. |
+| [`docs/BACKLOG.md`](docs/BACKLOG.md) | Historical narrative of completed workflow-refactor work; non-spec'd odds and ends. |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Strategy queue + priority order; what to build next and why. |
 
 **🔬 Research (decisions already made; context for *why*).**
 

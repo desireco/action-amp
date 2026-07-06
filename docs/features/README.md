@@ -8,7 +8,7 @@
 >
 > Owned by Discover. Build reads only.
 >
-> Last code-verified: **2026-07-03**.
+> Last code-verified: **2026-07-05**.
 
 ## How to read this
 
@@ -24,28 +24,33 @@
 ## Index (by area; status in parens)
 
 ### Capture & Triage
-- [capture](./capture.md) (`shipped`) — `⌘K` quick-add + NL parsing → universal Inbox.
+- [capture](./capture.md) (`shipped`) — `⌘K` quick-add + grammar v2 (`#` projects, `@` time, `[[lens]]`) → universal Inbox.
 - [inbox-triage](./inbox-triage.md) (`shipped`) — per-item spec wizard; lossless Archive.
+- [triage-classify-step](./triage-classify-step.md) (`shipped`) — Classify → Spec → Complete (replaces separate Context + Type steps).
 
 ### Focus — the wedge
 - [next-what-now](./next-what-now.md) (`shipped`) — home = one task; `getTopTask`; "why this?" line.
 - [today](./today.md) (`shipped`) — committed-for-today list, cap 5, Done-today section.
-- [focus-mode](./focus-mode.md) (`partial`) — single-task overlay; no timer.
-- [upcoming-someday](./upcoming-someday.md) (`shipped`) — bench + maybe-later lists.
+- [focus-mode](./focus-mode.md) (`shipped`) — dedicated `/app/focus` route; Variant F redesign (margin clock, summoned composer, confirm-on-complete).
+- [task-notes-completion-log](./task-notes-completion-log.md) (`shipped`) — `TaskUpdate.kind` (NOTE | COMPLETED) thread + Focus composer.
+- [upcoming-someday](./upcoming-someday.md) (`shipped`) — Upcoming (top-level Plan nav) + Someday.
 
 ### Planning
 - [projects](./projects.md) (`shipped`) — list + detail, inline task create, progress roll-up.
-- [goals](./goals.md) (`shipped`) — list + detail, aggregate progress.
-- [logbook](./logbook.md) (`shipped`) — completed + Archived section, Restore.
+- [goals](./goals.md) (`shipped`) — list + detail, aggregate progress, full lifecycle.
+- [goal-planning](./goal-planning.md) (`shipped`) — Goal/Project lifecycle (complete/reopen/edit/delete/re-link) + project ordering.
+- [logbook](./logbook.md) (`shipped`) — completed + Archived section, Restore, completed Goals.
 
 ### Cross-cutting
 - [entitlements](./entitlements.md) (`shipped`) — server-side caps + ProGate paywall.
 - [billing](./billing.md) (`shipped`) — 3 Pro prices + Founding 100 (server-enforced cap).
+- [custom-lenses](./custom-lenses.md) (`shipped`) — user-defined lenses; Pro CRUD; `⌘L` switcher; per-lens identity.
 - [onboarding](./onboarding.md) (`shipped`) — `/welcome`, server flag, 3 seed tasks.
 - [auth](./auth.md) (`partial`) — email live; Google OAuth code present but disabled.
 - [landing](./landing.md) (`partial`) — signup + Founding-100 CTAs; newsletter capture **missing but intended** (see [newsletter](./newsletter.md)).
 - [feedback](./feedback.md) (`shipped`) — loudspeaker → modal → admin email.
 - [shell-prefs](./shell-prefs.md) (`shipped`) — AppShell, focus-switch nav, shortcuts, dark mode, settings.
+- [task-fields](./task-fields.md) (`partial`) — **Context** shipped (Task.content via chip popovers); **Outcome** (`Task.outcome`) not yet shipped.
 
 ### Planned (not in code)
 - [command-palette](./command-palette.md) (`missing`, spec `ready`) — `⌘\` fuzzy search.
@@ -54,16 +59,14 @@
 - [focus-engine-v2](./focus-engine-v2.md) (`missing`, spec `draft`) — moment-aware matcher; needs tag-management UI + a mockup + matcher-test gate.
 - [observability-minimal](./observability-minimal.md) (`missing`, spec `ready`, gated by `gtm-analytics-account`) — analytics + funnel.
 - [retention-criticalpath](./retention-criticalpath.md) (`missing`, spec `ready`, depends on observability) — first-7-days instrumentation.
-- [work-area-merged](./work-area-merged.md) (`missing`, spec `draft`) — merged Work area + activity log.
-- [custom-lenses](./custom-lenses.md) (`missing`, spec `draft`) — user-defined lenses.
+- [work-area-merged](./work-area-merged.md) (`missing`, spec `draft`) — merged Work area; one sub-piece (TaskUpdate.kind) shipped as `task-notes-completion-log`.
 - [weekly-monthly-review](./weekly-monthly-review.md) (`missing`, spec `draft`) — period debriefs; v2 gated on `work-area-merged`.
 - [newsletter](./newsletter.md) (`missing`, spec `draft`) — landing-page email capture (footer + quiet hero).
-- [cli](./cli.md) (`missing`, **effort split into 3 specs 2026-07-03**) — power-user terminal surface:
+- [cli](./cli.md) (`missing`, **effort split into 3 specs 2026-07-03`) — power-user terminal surface:
   - `cli-pat-plumbing` (`ready`, P3 opportunistic) — `ApiKey` + PAT routes + middleware + Settings UI.
   - `cli-package` (`draft`) — the `cli/` package; draft because the op-refactor is unscoped.
   - `cli-skills` (`draft`) — four orchestration skills; depends on `cli-package`.
 - [tag-management](./tag-management.md) (`missing`, spec `ready`) — Task-detail tag chips + reserved-name seeding; **unblocks `focus-engine-v2`**.
-- [task-fields](./task-fields.md) (`missing`, spec `ready`) — the task enhancement pair: **Context** (reuses `Task.content`; what you need *to do* it) + **Outcome** (new `Task.outcome`; what *happened*, captured at completion for Review/Logbook). Markdown-rendered (`react-markdown` + `remark-gfm`); NextCard stays title-only. **Reverses `resources-project-owned`** on the Task↔Resource link (markdown links in Context, no `TaskResource` join).
 
 ### Deliberately not built (Phase 2 / Icebox)
 - Subtasks, Pomodoro timer, email-in capture, AI-tuned suggestions, native mobile,

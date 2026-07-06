@@ -1,12 +1,12 @@
 # ActionAmp — Pricing & Billing
 
-> Status: DRAFT v1 — strategy under discussion, no code yet.
+> Status: DECIDED — pricing strategy locked; implementation shipped 2026-07-03.
 > Authority: this is the living record of pricing/billing decisions and the
 > reasoning behind them. Update it whenever a decision is made or a number
 > changes. If it conflicts with a stale note elsewhere, **this file wins** for
 > pricing/monetization.
-> Companion docs: `FEATURES.md` (feature inventory → drives the free-tier cap),
-> `MARKETING.md` (pricing page placement), `DATA-MODEL.md` (what we meter).
+> Companion docs: `docs/features/billing.md` (feature catalog → drives the free-tier cap),
+> `BILLING-INTEGRATION.md` (Stripe implementation), `DATA-MODEL.md` (what we meter).
 
 ---
 
@@ -24,10 +24,13 @@
 - **Founding 100:** **$139 one-time, lifetime (DECIDED 2026-06-22)** — capped at
   exactly 100 spots; a launch patron tier. CTA disabled until checkout + cap
   enforcement are wired. See §3 Model C.
-- **Engine:** **Stripe (DECIDED).** NOT Wasp-built-in — Wasp 0.24 has no payment
-  support; we wire Stripe via `api` (webhook) + actions (checkout). Full plan:
-  see `BILLING-INTEGRATION.md`.
-- **Nothing is implemented.** This file is the source of truth until it is.
+- **Engine:** **Stripe (DECIDED + SHIPPED 2026-07-03).** NOT Wasp-built-in —
+  Wasp 0.24 has no payment support; we wire Stripe via `api` (webhook) +
+  actions (checkout). Full plan + as-built: see `BILLING-INTEGRATION.md`.
+- **Implementation status:** Recurring (Pro $79.50/yr, $12.95/mo), prepaid
+  ($90), and Founding 100 ($139 lifetime, server-enforced 100-spot cap) are
+  live; webhook is the source of truth. Free-tier caps enforced server-side
+  since 2026-07-03 (`entitlement-enforcement`). See `BILLING-INTEGRATION.md`.
 
 ---
 

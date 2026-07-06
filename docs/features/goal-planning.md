@@ -1,17 +1,14 @@
 # Feature: Goal planning & Project alignment
 
-> Catalog entry (1:1 with `docs/specs/goal-planning.md`). WHAT the feature does,
-> not how it's built. Discover owns; Build reads.
+> Catalog entry (1:1 with `docs/specs/goal-planning.md`). **Shipped 2026-07-05.**
+> WHAT the feature does, not how it's built. Discover owns; Build reads.
 
 ## What it is
 
 A complete, **mutable** Planning area for the Goal → Project → Task hierarchy.
-Today the Planning area is **read-mostly**: you can create goals/projects and
-read their roll-ups, but you cannot complete, reopen, edit, delete, or re-link
-them, and you cannot start a project from inside a goal. This feature closes
-those holes and adds one lightweight planning affordance — an explicit
-**sequence** of projects under a goal ("which project is next toward this
-goal?") — without turning ActionAmp into a project-management tool.
+You can create goals/projects and read their roll-ups, complete / reopen /
+edit / delete / re-link them, and sequence projects under a goal — without
+turning ActionAmp into a project-management tool.
 
 ## The hierarchy (unchanged)
 
