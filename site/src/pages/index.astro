@@ -9,6 +9,7 @@
 import "../styles/landing.css";
 
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
+const apiUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3001";
 
 // Hero demo tasks — cycles on click.
 const HERO_TASKS = [
@@ -205,6 +206,27 @@ const FAQ_ITEMS = [
         </p>
       </section>
 
+      {/* Founding 100 teaser — surfaces the live spots-remaining count from the
+          public /founding-100/status endpoint and links into the app. Hidden by
+          default; the script below reveals it once the count lands. If the
+          fetch fails, it stays hidden (the page still works). */}
+      <section class="aa-founding-teaser" id="aa-founding-teaser" hidden>
+        <div class="aa-founding-teaser-inner">
+          <div class="aa-founding-teaser-text">
+            <span class="aa-founding-teaser-eyebrow">Founding 100</span>
+            <h2>Lifetime Pro, for the first 100.</h2>
+            <p>
+              One-time <b>$139</b>. Capped at exactly 100 spots — when they're
+              gone, the tier retires for good.
+              <span class="aa-founding-teaser-count" id="aa-founding-count"></span>
+            </p>
+          </div>
+          <a href={`${appUrl}/founding-100`} class="aa-btn aa-btn--primary aa-btn--lg aa-founding-teaser-cta">
+            <span id="aa-founding-cta-label">Become a Founding Member</span>
+          </a>
+        </div>
+      </section>
+
       <section class="aa-section aa-method" id="method">
         <div class="aa-eyebrow">Methodology</div>
         <h2 class="aa-display">
@@ -284,7 +306,7 @@ const FAQ_ITEMS = [
       </footer>
     </div>
 
-    <script is:inline define:vars={{ HERO_TASKS }}>
+    <script is:inline define:vars={{ HERO_TASKS, apiUrl }}>
       // Hero card — click completion or "Do this" → fill → cycle to next task.
       // Ported from the React useState/handleComplete logic.
       (function () {
@@ -331,6 +353,36 @@ const FAQ_ITEMS = [
           item.classList.toggle("open");
         });
       });
+
+      // Founding 100 teaser — fetch the live spots-remaining count from the
+      // public status endpoint. Reveals the teaser only on success; on failure
+      // it stays hidden so the page still reads cleanly.
+      (function () {
+        var teaser = document.getElementById("aa-founding-teaser");
+        var countEl = document.getElementById("aa-founding-count");
+        var ctaLabel = document.getElementById("aa-founding-cta-label");
+        if (!teaser || !countEl || !ctaLabel) return;
+
+        fetch(apiUrl + "/founding-100/status")
+          .then(function (r) {
+            if (!r.ok) throw new Error("status " + r.status);
+            return r.json();
+          })
+          .then(function (data) {
+            if (data.isFull) {
+              countEl.textContent = " All 100 spots have been claimed.";
+              ctaLabel.textContent = "Join the waitlist";
+            } else if (typeof data.remaining === "number") {
+              countEl.textContent = " " + data.remaining + " of 100 spots left.";
+            }
+            teaser.hidden = false;
+          })
+          .catch(function () {
+            // Network/API unavailable — leave the teaser hidden. No console
+            // noise: this is expected on the static preview or local dev when
+            // the Wasp server isn't running.
+          });
+      })();
     </script>
   </body>
 </html>

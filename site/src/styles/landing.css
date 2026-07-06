@@ -946,3 +946,95 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   FOUNDING 100 TEASER
+   Surfaces the live spots-remaining count between the soul and method
+   sections. Hidden by default; a script reveals it once the count lands.
+   One calm amber accent (eyebrow) per the human-emphasis rule.
+   ============================================================ */
+.aa-founding-teaser {
+  padding: 0 56px;
+  max-width: 1180px;
+  margin: 0 auto 80px;
+}
+.aa-founding-teaser[hidden] {
+  display: none;
+}
+.aa-founding-teaser-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 36px 40px;
+  background:
+    radial-gradient(
+      ellipse 60% 80% at 90% 50%,
+      var(--aa-amber-soft) 0%,
+      transparent 70%
+    ),
+    var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-2xl);
+  box-shadow: var(--aa-shadow-sm);
+}
+.aa-founding-teaser-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--aa-amber-text);
+  background: var(--aa-amber-soft);
+  padding: 4px 10px;
+  border-radius: var(--aa-radius-full);
+  margin-bottom: 12px;
+}
+.aa-founding-teaser-text h2 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--aa-text);
+  margin-bottom: 8px;
+}
+.aa-founding-teaser-text p {
+  font-size: 15px;
+  color: var(--aa-text-3);
+  line-height: 1.55;
+  max-width: 48ch;
+}
+.aa-founding-teaser-text b {
+  color: var(--aa-text-2);
+  font-weight: 600;
+}
+.aa-founding-teaser-count {
+  color: var(--aa-amber-text);
+  font-weight: 600;
+}
+.aa-founding-teaser-cta {
+  flex-shrink: 0;
+  font-size: 15px;
+}
+.aa-founding-teaser-cta:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .aa-founding-teaser {
+    padding: 0 22px;
+    margin: 0 auto 56px;
+  }
+  .aa-founding-teaser-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 28px 24px;
+    gap: 20px;
+  }
+  .aa-founding-teaser-text h2 {
+    font-size: 22px;
+  }
+  .aa-founding-teaser-cta {
+    width: 100%;
+  }
+}

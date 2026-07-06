@@ -2,6 +2,7 @@ import type { GetBillingStatus } from "wasp/server/operations";
 import { isPaidPlan, FOUNDING_100_CAP } from "./config";
 import { stripe, getPriceId } from "./stripe";
 import { HttpError } from "wasp/server";
+import type { Request, Response } from "express";
 
 /**
  * The user's billing status: their plan, whether it's active, the renewal/
@@ -187,3 +188,33 @@ export const getFounding100Status = (async (_args, context) => {
     isFull: claimed >= FOUNDING_100_CAP,
   };
 }) satisfies GetFounding100Status<void>;
+
+/**
+ * Public REST endpoint — `GET /founding-100/status`. Same payload as the
+ * query above, exposed as a stable HTTP contract for the Astro marketing site
+ * (which can't call Wasp's internal RPC). Public (no auth); returns only the
+ * global count, never user-specific state. PII-free.
+ *
+ * The Astro landing page fetches this client-side to surface the live
+ * spots-remaining count and cut off the offer when `isFull`.
+ */
+type StatusApiContext = {
+  entities: { User: { count: (args: { where: Record<string, unknown> }) => Promise<number> } };
+};
+
+export const founding100StatusHandler = async (
+  _req: Request,
+  res: Response,
+  context: StatusApiContext
+) => {
+  const claimed = await context.entities.User.count({
+    where: { plan: "FOUNDER" },
+  });
+  res.set("Cache-Control", "public, max-age=60");
+  return res.json({
+    cap: FOUNDING_100_CAP,
+    claimed,
+    remaining: Math.max(0, FOUNDING_100_CAP - claimed),
+    isFull: claimed >= FOUNDING_100_CAP,
+  });
+};

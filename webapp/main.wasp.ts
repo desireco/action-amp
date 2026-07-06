@@ -32,7 +32,7 @@ import { createLens, updateLens, deleteLens } from "./src/lenses/operations" wit
 import { getLenses } from "./src/lenses/operations" with { type: "ref" };
 import { getAppData } from "./src/app/operations" with { type: "ref" };
 import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
-import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status } from "./src/billing/operations" with { type: "ref" };
+import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status, founding100StatusHandler } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
@@ -203,6 +203,10 @@ export default app({
     api("POST", "/webhooks/stripe", stripeWebhook, {
       entities: ["User", "Payment"],
       middlewareConfigFn: stripeWebhookMiddleware,
+    }),
+    api("GET", "/founding-100/status", founding100StatusHandler, {
+      entities: ["User"],
+      auth: false,
     }),
   ],
 });
