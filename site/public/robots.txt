@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Astro sitemap integration generates this at build time.
+Sitemap: https://actionamp.com/sitemap-index.xml

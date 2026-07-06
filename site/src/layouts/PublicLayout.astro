@@ -1,0 +1,71 @@
+---
+// PublicLayout — nav + footer chrome for the marketing site.
+// Ported from webapp/src/shared/PublicLayout.tsx.
+//
+// Link destinations under the subdomain split:
+//   - marketing routes (/, /about, /privacy, /terms, /roadmap) → relative
+//   - app routes (/founding-100, /login, /signup) → absolute to the app subdomain
+// The app origin comes from PUBLIC_APP_URL (dev: localhost:4000, prod: app.actionamp.com).
+import BrandMark from "../components/BrandMark.astro";
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description } = Astro.props;
+
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
+const siteUrl = Astro.site ?? "https://actionamp.com";
+const canonical = new URL(Astro.url.pathname, siteUrl);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonical} />
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="ActionAmp" />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body>
+    <div class="aa-public">
+      <nav class="aa-pub-nav">
+        <a href="/" class="aa-brand">
+          <BrandMark />
+          <span class="aa-brand-name">ActionAmp</span>
+        </a>
+        <a href="/" class="aa-pub-back">← Home</a>
+      </nav>
+
+      <main class="aa-pub-main">
+        <slot />
+      </main>
+
+      <footer class="aa-pub-footer">
+        <a href="/" class="aa-brand">
+          <BrandMark small />
+          <span class="aa-brand-name aa-brand-name-sm">ActionAmp</span>
+        </a>
+        <div class="aa-pub-footer-links">
+          <a href="/about">About</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/roadmap">Roadmap</a>
+          <a href={`${appUrl}/founding-100`}>Founding 100</a>
+        </div>
+        <div class="aa-pub-copy">© 2026 ActionAmp</div>
+      </footer>
+    </div>
+  </body>
+</html>

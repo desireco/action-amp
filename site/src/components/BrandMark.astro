@@ -1,0 +1,22 @@
+---
+// BrandMark — the ActionAmp checkmark in a teal gradient tile.
+// Ported from the inline SVG in webapp/src/shared/PublicLayout.tsx.
+// `small` is the footer variant (22px vs 28px).
+interface Props {
+  small?: boolean;
+}
+const { small = false } = Astro.props;
+const size = small ? 12 : 14;
+---
+
+<span class={`aa-brand-mark${small ? " aa-brand-mark-sm" : ""}`}>
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path
+      d="M3.5 8.5l3 3 6-7"
+      stroke="currentColor"
+      stroke-width="2.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+</span>

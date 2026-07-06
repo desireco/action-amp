@@ -1,0 +1,41 @@
+---
+// Button — ported from webapp/src/components/ui/Button.tsx.
+// Renders the same .aa-btn classes as the React version so styles are shared.
+// Renders as <a> when `href` is given (links), <button> otherwise.
+import type { HTMLAttributes } from "astro/types";
+
+type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Size = "sm" | "md" | "lg";
+
+interface Props extends HTMLAttributes<"button"> {
+  variant?: Variant;
+  size?: Size;
+  href?: string;
+}
+
+const {
+  variant = "primary",
+  size = "md",
+  href,
+  class: className = "",
+  ...rest
+} = Astro.props;
+
+const variantClass = variant === "primary" ? "" : `aa-btn--${variant}`;
+const sizeClass = size === "md" ? "" : `aa-btn--${size}`;
+const classes = ["aa-btn", variantClass, sizeClass, className]
+  .filter(Boolean)
+  .join(" ");
+---
+
+{
+  href ? (
+    <a class={classes} href={href} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button type="button" class={classes} {...rest}>
+      <slot />
+    </button>
+  )
+}
