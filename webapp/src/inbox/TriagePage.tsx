@@ -11,6 +11,12 @@ import {
   PropertyChips,
   type TriageExit,
 } from "../components/ui";
+import {
+  StarIcon,
+  ProjectsIcon,
+  LogbookIcon,
+  SomedayIcon,
+} from "../components/ui/icons";
 import { usePropertyKeys } from "../components/ui/usePropertyKeys";
 import { useActiveLens } from "../app/lensContext";
 import { getProjects } from "wasp/client/operations";
@@ -536,23 +542,24 @@ export function TriagePage() {
                 )}
                 <div className="aa-triage-types">
                   {([
-                    ["task", "Task", "an action — something to do"],
-                    ["project", "Project", "an outcome needing more than one step"],
-                    ["resource", "Note", "reference material — not an action"],
-                    ["archive", "Archive", "I will not do now — keep it for later"],
+                    { t: "task", label: "Task", sub: "an action — something to do", Icon: StarIcon },
+                    { t: "project", label: "Project", sub: "an outcome needing more than one step", Icon: ProjectsIcon },
+                    { t: "resource", label: "Note", sub: "reference material — not an action", Icon: LogbookIcon },
+                    { t: "archive", label: "Archive", sub: "not now — keep it for later", Icon: SomedayIcon },
                   ] as const)
                     // A captured/resolved project means this is a task *in*
                     // that project by default, not a new project by the same
                     // name. Hide that option here; the project can still be
                     // changed from Spec.
-                    .filter(([t]) => !(t === "project" && (item.parsedProject || hasProjectDestination)))
-                    .map(([t, label, sub]) => (
+                    .filter(({ t }) => !(t === "project" && (item.parsedProject || hasProjectDestination)))
+                    .map(({ t, label, sub, Icon }) => (
                     <button
                       key={t}
                       type="button"
                       className={`aa-triage-type ${working.type === t ? "active" : ""}`}
                       onClick={() => setW({ type: t })}
                     >
+                      <Icon className="aa-triage-type__icon" />
                       <span className="aa-triage-type__label">{label}</span>
                       <span className="aa-triage-type__sub">{sub}</span>
                     </button>

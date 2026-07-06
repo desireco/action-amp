@@ -389,7 +389,7 @@
   }
 }
 
-/* ---- Step 2: Type chooser ---- */
+/* ---- Step 2: Type chooser (one-line rows, icon leading) ---- */
 .aa-triage-types {
   display: flex;
   flex-direction: column;
@@ -398,16 +398,17 @@
 
 .aa-triage-type {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: var(--aa-space-sm);
   width: 100%;
-  padding: 11px 14px;
+  padding: 12px 16px;
   border-radius: var(--aa-radius-md);
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
   color: var(--aa-text-3);
   text-align: left;
   cursor: pointer;
+  font-family: inherit;
   transition:
     background var(--aa-dur-fast) var(--aa-ease-out),
     border-color var(--aa-dur-fast) var(--aa-ease-out),
@@ -426,15 +427,39 @@
   color: var(--aa-teal-cta);
 }
 
+/* Icon leading — picks up currentColor, so it inherits the row's state. */
+.aa-triage-type__icon {
+  flex-shrink: 0;
+  color: var(--aa-text-4);
+  transition: color var(--aa-dur-fast) var(--aa-ease-out);
+}
+.aa-triage-type:hover .aa-triage-type__icon {
+  color: var(--aa-text-3);
+}
+.aa-triage-type.active .aa-triage-type__icon {
+  color: var(--aa-teal-cta);
+}
+
 .aa-triage-type__label {
   font-size: var(--aa-text-base);
   font-weight: var(--aa-weight-semibold);
+  flex-shrink: 0;
 }
 
 .aa-triage-type__sub {
   font-size: var(--aa-text-sm);
   font-weight: var(--aa-weight-regular);
-  opacity: 0.85;
+  color: var(--aa-text-4);
+  /* Trailing description sits on the same line, muted. Truncate so a long
+     description never wraps the row. */
+  margin-left: var(--aa-space-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aa-triage-type.active .aa-triage-type__sub {
+  color: var(--aa-teal-cta);
+  opacity: 0.8;
 }
 
 /* ---- Confirm bar (summary + Complete, gated) ---- */
