@@ -1,0 +1,216 @@
+---
+// /roadmap — public, in-the-open build progress.
+// Ported from webapp/src/public/RoadmapPage.tsx. Pure static markup, no JS.
+// Three sections: phase rail, Now/Next/Later trio, shipped timeline.
+//
+// Content is hand-curated from docs/ROADMAP.md + the commit arc. There is no
+// auto-generation: a stale hand-edited page beats an honest-looking lie spun
+// from commit titles. Update it when the trunks move, not on every commit.
+import PublicLayout from "../layouts/PublicLayout.astro";
+import "../styles/roadmap.css";
+
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
+
+const shipped = [
+  { date: "Jul 5", trunk: "Focus redesign + task page", summary: "The focus screen rebuilt around a margin clock (session live, honest total), summoned composer, and confirm-on-complete. Task permalinks and full-field chip editing landed, with a shared property-chips editor across triage and the task page." },
+  { date: "Jul 5", trunk: "Task notes + completion log", summary: "Tasks gained a notes thread and a timestamped completion log via a kind discriminator on TaskUpdate (NOTE | COMPLETED), surfaced in focus mode, triage, and task rows. Focus segments are now accounted through a TaskSession model." },
+  { date: "Jul 5", trunk: "Upcoming + design tokens", summary: "Upcoming promoted to a top-level Plan nav item as a single surface with cross-links. The type scale, line-heights, and weights migrated to design tokens across the whole UI." },
+  { date: "Jul 4", trunk: "Planning + triage polish", summary: "Goals and projects gained calmer lifecycle controls, shared record surfaces, and better task-row composition. Triage now starts with Classify and uses a resolved Project as the visible destination." },
+  { date: "Jul 4", trunk: "Capture grammar + roadmap cleanup", summary: "Inline project autocomplete landed: first # is a project hint, later # tokens are tags, @ is time, and [[lens]] handles cross-lens capture." },
+  { date: "Jul 3", trunk: "Entitlements + custom lenses", summary: "Free-tier caps enforced server-side and surfaced as calm Pro moments. Lenses became first-class: kinds, identity colors, Pro CRUD, adaptive switcher." },
+  { date: "Jun 30", trunk: "Capture polish + lens theming", summary: "Rapid-fire capture with token parsing, per-lens identity color across the shell, mobile thumb-zone dock, in-app feedback, and signup CTAs on the landing page." },
+  { date: "Jun 27", trunk: "First-run, auth, friction cleanup", summary: "Onboarding routes new users to a magic moment; OAuth-ready legal pages; the honest 'why this?' line under Next; Someday promote, Goal detail, Today's Done section." },
+  { date: "Jun 25", trunk: "Project detail + triage wizard", summary: "A project page to work its tasks inline. Triage became a co-author wizard with lossless Archive — nothing is ever silently deleted." },
+  { date: "Jun 22", trunk: "Founding 100 + test suite", summary: "Capped lifetime tier with live Stripe checkout and a real spots-remaining count. Vitest + Playwright stood up; the suite went green and stayed green." },
+  { date: "Jun 16", trunk: "Foundation", summary: "Design system, the full core loop (capture → triage → Next → Today → Logbook), deploy to Railway on a custom domain, and the polished landing page." },
+];
+---
+
+<PublicLayout
+  title="Roadmap — ActionAmp"
+  description="What we're building, what shipped, where we're headed. The honest version of the roadmap, not a feature wishlist."
+>
+  <div class="aa-roadmap">
+    {/* ── Hero ── */}
+    <header class="aa-roadmap-hero">
+      <h1>Building in the open</h1>
+      <p class="aa-roadmap-lede">
+        What we're building, what shipped, where we're headed. ActionAmp is
+        soft-launched and self-funded — this page is the honest version of the
+        roadmap, not a feature wishlist.
+      </p>
+      <div class="aa-roadmap-stats">
+        <span class="aa-roadmap-stat"><strong>329</strong> commits</span>
+        <span class="aa-roadmap-stat"><strong>10</strong> major trunks</span>
+        <span class="aa-roadmap-stat">Jun 16 → today</span>
+      </div>
+    </header>
+
+    {/* ── Phase rail ── */}
+    <section class="aa-roadmap-phases">
+      <div class="aa-roadmap-section-head">
+        <h2>Phases</h2>
+        <span class="aa-roadmap-rule" />
+      </div>
+      <div class="aa-roadmap-rail">
+        <div class="aa-roadmap-phase">
+          <div class="aa-roadmap-node aa-roadmap-node--done">✓</div>
+          <div class="aa-roadmap-phase-label">Foundation</div>
+          <div class="aa-roadmap-phase-state">Shipped · Jun 16</div>
+        </div>
+        <div class="aa-roadmap-phase">
+          <div class="aa-roadmap-node aa-roadmap-node--current">●</div>
+          <div class="aa-roadmap-phase-label">Road to MVP</div>
+          <div class="aa-roadmap-phase-state aa-roadmap-phase-state--current">
+            In progress
+          </div>
+        </div>
+        <div class="aa-roadmap-phase">
+          <div class="aa-roadmap-node aa-roadmap-node--planned">○</div>
+          <div class="aa-roadmap-phase-label">Q3 2026</div>
+          <div class="aa-roadmap-phase-state">Planned</div>
+        </div>
+      </div>
+    </section>
+
+    {/* ── Now / Next / Later trio ── */}
+    <section>
+      <div class="aa-roadmap-section-head">
+        <h2>Now · Next · Later</h2>
+        <span class="aa-roadmap-rule" />
+      </div>
+      <div class="aa-roadmap-trio">
+        {/* NOW */}
+        <article class="aa-roadmap-card aa-roadmap-card--now">
+          <div class="aa-roadmap-card-head">
+            <span class="aa-roadmap-card-title">Now</span>
+            <span class="aa-roadmap-card-tag">Road to MVP</span>
+          </div>
+          <ul class="aa-roadmap-items">
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
+              <span>
+                <span class="aa-roadmap-item-name">Observability</span><br />
+                <span class="aa-roadmap-item-note">One privacy-respecting tracker; the funnel number.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
+              <span>
+                <span class="aa-roadmap-item-name">Newsletter capture</span><br />
+                <span class="aa-roadmap-item-note">Quiet hero/footer email capture before distribution.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
+              <span>
+                <span class="aa-roadmap-item-name">Retention critical-path</span><br />
+                <span class="aa-roadmap-item-note">First-7-days funnel; close the activation leaks.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
+              <span>
+                <span class="aa-roadmap-item-name">Google sign-in</span><br />
+                <span class="aa-roadmap-item-note">Code-ready; gating on the OAuth client config.</span>
+              </span>
+            </li>
+          </ul>
+        </article>
+
+        {/* NEXT */}
+        <article class="aa-roadmap-card">
+          <div class="aa-roadmap-card-head">
+            <span class="aa-roadmap-card-title">Next</span>
+            <span class="aa-roadmap-card-tag">Post-signal</span>
+          </div>
+          <ul class="aa-roadmap-items">
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span>
+                <span class="aa-roadmap-item-name">Quiet launch</span><br />
+                <span class="aa-roadmap-item-note">Put the product in front of ~500 of the right people.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span>
+                <span class="aa-roadmap-item-name">Command palette + search</span><br />
+                <span class="aa-roadmap-item-note">Fuzzy jump/run across everything.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span>
+                <span class="aa-roadmap-item-name">Tag management + matcher validation</span><br />
+                <span class="aa-roadmap-item-note">The gate before moment-aware matcher v2.</span>
+              </span>
+            </li>
+          </ul>
+        </article>
+
+        {/* LATER */}
+        <article class="aa-roadmap-card">
+          <div class="aa-roadmap-card-head">
+            <span class="aa-roadmap-card-title">Later</span>
+            <span class="aa-roadmap-card-tag">Q3 2026</span>
+          </div>
+          <ul class="aa-roadmap-items">
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span class="aa-roadmap-item-name">Moment-aware matcher v2</span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span class="aa-roadmap-item-name">Breadcrumb navigation</span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span class="aa-roadmap-item-name">Project-owned resources</span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span class="aa-roadmap-item-name">Weekly & monthly review</span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span class="aa-roadmap-item-name">Merged Work area</span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span class="aa-roadmap-item-name">CLI + agent skills</span>
+            </li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    {/* ── Shipped timeline ── */}
+    <section class="aa-roadmap-shipped">
+      <div class="aa-roadmap-section-head">
+        <h2>Shipped</h2>
+        <span class="aa-roadmap-rule" />
+      </div>
+      <div class="aa-roadmap-timeline">
+        {shipped.map((entry) => (
+          <div class="aa-roadmap-entry">
+            <div class="aa-roadmap-entry-date">{entry.date}</div>
+            <div class="aa-roadmap-entry-body">
+              <div class="aa-roadmap-entry-trunk">{entry.trunk}</div>
+              <div class="aa-roadmap-entry-summary">{entry.summary}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* ── Closer ── */}
+    <section class="aa-roadmap-closer">
+      <p>
+        No countdowns, no launch dates until the numbers say go. When the funnel
+        earns it, this page is where the next phase opens.
+      </p>
+      <a href={`${appUrl}/founding-100`}>Become a Founding Member →</a>
+    </section>
+  </div>
+</PublicLayout>

@@ -1,17 +1,336 @@
 ---
+// / — the landing page. The whole pitch in one scroll.
+// Ported to native .astro from webapp/src/landing/LandingPage.tsx — no React.
+//
+// Two interactive bits are tiny inline <script>s at the bottom:
+//   1. Hero "Next card" — click completion → fill → cycle to next task.
+//   2. FAQ accordion — click toggles .open.
+// All app links (/signup, /login, /founding-100) are absolute via appUrl.
+import "../styles/landing.css";
 
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
+
+// Hero demo tasks — cycles on click.
+const HERO_TASKS = [
+  { title: "Email Sarah re: Q3 invoice", why: "★ Important · the reason this is next", meta: "Due today · 15 min" },
+  { title: "Review pull request #284", why: "Normal · fits in 30 min", meta: "Due today · 30 min" },
+  { title: "Prep notes for 1:1 with Marco", why: "Low · quick win", meta: "Tomorrow · 10 min" },
+  { title: "Reply to legal re: contract", why: "★ Important · overdue", meta: "Was due yesterday" },
+  { title: "Draft the Q3 launch plan", why: "Important · break it down", meta: "This week · XL" },
+];
+
+const FAQ_ITEMS = [
+  { q: "Is this just another todo app?", a: 'No. The list is demoted. "What do I do next?" is the home screen. ActionAmp optimizes the decision, not the capture.' },
+  { q: "Do I need to know GTD?", a: "No. The methodology is there if you want it, invisible if you don't. Most users just capture, triage, and do." },
+  { q: "When does it launch?", a: "Soon. When it's ready, you'll know." },
+];
 ---
 
+<!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ActionAmp — Easiest way to get into action</title>
+    <meta name="description" content="Every other app opens to your list. ActionAmp opens to the one thing to do next. A focus app, not a todo app." />
+    <link rel="canonical" href="https://actionamp.com/" />
+    <meta property="og:title" content="ActionAmp — Easiest way to get into action" />
+    <meta property="og:description" content="Every other app opens to your list. ActionAmp opens to the one thing to do next." />
+    <meta property="og:url" content="https://actionamp.com/" />
+    <meta property="og:site_name" content="ActionAmp" />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body>
+    <div class="aa-landing">
+      <nav class="aa-nav">
+        <a href="/" class="aa-brand" aria-label="ActionAmp home">
+          <div class="aa-brand-mark">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <span class="aa-brand-name">ActionAmp</span>
+        </a>
+        <div class="aa-nav-links">
+          <a class="aa-nav-link" href="#how">How it works</a>
+          <a class="aa-nav-link" href="#soul">Why</a>
+          <a class="aa-nav-link" href="#method">Methodology</a>
+          <a class="aa-nav-link" href="#faq">FAQ</a>
+        </div>
+        <div class="aa-nav-auth">
+          <a class="aa-nav-link aa-nav-link-auth" href={`${appUrl}/login`}>Log in</a>
+        </div>
+      </nav>
+
+      <section class="aa-hero">
+        <div class="aa-chaos" aria-hidden="true">
+          <div class="aa-chaos-row"><span class="aa-c-box"></span>something</div>
+          <div class="aa-chaos-row"><span class="aa-c-box"></span>another thing</div>
+          <div class="aa-chaos-row"><span class="aa-c-box"></span>don't forget</div>
+          <div class="aa-chaos-row"><span class="aa-c-box"></span>and this</div>
+        </div>
+
+        <div class="aa-hero-grid">
+          <div class="aa-hero-text">
+            <span class="aa-hero-eyebrow">
+              <span class="aa-dot"></span>A focus app, not a todo app
+            </span>
+            <h1>
+              <span class="aa-light">Easiest way</span><br />
+              to get <span class="aa-accent">into action</span>.
+            </h1>
+            <p class="aa-hero-sub">
+              Every other app opens to your list. ActionAmp opens to the
+              <b>one thing</b> to do next.
+            </p>
+            <div class="aa-hero-meta">
+              <span>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M5 6h2M9 6h2M5 9h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                Keyboard-first
+              </span>
+              <span>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Calm by default
+              </span>
+              <span>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M2 8c0-3 2-6 6-6s6 3 6 6-2 6-6 6-6-3-6-6z" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+                GTD-compatible
+              </span>
+            </div>
+            <a href={`${appUrl}/signup`} class="aa-btn aa-btn--primary aa-btn--lg aa-hero-cta">
+              Make an account
+            </a>
+          </div>
+
+          <div class="aa-wn-wrap">
+            <div class="aa-wn-card" id="hero-card">
+              <div class="aa-wn-ctx">
+                <span class="aa-dot"></span>
+                Right now · 30 min
+              </div>
+              <button
+                class="aa-completion"
+                id="aa-completion"
+                aria-label="Mark task complete"
+                title="Click to complete"
+              >
+                <svg class="aa-check" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <div class="aa-wn-title" id="aa-wn-title">{HERO_TASKS[0].title}</div>
+              <div class="aa-wn-meta" id="aa-wn-meta">{HERO_TASKS[0].meta}</div>
+              <div class="aa-wn-why" id="aa-wn-why">{HERO_TASKS[0].why}</div>
+              <div class="aa-wn-actions">
+                <button class="aa-btn aa-btn--primary" id="aa-do-this">Do this</button>
+                <button class="aa-btn aa-btn--secondary">Switch</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="aa-section aa-problem">
+        <div class="aa-eyebrow">The expectation</div>
+        <h2 class="aa-display">
+          <span class="aa-light">Your app should</span> support your focus.
+        </h2>
+        <p class="aa-lede">
+          Most apps optimize <b>capture</b>, writing things down. None optimize
+          the <b>decision</b>: of all this, what do I do right now?
+        </p>
+        <p class="aa-lede">
+          The list grows faster than you can work it. You don't fail to capture.
+          You fail to <b>pick</b>. A list that doesn't help you pick isn't
+          helping you focus, it's just nagging.
+        </p>
+        <p class="aa-lede aa-lede-punch">
+          So we made something that does the picking for you.
+        </p>
+      </section>
+
+      <section class="aa-section aa-how" id="how">
+        <div class="aa-eyebrow">How it works</div>
+        <h2 class="aa-display">
+          <span class="aa-light">Three moves,</span> not three hundred features.
+        </h2>
+        <div class="aa-flow">
+          <div class="aa-flow-step">
+            <div class="aa-flow-num">01</div>
+            <h3>Capture</h3>
+            <p>Thought goes to inbox in under two seconds. From anywhere.</p>
+          </div>
+          <div class="aa-flow-arrow">
+            <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
+              <path d="M2 7h15M13 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="aa-flow-step">
+            <div class="aa-flow-num">02</div>
+            <h3>Triage</h3>
+            <p>Decide what each thing <i>is</i>: task, project, or reference.</p>
+          </div>
+          <div class="aa-flow-arrow">
+            <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
+              <path d="M2 7h15M13 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="aa-flow-step">
+            <div class="aa-flow-num">03</div>
+            <h3>Focus</h3>
+            <p>ActionAmp picks the next thing. You do it. The rest disappears.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="aa-soul" id="soul">
+        <h2 class="aa-soul-statement">
+          The home screen isn't a list.<br />
+          It's a <b>decision</b>.
+        </h2>
+        <p class="aa-soul-sub">
+          Every other app opens to your full todo list. ActionAmp opens to one
+          task, the next thing that matters, and hides the rest. You can always
+          see it. You just don't have to.
+        </p>
+      </section>
+
+      <section class="aa-section aa-method" id="method">
+        <div class="aa-eyebrow">Methodology</div>
+        <h2 class="aa-display">
+          GTD-compatible. <span class="aa-light">Built for action.</span>
+        </h2>
+        <p class="aa-lede">
+          If you know <b>Getting Things Done</b>, you're home: inbox, triage,
+          projects, someday. If you don't, none of that matters, the app still
+          just works.
+        </p>
+        <p class="aa-lede">
+          We also borrowed from <b>PARA</b>, with one deliberate change: we took
+          its <b>Areas</b> and called them <b>Goals</b>. Not the same, but
+          similar. Areas are passive buckets ("Health", "Finance"). Goals are
+          active outcomes ("Run a 10k", "Get finances under control"). For an
+          app about action, the active framing fits.
+        </p>
+        <div class="aa-badges">
+          <span class="aa-badge"><span class="aa-b">/</span>Inbox → triage</span>
+          <span class="aa-badge"><span class="aa-b">/</span>Goals over areas</span>
+          <span class="aa-badge"><span class="aa-b">/</span>Projects & tasks</span>
+          <span class="aa-badge"><span class="aa-b">/</span>Priority + size</span>
+        </div>
+      </section>
+
+      <section class="aa-section aa-faq-section" id="faq">
+        <div class="aa-eyebrow">FAQ</div>
+        <h2 class="aa-display aa-display-sm">Honest answers.</h2>
+        <div class="aa-faq-list">
+          {FAQ_ITEMS.map((item) => (
+            <div class="aa-faq-item">
+              <div class="aa-faq-q">{item.q}</div>
+              <div class="aa-faq-a">{item.a}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="aa-final">
+        <div class="aa-final-mark">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
+        <h2>
+          Do the <b>next thing</b>.<br />
+          Not all the things.
+        </h2>
+        <p>Free while we're in beta.</p>
+        <div class="aa-final-cta">
+          <a href={`${appUrl}/signup`} class="aa-btn aa-btn--primary aa-btn--lg aa-final-cta-btn">
+            Make an account
+          </a>
+          <span class="aa-final-login">
+            Already use it? <a href={`${appUrl}/login`}>Log in</a>
+          </span>
+        </div>
+      </section>
+
+      <footer class="aa-footer">
+        <a href="/" class="aa-brand" aria-label="ActionAmp home">
+          <div class="aa-brand-mark aa-brand-mark-sm">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <span class="aa-brand-name aa-brand-name-sm">ActionAmp</span>
+        </a>
+        <div class="aa-footer-links">
+          <a href="/about">About</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/roadmap">Roadmap</a>
+          <a href={`${appUrl}/founding-100`}>Founding 100</a>
+        </div>
+        <div class="aa-footer-copy">© 2026 ActionAmp</div>
+      </footer>
+    </div>
+
+    <script is:inline define:vars={{ HERO_TASKS }}>
+      // Hero card — click completion or "Do this" → fill → cycle to next task.
+      // Ported from the React useState/handleComplete logic.
+      (function () {
+        var completion = document.getElementById("aa-completion");
+        var doBtn = document.getElementById("aa-do-this");
+        var titleEl = document.getElementById("aa-wn-title");
+        var metaEl = document.getElementById("aa-wn-meta");
+        var whyEl = document.getElementById("aa-wn-why");
+        if (!completion || !doBtn || !titleEl) return;
+
+        var idx = 0;
+        var done = false;
+
+        function complete() {
+          if (done) return;
+          done = true;
+          completion.classList.add("filled", "burst");
+          doBtn.classList.add("is-done");
+          doBtn.textContent = "Done ✓";
+          setTimeout(function () {
+            completion.classList.remove("filled", "burst");
+            doBtn.classList.remove("is-done");
+            doBtn.textContent = "Do this";
+            idx = (idx + 1) % HERO_TASKS.length;
+            var task = HERO_TASKS[idx];
+            titleEl.textContent = task.title;
+            metaEl.textContent = task.meta;
+            whyEl.textContent = task.why;
+            // restart the rise animation
+            titleEl.style.animation = "none";
+            void titleEl.offsetWidth;
+            titleEl.style.animation = "";
+            done = false;
+          }, 2400);
+        }
+
+        completion.addEventListener("click", complete);
+        doBtn.addEventListener("click", complete);
+      })();
+
+      // FAQ accordion — click toggles .open (CSS handles the expand).
+      document.querySelectorAll(".aa-faq-item").forEach(function (item) {
+        item.addEventListener("click", function () {
+          item.classList.toggle("open");
+        });
+      });
+    </script>
+  </body>
 </html>

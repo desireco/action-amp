@@ -1,0 +1,52 @@
+---
+title: "Privacy Policy"
+description: "What ActionAmp collects, why, and what we don't do with it — in plain language."
+---
+
+# Privacy Policy
+
+*Last updated: June 27, 2026*
+
+This policy describes what ActionAmp collects, why, and what we do (and don't do) with it. We wrote it in plain language because privacy policies shouldn't require a lawyer to understand.
+
+## What we collect
+
+- **Account data:** your email address (for login) and a hashed password. We never see your password in plain text. If you sign in with Google, we also receive the name on your Google profile — nothing else from your Google account.
+- **Your tasks and content:** everything you create (tasks, projects, goals, notes, resources). This is your data. We store it so the app works.
+- **Usage data:** we collect basic, anonymized metrics (page views, feature usage) to understand what's working. No cross-site tracking, no selling data, no behavioral profiling.
+
+## Third parties we use
+
+We share the minimum each one needs to do its job, and nothing more.
+
+- **Google** — for optional "Sign in with Google" authentication. When you use it, Google confirms your identity to us and shares your name and email address. We do not share your tasks or content with Google, and we cannot read your Google data beyond that.
+- **Stripe** — for payments. Your card data goes directly to Stripe; we never see or store it. We keep only a Stripe customer reference and a record of your payments so we can manage your plan.
+- **Resend** — our email provider, used to deliver authentication and account emails (signup confirmation, password resets). They see only what's needed to deliver the message.
+- **Analytics** — we use a privacy-respecting analytics provider to understand aggregate usage. It does no cross-site tracking and does not sell your data. (We'll name the specific provider here once it's confirmed.)
+
+## What we don't do
+
+- **No selling your data.** Not to advertisers, not to anyone. Ever.
+- **No tracking pixels, no third-party ad SDKs.** We don't embed advertising.
+- **No reading your content for training AI** or any other purpose beyond running the app for you.
+- **No sharing with third parties** unless legally required (subpoena, court order).
+
+## How we store it
+
+Your data lives in a managed database. Passwords are hashed with industry-standard algorithms. We use encryption in transit (HTTPS) and at rest.
+
+## Data retention
+
+We keep your tasks and content for as long as your account exists. Deleting your account removes everything permanently — see "Your rights" below.
+
+## Your rights
+
+You can export or delete your data at any time. Deleting your account removes everything permanently — we don't keep "soft" copies.
+
+## Changes to this policy
+
+If we change this policy, we'll notify you in the app before it takes effect. The current version always lives at this page.
+
+## Contact
+
+Privacy questions: privacy@actionamp.com

@@ -1,0 +1,15 @@
+---
+// /terms — markdown-driven, same pattern as /about.
+import { getEntry, render } from "astro:content";
+import PublicLayout from "../layouts/PublicLayout.astro";
+
+const entry = await getEntry("pages", "terms");
+const { Content } = await render(entry);
+const { title, description } = entry.data;
+---
+
+<PublicLayout title={title} description={description}>
+  <article class="aa-markdown-body">
+    <Content />
+  </article>
+</PublicLayout>
