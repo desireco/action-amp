@@ -109,15 +109,28 @@ appears in Work/Planning/Review except by coming through triage.
   `getAppData`), idempotent within a day via
   `User.lastTodayRolloverAt`. Done tasks are left alone; `startedAt` (the
   Now state) is preserved.
-- This is the only area with a focus mode (`F`) and a Now state.
+- This is the only area with a focus mode. Focus is a **dedicated route**
+  (`/app/focus`, `FocusRoute` in `main.wasp.ts`) entered from Next's "Do this"
+  or any task row's focus affordance. The redesigned screen (Variant F, locked
+  2026-07-05) carries a **two-number margin clock** — live session + honest
+  total sourced from `TaskSession` rows — a **summoned composer** for notes,
+  and **confirm-on-complete**. Completing a task from focus appends a
+  `kind=COMPLETED` row to the task's `TaskUpdate` thread while leaving
+  `status` untouched (so Today's Done section stays accurate). See
+  `docs/features/focus-mode.md` + `docs/features/task-notes-completion-log.md`.
+- A **Now** state (`Task.startedAt`) persists across navigation.
 
 ### 2.4 Planning Area — organizing
 
 - Where **Projects** and **Goals** live, and where you organize tasks across
   time horizons.
 - Projects: multi-step outcomes, always in a context. May sit under a Goal.
+  **Lifecycle is fully editable** (locked 2026-07-05): complete / reopen /
+  edit / delete / re-link, with explicit ordering under a Goal
+  (`Project.order`) — the first non-done project surfaces as "Next: <name>".
 - Goals: the organizing layer (active outcomes, e.g. "Run a 10k"), always in a
-  context.
+  context. **Same lifecycle as Projects** — complete / reopen / edit / delete /
+  re-link; completed Goals surface in the Logbook with a Reopen affordance.
 - **Someday** lives here (pending confirmation — §5): items with no date and no
   commitment, kept for "when I'm ready." A planning concept, not a working one.
 - Creating Projects and Goals happens here (not in triage — triage *files into*
@@ -128,10 +141,16 @@ appears in Work/Planning/Review except by coming through triage.
 - Statistics and reports: how many tasks completed today/this week, what's
   stuck, what's been deferred repeatedly.
 - The **Logbook** is the catch-all record of things no longer active:
-  completed tasks, past projects, and **archived notes** ("I will not do now"
-  from triage — kept lossless, restorable to the inbox). This area is the
-  *view over it* (counts, trends, streaks — kept calm, no guilt-trip red dots).
-- Currently the least-built area — net-new work. (See `BACKLOG.md`.)
+  completed tasks (each carrying a `kind=COMPLETED` `TaskUpdate` since
+  2026-07-05), past projects, **completed goals** (since 2026-07-05, with
+  Reopen), and **archived notes** ("I will not do now" from triage — kept
+  lossless, restorable to the inbox). This area is the *view over it* (counts,
+  trends — kept calm, no guilt-trip red dots, no streaks).
+- The activity log itself (`TaskUpdate` rows, kind = NOTE | COMPLETED) is the
+  substrate the future Review v2 activity timeline will render — see
+  `docs/specs/weekly-monthly-review.md`.
+- Currently the least-built area — net-new work. (See `BACKLOG.md`,
+  `docs/features/work-area-merged.md`.)
 
 ## 3. Context (Lens) scoping
 
@@ -293,6 +312,22 @@ These were the open structural calls. All resolved:
      resolution can skip standalone lens selection because the Project already
      supplies the Lens, but Classify still shows the actual destination before
      dispatch.
+10. **Focus is a dedicated route; tasks carry an activity log (locked
+    2026-07-05).** Two structural calls from the Variant F redesign + the
+    task-notes-completion-log spec:
+    - **`/app/focus` is its own route**, not an overlay. Entered from Next's
+      "Do this" or any task row's focus affordance; `NextPage` and
+      `ProjectDetailPage` `navigate("/app/focus")` into it. The screen carries
+      a margin clock (live session + total), summoned composer, and
+      confirm-on-complete. `TaskSession` (startedAt/endedAt) accounts for
+      focus segments across pause/resume so the total is honest.
+    - **`TaskUpdate.kind` (NOTE | COMPLETED) is the activity-log
+      discriminator.** Notes are appended any time; completion appends a
+      `kind=COMPLETED` row. `Task.completedAt` stays as the existing
+      completion timestamp (Today/Logbook read it); the typed row carries the
+      user's optional completion note for Review. This is the focused slice
+      of `work-area-merged` — route merging and NOT_DOING/archive are still
+      out of scope.
 
 ## 6. Document cascade
 
@@ -330,6 +365,12 @@ The following were updated to match this doc (commit alongside):
   (no same-page swap toggle). Aligns with §5.1.
 - `PAGES.md` + `DATA-MODEL.md` + `BACKLOG.md` (revised 2026-07-05) — Upcoming
   framing flipped from demoted to promoted-into-Planning, matching §5.1.
+- `DATA-MODEL.md` (revised 2026-07-05) — v6 note documents `TaskUpdate.kind`
+  discriminator, `TaskSession`, and `Project.order`, matching §5.10 +
+  goal-planning.
+- `TRIAGE.md` §7.4 + §8 (revised 2026-07-05) — Classify lens UI is pills +
+  one-line type rows (not positional A/S/D/F slots); property keys
+  `[` `]` `-` `=` are now built (shared `PropertyChips` editor).
 
 ## 7. Code work implied (flagged in `BACKLOG.md`, not built here)
 
@@ -339,11 +380,10 @@ The following were updated to match this doc (commit alongside):
 - **Upcoming → Today toggle** — add a "see upcoming" affordance on the Today
   page that surfaces `status=UPCOMING` tasks (scoped to the active lens) for
   promotion onto today. *(Done.)*
-- **Add Upcoming to the Plan nav** (reverses the 2026-06-23 "drop the route"
-  item, superseded 2026-07-05) — `/app/upcoming` already exists; add it under
-  the Plan section in `AppShell.tsx`, add `counts.upcoming` to `getAppData`,
-  wire `/app/upcoming` into `sectionForPath`'s plan branch. The Today swap
-  toggle stays as a separate, same-page surface.
+- **Add Upcoming to the Plan nav** *(done 2026-07-05)* — `/app/upcoming` is
+  now a top-level Plan nav item. The same-page Today swap toggle was **dropped
+  the same day** (§5.1) in favor of one surface per intent; Today and Upcoming
+  cross-link from their heroes instead.
 - **Someday nav relocation** — move the Someday entry under the Plan section of
   the new focus-switch nav (route stays `/app/someday`).
 - **(Done 2026-06-25)** `getTopTask` scope — widened from `status=TODAY` to

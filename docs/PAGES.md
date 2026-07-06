@@ -1,26 +1,16 @@
 # ActionAmp — Pages & Routes
 
-> Status: route + page reference.
+> Status: route + page reference. Code-verified against `main.wasp.ts`
+> 2026-07-05.
 > **Structural authority has moved to `WORKFLOW.md`** (2026-06-23). The nav is
 > reorganized into three **focus-mode sections** (Work / Plan / Review) as an
-> expanding-section nav (one open at a time), with the **context switch (Lens:**
-> **Work/Me) above it and Capture pinned outside both.**
+> expanding-section nav (one open at a time), with the **context switch (Lens)**
+> above it and Capture pinned outside both.
 >
-> Key changes from the route map below (see `WORKFLOW.md` §5–§7):
->
-> - **`/app/upcoming` is a top-level Planning route/nav item** (framing
->   flipped 2026-07-05, reversing the 2026-06-23 demotion). It's the
->   forward-planning view of `status=UPCOMING` tasks; the Today "see upcoming"
->   toggle stays as a separate same-page swap surface.
-> - **Someday (`/app/someday`) relocates under the Plan section.**
-> - The **Next / Today** split stays, both under Work.
->
-> The page-by-page descriptions below stay accurate for each route's contents;
-> only the *grouping* and the Upcoming framing are superseded.
-
-> Status: DRAFT v1
-> Authority: derived from `DATA-MODEL.md` + `FEATURES.md`.
-> Lens (Work/Me) is a **global switch in the chrome**, not a page — it scopes every page below.
+> All authenticated app routes use the `/app` prefix (e.g. `/app`, `/app/inbox`,
+> `/app/tasks/:permalink`). The page-by-page descriptions below stay accurate
+> for each route's contents; the chrome mockup (§0) shows the post-2026-06-23
+> focus-switch sidebar.
 
 ---
 
@@ -30,30 +20,32 @@ Persistent UI that frames every page:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  [ActionAmp]          [⌘K capture]   [⌘\ palette]  [⚙]  │  ← top bar
+│  [ActionAmp]          [⌘K capture]                 [⚙]  │  ← top bar
 ├──────────┬──────────────────────────────────────────────┤
 │ LENS     │                                              │
 │ ○ Work   │                                              │
 │ ● Me     │           (page content)                     │
 │          │                                              │
 │ ─────    │                                              │
-│ ⚡ What   │                                              │
-│   Now    │                                              │
-│ ▣ Inbox  │                                              │
-│ ☀ Today  │                                              │
-│ ▦ Upcom. │                                              │
-│ ◌ Someday│                                              │
-│ ▤ Projects│                                             │
-│ ◎ Goals  │                                              │
+│ ⌁ Work   │  (expanding-section nav: one open at a time) │
+│   ⚡ Next │                                              │
+│   ☀ Today│                                              │
+│ ▽ Plan   │                                              │
+│   ▦ Upcom│                                              │
+│   ▤ Projs│                                              │
+│   ◎ Goals│                                              │
+│   ◌ Somed│                                              │
+│ ◇ Review │                                              │
+│   ⏱ Log  │                                              │
 │ ─────    │                                              │
-│ ⏱ Logbook│                                             │
+│ ▣ Inbox  │  (Capture is pinned outside both switches)   │
 └──────────┴──────────────────────────────────────────────┘
 ```
 
 - **Lens switch** at the top of the sidebar — changes scope of *everything* below it.
-- **Quick-add** (`⌘K`) and **command palette** (`⌘\`) accessible from the top bar on every page.
+- **Focus switch** (Work / Plan / Review) is an expanding-section nav — only one
+  section open at a time. Capture (`⌘K`) and Inbox stay pinned outside both.
 - Active page highlighted. Counts (Inbox `(4)`) live-update.
-- Collapsible sidebar for focus mode.
 
 ---
 
@@ -61,16 +53,18 @@ Persistent UI that frames every page:
 
 These are the main destinations. All scoped to the active Lens.
 
-### P1. Next  →  `/`
+### P1. Next  →  `/app`
 
 **The home page. The wedge.** Not a list — a chooser. (FEATURES F8/F10.)
 
 - Shows 1 (max 3) Tasks ranked by priority → size → due.
 - Context line ("Important · due today · S"), Do / Not now / ⋯ actions.
+- **Focus affordance** — `Do this` navigates to `/app/focus` (D3) and starts
+  the task (sets `Task.startedAt`).
 - Empty state: if no Today items → gentle prompt to triage Inbox or plan Today.
 - If Inbox is untriaged and Today is empty → nudge toward triage.
 
-### P2. Inbox  →  `/inbox`
+### P2. Inbox  →  `/app/inbox`
 
 The universal queue. (FEATURES F3.) Shows untriaged InboxItems as a list.
 
@@ -79,84 +73,110 @@ The universal queue. (FEATURES F3.) Shows untriaged InboxItems as a list.
 - Row actions: open, triage (→ P2b), delete.
 - Header: "Triage" button → enters review mode.
 
-### P2b. Inbox Triage  →  `/inbox/review` *(MVP — walk-through mode)*
+### P2b. Inbox Triage  →  `/app/inbox/review`
 
-One InboxItem at a time, decide what it becomes (FEATURES F6, DATA-MODEL §3):
+Per-item co-author wizard (DATA-MODEL §3, TRIAGE.md §4). The
+single-card one-key dispatch is **gone**. Three steps per item:
 
-- `1` Task (Today) · `2` Task (Upcoming, pick date) · `3` Task (Someday)
-- `P` → new/existing Project · `G` → link to Goal
-- `R` → Resource (pick parent Project/Goal) · `Del` → trash
+- **Classify** — Type chooser (one-line rows w/ leading icon: Task / Project /
+  Resource / Archive) + Lens pills. A resolved Project supplies both Project +
+  Lens and skips standalone lens selection by default.
+- **Spec** — property rows via the shared `PropertyChips` editor. Shortcuts:
+  `[`/`]` size · `-`/`=` priority · `/` Lens picker.
+- **Complete** — commits the spec; the InboxItem is transformed and removed.
 - Progress dot: "3 of 7 triaged."
 
-### P3. Today  →  `/today`
+### P3. Today  →  `/app/today`
 
 **Planning view** of today's commitments — distinct from Next (which is *doing*).
 
 - List of Tasks due today/overdue, grouped by Goal.
 - Enforces the **Today cap** (FEATURES F12): adding a 6th requires bumping one out.
 - Drag to reorder priority. Inline size/priority editors.
-- "Done today" section collapsed at bottom.
+- "Done today" section scoped to `status === "TODAY"` only (locked 2026-07-05).
+- Cross-links to `/app/upcoming` from the hero.
 
-### P4. Upcoming  →  `/upcoming`
+### P4. Upcoming  →  `/app/upcoming`
 
-Dated future items. (FEATURES §2 model.)
+The forward-planning view of `status=UPCOMING` tasks (the bench).
 
-- Grouped by date (Tomorrow / This week / Next week / Later) then by Goal.
-- Tasks + dated Projects.
+- Top-level Plan nav item (locked 2026-07-05; the Today same-page swap toggle
+  was dropped the same day in favor of one surface per intent).
+- Date-bucketed (Overdue / This week / Next week / Later / Unscheduled),
+  rose-tinted overdue, inline notes, per-row promote-to-Today.
+- Cross-links back to `/app/today` from the hero.
 
-### P5. Someday  →  `/someday`
+### P5. Someday  →  `/app/someday`
 
-No-date, not-forgotten, not-nagging Tasks. (GTD "Someday/Maybe".)
+No-date, not-forgotten, not-nagging Tasks. (GTD "Someday/Maybe".) Lives under
+the Plan section of the focus-switch nav.
 
 - Grouped by Goal (or flat). Lighter visual weight.
 - Promote to Today/Upcoming when ready.
 
-### P6. Projects  →  `/projects`
+### P6. Projects  →  `/app/projects`
 
 All Projects in the active Lens, with Goal alignment shown on each card.
 
 - Each row: name, progress (X/Y tasks done), due date if any, next-action preview.
 - "No next action" badge if a Project has no actionable Task — a GTD health nudge.
 
-### P7. Goals  →  `/goals`
+### P7. Goals  →  `/app/goals`
 
-All Goals in the active Lens, with project roll-up. *(First-class in MVP.)*
+All Goals in the active Lens, with project roll-up. Full lifecycle (locked
+2026-07-05): complete / reopen / edit / delete / re-link; `Project.order`
+sequences projects under each goal ("Next: <name>").
 
-- Each Goal: linked Projects, aggregate progress, current Focus project.
+- Each Goal: linked Projects (ordered), aggregate progress, current focus project.
 - Create/edit Goal inline.
 
-### P8. Logbook  →  `/logbook`
+### P8. Logbook  →  `/app/logbook`
 
 Completed + archived items. (PARA "Archive" / FEATURES F18.)
 
 - Searchable. Grouped by completion date.
+- **Completed Goals surface here** since 2026-07-05, with a Reopen affordance.
 - No editing — restore or permanently delete only.
 
 ---
 
 ## 2. Detail pages
 
-### D1. Project detail  →  `/projects/:permalink`
+### D1. Project detail  →  `/app/projects/:permalink`
 
-- Header: name, parent Goal, due date, status.
+- Header: name, parent Goal, due date, status. Editable inline (lifecycle
+  shipped 2026-07-05: complete / reopen / edit / delete / re-link).
 - **Tasks** list (the focus candidates) — sortable, inline-edit.
 - **Resources** list (links + notes / bookmarks) — add/edit/open.
 - Convert Task → Project (XL break-down path). Promote Resource → Task.
-- "Next action" highlighted.
+- "Next action" highlighted. **Move-to-Project** affordance on each task row.
 
-### D2. Goal detail  →  `/goals/:permalink`
+### D2. Goal detail  →  `/app/goals/:permalink`
 
 - Header: name, description ("the why").
-- Linked Projects (with progress).
+- Linked Projects (ordered by `Project.order`), with progress.
+- **"Next: <name>"** line surfaces the first non-done Project under this Goal.
 - Aggregate roll-up: % complete across linked Projects.
-- Edit/delete Goal.
+- Lifecycle actions: complete / reopen / edit / delete / re-link.
 
-### D3. Task focus mode  →  `/tasks/:id/focus` *(or full-screen overlay)*
+### D3. Task detail  →  `/app/tasks/:permalink`
 
-Single-task execution view (FEATURES F13). The task, its notes, optional timer, and *nothing else*.
+Task permalink page (shipped 2026-07-05). Full-field chip-popover editing via
+the shared `PropertyChips` editor (priority, size, due, project, goal, tags).
+Notes thread rendered as a thread + composer (writes a `TaskUpdate`,
+`kind=NOTE`). Completed task detail becomes feedback-only.
 
-- Entered via `F` from anywhere a Task is shown.
+### D4. Focus  →  `/app/focus`
+
+Single-task execution route (FEATURES F13, Variant F). The task, its margin
+clock (live session + honest total), summoned composer, and *nothing else*.
+
+- Entered from Next's "Do this" or any task row's focus affordance.
 - Minimal chrome — sidebar hidden.
+- Confirm-on-complete appends a `kind=COMPLETED` `TaskUpdate`; `Task.completedAt`
+  stamps; `status` is left untouched.
+- `TaskSession` rows (startedAt/endedAt) are maintained across start/pause/
+  complete so the clock total is honest.
 - Esc returns to origin.
 
 ---
@@ -166,67 +186,88 @@ Single-task execution view (FEATURES F13). The task, its notes, optional timer, 
 These aren't pages but are core surfaces:
 
 - **O1. Quick-add palette** (`⌘K`) — floating input, NL parsing, chips preview. (F1/F2.)
-- **O2. Command palette** (`⌘\`) — fuzzy jump/run over everything. (F20.)
-- **O3. Shortcut cheatsheet** (`?`) — overlay of all shortcuts. (F21.)
-- **O4. Search** (`/` or via palette) — full-text results overlay across items/notes/logbook. (F22.)
+- **O2. Command palette** (`⌘\`) — fuzzy jump/run over everything. (F20, not yet built.)
+- **O3. Shortcut cheatsheet** (`?` / `⌘?`) — overlay of all shortcuts. (F21.)
+- **O4. Search** (`/` or via palette) — full-text results overlay across items/notes/logbook. (F22, not yet built.)
 - **O5. XL break-down prompt** — modal when a Task is set to XL. (F9c.)
 
 ---
 
-## 4. Auth pages (from scaffold; social to be added)
+## 4. Auth pages
 
 | Route | Page | Notes |
 |---|---|---|
-| `/login` | Login | email + social (Google etc.) |
+| `/login` | Login | email + social (Google OAuth client config pending) |
 | `/signup` | Signup | email + social |
-| `/request-password-reset` | Request reset | email only |
 | `/password-reset` | Reset | email only |
 | `/email-verification` | Verify email | email only |
 
-Post-auth redirect → `/` (Next).
+Post-auth redirect → `/app` (Next).
 
 ---
 
-## 5. Settings  →  `/settings`
-
-Tabbed or single-scroll *(decide later)*:
+## 5. Settings  →  `/app/settings`
 
 - **Account** — email, password, linked social accounts, delete account.
 - **Preferences** — theme (dark default), Today cap (default 5, or off), confirmation sounds, momentum toggle.
-- **Lenses** *(Phase 2)* — add/rename/reorder Work/Me and custom Lenses.
-- **Shortcuts** *(Phase 2)* — view/customize keyboard map.
+- **Lenses** (`/app/settings/lenses`) — Pro-only CRUD for lenses: add/rename/recolor/edit-purpose/delete; FREE gets `<ProGate>`. Seeded two are renameable/recolorable but never deletable.
+- **Billing** (`/app/settings/billing`) — Stripe-managed subscription surface.
+- **Shortcuts** — view/customize keyboard map.
 
 ---
 
 ## 6. Route map (for `main.wasp.ts`)
 
 ```
-MVP routes (auth-required except auth pages):
-  /                          Next (home)
-  /inbox                     Inbox
-  /inbox/review              Triage walkthrough
-  /today                     Today (planning)
-  /upcoming                  Upcoming
-  /someday                   Someday
-  /projects                  Projects list
-  /projects/:id              Project detail
-  /goals                     Goals list
-  /goals/:id                 Goal detail
-  /tasks/:id/focus           Task focus mode
-  /logbook                   Logbook
-  /settings                  Settings
-  /login  /signup  /request-password-reset  /password-reset  /email-verification
+Authenticated app routes (all under /app):
+  /app                                    Next (home, the chooser)
+  /app/focus                              Focus (Variant F, single-task)
+  /app/inbox                              Inbox
+  /app/inbox/review                       Triage walkthrough (Classify → Spec → Complete)
+  /app/today                              Today (planning)
+  /app/today/:permalink                   Next on a selected task
+  /app/upcoming                           Upcoming (top-level Plan nav item)
+  /app/someday                            Someday
+  /app/projects                           Projects list
+  /app/projects/:permalink                Project detail
+  /app/goals                              Goals list
+  /app/goals/:permalink                   Goal detail
+  /app/tasks/:permalink                   Task permalink (full-field editor)
+  /app/logbook                            Logbook (completed + archived + completed goals)
+  /app/settings                           Settings
+  /app/settings/billing                   Billing
+  /app/settings/lenses                    Lenses (Pro CRUD)
 
-Phase 2:
-  /search (if not overlay)   /settings/lenses   /settings/shortcuts
+Onboarding:
+  /welcome                                Onboarding (server-flag-gated)
+
+Public (auth=false):
+  /                                       Landing
+  /about                                  About
+  /founding-100                           Founding 100 CTA
+  /founding-100/welcome                   Founding 100 welcome (post-checkout)
+  /roadmap                                Public roadmap
+  /terms                                  Terms
+  /privacy                                Privacy
+  /design-system                          Design system page
+
+Auth:
+  /login  /signup  /password-reset  /email-verification
 ```
 
 ---
 
-## 7. Open decisions (need your call)
+## 7. Resolved decisions (historical)
 
-1. **Today vs. Next — two pages or one?** My proposal: **two.** Next (`/`) = the chooser (doing); Today (`/today`) = the list (planning, cap enforcement). They serve different moments. *Alternative: collapse into one page with a toggle.* ← lean: keep separate.
-2. **Triage = dedicated walkthrough page (`/inbox/review`) or inline in the inbox list?** I lean **dedicated walkthrough** for MVP — it's the GTD "clarify" ritual and deserves focus. *Alternative: triage buttons inline on each inbox row.*
-3. **Project/Goal detail = full pages or expand-in-place panels?** Lean **full pages** (shareable URLs, deep-linkable, back-button friendly). *Alternative: Things-style inline expand.*
-4. **Focus mode = route (`/tasks/:id/focus`) or full-screen overlay?** Lean **overlay** (feels more "mode", no nav jank). Either works.
-5. **Settings = tabs or one scroll?** Minor — decide later.
+These were open calls during scaffold; all resolved. Kept as a record of *why*
+the routes are shaped the way they are.
+
+1. **Today vs. Next** → two pages. Next (`/app`) = the chooser (doing); Today
+   (`/app/today`) = the list (planning, cap enforcement). Different moments.
+2. **Triage** → dedicated walkthrough page (`/app/inbox/review`). The GTD
+   "clarify" ritual deserves focus.
+3. **Project/Goal detail** → full pages (shareable URLs, deep-linkable,
+   back-button friendly).
+4. **Focus mode** → dedicated route (`/app/focus`), not an overlay. Decided
+   2026-07-05 with the Variant F redesign.
+5. **Task permalinks** → `/app/tasks/:permalink`. Added 2026-07-05.

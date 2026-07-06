@@ -1,15 +1,15 @@
 # ActionAmp — Data Model & Triage Flow
 
-> Status: DRAFT v3 — GTD + PARA flavor; Areas replaced by Goals.
+> Status: DRAFT v6 — GTD + PARA flavor; Areas replaced by Goals. Code-verified
+> against `webapp/schema.prisma` 2026-07-05.
 > **Structural authority has moved to `WORKFLOW.md`** (2026-06-23) for *where
 > things live* (the §4 list below). Confirmed against the locked decisions:
 >
 > - **`InboxItem` stays unscoped** (no `lensId`) — capture is universal; the
 >   Lens is assigned at triage (inheriting the active lens).
 > - **`Task.status` keeps `UPCOMING`** — used by the snooze flow. It surfaces as
->   the `/app/upcoming` Planning page (date-bucketed) and the Today "see
->   upcoming" same-page swap toggle. (Framing flipped 2026-07-05 from
->   "non-area"; see `WORKFLOW.md` §5.1.)
+>   the `/app/upcoming` top-level Planning nav item (date-bucketed). (Framing
+>   flipped 2026-07-05; the Today bench was dropped — see `WORKFLOW.md` §5.1.)
 > - **Someday moves under the Planning Area** in nav grouping (the `SOMEDAY`
 >   status and `/app/someday` route are unchanged).
 >
@@ -43,6 +43,16 @@
 > stays on the model but is no longer populated by the v2 parser — the resolver
 > works off the cleaned text directly. The InboxItem remains unscoped; the lens
 > is confirmed at triage. See `docs/specs/capture-grammar.md`.
+>
+> v6 (2026-07-05): **Task lifecycle logging.** `TaskUpdate` gained a `kind`
+> discriminator (`TaskUpdateKind = NOTE | COMPLETED`); completing a task now
+> appends a typed `COMPLETED` row alongside the existing `Task.completedAt`.
+> `TaskSession` (startedAt/endedAt) was added for focus-segment accounting —
+> start/pause/complete maintain rows so the focus clock's "total" is honest
+> across interruptions. **`Project.order`** (Int) added for goal-scoped
+> sequencing — projects under a goal sort by `order` then name; the first
+> non-done project surfaces as "Next: <name>". See `docs/specs/task-notes-
+> completion-log.md` and `docs/specs/goal-planning.md`.
 
 ---
 
@@ -53,7 +63,10 @@
                    carries a stable kind (PERSONAL/WORK/CUSTOM) + identity color + purpose
    └─ Goal        ← the organizing layer — replaces PARA's Areas
         └─ Project ← an outcome that needs >1 step  [PARA Project / GTD outcome]
+                   (Projects under a Goal sort by `Project.order` then name)
              ├─ Task        ← an atomic action (THE focus candidate)
+             │    ├─ TaskUpdate   ← append-only notes/activity log (kind = NOTE | COMPLETED)
+             │    └─ TaskSession  ← per-task focus-segment accounting (startedAt/endedAt)
              └─ Resource    ← reference material, not an action  [PARA Resource]
 
   Tag             ← GTD "@context": #errands, #phone, ~15m, low-energy
@@ -167,10 +180,14 @@ The matcher only ever considers **Tasks** (never Resources, never bare Projects)
 
 ## 6. The Lens switch
 
-- **Default Lenses: `Work` and `Me`.** Users can add/rename later (Phase 2).
+- **Default Lenses: `Work` and `Me`.** **User-defined lenses ship on Pro**
+  (shipped 2026-07-03; was Phase 2): create / rename / recolor / edit-purpose /
+  delete at `/app/settings/lenses`. FREE gets the seeded two — Me usable, Work
+  visible-but-locked.
 - **Everything is scoped by the active Lens:** the Projects you see, the Goals
   you see, and — critically — **what the focus engine considers.**
-- Switching Lens is one keystroke (e.g. `Tab` cycles Work → Me → …).
+- Switching Lens is one keystroke — **`⌘L`** (or chip+popover at ≥4 lenses).
+  Active-lens state keys on `Lens.id` (not name) since 2026-07-03.
 - **Cross-lens exceptions** (an overdue Work item surfacing while you're in Me)
   are Phase 2; MVP is strict — only the active Lens's items are candidates.
 - **`Lens.color`** (nullable string, added 2026-06-30) — an identity palette key
@@ -232,5 +249,10 @@ basic loop works.
 
 ## 9. Still open
 
-- **InboxItem retention** — keep the original InboxItem after triage or delete on
-  transform? *(Lean: delete — the transformed entity *is* the record.)*
+- **InboxItem retention** — **DECIDED: delete on transform** (the transformed
+  entity *is* the record; Archive is the lossless path for "not now"). This has
+  been the shipped behavior since the triage wizard landed.
+- **Goal/Project lifecycle** — **DECIDED + SHIPPED 2026-07-05**: complete /
+  reopen / edit / delete (lossless) / re-link all exist as server ops + UI on
+  the Goal + Project detail pages and the Logbook; `Project.order` drives an
+  explicit sequence under each Goal. See `goal-planning.md`.

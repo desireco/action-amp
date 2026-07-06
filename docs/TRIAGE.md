@@ -290,10 +290,16 @@ becomes and where it lands.
 | `1` | Type = Task |
 | `2` | Type = Project |
 | `3` | Type = Resource / Note |
-| `A` / `S` / `D` / `F` | Select the visible Lens choice in that position |
 | `/` | Open the full Lens picker when there are more choices |
 | `Enter` | Continue to Spec, or archive immediately when Archive is selected |
 | `Del` / `Backspace` | Archive (lossless — kept, recoverable from the Logbook) |
+
+> **Lens selection UI (built 2026-07-05).** Lens renders as **large styled
+> pills**, not positional `A/S/D/F` slots — that keymap was retired. Type
+> chooser renders as **one-line rows with a leading icon**. Both pickers share
+> the `PropertyChips` editor used on the task page, so property-key shortcuts
+> (`[` `]` `-` `=`) work uniformly across triage and task editing. Goal meta +
+> lens pill appear on all pickers.
 
 When Classify has a concrete Project destination, it shows
 `Destination: Project · Lens` and hides the standalone lens choices by default.
@@ -382,14 +388,15 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 
 - ✅ Inbox list + triage walkthrough (`inbox/TriagePage.tsx`)
 - ✅ Triage card (`components/ui/TriageCard.tsx`)
-- ✅ **Co-author spec list in triage** — DONE 2026-06-25. Triage is now a
-  deliberate per-item wizard. Next pass: merge lens + type into Classify
-  (`Classify → Spec → Complete`) per `docs/specs/triage-classify-step.md`,
-  with project-resolved items skipping standalone lens selection by default.
-  Inline-expanding property rows remain ported from `triage-coauthor.html`.
-  Priority and Size set in the spec step are carried to the created task (they
-  override any parsed capture token — see `inbox/operations.ts ::
-  triageInboxItem`).
+- ✅ **Co-author spec list in triage** — DONE 2026-06-25. **Classify step
+  merged lens + type into one step 2026-07-04–05** (`Classify → Spec →
+  Complete` per `docs/specs/triage-classify-step.md`): project-resolved items
+  skip standalone lens selection by default; the lens pill and goal meta appear
+  on all pickers; type chooser is one-line rows with a leading icon.
+- ✅ **Property keys `[` `]` `-` `=`** (§7.6) — DONE 2026-07-05 via the shared
+  `PropertyChips` editor (`components/ui/PropertyChips.tsx`), used across
+  triage Spec + the task page. The property-key shortcuts work uniformly in
+  both surfaces.
 - ✅ Type dispatch (Task/Project/Resource/Archive) + exit animations
 - ✅ Resource/Note parent picker (file under a Project or Goal)
 - ✅ Transform action (`inbox/operations.ts :: triageInboxItem`)
@@ -397,10 +404,9 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 
 **Unbuilt (gap vs. this doc):**
 
-- ❌ Property keys `[` `]` `-` `=` (§7.6) — the wizard uses tap-to-expand rows
-  instead, but the keyset is still spec'd for power users.
-- ❌ `H` (set When), `T` (cycle type), `G` (assign Goal) as triage shortcuts
-  (the wizard replaces one-key dispatch; these may resurface as step shortcuts).
+- ❌ `H` (set When), `G` (assign Goal) as dedicated triage shortcuts — the
+  shared chip editor uses picker popovers instead, but the keys are still
+  spec'd for power users.
 - ❌ `I` (enter triage from Normal)
 - ❌ Undo toast (4s window) — spec'd, not in code
 - ❌ Mode indicator `— TRIAGE —` (bottom-left, VIM-style)
@@ -418,9 +424,9 @@ keyset:
    `contenteditable`; pressing `1/2/3/P/R` while editing the title would both
    type *and* dispatch. Decided in mockup: Enter commits the edit (blurs),
    dispatch keys only fire when title isn't focused. **Confirm before porting.**
-2. **Resource filing UX.** Resource requires a parent (Project/Goal). Currently
-   opens a separate picker sheet. Should the parent just be a spec row inline
-   like everything else? *(Lean: yes — one surface.)*
+2. **Resource filing UX.** **RESOLVED 2026-07-05**: Resource parent is a spec
+   row inline like everything else, sharing the `PropertyChips` editor. No
+   separate picker sheet for the parent.
 3. **Goal assignment during triage** — free-text pick vs. must-already-exist.
    Goals are first-class; do we allow "create Goal on the fly" from triage?
    *(Lean: no — Goals are deliberate. Capture-as-new-goal feels too cheap.)*
