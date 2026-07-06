@@ -273,6 +273,122 @@
   box-shadow: inset 0 0 0 2px var(--aa-surface);
 }
 
+/* ---- Step 1: Lens pills (radio-style, 2× regular chip size) ----
+   Larger than the spec-step chips — these are the primary "where does this
+   go" choice, so they earn more visual weight. The active pill fills with
+   the lens's identity color (scoped per data-lens-color, re-pointing the
+   active-lens vars locally — same trick as the radio above). */
+.aa-triage-lens-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-sm);
+}
+.aa-triage-lens-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  /* ~2× a regular chip: chips are 5px 11px / text-sm; these are 12px 22px / text-md. */
+  padding: 12px 22px;
+  border-radius: var(--aa-radius-full);
+  border: 1.5px solid var(--aa-border-strong);
+  background: var(--aa-surface);
+  color: var(--aa-text-2);
+  font-family: inherit;
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
+  cursor: pointer;
+  transition:
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    color var(--aa-dur-fast) var(--aa-ease-out),
+    transform var(--aa-dur-fast) var(--aa-ease-out);
+}
+.aa-triage-lens-pill:hover {
+  border-color: var(--aa-text-4);
+  background: var(--aa-surface-muted);
+  transform: translateY(-1px);
+}
+.aa-triage-lens-pill:focus-visible {
+  outline: none;
+  box-shadow: var(--aa-focus-ring);
+}
+/* Each lens carries its own identity color when active. The data-lens-color
+   attr re-points the active-lens vars locally so the fill + dot match. */
+.aa-triage-lens-pill.active {
+  background: var(--aa-active-lens-soft-strong);
+  border-color: var(--aa-active-lens);
+  color: var(--aa-active-lens-text);
+}
+.aa-triage-lens-pill[data-lens-color="indigo"].active {
+  --aa-active-lens: var(--aa-lens-indigo);
+  --aa-active-lens-text: var(--aa-lens-indigo-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-indigo-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="emerald"].active {
+  --aa-active-lens: var(--aa-lens-emerald);
+  --aa-active-lens-text: var(--aa-lens-emerald-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-emerald-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="slate"].active {
+  --aa-active-lens: var(--aa-lens-slate);
+  --aa-active-lens-text: var(--aa-lens-slate-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-slate-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="cyan"].active {
+  --aa-active-lens: var(--aa-lens-cyan);
+  --aa-active-lens-text: var(--aa-lens-cyan-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-cyan-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="coral"].active {
+  --aa-active-lens: var(--aa-lens-coral);
+  --aa-active-lens-text: var(--aa-lens-coral-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-coral-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="honey"].active {
+  --aa-active-lens: var(--aa-lens-honey);
+  --aa-active-lens-text: var(--aa-lens-honey-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-honey-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="lime"].active {
+  --aa-active-lens: var(--aa-lens-lime);
+  --aa-active-lens-text: var(--aa-lens-lime-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-lime-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="magenta"].active {
+  --aa-active-lens: var(--aa-lens-magenta);
+  --aa-active-lens-text: var(--aa-lens-magenta-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-magenta-soft-strong);
+}
+
+.aa-triage-lens-pill__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--aa-radius-full);
+  border: 2px solid var(--aa-text-4);
+  background: transparent;
+  flex-shrink: 0;
+  transition:
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    background var(--aa-dur-fast) var(--aa-ease-out);
+}
+/* Active dot fills with the lens identity color (the inner ring reads as
+   a "selected" radio marker against the soft-strong fill). */
+.aa-triage-lens-pill.active .aa-triage-lens-pill__dot {
+  border-color: var(--aa-active-lens);
+  background: var(--aa-active-lens);
+  box-shadow: inset 0 0 0 2.5px var(--aa-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-triage-lens-pill,
+  .aa-triage-lens-pill__dot {
+    transition-duration: 0.01ms !important;
+  }
+  .aa-triage-lens-pill:hover {
+    transform: none !important;
+  }
+}
+
 /* ---- Step 2: Type chooser ---- */
 .aa-triage-types {
   display: flex;

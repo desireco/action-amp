@@ -97,8 +97,8 @@ export function TriagePage() {
   const initializedItemId = useRef<string | null>(null);
   const lensTouchedRef = useRef(false);
 
-  // Pickers for Project (file-into) / Goal (project support) — reuse the
-  // bottom-sheet UI.
+  // Pickers for Project (file-into) / Goal (project support) — reuse
+  // the bottom-sheet UI.
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
   const [goalPickerOpen, setGoalPickerOpen] = useState(false);
   const [parentProjectPickerOpen, setParentProjectPickerOpen] = useState(false);
@@ -419,6 +419,16 @@ export function TriagePage() {
         : null
     : null;
 
+  // Lenses — fall back to the seeded two so the classify pills have something
+  // to show even before getAppData resolves (and during tests). Mirrors the
+  // fallback the old lens radiogroup used.
+  const lensList = lenses.length > 0
+    ? lenses
+    : [
+        { id: "Work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
+        { id: "Me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
+      ];
+
   return (
     <div className="aa-triage">
       {/* ---- Top: close + progress ---- */}
@@ -489,30 +499,38 @@ export function TriagePage() {
                         {lensInferenceLabel}
                       </p>
                     )}
-                    <div className="aa-triage-radio" role="radiogroup" aria-label="Lens">
-                      {(lenses.length > 0
-                        ? lenses
-                        : [
-                            { id: "Work", name: "Work", color: "indigo" },
-                            { id: "Me", name: "Me", color: "emerald" },
-                          ]
-                      ).map((l) => (
-                        <button
-                          key={l.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={chosenLensId === l.id}
-                          data-lens-color={l.color ?? undefined}
-                          className={`aa-triage-radio__opt ${chosenLensId === l.id ? "active" : ""}`}
-                          onClick={() => {
-                            lensTouchedRef.current = true;
-                            setChosenLensId(l.id);
-                          }}
-                        >
-                          <span className="aa-triage-radio__dot" aria-hidden="true" />
-                          {l.name}
-                        </button>
-                      ))}
+                    {/* Lens — inline pills, radio-style. One pill per lens,
+                        click to select; the active pill fills with the lens's
+                        identity color. Shows all lenses at once (faster than a
+                        sheet for the usual 2-4 lenses). */}
+                    <div
+                      className="aa-triage-lens-pills"
+                      role="radiogroup"
+                      aria-label="Lens"
+                    >
+                      {lensList.map((l) => {
+                        const active = chosenLensId === l.id;
+                        return (
+                          <button
+                            key={l.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            data-lens-color={l.color ?? undefined}
+                            className={`aa-triage-lens-pill ${active ? "active" : ""}`}
+                            onClick={() => {
+                              lensTouchedRef.current = true;
+                              setChosenLensId(l.id);
+                            }}
+                          >
+                            <span
+                              className="aa-triage-lens-pill__dot"
+                              aria-hidden="true"
+                            />
+                            {l.name}
+                          </button>
+                        );
+                      })}
                     </div>
                   </>
                 )}
