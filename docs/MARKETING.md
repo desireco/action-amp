@@ -124,13 +124,36 @@ Short and human:
 
 ---
 
-## 5. Where it lives — DECIDED: Wasp public routes (one domain)
+## 5. Where it lives — DECIDED: Astro on Cloudflare Pages, subdomain split
 
-The public site lives inside the Wasp app as `authRequired: false` routes. One
-deploy, one domain, marketing at `/` and app at `/app` etc. Marketing and app
-share styling/components. *(Considered: separate static site, hybrid subdomain —
-rejected for the extra moving parts.)* See `docs/PUBLIC-PAGES.md` §6 for the
-full route inventory + the public → app handoff.
+**Revised 2026-07-06** (reverses the earlier "Wasp public routes, one domain").
+The marketing surface moves to a separate Astro site, static SSG on Cloudflare
+Pages. The Wasp app (app + auth + billing + DB) stays on Railway. **Subdomain
+split:**
+
+- `actionamp.com` → Astro (marketing: `/`, `/about`, `/privacy`, `/terms`,
+  `/roadmap`, future `/blog` `/guides` `/help`)
+- `app.actionamp.com` → Wasp client SPA (`/login`, `/signup`, `/app/*`,
+  `/founding-100`, `/founding-100/welcome`)
+- `api.actionamp.com` → Wasp server + Postgres (existing)
+
+**Why move:** the marketing routes were client-rendered-only inside the Wasp
+SPA — no SSR, no sitemap, no `robots.txt`, no per-page meta/OG tags. For a
+marketing surface that's the biggest gap in the repo. Astro in static mode
+fixes all of it (pre-rendered HTML, frontmatter meta, generated sitemap, global
+edge delivery).
+
+**Why this shape:** Astro never touches the DB. All money + identity flows stay
+in Wasp — including the entire `/founding-100` route (offer, auth, checkout,
+webhook, welcome). The only coupling point is one public read endpoint
+(`GET /founding-100/status`) that Astro fetches client-side to surface the
+spots-remaining scarcity and link into the app.
+
+`docs/PUBLIC-PAGES.md` §6 has the route inventory + the public → app handoff
+under the subdomain model. The full plan lives at
+`docs/backlog/infra-astro-marketing-split.md`. (Earlier: considered Wasp public
+routes, one domain — rejected for the SEO cost of client-rendered marketing
+pages.)
 
 ---
 
@@ -154,7 +177,7 @@ full route inventory + the public → app handoff.
 
 ## 8. Resolved decisions (recorded so they don't relitigate)
 
-- ~~Where does the site live?~~ → Wasp public routes, one domain. (§5)
+- ~~Where does the site live?~~ → **Astro on Cloudflare Pages, subdomain split** (revised 2026-07-06; was "Wasp public routes, one domain"). Marketing surface moves to static Astro for SEO; Wasp keeps app + auth + billing + DB. (§5)
 - ~~Waitlist mechanic — plain signup vs referral/skip-the-line?~~ → **No waitlist.** Removed (PRODUCT.md §"Fair to users"). Replaced by newsletter (plain capture) + Founding 100 (the patron path). Referral mechanics are not dishonest in principle, but they're not the right vibe for this brand and we're not chasing viral growth.
 - ~~Headline direction?~~ → *"Easiest way to get into action."* Shipped. (§6)
 - ~~ADHD forward or universal?~~ → **Universal.** ADHD is the muse, not the target. (§6, PRODUCT.md)

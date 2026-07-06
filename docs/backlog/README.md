@@ -33,4 +33,10 @@
 | `lens-free-gate-loading-edge-cases` | FREE-gate transient bypass + self-heal reset (low-sev) | reviews/custom-lenses.md | draft |
 | `lens-integration-test-gaps` | LensesPage test, migration effect, assertLensAllowed e2e, at-cap | reviews/custom-lenses.md | draft |
 
+### Infrastructure / decisions (Build-owned)
+
+| ID | Title | Gates | Status |
+|----|-------|-------|--------|
+| `infra-astro-marketing-split` | Split marketing site into Astro on Cloudflare Pages (subdomain split) | marketing SEO, content velocity, Founding 100 discoverability | draft |
+
 (One file per unit below. Update status in the file AND here when it moves.)

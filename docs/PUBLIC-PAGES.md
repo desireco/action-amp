@@ -197,23 +197,43 @@ ready to build, it gets a spec in `docs/specs/` and returns here as a Tier 3 ite
 
 ## 6. The public → app handoff
 
+> **Revised 2026-07-06** — the marketing surface now lives on a separate Astro
+> site (Cloudflare Pages) at `actionamp.com`; the Wasp app lives at
+> `app.actionamp.com`. Handoff is cross-subdomain, not same-origin. See
+> `MARKETING.md` §5 and the full plan at
+> `docs/backlog/infra-astro-marketing-split.md`.
+
 ```
-visitor → / → (newsletter capture, inline confirm)
-                Founding 100 → /founding-100 → /login → Stripe → /founding-100/welcome
-                                                                          ↓
-                                                                       /app
+visitor  → actionamp.com/  (Astro)  → (newsletter capture, inline confirm)
+                                          ↓ teaser: "X of 100 left"
+                                          ↓ CTA → app.actionamp.com/founding-100
+                                                        ↓ /login (if logged out)
+                                                        ↓ Stripe
+                                                        ↓ app.actionamp.com/founding-100/welcome
+                                                                      ↓
+                                                                   /app
 
-ready user → /signup → auth → /welcome (first-run) → coach → /app
-returning  → /login  → auth → /app (Next)
+ready    → app.actionamp.com/signup → auth → /welcome (first-run) → coach → /app
+returning→ app.actionamp.com/login  → auth → /app (Next)
 ```
 
-**Public routes** (`authRequired: false`): `/`, `/about`, `/privacy`, `/terms`,
-`/founding-100`, `/login`, `/signup`, `/help`, `/changelog` (planned), `/welcome`
-(gated by first-run flag). `/founding-100/welcome` is auth-required (a founder
-must be logged in to have paid).
+**Astro routes** (static SSG, `actionamp.com`): `/`, `/about`, `/privacy`,
+`/terms`, `/roadmap`, plus future `/blog`, `/guides`, `/help`. These are no
+longer Wasp routes — they're build-time-rendered pages on Cloudflare Pages with
+per-page `<title>`/meta/OG tags, a generated sitemap, and `robots.txt` (the SEO
+gap that motivated the split). Astro never touches the DB; its only call into
+Wasp is one public read endpoint (`GET api.actionamp.com/founding-100/status`)
+to surface the live spots-remaining counter on the landing page.
 
-**App routes** (auth-required): Next (`/app`), Inbox, Triage, Today, Upcoming,
-Someday, Projects, Goals, Logbook, Settings, Billing, Preferences, Task detail.
+**Wasp routes** (auth + money stay here, `app.actionamp.com`): `/login`,
+`/signup`, `/founding-100` (whole route: offer + auth + checkout),
+`/founding-100/welcome` (auth-required — a founder must be logged in to have
+paid), `/welcome` (first-run flag), and all app routes — Next (`/app`), Inbox,
+Triage, Today, Upcoming, Someday, Projects, Goals, Logbook, Settings, Billing,
+Preferences, Task detail.
+
+**Planned but unbuilt Wasp-side public routes** (`/help`, `/changelog`) may move
+to Astro as part of the migration or stay in Wasp — TBD when those specs land.
 
 ---
 
@@ -265,3 +285,27 @@ higher-authority docs. Recorded so the reasoning isn't lost:
 The canonical set (`PRODUCT.md`, `ROADMAP.md`, this doc) now agrees: the CTAs
 are signup + newsletter + Founding 100, governed by the fairness principle, not
 by "no nudge ever."
+
+### 2026-07-06 — Hosting reversal: marketing → Astro on Cloudflare Pages
+
+The "Wasp public routes, one domain" decision (§5, recorded above as resolved)
+is **reversed**. The marketing surface moves to a separate Astro site (static
+SSG, Cloudflare Pages) at `actionamp.com`; the Wasp app lives at
+`app.actionamp.com`. Cascaded up/down:
+
+- **`MARKETING.md` §5 + §8** — hosting decision rewritten; the strikethrough
+  record updated with the reversal date and the new shape.
+- **`docs/research/deployment-research.md`** — verdict and recommendation now
+  record: marketing → CF Pages (Astro), app + DB → Railway. The "Cloudflare is
+  client-only" claim stays true for the Wasp app; CF Pages hosts the *non-Wasp*
+  marketing site.
+- **This doc §6** — handoff diagram rewritten for cross-subdomain paths; "public
+  routes" reframed from Wasp `authRequired: false` routes to Astro static pages,
+  with the Wasp-side routes (`/founding-100`, `/login`, `/signup`,
+  `/founding-100/welcome`, `/app/*`) called out explicitly.
+
+**What didn't move:** `/founding-100` stays in Wasp entirely (offer + auth +
+checkout + webhook + welcome) — the auth-gated checkout handoff is not ported.
+Astro's only coupling to the DB is one public read endpoint
+(`GET /founding-100/status`) feeding the landing-page scarcity counter. Full
+plan: `docs/backlog/infra-astro-marketing-split.md`.

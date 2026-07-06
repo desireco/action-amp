@@ -5,6 +5,12 @@
 > dead end** for us (tooling company, being acquired by Cloudflare; its hosting
 > product was edge-only and built on CF). **Wasp can't run on Bun** — the
 > generated server hard-codes `node`.
+>
+> **Update 2026-07-06 (marketing split):** the analysis below is about hosting
+> the **Wasp app** and remains correct. The *marketing site* is a separate
+> concern and goes to **Cloudflare Pages** (static Astro SSG) — not covered by
+> the "Cloudflare is client-only" line, which refers to the Wasp *server*. See
+> §6 for the decision.
 > Sources: wasp.sh/docs **v0.24** (pulled `2026-06-15`), VoidZero announcement,
 > Wasp GitHub repo (`waspc/data/Generator/templates/server/package.json`).
 
@@ -45,10 +51,13 @@ surprise breakage.
 
 ### Recommendation for ActionAmp
 - **Default: Fly.io** — one command, cheapest, closest to Wasp's happy path.
-- **Alternative: Railway** — better DX/dashboard, marginally more expensive.
+- **Alternative: Railway** — better DX/dashboard, marginally more expensive. **←
+  chosen for ActionAmp (2026-07-06); see §6.**
 - **Render** — fine third option if you prefer its pricing model.
 - **Cloudflare** — use as CDN/DDoS layer *in front of* a Node backend. Wasp's own
-  deployment Extras page explicitly recommends this pattern.
+  deployment Extras page explicitly recommends this pattern. **Also chosen as the
+  host for the separate Astro marketing site (Cloudflare Pages, static SSG) — see
+  §6.**
 
 ---
 
@@ -135,3 +144,30 @@ requirement, that's an argument *against* Wasp, not a config tweak.
 - Keep SQLite for local dev (current `schema.prisma`); switch to PostgreSQL before
   first production build — `wasp db migrate-dev` will scaffold the migration.
 - Put Cloudflare (free tier) in front for CDN/DDoS once the app has a domain.
+
+---
+
+## 6. Decision (marketing/app split, 2026-07-06)
+
+ActionAmp now runs as **two deploy targets**, not one. This records the split;
+the analysis in §1–5 above is unchanged (it covers the Wasp app only).
+
+| Surface | Host | Runtime | Notes |
+|---|---|---|---|
+| **Wasp app** (client SPA + server + DB) | **Railway** | Node 24 + Postgres | Existing project `afda37a6-…`, service `action-amp-server`. Serves `app.actionamp.com` (client) + `api.actionamp.com` (server). Chosen over Fly for DX. |
+| **Marketing site** (Astro) | **Cloudflare Pages** | None (static SSG) | Serves `actionamp.com`. Free, global edge, PR previews. Not a Wasp deploy — Astro is a sibling project in the repo (`site/`). |
+
+**Why Cloudflare Pages for marketing, when §1 says CF is client-only for Wasp?**
+Because the marketing site *is* client-only by design — it's static HTML. The
+"client-only" limitation that rules out CF for the Wasp *server* is irrelevant
+to a static Astro build. CF Pages is the natural fit: free, edge-delivered, and
+SEO-friendly (the whole point of the split — the marketing routes were
+client-rendered-only inside the Wasp SPA, with no SSR/sitemap/meta).
+
+**Coupling between the two deploys:** exactly one. A public read endpoint on the
+Wasp server (`GET api.actionamp.com/founding-100/status`, `auth: false`) feeds
+the marketing site's live spots-remaining counter. No DB access from Astro.
+
+**DNS:** apex `actionamp.com` → Cloudflare Pages; new `app.` CNAME → Railway;
+`api.` unchanged from existing setup. Implementation plan:
+`docs/backlog/infra-astro-marketing-split.md`.
