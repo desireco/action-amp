@@ -112,6 +112,28 @@ export function ProjectsPage() {
     }
   };
 
+  // The composer is rendered identically in both the empty-state branch and
+  // the populated branch — extract it once so the props can't drift.
+  const composer = creating ? (
+    <RecordComposer
+      title="New project"
+      subtitle="Name the outcome. Add the shape of done if it helps."
+      nameLabel="Project"
+      namePlaceholder="Ship product v2"
+      descriptionLabel="What makes it done"
+      descriptionPlaceholder="The concrete result this project should create"
+      submitLabel="Create project"
+      onCreate={handleCreate}
+      onCancel={() => setCreating(false)}
+      submitting={submitting}
+      initialName={initialName}
+    />
+  ) : null;
+
+  const gatePanel = gate ? (
+    <ProGate feature={gate.feature} reason={gate.reason} />
+  ) : null;
+
   if (!isLoading && (projects?.length ?? 0) === 0) {
     return (
       <div className="aa-projects">
@@ -131,24 +153,8 @@ export function ProjectsPage() {
             onToggleCreating={setCreating}
           />
         </header>
-        {gate && (
-          <ProGate feature={gate.feature} reason={gate.reason} />
-        )}
-        {creating && (
-          <RecordComposer
-            title="New project"
-            subtitle="Name the outcome. Add the shape of done if it helps."
-            nameLabel="Project"
-            namePlaceholder="Ship product v2"
-            descriptionLabel="What makes it done"
-            descriptionPlaceholder="The concrete result this project should create"
-            submitLabel="Create project"
-            onCreate={handleCreate}
-            onCancel={() => setCreating(false)}
-            submitting={submitting}
-            initialName={initialName}
-          />
-        )}
+        {gatePanel}
+        {composer}
         <ListEmpty
           title="No projects yet."
           text="Projects are outcomes that need more than one step. Create one here, or promote a big task during triage."
@@ -183,24 +189,8 @@ export function ProjectsPage() {
           onToggleCreating={setCreating}
         />
       </header>
-      {gate && (
-        <ProGate feature={gate.feature} reason={gate.reason} />
-      )}
-      {creating && (
-        <RecordComposer
-          title="New project"
-          subtitle="Name the outcome. Add the shape of done if it helps."
-          nameLabel="Project"
-          namePlaceholder="Ship product v2"
-          descriptionLabel="What makes it done"
-          descriptionPlaceholder="The concrete result this project should create"
-          submitLabel="Create project"
-          onCreate={handleCreate}
-          onCancel={() => setCreating(false)}
-          submitting={submitting}
-          initialName={initialName}
-        />
-      )}
+      {gatePanel}
+      {composer}
       <RecordCardGrid>
         {(projects ?? []).map((p: ProjectRow) => {
           const total = p.openCount + p.doneCount;

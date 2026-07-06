@@ -328,41 +328,7 @@ export function CapturePopover({
             parsed.parsedProject ||
             parsed.parsedTags.length > 0) && (
             <div className="aa-capture__preview">
-              {parsed.parsedLens && (
-                <Chip variant="teal" small>
-                  [[{parsed.parsedLens}]]
-                </Chip>
-              )}
-              {parsed.parsedDate && (
-                <Chip variant="teal" small>
-                  📅 {formatPreviewDate(parsed.parsedDate)}
-                </Chip>
-              )}
-              {parsed.parsedProject && (
-                <Chip variant="teal" small>
-                  ▣ {parsed.parsedProject}
-                </Chip>
-              )}
-              {parsed.parsedPriority === "IMPORTANT" && (
-                <Chip variant="amber" small>
-                  ★ Important
-                </Chip>
-              )}
-              {parsed.parsedPriority === "LOW" && (
-                <Chip variant="muted" small>
-                  low
-                </Chip>
-              )}
-              {parsed.parsedSize && (
-                <Chip variant="default" small>
-                  {parsed.parsedSize}
-                </Chip>
-              )}
-              {parsed.parsedTags.map((t) => (
-                <Chip key={t} variant="violet" small>
-                  {t}
-                </Chip>
-              ))}
+              <ParsedCaptureChips parsed={parsed} variant="preview" />
             </div>
           )}
 
@@ -397,6 +363,36 @@ export function CapturePopover({
 function CapturedChips({ parsed }: { parsed: ParsedCapture }) {
   return (
     <span className="aa-capture__captured-chips">
+      <ParsedCaptureChips parsed={parsed} variant="captured" />
+    </span>
+  );
+}
+
+/**
+ * Render the chips derived from a parsed capture. Two display variants share
+ * the same data but differ in compactness:
+ *
+ *  - `preview` — the live chip preview shown while typing. Verbose: includes
+ *    the calendar emoji on dates, the "Important"/"low" labels on priority,
+ *    the size chip, and all tags.
+ *  - `captured` — the post-commit confirmation toast. Compact: no emoji, bare
+ *    ★ for important, no size chip, only the first 2 tags.
+ *
+ * Extracted from two near-identical inline blocks; the variant differences
+ * are intentional design choices per surface.
+ */
+function ParsedCaptureChips({
+  parsed,
+  variant,
+}: {
+  parsed: ParsedCapture;
+  variant: "preview" | "captured";
+}) {
+  const verbose = variant === "preview";
+  // Captured toast caps tags at 2; preview shows all.
+  const tags = verbose ? parsed.parsedTags : parsed.parsedTags.slice(0, 2);
+  return (
+    <>
       {parsed.parsedLens && (
         <Chip variant="teal" small>
           [[{parsed.parsedLens}]]
@@ -404,7 +400,7 @@ function CapturedChips({ parsed }: { parsed: ParsedCapture }) {
       )}
       {parsed.parsedDate && (
         <Chip variant="teal" small>
-          {formatPreviewDate(parsed.parsedDate)}
+          {verbose ? `📅 ${formatPreviewDate(parsed.parsedDate)}` : formatPreviewDate(parsed.parsedDate)}
         </Chip>
       )}
       {parsed.parsedProject && (
@@ -414,15 +410,25 @@ function CapturedChips({ parsed }: { parsed: ParsedCapture }) {
       )}
       {parsed.parsedPriority === "IMPORTANT" && (
         <Chip variant="amber" small>
-          ★
+          {verbose ? "★ Important" : "★"}
         </Chip>
       )}
-      {parsed.parsedTags.slice(0, 2).map((t) => (
+      {verbose && parsed.parsedPriority === "LOW" && (
+        <Chip variant="muted" small>
+          low
+        </Chip>
+      )}
+      {verbose && parsed.parsedSize && (
+        <Chip variant="default" small>
+          {parsed.parsedSize}
+        </Chip>
+      )}
+      {tags.map((t) => (
         <Chip key={t} variant="violet" small>
           {t}
         </Chip>
       ))}
-    </span>
+    </>
   );
 }
 
