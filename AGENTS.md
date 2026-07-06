@@ -48,8 +48,8 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Triage loop, the keymap, dispatch destinations | `docs/TRIAGE.md` (+ `WORKFLOW.md` §2.2) |
 | **What features exist + what each does (code-verified)** | **`docs/features/` (catalog; 1 file per feature, 1:1 with specs)** — supersedes `FEATURES.md` on "does it exist" |
 | Capture (`⌘K`), NL parsing, Inbox | `docs/WORKFLOW.md` §2.1, `docs/features/capture.md` + `inbox-triage.md` |
-| Navigation, modes (Work/Plan/Review), gestures, keysets | `docs/INTERACTION.md`, `docs/modal-approach.md` |
-| Overlays — popover vs sheet vs modal | `docs/modal-approach.md` |
+| Navigation, modes (Work/Plan/Review), gestures, keysets | `docs/INTERACTION.md` (modal modes §§1–8) |
+| Overlays — popover vs sheet vs modal | `docs/INTERACTION.md` §9 (overlay patterns, merged from `modal-approach.md`) |
 | Data model, entities, enums, triage flow | `docs/DATA-MODEL.md` + `webapp/schema.prisma` |
 | A specific page/route | `docs/PAGES.md` + the route in `webapp/main.wasp.ts` |
 | Look/feel, color, type, components, tokens | `docs/DESIGN-SYSTEM.md` (decided) + `DESIGN.md` (Things DNA) + `webapp/src/styles/tokens.css` (source of truth) |
@@ -58,7 +58,8 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Stripe billing implementation | `docs/BILLING-INTEGRATION.md` (implemented) + `webapp/src/billing/` |
 | Marketing/public site | `docs/MARKETING.md` + `docs/PUBLIC-PAGES.md` |
 | Deployment / hosting | `docs/research/deployment-research.md` |
-| What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/BACKLOG.md` |
+| What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/backlog/` |
+| Historical context (why past decisions landed) | `docs/HISTORY.md` (was `BACKLOG.md`) |
 | What success means (the bets + their measurable triggers) | `docs/SUCCESS.md` |
 | A specific feature spec (ready/draft status, done-conditions) | `docs/specs/<feature>.md` (index + order in `docs/ROADMAP.md`) |
 | Product thesis, tone, strategic principles (the "why") | `PRODUCT.md` |
@@ -122,5 +123,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 1. [`PRODUCT.md`](PRODUCT.md) — the thesis and tone (5 min).
 2. [`docs/WORKFLOW.md`](docs/WORKFLOW.md) — the app's structure (canonical).
 3. [`docs/INTERACTION.md`](docs/INTERACTION.md) — how you move through it.
-4. [`docs/BACKLOG.md`](docs/BACKLOG.md) — what's actually left to build.
+4. [`docs/ROADMAP.md`](docs/ROADMAP.md) — what's left to build + the priority order.
+   [`docs/HISTORY.md`](docs/HISTORY.md) for the historical narrative behind
+   past decisions (was `BACKLOG.md`).
 5. [`webapp/main.wasp.ts`](webapp/main.wasp.ts) — the implementation's front door.

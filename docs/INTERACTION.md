@@ -1,9 +1,14 @@
 # ActionAmp — Interaction Model (Modal Architecture)
 
-> Status: CANONICAL — 2026-06-16
+> Status: CANONICAL — 2026-07-05 (Variant F focus redesign + overlay patterns
+> folded in from `modal-approach.md`).
 > The thesis: **every task manager optimizes states (lists, cards).
 > ActionAmp optimizes transitions. The interaction model is modal.**
 > Visual DNA is Things (calm, minimal, lively). The *behavior* is unlike any of them.
+>
+> This doc is now the single home for **both** the modal mode architecture
+> (§§1–8) and the four overlay patterns (§9) — `modal-approach.md` was merged
+> in 2026-07-05 and removed.
 
 ---
 
@@ -94,18 +99,33 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
 - **Chrome:** full HUD — top bar (brand/lens/breadcrumb/theme), side rails, bottom dial + zoom + capture.
 - **Indicator:** `NORMAL` (or hidden — it's the default).
 
-### WORKING mode (the sanctuary)
+### WORKING mode (the sanctuary) — Variant F, shipped 2026-07-05
 - **Purpose:** you are doing the thing. The card is the world.
-- **Entry:** click **Do this** / `Enter` from Normal (task focused).
-- **Exit:** `Esc` (pauses), **Done ✓** (completes), **Take a break** (pauses).
+- **Entry:** click **Do this** / `Enter` from Normal (task focused). Navigates
+  to the dedicated `/app/focus` route (not an overlay).
+- **Exit:** `Esc` (pauses), **Complete** (was "Done"; confirm-on-complete
+  asks for an optional completion note), **Take a break** (pauses).
 - **Keyset (intentionally tiny):**
   - `Esc` or `Space` — pause
-  - `D` — done
+  - `D` — complete (with confirm)
   - `⌘K` — **capture (the one exception)** — protects focus from stray thoughts
   - That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
-- **Sub-states:** `working ⇄ paused → done`. Paused = amber pulse, timer frozen. Done = checkmark fills.
-- **Mobile:** long-press the card → enters working. Tap the circle = pause/resume. Swipe-down = done.
-- **Chrome:** **all chrome hidden** (not dimmed — gone). Only the task card, timer, feelings, note, and the exit controls.
+- **Sub-states:** `working ⇄ paused → done`. Paused = amber pulse, clock
+  frozen. Done = checkmark fills.
+- **Margin clock (Variant F).** Two numbers: a **live session timer** (this
+  focus segment) and an **honest total** (cumulative across pause/resume,
+  sourced from `TaskSession` rows). The pair replaces the older single
+  breathing halo — the halo implied a pomodoro; the pair tells the truth
+  about interrupted work.
+- **Summoned composer.** The notes thread is always visible; the composer
+  appears on demand rather than permanently. Notes write a `TaskUpdate` with
+  `kind=NOTE`; completion writes `kind=COMPLETED` (see `task-notes-completion-log.md`).
+- **Confirm-on-complete.** The Complete button (renamed from "Done" 2026-07-04)
+  asks for confirmation and an optional completion note before finishing. This
+  resolves open question #2 (mid-task switch confirm) in lean-yes direction.
+- **Mobile:** long-press the card → enters working. Tap the circle = pause/resume. Swipe-down = complete.
+- **Chrome:** **all chrome hidden** (not dimmed — gone). Only the task card,
+  margin clock, notes thread + summoned composer, and the exit controls.
 - **Indicator:** `WORKING` (teal) or `PAUSED` (amber).
 
 ### CAPTURE mode (`⌘K`)
@@ -121,12 +141,14 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
 - **Purpose:** GTD clarify — one Inbox item at a time, decide what it becomes.
 - **Entry:** click Inbox count / `I` from Normal.
 - **Exit:** `Esc` / `Q` (done triaging) / empty inbox.
-- **Keyset (the dispatch keys):**
-  - `1` → Task (Today) · `2` → Task (Upcoming) · `3` → Task (Someday)
-  - `P` → new/existing Project · `G` → link to Goal
-  - `R` → Resource (under Project/Goal)
-  - `Del` / `Backspace` — trash
-  - `←` / `→` — previous / next Inbox item
+- **Wizard flow** (replaces the old single-card dispatch): **Classify → Spec →
+  Complete**. The old `1/2/3 = Task Today/Upcoming/Someday` and `P/G/R`
+  dispatch keys are gone. Type chooser is one-line rows with a leading icon;
+  Lens is large styled pills. See `TRIAGE.md` §7.4 for the canonical keymap.
+- **Keyset (step-aware):**
+  - **Classify:** `1` Task · `2` Project · `3` Resource · `/` Lens picker · `Enter` continue · `Del`/`Backspace` Archive
+  - **Spec:** `[`/`]` size · `-`/`=` priority · (shared `PropertyChips` editor)
+  - **Navigation:** `←`/`→` prev/next Inbox item · `Esc` Spec→Classify or leave triage · `Q` done
 - **Mobile:** swipe-right = dispatch to Today, swipe-left = Someday, long-press = full menu.
 - **Chrome:** one Inbox card center-stage, dispatch hints around it, progress dot ("3 of 7").
 - **Indicator:** `TRIAGE`.
@@ -214,7 +236,9 @@ Modal UIs can exclude. We don't want that.
 
 | File | What it demonstrates |
 |---|---|
-| `docs/mockups/mode-zoom-unified.html` | The spine: Mode × Zoom, working state with breathing halo, feelings, session timeline, switch confirm, focus lock. **The canonical desktop prototype.** |
+| `docs/mockups/focus-f-final.html` | **Canonical focus-screen prototype (Variant F, locked 2026-07-05).** Margin clock, summoned composer, confirm-on-complete. The shipped `/app/focus` matches this. |
+| `docs/mockups/focus-redesign.html` | Comparison canvas of all six focus redesign variants (A–F). |
+| `docs/mockups/mode-zoom-unified.html` | Pre-Variant-F spine prototype (Mode × Zoom, breathing halo). **Superseded** by `focus-f-final.html` for the focus surface; still illustrative for the zoom dial. |
 | `docs/mockups/approach-a-zoom-pan.html` | Pure zoom exploration (A). |
 | `docs/mockups/approach-b-focus-blur.html` | Focus/blur exploration (B). |
 | `docs/mockups/approach-c-time-adaptive.html` | Time-adaptive exploration (C) — the mode dial origin. |
@@ -223,7 +247,165 @@ Modal UIs can exclude. We don't want that.
 
 ## 8. Open questions
 
-1. **Should Working mode have a "pause reason"?** Lean: no — silent pause, optional note. Don't interrogate.
-2. **Switch during working?** Currently idle-only. Should mid-task Switch require the confirm modal? Lean: yes.
+1. **Should Working mode have a "pause reason"?** **RESOLVED (lean: no)** —
+   silent pause, optional note. Don't interrogate. The completion note
+   (Variant F) is the place for reflection, not the pause.
+2. **Switch during working?** **RESOLVED 2026-07-05 (lean: yes)** — Variant F's
+   confirm-on-complete path covers the related "are you sure you want to
+   leave this state" question. Mid-task switch keeps the confirm modal.
 3. **Visual/selection mode** (VIM-style multi-select for bulk triage)? Phase 2.
-4. **Mobile long-press vs swipe-up for entering work?** Needs the mock to decide.
+4. **Mobile long-press vs swipe-up for entering work?** Long-press is shipped.
+
+---
+
+## 9. Overlay patterns (merged from `modal-approach.md` 2026-07-05)
+
+The app uses **four overlay patterns**. Each has a specific job. Don't mix them.
+
+| # | Pattern | When | Dismissal |
+|---|---|---|---|
+| 01 | **Full-screen overlay** | Immersive flows that own the screen | Esc / explicit close |
+| 02 | **Capture popover** | Quick input, never blocks flow | Esc / backdrop click / submit |
+| 03 | **Bottom sheet** | Mobile-first actions, thumb zone | Esc / swipe down / backdrop |
+| 04 | **Confirm dialog** | Destructive / irreversible (rare) | Explicit choice only |
+
+All four share the same **shell mechanics** (backdrop, focus, scroll-lock,
+motion) — see §9.5.
+
+### 9.1 Full-screen overlay
+
+Takes over the entire viewport. No app chrome visible behind it. Used when the
+user has committed to a focused flow.
+
+**Used by:**
+- **Triage** — the per-item co-author wizard (`/app/inbox/review`)
+- **Focus** — single-task do-only view (`/app/focus`, Variant F)
+- **Onboarding coach** — walkthrough (`mobile-coach.html`)
+
+**Anatomy:** top row (close button + progress when sequential) · center (the
+primary content) · bottom (action cluster when applicable).
+
+**Dismissal:** Esc or explicit close. Backdrop is opaque — the underlying app
+state is irrelevant to the flow.
+
+**Motion:** content rises in (`translateY(10px) → 0`, 500ms,
+`--aa-ease-out-quart`). Exit reverses at ~60% duration.
+
+### 9.2 Capture popover
+
+Centered card over a dimmed backdrop. Lightweight — the user hasn't left their
+context. Used for quick capture and inline edits.
+
+**Used by:**
+- **⌘K Capture** — the universal quick-add
+- **Quick edit** — inline field edits that need room
+- **Search / command palette** (Phase 2)
+
+**Anatomy:** centered card (max-width 480px) · auto-focus input · footer with
+submit hint (`⏎ to save`).
+
+**Dismissal:** Esc, backdrop click, or submit. The backdrop click is
+intentional — capture should never trap the user.
+
+**Motion:** backdrop fades in 150ms; card scales 0.96 → 1 with
+`--aa-ease-spring` for a confident arrival.
+
+### 9.3 Bottom sheet
+
+Mobile-first. Slides up from the bottom edge, anchored in the thumb zone. Used
+for action menus and the "Not now" snooze flow.
+
+**Used by:**
+- **"Not now" snooze** — 1h / 3h / tomorrow / weekend / Someday
+- **Action menus** — row-level actions on tasks/projects
+- **Filter / sort** — list controls
+- **Project / Goal pickers** — long lists benefit from numbered rows
+
+**Anatomy:** anchored to bottom (full-width mobile, max-width 480px desktop) ·
+top grabber handle · large tap targets (≥44px) · dimmed backdrop above.
+
+**Dismissal:** Esc, swipe down (drag handle past 25% height), or backdrop click.
+
+**Motion:** slides up `translateY(100%) → 0`, 300ms, `--aa-ease-out-quart`.
+Drag tracks finger 1:1 during gesture; release commits or cancels.
+
+### 9.4 Confirm dialog
+
+Small centered card. **Rare** — only for irreversible destruction. The user
+must make an explicit choice; backdrop click does NOT dismiss.
+
+**Used by:**
+- **Delete account** (Settings)
+- **Discard unsaved changes**
+- **Permanently delete** (from Logbook trash)
+
+**Anatomy:** small card (max-width 400px) · clear title stating the action ·
+body explaining the consequence · two buttons (destructive rose
+`Button variant="danger"`, cancel `Button variant="secondary"`).
+
+**Dismissal:** only via the buttons. Backdrop click is inert. Esc maps to Cancel.
+
+**Motion:** same as capture popover but without the spring — a flat fade +
+slight scale, so it feels serious, not playful.
+
+### 9.5 Shared shell mechanics
+
+All four overlays share these behaviors. The shared overlay component encodes
+them once.
+
+**Backdrop**
+- Color: `oklch(0.2 0.02 230 / 0.4)` — cool-tinted dim, never pure black.
+- Click dismisses **non-blocking** overlays (capture, bottom sheet). Inert for
+  **blocking** overlays (confirm).
+
+**Focus management**
+- On open: focus moves to the overlay's first interactive element.
+- While open: focus is **trapped** inside (Tab cycles within the overlay).
+- On close: focus returns to the element that opened it.
+
+**Scroll lock**
+- `body { overflow: hidden }` while any overlay is open. Prevents background
+  scroll bleed-through.
+
+**Keyboard**
+- **Esc** closes every overlay (maps to Cancel for confirm dialogs).
+- **Tab / Shift+Tab** cycle focus within the overlay.
+- Overlay-specific shortcuts are scoped — only active while that overlay is open.
+
+**Motion**
+
+| Phase | Property | Duration | Easing |
+|---|---|---|---|
+| Backdrop enter | opacity 0 → 1 | 150ms | `--aa-ease-out` |
+| Content enter | translateY/scale | 250–500ms | `--aa-ease-out-quart` (or spring for capture) |
+| Exit (both) | reverse | ~60% of enter | `--aa-ease-out` |
+
+All motion respects `prefers-reduced-motion: reduce` (snaps to final state, ~0ms).
+
+**z-index scale**
+
+| Layer | z-index |
+|---|---|
+| App content | 0 |
+| Sidebar / floating shell controls | 10 |
+| Capture popover | 40 |
+| Bottom sheet | 40 |
+| Confirm dialog | 100 |
+| Full-screen overlay | 100 |
+| Toast / coach mark | 1000 |
+
+Higher = more blocking. Confirm and full-screen share the top app layer; toasts
+and coach marks float above everything.
+
+### 9.6 Decision guide
+
+> "I need to show the user something over the current view."
+
+1. **Is it a destructive/irreversible action?** → Confirm dialog (9.4)
+2. **Is it an immersive flow they've committed to?** → Full-screen overlay (9.1)
+3. **Is it quick input that shouldn't block?** → Capture popover (9.2)
+4. **Is it a mobile action menu?** → Bottom sheet (9.3)
+
+If none of these fit, it probably isn't an overlay — it's a page, a row
+expansion, or inline UI. Default to inline; reach for an overlay only when the
+content genuinely needs to take focus.

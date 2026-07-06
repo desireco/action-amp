@@ -1,13 +1,13 @@
-# ActionAmp — Work Backlog
+# ActionAmp — History
 
-> Single source of truth for what's left to do/decide. One item at a time.
-> Check things off as we cover them. Add new items as they emerge.
-> Last verified: **2026-06-27** (reconciled against shipped code; shipped items
-> flipped to `[x]`, open items point at `docs/specs/`).
+> **Historical narrative.** This file was the work backlog (named `BACKLOG.md`)
+> until 2026-07-05, when its active content was split: code work →
+> `docs/specs/*.md` (statuses drive the live build queue), non-code GTM items →
+> `docs/backlog/*.md`, priorities + queue order → `docs/ROADMAP.md`.
 >
-> **The live build queue is `docs/specs/*.md`** (statuses drive it). This file
-> is the historical narrative + the non-spec'd odds-and-ends. When a spec ships,
-> its item moves here to `[x]`.
+> What remains here is the **narrative of past decisions and completed work** —
+> the "why did X land this way" reference. Live state lives elsewhere; don't
+> add new work items here.
 
 ---
 

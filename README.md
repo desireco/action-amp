@@ -71,7 +71,7 @@ other docs, these win.
 | [`docs/PAGES.md`](docs/PAGES.md) | Pages & routes, organized into Work/Plan/Review clusters. |
 | [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) | Data model + triage flow (GTD + PARA; Areas → Goals). |
 | [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) | The design philosophy: GTD workflow + PARA storage shape. |
-| [`docs/modal-approach.md`](docs/modal-approach.md) | The four overlay patterns (popover/sheet/modal/…) and when to use each. |
+| [`docs/INTERACTION.md`](docs/INTERACTION.md) §9 | The four overlay patterns (popover/sheet/modal/…) and when to use each (merged from `modal-approach.md`). |
 | [`docs/DESIGN-SYSTEM.md`](docs/DESIGN-SYSTEM.md) | ActionAmp's decided design system — teal/amber accents, lens identity, token map. Mirrors `webapp/src/styles/tokens.css`. |
 
 **🟢 Go-to-market & pricing.**
@@ -87,8 +87,9 @@ other docs, these win.
 
 | Doc | Subject |
 |-----|---------|
-| [`docs/BACKLOG.md`](docs/BACKLOG.md) | Historical narrative of completed workflow-refactor work; non-spec'd odds and ends. |
+| [`docs/HISTORY.md`](docs/HISTORY.md) | Historical narrative of completed workflow-refactor work + past decisions (was `BACKLOG.md`). |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Strategy queue + priority order; what to build next and why. |
+| [`docs/backlog/`](docs/backlog/) | Tracked non-feature work units (GTM setup + test/bug gaps), one file per item. |
 
 **🔬 Research (decisions already made; context for *why*).**
 
@@ -165,5 +166,7 @@ See [`webapp/README.md`](webapp/README.md) and [`webapp/AGENTS.md`](webapp/AGENT
 - **Changing structure (areas, modes, destinations)?** `docs/WORKFLOW.md` is
   canonical and overrides the feature/page/data-model docs. Update it first,
   then cascade (see its §6).
-- **Picking up what's next?** [`docs/BACKLOG.md`](docs/BACKLOG.md) is the single
-  source of truth for open work.
+- **Picking up what's next?** [`docs/ROADMAP.md`](docs/ROADMAP.md) is the
+  strategy queue; [`docs/backlog/`](docs/backlog/) holds the tracked
+  non-feature work units. [`docs/HISTORY.md`](docs/HISTORY.md) is the
+  historical narrative (was `BACKLOG.md`).
