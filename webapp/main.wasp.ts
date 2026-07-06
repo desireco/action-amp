@@ -35,6 +35,7 @@ import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status, founding100StatusHandler } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
+import { publicStatusMiddleware } from "./src/billing/statusMiddleware" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
 import { LoginPage } from "./src/auth/email/LoginPage" with { type: "ref" };
 import { PasswordResetPage } from "./src/auth/email/PasswordResetPage" with { type: "ref" };
@@ -90,7 +91,10 @@ export default app({
       // },
     },
     onAuthSucceededRedirectTo: "/app",
-    onAuthFailedRedirectTo: "/",
+    // Absolute apex URL — under the subdomain split, the marketing site lives at
+    // actionamp.com (Astro) and the Wasp app at app.actionamp.com. A bare "/"
+    // would resolve to app.actionamp.com/ (the app shell), not the marketing site.
+    onAuthFailedRedirectTo: "https://actionamp.com",
   },
   emailSender: {
     provider: "SMTP",
@@ -207,6 +211,7 @@ export default app({
     api("GET", "/founding-100/status", founding100StatusHandler, {
       entities: ["User"],
       auth: false,
+      middlewareConfigFn: publicStatusMiddleware,
     }),
   ],
 });
