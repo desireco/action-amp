@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-04 (roadmap cleanup — capture-grammar moved to shipped; newsletter corrected to missing/intended; free-tier audit marked historical after entitlement/onboarding fixes; validation queue clarified around observability → newsletter → retention → distribution) -->
+<!-- Last reviewed: 2026-07-05 (post-weekend sweep — goal-planning flipped to shipped; 07-05 trunks added to §Shipped: focus redesign Variant F, task page full-field editing, task notes + completion log, design-system token migration, Upcoming top-level nav) -->
 
 ---
 
@@ -196,19 +196,12 @@ item; Build pulls `ready`.**
     `cli-pat-plumbing` (`ready`, the natural first pull), `cli-package`
     (`draft` — op-refactor scope unscoped), `cli-skills` (`draft` — depends on
     cli-package). Umbrella + cross-cutting decisions: `docs/specs/cli.md`.
-5. **goal-planning** (`ready`, new 2026-07-03) — the Planning area is
-   **read-mostly today**: you can create Goals/Projects and read roll-ups, but
-   cannot complete, reopen, edit, delete, or re-link them, and cannot start a
-   Project from inside a Goal (`isDone`/`completedAt` on both models are
-   write-only-by-hand; `grep updateProject|completeGoal|deleteGoal` → zero
-   matches). This closes the lifecycle + alignment holes and adds one
-   lightweight planning affordance: an explicit **sequence** of Projects under
-   a Goal, with the first one surfaced as "the next project toward this goal."
-   Pure Planning-area completion — no new routes, no matcher impact (independent
-   of `focus-engine-v2`). Same tier as `resources-project-owned` + `breadcrumb-nav`
-   per user decision 2026-07-03: depth/polish on a shipped surface, gated like
-   the rest of this tier. Spec at `docs/specs/goal-planning.md`; catalog at
-   `docs/features/goal-planning.md`.
+5. **goal-planning** (`done` 2026-07-05, was `ready`) — **shipped**: full
+   Goal/Project lifecycle (complete, reopen, edit, delete, re-link) + explicit
+   `Project.order` sequencing under a Goal + Logbook surfacing of completed
+   goals + Reopen affordance + e2e (full sequence → complete → logbook →
+   reopen). Server ops, UI, and tests all landed. → §Shipped. Spec at
+   `docs/specs/goal-planning.md`; catalog at `docs/features/goal-planning.md`.
 6. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
     Lens-scoped page (hero + Today | Done columns), and reshapes how a task is
     worked: **no completion circle anywhere** (complete only from focus mode —
@@ -314,6 +307,35 @@ item; Build pulls `ready`.**
   Inline project autocomplete and the triage resolver now share the same
   persisted `parsedProject` hint. + project resolver tests for punctuation
   names (`C++`, `Q4/OKR`).
+- **goal-planning** (`shipped` 2026-07-05) — the Planning area became mutable:
+  complete / reopen / edit / delete / re-link for Goals and Projects, an
+  explicit `Project.order` sequence under each Goal (with "the next project
+  toward this goal" surfaced), completed Goals surfaced in the Logbook, and a
+  Reopen affordance. Server ops + UI + e2e (full lifecycle sequence) all
+  landed. Independent of `focus-engine-v2` — pure Planning-area work, no
+  matcher impact.
+- **focus-redesign (Variant F)** (`shipped` 2026-07-05) — the focus screen
+  rebuilt around a two-number margin clock (live session + honest total), a
+  summoned composer, and confirm-on-complete. Focus segments are now accounted
+  through a `TaskSession` model; a dedicated `/app/focus/:taskId` route
+  replaced the overlay-style invocation. Spec locked to Variant F at
+  `docs/specs/`.
+- **task-page-full-field-editing** (`shipped` 2026-07-05) — task permalinks
+  (`/app/tasks/:id`) + chip-popover editing for every task field, sharing a
+  single `PropertyChips` editor across triage and the task page. Completed
+  task detail became feedback-only.
+- **task-notes-completion-log** (`shipped` 2026-07-05) — tasks gained a notes
+  thread + timestamped completion log via a `TaskUpdate.kind` discriminator
+  (NOTE | COMPLETED). Notes are captured in triage, editable from task rows,
+  and rendered as a thread + composer in Focus mode. Unblocks the v2 activity
+  review in `weekly-monthly-review`.
+- **lists-upcoming-top-level** (`shipped` 2026-07-05) — Upcoming promoted to a
+  top-level Plan nav item as a single surface; the Today bench was dropped and
+  cross-links added. Today/Upcoming got a polish pass.
+- **design-token-migration** (`shipped` 2026-07-05) — type scale + semantic
+  aliases added; `font-size`, `line-height`, and `font-weight 400` migrated to
+  tokens across `components/ui/`, `app/`, feature pages, and lenses.
+  Consolidated `focus-ring` / `empty-mark` / `lens-halo`. No visual regression.
 - **Feature catalog (`docs/features/`)** — stood up 2026-07-03. The
   code-verified inventory of what exists (one file per feature, 1:1 with specs);
   supersedes `FEATURES.md` on "does it exist / what does it do." `AGENTS.md`
@@ -536,7 +558,7 @@ roadmaps forget and most launches stall on.
 - [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup; route model locked 2026-07-03)
 - [ ] Tag management UI + reserved-tag seeding → **`tag-management`** (`ready`, written 2026-07-03; unblocks `focus-engine-v2`)
 - [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`, confirmed 2026-07-03)
-- [ ] Goal/Project lifecycle (complete/edit/relink/sequence) → **`goal-planning`** (`ready`)
+- [x] Goal/Project lifecycle (complete/edit/relink/sequence) → **`goal-planning`** (`done`)
 
 ### B. Non-code items the user owns (no spec — these are setup/decisions)
 

@@ -32,10 +32,10 @@ export function RoadmapPage() {
           </p>
           <div className="aa-roadmap-stats">
             <span className="aa-roadmap-stat">
-              <strong>249</strong> commits
+              <strong>329</strong> commits
             </span>
             <span className="aa-roadmap-stat">
-              <strong>7</strong> major trunks
+              <strong>10</strong> major trunks
             </span>
             <span className="aa-roadmap-stat">Jun 16 → today</span>
           </div>
@@ -232,6 +232,21 @@ export function RoadmapPage() {
             <span className="aa-roadmap-rule" />
           </div>
           <div className="aa-roadmap-timeline">
+            <ShippedEntry
+              date="Jul 5"
+              trunk="Focus redesign + task page"
+              summary="The focus screen rebuilt around a margin clock (session live, honest total), summoned composer, and confirm-on-complete. Task permalinks and full-field chip editing landed, with a shared property-chips editor across triage and the task page."
+            />
+            <ShippedEntry
+              date="Jul 5"
+              trunk="Task notes + completion log"
+              summary="Tasks gained a notes thread and a timestamped completion log via a kind discriminator on TaskUpdate (NOTE | COMPLETED), surfaced in focus mode, triage, and task rows. Focus segments are now accounted through a TaskSession model."
+            />
+            <ShippedEntry
+              date="Jul 5"
+              trunk="Upcoming + design tokens"
+              summary="Upcoming promoted to a top-level Plan nav item as a single surface with cross-links. The type scale, line-heights, and weights migrated to design tokens across the whole UI."
+            />
             <ShippedEntry
               date="Jul 4"
               trunk="Planning + triage polish"
