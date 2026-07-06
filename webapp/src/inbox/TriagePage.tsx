@@ -659,11 +659,19 @@ export function TriagePage() {
                   )}
                 </div>
 
-                {/* Confirm summary + Complete (gated) */}
+                {/* Confirm summary + Complete (gated). Back returns to Classify
+                    so the user can change the type (Task/Project/Note/Archive)
+                    or lens without restarting the whole item. Keyboard: Esc. */}
                 <div className="aa-triage-confirm">
                   <div className="aa-triage-confirm__summary">
                     {summaryFor(working, projectName ?? "General", projectGoalName ?? null, parentName)}
                   </div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setStep("classify")}
+                  >
+                    Back
+                  </Button>
                   <Button
                     variant="primary"
                     disabled={!canComplete(working)}

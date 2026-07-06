@@ -132,6 +132,19 @@ describe("TriagePage", () => {
     expect(await screen.findByText(/2 · Specify the task/i)).toBeInTheDocument();
   });
 
+  it("Back from Spec returns to Classify so the type can be changed", async () => {
+    renderTriagePage();
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    expect(await screen.findByText(/2 · Specify the task/i)).toBeInTheDocument();
+
+    // Back returns to the classify step — type/lens chooser reappears.
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i }));
+    expect(await screen.findByText("1 · Classify")).toBeInTheDocument();
+    // And the type chooser is reachable again (one-line rows now, so the
+    // accessible name is the label + sub-description combined).
+    expect(screen.getByRole("button", { name: /project/i })).toBeInTheDocument();
+  });
+
   it("uses a resolved Project as the destination and skips standalone Lens selection", async () => {
     appData.current = {
       lenses: [
