@@ -2,18 +2,24 @@
 id: infra-astro-marketing-split
 kind: backlog
 title: "Split marketing site into Astro on Cloudflare Pages (subdomain split)"
-status: draft
+status: done
 priority: P1
 spec_owner: user
 build_owner: build
 gates: marketing SEO, content velocity, Founding 100 discoverability
 created: 2026-07-06
+completed: 2026-07-06
 ---
 
 # Astro marketing split
 
-> Plan saved for later execution. Decision locked; sequencing confirmed (docs
-> first, then code). Not started — pick up from Phase 1.
+> **DONE 2026-07-06.** All 7 phases shipped. The marketing surface is live on
+> Astro (Cloudflare Pages) at `actionamp.com`; the Wasp app + auth + billing + DB
+> is on Railway at `app.actionamp.com` / `api.actionamp.com`; the Wasp marketing
+> routes are deleted. Verified end-to-end in production. The writeup below is the
+> plan as executed; only the Stripe Dashboard follow-up remains (add
+> `app.actionamp.com/founding-100/welcome` to the Stripe allowed success_url
+> origins before the first real Founding 100 checkout).
 >
 > **Revised 2026-07-06:** `/founding-100` stays in Wasp entirely (offer page +
 > auth + checkout + webhook + welcome). Astro only reads a public count endpoint

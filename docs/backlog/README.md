@@ -37,6 +37,6 @@
 
 | ID | Title | Gates | Status |
 |----|-------|-------|--------|
-| `infra-astro-marketing-split` | Split marketing site into Astro on Cloudflare Pages (subdomain split) | marketing SEO, content velocity, Founding 100 discoverability | draft |
+| `infra-astro-marketing-split` | Split marketing site into Astro on Cloudflare Pages (subdomain split) | marketing SEO, content velocity, Founding 100 discoverability | done |
 
 (One file per unit below. Update status in the file AND here when it moves.)
