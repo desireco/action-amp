@@ -83,6 +83,33 @@ function startOfDay(d: Date): Date {
   return x;
 }
 
+/**
+ * Resolve a "near day" keyword (today / tomorrow / tonight) to a Date.
+ * Returns `null` for unrecognized keywords so callers can fall through.
+ * Shared by the `@`-sigil pass and the bare-word pass so the two forms
+ * always produce the same Date for the same word.
+ */
+function nearDayKeyword(keyword: string, now: Date): Date | null {
+  switch (keyword.toLowerCase()) {
+    case "today":
+      return startOfDay(now);
+    case "tonight": {
+      const d = new Date(now);
+      d.setHours(20, 0, 0, 0);
+      return d;
+    }
+    case "tomorrow":
+    case "tmrw":
+    case "tmr": {
+      const d = new Date(now);
+      d.setDate(d.getDate() + 1);
+      return startOfDay(d);
+    }
+    default:
+      return null;
+  }
+}
+
 function nextWeekday(target: number, from: Date): Date {
   const d = new Date(from);
   const cur = d.getDay();
@@ -162,20 +189,9 @@ export function parseCapture(
   // today-the-date. Other @words (@phone, @errands) are NOT extracted — they
   // stay literal text. Stripped before the #tag pass so they never fall through.
   if (!date) {
-    text = text.replace(/@tonight\b/i, () => {
-      const d = new Date(now);
-      d.setHours(20, 0, 0, 0);
-      date = d;
-      return "";
-    });
-    text = text.replace(/@today\b/i, () => {
-      date = startOfDay(now);
-      return "";
-    });
-    text = text.replace(/@tomorrow\b|@tmrw\b|@tmr\b/i, () => {
-      const d = new Date(now);
-      d.setDate(d.getDate() + 1);
-      date = startOfDay(d);
+    text = text.replace(/@(tonight|today|tomorrow|tmrw|tmr)\b/gi, (_, kw: string) => {
+      const d = nearDayKeyword(kw, now);
+      if (d) date = d;
       return "";
     });
   }
@@ -246,20 +262,9 @@ export function parseCapture(
   });
 
   // today / tomorrow / tonight
-  text = text.replace(/\btonight\b/i, () => {
-    const d = new Date(now);
-    d.setHours(20, 0, 0, 0);
-    date = d;
-    return "";
-  });
-  text = text.replace(/\btoday\b/i, () => {
-    date = startOfDay(now);
-    return "";
-  });
-  text = text.replace(/\btomorrow\b|\btmrw\b|\btmr\b/i, () => {
-    const d = new Date(now);
-    d.setDate(d.getDate() + 1);
-    date = startOfDay(d);
+  text = text.replace(/\b(tonight|today|tomorrow|tmrw|tmr)\b/gi, (_, kw: string) => {
+    const d = nearDayKeyword(kw, now);
+    if (d) date = d;
     return "";
   });
 

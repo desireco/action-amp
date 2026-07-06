@@ -7,10 +7,11 @@ import {
   Chip,
   RecordCardGrid,
   RecordComposer,
-  RecordCreateButton,
   ProgressCard,
   ProjectsIcon,
   ProGate,
+  RecordCreateControl,
+  AllowanceChip,
 } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "../lists/ListShell";
@@ -111,35 +112,6 @@ export function ProjectsPage() {
     }
   };
 
-  // The create affordance: a normal button, OR — for a FREE user at the cap —
-  // a ProGate trigger so the cap is a quiet upgrade path, not a dead button.
-  const CreateControl = ({ empty }: { empty: boolean }) =>
-    creating ? null : atCap ? (
-      <ProGate
-        asTrigger
-        feature="New project"
-        reason="organize more than 3 projects with Pro"
-      >
-        <span className="aa-progate-trigger__label">New project</span>
-        <span className="aa-progate-trigger__cta">Upgrade →</span>
-      </ProGate>
-    ) : (
-      <RecordCreateButton
-        label="New project"
-        icon={ProjectsIcon}
-        onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}
-      />
-    );
-
-  // Allowance chip for FREE users (PRO sees no cap UI). Only when not at cap —
-  // at the cap the trigger itself signals it.
-  const AllowanceChip = () =>
-    !entitled && !atCap ? (
-      <Chip variant="muted" small>
-        {projectCount} of {FREE_LIMITS.projects} used
-      </Chip>
-    ) : null;
-
   if (!isLoading && (projects?.length ?? 0) === 0) {
     return (
       <div className="aa-projects">
@@ -148,7 +120,16 @@ export function ProjectsPage() {
             <div className="aa-list-header__eyebrow">Projects</div>
             <h1 className="aa-list-header__title">0 active</h1>
           </div>
-          <CreateControl empty />
+          <RecordCreateControl
+            label="New project"
+            icon={ProjectsIcon}
+            upgradeFeature="New project"
+            upgradeReason="organize more than 3 projects with Pro"
+            creating={creating}
+            atCap={atCap}
+            empty
+            onToggleCreating={setCreating}
+          />
         </header>
         {gate && (
           <ProGate feature={gate.feature} reason={gate.reason} />
@@ -183,10 +164,24 @@ export function ProjectsPage() {
           <div className="aa-list-header__eyebrow">Projects</div>
           <h1 className="aa-list-header__title">{projects?.length ?? 0} active</h1>
           <div className="aa-list-header__meta">
-            <AllowanceChip />
+            <AllowanceChip
+              entitled={entitled}
+              atCap={atCap}
+              used={projectCount}
+              cap={FREE_LIMITS.projects}
+            />
           </div>
         </div>
-        <CreateControl empty={false} />
+        <RecordCreateControl
+          label="New project"
+          icon={ProjectsIcon}
+          upgradeFeature="New project"
+          upgradeReason="organize more than 3 projects with Pro"
+          creating={creating}
+          atCap={atCap}
+          empty={false}
+          onToggleCreating={setCreating}
+        />
       </header>
       {gate && (
         <ProGate feature={gate.feature} reason={gate.reason} />

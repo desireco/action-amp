@@ -122,9 +122,18 @@ function LensList({
         )}
 
         {creating ? (
-          <CreateLensForm
+          <LensForm
+            initial={{ name: "", purpose: "", color: "coral" }}
+            submit={async (vals) => {
+              await createLens(vals);
+            }}
+            submitLabel="Create lens"
+            submittingLabel="Creating…"
+            errorPreamble="Couldn't create. Try again."
+            namePlaceholder="e.g. Studio, Board, Side project"
+            autoFocusName
             onCancel={() => setCreating(false)}
-            onCreated={async () => {
+            onDone={async () => {
               setCreating(false);
               await refresh();
             }}
@@ -171,10 +180,20 @@ function LensRowItem({
 
   if (editing) {
     return (
-      <EditLensForm
-        lens={lens}
+      <LensForm
+        initial={{
+          name: lens.name,
+          purpose: lens.purpose ?? "",
+          color: lens.color ?? "indigo",
+        }}
+        submit={async (vals) => {
+          await updateLens({ id: lens.id, ...vals });
+        }}
+        submitLabel="Save"
+        submittingLabel="Saving…"
+        errorPreamble="Couldn't save. Try again."
         onCancel={() => setEditing(false)}
-        onSaved={async () => {
+        onDone={async () => {
           setEditing(false);
           await onSaved();
         }}
@@ -229,18 +248,30 @@ function LensRowItem({
   );
 }
 
-function EditLensForm({
-  lens,
+function LensForm({
+  initial,
+  submit,
+  submitLabel,
+  submittingLabel,
+  errorPreamble,
+  namePlaceholder,
+  autoFocusName,
   onCancel,
-  onSaved,
+  onDone,
 }: {
-  lens: LensRow;
+  initial: { name: string; purpose: string; color: string };
+  submit: (vals: { name: string; purpose: string; color: string }) => Promise<void>;
+  submitLabel: string;
+  submittingLabel: string;
+  errorPreamble: string;
+  namePlaceholder?: string;
+  autoFocusName?: boolean;
   onCancel: () => void;
-  onSaved: () => Promise<void>;
+  onDone: () => Promise<void>;
 }) {
-  const [name, setName] = useState(lens.name);
-  const [purpose, setPurpose] = useState(lens.purpose ?? "");
-  const [color, setColor] = useState(lens.color ?? "indigo");
+  const [name, setName] = useState(initial.name);
+  const [purpose, setPurpose] = useState(initial.purpose);
+  const [color, setColor] = useState(initial.color);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -248,15 +279,10 @@ function EditLensForm({
     setSaving(true);
     setError(null);
     try {
-      await updateLens({
-        id: lens.id,
-        name,
-        purpose,
-        color,
-      });
-      await onSaved();
+      await submit({ name, purpose, color });
+      await onDone();
     } catch (e) {
-      setError(operationErrorMessage(e, "Couldn't save. Try again."));
+      setError(operationErrorMessage(e, errorPreamble));
     } finally {
       setSaving(false);
     }
@@ -270,7 +296,9 @@ function EditLensForm({
           className="aa-lenses-edit__input"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          placeholder={namePlaceholder}
           disabled={saving}
+          autoFocus={autoFocusName}
         />
       </div>
       <div className="aa-lenses-edit__row">
@@ -312,92 +340,7 @@ function EditLensForm({
           onClick={save}
           disabled={saving || !name.trim()}
         >
-          {saving ? "Saving…" : "Save"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function CreateLensForm({
-  onCancel,
-  onCreated,
-}: {
-  onCancel: () => void;
-  onCreated: () => Promise<void>;
-}) {
-  const [name, setName] = useState("");
-  const [purpose, setPurpose] = useState("");
-  const [color, setColor] = useState<string>("coral");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function create() {
-    setSaving(true);
-    setError(null);
-    try {
-      await createLens({ name, purpose, color });
-      await onCreated();
-    } catch (e) {
-      setError(operationErrorMessage(e, "Couldn't create. Try again."));
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="aa-lenses-edit" data-lens-color={color || undefined}>
-      <div className="aa-lenses-edit__row">
-        <label className="aa-lenses-edit__label">Name</label>
-        <input
-          className="aa-lenses-edit__input"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Studio, Board, Side project"
-          disabled={saving}
-          autoFocus
-        />
-      </div>
-      <div className="aa-lenses-edit__row">
-        <label className="aa-lenses-edit__label">Purpose</label>
-        <input
-          className="aa-lenses-edit__input"
-          value={purpose}
-          onChange={(e) => setPurpose(e.target.value)}
-          placeholder="What this lens is for"
-          disabled={saving}
-        />
-      </div>
-      <div className="aa-lenses-edit__row">
-        <label className="aa-lenses-edit__label">Color</label>
-        <div className="aa-lenses-palette">
-          {PALETTE.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              className={`aa-lenses-swatch ${color === p.key ? "selected" : ""}`}
-              data-lens-color={p.key}
-              onClick={() => setColor(p.key)}
-              aria-label={p.label}
-              title={p.label}
-            >
-              <span className="aa-lenses-swatch__dot" />
-            </button>
-          ))}
-        </div>
-      </div>
-      {error && <p className="aa-lenses-error">{error}</p>}
-      <div className="aa-lenses-edit__acts">
-        <button type="button" className="aa-lenses-act" onClick={onCancel} disabled={saving}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="aa-lenses-act aa-lenses-act--primary"
-          onClick={create}
-          disabled={saving || !name.trim()}
-        >
-          {saving ? "Creating…" : "Create lens"}
+          {saving ? submittingLabel : submitLabel}
         </button>
       </div>
     </div>

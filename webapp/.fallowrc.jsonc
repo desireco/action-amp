@@ -27,9 +27,13 @@
   // ── Packages provided by the Wasp runtime / test harness ────────────────
   // These are resolvable at runtime but live in .wasp/out/sdk and aren't in
   // this package.json, so fallow would otherwise flag them as "unlisted."
+  // `@wasp.sh/spec` is the Wasp DSL imported in main.wasp.ts via a
+  // `file:.wasp/spec/` workspace symlink that fallow can't resolve — also a
+  // false positive, suppressed here.
   "ignoreDependencies": [
     "@wasp.sh/api",
     "@wasp.sh/lib-auth",
+    "@wasp.sh/spec",
     "@tanstack/react-query",
     "@testing-library/react",
     "express"

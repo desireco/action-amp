@@ -56,7 +56,7 @@ const SIZE_OPTS: PropertyOption[] = [
 ];
 
 /** Coarse due-presets → Date. Mirrors triage's DUE_OPTS semantics. */
-export function presetToDate(preset: string): Date | null {
+function presetToDate(preset: string): Date | null {
   if (preset === "none") return null;
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -252,16 +252,4 @@ export function chipPickToTaskPatch(
     default:
       return {};
   }
-}
-
-/** Picker picks (project/goal) — return the patch the page writes. */
-export function chipPickerPickToTaskPatch(
-  fieldKey: string,
-): { projectId?: null; goalId?: null } {
-  // The "None" row passes null; an item id is the project/goal id. The page
-  // handles both via updateTaskDetails directly, so this just signals which
-  // field. (Caller passes the actual id/null.)
-  if (fieldKey === "project") return { projectId: null };
-  if (fieldKey === "goal") return { goalId: null };
-  return {};
 }

@@ -4,13 +4,13 @@ import { getGoals, createGoal, getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { useActiveLens } from "../app/lensContext";
 import {
-  Chip,
   RecordCardGrid,
   RecordComposer,
-  RecordCreateButton,
   GoalsIcon,
   ProgressCard,
   ProGate,
+  RecordCreateControl,
+  AllowanceChip,
 } from "../components/ui";
 import { ListEmpty } from "../lists/ListShell";
 import { FREE_LIMITS } from "../billing/config";
@@ -75,28 +75,6 @@ export function GoalsPage() {
     }
   };
 
-  // Create affordance: button, or ProGate trigger when a FREE user is at cap.
-  const CreateControl = ({ empty }: { empty: boolean }) =>
-    creating ? null : atCap ? (
-      <ProGate asTrigger feature="New goal" reason="link work to more than one outcome with Pro">
-        <span className="aa-progate-trigger__label">New goal</span>
-        <span className="aa-progate-trigger__cta">Upgrade →</span>
-      </ProGate>
-    ) : (
-      <RecordCreateButton
-        label="New goal"
-        icon={GoalsIcon}
-        onClick={() => (empty ? setCreating(true) : setCreating((v) => !v))}
-      />
-    );
-
-  const AllowanceChip = () =>
-    !entitled && !atCap ? (
-      <Chip variant="muted" small>
-        {goalCount} of {FREE_LIMITS.goals} used
-      </Chip>
-    ) : null;
-
   if (!isLoading && (goals?.length ?? 0) === 0 && !creating) {
     return (
       <div className="aa-goals">
@@ -105,7 +83,16 @@ export function GoalsPage() {
             <div className="aa-list-header__eyebrow">Goals</div>
             <h1 className="aa-list-header__title">0 active</h1>
           </div>
-          <CreateControl empty />
+          <RecordCreateControl
+            label="New goal"
+            icon={GoalsIcon}
+            upgradeFeature="New goal"
+            upgradeReason="link work to more than one outcome with Pro"
+            creating={creating}
+            atCap={atCap}
+            empty
+            onToggleCreating={setCreating}
+          />
         </header>
         {gate && <ProGate feature={gate.feature} reason={gate.reason} />}
         <ListEmpty
@@ -123,10 +110,24 @@ export function GoalsPage() {
           <div className="aa-list-header__eyebrow">Goals</div>
           <h1 className="aa-list-header__title">{goals?.length ?? 0} active</h1>
           <div className="aa-list-header__meta">
-            <AllowanceChip />
+            <AllowanceChip
+              entitled={entitled}
+              atCap={atCap}
+              used={goalCount}
+              cap={FREE_LIMITS.goals}
+            />
           </div>
         </div>
-        <CreateControl empty={false} />
+        <RecordCreateControl
+          label="New goal"
+          icon={GoalsIcon}
+          upgradeFeature="New goal"
+          upgradeReason="link work to more than one outcome with Pro"
+          creating={creating}
+          atCap={atCap}
+          empty={false}
+          onToggleCreating={setCreating}
+        />
       </header>
       {gate && <ProGate feature={gate.feature} reason={gate.reason} />}
       {creating && (
