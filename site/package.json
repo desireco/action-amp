@@ -9,7 +9,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "deploy": "PUBLIC_APP_URL=https://app.actionamp.com PUBLIC_API_URL=https://api.actionamp.com astro build && wrangler pages deploy dist --project-name=actionamp-site --branch=main"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",

@@ -1,0 +1,12 @@
+# Cloudflare Pages config for the ActionAmp marketing site.
+# Deploys the static SSG output in dist/ via `wrangler pages deploy`.
+# The project was created with: wrangler pages project create actionamp-site
+#                              --production-branch main
+#
+# Custom domain (actionamp.com) is wired in the Cloudflare dashboard, not here.
+# Env vars (PUBLIC_APP_URL, PUBLIC_API_URL) are bake-time: they're inlined into
+# the built HTML, so they must be set in the environment at build time, not in
+# the Pages dashboard. See package.json `deploy` script.
+
+name = "actionamp-site"
+pages_build_output_dir = "dist"
