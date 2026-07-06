@@ -434,6 +434,14 @@ export function TriagePage() {
         { id: "Work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
         { id: "Me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
       ];
+  // The active lens as a picker chip — passed to PickerSheet items so each
+  // project row shows which lens (context) it lives in. All projects in these
+  // pickers share the chosen lens (the query is scoped), but the chip
+  // reinforces the context and future-proofs for cross-lens filing.
+  const activeLensForChip = lensList.find((l) => l.id === (scopedLensId ?? chosenLensId));
+  const lensChip = activeLensForChip
+    ? { label: activeLensForChip.name, color: activeLensForChip.color }
+    : null;
 
   return (
     <div className="aa-triage">
@@ -693,7 +701,8 @@ export function TriagePage() {
           items={(projects ?? []).map((p) => ({
             id: p.id,
             label: p.name,
-            meta: p.goal?.name,
+            chip: lensChip,
+            meta: p.goal?.name ?? null,
             current: p.id === effectiveProjectId,
           }))}
           onPick={(id) => {
@@ -711,6 +720,7 @@ export function TriagePage() {
           items={(goals ?? []).map((g) => ({
             id: g.id,
             label: g.name,
+            chip: lensChip,
             current: g.id === working?.projectGoalId,
           }))}
           emptyMessage="No goals yet — create one on the Goals page."
@@ -725,11 +735,12 @@ export function TriagePage() {
       {/* ---- Parent picker for a Resource/Note: choose project or goal ---- */}
       {parentProjectPickerOpen && item && (
         <PickerSheet
-          title={`File note under`}
+          title="File note under a project"
           items={(projects ?? []).map((p) => ({
             id: p.id,
             label: p.name,
-            meta: "project",
+            chip: lensChip,
+            meta: p.goal?.name ?? null,
             current: p.id === working?.parentProjectId,
           }))}
           action={{
@@ -748,11 +759,11 @@ export function TriagePage() {
       )}
       {parentGoalPickerOpen && item && (
         <PickerSheet
-          title={`File note under a goal`}
+          title="File note under a goal"
           items={(goals ?? []).map((g) => ({
             id: g.id,
             label: g.name,
-            meta: "goal",
+            chip: lensChip,
             current: g.id === working?.parentGoalId,
           }))}
           emptyMessage="No goals yet — create one on the Goals page."

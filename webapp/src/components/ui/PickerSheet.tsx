@@ -5,6 +5,10 @@ export interface PickerSheetItem {
   id: string;
   label: string;
   meta?: string | null;
+  /** Optional leading identity chip. When provided, renders as a small pill
+   *  before the label — e.g. a lens dot so the user sees which context a
+   *  project lives in. */
+  chip?: { label: string; color?: string | null } | null;
   current?: boolean;
 }
 
@@ -47,6 +51,17 @@ export function PickerSheet({
                 className={`aa-picker-sheet__item ${item.current ? "current" : ""}`}
                 onClick={() => onPick(item.id)}
               >
+                {item.chip && (
+                  <span
+                    className="aa-picker-sheet__chip"
+                    data-lens-color={item.chip.color ?? undefined}
+                  >
+                    {item.chip.color && (
+                      <span className="aa-picker-sheet__chip-dot" aria-hidden="true" />
+                    )}
+                    {item.chip.label}
+                  </span>
+                )}
                 <span className="aa-picker-sheet__name">{item.label}</span>
                 {item.meta && <span className="aa-picker-sheet__meta">{item.meta}</span>}
                 <span className="aa-picker-sheet__num">{index + 1}</span>
