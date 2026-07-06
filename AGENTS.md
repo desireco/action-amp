@@ -59,7 +59,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Marketing/public site | `docs/MARKETING.md` + `docs/PUBLIC-PAGES.md` |
 | Deployment / hosting | `docs/research/deployment-research.md` |
 | What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/backlog/` |
-| Historical context (why past decisions landed) | `docs/HISTORY.md` (was `BACKLOG.md`) |
+| Historical context (why past decisions landed) | `docs/ROADMAP.md` §Shipped + `docs/reviews/` (sign-off writeups) |
 | What success means (the bets + their measurable triggers) | `docs/SUCCESS.md` |
 | A specific feature spec (ready/draft status, done-conditions) | `docs/specs/<feature>.md` (index + order in `docs/ROADMAP.md`) |
 | Product thesis, tone, strategic principles (the "why") | `PRODUCT.md` |
@@ -123,7 +123,6 @@ Pick the task; read the doc(s) on the right **before** writing code.
 1. [`PRODUCT.md`](PRODUCT.md) — the thesis and tone (5 min).
 2. [`docs/WORKFLOW.md`](docs/WORKFLOW.md) — the app's structure (canonical).
 3. [`docs/INTERACTION.md`](docs/INTERACTION.md) — how you move through it.
-4. [`docs/ROADMAP.md`](docs/ROADMAP.md) — what's left to build + the priority order.
-   [`docs/HISTORY.md`](docs/HISTORY.md) for the historical narrative behind
-   past decisions (was `BACKLOG.md`).
+4. [`docs/ROADMAP.md`](docs/ROADMAP.md) — what's left to build + the priority
+   order; §Shipped records what landed and why.
 5. [`webapp/main.wasp.ts`](webapp/main.wasp.ts) — the implementation's front door.

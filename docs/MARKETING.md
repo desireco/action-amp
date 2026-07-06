@@ -40,8 +40,8 @@ manipulating; it does not apologize for selling.
 | `/changelog` | Changelog | Phase 2 | "What's new" — pairs with the newsletter. |
 | `/pricing` | Pricing | post-launch | Defer until a recurring paid tier exists. |
 
-**Tier 4 growth pages** (`/blog`, `/guides`, `/community`) live in
-`docs/BACKLOG.md`, not here — see `docs/PUBLIC-PAGES.md` §4.
+**Tier 4 growth pages** (`/blog`, `/guides`, `/community`) are parked as
+Phase 2 — see `docs/PUBLIC-PAGES.md` §4.
 
 ---
 

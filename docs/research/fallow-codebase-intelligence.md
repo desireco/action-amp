@@ -2,8 +2,9 @@
 
 > Generated after installing [`fallow`](https://github.com/fallow-rs/fallow) (v2.60.0,
 > Homebrew) and tuning it for the Wasp project layout. This doc is the
-> **index for the findings**; the actionable improvements live in
-> [`BACKLOG.md`](BACKLOG.md) under the "Code health" section.
+> **findings index**; the actionable items it spawned have either been fixed
+> (see "What the cleanup pass did") or moved into the relevant feature spec /
+> `docs/backlog/` unit.
 >
 > Re-run any time: `cd webapp && fallow dead-code && fallow health && fallow dupes`.
 

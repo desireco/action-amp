@@ -19,7 +19,7 @@ created: 2026-07-03
 
 The `Breadcrumb` component exists and works (crumbs are `<button>`s with
 `onSelect`), but it is wired only into the design-system demo. The Project and
-Goal detail pages use a `← Back` Link instead. Per BACKLOG.md's BUILD
+Goal detail pages use a `← Back` Link instead. Per the 2026-06-16 build
 REQUIREMENT (2026-06-16), clicking an ancestor crumb should re-anchor the whole
 view at that scope — navigate *into* the Goal or Project, not just zoom.
 
@@ -39,9 +39,9 @@ ancestor-navigation surface.
 - [ ] **Clicking an ancestor crumb re-anchors the view** at that scope (the
       crumb's scope becomes the new "current"; the breadcrumb updates).
 - [ ] **The current scope's crumb is highlighted** (teal scope-active); deeper
-      ancestor crumbs dim, per the design rule in BACKLOG.md.
+      ancestor crumbs dim, per the design rule.
 - [ ] **The "zoom to see in context" behavior stays the job of the `Z` key /
-      two-finger swipe**, separate from crumb navigation (per BACKLOG.md).
+      two-finger swipe**, separate from crumb navigation.
 - [ ] **Goal-card hover-implies-clickable nit** resolved in the same pass
       (the same "list ↔ detail affordance" question).
 - [ ] Tests: a component test for crumb `onSelect` + an e2e asserting crumb

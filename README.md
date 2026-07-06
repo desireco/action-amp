@@ -86,9 +86,9 @@ other docs, these win.
 
 | Doc | Subject |
 |-----|---------|
-| [`docs/HISTORY.md`](docs/HISTORY.md) | Historical narrative of completed workflow-refactor work + past decisions (was `BACKLOG.md`). |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Strategy queue + priority order; what to build next and why. |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Strategy queue + priority order; what to build next, what shipped, and why. Includes §Shipped + §Icebox for historical record. |
 | [`docs/backlog/`](docs/backlog/) | Tracked non-feature work units (GTM setup + test/bug gaps), one file per item. |
+| [`docs/reviews/`](docs/reviews/) | Sign-off writeups for shipped specs — the decision record. |
 
 **🔬 Research (decisions already made; context for *why*).**
 
@@ -167,6 +167,6 @@ See [`webapp/README.md`](webapp/README.md) and [`webapp/AGENTS.md`](webapp/AGENT
   canonical and overrides the feature/page/data-model docs. Update it first,
   then cascade (see its §6).
 - **Picking up what's next?** [`docs/ROADMAP.md`](docs/ROADMAP.md) is the
-  strategy queue; [`docs/backlog/`](docs/backlog/) holds the tracked
-  non-feature work units. [`docs/HISTORY.md`](docs/HISTORY.md) is the
-  historical narrative (was `BACKLOG.md`).
+  strategy queue + §Shipped record; [`docs/backlog/`](docs/backlog/) holds the
+  tracked non-feature work units; [`docs/reviews/`](docs/reviews/) is the
+  sign-off writeup for each shipped spec.

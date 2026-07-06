@@ -177,10 +177,9 @@ When the user opens Inbox for the first time with ≥1 item, a one-time coach ov
 
 ## 4. Tier 4 — Growth / content → moved to BACKLOG
 
-`/blog`, `/guides`, `/community` are real ideas but not shipping work. They've
-been **moved to `docs/BACKLOG.md`** (Phase 2). This doc stays focused on what
-ships. When one of them is ready to build, it gets a spec in `docs/specs/` and
-returns here as a Tier 3 item.
+`/blog`, `/guides`, `/community` are real ideas but not shipping work — they're
+**Phase 2** (parked). This doc stays focused on what ships. When one of them is
+ready to build, it gets a spec in `docs/specs/` and returns here as a Tier 3 item.
 
 ---
 
@@ -222,8 +221,8 @@ Someday, Projects, Goals, Logbook, Settings, Billing, Preferences, Task detail.
 
 1. **Home newsletter fields (P1 §1 gaps)** — footer capture always, quiet hero
    field alongside "Make an account." Smallest gap to close; makes the public
-   site stop leaking interested visitors. **Needs an email provider** (see
-   `BACKLOG.md`: "Email provider for auth flows" → reuse for newsletter).
+   site stop leaking interested visitors. **Needs an email provider** (the
+   auth-flow provider — Resend — gets reused for newsletter sends).
 2. **Onboarding spine (O1–O5)** — the make-or-break for a modal app. Higher risk
    than the home page, but needs the home to send it traffic.
 3. **About + Privacy + Terms (P3–P5)** — Terms especially, given Founding 100

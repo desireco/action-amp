@@ -149,8 +149,8 @@ appears in Work/Planning/Review except by coming through triage.
 - The activity log itself (`TaskUpdate` rows, kind = NOTE | COMPLETED) is the
   substrate the future Review v2 activity timeline will render — see
   `docs/specs/weekly-monthly-review.md`.
-- Currently the least-built area — net-new work. (See `BACKLOG.md`,
-  `docs/features/work-area-merged.md`.)
+- Currently the least-built area — net-new work. (See
+  `docs/specs/work-area-merged.md` + `docs/specs/weekly-monthly-review.md`.)
 
 ## 3. Context (Lens) scoping
 
@@ -254,7 +254,8 @@ These were the open structural calls. All resolved:
    - Expanding **Review** shows: Logbook, reports (when built).
    - **Capture stays pinned outside both switches** — it's pervasive.
    - This is **soft focus now**. A future **hard focus** (each mode as a
-     distinct full-screen layout) is the north star, flagged in `BACKLOG.md`.
+     distinct full-screen layout) is the north star, parked in
+     `docs/ROADMAP.md` §Icebox.
 7. **Today rolls over daily (locked 2026-06-30).** At the start of each new
    calendar day, every incomplete **Today** task flips to **Upcoming** so Today
    starts fresh each morning — a deliberate re-commitment, not a backlog.
@@ -363,8 +364,8 @@ The following were updated to match this doc (commit alongside):
 - `docs/features/upcoming-someday.md` (revised 2026-07-05) — Upcoming framed
   as a single Planning page (`/app/upcoming`) that cross-links with Today
   (no same-page swap toggle). Aligns with §5.1.
-- `PAGES.md` + `DATA-MODEL.md` + `BACKLOG.md` (revised 2026-07-05) — Upcoming
-  framing flipped from demoted to promoted-into-Planning, matching §5.1.
+- `PAGES.md` + `DATA-MODEL.md` (revised 2026-07-05) — Upcoming framing flipped
+  from demoted to promoted-into-Planning, matching §5.1.
 - `DATA-MODEL.md` (revised 2026-07-05) — v6 note documents `TaskUpdate.kind`
   discriminator, `TaskSession`, and `Project.order`, matching §5.10 +
   goal-planning.
@@ -372,21 +373,9 @@ The following were updated to match this doc (commit alongside):
   one-line type rows (not positional A/S/D/F slots); property keys
   `[` `]` `-` `=` are now built (shared `PropertyChips` editor).
 
-## 7. Code work implied (flagged in `BACKLOG.md`, not built here)
+## 7. Code work implied by these decisions
 
-- **Focus-switch nav** — AppShell sidebar refactor: mode sections (Work/Plan/
-  Review) as expanding accordions, one open at a time; Lens switch above;
-  Capture pinned outside. No route changes.
-- **Upcoming → Today toggle** — add a "see upcoming" affordance on the Today
-  page that surfaces `status=UPCOMING` tasks (scoped to the active lens) for
-  promotion onto today. *(Done.)*
-- **Add Upcoming to the Plan nav** *(done 2026-07-05)* — `/app/upcoming` is
-  now a top-level Plan nav item. The same-page Today swap toggle was **dropped
-  the same day** (§5.1) in favor of one surface per intent; Today and Upcoming
-  cross-link from their heroes instead.
-- **Someday nav relocation** — move the Someday entry under the Plan section of
-  the new focus-switch nav (route stays `/app/someday`).
-- **(Done 2026-06-25)** `getTopTask` scope — widened from `status=TODAY` to
-  `status ∈ {TODAY, UPCOMING}` with a `dueDate ≤ now` (or null) guard, so a
-  triaged-to-Upcoming task surfaces on Next and a snoozed task auto-resurfaces
-  when its snooze expires. See §5.2.
+All items in this section have shipped (focus-switch nav, Upcoming → Today
+toggle, Upcoming as a top-level Plan nav item, Someday nav relocation,
+`getTopTask` scope). The decision history for each is in §5 above and in
+`docs/reviews/` sign-offs; this section is no longer tracked as an open list.

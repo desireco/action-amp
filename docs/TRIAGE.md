@@ -40,7 +40,7 @@ and **deletes the original InboxItem** — the transformed entity *is* the recor
 
 > Triage is **co-authoring the spec**, not just dispatching. The card shows the
 > raw text + NL-parsed editable properties; the user confirms/edits what the
-> thing becomes. (Decision, 2026-06-16. See `BACKLOG.md`.)
+> thing becomes. (Decision, 2026-06-16.)
 
 ---
 
