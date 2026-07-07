@@ -8,6 +8,10 @@ spec_owner: discover      # needs a campaign decision, not setup
 build_owner: user
 gates: Founding 100 success
 created: 2026-07-03
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsj_      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # The Founding 100 story

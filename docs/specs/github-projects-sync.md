@@ -8,6 +8,10 @@ feature: github-projects-sync
 spec_owner: discover
 build_owner: build
 created: 2026-07-07
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4MgsZS      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Spec: GitHub Projects board (Projects-wins sync with Duet markdown)

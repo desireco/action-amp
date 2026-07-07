@@ -7,6 +7,10 @@ priority: P1
 spec_owner: discover
 build_owner: discover     # no build; this is a Discover + user research action
 created: 2026-07-03
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4MgsaS      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Spec: Matcher validation (the 48-hour manual test)

@@ -8,6 +8,10 @@ spec_owner: user
 build_owner: user        # pure setup; no code (code is written in social-auth-google)
 gates: social-auth-google (going live)
 created: 2026-07-03
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4Mgskn      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Google Cloud OAuth client

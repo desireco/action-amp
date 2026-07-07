@@ -4,6 +4,10 @@ status: ready
 gated_by: gtm-analytics-account.md     # provider pick + site creation (user-owned)
 spec_owner: discover
 build_owner: build
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsby      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Feature: Minimal observability (the one funnel number)

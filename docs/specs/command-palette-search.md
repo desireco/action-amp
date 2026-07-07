@@ -3,6 +3,10 @@ feature: command-palette-search
 status: ready
 spec_owner: discover
 build_owner: build
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4MgsXU      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Feature: Command palette + Logbook search

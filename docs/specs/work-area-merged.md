@@ -3,6 +3,10 @@ feature: work-area-merged
 status: draft
 spec_owner: discover
 build_owner: build
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4MgsgE      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Feature: Merged Work Area (Next + Today on one page), complete-only-from-focus, and a timestamped activity log

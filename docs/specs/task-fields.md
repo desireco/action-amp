@@ -9,6 +9,10 @@ spec_owner: discover
 build_owner: build
 reverses: resources-project-owned.md   # on the Task↔Resource link question (see §Resource linking)
 created: 2026-07-04
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsep      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Spec: Task enhancement fields (Context + Outcome)

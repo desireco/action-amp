@@ -9,6 +9,10 @@ spec_owner: discover
 build_owner: build
 unblocks: focus-engine-v2.md   # the moment matcher is inert without it
 created: 2026-07-03
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsdx      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Spec: Tag management

@@ -8,6 +8,10 @@ spec_owner: user
 build_owner: user
 gates: legal-pages-oauth final signoff; Google OAuth verification; user trust
 created: 2026-07-03
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4Mgshr      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Monitored contact addresses

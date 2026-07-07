@@ -9,6 +9,10 @@ build_owner: build
 gates: marketing SEO, content velocity, Founding 100 discoverability
 created: 2026-07-06
 completed: 2026-07-06
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4MgsmB      # sync-managed (write-once)
+gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Astro marketing split
