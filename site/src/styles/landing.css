@@ -1,9 +1,11 @@
 /*
- * Landing page styles. Consumes design tokens (see src/styles/tokens.css).
+ * Landing page styles. Consumes design tokens (see src/styles/tokens.css) +
+ * the shared Button base styles (button.css) so the hero demo buttons and the
+ * CTAs render with the design-system .aa-btn classes.
  * All classes scoped under .aa-landing to avoid collisions with app styles.
- * Import tokens at the top so this page is self-contained.
  */
 @import "../styles/tokens.css";
+@import "../styles/button.css";
 
 .aa-landing {
   background: var(--aa-bg);
