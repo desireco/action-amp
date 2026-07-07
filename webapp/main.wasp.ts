@@ -88,10 +88,11 @@ export default app({
       // },
     },
     onAuthSucceededRedirectTo: "/app",
-    // Absolute apex URL — under the subdomain split, the marketing site lives at
-    // actionamp.com (Astro) and the Wasp app at app.actionamp.com. A bare "/"
-    // would resolve to app.actionamp.com/ (the app shell), not the marketing site.
-    onAuthFailedRedirectTo: "https://actionamp.com",
+    // Relative /login — stays on the app subdomain (app.actionamp.com/login).
+    // Wasp's auth-required route guard redirects unauthenticated visitors here,
+    // then returns them to the intended page after login. (Earlier this was the
+    // absolute marketing apex, which wrongly sent auth-fails off the app.)
+    onAuthFailedRedirectTo: "/login",
   },
   emailSender: {
     provider: "SMTP",
@@ -129,7 +130,12 @@ export default app({
     route("ProjectDetailRoute", "/app/projects/:permalink", page(ProjectDetailPage)),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
     route("DesignSystemRoute", "/design-system", page(DesignSystemPage, { authRequired: false })),
-    route("Founding100Route", "/founding-100", page(Founding100Page, { authRequired: false })),
+    // Auth-required: checkout needs a user (createCheckoutSession is gated on
+    // context.user). Making the route auth-required removes the CTA → /login →
+    // back-to-/founding-100 dance — an unauthenticated visitor lands on /login,
+    // then Wasp returns them here after auth, ready to check out.
+    // (authRequired defaults to false in Wasp 0.24 — must be explicit.)
+    route("Founding100Route", "/founding-100", page(Founding100Page, { authRequired: true })),
     route("Founding100WelcomeRoute", "/founding-100/welcome", page(Founding100WelcomePage)),
     route("LoginRoute", "/login", page(LoginPage)),
     route("SignupRoute", "/signup", page(SignupPage)),

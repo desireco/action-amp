@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "wasp/client/auth";
 import { useQuery, createCheckoutSession, getFounding100Status } from "wasp/client/operations";
 import { PublicLayout } from "../shared/PublicLayout";
@@ -7,17 +6,20 @@ import { Button } from "../components/ui";
 import "./Founding100Page.css";
 
 /**
- * /founding-100 — the Founding 100 landing page.
+ * /founding-100 — the Founding 100 landing page (auth-required).
  *
  * A one-time $139 lifetime Pro tier, capped at exactly 100 spots. The live
  * spots-remaining count comes from getFounding100Status; the CTA is enabled
- * while spots remain and the user is signed in (checkout requires auth).
- * Once full, the button locks and the page says so.
+ * while spots remain. Once full, the button locks and the page says so.
+ *
+ * Auth is required at the route level (main.wasp.ts) — checkout needs a user
+ * (createCheckoutSession is gated on context.user), so there's no point showing
+ * this page to anonymous visitors. Wasp redirects them to /login and back here
+ * after auth.
  */
 export function Founding100Page() {
   const { data: user } = useAuth();
   const { data: status } = useQuery(getFounding100Status);
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,10 +29,6 @@ export function Founding100Page() {
 
   async function handleCheckout() {
     setError(null);
-    if (!user) {
-      navigate("/login?redirect=/founding-100");
-      return;
-    }
     setLoading(true);
     try {
       const result = await createCheckoutSession({ priceKey: "founder" });
