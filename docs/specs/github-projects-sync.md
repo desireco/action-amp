@@ -88,14 +88,46 @@ view." The earlier model kept the agent loop simple but made the board
 powerless — dragging a card couldn't reprioritize the work, which is the whole
 reason to have a board. Aligning to upstream fixes that.
 
-### D3. Identity = `duet:<id>` label + `Duet ID` field (no new frontmatter key)
+### D3. Identity + sync metadata — frontmatter keys the cache
 
-The repo slug (`docs/specs/<slug>.md`) is the human key. The Project item's
-join key is a **`duet:<slug>` label** plus a `Duet ID` text field on the item.
-This avoids adding a write-once `gh_node_id` to every unit's frontmatter (the
-earlier draft's approach) — instead, the join is the label, which is set when
-the item is created and never edited. The file path is recoverable from the
-folder convention (`specs/`, `backlog/`, `tasks/`) + the slug.
+Every synced unit gains **two sync-metadata frontmatter keys**, written by sync
+(not human-authored), plus the lifecycle fields already present become the cache
+of Projects. Full set on a synced unit:
+
+```yaml
+---
+# ... the usual human/Discover-authored keys (id, kind, title, priority, ...) ...
+# Then the sync-managed block (added/updated by sync; don't hand-edit):
+status: ready              # cache of Projects Status — Projects wins on conflict
+gh_node_id: PVTI_xxxxx     # the Project item's stable node ID; write-once
+gh_synced_at: 2026-07-07T14:22:01Z   # last successful sync (push or write-back)
+---
+```
+
+- **`gh_node_id`** — the GitHub Project item's stable content node ID (the
+  `PVTI_...` value). **Write-once**: set on first push (when the item is
+  created), never rewritten. This is the *machine* join key that survives slug
+  renames, folder moves, and title edits. The repo path (`docs/specs/<slug>.md`)
+  is the *human* key; `gh_node_id` is what sync matches on.
+- **`gh_synced_at`** — ISO timestamp of the last sync touch (push or
+  write-back). Used for **drift detection**: a unit is stale if its file mtime
+  is newer than `gh_synced_at` (someone edited the file since sync) — the next
+  push reports it and, for lifecycle fields, rewrites from Projects.
+- **Lifecycle fields** (`status`, `priority`, `kind`, `feature`, `title`) —
+  these are the **cache of Projects**. Projects is authority; if the file
+  disagrees, the file is rewritten. Discover does not hand-edit `status` to
+  steer Build — that's the whole point of Projects-wins.
+
+**On slug collisions.** A `specs/foo.md` and `backlog/foo.md` would both map to
+`duet:foo` if the join were the label alone. `gh_node_id` disambiguates — each
+file has its own. The `duet:<id>` label + `Duet ID` field on the Project item
+still exist (they're the human-visible join on the board), but the *sync* join
+is `gh_node_id`. Folder + slug is the fallback only when `gh_node_id` is absent
+(a new unit on its first push).
+
+**What humans edit.** Discover authors `id`, `kind`, `title`, `priority`,
+`feature`, `parent`, `created`, and all prose. Build flips `status` per the
+protocol. Neither hand-edits `gh_node_id` or `gh_synced_at` — those are sync's.
 
 ### D4. Field map (frontmatter ↔ GitHub custom fields)
 
@@ -104,14 +136,16 @@ Title/Status:
 
 | Markdown frontmatter | GitHub Projects field | Type | Notes |
 |---|---|---|---|
-| `id` | label `duet:<id>` + `Duet ID` text | text | the join key |
+| `id` | label `duet:<id>` + `Duet ID` text | text | the human-visible join |
 | `kind` | `Kind` | single-select | `spec \| backlog \| task \| bug` |
 | `title` | issue title | text | `<id>: <title>` |
-| `status` | `Status` (built-in) | single-select | `draft \| ready \| building \| review \| done \| blocked` |
-| `priority` | `Priority` | single-select | `P0 \| P1 \| P2 \| P3` |
+| `status` | `Status` (built-in) | single-select | `draft \| ready \| building \| review \| done \| blocked` — cache; Projects wins |
+| `priority` | `Priority` | single-select | `P0 \| P1 \| P2 \| P3` — cache; Projects wins |
 | `feature` | `Feature` | text | slug; null if cross-cutting |
 | `parent` | `Parent` text / sub-issue link | link | tasks/bugs/children only |
 | `created` | `Created` | date | `YYYY-MM-DD` |
+| `gh_node_id` | _(item's content node ID)_ | — | **sync-managed**, write-once; the machine join key (survives slug renames) |
+| `gh_synced_at` | _(not stored on the item)_ | — | **sync-managed**; ISO timestamp of last sync touch, for drift detection |
 | (file path) | `Path` text | text | write-back locates the file |
 | (derived) | `Tier` | single-select | `Now \| Next \| Then \| Icebox` from `priority` → drives the roadmap view |
 
@@ -234,11 +268,21 @@ same commit survive (they're disjoint keys).
 - [ ] Running `duet sync --push` creates a Project item (with `duet:<id>` label)
       for every unit in `docs/specs/`, `docs/backlog/`, `docs/tasks/` that lacks
       one, and is a no-op for units that already have one.
+- [ ] **On first push of a unit lacking `gh_node_id`**, the script creates the
+      item, captures its content node ID, and writes it back into the unit's
+      frontmatter as `gh_node_id: PVTI_...` (write-once — a second push does
+      not rewrite it).
+- [ ] For units that already have `gh_node_id`, push **matches on `gh_node_id`
+      first** (not slug) — so renaming a file or moving it between folders does
+      not create a duplicate item. Folder + slug is the fallback only when
+      `gh_node_id` is absent.
 - [ ] After push, each item's `Kind`, `Priority`, `Duet ID`, `Path`, `Created`,
       and `Status` match the unit's frontmatter.
 - [ ] The item body holds a pointer to the file (`Path`), not the full prose.
       A one-line banner states prose lives in the file.
-- [ ] Push is idempotent (second run with no changes → "0 updated").
+- [ ] Push records `gh_synced_at: <ISO>` on success.
+- [ ] Push is idempotent (second run with no changes → "0 updated",
+      `gh_synced_at` not bumped).
 - [ ] Push **never overwrites** a Projects lifecycle value with a file value
       (verified: change a card's Status on the board, run push, confirm the
       file is rewritten to match the card, not vice-versa).
@@ -247,8 +291,12 @@ same commit survive (they're disjoint keys).
 
 - [ ] A `projects_v2_item` GitHub Action deploys and fires on card moves + field
       edits in the ActionAmp Duet project.
+- [ ] The Action locates the target file via the item's `Path` field (or, if
+      absent, by matching `gh_node_id` across the three folders) — never by
+      title alone.
 - [ ] Dragging a card Draft → Ready on the board commits
-      `duet: <slug> → ready` to the repo, rewriting the file's `status:`.
+      `duet: <slug> → ready` to the repo, rewriting the file's `status:` and
+      stamping `gh_synced_at`.
 - [ ] Editing the `Priority` field on a card commits `duet: <slug> → priority`.
 - [ ] An illegal drag (e.g. `review → ready`) is reverted in Projects with a
       comment explaining why (the arc isn't a legal transition).
@@ -347,10 +395,17 @@ This spec **reverses its own earlier draft** (committed 2026-07-07 as part of
 - Manual CLI v1, webhook deferred. → **Reversed**: GitHub Action is primary; CLI
   is reconciliation only.
 - `pinned: true` frontmatter flag. → **Dropped**: steering is by drag.
-- `gh_node_id` write-once frontmatter key. → **Dropped**: join is `duet:<id>`
-  label, no per-file node id.
 - ROADMAP.md tiers stay hand-maintained. → **Reversed**: Projects Roadmap view
   is the live index; ROADMAP.md demoted to prose.
+
+**Sync-metadata keys retained.** The earlier draft also carried `gh_node_id`
+(write-once join) and `gh_synced_at` (drift timestamp). An intermediate
+realignment pass dropped them, reasoning that the `duet:<id>` label was
+enough. It isn't — labels collide on slug clashes, and there's no way to
+detect drift without a timestamp. Both keys are back: `gh_node_id` is the
+machine join that survives renames, `gh_synced_at` powers drift detection.
+They are **sync-managed** (written by sync, never hand-edited), which is
+consistent with the cache model — they're metadata *about* the cache.
 
 The reversal lands because the duet upstream (`docs/protocol.md` §Source of
 truth, `docs/sync.md`) had already locked the Projects-wins model, and
