@@ -59,3 +59,12 @@ export const PLAN_LABEL: Record<Plan, string> = {
  * users, reject if >= cap) once the CTA on /founding-100 is enabled.
  */
 export const FOUNDING_100_CAP = 100;
+
+/**
+ * The Founding 100 price, in cents. Charged inline via Stripe Checkout's
+ * price_data (no Price object in the dashboard) because it's a one-off,
+ * non-recurring, sells-out-at-100 tier — there's no reporting or subscription
+ * benefit to a Price object here. Single source of truth for the amount; the
+ * marketing copy ($139) and CTA label must stay in sync with this value.
+ */
+export const FOUNDING_100_PRICE_CENTS = 13900;

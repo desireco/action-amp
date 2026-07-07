@@ -1,5 +1,5 @@
 import type { GetBillingStatus } from "wasp/server/operations";
-import { isPaidPlan, FOUNDING_100_CAP } from "./config";
+import { isPaidPlan, FOUNDING_100_CAP, FOUNDING_100_PRICE_CENTS } from "./config";
 import { stripe, getPriceId } from "./stripe";
 import { HttpError } from "wasp/server";
 import type { Request, Response } from "express";
@@ -74,7 +74,6 @@ export const createCheckoutSession = (async (
     }
   }
 
-  const priceId = getPriceId(priceKey);
   const authUser = context.user;
 
   // Fetch full user record (AuthUser doesn't have email/fullName/stripeCustomerId)
@@ -109,17 +108,36 @@ export const createCheckoutSession = (async (
     ? `${origin}/founding-100`
     : `${origin}/app/settings/billing?checkout=cancelled`;
 
-  // automatic_tax + allow_promotion_codes apply to both modes.
+  // line_items: the founder tier charges inline (price_data) — no Price object
+  // in the dashboard, the amount lives in code (FOUNDING_100_PRICE_CENTS). The
+  // recurring Pro tiers still use the dashboard-resolved priceId (subscriptions
+  // require a real Price object).
+  const lineItems = priceKey === "founder"
+    ? [{
+        price_data: {
+          currency: "usd",
+          unit_amount: FOUNDING_100_PRICE_CENTS,
+          // One-time product data — name shown on the Checkout page.
+          product_data: { name: "Founding 100 — Lifetime Pro" },
+        },
+        quantity: 1,
+      }]
+    : [{ price: getPriceId(priceKey), quantity: 1 }];
+
+  // automatic_tax is OFF — Stripe's tax calc requires an address on the
+  // Customer (or capturing one in Checkout), and we don't want to gate the
+  // $139 founder purchase on that for a soft launch. Prices are flat; handle
+  // tax manually if/when volume warrants it. allow_promotion_codes + the
+  // invoice_creation block below still apply to both modes.
   // invoice_creation is needed for one-time payments (Stripe auto-invoices
   // subscriptions); without it, prepaid/founder buyers get no receipt.
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: lineItems,
     mode: isRecurring ? ("subscription" as const) : ("payment" as const),
     success_url: successUrl,
     cancel_url: cancelUrl,
     metadata: { userId: dbUser.id, priceKey },
-    automatic_tax: { enabled: true },
     allow_promotion_codes: true,
     ...(isRecurring
       ? {
