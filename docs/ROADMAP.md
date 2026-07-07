@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-07 (duet github-projects-sync spec added at §Then P2; queue.md + tasks/ gap-fills landed alongside. 07-05 sweep: goal-planning shipped; 07-05 trunks in §Shipped: focus redesign Variant F, task page full-field editing, task notes + completion log, design-system token migration, Upcoming top-level nav) -->
+<!-- Last reviewed: 2026-07-07 (duet github-projects-sync spec realigned to upstream Projects-wins model; pinned: flag dropped; queue.md + tasks/ gap-fills landed alongside. 07-05 sweep: goal-planning shipped; 07-05 trunks in §Shipped: focus redesign Variant F, task page full-field editing, task notes + completion log, design-system token migration, Upcoming top-level nav) -->
 
 ---
 
@@ -247,11 +247,14 @@ item; Build pulls `ready`.**
    there is signal: **goal-planning**, then **resources-project-owned**.
 4. Developer-surface work (**cli-pat-plumbing**, then `cli-package` /
    `cli-skills`) remains explicitly opportunistic, not validation-critical.
-5. **Tooling:** **github-projects-sync** (`ready`, P2) — a GitHub Projects board
-   (org `desireco`) mirroring the Duet queue as Now/Next/Later, two-way on
-   structured fields, one-way on prose. Independent of the validation gauntlet;
-   pull when the flat markdown queue starts losing signal (it already is — ~25
-   live units). Gates on a one-time `gh auth refresh -s read:project project`.
+5. **Tooling:** **github-projects-sync** (`ready`, P2, realigned 2026-07-07) —
+   a GitHub Projects board (org `desireco`) as the **management surface** for
+   the Duet queue: Projects owns lifecycle (drag a card → it commits to the
+   file via a `projects_v2_item` Action), markdown owns prose. Matches the duet
+   upstream's locked source-of-truth split. Independent of the validation
+   gauntlet; pull when the flat markdown queue starts losing signal (it already
+   is — ~25 live units). Gates on a one-time `gh auth refresh -s read:project
+   project` + consuming the upstream write-back Action.
 
 ## Shipped
 

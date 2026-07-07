@@ -59,7 +59,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Marketing/public site | `docs/MARKETING.md` + `docs/PUBLIC-PAGES.md` |
 | Deployment / hosting | `docs/research/deployment-research.md` |
 | What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/backlog/` |
-| Duet pull / pin / decompose contract | `docs/queue.md` (round-robin + `pinned:` + `parent:`/`children:` rules) |
+| Duet pull / decompose contract | `docs/queue.md` (round-robin + `parent:`/`children:` rules; steering is via the GH Projects board, not a frontmatter flag) |
 | Capturing a new idea fast ("maybe" bucket) | `scripts/duet-capture.sh "<idea>"` (the intake floor) |
 | Refining a draft toward ready (enrich + decompose) | `duet-refine` skill (Discover sub-mode; operates only on `status: draft`) |
 | Historical context (why past decisions landed) | `docs/ROADMAP.md` §Shipped + `docs/reviews/` (sign-off writeups) |

@@ -17,17 +17,18 @@ does **not** simply take the highest-priority file. It rotates across
 1. Collect every unit with `status: ready` across `specs/`, `backlog/`,
    `tasks/`.
 2. If empty → idle. Do not invent work.
-3. **Pin check (highest precedence).** If exactly one unit has
-   `pinned: true` AND `status: ready`, pull that one — skip the round-robin.
-   If two or more are pinned, stop and surface the conflict (see §Pinning
-   below); do not guess which the user meant.
-4. Pick the kind **least recently claimed** (round-robin). Track is informal:
+3. Pick the kind **least recently claimed** (round-robin). Track is informal:
    if the last three units Build pulled were `spec`, prefer `backlog` or `task`
    next. The point is balance, not a strict clock.
-5. Within that kind, pick highest `priority` (P0 > P1 > P2 > P3).
-6. On priority tie, pick oldest `created:` date (FIFO).
-7. Claim: flip `status: ready → building`, commit. Clear the pin if the pinned
-   unit was the one claimed (the pin served its purpose).
+4. Within that kind, pick highest `priority` (P0 > P1 > P2 > P3).
+5. On priority tie, pick oldest `created:` date (FIFO).
+6. Claim: flip `status: ready → building`, commit.
+
+> **Steering ("do this one next").** There is no `pinned:` frontmatter flag —
+> steering happens on the board. Drag the card to the top of the Roadmap view
+> to set visual sort order, or change its `priority`/`status` on the card (the
+> Projects-wins write-back commits the change to the file). See
+> `docs/specs/github-projects-sync.md` §D6.
 
 ### Discover (Track 1) — pulls `draft` (and unblocks)
 
@@ -75,32 +76,6 @@ kill it (`status: done` with a one-line "decided no") when it doesn't.
 intake floor (default `kind: backlog, priority: P3`). Capture never blocks on
 refinement; drafts queue and refine in priority order via `duet-refine` or
 Discover's main loop.
-
-## Pinning (`pinned: true`)
-
-By default Build auto-selects the next `ready` unit by the round-robin rule
-above. To force "do *this* one next, not auto-pick," add **one line** to the
-unit's frontmatter:
-
-```yaml
-pinned: true        # Build pulls this before any other ready unit; cleared on claim
-```
-
-Rules:
-- **One pin at a time.** If Build finds two `pinned: ready` units, it stops and
-  surfaces the conflict rather than guessing. The human resolves it by removing
-  one pin.
-- **Pin is a hint to Build, not to Discover.** Discover still follows its own
-  priority when refining; a pinned `draft` doesn't change Discover's order.
-- **Pin clears on claim.** Build removes `pinned: true` (or sets `pinned: false`)
-  when it flips the unit `ready → building`. The pin's job is done once it's
-  been respected.
-- **Survives the board.** Under the GitHub Projects sync, `pinned` becomes a
-  checkbox field on the GH item — you can set it by dragging, and two-way sync
-  propagates it back to the file. (See `docs/specs/github-projects-sync.md`.)
-- **Status still must be `ready`.** A pin on a `draft` does nothing — Build only
-  pulls `ready`. Pin a draft to say "refine this first" and Discover will see
-  it; pin a ready to say "build this first" and Build will see it.
 
 ## Decomposition (`parent:` + `children:`)
 
