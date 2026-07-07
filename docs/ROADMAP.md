@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-05 (post-weekend sweep — goal-planning flipped to shipped; 07-05 trunks added to §Shipped: focus redesign Variant F, task page full-field editing, task notes + completion log, design-system token migration, Upcoming top-level nav) -->
+<!-- Last reviewed: 2026-07-07 (duet github-projects-sync spec added at §Then P2; queue.md + tasks/ gap-fills landed alongside. 07-05 sweep: goal-planning shipped; 07-05 trunks in §Shipped: focus redesign Variant F, task page full-field editing, task notes + completion log, design-system token migration, Upcoming top-level nav) -->
 
 ---
 
@@ -247,6 +247,11 @@ item; Build pulls `ready`.**
    there is signal: **goal-planning**, then **resources-project-owned**.
 4. Developer-surface work (**cli-pat-plumbing**, then `cli-package` /
    `cli-skills`) remains explicitly opportunistic, not validation-critical.
+5. **Tooling:** **github-projects-sync** (`ready`, P2) — a GitHub Projects board
+   (org `desireco`) mirroring the Duet queue as Now/Next/Later, two-way on
+   structured fields, one-way on prose. Independent of the validation gauntlet;
+   pull when the flat markdown queue starts losing signal (it already is — ~25
+   live units). Gates on a one-time `gh auth refresh -s read:project project`.
 
 ## Shipped
 

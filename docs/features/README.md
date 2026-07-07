@@ -67,6 +67,7 @@
   - `cli-package` (`draft`) — the `cli/` package; draft because the op-refactor is unscoped.
   - `cli-skills` (`draft`) — four orchestration skills; depends on `cli-package`.
 - [tag-management](./tag-management.md) (`missing`, spec `ready`) — Task-detail tag chips + reserved-name seeding; **unblocks `focus-engine-v2`**.
+- [github-projects-sync](./github-projects-sync.md) (`missing`, spec `ready`) — GitHub Projects board (org `desireco`); two-way sync on structured fields, one-way on prose; `gh_node_id` join; manual CLI for v1.
 
 ### Deliberately not built (Phase 2 / Icebox)
 - Subtasks, Pomodoro timer, email-in capture, AI-tuned suggestions, native mobile,
