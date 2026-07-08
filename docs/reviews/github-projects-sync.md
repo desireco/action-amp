@@ -87,7 +87,13 @@ Commits this session: `duet: github-projects-sync → building`, three `duet: <s
 3. **2 duplicate board items archived** — created during testing when the limit bug caused the push to not see existing items. Canonical IDs preserved in the files; duplicates had no file pointing to them.
 
 ### Spawned
-- **`docs/tasks/duet-archive-recreate.md`** (to file) — Done-condition D's "archive → re-create on push" and "file-delete → card-archive on push" are not implemented in `duet-sync-push.sh`. The push creates items for files lacking them but doesn't handle the reverse directions. Low severity (no one is deleting specs yet), but tracked.
+- **`docs/tasks/duet-archive-recreate.md`** (file committed; board push pending
+  GraphQL rate-limit recovery) — Done-condition D's "archive → re-create on
+  push" and "file-delete → card-archive on push" are not implemented in
+  `duet-sync-push.sh`. The push creates items for files lacking them but
+  doesn't handle the reverse directions. Low severity (no one is deleting
+  specs yet), but tracked. Run `./scripts/duet-sync-push.sh --slug duet-archive-recreate`
+  once the rate limit resets to create its board item.
 
 ### Deferred / rejected
 - **Cold-context reviewer subagents** — skipped. This is scripts + docs, not application code; the executable gates (idempotency, coverage) are stronger evidence than a cold read. Rejected for this review, not a precedent.
