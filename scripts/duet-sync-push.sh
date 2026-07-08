@@ -66,18 +66,24 @@ for cmd in gh python3 git; do
 done
 
 # ─── fetch board state + field metadata once ─────────────────────────────────
-if ! BOARD_JSON="$(gh project item-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json --limit 100 2>/dev/null)"; then
-  echo "✗ gh project item-list failed (token scope? project number?)" >&2
+# Capture stderr so we can surface the real error (rate limit, scope, etc.)
+# instead of guessing. The 2>/dev/null pattern hides transient failures.
+if ! BOARD_JSON="$(gh project item-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json --limit 100 2>/tmp/duet-push.err)"; then
+  echo "✗ gh project item-list failed:" >&2
+  sed 's/^/  /' /tmp/duet-push.err >&2
+  echo "  (common causes: rate-limited GraphQL, missing 'project' token scope, wrong project number)" >&2
   exit 1
 fi
 
-if ! FIELD_META="$(gh project field-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json 2>/dev/null)"; then
-  echo "✗ gh project field-list failed" >&2
+if ! FIELD_META="$(gh project field-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json 2>/tmp/duet-push.err)"; then
+  echo "✗ gh project field-list failed:" >&2
+  sed 's/^/  /' /tmp/duet-push.err >&2
   exit 1
 fi
 
-if ! PROJECT_JSON="$(gh project view "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json 2>/dev/null)"; then
-  echo "✗ gh project view failed (can't resolve project node id)" >&2
+if ! PROJECT_JSON="$(gh project view "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json 2>/tmp/duet-push.err)"; then
+  echo "✗ gh project view failed (can't resolve project node id):" >&2
+  sed 's/^/  /' /tmp/duet-push.err >&2
   exit 1
 fi
 
@@ -375,8 +381,8 @@ for slug, path in units:
             print(f"    title: {title}")
             continue
         item_id = create_draft_item(title, body)
-        # populate fields
-        set_text(item_id, 'Path', rel_path)  # set Path correctly (populate_fields placeholder)
+        # populate fields (Path first, then the rest)
+        set_text(item_id, 'Path', rel_path)
         # set the rest
         status = (fm.get('status') or 'draft').capitalize()
         if status in F['Status']['options']:
