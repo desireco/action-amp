@@ -7,6 +7,7 @@ feature: breadcrumb-nav
 spec_owner: discover
 build_owner: build
 created: 2026-07-03
+priority: P3
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsNL      # sync-managed (write-once)
