@@ -1,0 +1,29 @@
+# ActionAmp
+
+> A focus app that opens to one task — the next thing that matters — not a list.
+
+ActionAmp is a focus app built on a simple bet: the problem isn't capturing
+tasks, it's deciding which one to do next. Every other todo app helps you write
+things down. None of them help you pick. The home screen is a chooser, not a
+list. ADHD is the design muse, not the marketing target.
+
+## Product
+
+- [ActionAmp — landing page](https://actionamp.com/): the whole pitch in one scroll. What it is, how it works, why it exists.
+- [About](https://actionamp.com/about): the thesis — why focus apps optimize capture and nobody optimizes the decision.
+- [Roadmap](https://actionamp.com/roadmap): what's shipped, what's next, in priority order.
+
+## Blog
+
+- [Blog index](https://actionamp.com/blog/): essays on focus, decisions, and doing the next thing. Two streams — Finds (short curated pointers) and Essays (long-form).
+- [Why the list is the problem, not the answer](https://actionamp.com/blog/why-the-list-is-the-problem/): the core thesis essay. Every todo app optimizes capture. None optimize the decision.
+- [The capture trap](https://actionamp.com/blog/the-capture-trap/): writing things down feels like progress. It isn't. Capture is free; the decision is what costs.
+- [Working memory is the real bottleneck](https://actionamp.com/blog/working-memory-is-the-bottleneck/): you have four slots, not ninety-seven. What executive-function research says about prioritization.
+- [A calm GTD setup in 15 minutes](https://actionamp.com/blog/a-calm-gtd-setup-in-15-minutes/): inbox, triage, one goal, one project, one task. The minimum viable system.
+- [RSS feed](https://actionamp.com/rss.xml): all published posts, both streams.
+
+## Optional
+
+- [Privacy](https://actionamp.com/privacy)
+- [Terms](https://actionamp.com/terms)
+- [Founding 100](https://app.actionamp.com/founding-100): lifetime Pro, for the first hundred members.
