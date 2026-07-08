@@ -2,7 +2,7 @@
 id: github-projects-sync
 kind: spec
 title: "GitHub Projects board (Projects-wins sync with Duet markdown)"
-status: ready                # locked 2026-07-07; realigned to duet upstream 2026-07-07
+status: building
 priority: P2
 feature: github-projects-sync
 spec_owner: discover
@@ -11,7 +11,7 @@ created: 2026-07-07
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsZS      # sync-managed (write-once)
-gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-08T19:33:34Z
 ---
 
 # Spec: GitHub Projects board (Projects-wins sync with Duet markdown)
