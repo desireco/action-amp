@@ -2,7 +2,7 @@
 id: blog
 kind: spec
 title: "Blog — two-lane publication with a rotating featured zone"
-status: ready
+status: building
 priority: P1
 feature: blog
 spec_owner: discover
@@ -11,7 +11,7 @@ created: 2026-07-08
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MigEh      # sync-managed (write-once)
-gh_synced_at: 2026-07-08T18:30:00Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-08T15:41:46Z
 ---
 
 # Spec: Blog — two-lane publication with a rotating featured zone
