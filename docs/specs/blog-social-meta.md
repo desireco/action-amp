@@ -2,7 +2,7 @@
 id: blog-social-meta
 kind: spec
 title: "Blog shareability — OG images, Twitter/LinkedIn cards, share buttons"
-status: building
+status: review
 priority: P1
 feature: blog
 spec_owner: discover
