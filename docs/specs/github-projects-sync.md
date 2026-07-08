@@ -2,7 +2,7 @@
 id: github-projects-sync
 kind: spec
 title: "GitHub Projects board (Projects-wins sync with Duet markdown)"
-status: review               # v1 (manual pull+push) complete; Action deferred. See reviews/github-projects-sync.md
+status: done                 # v1 (manual pull+push) shipped + signed off 2026-07-08. Action deferred (D7). See reviews/github-projects-sync.md
 priority: P2
 feature: github-projects-sync
 spec_owner: discover
@@ -11,7 +11,7 @@ created: 2026-07-07
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsZS      # sync-managed (write-once)
-gh_synced_at: 2026-07-08T19:47:30Z
+gh_synced_at: 2026-07-08T21:06:16Z
 ---
 
 # Spec: GitHub Projects board (Projects-wins sync with Duet markdown)
