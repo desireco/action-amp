@@ -63,6 +63,13 @@ price assumes.
 
 ## Priority order
 
+> **Live queue:** [ActionAmp Duet — Roadmap view](https://github.com/users/desireco/projects/5)
+> (grouped by Tier, sorted by Priority). The board is the authoritative index
+> for what's Now / Next / Then / Icebox; the tier lists below are prose
+> context — strategy, reasoning, dependencies — not the hand-maintained index.
+> Drag a card to steer; run `scripts/duet-sync-pull.sh` to write the change
+> back into the file. See `docs/specs/github-projects-sync.md`.
+
 Top = next. Each name matches (or will match) `docs/specs/<feature>.md`.
 Status reflects duet state. **Discover writes the next spec for each `draft`
 item; Build pulls `next` (a human promotes `ready → next` to stage work for Build).**

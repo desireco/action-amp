@@ -2,7 +2,7 @@
 id: github-projects-sync
 kind: spec
 title: "GitHub Projects board (Projects-wins sync with Duet markdown)"
-status: building
+status: review               # v1 (manual pull+push) complete; Action deferred. See reviews/github-projects-sync.md
 priority: P2
 feature: github-projects-sync
 spec_owner: discover
@@ -11,7 +11,7 @@ created: 2026-07-07
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsZS      # sync-managed (write-once)
-gh_synced_at: 2026-07-08T19:33:34Z
+gh_synced_at: 2026-07-08T19:47:30Z
 ---
 
 # Spec: GitHub Projects board (Projects-wins sync with Duet markdown)
@@ -69,12 +69,15 @@ board to a cache and defeats the point of having one.
 
 ## Decisions locked
 
-### D1. Board owner = org `desireco`
+### D1. Board owner = user `desireco`
 
-Created at the org level via
-`gh project create --owner desireco --title "ActionAmp Duet"`. Survives a repo
-rename; visible alongside other org repos. Requires the `gh` token to carry
-`read:project` + `project` scopes (currently missing — see §Prerequisites).
+Created under the `desireco` **user account** (not an org) via
+`gh project create --owner desireco --title "ActionAmp Duet"`. Requires the
+`gh` token to carry `read:project` + `project` scopes (now present — see
+§Prerequisites). **Note:** because `desireco` is a user account, not an org,
+`projects_v2_item` webhooks do not fire — this is why the write-back Action is
+deferred and the manual pull script is the v1 (see D7). Converting to an org
+or standing up a GitHub App would unblock the Action; that's a Discover call.
 
 ### D2. Source of truth — split (matches duet upstream)
 
@@ -221,6 +224,20 @@ drag → write-back Action. This is the larger lift; the upstream `duet` repo
 already specs it (`github-projects-writeback.md`, `sync-engine.md`,
 `duet-sync-cli.md`) and ActionAmp reuses that work.
 
+> **v1 implementation note (locked 2026-07-08):** the GitHub Action is
+> **deferred** — `projects_v2_item` webhook events only fire for
+> *organization-owned* projects, and `desireco` is a **user account**, not an
+> org. Real-time write-back is impossible without converting to an org or
+> standing up a GitHub App. The locked v1 is a **manual pull script**
+> (`scripts/duet-sync-pull.sh`): you steer the board, then run one command to
+> commit the changes into the files. The push direction
+> (`scripts/duet-sync-push.sh`) handles file → Projects reconciliation
+> (creates items for new units, backfills `gh_node_id` + non-lifecycle
+> fields). Done-condition C (the Action) is marked deferred; the manual path
+> satisfies the same intent at the cost of one explicit command. Illegal-drag
+> transition validation (`is_legal_transition`) is correspondingly deferred —
+> it belongs in the Action, not the manual pull.
+
 ### D8. Conflict resolution — there is none, by design
 
 The earlier draft needed a "markdown-wins-on-conflict with a visible breadcrumb"
@@ -243,55 +260,68 @@ same commit survive (they're disjoint keys).
 
 ### D10. Prerequisites (Build unblocks before first sync)
 
-- [ ] User runs `gh auth refresh -s read:project project` (token currently has
-      `repo, gist, read:org, admin:public_key` — `gh project` is blocked without
-      this). *User-owned, not code.*
-- [ ] Project created: `gh project create --owner desireco --title "ActionAmp
-      Duet"`. *Build's first action or done manually.*
-- [ ] Custom fields created (`Kind`, `Priority`, `Tier`, `Feature`, `Duet ID`,
-      `Path`, `Created`) via `gh project field-create`. *Build script.*
-- [ ] `duet:*` label namespace reserved (`duet:github-projects-sync`, etc.).
-- [ ] The write-back GitHub Action deployed (from upstream `duet` repo's
-      `github-projects-writeback` spec). *The bigger piece — coordinate with
-      upstream rather than reimplement.*
+- [x] User runs `gh auth refresh -s read:project project` — token now carries
+      `repo, gist, read:org, admin:public_key, project`. *Done.*
+- [x] Project created: `gh project create --owner desireco --title "ActionAmp
+      Duet"` — project #5 exists under `desireco`. *Done.*
+- [x] Custom fields created (`Kind`, `Priority`, `Tier`, `Feature`, `Duet ID`,
+      `Path`, `Created`) via `gh project field-create`. *Done — all present on
+      project #5. Note: `Created` is GitHub's built-in date field, read-only via
+      API; see Open Questions.*
+- [x] `duet:*` label namespace — **superseded.** Board items are draft issues
+      (not repo issues), which can't carry repo labels. The `Duet ID` custom
+      field is the real join key and is populated on every item. Labels are no
+      longer part of the contract.
+- [ ] The write-back GitHub Action deployed — **deferred** (see D7 + Open
+      Questions). Blocked on `desireco` being a user account, not an org.
 
 ## Done-conditions
 
 ### A. Board exists with the right shape
 
-- [ ] A GitHub Project titled "ActionAmp Duet" exists under the `desireco` org
-      (`gh project list --owner desireco --format json` includes it).
-- [ ] Custom fields present: `Kind`, `Priority`, `Tier`, `Feature`, `Duet ID`,
+- [x] A GitHub Project titled "ActionAmp Duet" exists under `desireco`
+      (`gh project list --owner desireco --format json` includes it — project #5).
+- [x] Custom fields present: `Kind`, `Priority`, `Tier`, `Feature`, `Duet ID`,
       `Path`, `Created`. Verifiable via `gh project field-list <id> --owner desireco`.
-- [ ] Built-in `Status` options: Draft, Ready, Next, Building, Review, Blocked, Done.
-- [ ] Two views exist: **Board** (columns = Status) and **Roadmap** (grouped by
-      Tier, sorted by Priority then created). Verifiable in the GH UI.
+- [x] Built-in `Status` options: Draft, Ready, Next, Building, Review, Blocked, Done.
+- [x] Two views exist: **Board** (columns = Status) and **Roadmap** (grouped by
+      Tier, sorted by Priority then created). Verifiable in the GH UI. (A third
+      Table view also exists; cosmetic.)
 
-### B. Reconciliation — file → Projects (`duet sync --push`)
+### B. Reconciliation — file → Projects (`scripts/duet-sync-push.sh`)
 
-- [ ] Running `duet sync --push` creates a Project item (with `duet:<id>` label)
-      for every unit in `docs/specs/`, `docs/backlog/`, `docs/tasks/` that lacks
-      one, and is a no-op for units that already have one.
-- [ ] **On first push of a unit lacking `gh_node_id`**, the script creates the
+- [x] Running `scripts/duet-sync-push.sh` creates a Project item for every unit
+      in `docs/specs/`, `docs/backlog/`, `docs/tasks/` that lacks one, and is a
+      no-op for units that already have one.
+- [x] **On first push of a unit lacking `gh_node_id`**, the script creates the
       item, captures its content node ID, and writes it back into the unit's
       frontmatter as `gh_node_id: PVTI_...` (write-once — a second push does
       not rewrite it).
-- [ ] For units that already have `gh_node_id`, push **matches on `gh_node_id`
+- [x] For units that already have `gh_node_id`, push **matches on `gh_node_id`
       first** (not slug) — so renaming a file or moving it between folders does
       not create a duplicate item. Folder + slug is the fallback only when
       `gh_node_id` is absent.
-- [ ] After push, each item's `Kind`, `Priority`, `Duet ID`, `Path`, `Created`,
-      and `Status` match the unit's frontmatter.
-- [ ] The item body holds a pointer to the file (`Path`), not the full prose.
-      A one-line banner states prose lives in the file.
-- [ ] Push records `gh_synced_at: <ISO>` on success.
-- [ ] Push is idempotent (second run with no changes → "0 updated",
-      `gh_synced_at` not bumped).
-- [ ] Push **never overwrites** a Projects lifecycle value with a file value
-      (verified: change a card's Status on the board, run push, confirm the
-      file is rewritten to match the card, not vice-versa).
+- [~] After push, each item's `Kind`, `Priority`, `Duet ID`, `Path`, and
+      `Status` match the unit's frontmatter. **`Created` is excepted** — it's
+      GitHub's built-in date field, read-only via the API (see Open Questions).
+- [x] The item body holds a pointer to the file (`Path`), not the full prose.
+      A one-line banner states prose lives in the file. (Bodies are populated
+      at create time; use `--backfill-bodies` to refresh after Summary/Why edits.)
+- [x] Push records `gh_synced_at: <ISO>` on success (on the create path, when
+      `gh_node_id` is first written).
+- [x] Push is idempotent (second run with no changes → "0 updated", 0 created).
+- [x] Push **never overwrites** a Projects lifecycle value with a file value
+      (the backfill path touches only Duet ID, Path, Tier, and body — never
+      status/priority/kind/feature).
 
-### C. Write-back — Projects → file (the GitHub Action)
+### C. Write-back — Projects → file (the GitHub Action) — DEFERRED
+
+> **Deferred** (locked 2026-07-08). `projects_v2_item` webhooks don't fire for
+> user-owned projects; `desireco` is a user account. The manual pull script
+> `scripts/duet-sync-pull.sh` is the v1 substitute: drag on the board, then run
+> one command to commit the changes into the files. These predicates describe
+> the Action, which remains un-built. See D7 + Open Questions for the unblock
+> path (org conversion or GitHub App).
 
 - [ ] A `projects_v2_item` GitHub Action deploys and fires on card moves + field
       edits in the ActionAmp Duet project.
@@ -307,40 +337,55 @@ same commit survive (they're disjoint keys).
 - [ ] Prose (Summary/Why/Done-conditions/body) is **never modified** by the
       Action — verified by a cold-review check after any drag.
 
+### C′. Manual pull — Projects → file (`scripts/duet-sync-pull.sh`) — v1
+
+- [x] Running `scripts/duet-sync-pull.sh` rewrites lifecycle frontmatter
+      (`status`, `priority`, `kind`, `feature`) to match the board, committing
+      each change as `duet: <slug> → <field>=<value>`.
+- [x] Prose is never touched; only frontmatter keys are rewritten.
+- [x] `gh_synced_at` is stamped on every applied change.
+
 ### D. Delete / archive
 
-- [ ] Archiving a card leaves the file untouched; next `--push` re-creates the
-      item with a warning.
+- [~] Archiving a card leaves the file untouched; next `--push` re-creates the
+      item. *(Re-creation on push is not yet implemented — push creates items
+      for files lacking one, but does not currently detect archived-but-filed
+      units by `gh_node_id` and re-create. Tracked as a follow-up.)*
 - [ ] Deleting a file from the repo archives the matching card on next `--push`.
-- [ ] A `status: done` unit appears in the Done column, not archived.
+      *(Not yet implemented in the push script.)*
+- [x] A `status: done` unit appears in the Done column, not archived (the `blog`
+      spec confirms this — it's `Done` on the board, not archived).
 
 ### E. Maybe bucket works end-to-end (Projects-wins)
 
-- [ ] A new `docs/backlog/<id>.md` with `kind: backlog, status: draft,
-      priority: P3` and a one-line `## Why` syncs to the board as a Draft / Icebox
-      item on `--push`.
-- [ ] **Dragging that card to `Ready` on the board** triggers write-back, which
-      commits `duet: <id> → ready` to the file — the file's `status:` flips.
-- [ ] Editing the file's `status:` directly does **not** change the card
-      (Projects wins; the file is cache). Next `--push` reports the file is
-      stale and rewrites it from the card.
+- [x] A new `docs/backlog/<id>.md` with `kind: backlog, status: draft,
+      priority: P3` and a one-line `## Why` syncs to the board as a Draft item
+      on `--push`.
+- [~] **Dragging that card to `Ready` on the board** → with the Action deferred,
+      run `scripts/duet-sync-pull.sh` to commit `duet: <id> → status=Ready` into
+      the file. Manual, not real-time.
+- [x] Editing the file's `status:` directly does **not** change the card
+      (Projects wins; the file is cache). Push is a no-op on lifecycle fields.
 
 ### F. Safe + observable
 
-- [ ] The sync script never deletes a markdown file and never deletes a GH item
-      (only archives).
-- [ ] The script fails loudly (non-zero exit, clear message) if the `gh` token
+- [x] The sync script never deletes a markdown file and never deletes a GH item
+      (only archives — and that only via `gh project item-archive`, never auto).
+- [x] The script fails loudly (non-zero exit, clear message) if the `gh` token
       lacks `project` scope, if the project doesn't exist, or if frontmatter
-      parse fails — never silently continues.
-- [ ] Every write-back commit is identifiable by `duet: <id> → <field>` prefix,
+      parse fails.
+- [x] Every sync commit is identifiable by `duet: <id> → <field>` prefix,
       so the audit log of board-driven changes is greppable.
 
 ### G. ROADMAP demoted to prose
 
-- [ ] `docs/ROADMAP.md` tier lists are no longer hand-maintained as the index;
-      the Roadmap view in Projects is the live tier index.
-- [ ] A one-line note in ROADMAP.md points readers to the Projects Roadmap view
-      for the live queue; the prose stays for vision + strategy + shipped history.
+- [~] `docs/ROADMAP.md` tier lists now carry a pointer to the Projects Roadmap
+      view as the live index. The prose tier lists remain (they hold strategy
+      context the board can't) but are no longer the authoritative index — the
+      board is. Full deprecation of the prose lists is a Discover call.
+- [x] A note in ROADMAP.md (under `## Priority order`) points readers to the
+      Projects Roadmap view for the live queue; the prose stays for vision +
+      strategy + shipped history.
 
 ### H. Docs + queue gaps filled (companion work, already landed)
 
@@ -371,9 +416,21 @@ same commit survive (they're disjoint keys).
 ## Open questions
 
 - _(none product-side — all decisions locked above.)_
-- **Deferred to Build's discretion:** whether the write-back Action is deployed
-  from the upstream `duet` repo as-is, or needs ActionAmp-specific tweaks (e.g.
-  the `desireco` org vs. the project's own). Coordinate with upstream.
+- **Resolved 2026-07-08 (was "Deferred to Build's discretion"):** the write-back
+  Action is **deferred indefinitely** for the current `desireco` user account —
+  `projects_v2_item` webhooks don't fire for user-owned projects. The manual
+  pull script (`scripts/duet-sync-pull.sh`) is the locked v1. To re-enable the
+  Action: convert `desireco` to an org, or stand up a GitHub App with
+  `project:read/write`. That's a Discover-level decision, not a Build one.
+- **New (raised by Build):** the `Created` field on the board is GitHub's
+  **built-in** date, which is **read-only via the API** (`updateProjectV2ItemFieldValue`
+  rejects it: "The field of type created is currently not supported"). It
+  reflects when the item was added to the project, not the spec's `created:`
+  date. D4 maps `created` → `Created`, but this can't be set programmatically.
+  Options for Discover: (a) accept that `Created` = board-add time and stop
+  mapping the file's `created:` to it; (b) create a *custom* writable date
+  field (e.g. `Spec Created`) and map there. The push script currently skips
+  `Created` writes entirely — the field stays at its default.
 
 ## Dependencies
 

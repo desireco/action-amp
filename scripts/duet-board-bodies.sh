@@ -55,7 +55,7 @@ def gh(args):
 
 # ─── fetch board state ───────────────────────────────────────────────────────
 items = json.loads(
-    gh(['project','item-list', PROJECT_NUMBER, '--owner', PROJECT_OWNER, '--format','json'])
+    gh(['project','item-list', PROJECT_NUMBER, '--owner', PROJECT_OWNER, '--format','json', '--limit','100'])
 )['items']
 
 # Build slug → (pvti, di) mapping. Slug comes from the Duet ID field.

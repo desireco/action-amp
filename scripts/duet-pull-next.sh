@@ -58,7 +58,7 @@ for cmd in gh python3 git; do
 done
 
 # ─── fetch board state + field/option IDs ────────────────────────────────────
-if ! BOARD_JSON="$(gh project item-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json 2>/dev/null)"; then
+if ! BOARD_JSON="$(gh project item-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json --limit 100 2>/dev/null)"; then
   echo "✗ gh project item-list failed (token scope? project number?)" >&2
   exit 1
 fi

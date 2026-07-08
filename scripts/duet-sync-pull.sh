@@ -62,7 +62,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 # ─── fetch board state once ──────────────────────────────────────────────────
-if ! BOARD_JSON="$(gh project item-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json 2>/dev/null)"; then
+if ! BOARD_JSON="$(gh project item-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json --limit 100 2>/dev/null)"; then
   echo "✗ gh project item-list failed (token scope? project number?)" >&2
   exit 1
 fi
