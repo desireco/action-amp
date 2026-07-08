@@ -5,10 +5,11 @@ gated_by: matcher-validation.md        # must reach a BUILD verdict first
 depends_on: tag-management.md          # the moment tags need a UI that doesn't exist
 spec_owner: discover
 build_owner: build
+priority: P3
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsYc      # sync-managed (write-once)
-gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-08T19:45:22Z
 ---
 
 # Feature: Focus engine v2 — moment-aware matcher
