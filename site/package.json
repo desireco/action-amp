@@ -10,7 +10,13 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "deploy": "PUBLIC_APP_URL=https://app.actionamp.com PUBLIC_API_URL=https://api.actionamp.com astro build && wrangler pages deploy dist --project-name=actionamp-site --branch=main"
+    "deploy": "PUBLIC_APP_URL=https://app.actionamp.com PUBLIC_API_URL=https://api.actionamp.com astro build && wrangler pages deploy dist --project-name=actionamp-site --branch=main",
+    "duet": "node scripts/duet.mjs",
+    "duet:init": "node scripts/duet.mjs init",
+    "duet:capture": "node scripts/duet.mjs capture",
+    "duet:queue": "node scripts/duet.mjs queue",
+    "duet:set-status": "node scripts/duet.mjs set-status",
+    "duet:validate": "node scripts/duet.mjs validate"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
