@@ -44,14 +44,16 @@ const blog = defineCollection({
       // Author-provided read-time label (e.g. "9 min"). Optional; never computed
       // (non-goal: "No reading-time calculation"). Used only as a display string.
       readTime: z.string().optional(),
-      // Outbound link for finds (the curated pointer). When set, the article page
-      // emphasizes the external source — the whole point of a find. Optional so a
-      // find can stand alone as a note/quote.
-      link: z.string().url().optional(),
-      source: z.string().optional(), // human label for the outbound link host
-      // Reserved for blog-social-meta (the shareability split). Unused here.
-      ogImage: z.string().optional(),
-      socialDescription: z.string().optional(),
+    // Outbound link for finds (the curated pointer). When set, the article page
+    // emphasizes the external source — the whole point of a find. Optional so a
+    // find can stand alone as a note/quote.
+    link: z.string().url().optional(),
+    source: z.string().optional(), // human label for the outbound link host
+    // Reserved for blog-social-meta (the shareability split). ogImage must be a
+    // root-absolute path (e.g. "/og/some-post.png") so it resolves correctly
+    // against the site origin regardless of the article's URL depth.
+    ogImage: z.string().regex(/^\/[^/].*$/).optional(),
+    socialDescription: z.string().optional(),
     })
     // findType is required when kind is "find" (the spec's authoring contract).
     // Ignored for essays. Catches a missing-icon find at build time, not in prod.

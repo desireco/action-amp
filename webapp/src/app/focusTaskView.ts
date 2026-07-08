@@ -21,6 +21,7 @@ export function toFocusTask(task: {
   id: string;
   description: string;
   content?: string | null;
+  outcome?: string | null;
   status: string;
   dueDate?: Date | string | null;
   size?: string | null;
@@ -58,6 +59,7 @@ export function toFocusTask(task: {
     due,
     size: sizeLabel(task.size ?? null),
     content: task.content ?? null,
+    outcome: task.outcome ?? null,
     startedAt: task.startedAt ? new Date(task.startedAt) : null,
     sessionStartedAt: openSession?.startedAt ?? null,
     totalFocusedMs,

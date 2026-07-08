@@ -626,6 +626,13 @@
   border-color: var(--aa-teal);
   background: var(--aa-teal-soft);
 }
+/* Failure state — honest, not alarming. Amber is the human-emphasis accent,
+   used sparingly; a copy failure qualifies. */
+.aa-share-btn.is-failed {
+  color: var(--aa-amber-text);
+  border-color: var(--aa-amber);
+  background: var(--aa-amber-soft);
+}
 
 /* ============================================================
    INLINE ARTICLE FIGURES

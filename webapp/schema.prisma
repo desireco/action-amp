@@ -206,13 +206,18 @@ model Project {
 // Task — the atomic action (THE focus candidate)
 // ============================================================
 // projectId optional: a Task with no Project is "General" in its Lens.
-// content: longer-form notes / markdown body for the task.
+// content: Context — longer-form notes / markdown body (what you need to do
+//           it). Surfaced in Focus mode + Task detail. Reuses Task.content so
+//           no parallel "context" column exists (see docs/specs/task-fields.md).
+// outcome:  Outcome — one authorial note captured at completion (what
+//           happened), read in Logbook + future Review. Markdown like content.
 // updates: an activity log of status notes / progress over time.
 model Task {
   id          String   @id @default(uuid())
   description String // the title — what to do
   permalink   String // stable human-readable route key
-  content     String? // longer notes / markdown body
+  content     String? // Context — longer notes / markdown body
+  outcome     String? // Outcome — captured at completion, read in Logbook/Review
   isDone      Boolean  @default(false)
   createdAt   DateTime @default(now())
   completedAt DateTime?

@@ -48,7 +48,7 @@ const specialLabel = d.contentType === "guide" ? "Guide" : "Offer";
   title={`${d.title} — ActionAmp Blog`}
   description={d.description}
   ogType="article"
-  ogImage={d.ogImage}
+  ogImage={d.ogImage ?? "/og/default.png"}
   socialDescription={d.socialDescription}
   publishedTime={isoPub}
   modifiedTime={isoMod}

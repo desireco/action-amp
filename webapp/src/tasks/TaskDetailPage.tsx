@@ -6,10 +6,11 @@ import {
   getProjects,
   getGoals,
   submitFeedback,
+  setTaskOutcome,
   updateTaskDetails,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, PropertyChips } from "../components/ui";
+import { Button, Markdown, PropertyChips } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { usePropertyKeys } from "../components/ui/usePropertyKeys";
 import {
@@ -55,6 +56,11 @@ export function TaskDetailPage() {
   // footer. Structural fields don't touch this — they live-edit directly.
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
+  // Outcome (task-fields §E/§F): editable on done tasks, written through its
+  // own op (setTaskOutcome) since it's separate from the title+notes Save.
+  const [outcomeDraft, setOutcomeDraft] = useState("");
+  const [outcomeEditing, setOutcomeEditing] = useState(false);
+  const [outcomeSaving, setOutcomeSaving] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState("");
@@ -70,6 +76,8 @@ export function TaskDetailPage() {
     if (!task) return;
     setDescription(task.description);
     setContent(task.content ?? "");
+    setOutcomeDraft(task.outcome ?? "");
+    setOutcomeEditing(false);
     setSaveError(null);
   }, [task]);
 
@@ -190,6 +198,27 @@ export function TaskDetailPage() {
 
   const canSendFeedback =
     feedbackMessage.trim().length > 0 && !feedbackSubmitting;
+
+  // Persist the Outcome note via its own op (separate from the title+notes
+  // Save). Writable on done tasks so a note captured — or skipped — at
+  // completion can be added or revised afterwards (task-fields §F).
+  const saveOutcome = async () => {
+    if (!task || outcomeSaving) return;
+    setOutcomeSaving(true);
+    try {
+      await setTaskOutcome({ taskId: task.id, outcome: outcomeDraft });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["getTask"] }),
+        queryClient.invalidateQueries({ queryKey: ["getLogbook"] }),
+        queryClient.invalidateQueries({ queryKey: ["getDoneToday"] }),
+      ]);
+      setOutcomeEditing(false);
+    } catch {
+      setSaveError("Could not save outcome.");
+    } finally {
+      setOutcomeSaving(false);
+    }
+  };
 
   const sendFeedback = async () => {
     if (!task || !canSendFeedback) return;
@@ -314,9 +343,64 @@ export function TaskDetailPage() {
               {content && (
                 <div className="aa-task-done-panel__notes">
                   <span className="aa-task-label">Notes</span>
-                  <p>{content}</p>
+                  <Markdown>{content}</Markdown>
                 </div>
               )}
+              {/* Outcome — captured at completion, editable here afterwards
+                  (task-fields §F). Empty reads as nothing in the Logbook;
+                  here we show an explicit (optional) field so it's editable. */}
+              <div className="aa-task-done-panel__outcome">
+                <div className="aa-task-done-panel__outcome-head">
+                  <span className="aa-task-label">Outcome</span>
+                  {!outcomeEditing && (
+                    <button
+                      type="button"
+                      className="aa-task-done-panel__outcome-toggle"
+                      onClick={() => setOutcomeEditing(true)}
+                    >
+                      {task.outcome ? "Edit" : "Add outcome"}
+                    </button>
+                  )}
+                </div>
+                {outcomeEditing ? (
+                  <div className="aa-task-done-panel__outcome-editor">
+                    <textarea
+                      className="aa-task-textarea"
+                      aria-label="Task outcome"
+                      value={outcomeDraft}
+                      onChange={(e) => setOutcomeDraft(e.target.value)}
+                      placeholder="What happened?"
+                      rows={4}
+                      disabled={outcomeSaving}
+                    />
+                    <div className="aa-task-done-panel__outcome-actions">
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={() => void saveOutcome()}
+                        disabled={outcomeSaving}
+                      >
+                        {outcomeSaving ? "Saving" : "Save outcome"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setOutcomeDraft(task.outcome ?? "");
+                          setOutcomeEditing(false);
+                        }}
+                        disabled={outcomeSaving}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : task.outcome ? (
+                  <Markdown>{task.outcome}</Markdown>
+                ) : null}
+              </div>
               <div className="aa-task-feedback-inline">
                 <label className="aa-task-label" htmlFor="task-feedback">
                   Feedback

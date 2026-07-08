@@ -12,6 +12,7 @@ import type {
   AddTaskUpdate,
   UpdateTaskContent,
   UpdateTaskDetails,
+  SetTaskOutcome,
   CompleteTaskFromFocus,
 } from "wasp/server/operations";
 import { assertLensAllowed } from "../billing/entitlementHttp";
@@ -131,6 +132,11 @@ export const getDoneToday = (async (args, context) => {
 // ----------------------------------------------------------------
 // Sets completedAt when marking done, clears it when un-done. The Next /
 // Today completion circle calls this; optimistic UI hides the row afterwards.
+//
+// Outcome (task-fields spec §C): an optional `outcome?` may be written *only
+// when marking done* (next === true). Un-completing never clears an existing
+// outcome (toggling open shouldn't blow away a captured note). Empty/whitespace
+// is normalised to null so "cleared" reads as absent downstream.
 export const toggleTaskDone = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
@@ -143,15 +149,22 @@ export const toggleTaskDone = (async (args, context) => {
     throw new Error("Task not found.");
   }
   const next = !task.isDone;
+  const data: Record<string, unknown> = {
+    isDone: next,
+    completedAt: next ? new Date() : null,
+    startedAt: null,
+  };
+  // Outcome is part of the completion act, not the un-completion act. A future
+  // toggle-open preserves any captured note; re-completing with a new note is
+  // last-write-wins.
+  if (next && args.outcome !== undefined) {
+    data.outcome = args.outcome.trim() || null;
+  }
   return await context.entities.Task.update({
     where: { id: args.id },
-    data: {
-      isDone: next,
-      completedAt: next ? new Date() : null,
-      startedAt: null,
-    },
+    data,
   });
-}) satisfies ToggleTaskDone<{ id: string }>;
+}) satisfies ToggleTaskDone<{ id: string; outcome?: string }>;
 
 // ----------------------------------------------------------------
 // Write: move a task between Today / Upcoming / Someday
@@ -460,6 +473,33 @@ export const updateTaskContent = (async (args, context) => {
   { id: string; content: string | null }
 >;
 
+// Edit a task's Outcome — the "what happened" note. Writable anytime from Task
+// detail / Logbook so a note captured (or skipped) at completion can be added
+// or revised afterwards (task-fields spec §C/§F). Empty string → null.
+// Independent of done state: works on complete or incomplete tasks (the read
+// surface chooses when to show it).
+export const setTaskOutcome = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const task = await context.entities.Task.findUnique({
+    where: { id: args.taskId },
+    select: { userId: true },
+  });
+  if (!task || task.userId !== context.user.id) {
+    throw new Error("Task not found.");
+  }
+  const outcome = args.outcome.trim() || null;
+  return await context.entities.Task.update({
+    where: { id: args.taskId },
+    data: { outcome },
+    select: { id: true, outcome: true },
+  });
+}) satisfies SetTaskOutcome<
+  { taskId: string; outcome: string },
+  { id: string; outcome: string | null }
+>;
+
 // Edit the core task fields shown on the task detail page. This is the full
 // "edit task" path; list rows should navigate here instead of editing notes.
 // Title + notes arrive together from the Save footer (buffered prose), while
@@ -604,6 +644,10 @@ export const updateTaskDetails = (async (args, context) => {
 // existing completion without writing a second COMPLETED event. Otherwise, in
 // one transaction: isDone=true, completedAt=now, startedAt=null, and exactly
 // one TaskUpdate(kind=COMPLETED).
+//
+// Outcome (task-fields spec §C/§F): an optional `outcome?` written on the same
+// transaction as the completion — the natural "what happened?" capture moment.
+// Empty/whitespace → null; passing undefined leaves any existing outcome intact.
 export const completeTaskFromFocus = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
@@ -616,7 +660,8 @@ export const completeTaskFromFocus = (async (args, context) => {
     throw new Error("Task not found.");
   }
   // Idempotent: double-clicking Complete must not double-log. Return the
-  // existing completion timestamp; no second event row.
+  // existing completion timestamp; no second event row. (A re-complete with a
+  // fresh outcome uses setTaskOutcome, not this path.)
   if (task.isDone) {
     return { id: args.taskId, completedAt: task.completedAt };
   }
@@ -625,9 +670,17 @@ export const completeTaskFromFocus = (async (args, context) => {
     throw new Error("Start the task before completing it.");
   }
   const completedAt = new Date();
+  const data: Record<string, unknown> = {
+    isDone: true,
+    completedAt,
+    startedAt: null,
+  };
+  if (args.outcome !== undefined) {
+    data.outcome = args.outcome.trim() || null;
+  }
   const updated = await context.entities.Task.update({
     where: { id: args.taskId },
-    data: { isDone: true, completedAt, startedAt: null },
+    data,
     select: { id: true, completedAt: true },
   });
   // Close the open session so the focused time on this segment counts.
@@ -645,6 +698,6 @@ export const completeTaskFromFocus = (async (args, context) => {
   });
   return { id: updated.id, completedAt: updated.completedAt };
 }) satisfies CompleteTaskFromFocus<
-  { taskId: string },
+  { taskId: string; outcome?: string },
   { id: string; completedAt: Date | null }
 >;

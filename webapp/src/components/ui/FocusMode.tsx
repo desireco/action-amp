@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./Button";
+import { CloseButton } from "./CloseButton";
 import { CompletionCircle } from "./CompletionCircle";
-import { ConfirmDialog } from "./ConfirmDialog";
 import { Kbd, submitOnModEnter } from "./keyboard";
+import { Markdown } from "./Markdown";
 import { formatDuration } from "../../shared/timeFormat";
 import "./Overlays.css";
 
@@ -22,6 +23,7 @@ export interface FocusTask {
   due?: string | null;
   size?: string | null;
   content?: string | null;
+  outcome?: string | null;
   startedAt?: Date | null;
   /** When the current open session began (drives the live session clock). */
   sessionStartedAt?: Date | null;
@@ -56,7 +58,10 @@ export function FocusMode({
 }: {
   task: FocusTask;
   onClose: () => void;
-  onComplete?: () => void;
+  /** Called when the user confirms completion. Receives any Outcome note the
+   *  user typed into the completion sheet (empty string = skipped). The parent
+   *  persists it alongside the done toggle. */
+  onComplete?: (outcome: string) => Promise<void> | void;
   onAddNote?: (body: string) => Promise<void> | void;
   onSaveContent?: (content: string) => Promise<void> | void;
 }) {
@@ -77,6 +82,14 @@ export function FocusMode({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [completedLocally, setCompletedLocally] = useState(false);
 
+  // Outcome draft captured at completion (task-fields §F). Non-blocking: the
+  // field appears on the completion sheet, the user can type or skip; either
+  // way the task completes. Preserved across the confirm toggle so opening the
+  // sheet, typing half a thought, and dismissing doesn't lose it within this
+  // focus session.
+  const [outcomeDraft, setOutcomeDraft] = useState("");
+  const outcomeRef = useRef<HTMLTextAreaElement>(null);
+
   // Elapsed-time tick — informational, 15s cadence (slow enough to ignore,
   // fast enough to feel alive). Derived from `task.startedAt`.
   const [, setTick] = useState(0);
@@ -91,7 +104,8 @@ export function FocusMode({
     setDraft("");
     setConfirmOpen(false);
     setCompletedLocally(false);
-  }, [task.id, task.content]);
+    setOutcomeDraft(task.outcome ?? "");
+  }, [task.id, task.content, task.outcome]);
 
   // Elapsed clock ticker.
   useEffect(() => {
@@ -106,6 +120,15 @@ export function FocusMode({
       return () => clearTimeout(id);
     }
   }, [composerOpen]);
+
+  // Focus the Outcome field when the completion sheet opens — typing the note
+  // is the expected path; the user can skip with Enter/Complete.
+  useEffect(() => {
+    if (confirmOpen) {
+      const id = setTimeout(() => outcomeRef.current?.focus(), 60);
+      return () => clearTimeout(id);
+    }
+  }, [confirmOpen]);
 
   // Session clock — elapsed since the current open session began (resets on
   // each Start). Falls back to startedAt for the rare case where a task has
@@ -204,10 +227,13 @@ export function FocusMode({
   const handleConfirm = () => {
     // Optimistic payoff: circle fills, title strikes. The parent's
     // onComplete then awaits the server + navigates; if it's slow the
-    // user sees the payoff, if fast they're already moving.
+    // user sees the payoff, if fast they're already moving. Pass the Outcome
+    // draft (may be empty — skipped is a first-class choice).
+    const note = outcomeDraft.trim();
     setConfirmOpen(false);
     setCompletedLocally(true);
-    onComplete?.();
+    setOutcomeDraft("");
+    void onComplete?.(note);
   };
 
   const openConfirm = () => {
@@ -337,7 +363,9 @@ export function FocusMode({
               </div>
             </div>
           ) : content ? (
-            <div className="aa-focus__content">{content}</div>
+            <div className="aa-focus__content">
+              <Markdown>{content}</Markdown>
+            </div>
           ) : (
             <p className="aa-focus__content-empty">No task notes yet.</p>
           )}
@@ -434,22 +462,74 @@ export function FocusMode({
         </div>
       )}
 
-      {/* Completion confirm — calm, never blocking. */}
+      {/* Completion sheet — Outcome capture at the moment of completion
+          (task-fields §F). Non-blocking: the note is optional, Enter/Complete
+          skips it in one keystroke; typing + ⌘↵ posts both in one motion. */}
       {confirmOpen && (
-        <ConfirmDialog
-          title="Mark this done?"
-          message={
-            sessionElapsedMs !== null
-              ? totalMs > 0
-                ? `${formatDuration(sessionElapsedMs)} this session · ${formatDuration(totalMs)} total`
-                : `${formatDuration(sessionElapsedMs)} this session`
-              : "This will mark the task complete."
-          }
-          confirmLabel="Complete"
-          cancelLabel="Not yet"
-          onConfirm={handleConfirm}
-          onClose={() => setConfirmOpen(false)}
-        />
+        <div
+          className="aa-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Complete task"
+          onClick={() => setConfirmOpen(false)}
+        >
+          <div
+            className="aa-overlay-card aa-overlay-card--sm aa-confirm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="aa-confirm__head">
+              <h2 className="aa-confirm__title">Mark this done?</h2>
+              <CloseButton onClose={() => setConfirmOpen(false)} />
+            </div>
+
+            <div className="aa-confirm__body">
+              <p className="aa-confirm__meta">
+                {sessionElapsedMs !== null
+                  ? totalMs > 0
+                    ? `${formatDuration(sessionElapsedMs)} this session · ${formatDuration(totalMs)} total`
+                    : `${formatDuration(sessionElapsedMs)} this session`
+                  : "This will mark the task complete."}
+              </p>
+              <div className="aa-confirm__outcome">
+                <label
+                  className="aa-confirm__outcome-label"
+                  htmlFor="aa-focus-outcome"
+                >
+                  Outcome
+                  <span className="aa-confirm__outcome-hint">optional</span>
+                </label>
+                <textarea
+                  ref={outcomeRef}
+                  id="aa-focus-outcome"
+                  className="aa-confirm__outcome-input"
+                  placeholder="What happened?"
+                  value={outcomeDraft}
+                  onChange={(e) => setOutcomeDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    // ⌘↵ / Ctrl+↵ completes with the note. Plain Enter inserts a
+                    // newline — multi-line outcomes are expected, so we don't
+                    // bind bare Enter to "complete."
+                    submitOnModEnter(e, () => handleConfirm());
+                  }}
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="aa-confirm__foot">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setConfirmOpen(false)}
+              >
+                Not yet
+              </Button>
+              <Button variant="primary" size="sm" onClick={handleConfirm}>
+                Complete
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

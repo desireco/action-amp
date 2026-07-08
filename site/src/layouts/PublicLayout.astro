@@ -17,11 +17,12 @@ interface Props {
   // need a wider canvas (the blog index's two-lane grid). Article pages keep it.
   fullWidth?: boolean;
   // --- Social share meta (blog-social-meta) ---
-  // OG image path relative to site root (e.g. "/og/default.png"). Defaults to
-  // the branded default. socialDescription overrides `description` in share
-  // tags only (og/twitter:description), letting share copy differ from SEO copy.
+  // OG image path (root-absolute, e.g. "/og/default.png"). No default — pages
+  // that don't pass one render without og:image. The blog article page passes
+  // "/og/default.png" explicitly (the branded blog default), so non-blog pages
+  // (privacy/terms/etc.) aren't given a blog-branded card. Per spec non-goal:
+  // "No work outside /blog."
   ogImage?: string;
-  ogImageAlt?: string;
   socialDescription?: string;
   twitterCard?: "summary" | "summary_large_image";
   // Article-specific OG tags (LinkedIn rich previews). Only emitted when
@@ -36,8 +37,7 @@ const {
   description,
   ogType = "website",
   fullWidth = false,
-  ogImage = "/og/default.png",
-  ogImageAlt,
+  ogImage,
   socialDescription,
   twitterCard = ogType === "article" ? "summary_large_image" : "summary",
   publishedTime,
@@ -50,11 +50,9 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
 const siteUrl = Astro.site ?? "https://actionamp.com";
 const canonical = new URL(Astro.url.pathname, siteUrl);
 // Social crawlers need absolute URLs for og:image / twitter:image.
-const ogImageUrl = new URL(ogImage, siteUrl).href;
+const ogImageUrl = ogImage ? new URL(ogImage, siteUrl).href : undefined;
 // socialDescription wins for share tags; falls back to the SEO description.
 const shareDescription = socialDescription ?? description;
-// og:image:alt falls back to the title (per spec: "title is enough").
-const ogImageAltText = ogImageAlt ?? title;
 ---
 
 <!doctype html>
@@ -77,28 +75,25 @@ const ogImageAltText = ogImageAlt ?? title;
     <meta property="og:url" content={canonical} />
     <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content="ActionAmp" />
-    <meta property="og:image" content={ogImageUrl} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={ogImageAltText} />
-    {/* Article-specific OG (LinkedIn rich previews) — only on article pages. */}
-    {ogType === "article" && publishedTime && (
-      <meta property="article:published_time" content={publishedTime} />
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+    {ogImageUrl && <meta property="og:image:width" content="1200" />}
+    {ogImageUrl && <meta property="og:image:height" content="630" />}
+    {ogImageUrl && <meta property="og:image:alt" content={title} />}
+    {/* Article-specific OG (LinkedIn rich previews) — emitted as a block only
+        on article pages. Keeps the head readable and gates once, not four times. */}
+    {ogType === "article" && (publishedTime || modifiedTime || author || tags) && (
+      <Fragment>
+        {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+        {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+        {author && <meta property="article:author" content={author} />}
+        {tags && tags.map((t) => <meta property="article:tag" content={t} />)}
+      </Fragment>
     )}
-    {ogType === "article" && modifiedTime && (
-      <meta property="article:modified_time" content={modifiedTime} />
-    )}
-    {ogType === "article" && author && (
-      <meta property="article:author" content={author} />
-    )}
-    {ogType === "article" && tags && tags.map((t) => (
-      <meta property="article:tag" content={t} />
-    ))}
     <!-- Twitter / X -->
     <meta name="twitter:card" content={twitterCard} />
     <meta name="twitter:title" content={title} />
     {shareDescription && <meta name="twitter:description" content={shareDescription} />}
-    <meta name="twitter:image" content={ogImageUrl} />
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
   </head>
   <body>
     <div class="aa-public">

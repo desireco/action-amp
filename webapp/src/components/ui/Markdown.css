@@ -1,0 +1,149 @@
+/* Markdown — shared typography for user-authored content (Context + Outcome).
+   Sits inside Focus notes, Task detail, and Logbook rows. Stays calm: neutral
+   text scale, teal reserved for links/state, amber never decorative.
+   Mirrors the Things DNA in DESIGN.md: prose that reads like the app, not like
+   a rendered GitHub README. */
+
+.aa-md {
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-relaxed);
+  color: var(--aa-text);
+}
+
+.aa-md > *:first-child {
+  margin-top: 0;
+}
+
+.aa-md > *:last-child {
+  margin-bottom: 0;
+}
+
+.aa-md p {
+  margin: 0 0 var(--aa-space-sm);
+}
+
+.aa-md h1,
+.aa-md h2,
+.aa-md h3,
+.aa-md h4 {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
+  line-height: var(--aa-leading-snug);
+  margin: var(--aa-space-lg) 0 var(--aa-space-sm);
+  color: var(--aa-text);
+}
+
+.aa-md h1 {
+  font-size: var(--aa-text-lg);
+}
+
+.aa-md h2 {
+  font-size: var(--aa-text-md);
+}
+
+.aa-md ul,
+.aa-md ol {
+  margin: 0 0 var(--aa-space-sm);
+  padding-left: 1.4em;
+}
+
+.aa-md li {
+  margin: 2px 0;
+}
+
+.aa-md li > p {
+  margin: 0;
+}
+
+/* Task-list checkboxes (GFM `- [ ]`). Read-only — editing lives in the
+   textarea, not here. Subtle so a checklist reads as content, not chrome. */
+.aa-md input[type="checkbox"] {
+  margin-right: 0.5em;
+  accent-color: var(--aa-teal);
+}
+
+.aa-md a {
+  color: var(--aa-text);
+  text-decoration: underline;
+  text-decoration-color: var(--aa-text-4);
+  text-underline-offset: 2px;
+  transition: color var(--aa-dur-fast) var(--aa-ease-out),
+    text-decoration-color var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-md a:hover {
+  color: var(--aa-teal-cta);
+  text-decoration-color: var(--aa-teal);
+}
+
+.aa-md strong {
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+}
+
+.aa-md em {
+  font-style: italic;
+}
+
+.aa-md del {
+  color: var(--aa-text-3);
+}
+
+.aa-md blockquote {
+  margin: 0 0 var(--aa-space-sm);
+  padding: 2px 0 2px var(--aa-space-sm);
+  border-left: 2px solid var(--aa-border-strong);
+  color: var(--aa-text-2);
+}
+
+.aa-md blockquote > *:last-child {
+  margin-bottom: 0;
+}
+
+.aa-md code {
+  font-family: var(--aa-font-mono);
+  font-size: 0.85em;
+  background: var(--aa-surface-muted);
+  padding: 1px 5px;
+  border-radius: var(--aa-radius-xs);
+}
+
+.aa-md pre {
+  margin: 0 0 var(--aa-space-sm);
+  padding: var(--aa-space-sm);
+  background: var(--aa-surface-muted);
+  border-radius: var(--aa-radius-sm);
+  overflow-x: auto;
+}
+
+.aa-md pre code {
+  background: none;
+  padding: 0;
+  font-size: var(--aa-text-sm);
+}
+
+.aa-md hr {
+  border: none;
+  border-top: 1px solid var(--aa-border);
+  margin: var(--aa-space-md) 0;
+}
+
+/* Tables (GFM). Compact; the surface around them scrolls on overflow. */
+.aa-md table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 var(--aa-space-sm);
+  font-size: var(--aa-text-sm);
+}
+
+.aa-md th,
+.aa-md td {
+  text-align: left;
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+  border-bottom: 1px solid var(--aa-border);
+}
+
+.aa-md th {
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text-2);
+}

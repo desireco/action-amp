@@ -47,8 +47,10 @@ export function FocusPage() {
     <FocusMode
       task={toFocusTask(task)}
       onClose={() => navigate("/app")}
-      onComplete={async () => {
-        await completeTaskFromFocus({ taskId: task.id });
+      onComplete={async (outcome) => {
+        await completeTaskFromFocus(
+          outcome ? { taskId: task.id, outcome } : { taskId: task.id },
+        );
         refreshTaskState();
         navigate("/app");
       }}

@@ -96,6 +96,60 @@
   margin: var(--aa-space-xs) 0 var(--aa-space-lg);
 }
 
+/* The session-time summary that precedes the Outcome field on the completion
+   sheet. Quiet — it's context, not the focus. */
+.aa-confirm__meta {
+  margin: 0 0 var(--aa-space-sm);
+}
+
+/* Outcome capture at completion (task-fields §F). Lives inside the completion
+   sheet so the note is tied to the act of finishing. The label carries an
+   "optional" hint so the field never feels mandatory. */
+.aa-confirm__outcome {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aa-confirm__outcome-label {
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-2);
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-xs);
+}
+
+.aa-confirm__outcome-hint {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-regular);
+  color: var(--aa-text-4);
+}
+
+.aa-confirm__outcome-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 4.5em;
+  padding: var(--aa-space-sm);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  font: inherit;
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-normal);
+}
+
+.aa-confirm__outcome-input:focus {
+  outline: none;
+  border-color: var(--aa-teal);
+  box-shadow: var(--aa-focus-ring);
+}
+
+.aa-confirm__outcome-input::placeholder {
+  color: var(--aa-text-4);
+}
+
 .aa-confirm__foot {
   display: flex;
   align-items: center;
