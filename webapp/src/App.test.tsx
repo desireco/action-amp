@@ -18,7 +18,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
  *
  * Note: we don't use renderInContext here. That helper hardcodes BrowserRouter
  * and a fresh QueryClient; this test needs a MemoryRouter (to set the initial
- * entry to /app and observe the redirect to /) and a mocked useAuth.
+ * entry to /app and observe the redirect to /login) and a mocked useAuth.
  */
 
 // The shape Wasp's useAuth() returns (a TanStack UseQueryResult<AuthUser|null>).
@@ -42,9 +42,9 @@ vi.mock("wasp/client/auth", () => ({
 // Importing App AFTER vi.mock so it picks up the mocked useAuth.
 const { App } = await import("./App");
 
-/** A landing marker rendered at "/", so we can assert a redirect landed there. */
-function LandingMarker() {
-  return <div data-testid="landing-marker">landing</div>;
+/** A login marker rendered at "/login", so we can assert redirect target. */
+function LoginMarker() {
+  return <div data-testid="login-marker">login</div>;
 }
 
 /** A minimal child that the shell's Outlet renders for an /app route. */
@@ -53,8 +53,8 @@ function AppChild() {
 }
 
 /**
- * Render App as a layout route with a /app/* child, plus a / landing route so
- * the gate's <Navigate to="/" /> has somewhere to land that we can observe.
+ * Render App as a layout route with a /app/* child, plus a /login route so
+ * the gate's <Navigate to="/login" /> has somewhere to land that we can observe.
  * `initialPath` lets a caller start at /app (the path the gate guards).
  */
 function renderAt(initialPath: string) {
@@ -66,7 +66,7 @@ function renderAt(initialPath: string) {
             <Route path="/app" element={<AppChild />} />
             <Route path="/app/*" element={<AppChild />} />
           </Route>
-          <Route path="/" element={<LandingMarker />} />
+          <Route path="/login" element={<LoginMarker />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -111,25 +111,25 @@ describe("App auth gate", () => {
     expect(screen.getByTestId("app-child")).toBeInTheDocument();
   });
 
-  it("redirects to / when the session resolves but there is no user", () => {
+  it("redirects to /login when the session resolves but there is no user", () => {
     mockUseAuthReturn = { data: null, status: "success" };
     renderAt("/app");
 
-    // No shell chrome, no app child — redirected to the landing marker.
+    // No shell chrome, no app child — redirected to login, not marketing root.
     expect(document.querySelector(".aa-app-brand")).not.toBeInTheDocument();
     expect(screen.queryByTestId("app-child")).not.toBeInTheDocument();
-    expect(screen.getByTestId("landing-marker")).toBeInTheDocument();
+    expect(screen.getByTestId("login-marker")).toBeInTheDocument();
   });
 
   it("renders nothing interactive while the session is still loading", () => {
     mockUseAuthReturn = { data: null, status: "loading" };
     renderAt("/app");
 
-    // No shell chrome and NOT redirected to / either — just waiting. (The gate
-    // returns null during loading; the landing route only renders after a
+    // No shell chrome and NOT redirected to /login either — just waiting. (The gate
+    // returns null during loading; the login route only renders after a
     // successful resolve-to-null.)
     expect(document.querySelector(".aa-app-brand")).not.toBeInTheDocument();
     expect(screen.queryByTestId("app-child")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("landing-marker")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("login-marker")).not.toBeInTheDocument();
   });
 });

@@ -29,12 +29,12 @@ export function App() {
   // during session resolution and when the session is stale/null — letting the
   // user fire auth-required actions that 500 ("Not authenticated") or 401
   // ("Invalid credentials"). So we gate at the layout too: wait for the session
-  // to resolve, and send a resolved-but-null user to "/" rather than a broken
+  // to resolve, and send a resolved-but-null user to "/login" rather than a broken
   // /app. Mirrors the per-page gate's behavior (same `status` field) but one
   // level up, where the chrome lives. Scoped to /app* — public pages stay bare.
   if (isApp) {
     if (status === "loading") return null;
-    if (!user) return <Navigate to="/" replace />;
+    if (!user) return <Navigate to="/login" replace />;
   }
 
   // First-run redirect: send brand-new users to onboarding before /app.

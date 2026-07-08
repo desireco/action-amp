@@ -13,6 +13,14 @@ import { useEffect } from "react";
  */
 export function RedirectToMarketing() {
   useEffect(() => {
+    const isLocal =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "::1";
+    if (isLocal) {
+      window.location.replace("/login");
+      return;
+    }
     window.location.replace("https://actionamp.com");
   }, []);
   return null;
