@@ -2,7 +2,7 @@
 id: gtm-stripe-prod
 kind: backlog
 title: "Verify Stripe is in production mode (prod keys + webhook signature)"
-status: ready
+status: Next
 priority: P1
 spec_owner: user
 build_owner: user
@@ -11,7 +11,7 @@ created: 2026-07-03
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4Mgslb      # sync-managed (write-once)
-gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-08T19:45:22Z
 ---
 
 # Stripe production verification
