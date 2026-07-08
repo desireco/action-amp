@@ -77,7 +77,7 @@ async function sendWelcomeEmail(user: {
       identities.google = { id: identity.providerUserId };
   }
 
-  const email = buildWelcomeEmail({ ...user, identities });
+  const email = await buildWelcomeEmail({ ...user, identities });
   if (!email) return;
 
   // ponytail: string-concat the module path so `wasp compile` doesn't try to

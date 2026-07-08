@@ -1,6 +1,7 @@
 import type { SubmitFeedback } from "wasp/server/operations";
 import { PrismaClient } from "@prisma/client";
 import { getAdminEmail, shouldSendFeedbackEmail } from "./config";
+import { renderFeedbackEmailHtml } from "../email/FeedbackEmail";
 
 type FeedbackSection = "work" | "plan" | "review";
 
@@ -35,7 +36,7 @@ function cleanOptional(value: string | null | undefined, max = 500) {
   return trimmed ? trimmed.slice(0, max) : null;
 }
 
-function buildFeedbackEmail(feedback: FeedbackEmailInput) {
+async function buildFeedbackEmail(feedback: FeedbackEmailInput) {
   const adminEmail = getAdminEmail();
   const lines = [
     "New ActionAmp feedback",
@@ -54,27 +55,8 @@ function buildFeedbackEmail(feedback: FeedbackEmailInput) {
     to: adminEmail,
     subject: "ActionAmp feedback",
     text: lines.join("\n"),
-    html: `
-      <p><strong>New ActionAmp feedback</strong></p>
-      <p>
-        From: ${escapeHtml(feedback.userName || "Unknown")}${feedback.userEmail ? ` &lt;${escapeHtml(feedback.userEmail)}&gt;` : ""}<br />
-        Feedback ID: ${escapeHtml(feedback.id)}<br />
-        Route: ${escapeHtml(feedback.route || "-")}<br />
-        Section: ${escapeHtml(feedback.section || "-")}<br />
-        Lens: ${escapeHtml(feedback.lensName || "-")}${feedback.lensColor ? ` (${escapeHtml(feedback.lensColor)})` : ""}<br />
-        User agent: ${escapeHtml(feedback.userAgent || "-")}
-      </p>
-      <p>${escapeHtml(feedback.message).replace(/\n/g, "<br />")}</p>
-    `,
+    html: await renderFeedbackEmailHtml(feedback),
   };
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 async function getUserEmail(userId: string) {
@@ -96,7 +78,7 @@ async function maybeSendFeedbackEmail(feedback: FeedbackEmailInput) {
 
   const emailModule = "wasp/server/" + "email";
   const { emailSender } = await import(emailModule);
-  await emailSender.send(buildFeedbackEmail(feedback));
+  await emailSender.send(await buildFeedbackEmail(feedback));
 }
 
 export const submitFeedback = (async (args: SubmitFeedbackArgs, context) => {
@@ -117,7 +99,10 @@ export const submitFeedback = (async (args: SubmitFeedbackArgs, context) => {
     where: { id: userId },
     select: { fullName: true },
   });
-  const userName = cleanOptional(userRow?.fullName ?? context.user.fullName ?? null, 160);
+  const userName = cleanOptional(
+    userRow?.fullName ?? context.user.fullName ?? null,
+    160,
+  );
   let userEmail: string | null = null;
   try {
     userEmail = await getUserEmail(userId);

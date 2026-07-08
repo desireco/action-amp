@@ -9,18 +9,21 @@
     "deploy": "wasp deploy railway deploy action-amp --existing-project-id afda37a6-287f-4c81-b1db-65fc9d2dcb6f --custom-server-url https://api.actionamp.com",
     "test": "vitest run",
     "test:watch": "vitest",
+    "email:dev": "email dev --dir src/email/previews",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
+    "react-email": "^6.6.5",
     "react-router": "^7.12.0",
     "stripe": "^22.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
     "@playwright/test": "^1.61.0",
+    "@react-email/ui": "^6.6.5",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
