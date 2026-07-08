@@ -10,8 +10,8 @@ build_owner: build
 created: 2026-07-08
 
 # sync-managed (do not hand-edit; written by duet sync):
-# gh_node_id:    # populated on first sync
-# gh_synced_at:  # populated on sync
+gh_node_id: PVTI_lAHN6NzOAXMArs4MigHK      # sync-managed (write-once)
+gh_synced_at: 2026-07-08T18:30:00Z   # sync-managed (drift detection)
 ---
 
 # Spec: Blog shareability — OG images, Twitter/LinkedIn cards, share buttons
