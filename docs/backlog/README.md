@@ -1,6 +1,6 @@
 # Backlog (non-feature work)
 
-> Same lifecycle as specs (`draft → ready → building → review → done`), but for
+> Same lifecycle as specs (`draft → ready → next → building → review → done`), but for
 > **non-feature work**: setup, decisions, ops, research, infrastructure, and
 > code-side test/bug gaps that don't fit a feature spec. These units carry the
 > same frontmatter as specs and appear in the same queue.

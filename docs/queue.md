@@ -12,17 +12,27 @@ When polling `docs/{specs,backlog,tasks}/` for the next unit to work, a track
 does **not** simply take the highest-priority file. It rotates across
 **kinds**, so no kind starves. Within a kind, priority + age break ties.
 
-### Build (Track 2) — pulls `ready`
+### Build (Track 2) — pulls `next`
 
-1. Collect every unit with `status: ready` across `specs/`, `backlog/`,
-   `tasks/`.
-2. If empty → idle. Do not invent work.
+1. Collect every unit with `status: next` across `specs/`, `backlog/`,
+   `tasks/`. (If none, Build **does not fall back to `ready`** — see "the two
+   states" below.)
+2. If empty → idle. Do not invent work. Surface that the Next column is empty
+   and there are N `ready` items awaiting promotion.
 3. Pick the kind **least recently claimed** (round-robin). Track is informal:
    if the last three units Build pulled were `spec`, prefer `backlog` or `task`
    next. The point is balance, not a strict clock.
 4. Within that kind, pick highest `priority` (P0 > P1 > P2 > P3).
 5. On priority tie, pick oldest `created:` date (FIFO).
-6. Claim: flip `status: ready → building`, commit.
+6. Claim: flip `status: next → building`, commit.
+
+> **The two states — `ready` vs `next`.** Discover locks work to `ready`; the
+> human curates a shortlist by promoting `ready → next`. Build pulls **only
+> from `next`**. This separates "this is buildable" (Discover's call) from
+> "do this soon" (the human's call) — so a growing `ready` backlog doesn't
+> dilute focus, and the human steers by dragging one column on the board, not
+> by reprioritizing everything. If `next` is empty, Build idles rather than
+> grabbing arbitrary `ready` work.
 
 > **Steering ("do this one next").** There is no `pinned:` frontmatter flag —
 > steering happens on the board. Drag the card to the top of the Roadmap view
@@ -124,12 +134,15 @@ Rules:
 
 Every unit carries one of:
 
-| `status` | Meaning | Discover owns? | Build owns? |
-|---|---|---|---|
-| `draft` | being refined / maybe | ✓ (creates + refines) | — |
-| `ready` | done-conditions testable, locked | ✓ (flips to ready) | — (pulls from here) |
-| `building` | Build is implementing | — | ✓ (claims) |
-| `review` | code gated, awaiting sign-off | reads `reviews/` | ✓ (writes review, flips) |
-| `blocked` | spec ambiguous or wrong | ✓ (resolves Open Qs) | ✓ (raises, flips) |
-| `done` | shipped + signed off | ✓ (signs off → done) | — |
-| `deferred` | parked, not killed | ✓ | — |
+| `status` | Meaning | Discover owns? | Build owns? | Human owns? |
+|---|---|---|---|---|
+| `draft` | being refined / maybe | ✓ (creates + refines) | — | — |
+| `ready` | done-conditions testable, locked | ✓ (flips to ready) | — | — |
+| `next` | staged for Build — the curated pull queue | — | ✓ (pulls from here) | ✓ (promotes ready → next) |
+| `building` | Build is implementing | — | ✓ (claims) | — |
+| `review` | code gated, awaiting sign-off | reads `reviews/` | ✓ (writes review, flips) | — |
+| `blocked` | spec ambiguous or wrong | ✓ (resolves Open Qs) | ✓ (raises, flips) | — |
+| `done` | shipped + signed off | ✓ (signs off → done) | — | — |
+| `deferred` | parked, not killed | ✓ | — | — |
+
+**Status flow:** `draft` → (Discover locks) → `ready` → (human promotes) → `next` → (Build claims) → `building` → (Build gates) → `review` → (Discover signs off) → `done`. Any state can flip to `blocked` or `deferred`.

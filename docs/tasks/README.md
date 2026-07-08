@@ -1,6 +1,6 @@
 # Tasks & bugs (review-spawned + small fixes)
 
-> Same lifecycle as specs (`draft → ready → building → review → done`), same
+> Same lifecycle as specs (`draft → ready → next → building → review → done`), same
 > frontmatter, but for **granular work**: bugs, small tasks, and findings
 > spawned from a review that are out-of-scope for the spec under review but
 > worth doing. Referenced by both Duet skills and `docs/backlog/README.md`;
@@ -21,7 +21,7 @@ spawned this unit:
 id: <slug>
 kind: task               # task | bug
 title: "<human-readable>"
-status: draft            # draft → ready → building → review → done | blocked
+status: draft            # draft → ready → next → building → review → done | blocked
 priority: P2             # severity-weighted: P0 = prod-down, P3 = cosmetic
 feature: <slug|null>     # the feature this touches, if any
 parent: <review-id|spec-id>   # the review or spec that spawned this

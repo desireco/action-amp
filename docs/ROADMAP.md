@@ -65,7 +65,7 @@ price assumes.
 
 Top = next. Each name matches (or will match) `docs/specs/<feature>.md`.
 Status reflects duet state. **Discover writes the next spec for each `draft`
-item; Build pulls `ready`.**
+item; Build pulls `next` (a human promotes `ready → next` to stage work for Build).**
 
 ### Now (the validation gauntlet — do these before anything new)
 

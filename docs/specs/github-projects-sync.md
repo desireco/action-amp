@@ -143,7 +143,7 @@ Title/Status:
 | `id` | label `duet:<id>` + `Duet ID` text | text | the human-visible join |
 | `kind` | `Kind` | single-select | `spec \| backlog \| task \| bug` |
 | `title` | issue title | text | `<id>: <title>` |
-| `status` | `Status` (built-in) | single-select | `draft \| ready \| building \| review \| done \| blocked` — cache; Projects wins |
+| `status` | `Status` (built-in) | single-select | `draft \| ready \| next \| building \| review \| done \| blocked` — cache; Projects wins |
 | `priority` | `Priority` | single-select | `P0 \| P1 \| P2 \| P3` — cache; Projects wins |
 | `feature` | `Feature` | text | slug; null if cross-cutting |
 | `parent` | `Parent` text / sub-issue link | link | tasks/bugs/children only |
@@ -155,8 +155,8 @@ Title/Status:
 
 ### D5. Two views on one project
 
-1. **"Board" view** — columns = Status (Draft / Ready / Building / Review /
-   Blocked / Done). The kanban. Default view.
+1. **"Board" view** — columns = Status (Draft / Ready / Next / Building /
+   Review / Blocked / Done). The kanban. Default view.
 2. **"Roadmap" view** — grouped by Tier (Now / Next / Later / Icebox), sorted by
    Priority then created-date. This is the Now/Next/Later surface the user asked
    for, **and it replaces `docs/ROADMAP.md`'s tier lists as the live index**.
@@ -263,7 +263,7 @@ same commit survive (they're disjoint keys).
       (`gh project list --owner desireco --format json` includes it).
 - [ ] Custom fields present: `Kind`, `Priority`, `Tier`, `Feature`, `Duet ID`,
       `Path`, `Created`. Verifiable via `gh project field-list <id> --owner desireco`.
-- [ ] Built-in `Status` options: Draft, Ready, Building, Review, Blocked, Done.
+- [ ] Built-in `Status` options: Draft, Ready, Next, Building, Review, Blocked, Done.
 - [ ] Two views exist: **Board** (columns = Status) and **Roadmap** (grouped by
       Tier, sorted by Priority then created). Verifiable in the GH UI.
 
