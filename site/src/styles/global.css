@@ -11,6 +11,23 @@
 @import "./tokens.css";
 
 /* ============================================================
+   Display headline primitives — shared by the landing page and any
+   surface that uses the marketing two-weight headline treatment.
+   Hoisted here so blog/about/etc. can reuse .aa-light without importing
+   landing.css. Landing.css still defines them too (harmless dup); the
+   canonical copy lives here.
+   ============================================================ */
+.aa-light {
+  font-weight: 300;
+  color: var(--aa-text-3);
+}
+.aa-accent {
+  color: var(--aa-teal-cta);
+  font-style: italic;
+  font-weight: 700;
+}
+
+/* ============================================================
    Public layout + markdown rendering styles
    (ported from webapp/src/shared/PublicLayout.css)
    ============================================================ */
