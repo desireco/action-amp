@@ -5,6 +5,7 @@ reconciles_with: cli-comments-resources.md   # the CLI spec deferred until this 
 spec_owner: discover
 build_owner: build
 priority: P3
+kind: spec
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4Mgscc      # sync-managed (write-once)
