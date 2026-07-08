@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-08 (blog spec locked ready — SEO publication on the Astro marketing site; unparks the Tier-4 /blog note, slots into Now alongside newsletter as the discovery half of the owned-channel pair. 07-07: duet github-projects-sync spec realigned to upstream Projects-wins model; pinned: flag dropped; queue.md + tasks/ gap-fills landed alongside. 07-05 sweep: goal-planning shipped; 07-05 trunks in §Shipped: focus redesign Variant F, task page full-field editing, task notes + completion log, design-system token migration, Upcoming top-level nav) -->
+<!-- Last reviewed: 2026-07-08 (blog design locked — two-lane index + rotating featured zone; shareability split into blog-social-meta; both specs ready. 07-08 earlier: blog spec locked ready — SEO publication on the Astro marketing site; unparks the Tier-4 /blog note, slots into Now alongside newsletter as the discovery half of the owned-channel pair. 07-07: duet github-projects-sync spec realigned to upstream Projects-wins model; pinned: flag dropped; queue.md + tasks/ gap-fills landed alongside. 07-05 sweep: goal-planning shipped; 07-05 trunks in §Shipped: focus redesign Variant F, task page full-field editing, task notes + completion log, design-system token migration, Upcoming top-level nav) -->
 
 ---
 
@@ -101,15 +101,27 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
    (`infra-astro-marketing-split`, `done`): pure static SSG, content
    collection + RSS, zero Wasp/DB coupling. Unparks the Tier-4 `/blog` three
    docs park (`PUBLIC-PAGES.md` §4, `MARKETING.md` §1, this file's §GTM) now
-   that the foundation is paid for. Spec at `docs/specs/blog.md`.
-7. **social-auth-google** (`done` 2026-06-27, code-side) — Google OAuth added
+   that the foundation is paid for. **Design locked (2026-07-08): two-lane
+   index (Finds | Essays) + rotating featured zone** (Pattern A Spotlight /
+   Pattern B Split, build-time); four categories Focus · Method · Attention ·
+   Build; shareability split into `blog-social-meta`. Prototype at
+   `docs/mockups/blog-directions.html`. Spec at `docs/specs/blog.md`.
+7. **blog-social-meta** (`ready`, new 2026-07-08) — the shareability half of
+   the blog: OG images (default + per-post override), `summary_large_image`
+   Twitter cards, LinkedIn rich-preview `article:*` tags, and a calm
+   share-row (Copy link + X + LinkedIn, no third-party widget). Split from
+   `blog` because shareability is a per-post-asset + platform-contract
+   problem (OG images are a content task), not a layout problem. Fills the
+   schema slots `blog` reserves. The two compose; they don't block each other.
+   Spec at `docs/specs/blog-social-meta.md`.
+8. **social-auth-google** (`done` 2026-06-27, code-side) — Google OAuth added
    alongside email; config verified, never-throws name resolution. **Non-code
    gate outstanding (your side):** create the Google Cloud OAuth client +
    register redirect URIs + add a test user — see §GTM prep B. The callback
    verifies once the client exists. → §Shipped.
-8. **distribution-quietlaunch** — (no spec; it's a campaign, not a build item)
+9. **distribution-quietlaunch** — (no spec; it's a campaign, not a build item)
    get the existing product in front of ~500 of the right people in 4 weeks.
-9. **in-app-feedback** (`done` 2026-06-30) — shell loudspeaker opens a simple
+10. **in-app-feedback** (`done` 2026-06-30) — shell loudspeaker opens a simple
    feedback modal. Feedback is stored with user, route, Work/Plan/Review
    section, lens context, and user agent; production sends an admin email to
    `ACTIONAMP_ADMIN_EMAIL` (default `zeljko@dakic.com`) after the DB write. Dev
@@ -575,7 +587,10 @@ roadmaps forget and most launches stall on.
 - [ ] Newsletter capture → **`newsletter`** (`draft`; product copy + provider
       decision still needed)
 - [ ] Blog (SEO publication) → **`blog`** (`ready`; builds on the shipped Astro
-      split — content collection + `/blog` + `/blog/[slug]` + RSS)
+      split — two-lane index + rotating featured zone; content collection +
+      `/blog` + `/blog/[slug]` + RSS)
+- [ ] Blog shareability → **`blog-social-meta`** (`ready`; split from `blog` —
+      OG images, Twitter/LinkedIn cards, share row)
 - [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup; route model locked 2026-07-03)
 - [ ] Tag management UI + reserved-tag seeding → **`tag-management`** (`ready`, written 2026-07-03; unblocks `focus-engine-v2`)
 - [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`, confirmed 2026-07-03)

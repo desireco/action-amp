@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Blog directions — ActionAmp</title>
+<style>
+  /* ============================================================
+     ActionAmp design tokens — verbatim from webapp/src/styles/tokens.css
+     ============================================================ */
+  :root {
+    --aa-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+      "SF Pro Display", Roboto, sans-serif;
+    --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --aa-text-xs: 0.7rem;
+    --aa-text-sm: 0.78rem;
+    --aa-text-base: 0.9rem;
+    --aa-text-md: 1rem;
+    --aa-text-lg: 1.1rem;
+    --aa-text-xl: 1.5rem;
+    --aa-text-2xl: 2rem;
+    --aa-text-3xl: 2.75rem;
+
+    --aa-leading-tight: 1.25;
+    --aa-leading-snug: 1.4;
+    --aa-leading-normal: 1.5;
+    --aa-leading-relaxed: 1.6;
+    --aa-leading-loose: 1.75;
+
+    --aa-teal: oklch(0.72 0.15 220);
+    --aa-teal-bright: oklch(0.78 0.14 215);
+    --aa-teal-cta: oklch(0.58 0.16 225);
+    --aa-teal-cta-hover: oklch(0.5 0.16 228);
+    --aa-teal-soft: oklch(0.95 0.04 220);
+    --aa-teal-soft-strong: oklch(0.9 0.07 220);
+
+    --aa-amber: oklch(0.78 0.16 70);
+    --aa-amber-text: oklch(0.45 0.13 65);
+
+    --aa-bg: oklch(0.99 0.005 230);
+    --aa-bg-soft: oklch(0.97 0.008 230);
+    --aa-bg-deep: oklch(0.94 0.01 230);
+    --aa-surface: oklch(1 0.003 230);
+    --aa-surface-muted: oklch(0.96 0.008 230);
+    --aa-surface-muted-2: oklch(0.93 0.01 230);
+    --aa-border: oklch(0.91 0.01 230);
+    --aa-border-strong: oklch(0.86 0.012 230);
+    --aa-text: oklch(0.2 0.015 230);
+    --aa-text-2: oklch(0.36 0.015 230);
+    --aa-text-3: oklch(0.5 0.015 230);
+    --aa-text-4: oklch(0.62 0.012 230);
+
+    --aa-radius-sm: 6px;
+    --aa-radius-md: 8px;
+    --aa-radius-lg: 12px;
+    --aa-radius-full: 9999px;
+
+    --aa-space-xs: 4px;
+    --aa-space-sm: 8px;
+    --aa-space-md: 16px;
+    --aa-space-lg: 24px;
+    --aa-space-xl: 32px;
+    --aa-space-2xl: 48px;
+    --aa-space-3xl: 64px;
+    --aa-space-4xl: 96px;
+    --aa-space-5xl: 128px;
+
+    --aa-shadow-sm: 0 1px 2px oklch(0.2 0.02 230 / 0.05);
+    --aa-shadow-md: 0 2px 6px oklch(0.2 0.02 230 / 0.06), 0 12px 32px oklch(0.2 0.02 230 / 0.06);
+
+    --aa-ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --aa-dur-fast: 0.12s;
+    --aa-dur-base: 0.2s;
+  }
+
+  /* Dark theme */
+  [data-theme="dark"] {
+    --aa-bg: oklch(0.18 0.012 230);
+    --aa-bg-soft: oklch(0.21 0.012 230);
+    --aa-bg-deep: oklch(0.16 0.012 230);
+    --aa-surface: oklch(0.25 0.013 230);
+    --aa-surface-muted: oklch(0.29 0.013 230);
+    --aa-surface-muted-2: oklch(0.33 0.013 230);
+    --aa-border: oklch(0.32 0.013 230);
+    --aa-border-strong: oklch(0.4 0.015 230);
+    --aa-text: oklch(0.96 0.005 230);
+    --aa-text-2: oklch(0.85 0.008 230);
+    --aa-text-3: oklch(0.7 0.012 230);
+    --aa-text-4: oklch(0.58 0.012 230);
+    --aa-teal-soft: oklch(0.3 0.05 220);
+    --aa-teal-soft-strong: oklch(0.35 0.07 220);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+  body {
+    font-family: var(--aa-font-sans);
+    background: var(--aa-bg);
+    color: var(--aa-text);
+    font-size: var(--aa-text-base);
+    line-height: var(--aa-leading-normal);
+  }
+
+  a { color: var(--aa-teal-cta); text-decoration: none; }
+  a:hover { color: var(--aa-teal-cta-hover); text-decoration: underline; text-underline-offset: 2px; }
+
+  /* ============================================================
+     Direction switcher (this file only — not part of any design)
+     ============================================================ */
+  .switcher {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--aa-surface);
+    border-bottom: 1px solid var(--aa-border);
+    padding: var(--aa-space-md) var(--aa-space-2xl);
+    display: flex; align-items: center; gap: var(--aa-space-2xl);
+    flex-wrap: wrap;
+  }
+  .switcher-label {
+    font-size: var(--aa-text-xs); text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--aa-text-3); font-weight: 600;
+  }
+  .switcher-buttons { display: flex; gap: var(--aa-space-xs); flex: 1; flex-wrap: wrap; }
+  .switcher-btn {
+    font-family: inherit; font-size: var(--aa-text-sm); font-weight: 500;
+    padding: var(--aa-space-sm) var(--aa-space-md);
+    border: 1px solid var(--aa-border); background: var(--aa-surface);
+    color: var(--aa-text-2); border-radius: var(--aa-radius-full); cursor: pointer;
+    transition: all var(--aa-dur-base) var(--aa-ease-out);
+  }
+  .switcher-btn:hover { border-color: var(--aa-border-strong); color: var(--aa-text); }
+  .switcher-btn.active {
+    background: var(--aa-teal-cta); border-color: var(--aa-teal-cta); color: white;
+  }
+  .switcher-tools { display: flex; gap: var(--aa-space-md); align-items: center; }
+  .switcher-tool {
+    font-family: inherit; font-size: var(--aa-text-sm); font-weight: 500;
+    padding: var(--aa-space-xs) var(--aa-space-sm);
+    border: 1px solid var(--aa-border); background: var(--aa-surface);
+    color: var(--aa-text-3); border-radius: var(--aa-radius-sm); cursor: pointer;
+  }
+  .switcher-tool:hover { color: var(--aa-text); border-color: var(--aa-border-strong); }
+
+  /* Segmented viewport toggle (desktop/mobile preview) */
+  .switcher-view {
+    display: inline-flex; border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-full); overflow: hidden;
+  }
+  .switcher-view-btn {
+    font-family: inherit; font-size: var(--aa-text-xs); font-weight: 600;
+    padding: var(--aa-space-xs) var(--aa-space-md);
+    border: none; background: var(--aa-surface); color: var(--aa-text-3);
+    cursor: pointer; transition: all var(--aa-dur-base);
+    letter-spacing: 0.03em;
+  }
+  .switcher-view-btn + .switcher-view-btn { border-left: 1px solid var(--aa-border); }
+  .switcher-view-btn:hover { color: var(--aa-text); }
+  .switcher-view-btn.active { background: var(--aa-text); color: var(--aa-surface); }
+
+  /* Mobile preview frame — constrains the active direction to phone width.
+     Side borders + centered column read as "this is mobile" without a heavy
+     device chrome. The viewport badge makes it unambiguous. */
+  .view-badge {
+    display: none; text-align: center;
+    font-size: var(--aa-text-xs); color: var(--aa-text-4);
+    padding: var(--aa-space-md) var(--aa-space-md) 0;
+    letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600;
+  }
+  .is-mobile .view-badge { display: block; }
+  .is-mobile .direction.active {
+    max-width: 390px; margin: 0 auto;
+    border-left: 1px solid var(--aa-border);
+    border-right: 1px solid var(--aa-border);
+    min-height: 100vh; box-shadow: var(--aa-shadow-md);
+  }
+
+  .direction { display: none; }
+  .direction.active { display: block; }
+
+  /* ============================================================
+     SHARED — brand mark, nav, eyebrow, category pill
+     (matches landing page chrome)
+     ============================================================ */
+  .aa-brand { display: inline-flex; align-items: center; gap: var(--aa-space-sm); color: var(--aa-text); }
+  .aa-brand:hover { text-decoration: none; }
+  .aa-brand-mark {
+    width: 20px; height: 20px; border-radius: var(--aa-radius-sm);
+    background: var(--aa-teal-cta); color: white;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .aa-brand-mark svg { width: 13px; height: 13px; }
+  .aa-brand-name { font-weight: 600; font-size: var(--aa-text-md); letter-spacing: -0.01em; }
+
+  .aa-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--aa-space-lg) var(--aa-space-2xl);
+    border-bottom: 1px solid var(--aa-border);
+  }
+  .aa-nav-links { display: flex; gap: var(--aa-space-xl); }
+  .aa-nav-link {
+    color: var(--aa-text-2); font-size: var(--aa-text-sm); font-weight: 500;
+    transition: color var(--aa-dur-base);
+  }
+  .aa-nav-link:hover { color: var(--aa-text); text-decoration: none; }
+
+  .aa-eyebrow {
+    font-size: var(--aa-text-xs); text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--aa-teal-cta); font-weight: 600;
+  }
+
+  /* Category pill — the four tags: Focus · Method · Attention · Build */
+  .cat {
+    display: inline-flex; align-items: center; gap: var(--aa-space-xs);
+    font-size: var(--aa-text-xs); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--aa-text-3);
+  }
+  .cat::before {
+    content: ""; width: 5px; height: 5px; border-radius: var(--aa-radius-full);
+    background: var(--aa-teal);
+  }
+
+  /* Find type hint — watch/read/tool/note */
+  .find-type {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: var(--aa-text-xs); font-weight: 500;
+    color: var(--aa-text-4); text-transform: lowercase;
+  }
+  .find-type svg { width: 11px; height: 11px; }
+
+  /* Page footer */
+  .aa-footer {
+    border-top: 1px solid var(--aa-border);
+    padding: var(--aa-space-2xl) var(--aa-space-2xl);
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--aa-text-4); font-size: var(--aa-text-sm);
+    margin-top: var(--aa-space-5xl);
+  }
+  .aa-footer-links { display: flex; gap: var(--aa-space-lg); }
+  .aa-footer-links a { color: var(--aa-text-3); }
+  .aa-footer-links a:hover { color: var(--aa-text); text-decoration: none; }
+
+  /* ============================================================
+     DIRECTION 1 — TWO LANES
+     Index splits: dense Finds left, spacious Essays right
+     ============================================================ */
+  .d1-hero {
+    padding: var(--aa-space-3xl) var(--aa-space-2xl) var(--aa-space-2xl);
+    border-bottom: 1px solid var(--aa-border);
+  }
+  .d1-hero h1 {
+    font-size: var(--aa-text-2xl); font-weight: 600;
+    letter-spacing: -0.02em; line-height: var(--aa-leading-tight);
+    margin-top: var(--aa-space-sm);
+  }
+  .d1-hero p {
+    color: var(--aa-text-3); font-size: var(--aa-text-md);
+    margin-top: var(--aa-space-sm); max-width: 52ch;
+  }
+
+  .d1-lanes {
+    display: grid; grid-template-columns: 1fr 1.4fr;
+    gap: 0; max-width: 1200px; margin: 0 auto;
+  }
+  .d1-lane { padding: var(--aa-space-2xl); }
+  .d1-lane--finds { border-right: 1px solid var(--aa-border); }
+  .d1-lane-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: var(--aa-space-xl);
+  }
+  .d1-lane-title {
+    font-size: var(--aa-text-md); font-weight: 600; color: var(--aa-text);
+  }
+  .d1-lane-meta { font-size: var(--aa-text-xs); color: var(--aa-text-4); }
+
+  /* Find row — dense, one-line, teal arrow */
+  .d1-find {
+    display: block; padding: var(--aa-space-md) 0;
+    border-bottom: 1px solid var(--aa-border);
+    color: var(--aa-text); text-decoration: none;
+  }
+  .d1-find:last-child { border-bottom: none; }
+  .d1-find:hover { text-decoration: none; }
+  .d1-find-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4px;
+  }
+  .d1-find-date { font-size: var(--aa-text-xs); color: var(--aa-text-4); }
+  .d1-find-body {
+    display: flex; align-items: baseline; gap: var(--aa-space-sm);
+    line-height: var(--aa-leading-snug);
+  }
+  .d1-find-text { color: var(--aa-text-2); font-size: var(--aa-text-sm); flex: 1; }
+  .d1-find-arrow {
+    color: var(--aa-teal-cta); font-size: var(--aa-text-md); flex-shrink: 0;
+    transition: transform var(--aa-dur-base) var(--aa-ease-out);
+  }
+  .d1-find:hover .d1-find-arrow { transform: translateX(3px); }
+  .d1-find:hover .d1-find-text { color: var(--aa-text); }
+
+  /* Essay block — spacious */
+  .d1-essay {
+    display: block; padding: var(--aa-space-xl) 0;
+    border-bottom: 1px solid var(--aa-border);
+    color: var(--aa-text); text-decoration: none;
+  }
+  .d1-essay:first-of-type { padding-top: 0; }
+  .d1-essay:last-child { border-bottom: none; }
+  .d1-essay:hover { text-decoration: none; }
+  .d1-essay-meta {
+    display: flex; gap: var(--aa-space-md); align-items: center;
+    margin-bottom: var(--aa-space-sm);
+  }
+  .d1-essay-read { font-size: var(--aa-text-xs); color: var(--aa-text-4); }
+  .d1-essay h2 {
+    font-size: var(--aa-text-lg); font-weight: 600;
+    letter-spacing: -0.015em; line-height: var(--aa-leading-snug);
+    color: var(--aa-text);
+  }
+  .d1-essay:hover h2 { color: var(--aa-teal-cta); }
+  .d1-essay p {
+    color: var(--aa-text-3); font-size: var(--aa-text-sm);
+    margin-top: var(--aa-space-xs); line-height: var(--aa-leading-snug);
+  }
+
+  /* ============================================================
+     FEATURED ZONE (Direction 1) — rotating curated section
+     Sits between the hero and the two-lane archive. Rotates between
+     two build-time patterns (not in-page motion — that would violate
+     calm). Featured items are pulled out of the lanes (no duplication).
+     The hero slot is content-agnostic: essay, guide, or offer.
+     ============================================================ */
+  .d1-featured {
+    max-width: 1200px; margin: 0 auto;
+    padding: var(--aa-space-2xl) var(--aa-space-2xl) var(--aa-space-md);
+  }
+  .d1-featured-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: var(--aa-space-xl);
+  }
+  .d1-featured-label {
+    font-size: var(--aa-text-xs); text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--aa-teal-cta); font-weight: 600;
+  }
+  .d1-featured-note { font-size: var(--aa-text-xs); color: var(--aa-text-4); }
+
+  /* Prototype-only pattern toggle */
+  .d1-featured-pattern { display: none; }
+  .d1-featured.pattern-a .d1-featured-pattern--a { display: block; }
+  .d1-featured.pattern-b .d1-featured-pattern--b { display: block; }
+
+  /* --- Pattern A — Spotlight: full-width hero + two half-width takes --- */
+  .d1-spotlight {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: var(--aa-space-lg);
+  }
+  /* Hero spans full width; the two takes fill the row below. */
+  .d1-spotlight-hero {
+    grid-column: 1 / -1;
+    display: grid; grid-template-columns: 3px 1fr; gap: var(--aa-space-lg);
+    padding-bottom: var(--aa-space-xl);
+    border-bottom: 1px solid var(--aa-border);
+  }
+  .d1-spotlight-rule { background: var(--aa-teal); border-radius: var(--aa-radius-full); }
+  .d1-spotlight-hero-body { display: flex; flex-direction: column; gap: var(--aa-space-sm); }
+  .d1-spotlight-hero-meta {
+    display: flex; gap: var(--aa-space-md); align-items: center;
+    flex-wrap: wrap;
+  }
+  .d1-spotlight-hero h3 {
+    font-size: var(--aa-text-xl); font-weight: 600;
+    letter-spacing: -0.02em; line-height: var(--aa-leading-tight);
+    color: var(--aa-text); margin-top: var(--aa-space-xs);
+  }
+  .d1-spotlight-hero p {
+    color: var(--aa-text-2); font-size: var(--aa-text-base);
+    line-height: var(--aa-leading-relaxed); max-width: 62ch;
+  }
+  .d1-spotlight-hero-read {
+    margin-top: var(--aa-space-sm);
+    font-size: var(--aa-text-sm); font-weight: 500; color: var(--aa-teal-cta);
+  }
+  /* Amber eyebrow reserved for non-post featured content (guide/offer) —
+     the rare-human-emphasis accent, used sparingly. */
+  .d1-tag-special {
+    font-size: var(--aa-text-xs); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--aa-amber-text); background: var(--aa-amber-soft);
+    padding: 2px var(--aa-space-sm); border-radius: var(--aa-radius-sm);
+  }
+  /* Half-width take card */
+  .d1-take {
+    display: flex; flex-direction: column; gap: var(--aa-space-xs);
+    padding: var(--aa-space-md) 0;
+  }
+  .d1-take-top {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .d1-take-date { font-size: var(--aa-text-xs); color: var(--aa-text-4); }
+  .d1-take h4 {
+    font-size: var(--aa-text-md); font-weight: 500;
+    line-height: var(--aa-leading-snug); color: var(--aa-text);
+  }
+  .d1-take p {
+    font-size: var(--aa-text-sm); color: var(--aa-text-3);
+    line-height: var(--aa-leading-snug);
+  }
+
+  /* --- Pattern B — Split: 1/3 quick takes, 2/3 essays --- */
+  .d1-split {
+    display: grid; grid-template-columns: 1fr 2fr;
+    gap: var(--aa-space-2xl);
+  }
+  .d1-split-col { display: flex; flex-direction: column; }
+  .d1-split-col-head {
+    font-size: var(--aa-text-xs); text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--aa-text-4); font-weight: 600;
+    margin-bottom: var(--aa-space-md); padding-bottom: var(--aa-space-sm);
+    border-bottom: 1px solid var(--aa-border);
+  }
+  /* Left takes — compact rows */
+  .d1-split-take {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: var(--aa-space-md) 0;
+    border-bottom: 1px solid var(--aa-border);
+  }
+  .d1-split-take:last-child { border-bottom: none; }
+  .d1-split-take-top {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .d1-split-take h4 {
+    font-size: var(--aa-text-sm); font-weight: 500;
+    line-height: var(--aa-leading-snug); color: var(--aa-text-2);
+  }
+  /* Right essays — titled blocks */
+  .d1-split-essay {
+    display: flex; flex-direction: column; gap: var(--aa-space-xs);
+    padding: var(--aa-space-md) 0;
+    border-bottom: 1px solid var(--aa-border);
+  }
+  .d1-split-essay:first-of-type { padding-top: 0; }
+  .d1-split-essay:last-child { border-bottom: none; }
+  .d1-split-essay-meta {
+    display: flex; gap: var(--aa-space-md); align-items: center;
+  }
+  .d1-split-essay h4 {
+    font-size: var(--aa-text-lg); font-weight: 600;
+    letter-spacing: -0.015em; line-height: var(--aa-leading-snug);
+    color: var(--aa-text);
+  }
+  .d1-split-essay p {
+    font-size: var(--aa-text-sm); color: var(--aa-text-3);
+    line-height: var(--aa-leading-snug);
+  }
+
+  /* ============================================================
+     DIRECTION 2 — TYPE-LED FEED
+     Single column. Finds = inline prose. Essays = titled blocks.
+     ============================================================ */
+  .d2-wrap { max-width: 680px; margin: 0 auto; padding: var(--aa-space-3xl) var(--aa-space-2xl); }
+  .d2-hero { margin-bottom: var(--aa-space-4xl); }
+  .d2-hero h1 {
+    font-size: var(--aa-text-2xl); font-weight: 600;
+    letter-spacing: -0.02em; line-height: var(--aa-leading-tight);
+    margin-top: var(--aa-space-sm);
+  }
+  .d2-hero p {
+    color: var(--aa-text-3); font-size: var(--aa-text-md);
+    margin-top: var(--aa-space-sm);
+  }
+
+  .d2-feed { display: flex; flex-direction: column; }
+
+  /* Essay block — titled, generous whitespace */
+  .d2-essay {
+    padding: var(--aa-space-2xl) 0;
+    border-top: 1px solid var(--aa-border);
+  }
+  .d2-essay:first-child { border-top: none; padding-top: 0; }
+  .d2-essay-meta {
+    display: flex; gap: var(--aa-space-md); align-items: center;
+    margin-bottom: var(--aa-space-sm);
+  }
+  .d2-essay h2 {
+    font-size: var(--aa-text-xl); font-weight: 600;
+    letter-spacing: -0.02em; line-height: var(--aa-leading-tight);
+  }
+  .d2-essay h2 a { color: var(--aa-text); }
+  .d2-essay h2 a:hover { color: var(--aa-teal-cta); text-decoration: none; }
+  .d2-essay p {
+    color: var(--aa-text-2); font-size: var(--aa-text-base);
+    margin-top: var(--aa-space-sm); line-height: var(--aa-leading-relaxed);
+  }
+
+  /* Find — inline prose, no title, no card */
+  .d2-finds-group {
+    padding: var(--aa-space-2xl) 0;
+    border-top: 1px solid var(--aa-border);
+  }
+  .d2-finds-label {
+    font-size: var(--aa-text-xs); text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--aa-text-4); font-weight: 600;
+    margin-bottom: var(--aa-space-lg);
+  }
+  .d2-find {
+    padding: var(--aa-space-sm) 0;
+    line-height: var(--aa-leading-relaxed);
+    color: var(--aa-text-2); font-size: var(--aa-text-base);
+  }
+  .d2-find-text { color: var(--aa-text-2); }
+  .d2-find a { color: var(--aa-teal-cta); font-weight: 500; }
+  .d2-find-meta {
+    display: inline-flex; gap: var(--aa-space-sm); align-items: center;
+    margin-left: var(--aa-space-sm); color: var(--aa-text-4);
+    font-size: var(--aa-text-xs);
+  }
+  .d2-find-meta::before {
+    content: "·"; color: var(--aa-text-4); margin-right: var(--aa-space-xs);
+  }
+
+  /* ============================================================
+     DIRECTION 3 — THE CHOOSER
+     Opens to "Now Reading" + "Latest Find", archive below
+     ============================================================ */
+  .d3-wrap { max-width: 760px; margin: 0 auto; padding: var(--aa-space-3xl) var(--aa-space-2xl); }
+  .d3-hero { margin-bottom: var(--aa-space-4xl); }
+  .d3-hero h1 {
+    font-size: var(--aa-text-2xl); font-weight: 600;
+    letter-spacing: -0.02em; line-height: var(--aa-leading-tight);
+    margin-top: var(--aa-space-sm);
+  }
+  .d3-hero p {
+    color: var(--aa-text-3); font-size: var(--aa-text-md);
+    margin-top: var(--aa-space-sm);
+  }
+
+  .d3-chooser { display: flex; flex-direction: column; gap: var(--aa-space-2xl); }
+
+  .d3-pick {
+    display: block; padding: var(--aa-space-2xl);
+    border: 1px solid var(--aa-border); border-radius: var(--aa-radius-lg);
+    text-decoration: none; color: var(--aa-text);
+    transition: border-color var(--aa-dur-base), box-shadow var(--aa-dur-base);
+  }
+  .d3-pick:hover {
+    text-decoration: none; border-color: var(--aa-teal);
+    box-shadow: var(--aa-shadow-sm);
+  }
+  .d3-pick-label {
+    font-size: var(--aa-text-xs); text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--aa-teal-cta); font-weight: 600;
+    margin-bottom: var(--aa-space-md);
+  }
+  .d3-pick-essay h2 {
+    font-size: var(--aa-text-xl); font-weight: 600;
+    letter-spacing: -0.02em; line-height: var(--aa-leading-tight);
+    margin-bottom: var(--aa-space-sm);
+  }
+  .d3-pick-essay p {
+    color: var(--aa-text-3); font-size: var(--aa-text-base);
+    line-height: var(--aa-leading-relaxed); max-width: 60ch;
+  }
+  .d3-pick-essay-meta {
+    display: flex; gap: var(--aa-space-md); margin-top: var(--aa-space-md);
+    font-size: var(--aa-text-xs); color: var(--aa-text-4);
+  }
+
+  .d3-pick-find { display: flex; flex-direction: column; gap: var(--aa-space-sm); }
+  .d3-pick-find h2 {
+    font-size: var(--aa-text-lg); font-weight: 500;
+    line-height: var(--aa-leading-snug); color: var(--aa-text);
+  }
+  .d3-pick-find-meta {
+    display: flex; gap: var(--aa-space-md); align-items: center;
+    font-size: var(--aa-text-xs); color: var(--aa-text-4);
+  }
+
+  /* Archive */
+  .d3-archive {
+    margin-top: var(--aa-space-4xl);
+    padding-top: var(--aa-space-2xl);
+    border-top: 1px solid var(--aa-border);
+  }
+  .d3-archive-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: var(--aa-space-xl);
+  }
+  .d3-archive-title {
+    font-size: var(--aa-text-md); font-weight: 600; color: var(--aa-text-2);
+  }
+  .d3-archive-count { font-size: var(--aa-text-xs); color: var(--aa-text-4); }
+
+  .d3-archive-topics {
+    display: flex; gap: var(--aa-space-sm); flex-wrap: wrap;
+    margin-bottom: var(--aa-space-2xl);
+  }
+  .d3-topic {
+    font-size: var(--aa-text-sm); font-weight: 500;
+    padding: var(--aa-space-xs) var(--aa-space-md);
+    border: 1px solid var(--aa-border); border-radius: var(--aa-radius-full);
+    color: var(--aa-text-2); cursor: pointer;
+    transition: all var(--aa-dur-base);
+  }
+  .d3-topic:hover { border-color: var(--aa-teal); color: var(--aa-teal-cta); }
+
+  .d3-archive-list { display: flex; flex-direction: column; }
+  .d3-archive-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: var(--aa-space-md) 0; border-bottom: 1px solid var(--aa-border);
+    text-decoration: none;
+  }
+  .d3-archive-row:last-child { border-bottom: none; }
+  .d3-archive-row:hover { text-decoration: none; }
+  .d3-archive-row-left { display: flex; gap: var(--aa-space-md); align-items: baseline; }
+  .d3-archive-row-date { font-size: var(--aa-text-xs); color: var(--aa-text-4); min-width: 56px; }
+  .d3-archive-row-title { color: var(--aa-text-2); font-size: var(--aa-text-sm); }
+  .d3-archive-row:hover .d3-archive-row-title { color: var(--aa-teal-cta); }
+  .d3-archive-row-kind {
+    font-size: var(--aa-text-xs); color: var(--aa-text-4);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+
+  /* Mobile layouts trigger on EITHER a narrow viewport OR the preview class,
+     so the Desktop toggle can show the mobile design without resizing. */
+  @media (max-width: 760px) {
+    html:not(.is-desktop) .d1-lanes { grid-template-columns: 1fr; }
+    html:not(.is-desktop) .d1-lane--finds { border-right: none; border-bottom: 1px solid var(--aa-border); }
+    html:not(.is-desktop) .aa-nav,
+    html:not(.is-desktop) .d1-hero,
+    html:not(.is-desktop) .d1-lane,
+    html:not(.is-desktop) .d2-wrap,
+    html:not(.is-desktop) .d3-wrap,
+    html:not(.is-desktop) .aa-footer,
+    html:not(.is-desktop) .switcher {
+      padding-left: var(--aa-space-lg); padding-right: var(--aa-space-lg);
+    }
+    html:not(.is-desktop) .aa-nav-links { gap: var(--aa-space-md); }
+    html:not(.is-desktop) .aa-nav-link { font-size: var(--aa-text-xs); }
+  }
+
+  /* Explicit mobile preview (toggled) — same rules, any viewport width */
+  body.is-mobile .d1-lanes { grid-template-columns: 1fr; }
+  body.is-mobile .d1-lane--finds { border-right: none; border-bottom: 1px solid var(--aa-border); }
+  body.is-mobile .aa-nav,
+  body.is-mobile .d1-hero,
+  body.is-mobile .d1-lane,
+  body.is-mobile .d2-wrap,
+  body.is-mobile .d3-wrap,
+  body.is-mobile .aa-footer {
+    padding-left: var(--aa-space-lg); padding-right: var(--aa-space-lg);
+  }
+  body.is-mobile .aa-nav-links { gap: var(--aa-space-md); }
+  body.is-mobile .aa-nav-link { font-size: var(--aa-text-xs); }
+
+  /* Touch hit-targets grow on mobile for thumb use. Stays within tokens. */
+  body.is-mobile .d1-find { padding: var(--aa-space-md) 0; }
+  body.is-mobile .d3-archive-row { padding: var(--aa-space-md) 0; }
+  /* Featured zone collapses to single column on mobile — both patterns. */
+  body.is-mobile .d1-spotlight { grid-template-columns: 1fr; }
+  body.is-mobile .d1-take { padding: var(--aa-space-md) 0; }
+  body.is-mobile .d1-split { grid-template-columns: 1fr; gap: var(--aa-space-xl); }
+</style>
+</head>
+<body>
+
+  <!-- Direction switcher (prototype-only chrome) -->
+<div class="switcher">
+  <span class="switcher-label">Direction</span>
+  <div class="switcher-buttons">
+    <button class="switcher-btn active" data-dir="1">1 · Two lanes</button>
+    <button class="switcher-btn" data-dir="2">2 · Type-led feed</button>
+    <button class="switcher-btn" data-dir="3">3 · The chooser</button>
+  </div>
+  <div class="switcher-tools">
+    <div class="switcher-view">
+      <button class="switcher-view-btn active" data-view="desktop">Desktop</button>
+      <button class="switcher-view-btn" data-view="mobile">Mobile</button>
+    </div>
+    <button class="switcher-tool" id="theme-toggle">Dark</button>
+  </div>
+</div>
+<div class="view-badge">Mobile preview · 390px</div>
+
+
+<!-- ============================================================
+     DIRECTION 1 — TWO LANES
+     ============================================================ -->
+<div class="direction active" id="dir-1">
+  <nav class="aa-nav">
+    <a href="#" class="aa-brand">
+      <span class="aa-brand-mark">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="aa-brand-name">ActionAmp</span>
+    </a>
+    <div class="aa-nav-links">
+      <a href="#" class="aa-nav-link">Blog</a>
+      <a href="#" class="aa-nav-link">About</a>
+      <a href="#" class="aa-nav-link">Roadmap</a>
+      <a href="#" class="aa-nav-link">RSS</a>
+    </div>
+  </nav>
+
+  <header class="d1-hero">
+    <div class="aa-eyebrow">The blog</div>
+    <h1>On focus, decisions, and doing the next thing.</h1>
+    <p>Essays on the craft of choosing what to do next. Finds worth your attention. No schedule, no noise.</p>
+  </header>
+
+  <!-- Featured zone — curated; items pulled out of the lanes below.
+       Rotates between Pattern A (spotlight) and Pattern B (split) at build time. -->
+  <section class="d1-featured pattern-a" id="d1-featured">
+    <div class="d1-featured-head">
+      <span class="d1-featured-label">Featured</span>
+      <span class="d1-featured-note">
+        <button class="switcher-tool" id="d1-pattern-toggle" style="padding: 2px 8px;">Pattern A · Spotlight → B</button>
+      </span>
+    </div>
+
+    <!-- Pattern A — Spotlight: full-width hero + two half-width takes -->
+    <div class="d1-featured-pattern d1-featured-pattern--a">
+      <div class="d1-spotlight">
+        <a href="#" class="d1-spotlight-hero" style="text-decoration:none;">
+          <div class="d1-spotlight-rule"></div>
+          <div class="d1-spotlight-hero-body">
+            <div class="d1-spotlight-hero-meta">
+              <span class="cat">Focus</span>
+              <span class="d1-essay-read">9 min · Jul 5</span>
+            </div>
+            <h3>Why the list is the problem, not the answer.</h3>
+            <p>Every todo app optimizes capture. None optimize the decision. The list grows faster than you can work it, and the app that promised to help becomes the thing you avoid opening.</p>
+            <span class="d1-spotlight-hero-read">Read the essay →</span>
+          </div>
+        </a>
+
+        <a href="#" class="d1-take" style="text-decoration:none;">
+          <div class="d1-take-top">
+            <span class="find-type">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M3 2h7l3 3v9H3z M10 2v3h3" stroke="currentColor" stroke-width="1.3"/></svg>
+              read
+            </span>
+            <span class="d1-take-date">Jul 7</span>
+          </div>
+          <h4>Andy Matuschak's notes are a living system — emergent structure over folders.</h4>
+          <p>Why static hierarchies lose to notes that reorganize themselves around what you actually use.</p>
+        </a>
+
+        <a href="#" class="d1-take" style="text-decoration:none;">
+          <div class="d1-take-top">
+            <span class="d1-tag-special">Guide</span>
+            <span class="d1-take-date">Jul 1</span>
+          </div>
+          <h4>A calm GTD setup in 15 minutes.</h4>
+          <p>Inbox, triage, one project, one task. The minimum viable system, and why it's enough to start.</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Pattern B — Split: 1/3 quick takes, 2/3 essays -->
+    <div class="d1-featured-pattern d1-featured-pattern--b">
+      <div class="d1-split">
+        <div class="d1-split-col">
+          <div class="d1-split-col-head">Quick takes</div>
+          <a href="#" class="d1-split-take" style="text-decoration:none;">
+            <div class="d1-split-take-top">
+              <span class="find-type">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M2 3h12v10H2z M5 3v10 M11 3v10" stroke="currentColor" stroke-width="1.3"/></svg>
+                watch
+              </span>
+              <span class="d1-take-date">Jul 8</span>
+            </div>
+            <h4>How Tiimo handles single-task focus — and where it diverges from GTD.</h4>
+          </a>
+          <a href="#" class="d1-split-take" style="text-decoration:none;">
+            <div class="d1-split-take-top">
+              <span class="d1-tag-special">Offer</span>
+              <span class="d1-take-date">Jul 1</span>
+            </div>
+            <h4>Founding 100 — lifetime Pro, for the first hundred.</h4>
+          </a>
+          <a href="#" class="d1-split-take" style="text-decoration:none;">
+            <div class="d1-split-take-top">
+              <span class="find-type">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M8 1l2 5h5l-4 3 1.5 5L8 11l-4.5 3L5 9 1 6h5z" stroke="currentColor" stroke-width="1.2"/></svg>
+                tool
+              </span>
+              <span class="d1-take-date">Jul 6</span>
+            </div>
+            <h4>Markwhen — timelines as markdown. Useful for sequencing projects.</h4>
+          </a>
+        </div>
+
+        <div class="d1-split-col">
+          <div class="d1-split-col-head">Essays</div>
+          <a href="#" class="d1-split-essay" style="text-decoration:none;">
+            <div class="d1-split-essay-meta">
+              <span class="cat">Focus</span>
+              <span class="d1-essay-read">9 min · Jul 5</span>
+            </div>
+            <h4>Why the list is the problem, not the answer.</h4>
+            <p>Every todo app optimizes capture. None optimize the decision.</p>
+          </a>
+          <a href="#" class="d1-split-essay" style="text-decoration:none;">
+            <div class="d1-split-essay-meta">
+              <span class="cat">Method</span>
+              <span class="d1-essay-read">6 min · Jun 28</span>
+            </div>
+            <h4>The capture trap.</h4>
+            <p>Writing things down feels like progress. It isn't. The decision is what costs.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="d1-lanes">
+    <!-- FINDS lane -->
+    <section class="d1-lane d1-lane--finds">
+      <div class="d1-lane-head">
+        <span class="d1-lane-title">Finds</span>
+        <span class="d1-lane-meta">curated · weekly-ish</span>
+      </div>
+
+      <a href="#" class="d1-find">
+        <div class="d1-find-top">
+          <span class="find-type">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M2 3h12v10H2z M5 3v10 M11 3v10" stroke="currentColor" stroke-width="1.3"/></svg>
+            watch
+          </span>
+          <span class="d1-find-date">Jul 8</span>
+        </div>
+        <div class="d1-find-body">
+          <span class="d1-find-text">How Tiimo handles single-task focus — and where it differs from the GTD instinct.</span>
+          <span class="d1-find-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="#" class="d1-find">
+        <div class="d1-find-top">
+          <span class="find-type">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M3 2h7l3 3v9H3z M10 2v3h3" stroke="currentColor" stroke-width="1.3"/></svg>
+            read
+          </span>
+          <span class="d1-find-date">Jul 7</span>
+        </div>
+        <div class="d1-find-body">
+          <span class="d1-find-text">Andy Matuschak's notes are a living system — the case for emergent structure over folders.</span>
+          <span class="d1-find-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="#" class="d1-find">
+        <div class="d1-lane-top"></div>
+        <div class="d1-find-top">
+          <span class="find-type">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M8 1l2 5h5l-4 3 1.5 5L8 11l-4.5 3L5 9 1 6h5z" stroke="currentColor" stroke-width="1.2"/></svg>
+            tool
+          </span>
+          <span class="d1-find-date">Jul 6</span>
+        </div>
+        <div class="d1-find-body">
+          <span class="d1-find-text">Markwhen — timelines as markdown. Useful for sequencing projects.</span>
+          <span class="d1-find-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="#" class="d1-find">
+        <div class="d1-find-top">
+          <span class="find-type">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M3 4h10 M3 8h10 M3 12h6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            note
+          </span>
+          <span class="d1-find-date">Jul 4</span>
+        </div>
+        <div class="d1-find-body">
+          <span class="d1-find-text">"You don't rise to the level of your goals, you fall to the level of your systems." — Clear, on why triage matters.</span>
+          <span class="d1-find-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="#" class="d1-find">
+        <div class="d1-find-top">
+          <span class="find-type">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M3 2h7l3 3v9H3z M10 2v3h3" stroke="currentColor" stroke-width="1.3"/></svg>
+            read
+          </span>
+          <span class="d1-find-date">Jul 2</span>
+        </div>
+        <div class="d1-find-body">
+          <span class="d1-find-text">The "productive procrastination" trap — reorganizing the list instead of working it.</span>
+          <span class="d1-find-arrow">→</span>
+        </div>
+      </a>
+    </section>
+
+    <!-- ESSAYS lane -->
+    <section class="d1-lane">
+      <div class="d1-lane-head">
+        <span class="d1-lane-title">Essays</span>
+        <span class="d1-lane-meta">long-form · monthly</span>
+      </div>
+
+      <a href="#" class="d1-essay">
+        <div class="d1-essay-meta">
+          <span class="cat">Focus</span>
+          <span class="d1-essay-read">9 min · Jul 5</span>
+        </div>
+        <h2>Why the list is the problem, not the answer.</h2>
+        <p>Every todo app optimizes capture. None optimize the decision. The list grows faster than you can work it, and the app that promised to help becomes the thing you avoid.</p>
+      </a>
+
+      <a href="#" class="d1-essay">
+        <div class="d1-essay-meta">
+          <span class="cat">Method</span>
+          <span class="d1-essay-read">6 min · Jun 28</span>
+        </div>
+        <h2>The capture trap.</h2>
+        <p>Writing things down feels like progress. It isn't. Capture is free; the decision is what costs. A working triage practice, and why most people skip it.</p>
+      </a>
+
+      <a href="#" class="d1-essay">
+        <div class="d1-essay-meta">
+          <span class="cat">Attention</span>
+          <span class="d1-essay-read">8 min · Jun 20</span>
+        </div>
+        <h2>Working memory is the real bottleneck.</h2>
+        <p>You don't have 97 problems. You have four slots, and 93 things competing for them. What executive function research says about prioritization — and why a single-task surface is an accessibility feature, not a preference.</p>
+      </a>
+
+      <a href="#" class="d1-essay">
+        <div class="d1-essay-meta">
+          <span class="cat">Build</span>
+          <span class="d1-essay-read">5 min · Jun 12</span>
+        </div>
+        <h2>Why we open to one task.</h2>
+        <p>The design decision behind the What Now screen. Not a todo list, not a kanban — a chooser. The trade-offs we accepted, and the ones we didn't.</p>
+      </a>
+    </section>
+  </div>
+
+  <footer class="aa-footer">
+    <span>© 2026 ActionAmp</span>
+    <div class="aa-footer-links">
+      <a href="#">About</a>
+      <a href="#">Privacy</a>
+      <a href="#">RSS</a>
+      <a href="#">Founding 100</a>
+    </div>
+  </footer>
+</div>
+
+
+<!-- ============================================================
+     DIRECTION 2 — TYPE-LED FEED
+     ============================================================ -->
+<div class="direction" id="dir-2">
+  <nav class="aa-nav">
+    <a href="#" class="aa-brand">
+      <span class="aa-brand-mark">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="aa-brand-name">ActionAmp</span>
+    </a>
+    <div class="aa-nav-links">
+      <a href="#" class="aa-nav-link">Blog</a>
+      <a href="#" class="aa-nav-link">About</a>
+      <a href="#" class="aa-nav-link">Roadmap</a>
+      <a href="#" class="aa-nav-link">RSS</a>
+    </div>
+  </nav>
+
+  <div class="d2-wrap">
+    <header class="d2-hero">
+      <div class="aa-eyebrow">The blog</div>
+      <h1>On focus, decisions, and doing the next thing.</h1>
+      <p>Essays on the craft of choosing what to do next. Finds worth your attention.</p>
+    </header>
+
+    <div class="d2-feed">
+
+      <article class="d2-essay">
+        <div class="d2-essay-meta">
+          <span class="cat">Focus</span>
+          <span class="d1-essay-read">9 min · Jul 5</span>
+        </div>
+        <h2><a href="#">Why the list is the problem, not the answer.</a></h2>
+        <p>Every todo app optimizes capture. None optimize the decision. The list grows faster than you can work it, and the app that promised to help becomes the thing you avoid opening.</p>
+      </article>
+
+      <article class="d2-essay">
+        <div class="d2-essay-meta">
+          <span class="cat">Method</span>
+          <span class="d1-essay-read">6 min · Jun 28</span>
+        </div>
+        <h2><a href="#">The capture trap.</a></h2>
+        <p>Writing things down feels like progress. It isn't. Capture is free; the decision is what costs. A working triage practice, and why most people skip it.</p>
+      </article>
+
+      <!-- Finds as inline prose — no titles, no cards -->
+      <section class="d2-finds-group">
+        <div class="d2-finds-label">Recent finds</div>
+
+        <p class="d2-find">
+          <span class="d2-find-text"><a href="#">How Tiimo handles single-task focus</a> — and where it differs from the GTD instinct.</span>
+          <span class="d2-find-meta">watch · Jul 8</span>
+        </p>
+
+        <p class="d2-find">
+          <span class="d2-find-text"><a href="#">Andy Matuschak's notes</a> are a living system — the case for emergent structure over folders.</span>
+          <span class="d2-find-meta">read · Jul 7</span>
+        </p>
+
+        <p class="d2-find">
+          <span class="d2-find-text"><a href="#">Markwhen</a> — timelines as markdown. Useful for sequencing projects.</span>
+          <span class="d2-find-meta">tool · Jul 6</span>
+        </p>
+
+        <p class="d2-find">
+          <span class="d2-find-text">"You don't rise to the level of your goals, you fall to the level of your systems." — <a href="#">Atomic Habits</a>, on why triage matters.</span>
+          <span class="d2-find-meta">note · Jul 4</span>
+        </p>
+
+        <p class="d2-find">
+          <span class="d2-find-text">The <a href="#">"productive procrastination" trap</a> — reorganizing the list instead of working it.</span>
+          <span class="d2-find-meta">read · Jul 2</span>
+        </p>
+      </section>
+
+      <article class="d2-essay">
+        <div class="d2-essay-meta">
+          <span class="cat">Attention</span>
+          <span class="d1-essay-read">8 min · Jun 20</span>
+        </div>
+        <h2><a href="#">Working memory is the real bottleneck.</a></h2>
+        <p>You don't have 97 problems. You have four slots, and 93 things competing for them. What executive function research says about prioritization.</p>
+      </article>
+
+      <article class="d2-essay">
+        <div class="d2-essay-meta">
+          <span class="cat">Build</span>
+          <span class="d1-essay-read">5 min · Jun 12</span>
+        </div>
+        <h2><a href="#">Why we open to one task.</a></h2>
+        <p>The design decision behind the What Now screen. Not a todo list, not a kanban — a chooser.</p>
+      </article>
+
+    </div>
+  </div>
+
+  <footer class="aa-footer">
+    <span>© 2026 ActionAmp</span>
+    <div class="aa-footer-links">
+      <a href="#">About</a>
+      <a href="#">Privacy</a>
+      <a href="#">RSS</a>
+      <a href="#">Founding 100</a>
+    </div>
+  </footer>
+</div>
+
+
+<!-- ============================================================
+     DIRECTION 3 — THE CHOOSER
+     ============================================================ -->
+<div class="direction" id="dir-3">
+  <nav class="aa-nav">
+    <a href="#" class="aa-brand">
+      <span class="aa-brand-mark">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="aa-brand-name">ActionAmp</span>
+    </a>
+    <div class="aa-nav-links">
+      <a href="#" class="aa-nav-link">Blog</a>
+      <a href="#" class="aa-nav-link">About</a>
+      <a href="#" class="aa-nav-link">Roadmap</a>
+      <a href="#" class="aa-nav-link">RSS</a>
+    </div>
+  </nav>
+
+  <div class="d3-wrap">
+    <header class="d3-hero">
+      <div class="aa-eyebrow">The blog</div>
+      <h1>On focus, decisions, and doing the next thing.</h1>
+      <p>What's current, and the archive behind it.</p>
+    </header>
+
+    <div class="d3-chooser">
+      <!-- Current essay -->
+      <a href="#" class="d3-pick d3-pick-essay">
+        <div class="d3-pick-label">Now reading</div>
+        <h2>Why the list is the problem, not the answer.</h2>
+        <p>Every todo app optimizes capture. None optimize the decision. The list grows faster than you can work it, and the app that promised to help becomes the thing you avoid.</p>
+        <div class="d3-pick-essay-meta">
+          <span class="cat">Focus</span>
+          <span>9 min · Jul 5</span>
+        </div>
+      </a>
+
+      <!-- Latest find -->
+      <a href="#" class="d3-pick d3-pick-find">
+        <div class="d3-pick-label">Latest find</div>
+        <h2>How Tiimo handles single-task focus — and where it differs from the GTD instinct.</h2>
+        <div class="d3-pick-find-meta">
+          <span class="find-type">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M2 3h12v10H2z M5 3v10 M11 3v10" stroke="currentColor" stroke-width="1.3"/></svg>
+            watch
+          </span>
+          <span>Jul 8</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Archive -->
+    <section class="d3-archive">
+      <div class="d3-archive-head">
+        <span class="d3-archive-title">The archive</span>
+        <span class="d3-archive-count">4 essays · 5 finds</span>
+      </div>
+
+      <div class="d3-archive-topics">
+        <span class="d3-topic">Focus</span>
+        <span class="d3-topic">Method</span>
+        <span class="d3-topic">Attention</span>
+        <span class="d3-topic">Build</span>
+      </div>
+
+      <div class="d3-archive-list">
+        <a href="#" class="d3-archive-row">
+          <div class="d3-archive-row-left">
+            <span class="d3-archive-row-date">Jul 7</span>
+            <span class="d3-archive-row-title">Andy Matuschak's notes — emergent structure over folders</span>
+          </div>
+          <span class="d3-archive-row-kind">find</span>
+        </a>
+        <a href="#" class="d3-archive-row">
+          <div class="d3-archive-row-left">
+            <span class="d3-archive-row-date">Jul 6</span>
+            <span class="d3-archive-row-title">Markwhen — timelines as markdown</span>
+          </div>
+          <span class="d3-archive-row-kind">find</span>
+        </a>
+        <a href="#" class="d3-archive-row">
+          <div class="d3-archive-row-left">
+            <span class="d3-archive-row-date">Jun 28</span>
+            <span class="d3-archive-row-title">The capture trap</span>
+          </div>
+          <span class="d3-archive-row-kind">essay</span>
+        </a>
+        <a href="#" class="d3-archive-row">
+          <div class="d3-archive-row-left">
+            <span class="d3-archive-row-date">Jun 20</span>
+            <span class="d3-archive-row-title">Working memory is the real bottleneck</span>
+          </div>
+          <span class="d3-archive-row-kind">essay</span>
+        </a>
+        <a href="#" class="d3-archive-row">
+          <div class="d3-archive-row-left">
+            <span class="d3-archive-row-date">Jun 12</span>
+            <span class="d3-archive-row-title">Why we open to one task</span>
+          </div>
+          <span class="d3-archive-row-kind">essay</span>
+        </a>
+        <a href="#" class="d3-archive-row">
+          <div class="d3-archive-row-left">
+            <span class="d3-archive-row-date">Jul 4</span>
+            <span class="d3-archive-row-title">"You fall to the level of your systems" — Clear</span>
+          </div>
+          <span class="d3-archive-row-kind">find</span>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <footer class="aa-footer">
+    <span>© 2026 ActionAmp</span>
+    <div class="aa-footer-links">
+      <a href="#">About</a>
+      <a href="#">Privacy</a>
+      <a href="#">RSS</a>
+      <a href="#">Founding 100</a>
+    </div>
+  </footer>
+</div>
+
+
+<script>
+  // Direction switcher
+  document.querySelectorAll('.switcher-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var dir = btn.dataset.dir;
+      document.querySelectorAll('.switcher-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.querySelectorAll('.direction').forEach(function (d) { d.classList.remove('active'); });
+      document.getElementById('dir-' + dir).classList.add('active');
+      window.scrollTo(0, 0);
+    });
+  });
+
+  // Viewport preview toggle (desktop/mobile). Mobile adds a class to <body>
+  // that constrains the active direction to a 390px column + single-col layout.
+  // Detect initial state from actual viewport width.
+  function setView(view) {
+    var isMobile = view === 'mobile';
+    document.body.classList.toggle('is-mobile', isMobile);
+    document.documentElement.classList.toggle('is-desktop', !isMobile);
+    document.querySelectorAll('.switcher-view-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.view === view);
+    });
+  }
+  document.querySelectorAll('.switcher-view-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () { setView(btn.dataset.view); });
+  });
+  // Default to the visitor's real device class so the preview is honest.
+  setView(window.innerWidth < 760 ? 'mobile' : 'desktop');
+
+  // Featured pattern toggle (prototype-only). Flips the featured zone between
+  // Pattern A (spotlight) and Pattern B (split). The real site would pick one
+  // per build (date-based rotation), not toggle in-page.
+  var featured = document.getElementById('d1-featured');
+  var patternBtn = document.getElementById('d1-pattern-toggle');
+  if (featured && patternBtn) {
+    patternBtn.addEventListener('click', function () {
+      var isA = featured.classList.contains('pattern-a');
+      featured.classList.toggle('pattern-a', !isA);
+      featured.classList.toggle('pattern-b', isA);
+      patternBtn.textContent = isA
+        ? 'Pattern A · Spotlight → B'
+        : 'Pattern B · Split → A';
+      featured.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  // Dark mode toggle
+  var toggle = document.getElementById('theme-toggle');
+  toggle.addEventListener('click', function () {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    toggle.textContent = isDark ? 'Dark' : 'Light';
+  });
+</script>
+
+</body>
+</html>
