@@ -50,20 +50,20 @@
   width: 100%;
   border-bottom: 1px solid var(--aa-border);
 }
-.aa-pub-back {
+.aa-pub-nav-link {
   font-size: 14px;
   font-weight: 500;
   color: var(--aa-text-3);
   transition: color var(--aa-dur-fast);
 }
-.aa-pub-back:hover {
+.aa-pub-nav-link:hover {
   color: var(--aa-text);
   text-decoration: none;
 }
 .aa-pub-nav-links {
   display: flex;
   align-items: center;
-  gap: var(--aa-space-md);
+  gap: 24px;
 }
 
 /* shared brand (used in nav + footer) */
