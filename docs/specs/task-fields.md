@@ -2,7 +2,7 @@
 id: task-fields
 kind: spec
 title: "Task enhancement fields (Context + Outcome)"
-status: ready
+status: building
 priority: P2
 feature: task-fields
 spec_owner: discover
@@ -12,7 +12,7 @@ created: 2026-07-04
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsep      # sync-managed (write-once)
-gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-08T19:30:30Z
 ---
 
 # Spec: Task enhancement fields (Context + Outcome)
