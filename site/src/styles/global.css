@@ -60,6 +60,11 @@
   color: var(--aa-text);
   text-decoration: none;
 }
+.aa-pub-nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-md);
+}
 
 /* shared brand (used in nav + footer) */
 .aa-brand {
@@ -100,6 +105,13 @@
   margin: 0 auto;
   padding: 64px 56px;
   width: 100%;
+}
+/* Wide variant — surfaces that need a larger canvas (the blog index). Drops
+   the reading-width cap so child grids (two-lane archive, featured zone) can
+   use the full content width. Article pages keep the 720px cap. */
+.aa-pub-main--wide {
+  max-width: 1200px;
+  padding: 0;
 }
 
 .aa-markdown-body {

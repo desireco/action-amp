@@ -12,8 +12,12 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description?: string;
+  ogType?: "website" | "article";
+  // Drop the default 720px reading-width constraint on <main> for surfaces that
+  // need a wider canvas (the blog index's two-lane grid). Article pages keep it.
+  fullWidth?: boolean;
 }
-const { title, description } = Astro.props;
+const { title, description, ogType = "website", fullWidth = false } = Astro.props;
 
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
 const siteUrl = Astro.site ?? "https://actionamp.com";
@@ -32,10 +36,13 @@ const canonical = new URL(Astro.url.pathname, siteUrl);
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={canonical} />
+    <!-- RSS feed — the blog publishes here. -->
+    <link rel="alternate" type="application/rss+xml" title="ActionAmp — Blog" href="/rss.xml" />
     <!-- Open Graph -->
     <meta property="og:title" content={title} />
     {description && <meta property="og:description" content={description} />}
     <meta property="og:url" content={canonical} />
+    <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content="ActionAmp" />
     <meta name="twitter:card" content="summary" />
   </head>
@@ -46,10 +53,13 @@ const canonical = new URL(Astro.url.pathname, siteUrl);
           <BrandMark />
           <span class="aa-brand-name">ActionAmp</span>
         </a>
-        <a href="/" class="aa-pub-back">← Home</a>
+        <div class="aa-pub-nav-links">
+          <a href="/blog" class="aa-pub-back">Blog</a>
+          <a href="/" class="aa-pub-back">Home</a>
+        </div>
       </nav>
 
-      <main class="aa-pub-main">
+      <main class={`aa-pub-main${fullWidth ? " aa-pub-main--wide" : ""}`}>
         <slot />
       </main>
 
@@ -59,10 +69,12 @@ const canonical = new URL(Astro.url.pathname, siteUrl);
           <span class="aa-brand-name aa-brand-name-sm">ActionAmp</span>
         </a>
         <div class="aa-pub-footer-links">
+          <a href="/blog">Blog</a>
           <a href="/about">About</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
           <a href="/roadmap">Roadmap</a>
+          <a href="/rss.xml">RSS</a>
           <a href={`${appUrl}/founding-100`}>Founding 100</a>
         </div>
         <div class="aa-pub-copy">© 2026 ActionAmp</div>

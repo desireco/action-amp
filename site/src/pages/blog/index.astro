@@ -1,0 +1,245 @@
+---
+// /blog — the index. Hero → featured zone (Pattern A or B per build-time
+// config) → two-lane archive (Finds | Essays).
+//
+// Spec: docs/specs/blog.md (Done-conditions §Routes, §Featured zone).
+// Direction 1 from the prototype (docs/mockups/blog-directions.html).
+// All posts are loaded once, partitioned into published/draft, then into
+// featured/lane, so dedup is guaranteed (featured XOR archived).
+import { getCollection } from "astro:content";
+import PublicLayout from "../../layouts/PublicLayout.astro";
+import FindTypeIcon from "../../components/FindTypeIcon.astro";
+import { featuredConfig, resolvePattern } from "../../content/blog/featured.config";
+import "../../styles/blog.css";
+
+// ─── load + filter ───────────────────────────────────────────────────────────
+// Drafts are excluded everywhere: index, featured, RSS, sitemap, article route.
+const all = await getCollection("blog", ({ data }) => !data.draft);
+const byDate = (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+const sorted = [...all].sort(byDate);
+
+// ─── featured partition ─────────────────────────────────────────────────────
+// A post is featured if frontmatter `featured: true` OR it's named in
+// featured.config slots. The active pattern renders a fixed number of slots
+// (Pattern A: hero + 2 takes; Pattern B: up to 4 takes + up to 3 essays), so
+// only the items the pattern actually shows are deduped from the lanes. Overflow
+// featured items fall back to the lanes rather than vanishing — an item is never
+// orphaned by a pattern it doesn't fit.
+const slotSlugs = new Set(Object.keys(featuredConfig.slots));
+const isFeatured = (entry) => entry.data.featured || slotSlugs.has(entry.id);
+
+const featuredCandidates = sorted.filter(isFeatured);
+
+// ─── featured-zone curation ──────────────────────────────────────────────────
+// Pattern A (Spotlight): one hero + two half-width takes.
+// Pattern B (Split): a takes column (left, 1/3) + an essays column (right, 2/3).
+// Slot assignment precedence: featured.config.slots → featuredAs frontmatter →
+// kind default (essay→hero, else take).
+const pattern = resolvePattern();
+
+function slotOf(entry) {
+  return (
+    featuredConfig.slots[entry.id] ??
+    entry.data.featuredAs ??
+    (entry.data.kind === "essay" ? "hero" : "take")
+  );
+}
+
+const hero = featuredCandidates.find((e) => slotOf(e) === "hero") ?? featuredCandidates[0];
+// All take-slotted candidates, minus the hero.
+const takeCandidates = featuredCandidates.filter((e) => e !== hero && slotOf(e) === "take");
+
+// Pattern A renders hero + 2 takes; Pattern B renders up to 4 takes + up to 3
+// essays (hero included in the essays column). The items actually rendered:
+const patternATakes = takeCandidates.slice(0, 2);
+const patternBTakes = takeCandidates.slice(0, 4);
+const patternBSplitEssays = featuredCandidates.filter(
+  (e) => e.data.kind === "essay" && e !== hero && !patternBTakes.includes(e),
+);
+const patternBEssays = hero && hero.data.kind === "essay"
+  ? [hero, ...patternBSplitEssays].slice(0, 3)
+  : patternBSplitEssays.slice(0, 3);
+
+// Only the items the active pattern actually renders are pulled from the lanes.
+// Anything else (overflow featured) stays in the lanes so nothing vanishes.
+const renderedFeatured = new Set(
+  [hero, ...(pattern === "A" ? patternATakes : patternBTakes), ...(pattern === "B" ? patternBEssays : [])]
+    .filter(Boolean)
+    .map((e) => e.id),
+);
+const lanesPool = sorted.filter((e) => !renderedFeatured.has(e.id));
+
+// Lane split by kind. Finds render dense; essays render spacious.
+const finds = lanesPool.filter((e) => e.data.kind === "find");
+const essays = lanesPool.filter((e) => e.data.kind === "essay");
+
+// Whether to show the featured zone at all (only when there's something to show).
+const hasFeatured = Boolean(hero);
+
+// ─── formatting helpers ──────────────────────────────────────────────────────
+const FMT_DATE = { month: "short", day: "numeric" };
+const fmtDate = (d) => d.toLocaleDateString("en-US", FMT_DATE);
+const readMeta = (e) =>
+  [e.data.readTime, fmtDate(e.data.pubDate)].filter(Boolean).join(" · ");
+
+// Convenience: does a featured item render the amber special tag?
+const isSpecial = (e) => e.data.contentType === "guide" || e.data.contentType === "offer";
+const specialLabel = (e) => (e.data.contentType === "guide" ? "Guide" : "Offer");
+---
+
+<PublicLayout
+  title="Blog — ActionAmp"
+  description="Essays on focus, decisions, and doing the next thing. Finds worth your attention. No schedule, no noise."
+  fullWidth
+>
+
+  <div class="aa-blog">
+    <!-- ─── HERO ─────────────────────────────────────────────────────── -->
+    <header class="aa-blog-hero">
+      <div class="aa-blog-eyebrow">The blog</div>
+      <h1>On focus, decisions, and doing the next thing.</h1>
+      <p>
+        Essays on the craft of choosing what to do next. Finds worth your
+        attention. No schedule, no noise.
+      </p>
+    </header>
+
+    <!-- ─── FEATURED ZONE ───────────────────────────────────────────────
+         Exactly one pattern renders per build. The active pattern is resolved
+         at build time (editor-set, else ISO-week even/odd). No client toggle. -->
+    {hasFeatured && (
+      <section class="aa-blog-featured" aria-label="Featured">
+        <div class="aa-blog-featured-head">
+          <span class="aa-blog-featured-label">Featured</span>
+        </div>
+
+        {pattern === "A" ? (
+          /* Pattern A — Spotlight: full-width hero + two half-width takes */
+          <div class="aa-spotlight">
+            {hero && (
+              <a class="aa-spotlight-hero" href={`/blog/${hero.id}`}>
+                <div class="aa-spotlight-rule"></div>
+                <div class="aa-spotlight-hero-body">
+                  <div class="aa-spotlight-hero-meta">
+                    {isSpecial(hero) ? (
+                      <span class="aa-tag-special">{specialLabel(hero)}</span>
+                    ) : (
+                      hero.data.tags?.[0] && <span class="aa-cat">{hero.data.tags[0]}</span>
+                    )}
+                    {hero.data.readTime && <span class="aa-blog-read">{readMeta(hero)}</span>}
+                  </div>
+                  <h3>{hero.data.title}</h3>
+                  <p>{hero.data.description}</p>
+                  <span class="aa-spotlight-hero-read">Read →</span>
+                </div>
+              </a>
+            )}
+
+            {patternATakes.map((t) => (
+              <a class="aa-take" href={`/blog/${t.id}`}>
+                <div class="aa-take-top">
+                  {isSpecial(t) ? (
+                    <span class="aa-tag-special">{specialLabel(t)}</span>
+                  ) : t.data.kind === "find" && t.data.findType ? (
+                    <FindTypeIcon type={t.data.findType} />
+                  ) : (
+                    t.data.tags?.[0] && <span class="aa-cat">{t.data.tags[0]}</span>
+                  )}
+                  <span class="aa-take-date">{fmtDate(t.data.pubDate)}</span>
+                </div>
+                <h4>{t.data.title}</h4>
+                <p>{t.data.description}</p>
+              </a>
+            ))}
+          </div>
+        ) : (
+          /* Pattern B — Split: 1/3 quick takes, 2/3 essays.
+             The two columns are disjoint buckets: takes (left) and the hero +
+             remaining featured essays (right). No item appears in both. */
+          <div class="aa-split">
+            <div class="aa-split-col">
+              <div class="aa-split-col-head">Quick takes</div>
+              {patternBTakes.map((t) => (
+                <a class="aa-split-take" href={`/blog/${t.id}`}>
+                  <div class="aa-split-take-top">
+                    {isSpecial(t) ? (
+                      <span class="aa-tag-special">{specialLabel(t)}</span>
+                    ) : t.data.kind === "find" && t.data.findType ? (
+                      <FindTypeIcon type={t.data.findType} />
+                    ) : (
+                      t.data.tags?.[0] && <span class="aa-cat">{t.data.tags[0]}</span>
+                    )}
+                    <span class="aa-take-date">{fmtDate(t.data.pubDate)}</span>
+                  </div>
+                  <h4>{t.data.title}</h4>
+                </a>
+              ))}
+            </div>
+
+            <div class="aa-split-col">
+              <div class="aa-split-col-head">Essays</div>
+              {patternBEssays.map((e) => (
+                <a class="aa-split-essay" href={`/blog/${e.id}`}>
+                  <div class="aa-split-essay-meta">
+                    {e.data.tags?.[0] && <span class="aa-cat">{e.data.tags[0]}</span>}
+                    {e.data.readTime && <span class="aa-blog-read">{readMeta(e)}</span>}
+                  </div>
+                  <h4>{e.data.title}</h4>
+                  <p>{e.data.description}</p>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+    )}
+
+    <!-- ─── TWO-LANE ARCHIVE (Finds | Essays) ───────────────────────────
+         Featured items are deduped out (they show above, not again here). -->
+    <div class="aa-blog-lanes">
+      <section class="aa-blog-lane aa-blog-lane--finds">
+        <div class="aa-blog-lane-head">
+          <span class="aa-blog-lane-title">Finds</span>
+          <span class="aa-blog-lane-meta">curated · weekly-ish</span>
+        </div>
+        {finds.length === 0 ? (
+          <p class="aa-blog-lane-empty">No finds yet — check back soon.</p>
+        ) : (
+          finds.map((f) => (
+            <a class="aa-find" href={`/blog/${f.id}`}>
+              <div class="aa-find-top">
+                {f.data.findType && <FindTypeIcon type={f.data.findType} />}
+                <span class="aa-find-date">{fmtDate(f.data.pubDate)}</span>
+              </div>
+              <div class="aa-find-body">
+                <span class="aa-find-text">{f.data.title}</span>
+                <span class="aa-find-arrow">→</span>
+              </div>
+            </a>
+          ))
+        )}
+      </section>
+
+      <section class="aa-blog-lane">
+        <div class="aa-blog-lane-head">
+          <span class="aa-blog-lane-title">Essays</span>
+          <span class="aa-blog-lane-meta">long-form · monthly</span>
+        </div>
+        {essays.length === 0 ? (
+          <p class="aa-blog-lane-empty">No essays yet — check back soon.</p>
+        ) : (
+          essays.map((e) => (
+            <a class="aa-essay" href={`/blog/${e.id}`}>
+              <div class="aa-essay-meta">
+                {e.data.tags?.[0] && <span class="aa-cat">{e.data.tags[0]}</span>}
+                {e.data.readTime && <span class="aa-blog-read">{readMeta(e)}</span>}
+              </div>
+              <h2>{e.data.title}</h2>
+              <p>{e.data.description}</p>
+            </a>
+          ))
+        )}
+      </section>
+    </div>
+  </div>
+</PublicLayout>

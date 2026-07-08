@@ -1,0 +1,101 @@
+---
+// /blog/[slug] — article page. Renders the post body from markdown, with the
+// post's title/description/canonical/OG in the head (PublicLayout handles the
+// chrome). A find article emphasizes the outbound link; an essay is long-form.
+//
+// Spec: docs/specs/blog.md (Done-conditions §Routes, second block).
+// Unknown slugs don't generate a route (getStaticPaths returns only published
+// posts); Cloudflare Pages serves a 404 for unmatched paths. No redirect or
+// catch-all needed — the static host handles it.
+import { getCollection, render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import PublicLayout from "../../layouts/PublicLayout.astro";
+import FindTypeIcon from "../../components/FindTypeIcon.astro";
+import "../../styles/blog.css";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+interface Props {
+  post: CollectionEntry<"blog">;
+}
+const { post } = Astro.props;
+const { Content } = await render(post);
+const d = post.data;
+
+// Human-readable date formatting.
+const FMT_LONG = { year: "numeric", month: "long", day: "numeric" };
+const fmtLong = (date: Date) => date.toLocaleDateString("en-US", FMT_LONG);
+
+// The kind badge label for the meta row.
+const isFind = d.kind === "find";
+const isSpecial = d.contentType === "guide" || d.contentType === "offer";
+const specialLabel = d.contentType === "guide" ? "Guide" : "Offer";
+---
+
+<PublicLayout title={`${d.title} — ActionAmp Blog`} description={d.description} ogType="article">
+  <article class="aa-blog-article">
+    <a class="aa-blog-back" href="/blog">
+      <span class="aa-blog-back-arrow">←</span>
+      Back to blog
+    </a>
+
+    <!-- Meta row: kind badge / category, date, read-time -->
+    <div class="aa-blog-article-meta">
+      {isSpecial ? (
+        <span class="aa-tag-special">{specialLabel}</span>
+      ) : isFind ? (
+        d.findType && <FindTypeIcon type={d.findType} />
+      ) : (
+        d.tags?.[0] && <span class="aa-cat">{d.tags[0]}</span>
+      )}
+      <span class="aa-blog-article-date">{fmtLong(d.pubDate)}</span>
+      {d.readTime && <span class="aa-blog-read">{d.readTime}</span>}
+    </div>
+
+    <h1>{d.title}</h1>
+    <p class="aa-blog-article-lede">{d.description}</p>
+
+    {d.updatedDate && (
+      <p class="aa-blog-article-updated">Updated {fmtLong(d.updatedDate)}</p>
+    )}
+
+    {/* Tags row (categories) for non-find posts that have them. */}
+    {d.tags && d.tags.length > 0 && !isFind && (
+      <div class="aa-blog-article-tags">
+        {d.tags.map((t) => (
+          <span class="aa-cat">{t}</span>
+        ))}
+      </div>
+    )}
+
+    {/* Find outbound-link callout — prominent, the point of a find. */}
+    {isFind && d.link && (
+      <a
+        class="aa-find-link"
+        href={d.link}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <div class="aa-find-link-left">
+          <span class="aa-find-link-label">Read the source</span>
+          <span class="aa-find-link-source">{d.source ?? new URL(d.link).hostname}</span>
+        </div>
+        <span class="aa-find-link-arrow">↗</span>
+      </a>
+    )}
+
+    <div class="aa-blog-article-body aa-markdown-body">
+      <Content />
+    </div>
+
+    {/*
+      Newsletter slot — placeholder until the `newsletter` spec ships.
+      Wiring it later is a one-line change: drop the component in here and
+      remove this comment. See docs/specs/blog.md Non-goals + Open questions §5.
+    */}
+    {/* <div class="aa-blog-newsletter-slot"><NewsletterForm /></div> */}
+  </article>
+</PublicLayout>

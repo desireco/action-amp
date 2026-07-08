@@ -1,0 +1,607 @@
+/*
+ * Blog styles — two-lane index + rotating featured zone.
+ * Ported from docs/mockups/blog-directions.html (Direction 1), adapted to the
+ * production PublicLayout chrome (which provides its own nav/footer). Reads all
+ * color/type/spacing from tokens.css via global.css. Mobile-first: the lanes
+ * stack by default and split into two columns at ≥761px.
+ *
+ * Class namespace: aa-blog-* (matches the site's aa-* convention and avoids
+ * collision with the prototype's d1-* / landing's aa-* names).
+ */
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.aa-blog-hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--aa-space-3xl) var(--aa-space-2xl) var(--aa-space-2xl);
+  border-bottom: 1px solid var(--aa-border);
+}
+.aa-blog-eyebrow {
+  font-size: var(--aa-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--aa-teal-cta);
+  font-weight: 600;
+}
+.aa-blog-hero h1 {
+  font-size: var(--aa-text-2xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: var(--aa-leading-tight);
+  margin-top: var(--aa-space-sm);
+}
+.aa-blog-hero p {
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-md);
+  margin-top: var(--aa-space-sm);
+  max-width: 52ch;
+}
+
+/* ============================================================
+   CATEGORY PILL + FIND-TYPE HINT (shared across patterns)
+   ============================================================ */
+.aa-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  font-size: var(--aa-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--aa-text-3);
+}
+.aa-cat::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+}
+
+.aa-find-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--aa-text-xs);
+  font-weight: 500;
+  color: var(--aa-text-4);
+  text-transform: lowercase;
+}
+.aa-find-type svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* Amber tag for non-post featured content (guide/offer) — rare human emphasis. */
+.aa-tag-special {
+  display: inline-block;
+  font-size: var(--aa-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--aa-amber-text);
+  background: var(--aa-amber-soft);
+  padding: 2px var(--aa-space-sm);
+  border-radius: var(--aa-radius-sm);
+}
+
+/* Shared read-time meta used by essays + featured hero. */
+.aa-blog-read {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+}
+
+/* ============================================================
+   FEATURED ZONE
+   ============================================================ */
+.aa-blog-featured {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--aa-space-2xl) var(--aa-space-2xl) var(--aa-space-md);
+}
+.aa-blog-featured-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--aa-space-xl);
+}
+.aa-blog-featured-label {
+  font-size: var(--aa-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--aa-teal-cta);
+  font-weight: 600;
+}
+.aa-blog-featured-note {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+}
+
+/* --- Pattern A — Spotlight: full-width hero + two half-width takes --- */
+.aa-spotlight {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--aa-space-lg);
+}
+.aa-spotlight-hero {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 3px 1fr;
+  gap: var(--aa-space-lg);
+  padding-bottom: var(--aa-space-xl);
+  border-bottom: 1px solid var(--aa-border);
+  color: var(--aa-text);
+  text-decoration: none;
+}
+.aa-spotlight-hero:hover {
+  text-decoration: none;
+}
+.aa-spotlight-rule {
+  background: var(--aa-teal);
+  border-radius: var(--aa-radius-full);
+}
+.aa-spotlight-hero-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+}
+.aa-spotlight-hero-meta {
+  display: flex;
+  gap: var(--aa-space-md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.aa-spotlight-hero h3 {
+  font-size: var(--aa-text-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: var(--aa-leading-tight);
+  color: var(--aa-text);
+  margin-top: var(--aa-space-xs);
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-spotlight-hero:hover h3 {
+  color: var(--aa-teal-cta);
+}
+.aa-spotlight-hero p {
+  color: var(--aa-text-2);
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-relaxed);
+  max-width: 62ch;
+}
+.aa-spotlight-hero-read {
+  margin-top: var(--aa-space-sm);
+  font-size: var(--aa-text-sm);
+  font-weight: 500;
+  color: var(--aa-teal-cta);
+}
+/* Half-width take card */
+.aa-take {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+  padding: var(--aa-space-md) 0;
+  color: var(--aa-text);
+  text-decoration: none;
+}
+.aa-take:hover {
+  text-decoration: none;
+}
+.aa-take-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.aa-take-date {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+}
+.aa-take h4 {
+  font-size: var(--aa-text-md);
+  font-weight: 500;
+  line-height: var(--aa-leading-snug);
+  color: var(--aa-text);
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-take:hover h4 {
+  color: var(--aa-teal-cta);
+}
+.aa-take p {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  line-height: var(--aa-leading-snug);
+}
+
+/* --- Pattern B — Split: 1/3 quick takes, 2/3 essays --- */
+.aa-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--aa-space-xl);
+}
+.aa-split-col {
+  display: flex;
+  flex-direction: column;
+}
+.aa-split-col-head {
+  font-size: var(--aa-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--aa-text-4);
+  font-weight: 600;
+  margin-bottom: var(--aa-space-md);
+  padding-bottom: var(--aa-space-sm);
+  border-bottom: 1px solid var(--aa-border);
+}
+/* Left takes — compact rows */
+.aa-split-take {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--aa-space-md) 0;
+  border-bottom: 1px solid var(--aa-border);
+  color: var(--aa-text);
+  text-decoration: none;
+}
+.aa-split-take:last-child {
+  border-bottom: none;
+}
+.aa-split-take:hover {
+  text-decoration: none;
+}
+.aa-split-take-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.aa-split-take h4 {
+  font-size: var(--aa-text-sm);
+  font-weight: 500;
+  line-height: var(--aa-leading-snug);
+  color: var(--aa-text-2);
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-split-take:hover h4 {
+  color: var(--aa-teal-cta);
+}
+/* Right essays — titled blocks */
+.aa-split-essay {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+  padding: var(--aa-space-md) 0;
+  border-bottom: 1px solid var(--aa-border);
+  color: var(--aa-text);
+  text-decoration: none;
+}
+.aa-split-essay:first-of-type {
+  padding-top: 0;
+}
+.aa-split-essay:last-child {
+  border-bottom: none;
+}
+.aa-split-essay:hover {
+  text-decoration: none;
+}
+.aa-split-essay-meta {
+  display: flex;
+  gap: var(--aa-space-md);
+  align-items: center;
+}
+.aa-split-essay h4 {
+  font-size: var(--aa-text-lg);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: var(--aa-leading-snug);
+  color: var(--aa-text);
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-split-essay:hover h4 {
+  color: var(--aa-teal-cta);
+}
+.aa-split-essay p {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  line-height: var(--aa-leading-snug);
+}
+
+/* ============================================================
+   TWO-LANE ARCHIVE (Finds | Essays)
+   ============================================================ */
+.aa-blog-lanes {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.aa-blog-lane {
+  padding: var(--aa-space-2xl);
+}
+.aa-blog-lane--finds {
+  border-bottom: 1px solid var(--aa-border);
+}
+.aa-blog-lane-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--aa-space-xl);
+}
+.aa-blog-lane-title {
+  font-size: var(--aa-text-md);
+  font-weight: 600;
+  color: var(--aa-text);
+}
+.aa-blog-lane-meta {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+}
+
+/* Find row — dense, one-line, teal arrow */
+.aa-find {
+  display: block;
+  padding: var(--aa-space-md) 0;
+  border-bottom: 1px solid var(--aa-border);
+  color: var(--aa-text);
+  text-decoration: none;
+}
+.aa-find:last-child {
+  border-bottom: none;
+}
+.aa-find:hover {
+  text-decoration: none;
+}
+.aa-find-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.aa-find-date {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+}
+.aa-find-body {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+  line-height: var(--aa-leading-snug);
+}
+.aa-find-text {
+  color: var(--aa-text-2);
+  font-size: var(--aa-text-sm);
+  flex: 1;
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-find:hover .aa-find-text {
+  color: var(--aa-text);
+}
+.aa-find-arrow {
+  color: var(--aa-teal-cta);
+  font-size: var(--aa-text-md);
+  flex-shrink: 0;
+  transition: transform var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-find:hover .aa-find-arrow {
+  transform: translateX(3px);
+}
+
+/* Essay block — spacious */
+.aa-essay {
+  display: block;
+  padding: var(--aa-space-xl) 0;
+  border-bottom: 1px solid var(--aa-border);
+  color: var(--aa-text);
+  text-decoration: none;
+}
+.aa-essay:first-of-type {
+  padding-top: 0;
+}
+.aa-essay:last-child {
+  border-bottom: none;
+}
+.aa-essay:hover {
+  text-decoration: none;
+}
+.aa-essay-meta {
+  display: flex;
+  gap: var(--aa-space-md);
+  align-items: center;
+  margin-bottom: var(--aa-space-sm);
+}
+.aa-essay h2 {
+  font-size: var(--aa-text-lg);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: var(--aa-leading-snug);
+  color: var(--aa-text);
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-essay:hover h2 {
+  color: var(--aa-teal-cta);
+}
+.aa-essay p {
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  margin-top: var(--aa-space-xs);
+  line-height: var(--aa-leading-snug);
+}
+
+/* Empty-lane placeholder — calm, not alarming. */
+.aa-blog-lane-empty {
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-sm);
+  font-style: italic;
+}
+
+/* ============================================================
+   ARTICLE PAGE (/blog/[slug])
+   ============================================================ */
+.aa-blog-article {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--aa-space-3xl) var(--aa-space-2xl) var(--aa-space-4xl);
+  width: 100%;
+}
+.aa-blog-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--aa-text-sm);
+  font-weight: 500;
+  color: var(--aa-text-3);
+  margin-bottom: var(--aa-space-xl);
+  transition: color var(--aa-dur-fast);
+}
+.aa-blog-back:hover {
+  color: var(--aa-text);
+  text-decoration: none;
+}
+.aa-blog-back-arrow {
+  transition: transform var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-blog-back:hover .aa-blog-back-arrow {
+  transform: translateX(-3px);
+}
+/* Article meta row (kind badge, date, read-time) */
+.aa-blog-article-meta {
+  display: flex;
+  gap: var(--aa-space-md);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--aa-space-sm);
+}
+.aa-blog-article-date {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-4);
+}
+.aa-blog-article-updated {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  font-style: italic;
+}
+/* Tags row under the lede — spacing only; the pills come from .aa-cat. */
+.aa-blog-article-tags {
+  display: flex;
+  gap: var(--aa-space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--aa-space-lg);
+}
+.aa-blog-article h1 {
+  font-size: var(--aa-text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: var(--aa-leading-tight);
+  color: var(--aa-text);
+  margin-bottom: var(--aa-space-md);
+}
+.aa-blog-article-lede {
+  font-size: var(--aa-text-md);
+  color: var(--aa-text-3);
+  line-height: var(--aa-leading-relaxed);
+  max-width: 65ch;
+  margin-bottom: var(--aa-space-2xl);
+}
+
+/* Find outbound-link callout — prominent, the point of a find. */
+.aa-find-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  margin: var(--aa-space-lg) 0 var(--aa-space-2xl);
+  padding: var(--aa-space-md) var(--aa-space-lg);
+  background: var(--aa-teal-soft);
+  border-radius: var(--aa-radius-md);
+  text-decoration: none;
+  transition: background var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-find-link:hover {
+  background: var(--aa-teal-soft-strong);
+  text-decoration: none;
+}
+.aa-find-link-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.aa-find-link-label {
+  font-size: var(--aa-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--aa-teal-cta);
+  font-weight: 600;
+}
+.aa-find-link-source {
+  font-size: var(--aa-text-md);
+  font-weight: 500;
+  color: var(--aa-text);
+}
+.aa-find-link-arrow {
+  color: var(--aa-teal-cta);
+  font-size: var(--aa-text-md);
+  transition: transform var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-find-link:hover .aa-find-link-arrow {
+  transform: translateX(3px);
+}
+
+/* Article body — inherits typography from .aa-markdown-body (global.css).
+   This class only adds the blog article's spacing + a 65ch measure; it does
+   not re-declare the markdown type scale (that would duplicate and drift). */
+.aa-blog-article-body {
+  font-size: var(--aa-text-md);
+  line-height: var(--aa-leading-relaxed);
+  color: var(--aa-text-2);
+}
+.aa-blog-article-body p,
+.aa-blog-article-body ul,
+.aa-blog-article-body ol {
+  max-width: 65ch;
+}
+
+/* Newsletter slot — placeholder until the `newsletter` spec ships. */
+.aa-blog-newsletter-slot {
+  margin-top: var(--aa-space-3xl);
+  padding-top: var(--aa-space-2xl);
+  border-top: 1px solid var(--aa-border);
+}
+
+/* ============================================================
+   DESKTOP — two-column layouts kick in at 761px
+   ============================================================ */
+@media (min-width: 761px) {
+  /* Lane archive: dense Finds left, spacious Essays right (1 : 1.4). */
+  .aa-blog-lanes {
+    grid-template-columns: 1fr 1.4fr;
+  }
+  .aa-blog-lane--finds {
+    border-bottom: none;
+    border-right: 1px solid var(--aa-border);
+  }
+  /* Pattern A: two takes sit side-by-side below the hero. */
+  .aa-spotlight {
+    grid-template-columns: 1fr 1fr;
+  }
+  /* Pattern B: quick takes left third, essays right two-thirds. */
+  .aa-split {
+    grid-template-columns: 1fr 2fr;
+    gap: var(--aa-space-2xl);
+  }
+}
+
+/* ============================================================
+   NARROW-MOBILE padding tighten (≤520px)
+   ============================================================ */
+@media (max-width: 520px) {
+  .aa-blog-hero,
+  .aa-blog-featured,
+  .aa-blog-lane,
+  .aa-blog-article {
+    padding-left: var(--aa-space-lg);
+    padding-right: var(--aa-space-lg);
+  }
+  .aa-blog-article {
+    padding-top: var(--aa-space-2xl);
+  }
+}
