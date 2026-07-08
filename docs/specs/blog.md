@@ -2,7 +2,7 @@
 id: blog
 kind: spec
 title: "Blog — two-lane publication with a rotating featured zone"
-status: review
+status: done
 priority: P1
 feature: blog
 spec_owner: discover
