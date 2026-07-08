@@ -6,6 +6,7 @@ depends_on: tag-management.md          # the moment tags need a UI that doesn't 
 spec_owner: discover
 build_owner: build
 priority: P3
+kind: spec
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsYc      # sync-managed (write-once)
