@@ -1,13 +1,13 @@
 ---
 kind: bug
 status: draft
-priority: low
+priority: P3
 feature: custom-lenses
 parent: reviews/custom-lenses.md
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsmu      # sync-managed (write-once)
-gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-08T19:45:22Z
 ---
 
 # Lens FREE-gate edge cases during loading + self-heal
