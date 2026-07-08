@@ -21,6 +21,30 @@ Decision is expensive. It takes attention, comparison, and a kind of commitment 
 
 So a list that grows without a matching decision practice isn't a productivity system. It's a backlog of unmade decisions, and the longer it sits the heavier each one gets. The six-month-old task you keep carrying forward isn't a task anymore. It's a small daily reminder that you have a decision you're avoiding.
 
+<figure class="aa-blog-fig">
+  <svg viewBox="0 0 520 220" fill="none" role="img" aria-label="An inbox list where older items accumulate and one keeps carrying forward">
+    <g stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="20" y="20" width="480" height="180" rx="8" opacity="0.4" />
+      <!-- inbox header -->
+      <line x1="20" y1="48" x2="500" y2="48" opacity="0.4" />
+      <text x="36" y="40" font-family="ui-monospace,monospace" font-size="10" fill="currentColor" opacity="0.5">inbox · 24 items</text>
+      <!-- fresh rows: crisp, full opacity -->
+      <rect x="34" y="60" width="10" height="10" rx="2" /><line x1="52" y1="65" x2="320" y2="65" />
+      <rect x="34" y="80" width="10" height="10" rx="2" /><line x1="52" y1="85" x2="288" y2="85" />
+      <rect x="34" y="100" width="10" height="10" rx="2" /><line x1="52" y1="105" x2="340" y2="105" />
+      <!-- middle rows: fading -->
+      <rect x="34" y="120" width="10" height="10" rx="2" opacity="0.6" /><line x1="52" y1="125" x2="260" y2="125" opacity="0.6" />
+      <rect x="34" y="140" width="10" height="10" rx="2" opacity="0.5" /><line x1="52" y1="145" x2="300" y2="145" opacity="0.5" />
+      <!-- the carried-forward fossil: amber marker, boxed -->
+      <rect x="30" y="158" width="340" height="26" rx="5" stroke="var(--aa-amber)" stroke-width="1.2" opacity="0.9" fill="var(--aa-amber-soft)" />
+      <rect x="34" y="166" width="10" height="10" rx="2" stroke="var(--aa-amber)" opacity="0.8" />
+      <line x1="52" y1="171" x2="240" y2="171" stroke="var(--aa-amber-text)" opacity="0.85" />
+      <text x="300" y="175" font-family="ui-monospace,monospace" font-size="9" fill="var(--aa-amber-text)" opacity="0.8">Mar 14</text>
+    </g>
+  </svg>
+  <figcaption>Capture without triage: new items land, old ones never leave.</figcaption>
+</figure>
+
 ## Triage is the missing step
 
 What almost nobody does — and what every serious methodology, from GTD onward, actually centers on — is a regular triage step between capture and action. Not doing the work. Just deciding, item by item, what each captured thing *is*.

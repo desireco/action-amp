@@ -13,6 +13,31 @@ That number — four, give or take — is one of the more durable results in the
 
 This is why the todo list fails so reliably, and why "just prioritize better" is such useless advice. You can't prioritize by holding more things in mind. You can only prioritize by **removing things from the contention set** so the slots you have are free for the one thing that matters.
 
+<figure class="aa-blog-fig">
+  <svg viewBox="0 0 520 200" fill="none" role="img" aria-label="Working memory shown as four filled slots, with many more items queued behind them">
+    <!-- The four slots — small, full, foregrounded -->
+    <text x="24" y="32" font-family="ui-monospace,monospace" font-size="10" fill="currentColor" opacity="0.5">working memory · 4 slots</text>
+    <g>
+      <rect x="24" y="44" width="80" height="64" rx="6" stroke="var(--aa-teal)" stroke-width="1.6" fill="var(--aa-teal-soft)" />
+      <rect x="112" y="44" width="80" height="64" rx="6" stroke="var(--aa-teal)" stroke-width="1.6" fill="var(--aa-teal-soft)" />
+      <rect x="200" y="44" width="80" height="64" rx="6" stroke="var(--aa-teal)" stroke-width="1.6" fill="var(--aa-teal-soft)" />
+      <rect x="288" y="44" width="80" height="64" rx="6" stroke="var(--aa-teal)" stroke-width="1.6" fill="var(--aa-teal-soft)" />
+      <!-- occupied marks -->
+      <circle cx="64" cy="76" r="5" fill="var(--aa-teal)" /><circle cx="152" cy="76" r="5" fill="var(--aa-teal)" /><circle cx="240" cy="76" r="5" fill="var(--aa-teal)" /><circle cx="328" cy="76" r="5" fill="var(--aa-teal)" />
+    </g>
+    <!-- The queue — many items waiting, fading into noise -->
+    <text x="24" y="136" font-family="ui-monospace,monospace" font-size="10" fill="currentColor" opacity="0.5">the rest · 93 competing</text>
+    <g stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+      <line x1="24" y1="152" x2="468" y2="152" opacity="0.5" /><line x1="24" y1="164" x2="452" y2="164" opacity="0.42" />
+      <line x1="24" y1="176" x2="476" y2="176" opacity="0.34" /><line x1="24" y1="188" x2="440" y2="188" opacity="0.26" />
+    </g>
+    <line x1="380" y1="76" x2="420" y2="76" stroke="var(--aa-teal)" stroke-width="1.4" stroke-linecap="round" opacity="0.7" />
+    <path d="M416 70l6 6-6 6" stroke="var(--aa-teal)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7" />
+    <text x="432" y="80" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11" fill="currentColor" opacity="0.4">blocked</text>
+  </svg>
+  <figcaption>Four slots, all occupied. Everything else waits.</figcaption>
+</figure>
+
 ## The list assumes a larger working memory than you have
 
 A list of forty items is an instruction to your working memory: hold these forty in suspension, compare them, and pick. The system can't do that. What actually happens is you scan the top, feel the weight of the rest, get tired, and pick something near the top that's easy rather than important. That's not a character flaw. That's a four-slot system doing what four-slot systems do under load.

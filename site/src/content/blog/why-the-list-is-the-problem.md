@@ -15,6 +15,36 @@ The implied promise: write things down and the overwhelm will recede. It doesn't
 
 The actual problem isn't capturing. You're already good at that — the inbox fills itself whether you help or not. The problem is **the decision**. Of all this, what do I do next?
 
+<figure class="aa-blog-fig">
+  <svg viewBox="0 0 520 200" fill="none" role="img" aria-label="A long, overwhelming todo list collapsing into a single next-task card">
+    <!-- Left: the long list, dense and claustrophobic -->
+    <g stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.55">
+      <rect x="16" y="22" width="220" height="156" rx="8" />
+      <rect x="30" y="38" width="10" height="10" rx="2" /><line x1="48" y1="43" x2="210" y2="43" />
+      <rect x="30" y="60" width="10" height="10" rx="2" /><line x1="48" y1="65" x2="200" y2="65" />
+      <rect x="30" y="82" width="10" height="10" rx="2" /><line x1="48" y1="87" x2="218" y2="87" />
+      <rect x="30" y="104" width="10" height="10" rx="2" /><line x1="48" y1="109" x2="196" y2="109" />
+      <rect x="30" y="126" width="10" height="10" rx="2" /><line x1="48" y1="131" x2="206" y2="131" />
+      <rect x="30" y="148" width="10" height="10" rx="2" /><line x1="48" y1="153" x2="188" y2="153" />
+    </g>
+    <!-- Arrow collapsing to the right -->
+    <path d="M250 100 C 290 100, 300 100, 326 100" stroke="var(--aa-teal)" stroke-width="2" stroke-linecap="round" />
+    <path d="M320 94 L 330 100 L 320 106" stroke="var(--aa-teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <!-- Right: one calm card — the chooser -->
+    <g>
+      <rect x="346" y="48" width="156" height="104" rx="10" fill="var(--aa-teal-soft)" stroke="var(--aa-teal)" stroke-width="1.6" />
+      <circle cx="372" cy="78" r="7" stroke="var(--aa-teal)" stroke-width="1.6" fill="none" />
+      <path d="M369 78l2 2 4-4" stroke="var(--aa-teal)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <line x1="388" y1="74" x2="484" y2="74" stroke="var(--aa-text)" stroke-width="2" stroke-linecap="round" />
+      <line x1="388" y1="82" x2="464" y2="82" stroke="var(--aa-text-2)" stroke-width="1.6" stroke-linecap="round" opacity="0.6" />
+      <line x1="364" y1="104" x2="484" y2="104" stroke="var(--aa-text-2)" stroke-width="1.6" stroke-linecap="round" opacity="0.45" />
+      <line x1="364" y1="118" x2="464" y2="118" stroke="var(--aa-text-2)" stroke-width="1.6" stroke-linecap="round" opacity="0.35" />
+      <line x1="364" y1="132" x2="448" y2="132" stroke="var(--aa-text-2)" stroke-width="1.6" stroke-linecap="round" opacity="0.25" />
+    </g>
+  </svg>
+  <figcaption>The list grows; the home screen collapses to one.</figcaption>
+</figure>
+
 ## Capture is free; the decision is what costs
 
 Writing a task down feels like progress because it is progress — against forgetting. But forgetting was never the bottleneck. You forget the odd thing; you don't forget that you're behind. The bottleneck is choosing, and choosing is cognitively expensive in a way that capturing isn't. Capture takes two seconds and resolves a small anxiety. Choosing takes real attention and commits you to one path at the cost of every other.

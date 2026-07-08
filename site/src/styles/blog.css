@@ -569,6 +569,34 @@
 }
 
 /* ============================================================
+   INLINE ARTICLE FIGURES
+   Line illustrations in the site's vocabulary (currentColor strokes,
+   teal system accent, amber for the rare human-emphasis element).
+   Inherits the article body's text color so it adapts to theme.
+   ============================================================ */
+.aa-blog-fig {
+  margin: var(--aa-space-xl) 0;
+  text-align: center;
+}
+.aa-blog-fig svg {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  color: var(--aa-text-2);
+  display: block;
+  margin: 0 auto;
+}
+.aa-blog-fig figcaption {
+  margin-top: var(--aa-space-sm);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-4);
+  font-style: italic;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ============================================================
    DESKTOP — two-column layouts kick in at 761px
    ============================================================ */
 @media (min-width: 761px) {
