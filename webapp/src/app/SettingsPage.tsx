@@ -66,10 +66,15 @@ export function SettingsPage() {
 
   return (
     <SettingsLayout>
-      {/* Profile */}
       <section className="aa-settings-section">
+        <div className="aa-settings-section-head">
+          <h2 className="aa-settings-sh">Profile</h2>
+          <p className="aa-settings-note">
+            This name shows in the app shell and personalizes focus copy.
+          </p>
+        </div>
         <form className="aa-settings-form" onSubmit={saveProfile}>
-          <Field label="Name">
+          <Field label="Full name" description="Used for your account and avatar initials.">
             <input
               className="aa-settings-input"
               value={fullName}
@@ -81,8 +86,7 @@ export function SettingsPage() {
               disabled={!user || profileStatus === "saving"}
             />
           </Field>
-          <Field label="Email" value={email ?? "—"} />
-          <Field label="Call me">
+          <Field label="Display name" description="Short name ActionAmp can use in calmer copy.">
             <input
               className="aa-settings-input"
               value={preferredName}
@@ -111,9 +115,14 @@ export function SettingsPage() {
         </form>
       </section>
 
-      {/* Security */}
       <section className="aa-settings-section">
-        <h2 className="aa-settings-sh">Security</h2>
+        <div className="aa-settings-section-head">
+          <h2 className="aa-settings-sh">Sign-in</h2>
+          <p className="aa-settings-note">
+            Email identifies the account. Password changes happen by reset link.
+          </p>
+        </div>
+        <Field label="Email address" description={email ? "Primary sign-in email." : "No email login attached."} value={email ?? "Not connected"} />
         <Field
           label="Password"
           description={
@@ -137,10 +146,12 @@ export function SettingsPage() {
         {passwordError && <p className="aa-settings-error">{passwordError}</p>}
       </section>
 
-      {/* Sign out */}
       <section className="aa-settings-section">
-        <h2 className="aa-settings-sh">Session</h2>
-        <Field label="Session">
+        <div className="aa-settings-section-head">
+          <h2 className="aa-settings-sh">Session</h2>
+          <p className="aa-settings-note">End this browser session.</p>
+        </div>
+        <Field label="Signed in as" value={email ?? user?.fullName ?? "This account"}>
           <Button variant="secondary" size="sm" onClick={() => setConfirmLogout(true)}>
             Log out
           </Button>

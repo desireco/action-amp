@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--aa-space-lg);
-  padding: var(--aa-space-md) 0;
+  padding: var(--aa-space-lg) 0;
   border-bottom: 1px solid var(--aa-border);
 }
 
@@ -22,22 +22,23 @@
 }
 
 .aa-field__label {
-  font-size: var(--aa-text-base);
+  font-size: var(--aa-text-md);
   font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
 }
 
 .aa-field__desc {
-  font-size: var(--aa-text-sm);
-  color: var(--aa-text-3);
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-2);
   line-height: var(--aa-leading-snug);
 }
 
 .aa-field__value {
-  font-size: var(--aa-text-base);
-  color: var(--aa-text-2);
+  font-size: var(--aa-text-md);
+  color: var(--aa-text);
   text-align: right;
   word-break: break-word;
+  font-weight: var(--aa-weight-medium);
 }
 
 /* Stack vertically on narrow viewports */

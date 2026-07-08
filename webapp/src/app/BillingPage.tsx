@@ -103,7 +103,10 @@ export function BillingPage() {
 
       {/* Payment history */}
       <section className="aa-billing-section">
-        <h2 className="aa-settings-sh">Payment history</h2>
+        <div className="aa-settings-section-head">
+          <h2 className="aa-settings-sh">Payment history</h2>
+          <p className="aa-settings-note">Receipts recorded after Stripe confirms payment.</p>
+        </div>
         <Table
           columns={paymentColumns}
           rows={data?.payments ?? []}
@@ -144,10 +147,19 @@ function ActivePlanState({
 
   return (
     <section className="aa-billing-section">
+      <div className="aa-settings-section-head">
+        <h2 className="aa-settings-sh">Current plan</h2>
+        <p className="aa-settings-note">
+          Manage subscription, payment method, invoices, and cancellation through Stripe.
+        </p>
+      </div>
       <Card padding="lg">
         <div className="aa-billing-active">
           <div>
-            <Chip variant="teal">{PLAN_LABEL[plan]}</Chip>
+            <div className="aa-billing-active-title">
+              <Chip variant="teal">{PLAN_LABEL[plan]}</Chip>
+              <span>Active</span>
+            </div>
             {planRenewsAt ? (
               <p className="aa-billing-active-renewal">
                 Renews {new Date(planRenewsAt).toLocaleDateString()}
@@ -162,7 +174,7 @@ function ActivePlanState({
             onClick={handleManage}
             disabled={portalLoading}
           >
-            {portalLoading ? "Opening…" : "Manage billing"}
+            {portalLoading ? "Opening…" : "Update payment in Stripe"}
           </Button>
         </div>
       </Card>
@@ -192,13 +204,25 @@ function FreeUpgradeScreen() {
   return (
     <>
       <section className="aa-billing-section">
-        <p className="aa-billing-current-tier">
-          You're on <strong>Free</strong> · personal scope, 3 projects, 1 goal.
-        </p>
+        <div className="aa-settings-section-head">
+          <h2 className="aa-settings-sh">Current plan</h2>
+          <p className="aa-settings-note">Free includes personal scope, 3 projects, and 1 goal.</p>
+        </div>
+        <Card padding="lg">
+          <div className="aa-billing-active">
+            <div className="aa-billing-active-title">
+              <Chip variant="muted">Free</Chip>
+              <span>No payment method on file</span>
+            </div>
+          </div>
+        </Card>
       </section>
 
       <section className="aa-billing-section">
-        <h2 className="aa-settings-sh">Upgrade to Pro</h2>
+        <div className="aa-settings-section-head">
+          <h2 className="aa-settings-sh">Upgrade to Pro</h2>
+          <p className="aa-settings-note">Pick a plan. Checkout opens in Stripe.</p>
+        </div>
         <div className="aa-billing-grid">
           {PLANS.map((plan) => (
             <Card

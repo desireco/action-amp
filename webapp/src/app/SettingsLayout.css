@@ -1,7 +1,7 @@
 @import "../styles/tokens.css";
 
 .aa-settings-hub {
-  max-width: 680px;
+  max-width: 760px;
 }
 
 /* ---- Back link ---- */
@@ -9,9 +9,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--aa-text-sm);
+  font-size: var(--aa-text-base);
   font-weight: var(--aa-weight-medium);
-  color: var(--aa-text-3);
+  color: var(--aa-text-2);
   margin-bottom: var(--aa-space-lg);
   text-decoration: none;
   transition: color 0.12s var(--aa-ease-out);
@@ -35,7 +35,7 @@
 .aa-settings-h {
   font-size: var(--aa-text-2xl);
   font-weight: var(--aa-weight-bold);
-  letter-spacing: -0.015em;
+  letter-spacing: 0;
   color: var(--aa-text);
   margin: 0 0 var(--aa-space-lg);
 }
@@ -46,13 +46,20 @@
   gap: var(--aa-space-xs);
   border-bottom: 1px solid var(--aa-border);
   margin-bottom: var(--aa-space-xl);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.aa-settings-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .aa-settings-tab {
   padding: var(--aa-space-sm) var(--aa-space-md);
-  font-size: var(--aa-text-base);
+  font-size: var(--aa-text-md);
   font-weight: var(--aa-weight-medium);
-  color: var(--aa-text-3);
+  color: var(--aa-text-2);
   text-decoration: none;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
@@ -79,18 +86,18 @@
 
 /* ---- Section heading (shared by Account + Preferences + Billing) ---- */
 .aa-settings-sh {
-  font-size: var(--aa-text-sm);
+  font-size: var(--aa-text-base);
   font-weight: var(--aa-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--aa-text-4);
+  color: var(--aa-text-2);
   margin: 0 0 var(--aa-space-md);
 }
 
 /* ---- Shared settings section ---- */
 .aa-settings-section {
-  padding: var(--aa-space-lg) 0;
-  border-top: 1px solid var(--aa-border);
+  padding: var(--aa-space-xl) 0;
+  border-top: 1px solid var(--aa-border-strong);
 }
 
 .aa-settings-section:first-of-type {
@@ -99,8 +106,8 @@
 }
 
 .aa-settings-note {
-  font-size: var(--aa-text-base);
-  color: var(--aa-text-3);
+  font-size: var(--aa-text-md);
+  color: var(--aa-text-2);
   margin: 0;
   line-height: var(--aa-leading-normal);
 }
@@ -111,14 +118,14 @@
 }
 
 .aa-settings-input {
-  width: min(260px, 100%);
+  width: min(320px, 100%);
   border: 1px solid var(--aa-border-strong);
   border-radius: var(--aa-radius-sm);
   background: var(--aa-surface);
   color: var(--aa-text);
   font: inherit;
-  font-size: var(--aa-text-base);
-  padding: 7px 10px;
+  font-size: var(--aa-text-md);
+  padding: 10px 12px;
 }
 
 .aa-settings-input:focus {
@@ -137,7 +144,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: var(--aa-space-md);
-  padding-top: var(--aa-space-sm);
+  padding-top: var(--aa-space-md);
 }
 
 .aa-settings-error,
@@ -174,6 +181,15 @@
 }
 
 @media (max-width: 480px) {
+  .aa-settings-tabs {
+    gap: 0;
+  }
+
+  .aa-settings-tab {
+    padding: var(--aa-space-sm) 10px;
+    font-size: var(--aa-text-base);
+  }
+
   .aa-settings-actions {
     align-items: flex-start;
     flex-direction: column;
