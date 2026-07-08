@@ -5,6 +5,7 @@ gated_by: gtm-analytics-account.md     # provider pick + site creation (user-own
 spec_owner: discover
 build_owner: build
 priority: P3
+kind: spec
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsby      # sync-managed (write-once)
