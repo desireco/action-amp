@@ -11,6 +11,7 @@ import { getCollection, render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 import PublicLayout from "../../layouts/PublicLayout.astro";
 import FindTypeIcon from "../../components/FindTypeIcon.astro";
+import ShareRow from "../../components/ShareRow.astro";
 import "../../styles/blog.css";
 
 export async function getStaticPaths() {
@@ -29,13 +30,31 @@ const d = post.data;
 const FMT_LONG = { year: "numeric", month: "long", day: "numeric" };
 const fmtLong = (date: Date) => date.toLocaleDateString("en-US", FMT_LONG);
 
+// ISO 8601 for article:published_time / article:modified_time (OG).
+const isoPub = d.pubDate.toISOString();
+const isoMod = (d.updatedDate ?? d.pubDate).toISOString();
+
+// Absolute canonical URL for share intents (X/LinkedIn) + crawlers.
+const siteUrl = Astro.site ?? "https://actionamp.com";
+const canonicalUrl = new URL(`/blog/${post.id}/`, siteUrl).href;
+
 // The kind badge label for the meta row.
 const isFind = d.kind === "find";
 const isSpecial = d.contentType === "guide" || d.contentType === "offer";
 const specialLabel = d.contentType === "guide" ? "Guide" : "Offer";
 ---
 
-<PublicLayout title={`${d.title} — ActionAmp Blog`} description={d.description} ogType="article">
+<PublicLayout
+  title={`${d.title} — ActionAmp Blog`}
+  description={d.description}
+  ogType="article"
+  ogImage={d.ogImage}
+  socialDescription={d.socialDescription}
+  publishedTime={isoPub}
+  modifiedTime={isoMod}
+  author="ActionAmp"
+  tags={d.tags}
+>
   <article class="aa-blog-article">
     <a class="aa-blog-back" href="/blog">
       <span class="aa-blog-back-arrow">←</span>
@@ -90,6 +109,8 @@ const specialLabel = d.contentType === "guide" ? "Guide" : "Offer";
     <div class="aa-blog-article-body aa-markdown-body">
       <Content />
     </div>
+
+    <ShareRow url={canonicalUrl} title={d.title} />
 
     {/*
       Newsletter slot — placeholder until the `newsletter` spec ships.

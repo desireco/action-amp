@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>OG default template</title>
+<style>
+  /* Branded OG default — 1200×630.
+     Teal-tinted surface, ActionAmp mark, wordmark, one-line thesis.
+     Rendered to PNG via: playwright screenshot --viewport-size=1200,630
+     This file is the source; the PNG at public/og/default.png is the artifact. */
+  :root {
+    --teal: oklch(0.72 0.15 220);
+    --teal-cta: oklch(0.58 0.16 225);
+    --teal-soft: oklch(0.95 0.04 220);
+    --bg: oklch(0.99 0.005 230);
+    --text: oklch(0.2 0.015 230);
+    --text-3: oklch(0.5 0.015 230);
+    --border: oklch(0.91 0.01 230);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 80px;
+  }
+  .mark {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .mark-tile {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-bright, oklch(0.78 0.14 215)));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px oklch(0.58 0.16 225 / 0.25);
+    color: white;
+  }
+  .mark-tile svg { width: 38px; height: 38px; }
+  .mark-name {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .thesis {
+    max-width: 880px;
+  }
+  .thesis-eyebrow {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--teal-cta);
+    margin-bottom: 24px;
+  }
+  .thesis h1 {
+    font-size: 76px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    color: var(--text);
+  }
+  .thesis h1 .light {
+    font-weight: 300;
+    color: var(--text-3);
+  }
+  .rule {
+    height: 4px;
+    width: 64px;
+    background: var(--teal);
+    border-radius: 9999px;
+    margin-bottom: 24px;
+  }
+  .footer-line {
+    font-size: 22px;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+  <div class="mark">
+    <div class="mark-tile">
+      <svg viewBox="0 0 16 16" fill="none">
+        <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="mark-name">ActionAmp</span>
+  </div>
+
+  <div class="thesis">
+    <div class="thesis-eyebrow">A focus app, not a todo app</div>
+    <div class="rule"></div>
+    <h1><span class="light">Do the</span> next thing.<br><span class="light">Not all the</span> things.</h1>
+  </div>
+
+  <div class="footer-line">Essays on focus, decisions, and doing the next thing.</div>
+</body>
+</html>

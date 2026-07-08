@@ -569,6 +569,65 @@
 }
 
 /* ============================================================
+   SHARE ROW — calm share actions at the end of an article.
+   No third-party widget; plain anchors + a clipboard call.
+   Teal accents only on hover/active (the system accent).
+   ============================================================ */
+.aa-share {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-md);
+  margin-top: var(--aa-space-2xl);
+  padding-top: var(--aa-space-lg);
+  border-top: 1px solid var(--aa-border);
+}
+.aa-share-label {
+  font-size: var(--aa-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--aa-text-4);
+  font-weight: 600;
+}
+.aa-share-actions {
+  display: flex;
+  gap: var(--aa-space-sm);
+  flex-wrap: wrap;
+}
+.aa-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: 500;
+  color: var(--aa-text-3);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-full);
+  padding: 6px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color var(--aa-dur-base) var(--aa-ease-out),
+    border-color var(--aa-dur-base) var(--aa-ease-out),
+    background var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-share-btn:hover {
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal);
+  text-decoration: none;
+}
+.aa-share-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.aa-share-btn.is-copied {
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal);
+  background: var(--aa-teal-soft);
+}
+
+/* ============================================================
    INLINE ARTICLE FIGURES
    Line illustrations in the site's vocabulary (currentColor strokes,
    teal system accent, amber for the rare human-emphasis element).
