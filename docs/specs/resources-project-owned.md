@@ -4,10 +4,11 @@ status: ready                # confirmed ready 2026-07-03 after resolving Gap A 
 reconciles_with: cli-comments-resources.md   # the CLI spec deferred until this lands
 spec_owner: discover
 build_owner: build
+priority: P3
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4Mgscc      # sync-managed (write-once)
-gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-08T19:45:22Z
 ---
 
 # Feature: Project-owned Resources with Task references
