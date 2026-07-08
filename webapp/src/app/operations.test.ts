@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getAppData } from "./operations";
+import { getAppData, updateProfile } from "./operations";
 import { mockContext } from "../test/mockContext";
 
 /**
@@ -241,6 +241,52 @@ describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
         isDone: false,
       }),
       data: { status: "UPCOMING" },
+    });
+  });
+});
+
+describe("updateProfile", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+
+    await expect(
+      updateProfile({ fullName: "Jake Doe", preferredName: "Jake" }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("validates required profile fields", async () => {
+    const m = mockContext();
+
+    await expect(
+      updateProfile({ fullName: " ", preferredName: "Jake" }, m.context),
+    ).rejects.toThrow(/Name is required/);
+    await expect(
+      updateProfile({ fullName: "Jake Doe", preferredName: "" }, m.context),
+    ).rejects.toThrow(/Call me is required/);
+  });
+
+  it("trims fields, derives firstName, and updates the user", async () => {
+    const m = mockContext();
+    m.entities.User.update.mockResolvedValue({
+      fullName: "Jake Doe",
+      firstName: "Jake",
+      preferredName: "JD",
+    });
+
+    const result = await updateProfile(
+      { fullName: "  Jake Doe  ", preferredName: "  JD  " },
+      m.context,
+    );
+
+    expect(result).toEqual({
+      fullName: "Jake Doe",
+      firstName: "Jake",
+      preferredName: "JD",
+    });
+    expect(m.entities.User.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { fullName: "Jake Doe", firstName: "Jake", preferredName: "JD" },
+      select: { fullName: true, firstName: true },
     });
   });
 });

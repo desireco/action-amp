@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import { useAuth, logout } from "wasp/client/auth";
+import { useAuth, logout, requestPasswordReset } from "wasp/client/auth";
+import { updateProfile } from "wasp/client/operations";
 import { Button, ConfirmDialog } from "../components/ui";
 import { SettingsLayout } from "./SettingsLayout";
 import { Field } from "./Field";
@@ -11,37 +12,139 @@ import "./Field.css";
  * Minimal on purpose. More controls arrive when their features ship.
  */
 export function SettingsPage() {
-  const { data: user } = useAuth();
+  const { data: user, refetch } = useAuth();
   const email = user?.identities?.email?.id ?? null;
   const navigate = useNavigate();
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [preferredName, setPreferredName] = useState("");
+  const [profileStatus, setProfileStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [passwordStatus, setPasswordStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    setFullName(user.fullName ?? "");
+    setPreferredName(user.preferredName || user.firstName || "");
+  }, [user]);
+
+  const profileChanged =
+    !!user &&
+    (fullName.trim() !== (user.fullName ?? "") ||
+      preferredName.trim() !== (user.preferredName || user.firstName || ""));
+
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setProfileStatus("saving");
+    setProfileError(null);
+    try {
+      await updateProfile({ fullName, preferredName });
+      await refetch();
+      setProfileStatus("saved");
+    } catch (err) {
+      setProfileStatus("idle");
+      setProfileError(err instanceof Error ? err.message : "Could not save profile.");
+    }
+  }
+
+  async function sendPasswordReset() {
+    if (!email) {
+      setPasswordError("Add an email login before changing password.");
+      return;
+    }
+    setPasswordStatus("sending");
+    setPasswordError(null);
+    try {
+      await requestPasswordReset({ email });
+      setPasswordStatus("sent");
+    } catch (err) {
+      setPasswordStatus("idle");
+      setPasswordError(err instanceof Error ? err.message : "Could not send reset link.");
+    }
+  }
 
   return (
     <SettingsLayout>
       {/* Profile */}
       <section className="aa-settings-section">
-      <Field label="Name" value={user ? user.fullName : ""} />
-      <Field label="Email" value={email ?? "—"} />
-      <Field
-        label="Call me"
-        value={(user && (user.preferredName || user.firstName)) || "—"}
-      />
+        <form className="aa-settings-form" onSubmit={saveProfile}>
+          <Field label="Name">
+            <input
+              className="aa-settings-input"
+              value={fullName}
+              onChange={(event) => {
+                setFullName(event.target.value);
+                setProfileStatus("idle");
+              }}
+              autoComplete="name"
+              disabled={!user || profileStatus === "saving"}
+            />
+          </Field>
+          <Field label="Email" value={email ?? "—"} />
+          <Field label="Call me">
+            <input
+              className="aa-settings-input"
+              value={preferredName}
+              onChange={(event) => {
+                setPreferredName(event.target.value);
+                setProfileStatus("idle");
+              }}
+              autoComplete="given-name"
+              disabled={!user || profileStatus === "saving"}
+            />
+          </Field>
+          <div className="aa-settings-actions">
+            {profileError && <p className="aa-settings-error">{profileError}</p>}
+            {profileStatus === "saved" && !profileChanged && (
+              <p className="aa-settings-success">Saved.</p>
+            )}
+            <Button
+              type="submit"
+              variant="secondary"
+              size="sm"
+              disabled={!profileChanged || profileStatus === "saving"}
+            >
+              {profileStatus === "saving" ? "Saving" : "Save changes"}
+            </Button>
+          </div>
+        </form>
+      </section>
+
+      {/* Security */}
+      <section className="aa-settings-section">
+        <h2 className="aa-settings-sh">Security</h2>
+        <Field
+          label="Password"
+          description={
+            email
+              ? "Send a reset link to your email."
+              : "Password changes require an email login."
+          }
+        >
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={sendPasswordReset}
+            disabled={!email || passwordStatus === "sending"}
+          >
+            {passwordStatus === "sending" ? "Sending" : "Send reset link"}
+          </Button>
+        </Field>
+        {passwordStatus === "sent" && (
+          <p className="aa-settings-success">Reset link sent to {email}.</p>
+        )}
+        {passwordError && <p className="aa-settings-error">{passwordError}</p>}
       </section>
 
       {/* Sign out */}
       <section className="aa-settings-section">
+        <h2 className="aa-settings-sh">Session</h2>
         <Field label="Session">
           <Button variant="secondary" size="sm" onClick={() => setConfirmLogout(true)}>
             Log out
           </Button>
         </Field>
-      </section>
-
-      {/* Coming soon — kept quiet */}
-      <section className="aa-settings-section">
-        <p className="aa-settings-note">
-          Change email, change password, and delete account are coming soon.
-        </p>
       </section>
 
       {confirmLogout && (

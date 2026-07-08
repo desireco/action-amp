@@ -30,7 +30,7 @@ import { LogbookPage } from "./src/logbook/LogbookPage" with { type: "ref" };
 import { ensureOnboarded, setPreferredName, completeOnboarding } from "./src/onboarding/operations" with { type: "ref" };
 import { createLens, updateLens, deleteLens } from "./src/lenses/operations" with { type: "ref" };
 import { getLenses } from "./src/lenses/operations" with { type: "ref" };
-import { getAppData } from "./src/app/operations" with { type: "ref" };
+import { getAppData, updateProfile } from "./src/app/operations" with { type: "ref" };
 import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status, founding100StatusHandler } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
@@ -182,6 +182,7 @@ export default app({
     action(reorderGoalProjects, { entities: ["Goal", "Project"], auth: true }),
     query(getLogbook, { entities: ["Task", "Project", "Goal", "InboxItem"], auth: true }),
     query(getAppData, { entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
+    action(updateProfile, { entities: ["User"], auth: true }),
     action(submitFeedback, { entities: ["User", "Feedback"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),
     action(createLens, { entities: ["Lens"], auth: true }),

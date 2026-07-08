@@ -1,4 +1,4 @@
-import type { GetAppData } from "wasp/server/operations";
+import type { GetAppData, UpdateProfile } from "wasp/server/operations";
 
 /**
  * App-shell bootstrap data — runs on every app load and lens switch.
@@ -145,3 +145,39 @@ function isDifferentDay(a: Date, b: Date): boolean {
     a.getDate() !== b.getDate()
   );
 }
+
+function cleanName(value: string | undefined, fieldName: string): string {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    throw new Error(`${fieldName} is required.`);
+  }
+  if (trimmed.length > 120) {
+    throw new Error(`${fieldName} must be 120 characters or fewer.`);
+  }
+  return trimmed;
+}
+
+/**
+ * Account settings profile update. Auth email lives in Wasp AuthIdentity, so
+ * this action only edits app-owned User profile fields.
+ */
+export const updateProfile = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+
+  const fullName = cleanName(args.fullName, "Name");
+  const preferredName = cleanName(args.preferredName, "Call me");
+  const firstName = fullName.split(/\s+/)[0] ?? fullName;
+
+  const user = await context.entities.User.update({
+    where: { id: context.user.id },
+    data: { fullName, firstName, preferredName },
+    select: { fullName: true, firstName: true },
+  });
+
+  return { ...user, preferredName };
+}) satisfies UpdateProfile<
+  { fullName: string; preferredName: string },
+  { fullName: string; firstName: string; preferredName: string }
+>;
