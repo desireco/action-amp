@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-07 (duet github-projects-sync spec realigned to upstream Projects-wins model; pinned: flag dropped; queue.md + tasks/ gap-fills landed alongside. 07-05 sweep: goal-planning shipped; 07-05 trunks in §Shipped: focus redesign Variant F, task page full-field editing, task notes + completion log, design-system token migration, Upcoming top-level nav) -->
+<!-- Last reviewed: 2026-07-08 (blog spec locked ready — SEO publication on the Astro marketing site; unparks the Tier-4 /blog note, slots into Now alongside newsletter as the discovery half of the owned-channel pair. 07-07: duet github-projects-sync spec realigned to upstream Projects-wins model; pinned: flag dropped; queue.md + tasks/ gap-fills landed alongside. 07-05 sweep: goal-planning shipped; 07-05 trunks in §Shipped: focus redesign Variant F, task page full-field editing, task notes + completion log, design-system token migration, Upcoming top-level nav) -->
 
 ---
 
@@ -93,14 +93,23 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
 5. **newsletter** (`draft`) — add the quiet hero/footer email capture the GTM
    prose already assumes, or remove the newsletter promise everywhere. Owned
    audience capture matters before community distribution.
-6. **social-auth-google** (`done` 2026-06-27, code-side) — Google OAuth added
+6. **blog** (`ready`, new 2026-07-08) — the SEO-bound publication on the Astro
+   marketing site (`/blog`, `/blog/[slug]`, RSS): markdown-authored posts on
+   ADHD/focus/GTD/decision-overwhelm intent. The owned **discovery** channel
+   (where `newsletter` is the capture channel) — how strangers arrive via
+   search on a surface the repo owns. Builds on the shipped Astro split
+   (`infra-astro-marketing-split`, `done`): pure static SSG, content
+   collection + RSS, zero Wasp/DB coupling. Unparks the Tier-4 `/blog` three
+   docs park (`PUBLIC-PAGES.md` §4, `MARKETING.md` §1, this file's §GTM) now
+   that the foundation is paid for. Spec at `docs/specs/blog.md`.
+7. **social-auth-google** (`done` 2026-06-27, code-side) — Google OAuth added
    alongside email; config verified, never-throws name resolution. **Non-code
    gate outstanding (your side):** create the Google Cloud OAuth client +
    register redirect URIs + add a test user — see §GTM prep B. The callback
    verifies once the client exists. → §Shipped.
-7. **distribution-quietlaunch** — (no spec; it's a campaign, not a build item)
+8. **distribution-quietlaunch** — (no spec; it's a campaign, not a build item)
    get the existing product in front of ~500 of the right people in 4 weeks.
-8. **in-app-feedback** (`done` 2026-06-30) — shell loudspeaker opens a simple
+9. **in-app-feedback** (`done` 2026-06-30) — shell loudspeaker opens a simple
    feedback modal. Feedback is stored with user, route, Work/Plan/Review
    section, lens context, and user agent; production sends an admin email to
    `ACTIONAMP_ADMIN_EMAIL` (default `zeljko@dakic.com`) after the DB write. Dev
@@ -487,8 +496,10 @@ sequenced as audience-first.
 - **Channels (ORB):**
   - **Owned (build first):** newsletter capture is intended but not shipped.
     Add the quiet hero/footer form before community distribution, then grow it.
-    Still needed later: a blog/SEO surface for ADHD+focus+GTD intent (deferred
-    — see PUBLIC-PAGES.md Tier 4 → BACKLOG).
+    Blog/SEO surface for ADHD+focus+GTD intent: spec'd (`docs/specs/blog.md`,
+    `ready`, 2026-07-08) — unparked from the Tier-4 "deferred" note now that
+    the Astro marketing split shipped the foundation. Newsletter is the
+    capture channel; the blog is the discovery channel.
   - **Rented (drive to owned):** r/ADHD, r/productivity, r/gtd (carefully —
     these ban self-promo; lead with value, not links); ADHD/focus Twitter &
     TikTok where Llama Life/Tiimo already play.
@@ -563,6 +574,8 @@ roadmaps forget and most launches stall on.
 - [ ] Command palette + search → **`command-palette-search`** (`ready`)
 - [ ] Newsletter capture → **`newsletter`** (`draft`; product copy + provider
       decision still needed)
+- [ ] Blog (SEO publication) → **`blog`** (`ready`; builds on the shipped Astro
+      split — content collection + `/blog` + `/blog/[slug]` + RSS)
 - [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup; route model locked 2026-07-03)
 - [ ] Tag management UI + reserved-tag seeding → **`tag-management`** (`ready`, written 2026-07-03; unblocks `focus-engine-v2`)
 - [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`, confirmed 2026-07-03)

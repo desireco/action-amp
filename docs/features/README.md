@@ -62,6 +62,7 @@
 - [work-area-merged](./work-area-merged.md) (`missing`, spec `draft`) — merged Work area; one sub-piece (TaskUpdate.kind) shipped as `task-notes-completion-log`.
 - [weekly-monthly-review](./weekly-monthly-review.md) (`missing`, spec `draft`) — period debriefs; v2 gated on `work-area-merged`.
 - [newsletter](./newsletter.md) (`missing`, spec `draft`) — landing-page email capture (footer + quiet hero).
+- [blog](./blog.md) (`missing`, spec `ready`) — SEO-bound publication on the Astro marketing site (`/blog`, `/blog/[slug]`, RSS); ADHD/focus/GTD intent. Builds on the shipped Astro split; pure static.
 - [cli](./cli.md) (`missing`, **effort split into 3 specs 2026-07-03`) — power-user terminal surface:
   - `cli-pat-plumbing` (`ready`, P3 opportunistic) — `ApiKey` + PAT routes + middleware + Settings UI.
   - `cli-package` (`draft`) — the `cli/` package; draft because the op-refactor is unscoped.
