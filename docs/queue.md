@@ -12,19 +12,30 @@ When polling `docs/{specs,backlog,tasks}/` for the next unit to work, a track
 does **not** simply take the highest-priority file. It rotates across
 **kinds**, so no kind starves. Within a kind, priority + age break ties.
 
-### Build (Track 2) — pulls `next`
+### Build (Track 2) — pulls `next` from the board
 
-1. Collect every unit with `status: next` across `specs/`, `backlog/`,
-   `tasks/`. (If none, Build **does not fall back to `ready`** — see "the two
-   states" below.)
-2. If empty → idle. Do not invent work. Surface that the Next column is empty
-   and there are N `ready` items awaiting promotion.
-3. Pick the kind **least recently claimed** (round-robin). Track is informal:
-   if the last three units Build pulled were `spec`, prefer `backlog` or `task`
-   next. The point is balance, not a strict clock.
-4. Within that kind, pick highest `priority` (P0 > P1 > P2 > P3).
-5. On priority tie, pick oldest `created:` date (FIFO).
-6. Claim: flip `status: next → building`, commit.
+Build reads the board, not the files, for selection. Per
+`docs/specs/build-pulls-from-board.md`:
+
+1. Run `scripts/duet-pull-next.sh`. The script queries the GitHub Projects
+   board for items with Status=Next, picks one, and atomically flips the card
+   to Building AND rewrites the file's `status: next → building` + commits as
+   `duet: <slug> → building`. Board-first, then file — the board is
+   authoritative at every instant.
+2. If the script prints `idle: 0 Next items`, Build stops. Do not invent work,
+   do not fall back to `ready`, do not scan files for `status: next`.
+3. The script handles selection: round-robin across Kind (spec → backlog →
+   task), then highest Priority, then oldest Created. Build doesn't reimplement
+   this — it trusts the script's pick.
+4. Build then reads the file (the path the script names) for done-conditions,
+   decisions, non-goals, open questions. The board told Build *which* unit;
+   the file tells Build *what to build*.
+
+> **Why board-primary.** The Projects-wins contract makes the board
+> authoritative for lifecycle. Reading files for selection would force a
+> reconciliation step (`duet-sync-pull.sh`) every time and recreate a
+> stale-cache race. The board is already current; read it directly. Files
+> remain the source for prose — only the *selection* moves to the board.
 
 > **The two states — `ready` vs `next`.** Discover locks work to `ready`; the
 > human curates a shortlist by promoting `ready → next`. Build pulls **only
