@@ -53,6 +53,20 @@
   line-height: var(--aa-leading-snug);
 }
 
+/* Outcome — the "what happened" note under a completed task (task-fields §G).
+   Slightly smaller than the title, body-color so it reads as the substance of
+   the row, not chrome. Empty outcomes render nothing (no stub). */
+.aa-logbook-row__outcome {
+  margin-top: 4px;
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-2);
+}
+
+.aa-logbook-row__outcome .aa-md {
+  font-size: inherit;
+  color: inherit;
+}
+
 .aa-logbook-row__meta {
   display: flex;
   align-items: center;

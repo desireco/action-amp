@@ -25,9 +25,14 @@ export function Markdown({ children }: { children: string }) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          a: ({ node: _node, ...props }) => (
+          a: (props) => (
             <a {...props} target="_blank" rel="noopener noreferrer" />
           ),
+          // GFM task-list checkboxes render read-only — this surface displays
+          // authored markdown, not an editor. A clickable checkbox that
+          // toggles visually but persists nothing would be a calm violation
+          // (an affordance that lies).
+          input: (props) => <input {...props} disabled />,
         }}
       >
         {children}

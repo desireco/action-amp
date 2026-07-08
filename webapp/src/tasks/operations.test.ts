@@ -23,6 +23,7 @@ import {
   addTaskUpdate,
   updateTaskContent,
   updateTaskDetails,
+  setTaskOutcome,
   completeTaskFromFocus,
 } from "./operations";
 import { mockContext } from "../test/mockContext";
@@ -279,6 +280,69 @@ describe("toggleTaskDone", () => {
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, isDone: false });
 
     await toggleTaskDone({ id: "task-1" }, m.context);
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { isDone: false, completedAt: null, startedAt: null },
+    });
+  });
+
+  // Outcome (task-fields §C): written only when marking done, normalised to
+  // null when empty, and never touched on un-completion.
+  it("writes the outcome when marking done", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      isDone: false,
+      userId: "user-1",
+    });
+    m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, isDone: true });
+
+    await toggleTaskDone({ id: "task-1", outcome: "Done — shipped." }, m.context);
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: {
+        isDone: true,
+        completedAt: expect.any(Date),
+        startedAt: null,
+        outcome: "Done — shipped.",
+      },
+    });
+  });
+
+  it("normalises a whitespace outcome to null when marking done", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      isDone: false,
+      userId: "user-1",
+    });
+    m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, isDone: true });
+
+    await toggleTaskDone({ id: "task-1", outcome: "   " }, m.context);
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: {
+        isDone: true,
+        completedAt: expect.any(Date),
+        startedAt: null,
+        outcome: null,
+      },
+    });
+  });
+
+  it("does not touch outcome when un-completing a task", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      isDone: true,
+      userId: "user-1",
+    });
+    m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, isDone: false });
+
+    await toggleTaskDone(
+      { id: "task-1", outcome: "should be ignored" },
+      m.context,
+    );
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
@@ -748,6 +812,61 @@ describe("updateTaskContent", () => {
 });
 
 // ----------------------------------------------------------------
+// setTaskOutcome — edit a task's Outcome (task-fields §C/§F)
+// ----------------------------------------------------------------
+describe("setTaskOutcome", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(
+      setTaskOutcome({ taskId: "task-1", outcome: "Shipped." }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("rejects a task that belongs to another user", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
+    await expect(
+      setTaskOutcome({ taskId: "task-1", outcome: "Shipped." }, m.context),
+    ).rejects.toThrow(/not found/i);
+  });
+
+  it("trims and saves the outcome", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.update.mockResolvedValue({
+      id: "task-1",
+      outcome: "Shipped the draft.",
+    });
+
+    const result = await setTaskOutcome(
+      { taskId: "task-1", outcome: "  Shipped the draft.  " },
+      m.context,
+    );
+
+    expect(result).toEqual({ id: "task-1", outcome: "Shipped the draft." });
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { outcome: "Shipped the draft." },
+      select: { id: true, outcome: true },
+    });
+  });
+
+  it("clears the outcome when saved as whitespace", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.Task.update.mockResolvedValue({ id: "task-1", outcome: null });
+
+    await setTaskOutcome({ taskId: "task-1", outcome: "   \n  " }, m.context);
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { outcome: null },
+      select: { id: true, outcome: true },
+    });
+  });
+});
+
+// ----------------------------------------------------------------
 // updateTaskDetails — edit task title + notes from the detail page
 // ----------------------------------------------------------------
 describe("updateTaskDetails", () => {
@@ -1034,5 +1153,67 @@ describe("completeTaskFromFocus", () => {
     expect(result).toEqual({ id: "task-1", completedAt: doneAt });
     expect(m.entities.Task.update).not.toHaveBeenCalled();
     expect(m.entities.TaskUpdate.create).not.toHaveBeenCalled();
+  });
+
+  // Outcome (task-fields §C/§F): an optional outcome can ride on the same
+  // completion transaction — the capture-at-completion moment.
+  it("writes an optional outcome alongside the completion", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      isDone: false,
+      completedAt: null,
+      startedAt: new Date("2026-07-04T09:00:00Z"),
+      userId: "user-1",
+    });
+    m.entities.Task.update.mockResolvedValue({
+      id: "task-1",
+      completedAt: new Date("2026-07-04T09:41:00Z"),
+    });
+
+    await completeTaskFromFocus(
+      { taskId: "task-1", outcome: "Shipped the draft." },
+      m.context,
+    );
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: {
+        isDone: true,
+        completedAt: expect.any(Date),
+        startedAt: null,
+        outcome: "Shipped the draft.",
+      },
+      select: { id: true, completedAt: true },
+    });
+  });
+
+  it("normalises a whitespace outcome to null on completion", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      isDone: false,
+      completedAt: null,
+      startedAt: new Date("2026-07-04T09:00:00Z"),
+      userId: "user-1",
+    });
+    m.entities.Task.update.mockResolvedValue({
+      id: "task-1",
+      completedAt: new Date("2026-07-04T09:41:00Z"),
+    });
+
+    await completeTaskFromFocus(
+      { taskId: "task-1", outcome: "   " },
+      m.context,
+    );
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: {
+        isDone: true,
+        completedAt: expect.any(Date),
+        startedAt: null,
+        outcome: null,
+      },
+      select: { id: true, completedAt: true },
+    });
   });
 });

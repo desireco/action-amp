@@ -10,7 +10,7 @@ import {
   updateTaskDetails,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Markdown, PropertyChips } from "../components/ui";
+import { Button, Markdown, PropertyChips, submitOnModEnter } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { usePropertyKeys } from "../components/ui/usePropertyKeys";
 import {
@@ -369,6 +369,7 @@ export function TaskDetailPage() {
                       aria-label="Task outcome"
                       value={outcomeDraft}
                       onChange={(e) => setOutcomeDraft(e.target.value)}
+                      onKeyDown={(e) => submitOnModEnter(e, () => void saveOutcome())}
                       placeholder="What happened?"
                       rows={4}
                       disabled={outcomeSaving}

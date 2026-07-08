@@ -2,7 +2,7 @@
 id: task-fields
 kind: spec
 title: "Task enhancement fields (Context + Outcome)"
-status: building
+status: done
 priority: P2
 feature: task-fields
 spec_owner: discover

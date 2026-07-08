@@ -150,6 +150,17 @@
   color: var(--aa-text-4);
 }
 
+/* Discoverability hint for the ⌘↵ complete chord. Quiet — sits under the field
+   so keyboard users find the binding without a help overlay. */
+.aa-confirm__outcome-kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  margin-top: 2px;
+}
+
 .aa-confirm__foot {
   display: flex;
   align-items: center;

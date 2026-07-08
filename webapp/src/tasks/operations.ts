@@ -642,11 +642,13 @@ export const updateTaskDetails = (async (args, context) => {
 // reachable via Start, so this holds by construction — the guard keeps the
 // product rule explicit in code). Idempotent: an already-done task returns its
 // existing completion without writing a second COMPLETED event. Otherwise, in
-// one transaction: isDone=true, completedAt=now, startedAt=null, and exactly
-// one TaskUpdate(kind=COMPLETED).
+// a single op sequence: isDone=true, completedAt=now, startedAt=null, and
+// exactly one TaskUpdate(kind=COMPLETED). (The three writes are not wrapped in
+// a $transaction; outcome + isDone + completedAt ride on the first Task.update
+// together, so the outcome's integrity doesn't depend on the later writes.)
 //
-// Outcome (task-fields spec §C/§F): an optional `outcome?` written on the same
-// transaction as the completion — the natural "what happened?" capture moment.
+// Outcome (task-fields spec §C/§F): an optional `outcome?` written alongside
+// the completion — the natural "what happened?" capture moment.
 // Empty/whitespace → null; passing undefined leaves any existing outcome intact.
 export const completeTaskFromFocus = (async (args, context) => {
   if (!context.user) {

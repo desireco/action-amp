@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "wasp/client/operations";
 import { getLogbook, restoreArchivedItem, setGoalDone, setProjectDone } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { BrandMark, Chip, GroupedList, type GroupDef } from "../components/ui";
+import { BrandMark, Chip, GroupedList, Markdown, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "../lists/ListShell";
 import "./LogbookPage.css";
@@ -13,6 +13,7 @@ interface LogItem {
   when: Date; // completedAt for tasks/projects/goals, archivedAt for archived notes
   kind: "task" | "project" | "goal" | "archived";
   size?: string;
+  outcome?: string | null; // task only — "what happened" (task-fields §G)
   project?: { id: string; name: string } | null;
   goal?: { id: string; name: string } | null;
 }
@@ -101,6 +102,11 @@ export function LogbookPage() {
             </span>
             <div className="aa-logbook-row__main">
               <span className="aa-logbook-row__title">{item.title}</span>
+              {item.kind === "task" && item.outcome && (
+                <div className="aa-logbook-row__outcome">
+                  <Markdown>{item.outcome}</Markdown>
+                </div>
+              )}
               <div className="aa-logbook-row__meta">
                 {item.kind === "goal" ? (
                   <Chip variant="teal" small>Goal</Chip>

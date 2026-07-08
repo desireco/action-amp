@@ -320,6 +320,75 @@ describe("FocusMode", () => {
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
 
+    // Outcome capture (task-fields §F): the completion sheet shows an optional
+    // Outcome field. Skipping (Complete with empty field) passes an empty
+    // string; typing a note passes the trimmed text.
+    it("passes an empty outcome when completing without a note", () => {
+      const onComplete = vi.fn();
+      renderInContext(
+        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
+      fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+      expect(onComplete).toHaveBeenCalledWith("");
+    });
+
+    it("passes the typed outcome when completing with a note", () => {
+      const onComplete = vi.fn();
+      renderInContext(
+        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
+      fireEvent.change(screen.getByLabelText(/outcome/i), {
+        target: { value: "Shipped the draft to Sarah." },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+      expect(onComplete).toHaveBeenCalledWith("Shipped the draft to Sarah.");
+    });
+
+    // Skipping outcome stays one keystroke (task-fields §F): bare Enter in an
+    // empty Outcome field completes. Once the user types, Enter inserts a
+    // newline (multi-line outcomes) and ⌘↵ completes-with-content.
+    it("bare Enter completes when the outcome field is empty (one-keystroke skip)", () => {
+      const onComplete = vi.fn();
+      renderInContext(
+        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
+      fireEvent.keyDown(screen.getByLabelText(/outcome/i), { key: "Enter" });
+      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(onComplete).toHaveBeenCalledWith("");
+    });
+
+    it("bare Enter does NOT complete once the user has typed an outcome", () => {
+      const onComplete = vi.fn();
+      renderInContext(
+        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
+      fireEvent.change(screen.getByLabelText(/outcome/i), {
+        target: { value: "Shipped." },
+      });
+      fireEvent.keyDown(screen.getByLabelText(/outcome/i), { key: "Enter" });
+      expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    it("⌘↵ completes with the typed outcome", () => {
+      const onComplete = vi.fn();
+      renderInContext(
+        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
+      fireEvent.change(screen.getByLabelText(/outcome/i), {
+        target: { value: "Shipped the draft." },
+      });
+      fireEvent.keyDown(screen.getByLabelText(/outcome/i), {
+        key: "Enter",
+        metaKey: true,
+      });
+      expect(onComplete).toHaveBeenCalledWith("Shipped the draft.");
+    });
+
     it("cancelling closes the confirm without firing onComplete", () => {
       const onComplete = vi.fn();
       renderInContext(

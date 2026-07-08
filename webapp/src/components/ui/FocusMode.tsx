@@ -94,7 +94,11 @@ export function FocusMode({
   // fast enough to feel alive). Derived from `task.startedAt`.
   const [, setTick] = useState(0);
 
-  // Reset transient state when the task changes.
+  // Reset transient state when the task changes. Content drafts key off
+  // task.content (they reflect a server-backed field that can change); outcome
+  // keys off task.id only — outcome is a completion-time field, so an
+  // in-focus (active) task carries null outcome and the draft shouldn't wipe
+  // on a content refetch mid-edit.
   useEffect(() => {
     const nextContent = task.content ?? "";
     setContent(nextContent);
@@ -104,8 +108,13 @@ export function FocusMode({
     setDraft("");
     setConfirmOpen(false);
     setCompletedLocally(false);
+  }, [task.id, task.content]);
+
+  // Outcome reset is split out so it doesn't re-run on every content change
+  // (which would clobber an in-progress draft if the server refetched).
+  useEffect(() => {
     setOutcomeDraft(task.outcome ?? "");
-  }, [task.id, task.content, task.outcome]);
+  }, [task.id]);
 
   // Elapsed clock ticker.
   useEffect(() => {
@@ -470,7 +479,7 @@ export function FocusMode({
           className="aa-overlay"
           role="dialog"
           aria-modal="true"
-          aria-label="Complete task"
+          aria-label="Mark this done?"
           onClick={() => setConfirmOpen(false)}
         >
           <div
@@ -506,13 +515,26 @@ export function FocusMode({
                   value={outcomeDraft}
                   onChange={(e) => setOutcomeDraft(e.target.value)}
                   onKeyDown={(e) => {
-                    // ⌘↵ / Ctrl+↵ completes with the note. Plain Enter inserts a
-                    // newline — multi-line outcomes are expected, so we don't
-                    // bind bare Enter to "complete."
-                    submitOnModEnter(e, () => handleConfirm());
+                    // ⌘↵ / Ctrl+↵ always completes (with whatever's typed).
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      handleConfirm();
+                      return;
+                    }
+                    // Bare Enter completes ONLY when the field is empty — so
+                    // "skip" stays one keystroke (the spec's §F promise). Once
+                    // the user has typed anything, Enter inserts a newline so
+                    // multi-line outcomes work.
+                    if (e.key === "Enter" && !outcomeDraft.trim()) {
+                      e.preventDefault();
+                      handleConfirm();
+                    }
                   }}
                   rows={3}
                 />
+                <span className="aa-confirm__outcome-kbd">
+                  <Kbd>⌘↵</Kbd> complete
+                </span>
               </div>
             </div>
 

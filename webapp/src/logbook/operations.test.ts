@@ -27,6 +27,7 @@ describe("getLogbook — query + return shape", () => {
       description: "Email Sarah",
       completedAt: new Date("2026-06-24"),
       size: "S",
+      outcome: "She said yes — kickoff Friday.",
       project: { id: "p1", name: "Ship v2" },
     };
     const projectRow = {
@@ -66,6 +67,7 @@ describe("getLogbook — query + return shape", () => {
         description: true,
         completedAt: true,
         size: true,
+        outcome: true,
         project: { select: { id: true, name: true } },
       },
     });
@@ -94,6 +96,7 @@ describe("getLogbook — query + return shape", () => {
           title: "Email Sarah",
           completedAt: taskRow.completedAt,
           size: "S",
+          outcome: taskRow.outcome,
           project: taskRow.project,
           kind: "task",
         },
