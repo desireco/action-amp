@@ -4,6 +4,7 @@ status: ready
 spec_owner: discover
 build_owner: build
 priority: P3
+kind: spec
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsXU      # sync-managed (write-once)
