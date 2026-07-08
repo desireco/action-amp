@@ -2,7 +2,7 @@
 id: blog-social-meta
 kind: spec
 title: "Blog shareability — OG images, Twitter/LinkedIn cards, share buttons"
-status: ready
+status: building
 priority: P1
 feature: blog
 spec_owner: discover
@@ -11,7 +11,7 @@ created: 2026-07-08
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MigHK      # sync-managed (write-once)
-gh_synced_at: 2026-07-08T18:30:00Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-08T19:23:56Z
 ---
 
 # Spec: Blog shareability — OG images, Twitter/LinkedIn cards, share buttons
