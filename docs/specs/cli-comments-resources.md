@@ -6,7 +6,7 @@ build_owner: build
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4Mi6bq      # sync-managed (write-once)
-gh_synced_at: 2026-07-08T19:38:16Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-08T19:38:50Z
 ---
 
 # Feature: CLI comments + resources (the research surface)
