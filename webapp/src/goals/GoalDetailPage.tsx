@@ -167,15 +167,15 @@ export function GoalDetailPage() {
   const childCount = goal?.projects.length ?? 0;
 
   // Breadcrumb: Goals list › this goal (goal has no parent entity).
+  // Crumb id IS the destination route.
+  const goalActiveRoute = goal ? `/app/goals/${goal.permalink}` : "";
   const goalCrumbs: BreadcrumbItem[] = [
-    { id: "goals:list", label: "Goals" },
+    { id: "/app/goals", label: "Goals" },
   ];
-  const goalActiveId = goal ? `goal:${goal.permalink}` : "";
-  if (goal) goalCrumbs.push({ id: goalActiveId, label: goal.name || "Goal" });
+  if (goal) goalCrumbs.push({ id: goalActiveRoute, label: goal.name || "Goal" });
 
-  const handleCrumbSelect = (crumbId: string) => {
-    if (crumbId === "goals:list") navigate("/app/goals");
-    // "goal:..." is the current page — no-op.
+  const handleCrumbSelect = (dest: string) => {
+    if (dest !== goalActiveRoute) navigate(dest);
   };
 
   return (
@@ -183,7 +183,7 @@ export function GoalDetailPage() {
       {goal ? (
         <Breadcrumb
           items={goalCrumbs}
-          active={goalActiveId}
+          active={goalActiveRoute}
           onSelect={handleCrumbSelect}
         />
       ) : (

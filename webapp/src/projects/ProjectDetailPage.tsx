@@ -324,24 +324,24 @@ export function ProjectDetailPage() {
     navigate("/app/projects");
   };
 
-  // Breadcrumb chain: Goal › Project (goal skipped if null).
-  const projectCrumbs: BreadcrumbItem[] = [];
-  if (project?.goal) projectCrumbs.push({ id: `goal:${project.goal.permalink}`, label: project.goal.name });
-  const projectActiveId = project ? `project:${project.permalink}` : "";
-  if (project) projectCrumbs.push({ id: projectActiveId, label: project.name || "Project" });
+  // Breadcrumb chain: Goal › Project. A "Projects" list root is always present
+  // so there's always a way back to /app/projects even when the project has no
+  // goal ancestor. Crumb id IS the destination route.
+  const projectActiveRoute = project ? `/app/projects/${project.permalink}` : "";
+  const projectCrumbs: BreadcrumbItem[] = [{ id: "/app/projects", label: "Projects" }];
+  if (project?.goal) projectCrumbs.push({ id: `/app/goals/${project.goal.permalink}`, label: project.goal.name });
+  if (project) projectCrumbs.push({ id: projectActiveRoute, label: project.name || "Project" });
 
-  const handleCrumbSelect = (crumbId: string) => {
-    const [kind, p] = crumbId.split(":");
-    if (kind === "goal") navigate(`/app/goals/${p}`);
-    // "project" is the current page — no-op.
+  const handleCrumbSelect = (dest: string) => {
+    if (dest !== projectActiveRoute) navigate(dest);
   };
 
   return (
     <div className="aa-project">
-      {projectCrumbs.length > 0 ? (
+      {project ? (
         <Breadcrumb
           items={projectCrumbs}
-          active={projectActiveId}
+          active={projectActiveRoute}
           onSelect={handleCrumbSelect}
         />
       ) : (

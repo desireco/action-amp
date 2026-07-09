@@ -33,6 +33,12 @@
   cursor: pointer;
   font-family: inherit;
   font-size: inherit;
+  /* Long titles (task descriptions) truncate with ellipsis so a verbose crumb
+     doesn't wrap and push the topbar taller. Hover reveals the full label. */
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transition:
     background 0.12s var(--aa-ease-out),
     color 0.12s var(--aa-ease-out),
