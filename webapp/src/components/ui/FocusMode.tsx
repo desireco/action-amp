@@ -4,6 +4,7 @@ import { CloseButton } from "./CloseButton";
 import { CompletionCircle } from "./CompletionCircle";
 import { Kbd, submitOnModEnter } from "./keyboard";
 import { Markdown } from "./Markdown";
+import { SnoozeSheet, type SnoozePreset } from "./SnoozeSheet";
 import { formatDuration } from "../../shared/timeFormat";
 import "./Overlays.css";
 
@@ -55,6 +56,7 @@ export function FocusMode({
   onComplete,
   onAddNote,
   onSaveContent,
+  onSnooze,
 }: {
   task: FocusTask;
   onClose: () => void;
@@ -64,6 +66,10 @@ export function FocusMode({
   onComplete?: (outcome: string) => Promise<void> | void;
   onAddNote?: (body: string) => Promise<void> | void;
   onSaveContent?: (content: string) => Promise<void> | void;
+  /** Called when the user picks a snooze preset from the "Not now" sheet. The
+   *  parent runs snoozeTask (the task leaves the focus queue) and navigates
+   *  away. Only reachable from the mobile action bar. */
+  onSnooze?: (preset: SnoozePreset) => Promise<void> | void;
 }) {
   // Composer state — summoned via `n`, posts via ⌘↵.
   const [composerOpen, setComposerOpen] = useState(false);
@@ -81,6 +87,10 @@ export function FocusMode({
   // Confirm dialog before completion — the payoff animation is optimistic.
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [completedLocally, setCompletedLocally] = useState(false);
+
+  // Snooze sheet ("Not now") — opened from the mobile action bar. Same layering
+  // as the composer/confirm: Esc closes it before falling through to exit.
+  const [snoozeOpen, setSnoozeOpen] = useState(false);
 
   // Hold-to-complete (touch only). Pressing and holding the hero circle fills a
   // ring around it over HOLD_MS; when the fill completes, the confirm dialog
@@ -118,6 +128,7 @@ export function FocusMode({
     setDraft("");
     setConfirmOpen(false);
     setCompletedLocally(false);
+    setSnoozeOpen(false);
     // Cancel any in-flight hold-to-complete when the task changes.
     clearHold();
   }, [task.id, task.content]);
@@ -173,6 +184,10 @@ export function FocusMode({
           setConfirmOpen(false);
           return;
         }
+        if (snoozeOpen) {
+          setSnoozeOpen(false);
+          return;
+        }
         if (composerOpen) {
           setComposerOpen(false);
           return;
@@ -190,7 +205,7 @@ export function FocusMode({
       // must not steal keystrokes from the composer/editor.
       const target = e.target as HTMLElement | null;
       if (isTypingTarget(target)) return;
-      if (confirmOpen) return;
+      if (confirmOpen || snoozeOpen) return;
 
       // `n` → toggle the summoned composer.
       if (e.key === "n" || e.key === "N") {
@@ -216,7 +231,7 @@ export function FocusMode({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, onComplete, onAddNote, composerOpen, confirmOpen, editingContent, content]);
+  }, [onClose, onComplete, onAddNote, composerOpen, confirmOpen, snoozeOpen, editingContent, content]);
 
   // Composer: ⌘↵ / Ctrl+↵ posts (shared helper). Plain Enter inserts a
   // newline — the composer is summoned and dedicated, so multi-line input
@@ -502,6 +517,25 @@ export function FocusMode({
         </button>
       </div>
 
+      {/* Mobile action bar: tappable Pause + Not now. The keyboard rail above is
+          useless on touch (no keyboard); this bar replaces it on mobile. CSS
+          toggles visibility — desktop shows the rail, mobile shows this. */}
+      <div className="aa-focus__actions">
+        <Button variant="secondary" size="md" onClick={onClose} className="aa-focus__action-btn">
+          Pause
+        </Button>
+        {onSnooze && (
+          <Button
+            variant="ghost"
+            size="md"
+            onClick={() => setSnoozeOpen(true)}
+            className="aa-focus__action-btn"
+          >
+            Not now
+          </Button>
+        )}
+      </div>
+
       {/* Summoned notes composer — slides up when open. */}
       {composerOpen && (
         <div className="aa-composer" role="region" aria-label="Progress note">
@@ -623,6 +657,17 @@ export function FocusMode({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Snooze sheet — "Not now" from the mobile action bar. Reuses the same
+          SnoozeSheet the home screen uses (5 presets). The parent's onSnooze
+          runs snoozeTask and navigates away. */}
+      {snoozeOpen && onSnooze && (
+        <SnoozeSheet
+          taskTitle={task.title}
+          onSnooze={onSnooze}
+          onClose={() => setSnoozeOpen(false)}
+        />
       )}
     </div>
   );

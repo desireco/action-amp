@@ -435,5 +435,21 @@ describe("FocusMode", () => {
       expect(onClose).not.toHaveBeenCalled();
       expect(onComplete).not.toHaveBeenCalled();
     });
+
+    it("Esc closes the snooze sheet without exiting focus", () => {
+      const onClose = vi.fn();
+      const onSnooze = vi.fn();
+      renderInContext(
+        <FocusMode task={BASE_TASK} onClose={onClose} onSnooze={onSnooze} />,
+      );
+      // Open the snooze sheet via the "Not now" button.
+      fireEvent.click(screen.getByRole("button", { name: /not now/i }));
+      expect(screen.getByRole("dialog", { name: /not now/i })).toBeInTheDocument();
+      // Esc should close the sheet, not exit focus.
+      fireEvent.keyDown(window, { key: "Escape" });
+      expect(screen.queryByRole("dialog", { name: /not now/i })).toBeNull();
+      expect(onClose).not.toHaveBeenCalled();
+      expect(onSnooze).not.toHaveBeenCalled();
+    });
   });
 });

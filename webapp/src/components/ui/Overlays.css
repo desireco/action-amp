@@ -1067,6 +1067,40 @@
   color: var(--aa-text-2);
 }
 
+/* ---- Mobile action bar (Pause + Not now) ----
+   Replaces the keyboard rail on touch — the rail's kbd hints are meaningless
+   without a keyboard. Hidden by default; shown only at ≤768px (see media query
+   below). Two full-width buttons in a row, anchored in the thumb zone with
+   safe-area insets. Desktop never sees it. */
+.aa-focus__actions {
+  display: none;
+}
+.aa-focus__action-btn {
+  flex: 1;
+}
+/* Pale-teal (the system's "pale blue") treatment for the action buttons.
+   Overrides the shared Button variants locally so the bar reads as a calm,
+   unified pair — without touching Button.css (used everywhere else). Pause is
+   the stronger tint (primary exit action); Not now is the lighter ghost. */
+.aa-focus__action-btn.aa-btn--secondary {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal);
+}
+.aa-focus__action-btn.aa-btn--secondary:hover:not(:disabled) {
+  background: var(--aa-teal-soft-strong);
+  color: var(--aa-teal-cta-hover);
+}
+.aa-focus__action-btn.aa-btn--ghost {
+  background: transparent;
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal-soft-strong);
+}
+.aa-focus__action-btn.aa-btn--ghost:hover:not(:disabled) {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta-hover);
+}
+
 /* Shared kbd chip — used in hints, composer foot, empty state. */
 .aa-kbd {
   font-family: var(--aa-font-mono);
@@ -1311,6 +1345,29 @@
   font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
   font-style: italic;
+}
+
+/* ---- Responsive: swap keyboard rail → mobile action bar on touch ----
+   The rail's kbd hints (n / ↵ / p) are meaningless without a keyboard. On
+   mobile, hide the rail and show the tappable action bar (Pause + Not now)
+   instead. Also add bottom padding to the body so the centered circle/title
+   aren't hidden behind the bar. */
+@media (max-width: 768px) {
+  .aa-focus__rail {
+    display: none;
+  }
+  .aa-focus__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--aa-space-sm);
+    padding: var(--aa-space-sm) max(var(--aa-space-md), env(safe-area-inset-right))
+      max(var(--aa-space-md), env(safe-area-inset-bottom))
+      max(var(--aa-space-md), env(safe-area-inset-left));
+  }
+  /* Reclaim a little body space so centered content sits above the bar. */
+  .aa-focus__body {
+    padding-bottom: var(--aa-space-lg);
+  }
 }
 
 /* Reduced motion */

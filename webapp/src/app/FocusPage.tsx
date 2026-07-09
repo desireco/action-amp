@@ -6,9 +6,11 @@ import {
   updateTaskContent,
   completeTaskFromFocus,
   pauseTask,
+  snoozeTask,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { FocusMode } from "../components/ui";
+import type { SnoozePreset } from "../components/ui";
 import { toFocusTask } from "./focusTaskView";
 import "./NextPage.css";
 
@@ -71,6 +73,14 @@ export function FocusPage() {
       onSaveContent={async (content) => {
         await updateTaskContent({ taskId: task.id, content });
         queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
+      }}
+      onSnooze={async (preset: SnoozePreset) => {
+        // "Not now" from the mobile action bar. Snoozes the task out of the
+        // focus queue entirely (sets status/dueDate, clears startedAt). The
+        // task reappears in Upcoming/Someday when the snooze expires.
+        await snoozeTask({ id: task.id, preset });
+        refreshTaskState();
+        navigate("/app");
       }}
     />
   );
