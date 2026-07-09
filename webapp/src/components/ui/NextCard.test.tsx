@@ -4,9 +4,10 @@ import { NextCard, type NextTask } from "./NextCard";
 import { renderInContext } from "wasp/client/test";
 
 // NextCard — the composite task card (the product wedge). Title → meta →
-// amber "why" → Start / Not now (Next) or Do this / Pause (Now). Completion
-// happens in focus mode, not on this card, so there's no completion control
-// here. Tests render + the callbacks + conditional "why" line.
+// amber "why" → Start / Not now (Next) or Start / Pause (Now). The primary
+// button is always "Start" (starts the task if needed, then opens focus).
+// Completion happens in focus mode, not on this card, so there's no
+// completion control here. Tests render + the callbacks + conditional "why".
 
 const BASE_TASK: NextTask = {
   title: "Email Sarah",
@@ -67,12 +68,12 @@ describe("NextCard", () => {
   });
 
   describe("actions — Next state (default)", () => {
-    it("'Start' fires onStart with the task (Next → Now)", () => {
-      const onStart = vi.fn();
-      renderInContext(<NextCard task={BASE_TASK} onStart={onStart} />);
+    it("'Start' fires onDo with the task", () => {
+      const onDo = vi.fn();
+      renderInContext(<NextCard task={BASE_TASK} onDo={onDo} />);
 
       fireEvent.click(screen.getByRole("button", { name: /start/i }));
-      expect(onStart).toHaveBeenCalledWith(BASE_TASK);
+      expect(onDo).toHaveBeenCalledWith(BASE_TASK);
     });
 
     it("'Not now' fires onNotNow with the task", () => {
@@ -85,11 +86,11 @@ describe("NextCard", () => {
   });
 
   describe("actions — Now state (in progress)", () => {
-    it("'Do this' fires onDo with the task", () => {
+    it("'Start' fires onDo with the task", () => {
       const onDo = vi.fn();
       renderInContext(<NextCard task={BASE_TASK} state="now" onDo={onDo} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /do this/i }));
+      fireEvent.click(screen.getByRole("button", { name: /start/i }));
       expect(onDo).toHaveBeenCalledWith(BASE_TASK);
     });
 

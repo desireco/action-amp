@@ -156,8 +156,6 @@ export function NextPage() {
           </>
         }
         state={isNow ? "now" : "next"}
-        onStart={() => void handleStart(true)}
-        onPause={handlePause}
         onDo={() => {
           if (isNow) {
             navigate("/app/focus");
@@ -165,6 +163,7 @@ export function NextPage() {
           }
           void handleStart(true);
         }}
+        onPause={handlePause}
         onNotNow={() => setSnoozeOpen(true)}
       />
       {snoozeOpen && task && (

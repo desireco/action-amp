@@ -494,7 +494,7 @@ export function ProjectDetailPage() {
                         iconEnd
                         onClick={() => void handleStart(nextStep)}
                       >
-                        Do this
+                        Start
                       </Button>
                     </div>
                   </div>

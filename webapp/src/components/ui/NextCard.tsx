@@ -25,12 +25,12 @@ interface NextCardProps {
   context?: ReactNode;
   /** Called when the user defers ("Not now") */
   onNotNow?: (task: NextTask) => void;
-  /** Called when the user clicks "Do this" — opens focus mode + starts the task */
+  /** Called when the user clicks "Start" — starts the task (if not already
+   *  started) and opens focus mode. */
   onDo?: (task: NextTask) => void;
-  /** "next" = candidate (default); "now" = in progress. Swaps the primary button. */
+  /** "next" = candidate (default); "now" = in progress. Swaps the secondary
+   *  button (Not now vs Pause). The primary is always "Start". */
   state?: "next" | "now";
-  /** Start the task (Next → Now). */
-  onStart?: (task: NextTask) => void;
   /** Pause (Now → Next, same task stays as the candidate). */
   onPause?: (task: NextTask) => void;
 }
@@ -47,7 +47,7 @@ interface NextCardProps {
  * The app-shell version is flat (no card chrome); the landing version wraps
  * it in an elevated card. This component is the flat app-shell variant.
  */
-export function NextCard({ task, context, onNotNow, onDo, state = "next", onStart, onPause }: NextCardProps) {
+export function NextCard({ task, context, onNotNow, onDo, state = "next", onPause }: NextCardProps) {
   const [doing, setDoing] = useState(false);
 
   const handleDo = () => {
@@ -80,27 +80,26 @@ export function NextCard({ task, context, onNotNow, onDo, state = "next", onStar
       )}
 
       <div className="aa-wn-card__actions">
+        {/* One primary button: "Start". Starts the task if it isn't already,
+            then opens focus mode. Previously this swapped between "Start"
+            (onStart) and "Do this" (onDo) based on state — but onStart always
+            opened focus too, so the two were the same action with different
+            labels, creating a dead extra click (Start → Do this → focus). Now
+            it's always Start → focus. The `doing` flag gives a brief "Done ✓"
+            flash on tap (visual feedback before the navigate lands). */}
+        <Button variant="primary" onClick={handleDo} disabled={doing}>
+          {doing ? "Done ✓" : "Start"}
+        </Button>
+        {/* Secondary: Pause when in progress (drops back to Next), Not now
+            when it's a fresh candidate (opens the snooze sheet). */}
         {state === "now" ? (
-          // Now: the task is in progress. Pause drops back to Next (same task);
-          // Do this opens focus mode on the already-started task.
-          <>
-            <Button variant="primary" onClick={handleDo} disabled={doing}>
-              {doing ? "Done ✓" : "Do this"}
-            </Button>
-            <Button variant="secondary" onClick={() => onPause?.(task)} disabled={doing}>
-              Pause
-            </Button>
-          </>
+          <Button variant="secondary" onClick={() => onPause?.(task)} disabled={doing}>
+            Pause
+          </Button>
         ) : (
-          // Next: candidate. Start (without focus mode) or Do this (start + focus).
-          <>
-            <Button variant="primary" onClick={() => onStart?.(task)}>
-              Start
-            </Button>
-            <Button variant="secondary" onClick={() => onNotNow?.(task)}>
-              Not now
-            </Button>
-          </>
+          <Button variant="secondary" onClick={() => onNotNow?.(task)} disabled={doing}>
+            Not now
+          </Button>
         )}
       </div>
     </div>

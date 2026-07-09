@@ -260,13 +260,13 @@ describe("ProjectDetailPage — re-link to goal (spec §C)", () => {
 });
 
 describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
-  it("renders the hero with Do this when there is exactly one Today task", () => {
+  it("renders the hero with Start when there is exactly one Today task", () => {
     projectData.current = makeProject(); // fixture has a single Today task
     renderAt("/app/projects/p1");
 
     expect(screen.getByText(/next step/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /email sarah/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /do this/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /start/i })).toBeInTheDocument();
   });
 
   it("does not render the hero when there are two or more Today tasks", () => {
@@ -279,11 +279,11 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
     expect(screen.getByText("Draft the brief")).toBeInTheDocument();
   });
 
-  it("Do this starts the task and routes to focus mode", async () => {
+  it("Start starts the task and routes to focus mode", async () => {
     projectData.current = makeProject();
     renderAt("/app/projects/p1");
 
-    fireEvent.click(screen.getByRole("button", { name: /do this/i }));
+    fireEvent.click(screen.getByRole("button", { name: /start/i }));
 
     await waitFor(() => expect(startTask).toHaveBeenCalledWith({ id: "t1" }));
   });
