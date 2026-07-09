@@ -833,6 +833,42 @@
   border-width: 3px;
 }
 
+/* ---- Hold-to-complete fill ring (touch) ----
+   While the user presses and holds the hero circle, a teal arc sweeps around
+   it. It uses a conic-gradient driven by a CSS custom property (--aa-hold-pct)
+   that animates 0 → 1 over HOLD_MS (kept in sync with the JS timer). When it
+   reaches 100% the onAnimationEnd handler (or the JS timer, whichever first)
+   opens the confirm dialog. Releasing early removes the class and the ring
+   vanishes. Gated to coarse pointers so mouse/trackpad never show it. */
+.aa-presence__circle--holding::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: var(--aa-radius-full);
+  /* Two stops: filled arc up to --aa-hold-pct, then transparent. The 0.001
+     gap avoids a hairline seam at the sweep front. */
+  background: conic-gradient(
+    var(--aa-teal) calc(var(--aa-hold-pct, 0) * 360deg),
+    transparent calc(var(--aa-hold-pct, 0) * 360deg + 0.001deg)
+  );
+  -webkit-mask: radial-gradient(circle, transparent 58%, black 60%);
+  mask: radial-gradient(circle, transparent 58%, black 60%);
+  animation: aa-hold-fill 600ms linear forwards;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes aa-hold-fill {
+  from { --aa-hold-pct: 0; }
+  to   { --aa-hold-pct: 1; }
+}
+/* CSS custom properties aren't animatable without @property registration in
+   all engines; register so the conic-gradient sweep is smooth (not stepped). */
+@property --aa-hold-pct {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
 .aa-title {
   font-size: clamp(1.625rem, 3.2vw, 2.125rem);
   font-weight: var(--aa-weight-bold);
@@ -1285,6 +1321,7 @@
   .aa-composer,
   .aa-thread__note,
   .aa-presence__halo,
+  .aa-presence__circle--holding::before,
   .aa-clock__dot {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

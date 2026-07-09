@@ -300,16 +300,19 @@ export function AppShell({ children }: { children: ReactNode }) {
     };
   }, [captureOpen, cheatsheetOpen, confirmLogout, feedbackOpen]);
 
-  // On mobile, hide the bottom dock while in Settings. Settings is a deliberate
-  // detour from the focus loop; the dock's tabs are all inactive there, and
-  // reclaiming the thumb zone lets the dense forms breathe. Exit is via the
-  // SettingsLayout back-link (top) — and the FAB stays for capture. Desktop is
-  // unaffected (the dock is already display:none above 768px).
+  // On mobile, hide the bottom dock while in Settings or Focus mode. Settings
+  // is a deliberate detour from the focus loop (its tabs are all inactive
+  // there); Focus is a full-screen modal where the dock actively overlaps the
+  // keyboard-rail hints. In both, reclaiming the thumb zone helps and the FAB
+  // stays for capture. Desktop is unaffected (the dock is already display:none
+  // above 768px).
   const inSettings = isActive("/app/settings");
+  const inFocus = location.pathname.startsWith("/app/focus");
 
   return (
-    <div className={`aa-app ${inSettings ? "is-in-settings" : ""}`}>
-      {/* ============================ SIDEBAR ============================ */}
+    <div
+      className={`aa-app${inSettings ? " is-in-settings" : ""}${inFocus ? " is-in-focus" : ""}`}
+    >
       <aside className="aa-app-side">
         <Link className="aa-app-brand" to="/app" title="Next">
           <span className="aa-app-mark" aria-hidden="true">

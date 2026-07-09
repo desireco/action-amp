@@ -82,6 +82,16 @@ export function FocusMode({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [completedLocally, setCompletedLocally] = useState(false);
 
+  // Hold-to-complete (touch only). Pressing and holding the hero circle fills a
+  // ring around it over HOLD_MS; when the fill completes, the confirm dialog
+  // opens. Releasing early cancels the fill. A short tap still opens confirm via
+  // the circle's native click — so the gesture stays discoverable. Desktop
+  // (mouse/trackpad) is unaffected: it keeps the instant click → confirm path.
+  const [holding, setHolding] = useState(false);
+  const holdCompletedRef = useRef(false);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const HOLD_MS = 600;
+
   // Outcome draft captured at completion (task-fields §F). Non-blocking: the
   // field appears on the completion sheet, the user can type or skip; either
   // way the task completes. Preserved across the confirm toggle so opening the
@@ -108,6 +118,8 @@ export function FocusMode({
     setDraft("");
     setConfirmOpen(false);
     setCompletedLocally(false);
+    // Cancel any in-flight hold-to-complete when the task changes.
+    clearHold();
   }, [task.id, task.content]);
 
   // Outcome reset is split out so it doesn't re-run on every content change
@@ -251,6 +263,50 @@ export function FocusMode({
     setConfirmOpen(true);
   };
 
+  // ---- Hold-to-complete (touch) ----
+  // Pointer Events cover both touch and mouse. We only arm the hold timer for
+  // touch presses — mouse/trackpad keep the instant click. When the timer
+  // fires we open the confirm and set a flag so the subsequent synthetic click
+  // (browsers fire click after pointerup) is a no-op, preventing a double-open.
+  const clearHold = () => {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    setHolding(false);
+  };
+  const onCirclePointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== "touch" || !onComplete) return;
+    holdCompletedRef.current = false;
+    setHolding(true);
+    holdTimerRef.current = setTimeout(() => {
+      holdCompletedRef.current = true;
+      clearHold();
+      openConfirm();
+    }, HOLD_MS);
+  };
+  const onCirclePointerUp = () => {
+    if (holdTimerRef.current) clearHold();
+  };
+  // The fill animation runs only while `holding`; if it reaches the end before
+  // the user releases, onAnimationEnd fires openConfirm (a backup to the
+  // timer — whichever fires first wins, the other is a no-op via the flag).
+  const onCircleAnimEnd = (e: React.AnimationEvent) => {
+    if (e.animationName !== "aa-hold-fill" || !holding) return;
+    if (holdCompletedRef.current) return;
+    holdCompletedRef.current = true;
+    clearHold();
+    openConfirm();
+  };
+  // Circle click: if the hold already opened the confirm, swallow the click.
+  const onCircleClick = () => {
+    if (holdCompletedRef.current) {
+      holdCompletedRef.current = false;
+      return;
+    }
+    openConfirm();
+  };
+
   return (
     <div
       className={`aa-focus${completedLocally ? " aa-focus--done" : ""}`}
@@ -312,11 +368,18 @@ export function FocusMode({
       <div className="aa-focus__body">
         <div className="aa-presence">
           <div className="aa-presence__halo" aria-hidden="true" />
-          <div className="aa-presence__circle">
+          <div
+            className={`aa-presence__circle${holding ? " aa-presence__circle--holding" : ""}`}
+            onPointerDown={onCirclePointerDown}
+            onPointerUp={onCirclePointerUp}
+            onPointerLeave={onCirclePointerUp}
+            onPointerCancel={onCirclePointerUp}
+            onAnimationEnd={onCircleAnimEnd}
+          >
             <CompletionCircle
               filled={completedLocally}
               size="lg"
-              onClick={onComplete ? openConfirm : undefined}
+              onClick={onComplete ? onCircleClick : undefined}
               className={completedLocally ? "aa-cc--burst" : undefined}
             />
           </div>

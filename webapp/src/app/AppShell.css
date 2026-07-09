@@ -506,19 +506,23 @@
   .aa-app-capture-fab.is-hidden-while-lens-open {
     display: none;
   }
-  /* Settings: a deliberate detour from the focus loop, so step out of the
-     thumb-zone chrome. Hide the bottom dock, drop the bottom padding it
-     reserved, and reset the FAB's dock-clearing offset (it normally sits
-     `+72px` to clear the dock; with no dock it returns to its base offset).
-     Exit is via SettingsLayout's top back-link. Desktop is unaffected — the
-     dock is already display:none above 768px. */
-  .aa-app.is-in-settings {
+  /* Settings + Focus: both step out of the thumb-zone chrome. Hide the bottom
+     dock, drop the bottom padding it reserved, and reset the FAB's dock-
+     clearing offset (it normally sits `+72px` to clear the dock; with no dock
+     it returns to its base offset). Settings exits via SettingsLayout's top
+     back-link; Focus is a full-screen modal where the dock was overlapping the
+     keyboard-rail hints. Desktop is unaffected — the dock is already
+     display:none above 768px. */
+  .aa-app.is-in-settings,
+  .aa-app.is-in-focus {
     padding-bottom: 0;
   }
-  .aa-app.is-in-settings .aa-mobile-dock {
+  .aa-app.is-in-settings .aa-mobile-dock,
+  .aa-app.is-in-focus .aa-mobile-dock {
     display: none;
   }
-  .aa-app.is-in-settings .aa-app-capture-fab {
+  .aa-app.is-in-settings .aa-app-capture-fab,
+  .aa-app.is-in-focus .aa-app-capture-fab {
     bottom: max(var(--aa-space-xl), env(safe-area-inset-bottom));
   }
 }
