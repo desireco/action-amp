@@ -197,6 +197,7 @@ export function ProjectsPage() {
           const pct = total === 0 ? 0 : Math.round((p.doneCount / total) * 100);
           return (
             <ProgressCard
+              key={p.id}
               className="aa-project-card"
               to={`/app/projects/${p.permalink}`}
               title={p.name}

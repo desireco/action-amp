@@ -51,6 +51,7 @@ export function SomedayPage() {
         {(tasks ?? []).map((task) => (
           <li key={task.id} className="aa-someday-row">
             <TaskRow
+              as="div"
               task={task}
               muted
               onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
