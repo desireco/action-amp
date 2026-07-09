@@ -196,7 +196,12 @@
     flex-direction: column;
   }
 
-  .aa-task-row__actions {
+  /* Full-width actions only for the stacked --surface variant. Applying this
+     to all rows (the previous form) starved variant="list" rows: actions hit
+     width:100% + flex-shrink:0 and consumed the whole row, squeezing the task
+     title (.aa-task-row__main) to 0 width → text wrapped one letter per line.
+     List rows keep actions inline at content width (see page overrides). */
+  .aa-task-row--surface .aa-task-row__actions {
     width: 100%;
     justify-content: flex-start;
   }

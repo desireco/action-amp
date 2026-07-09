@@ -55,11 +55,37 @@
 
 @media (max-width: 720px) {
   .aa-upcoming__hero {
+    /* Stack hero copy above the "Today" button instead of jamming them onto
+       one space-between row. Mirrors Today's hero — the two are siblings. */
+    align-items: stretch;
+    flex-direction: column;
     padding: var(--aa-space-lg);
     margin-bottom: var(--aa-space-xl);
   }
 
+  .aa-upcoming__hero .aa-btn {
+    width: 100%;
+  }
+
   .aa-upcoming__title {
     font-size: var(--aa-text-xl);
+  }
+
+  .aa-upcoming__list .aa-grouped__group {
+    padding: var(--aa-space-md);
+  }
+
+  /* Collapse the "Today" promote button to content width so it doesn't squeeze
+     the task title at narrow widths. variant="list" rows don't get the mobile
+     stacking that --surface rows do, so without this the title cramps next to
+     an always-visible button. Mirrors Today's .aa-task-row__actions override. */
+  .aa-upcoming__list .aa-task-row__actions {
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--aa-space-xs);
+  }
+  .aa-upcoming__list .aa-task-row__actions .aa-btn {
+    width: auto;
   }
 }
