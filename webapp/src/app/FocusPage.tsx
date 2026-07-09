@@ -5,6 +5,7 @@ import {
   addTaskUpdate,
   updateTaskContent,
   completeTaskFromFocus,
+  pauseTask,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { FocusMode } from "../components/ui";
@@ -46,7 +47,16 @@ export function FocusPage() {
   return (
     <FocusMode
       task={toFocusTask(task)}
-      onClose={() => navigate("/app")}
+      onClose={async () => {
+        // Leaving focus = pausing the task. The X / Esc / "esc exit" all flow
+        // through here. Without this, exiting left the session open and the
+        // clock kept running server-side (startedAt stayed non-null). Pausing
+        // closes the TaskSession and clears startedAt so the task drops back to
+        // a Next candidate — no ghost timer.
+        await pauseTask({ id: task.id });
+        refreshTaskState();
+        navigate("/app");
+      }}
       onComplete={async (outcome) => {
         await completeTaskFromFocus(
           outcome ? { taskId: task.id, outcome } : { taskId: task.id },

@@ -200,6 +200,14 @@ export function FocusMode({
         return;
       }
 
+      // `p` → pause (exit focus, stop the clock). Same as Esc/X, but more
+      // intentional and discoverable in the keyset alongside n/↵.
+      if (e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+
       // Enter → open the completion confirm.
       if (e.key === "Enter" && onComplete) {
         e.preventDefault();
@@ -351,7 +359,7 @@ export function FocusMode({
             type="button"
             className="aa-focus__close"
             onClick={onClose}
-            aria-label="Exit focus mode (Esc)"
+            aria-label="Pause and exit focus (Esc or P)"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path
@@ -490,7 +498,7 @@ export function FocusMode({
           </button>
         )}
         <button type="button" className="aa-hint" onClick={onClose}>
-          <Kbd>esc</Kbd> exit
+          <Kbd>p</Kbd> pause
         </button>
       </div>
 

@@ -114,6 +114,8 @@ Pick the task; read the doc(s) on the right **before** writing code.
   "ref" }` imports, `wasp db migrate-dev --name <x>`, verify with `wasp compile`
   not `tsc`). Load the project's `wasp` skill for non-trivial Wasp work, and
   ground against the versioned docs (`webapp/AGENTS.md` §Documentation protocol).
+- **Work on `main`.** Commit directly to `main` unless the user explicitly
+  asks for a branch. Do not auto-create feature branches.
 - **Caveman mode.** Prose responses use the `caveman` skill (installed at
   `~/.agents/skills/caveman/`): terse, drop filler/articles/hedging, technical
   substance intact. Default intensity **full**. Auto-clarity rules apply — drop
