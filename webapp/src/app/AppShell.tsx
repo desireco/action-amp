@@ -300,8 +300,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     };
   }, [captureOpen, cheatsheetOpen, confirmLogout, feedbackOpen]);
 
+  // On mobile, hide the bottom dock while in Settings. Settings is a deliberate
+  // detour from the focus loop; the dock's tabs are all inactive there, and
+  // reclaiming the thumb zone lets the dense forms breathe. Exit is via the
+  // SettingsLayout back-link (top) — and the FAB stays for capture. Desktop is
+  // unaffected (the dock is already display:none above 768px).
+  const inSettings = isActive("/app/settings");
+
   return (
-    <div className="aa-app">
+    <div className={`aa-app ${inSettings ? "is-in-settings" : ""}`}>
       {/* ============================ SIDEBAR ============================ */}
       <aside className="aa-app-side">
         <Link className="aa-app-brand" to="/app" title="Next">
@@ -514,6 +521,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <div className="aa-app-utility-cluster" aria-label="Shell utilities">
+        {/* Mobile-only avatar → Settings. The sidebar footer that hosts the
+            desktop avatar/settings link is display:none at ≤768px, and the
+            bottom dock has no settings entry, so without this there is no path
+            to /app/settings (or Log out, which lives on the Account tab) on
+            mobile. Hidden on desktop (see AppShell.css). */}
+        <Link
+          to="/app/settings"
+          className={`aa-app-mobile-avatar ${isActive("/app/settings") ? "active" : ""}`}
+          title="Settings"
+          aria-label="Settings"
+        >
+          {initials || <UserIcon />}
+        </Link>
         <button
           type="button"
           className="aa-app-utility-btn"

@@ -181,6 +181,13 @@
   gap: var(--aa-space-xs);
 }
 
+/* Mobile-only avatar → Settings link. Lives in the utility cluster so the
+   desktop sidebar footer (display:none at ≤768px) doesn't strand Settings and
+   Log out on mobile. Desktop never shows it. See AppShell.tsx. */
+.aa-app-mobile-avatar {
+  display: none;
+}
+
 .aa-app-utility-btn {
   width: 48px;
   height: 48px;
@@ -318,6 +325,39 @@
   .aa-app-utility-cluster {
     top: max(var(--aa-space-sm), env(safe-area-inset-top));
     right: max(var(--aa-space-md), env(safe-area-inset-right));
+  }
+  .aa-app-mobile-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--aa-radius-sm);
+    background: var(--aa-teal-cta);
+    color: var(--aa-surface);
+    border: 1px solid var(--aa-teal-cta);
+    box-shadow: var(--aa-shadow-sm);
+    font-family: var(--aa-font);
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-bold);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background 0.15s var(--aa-ease-out),
+      border-color 0.15s var(--aa-ease-out);
+  }
+  .aa-app-mobile-avatar svg {
+    width: 18px;
+    height: 18px;
+  }
+  .aa-app-mobile-avatar.active {
+    background: var(--aa-teal-soft);
+    color: var(--aa-teal-cta);
+    border-color: var(--aa-teal);
+  }
+  .aa-app-mobile-avatar:focus-visible {
+    outline: 2px solid var(--aa-teal);
+    outline-offset: 2px;
   }
   .aa-mobile-dock {
     position: fixed;
@@ -465,6 +505,21 @@
   }
   .aa-app-capture-fab.is-hidden-while-lens-open {
     display: none;
+  }
+  /* Settings: a deliberate detour from the focus loop, so step out of the
+     thumb-zone chrome. Hide the bottom dock, drop the bottom padding it
+     reserved, and reset the FAB's dock-clearing offset (it normally sits
+     `+72px` to clear the dock; with no dock it returns to its base offset).
+     Exit is via SettingsLayout's top back-link. Desktop is unaffected — the
+     dock is already display:none above 768px. */
+  .aa-app.is-in-settings {
+    padding-bottom: 0;
+  }
+  .aa-app.is-in-settings .aa-mobile-dock {
+    display: none;
+  }
+  .aa-app.is-in-settings .aa-app-capture-fab {
+    bottom: max(var(--aa-space-xl), env(safe-area-inset-bottom));
   }
 }
 
