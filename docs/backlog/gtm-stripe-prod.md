@@ -2,7 +2,7 @@
 id: gtm-stripe-prod
 kind: backlog
 title: "Verify Stripe is in production mode (prod keys + webhook signature)"
-status: review
+status: done
 priority: P1
 spec_owner: user
 build_owner: user
