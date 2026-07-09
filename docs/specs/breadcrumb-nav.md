@@ -2,7 +2,7 @@
 id: breadcrumb-nav
 kind: spec
 title: "Breadcrumb navigation (crumbs navigate, not just zoom)"
-status: building
+status: review
 feature: breadcrumb-nav
 spec_owner: discover
 build_owner: build
