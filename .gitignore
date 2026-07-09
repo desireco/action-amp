@@ -15,6 +15,7 @@ webapp/build/
 .DS_Store
 .pi/
 skills-lock.json
+.zcode/
 
 # playwright-cli artifacts (local screenshots/snapshots/traces)
 .playwright-cli/
