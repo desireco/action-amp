@@ -26,6 +26,7 @@ import {
   setTaskOutcome,
   completeTaskFromFocus,
 } from "./operations";
+import { activePoolWhere } from "./activePool";
 import { mockContext } from "../test/mockContext";
 
 /**
@@ -442,6 +443,20 @@ describe("getTopTask", () => {
         goal: { select: { id: true, name: true } },
       },
     });
+  });
+
+  it("draws its candidate pool from the shared activePoolWhere predicate", async () => {
+    // Single-source lock: getTopTask's where-clause must equal activePoolWhere
+    // (the same predicate getAppData's Today badge + lens pills count). If this
+    // drifts, Next and the counts disagree — the exact bug this change fixed.
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([]);
+
+    await getTopTask({ lensId: "lens-1" }, m.context);
+
+    const expected = activePoolWhere({ userId: "user-1", lensId: "lens-1" });
+    const call = m.entities.Task.findMany.mock.calls[0][0];
+    expect(call.where).toMatchObject(expected);
   });
 
   it("ranks by priority first (IMPORTANT beats NORMAL)", async () => {

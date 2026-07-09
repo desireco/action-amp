@@ -128,8 +128,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     { enabled: !!user },
   );
   const lenses = appData?.lenses ?? [];
-  const counts = appData?.counts ?? { inbox: 0, today: 0, upcoming: 0, projects: 0, goals: 0 };
-  const todayByLens = appData?.todayByLens ?? {};
+  const counts = appData?.counts ?? { inbox: 0, active: 0, upcoming: 0, projects: 0, goals: 0 };
+  const activeByLens = appData?.activeByLens ?? {};
 
   // Capture autocomplete sources — fetched here (gated on user, same as
   // getAppData) and passed as props to CapturePopover so the popover stays a
@@ -194,7 +194,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           id: l.id,
           label: l.name,
           color: l.color ?? undefined,
-          count: todayByLens[l.id] ?? 0,
+          count: activeByLens[l.id] ?? 0,
           purpose: l.purpose ?? undefined,
           // FREE: only PERSONAL is usable; WORK + CUSTOM are gated.
           proLocked: workLocked && l.kind !== "PERSONAL",
@@ -352,7 +352,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {expandedFocus === "work" && (
               <div className="aa-focus-items">
                 <NavItem icon={<StarIcon />} label="Next" active={isActive("/app")} to="/app" />
-                <NavItem icon={<ClockIcon />} label="Today" active={isActive("/app/today")} to="/app/today" count={counts.today} />
+                <NavItem icon={<ClockIcon />} label="Today" active={isActive("/app/today")} to="/app/today" count={counts.active} />
               </div>
             )}
           </div>

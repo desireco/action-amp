@@ -16,6 +16,7 @@ import type {
   CompleteTaskFromFocus,
 } from "wasp/server/operations";
 import { assertLensAllowed } from "../billing/entitlementHttp";
+import { activePoolWhere } from "./activePool";
 
 /**
  * Task operations for the Phase 4 list views.
@@ -195,8 +196,8 @@ export const updateTaskStatus = (async (args, context) => {
 // ----------------------------------------------------------------
 // Read: the focus engine's top task (FEATURES.md F10 — MVP priority-first)
 // ----------------------------------------------------------------
-// Candidates = Tasks in the active Lens with status TODAY or UPCOMING, not
-// done, whose dueDate is null or already due (≤ now). The due-guard is what
+// Candidates = the shared actionable pool (tasks/activePool.ts): status TODAY
+// or UPCOMING in the active Lens, not done, due null or ≤ now. The due-guard
 // keeps snooze working: a snoozed task carries a future dueDate, so it stays
 // off Next until its time arrives (then auto-resurfaces). A triaged-to-
 // Upcoming task has no dueDate, so it surfaces as Next immediately — triage
@@ -218,16 +219,14 @@ export const getTopTask = (async (args, context) => {
   // calls this; a FREE user lands on Me, so this passes — the guard exists for
   // the localStorage-bypass case where a Work lensId reaches the server.
   await assertLensAllowed(context, args.lensId);
+  // Candidate pool = the shared actionable predicate (WORKFLOW.md §5.2). Same
+  // filter the Today nav badge + lens pills count against, so Next and every
+  // count can never diverge. See tasks/activePool.ts.
   const candidates = await context.entities.Task.findMany({
-    where: {
+    where: activePoolWhere({
       userId: context.user.id,
       lensId: args.lensId,
-      status: { in: ["TODAY", "UPCOMING"] },
-      isDone: false,
-      // A future dueDate = snoozed/scheduled; keep it off Next until due.
-      // (null dueDate = no horizon → always a candidate.)
-      OR: [{ dueDate: null }, { dueDate: { lte: new Date() } }],
-    },
+    }),
     include: {
       project: { select: { id: true, name: true } },
       goal: { select: { id: true, name: true } },

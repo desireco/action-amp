@@ -1,4 +1,5 @@
 import type { GetAppData, UpdateProfile } from "wasp/server/operations";
+import { activePoolWhere } from "../tasks/activePool";
 
 /**
  * App-shell bootstrap data — runs on every app load and lens switch.
@@ -6,8 +7,10 @@ import type { GetAppData, UpdateProfile } from "wasp/server/operations";
  * Returns the user's lenses (for the sidebar's Work/Me switch + query scoping)
  * and nav-badge counts. NOT onboarding — onboarding is a one-time signup flow
  * that lives in `src/onboarding/`. This is the per-load data the shell needs to
- * paint, plus the lazy daily Today→Upcoming rollover (which must run before the
- * count fetches so `todayCount` reflects the roll).
+ * paint, plus the lazy daily Today→Upcoming rollover (which runs first, though
+ * the actionable-pool count is roll-invariant — both TODAY and UPCOMING are in
+ * the pool — so the badge/pill are stable across midnight; only the Today PAGE
+ * resets).
  *
  * Lived in `onboarding/operations.ts` historically (it shared Lens/User entity
  * needs with `ensureOnboarded`), but it's app-shell data, so it moved here.
@@ -79,15 +82,19 @@ export const getAppData = (async (args, context) => {
     lenses[0]?.id;
   const lensWhere = activeLensId ? { lensId: activeLensId } : {};
 
-  const [inboxCount, todayCount, upcomingCount, projectCount, goalCount, todayByLensRows] =
+  const [inboxCount, activeCount, upcomingCount, projectCount, goalCount, activeByLensRows] =
     await Promise.all([
       context.entities.InboxItem.count({ where: { userId, status: "UNPROCESSED" } }),
-      // Focus-nav counts: lens-scoped to match the list pages.
+      // Focus-nav count: the actionable pool for THIS lens — the same predicate
+      // Next's top task draws from (tasks/activePool.ts). Lens-scoped so the
+      // badge matches what's on the table in the lens you're looking at. Named
+      // `active` (not `today`) because it includes the Upcoming bench as soon as
+      // a task is due/undated — the honest answer to "what could I do now?".
       context.entities.Task.count({
-        where: { userId, ...lensWhere, status: "TODAY", isDone: false },
+        where: activePoolWhere({ userId, lensId: activeLensId }),
       }),
-      // Upcoming count mirrors the Today list scope (lens-scoped, not done) so
-      // the Plan nav chip matches what /app/upcoming actually shows.
+      // Upcoming count mirrors the Upcoming list scope (lens-scoped, not done)
+      // so the Plan nav chip matches what /app/upcoming actually shows.
       context.entities.Task.count({
         where: { userId, ...lensWhere, status: "UPCOMING", isDone: false },
       }),
@@ -97,38 +104,39 @@ export const getAppData = (async (args, context) => {
       context.entities.Goal.count({
         where: { userId, ...lensWhere, isDone: false },
       }),
-      // Per-lens Today counts for the lens switch's badges. This intentionally
-      // matches the Today nav count semantics, not the broader Next candidate
-      // pool, so the Lens badge answers "how many are committed today here?"
+      // Per-lens actionable counts for the lens switch's badges. Same pool
+      // predicate (no lensId — grouped BY lensId across all lenses), so each
+      // pill mirrors the Next candidate pool for its lens and can never diverge
+      // from the card. Both TODAY and (due/undated) UPCOMING count.
       context.entities.Task.groupBy({
         by: ["lensId"],
-        where: { userId, status: "TODAY", isDone: false },
+        where: activePoolWhere({ userId }),
         _count: { _all: true },
       }),
     ]);
 
-  const todayByLens: Record<string, number> = {};
-  for (const row of todayByLensRows) {
-    todayByLens[row.lensId] = row._count._all;
+  const activeByLens: Record<string, number> = {};
+  for (const row of activeByLensRows) {
+    activeByLens[row.lensId] = row._count._all;
   }
 
   return {
     lenses,
     counts: {
       inbox: inboxCount,
-      today: todayCount,
+      active: activeCount,
       upcoming: upcomingCount,
       projects: projectCount,
       goals: goalCount,
     },
-    todayByLens,
+    activeByLens,
   };
 }) satisfies GetAppData<
   { lensId?: string | null },
   {
     lenses: { id: string; name: string; color: string | null; kind: string; purpose: string | null }[];
-    counts: { inbox: number; today: number; upcoming: number; projects: number; goals: number };
-    todayByLens: Record<string, number>;
+    counts: { inbox: number; active: number; upcoming: number; projects: number; goals: number };
+    activeByLens: Record<string, number>;
   }
 >;
 

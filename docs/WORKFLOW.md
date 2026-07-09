@@ -269,6 +269,15 @@ These were the open structural calls. All resolved:
    - **No effect on Next:** `getTopTask` already pools Today + Upcoming
      (§5.2), so rolled tasks stay focus candidates — this is a list/view
      concern, not a focus-engine concern. Resolves the pending note in §2.3.
+   - **No effect on counts either (updated 2026-07-09):** the Today nav badge
+     and the per-lens pill now draw from the **same shared actionable pool** as
+     Next (`tasks/activePool.ts` — status ∈ {TODAY, UPCOMING}, not done, due
+     null/now), so rolling TODAY→UPCOMING no longer flips them to 0 overnight.
+     Only the Today **page** (the strict committed list, `status === TODAY`)
+     resets each morning. This closed a recurring drift where a task showed on
+     Next ("due today") while the badge read 0 and the pill was empty. The
+     badge key is `counts.active` / `activeByLens` (not `today`) to stay honest
+     that it's the pool, not the committed list.
 8. **Custom lenses are user-defined + Pro-only (locked 2026-07-03).** A Lens is
    no longer a hardcoded Work/Me binary — a paying user can create, name, give
    a purpose, and color additional lenses; the active-lens switcher becomes
