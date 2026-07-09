@@ -2,7 +2,7 @@
 id: breadcrumb-nav
 kind: spec
 title: "Breadcrumb navigation (crumbs navigate, not just zoom)"
-status: Next
+status: building
 feature: breadcrumb-nav
 spec_owner: discover
 build_owner: build
@@ -11,7 +11,7 @@ priority: P3
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsNL      # sync-managed (write-once)
-gh_synced_at: 2026-07-08T19:45:22Z
+gh_synced_at: 2026-07-09T20:56:14Z
 ---
 
 # Spec: Breadcrumb navigation
