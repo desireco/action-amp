@@ -13,6 +13,8 @@ import {
   deleteProject,
   updateTask,
 } from "wasp/client/operations";
+import { Breadcrumb } from "../components/ui";
+import type { BreadcrumbItem } from "../components/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
@@ -322,11 +324,31 @@ export function ProjectDetailPage() {
     navigate("/app/projects");
   };
 
+  // Breadcrumb chain: Goal › Project (goal skipped if null).
+  const projectCrumbs: BreadcrumbItem[] = [];
+  if (project?.goal) projectCrumbs.push({ id: `goal:${project.goal.permalink}`, label: project.goal.name });
+  const projectActiveId = project ? `project:${project.permalink}` : "";
+  if (project) projectCrumbs.push({ id: projectActiveId, label: project.name || "Project" });
+
+  const handleCrumbSelect = (crumbId: string) => {
+    const [kind, p] = crumbId.split(":");
+    if (kind === "goal") navigate(`/app/goals/${p}`);
+    // "project" is the current page — no-op.
+  };
+
   return (
     <div className="aa-project">
-      <Link className="aa-task-back" to="/app/projects">
-        ← Projects
-      </Link>
+      {projectCrumbs.length > 0 ? (
+        <Breadcrumb
+          items={projectCrumbs}
+          active={projectActiveId}
+          onSelect={handleCrumbSelect}
+        />
+      ) : (
+        <Link className="aa-task-back" to="/app/projects">
+          ← Projects
+        </Link>
+      )}
 
       {isLoading && <p className="aa-task-state">Loading…</p>}
 

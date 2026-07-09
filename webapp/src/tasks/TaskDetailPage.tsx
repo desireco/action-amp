@@ -10,7 +10,8 @@ import {
   updateTaskDetails,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Markdown, PropertyChips, submitOnModEnter } from "../components/ui";
+import { Breadcrumb, Button, Markdown, PropertyChips, submitOnModEnter } from "../components/ui";
+import type { BreadcrumbItem } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { usePropertyKeys } from "../components/ui/usePropertyKeys";
 import {
@@ -249,19 +250,42 @@ export function TaskDetailPage() {
       })
     : "";
 
+  // Build the breadcrumb chain from the task's ancestors (skipping nulls).
+  // Route model: each crumb navigates to the ancestor's detail route.
+  const taskCrumbs: BreadcrumbItem[] = [];
+  if (task?.goal) taskCrumbs.push({ id: `goal:${task.goal.permalink}`, label: task.goal.name });
+  if (task?.project) taskCrumbs.push({ id: `project:${task.project.permalink}`, label: task.project.name });
+  const taskActiveId = task ? `task:${task.permalink}` : "";
+  if (task) taskCrumbs.push({ id: taskActiveId, label: task.description || "Task" });
+
+  const handleCrumbSelect = (crumbId: string) => {
+    const [kind, permalink] = crumbId.split(":");
+    if (kind === "goal") navigate(`/app/goals/${permalink}`);
+    else if (kind === "project") navigate(`/app/projects/${permalink}`);
+    // "task" is the current page — no-op (already here).
+  };
+
   return (
     <div className="aa-task-edit">
       <header className="aa-task-edit__topbar">
-        <a
-          href={returnTo}
-          className="aa-task-edit__back"
-          onClick={(e) => {
-            e.preventDefault();
-            navigate(returnTo);
-          }}
-        >
-          ← Back
-        </a>
+        {taskCrumbs.length > 0 ? (
+          <Breadcrumb
+            items={taskCrumbs}
+            active={taskActiveId}
+            onSelect={handleCrumbSelect}
+          />
+        ) : (
+          <a
+            href={returnTo}
+            className="aa-task-edit__back"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate(returnTo);
+            }}
+          >
+            ← Back
+          </a>
+        )}
         {task && (
           <span className="aa-task-edit__permalink">
             /tasks/{task.permalink}

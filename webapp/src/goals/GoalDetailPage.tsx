@@ -10,12 +10,14 @@ import {
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Breadcrumb,
   Button,
   Chip,
   ConfirmDialog,
   DetailHeaderActions,
   InlineEntityEditForm,
 } from "../components/ui";
+import type { BreadcrumbItem } from "../components/ui";
 import { formatRelativeDue } from "../shared/dateFormat";
 import "./GoalDetailView.css";
 
@@ -164,11 +166,31 @@ export function GoalDetailPage() {
   // Counts for the delete confirm copy: "N children will move to standalone."
   const childCount = goal?.projects.length ?? 0;
 
+  // Breadcrumb: Goals list › this goal (goal has no parent entity).
+  const goalCrumbs: BreadcrumbItem[] = [
+    { id: "goals:list", label: "Goals" },
+  ];
+  const goalActiveId = goal ? `goal:${goal.permalink}` : "";
+  if (goal) goalCrumbs.push({ id: goalActiveId, label: goal.name || "Goal" });
+
+  const handleCrumbSelect = (crumbId: string) => {
+    if (crumbId === "goals:list") navigate("/app/goals");
+    // "goal:..." is the current page — no-op.
+  };
+
   return (
     <div className="aa-goal">
-      <Link className="aa-task-back" to="/app/goals">
-        ← Goals
-      </Link>
+      {goal ? (
+        <Breadcrumb
+          items={goalCrumbs}
+          active={goalActiveId}
+          onSelect={handleCrumbSelect}
+        />
+      ) : (
+        <Link className="aa-task-back" to="/app/goals">
+          ← Goals
+        </Link>
+      )}
 
       {isLoading && <p className="aa-task-state">Loading…</p>}
 

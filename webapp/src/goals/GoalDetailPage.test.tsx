@@ -221,3 +221,22 @@ describe("GoalDetailPage — project alignment only", () => {
     expect(screen.queryByRole("button", { name: /^add task$/i })).toBeNull();
   });
 });
+
+describe("GoalDetailPage — breadcrumb navigation (breadcrumb-nav spec)", () => {
+  it("renders a breadcrumb with the goal name as the active crumb", () => {
+    goalData.current = makeGoal();
+    renderAt("/app/goals/g1");
+    // The active crumb has aria-current="location".
+    const activeCrumb = screen.getByRole("button", { name: "Grow audience" });
+    expect(activeCrumb).toHaveAttribute("aria-current", "location");
+  });
+
+  it("renders a Goals-list crumb that navigates to /app/goals on click", () => {
+    goalData.current = makeGoal();
+    renderAt("/app/goals/g1");
+    fireEvent.click(screen.getByRole("button", { name: "Goals" }));
+    // The /app/goals route in the test router renders a div with testid
+    // "goals-list" — if we navigated there, it should be present.
+    expect(screen.getByTestId("goals-list")).toBeInTheDocument();
+  });
+});
