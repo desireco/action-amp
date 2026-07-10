@@ -29,45 +29,59 @@ export function SomedayPage() {
     { enabled: !!lens },
   );
 
-  if (!isLoading && (tasks?.length ?? 0) === 0) {
-    return (
-      <ListEmpty
-        icon={<CompletionCircle size="md" />}
-        title="Nothing for Someday."
-        text="Someday is for things you want to keep but stop nagging about. Send a task here from triage or by changing its status."
-      />
-    );
-  }
+  const count = tasks?.length ?? 0;
 
   return (
-    <div className="aa-list-shell">
+    <div className="aa-someday">
       <header className="aa-list-header">
         <div>
-          <div className="aa-list-header__eyebrow">Someday</div>
-          <h1 className="aa-list-header__title">{tasks?.length ?? 0} parked</h1>
+          <div className="aa-list-header__eyebrow">Planning</div>
+          <h1 className="aa-list-header__title">Someday</h1>
+          <p className="aa-list-header__description">
+            {isLoading
+              ? "Loading parked tasks…"
+              : `${count} parked · Kept without asking for attention today.`}
+          </p>
         </div>
       </header>
-      <ul className="aa-someday-list">
-        {(tasks ?? []).map((task) => (
-          <li key={task.id} className="aa-someday-row">
-            <TaskRow
-              as="div"
-              task={task}
-              muted
-              onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => promoteToToday(task)}
-                title="Move to Today"
+
+      {isLoading ? (
+        <div className="aa-someday__loading" aria-label="Loading Someday tasks">
+          <div className="aa-list-skeleton-group" aria-hidden="true">
+            <div className="aa-list-skeleton aa-list-skeleton--heading" />
+            <div className="aa-list-skeleton aa-list-skeleton--row" />
+            <div className="aa-list-skeleton aa-list-skeleton--row" />
+          </div>
+        </div>
+      ) : count === 0 ? (
+        <ListEmpty
+          icon={<CompletionCircle size="md" />}
+          title="Nothing parked."
+          text="Someday is for things you want to keep but stop nagging about. Send a task here from triage or by changing its status."
+        />
+      ) : (
+        <ul className="aa-someday-list">
+          {(tasks ?? []).map((task) => (
+            <li key={task.id} className="aa-someday-row">
+              <TaskRow
+                as="div"
+                task={task}
+                muted
+                onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
               >
-                Today
-              </Button>
-            </TaskRow>
-          </li>
-        ))}
-      </ul>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => promoteToToday(task)}
+                  title="Move to Today"
+                >
+                  Today
+                </Button>
+              </TaskRow>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

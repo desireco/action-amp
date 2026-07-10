@@ -5,19 +5,45 @@
  * Mirrors the Today ↔ Upcoming swap-row layout: flex row, the TaskRow fills,
  * the promote button right-aligns.
  */
+.aa-someday {
+  width: min(100%, 680px);
+  margin: 0 auto;
+}
+
 .aa-someday-list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: var(--aa-space-sm) var(--aa-space-lg);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-xl);
+  box-shadow: var(--aa-shadow-sm);
 }
 
 .aa-someday-row {
   display: flex;
   align-items: center;
   gap: var(--aa-space-sm);
+  border-bottom: 1px solid var(--aa-border);
+}
+
+.aa-someday-row:last-child {
+  border-bottom: none;
 }
 
 .aa-someday-row > :first-child {
   flex: 1;
   min-width: 0;
+}
+
+.aa-someday__loading {
+  min-height: 240px;
+  padding: var(--aa-space-xl);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-xl);
+  box-shadow: var(--aa-shadow-sm);
 }
