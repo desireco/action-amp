@@ -25,6 +25,14 @@
   margin: 0;
 }
 
+.aa-list-header__description {
+  max-width: 48ch;
+  margin: var(--aa-space-xs) 0 0;
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-snug);
+}
+
 /* Allowance row — sits under the title. Used for free-tier cap chips
  * ("2 of 3 projects used"). Empty for PRO users. */
 .aa-list-header__meta {

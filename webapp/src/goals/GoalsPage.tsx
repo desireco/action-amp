@@ -80,8 +80,11 @@ export function GoalsPage() {
       <div className="aa-goals">
         <header className="aa-list-header">
           <div>
-            <div className="aa-list-header__eyebrow">Goals</div>
-            <h1 className="aa-list-header__title">0 active</h1>
+            <div className="aa-list-header__eyebrow">Planning</div>
+            <h1 className="aa-list-header__title">Goals</h1>
+            <p className="aa-list-header__description">
+              0 active · Outcomes your projects move forward.
+            </p>
           </div>
           <RecordCreateControl
             label="New goal"
@@ -107,8 +110,11 @@ export function GoalsPage() {
     <div className="aa-goals">
       <header className="aa-list-header">
         <div>
-          <div className="aa-list-header__eyebrow">Goals</div>
-          <h1 className="aa-list-header__title">{goals?.length ?? 0} active</h1>
+          <div className="aa-list-header__eyebrow">Planning</div>
+          <h1 className="aa-list-header__title">Goals</h1>
+          <p className="aa-list-header__description">
+            {isLoading ? "Loading active goals…" : `${goals?.length ?? 0} active · Outcomes your projects move forward.`}
+          </p>
           <div className="aa-list-header__meta">
             <AllowanceChip
               entitled={entitled}

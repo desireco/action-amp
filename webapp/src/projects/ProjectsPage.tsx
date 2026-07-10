@@ -139,8 +139,11 @@ export function ProjectsPage() {
       <div className="aa-projects">
         <header className="aa-list-header">
           <div>
-            <div className="aa-list-header__eyebrow">Projects</div>
-            <h1 className="aa-list-header__title">0 active</h1>
+            <div className="aa-list-header__eyebrow">Planning</div>
+            <h1 className="aa-list-header__title">Projects</h1>
+            <p className="aa-list-header__description">
+              0 active · Outcomes that need more than one step.
+            </p>
           </div>
           <RecordCreateControl
             label="New project"
@@ -167,8 +170,11 @@ export function ProjectsPage() {
     <div className="aa-projects">
       <header className="aa-list-header">
         <div>
-          <div className="aa-list-header__eyebrow">Projects</div>
-          <h1 className="aa-list-header__title">{projects?.length ?? 0} active</h1>
+          <div className="aa-list-header__eyebrow">Planning</div>
+          <h1 className="aa-list-header__title">Projects</h1>
+          <p className="aa-list-header__description">
+            {isLoading ? "Loading active projects…" : `${projects?.length ?? 0} active · Outcomes that need more than one step.`}
+          </p>
           <div className="aa-list-header__meta">
             <AllowanceChip
               entitled={entitled}

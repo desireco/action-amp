@@ -1,7 +1,8 @@
 @import "../styles/tokens.css";
 
 .aa-projects {
-  max-width: 980px;
+  width: min(100%, 980px);
+  margin: 0 auto;
 }
 
 .aa-project-card {
