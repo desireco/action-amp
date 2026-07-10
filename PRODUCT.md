@@ -19,6 +19,12 @@ embody the calm, opinionated, "we are not like the others" stance in its own
 composition. The app (separate work) is the product register where design
 serves.
 
+**Brand identity kit:** `docs/brand.md` — the canonical positioning, voice,
+lexicon, and messaging. Category **Attention Engine**; hero tagline **"One
+task. The next one that matters."**; register **calm-premium** (the Superhuman-
+model: premium through craft + decisiveness, never luxury signaling). Governs
+all marketing/public copy; defers to this file on product thesis.
+
 ## Tone of Voice
 - **Calm, not chirpy.** No exclamation marks, no "🚀 Let's go!" energy.
 - **Direct, not clinical.** "You don't fail to capture. You fail to pick."
