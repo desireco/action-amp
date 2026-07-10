@@ -21,14 +21,14 @@
   positioning (~$1.53/week). See §5.
 - **Prepaid option:** **$90/yr non-recurring (DECIDED)** — same Pro product,
   no auto-renew, for the anti-subscription crowd (+$10.50 over recurring). See §5.
-- **Founding 100:** **$139 one-time, lifetime (DECIDED 2026-06-22)** — capped at
+- **Founding 100:** **$99 one-time, lifetime (DECIDED 2026-07-10)** — capped at
   exactly 100 spots; a launch patron tier. CTA disabled until checkout + cap
   enforcement are wired. See §3 Model C.
 - **Engine:** **Stripe (DECIDED + SHIPPED 2026-07-03).** NOT Wasp-built-in —
   Wasp 0.24 has no payment support; we wire Stripe via `api` (webhook) +
   actions (checkout). Full plan + as-built: see `BILLING-INTEGRATION.md`.
 - **Implementation status:** Recurring (Pro $79.50/yr, $12.95/mo), prepaid
-  ($90), and Founding 100 ($139 lifetime, server-enforced 100-spot cap) are
+  ($90), and Founding 100 ($99 lifetime, server-enforced 100-spot cap) are
   live; webhook is the source of truth. Free-tier caps enforced server-side
   since 2026-07-03 (`entitlement-enforcement`). See `BILLING-INTEGRATION.md`.
 
@@ -224,7 +224,7 @@ one-time lifetime option alongside the recurring/prepaid Pro ladder.)*
 | **Pro** *(regular annual)* | **$79.50/yr** | Charm-priced. "About a dollar-fifty a week." (~$1.53/wk, ~$6.63/mo equiv) |
 | **Pro prepaid** *(non-recurring)* | **$90/yr** | Same Pro, **no auto-renew**. +$10.50 for control & peace of mind. For the anti-subscription crowd. |
 | **Pro monthly** *(optional)* | **$12.95/mo** | Commitment-phobe option — ~2.0× the annual equiv, a clear push to yearly. |
-| **Founding 100** *(launch, lifetime)* | **$139 once** | Exactly 100 spots. Lifetime Pro, no recurring charge. Permanently retired once the 100th spot is claimed. See §3 Model C. |
+| **Founding 100** *(launch, lifetime)* | **$99 once** | Exactly 100 spots. Lifetime Pro, no recurring charge. Permanently retired once the 100th spot is claimed. See §3 Model C. |
 
 **The pricing story:**
 
@@ -350,4 +350,4 @@ webhook as source of truth, signature verification, idempotency).
 | 2026-06-16 | **Feature caps: personal (Me) scope · 1 Goal · 3 Projects · unlimited Tasks** | Personal-only lens is the strongest upgrade trigger; unlimited tasks avoids punishing the core capture behavior; 3/1 is the tastes-great zone |
 | 2026-06-16 | **Monthly price: $12.95/mo** | Push-to-annual rate (~$155/yr equiv ≈ 2.0× the $79.50 annual). Still above market 1.2–1.4× norm — intentional |
 | 2026-06-22 | **Founder tier reversed: dropped from catalog, schema, and UI** | Lifetime-locked tier added entitlement-model complexity (third plan state, non-expiring `planRenewsAt`) for a benefit the $90 prepaid already covers. Trust-gap concern real but cheaper to solve with a time-limited launch discount later if churn demands it. Removed `FOUNDER` from `Plan` enum, `billing/`, `BillingPage`, and docs. |
-| 2026-06-22 | **Founding 100 re-introduced: $139 one-time, lifetime, capped at 100 spots** | Reverses the earlier reversal, on safer terms: a hard 100-spot cap makes a lifetime tier viable (funds launch without open-ended liability). $139 pays for itself in ~1.75yr vs annual. Shipped page (`/founding-100`), schema enum, entitlement infra; CTA disabled pending checkout + cap enforcement wiring. |
+| 2026-07-10 | **Founding 100 launch price: $99 one-time, lifetime, capped at 100 spots** | Lower launch price improves early conversion while preserving a hard 100-spot cap. $99 pays for itself in ~1.25yr vs annual. Existing page, checkout, webhook entitlement, and cap enforcement are used. |

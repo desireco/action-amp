@@ -68,7 +68,7 @@ The billing implementation is correct:
 - **`stripe.ts`** — Stripe client initialized from `STRIPE_SECRET_KEY`
 - **`webhook.ts`** — signature verified via `stripe.webhooks.constructEvent`; proper error handling (400 on bad sig, 500 on missing secret)
 - **`webhookMiddleware.ts`** — raw-body middleware (`express.raw({ type: "*/*" })`) replaces JSON parsing so the signature base is the unmodified bytes. This is the classic Stripe gotcha, handled correctly.
-- **`operations.ts`** — Founding 100 checkout: auth-required, server-side cap (100), inline `price_data` at $139 (13,900 cents), metadata stamped for webhook mapping
+- **`operations.ts`** — Founding 100 checkout: auth-required, server-side cap (100), inline `price_data` at $99 (9,900 cents), metadata stamped for webhook mapping
 
 ## Done-conditions
 
@@ -81,7 +81,7 @@ The billing implementation is correct:
 
 ## Notes
 
-- **`STRIPE_PRICE_FOUNDER` is unused by the checkout path.** Founding 100 uses inline `price_data` (amount hardcoded at $139 in `config.ts`), not a dashboard Price object. The env var exists for completeness but isn't read during founder checkout. Not a bug — just dead config.
+- **`STRIPE_PRICE_FOUNDER` is unused by the checkout path.** Founding 100 uses inline `price_data` (amount hardcoded at $99 in `config.ts`), not a dashboard Price object. The env var exists for completeness but isn't read during founder checkout. Not a bug — just dead config.
 - **A second live webhook endpoint exists** (`we_0T37Xi...`) pointing at `sidiansidekicks.com/api/stripe-webhook` — likely from a prior project on the same Stripe account. Harmless (different URL, won't receive ActionAmp events), but worth cleaning up if you want a tidy account.
 - **The test-transaction done-condition is deferred.** The signature chain is proven (signed request accepted, unsigned rejected). A full end-to-end checkout needs a real card — recommend doing one $139 test purchase (then refund it) when you're ready, to confirm the plan-upgrade path fires on `checkout.session.completed`.
 

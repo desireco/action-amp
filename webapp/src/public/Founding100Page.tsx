@@ -8,7 +8,7 @@ import "./Founding100Page.css";
 /**
  * /founding-100 — the Founding 100 landing page (auth-required).
  *
- * A one-time $139 lifetime Pro tier, capped at exactly 100 spots. The live
+ * A one-time $99 lifetime Pro tier, capped at exactly 100 spots. The live
  * spots-remaining count comes from getFounding100Status; the CTA is enabled
  * while spots remain. Once full, the button locks and the page says so.
  *
@@ -43,7 +43,7 @@ export function Founding100Page() {
   }
 
   // CTA copy + state by situation
-  let ctaLabel = "Secure Your Lifetime Spot for $139";
+  let ctaLabel = "Secure Your Lifetime Spot for $99";
   let ctaDisabled = loading;
   if (isFull) {
     ctaLabel = "All 100 spots claimed";
@@ -64,7 +64,7 @@ export function Founding100Page() {
           that real for the people who show up at the start.
         </p>
         <p>
-          The Founding 100 is a one-time tier — <strong>$139, lifetime Pro</strong>
+          The Founding 100 is a one-time tier — <strong>$99, lifetime Pro</strong>
           {" "}— for the first hundred people who claim a spot. When the hundred
           are gone, the tier retires for good. No countdown timer, no fake
           scarcity. Just a fixed number, in public, that goes down as people

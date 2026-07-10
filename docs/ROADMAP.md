@@ -18,7 +18,7 @@ audience yet**. That distinction changes the whole roadmap.
   task/project → Next focus chooser → Today (capped at 5) → completion →
   Logbook. Every step has a real server operation and a route.
 - **Live Stripe billing**: recurring (Pro $79.50/yr, $12.95/mo), prepaid ($90),
-  and the capped **Founding 100** ($139 lifetime, 100 spots, server-enforced
+  and the capped **Founding 100** ($99 lifetime, 100 spots, server-enforced
   cap, live count on the landing page). Webhook is the source of truth; client
   never mutates `plan`.
 - **The wedge is built**: `getTopTask` priority-first matcher, Now/Next state
@@ -444,7 +444,7 @@ the category" — above Things-once, 2.2× Todoist, matched only by the heavier
 Sunsama. With zero reputation and zero audience, **the price is not the
 problem and it is not the solution — the missing audience is.** Do not move
 the price until 500+ of the right people have seen the product and the
-conversion number is known. Founding 100 ($139 lifetime) is the right
+conversion number is known. Founding 100 ($99 lifetime) is the right
 patron-on-ramp and is already live; lean on it, don't discount the ladder.
 
 ---

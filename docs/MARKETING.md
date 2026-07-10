@@ -30,7 +30,7 @@ manipulating; it does not apologize for selling.
 | Route | Page | Status | Purpose |
 |---|---|---|---|
 | `/` | **Home** | live | The whole pitch in one scroll. The main asset. |
-| `/founding-100` | **Founding 100** | live | One-time $139 lifetime Pro, capped at 100 spots. The patron offer. |
+| `/founding-100` | **Founding 100** | live | One-time $99 lifetime Pro, capped at 100 spots. The patron offer. |
 | `/founding-100/welcome` | Post-checkout | live | Stripe success_url; thanks the new founder. |
 | `/about` | About / story | live-light | Why this exists, who's behind it. Builds trust. |
 | `/privacy` | Privacy policy | live | Required. Plain-language. |
@@ -104,7 +104,7 @@ gaps marked **(to add)** are the newsletter work per `PUBLIC-PAGES.md` §1.
 
 Already built (`src/public/Founding100Page.tsx`); this is the copy/stance record, not a spec to write.
 
-- **Offer:** one-time $139 lifetime Pro, capped at exactly 100 spots. After the 100th, the tier retires permanently and Pro becomes yearly-only.
+- **Offer:** one-time $99 lifetime Pro, capped at exactly 100 spots. After the 100th, the tier retires permanently and Pro becomes yearly-only.
 - **The honest why:** lifetime plans are genuinely risky for software businesses past a point; 100 funds development without a subscription treadmill or VC. Patronage, not FOMO. The copy says this directly ("Why 100 spots?") — which is the fair version of scarcity: the limit is real and the reason is stated.
 - **Mechanics:** live spots-remaining counter; checkout requires auth (logged-out users redirect to `/login?redirect=/founding-100`); Stripe via `createCheckoutSession({ priceKey: "founder" })`.
 - **The line we don't cross:** no countdown timers, no "only N left today," no invented urgency. The cap is the cap; it's stated once, honestly.

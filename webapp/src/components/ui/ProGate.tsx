@@ -75,7 +75,7 @@ export function ProGate({
           See plans
         </Link>
         <Link to="/founding-100" className="aa-progate__secondary">
-          Founding 100 · $139 lifetime
+          Founding 100 · $99 lifetime
         </Link>
       </div>
     </div>

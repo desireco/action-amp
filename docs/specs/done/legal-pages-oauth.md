@@ -32,7 +32,7 @@ Three concrete reasons:
    app" warning.
 2. **The Terms are now false.** `terms.md` §"Free at launch" says *"ActionAmp
    is free during its initial launch. If we introduce a paid tier..."* — but
-   Pro ($79.50/yr), Prepaid ($90), and Founding 100 ($139) are **live with
+   Pro ($79.50/yr), Prepaid ($90), and Founding 100 ($99) are **live with
    working checkout**. Shipping paid features with Terms that say there are
    none is a real (if low-stakes) legal/policy problem.
 3. **Collection-point consent.** Google and basic best practice require the

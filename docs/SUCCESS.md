@@ -98,7 +98,7 @@ only by heavier Sunsama. **Do not move the price** until Bet 1 + Bet 2 produce
 data.
 
 **What unblocks it.** Bets 1 and 2 resolving yes, in that order. Founding 100
-($139 lifetime) is the patron-on-ramp; the recurring tiers prove the business.
+($99 lifetime) is the patron-on-ramp; the recurring tiers prove the business.
 
 **What failure looks like.** Right audience + surprising matcher + still <3%
 signup→paid → price is the blocker (move it) or the value-prop framing is the

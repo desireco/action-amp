@@ -54,7 +54,7 @@ export const PLAN_LABEL: Record<Plan, string> = {
 };
 
 /**
- * The Founding 100 — a one-time $139 lifetime Pro tier, capped at exactly 100
+ * The Founding 100 — a one-time $99 lifetime Pro tier, capped at exactly 100
  * spots. Enforcement lives in the checkout action (count current FOUNDER
  * users, reject if >= cap) once the CTA on /founding-100 is enabled.
  */
@@ -67,4 +67,4 @@ export const FOUNDING_100_CAP = 100;
  * benefit to a Price object here. Single source of truth for the amount; the
  * marketing copy ($139) and CTA label must stay in sync with this value.
  */
-export const FOUNDING_100_PRICE_CENTS = 13900;
+export const FOUNDING_100_PRICE_CENTS = 9900;

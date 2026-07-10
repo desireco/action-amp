@@ -14,7 +14,7 @@ The waitlist is gone. It was removed because it felt like manipulation (see
 `PRODUCT.md` Strategic Principle #3). What replaces it, for now:
 
 - **The Founding 100** (`/founding-100`) — the real conversion surface today: a
-  one-time $139 lifetime Pro tier capped at 100 spots, with a live checkout.
+  one-time $99 lifetime Pro tier capped at 100 spots, with a live checkout.
   This is the only CTA that asks for money.
 - **A newsletter** — plain email capture, **footer always, plus a quiet field in
   the hero**. Low-pressure copy, no scarcity, no referral, no incentives.
@@ -60,7 +60,7 @@ The whole story in one page. Spec'd section-by-section in `MARKETING.md §2` and
 ### P2. `/founding-100` — The Founding 100 (LIVE, ships as-is)
 **Already built and live** — `src/public/Founding100Page.tsx`. Not a spec, a record.
 
-- **Offer:** one-time $139 lifetime Pro, capped at exactly 100 spots. When the
+- **Offer:** one-time $99 lifetime Pro, capped at exactly 100 spots. When the
   100th spot is claimed, the tier retires permanently and Pro becomes yearly-only.
 - **Why it exists:** funds development without VC, gives early believers a patron
   role, avoids the subscription treadmill. Stated in the page copy itself.

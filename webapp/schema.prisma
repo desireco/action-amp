@@ -64,7 +64,7 @@ model User {
   lastTodayRolloverAt DateTime?
 }
 
-// A user's entitlement tier. FOUNDER = "Founding 100": one-time $139, lifetime,
+// A user's entitlement tier. FOUNDER = "Founding 100": one-time $99, lifetime,
 // capped at 100 spots (FOUNDING_100_CAP in billing/config.ts).
 enum Plan {
   FREE

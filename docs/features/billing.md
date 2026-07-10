@@ -11,7 +11,7 @@ verified: 2026-07-03
 
 **What.** Live Stripe billing. Three Pro prices: Monthly $12.95/mo, Yearly
 $79.50/yr (recommended), Prepaid $90/yr (no renew). Plus **Founding 100**
-$139 lifetime, capped at 100 spots.
+$99 lifetime, capped at 100 spots.
 
 **Founding 100 cap** — server-enforced in `createCheckoutSession`: counts
 `plan:FOUNDER` users, throws `HttpError(409)` when claimed ≥ 100. Status exposed
