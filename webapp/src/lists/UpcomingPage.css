@@ -4,19 +4,20 @@
  * Mirrors Today's hero treatment so the two list pages feel like siblings. */
 
 .aa-upcoming {
-  max-width: 840px;
+  width: min(100%, 840px);
+  margin: 0 auto;
 }
 
 .aa-upcoming__hero {
   align-items: center;
   padding: var(--aa-space-xl);
-  margin-bottom: var(--aa-space-2xl);
+  margin-bottom: var(--aa-space-lg);
   background:
     linear-gradient(135deg, var(--aa-active-lens-soft), transparent 58%),
     var(--aa-surface);
   border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-md);
-  box-shadow: var(--aa-shadow-md);
+  border-radius: var(--aa-radius-xl);
+  box-shadow: var(--aa-shadow-sm);
 }
 
 .aa-upcoming__hero-copy {
@@ -34,6 +35,28 @@
   color: var(--aa-text-3);
   font-size: var(--aa-text-base);
   line-height: var(--aa-leading-snug);
+}
+
+.aa-upcoming__list {
+  gap: var(--aa-space-lg);
+}
+
+.aa-upcoming__list .aa-grouped__group {
+  padding: var(--aa-space-lg);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-xl);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-upcoming__list .aa-grouped__heading {
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-upcoming__list .aa-grouped__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
 }
 
 /* The Overdue bucket is a contradiction on a forward-looking list — surface

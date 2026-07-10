@@ -3,19 +3,20 @@
 /* Today-specific styles — the list chrome lives in ListShell.css + GroupedList.css */
 
 .aa-today {
-  max-width: 840px;
+  width: min(100%, 840px);
+  margin: 0 auto;
 }
 
 .aa-today__hero {
   align-items: center;
   padding: var(--aa-space-xl);
-  margin-bottom: var(--aa-space-2xl);
+  margin-bottom: var(--aa-space-lg);
   background:
     linear-gradient(135deg, var(--aa-active-lens-soft), transparent 58%),
     var(--aa-surface);
   border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-md);
-  box-shadow: var(--aa-shadow-md);
+  border-radius: var(--aa-radius-xl);
+  box-shadow: var(--aa-shadow-sm);
 }
 
 .aa-today__hero-copy {
@@ -60,10 +61,10 @@
 }
 
 .aa-today__list .aa-grouped__group {
-  padding: var(--aa-space-md);
+  padding: var(--aa-space-lg);
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-md);
+  border-radius: var(--aa-radius-xl);
   box-shadow: var(--aa-shadow-sm);
 }
 
