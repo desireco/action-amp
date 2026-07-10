@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { getAppData, updateProfile } from "./operations";
-import { activePoolWhere } from "../tasks/activePool";
 import { mockContext } from "../test/mockContext";
 
 /**
@@ -22,7 +21,7 @@ describe("getAppData — guards", () => {
 });
 
 describe("getAppData — happy path", () => {
-  it("aggregates lenses + four counts, lens-scoping the focus-nav counts", async () => {
+  it("derives planning counters from one Lens-scoped status rollup", async () => {
     const m = mockContext();
     // Rollover already ran today → short-circuits so this test stays focused
     // on the count aggregation (covered in the rollover describe block).
@@ -32,27 +31,37 @@ describe("getAppData — happy path", () => {
       { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
     ];
 
-    // Lens.findMany resolves first (awaited before the counts); the count spies
-    // + the per-lens actionable groupBy then run in the Promise.all. Task.count
-    // is called twice (active pool + Upcoming); resolve 3 for both.
+    // Lens.findMany resolves first. Planning status totals and per-lens Today
+    // totals then run in parallel, both through groupBy.
     m.entities.Lens.findMany.mockResolvedValue(lenses);
     m.entities.InboxItem.count.mockResolvedValue(5);
-    m.entities.Task.count.mockResolvedValue(3);
     m.entities.Project.count.mockResolvedValue(7);
     m.entities.Goal.count.mockResolvedValue(2);
-    // Per-lens actionable counts for the lens-switch badges (groupBy shape: one
-    // row per lens with its _count). Work has 3 on the table, Me has 1.
-    m.entities.Task.groupBy.mockResolvedValue([
+    m.entities.Task.groupBy
+      .mockResolvedValueOnce([
+        { status: "TODAY", _count: { _all: 2 } },
+        { status: "UPCOMING", _count: { _all: 3 } },
+        { status: "SOMEDAY", _count: { _all: 4 } },
+      ])
+      .mockResolvedValueOnce([
       { lensId: "lens-work", _count: { _all: 3 } },
       { lensId: "lens-me", _count: { _all: 1 } },
-    ]);
+      ]);
 
     const result = await getAppData({ lensId: "lens-work" }, m.context);
 
     expect(result).toEqual({
       lenses,
-      counts: { inbox: 5, active: 3, upcoming: 3, projects: 7, goals: 2 },
-      activeByLens: { "lens-work": 3, "lens-me": 1 },
+      counts: {
+        inbox: 5,
+        today: 2,
+        upcoming: 3,
+        someday: 4,
+        open: 9,
+        projects: 7,
+        goals: 2,
+      },
+      todayByLens: { "lens-work": 3, "lens-me": 1 },
     });
 
     // Inbox is global (no lens) but only counts unprocessed items, matching
@@ -66,19 +75,17 @@ describe("getAppData — happy path", () => {
         },
       }),
     );
-    // The active count uses the SHARED pool predicate (tasks/activePool.ts) —
-    // the same where-clause Next's getTopTask draws from — lens-scoped so the
-    // Today badge matches what's on the table in this lens. status is TODAY +
-    // UPCOMING (not TODAY-only), with the due-now-or-null OR guard.
-    expect(m.entities.Task.count).toHaveBeenCalledWith(
+    // Single status rollup owns Today/Upcoming/Someday. Its sum is `open`, so
+    // sidebar counters cannot disagree because of mismatched filters.
+    expect(m.entities.Task.groupBy).toHaveBeenCalledWith(
       expect.objectContaining({
+        by: ["status"],
         where: expect.objectContaining({
           userId: "user-1",
           lensId: "lens-work",
-          status: { in: ["TODAY", "UPCOMING"] },
           isDone: false,
-          OR: [{ dueDate: null }, { dueDate: { lte: expect.any(Date) } }],
         }),
+        _count: { _all: true },
       }),
     );
     expect(m.entities.Project.count).toHaveBeenCalledWith(
@@ -97,17 +104,15 @@ describe("getAppData — happy path", () => {
         select: { id: true, name: true, color: true, kind: true, purpose: true },
       }),
     );
-    // Per-lens actionable counts use the SAME pool predicate but are NOT scoped
-    // to the active lens — grouped BY lensId across all lenses, so every pill
-    // mirrors the Next pool for its own lens and can never diverge from the card.
+    // Lens badges are Today-only. Upcoming remains counted only on its own nav
+    // item; it must not inflate a commitment count.
     expect(m.entities.Task.groupBy).toHaveBeenCalledWith(
       expect.objectContaining({
         by: ["lensId"],
         where: expect.objectContaining({
           userId: "user-1",
-          status: { in: ["TODAY", "UPCOMING"] },
+          status: "TODAY",
           isDone: false,
-          OR: [{ dueDate: null }, { dueDate: { lte: expect.any(Date) } }],
         }),
       }),
     );
@@ -129,15 +134,15 @@ describe("getAppData — happy path", () => {
       { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
-    m.entities.Task.count.mockResolvedValue(1);
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Goal.count.mockResolvedValue(0);
 
     await getAppData({ lensId: "stale-id" }, m.context); // id not present → first lens
 
-    expect(m.entities.Task.count).toHaveBeenCalledWith(
+    expect(m.entities.Task.groupBy).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ lensId: "lens-me" }),
+        by: ["status"],
+        where: expect.objectContaining({ lensId: "lens-me", isDone: false }),
       }),
     );
   });
@@ -259,68 +264,38 @@ describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
   });
 });
 
-describe("getAppData — actionable pool (the consistency lock)", () => {
-  // The bug this whole change exists to prevent: a task surfaced on Next (card
-  // reads "due today") while the Today badge read 0 and the lens pill showed
-  // nothing — because the counts filtered status === "TODAY" only, while Next
-  // pooled TODAY + UPCOMING. Now the badge + pill draw from the SAME predicate
-  // as Next (tasks/activePool.ts). These tests pin that.
-
-  beforeEach(() => {
-    // Default the active + Upcoming counts so rollover short-circuit cases have
-    // something to resolve; individual tests override as needed.
-    const m = mockContext();
-    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
-  });
-
-  it("the active count and the lens pill use the SAME predicate shape as Next", async () => {
-    // Single-source proof: getAppData's Task.count (active) and groupBy (pill)
-    // receive a where-clause that exactly matches activePoolWhere, which is the
-    // same function getTopTask uses. If any of the three drifts, this fails.
+describe("getAppData — planning counter consistency", () => {
+  it("keeps Today distinct from Upcoming and makes every counter add up", async () => {
     const m = mockContext();
     m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
-    m.entities.Task.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Goal.count.mockResolvedValue(0);
-    m.entities.Task.groupBy.mockResolvedValue([]);
+    m.entities.Task.groupBy
+      .mockResolvedValueOnce([
+        { status: "TODAY", _count: { _all: 2 } },
+        { status: "UPCOMING", _count: { _all: 5 } },
+        { status: "SOMEDAY", _count: { _all: 3 } },
+      ])
+      .mockResolvedValueOnce([{ lensId: "lens-work", _count: { _all: 2 } }]);
 
-    await getAppData({ lensId: "lens-work" }, m.context);
+    const result = await getAppData({ lensId: "lens-work" }, m.context);
 
-    const expectedLensScoped = activePoolWhere({ userId: "user-1", lensId: "lens-work" });
-    const expectedPerLens = activePoolWhere({ userId: "user-1" });
-
-    // Active count = pool predicate, lens-scoped (matches getTopTask's lens).
-    expect(m.entities.Task.count).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining(expectedLensScoped) }),
-    );
-    // Per-lens pill = pool predicate, unscoped (grouped BY lensId).
+    expect(result.counts).toMatchObject({
+      today: 2,
+      upcoming: 5,
+      someday: 3,
+      open: 10,
+    });
     expect(m.entities.Task.groupBy).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining(expectedPerLens) }),
+      expect.objectContaining({
+        by: ["lensId"],
+        where: { userId: "user-1", status: "TODAY", isDone: false },
+      }),
     );
-  });
-
-  it("regression: counts an UPCOMING + due-today task (the case that used to read 0)", async () => {
-    // Before the fix this task matched getTopTask (UPCOMING + due ≤ now) but
-    // NOT the old status === "TODAY" count, so Next showed it and the badge
-    // read 0. The pool predicate admits it; this test guarantees the where-
-    // clause shape that would count it stays in place.
-    const expected = activePoolWhere({ userId: "user-1", lensId: "lens-work" });
-    expect(expected.status).toEqual({ in: ["TODAY", "UPCOMING"] }); // admits UPCOMING
-    expect(expected.OR).toContainEqual({ dueDate: { lte: expect.any(Date) } }); // admits due-now
-  });
-
-  it("the active count is roll-invariant: a post-rollover TODAY→UPCOMING task still counts", async () => {
-    // The daily rollover flips TODAY → UPCOMING. Under the old count (TODAY
-    // only) the badge dropped to 0 overnight. The pool admits both statuses,
-    // so the count is stable across midnight — only the Today PAGE resets.
-    const before = activePoolWhere({ userId: "user-1", lensId: "lens-work" });
-    const after = activePoolWhere({ userId: "user-1", lensId: "lens-work" });
-    expect(before).toEqual(after); // predicate doesn't change with status flips
-    expect(before.status).toEqual({ in: ["TODAY", "UPCOMING"] });
   });
 });
 
