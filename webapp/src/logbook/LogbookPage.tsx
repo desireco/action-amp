@@ -89,8 +89,11 @@ export function LogbookPage() {
     <div className="aa-logbook">
       <header className="aa-list-header">
         <div>
-          <div className="aa-list-header__eyebrow">Logbook</div>
-          <h1 className="aa-list-header__title">Done &amp; archived</h1>
+          <div className="aa-list-header__eyebrow">Review</div>
+          <h1 className="aa-list-header__title">Logbook</h1>
+          <p className="aa-list-header__description">
+            Done and archived work, grouped by day.
+          </p>
         </div>
       </header>
       <GroupedList
