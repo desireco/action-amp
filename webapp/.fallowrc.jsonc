@@ -8,7 +8,11 @@
   "entry": [
     "main.wasp.ts",
     "scripts/**/*.mjs",
-    "e2e/**/*.ts"
+    "e2e/**/*.ts",
+    // react-email preview components are consumed by `npm run email:dev`
+    // (`email dev --dir src/email/previews`), which fallow can't see as an
+    // entry point — without this the *EmailPreview.tsx files read as dead.
+    "src/email/previews/**"
   ],
 
   // ── Ignore generated / vendored / scratch trees ─────────────────────────
@@ -36,7 +40,12 @@
     "@wasp.sh/spec",
     "@tanstack/react-query",
     "@testing-library/react",
-    "express"
+    "express",
+    // nodemailer is patched into the Wasp server runtime via serverSetup
+    // (the Resend HTTP workaround); wasp is the global CLI — both resolve at
+    // runtime, not from this package.json.
+    "nodemailer",
+    "wasp"
   ],
 
   // ── Dead code: parked features ──────────────────────────────────────────
