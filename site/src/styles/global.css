@@ -9,6 +9,7 @@
  * webapp/, split it back out.
  */
 @import "./tokens.css";
+@import "./button.css";
 
 /* ============================================================
    Display headline primitives — shared by the landing page and any
@@ -279,9 +280,8 @@
   }
 }
 
-/* ============================================================
-   Button base styles — shared with the landing page.
-   Extracted to button.css so both landing.css and global.css can
-   import it without duplication. See button.css for the rules.
-   ============================================================ */
-@import "./button.css";
+/* Button base styles live in button.css, imported at the top of this
+   file so both global.css and landing.css share them without
+   duplication. (Importing at the foot was invalid CSS ordering —
+   @import must precede all other rules — and the rules were being
+   silently dropped.) */
