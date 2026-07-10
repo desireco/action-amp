@@ -130,6 +130,68 @@ function extractPaymentIntentId(invoice: Record<string, unknown>): string | unde
   return extractId(invoice.payment_intent);
 }
 
+/** Idempotency guard: have we already recorded a Payment for this Stripe id? */
+async function alreadyProcessed(
+  entities: WaspEntities,
+  where: Record<string, unknown>,
+): Promise<boolean> {
+  return !!(await entities.Payment.findFirst({ where }));
+}
+
+/** Pull priceKey + userId from the invoice's subscription (one Stripe call). */
+async function resolveInvoiceSubscriptionMeta(
+  invoice: Record<string, unknown>,
+): Promise<{ priceKey?: string; userId?: string }> {
+  const subscriptionId = extractSubscriptionId(invoice);
+  if (!subscriptionId) return {};
+  try {
+    const sub = await stripe.subscriptions.retrieve(subscriptionId);
+    return {
+      priceKey: sub.metadata?.priceKey as string | undefined,
+      userId: sub.metadata?.userId as string | undefined,
+    };
+  } catch {
+    console.warn("[webhook] Could not retrieve subscription for invoice.");
+    return {};
+  }
+}
+
+/** priceKey fallback: the first invoice line's price metadata. */
+function priceKeyFromLines(invoice: Record<string, unknown>): string | undefined {
+  const lines = invoice.lines as
+    | { data?: Array<{ price?: { metadata?: Record<string, string> } }> }
+    | undefined;
+  return lines?.data?.[0]?.price?.metadata?.actionamp_plan;
+}
+
+/** Find the user behind a Stripe object's `customer` field (id or embedded object). */
+async function findUserByCustomer(
+  entities: WaspEntities,
+  source: Record<string, unknown>,
+): Promise<{ id: string; plan: string } | null> {
+  const customerId = extractId(source.customer);
+  if (!customerId) return null;
+  return (await entities.User.findFirst({
+    where: { stripeCustomerId: customerId },
+  })) as { id: string; plan: string } | null;
+}
+
+/** Resolve an invoice's plan/label/renewal from a priceKey, with PRO defaults. */
+function invoiceEntitlement(priceKey: string | undefined): {
+  plan: string;
+  label: string;
+  renewalMs: number;
+} {
+  const entitlement = priceKey
+    ? PRICING_ENTITLEMENT[priceKey as keyof typeof PRICING_ENTITLEMENT]
+    : null;
+  return {
+    plan: entitlement?.plan ?? "PRO",
+    label: entitlement?.label ?? "Pro Subscription",
+    renewalMs: entitlement?.renewalMs ?? 30 * 24 * 60 * 60 * 1000,
+  };
+}
+
 // ── Event handlers ─────────────────────────────────────────────────────────
 
 async function handleCheckoutCompleted(event: Stripe.Event, context: WaspApiContext) {
@@ -152,10 +214,7 @@ async function handleCheckoutCompleted(event: Stripe.Event, context: WaspApiCont
   }
 
   // Idempotency: skip if we already processed this session
-  const existing = await context.entities.Payment.findFirst({
-    where: { stripeCheckoutSessionId: session.id as string },
-  });
-  if (existing) {
+  if (await alreadyProcessed(context.entities, { stripeCheckoutSessionId: session.id as string })) {
     console.log(`[webhook] checkout.session.completed — already processed session ${session.id}, skipping.`);
     return;
   }
@@ -200,65 +259,30 @@ async function handleCheckoutCompleted(event: Stripe.Event, context: WaspApiCont
 
 async function handleInvoicePaid(event: Stripe.Event, context: WaspApiContext) {
   const invoice = event.data.object as unknown as Record<string, unknown>;
+  const invoiceId = invoice.id as string | undefined;
 
   // Idempotency
-  const invoiceId = invoice.id as string;
-  if (invoiceId) {
-    const existing = await context.entities.Payment.findFirst({
-      where: { stripeInvoiceId: invoiceId },
-    });
-    if (existing) {
-      console.log(`[webhook] invoice.paid — already processed invoice ${invoiceId}, skipping.`);
-      return;
-    }
+  if (invoiceId && (await alreadyProcessed(context.entities, { stripeInvoiceId: invoiceId }))) {
+    console.log(`[webhook] invoice.paid — already processed invoice ${invoiceId}, skipping.`);
+    return;
   }
 
-  // Get the subscription to find metadata
-  const subscriptionId = extractSubscriptionId(invoice);
-  let priceKey: string | undefined;
-  let userId: string | undefined;
+  // Prefer the subscription's metadata (priceKey + userId); fall back to the
+  // invoice line's price metadata for the plan key.
+  const subMeta = await resolveInvoiceSubscriptionMeta(invoice);
+  const priceKey = subMeta.priceKey ?? priceKeyFromLines(invoice);
 
-  if (subscriptionId) {
-    try {
-      const sub = await stripe.subscriptions.retrieve(subscriptionId);
-      priceKey = sub.metadata?.priceKey as string | undefined;
-      userId = sub.metadata?.userId as string | undefined;
-    } catch {
-      console.warn("[webhook] Could not retrieve subscription for invoice.");
-    }
-  }
-
-  // Fallback: check lines for price metadata
-  if (!priceKey) {
-    const lines = invoice.lines as { data?: Array<{ price?: { metadata?: Record<string, string> } }> } | undefined;
-    if (lines?.data?.[0]?.price?.metadata?.actionamp_plan) {
-      priceKey = lines.data[0].price.metadata.actionamp_plan;
-    }
-  }
-
+  // Resolve the user: subscription metadata first, then the Stripe customer.
+  let userId = subMeta.userId;
   if (!userId) {
-    // Try to find user by Stripe customer ID
-    const customerId = extractId(invoice.customer);
-    if (customerId) {
-      const user = await context.entities.User.findFirst({
-        where: { stripeCustomerId: customerId },
-      });
-      userId = user?.id ?? undefined;
-    }
+    userId = (await findUserByCustomer(context.entities, invoice))?.id;
   }
-
   if (!userId) {
     console.error("[webhook] invoice.paid — could not determine userId.");
     return;
   }
 
-  const entitlement = priceKey
-    ? PRICING_ENTITLEMENT[priceKey as keyof typeof PRICING_ENTITLEMENT]
-    : null;
-
-  const plan = entitlement?.plan ?? "PRO";
-  const label = entitlement?.label ?? "Pro Subscription";
-  const renewalMs = entitlement?.renewalMs ?? 30 * 24 * 60 * 60 * 1000;
+  const { plan, label, renewalMs } = invoiceEntitlement(priceKey);
 
   // Update user plan
   await context.entities.User.update({
@@ -290,19 +314,15 @@ async function handleInvoicePaid(event: Stripe.Event, context: WaspApiContext) {
 async function handleInvoiceFailed(event: Stripe.Event, context: WaspApiContext) {
   const invoice = event.data.object as unknown as Record<string, unknown>;
 
-  const customerId = extractId(invoice.customer);
-  const user = customerId
-    ? await context.entities.User.findFirst({
-        where: { stripeCustomerId: customerId },
-      })
-    : null;
-
+  const user = await findUserByCustomer(context.entities, invoice);
   if (!user) {
     console.error("[webhook] invoice.payment_failed — could not find user.");
     return;
   }
 
-  // Record the failed payment
+  // Record the failed payment. Note: we don't immediately revoke the plan —
+  // Stripe retries and the user stays active during the grace period.
+  // customer.subscription.deleted handles the actual downgrade.
   await context.entities.Payment.create({
     data: {
       userId: user.id,
@@ -317,9 +337,6 @@ async function handleInvoiceFailed(event: Stripe.Event, context: WaspApiContext)
   });
 
   console.log(`[webhook] Invoice payment failed: userId=${user.id}`);
-  // Note: we don't immediately revoke the plan. Stripe retries, and the user
-  // stays active during the grace period. customer.subscription.deleted
-  // handles the actual downgrade.
 }
 
 async function handleSubscriptionUpdated(event: Stripe.Event, context: WaspApiContext) {
@@ -339,13 +356,7 @@ async function handleSubscriptionUpdated(event: Stripe.Event, context: WaspApiCo
   const metadata = subscription.metadata as Record<string, string> | undefined;
   let userId = metadata?.userId;
   if (!userId) {
-    const customerId = extractId(subscription.customer);
-    if (customerId) {
-      const user = await context.entities.User.findFirst({
-        where: { stripeCustomerId: customerId },
-      });
-      userId = user?.id;
-    }
+    userId = (await findUserByCustomer(context.entities, subscription))?.id;
   }
 
   if (!userId) {
