@@ -89,7 +89,7 @@ export async function openCapture(page: Page) {
 
 /**
  * Complete whatever task is currently surfaced as the top item on the home
- * screen (/app), via the focus-mode flow (Start → Do this → Done).
+ * screen (/app), via the focus-mode flow (Start → focus → Complete).
  *
  * Used to clear the seeded "Try it" starter task (now visible on home since the
  * FREE-tier default lens became Me — entitlement-enforcement) so a test starts
@@ -106,11 +106,10 @@ export async function completeTopTask(page: Page) {
     // empty — done.
     if (!(await startBtn.waitFor({ state: "visible", timeout: 3_000 }).then(() => true).catch(() => false))) return;
     await startBtn.click();
-    // "Do this" appears only in the Now state (after Start) — wait for it.
-    await page.getByText(/Now ·/).waitFor({ state: "visible", timeout: 5_000 });
-    await page.getByRole("button", { name: /do this/i }).click();
+    // Start enters focus in the same action; no intermediate Now card.
     await page.getByLabel(/focus:/i).waitFor({ state: "visible", timeout: 10_000 });
-    await page.getByRole("button", { name: /^done$/i }).click();
+    await page.getByRole("button", { name: /mark complete/i }).click();
+    await page.getByRole("button", { name: /^complete$/i }).click();
     await page.getByLabel(/focus:/i).waitFor({ state: "detached", timeout: 10_000 });
   }
 }
@@ -198,4 +197,3 @@ async function commitTriage(
   // The exit animation removes the item from the triage stage.
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
 }
-

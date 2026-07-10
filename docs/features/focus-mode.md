@@ -10,7 +10,7 @@ verified: 2026-07-05
 # Focus mode
 
 **What.** Dedicated single-task route `/app/focus` (`FocusRoute`,
-`main.wasp.ts:108`), entered from Next's "Do this" or from any task row.
+`main.wasp.ts:108`), entered from Next's one-tap "Start" or from any task row.
 Hides the sidebar; no counts, no list — just the one task. Esc exits.
 
 **Shipped 2026-07-05 (Variant F).** The redesigned focus screen:

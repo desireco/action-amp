@@ -21,7 +21,7 @@ import "./NextPage.css";
 export function FocusPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: task, isLoading } = useQuery(getFocusedTask);
+  const { data: task, isLoading, isFetching } = useQuery(getFocusedTask);
 
   const refreshTaskState = () => {
     queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
@@ -33,7 +33,11 @@ export function FocusPage() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
   };
 
-  if (isLoading) {
+  // `getFocusedTask` can be cached as empty after completing a task. Starting
+  // the next task invalidates that cache immediately before navigating here;
+  // wait for its refetch before deciding there is no focus task. Otherwise the
+  // stale empty result redirects back to /app, forcing a second Start tap.
+  if (isLoading || isFetching) {
     return (
       <div className="aa-wn">
         <div className="aa-wn-eyebrow">Focus</div>

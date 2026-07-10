@@ -110,7 +110,7 @@ appears in Work/Planning/Review except by coming through triage.
   `User.lastTodayRolloverAt`. Done tasks are left alone; `startedAt` (the
   Now state) is preserved.
 - This is the only area with a focus mode. Focus is a **dedicated route**
-  (`/app/focus`, `FocusRoute` in `main.wasp.ts`) entered from Next's "Do this"
+  (`/app/focus`, `FocusRoute` in `main.wasp.ts`) entered from Next's one-tap "Start"
   or any task row's focus affordance. The redesigned screen (Variant F, locked
   2026-07-05) carries a **two-number margin clock** — live session + honest
   total sourced from `TaskSession` rows — a **summoned composer** for notes,
@@ -326,7 +326,7 @@ These were the open structural calls. All resolved:
     2026-07-05).** Two structural calls from the Variant F redesign + the
     task-notes-completion-log spec:
     - **`/app/focus` is its own route**, not an overlay. Entered from Next's
-      "Do this" or any task row's focus affordance; `NextPage` and
+      one-tap "Start" or any task row's focus affordance; `NextPage` and
       `ProjectDetailPage` `navigate("/app/focus")` into it. The screen carries
       a margin clock (live session + total), summoned composer, and
       confirm-on-complete. `TaskSession` (startedAt/endedAt) accounts for

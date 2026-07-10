@@ -101,7 +101,7 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
 
 ### WORKING mode (the sanctuary) — Variant F, shipped 2026-07-05
 - **Purpose:** you are doing the thing. The card is the world.
-- **Entry:** click **Do this** / `Enter` from Normal (task focused). Navigates
+- **Entry:** click **Start** / `Enter` from Normal (task focused). Navigates
   to the dedicated `/app/focus` route (not an overlay).
 - **Exit:** `Esc` (pauses), **Complete** (was "Done"; confirm-on-complete
   asks for an optional completion note), **Take a break** (pauses).
@@ -200,7 +200,7 @@ translate to thumbs.
 | Zoom in | `X` / click breadcrumb crumb | two-finger swipe right / tap breadcrumb crumb |
 | Switch to Plan mode | `1` | swipe right on card |
 | Switch to Review mode | `3` | swipe left on card |
-| Start working | `Enter` / Do this | long-press card |
+| Start working | `Enter` / Start | long-press card |
 | Pause/resume | `Esc` / `Space` | tap circle |
 | Mark done | `D` / Done ✓ | swipe-down on card |
 | Capture | `⌘K` | pull-down from top / FAB (FAB stays in working mode as a quiet ghost — the focus-protector exception) |

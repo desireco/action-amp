@@ -58,8 +58,8 @@ These are the main destinations. All scoped to the active Lens.
 **The home page. The wedge.** Not a list — a chooser. (FEATURES F8/F10.)
 
 - Shows 1 (max 3) Tasks ranked by priority → size → due.
-- Context line ("Important · due today · S"), Do / Not now / ⋯ actions.
-- **Focus affordance** — `Do this` navigates to `/app/focus` (D3) and starts
+- Context line ("Important · due today · S"), Start / Not now / ⋯ actions.
+- **Focus affordance** — `Start` navigates to `/app/focus` (D3) and starts
   the task (sets `Task.startedAt`).
 - Empty state: if no Today items → gentle prompt to triage Inbox or plan Today.
 - If Inbox is untriaged and Today is empty → nudge toward triage.
@@ -172,7 +172,7 @@ Notes thread rendered as a thread + composer (writes a `TaskUpdate`,
 Single-task execution route (FEATURES F13, Variant F). The task, its margin
 clock (live session + honest total), summoned composer, and *nothing else*.
 
-- Entered from Next's "Do this" or any task row's focus affordance.
+- Entered from Next's one-tap "Start" or any task row's focus affordance.
 - Minimal chrome — sidebar hidden.
 - Confirm-on-complete appends a `kind=COMPLETED` `TaskUpdate`; `Task.completedAt`
   stamps; `status` is left untouched.

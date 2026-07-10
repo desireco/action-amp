@@ -1,11 +1,15 @@
 import { test, expect } from "@playwright/test";
 import { signupNewUser, triageOneItem, completeTopTask } from "./helpers";
 
+// The reported double-tap came from the mobile path. Keep this entire chooser
+// suite touch-sized so Start must reach focus without an intermediate card.
+test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
 /**
  * Next — FEATURES.md §3 F8/F10: the home screen is a chooser, not a list.
  * Given the moment, surface ONE Today task and hide the rest.
  *
- * F8: one task shown, with "Do this" + "Not now" actions.
+ * F8: one task shown, with Start + Not now actions.
  * F10: transparent — a one-line "why this?" under the suggestion.
  */
 
@@ -51,7 +55,7 @@ test("an Upcoming task (no due date) also surfaces on home", async ({ page }) =>
   await expect(page.getByText("Bench task")).toBeVisible({ timeout: 10_000 });
 });
 
-test("'Start' → Now state; 'Do this' then enters focus mode (F13)", async ({ page }) => {
+test("'Start' enters focus mode in one action (F13)", async ({ page }) => {
   await signupNewUser(page);
   // Clear the seeded starter task (now visible on home under the Me default) so
   // the triaged task below is the single focus item, not the seed.
@@ -62,13 +66,10 @@ test("'Start' → Now state; 'Do this' then enters focus mode (F13)", async ({ p
 
   await expect(page.getByText("Deep work task")).toBeVisible({ timeout: 10_000 });
 
-  // Default state is Next — eyebrow says 'Next · …', primary button is Start.
+  // Default state is Next — one Start action records Now and enters focus.
   await expect(page.getByText(/Next ·/)).toBeVisible({ timeout: 5_000 });
   await page.getByRole("button", { name: /^start$/i }).click();
-
-  // Now state: eyebrow says 'Now · …', Pause is available, Do this enters focus.
-  await expect(page.getByText(/Now ·/)).toBeVisible({ timeout: 5_000 });
-  await page.getByRole("button", { name: /do this/i }).click();
+  await page.waitForURL(/\/app\/focus$/, { timeout: 10_000 });
   await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
 });
 
@@ -82,7 +83,7 @@ test("'Now' persists across navigation away and back", async ({ page }) => {
   await page.goto("/app");
 
   await page.getByRole("button", { name: /^start$/i }).click();
-  await expect(page.getByText(/Now ·/)).toBeVisible();
+  await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
 
   // Navigate away to the inbox, then back home — the started task must still
   // be #1 in the Now state (startedAt persisted).
@@ -102,7 +103,9 @@ test("'Pause' returns a started task to the Next state (same task stays #1)", as
   await page.goto("/app");
 
   await page.getByRole("button", { name: /^start$/i }).click();
-  await expect(page.getByText(/Now ·/)).toBeVisible();
+  await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
+  await page.goto("/app");
+  await expect(page.getByText(/Now ·/)).toBeVisible({ timeout: 5_000 });
 
   await page.getByRole("button", { name: /pause/i }).click();
   // Back to Next; same task remains the focus candidate.
@@ -121,12 +124,11 @@ test("completing a task in focus mode removes it from Next (F16)", async ({ page
 
   await expect(page.getByText("Finish this now")).toBeVisible({ timeout: 10_000 });
   // F16: completion happens in focus mode, not via a list-row checkbox.
-  // Start → Now state, then "Do this" enters focus, then "Done" completes it.
+  // Start enters focus, then completing removes the task from Next.
   await page.getByRole("button", { name: /^start$/i }).click();
-  await expect(page.getByText(/Now ·/)).toBeVisible({ timeout: 5_000 });
-  await page.getByRole("button", { name: /do this/i }).click();
   await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
-  await page.getByRole("button", { name: /^done$/i }).click();
+  await page.getByRole("button", { name: /mark complete/i }).click();
+  await page.getByRole("button", { name: /^complete$/i }).click();
 
   // The task leaves the focus view and Next (no checkbox to tick on the card).
   await expect(page.getByText("Finish this now")).toHaveCount(0, { timeout: 10_000 });
