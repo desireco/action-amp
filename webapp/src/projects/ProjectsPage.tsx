@@ -146,7 +146,7 @@ export function ProjectsPage() {
             label="New project"
             icon={ProjectsIcon}
             upgradeFeature="New project"
-            upgradeReason="organize more than 3 projects with Pro"
+            upgradeReason="organize more of your work"
             creating={creating}
             atCap={atCap}
             empty
@@ -182,7 +182,7 @@ export function ProjectsPage() {
           label="New project"
           icon={ProjectsIcon}
           upgradeFeature="New project"
-          upgradeReason="organize more than 3 projects with Pro"
+          upgradeReason="organize more of your work"
           creating={creating}
           atCap={atCap}
           empty={false}

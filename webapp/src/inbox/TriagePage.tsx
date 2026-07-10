@@ -723,7 +723,7 @@ export function TriagePage() {
             chip: lensChip,
             current: g.id === working?.projectGoalId,
           }))}
-          emptyMessage="No goals yet — create one on the Goals page."
+          emptyMessage="No goals yet — make one on the Goals page."
           onPick={(id) => {
             setW({ projectGoalId: id });
             setGoalPickerOpen(false);
@@ -766,7 +766,7 @@ export function TriagePage() {
             chip: lensChip,
             current: g.id === working?.parentGoalId,
           }))}
-          emptyMessage="No goals yet — create one on the Goals page."
+          emptyMessage="No goals yet — make one on the Goals page."
           onPick={(id) => {
             setW({ parentGoalId: id, parentProjectId: null });
             setParentGoalPickerOpen(false);

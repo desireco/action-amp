@@ -87,7 +87,7 @@ export function GoalsPage() {
             label="New goal"
             icon={GoalsIcon}
             upgradeFeature="New goal"
-            upgradeReason="link work to more than one outcome with Pro"
+            upgradeReason="link work to more than one outcome"
             creating={creating}
             atCap={atCap}
             empty
@@ -122,7 +122,7 @@ export function GoalsPage() {
           label="New goal"
           icon={GoalsIcon}
           upgradeFeature="New goal"
-          upgradeReason="link work to more than one outcome with Pro"
+          upgradeReason="link work to more than one outcome"
           creating={creating}
           atCap={atCap}
           empty={false}
