@@ -4,7 +4,7 @@ title: "Upcoming + Someday (bench + maybe-later)"
 feature_area: focus
 status: shipped
 spec: —
-verified: 2026-07-03
+verified: 2026-07-10
 ---
 
 # Upcoming + Someday
@@ -14,8 +14,10 @@ forward-planning view of `status=UPCOMING` tasks. Lives under the **Plan**
 nav section (promoted 2026-07-05; same-page Today swap toggle dropped later
 that day — one surface was clearer than two; see `WORKFLOW.md` §5.1).
 Date-bucketed: Overdue (rose) / This week / Next week / Later / Unscheduled.
-Each row has a "Today" promote button (reuses `updateTaskStatus`) and
-supports inline notes editing.
+When dates have gone stale, the Overdue section exposes one **Unschedule N
+overdue** recovery action. It clears dates only from incomplete Upcoming tasks
+in the active Lens; tasks stay on the bench and land in Unscheduled. Each row
+can move to **Today** or **Someday**; Someday clears its date.
 
 **Cross-links, not a toggle.** Today's hero links to `/app/upcoming`
 (with the bench count); Upcoming's hero links back to `/app/today`. One page

@@ -9,6 +9,7 @@ import type {
   PauseTask,
   ToggleTaskDone,
   UpdateTaskStatus,
+  UnscheduleOverdueTasks,
   AddTaskUpdate,
   UpdateTaskContent,
   UpdateTaskDetails,
@@ -192,6 +193,34 @@ export const updateTaskStatus = (async (args, context) => {
   status: "TODAY" | "UPCOMING" | "SOMEDAY";
   dueDate?: Date | null;
 }>;
+
+// ----------------------------------------------------------------
+// Write: clear stale dates from the Upcoming bench
+// ----------------------------------------------------------------
+// An overdue date is a planning signal, not a permanent task property. This
+// recovery action deliberately keeps tasks on the bench while clearing only
+// their past dates; future-scheduled, Today, Someday, and completed tasks are
+// never touched.
+export const unscheduleOverdueTasks = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  await assertLensAllowed(context, args.lensId);
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  return await context.entities.Task.updateMany({
+    where: {
+      userId: context.user.id,
+      lensId: args.lensId,
+      status: "UPCOMING",
+      isDone: false,
+      dueDate: { lt: startOfToday },
+    },
+    data: { dueDate: null },
+  });
+}) satisfies UnscheduleOverdueTasks<{ lensId: string }, { count: number }>;
 
 // ----------------------------------------------------------------
 // Read: the focus engine's top task (FEATURES.md F10 — MVP priority-first)

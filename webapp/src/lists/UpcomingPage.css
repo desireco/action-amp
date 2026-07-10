@@ -41,6 +41,22 @@
   gap: var(--aa-space-lg);
 }
 
+/* Recovery is deliberately small: rose marks stale state in the group below;
+   this teal-adjacent neutral action gives it a quick, non-punitive exit. */
+.aa-upcoming__overdue-recovery {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  margin: 0 0 var(--aa-space-lg);
+  color: var(--aa-text-2);
+  font-size: var(--aa-text-sm);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+}
+
 .aa-upcoming__list .aa-grouped__group {
   padding: var(--aa-space-lg);
   background: var(--aa-surface);
@@ -92,6 +108,15 @@
 
   .aa-upcoming__title {
     font-size: var(--aa-text-xl);
+  }
+
+  .aa-upcoming__overdue-recovery {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .aa-upcoming__overdue-recovery .aa-btn {
+    width: 100%;
   }
 
   .aa-upcoming__list .aa-grouped__group {

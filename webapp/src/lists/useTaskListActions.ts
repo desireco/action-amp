@@ -26,5 +26,13 @@ export function useTaskListActions() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
   };
 
-  return { promoteToToday };
+  /** Park a task without a date. Someday must never retain a stale deadline. */
+  const moveToSomeday = async (task: TaskRowTask) => {
+    await updateTaskStatus({ id: task.id, status: "SOMEDAY", dueDate: null });
+    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+  };
+
+  return { promoteToToday, moveToSomeday };
 }

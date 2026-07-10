@@ -1,0 +1,120 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const getTasks = vi.fn();
+const unscheduleOverdueTasks = vi.fn();
+const promoteToToday = vi.fn();
+const moveToSomeday = vi.fn();
+const queryState = {
+  current: { data: [] as UpcomingTask[], isLoading: false },
+};
+
+interface UpcomingTask {
+  id: string;
+  permalink: string;
+  description: string;
+  status: "UPCOMING";
+  isDone: false;
+  dueDate: string | null;
+}
+
+vi.mock("wasp/client/operations", () => ({
+  getTasks,
+  unscheduleOverdueTasks,
+  useQuery: () => queryState.current,
+}));
+
+vi.mock("../app/lensContext", () => ({
+  useActiveLens: () => ({ id: "lens-1", name: "Work" }),
+}));
+
+vi.mock("./useTaskListActions", () => ({
+  useTaskListActions: () => ({ promoteToToday, moveToSomeday }),
+}));
+
+const { UpcomingPage } = await import("./UpcomingPage");
+
+function renderPage() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <UpcomingPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+beforeEach(() => {
+  queryState.current = { data: [], isLoading: false };
+  vi.clearAllMocks();
+});
+
+describe("UpcomingPage overdue recovery", () => {
+  it("offers one bulk unschedule action and individual Someday actions", () => {
+    queryState.current = {
+      data: [
+        {
+          id: "task-1",
+          permalink: "past-task",
+          description: "Past task",
+          status: "UPCOMING",
+          isDone: false,
+          dueDate: "2000-07-09T12:00:00.000Z",
+        },
+      ],
+      isLoading: false,
+    };
+
+    renderPage();
+
+    expect(screen.getByRole("button", { name: "Unschedule 1 overdue" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Someday" })).toBeInTheDocument();
+  });
+
+  it("does not show recovery controls without overdue tasks", () => {
+    queryState.current = {
+      data: [
+        {
+          id: "task-1",
+          permalink: "future-task",
+          description: "Future task",
+          status: "UPCOMING",
+          isDone: false,
+          dueDate: "2099-07-11T12:00:00.000Z",
+        },
+      ],
+      isLoading: false,
+    };
+
+    renderPage();
+
+    expect(screen.queryByRole("button", { name: /Unschedule/ })).not.toBeInTheDocument();
+  });
+
+  it("sends the active Lens to the bulk recovery action", async () => {
+    queryState.current = {
+      data: [
+        {
+          id: "task-1",
+          permalink: "past-task",
+          description: "Past task",
+          status: "UPCOMING",
+          isDone: false,
+          dueDate: "2000-07-09T12:00:00.000Z",
+        },
+      ],
+      isLoading: false,
+    };
+    unscheduleOverdueTasks.mockResolvedValue({ count: 1 });
+
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: "Unschedule 1 overdue" }));
+
+    expect(unscheduleOverdueTasks).toHaveBeenCalledWith({ lensId: "lens-1" });
+  });
+});

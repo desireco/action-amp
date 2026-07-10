@@ -15,6 +15,7 @@ import {
   getDoneToday,
   toggleTaskDone,
   updateTaskStatus,
+  unscheduleOverdueTasks,
   getTopTask,
   getFocusedTask,
   snoozeTask,
@@ -507,6 +508,42 @@ describe("getTopTask", () => {
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
     expect(result).toMatchObject({ id: "court" });
+  });
+});
+
+// ----------------------------------------------------------------
+// unscheduleOverdueTasks
+// ----------------------------------------------------------------
+
+describe("unscheduleOverdueTasks", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(
+      unscheduleOverdueTasks({ lensId: "lens-1" }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("clears only past dates from incomplete Upcoming tasks in this lens", async () => {
+    const m = mockContext();
+    m.entities.Task.updateMany.mockResolvedValue({ count: 3 });
+
+    const result = await unscheduleOverdueTasks({ lensId: "lens-1" }, m.context);
+
+    expect(result).toEqual({ count: 3 });
+    expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
+      where: {
+        userId: "user-1",
+        lensId: "lens-1",
+        status: "UPCOMING",
+        isDone: false,
+        dueDate: { lt: expect.any(Date) },
+      },
+      data: { dueDate: null },
+    });
+    const call = m.entities.Task.updateMany.mock.calls[0][0];
+    expect(call.where.dueDate.lt).toEqual(
+      new Date(new Date().setHours(0, 0, 0, 0)),
+    );
   });
 });
 

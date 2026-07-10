@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "wasp/client/operations";
-import { getTasks } from "wasp/client/operations";
+import { getTasks, unscheduleOverdueTasks } from "wasp/client/operations";
 import {
   Button,
   TaskRow,
@@ -32,7 +33,9 @@ import "./UpcomingPage.css";
 export function UpcomingPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
-  const { promoteToToday } = useTaskListActions();
+  const queryClient = useQueryClient();
+  const { promoteToToday, moveToSomeday } = useTaskListActions();
+  const [isUnscheduling, setIsUnscheduling] = useState(false);
   const { data: tasks, isLoading } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "UPCOMING", isDone: false } : undefined,
@@ -74,6 +77,19 @@ export function UpcomingPage() {
   const overdueCount =
     groups.find((g) => g.key === "Overdue")?.items.length ?? 0;
 
+  const unscheduleOverdue = async () => {
+    if (!lens || overdueCount === 0) return;
+    setIsUnscheduling(true);
+    try {
+      await unscheduleOverdueTasks({ lensId: lens.id });
+      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+    } finally {
+      setIsUnscheduling(false);
+    }
+  };
+
   // Hero copy adapts to what's on the page. The verb is always forward-looking.
   const heroSubtitle = (() => {
     if (isLoading) return "Tasks with a future date land here.";
@@ -102,6 +118,24 @@ export function UpcomingPage() {
           </Button>
         </Link>
       </header>
+
+      {overdueCount > 0 && (
+        <div className="aa-upcoming__overdue-recovery" role="status">
+          <span>
+            Clear past dates. Tasks stay on the bench without an overdue label.
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={unscheduleOverdue}
+            disabled={isUnscheduling}
+          >
+            {isUnscheduling
+              ? "Unscheduling…"
+              : `Unschedule ${overdueCount} overdue`}
+          </Button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="aa-upcoming__loading" aria-hidden="true">
@@ -149,6 +183,14 @@ export function UpcomingPage() {
                 title="Promote to Today"
               >
                 Today
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => moveToSomeday(task)}
+                title="Move to Someday"
+              >
+                Someday
               </Button>
             </TaskRow>
           )}

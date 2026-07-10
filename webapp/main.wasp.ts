@@ -9,7 +9,7 @@ import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
 import { LensesPage } from "./src/lenses/LensesPage" with { type: "ref" };
 import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
-import { getTask, getTasks, getDoneToday, getTopTask, getFocusedTask, toggleTaskDone, updateTaskStatus, snoozeTask, startTask, pauseTask, addTaskUpdate, updateTaskContent, updateTaskDetails, setTaskOutcome, completeTaskFromFocus } from "./src/tasks/operations" with { type: "ref" };
+import { getTask, getTasks, getDoneToday, getTopTask, getFocusedTask, toggleTaskDone, updateTaskStatus, unscheduleOverdueTasks, snoozeTask, startTask, pauseTask, addTaskUpdate, updateTaskContent, updateTaskDetails, setTaskOutcome, completeTaskFromFocus } from "./src/tasks/operations" with { type: "ref" };
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { createProject } from "./src/projects/operations" with { type: "ref" };
 import { getProject, createTask } from "./src/projects/operations" with { type: "ref" };
@@ -166,6 +166,7 @@ export default app({
     query(getFocusedTask, { entities: ["Task", "TaskSession"], auth: true }),
     action(toggleTaskDone, { entities: ["Task"], auth: true }),
     action(updateTaskStatus, { entities: ["Task"], auth: true }),
+    action(unscheduleOverdueTasks, { entities: ["Task", "Lens"], auth: true }),
     action(snoozeTask, { entities: ["Task"], auth: true }),
     action(startTask, { entities: ["Task", "TaskSession"], auth: true }),
     action(pauseTask, { entities: ["Task", "TaskSession"], auth: true }),
