@@ -54,17 +54,18 @@ function makeTask(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function renderAt(path: string) {
+function renderAt(entry: string | { pathname: string; state?: unknown }) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[path]}>
+      <MemoryRouter initialEntries={[entry]}>
         <Routes>
           <Route path="/app/tasks/:permalink" element={<TaskDetailPage />} />
           <Route path="/app/goals/:permalink" element={<div data-testid="goal-detail" />} />
           <Route path="/app/projects/:permalink" element={<div data-testid="project-detail" />} />
+          <Route path="/app/upcoming" element={<div data-testid="upcoming" />} />
           <Route path="/app" element={<div data-testid="home" />} />
         </Routes>
       </MemoryRouter>
@@ -123,5 +124,17 @@ describe("TaskDetailPage — breadcrumb (breadcrumb-nav spec)", () => {
     expect(screen.getByText(/back/i)).toBeInTheDocument();
     // No breadcrumb nav element.
     expect(screen.queryByLabelText("Hierarchy")).toBeNull();
+  });
+
+  it("returns to the route supplied by the task opener", () => {
+    taskData.current = makeTask({ project: null, goal: null });
+    renderAt({
+      pathname: "/app/tasks/send-issue-1",
+      state: { returnTo: "/app/upcoming" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.getByTestId("upcoming")).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router";
+import { useParams, Link, useLocation, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import {
   getProject,
@@ -76,8 +76,10 @@ type ProjectOption = { id: string; permalink: string; name: string };
  */
 export function ProjectDetailPage() {
   const { permalink } = useParams<{ permalink: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
 
   const {
     data: project,
@@ -659,7 +661,9 @@ export function ProjectDetailPage() {
                           task={task}
                           muted={task.status === "SOMEDAY" || task.isDone}
                           onOpen={() =>
-                            navigate(`/app/tasks/${task.permalink ?? task.id}`)
+                            navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+                              state: { returnTo },
+                            })
                           }
                         >
                           {!task.isDone && (
@@ -722,7 +726,9 @@ export function ProjectDetailPage() {
                             size="sm"
                             className="aa-project__row-ctrl"
                             onClick={() =>
-                              navigate(`/app/tasks/${task.permalink ?? task.id}`)
+                              navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+                                state: { returnTo },
+                              })
                             }
                             aria-label={`Edit ${task.description}`}
                           >

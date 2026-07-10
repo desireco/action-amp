@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getTasks } from "wasp/client/operations";
 import {
@@ -22,6 +22,7 @@ import "./SomedayPage.css";
 export function SomedayPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
+  const location = useLocation();
   const { promoteToToday } = useTaskListActions();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
@@ -30,6 +31,7 @@ export function SomedayPage() {
   );
 
   const count = tasks?.length ?? 0;
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
 
   return (
     <div className="aa-someday">
@@ -67,7 +69,11 @@ export function SomedayPage() {
                 as="div"
                 task={task}
                 muted
-                onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
+                onOpen={() =>
+                  navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+                    state: { returnTo },
+                  })
+                }
               >
                 <Button
                   variant="ghost"

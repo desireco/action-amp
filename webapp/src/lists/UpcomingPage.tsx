@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "wasp/client/operations";
 import { getTasks, unscheduleOverdueTasks } from "wasp/client/operations";
@@ -33,6 +33,7 @@ import "./UpcomingPage.css";
 export function UpcomingPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { promoteToToday, moveToSomeday } = useTaskListActions();
   const [isUnscheduling, setIsUnscheduling] = useState(false);
@@ -74,6 +75,7 @@ export function UpcomingPage() {
   }, [tasks]);
 
   const count = tasks?.length ?? 0;
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
   const overdueCount =
     groups.find((g) => g.key === "Overdue")?.items.length ?? 0;
 
@@ -174,7 +176,11 @@ export function UpcomingPage() {
               as="div"
               task={task}
               variant="list"
-              onOpen={() => navigate(`/app/tasks/${task.permalink ?? task.id}`)}
+              onOpen={() =>
+                navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+                  state: { returnTo },
+                })
+              }
             >
               <Button
                 variant="secondary"
