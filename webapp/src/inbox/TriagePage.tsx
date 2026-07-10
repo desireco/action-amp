@@ -448,198 +448,48 @@ export function TriagePage() {
           >
             {/* ============ STEP 1: Classify ============ */}
             {step === "classify" && (
-              <div className="aa-triage-step">
-                <div className="aa-triage-step__label">1 · Classify</div>
-                {hasProjectDestination ? (
-                  <div className="aa-triage-destination">
-                    <span className="aa-triage-destination__label">Destination</span>
-                    <span className="aa-triage-destination__value">
-                      {projectBridge?.projectName} · {projectDestinationLens?.name}
-                    </span>
-                  </div>
-                ) : (
-                  <>
-                    {lensInferenceLabel && inferredLens && (
-                      <p className="aa-triage-step__hint" aria-live="polite">
-                        {lensInferenceLabel}
-                      </p>
-                    )}
-                    {/* Lens — inline pills, radio-style. One pill per lens,
-                        click to select; the active pill fills with the lens's
-                        identity color. Shows all lenses at once (faster than a
-                        sheet for the usual 2-4 lenses). */}
-                    <div
-                      className="aa-triage-lens-pills"
-                      role="radiogroup"
-                      aria-label="Lens"
-                    >
-                      {lensList.map((l) => {
-                        const active = chosenLensId === l.id;
-                        return (
-                          <button
-                            key={l.id}
-                            type="button"
-                            role="radio"
-                            aria-checked={active}
-                            data-lens-color={l.color ?? undefined}
-                            className={`aa-triage-lens-pill ${active ? "active" : ""}`}
-                            onClick={() => {
-                              lensTouchedRef.current = true;
-                              setChosenLensId(l.id);
-                            }}
-                          >
-                            <span
-                              className="aa-triage-lens-pill__dot"
-                              aria-hidden="true"
-                            />
-                            {l.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-                <div className="aa-triage-types">
-                  {([
-                    { t: "task", label: "Task", sub: "an action — something to do", Icon: StarIcon },
-                    { t: "project", label: "Project", sub: "an outcome needing more than one step", Icon: ProjectsIcon },
-                    { t: "resource", label: "Note", sub: "reference material — not an action", Icon: LogbookIcon },
-                    { t: "archive", label: "Archive", sub: "not now — keep it for later", Icon: SomedayIcon },
-                  ] as const)
-                    // A captured/resolved project means this is a task *in*
-                    // that project by default, not a new project by the same
-                    // name. Hide that option here; the project can still be
-                    // changed from Spec.
-                    .filter(({ t }) => !(t === "project" && (item.parsedProject || hasProjectDestination)))
-                    .map(({ t, label, sub, Icon }) => (
-                    <button
-                      key={t}
-                      type="button"
-                      className={`aa-triage-type ${working.type === t ? "active" : ""}`}
-                      onClick={() => setW({ type: t })}
-                    >
-                      <Icon className="aa-triage-type__icon" />
-                      <span className="aa-triage-type__label">{label}</span>
-                      <span className="aa-triage-type__sub">{sub}</span>
-                    </button>
-                  ))}
-                </div>
-                <Button
-                  variant="primary"
-                  className="aa-triage-step__continue"
-                  onClick={() => (working.type === "archive" ? void dispatch() : setStep("spec"))}
-                  disabled={!chosenLensId}
-                >
-                  {working.type === "archive" ? "Archive" : "Continue"}
-                </Button>
-              </div>
+              <ClassifyStep
+                working={working}
+                chosenLensId={chosenLensId}
+                lenses={lensList}
+                hasProjectDestination={hasProjectDestination}
+                destination={
+                  hasProjectDestination && projectBridge && projectDestinationLens
+                    ? { project: projectBridge.projectName, lens: projectDestinationLens.name }
+                    : null
+                }
+                inferenceLabel={lensInferenceLabel}
+                hasInferredLens={!!inferredLens}
+                hasParsedProject={!!item.parsedProject}
+                onSelectLens={(id) => {
+                  lensTouchedRef.current = true;
+                  setChosenLensId(id);
+                }}
+                onSetType={(t) => setW({ type: t })}
+                onContinue={() =>
+                  working.type === "archive" ? void dispatch() : setStep("spec")
+                }
+              />
             )}
 
             {/* ============ STEP 2: Spec ============ */}
             {step === "spec" && (
-              <div className="aa-triage-step">
-                <div className="aa-triage-step__label">
-                  2 · {working.type === "task" ? "Specify the task" : working.type === "project" ? "Specify the project" : "File the note"}
-                </div>
-
-                <div className="aa-triage-spec">
-                  {/* The chip row IS the editor — same component as the task
-                      page. Project/Goal/Parent are externalPicker (triage owns
-                      those sheets — they have rich, item-specific semantics).
-                      Notes (task) stay a textarea — prose, not a chip. */}
-                  {working.type === "task" && (
-                    <>
-                      <PropertyChips
-                        fields={taskFields({
-                          working,
-                          projectName,
-                          projectGoalName,
-                          parentName,
-                          projectIsDefault: !projectName,
-                        })}
-                        onPick={(key, value) =>
-                          setW(chipPickToWorkingPatch(key, value))
-                        }
-                        onPickerOpen={(key) => {
-                          if (key === "project") setProjectPickerOpen(true);
-                        }}
-                        onOpenChange={(open) => setChipOpen(open)}
-                      />
-                      <label className="aa-triage-notes">
-                        <span className="aa-triage-notes__label">Notes</span>
-                        <textarea
-                          className="aa-triage-notes__textarea"
-                          aria-label="Task notes"
-                          value={working.content}
-                          onChange={(e) => setW({ content: e.target.value })}
-                          rows={4}
-                          placeholder="Add details, criteria, or reminders"
-                        />
-                      </label>
-                    </>
-                  )}
-
-                  {working.type === "project" && (
-                    <PropertyChips
-                      fields={projectFields({
-                        working,
-                        projectName,
-                        projectGoalName,
-                        parentName,
-                        projectIsDefault: !projectName,
-                      })}
-                      onPick={(key, value) =>
-                        setW(chipPickToWorkingPatch(key, value))
-                      }
-                      onPickerOpen={(key) => {
-                        if (key === "goal") setGoalPickerOpen(true);
-                      }}
-                      onOpenChange={(open) => setChipOpen(open)}
-                    />
-                  )}
-
-                  {working.type === "resource" && (
-                    <PropertyChips
-                      fields={resourceFields({
-                        working,
-                        projectName,
-                        projectGoalName,
-                        parentName,
-                        projectIsDefault: !projectName,
-                      })}
-                      onPick={(key, value) =>
-                        setW(chipPickToWorkingPatch(key, value))
-                      }
-                      onPickerOpen={(key) => {
-                        if (key === "parent") setParentProjectPickerOpen(true);
-                      }}
-                      onOpenChange={(open) => setChipOpen(open)}
-                    />
-                  )}
-                </div>
-
-                {/* Confirm summary + Ready (gated). Back returns to Classify
-                    so the user can change the type (Task/Project/Note/Archive)
-                    or lens without restarting the whole item. Keyboard: Esc. */}
-                <div className="aa-triage-confirm">
-                  <div className="aa-triage-confirm__summary">
-                    {summaryFor(working, projectName ?? "General", projectGoalName ?? null, parentName)}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setStep("classify")}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    variant="primary"
-                    disabled={!canComplete(working)}
-                    onClick={() => void dispatch()}
-                  >
-                    Ready
-                  </Button>
-                </div>
-              </div>
+              <SpecStep
+                working={working}
+                projectName={projectName}
+                projectGoalName={projectGoalName}
+                parentName={parentName}
+                setW={setW}
+                onPickerOpen={(key) => {
+                  if (key === "project") setProjectPickerOpen(true);
+                  else if (key === "goal") setGoalPickerOpen(true);
+                  else if (key === "parent") setParentProjectPickerOpen(true);
+                }}
+                onChipOpenChange={setChipOpen}
+                canComplete={canComplete(working)}
+                onBack={() => setStep("classify")}
+                onReady={() => void dispatch()}
+              />
             )}
           </TriageCard>
         )}
@@ -673,6 +523,195 @@ export function TriagePage() {
 // ── Presentational sub-components ──────────────────────────────────────────
 // Extracted from TriagePage so the orchestrator reads as state + a flat tree.
 // Each is presentational: behavior lives in TriagePage, these just render.
+
+const TRIAGE_TYPES = [
+  { t: "task", label: "Task", sub: "an action — something to do", Icon: StarIcon },
+  { t: "project", label: "Project", sub: "an outcome needing more than one step", Icon: ProjectsIcon },
+  { t: "resource", label: "Note", sub: "reference material — not an action", Icon: LogbookIcon },
+  { t: "archive", label: "Archive", sub: "not now — keep it for later", Icon: SomedayIcon },
+] as const;
+
+type ClassifyLens = { id: string; name: string; color?: string | null };
+
+/** Step 1 — pick the type (Task/Project/Note/Archive) + Lens/Project destination. */
+function ClassifyStep({
+  working,
+  chosenLensId,
+  lenses,
+  hasProjectDestination,
+  destination,
+  inferenceLabel,
+  hasInferredLens,
+  hasParsedProject,
+  onSelectLens,
+  onSetType,
+  onContinue,
+}: {
+  working: Working;
+  chosenLensId: string | null;
+  lenses: ClassifyLens[];
+  hasProjectDestination: boolean;
+  destination: { project: string; lens: string } | null;
+  inferenceLabel: string | null;
+  hasInferredLens: boolean;
+  hasParsedProject: boolean;
+  onSelectLens: (id: string) => void;
+  onSetType: (t: Working["type"]) => void;
+  onContinue: () => void;
+}) {
+  return (
+    <div className="aa-triage-step">
+      <div className="aa-triage-step__label">1 · Classify</div>
+      {hasProjectDestination ? (
+        <div className="aa-triage-destination">
+          <span className="aa-triage-destination__label">Destination</span>
+          <span className="aa-triage-destination__value">
+            {destination?.project} · {destination?.lens}
+          </span>
+        </div>
+      ) : (
+        <>
+          {inferenceLabel && hasInferredLens && (
+            <p className="aa-triage-step__hint" aria-live="polite">
+              {inferenceLabel}
+            </p>
+          )}
+          {/* Lens — inline pills, radio-style. One pill per lens, click to
+              select; the active pill fills with the lens's identity color. */}
+          <div className="aa-triage-lens-pills" role="radiogroup" aria-label="Lens">
+            {lenses.map((l) => {
+              const active = chosenLensId === l.id;
+              return (
+                <button
+                  key={l.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  data-lens-color={l.color ?? undefined}
+                  className={`aa-triage-lens-pill ${active ? "active" : ""}`}
+                  onClick={() => onSelectLens(l.id)}
+                >
+                  <span className="aa-triage-lens-pill__dot" aria-hidden="true" />
+                  {l.name}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+      <div className="aa-triage-types">
+        {TRIAGE_TYPES
+          // A captured/resolved project means this is a task *in* that project
+          // by default, not a new project by the same name — hide that option.
+          .filter(({ t }) => !(t === "project" && (hasParsedProject || hasProjectDestination)))
+          .map(({ t, label, sub, Icon }) => (
+            <button
+              key={t}
+              type="button"
+              className={`aa-triage-type ${working.type === t ? "active" : ""}`}
+              onClick={() => onSetType(t)}
+            >
+              <Icon className="aa-triage-type__icon" />
+              <span className="aa-triage-type__label">{label}</span>
+              <span className="aa-triage-type__sub">{sub}</span>
+            </button>
+          ))}
+      </div>
+      <Button
+        variant="primary"
+        className="aa-triage-step__continue"
+        onClick={onContinue}
+        disabled={!chosenLensId}
+      >
+        {working.type === "archive" ? "Archive" : "Continue"}
+      </Button>
+    </div>
+  );
+}
+
+/** Step 2 — specify the entity (chips + notes) and commit (Ready) or go Back. */
+function SpecStep({
+  working,
+  projectName,
+  projectGoalName,
+  parentName,
+  setW,
+  onPickerOpen,
+  onChipOpenChange,
+  canComplete,
+  onBack,
+  onReady,
+}: {
+  working: Working;
+  projectName: string | null;
+  projectGoalName: string | null;
+  parentName: string | null;
+  setW: (patch: Partial<Working>) => void;
+  onPickerOpen: (key: string) => void;
+  onChipOpenChange: (open: boolean) => void;
+  canComplete: boolean;
+  onBack: () => void;
+  onReady: () => void;
+}) {
+  return (
+    <div className="aa-triage-step">
+      <div className="aa-triage-step__label">
+        2 · {working.type === "task" ? "Specify the task" : working.type === "project" ? "Specify the project" : "File the note"}
+      </div>
+      <div className="aa-triage-spec">
+        {/* The chip row IS the editor — same component as the task page.
+            Project/Goal/Parent are external pickers (triage owns those
+            sheets); task Notes stay a textarea — prose, not a chip. */}
+        {working.type === "task" && (
+          <>
+            <PropertyChips
+              fields={taskFields({ working, projectName, projectGoalName, parentName, projectIsDefault: !projectName })}
+              onPick={(key, value) => setW(chipPickToWorkingPatch(key, value))}
+              onPickerOpen={(key) => { if (key === "project") onPickerOpen("project"); }}
+              onOpenChange={onChipOpenChange}
+            />
+            <label className="aa-triage-notes">
+              <span className="aa-triage-notes__label">Notes</span>
+              <textarea
+                className="aa-triage-notes__textarea"
+                aria-label="Task notes"
+                value={working.content}
+                onChange={(e) => setW({ content: e.target.value })}
+                rows={4}
+                placeholder="Add details, criteria, or reminders"
+              />
+            </label>
+          </>
+        )}
+        {working.type === "project" && (
+          <PropertyChips
+            fields={projectFields({ working, projectName, projectGoalName, parentName, projectIsDefault: !projectName })}
+            onPick={(key, value) => setW(chipPickToWorkingPatch(key, value))}
+            onPickerOpen={(key) => { if (key === "goal") onPickerOpen("goal"); }}
+            onOpenChange={onChipOpenChange}
+          />
+        )}
+        {working.type === "resource" && (
+          <PropertyChips
+            fields={resourceFields({ working, projectName, projectGoalName, parentName, projectIsDefault: !projectName })}
+            onPick={(key, value) => setW(chipPickToWorkingPatch(key, value))}
+            onPickerOpen={(key) => { if (key === "parent") onPickerOpen("parent"); }}
+            onOpenChange={onChipOpenChange}
+          />
+        )}
+      </div>
+      {/* Confirm summary + Ready (gated). Back returns to Classify so the
+          type or lens can change without restarting the whole item. */}
+      <div className="aa-triage-confirm">
+        <div className="aa-triage-confirm__summary">
+          {summaryFor(working, projectName ?? "General", projectGoalName ?? null, parentName)}
+        </div>
+        <Button variant="ghost" onClick={onBack}>Back</Button>
+        <Button variant="primary" disabled={!canComplete} onClick={onReady}>Ready</Button>
+      </div>
+    </div>
+  );
+}
 
 /** The end-of-triage empty state ("Inbox zero" / "Caught up from here"). */
 function TriageComplete({
