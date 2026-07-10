@@ -26,7 +26,7 @@
 ### Capture & Triage
 - [capture](./capture.md) (`shipped`) — `⌘K` quick-add + grammar v2 (`#` projects, `@` time, `[[lens]]`) → universal Inbox.
 - [inbox-triage](./inbox-triage.md) (`shipped`) — per-item spec wizard; lossless Archive.
-- [triage-classify-step](./triage-classify-step.md) (`shipped`) — Classify → Spec → Complete (replaces separate Context + Type steps).
+- [triage-classify-step](./triage-classify-step.md) (`shipped`) — Classify → Spec → Ready (replaces separate Context + Type steps).
 
 ### Focus — the wedge
 - [next-what-now](./next-what-now.md) (`shipped`) — home = one task; `getTopTask`; "why this?" line.

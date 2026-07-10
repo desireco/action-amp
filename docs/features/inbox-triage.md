@@ -10,12 +10,15 @@ verified: 2026-07-04
 # Inbox + Triage
 
 **What.** Two surfaces.
-- **Inbox** (`inbox/InboxPage.tsx`) — lists unprocessed items newest-first with
-  parsed-token chips; row click or "Triage" → `/app/inbox/review?i=N`.
+- **Inbox** (`inbox/InboxPage.tsx`) — a centered queue surface that lists
+  unprocessed items newest-first with parsed-token chips. Its queue header keeps
+  count + Start triage together; the empty state uses the same bounded surface
+  so zero, one, and many items all retain a deliberate composition. Row click
+  or "Start triage" → `/app/inbox/review?i=N`.
 - **Triage** (`inbox/TriagePage.tsx`) — a per-item **specification wizard**, not
   one-key dispatch: (1) Context/Lens radio, (2) Type — Task / Project /
   Note(Resource) / Archive, (3) Spec — inline-expanding rows (When/Size/Priority/
-  Project/Goal). Complete is gated until lens + filing target set.
+  Project/Goal). Ready is gated until lens + filing target set.
 
 **Resolver pre-fill** (grammar v2, `docs/specs/done/capture-grammar.md`, shipped).
 The Context step pre-fills from two inference paths, neither of which silently

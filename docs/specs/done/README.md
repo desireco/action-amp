@@ -25,6 +25,6 @@ for "what does it do today"; the spec here is the *why and how it was decided*.
 | `legal-pages-oauth.md` | OAuth-ready privacy/terms | 2026-06-27 |
 | `social-auth-google.md` | Google OAuth (code-side; client config pending) | 2026-06-27 |
 | `task-notes-completion-log.md` | TaskUpdate.kind (NOTE \| COMPLETED) + thread | 2026-07-05 |
-| `triage-classify-step.md` | Classify → Spec → Complete (replaces Context + Type) | 2026-07-04 |
+| `triage-classify-step.md` | Classify → Spec → Ready (replaces Context + Type) | 2026-07-04 |
 
 Review writeups live in `docs/reviews/<slug>.md`.

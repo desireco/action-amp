@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { TriageCard, type TriageChip } from "./TriageCard";
 import { renderInContext } from "wasp/client/test";
 
@@ -11,6 +11,22 @@ describe("TriageCard", () => {
     it("shows the body text", () => {
       renderInContext(<TriageCard body="Email Sarah" />);
       expect(screen.getByText("Email Sarah")).toBeInTheDocument();
+    });
+
+    it("makes the title directly editable when given a change handler", () => {
+      let title = "Email Sarah";
+      const onBodyChange = (next: string) => {
+        title = next;
+      };
+      renderInContext(
+        <TriageCard body={title} onBodyChange={onBodyChange} />,
+      );
+
+      fireEvent.change(screen.getByRole("textbox", { name: "Title" }), {
+        target: { value: "Email Sarah about Q3" },
+      });
+
+      expect(title).toBe("Email Sarah about Q3");
     });
 
     it("shows the meta line when provided", () => {

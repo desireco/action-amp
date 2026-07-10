@@ -14,7 +14,7 @@ verified: 2026-07-05
 lets the user confirm or change both decisions at once: what the inbox item
 becomes, and where it will land.
 
-**Today.** Triage flow is **Classify → Spec → Complete**:
+**Today.** Triage flow is **Classify → Spec → Ready**:
 - **Classify** — Type + Destination together. Type chooser renders as one-line
   rows with a leading icon; Lens renders as large styled pills; goal meta and
   lens pill appear on all pickers. When capture or free text resolves to a
@@ -24,7 +24,7 @@ becomes, and where it will land.
 - **Spec** — Type-specific property rows (priority, size, due, project, goal,
   tags) via the shared `PropertyChips` editor; property-key shortcuts active.
   Back button returns to Classify.
-- **Complete** — Commit the transformed entity.
+- **Ready** — Commit the prepared entity and advance.
 
 **Remaining polish** (not blocking): full `/` Lens picker from Spec, and
 cross-lens Project change from Spec. Spec at `docs/specs/done/triage-classify-step.md`.

@@ -27,6 +27,62 @@
   margin: 0 0 var(--aa-space-md);
 }
 
+.aa-triage-card__title-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+  margin: 0 0 var(--aa-space-md);
+  text-align: left;
+}
+
+.aa-triage-card__title-label {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  color: var(--aa-text-4);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aa-triage-card__title-input {
+  width: 100%;
+  min-height: 2.75rem;
+  max-height: 10rem;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  overflow-y: auto;
+  resize: vertical;
+  field-sizing: content;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  font: inherit;
+  font-size: var(--aa-text-lg);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: -0.01em;
+  line-height: var(--aa-leading-snug);
+  text-align: left;
+  transition:
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    box-shadow var(--aa-dur-fast) var(--aa-ease-out),
+    background var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-triage-card__title-input:hover {
+  border-color: var(--aa-border-strong);
+  background: var(--aa-surface-muted);
+}
+
+.aa-triage-card__title-input:focus {
+  outline: none;
+  border-color: var(--aa-teal);
+  background: var(--aa-surface);
+  box-shadow: var(--aa-focus-ring);
+}
+
+.aa-triage-card__title-input::placeholder {
+  color: var(--aa-text-4);
+}
+
 .aa-triage-card__meta {
   font-size: var(--aa-text-xs);
   color: var(--aa-text-4);

@@ -23,6 +23,7 @@ export const DUE_OPTS = ["—", "This week", "Next week", "Next month"] as const
 
 export interface Working {
   type: ChosenType;
+  title: string;
   when: (typeof WHEN_OPTS)[number];
   size: ParsedSize;
   priority: ParsedPriority;
@@ -88,6 +89,7 @@ export function buildDispatchPayload(
   inboxItemId: string;
   decision: Outcome;
   lensId: string;
+  name?: string;
   projectId?: string;
   goalId?: string;
   priority?: ParsedPriority;
@@ -96,9 +98,11 @@ export function buildDispatchPayload(
 } {
   const outcome = buildOutcome(w);
   const base = { inboxItemId: ctx.inboxItemId, decision: outcome, lensId: ctx.lensId };
+  const name = w.title.trim();
   if (w.type === "task") {
     return {
       ...base,
+      name,
       projectId: w.projectId ?? ctx.resolvedProjectId ?? undefined,
       priority: w.priority,
       size: w.size,
@@ -106,11 +110,12 @@ export function buildDispatchPayload(
     };
   }
   if (w.type === "project") {
-    return { ...base, goalId: w.projectGoalId ?? undefined };
+    return { ...base, name, goalId: w.projectGoalId ?? undefined };
   }
   if (w.type === "resource") {
     return {
       ...base,
+      name,
       projectId: w.parentProjectId ?? undefined,
       goalId: w.parentGoalId ?? undefined,
     };
@@ -120,6 +125,7 @@ export function buildDispatchPayload(
 
 export function canComplete(w: Working | null, chosenLensId: string | null): boolean {
   if (!w || !chosenLensId) return false;
+  if (!w.title.trim()) return false;
   if (w.type === "resource") return !!w.parentProjectId || !!w.parentGoalId;
   return true;
 }

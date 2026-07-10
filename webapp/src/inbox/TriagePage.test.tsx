@@ -178,7 +178,7 @@ describe("TriagePage", () => {
     expect(screen.queryByRole("radio", { name: "Me" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /^complete$/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /^ready$/i }));
 
     await waitFor(() =>
       expect(triageInboxItem).toHaveBeenCalledWith(
@@ -206,7 +206,7 @@ describe("TriagePage", () => {
     expect(screen.getByText("Email Sarah")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^ready$/i }));
 
     await waitFor(() => expect(screen.getByText("Server unavailable")).toBeInTheDocument());
 
@@ -225,7 +225,7 @@ describe("TriagePage", () => {
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
     const notes = await screen.findByLabelText(/task notes/i);
     fireEvent.change(notes, { target: { value: "  Call out invoice terms  " } });
-    fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^ready$/i }));
 
     await waitFor(() =>
       expect(triageInboxItem).toHaveBeenCalledWith(
@@ -235,5 +235,46 @@ describe("TriagePage", () => {
         }),
       ),
     );
+  });
+
+  it("lets the title be edited and creates the task with the edited value", async () => {
+    triageInboxItem.mockResolvedValue({ id: "task-1" });
+    renderTriagePage();
+
+    expect(screen.queryByRole("textbox", { name: "Title" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    const title = screen.getByRole("textbox", { name: "Title" });
+    fireEvent.change(title, { target: { value: "Email Sarah about Q3" } });
+    fireEvent.click(screen.getByRole("button", { name: /^ready$/i }));
+
+    await waitFor(() =>
+      expect(triageInboxItem).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "Email Sarah about Q3" }),
+      ),
+    );
+  });
+
+  it("does not trigger triage shortcuts while the title is being edited", () => {
+    renderTriagePage();
+
+    expect(screen.queryByRole("textbox", { name: "Title" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    const title = screen.getByRole("textbox", { name: "Title" });
+    title.focus();
+    fireEvent.keyDown(title, { key: "Enter" });
+
+    expect(screen.getByText(/2 · Specify the task/i)).toBeInTheDocument();
+    expect(triageInboxItem).not.toHaveBeenCalled();
+  });
+
+  it("blocks completion when the title is blank", async () => {
+    renderTriagePage();
+
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Title" }), {
+      target: { value: "   " },
+    });
+
+    expect(await screen.findByRole("button", { name: /^ready$/i })).toBeDisabled();
   });
 });

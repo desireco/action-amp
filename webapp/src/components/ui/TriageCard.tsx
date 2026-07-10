@@ -14,6 +14,8 @@ export type TriageExit = "right" | "left" | "up" | "down" | null;
 interface TriageCardProps {
   /** The captured item text */
   body: string;
+  /** When provided, the captured text becomes an always-visible title editor. */
+  onBodyChange?: (body: string) => void;
   /** Meta line (e.g. "captured 14 min ago") */
   meta?: string;
   /** Parsed-token chips */
@@ -42,6 +44,7 @@ const CHIP_VARIANT: Record<TriageChipTone, "teal" | "amber" | "violet"> = {
  */
 export function TriageCard({
   body,
+  onBodyChange,
   meta,
   chips,
   exit = null,
@@ -60,7 +63,21 @@ export function TriageCard({
 
   return (
     <div className={cls}>
-      <p className="aa-triage-card__body">{body}</p>
+      {onBodyChange ? (
+        <label className="aa-triage-card__title-field">
+          <span className="aa-triage-card__title-label">Title</span>
+          <textarea
+            className="aa-triage-card__title-input"
+            aria-label="Title"
+            value={body}
+            onChange={(event) => onBodyChange(event.target.value)}
+            rows={1}
+            placeholder="What needs doing?"
+          />
+        </label>
+      ) : (
+        <p className="aa-triage-card__body">{body}</p>
+      )}
       {meta && <p className="aa-triage-card__meta">{meta}</p>}
       {chips && chips.length > 0 && (
         <div className="aa-triage-card__chips">

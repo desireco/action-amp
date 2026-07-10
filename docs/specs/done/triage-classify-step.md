@@ -26,7 +26,7 @@ The new triage flow is:
 
 1. **Classify** — Type + Destination together.
 2. **Spec** — Type-specific property rows.
-3. **Complete** — Commit the transformed entity.
+3. **Ready** — Commit the prepared entity and advance.
 
 This is a product/design change only. The build should update implementation
 and canonical docs as described below.
@@ -53,7 +53,7 @@ four-stage wizard:
 1. Context
 2. Type
 3. Spec
-4. Complete
+4. Ready
 
 The implementation modeled this as:
 
@@ -78,8 +78,8 @@ completion behavior:
 | Step | Purpose | Commit behavior |
 |---|---|---|
 | Classify | Pick Type and Destination together | `Enter` advances to Spec, or archives immediately when Type is Archive |
-| Spec | Edit type-specific rows | `Enter` completes when valid |
-| Complete | Existing completion/dispatch animation and next item advance | No separate visible screen required |
+| Spec | Edit type-specific rows | `Enter` marks ready when valid |
+| Ready | Existing dispatch animation and next item advance | No separate visible screen required |
 
 In code, `Step` should become:
 
@@ -87,7 +87,7 @@ In code, `Step` should become:
 type Step = "classify" | "spec";
 ```
 
-Complete remains the dispatch action from the Spec step, not a new React step
+Ready remains the dispatch action from the Spec step, not a new React step
 unless the builder finds a strong reason to introduce one.
 
 ### Classify Screen
@@ -292,7 +292,7 @@ Existing and planned Spec shortcuts remain:
 | `-` / `=` | Priority down / up |
 | `H` | Set When / cycle Today → Upcoming → Someday |
 | `G` | Assign/link Goal |
-| `Enter` | Complete when valid |
+| `Enter` | Ready when valid |
 | `Esc` | Return to Classify |
 | `Q` | Return to Inbox |
 
@@ -428,7 +428,7 @@ Archive is lossless.
 ### Resource/Note
 
 When Type is Note/Resource, Classify chooses the Lens destination only. The
-required parent Project/Goal is still selected in Spec. Complete remains gated
+required parent Project/Goal is still selected in Spec. Ready remains gated
 until a parent is set.
 
 ## Edge Cases

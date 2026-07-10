@@ -1,6 +1,7 @@
 # ActionAmp — Brand
 
-> **Status: Decided (2026-07-09).** The canonical brand identity kit —
+> #### **Status: Decided (2026-07-09).** The canonical brand identity kit —
+>
 > positioning, voice, lexicon, messaging. Governs all marketing copy and public
 > surfaces (landing page, blog, newsletter, social, app store copy).
 > **Authority:** for brand/voice questions this file wins; it defers to

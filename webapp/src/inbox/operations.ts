@@ -127,6 +127,7 @@ export const triageInboxItem = (async (args, context) => {
   const priority = args.priority ?? item.parsedPriority ?? "NORMAL";
   const size = args.size ?? item.parsedSize ?? "M";
   const content = args.content?.trim() || null;
+  const title = args.name?.trim() || item.text;
 
   // Resolve captured extra #tokens into real Tag records (per-user unique by
   // name). Tags carry onto Tasks only — Projects and Goals drop them (their
@@ -189,7 +190,7 @@ export const triageInboxItem = (async (args, context) => {
             ? "UPCOMING"
             : "SOMEDAY";
       const permalink = await uniquePermalink(
-        taskPermalinkSource(item.text, effectiveProjectPermalink),
+        taskPermalinkSource(title, effectiveProjectPermalink),
         async (candidate) => {
           const existing = await context.entities.Task.findFirst({
             where: { userId: context.user!.id, permalink: candidate },
@@ -200,7 +201,7 @@ export const triageInboxItem = (async (args, context) => {
       );
       const task = await context.entities.Task.create({
         data: {
-          description: item.text,
+          description: title,
           permalink,
           content,
           userId: context.user.id,
@@ -236,7 +237,7 @@ export const triageInboxItem = (async (args, context) => {
           reason: "organize more than 3 projects with Pro",
         },
       );
-      const name = args.name?.trim() || item.text;
+      const name = title;
       const permalink = await uniquePermalink(name, async (candidate) => {
         const existing = await context.entities.Project.findFirst({
           where: { userId: context.user!.id, permalink: candidate },
@@ -265,7 +266,7 @@ export const triageInboxItem = (async (args, context) => {
       }
       const resource = await context.entities.Resource.create({
         data: {
-          title: item.text,
+          title,
           userId: context.user.id,
           projectId: args.projectId ?? null,
           goalId: args.goalId ?? null,
@@ -311,7 +312,7 @@ export const triageInboxItem = (async (args, context) => {
   lensId: string;
   goalId?: string;
   projectId?: string;
-  name?: string; // override the project name (defaults to the item text)
+  name?: string; // override the created Task/Project/Resource title (defaults to item text)
   priority?: ParsedPriority; // override parsed priority (set deliberately in the triage spec step)
   size?: ParsedSize; // override parsed size (set deliberately in the triage spec step)
   content?: string; // durable task notes/body captured during triage

@@ -274,6 +274,29 @@ describe("triageInboxItem — task decisions", () => {
     });
   });
 
+  it("uses the edited title for the task description and permalink", async () => {
+    const m = arrange();
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triageOne(
+      {
+        inboxItemId: "ix-1",
+        decision: "task-today",
+        lensId: "l",
+        name: "  Email Sarah about Q3  ",
+      },
+      m,
+    );
+
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        description: "Email Sarah about Q3",
+        permalink: "email-sarah-about-q3",
+      }),
+      select: { id: true },
+    });
+  });
+
   it("stores blank task notes as null", async () => {
     const m = arrange();
     m.entities.Task.create.mockResolvedValue({ id: "t" });

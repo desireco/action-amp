@@ -462,7 +462,7 @@
   opacity: 0.8;
 }
 
-/* ---- Confirm bar (summary + Complete, gated) ---- */
+/* ---- Confirm bar (summary + Ready, gated) ---- */
 .aa-triage-confirm {
   display: flex;
   gap: var(--aa-space-sm);

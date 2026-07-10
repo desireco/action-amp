@@ -77,7 +77,7 @@ appears in Work/Planning/Review except by coming through triage.
   **Upcoming** (the bench), which surfaces on Next only if undated or due
   (§5.2). Committing to Today is an explicit choice; demoting to Someday is, too.
 - The single-card one-key dispatch (`1/2/3/P/R/Del`) is **gone** — replaced by
-  the wizard steps (Classify → Spec → Complete). The old keymap survives only
+  the wizard steps (Classify → Spec → Ready). The old keymap survives only
   as step shortcuts where noted in `TRIAGE.md` §7.
 
 ### 2.3 Work Area — doing, right now

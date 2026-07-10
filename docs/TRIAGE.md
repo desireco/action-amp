@@ -69,7 +69,7 @@ and **deletes the original InboxItem** — the transformed entity *is* the recor
      │  └──────────────────────────────────────┘   │
      │                                              │
      │  ← prev   classify: Task · Work · MVP →                │  ← wizard steps
-     │           (Classify → Spec → Complete)                 │
+     │           (Classify → Spec → Ready)                    │
      └─────────────────────────────────────────────────────────┘
           ↓ (exit animation encodes the decision →/←/↑/↓)
    Next item appears.
@@ -119,7 +119,7 @@ are **one surface at different commitment levels.**
 > **Status 2026-06-25:** the co-author spec list is now built. Triage is a
 > deliberate **per-item wizard**, not a one-key dispatch. The single-card
 > dispatch buttons (Task/Today/File-in/Resource/Trash) are gone; every item is
-> specified through the steps below and committed with a final **Complete**.
+> specified through the steps below and committed with a final **Ready**.
 > See `webapp/src/inbox/TriagePage.tsx`.
 
 The wizard (per item):
@@ -143,7 +143,7 @@ The wizard (per item):
    adaptive pattern as the sidebar switcher (chip + popover); at ≤3 it's
    today's radio.
 2. **Spec** — the property rows, per type (see table below).
-3. **Complete** — commits the spec; gated until the destination is valid and
+3. **Ready** — commits the spec; gated until the destination is valid and
    (for Task/Resource) a filing target is set.
 
 The spec rows are **inline-expanding**: tap a row → the options expand beneath
@@ -152,8 +152,9 @@ which open the existing bottom-sheet picker because the list can be long and
 benefits from numbered rows). Value tinting: teal = When/Today, amber =
 Important/XL, violet = Project/Goal, gray = default.
 
-- **Title row** — the raw captured text (editable inline in the mockup; in the
-  built wizard it's read-only on the card for now).
+- **Title row** — the raw captured text stays read-only during Classify, then
+  becomes editable inline during Spec. `Enter` inserts text/newlines while
+  focused; triage shortcuts resume on blur.
 - **Confirm summary** — reads back the commitment in plain English:
   `→ Tomorrow · M · Normal · General`. No metadata-chip soup.
 - **Undo toast** — 4s window after dispatch *(still spec'd, not yet built)*.
@@ -390,7 +391,7 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 - ✅ Triage card (`components/ui/TriageCard.tsx`)
 - ✅ **Co-author spec list in triage** — DONE 2026-06-25. **Classify step
   merged lens + type into one step 2026-07-04–05** (`Classify → Spec →
-  Complete` per `docs/specs/done/triage-classify-step.md`): project-resolved items
+  Ready` per `docs/specs/done/triage-classify-step.md`): project-resolved items
   skip standalone lens selection by default; the lens pill and goal meta appear
   on all pickers; type chooser is one-line rows with a leading icon.
 - ✅ **Property keys `[` `]` `-` `=`** (§7.6) — DONE 2026-07-05 via the shared
@@ -410,8 +411,8 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 - ❌ `I` (enter triage from Normal)
 - ❌ Undo toast (4s window) — spec'd, not in code
 - ❌ Mode indicator `— TRIAGE —` (bottom-left, VIM-style)
-- ❌ Inline title edit on the triage card (the wizard shows the text read-only;
-  the contenteditable affordance from the mockup isn't ported yet)
+- ✅ Inline title edit on the triage card (multiline field during Spec; edited
+  text becomes the created Task / Project / Resource title)
 
 ---
 
@@ -420,10 +421,10 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 All shortcut decisions are locked. Remaining questions are product/UX, not
 keyset:
 
-1. **Inline title edit + dispatch conflict.** The mockup makes the title
-   `contenteditable`; pressing `1/2/3/P/R` while editing the title would both
-   type *and* dispatch. Decided in mockup: Enter commits the edit (blurs),
-   dispatch keys only fire when title isn't focused. **Confirm before porting.**
+1. **Inline title edit + dispatch conflict — resolved 2026-07-10.** The built
+   title stays read-only during Classify and uses a multiline textarea during
+   Spec. While focused, all triage shortcuts are suppressed and Enter remains
+   text input; shortcuts resume on blur.
 2. **Resource filing UX.** **RESOLVED 2026-07-05**: Resource parent is a spec
    row inline like everything else, sharing the `PropertyChips` editor. No
    separate picker sheet for the parent.

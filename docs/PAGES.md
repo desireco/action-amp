@@ -71,7 +71,8 @@ The universal queue. (FEATURES F3.) Shows untriaged InboxItems as a list.
 - Sort: newest first (capture order).
 - Each row: text + parsed-token chips (date/tag/priority detected).
 - Row actions: open, triage (→ P2b), delete.
-- Header: "Triage" button → enters review mode.
+- Queue header: count + "Start triage" button → enters review mode. Empty state
+  keeps the same bounded queue surface and points back to universal `⌘K` capture.
 
 ### P2b. Inbox Triage  →  `/app/inbox/review`
 
@@ -83,7 +84,7 @@ single-card one-key dispatch is **gone**. Three steps per item:
   Lens and skips standalone lens selection by default.
 - **Spec** — property rows via the shared `PropertyChips` editor. Shortcuts:
   `[`/`]` size · `-`/`=` priority · `/` Lens picker.
-- **Complete** — commits the spec; the InboxItem is transformed and removed.
+- **Ready** — commits the spec; the InboxItem is transformed and removed.
 - Progress dot: "3 of 7 triaged."
 
 ### P3. Today  →  `/app/today`

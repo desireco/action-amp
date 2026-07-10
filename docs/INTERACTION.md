@@ -142,7 +142,7 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
 - **Entry:** click Inbox count / `I` from Normal.
 - **Exit:** `Esc` / `Q` (done triaging) / empty inbox.
 - **Wizard flow** (replaces the old single-card dispatch): **Classify → Spec →
-  Complete**. The old `1/2/3 = Task Today/Upcoming/Someday` and `P/G/R`
+  Ready**. The old `1/2/3 = Task Today/Upcoming/Someday` and `P/G/R`
   dispatch keys are gone. Type chooser is one-line rows with a leading icon;
   Lens is large styled pills. See `TRIAGE.md` §7.4 for the canonical keymap.
 - **Keyset (step-aware):**

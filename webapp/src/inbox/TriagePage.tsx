@@ -48,15 +48,15 @@ import "./TriagePage.css";
  *
  * Triage is NOT speed-dispatch; it's the deliberate act of *specifying* a task.
  * So the review is a per-item wizard with explicit Continue steps and a final
- * Complete that commits the spec:
+ * Ready that commits the spec:
  *
  *   1. Classify        — what it becomes plus the Lens/Project destination.
  *   2. Spec            — inline-expanding property rows (When / Size / Priority
  *                        / Project for a Task), value-tinted.
- *   3. Complete        — commits the spec; gated until destination + filing target
+ *   3. Ready           — commits the spec; gated until destination + filing target
  *                        (for Task/Resource) are set.
  *
- * Each Complete calls `triageInboxItem` (transforms the InboxItem into its
+ * Each Ready action calls `triageInboxItem` (transforms the InboxItem into its
  * concrete type, deletes the original) and the exit direction encodes the call.
  * Canonical layout: docs/mockups/triage-coauthor.html.
  */
@@ -126,7 +126,7 @@ export function TriagePage() {
 
   // Snapshot the list on first arrival. The triage walkthrough navigates this
   // FIXED snapshot, not the refetching query — without it, invalidating
-  // getInboxItems after each Complete shrinks `list`, shifting indices
+  // getInboxItems after each Ready action shrinks `list`, shifting indices
   // (skipping items) and tripping isComplete early. The live query still
   // updates the sidebar count; the walkthrough just doesn't chase it.
   const [snapshot, setSnapshot] = useState<typeof list | null>(null);
@@ -230,6 +230,7 @@ export function TriagePage() {
   const initWorking = useCallback(
     (): Working => ({
       type: "task",
+      title: item?.text ?? "",
       // Default When = Upcoming (decided 2026-06-25). A triaged task is
       // actionable — it lands on the Upcoming bench (reachable from Today's
       // "See upcoming" and /app/upcoming), not buried in Someday. Today stays
@@ -488,7 +489,8 @@ export function TriagePage() {
         {item && working && (
           <TriageCard
             key={item.id}
-            body={item.text}
+            body={working.title}
+            onBodyChange={step === "spec" ? (title) => setW({ title }) : undefined}
             meta={`captured ${formatAgo(item.createdAt)}`}
             chips={triageChips}
             exit={exit}
@@ -667,7 +669,7 @@ export function TriagePage() {
                   )}
                 </div>
 
-                {/* Confirm summary + Complete (gated). Back returns to Classify
+                {/* Confirm summary + Ready (gated). Back returns to Classify
                     so the user can change the type (Task/Project/Note/Archive)
                     or lens without restarting the whole item. Keyboard: Esc. */}
                 <div className="aa-triage-confirm">
@@ -685,7 +687,7 @@ export function TriagePage() {
                     disabled={!canComplete(working)}
                     onClick={() => void dispatch()}
                   >
-                    Complete
+                    Ready
                   </Button>
                 </div>
               </div>
