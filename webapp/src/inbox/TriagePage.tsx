@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import type { NavigateFunction } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems, triageInboxItem } from "wasp/client/operations";
 import { getAppData } from "wasp/client/operations";
@@ -17,12 +18,10 @@ import {
   LogbookIcon,
   SomedayIcon,
 } from "../components/ui/icons";
-import { usePropertyKeys } from "../components/ui/usePropertyKeys";
 import { useActiveLens } from "../app/lensContext";
 import { getProjects } from "wasp/client/operations";
 import { getProjectsForResolver } from "wasp/client/operations";
 import { getGoals } from "wasp/client/operations";
-import type { ParsedPriority, ParsedSize } from "./parseCapture";
 import { resolveProjectCandidate } from "./projectResolver";
 import {
   OUTCOME_EXIT,
@@ -352,7 +351,6 @@ export function TriagePage() {
         requestAnimationFrame(() => setEntering(false));
       });
     }, 320);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, total, exit, activeLens, working, chosenLensId, item, queryClient, resolvedProjectId]);
 
   useTriageKeyboard({
@@ -379,36 +377,7 @@ export function TriagePage() {
   });
 
   if (isComplete) {
-    // Started mid-list (?i>0): items above the start index are still
-    // untriaged, so "Inbox zero" would be a lie. Say what's actually true.
-    const reachedFromTop = start === 0;
-    return (
-      <div className="aa-triage-empty">
-        <div className="aa-empty-mark" aria-hidden="true">
-          <svg viewBox="0 0 16 16" fill="none">
-            <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-        <h2 className="aa-triage-empty__title">
-          {reachedFromTop ? "Inbox zero." : "Caught up from here."}
-        </h2>
-        <p className="aa-triage-empty__text">
-          {reachedFromTop
-            ? "Nothing left to decide. Go do something."
-            : `${start} earlier ${start === 1 ? "item is" : "items are"} still in the inbox.`}
-        </p>
-        <div className="aa-triage-empty__actions">
-          {reachedFromTop ? (
-            <Button variant="primary" onClick={() => navigate("/app")}>Done →</Button>
-          ) : (
-            <Button variant="primary" onClick={() => navigate("/app/inbox/review")}>
-              Triage earlier →
-            </Button>
-          )}
-          <Button variant="secondary" onClick={() => navigate("/app/inbox")}>Back to inbox</Button>
-        </div>
-      </div>
-    );
+    return <TriageComplete start={start} onNavigate={navigate} />;
   }
 
   // Effective project = manual picker choice > resolved #token link. Drives both
@@ -447,31 +416,11 @@ export function TriagePage() {
   return (
     <div className="aa-triage">
       {/* ---- Top: close + progress ---- */}
-      <div className="aa-triage__top">
-        <button
-          type="button"
-          className="aa-triage__close"
-          onClick={() => navigate("/app/inbox")}
-          title="Done triaging (Esc)"
-          aria-label="Close"
-        >
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-        </button>
-        <div className="aa-triage__progress">
-          <span className="aa-triage__progress-count">
-            <b>{done + 1}</b> of <b>{remaining}</b>
-          </span>
-          <div className="aa-triage__progress-bar">
-            <div
-              className="aa-triage__progress-fill"
-              style={{ width: `${remaining > 0 ? (done / remaining) * 100 : 0}%` }}
-            />
-          </div>
-        </div>
-        <span className="aa-triage__top-spacer" />
-      </div>
+      <TriageProgress
+        done={done}
+        remaining={remaining}
+        onClose={() => navigate("/app/inbox")}
+      />
 
       <div className="aa-triage__title">
         <h1>Triage</h1>
@@ -776,6 +725,87 @@ export function TriagePage() {
           onClose={() => setParentGoalPickerOpen(false)}
         />
       )}
+    </div>
+  );
+}
+
+// ── Presentational sub-components ──────────────────────────────────────────
+// Extracted from TriagePage so the orchestrator reads as state + a flat tree.
+// Each is presentational: behavior lives in TriagePage, these just render.
+
+/** The end-of-triage empty state ("Inbox zero" / "Caught up from here"). */
+function TriageComplete({
+  start,
+  onNavigate,
+}: {
+  start: number;
+  onNavigate: NavigateFunction;
+}) {
+  const reachedFromTop = start === 0;
+  return (
+    <div className="aa-triage-empty">
+      <div className="aa-empty-mark" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="none">
+          <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+      <h2 className="aa-triage-empty__title">
+        {reachedFromTop ? "Inbox zero." : "Caught up from here."}
+      </h2>
+      <p className="aa-triage-empty__text">
+        {reachedFromTop
+          ? "Nothing left to decide. Go do something."
+          : `${start} earlier ${start === 1 ? "item is" : "items are"} still in the inbox.`}
+      </p>
+      <div className="aa-triage-empty__actions">
+        {reachedFromTop ? (
+          <Button variant="primary" onClick={() => onNavigate("/app")}>Done →</Button>
+        ) : (
+          <Button variant="primary" onClick={() => onNavigate("/app/inbox/review")}>
+            Triage earlier →
+          </Button>
+        )}
+        <Button variant="secondary" onClick={() => onNavigate("/app/inbox")}>Back to inbox</Button>
+      </div>
+    </div>
+  );
+}
+
+/** The top bar: close button + session progress count and bar. */
+function TriageProgress({
+  done,
+  remaining,
+  onClose,
+}: {
+  done: number;
+  remaining: number;
+  onClose: () => void;
+}) {
+  return (
+    <div className="aa-triage__top">
+      <button
+        type="button"
+        className="aa-triage__close"
+        onClick={onClose}
+        title="Done triaging (Esc)"
+        aria-label="Close"
+      >
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+          <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+      </button>
+      <div className="aa-triage__progress">
+        <span className="aa-triage__progress-count">
+          <b>{done + 1}</b> of <b>{remaining}</b>
+        </span>
+        <div className="aa-triage__progress-bar">
+          <div
+            className="aa-triage__progress-fill"
+            style={{ width: `${remaining > 0 ? (done / remaining) * 100 : 0}%` }}
+          />
+        </div>
+      </div>
+      <span className="aa-triage__top-spacer" />
     </div>
   );
 }
