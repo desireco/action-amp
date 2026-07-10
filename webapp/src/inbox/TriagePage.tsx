@@ -645,86 +645,27 @@ export function TriagePage() {
         )}
       </div>
 
-      {/* ---- Project picker (Task → file into a project) ---- */}
-      {projectPickerOpen && item && (
-        <PickerSheet
-          title={`File “${shortText}” in`}
-          items={(projects ?? []).map((p) => ({
-            id: p.id,
-            label: p.name,
-            chip: lensChip,
-            meta: p.goal?.name ?? null,
-            current: p.id === effectiveProjectId,
-          }))}
-          onPick={(id) => {
-            setW({ projectId: id });
-            setProjectPickerOpen(false);
-          }}
-          onClose={() => setProjectPickerOpen(false)}
-        />
-      )}
-
-      {/* ---- Goal picker (Project → supports a goal) ---- */}
-      {goalPickerOpen && item && (
-        <PickerSheet
-          title={`Choose goal for “${shortText}”`}
-          items={(goals ?? []).map((g) => ({
-            id: g.id,
-            label: g.name,
-            chip: lensChip,
-            current: g.id === working?.projectGoalId,
-          }))}
-          emptyMessage="No goals yet — make one on the Goals page."
-          onPick={(id) => {
-            setW({ projectGoalId: id });
-            setGoalPickerOpen(false);
-          }}
-          onClose={() => setGoalPickerOpen(false)}
-        />
-      )}
-
-      {/* ---- Parent picker for a Resource/Note: choose project or goal ---- */}
-      {parentProjectPickerOpen && item && (
-        <PickerSheet
-          title="File note under a project"
-          items={(projects ?? []).map((p) => ({
-            id: p.id,
-            label: p.name,
-            chip: lensChip,
-            meta: p.goal?.name ?? null,
-            current: p.id === working?.parentProjectId,
-          }))}
-          action={{
-            label: "…or file under a goal",
-            onPick: () => {
-              setParentProjectPickerOpen(false);
-              setParentGoalPickerOpen(true);
-            },
-          }}
-          onPick={(id) => {
-            setW({ parentProjectId: id, parentGoalId: null });
-            setParentProjectPickerOpen(false);
-          }}
-          onClose={() => setParentProjectPickerOpen(false)}
-        />
-      )}
-      {parentGoalPickerOpen && item && (
-        <PickerSheet
-          title="File note under a goal"
-          items={(goals ?? []).map((g) => ({
-            id: g.id,
-            label: g.name,
-            chip: lensChip,
-            current: g.id === working?.parentGoalId,
-          }))}
-          emptyMessage="No goals yet — make one on the Goals page."
-          onPick={(id) => {
-            setW({ parentGoalId: id, parentProjectId: null });
-            setParentGoalPickerOpen(false);
-          }}
-          onClose={() => setParentGoalPickerOpen(false)}
-        />
-      )}
+      {/* ---- File-into pickers (Project / Goal / parent-Project / parent-Goal) ---- */}
+      <TriagePickers
+        open={{
+          project: projectPickerOpen,
+          goal: goalPickerOpen,
+          parentProject: parentProjectPickerOpen,
+          parentGoal: parentGoalPickerOpen,
+        }}
+        itemPresent={!!item}
+        shortText={shortText}
+        projects={projects ?? []}
+        goals={goals ?? []}
+        working={working}
+        effectiveProjectId={effectiveProjectId}
+        lensChip={lensChip}
+        setW={setW}
+        setProjectOpen={setProjectPickerOpen}
+        setGoalOpen={setGoalPickerOpen}
+        setParentProjectOpen={setParentProjectPickerOpen}
+        setParentGoalOpen={setParentGoalPickerOpen}
+      />
     </div>
   );
 }
@@ -768,6 +709,123 @@ function TriageComplete({
         <Button variant="secondary" onClick={() => onNavigate("/app/inbox")}>Back to inbox</Button>
       </div>
     </div>
+  );
+}
+
+type PickerProject = { id: string; name: string; goal?: { name: string } | null };
+type PickerGoal = { id: string; name: string };
+
+/** The four file-into pickers (Project / Goal / parent-Project / parent-Goal). */
+function TriagePickers({
+  open,
+  itemPresent,
+  shortText,
+  projects,
+  goals,
+  working,
+  effectiveProjectId,
+  lensChip,
+  setW,
+  setProjectOpen,
+  setGoalOpen,
+  setParentProjectOpen,
+  setParentGoalOpen,
+}: {
+  open: { project: boolean; goal: boolean; parentProject: boolean; parentGoal: boolean };
+  itemPresent: boolean;
+  shortText: string;
+  projects: PickerProject[];
+  goals: PickerGoal[];
+  working: Working | null;
+  effectiveProjectId: string | null;
+  lensChip: { label: string; color: string | null } | null;
+  setW: (patch: Partial<Working>) => void;
+  setProjectOpen: (open: boolean) => void;
+  setGoalOpen: (open: boolean) => void;
+  setParentProjectOpen: (open: boolean) => void;
+  setParentGoalOpen: (open: boolean) => void;
+}) {
+  return (
+    <>
+      {open.project && itemPresent && (
+        <PickerSheet
+          title={`File “${shortText}” in`}
+          items={projects.map((p) => ({
+            id: p.id,
+            label: p.name,
+            chip: lensChip,
+            meta: p.goal?.name ?? null,
+            current: p.id === effectiveProjectId,
+          }))}
+          onPick={(id) => {
+            setW({ projectId: id });
+            setProjectOpen(false);
+          }}
+          onClose={() => setProjectOpen(false)}
+        />
+      )}
+
+      {open.goal && itemPresent && (
+        <PickerSheet
+          title={`Choose goal for “${shortText}”`}
+          items={goals.map((g) => ({
+            id: g.id,
+            label: g.name,
+            chip: lensChip,
+            current: g.id === working?.projectGoalId,
+          }))}
+          emptyMessage="No goals yet — make one on the Goals page."
+          onPick={(id) => {
+            setW({ projectGoalId: id });
+            setGoalOpen(false);
+          }}
+          onClose={() => setGoalOpen(false)}
+        />
+      )}
+
+      {open.parentProject && itemPresent && (
+        <PickerSheet
+          title="File note under a project"
+          items={projects.map((p) => ({
+            id: p.id,
+            label: p.name,
+            chip: lensChip,
+            meta: p.goal?.name ?? null,
+            current: p.id === working?.parentProjectId,
+          }))}
+          action={{
+            label: "…or file under a goal",
+            onPick: () => {
+              setParentProjectOpen(false);
+              setParentGoalOpen(true);
+            },
+          }}
+          onPick={(id) => {
+            setW({ parentProjectId: id, parentGoalId: null });
+            setParentProjectOpen(false);
+          }}
+          onClose={() => setParentProjectOpen(false)}
+        />
+      )}
+
+      {open.parentGoal && itemPresent && (
+        <PickerSheet
+          title="File note under a goal"
+          items={goals.map((g) => ({
+            id: g.id,
+            label: g.name,
+            chip: lensChip,
+            current: g.id === working?.parentGoalId,
+          }))}
+          emptyMessage="No goals yet — make one on the Goals page."
+          onPick={(id) => {
+            setW({ parentGoalId: id, parentProjectId: null });
+            setParentGoalOpen(false);
+          }}
+          onClose={() => setParentGoalOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
