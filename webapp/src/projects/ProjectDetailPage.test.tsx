@@ -199,7 +199,7 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
     expect(screen.getByTestId("task-detail")).toBeInTheDocument();
   });
 
-  it("done tasks still show an Edit button (read-only on the destination)", () => {
+  it("done tasks open their review-only task detail without an Edit button", () => {
     projectData.current = makeProject({
       tasks: [
         { id: "t1", description: "Email Sarah", isDone: true, status: "TODAY", priority: "NORMAL", size: "M" },
@@ -207,8 +207,11 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
     });
     renderAt("/app/projects/p1");
 
-    // Done tasks show in the Done group; the Edit affordance is still there.
-    expect(screen.getByRole("button", { name: /edit email sarah/i })).toBeInTheDocument();
+    // Completion freezes task fields, so the project row has no misleading
+    // Edit affordance. The row itself remains the route to task review.
+    expect(screen.queryByRole("button", { name: /edit email sarah/i })).toBeNull();
+    fireEvent.click(screen.getByText("Email Sarah"));
+    expect(screen.getByTestId("task-detail")).toBeInTheDocument();
   });
 });
 

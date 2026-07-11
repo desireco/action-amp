@@ -666,7 +666,8 @@ export function ProjectDetailPage() {
                             })
                           }
                         >
-                          {!task.isDone && (
+                          {!task.isDone ? (
+                            <>
                             <div className="aa-project__horizon">
                               {task.status !== "TODAY" && (
                                 <Button
@@ -715,26 +716,23 @@ export function ProjectDetailPage() {
                                 Move
                               </Button>
                             </div>
-                          )}
-                          {/* Edit — opens the task's own page (title + notes
-                              editable there today; full-field editing is
-                              pending on the destination). Surfaced on every row
-                              including done ones, so a completed task is still
-                              reachable. */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="aa-project__row-ctrl"
-                            onClick={() =>
-                              navigate(`/app/tasks/${task.permalink ?? task.id}`, {
-                                state: { returnTo },
-                              })
-                            }
-                            aria-label={`Edit ${task.description}`}
-                          >
-                            Edit
-                          </Button>
-                          {movingTaskId === task.id && (
+                            {/* Edit takes open tasks to their full task editor.
+                                Done tasks are review-only; tapping their row
+                                opens the actual task detail instead. */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="aa-project__row-ctrl"
+                              onClick={() =>
+                                navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+                                  state: { returnTo },
+                                })
+                              }
+                              aria-label={`Edit ${task.description}`}
+                            >
+                              Edit
+                            </Button>
+                            {movingTaskId === task.id && (
                             <div className="aa-project__move-picker">
                               <span className="aa-project__move-hint">
                                 Move to:
@@ -779,7 +777,9 @@ export function ProjectDetailPage() {
                                 </p>
                               )}
                             </div>
-                          )}
+                            )}
+                            </>
+                          ) : null}
                         </TaskRow>
                       ))}
                     </ul>

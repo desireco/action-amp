@@ -382,7 +382,10 @@
   flex-wrap: wrap;
   gap: var(--aa-space-sm);
 }
-.aa-project__row > :first-child {
+/* TaskRow starts with the status dot. Target its main region explicitly: the
+   old `:first-child` selector made the dot flex-grow and crushed titles on
+   narrow project pages. */
+.aa-project__row > .aa-task-row__main {
   flex: 1;
   min-width: 0;
 }
@@ -429,6 +432,44 @@
 
 .aa-project__empty {
   margin-top: var(--aa-space-lg);
+}
+
+/* Mobile project detail is a touch workspace, not a compressed desktop row.
+   Keep the task title on its own generous line; put management controls in a
+   clear second line, where every target remains reachable without hover. */
+@media (max-width: 720px) {
+  .aa-project {
+    gap: var(--aa-space-xl);
+  }
+
+  .aa-project__momentum {
+    justify-content: space-between;
+    gap: var(--aa-space-sm);
+  }
+
+  .aa-project__next-row {
+    align-items: flex-start;
+  }
+
+  .aa-project__next-skip {
+    margin-left: 0;
+  }
+
+  .aa-project__row {
+    align-items: flex-start;
+    gap: var(--aa-space-sm);
+  }
+
+  .aa-project__row > .aa-task-row__actions {
+    width: 100%;
+    padding-left: 20px;
+    justify-content: flex-start;
+    opacity: 1;
+  }
+
+  .aa-project__row-ctrl {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
