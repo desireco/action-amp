@@ -6,8 +6,8 @@
 }
 
 .aa-logbook > .aa-grouped {
-  gap: var(--aa-space-lg);
-  padding: var(--aa-space-lg) var(--aa-space-xl);
+  gap: var(--aa-space-md);
+  padding: var(--aa-space-md) var(--aa-space-xl);
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-xl);
@@ -15,8 +15,12 @@
 }
 
 .aa-logbook > .aa-grouped .aa-grouped__group + .aa-grouped__group {
-  padding-top: var(--aa-space-lg);
+  padding-top: var(--aa-space-md);
   border-top: 1px solid var(--aa-border);
+}
+
+.aa-logbook > .aa-grouped .aa-grouped__heading {
+  margin-bottom: var(--aa-space-xs);
 }
 
 .aa-logbook-empty-mark {
@@ -33,8 +37,8 @@
 .aa-logbook-row {
   display: flex;
   align-items: flex-start;
-  gap: var(--aa-space-md);
-  padding: var(--aa-space-md) 0;
+  gap: var(--aa-space-sm);
+  padding: 10px 0;
   border-bottom: 1px solid var(--aa-border);
 }
 
@@ -46,35 +50,41 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: var(--aa-radius-full);
   background: var(--aa-teal);
   color: var(--aa-surface);
   flex-shrink: 0;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 .aa-logbook-row__main {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+  flex-wrap: wrap;
 }
 
 .aa-logbook-row__title {
-  display: block;
+  display: inline;
   font-size: var(--aa-text-base);
-  color: var(--aa-text-3);
-  text-decoration: line-through;
+  color: var(--aa-text-2);
   line-height: var(--aa-leading-snug);
+  text-decoration: none;
 }
 
 /* Outcome — the "what happened" note under a completed task (task-fields §G).
    Slightly smaller than the title, body-color so it reads as the substance of
    the row, not chrome. Empty outcomes render nothing (no stub). */
 .aa-logbook-row__outcome {
-  margin-top: 4px;
+  flex-basis: 100%;
+  margin-top: -2px;
+  padding-left: 1px;
   font-size: var(--aa-text-sm);
-  color: var(--aa-text-2);
+  color: var(--aa-text-3);
 }
 
 .aa-logbook-row__outcome .aa-md {
@@ -87,7 +97,7 @@
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  margin-top: 5px;
+  margin-top: 0;
 }
 
 /* Archived-note rows: muted check (not the teal "done" mark) + restore action. */
@@ -108,14 +118,44 @@
   font-weight: var(--aa-weight-semibold);
   cursor: pointer;
   transition:
+    opacity var(--aa-dur-fast) var(--aa-ease-out),
     background var(--aa-dur-fast) var(--aa-ease-out),
     border-color var(--aa-dur-fast) var(--aa-ease-out),
     color var(--aa-dur-fast) var(--aa-ease-out);
 }
 
+@media (hover: hover) {
+  .aa-logbook-row__restore {
+    opacity: 0;
+  }
+
+  .aa-logbook-row:hover .aa-logbook-row__restore,
+  .aa-logbook-row:focus-within .aa-logbook-row__restore {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 620px) {
   .aa-logbook > .aa-grouped {
-    padding: var(--aa-space-lg);
+    padding: var(--aa-space-sm) var(--aa-space-md);
+  }
+
+  .aa-logbook-row {
+    padding: var(--aa-space-sm) 0;
+  }
+
+  .aa-logbook-row__check {
+    margin-top: 2px;
+  }
+
+  .aa-logbook-row__main {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .aa-logbook-row__meta {
+    margin-top: 0;
   }
 }
 
