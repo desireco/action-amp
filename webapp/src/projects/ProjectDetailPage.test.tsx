@@ -118,6 +118,10 @@ function makeProjectMultiToday(overrides: Record<string, unknown> = {}) {
   });
 }
 
+function openTaskActions(description: string) {
+  fireEvent.click(screen.getByText(description));
+}
+
 describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
   // Uses the multi-Today fixture so the Next-step hero does not lift the row
   // out of the list (the hero renders only for exactly one Today task).
@@ -129,6 +133,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
     renderAt("/app/projects/p1");
 
     // The Move button is present on the open task row.
+    openTaskActions("Email Sarah");
     const moveBtn = screen.getByRole("button", { name: /move email sarah to another project/i });
     fireEvent.click(moveBtn);
 
@@ -143,6 +148,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
     lensProjectsData.current = [{ id: "p2", name: "Other project" }];
     renderAt("/app/projects/p1");
 
+    openTaskActions("Email Sarah");
     fireEvent.click(screen.getByRole("button", { name: /move email sarah to another project/i }));
     fireEvent.click(screen.getByText("Other project"));
 
@@ -156,6 +162,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
     lensProjectsData.current = [{ id: "p2", name: "Other project" }];
     renderAt("/app/projects/p1");
 
+    openTaskActions("Email Sarah");
     fireEvent.click(screen.getByRole("button", { name: /move email sarah to another project/i }));
     fireEvent.click(screen.getByRole("button", { name: /^standalone$/i }));
 
@@ -172,6 +179,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
     ];
     renderAt("/app/projects/p1");
 
+    openTaskActions("Email Sarah");
     fireEvent.click(screen.getByRole("button", { name: /move email sarah to another project/i }));
     // Only "Other project" appears as an option button, not the current project.
     const movePicker = screen.getByText("Other project").parentElement!;
@@ -183,6 +191,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
     lensProjectsData.current = [{ id: "p1", name: "Ship product v2" }]; // only the current project
     renderAt("/app/projects/p1");
 
+    openTaskActions("Email Sarah");
     fireEvent.click(screen.getByRole("button", { name: /move email sarah to another project/i }));
     expect(screen.getByText(/no other projects in this lens/i)).toBeInTheDocument();
   });
@@ -193,6 +202,7 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
     projectData.current = makeProjectMultiToday();
     renderAt("/app/projects/p1");
 
+    openTaskActions("Email Sarah");
     const editBtn = screen.getByRole("button", { name: /edit email sarah/i });
     fireEvent.click(editBtn);
 
@@ -212,6 +222,45 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
     expect(screen.queryByRole("button", { name: /edit email sarah/i })).toBeNull();
     fireEvent.click(screen.getByText("Email Sarah"));
     expect(screen.getByTestId("task-detail")).toBeInTheDocument();
+  });
+
+  it("opens and closes open-task actions instead of opening task detail", () => {
+    projectData.current = makeProjectMultiToday();
+    renderAt("/app/projects/p1");
+
+    const row = screen.getByText("Email Sarah").closest(".aa-project__row")!;
+    const trigger = row.querySelector(".aa-task-row__main")!;
+    openTaskActions("Email Sarah");
+
+    expect(row).toHaveClass("aa-project__row--active");
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(screen.queryByTestId("task-detail")).toBeNull();
+
+    openTaskActions("Email Sarah");
+    expect(row).not.toHaveClass("aa-project__row--active");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("keeps a done row settled by hiding its old size and due metadata", () => {
+    projectData.current = makeProject({
+      tasks: [
+        {
+          id: "t1",
+          description: "Email Sarah",
+          isDone: true,
+          status: "TODAY",
+          priority: "NORMAL",
+          size: "M",
+          dueDate: new Date("2026-07-09"),
+        },
+      ],
+    });
+    renderAt("/app/projects/p1");
+
+    expect(screen.getByRole("heading", { name: /^done/i })).toBeInTheDocument();
+    expect(screen.getByText("Email Sarah")).toBeInTheDocument();
+    expect(screen.queryByText("M")).toBeNull();
+    expect(screen.queryByText(/overdue/i)).toBeNull();
   });
 });
 

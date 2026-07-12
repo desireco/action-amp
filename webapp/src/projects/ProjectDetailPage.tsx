@@ -111,6 +111,7 @@ export function ProjectDetailPage() {
   // expands at a time. We fetch the project's siblings (same Lens) and offer
   // them + an unlink-to-standalone option.
   const [movingTaskId, setMovingTaskId] = useState<string | null>(null);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
 
   // Header overflow menu (Edit/Complete/Add are surfaced; Delete is destructive
@@ -645,8 +646,12 @@ export function ProjectDetailPage() {
                 ) {
                   return null;
                 }
+                const isDoneGroup = group.key === "DONE";
                 return (
-                  <section key={group.key} className="aa-grouped__group">
+                  <section
+                    key={group.key}
+                    className={`aa-grouped__group${isDoneGroup ? " aa-project__done-group" : ""}`}
+                  >
                     <h3 className="aa-grouped__heading">
                       {group.label}
                       <span className="aa-grouped__count">
@@ -657,14 +662,31 @@ export function ProjectDetailPage() {
                       {group.items.map((task) => (
                         <TaskRow
                           key={task.id}
-                          className="aa-grouped__item aa-project__row"
-                          task={task}
-                          muted={task.status === "SOMEDAY" || task.isDone}
-                          onOpen={() =>
-                            navigate(`/app/tasks/${task.permalink ?? task.id}`, {
-                              state: { returnTo },
-                            })
+                          className={`aa-grouped__item aa-project__row${activeTaskId === task.id ? " aa-project__row--active" : ""}`}
+                          // Completion settles a task. Its prior estimate and
+                          // deadline no longer help someone scan this project;
+                          // leaving the size chip behind made mobile done rows
+                          // look like unfinished work.
+                          task={
+                            task.isDone
+                              ? { ...task, size: undefined, dueDate: null }
+                              : task
                           }
+                          muted={task.status === "SOMEDAY" || task.isDone}
+                          expanded={
+                            task.isDone ? undefined : activeTaskId === task.id
+                          }
+                          onOpen={() => {
+                            if (task.isDone) {
+                              navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+                                state: { returnTo },
+                              });
+                              return;
+                            }
+                            setActiveTaskId((current) =>
+                              current === task.id ? null : task.id,
+                            );
+                          }}
                         >
                           {!task.isDone ? (
                             <>

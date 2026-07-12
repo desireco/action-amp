@@ -407,6 +407,10 @@
 .aa-project__row-ctrl[aria-expanded="true"] {
   opacity: 1;
 }
+.aa-project__row--active .aa-project__row-ctrl,
+.aa-project__row--active .aa-task-row__actions {
+  opacity: 1;
+}
 
 /* ---- Move-task picker (§C "move to project" affordance) ----
    Wraps below the row (flex-wrap + width:100% on the row). Reuses the
@@ -432,6 +436,23 @@
 
 .aa-project__empty {
   margin-top: var(--aa-space-lg);
+}
+
+/* ---- Done — settled, deliberately quiet ----
+   Completed rows stay one clean line: check, struck title, then nothing to
+   resolve. Estimates and deadlines belong to planning, so they are removed in
+   render instead of leaving a lone chip underneath the title on mobile. */
+.aa-project__done-group {
+  margin-top: var(--aa-space-md);
+  padding-top: var(--aa-space-lg);
+  border-top: 1px solid var(--aa-border);
+}
+.aa-project__done-group .aa-task-row {
+  padding-top: var(--aa-space-sm);
+  padding-bottom: var(--aa-space-sm);
+}
+.aa-project__done-group .aa-task-row__title {
+  text-decoration-thickness: 1px;
 }
 
 /* Mobile project detail is a touch workspace, not a compressed desktop row.
@@ -460,15 +481,31 @@
     gap: var(--aa-space-sm);
   }
 
+  /* Touch rows are drawers: title tap reveals actions. Avoid reserving a blank
+     second line while drawer is closed. */
   .aa-project__row > .aa-task-row__actions {
+    display: none;
     width: 100%;
     padding-left: 20px;
     justify-content: flex-start;
+  }
+
+  .aa-project__row--active > .aa-task-row__actions {
+    display: flex;
     opacity: 1;
   }
 
   .aa-project__row-ctrl {
+    opacity: 0;
+  }
+
+  .aa-project__row--active .aa-project__row-ctrl {
     opacity: 1;
+  }
+
+  .aa-project__done-group {
+    margin-top: var(--aa-space-sm);
+    padding-top: var(--aa-space-md);
   }
 }
 

@@ -73,7 +73,37 @@ describe("UpcomingPage overdue recovery", () => {
     renderPage();
 
     expect(screen.getByRole("button", { name: "Unschedule 1 overdue" })).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Past task"));
     expect(screen.getByRole("button", { name: "Someday" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+  });
+
+  it("opens and closes a task's action drawer instead of navigating on row click", () => {
+    queryState.current = {
+      data: [
+        {
+          id: "task-1",
+          permalink: "future-task",
+          description: "Future task",
+          status: "UPCOMING",
+          isDone: false,
+          dueDate: "2099-07-11T12:00:00.000Z",
+        },
+      ],
+      isLoading: false,
+    };
+
+    renderPage();
+    const row = screen.getByText("Future task").closest(".aa-task-row")!;
+    const trigger = row.querySelector(".aa-task-row__main")!;
+
+    fireEvent.click(screen.getByText("Future task"));
+    expect(row).toHaveClass("aa-upcoming__row--active");
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+
+    fireEvent.click(screen.getByText("Future task"));
+    expect(row).not.toHaveClass("aa-upcoming__row--active");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
   });
 
   it("does not show recovery controls without overdue tasks", () => {

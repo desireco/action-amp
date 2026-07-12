@@ -37,6 +37,7 @@ export function UpcomingPage() {
   const queryClient = useQueryClient();
   const { promoteToToday, moveToSomeday } = useTaskListActions();
   const [isUnscheduling, setIsUnscheduling] = useState(false);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const { data: tasks, isLoading } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "UPCOMING", isDone: false } : undefined,
@@ -176,16 +177,21 @@ export function UpcomingPage() {
               as="div"
               task={task}
               variant="list"
+              className={`aa-upcoming__row${activeTaskId === task.id ? " aa-upcoming__row--active" : ""}`}
+              expanded={activeTaskId === task.id}
               onOpen={() =>
-                navigate(`/app/tasks/${task.permalink ?? task.id}`, {
-                  state: { returnTo },
-                })
+                setActiveTaskId((current) =>
+                  current === task.id ? null : task.id,
+                )
               }
             >
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => promoteToToday(task)}
+                onClick={() => {
+                  setActiveTaskId(null);
+                  void promoteToToday(task);
+                }}
                 title="Promote to Today"
               >
                 Today
@@ -193,10 +199,24 @@ export function UpcomingPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => moveToSomeday(task)}
+                onClick={() => {
+                  setActiveTaskId(null);
+                  void moveToSomeday(task);
+                }}
                 title="Move to Someday"
               >
                 Someday
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+                    state: { returnTo },
+                  })
+                }
+              >
+                Edit
               </Button>
             </TaskRow>
           )}

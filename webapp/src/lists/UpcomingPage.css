@@ -75,6 +75,13 @@
   gap: var(--aa-space-sm);
 }
 
+/* A row is a small action drawer: desktop hover/focus reveals it, while a
+   touch tap keeps it open until an action is chosen. This avoids treating a
+   planning row as an accidental trip into the editor. */
+.aa-upcoming__row--active .aa-task-row__actions {
+  opacity: 1;
+}
+
 /* The Overdue bucket is a contradiction on a forward-looking list — surface
    it in rose so it can't be missed, the way amber surfaces "Over capacity" on
    Today. Reserved error/overdue hue per tokens.css. */
@@ -135,5 +142,16 @@
   }
   .aa-upcoming__list .aa-task-row__actions .aa-btn {
     width: auto;
+  }
+
+  /* Touch has no hover state. Keep controls hidden until task title is tapped,
+     then hold them open through the active row class above. */
+  .aa-upcoming__list .aa-task-row__actions {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .aa-upcoming__list .aa-upcoming__row--active .aa-task-row__actions {
+    opacity: 1;
+    pointer-events: auto;
   }
 }

@@ -27,8 +27,10 @@ interface TaskRowProps {
   variant?: "plain" | "surface" | "list";
   /** Lighter visual weight (for Someday / Done) */
   muted?: boolean;
-  /** Open the task detail on row click */
+  /** Run the row's primary click action. */
   onOpen?: (task: TaskRowTask) => void;
+  /** Whether a row-click action menu is currently expanded. */
+  expanded?: boolean;
   className?: string;
   /** Right-aligned action slot — promote, Edit, Move, etc. Hover-revealed. */
   children?: ReactNode;
@@ -92,6 +94,7 @@ export function TaskRow({
   variant = "plain",
   muted = false,
   onOpen,
+  expanded = false,
   className = "",
   children,
 }: TaskRowProps) {
@@ -143,7 +146,11 @@ export function TaskRow({
           {done ? "✓" : ""}
         </span>
       )}
-      <div className={mainClass} {...clickableProps(mainClickable, openTask)}>
+      <div
+        className={mainClass}
+        {...clickableProps(mainClickable, openTask)}
+        aria-expanded={mainClickable ? expanded : undefined}
+      >
         <span className="aa-task-row__title">{task.description}</span>
         {hasMeta && (
           <div className="aa-task-row__meta">
