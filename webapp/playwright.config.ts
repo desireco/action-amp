@@ -11,11 +11,15 @@ import { existsSync, readFileSync } from "node:fs";
  *
  * ── Isolated (worktree) ────────────────────────────────────────────────
  * Activated when E2E_WORKTREE=1 (set via `npm run test:e2e:isolated`, which
- * loads .e2e.env). Playwright's `webServer` spawns scripts/e2e-run.mjs, which
- * migrates + starts `wasp start` and forwards SIGTERM/SIGINT so teardown
- * kills the whole process tree (the thing bare `wasp start` doesn't do).
- * Client on :4100, server :3101, DB actionamp_e2e — runs side-by-side with
- * dev without port or `.wasp/` collision. See scripts/e2e-setup.sh.
+ * loads .e2e.env). Runs against a git worktree on :4100/:3101 with its own
+ * DB (actionamp_e2e) — side-by-side with dev without port or .wasp/ collision.
+ * See scripts/e2e-setup.sh.
+ *
+ * `webServer` is CI-ONLY. Locally it kills the server mid-run (Playwright
+ * bug #11907, the same one Wasp's own configs work around): with
+ * reuseExistingServer:true, Playwright still tears the process down during the
+ * run. So locally you start `wasp start` in the worktree manually and
+ * globalSetup polls it. In CI, webServer owns the full lifecycle.
  *
  * NOTE: client is on :4000 in dev (vite.config.ts, overridable via VITE_PORT),
  * NOT Wasp's default :3000.
@@ -47,16 +51,15 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  // Isolated mode only: Playwright owns the server lifecycle. In dev-coupled
-  // mode this block is omitted and globalSetup polls the hand-started server.
-  ...(ISOLATED
+  // CI-only: Playwright owns the server lifecycle via scripts/e2e-run.mjs
+  // (spawn + SIGTERM teardown). Locally, start `wasp start` manually — see
+  // the header comment for why (Playwright bug #11907).
+  ...(ISOLATED && process.env.CI
     ? {
         webServer: {
           command: "node scripts/e2e-run.mjs",
           url: BASE,
-          reuseExistingServer: !process.env.CI,
-          // Cold first compile in a fresh worktree can take 3+ min (Wasp
-          // compiles .wasp/out/ + bundles). Subsequent runs are faster.
+          reuseExistingServer: false,
           timeout: 240_000,
           gracefulShutdown: { signal: "SIGTERM", timeout: 1_000 },
         },

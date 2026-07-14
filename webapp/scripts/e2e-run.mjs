@@ -3,12 +3,17 @@
  * Lifecycle-managed `wasp start` for isolated e2e.
  *
  * Spawned by Playwright's `webServer` (playwright.config.ts, isolated mode).
- * Migrates the e2e DB, starts Wasp, and forwards SIGTERM/SIGINT so Playwright's
- * teardown actually kills the whole process tree — the thing bare `wasp start`
- * doesn't do (it orphans the Vite client + Node API server, leaving ports bound).
+ * Starts Wasp and forwards SIGTERM/SIGINT so Playwright's teardown actually
+ * kills the whole process tree — the thing bare `wasp start` doesn't do (it
+ * orphans the Vite client + Node API server, leaving ports bound).
  *
  * This mirrors what Wasp's own `@wasp.sh/wasp-app-runner` ChildProcessManager
  * does, but without that tool's forced Docker Postgres / clobbered DATABASE_URL.
+ *
+ * Does NOT migrate — scripts/e2e-setup.sh handles the initial migration, and
+ * running `wasp db migrate-dev` here would recompile the whole project on every
+ * test run (slow + churns the file watcher). If the schema changes, re-run
+ * e2e-setup.sh.
  *
  * Env (from .env.server in the worktree + .e2e.env, loaded by playwright.config):
  *   DATABASE_URL         → e2e DB (actionamp_e2e)
@@ -16,15 +21,10 @@
  *   WASP_WEB_CLIENT_URL  → http://localhost:4100
  *   VITE_PORT            → 4100 (client, read by vite.config.ts)
  */
-import { spawn, execSync } from "node:child_process";
+import { spawn } from "node:child_process";
 
 const cwd = process.cwd();
 
-// 1. Sync e2e DB schema (applies pending migrations; no-op if current).
-// `--name auto` avoids Prisma's interactive prompt for a migration name.
-execSync("wasp db migrate-dev --name auto", { stdio: "inherit", cwd });
-
-// 2. Start wasp with signal management.
 const child = spawn("wasp", ["start"], {
   stdio: "inherit",
   cwd,
