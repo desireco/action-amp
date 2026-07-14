@@ -15,7 +15,10 @@ import path from "node:path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WEBAPP = path.resolve(__dirname, "..");
-const DATABASE_URL = "postgresql://jake@localhost:5432/actionamp_dev";
+// Env-driven so the isolated e2e worktree seeds its own DB (actionamp_e2e)
+// while dev runs keep using actionamp_dev. Set E2E_DATABASE_URL in .e2e.env.
+const DATABASE_URL =
+  process.env.E2E_DATABASE_URL ?? "postgresql://jake@localhost:5432/actionamp_dev";
 
 export const TEST_PASS = "Testpass123!";
 

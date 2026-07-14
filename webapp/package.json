@@ -12,6 +12,7 @@
     "analyze": "fallow",
     "email:dev": "email dev --dir src/email/previews",
     "test:e2e": "playwright test",
+    "test:e2e:isolated": "E2E_WORKTREE=1 playwright test",
     "test:e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
