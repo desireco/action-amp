@@ -16,9 +16,14 @@ if (!stripeSecretKey) {
   );
 }
 
-export const stripe = new Stripe(stripeSecretKey ?? "", {
-  // No explicit apiVersion — use the account's pinned version (stable).
-});
+// `new Stripe("")` throws ("Neither apiKey nor config.authenticator provided")
+// in Stripe v22+, so only construct when the key is present. Export a typed
+// stub when absent — the warning above already flags the missing key.
+export const stripe = stripeSecretKey
+  ? new Stripe(stripeSecretKey, {
+      // No explicit apiVersion — use the account's pinned version (stable).
+    })
+  : (null as unknown as Stripe);
 
 /** Price IDs from env — these are public identifiers, not secrets. */
 const priceIds = {

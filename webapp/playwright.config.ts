@@ -55,7 +55,9 @@ export default defineConfig({
           command: "node scripts/e2e-run.mjs",
           url: BASE,
           reuseExistingServer: !process.env.CI,
-          timeout: 120_000,
+          // Cold first compile in a fresh worktree can take 3+ min (Wasp
+          // compiles .wasp/out/ + bundles). Subsequent runs are faster.
+          timeout: 240_000,
           gracefulShutdown: { signal: "SIGTERM", timeout: 1_000 },
         },
       }
