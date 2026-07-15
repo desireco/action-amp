@@ -60,7 +60,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Deployment / hosting | `docs/research/deployment-research.md` |
 | What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/backlog/` |
 | Duet pull / decompose contract | `docs/queue.md` (round-robin + `parent:`/`children:` rules; steering is via the GH Projects board, not a frontmatter flag) |
-| Running a second `wasp start` / parallel dev / distributing work across agents | `docs/DEV-WORKTREES.md` + `webapp/scripts/dev-worktree.sh <name>` (worktree + own DB + own ports; `--list` / `--remove`) |
+| Running a second `wasp start` / parallel dev / distributing work across agents | `docs/DEV-WORKTREES.md` + `webapp/scripts/dev-worktree.sh <name>` (worktree + own DB + own ports; `--list` / `--remove`). From inside one: `worktree-teardown.sh` (remove + cd back) and `worktree-sync.sh` (rebase onto main; `--push`/`--abort`/`--continue`) |
 | Capturing a new idea fast ("maybe" bucket) | `scripts/duet-capture.sh "<idea>"` (the intake floor) |
 | Refining a draft toward ready (enrich + decompose) | `duet-refine` skill (Discover sub-mode; operates only on `status: draft`) |
 | Historical context (why past decisions landed) | `docs/ROADMAP.md` §Shipped + `docs/reviews/` (sign-off writeups) |

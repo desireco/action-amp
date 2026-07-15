@@ -38,6 +38,30 @@ Create takes ~2–3 min cold (`wasp install` + compile + migrate + SDK build).
 Teardown is seconds. `--list` shows a `STATE` column: `run` if the worktree's
 server port is currently bound (i.e. its `wasp start` is up), else `-`.
 
+### From inside a worktree: teardown + sync
+
+The companion scripts run **from inside a worktree** (no name needed — they
+introspect the current tree) and work regardless of which creator made it:
+
+```bash
+bash webapp/scripts/worktree-teardown.sh          # remove the worktree you're in (dir + branch + DB), then it tells you how to cd back to main
+bash webapp/scripts/worktree-teardown.sh --force  # no confirmation prompt
+bash webapp/scripts/worktree-sync.sh              # fetch + fast-forward main + rebase this branch onto it (default)
+bash webapp/scripts/worktree-sync.sh --push       # …then push the branch to origin
+bash webapp/scripts/worktree-sync.sh --autostash  # …stash dirty changes around the rebase (e.g. churned lockfiles)
+bash webapp/scripts/worktree-sync.sh --continue   # after you've resolved rebase conflicts
+bash webapp/scripts/worktree-sync.sh --abort      # give up on the in-progress rebase
+```
+
+**Teardown** confirms first (shows branch/DB/dirty files), never drops
+reserved DBs (`actionamp_dev`, `actionamp_e2e`), never deletes `main`/`master`.
+A child process can't change your shell's cwd, so it prints the `cd` back to
+main; to get the cd for free, `source` it instead of `bash`-ing it.
+
+**Sync** rebases onto main by default (linear history). On conflict it **stops
+and lets you resolve** — never auto-aborts, never force-resets. Resolve in your
+editor, then `--continue` (or `git rebase --continue`), optionally `--push`.
+
 ## The contract the script enforces
 
 - **Port assignment is dynamic, not a fixed pool.** It scans every existing
@@ -73,12 +97,14 @@ with the main checkout.
 cd ../action-amp-<name>/webapp && VITE_PORT=<client_port> wasp start
 ```
 
-**Inspection uses the worktree's own port**, not 4000. The dev autologin route
+**Inspection uses the worktree's own client port**, not 4000. Browser-facing
+routes (the UI, including `/login`) are served by the Vite client, so use the
+**client** port — never the API/server port. The dev autologin route
 (see `AGENTS.md` §"Agent browser access") works on any instance — just swap
 the port:
 
 ```
-http://localhost:<server_port>/login?devEmail=zeljko%40dakic.com
+http://localhost:<client_port>/login?devEmail=zeljko%40dakic.com
 ```
 
 **Cleanup is part of the task.** When the work is done or the worktree is no
