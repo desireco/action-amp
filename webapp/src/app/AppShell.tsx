@@ -498,17 +498,17 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
         <div className="aa-mobile-dock__row">
-          <Link className={`aa-mobile-dock__item ${isActive("/app") ? "active" : ""}`} to="/app" aria-label="Next">
-            <StarIcon />
-            <span>Next</span>
-          </Link>
+          {/* Mobile dock: "Do" is the Next/What-Now chooser (the home screen).
+              "Today" leaves the dock (its slot is covered by a Today link on
+              the Next page, plus the Today↔Upcoming cross-link). Desktop keeps
+              the full Next/Today sidebar split. */}
           <Link className={`aa-mobile-dock__item ${isActive("/app/inbox") ? "active" : ""}`} to="/app/inbox" aria-label="Inbox">
             <InboxIcon />
             <span>Inbox</span>
           </Link>
-          <Link className={`aa-mobile-dock__item ${isActive("/app/today") ? "active" : ""}`} to="/app/today" aria-label="Today">
-            <ClockIcon />
-            <span>Today</span>
+          <Link className={`aa-mobile-dock__item ${isActive("/app") ? "active" : ""}`} to="/app" aria-label="Do">
+            <StarIcon />
+            <span>Do</span>
           </Link>
           <Link className={`aa-mobile-dock__item ${expandedFocus === "plan" ? "active" : ""}`} to="/app/projects" aria-label="Plan">
             <ProjectsIcon />

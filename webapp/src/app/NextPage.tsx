@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import {
   getTopTask,
@@ -93,6 +93,9 @@ export function NextPage() {
   if (!task) {
     return (
       <div className="aa-wn">
+        <Link to="/app/today" className="aa-wn-today-link">
+          See Today →
+        </Link>
         <div className="aa-wn-eyebrow">What now</div>
         <h1 className="aa-wn-empty">
           {selectedTaskToken
@@ -140,6 +143,9 @@ export function NextPage() {
 
   return (
     <>
+      <Link to="/app/today" className="aa-wn-today-link">
+        See Today →
+      </Link>
       <NextCard
         task={{
           title: task.description,
