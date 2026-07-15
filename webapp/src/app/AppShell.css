@@ -326,6 +326,10 @@
     top: max(var(--aa-space-sm), env(safe-area-inset-top));
     right: max(var(--aa-space-md), env(safe-area-inset-right));
   }
+  /* Keyboard shortcuts have no surface on touch — hide the cheatsheet trigger. */
+  .aa-app-shortcuts-btn {
+    display: none;
+  }
   .aa-app-mobile-avatar {
     display: flex;
     align-items: center;

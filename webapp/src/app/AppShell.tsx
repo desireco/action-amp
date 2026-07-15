@@ -532,6 +532,28 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <div className="aa-app-utility-cluster" aria-label="Shell utilities">
+        {/* Shortcuts (?) — keyboard-only; hidden on touch (see AppShell.css).
+            Desktop utility cluster order (right→left): shortcuts, feedback,
+            avatar/settings. The feedback + shortcuts buttons precede the avatar
+            in the DOM so they sit to its left when the cluster is pinned right. */}
+        <button
+          type="button"
+          className="aa-app-utility-btn aa-app-shortcuts-btn"
+          onClick={() => setCheatsheetOpen(true)}
+          title="Shortcuts (?)"
+          aria-label="Shortcuts"
+        >
+          ?
+        </button>
+        <button
+          type="button"
+          className="aa-app-utility-btn"
+          onClick={() => setFeedbackOpen(true)}
+          title="Leave feedback"
+          aria-label="Leave feedback"
+        >
+          <LoudspeakerIcon />
+        </button>
         {/* Mobile-only avatar → Settings. The sidebar footer that hosts the
             desktop avatar/settings link is display:none at ≤768px, and the
             bottom dock has no settings entry, so without this there is no path
@@ -545,24 +567,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           {initials || <UserIcon />}
         </Link>
-        <button
-          type="button"
-          className="aa-app-utility-btn"
-          onClick={() => setFeedbackOpen(true)}
-          title="Leave feedback"
-          aria-label="Leave feedback"
-        >
-          <LoudspeakerIcon />
-        </button>
-        <button
-          type="button"
-          className="aa-app-utility-btn"
-          onClick={() => setCheatsheetOpen(true)}
-          title="Shortcuts (?)"
-          aria-label="Shortcuts"
-        >
-          ?
-        </button>
       </div>
 
       <button
