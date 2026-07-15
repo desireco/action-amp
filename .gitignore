@@ -13,7 +13,6 @@ webapp/build/
 
 # os
 .DS_Store
-.pi/
 skills-lock.json
 .zcode/
 
