@@ -13,8 +13,12 @@ import { signupNewUser } from "./helpers";
 test("FREE user clicking the Work lens shows the ProGate, not Work content", async ({ page }) => {
   await signupNewUser(page);
 
-  // The Work lens tab carries a subtle "Pro" affordance.
-  await expect(page.getByRole("tab", { name: /work/i })).toBeVisible({ timeout: 10_000 });
+  // Wait for app data to resolve before clicking: the lens tabs render from a
+  // static fallback before the lenses query lands, and the gate logic
+  // (selectLens → lenses.find) only fires once real lenses are in hand. The Me
+  // tab's today-count badge (e.g. "Me 3") only appears once appData loads, so
+  // it's the readiness signal that the gate can actually evaluate.
+  await expect(page.getByRole("tab", { name: /^me\b.*\d/i })).toBeVisible({ timeout: 10_000 });
 
   // Clicking Work does NOT switch to it — the main area shows the ProGate panel.
   await page.getByRole("tab", { name: /work/i }).click();
