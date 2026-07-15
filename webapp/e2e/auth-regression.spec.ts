@@ -16,8 +16,10 @@ import { signupNewUser } from "./helpers";
  * the network to prove capture never fires an unauthenticated action POST.
  */
 
-// The landing page h1 — the gate redirects logged-out /app visitors here.
-const LANDING_H1 = /easiest way/i;
+// Locally, `/` redirects to `/login` (see RedirectToMarketing.tsx — the
+// marketing apex is only used in prod). The gate bounces logged-out /app
+// visitors to `/`, which lands on the login page. Assert that heading.
+const LANDING_H1 = /welcome back/i;
 
 /** True if a request hits the create-inbox-item action endpoint. */
 function isCreateInboxItem(url: string): boolean {

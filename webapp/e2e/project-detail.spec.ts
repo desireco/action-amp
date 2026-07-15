@@ -26,21 +26,22 @@ test("opening a project shows its tasks; add + horizon move work", async ({ page
   await expect(page.getByRole("heading", { name: projectName })).toBeVisible({ timeout: 10_000 });
 
   // Add a task inline. It lands on Upcoming (the default) and is visible.
-  await page.getByRole("button", { name: /^add task$/i }).click();
+  // The add affordance is "Add step" (toggles the inline composer).
+  await page.getByRole("button", { name: /add step/i }).click();
   await page.getByPlaceholder(/what needs doing/i).fill("Record episode 1");
   await page.getByRole("button", { name: /^create$/i }).click();
   await expect(page.getByText("Record episode 1")).toBeVisible({ timeout: 10_000 });
 
   // The row has no checkbox — but it does let you promote it onto Today.
-  // The horizon-move "Today" button is a SIBLING of TaskRow inside the row's
-  // <li class="aa-project__row"> (TaskRow itself is a pure title+chips row;
-  // completion moved to focus mode in e1ce93d). Scope the search to that <li>.
+  // The horizon controls live in a sibling div; the "Today" button promotes
+  // an Upcoming task onto Today.
   const row = page.locator(".aa-project__row").filter({ hasText: "Record episode 1" });
   await expect(row.locator(".aa-task-row__circle")).toHaveCount(0);
   await row.getByRole("button", { name: /^today$/i }).click();
 
-  // Promoted: the row is now under the Today heading, not Upcoming. The group
-  // heading renders as "Today<N>" (label + count span), so match by prefix.
-  await expect(page.locator("section", { has: page.getByRole("heading", { name: /^today/i }) })
-    .locator(".aa-task-row").filter({ hasText: "Record episode 1" })).toBeVisible({ timeout: 10_000 });
+  // Promoted onto Today. With exactly one Today task, the project surfaces it
+  // as the NEXT STEP hero (a "Start" pointer into focus mode) rather than a
+  // plain horizon row — so assert the hero's Start action is visible.
+  await expect(page.getByText("Record episode 1")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("button", { name: /^start$/i })).toBeVisible({ timeout: 10_000 });
 });

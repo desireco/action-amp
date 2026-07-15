@@ -1,20 +1,19 @@
 import { test, expect } from "@playwright/test";
+import { createVerifiedUser, TEST_PASS } from "./helpers";
 
 /**
  * Login e2e — the one test that honestly answers "is login working".
  *
- * Uses the seeded dev user (set its password via scripts/reset-user.mjs).
- * Covers the exact failure class that unit/component tests CAN'T see: the
- * client POSTing to a down/broken API server.
+ * Creates a fresh verified user directly in the DB (no email round-trip), then
+ * exercises the real login form. Covers the exact failure class that
+ * unit/component tests CAN'T see: the client POSTing to a down/broken API
+ * server, a session actually round-tripping.
  *
  * Requires `wasp start` serving on :4000 (see playwright.config.ts).
  */
 
-// ponytail: default to a throwaway test account so e2e never depends on a
-// real person's email. Create it via scripts/create-verified-user.mjs.
-const E2E_EMAIL = process.env.E2E_EMAIL ?? "test@example.com";
-const E2E_PASSWORD = process.env.E2E_PASSWORD ?? "Testpass123!";
-
+// Wasp's LoginForm renders labels as plain <div>s (not <label> elements), so
+// getByLabel() can't associate them — target inputs by type instead.
 // Wasp's LoginForm renders labels as plain <div>s (not <label> elements), so
 // getByLabel() can't associate them — target inputs by type instead.
 const emailInput = (page: import("@playwright/test").Page) => page.locator('input[type="email"]');
@@ -32,8 +31,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("login with known credentials reaches /app", async ({ page }) => {
-  await emailInput(page).fill(E2E_EMAIL);
-  await passwordInput(page).fill(E2E_PASSWORD);
+  const email = createVerifiedUser();
+  await emailInput(page).fill(email);
+  await passwordInput(page).fill(TEST_PASS);
   await page.getByRole("button", { name: /log in/i }).click();
 
   // onAuthSucceededRedirectTo: "/app"
@@ -41,7 +41,8 @@ test("login with known credentials reaches /app", async ({ page }) => {
 });
 
 test("wrong password stays on the auth flow", async ({ page }) => {
-  await emailInput(page).fill(E2E_EMAIL);
+  const email = createVerifiedUser();
+  await emailInput(page).fill(email);
   await passwordInput(page).fill("definitely-not-the-password");
   await page.getByRole("button", { name: /log in/i }).click();
 

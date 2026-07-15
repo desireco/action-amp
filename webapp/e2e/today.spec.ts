@@ -26,42 +26,43 @@ test("F12: Today is capped at 5 — a 6th item is flagged as over-capacity", asy
 
   await page.goto("/app/today");
 
-  // F12: the cap is surfaced. The heading reads "N of 5 committed" (proving
-  // the cap is 5 and it's exceeded), an "Over capacity" banner appears, and
-  // the overflow tasks live in a separate "Beyond the cap" section.
+  // F12: the cap is surfaced. The heading reads "6 of 5 committed" (cap is 5
+  // and exceeded), an amber "Over capacity" banner appears, and the overflow
+  // tasks render in a list labelled "Beyond the cap" (aria-label on the <ul>,
+  // not a visible heading — the banner already states the count).
   await expect(page.getByRole("heading", { name: /of 5 committed/i })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText(/over capacity/i)).toBeVisible();
-  await expect(page.getByRole("heading", { name: /beyond the cap/i })).toBeVisible();
+  await expect(page.locator("[aria-label^='Beyond the cap']")).toBeVisible();
 });
 
-test("'Not today' demotes to Upcoming; the bench shows it; 'Today' promotes back", async ({ page }) => {
+test("'Move to Upcoming' demotes; Upcoming's 'Today' promotes back", async ({ page }) => {
   await signupNewUser(page);
   // Clear the seeded starter task so "Swap me around" is the only Today row
-  // (deterministic per-row "Not today" click).
+  // (deterministic per-row demote click).
   await completeTopTask(page);
 
   // Capture + triage one item to Today.
   await triageOneItem(page, "Swap me around", { type: "task", when: "today" });
 
-  // On Today, demote it via "Not today".
+  // On Today, demote it via "Move to Upcoming" → confirm dialog.
   await page.goto("/app/today");
   await expect(page.getByText("Swap me around")).toBeVisible({ timeout: 10_000 });
-  await page.getByRole("button", { name: "Not today" }).click();
+  await page.getByRole("button", { name: /move to upcoming/i }).first().click();
+  await page.getByRole("dialog").getByRole("button", { name: /move to upcoming/i }).click();
 
   // It leaves the Today list...
   await expect(page.getByText("Swap me around")).toHaveCount(0, { timeout: 10_000 });
 
-  // ...and appears on the Upcoming bench.
-  await page.getByRole("button", { name: /see upcoming/i }).click();
+  // ...and appears on the Upcoming page (its own route now, not an inline bench).
+  await page.goto("/app/upcoming");
   await expect(page.getByText("Swap me around")).toBeVisible({ timeout: 10_000 });
 
-  // Promote it back: it leaves the bench...
-  // (Scope to the upcoming section — the sidebar "Today" nav link also matches.)
-  const upcomingSection = page.locator(".aa-today__upcoming");
-  await upcomingSection.getByRole("button", { name: "Today" }).click();
+  // Promote it back via Upcoming's per-row "Today" button.
+  await page.locator(".aa-task-row").filter({ hasText: "Swap me around" })
+    .getByRole("button", { name: /^today$/i }).click();
   await expect(page.getByText("Swap me around")).toHaveCount(0, { timeout: 10_000 });
 
   // ...and returns to the Today list.
-  await page.getByRole("button", { name: /back to today/i }).click();
+  await page.goto("/app/today");
   await expect(page.getByText("Swap me around")).toBeVisible({ timeout: 10_000 });
 });

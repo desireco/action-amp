@@ -27,11 +27,18 @@ async function setupOneItem(page: Page, text: string) {
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 }
 
-/** Advance step 1 (lens → Continue) to land on the type chooser. */
-async function continueFromLens(page: Page) {
-  // The lens radio renders first; Continue is the primary button.
-  await page.getByRole("radio").first().waitFor({ state: "visible", timeout: 10_000 });
-  await page.getByRole("button", { name: /^continue$/i }).click();
+/** On step 1 (Classify), select a type, then Continue to step 2 (Spec).
+ * The lens radios + type chooser render TOGETHER on step 1; selecting the
+ * type before Continue is what advances with that type chosen. When the item
+ * carries a resolved project destination (e.g. #general), the lens radios are
+ * replaced by a destination banner — so wait for the type chooser directly. */
+async function pickTypeAndContinue(page: Page, typeLabel: string) {
+  await page.locator(".aa-triage-types button").first().waitFor({ state: "visible", timeout: 10_000 });
+  await page
+    .locator(".aa-triage-types button")
+    .filter({ hasText: new RegExp(`^${typeLabel}`) })
+    .click();
+  await page.locator(".aa-triage-step__continue").click();
 }
 
 test("a #project capture token preselects the project link (type stays Task)", async ({ page }) => {
@@ -39,27 +46,50 @@ test("a #project capture token preselects the project link (type stays Task)", a
   // (TRIAGE.md §7.5 — link, don't create). Triage keeps the type as Task and
   // pre-fills the Project spec row from the parsed hint, so completing files
   // the task under the matched project with no manual selection.
-  // ensureOnboarded seeds a "General" project per lens; #general resolves to
-  // it. Capture strips the token, so we capture "…#general" but the stored
-  // item text is the token-free remainder.
+  //
+  // We create a uniquely-named Me-lens project first: ensureOnboarded seeds a
+  // "General" project per lens, so "#general" is ambiguous (resolves to Work's
+  // General, which a FREE user can't file into → 402). A unique name pins the
+  // match unambiguously to one project.
+  const PROJECT = "Briefs";
   await signupNewUser(page);
+  await page.goto("/app/projects");
+  await page.getByRole("button", { name: "New project" }).click();
+  const nameInput = page.getByPlaceholder(/ship product|project name/i);
+  await nameInput.waitFor({ state: "visible", timeout: 5_000 });
+  await nameInput.fill(PROJECT);
+  await nameInput.press("Enter");
+  await page.getByText(PROJECT).waitFor({ state: "visible", timeout: 10_000 });
+
+  // Capture with the project hint. Navigate home first so the app shell is in
+  // a known state for openCapture (which waits on the Next nav link). The
+  // #token opens an autocomplete; the first Enter accepts the suggestion
+  // (closing the menu), the second submits.
+  await page.goto("/app");
   const textarea = await openCapture(page);
-  await textarea.fill("Draft the brief #general");
-  await textarea.press("Enter");
-  await page.keyboard.press("Escape");
+  await textarea.fill(`Draft the brief #${PROJECT.toLowerCase()}`);
+  await textarea.press("Enter"); // accept the suggestion
+  await textarea.press("Enter"); // submit the capture
+  await page.keyboard.press("Escape"); // close the popover
   await page.goto("/app/inbox/review");
   await expect(page.getByText("Draft the brief")).toBeVisible({ timeout: 10_000 });
 
-  await continueFromLens(page);
-  await page.getByRole("button", { name: /^task\b/i }).click();
-  await page.getByRole("button", { name: /^continue$/i }).click();
-  // No Project row change — rely on the parsed-#general preselection.
-  await page.getByRole("button", { name: /^complete$/i }).click();
+  // Task is the default type; the project hint pre-fills the destination. Just
+  // continue through and commit — no manual project selection needed. Wait for
+  // the triage action response before asserting (the exit animation fires
+  // before the server resolves — same race commitTriage handles).
+  await pickTypeAndContinue(page, "Task");
+  const triageRes = page
+    .waitForResponse((r) => r.url().includes("/operations/triage-inbox-item"), { timeout: 10_000 })
+    .catch(() => null);
+  await page.getByRole("button", { name: /^ready$|^complete$/i }).click();
+  const res = await triageRes;
+  if (res) expect(res.ok()).toBeTruthy();
   await expect(page.getByText("Draft the brief")).toHaveCount(0, { timeout: 10_000 });
 
-  // Filed under the General project — visible on its detail page.
+  // Filed under the Briefs project — visible on its detail page.
   await page.goto("/app/projects");
-  await page.getByText("General").click();
+  await page.getByText(PROJECT).click();
   await expect(page.getByText("Draft the brief")).toBeVisible({ timeout: 10_000 });
 });
 
@@ -71,25 +101,24 @@ test("becoming a Project uses the item text as the name", async ({ page }) => {
   await page.goto("/app/projects");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
   await page.goto("/app/inbox");
-  await expect(page.getByText(/nothing left to decide/i)).toBeVisible();
+  await expect(page.getByText(/inbox clear/i)).toBeVisible();
 });
 
 test("becoming a Resource (Note) requires a parent before Complete", async ({ page }) => {
   await setupOneItem(page, "Competitor pricing PDF");
 
-  await continueFromLens(page);
-  await page.getByRole("button", { name: /^note\b/i }).click();
-  await page.getByRole("button", { name: /^continue$/i }).click();
+  await pickTypeAndContinue(page, "Note");
 
-  // On the spec step, Complete is disabled until a parent is chosen — the
-  // parent row opens a bottom-sheet picker.
-  const complete = page.getByRole("button", { name: /^complete$/i });
-  await expect(complete).toBeDisabled();
+  // On the spec step, commit is disabled until a parent is chosen. The parent
+  // chip (.aa-prop-chip--parent) shows "Pick parent…" when unset; clicking it
+  // opens the "File under…" bottom sheet (ResourcePickerSheet).
+  const commit = page.getByRole("button", { name: /^ready$|^complete$/i });
+  await expect(commit).toBeDisabled();
 
-  await page.locator(".aa-spec-key", { hasText: /^file under$/i }).locator("..").click();
-  await page.locator(".aa-triage__picker-item").filter({ hasText: "General" }).first().click();
-  await expect(complete).toBeEnabled();
-  await complete.click();
+  await page.locator(".aa-prop-chip--parent").click();
+  await page.locator(".aa-picker-sheet__item").filter({ hasText: "General" }).first().click();
+  await expect(commit).toBeEnabled();
+  await commit.click();
 
   await expect(page.getByText("Competitor pricing PDF")).toHaveCount(0, { timeout: 10_000 });
 });
@@ -106,7 +135,7 @@ test("Archive keeps the note — it leaves the inbox but surfaces in the Logbook
   await expect(page.getByText(text)).toHaveCount(0);
   // …and it leaves the inbox.
   await page.goto("/app/inbox");
-  await expect(page.getByText(/nothing left to decide/i)).toBeVisible();
+  await expect(page.getByText(/inbox clear/i)).toBeVisible();
 
   // But it's NOT lost — it lands in the Logbook's archived section, with a
   // Restore action (lossless: declining a note never deletes it).

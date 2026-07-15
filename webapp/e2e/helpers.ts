@@ -142,39 +142,45 @@ export async function triageOneItem(
   await page.goto("/app/inbox/review");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 
-  // Step 1 — confirm the active lens (pre-selected). Continue is the primary
-  // button; the lens radio has role=radio.
-  await page.getByRole("radio").first().waitFor({ state: "visible", timeout: 10_000 });
-  await page.getByRole("button", { name: /^continue$/i }).click();
-
-  // Step 2 — pick the type. The type buttons' visible label is the outcome
-  // name (Task/Project/Note/Archive); "resource" surfaces as "Note".
+  // Step 1 (Classify) — lens radios (pre-selected) + the type chooser render
+  // TOGETHER. Select the type BEFORE Continue: Continue advances to step 2
+  // (spec), which removes the type buttons. The lens is already chosen (Me is
+  // the FREE default and checked), so we only touch the type.
   const TYPE_LABEL: Record<typeof dest.type, string> = {
     task: "Task",
     project: "Project",
     resource: "Note",
     archive: "Archive",
   };
-  await page.getByRole("button", { name: new RegExp(`^${TYPE_LABEL[dest.type]}`, "i") }).click();
-  // The step-2 commit button reads "Continue" (or "Archive" for the archive
-  // type). Scope to the primary button so the click can't hit the type pill.
-  // Archive has no step 3 — this commit IS the triage action, so wait for the
-  // server response here. Other types advance to the spec step.
+  await page.getByRole("radio").first().waitFor({ state: "visible", timeout: 10_000 });
+  await page
+    .locator(".aa-triage-types button")
+    .filter({ hasText: new RegExp(`^${TYPE_LABEL[dest.type]}`) })
+    .click();
+
+  // Archive commits straight from step 1 — the Continue button IS the triage
+  // action (it relabels to "Archive", but the locator matches either). Wait
+  // for the server response so the caller sees the item gone.
   if (dest.type === "archive") {
     await commitTriage(page, page.locator(".aa-triage-step__continue"), text);
     return;
   }
   await page.locator(".aa-triage-step__continue").click();
 
-  // Step 3 — set When (tasks only), then Complete. The spec row is pre-filled
-  // with the default (Upcoming), so we only touch it when an explicit choice
-  // is requested. "upcoming" matches the default and needs no click.
+  // Step 2 (Spec) — set When (tasks only), then commit. When is a property
+  // chip (.aa-prop-chip--when) defaulting to Upcoming; only change it when an
+  // explicit choice is requested. "upcoming" matches the default, no click.
+  // The commit button reads "Ready" (was "Complete" before the chip-editor
+  // refactor); accept either so this survives either label.
   if (dest.type === "task" && dest.when && dest.when !== "upcoming") {
-    const whenRow = page.locator(".aa-spec-key", { hasText: /^when$/i }).locator("..");
-    await whenRow.click();
-    await page.getByRole("button", { name: dest.when === "today" ? /^today$/i : /^someday$/i }).click();
+    const whenChip = page.locator(".aa-prop-chip--when");
+    await whenChip.waitFor({ state: "visible", timeout: 10_000 });
+    await whenChip.click();
+    await page
+      .getByRole("button", dest.when === "today" ? { name: /^today$/i } : { name: /^someday$/i })
+      .click();
   }
-  await commitTriage(page, page.getByRole("button", { name: /^complete$/i }), text);
+  await commitTriage(page, page.getByRole("button", { name: /^ready$|^complete$/i }), text);
 }
 
 /**
