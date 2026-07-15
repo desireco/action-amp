@@ -7,37 +7,14 @@ test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true
 
 /**
  * Next — FEATURES.md §3 F8/F10: the home screen is a chooser, not a list.
- * Given the moment, surface ONE Today task and hide the rest.
  *
- * F8: one task shown, with Start + Not now actions.
- * F10: transparent — a one-line "why this?" under the suggestion.
+ * Keep: the three cross-layer state-machine transitions — (1) an Upcoming task
+ * with no due date surfaces on home (bench is in the candidate pool, per
+ * WORKFLOW.md §5.2), (2) Start → focus in one action (F13 Now/Next state), (3)
+ * complete-in-focus removes the task from Next (F16). Dropped: empty-state,
+ * "a Today task appears", "Now persists", Pause, "Not now" — trivial variants
+ * or component-testable, and the core transitions cover the state machine.
  */
-
-test("empty state: no Today tasks shows a calm prompt, not an empty list", async ({ page }) => {
-  await signupNewUser(page);
-  // A fresh user has a seeded "Try it" starter task (in the Me lens, the FREE
-  // default). Clear it so we can observe the genuine empty state.
-  await completeTopTask(page);
-  // Home is /app — now empty of Today tasks.
-  await page.goto("/app");
-  // F8: the home should communicate calm/empty, not a blank list. Wording may
-  // evolve; assert the page rendered its shell (the heading is present).
-  await expect(page.getByRole("heading", { name: /what now/i }).or(page.getByText(/nothing|clear|all done|nothing on/i))).toBeVisible({ timeout: 10_000 });
-});
-
-test("a Today task appears as the single focus item on home", async ({ page }) => {
-  await signupNewUser(page);
-  // Clear the seeded starter task (now visible on home under the Me default) so
-  // the triaged task below is the single focus item, not the seed.
-  await completeTopTask(page);
-
-  // Capture + triage one item to Today.
-  await triageOneItem(page, "The one thing", { type: "task", when: "today" });
-
-  // Go home — the triaged task should be THE focus item.
-  await page.goto("/app");
-  await expect(page.getByText("The one thing")).toBeVisible({ timeout: 10_000 });
-});
 
 test("an Upcoming task (no due date) also surfaces on home", async ({ page }) => {
   await signupNewUser(page);
@@ -73,46 +50,6 @@ test("'Start' enters focus mode in one action (F13)", async ({ page }) => {
   await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
 });
 
-test("'Now' persists across navigation away and back", async ({ page }) => {
-  await signupNewUser(page);
-  // Clear the seeded starter task (now visible on home under the Me default) so
-  // the triaged task below is the single focus item, not the seed.
-  await completeTopTask(page);
-
-  await triageOneItem(page, "Persists task", { type: "task", when: "today" });
-  await page.goto("/app");
-
-  await page.getByRole("button", { name: /^start$/i }).click();
-  await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
-
-  // Navigate away to the inbox, then back home — the started task must still
-  // be #1 in the Now state (startedAt persisted).
-  await page.goto("/app/inbox");
-  await page.goto("/app");
-  await expect(page.getByText("Persists task")).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/Now ·/)).toBeVisible({ timeout: 5_000 });
-});
-
-test("'Pause' returns a started task to the Next state (same task stays #1)", async ({ page }) => {
-  await signupNewUser(page);
-  // Clear the seeded starter task (now visible on home under the Me default) so
-  // the triaged task below is the single focus item, not the seed.
-  await completeTopTask(page);
-
-  await triageOneItem(page, "Pausable task", { type: "task", when: "today" });
-  await page.goto("/app");
-
-  await page.getByRole("button", { name: /^start$/i }).click();
-  await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
-  await page.goto("/app");
-  await expect(page.getByText(/Now ·/)).toBeVisible({ timeout: 5_000 });
-
-  await page.getByRole("button", { name: /pause/i }).click();
-  // Back to Next; same task remains the focus candidate.
-  await expect(page.getByText(/Next ·/)).toBeVisible({ timeout: 5_000 });
-  await expect(page.getByText("Pausable task")).toBeVisible();
-});
-
 test("completing a task in focus mode removes it from Next (F16)", async ({ page }) => {
   await signupNewUser(page);
   // Clear the seeded starter task (now visible on home under the Me default) so
@@ -132,25 +69,4 @@ test("completing a task in focus mode removes it from Next (F16)", async ({ page
 
   // The task leaves the focus view and Next (no checkbox to tick on the card).
   await expect(page.getByText("Finish this now")).toHaveCount(0, { timeout: 10_000 });
-});
-
-test("'Not now' defers the focused task (it leaves Next)", async ({ page }) => {
-  await signupNewUser(page);
-  // Clear the seeded starter task (now visible on home under the Me default) so
-  // the triaged task below is the single focus item, not the seed.
-  await completeTopTask(page);
-
-  await triageOneItem(page, "Not now task", { type: "task", when: "today" });
-  await page.goto("/app");
-
-  await expect(page.getByText("Not now task")).toBeVisible({ timeout: 10_000 });
-  await page.getByRole("button", { name: /not now/i }).click();
-
-  // F11: "not now" pushes it out of the focus queue. It may open a snooze
-  // sheet — accept the default snooze if one appears.
-  const snoozeButton = page.getByRole("button", { name: /snooze|1h|tomorrow|confirm/i }).first();
-  if (await snoozeButton.isVisible({ timeout: 2_000 }).catch(() => false)) {
-    await snoozeButton.click();
-  }
-  await expect(page.getByText("Not now task")).toHaveCount(0, { timeout: 10_000 });
 });

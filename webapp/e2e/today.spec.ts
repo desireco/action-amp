@@ -5,28 +5,15 @@ import { signupNewUser, triageOneItem, completeTopTask } from "./helpers";
  * Today — FEATURES.md §4 F12: Today is capped (default 5). To add a 6th, you
  * must bump one out. This forces the "what actually matters today" decision.
  *
- * Encodes the spec. The cap is the feature, not a limit.
+ * Keep: the cap (the feature, not a limit) + the Not-today → bench → promote
+ * horizon flow. Dropped: empty-state and "triaged item appears" (trivial, and
+ * the latter is covered by triage.spec.ts).
  *
  * ponytail: avoid leading "Today" in task text — parseCapture treats it as a
  * date keyword and strips it, breaking text matches.
  */
 
 const TASK = (n: number) => `Focus task ${n}`;
-
-test("empty Today shows a calm empty state", async ({ page }) => {
-  await signupNewUser(page);
-  // Clear the seeded starter task (visible on Today under the Me default).
-  await completeTopTask(page);
-  await page.goto("/app/today");
-  await expect(page.getByText(/nothing|clear|empty|no .*today/i)).toBeVisible({ timeout: 10_000 });
-});
-
-test("triaged-to-Today items appear in the Today list", async ({ page }) => {
-  await signupNewUser(page);
-  await triageOneItem(page, TASK(1), { type: "task", when: "today" });
-  await page.goto("/app/today");
-  await expect(page.getByText(TASK(1))).toBeVisible({ timeout: 10_000 });
-});
 
 test("F12: Today is capped at 5 — a 6th item is flagged as over-capacity", async ({ page }) => {
   await signupNewUser(page);
