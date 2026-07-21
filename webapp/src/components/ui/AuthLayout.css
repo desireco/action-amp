@@ -86,6 +86,15 @@
   text-decoration: underline;
 }
 
+/* Build identifier — quietest line in the footer, last thing on the page.
+   Surfaces what commit is deployed so support/debug reports are actionable. */
+.aa-auth-version {
+  margin-top: var(--aa-space-xs);
+  font-size: var(--aa-text-xs);
+  font-family: var(--aa-font-mono);
+  opacity: 0.6;
+}
+
 /* ============================================================
    Wasp form overrides (scoped to our card)
    ============================================================ */

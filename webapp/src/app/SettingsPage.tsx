@@ -158,6 +158,16 @@ export function SettingsPage() {
         </Field>
       </section>
 
+      <section className="aa-settings-section">
+        <div className="aa-settings-section-head">
+          <h2 className="aa-settings-sh">About</h2>
+          <p className="aa-settings-note">
+            Build identifier — useful when reporting an issue.
+          </p>
+        </div>
+        <Field label="Version" value={__APP_VERSION__} />
+      </section>
+
       {confirmLogout && (
         <ConfirmDialog
           title="Log out?"
