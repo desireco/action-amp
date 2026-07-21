@@ -49,8 +49,8 @@ export function LoginPage() {
             <Link to="/request-password-reset">Reset it</Link>
           </span>
           <span>
-            See our <Link to="/terms">Terms</Link> and{" "}
-            <Link to="/privacy">Privacy Policy</Link>.
+            See our <a href="https://actionamp.com/terms">Terms</a> and{" "}
+            <a href="https://actionamp.com/privacy">Privacy Policy</a>.
           </span>
         </>
       }

@@ -44,10 +44,10 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <span className="aa-brand-name aa-brand-name-sm">ActionAmp</span>
           </Link>
           <div className="aa-pub-footer-links">
-            <Link to="/about">About</Link>
-            <Link to="/privacy">Privacy</Link>
-            <Link to="/terms">Terms</Link>
-            <Link to="/roadmap">Roadmap</Link>
+            <a href="https://actionamp.com/about">About</a>
+            <a href="https://actionamp.com/privacy">Privacy</a>
+            <a href="https://actionamp.com/terms">Terms</a>
+            <a href="https://actionamp.com/roadmap">Roadmap</a>
             <Link to="/founding-100">Founding 100</Link>
           </div>
           <div className="aa-pub-copy">© 2026 ActionAmp</div>

@@ -150,7 +150,7 @@ function StillConfirming() {
         <p className="aa-founding-spots">
           Your Founding Member status will be there within a few minutes. If it
           isn't within an hour,{" "}
-          <Link to="/about">reach out</Link> and we'll sort it.
+          <a href="https://actionamp.com/about">reach out</a> and we'll sort it.
         </p>
       </div>
     </div>

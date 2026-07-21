@@ -13,8 +13,8 @@ export function SignupPage() {
         <>
           <span>
             By creating an account, you agree to our{" "}
-            <Link to="/terms">Terms</Link> and{" "}
-            <Link to="/privacy">Privacy Policy</Link>.
+            <a href="https://actionamp.com/terms">Terms</a> and{" "}
+            <a href="https://actionamp.com/privacy">Privacy Policy</a>.
           </span>
           <span>
             Already have an account? <Link to="/login">Log in</Link>
