@@ -33,7 +33,14 @@ import {
  * `.webmanifest` extension is missing from its MIME table, so Chrome Android
  * sees `text/plain`, refuses to parse the manifest as a manifest, and won't
  * build a true WebAPK — which silently breaks long-press app-icon shortcuts.
- * Override just for this one path.
+ *
+ * Implementation note: Wasp's express.static handler runs *after* this
+ * middleware and overwrites Content-Type from the file extension. We can't
+ * set it inline (static clobbers it) and we can't use res.on("finish")
+ * (headers are already flushed by then). So we monkey-patch res.setHeader
+ * on this one request: the first Content-Type write from static is
+ * overridden with the manifest MIME, then the patch is removed so
+ * subsequent setHeader calls behave normally.
  */
 function setManifestContentType(
   req: Request,
@@ -41,7 +48,16 @@ function setManifestContentType(
   next: NextFunction,
 ): void {
   if (req.path === "/manifest.webmanifest") {
-    res.setHeader("Content-Type", "application/manifest+json; charset=utf-8");
+    const originalSetHeader = res.setHeader.bind(res);
+    res.setHeader = ((name: string, value: string | number | readonly string[]) => {
+      if (name.toLowerCase() === "content-type") {
+        // Override once, then restore the original so a later setHeader
+        // (if any) isn't affected.
+        res.setHeader = originalSetHeader;
+        return originalSetHeader(name, "application/manifest+json; charset=utf-8");
+      }
+      return originalSetHeader(name, value);
+    }) as typeof res.setHeader;
   }
   next();
 }
