@@ -116,6 +116,11 @@ middleware · email sending. See the Advanced Features docs.
 
 - Run `wasp compile` (in `webapp/`) to check if the app is valid.
 - **Do not** run `tsc` directly for validation — Wasp generates types during compile.
+- If npm on the machine has a global `allow-scripts` policy, use
+  `./scripts/wasp-safe.sh <wasp-command>` (for example,
+  `./scripts/wasp-safe.sh compile`). It isolates Wasp from the user-level npm
+  config without changing that policy globally. The `npm run deploy` script
+  already uses this wrapper.
 - For local browser QA of authenticated pages, use the dev autologin URL:
   `http://localhost:4000/login?devEmail=zeljko%40dakic.com`. Swap the
   `devEmail` value to inspect as any local email identity. This is implemented
