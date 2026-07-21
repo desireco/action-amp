@@ -16,7 +16,7 @@
     "test:e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
-    "nodemailer": "^7.0.13",
+    "nodemailer": "^9.0.3",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-email": "^6.6.5",
