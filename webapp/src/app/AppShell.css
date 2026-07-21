@@ -584,3 +584,56 @@
   gap: 2px;
   padding-left: var(--aa-space-sm);
 }
+
+/* ============================================================
+   Update banner — surfaces when a new service worker is waiting
+   ============================================================
+   Token-driven so dark mode comes for free. Sits at the top of
+   .aa-app-mainwrap, above page content, non-blocking (no scroll lock).
+   Mirrors the calm teal-soft recipe used by TodayPage's overflow banner. */
+.aa-app-update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  margin: var(--aa-space-md) var(--aa-space-md) 0;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  background: var(--aa-teal-soft);
+  border: 1px solid var(--aa-teal-soft-strong);
+  border-radius: var(--aa-radius-sm);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text);
+  animation: aa-update-banner-in var(--aa-dur-base) var(--aa-ease-out-quart);
+}
+
+.aa-app-update-banner__copy {
+  flex: 1;
+}
+
+.aa-app-update-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+}
+
+@keyframes aa-update-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .aa-app-update-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--aa-space-sm);
+  }
+  .aa-app-update-banner__actions {
+    justify-content: flex-end;
+  }
+}

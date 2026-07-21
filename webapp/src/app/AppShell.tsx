@@ -7,9 +7,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
 import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcuts";
 import { FeedbackDialog } from "./FeedbackDialog";
-import { CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate, LensChip, LensPopover, Kbd } from "../components/ui";
+import { Button, CloseButton, CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate, LensChip, LensPopover, Kbd } from "../components/ui";
 import { useEntitled } from "../billing/useEntitled";
-import { registerServiceWorker } from "../notifications/client";
+import { registerServiceWorker, useServiceWorkerUpdate } from "../notifications/client";
 import {
   BrandMark,
   LensSwitch,
@@ -289,6 +289,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileLensOpen, setMobileLensOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [lensPopoverOpen, setLensPopoverOpen] = useState(false);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+
+  // New SW waiting → offer a one-click refresh into the next build.
+  const { updateAvailable, applyUpdate } = useServiceWorkerUpdate();
+  const showUpdateBanner = updateAvailable && !updateDismissed;
 
   // Manifest shortcut and notification action: /app?capture=1 opens the same
   // universal capture surface as ⌘K, then removes the one-shot URL flag.
@@ -472,6 +477,19 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* ============================ MAIN ============================ */}
       <div className="aa-app-mainwrap">
+        {showUpdateBanner && (
+          <div className="aa-app-update-banner" role="status" aria-live="polite">
+            <span className="aa-app-update-banner__copy">
+              A new version of ActionAmp is available.
+            </span>
+            <span className="aa-app-update-banner__actions">
+              <Button size="sm" variant="secondary" onClick={applyUpdate}>
+                Refresh
+              </Button>
+              <CloseButton onClose={() => setUpdateDismissed(true)} label="Dismiss update banner" />
+            </span>
+          </div>
+        )}
         {/* ---- Page content ---- */}
         <main className="aa-app-main">
           <LensContext.Provider value={activeLensValue}>

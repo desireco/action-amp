@@ -4,9 +4,20 @@
  * normal network experience; this worker owns push delivery and notification
  * clicks only. Keeping cache out avoids stale/private task data on a shared
  * device while still making the app installable and actionable.
+ *
+ * Update flow: a newly-fetched worker installs but does NOT activate on its
+ * own. The page detects it waiting (useServiceWorkerUpdate hook) and prompts
+ * the user; on user click the page posts {type: "SKIP_WAITING"}, the worker
+ * activates, and controllerchange triggers a reload into the new version.
  */
-self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("install", () => {
+  // Deliberately not calling self.skipWaiting() here — see header comment.
+});
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
 
 // A fetch handler is intentionally present (Chrome requires one for PWA
 // installability), but leaves all requests to the browser/network untouched.
