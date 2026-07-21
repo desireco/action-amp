@@ -1,4 +1,4 @@
-import { action, api, app, page, query, route } from "@wasp.sh/spec";
+import { action, api, app, job, page, query, route } from "@wasp.sh/spec";
 import { App } from "./src/App" with { type: "ref" };
 import { NextPage } from "./src/app/NextPage" with { type: "ref" };
 import { FocusPage } from "./src/app/FocusPage" with { type: "ref" };
@@ -31,6 +31,8 @@ import { ensureOnboarded, setPreferredName, completeOnboarding } from "./src/onb
 import { createLens, updateLens, deleteLens } from "./src/lenses/operations" with { type: "ref" };
 import { getLenses } from "./src/lenses/operations" with { type: "ref" };
 import { getAppData, updateProfile } from "./src/app/operations" with { type: "ref" };
+import { getNotificationPreferences, saveDailyReminder, savePushSubscription } from "./src/notifications/operations" with { type: "ref" };
+import { sendDailyTodayReminder } from "./src/notifications/dailyReminderJob" with { type: "ref" };
 import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status, founding100StatusHandler } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
@@ -205,6 +207,9 @@ export default app({
     query(getLogbook, { entities: ["Task", "Project", "Goal", "InboxItem"], auth: true }),
     query(getAppData, { entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(updateProfile, { entities: ["User"], auth: true }),
+    query(getNotificationPreferences, { entities: ["User"], auth: true }),
+    action(savePushSubscription, { entities: ["PushSubscription"], auth: true }),
+    action(saveDailyReminder, { entities: ["User"], auth: true }),
     action(submitFeedback, { entities: ["User", "Feedback"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),
     action(createLens, { entities: ["Lens"], auth: true }),
@@ -230,6 +235,13 @@ export default app({
       entities: ["User"],
       auth: false,
       middlewareConfigFn: publicStatusMiddleware,
+    }),
+    job(sendDailyTodayReminder, {
+      executor: "PgBoss",
+      entities: ["User", "PushSubscription", "Task"],
+      // Per-minute so every valid local HH:mm choice can fire. The worker
+      // sends at most once per user/calendar day (lastDailyReminderAt guard).
+      schedule: { cron: "* * * * *" },
     }),
   ],
 });

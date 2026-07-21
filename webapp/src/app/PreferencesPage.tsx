@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery, getNotificationPreferences, saveDailyReminder, savePushSubscription } from "wasp/client/operations";
 import { SettingsLayout } from "./SettingsLayout";
 import { Field } from "./Field";
 import { Chip } from "../components/ui";
 import "./Field.css";
 import "./PreferencesPage.css";
+import { supportsPushNotifications, urlBase64ToUint8Array } from "../notifications/client";
 
 /**
  * Preferences — app behavior. Theme toggle is live (wired to [data-theme] +
@@ -27,6 +29,49 @@ export function PreferencesPage() {
     localStorage.setItem("aa-theme", value);
     document.documentElement.dataset.theme = value;
   };
+  const { data: notificationPrefs, refetch: refetchNotifications } = useQuery(getNotificationPreferences);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTime, setReminderTime] = useState("09:00");
+  const [notificationStatus, setNotificationStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [notificationError, setNotificationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!notificationPrefs) return;
+    setReminderEnabled(notificationPrefs.dailyReminderEnabled);
+    setReminderTime(notificationPrefs.dailyReminderTime);
+  }, [notificationPrefs]);
+
+  async function setDailyReminder(enabled: boolean, time = reminderTime) {
+    setNotificationStatus("saving");
+    setNotificationError(null);
+    try {
+      if (enabled) {
+        if (!supportsPushNotifications()) throw new Error("This browser does not support push notifications.");
+        if (!notificationPrefs?.vapidPublicKey) throw new Error("Notifications are not configured on this ActionAmp server yet.");
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") throw new Error("Notification permission was not granted.");
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(notificationPrefs.vapidPublicKey),
+        });
+        const json = subscription.toJSON();
+        if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) throw new Error("Could not create notification subscription.");
+        await savePushSubscription({ endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth });
+      }
+      await saveDailyReminder({
+        enabled,
+        time,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+      });
+      setReminderEnabled(enabled);
+      setNotificationStatus("idle");
+      await refetchNotifications();
+    } catch (error) {
+      setNotificationStatus("error");
+      setNotificationError(error instanceof Error ? error.message : "Could not update reminders.");
+    }
+  }
 
   // The rest are not yet wired (their features ship later).
   return (
@@ -48,6 +93,26 @@ export function PreferencesPage() {
         >
           <Chip variant="muted" small>soon</Chip>
         </Field>
+        <Field
+          label="Daily Today reminder"
+          description="One quiet nudge at your chosen local time. It opens Today, Next, or Capture."
+          toggle={{ checked: reminderEnabled, onChange: (next) => void setDailyReminder(next), disabled: notificationStatus === "saving" }}
+        />
+        {reminderEnabled && (
+          <Field label="Reminder time" description="Uses this device's current time zone.">
+            <input
+              className="aa-settings-input"
+              type="time"
+              value={reminderTime}
+              onChange={(event) => {
+                setReminderTime(event.target.value);
+              }}
+              onBlur={() => void setDailyReminder(true)}
+              disabled={notificationStatus === "saving"}
+            />
+          </Field>
+        )}
+        {notificationError && <p className="aa-settings-error">{notificationError}</p>}
       </section>
 
       <section className="aa-settings-section">

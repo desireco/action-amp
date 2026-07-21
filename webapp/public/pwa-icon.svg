@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">ActionAmp</title>
+  <desc id="desc">A calm teal app icon with ActionAmp's completion checkmark.</desc>
+  <!-- Full-bleed base keeps the mark safe inside Android's maskable icon crop. -->
+  <rect width="512" height="512" fill="#008AC0"/>
+  <rect x="52" y="52" width="408" height="408" rx="108" fill="#0B6F9B" opacity=".18"/>
+  <path d="M150 268l68 68 174-190" fill="none" stroke="#F9FCFE" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

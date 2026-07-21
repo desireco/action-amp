@@ -9,6 +9,7 @@ import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcut
 import { FeedbackDialog } from "./FeedbackDialog";
 import { CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate, LensChip, LensPopover, Kbd } from "../components/ui";
 import { useEntitled } from "../billing/useEntitled";
+import { registerServiceWorker } from "../notifications/client";
 import {
   BrandMark,
   LensSwitch,
@@ -97,6 +98,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem("aa-theme") as "light" | "dark" | null;
     const theme = stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     document.documentElement.dataset.theme = theme;
+  }, []);
+
+  // Push and notification actions are handled by the production service worker.
+  // Register once at shell mount; the worker never caches account data.
+  useEffect(() => {
+    registerServiceWorker();
   }, []);
 
   // Idempotent: ensures the user has the default Work/Me lenses (covers both
@@ -282,6 +289,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileLensOpen, setMobileLensOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [lensPopoverOpen, setLensPopoverOpen] = useState(false);
+
+  // Manifest shortcut and notification action: /app?capture=1 opens the same
+  // universal capture surface as ⌘K, then removes the one-shot URL flag.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("capture") !== "1") return;
+    setCaptureOpen(true);
+    const params = new URLSearchParams(location.search);
+    params.delete("capture");
+    navigate({ pathname: location.pathname, search: params.toString() ? `?${params}` : "" }, { replace: true });
+  }, [location.pathname, location.search, navigate]);
 
   useKeyboardShortcuts({
     onCapture: () => setCaptureOpen(true),
