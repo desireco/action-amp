@@ -212,17 +212,19 @@
    FOOTER
    ============================================================ */
 .aa-pub-footer {
+  width: 100%;
+  border-top: 1px solid var(--aa-border);
+  background: var(--aa-bg-soft);
+}
+.aa-pub-footer-inner {
   padding: 40px 56px;
   max-width: 1180px;
   margin: 0 auto;
-  width: 100%;
-  border-top: 1px solid var(--aa-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  background: var(--aa-bg-soft);
 }
 .aa-pub-footer-links {
   display: flex;
@@ -262,6 +264,9 @@
   }
   .aa-pub-footer {
     padding: 28px 20px;
+  }
+  .aa-pub-footer-inner {
+    padding: 0;
     flex-direction: column;
     align-items: flex-start;
   }

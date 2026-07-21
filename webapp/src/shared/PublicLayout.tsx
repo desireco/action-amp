@@ -28,28 +28,30 @@ export function PublicLayout({ children }: { children: ReactNode }) {
       <main className="aa-pub-main">{children}</main>
 
       <footer className="aa-pub-footer">
-        <Link to="/" className="aa-brand">
-          <span className="aa-brand-mark aa-brand-mark-sm">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M3.5 8.5l3 3 6-7"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-          <span className="aa-brand-name aa-brand-name-sm">ActionAmp</span>
-        </Link>
-        <div className="aa-pub-footer-links">
-          <Link to="/about">About</Link>
-          <Link to="/privacy">Privacy</Link>
-          <Link to="/terms">Terms</Link>
-          <Link to="/roadmap">Roadmap</Link>
-          <Link to="/founding-100">Founding 100</Link>
+        <div className="aa-pub-footer-inner">
+          <Link to="/" className="aa-brand">
+            <span className="aa-brand-mark aa-brand-mark-sm">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M3.5 8.5l3 3 6-7"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="aa-brand-name aa-brand-name-sm">ActionAmp</span>
+          </Link>
+          <div className="aa-pub-footer-links">
+            <Link to="/about">About</Link>
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/terms">Terms</Link>
+            <Link to="/roadmap">Roadmap</Link>
+            <Link to="/founding-100">Founding 100</Link>
+          </div>
+          <div className="aa-pub-copy">© 2026 ActionAmp</div>
         </div>
-        <div className="aa-pub-copy">© 2026 ActionAmp</div>
       </footer>
     </div>
   );
