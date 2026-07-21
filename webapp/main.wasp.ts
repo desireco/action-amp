@@ -43,6 +43,7 @@ import { RequestPasswordResetPage } from "./src/auth/email/RequestPasswordResetP
 import { SignupPage } from "./src/auth/email/SignupPage" with { type: "ref" };
 import { userSignupFields } from "./src/auth/email/userSignupFields" with { type: "ref" };
 import { prepareDevAutologin } from "./src/auth/devAutologin" with { type: "ref" };
+import { globalMiddlewareConfigFn } from "./src/auth/serverMiddleware" with { type: "ref" };
 // Google social auth — disabled to skip GOOGLE_CLIENT_ID/SECRET setup for now.
 // All supporting code (config, GoogleButton, userSignupFields) stays in place;
 // flip the block below back on + re-add <GoogleButton /> to Login/Signup pages
@@ -116,6 +117,9 @@ export default app({
   // src/serverSetup.ts. SMTP config above is the fallback for dev.
   server: {
     setupFn: serverSetup,
+    // Adds the session-cookie fallback + sliding 30-day refresh. See
+    // src/auth/sessionCookie.ts for the why (mobile PWA localStorage eviction).
+    middlewareConfigFn: globalMiddlewareConfigFn,
   },
   client: {
     rootComponent: App,
