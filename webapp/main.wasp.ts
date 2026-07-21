@@ -73,7 +73,7 @@ export default app({
     // ITP 7-day cap on script-writable storage (localStorage) doesn't apply.
     // `display: standalone` in the manifest is the field that triggers the
     // exemption; these metas are the iOS-specific bridges to the same state.
-    "<link rel='manifest' href='/manifest.webmanifest' />",
+    "<link rel='manifest' href='/manifest.json' />",
     "<meta name='apple-mobile-web-app-capable' content='yes' />",
     "<meta name='apple-mobile-web-app-status-bar-style' content='default' />",
     "<meta name='theme-color' content='#008AC0' />",
