@@ -124,12 +124,12 @@ audience.
 ### Model C — Founding 100 (re-introduced 2026-06-22)
 
 A capped, one-time lifetime tier for launch patrons: **exactly 100 spots at
-$139 once**, lifetime Pro access, no recurring charge. Replaces the earlier
+$99 once**, lifetime Pro access, no recurring charge. Replaces the earlier
 $52/yr Founder concept (which was reversed, then re-introduced on these terms).
 
 **Why these terms:**
 
-- **$139 one-time** pays for itself in ~1.75 years vs the $79.50 annual — a
+- **$99 one-time** pays for itself in ~1.25 years vs the $79.50 annual — a
   clear, honest patron offer, not a discount.
 - **Capped at 100** because lifetime plans are dangerous for software
   businesses; a hard cap gives launch funding momentum without compromising
@@ -265,7 +265,7 @@ billing toggle). Monthly is the escape hatch, not a headline.
 ### ~~Why $52 founder~~ — *reversed 2026-06-22; re-introduced as Founding 100 (see §3 Model C)*
 
 The original $52/yr Founder concept was reversed, then re-introduced on
-different terms: **$139 one-time**, lifetime, capped at 100 spots. The cap is
+different terms: **$99 one-time**, lifetime, capped at 100 spots. The cap is
 the discipline that makes a lifetime tier safe — see §3 Model C.
 
 ### Paths not taken — parked

@@ -12,7 +12,7 @@ featuredAs: take
 
 ActionAmp is being built in the open, and we wanted a way to make that real for the people who show up at the start.
 
-Founding 100 is a one-time tier — **$139, lifetime Pro** — for the first hundred people who claim a spot. When the hundred are gone, the tier retires for good. No countdown timer, no fake scarcity. Just a fixed number, in public, that goes down as people claim it.
+Founding 100 is a one-time tier — **$99, lifetime Pro** — for the first hundred people who claim a spot. When the hundred are gone, the tier retires for good. No countdown timer, no fake scarcity. Just a fixed number, in public, that goes down as people claim it.
 
 ## What lifetime Pro means
 
