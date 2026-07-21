@@ -39,6 +39,16 @@ model User {
   inboxItems InboxItem[]
   tags       Tag[]
   feedback   Feedback[]
+  pushSubscriptions PushSubscription[]
+
+  // ---- Daily Today reminder (Web Push) ----
+  // Stored server-side so reminders remain reliable after the installed PWA is
+  // closed. Time zone is supplied by the device whenever notification settings
+  // are saved; time is local HH:mm.
+  dailyReminderEnabled Boolean @default(false)
+  dailyReminderTime    String  @default("09:00")
+  dailyReminderTimeZone String @default("UTC")
+  lastDailyReminderAt  DateTime?
 
   // ---- Billing (Stripe) ----
   // Entitlement state. Mutated ONLY by the Stripe webhook (the source of
@@ -62,6 +72,22 @@ model User {
   // incomplete TODAY task flips to UPCOMING and this is stamped. Idempotent
   // within a day. See docs/WORKFLOW.md §2.3.
   lastTodayRolloverAt DateTime?
+}
+
+// One account may subscribe from several browsers/devices. Endpoints can be
+// revoked by their push provider, so send failures remove only that endpoint.
+model PushSubscription {
+  id        String   @id @default(uuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
 }
 
 // A user's entitlement tier. FOUNDER = "Founding 100": one-time $99, lifetime,
