@@ -66,6 +66,14 @@ export default app({
     "<link rel='icon' type='image/svg+xml' href='/favicon.svg' />",
     "<link rel='icon' type='image/x-icon' href='/favicon.ico' />",
     "<link rel='apple-touch-icon' sizes='180x180' href='/apple-touch-icon.png' />",
+    // PWA: promote the home-screen icon to a real installed app so WebKit's
+    // ITP 7-day cap on script-writable storage (localStorage) doesn't apply.
+    // `display: standalone` in the manifest is the field that triggers the
+    // exemption; these metas are the iOS-specific bridges to the same state.
+    "<link rel='manifest' href='/manifest.webmanifest' />",
+    "<meta name='apple-mobile-web-app-capable' content='yes' />",
+    "<meta name='apple-mobile-web-app-status-bar-style' content='default' />",
+    "<meta name='theme-color' content='#008AC0' />",
   ],
   auth: {
     userEntity: "User",
