@@ -69,6 +69,7 @@ async function runCommand(args: string[]): Promise<{ stdout: string; stderr: str
 
 const ROW = {
   id: "fb-12345678-aaaa-bbbb-cccc-dddddddddddd",
+  shortId: "ABCD-1234",
   createdAt: "2026-07-22T10:00:00.000Z",
   updatedAt: "2026-07-22T10:00:00.000Z",
   message: "Love the new What Now screen.",

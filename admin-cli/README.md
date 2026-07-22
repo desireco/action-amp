@@ -39,10 +39,14 @@ Every command supports `--json` for scripting / agent orchestration.
 
 ```
 whoami           → { user: { id, email, fullName, plan, isAdmin } }
-feedback list    → { feedback: [ { id, status, message, userEmail, ... } ] }
-feedback show    → { feedback: { id, status, message, ... } }
-feedback status  → { feedback: { id, status, ... } }
+feedback list    → { feedback: [ { id, shortId, status, message, userEmail, ... } ] }
+feedback show    → { feedback: { id, shortId, status, message, ... } }
+feedback status  → { feedback: { id, shortId, status, ... } }
 ```
+
+Each feedback row has a UUID `id` (the real PK) and a human-addressable
+`shortId` (`XXXX-XXXX`, Crockford base32). The CLI shows + accepts the shortId;
+`show`/`status` accept either (case-insensitive on the shortId).
 
 Errors (in `--json` mode): `{ error: "<message>" }` to stdout, exit code 1.
 

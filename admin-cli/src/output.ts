@@ -44,11 +44,11 @@ export function colorStatus(status: FeedbackStatus): string {
 }
 
 /**
- * Format one feedback row for a list line: id, status, first line of message,
- * submitter. Calm — no exclamation, no streaks.
+ * Format one feedback row for a list line: short id, status, first line of
+ * message, submitter. Calm — no exclamation, no streaks.
  */
 export function formatFeedbackLine(f: Feedback): string {
-  const id = chalk.gray(f.id.slice(0, 8));
+  const id = chalk.gray(f.shortId);
   const status = colorStatus(f.status);
   const firstLine = f.message.split("\n")[0].slice(0, 80);
   const from = f.userEmail ?? f.userName ?? "unknown";
@@ -58,7 +58,7 @@ export function formatFeedbackLine(f: Feedback): string {
 /** Format a feedback row for the `show` detail view. */
 export function formatFeedbackDetail(f: Feedback): string {
   const lines = [
-    `${chalk.bold(f.id)}`,
+    `${chalk.bold(f.shortId)} ${chalk.gray(`(${f.id})`)}`,
     `status:   ${colorStatus(f.status)}`,
     `from:     ${f.userEmail ?? "unknown"}${f.userName ? ` (${f.userName})` : ""}`,
     `created:  ${new Date(f.createdAt).toLocaleString()}`,

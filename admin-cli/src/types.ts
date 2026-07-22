@@ -22,6 +22,7 @@ export function isFeedbackStatus(value: string): value is FeedbackStatus {
 
 export type Feedback = {
   id: string;
+  shortId: string;
   createdAt: string;
   updatedAt: string;
   message: string;
