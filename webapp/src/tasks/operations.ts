@@ -233,12 +233,12 @@ export const unscheduleOverdueTasks = (async (args, context) => {
 // puts real work in front of you, not behind a toggle (WORKFLOW.md §5.2).
 // Rank by priority (IMPORTANT > NORMAL > LOW), then size (smaller = quick win),
 // then oldest. Returns the top 1, or null when nothing's on the table.
-const PRIORITY_RANK: Record<string, number> = {
+export const PRIORITY_RANK: Record<string, number> = {
   IMPORTANT: 0,
   NORMAL: 1,
   LOW: 2,
 };
-const SIZE_RANK: Record<string, number> = { S: 0, M: 1, L: 2, XL: 3 };
+export const SIZE_RANK: Record<string, number> = { S: 0, M: 1, L: 2, XL: 3 };
 
 export const getTopTask = (async (args, context) => {
   if (!context.user) {

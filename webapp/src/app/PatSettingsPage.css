@@ -1,0 +1,69 @@
+@import "../styles/tokens.css";
+
+/* PAT issue form — label input + button on one row, wrapping on narrow viewports. */
+.aa-pat-issue {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  flex-wrap: wrap;
+  margin-top: var(--aa-space-md);
+}
+
+.aa-pat-issue__input {
+  flex: 1 1 280px;
+  width: auto; /* override .aa-settings-input's fixed max-width so it flexes */
+}
+
+/* Issued-once reveal — the one-time plaintext display. */
+.aa-pat-reveal {
+  margin-top: var(--aa-space-md);
+  padding: var(--aa-space-md);
+  background: var(--aa-surface-muted);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+  align-items: flex-start;
+}
+
+.aa-pat-reveal__warning {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-amber, #c47f17); /* human-emphasis accent, the "rare warning" lane */
+  margin: 0;
+  font-weight: var(--aa-weight-medium);
+}
+
+.aa-pat-reveal__row {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.aa-pat-reveal__token {
+  flex: 1 1 280px;
+  width: auto;
+  font-family: var(--aa-font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: var(--aa-text-sm);
+}
+
+/* Existing keys — Field rows already give us the layout; this just adds a
+   top divider to separate the list from the issue form. */
+.aa-pat-list {
+  margin-top: var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
+}
+
+@media (max-width: 480px) {
+  .aa-pat-issue,
+  .aa-pat-reveal__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .aa-pat-issue__input,
+  .aa-pat-reveal__token {
+    width: 100%;
+  }
+}

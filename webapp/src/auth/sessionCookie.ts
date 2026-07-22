@@ -120,7 +120,13 @@ export function sessionCookieWriteMiddleware(
       (isLogin && res.statusCode >= 200 && res.statusCode < 300) ||
       (typeof sessionId === "string" && res.statusCode >= 200 && res.statusCode < 300);
 
-    if (shouldRefresh && typeof sessionId === "string") {
+    // Guard against ERR_HTTP_HEADERS_SENT: the `finish` event fires after the
+    // response has been written to the wire, so `res.cookie()` (which calls
+    // `setHeader`) throws if headers already went out. The sliding refresh is
+    // best-effort — if we can't set the cookie here, the client still holds a
+    // valid session via its existing cookie / Bearer token; only the refresh
+    // is skipped for this response. Crash > skipped refresh.
+    if (shouldRefresh && typeof sessionId === "string" && !res.headersSent) {
       res.cookie(SESSION_COOKIE_NAME, sessionId, cookieOptions());
     }
   });

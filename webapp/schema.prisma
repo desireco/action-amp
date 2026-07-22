@@ -40,6 +40,7 @@ model User {
   tags       Tag[]
   feedback   Feedback[]
   pushSubscriptions PushSubscription[]
+  apiKeys    ApiKey[] // Personal Access Tokens (CLI auth); deleted with the user
 
   // ---- Daily Today reminder (Web Push) ----
   // Stored server-side so reminders remain reliable after the installed PWA is
@@ -49,6 +50,12 @@ model User {
   dailyReminderTime    String  @default("09:00")
   dailyReminderTimeZone String @default("UTC")
   lastDailyReminderAt  DateTime?
+
+  // ---- Today cap (user-tunable, enforced globally across lenses) ----
+  // The committed-for-today list ceiling. Default 5, range 3–12 (enforced in
+  // saveTodayCap). Today is universal (WORKFLOW.md §5.11), so this cap applies
+  // to the merged cross-lens list, not per-lens.
+  todayCap Int @default(5)
 
   // ---- Billing (Stripe) ----
   // Entitlement state. Mutated ONLY by the Stripe webhook (the source of
@@ -446,4 +453,28 @@ model Tag {
   tasks Task[]
 
   @@unique([userId, name]) // tags are per-user (two users can share a tag name)
+}
+
+// ============================================================
+// ApiKey — Personal Access Token for the ActionAmp CLI
+// ============================================================
+// Issued from the Settings UI (POST /api/pat/issue), pasted once into the CLI,
+// sent as `Authorization: Bearer aa_<token>` to /api/cli/* routes. The
+// plaintext is shown exactly once at issue time; only `hashedToken` is stored.
+// Revocation is by delete (POST /api/pat/revoke). Full-scope, non-expiring v1
+// — scoping/expiresAt are deferred (revocation is the safety valve). See
+// docs/specs/cli-pat-plumbing.md.
+model ApiKey {
+  id          String   @id @default(uuid())
+  // argon2id hash of the plaintext token (same hasher as passwords). Looked up
+  // by hashing the inbound Bearer token on each /api/cli/* request.
+  hashedToken String   @unique
+  label       String // user-supplied name ("laptop", "ci", …)
+  createdAt   DateTime @default(now())
+  lastUsedAt  DateTime? // stamped on every successful /api/cli/* auth
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
 }

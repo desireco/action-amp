@@ -12,6 +12,7 @@ const TABS = [
   { label: "Billing", to: "/app/settings/billing", exact: false },
   { label: "Preferences", to: "/app/settings/preferences", exact: false },
   { label: "Lenses", to: "/app/settings/lenses", exact: false },
+  { label: "Access tokens", to: "/app/settings/pat", exact: false },
 ];
 
 export function SettingsLayout({ children }: { children: ReactNode }) {

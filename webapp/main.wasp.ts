@@ -9,7 +9,7 @@ import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
 import { LensesPage } from "./src/lenses/LensesPage" with { type: "ref" };
 import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
-import { getTask, getTasks, getDoneToday, getTopTask, getFocusedTask, toggleTaskDone, updateTaskStatus, unscheduleOverdueTasks, snoozeTask, startTask, pauseTask, addTaskUpdate, updateTaskContent, updateTaskDetails, setTaskOutcome, completeTaskFromFocus } from "./src/tasks/operations" with { type: "ref" };
+import { getTask, getTasks, getTodayTasks, getDoneToday, getTopTask, getFocusedTask, toggleTaskDone, updateTaskStatus, unscheduleOverdueTasks, snoozeTask, startTask, pauseTask, addTaskUpdate, updateTaskContent, updateTaskDetails, setTaskOutcome, completeTaskFromFocus } from "./src/tasks/operations" with { type: "ref" };
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { createProject } from "./src/projects/operations" with { type: "ref" };
 import { getProject, createTask } from "./src/projects/operations" with { type: "ref" };
@@ -30,7 +30,7 @@ import { LogbookPage } from "./src/logbook/LogbookPage" with { type: "ref" };
 import { ensureOnboarded, setPreferredName, completeOnboarding } from "./src/onboarding/operations" with { type: "ref" };
 import { createLens, updateLens, deleteLens } from "./src/lenses/operations" with { type: "ref" };
 import { getLenses } from "./src/lenses/operations" with { type: "ref" };
-import { getAppData, updateProfile } from "./src/app/operations" with { type: "ref" };
+import { getAppData, updateProfile, saveTodayCap } from "./src/app/operations" with { type: "ref" };
 import { getNotificationPreferences, saveDailyReminder, savePushSubscription } from "./src/notifications/operations" with { type: "ref" };
 import { sendDailyTodayReminder } from "./src/notifications/dailyReminderJob" with { type: "ref" };
 import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
@@ -38,6 +38,11 @@ import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, g
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
 import { publicStatusMiddleware } from "./src/billing/statusMiddleware" with { type: "ref" };
+// CLI auth (PAT plumbing) — issue/revoke/list + the /api/cli/now stub. See
+// docs/specs/cli-pat-plumbing.md.
+import { patIssue, patRevoke, patList, cliNow } from "./src/auth/patRoutes" with { type: "ref" };
+import { patRouteMiddleware } from "./src/auth/patMiddleware" with { type: "ref" };
+import { PatSettingsPage } from "./src/app/PatSettingsPage" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
 import { LoginPage } from "./src/auth/email/LoginPage" with { type: "ref" };
 import { PasswordResetPage } from "./src/auth/email/PasswordResetPage" with { type: "ref" };
@@ -148,6 +153,7 @@ export default app({
       page(PreferencesPage),
     ),
     route("LensesRoute", "/app/settings/lenses", page(LensesPage)),
+    route("PatSettingsRoute", "/app/settings/pat", page(PatSettingsPage)),
     route("TaskDetailRoute", "/app/tasks/:permalink", page(TaskDetailPage)),
     route("ProjectDetailRoute", "/app/projects/:permalink", page(ProjectDetailPage)),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
@@ -175,6 +181,7 @@ export default app({
     action(prepareDevAutologin, { auth: false }),
     query(getTask, { entities: ["Task"], auth: true }),
     query(getTasks, { entities: ["Task", "Lens"], auth: true }),
+    query(getTodayTasks, { entities: ["Task", "Lens"], auth: true }),
     query(getDoneToday, { entities: ["Task", "Lens"], auth: true }),
     query(getTopTask, { entities: ["Task", "Lens"], auth: true }),
     query(getFocusedTask, { entities: ["Task", "TaskSession"], auth: true }),
@@ -207,6 +214,7 @@ export default app({
     query(getLogbook, { entities: ["Task", "Project", "Goal", "InboxItem"], auth: true }),
     query(getAppData, { entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(updateProfile, { entities: ["User"], auth: true }),
+    action(saveTodayCap, { entities: ["User"], auth: true }),
     query(getNotificationPreferences, { entities: ["User"], auth: true }),
     action(savePushSubscription, { entities: ["PushSubscription"], auth: true }),
     action(saveDailyReminder, { entities: ["User"], auth: true }),
@@ -235,6 +243,31 @@ export default app({
       entities: ["User"],
       auth: false,
       middlewareConfigFn: publicStatusMiddleware,
+    }),
+    // ── CLI auth (PAT plumbing) ────────────────────────────────────────────
+    // The three session-authed token-management routes. `auth: true` (the
+    // default) gates these to the logged-in user; `context.user.id` is the
+    // tenancy key. See src/auth/patRoutes.ts + docs/specs/cli-pat-plumbing.md.
+    api("POST", "/api/pat/issue", patIssue, {
+      entities: ["ApiKey"],
+      auth: true,
+    }),
+    api("POST", "/api/pat/revoke", patRevoke, {
+      entities: ["ApiKey"],
+      auth: true,
+    }),
+    api("GET", "/api/pat/list", patList, {
+      entities: ["ApiKey"],
+      auth: true,
+    }),
+    // The CLI stub: PAT-middleware protected (not session auth). `auth: false`
+    // so Wasp doesn't add the session handler on top — the PAT middleware
+    // resolves the user from the Bearer token. Replaced by the real CLI
+    // surface in cli-package (Phase 1).
+    api("GET", "/api/cli/now", cliNow, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
     }),
     job(sendDailyTodayReminder, {
       executor: "PgBoss",
