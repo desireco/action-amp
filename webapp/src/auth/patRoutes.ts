@@ -28,6 +28,12 @@
 import type { Request, Response } from "express";
 import { generateToken, hashToken, TOKEN_PREFIX } from "./pat";
 import { authEntities } from "./prisma";
+// Side-effect import: loads the `declare module "express-serve-static-core"`
+// augmentation that adds `req.patUser` / `req.patApiKeyId` to Express's
+// Request type. Without this, tsc compiling this file in isolation (the
+// server bundle's tsc --build) can't see the augmentation and reports
+// "Property 'patUser' does not exist on type 'Request'".
+import "./patMiddleware";
 import {
   resolveLens,
   resolveAccessibleLenses,

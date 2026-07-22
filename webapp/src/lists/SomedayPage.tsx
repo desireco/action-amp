@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getTasks } from "wasp/client/operations";
+import type { Task } from "@prisma/client";
 import {
   TaskRow,
   Button,
@@ -63,7 +64,7 @@ export function SomedayPage() {
         />
       ) : (
         <ul className="aa-someday-list">
-          {(tasks ?? []).map((task) => (
+          {(tasks ?? []).map((task: Task) => (
             <li key={task.id} className="aa-someday-row">
               <TaskRow
                 as="div"

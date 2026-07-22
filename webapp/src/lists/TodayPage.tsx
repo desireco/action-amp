@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
+import type { Task } from "@prisma/client";
 import {
   getTodayTasks,
   getDoneToday,
@@ -247,7 +248,7 @@ export function TodayPage() {
                   overflow.length === 1 ? "" : "s"
                 }`}
               >
-                {overflow.map((task) => (
+                {overflow.map((task: Task) => (
                   <li key={task.id} className="aa-grouped__item">
                     <TaskRow
                       as="div"

@@ -37,10 +37,18 @@ export function LogbookPage() {
   const groups = useMemo<GroupDef<LogItem>[]>(() => {
     if (!logbook) return [];
     const all: LogItem[] = [
-      ...logbook.tasks.map((t) => ({ ...t, when: new Date(t.completedAt) })),
-      ...logbook.projects.map((p) => ({ ...p, when: new Date(p.completedAt) })),
-      ...logbook.goals.map((g) => ({ ...g, when: new Date(g.completedAt) })),
-      ...logbook.archived.map((a) => ({ ...a, when: new Date(a.archivedAt) })),
+      // The map callbacks transform entities → LogItem; the param types are
+      // inferred from logbook's shape (which includes relations). Using the
+      // Prisma type directly causes spread/overload mismatches because LogItem
+      // has a different shape (title vs description, kind, etc.).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...logbook.tasks.map((t: any) => ({ ...t, when: new Date(t.completedAt) })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...logbook.projects.map((p: any) => ({ ...p, when: new Date(p.completedAt) })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...logbook.goals.map((g: any) => ({ ...g, when: new Date(g.completedAt) })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...logbook.archived.map((a: any) => ({ ...a, when: new Date(a.archivedAt) })),
     ].sort((a, b) => b.when.getTime() - a.when.getTime());
 
     const byDay = new Map<string, LogItem[]>();
