@@ -79,6 +79,15 @@ model User {
   // incomplete TODAY task flips to UPCOMING and this is stamped. Idempotent
   // within a day. See docs/WORKFLOW.md §2.3.
   lastTodayRolloverAt DateTime?
+
+  // ---- Activity tracking (admin dashboard stats) ----
+  // createdAt: when the user signed up (parity with every other model).
+  // Backfilled for pre-existing users via scripts/backfill-user-activity.mjs.
+  // lastActiveAt: throttled-stamped on app load (getAppData, 15-min window).
+  // Null for legacy users until their next app open. Powers the admin
+  // dashboard's active-today / 7d / 30d counts.
+  createdAt     DateTime @default(now())
+  lastActiveAt  DateTime?
 }
 
 // One account may subscribe from several browsers/devices. Endpoints can be

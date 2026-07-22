@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "Feedback" ALTER COLUMN "updatedAt" DROP DEFAULT;
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "lastActiveAt" TIMESTAMP(3);
