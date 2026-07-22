@@ -2,7 +2,7 @@
 id: cli-pat-plumbing
 kind: spec
 title: "CLI auth + PAT backend plumbing (Phase 0 of the CLI effort)"
-status: ready
+status: building
 priority: P3              # opportunistic, not validation-critical
 feature: cli
 spec_owner: discover
@@ -12,7 +12,7 @@ created: 2026-07-03
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsUt      # sync-managed (write-once)
-gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-22T00:16:31Z
 ---
 
 # Spec: CLI PAT plumbing (Phase 0)
