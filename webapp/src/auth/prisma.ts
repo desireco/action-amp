@@ -22,9 +22,25 @@ import { PrismaClient } from "@prisma/client";
 
 export const authPrisma = new PrismaClient();
 
-/** The shape the pure entitlement helpers expect (PascalCase model delegates). */
+/**
+ * The shape the pure entitlement helpers + the operation cores expect
+ * (PascalCase model delegates — the same shape Wasp passes to operations).
+ *
+ * Every model a `/api/cli/*` route's core touches is exposed here so the route
+ * can pass a single `entities` object to any core. The PAT middleware resolves
+ * the user via `authPrisma.apiKey` directly (it needs the join to User/Auth that
+ * the cores never touch), so ApiKey is included for completeness but the cores
+ * themselves don't read it.
+ */
 export const authEntities = {
   Lens: authPrisma.lens,
   Task: authPrisma.task,
+  TaskSession: authPrisma.taskSession,
+  TaskUpdate: authPrisma.taskUpdate,
+  InboxItem: authPrisma.inboxItem,
+  Project: authPrisma.project,
+  Goal: authPrisma.goal,
+  Tag: authPrisma.tag,
+  Resource: authPrisma.resource,
   ApiKey: authPrisma.apiKey,
 };

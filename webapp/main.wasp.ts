@@ -38,9 +38,34 @@ import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, g
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
 import { publicStatusMiddleware } from "./src/billing/statusMiddleware" with { type: "ref" };
-// CLI auth (PAT plumbing) — issue/revoke/list + the /api/cli/now stub. See
-// docs/specs/cli-pat-plumbing.md.
-import { patIssue, patRevoke, patList, cliNow, cliCapture, cliWhoami } from "./src/auth/patRoutes" with { type: "ref" };
+// CLI auth (PAT plumbing) — issue/revoke/list + the /api/cli/* command surface.
+// See docs/specs/cli-pat-plumbing.md.
+import {
+  patIssue,
+  patRevoke,
+  patList,
+  cliNow,
+  cliCapture,
+  cliWhoami,
+  cliTaskShow,
+  cliTaskStart,
+  cliTaskPause,
+  cliTaskDone,
+  cliTaskSnooze,
+  cliTaskMove,
+  cliToday,
+  cliTodayDone,
+  cliInboxList,
+  cliInboxTriage,
+  cliProjectList,
+  cliProjectShow,
+  cliProjectCreate,
+  cliProjectAddTask,
+  cliGoalList,
+  cliGoalShow,
+  cliGoalCreate,
+  cliLogbook,
+} from "./src/auth/patRoutes" with { type: "ref" };
 import { mintCliToken } from "./src/auth/cliMint" with { type: "ref" };
 import { patRouteMiddleware } from "./src/auth/patMiddleware" with { type: "ref" };
 import { PatSettingsPage } from "./src/app/PatSettingsPage" with { type: "ref" };
@@ -301,6 +326,109 @@ export default app({
     // CLI whoami — returns the resolved user (email/fullName/plan). Used by
     // the OAuth login flow's post-callback "Signed in as" line.
     api("GET", "/api/cli/whoami", cliWhoami, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // ── CLI command surface ───────────────────────────────────────────────
+    // ⚠ Every `/api/cli/*` route MUST set `middlewareConfigFn: patRouteMiddleware`
+    // (see the note above the now/capture stubs). Forgetting it makes the route
+    // silently unauthenticated. Each handler below delegates to the pure
+    // operation cores and translates entitlement violations (from the PURE
+    // billing/entitlements helpers) into 402s — no wasp/server import lives in
+    // the handlers.
+    // Task routes.
+    api("GET", "/api/cli/task/show", cliTaskShow, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/task/start", cliTaskStart, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/task/pause", cliTaskPause, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/task/done", cliTaskDone, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/task/snooze", cliTaskSnooze, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/task/move", cliTaskMove, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // Today routes (global — no lens gate; the accessible-lens set is the filter).
+    api("GET", "/api/cli/today", cliToday, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("GET", "/api/cli/today/done", cliTodayDone, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // Inbox routes.
+    api("GET", "/api/cli/inbox/list", cliInboxList, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/inbox/triage", cliInboxTriage, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // Project routes.
+    api("GET", "/api/cli/project/list", cliProjectList, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("GET", "/api/cli/project/show", cliProjectShow, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/project/create", cliProjectCreate, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/project/add-task", cliProjectAddTask, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // Goal routes.
+    api("GET", "/api/cli/goal/list", cliGoalList, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("GET", "/api/cli/goal/show", cliGoalShow, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/goal/create", cliGoalCreate, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // Logbook route (optional ?lensId; defaults to the first accessible lens).
+    api("GET", "/api/cli/logbook", cliLogbook, {
       entities: [],
       auth: false,
       middlewareConfigFn: patRouteMiddleware,
