@@ -65,6 +65,9 @@ import {
   cliGoalShow,
   cliGoalCreate,
   cliLogbook,
+  cliFeedbackList,
+  cliFeedbackShow,
+  cliFeedbackStatus,
 } from "./src/auth/patRoutes" with { type: "ref" };
 import { mintCliToken } from "./src/auth/cliMint" with { type: "ref" };
 import { patRouteMiddleware } from "./src/auth/patMiddleware" with { type: "ref" };
@@ -185,12 +188,13 @@ export default app({
     route("ProjectDetailRoute", "/app/projects/:permalink", page(ProjectDetailPage)),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
     route("DesignSystemRoute", "/design-system", page(DesignSystemPage, { authRequired: false })),
-    // Auth-required: checkout needs a user (createCheckoutSession is gated on
-    // context.user). Making the route auth-required removes the CTA → /login →
-    // back-to-/founding-100 dance — an unauthenticated visitor lands on /login,
-    // then Wasp returns them here after auth, ready to check out.
-    // (authRequired defaults to false in Wasp 0.24 — must be explicit.)
-    route("Founding100Route", "/founding-100", page(Founding100Page, { authRequired: true })),
+    // Public: /founding-100 is a marketing/landing offer linked from PublicLayout
+    // and ProGate aimed at logged-out visitors, so it must render for everyone.
+    // The CTA handles auth itself — an anonymous clicker is sent to /login, an
+    // authed clicker starts Stripe Checkout (createCheckoutSession gates on
+    // context.user server-side). (authRequired defaults to false in Wasp 0.24 —
+    // explicit for clarity.)
+    route("Founding100Route", "/founding-100", page(Founding100Page, { authRequired: false })),
     route("Founding100WelcomeRoute", "/founding-100/welcome", page(Founding100WelcomePage)),
     route("LoginRoute", "/login", page(LoginPage)),
     // CLI OAuth login — the browser half of `actionamp login`. Session-authed
@@ -429,6 +433,24 @@ export default app({
     }),
     // Logbook route (optional ?lensId; defaults to the first accessible lens).
     api("GET", "/api/cli/logbook", cliLogbook, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // Feedback triage routes — admin-only. The handlers gate on req.patUser.isAdmin
+    // (first check, before any DB read) and return 403 for non-admins. Users still
+    // submit feedback via the in-app action; only admins list/show/triage here.
+    api("GET", "/api/cli/feedback/list", cliFeedbackList, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("GET", "/api/cli/feedback/show", cliFeedbackShow, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/feedback/status", cliFeedbackStatus, {
       entities: [],
       auth: false,
       middlewareConfigFn: patRouteMiddleware,

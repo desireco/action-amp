@@ -73,6 +73,14 @@ import {
   createGoalCore,
 } from "../goals/operationsCore";
 import { getLogbookData } from "../logbook/operationsCore";
+import {
+  listFeedbackCore,
+  showFeedbackCore,
+  updateFeedbackStatusCore,
+  isFeedbackStatus,
+  FEEDBACK_STATUSES,
+  type FeedbackStatus,
+} from "../feedback/operationsCore";
 
 // Wasp injects `context.entities.<EntityName>` (Prisma clients) for every
 // entity listed in the route's `entities:` array. We type the slice we use so
@@ -390,6 +398,9 @@ export const cliWhoami = async (req: Request, res: Response, _context: unknown) 
       email: user.email,
       fullName: user.fullName,
       plan: user.plan,
+      // isAdmin is resolved by patAuthMiddleware from the User row. Surfaced
+      // here so the admin CLI can gate login on it (the user CLI ignores it).
+      isAdmin: user.isAdmin,
     },
   });
 };
@@ -1045,6 +1056,119 @@ export const cliLogbook = async (req: Request, res: Response, _context: unknown)
   } catch (err) {
     console.error("[cli/logbook] failed:", err);
     return res.status(500).json({ error: "Could not load logbook." });
+  }
+};
+
+// ───────────────────────────────────────────────────────────────────────────
+// Feedback routes — admin-only triage surface (list / show / update status).
+//
+// Every feedback route gates on `user.isAdmin` FIRST (before any DB work): the
+// feedback feature is fire-and-forget for users; only admins read + triage it.
+// `req.patUser.isAdmin` is resolved by `patAuthMiddleware` from the User row.
+// A non-admin token gets 403 regardless of which feedback id it asks for — no
+// information leak about whether a given id exists.
+// ───────────────────────────────────────────────────────────────────────────
+
+/** Shared admin gate. Returns the 403 response if the caller is not an admin. */
+function requireAdmin(
+  user: { isAdmin: boolean } | undefined,
+  res: Response,
+): res is Response {
+  if (!user) {
+    res.status(401).json({ error: "Not authenticated." });
+    return false;
+  }
+  if (!user.isAdmin) {
+    res.status(403).json({ error: "Admin only." });
+    return false;
+  }
+  return true;
+}
+
+// GET /api/cli/feedback/list — list feedback, newest first. Optional ?status=
+// narrows to one bucket; ?limit= caps the page (default 50, clamped 1–200).
+export const cliFeedbackList = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!requireAdmin(user, res)) return;
+
+  const statusParam = queryString(req, "status");
+  let status: FeedbackStatus | undefined;
+  if (statusParam !== null) {
+    if (!isFeedbackStatus(statusParam)) {
+      return res.status(400).json({
+        error: `Invalid status. Must be one of: ${FEEDBACK_STATUSES.join(", ")}.`,
+      });
+    }
+    status = statusParam;
+  }
+
+  const limitRaw = queryString(req, "limit");
+  const limit = limitRaw !== null ? Number(limitRaw) : undefined;
+  if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+    return res.status(400).json({ error: "limit must be a positive number." });
+  }
+
+  try {
+    const feedback = await listFeedbackCore(authEntities, { status, limit });
+    return res.status(200).json({ feedback });
+  } catch (err) {
+    console.error("[cli/feedback/list] failed:", err);
+    return res.status(500).json({ error: "Could not list feedback." });
+  }
+};
+
+// GET /api/cli/feedback/show?id= — single feedback row. 404 when absent.
+export const cliFeedbackShow = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!requireAdmin(user, res)) return;
+
+  const id = queryString(req, "id");
+  if (!id) {
+    return res.status(400).json({ error: "id is required." });
+  }
+
+  try {
+    const feedback = await showFeedbackCore(authEntities, { id });
+    if (!feedback) {
+      return res.status(404).json({ error: "Feedback not found." });
+    }
+    return res.status(200).json({ feedback });
+  } catch (err) {
+    console.error("[cli/feedback/show] failed:", err);
+    return res.status(500).json({ error: "Could not load feedback." });
+  }
+};
+
+// POST /api/cli/feedback/status — body { id, status }. Updates the triage state.
+export const cliFeedbackStatus = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!requireAdmin(user, res)) return;
+
+  const id = bodyString(req.body, "id");
+  if (!id) {
+    return res.status(400).json({ error: "id is required." });
+  }
+  const status = bodyString(req.body, "status");
+  if (!status) {
+    return res
+      .status(400)
+      .json({ error: `status is required. One of: ${FEEDBACK_STATUSES.join(", ")}.` });
+  }
+  if (!isFeedbackStatus(status)) {
+    return res
+      .status(400)
+      .json({ error: `Invalid status. Must be one of: ${FEEDBACK_STATUSES.join(", ")}.` });
+  }
+
+  try {
+    const feedback = await updateFeedbackStatusCore(authEntities, { id, status });
+    return res.status(200).json({ feedback });
+  } catch (err) {
+    if (err instanceof Error && /not found/i.test(err.message)) {
+      return res.status(404).json({ error: err.message });
+    }
+    console.error("[cli/feedback/status] failed:", err);
+    return res.status(500).json({ error: "Could not update feedback status." });
   }
 };
 
