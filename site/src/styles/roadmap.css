@@ -6,8 +6,12 @@
 @import "./tokens.css";
 
 .aa-roadmap {
-  max-width: 880px;
+  /* fullWidth PublicLayout shell unlocks up to 1200px (matches the blog index
+     and the landing's 1180px section width). The --wide variant strips the
+     shell's horizontal padding, so it's re-added here. */
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 64px 56px;
 }
 
 /* ---- HERO ---- */
@@ -322,6 +326,9 @@
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
+  .aa-roadmap {
+    padding: 40px 20px;
+  }
   .aa-roadmap-hero h1 {
     font-size: 30px;
   }
