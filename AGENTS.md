@@ -18,6 +18,12 @@ not a list. Two halves of the repo:
   Auth via OAuth browser login; every command supports `--json`. The
   `/api/cli/*` routes + the pure `*Core.ts` files they share with the Wasp ops
   live under `webapp/src/`.
+- **`admin-cli/`** — the *admin terminal client*: a separate standalone package
+  (same stack as `cli/`, no shared code) restricted to admin accounts. Login
+  rejects non-admins; stores its token at `~/.config/actionamp-admin/` (separate
+  from `cli/`'s). Currently the feedback-triage surface (`feedback list/show/
+  status`). Talks to the same `/api/cli/*` backend; the admin-only routes
+  (`/api/cli/feedback/*`) gate on `req.patUser.isAdmin`.
 
 ADHD is the design muse, not the marketing target. Tone is calm, direct,
 opinionated, honest — no exclamation marks, no streaks, no guilt-trip red dots.
@@ -62,6 +68,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Pricing, plans, feature caps | `docs/PRICING.md` + `docs/FEATURES.md` |
 | Stripe billing implementation | `docs/BILLING-INTEGRATION.md` (implemented) + `webapp/src/billing/` |
 | The CLI (`actionamp`) terminal client | `cli/README.md` + `cli/src/` + `webapp/src/auth/patRoutes.ts` (the `/api/cli/*` routes) + `webapp/src/*/operationsCore.ts` (the shared pure cores) |
+| The admin CLI (`actionamp-admin`) | `admin-cli/README.md` + `admin-cli/src/` + `webapp/src/auth/patRoutes.ts` (the admin-gated `/api/cli/feedback/*` routes) + `webapp/src/feedback/operationsCore.ts` |
 | Marketing/public site | `docs/MARKETING.md` + `docs/PUBLIC-PAGES.md` |
 | Deployment / hosting | `docs/research/deployment-research.md` |
 | What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/backlog/` |
