@@ -69,6 +69,8 @@ import {
   cliFeedbackList,
   cliFeedbackShow,
   cliFeedbackStatus,
+  cliAdminStats,
+  cliAdminFeedback,
 } from "./src/auth/patRoutes" with { type: "ref" };
 import { mintCliToken } from "./src/auth/cliMint" with { type: "ref" };
 import { patRouteMiddleware } from "./src/auth/patMiddleware" with { type: "ref" };
@@ -454,6 +456,16 @@ export default app({
       middlewareConfigFn: patRouteMiddleware,
     }),
     api("POST", "/api/cli/feedback/status", cliFeedbackStatus, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("GET", "/api/cli/admin/stats", cliAdminStats, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("GET", "/api/cli/admin/feedback", cliAdminFeedback, {
       entities: [],
       auth: false,
       middlewareConfigFn: patRouteMiddleware,

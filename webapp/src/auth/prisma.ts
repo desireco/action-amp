@@ -33,6 +33,7 @@ export const authPrisma = new PrismaClient();
  * themselves don't read it.
  */
 export const authEntities = {
+  User: authPrisma.user,
   Lens: authPrisma.lens,
   Task: authPrisma.task,
   TaskSession: authPrisma.taskSession,

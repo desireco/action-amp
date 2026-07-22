@@ -81,6 +81,7 @@ import {
   FEEDBACK_STATUSES,
   type FeedbackStatus,
 } from "../feedback/operationsCore";
+import { getAdminStatsCore, getRecentFeedbackCore } from "../admin/operationsCore";
 
 // Wasp injects `context.entities.<EntityName>` (Prisma clients) for every
 // entity listed in the route's `entities:` array. We type the slice we use so
@@ -1177,6 +1178,42 @@ export const cliFeedbackStatus = async (req: Request, res: Response, _context: u
     }
     console.error("[cli/feedback/status] failed:", err);
     return res.status(500).json({ error: "Could not update feedback status." });
+  }
+};
+
+// ----------------------------------------------------------------
+// Admin dashboard stats + recent feedback (admin-cli consumers)
+// ----------------------------------------------------------------
+// Mirrors the feedback routes: requireAdmin first, then delegate to the shared
+// core. No business logic in the route — pure passthrough. The browser page
+// uses the Wasp query (same core); these routes serve actionamp-admin stats.
+export const cliAdminStats = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!requireAdmin(user, res)) return;
+  try {
+    const stats = await getAdminStatsCore(authEntities);
+    return res.status(200).json({ stats });
+  } catch (err) {
+    console.error("[cli/admin/stats] failed:", err);
+    return res.status(500).json({ error: "Could not load admin stats." });
+  }
+};
+
+export const cliAdminFeedback = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!requireAdmin(user, res)) return;
+  const afterId = queryString(req, "after");
+  const limitRaw = Number(queryString(req, "limit") ?? "10");
+  const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(50, Math.floor(limitRaw))) : 10;
+  try {
+    const page = await getRecentFeedbackCore(authEntities, {
+      afterId: afterId ?? null,
+      limit,
+    });
+    return res.status(200).json(page);
+  } catch (err) {
+    console.error("[cli/admin/feedback] failed:", err);
+    return res.status(500).json({ error: "Could not load recent feedback." });
   }
 };
 
