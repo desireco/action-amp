@@ -6,6 +6,7 @@
     ".wasp/out/sdk/wasp"
   ],
   "scripts": {
+    "dev": "./scripts/wasp-runner.sh",
     "deploy": "./scripts/wasp-safe.sh deploy railway deploy action-amp --existing-project-id afda37a6-287f-4c81-b1db-65fc9d2dcb6f --custom-server-url https://api.actionamp.com",
     "test": "vitest run",
     "test:watch": "vitest",
