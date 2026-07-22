@@ -1,6 +1,7 @@
 import { HttpError } from "wasp/server";
-import type { GetAdminStats, GetRecentFeedback } from "wasp/server/operations";
+import type { GetAdminStats, GetRecentFeedback, UpdateFeedbackStatus } from "wasp/server/operations";
 import { getAdminStatsCore, getRecentFeedbackCore, type AdminStats, type FeedbackRow } from "./operationsCore";
+import { updateFeedbackStatusCore, type FeedbackStatus } from "../feedback/operationsCore";
 
 /**
  * Admin dashboard stats — one round-trip bundle of counts. Gates on
@@ -33,3 +34,22 @@ export const getRecentFeedback = (async (
     limit: Math.max(1, Math.min(50, Math.floor(limit))),
   });
 }) satisfies GetRecentFeedback<RecentFeedbackArgs, RecentFeedbackResult>;
+
+export type UpdateFeedbackStatusArgs = { id: string; status: FeedbackStatus };
+export type UpdateFeedbackStatusResult = FeedbackRow;
+
+/**
+ * Inline status update from the admin dashboard's recent-feedback table.
+ * Admin-gated (same boundary as the queries); delegates to the shared
+ * `updateFeedbackStatusCore`, which validates the status, resolves the row by
+ * id prefix (full UUID works — it's a prefix of itself), and updates by PK.
+ */
+export const updateFeedbackStatus = (async (
+  { id, status }: UpdateFeedbackStatusArgs,
+  context,
+) => {
+  if (!context.user?.isAdmin) {
+    throw new HttpError(403, "Admin only.");
+  }
+  return updateFeedbackStatusCore(context.entities, { id, status });
+}) satisfies UpdateFeedbackStatus<UpdateFeedbackStatusArgs, UpdateFeedbackStatusResult>;

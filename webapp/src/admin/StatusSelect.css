@@ -1,0 +1,109 @@
+.aa-status-select {
+  position: relative;
+  display: inline-block;
+}
+
+/* Trigger: the chip + caret. Reuses .aa-chip--<variant> for color. */
+.aa-status-select__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.aa-status-select__trigger--saving {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.aa-status-select__caret {
+  transition: transform 0.12s var(--aa-ease-out);
+}
+
+/* Backdrop: transparent, sits behind the panel, closes on outside-click. */
+.aa-status-select__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+/* Panel: the floating list. Anchored under the trigger. */
+.aa-status-select__panel {
+  position: absolute;
+  z-index: 21;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 150px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow: var(--aa-shadow-md);
+}
+
+/* Option: full-width button, carries the status color via .aa-chip--<variant>. */
+.aa-status-select__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  border-radius: var(--aa-radius-xs);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The variant class sets background+color; give each option a pill feel. */
+.aa-status-select__option.aa-chip--default,
+.aa-status-select__option.aa-chip--teal,
+.aa-status-select__option.aa-chip--amber,
+.aa-status-select__option.aa-chip--muted {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text-2);
+}
+
+.aa-status-select__option.aa-chip--teal {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+
+.aa-status-select__option.aa-chip--amber {
+  background: var(--aa-amber-soft);
+  color: var(--aa-amber-text);
+}
+
+.aa-status-select__option.aa-chip--muted {
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-3);
+}
+
+.aa-status-select__option:hover:not(:disabled),
+.aa-status-select__option:focus-visible:not(:disabled) {
+  outline: 2px solid var(--aa-focus-ring);
+  outline-offset: 1px;
+}
+
+.aa-status-select__option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.aa-status-select__option-label {
+  flex: 1;
+}
+
+.aa-status-select__option--current {
+  font-weight: var(--aa-weight-medium);
+}
+
+.aa-status-select__check {
+  flex-shrink: 0;
+}

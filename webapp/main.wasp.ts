@@ -34,7 +34,7 @@ import { getAppData, updateProfile, saveTodayCap } from "./src/app/operations" w
 import { getNotificationPreferences, saveDailyReminder, savePushSubscription } from "./src/notifications/operations" with { type: "ref" };
 import { sendDailyTodayReminder } from "./src/notifications/dailyReminderJob" with { type: "ref" };
 import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
-import { getAdminStats, getRecentFeedback } from "./src/admin/operations" with { type: "ref" };
+import { getAdminStats, getRecentFeedback, updateFeedbackStatus } from "./src/admin/operations" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status, founding100StatusHandler } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
@@ -266,6 +266,7 @@ export default app({
     action(submitFeedback, { entities: ["User", "Feedback"], auth: true }),
     query(getAdminStats, { entities: ["User", "Task", "Feedback"], auth: true }),
     query(getRecentFeedback, { entities: ["Feedback"], auth: true }),
+    action(updateFeedbackStatus, { entities: ["Feedback"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),
     action(createLens, { entities: ["Lens"], auth: true }),
     action(updateLens, { entities: ["Lens"], auth: true }),

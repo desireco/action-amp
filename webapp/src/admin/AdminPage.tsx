@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "wasp/client/auth";
-import { useQuery, getAdminStats, getRecentFeedback } from "wasp/client/operations";
+import { useQuery, useAction, getAdminStats, getRecentFeedback, updateFeedbackStatus } from "wasp/client/operations";
+import { useQueryClient } from "@tanstack/react-query";
 import { SettingsLayout } from "../app/SettingsLayout";
 import { Button, Card, Chip, Table, type TableColumn } from "../components/ui";
 import type { FeedbackRow } from "./operationsCore";
+import type { FeedbackStatus } from "../feedback/operationsCore";
+import { StatusSelect } from "./StatusSelect";
 import "./AdminPage.css";
 
 function relativeTime(iso: string | Date): string {
@@ -15,15 +18,6 @@ function relativeTime(iso: string | Date): string {
   if (hr < 24) return `${hr}h ago`;
   const day = Math.floor(hr / 24);
   return `${day}d ago`;
-}
-
-function statusVariant(status: FeedbackRow["status"]): "default" | "amber" | "teal" | "muted" {
-  switch (status) {
-    case "OPEN": return "default";
-    case "IN_PROGRESS": return "amber";
-    case "RESOLVED": return "teal";
-    case "CLOSED": return "muted";
-  }
 }
 
 function Tile({ value, label, sub }: { value: number | null; label: string; sub?: string }) {
@@ -107,11 +101,33 @@ export function AdminPage() {
   // to the first page's signal before any "Show more" has been clicked.
   const hasNext = appendedHasNext ?? (firstPage?.hasNext ?? false);
 
+  // Inline status update: fire the action, then invalidate the feedback list
+  // (all pages) + the stats (by-status counts). The app uses invalidate-and-
+  // refetch, not optimistic updates — the row briefly shows the old status
+  // until the refetch lands. Errors are logged; the picker resets its pending
+  // state and the stale row stays (no silent local mutation).
+  const updateStatusAction = useAction(updateFeedbackStatus);
+  const queryClient = useQueryClient();
+  async function handleStatusChange(id: string, status: FeedbackStatus) {
+    try {
+      await updateStatusAction({ id, status });
+      await queryClient.invalidateQueries({ queryKey: ["getRecentFeedback"] });
+      await queryClient.invalidateQueries({ queryKey: ["getAdminStats"] });
+    } catch (err) {
+      console.error("[admin] status update failed:", err);
+    }
+  }
+
   const feedbackColumns: TableColumn<FeedbackRow>[] = [
     {
       key: "status",
       header: "Status",
-      render: (r) => <Chip variant={statusVariant(r.status)} small>{r.status.toLowerCase().replace("_", " ")}</Chip>,
+      render: (r) => (
+        <StatusSelect
+          status={r.status}
+          onStatusChange={(s) => handleStatusChange(r.id, s)}
+        />
+      ),
     },
     { key: "message", header: "Message", render: (r) => r.message.split("\n")[0].slice(0, 80) },
     {
