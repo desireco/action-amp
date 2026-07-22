@@ -42,5 +42,6 @@ export const authEntities = {
   Goal: authPrisma.goal,
   Tag: authPrisma.tag,
   Resource: authPrisma.resource,
+  Feedback: authPrisma.feedback,
   ApiKey: authPrisma.apiKey,
 };

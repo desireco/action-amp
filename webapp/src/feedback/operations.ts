@@ -2,6 +2,7 @@ import type { SubmitFeedback } from "wasp/server/operations";
 import { PrismaClient } from "@prisma/client";
 import { getAdminEmail, shouldSendFeedbackEmail } from "./config";
 import { renderFeedbackEmailHtml } from "../email/FeedbackEmail";
+import { submitFeedbackCore } from "./operationsCore";
 
 type FeedbackSection = "work" | "plan" | "review";
 
@@ -30,11 +31,6 @@ type FeedbackEmailInput = {
 };
 
 const prisma = new PrismaClient();
-
-function cleanOptional(value: string | null | undefined, max = 500) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed.slice(0, max) : null;
-}
 
 async function buildFeedbackEmail(feedback: FeedbackEmailInput) {
   const adminEmail = getAdminEmail();
@@ -86,23 +82,12 @@ export const submitFeedback = (async (args: SubmitFeedbackArgs, context) => {
     throw new Error("Not authenticated.");
   }
 
-  const message = args.message?.trim();
-  if (!message) {
-    throw new Error("Feedback is required.");
-  }
-  if (message.length > 4000) {
-    throw new Error("Feedback is too long.");
-  }
-
   const userId = context.user.id;
   const userRow = await context.entities.User.findUnique({
     where: { id: userId },
     select: { fullName: true },
   });
-  const userName = cleanOptional(
-    userRow?.fullName ?? context.user.fullName ?? null,
-    160,
-  );
+  const userName = userRow?.fullName ?? context.user.fullName ?? null;
   let userEmail: string | null = null;
   try {
     userEmail = await getUserEmail(userId);
@@ -110,30 +95,17 @@ export const submitFeedback = (async (args: SubmitFeedbackArgs, context) => {
     userEmail = null;
   }
 
-  const feedback = await context.entities.Feedback.create({
-    data: {
-      message,
-      userId,
-      userName,
-      userEmail,
-      route: cleanOptional(args.route, 300),
-      section: cleanOptional(args.section, 40),
-      lensId: cleanOptional(args.lens?.id, 80),
-      lensName: cleanOptional(args.lens?.name, 120),
-      lensColor: cleanOptional(args.lens?.color, 80),
-      userAgent: cleanOptional(args.userAgent, 500),
-    },
-    select: {
-      id: true,
-      message: true,
-      route: true,
-      section: true,
-      lensName: true,
-      lensColor: true,
-      userName: true,
-      userEmail: true,
-      userAgent: true,
-    },
+  // Message trim + length validation live in the core (shared with any write
+  // surface). It throws the same "Feedback is required." / "too long." messages.
+  const feedback = await submitFeedbackCore(context.entities, {
+    userId,
+    message: args.message,
+    route: args.route,
+    section: args.section,
+    lens: args.lens,
+    userAgent: args.userAgent,
+    userName,
+    userEmail,
   });
 
   try {
