@@ -1,8 +1,18 @@
 import { useEffect, useState } from "react";
-import { useQuery, getNotificationPreferences, saveDailyReminder, savePushSubscription } from "wasp/client/operations";
+import {
+  useQuery,
+  useAction,
+  getNotificationPreferences,
+  getAppData,
+  saveDailyReminder,
+  savePushSubscription,
+  saveTodayCap,
+} from "wasp/client/operations";
+import { useQueryClient } from "@tanstack/react-query";
 import { SettingsLayout } from "./SettingsLayout";
 import { Field } from "./Field";
 import { Chip } from "../components/ui";
+import { TODAY_CAP_DEFAULT, TODAY_CAP_MIN, TODAY_CAP_MAX } from "./operations";
 import "./Field.css";
 import "./PreferencesPage.css";
 import { supportsPushNotifications, urlBase64ToUint8Array } from "../notifications/client";
@@ -10,10 +20,9 @@ import { supportsPushNotifications, urlBase64ToUint8Array } from "../notificatio
 /**
  * Preferences — app behavior. Theme toggle is live (wired to [data-theme] +
  * localStorage); the rest are stubbed with "soon" chips until their features
- * ship, per the honesty-over-fake-toggles principle.
+ * ship, per the honesty-over-fake-toggles principle. The Today cap is live
+ * (global ceiling, default 5, range 3–12).
  */
-
-const TODAY_CAP_DEFAULT = 5;
 
 export function PreferencesPage() {
   // ---- Theme: live, persisted ----
@@ -30,6 +39,9 @@ export function PreferencesPage() {
     document.documentElement.dataset.theme = value;
   };
   const { data: notificationPrefs, refetch: refetchNotifications } = useQuery(getNotificationPreferences);
+  const { data: appData } = useQuery(getAppData);
+  const queryClient = useQueryClient();
+  const saveCapAction = useAction(saveTodayCap);
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState("09:00");
   const [notificationStatus, setNotificationStatus] = useState<"idle" | "saving" | "error">("idle");
@@ -40,6 +52,36 @@ export function PreferencesPage() {
     setReminderEnabled(notificationPrefs.dailyReminderEnabled);
     setReminderTime(notificationPrefs.dailyReminderTime);
   }, [notificationPrefs]);
+
+  // ---- Today cap (global, user-tunable) ----
+  const storedCap = appData?.todayCap ?? TODAY_CAP_DEFAULT;
+  const [draftCap, setDraftCap] = useState<number>(storedCap);
+  const [capStatus, setCapStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [capError, setCapError] = useState<string | null>(null);
+  const capDirty = draftCap !== storedCap;
+
+  useEffect(() => {
+    // Sync local draft when the server value changes (first load, post-save
+    // invalidation, or a change made elsewhere).
+    setDraftCap(storedCap);
+  }, [storedCap]);
+
+  async function commitCap(value: number) {
+    const clamped = Math.max(TODAY_CAP_MIN, Math.min(TODAY_CAP_MAX, Math.round(value)));
+    setDraftCap(clamped);
+    if (clamped === storedCap) return;
+    setCapStatus("saving");
+    setCapError(null);
+    try {
+      await saveCapAction({ todayCap: clamped });
+      await queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+      await queryClient.invalidateQueries({ queryKey: ["getTodayTasks"] });
+      setCapStatus("idle");
+    } catch (error) {
+      setCapStatus("error");
+      setCapError(error instanceof Error ? error.message : "Could not save Today cap.");
+    }
+  }
 
   async function setDailyReminder(enabled: boolean, time = reminderTime) {
     setNotificationStatus("saving");
@@ -89,10 +131,56 @@ export function PreferencesPage() {
         <h2 className="aa-settings-sh">Today</h2>
         <Field
           label="Today cap"
-          description={`Limit Today to ${TODAY_CAP_DEFAULT} items. Forces the "what actually matters" decision.`}
+          description={`Today is global across lenses. Cap the day's commitment between ${TODAY_CAP_MIN} and ${TODAY_CAP_MAX}. Default ${TODAY_CAP_DEFAULT}.`}
         >
-          <Chip variant="muted" small>soon</Chip>
+          <div className="aa-settings-stepper" role="group" aria-label="Today cap">
+            <button
+              type="button"
+              className="aa-settings-stepper__btn"
+              onClick={() => void commitCap(draftCap - 1)}
+              disabled={draftCap <= TODAY_CAP_MIN || capStatus === "saving"}
+              aria-label="Decrease Today cap"
+            >
+              −
+            </button>
+            <input
+              className="aa-settings-stepper__value"
+              type="number"
+              inputMode="numeric"
+              min={TODAY_CAP_MIN}
+              max={TODAY_CAP_MAX}
+              step={1}
+              value={draftCap}
+              onChange={(e) => {
+                const n = Number.parseInt(e.target.value, 10);
+                setDraftCap(Number.isFinite(n) ? n : storedCap);
+              }}
+              onBlur={(e) => void commitCap(Number.parseInt(e.target.value, 10) || storedCap)}
+              disabled={capStatus === "saving"}
+              aria-label="Today cap value"
+            />
+            <button
+              type="button"
+              className="aa-settings-stepper__btn"
+              onClick={() => void commitCap(draftCap + 1)}
+              disabled={draftCap >= TODAY_CAP_MAX || capStatus === "saving"}
+              aria-label="Increase Today cap"
+            >
+              +
+            </button>
+            {capDirty && capStatus !== "saving" && (
+              <button
+                type="button"
+                className="aa-settings-stepper__save"
+                onClick={() => void commitCap(draftCap)}
+              >
+                Save
+              </button>
+            )}
+            {capStatus === "saving" && <Chip variant="muted" small>saving…</Chip>}
+          </div>
         </Field>
+        {capError && <p className="aa-settings-error">{capError}</p>}
         <Field
           label="Daily Today reminder"
           description="One quiet nudge at your chosen local time. It opens Today, Next, or Capture."

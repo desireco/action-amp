@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import {
-  getTasks,
+  getTodayTasks,
   getDoneToday,
   getAppData,
   updateTaskStatus,
@@ -21,10 +21,9 @@ import { GroupedList, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { FeedbackDialog } from "../app/FeedbackDialog";
 import { ListEmpty } from "./ListShell";
+import { TODAY_CAP_DEFAULT } from "../app/operations";
 import "./ListShell.css";
 import "./TodayPage.css";
-
-const TODAY_CAP = 5;
 
 /**
  * Group tasks by their Goal (or "General" when a task carries none). When the
@@ -48,39 +47,40 @@ function groupByGoal(tasks: TaskRowTask[]): GroupDef<TaskRowTask>[] {
 }
 
 /**
- * Today — the committed-for-today list. Tasks with status=TODAY (not done),
- * grouped by Goal. Enforces a 5-item cap (FEATURES.md F12): items beyond the
- * cap are flagged as "over capacity" and must be bumped out to add more.
+ * Today — the global committed-for-today list (across all accessible lenses,
+ * WORKFLOW.md §5.11). Tasks with status=TODAY (not done), grouped by Goal.
+ * Enforces the user's `todayCap` (default 5, range 3–12, set in Preferences):
+ * items beyond the cap are flagged "over capacity" and must be bumped out to
+ * add more. Each row carries a trailing lens pill so provenance stays visible
+ * without partitioning the list (only when the user has 2+ lenses — a single
+ * lens makes the pill noise).
  */
 export function TodayPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { data: tasks, isLoading } = useQuery(
-    getTasks,
-    lens ? { lensId: lens.id, status: "TODAY", isDone: false } : undefined,
-    { enabled: !!lens },
-  );
-  // Upcoming count for the hero cross-link — comes from getAppData (already
-  // lens-scoped and shared with the Plan nav chip) instead of a second
-  // status=UPCOMING query. Upcoming lives on its own page now; Today just
-  // links over.
-  const { data: appData } = useQuery(getAppData, undefined, { enabled: !!lens });
+  // Today is universal — no lens arg, no enabled gate. The query filters by
+  // the accessible-lens set server-side, so a FREE user sees their one lens
+  // and a Pro user sees all of them. `lens` is still read for the feedback
+  // dialog's context only.
+  const { data: tasks, isLoading } = useQuery(getTodayTasks);
+  // App data carries the user's todayCap + the lens list (for the pill gate)
+  // + the lens-scoped Upcoming count for the hero cross-link (Upcoming stays
+  // lens-scoped — the link still lands in the active lens, per design).
+  const { data: appData } = useQuery(getAppData);
 
-  // Done-today: tasks completed since local midnight. Fetched on mount and
-  // shown inline so completed work stays visible without another click.
+  const todayCap = appData?.todayCap ?? TODAY_CAP_DEFAULT;
+  const showLensPill = (appData?.lenses.length ?? 0) > 1;
+
+  // Done-today: tasks completed since local midnight, global across lenses.
   const [showDone, setShowDone] = useState(true);
-  const { data: doneToday } = useQuery(
-    getDoneToday,
-    lens ? { lensId: lens.id } : undefined,
-    { enabled: !!lens },
-  );
+  const { data: doneToday } = useQuery(getDoneToday, undefined);
 
-  // Open tasks: group the CAPPED set (first TODAY_CAP) by Goal.
+  // Open tasks: group the CAPPED set (first todayCap) by Goal.
   const groups = useMemo<GroupDef<TaskRowTask>[]>(
-    () => (tasks ? groupByGoal(tasks.slice(0, TODAY_CAP)) : []),
-    [tasks],
+    () => (tasks ? groupByGoal(tasks.slice(0, todayCap)) : []),
+    [tasks, todayCap],
   );
 
   // Done-today grouped by Goal, same shape so GroupedList + TaskRow render
@@ -95,6 +95,7 @@ export function TodayPage() {
   // links over.
   const handleDemote = async (task: TaskRowTask) => {
     await updateTaskStatus({ id: task.id, status: "UPCOMING" });
+    queryClient.invalidateQueries({ queryKey: ["getTodayTasks"] });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
@@ -102,9 +103,9 @@ export function TodayPage() {
   const [feedbackTask, setFeedbackTask] = useState<TaskRowTask | null>(null);
   const [demoteTask, setDemoteTask] = useState<TaskRowTask | null>(null);
 
-  const overCapacity = (tasks?.length ?? 0) > TODAY_CAP;
-  const overflow = useMemo(() => (tasks ?? []).slice(TODAY_CAP), [tasks]);
-  const committedCount = Math.min(tasks?.length ?? 0, TODAY_CAP);
+  const overCapacity = (tasks?.length ?? 0) > todayCap;
+  const overflow = useMemo(() => (tasks ?? []).slice(todayCap), [tasks, todayCap]);
+  const committedCount = Math.min(tasks?.length ?? 0, todayCap);
   const upcomingCount = appData?.counts.upcoming ?? 0;
   const doneCount = doneToday?.length ?? 0;
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
@@ -122,9 +123,9 @@ export function TodayPage() {
   // away via the hero link, no same-page swap.
   const heroTitle = isLoading
     ? "—"
-    : `${tasks?.length ?? 0} of ${TODAY_CAP} committed`;
+    : `${tasks?.length ?? 0} of ${todayCap} committed`;
   const heroSubtitle =
-    committedCount >= TODAY_CAP
+    committedCount >= todayCap
       ? "Day's full. Finish one to make room."
       : "Keep the day small enough to finish.";
 
@@ -137,9 +138,9 @@ export function TodayPage() {
           <p className="aa-today__subtitle">{heroSubtitle}</p>
           <div
             className="aa-today__meter"
-            aria-label={`${committedCount} of ${TODAY_CAP} Today slots committed`}
+            aria-label={`${committedCount} of ${todayCap} Today slots committed`}
           >
-            {Array.from({ length: TODAY_CAP }, (_, i) => (
+            {Array.from({ length: todayCap }, (_, i) => (
               <span
                 key={i}
                 className={
@@ -195,7 +196,7 @@ export function TodayPage() {
                 <Chip variant="amber">Over capacity</Chip>
                 <span>
                   {overflow.length} task{overflow.length === 1 ? "" : "s"}{" "}
-                  beyond the cap of {TODAY_CAP}. Bump one to Upcoming or Someday
+                  beyond the cap of {todayCap}. Bump one to Upcoming or Someday
                   to make room.
                 </span>
               </div>
@@ -211,6 +212,7 @@ export function TodayPage() {
                   variant="list"
                   key={task.id}
                   task={task}
+                  showLens={showLensPill}
                   onOpen={() => {
                     pickTask(task);
                   }}
@@ -251,6 +253,7 @@ export function TodayPage() {
                       as="div"
                       variant="list"
                       task={task}
+                      showLens={showLensPill}
                       muted
                       onOpen={() => {
                         pickTask(task);
@@ -290,6 +293,7 @@ export function TodayPage() {
                   variant="list"
                   key={task.id}
                   task={task}
+                  showLens={showLensPill}
                   muted
                   onOpen={() => editTask(task)}
                 >

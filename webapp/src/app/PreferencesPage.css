@@ -1,1 +1,104 @@
 /* PreferencesPage inherits Field + SettingsLayout styles. */
+@import "../styles/tokens.css";
+
+/* ---- Today cap stepper ----
+   A compact − value + triplet, right-aligned in the Field row. The value is a
+   number input; −/+ clamp at the bounds. A Save chip appears only when the
+   draft diverges from the stored value, so "no change" never looks pending. */
+.aa-settings-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  flex-shrink: 0;
+}
+
+.aa-settings-stepper__btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--aa-radius-sm);
+  border: 1px solid var(--aa-border-strong);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.12s var(--aa-ease-out),
+    border-color 0.12s var(--aa-ease-out),
+    opacity 0.12s var(--aa-ease-out);
+}
+
+.aa-settings-stepper__btn:hover:not(:disabled) {
+  background: var(--aa-surface-muted);
+  border-color: var(--aa-teal);
+}
+
+.aa-settings-stepper__btn:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-settings-stepper__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.aa-settings-stepper__value {
+  width: 44px;
+  height: 28px;
+  text-align: center;
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  /* Hide the spin buttons — we have our own −/+ affordance. */
+  -moz-appearance: textfield;
+}
+
+.aa-settings-stepper__value::-webkit-outer-spin-button,
+.aa-settings-stepper__value::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.aa-settings-stepper__value:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-settings-stepper__save {
+  margin-left: var(--aa-space-xs);
+  padding: 4px 10px;
+  border-radius: var(--aa-radius-sm);
+  border: 1px solid var(--aa-teal);
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  cursor: pointer;
+  transition:
+    background 0.12s var(--aa-ease-out),
+    border-color 0.12s var(--aa-ease-out);
+}
+
+.aa-settings-stepper__save:hover {
+  background: var(--aa-teal-cta);
+  color: white;
+}
+
+.aa-settings-stepper__save:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .aa-settings-stepper {
+    align-self: stretch;
+    justify-content: flex-start;
+  }
+}
