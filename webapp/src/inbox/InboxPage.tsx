@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems } from "wasp/client/operations";
+import type { InboxItem } from "@prisma/client";
 import { Chip, ArrowRightIcon, CalendarIcon, BoxIcon, HashIcon, StarIcon } from "../components/ui";
 import { formatAgo, formatRelativeDay } from "../shared/dateFormat";
 import "./InboxPage.css";
@@ -64,7 +65,7 @@ export function InboxPage() {
               </Link>
             </div>
             <ul className="aa-inbox__list">
-              {list.map((item, i) => (
+              {list.map((item: InboxItem, i: number) => (
                 <li key={item.id} className="aa-inbox__item">
                   <Link to={`/app/inbox/review?i=${i}`} className="aa-inbox__row">
                     <div className="aa-inbox__row-content">
@@ -91,7 +92,7 @@ export function InboxPage() {
                         )}
                         {item.parsedPriority === "LOW" && <Chip variant="muted" small>low</Chip>}
                         {item.parsedSize && <Chip variant="default" small>{item.parsedSize}</Chip>}
-                        {item.parsedTags.map((t) => (
+                        {item.parsedTags.map((t: string) => (
                           <Chip key={t} variant={t.startsWith("@") ? "amber" : "violet"} small>
                             <HashIcon className="aa-chip__icon" />
                             {t}

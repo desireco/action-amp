@@ -73,7 +73,7 @@ export function GoalDetailPage() {
   // formula is unchanged.)
   const { progress, totalItems, doneItems } = useMemo(() => {
     if (!goal) return { progress: 0, totalItems: 0, doneItems: 0 };
-    const projectsDone = goal.projects.filter((p) => p.isDone).length;
+    const projectsDone = goal.projects.filter((p: LinkedProject) => p.isDone).length;
     const projectsTotal = goal.projects.length;
     return {
       progress: projectsTotal === 0 ? 0 : Math.round((projectsDone / projectsTotal) * 100),
@@ -87,7 +87,7 @@ export function GoalDetailPage() {
   // entry is the focus toward this goal. Absent when all projects are done or
   // there are none — no fabricated content.
   const nextProject = useMemo(
-    () => goal?.projects.find((p) => !p.isDone) ?? null,
+    () => goal?.projects.find((p: LinkedProject) => !p.isDone) ?? null,
     [goal],
   );
 
@@ -151,7 +151,7 @@ export function GoalDetailPage() {
     if (!goal || reordering) return;
     const newIndex = index + direction;
     if (newIndex < 0 || newIndex >= goal.projects.length) return;
-    const orderedIds = goal.projects.map((p) => p.id);
+    const orderedIds = goal.projects.map((p: LinkedProject) => p.id);
     [orderedIds[index], orderedIds[newIndex]] = [orderedIds[newIndex], orderedIds[index]];
     setReordering(true);
     try {
@@ -257,8 +257,8 @@ export function GoalDetailPage() {
                 Projects <span className="aa-grouped__count">{goal.projects.length}</span>
               </h3>
               <ul className="aa-grouped__list">
-                {goal.projects.map((p, index) => {
-                  const pDone = p.tasks.filter((t) => t.isDone).length;
+                {goal.projects.map((p: LinkedProject, index: number) => {
+                  const pDone = p.tasks.filter((t: { id: string; isDone: boolean }) => t.isDone).length;
                   const pTotal = p.tasks.length;
                   const pct = pTotal === 0 ? 0 : Math.round((pDone / pTotal) * 100);
                   return (

@@ -4,6 +4,7 @@ import type { NavigateFunction } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getInboxItems, triageInboxItem } from "wasp/client/operations";
 import { getAppData } from "wasp/client/operations";
+import type { Project, Goal } from "@prisma/client";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   TriageCard,
@@ -384,14 +385,14 @@ export function TriagePage() {
   // the SpecRow display and what dispatch sends; a manual pick always wins.
   const effectiveProjectId = working?.projectId ?? resolvedProjectId ?? null;
   const projectName =
-    (projects ?? []).find((p) => p.id === effectiveProjectId)?.name ?? null;
+    (projects ?? []).find((p: Project) => p.id === effectiveProjectId)?.name ?? null;
   const projectGoalName =
-    (goals ?? []).find((g) => g.id === working?.projectGoalId)?.name ?? null;
+    (goals ?? []).find((g: Goal) => g.id === working?.projectGoalId)?.name ?? null;
   const parentName = working
     ? working.parentProjectId
-      ? (projects ?? []).find((p) => p.id === working.parentProjectId)?.name ?? null
+      ? (projects ?? []).find((p: Project) => p.id === working.parentProjectId)?.name ?? null
       : working.parentGoalId
-        ? (goals ?? []).find((g) => g.id === working.parentGoalId)?.name ?? null
+        ? (goals ?? []).find((g: Goal) => g.id === working.parentGoalId)?.name ?? null
         : null
     : null;
 
