@@ -1,6 +1,7 @@
 import type {
   GetTask,
   GetTasks,
+  GetTodayTasks,
   GetDoneToday,
   GetTopTask,
   GetFocusedTask,
@@ -17,14 +18,16 @@ import type {
   CompleteTaskFromFocus,
 } from "wasp/server/operations";
 import { assertLensAllowed } from "../billing/entitlementHttp";
+import { resolveAccessibleLenses } from "../billing/entitlements";
 import { activePoolWhere } from "./activePool";
 
 /**
  * Task operations for the Phase 4 list views.
  *
- * Every query/action is scoped by userId AND lensId — the active Lens (Work/Me)
- * determines what the user sees. All mutations are tenancy-safe via the
- * compound where-clause on userId.
+ * Every query/action is scoped by userId; list reads are additionally scoped
+ * by lensId (the active Lens determines what the user sees) — except the
+ * global Today list, which spans all accessible lenses (WORKFLOW.md §5.11).
+ * All mutations are tenancy-safe via the compound where-clause on userId.
  */
 
 // ----------------------------------------------------------------
@@ -89,17 +92,79 @@ export const getTasks = (async (args, context) => {
 }>;
 
 // ----------------------------------------------------------------
+// Read: global Today list (across all accessible lenses)
+// ----------------------------------------------------------------
+// Today is universal (WORKFLOW.md §5.11) — the committed-for-today list spans
+// every lens the user can read, not just the active one. This is the
+// Inbox-shaped query: no lensId arg, filters by userId only, and the
+// entitlement gate is the accessible-lens SET (not a per-task assertLensAllowed).
+// `lens` is included per row so the page can render a provenance pill.
+//
+// Entitlement: resolveAccessibleLenses returns FREE → PERSONAL-only lenses,
+// PRO/admin → all lenses. So a downgraded user can't see Today tasks from
+// now-inaccessible lenses — the set filter replaces the per-task guard that
+// lens-scoped getTasks uses.
+export const getTodayTasks = (async (_args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const accessible = await resolveAccessibleLenses(
+    context.entities,
+    context.user,
+    context.user.id,
+  );
+  const lensIds = accessible.map((l) => l.id);
+  // No accessible lenses (a brand-new account mid-onboarding) → empty list
+  // rather than a Prisma error on `lensId: { in: [] }` (which actually returns
+  // nothing in Prisma, but this makes the intent explicit).
+  if (lensIds.length === 0) return [];
+
+  return await context.entities.Task.findMany({
+    where: {
+      userId: context.user.id,
+      lensId: { in: lensIds },
+      status: "TODAY",
+      isDone: false,
+    },
+    orderBy: [{ order: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
+    include: {
+      tags: true,
+      project: { select: { id: true, name: true } },
+      goal: { select: { id: true, name: true } },
+      lens: { select: { id: true, name: true, color: true } },
+    },
+  });
+}) satisfies GetTodayTasks<never>;
+
+// ----------------------------------------------------------------
 // Read: tasks completed today (for the Today "Done today" section)
 // ----------------------------------------------------------------
 // Separate from getTasks (which has no date filter and returns full history).
-// Scoped to the active lens + completed since local-midnight, newest first.
-// Includes project/goal so the section can group the same way open tasks do.
+// Completed since local-midnight, newest first. Includes project/goal so the
+// section can group the same way open tasks do.
+//
+// Lens scoping: when `lensId` is passed the query is lens-scoped (guarded by
+// assertLensAllowed — the FREE-lens rule). When `lensId` is omitted the query
+// is global across accessible lenses (WORKFLOW.md §5.11), same accessible-set
+// filter as getTodayTasks — that's how Today's Done-today section now reads.
 export const getDoneToday = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  // Entitlement: FREE users may only read the Me lens.
-  await assertLensAllowed(context, args.lensId);
+  let lensIds: string[] | null = null;
+  if (args?.lensId) {
+    // Lens-scoped path: enforce the FREE-lens entitlement for this one lens.
+    await assertLensAllowed(context, args.lensId);
+    lensIds = [args.lensId];
+  } else {
+    // Global path: filter by the accessible-lens SET (entitlement-preserving).
+    const accessible = await resolveAccessibleLenses(
+      context.entities,
+      context.user,
+      context.user.id,
+    );
+    lensIds = accessible.map((l) => l.id);
+  }
   // Local-midnight boundary: completedAt is stamped server-side on toggle; we
   // compare against the start of "today" in the server's locale. Day-granular
   // is the right resolution for a "done today" section.
@@ -112,10 +177,13 @@ export const getDoneToday = (async (args, context) => {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
+  // Empty accessible set → empty result (no Prisma `in: []` surprise).
+  if (lensIds.length === 0) return [];
+
   return await context.entities.Task.findMany({
     where: {
       userId: context.user.id,
-      lensId: args.lensId,
+      lensId: { in: lensIds },
       status: "TODAY",
       isDone: true,
       completedAt: { gte: startOfToday },
@@ -125,9 +193,10 @@ export const getDoneToday = (async (args, context) => {
       tags: true,
       project: { select: { id: true, name: true } },
       goal: { select: { id: true, name: true } },
+      lens: { select: { id: true, name: true, color: true } },
     },
   });
-}) satisfies GetDoneToday<{ lensId: string }>;
+}) satisfies GetDoneToday<{ lensId?: string }>;
 
 // ----------------------------------------------------------------
 // Write: toggle a task's done state
@@ -233,6 +302,9 @@ export const unscheduleOverdueTasks = (async (args, context) => {
 // puts real work in front of you, not behind a toggle (WORKFLOW.md §5.2).
 // Rank by priority (IMPORTANT > NORMAL > LOW), then size (smaller = quick win),
 // then oldest. Returns the top 1, or null when nothing's on the table.
+// Exported so the CLI `/api/cli/now` stub (auth/patRoutes.ts) ranks candidates
+// identically without re-implementing the maps — drift here would mean the
+// CLI surfaces a different "top" than the home screen.
 export const PRIORITY_RANK: Record<string, number> = {
   IMPORTANT: 0,
   NORMAL: 1,

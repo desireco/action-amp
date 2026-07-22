@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getAppData, updateProfile } from "./operations";
+import { getAppData, updateProfile, saveTodayCap } from "./operations";
 import { mockContext } from "../test/mockContext";
 
 /**
@@ -21,32 +21,38 @@ describe("getAppData — guards", () => {
 });
 
 describe("getAppData — happy path", () => {
-  it("derives planning counters from one Lens-scoped status rollup", async () => {
-    const m = mockContext();
+  it("derives global Today + lens-scoped Upcoming/Someday from their own queries", async () => {
+    // Today is global (WORKFLOW.md §5.11); Upcoming/Someday stay lens-scoped.
+    // They use SEPARATE queries on purpose — the scopes disagree by design.
+    // Pro user so both lenses are accessible (exercises the global today path).
+    const m = mockContext({
+      id: "user-1",
+      plan: "PRO",
+      planRenewsAt: new Date(Date.now() + 86_400_000),
+    });
     // Rollover already ran today → short-circuits so this test stays focused
     // on the count aggregation (covered in the rollover describe block).
-    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
+    m.entities.User.findUnique.mockResolvedValue({
+      lastTodayRolloverAt: new Date(),
+      todayCap: 5,
+    });
     const lenses = [
       { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
       { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
     ];
 
-    // Lens.findMany resolves first. Planning status totals and per-lens Today
-    // totals then run in parallel, both through groupBy.
     m.entities.Lens.findMany.mockResolvedValue(lenses);
     m.entities.InboxItem.count.mockResolvedValue(5);
     m.entities.Project.count.mockResolvedValue(7);
     m.entities.Goal.count.mockResolvedValue(2);
-    m.entities.Task.groupBy
-      .mockResolvedValueOnce([
-        { status: "TODAY", _count: { _all: 2 } },
-        { status: "UPCOMING", _count: { _all: 3 } },
-        { status: "SOMEDAY", _count: { _all: 4 } },
-      ])
-      .mockResolvedValueOnce([
-      { lensId: "lens-work", _count: { _all: 3 } },
-      { lensId: "lens-me", _count: { _all: 1 } },
-      ]);
+    // Global Today count (across both accessible lenses).
+    m.entities.Task.count.mockResolvedValue(2);
+    // Lens-scoped Upcoming + Someday rollup. (Today is NOT in this groupBy —
+    // it's the Task.count above. Don't add a TODAY row here.)
+    m.entities.Task.groupBy.mockResolvedValueOnce([
+      { status: "UPCOMING", _count: { _all: 3 } },
+      { status: "SOMEDAY", _count: { _all: 4 } },
+    ]);
 
     const result = await getAppData({ lensId: "lens-work" }, m.context);
 
@@ -57,11 +63,10 @@ describe("getAppData — happy path", () => {
         today: 2,
         upcoming: 3,
         someday: 4,
-        open: 9,
         projects: 7,
         goals: 2,
       },
-      todayByLens: { "lens-work": 3, "lens-me": 1 },
+      todayCap: 5,
     });
 
     // Inbox is global (no lens) but only counts unprocessed items, matching
@@ -75,8 +80,20 @@ describe("getAppData — happy path", () => {
         },
       }),
     );
-    // Single status rollup owns Today/Upcoming/Someday. Its sum is `open`, so
-    // sidebar counters cannot disagree because of mismatched filters.
+    // Global Today count — accessible-lens set (Pro → all), status TODAY, not
+    // done. No active-lens filter: this must match what the global Today page
+    // renders, or the badge and the page disagree.
+    expect(m.entities.Task.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId: "user-1",
+          lensId: { in: ["lens-work", "lens-me"] },
+          status: "TODAY",
+          isDone: false,
+        }),
+      }),
+    );
+    // Lens-scoped Upcoming + Someday rollup — still the active-lens filter.
     expect(m.entities.Task.groupBy).toHaveBeenCalledWith(
       expect.objectContaining({
         by: ["status"],
@@ -102,23 +119,6 @@ describe("getAppData — happy path", () => {
     expect(m.entities.Lens.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         select: { id: true, name: true, color: true, kind: true, purpose: true },
-      }),
-    );
-    // Lens badges are Today-only. Upcoming remains counted only on its own nav
-    // item; it must not inflate a commitment count.
-    expect(m.entities.Task.groupBy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        by: ["lensId"],
-        where: expect.objectContaining({
-          userId: "user-1",
-          status: "TODAY",
-          isDone: false,
-        }),
-      }),
-    );
-    expect(m.entities.Task.groupBy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.not.objectContaining({ lensId: expect.anything() }),
       }),
     );
   });
@@ -265,7 +265,75 @@ describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
 });
 
 describe("getAppData — planning counter consistency", () => {
-  it("keeps Today distinct from Upcoming and makes every counter add up", async () => {
+  it("keeps Today (global) distinct from Upcoming/Someday (lens-scoped)", async () => {
+    // Today is its own global count; Upcoming/Someday come from the lens-scoped
+    // groupBy. They must never be summed into one "open" number — the scopes
+    // disagree (global today + lens upcoming + lens someday = nonsense).
+    const m = mockContext({
+      id: "user-1",
+      plan: "PRO",
+      planRenewsAt: new Date(Date.now() + 86_400_000),
+    });
+    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
+    m.entities.Lens.findMany.mockResolvedValue([
+      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
+    ]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(2); // global today
+    m.entities.Task.groupBy.mockResolvedValueOnce([
+      { status: "UPCOMING", _count: { _all: 5 } },
+      { status: "SOMEDAY", _count: { _all: 3 } },
+    ]);
+
+    const result = await getAppData({ lensId: "lens-work" }, m.context);
+
+    expect(result.counts).toMatchObject({
+      today: 2,
+      upcoming: 5,
+      someday: 3,
+    });
+    // No `open` field — it was a mixed-scope sum with no honest meaning once
+    // today went global, so it was removed.
+    expect(result.counts).not.toHaveProperty("open");
+  });
+
+  it("global Today count respects the accessible-lens filter (FREE → PERSONAL only)", async () => {
+    // A FREE user with a WORK + PERSONAL lens: the global Today count must
+    // only see the PERSONAL lens, even though both exist. This is the badge-
+    // level mirror of getTodayTasks' entitlement filter.
+    const m = mockContext(); // FREE (no plan on the default mock)
+    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
+    m.entities.Lens.findMany.mockResolvedValue([
+      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
+      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
+    ]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(1);
+    m.entities.Task.groupBy.mockResolvedValue([]);
+
+    await getAppData({ lensId: "lens-me" }, m.context);
+
+    expect(m.entities.Task.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId: "user-1",
+          // Only the PERSONAL lens is accessible to FREE; WORK is excluded.
+          lensId: { in: ["lens-me"] },
+          status: "TODAY",
+          isDone: false,
+        }),
+      }),
+    );
+  });
+
+  it("global Today count is 0 when the user has no accessible lenses", async () => {
+    // Edge case: a FREE user whose only lens is WORK (non-PERSONAL). The
+    // accessible set is empty → today must short-circuit to 0 rather than fire
+    // a Prisma `in: []` query that could surprise.
     const m = mockContext();
     m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
     m.entities.Lens.findMany.mockResolvedValue([
@@ -274,28 +342,14 @@ describe("getAppData — planning counter consistency", () => {
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Goal.count.mockResolvedValue(0);
-    m.entities.Task.groupBy
-      .mockResolvedValueOnce([
-        { status: "TODAY", _count: { _all: 2 } },
-        { status: "UPCOMING", _count: { _all: 5 } },
-        { status: "SOMEDAY", _count: { _all: 3 } },
-      ])
-      .mockResolvedValueOnce([{ lensId: "lens-work", _count: { _all: 2 } }]);
+    m.entities.Task.groupBy.mockResolvedValue([]);
 
     const result = await getAppData({ lensId: "lens-work" }, m.context);
 
-    expect(result.counts).toMatchObject({
-      today: 2,
-      upcoming: 5,
-      someday: 3,
-      open: 10,
-    });
-    expect(m.entities.Task.groupBy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        by: ["lensId"],
-        where: { userId: "user-1", status: "TODAY", isDone: false },
-      }),
-    );
+    expect(result.counts.today).toBe(0);
+    // The today count query must NOT have run — the empty-set short-circuit
+    // returns 0 directly.
+    expect(m.entities.Task.count).not.toHaveBeenCalled();
   });
 });
 
@@ -341,6 +395,45 @@ describe("updateProfile", () => {
       where: { id: "user-1" },
       data: { fullName: "Jake Doe", firstName: "Jake", preferredName: "JD" },
       select: { fullName: true, firstName: true },
+    });
+  });
+});
+
+// ----------------------------------------------------------------
+// saveTodayCap — the global Today cap preference (WORKFLOW.md §5.11)
+// ----------------------------------------------------------------
+describe("saveTodayCap", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(saveTodayCap({ todayCap: 5 }, m.context)).rejects.toThrow(
+      /Not authenticated/,
+    );
+  });
+
+  it.each([
+    [2, /between 3 and 12/],
+    [13, /between 3 and 12/],
+    [0, /between 3 and 12/],
+    [NaN, /between 3 and 12/],
+    [5.5, /between 3 and 12/],
+  ])("rejects an out-of-range or non-integer value (%s)", async (value, expected) => {
+    const m = mockContext();
+    await expect(saveTodayCap({ todayCap: value }, m.context)).rejects.toThrow(
+      expected,
+    );
+    expect(m.entities.User.update).not.toHaveBeenCalled();
+  });
+
+  it.each([[3], [12], [5], [7]])("accepts and persists a valid value (%s)", async (value) => {
+    const m = mockContext();
+    m.entities.User.update.mockResolvedValue({});
+
+    const result = await saveTodayCap({ todayCap: value }, m.context);
+
+    expect(result).toEqual({ ok: true });
+    expect(m.entities.User.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { todayCap: value },
     });
   });
 });

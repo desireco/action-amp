@@ -144,6 +144,37 @@ export async function resolveLens(
   return lens ?? null;
 }
 
+/**
+ * The lens ids a user is allowed to READ — the entitlement filter for global,
+ * cross-lens views (Today per WORKFLOW.md §5.11). Mirrors `lensViolation`'s
+ * rule: entitled users read every lens; non-entitled users read only their
+ * `PERSONAL` lenses (the seeded "Me" + any other PERSONAL lens, though in
+ * practice that's one). `WORK` and `CUSTOM` lenses are excluded for FREE.
+ *
+ * Used by global Today so a downgraded user no longer sees Today tasks from
+ * now-inaccessible lenses — the set-filter replacement for the per-task
+ * `assertLensAllowed` guard that lens-scoped reads use.
+ *
+ * Returns the full Lens rows (id + the fields a row pill needs) so the caller
+ * doesn't need a second lookup; callers that only want ids map to `.id`.
+ */
+export async function resolveAccessibleLenses(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  entities: { Lens: { findMany: (a: any) => Promise<any> } } | Record<string, unknown>,
+  user: EntitlementUser | null,
+  userId: string,
+): Promise<{ id: string; name: string; color: string | null; kind: LensKind }[]> {
+  const where = isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)
+    ? { userId }
+    : { userId, kind: "PERSONAL" as const };
+  return await (entities as {
+    Lens: { findMany: (a: unknown) => Promise<{ id: string; name: string; color: string | null; kind: LensKind }[]> };
+  }).Lens.findMany({
+    where,
+    select: { id: true, name: true, color: true, kind: true },
+  });
+}
+
 /** Default ProGate copy for the Work-lens gate (shared by client + server). */
 export const WORK_LENS_MESSAGE: EntitlementMessage = {
   feature: "the Work lens",

@@ -1,4 +1,5 @@
-import type { GetAppData, UpdateProfile } from "wasp/server/operations";
+import type { GetAppData, UpdateProfile, SaveTodayCap } from "wasp/server/operations";
+import { isEntitled } from "../billing/entitlements";
 
 /**
  * App-shell bootstrap data — runs on every app load and lens switch.
@@ -52,7 +53,7 @@ export const getAppData = (async (args, context) => {
   // fields, but the User entity delegate always does.
   const userRow = await context.entities.User.findUnique({
     where: { id: userId },
-    select: { lastTodayRolloverAt: true },
+    select: { lastTodayRolloverAt: true, todayCap: true },
   });
   const lastRoll = userRow?.lastTodayRolloverAt ?? null;
   if (!lastRoll || isDifferentDay(lastRoll, new Date())) {
@@ -80,12 +81,40 @@ export const getAppData = (async (args, context) => {
     lenses[0]?.id;
   const lensWhere = activeLensId ? { lensId: activeLensId } : {};
 
-  const [inboxCount, planningStatusRows, projectCount, goalCount, todayByLensRows] =
+  // Today is global (WORKFLOW.md §5.11) — its count spans every lens the user
+  // can read, so the Today nav badge matches the merged Today page. Upcoming +
+  // Someday stay lens-scoped (their pages still are). The two are computed by
+  // SEPARATE queries on purpose: today's predicate (accessible lenses, no
+  // active-lens filter) can't share the lens-scoped status rollup. Don't try
+  // to re-merge them — the scopes disagree by design.
+  const accessibleLensIds = lenses
+    .filter((l) =>
+      isEntitled(context.user?.plan ?? null, context.user?.planRenewsAt ?? null, context.user?.isAdmin)
+        ? true
+        : l.kind === "PERSONAL",
+    )
+    .map((l) => l.id);
+
+  const [inboxCount, todayCount, planningStatusRows, projectCount, goalCount] =
     await Promise.all([
       context.entities.InboxItem.count({ where: { userId, status: "UNPROCESSED" } }),
-      // All planning counters share one status rollup. Never calculate Today
-      // and Upcoming through different predicates: their sum must equal every
-      // incomplete task in this Lens, or users lose trust in the numbers.
+      // Global Today count — accessible-lens set, status TODAY, not done.
+      // Empty set (no accessible lenses) → 0; the `in: []` guard keeps Prisma
+      // from returning everything by accident.
+      accessibleLensIds.length === 0
+        ? Promise.resolve(0)
+        : context.entities.Task.count({
+            where: {
+              userId,
+              lensId: { in: accessibleLensIds },
+              status: "TODAY",
+              isDone: false,
+            },
+          }),
+      // Lens-scoped Upcoming + Someday rollup. (Today is intentionally absent
+      // here — it's the global query above. Do NOT add it back: a sum of
+      // global-today + lens-upcoming + lens-someday is a mixed-scope number
+      // with no honest meaning.)
       context.entities.Task.groupBy({
         by: ["status"],
         where: { userId, ...lensWhere, isDone: false },
@@ -97,23 +126,10 @@ export const getAppData = (async (args, context) => {
       context.entities.Goal.count({
         where: { userId, ...lensWhere, isDone: false },
       }),
-      // Lens badges are Today commitments too. Upcoming remains visible only on
-      // the Upcoming nav item, avoiding a misleading Today total.
-      context.entities.Task.groupBy({
-        by: ["lensId"],
-        where: { userId, status: "TODAY", isDone: false },
-        _count: { _all: true },
-      }),
     ]);
 
-  const todayByLens: Record<string, number> = {};
-  for (const row of todayByLensRows) {
-    todayByLens[row.lensId] = row._count._all;
-  }
-
-  const planning = { today: 0, upcoming: 0, someday: 0 };
+  const planning = { upcoming: 0, someday: 0 };
   for (const row of planningStatusRows) {
-    if (row.status === "TODAY") planning.today = row._count._all;
     if (row.status === "UPCOMING") planning.upcoming = row._count._all;
     if (row.status === "SOMEDAY") planning.someday = row._count._all;
   }
@@ -122,12 +138,15 @@ export const getAppData = (async (args, context) => {
     lenses,
     counts: {
       inbox: inboxCount,
+      today: todayCount,
       ...planning,
-      open: planning.today + planning.upcoming + planning.someday,
       projects: projectCount,
       goals: goalCount,
     },
-    todayByLens,
+    // Today is global + user-tunable (WORKFLOW.md §5.11). Default 5; range
+    // enforced in saveTodayCap. The shell passes it through so TodayPage and
+    // PreferencesPage read one shared value.
+    todayCap: userRow?.todayCap ?? 5,
   };
 }) satisfies GetAppData<
   { lensId?: string | null },
@@ -138,11 +157,10 @@ export const getAppData = (async (args, context) => {
       today: number;
       upcoming: number;
       someday: number;
-      open: number;
       projects: number;
       goals: number;
     };
-    todayByLens: Record<string, number>;
+    todayCap: number;
   }
 >;
 
@@ -195,3 +213,33 @@ export const updateProfile = (async (args, context) => {
   { fullName: string; preferredName: string },
   { fullName: string; firstName: string; preferredName: string }
 >;
+
+/**
+ * Today cap preference — the committed-for-today ceiling, global across lenses
+ * (WORKFLOW.md §5.11). Range 3–12, integer; default 5 (set on the column).
+ * Mirrors saveDailyReminder's shape (validate → update → { ok }). The cap is
+ * enforced client-side in TodayPage against the value getAppData returns; the
+ * server only stores the preference.
+ */
+export const saveTodayCap = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  if (
+    !Number.isInteger(args.todayCap) ||
+    args.todayCap < TODAY_CAP_MIN ||
+    args.todayCap > TODAY_CAP_MAX
+  ) {
+    throw new Error(`Today cap must be a whole number between ${TODAY_CAP_MIN} and ${TODAY_CAP_MAX}.`);
+  }
+  await context.entities.User.update({
+    where: { id: context.user.id },
+    data: { todayCap: args.todayCap },
+  });
+  return { ok: true as const };
+}) satisfies SaveTodayCap<{ todayCap: number }, { ok: true }>;
+
+/** Today-cap bounds — shared with the client via re-export from app/operations. */
+export const TODAY_CAP_DEFAULT = 5;
+export const TODAY_CAP_MIN = 3;
+export const TODAY_CAP_MAX = 12;
