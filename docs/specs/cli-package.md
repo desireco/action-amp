@@ -2,7 +2,7 @@
 id: cli-package
 kind: spec
 title: "CLI package + op refactor (Phase 1 of the CLI effort)"
-status: building
+status: review
 priority: P3
 feature: cli
 spec_owner: discover
@@ -213,7 +213,13 @@ lens in this order:**
 The `?lensId=` query param on the Phase 0 `/api/cli/now` stub is replaced by
 this resolution in the `cli/` package's `now` command.
 
-## Prototype (first Phase 1 pull — throwaway, "discard on lock")
+## Prototype — SHIPPED 2026-07-22 (throwaway; "discard on lock")
+
+> **Status: `review`.** Built as the first Phase 1 pull. The four verbs work
+> end-to-end against a running dev server (see the verification log below). All
+> four steering questions are open — answer them after ~a week of use, then
+> decide which of the three Phase 1 scope forks (§"Phase 1 scope options") is
+> the real one.
 
 A throwaway `cli/actionamp.ts` (~100 lines, pure Node 22+, **no dependencies**)
 that validates the transport *and* the feel of the loop before committing to
@@ -270,6 +276,34 @@ Three honest forks, ordered by what the prototype is likeliest to confirm:
 - **Full surface (current spec)** — all ~14 commands + `--json` + op-refactor.
   Largest. Only if the prototype confirms the browsing commands pull weight
   from the terminal, which is the least likely outcome.
+
+### Verification log (2026-07-22)
+
+Prototype exercised end-to-end against `wasp start` (API on :3001) with a
+session-issued PAT. All four verbs + `--json` + error paths verified:
+
+| Step | Command | Result |
+|---|---|---|
+| 1 | `--help` | Usage text printed. ✅ |
+| 2 | `now` (not logged in) | `Not logged in. Run: actionamp login` + exit 1. ✅ |
+| 3 | `login` (pipe a real PAT) | `Signed in. API: http://localhost:3001`. ✅ |
+| 4 | `now` | `Capture one real thing on your mind` (the user's actual top task). ✅ |
+| 5 | `now --json` | Full task JSON (id, description, lens, project, …). ✅ |
+| 6 | `capture "text #cli"` | `Captured.` ✅ |
+| 7 | `capture "…" --json` | `{ok:true, id, text, createdAt}`. ✅ |
+| 8 | `capture` (no text) | Usage error + exit 1. ✅ |
+| 9 | `logout` | `Signed out.` + config deleted. ✅ |
+| 10 | `now` (after logout) | `Not logged in.` ✅ |
+| 11 | `login` with `aa_bogus` | `Token rejected (401).` + exit 1. ✅ |
+
+Also verified the Phase 0 review-fix path still holds end-to-end through the
+CLI: the prototype's `now` resolves the default lens via `resolveAccessibleLenses`
+(FREE → PERSONAL), and `/api/cli/capture` is wired behind `patRouteMiddleware`
+with the same ⚠ guard comment as `/api/cli/now`.
+
+**No new backend route gaps.** `/api/cli/capture` added in the same pull,
+duplicating `createInboxItem`'s logic inline (the same tradeoff `cliNow` makes
+for `getTopTask`). Phase 1's op refactor collapses both duplications.
 
 ## Dependencies
 

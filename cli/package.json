@@ -1,0 +1,6 @@
+{
+  "name": "actionamp-cli-prototype",
+  "private": true,
+  "comment": "Throwaway prototype (docs/specs/cli-package.md §Prototype). The real cli/ package — typed, tested, commander-based — replaces this. The only purpose of this file is to set type:module so Node doesn't warn about MODULE_TYPELESS_PACKAGE_JSON when running actionamp.ts directly.",
+  "type": "module"
+}

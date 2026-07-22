@@ -40,7 +40,7 @@ import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with {
 import { publicStatusMiddleware } from "./src/billing/statusMiddleware" with { type: "ref" };
 // CLI auth (PAT plumbing) — issue/revoke/list + the /api/cli/now stub. See
 // docs/specs/cli-pat-plumbing.md.
-import { patIssue, patRevoke, patList, cliNow } from "./src/auth/patRoutes" with { type: "ref" };
+import { patIssue, patRevoke, patList, cliNow, cliCapture } from "./src/auth/patRoutes" with { type: "ref" };
 import { patRouteMiddleware } from "./src/auth/patMiddleware" with { type: "ref" };
 import { PatSettingsPage } from "./src/app/PatSettingsPage" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
@@ -272,6 +272,13 @@ export default app({
     // `docs/reviews/cli-pat-plumbing.md` curls each `/api/cli/*` route
     // without a token and asserts 401; update it whenever a CLI route is added.
     api("GET", "/api/cli/now", cliNow, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // CLI quick-capture (prototype). Mirror of createInboxItem; Phase 1's
+    // op refactor collapses the duplication.
+    api("POST", "/api/cli/capture", cliCapture, {
       entities: [],
       auth: false,
       middlewareConfigFn: patRouteMiddleware,

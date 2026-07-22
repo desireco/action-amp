@@ -1,17 +1,17 @@
 /**
- * PAT route handlers + the `/api/cli/now` stub.
+ * PAT route handlers + the `/api/cli/now` and `/api/cli/capture` stubs.
  *
  * Three session-authed routes (issue / revoke / list) manage tokens from the
  * Settings UI. They run behind Wasp's normal `auth: true` (the logged-in user
- * is `context.user`). The `/api/cli/now` stub runs behind `patRouteMiddleware`
- * instead (Bearer auth) and proves the PAT layer end-to-end — a valid token
- * returns the user's top task; anything else 401s.
+ * is `context.user`). The `/api/cli/*` routes run behind `patRouteMiddleware`
+ * instead (Bearer auth) and prove the PAT layer end-to-end — a valid token
+ * returns real data; anything else 401s.
  *
- * No op-refactor here. The stub re-implements the small `getTopTask` candidate
- * query inline (the spec's "no op-refactor yet" non-goal). `cli-package` (next
- * phase) is where the pure-function refactor lands; this stub is replaced by
- * the real CLI surface then. Re-implementing ~15 lines is cheaper than
- * factoring an op halfway and undoing it.
+ * No op-refactor here. The stubs re-implement small slices of `getTopTask` /
+ * `createInboxItem` inline (the spec's "no op-refactor yet" non-goal for the
+ * prototype). `cli-package` is where the pure-function refactor lands; these
+ * stubs are replaced by the real CLI surface then. Re-implementing ~15 lines
+ * each is cheaper than factoring ops halfway and undoing them.
  */
 import type { Request, Response } from "express";
 import { generateToken, hashToken, TOKEN_PREFIX } from "./pat";
@@ -24,6 +24,7 @@ import {
   WORK_LENS_MESSAGE,
   type EntitlementUser,
 } from "../billing/entitlements";
+import { parseCapture } from "../inbox/parseCapture";
 
 // Wasp injects `context.entities.<EntityName>` (Prisma clients) for every
 // entity listed in the route's `entities:` array. We type the slice we use so
@@ -239,6 +240,58 @@ export const cliNow = async (req: Request, res: Response, _context: unknown) => 
   } catch (err) {
     console.error("[cli/now] failed:", err);
     return res.status(500).json({ error: "Could not resolve top task." });
+  }
+};
+
+// ───────────────────────────────────────────────────────────────────────────
+// POST /api/cli/capture — PAT-middleware protected. Quick-capture to inbox.
+//
+// Mirror of `createInboxItem` for the CLI prototype (same inline-duplication
+// tradeoff as `cliNow` — Phase 1's op refactor collapses this). Inbox is
+// universal (not lens-scoped), so no entitlement gate; the PAT already
+// resolved the user. `projectName` is optional (the typeahead pick); the
+// parser also extracts #project / @date / !priority / #tags / [[lens]].
+// ───────────────────────────────────────────────────────────────────────────
+export const cliCapture = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!user) {
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+
+  const raw = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+  if (!raw) {
+    return res.status(400).json({ error: "Capture text is required." });
+  }
+  const projectName =
+    typeof req.body?.projectName === "string" ? req.body.projectName.trim() : undefined;
+
+  const { authPrisma: prisma } = await import("./prisma");
+  try {
+    // Pull custom lens names so `[[studio]]` is recognized at parse time
+    // (seeded work/me are always known). Mirrors createInboxItem.
+    const customLenses = await prisma.lens.findMany({
+      where: { userId: user.id, kind: "CUSTOM" },
+      select: { name: true },
+    });
+    const parsed = parseCapture(raw, new Date(), customLenses.map((l) => l.name));
+
+    const created = await prisma.inboxItem.create({
+      data: {
+        text: parsed.cleanText,
+        userId: user.id,
+        parsedDate: parsed.parsedDate,
+        parsedPriority: parsed.parsedPriority,
+        parsedSize: parsed.parsedSize,
+        parsedTags: parsed.parsedTags,
+        parsedProject: projectName?.toLowerCase() || parsed.parsedProject,
+        parsedLens: parsed.parsedLens,
+      },
+      select: { id: true, text: true, createdAt: true },
+    });
+    return res.status(201).json({ ok: true, ...created });
+  } catch (err) {
+    console.error("[cli/capture] failed:", err);
+    return res.status(500).json({ error: "Could not capture." });
   }
 };
 
