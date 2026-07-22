@@ -1,0 +1,29 @@
+{
+  "name": "actionamp-admin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ActionAmp admin terminal client — feedback triage + admin ops",
+  "type": "module",
+  "bin": {
+    "actionamp-admin": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "cli-truncate": "^4.0.0",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "msw": "^2.7.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.10"
+  }
+}
