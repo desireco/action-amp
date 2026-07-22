@@ -58,22 +58,18 @@
   white-space: nowrap;
 }
 
-/* "See Today" link — mobile only, top + centered. Today left the bottom dock
-   (folded into Do), so this is the path from the Next/Do chooser to the Today
-   list. Desktop has Today in the sidebar, so it's hidden there. */
+/* "See Today" link — top of the Next/Do chooser. Today left the bottom dock
+   (folded into Do), so this is the page-level path from the focus card to the
+   Today list. Mirrors the mobile treatment at all widths — the sidebar link
+   exists too, but on the focus surface itself the affordance stays visible so
+   you don't have to leave the page's flow to reach Today. */
 .aa-wn-today-link {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .aa-wn-today-link {
-    display: block;
-    text-align: center;
-    margin-bottom: var(--aa-space-lg);
-    font-size: var(--aa-text-base);
-    font-weight: var(--aa-weight-semibold);
-    color: var(--aa-teal-cta);
-    text-decoration: none;
-  }
+  display: block;
+  text-align: center;
+  margin-bottom: var(--aa-space-lg);
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-teal-cta);
+  text-decoration: none;
 }
 
