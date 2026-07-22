@@ -13,6 +13,10 @@ created: 2026-07-22
 # sync-managed (do not hand-edit; written by duet sync):
 # gh_node_id: (pending first duet-sync-push.sh run)
 # gh_synced_at: (pending)
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4M6OdI      # sync-managed (write-once)
+gh_synced_at: 2026-07-22T00:58:08Z   # sync-managed (drift detection)
 ---
 
 # Task: Session cookie write races with `res` finish
