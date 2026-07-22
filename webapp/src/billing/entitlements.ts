@@ -38,7 +38,7 @@ import type { EntitlementMessage } from "./entitlement-types";
 /** The subset of a user the entitlement decisions read. Both fields optional
  * (Wasp's AuthUser types them as `Plan` with a FREE default; we accept absent).
  * `isAdmin` is the staff/dev bypass — true short-circuits every gate. */
-interface EntitlementUser {
+export interface EntitlementUser {
   plan?: string | null;
   planRenewsAt?: Date | null;
   isAdmin?: boolean | null;
