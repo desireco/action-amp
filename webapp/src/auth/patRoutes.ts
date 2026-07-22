@@ -295,5 +295,27 @@ export const cliCapture = async (req: Request, res: Response, _context: unknown)
   }
 };
 
+// ───────────────────────────────────────────────────────────────────────────
+// GET /api/cli/whoami — PAT-middleware protected. Returns the resolved user.
+//
+// Used by the CLI's `login` flow (post-callback "Signed in as <email>") and
+// by a future `actionamp whoami` command. Cheap: the middleware already did
+// the resolve; this just returns what's on req.patUser.
+// ───────────────────────────────────────────────────────────────────────────
+export const cliWhoami = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!user) {
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+  return res.status(200).json({
+    user: {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      plan: user.plan,
+    },
+  });
+};
+
 // Exported for tests + the CLI client (Phase 1) to reference the token format.
 export { TOKEN_PREFIX };

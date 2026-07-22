@@ -1,55 +1,50 @@
 # actionamp — prototype CLI
 
 > **Throwaway.** This is the validation slice `docs/specs/cli-package.md` §Prototype
-> calls for: ~150 lines of pure Node, no deps, built to learn whether the transport
-> and the loop feel right before committing to the typed/tested/`commander`-based
+> calls for: pure Node, no deps, built to learn whether the transport and the
+> loop feel right before committing to the typed/tested/`commander`-based
 > package in real Phase 1. **Discard on lock** — the real `cli/` package replaces
 > this file entirely.
 
 ## Prereqs
 
-- Node 22+ (uses native `fetch` + `parseArgs`)
-- The ActionAmp dev server running: `wasp start` from `webapp/` (API on :3001)
-
-## Setup
-
-```sh
-# From the repo root. Node 23.6+ strips types by default; 22 needs the flag.
-alias actionamp="node --experimental-strip-types $(pwd)/cli/actionamp.ts"
-
-# Or just call it directly each time:
-NODE='node --experimental-strip-types'
-```
+- Node 22+ (uses native `fetch`, `parseArgs`, `http`, `crypto`)
+- The ActionAmp dev server running: `wasp start` from `webapp/` (web on :4000, API on :3001)
+- `webapp/.env.client` with `REACT_APP_API_URL=http://localhost:3001` (without it, the `/cli/login` page can't reach the API cross-origin)
 
 ## The loop
 
-1. **Issue a token** in the app: Settings → Access tokens → label `laptop` →
-   Issue → copy the `aa_…` plaintext (shown once).
-
-2. **Log in:**
+1. **Log in** (the OAuth flow — no copy/paste of tokens):
    ```sh
-   $ actionamp login
-   Paste your token (from Settings → Access tokens): aa_…
-   Signed in. API: http://localhost:3001
-   ```
-   `login` validates the token by hitting `/api/cli/now` — if the token is
-   wrong or revoked, it refuses to save.
+   $ actionamp login --dev
+   Opening browser to http://localhost:4000/cli/login?callback=…&state=…
+   Waiting for authorization… (Ctrl+C to cancel)
 
-3. **See your top task:**
+     ← browser opens →
+     ← if not logged in: redirects to /login, then back to /cli/login →
+     ← "Authorize ActionAmp CLI?" page with a Confirm button →
+     ← on click: mints a PAT via the mintCliToken action, redirects to callback →
+
+   Signed in as zeljko@dakic.com.
+   Token saved. Revoke it any time from Settings → Access tokens.
+   ```
+   `--dev` targets `localhost:3001` / `localhost:4000`. Default (no flag) is
+   `api.actionamp.com` / `app.actionamp.com`.
+
+2. **See your top task:**
    ```sh
    $ actionamp now
-   Ship the auth refactor · in ProjectX
+   Capture one real thing on your mind
    ```
    Empty pool → `Nothing on the table.` This is the same task `/app` shows.
 
-4. **Capture a thought without breaking flow:**
+3. **Capture a thought without breaking flow:**
    ```sh
    $ actionamp capture "fix the off-by-one in pagination #backend"
    Captured.
    ```
-   NL parsing (dates, priorities, tags, projects) is identical to the web `⌘K`.
 
-5. **Sign out:**
+4. **Sign out:**
    ```sh
    $ actionamp logout
    Signed out.
@@ -61,7 +56,7 @@ Every command emits JSON when asked. Useful for orchestration skills (Phase 2):
 
 ```sh
 $ actionamp now --json
-{"task":{"id":"…","description":"Ship the auth refactor","project":{"name":"ProjectX"},…}}
+{"task":{"id":"…","description":"Capture one real thing on your mind","project":null,…}}
 
 $ actionamp now --json   # nothing on the table
 {"task":null,"reason":"no-candidates"}
@@ -77,6 +72,25 @@ $ actionamp now --json    # not logged in
 {"error":"Not logged in. Run: actionamp login"}
 ```
 
+## How login works (under the hood)
+
+The CLI is not a trusted token-issuer — only the authed browser can mint — so
+the CLI asks the browser to do it, then receives the result via a localhost
+callback (same pattern as `gh auth login`, `stripe login`, `vercel login`):
+
+1. CLI spins up a one-shot `http.createServer` on a random high port.
+2. CLI generates a `state` nonce (CSRF protection).
+3. CLI opens the browser to `${webUrl}/cli/login?callback=http://localhost:<port>/callback&state=<state>`.
+4. The `/cli/login` page (session-authed, explicit confirm) mints an `ApiKey`
+   via the `mintCliToken` action, redirects the browser to the callback with
+   `?token=…&state=<same state>`.
+5. CLI receives the callback, validates `state` matches, stores the token in
+   `~/.config/actionamp/config.json` (mode 0600), shuts down the server.
+
+**Token storage** is unchanged from the PAT layer (Phase 0): SHA-256 hashed in
+the `ApiKey` table, revocable from Settings → Access tokens. The OAuth flow is
+purely a better delivery mechanism for that row.
+
 ## Config
 
 `~/.config/actionamp/config.json`:
@@ -84,7 +98,9 @@ $ actionamp now --json    # not logged in
 { "token": "aa_…", "apiUrl": "http://localhost:3001" }
 ```
 
-Override the API URL with `ACTIONAMP_API_URL=https://api.actionamp.com` (prod).
+Override origins with env vars:
+- `ACTIONAMP_API_URL` — the API origin (default: prod `api.actionamp.com`, or `localhost:3001` with `--dev`)
+- `ACTIONAMP_WEB_URL` — the web client origin where `/cli/login` lives (default: prod `app.actionamp.com`, or `localhost:4000` with `--dev`)
 
 ## What this prototype is for
 

@@ -1,0 +1,55 @@
+@import "../styles/tokens.css";
+
+/* /cli/login — the OAuth-style authorization page. Minimal, centered, calm.
+   No streaks/badges/exclamation marks — ActionAmp tone. */
+
+.aa-cli-login {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--aa-space-xl) var(--aa-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-md);
+}
+
+.aa-cli-login h1 {
+  font-size: var(--aa-text-2xl);
+  font-weight: var(--aa-weight-bold);
+  color: var(--aa-text);
+  margin: 0;
+  letter-spacing: 0;
+}
+
+.aa-cli-login p {
+  font-size: var(--aa-text-md);
+  line-height: var(--aa-leading-normal);
+  color: var(--aa-text-2);
+  margin: 0;
+}
+
+.aa-cli-login__muted {
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-base);
+}
+
+.aa-cli-login__success {
+  color: var(--aa-teal-cta);
+  font-weight: var(--aa-weight-medium);
+}
+
+.aa-cli-login__error {
+  color: var(--aa-rose-text);
+}
+
+.aa-cli-login code {
+  font-family: var(--aa-font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: var(--aa-text-sm);
+  background: var(--aa-surface-muted);
+  padding: 1px 6px;
+  border-radius: var(--aa-radius-xs);
+}
+
+.aa-cli-login button {
+  align-self: flex-start;
+  margin-top: var(--aa-space-sm);
+}

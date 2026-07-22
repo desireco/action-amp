@@ -40,9 +40,11 @@ import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with {
 import { publicStatusMiddleware } from "./src/billing/statusMiddleware" with { type: "ref" };
 // CLI auth (PAT plumbing) — issue/revoke/list + the /api/cli/now stub. See
 // docs/specs/cli-pat-plumbing.md.
-import { patIssue, patRevoke, patList, cliNow, cliCapture } from "./src/auth/patRoutes" with { type: "ref" };
+import { patIssue, patRevoke, patList, cliNow, cliCapture, cliWhoami } from "./src/auth/patRoutes" with { type: "ref" };
+import { mintCliToken } from "./src/auth/cliMint" with { type: "ref" };
 import { patRouteMiddleware } from "./src/auth/patMiddleware" with { type: "ref" };
 import { PatSettingsPage } from "./src/app/PatSettingsPage" with { type: "ref" };
+import { CliLoginPage } from "./src/auth/CliLoginPage" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
 import { LoginPage } from "./src/auth/email/LoginPage" with { type: "ref" };
 import { PasswordResetPage } from "./src/auth/email/PasswordResetPage" with { type: "ref" };
@@ -166,6 +168,11 @@ export default app({
     route("Founding100Route", "/founding-100", page(Founding100Page, { authRequired: true })),
     route("Founding100WelcomeRoute", "/founding-100/welcome", page(Founding100WelcomePage)),
     route("LoginRoute", "/login", page(LoginPage)),
+    // CLI OAuth login — the browser half of `actionamp login`. Session-authed
+    // (authRequired: true → Wasp redirects to /login then back here with the
+    // callback/state query params preserved). Explicit-consent confirm mints
+    // an ApiKey and redirects to the CLI's localhost callback.
+    route("CliLoginRoute", "/cli/login", page(CliLoginPage, { authRequired: true })),
     route("SignupRoute", "/signup", page(SignupPage)),
     route(
       "RequestPasswordResetRoute",
@@ -179,6 +186,10 @@ export default app({
       page(EmailVerificationPage),
     ),
     action(prepareDevAutologin, { auth: false }),
+    // CLI OAuth mint — the /cli/login page calls this to mint a PAT on confirm.
+    // A Wasp action (not a custom api route) so it goes through /operations/*
+    // where CORS+credentials are properly handled cross-origin.
+    action(mintCliToken, { entities: ["ApiKey"], auth: true }),
     query(getTask, { entities: ["Task"], auth: true }),
     query(getTasks, { entities: ["Task", "Lens"], auth: true }),
     query(getTodayTasks, { entities: ["Task", "Lens"], auth: true }),
@@ -247,7 +258,11 @@ export default app({
     // ── CLI auth (PAT plumbing) ────────────────────────────────────────────
     // The three session-authed token-management routes. `auth: true` (the
     // default) gates these to the logged-in user; `context.user.id` is the
-    // tenancy key. See src/auth/patRoutes.ts + docs/specs/cli-pat-plumbing.md.
+    // tenancy key. CORS credentials (needed for the browser to send the
+    // session cookie cross-origin) are handled globally in
+    // `auth/serverMiddleware.ts` — a per-route middleware can't do it because
+    // Express's method-specific routes don't match the OPTIONS preflight.
+    // See src/auth/patRoutes.ts + docs/specs/cli-pat-plumbing.md.
     api("POST", "/api/pat/issue", patIssue, {
       entities: ["ApiKey"],
       auth: true,
@@ -279,6 +294,13 @@ export default app({
     // CLI quick-capture (prototype). Mirror of createInboxItem; Phase 1's
     // op refactor collapses the duplication.
     api("POST", "/api/cli/capture", cliCapture, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // CLI whoami — returns the resolved user (email/fullName/plan). Used by
+    // the OAuth login flow's post-callback "Signed in as" line.
+    api("GET", "/api/cli/whoami", cliWhoami, {
       entities: [],
       auth: false,
       middlewareConfigFn: patRouteMiddleware,
