@@ -365,13 +365,26 @@ model TaskSession {
 // Submitted from the shell feedback button. Always stored; production also
 // emails the configured admin. Context fields are intentionally denormalized so
 // feedback remains useful even if a lens is renamed later.
+enum FeedbackStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
 model Feedback {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   message   String
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
+
+  // Triage state — managed by admins (via the admin CLI / future admin UI).
+  // OPEN is the default for freshly submitted feedback. Existing rows backfill
+  // to OPEN on migration (anything not yet triaged is, by definition, open).
+  status FeedbackStatus @default(OPEN)
 
   userName  String?
   userEmail String?

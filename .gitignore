@@ -9,6 +9,8 @@ webapp/.env*
 webapp/build/
 cli/node_modules/
 cli/dist/
+admin-cli/node_modules/
+admin-cli/dist/
 
 # secrets
 .env
