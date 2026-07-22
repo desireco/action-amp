@@ -19,7 +19,34 @@ import type {
 } from "wasp/server/operations";
 import { assertLensAllowed } from "../billing/entitlementHttp";
 import { resolveAccessibleLenses } from "../billing/entitlements";
-import { activePoolWhere } from "./activePool";
+// Pure cores shared with /api/cli/* routes — auth + entitlement guards stay
+// here (the wrapper), the DB shape lives in the core. See operationsCore.ts.
+import {
+  getTaskData,
+  getTasksData,
+  getTodayTasksData,
+  getDoneTodayData,
+  getTopTaskData,
+  toggleTaskDoneCore,
+  snoozeTaskCore,
+  updateTaskStatusCore,
+  startTaskCore,
+  pauseTaskCore,
+  PRIORITY_RANK,
+  SIZE_RANK,
+} from "./operationsCore";
+// Re-export the ranks + cores for back-compat: patRoutes.ts imports
+// PRIORITY_RANK/SIZE_RANK from this module, and other callers may reach the
+// cores through the familiar path.
+export {
+  PRIORITY_RANK,
+  SIZE_RANK,
+  getTopTaskData,
+  toggleTaskDoneCore,
+  snoozeTaskCore,
+  startTaskCore,
+  pauseTaskCore,
+};
 
 /**
  * Task operations for the Phase 4 list views.
@@ -40,17 +67,9 @@ export const getTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  return await context.entities.Task.findFirst({
-    where: {
-      userId: context.user.id,
-      OR: [{ id: args.id }, { permalink: args.id }],
-    },
-    include: {
-      tags: true,
-      updates: { orderBy: { createdAt: "asc" } },
-      project: { select: { id: true, permalink: true, name: true } },
-      goal: { select: { id: true, permalink: true, name: true } },
-    },
+  return await getTaskData(context.entities, {
+    userId: context.user.id,
+    id: args.id,
   });
 }) satisfies GetTask<{ id: string }>;
 
@@ -69,21 +88,11 @@ export const getTasks = (async (args, context) => {
   // existing content; only list/scope reads enforce the lens rule.
   await assertLensAllowed(context, args.lensId);
 
-  const where: Record<string, unknown> = {
+  return await getTasksData(context.entities, {
     userId: context.user.id,
     lensId: args.lensId,
-  };
-  if (args.status) where.status = args.status;
-  if (args.isDone !== undefined) where.isDone = args.isDone;
-
-  return await context.entities.Task.findMany({
-    where,
-    orderBy: [{ order: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
-    include: {
-      tags: true,
-      project: { select: { id: true, name: true } },
-      goal: { select: { id: true, name: true } },
-    },
+    status: args.status,
+    isDone: args.isDone,
   });
 }) satisfies GetTasks<{
   lensId: string;
@@ -108,31 +117,11 @@ export const getTodayTasks = (async (_args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const accessible = await resolveAccessibleLenses(
-    context.entities,
-    context.user,
-    context.user.id,
-  );
-  const lensIds = accessible.map((l) => l.id);
-  // No accessible lenses (a brand-new account mid-onboarding) → empty list
-  // rather than a Prisma error on `lensId: { in: [] }` (which actually returns
-  // nothing in Prisma, but this makes the intent explicit).
-  if (lensIds.length === 0) return [];
-
-  return await context.entities.Task.findMany({
-    where: {
-      userId: context.user.id,
-      lensId: { in: lensIds },
-      status: "TODAY",
-      isDone: false,
-    },
-    orderBy: [{ order: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
-    include: {
-      tags: true,
-      project: { select: { id: true, name: true } },
-      goal: { select: { id: true, name: true } },
-      lens: { select: { id: true, name: true, color: true } },
-    },
+  // The core resolves the accessible-lens set internally (entitlement gate for
+  // the global Today list) and returns [] when none are accessible.
+  return await getTodayTasksData(context.entities, {
+    user: context.user,
+    userId: context.user.id,
   });
 }) satisfies GetTodayTasks<never>;
 
@@ -165,36 +154,11 @@ export const getDoneToday = (async (args, context) => {
     );
     lensIds = accessible.map((l) => l.id);
   }
-  // Local-midnight boundary: completedAt is stamped server-side on toggle; we
-  // compare against the start of "today" in the server's locale. Day-granular
-  // is the right resolution for a "done today" section.
-  // Status scoping: only tasks that were committed to Today (status=TODAY)
-  // belong here. Completion (completeTaskFromFocus) sets isDone + completedAt
-  // but leaves status untouched, so an Upcoming task finished via focus stays
-  // status=UPCOMING and is correctly excluded. A Today task that rolls to
-  // Upcoming at midnight and is then completed no longer counts as "today's
-  // work" — by then it wasn't committed to the day.
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
-  // Empty accessible set → empty result (no Prisma `in: []` surprise).
-  if (lensIds.length === 0) return [];
-
-  return await context.entities.Task.findMany({
-    where: {
-      userId: context.user.id,
-      lensId: { in: lensIds },
-      status: "TODAY",
-      isDone: true,
-      completedAt: { gte: startOfToday },
-    },
-    orderBy: { completedAt: "desc" },
-    include: {
-      tags: true,
-      project: { select: { id: true, name: true } },
-      goal: { select: { id: true, name: true } },
-      lens: { select: { id: true, name: true, color: true } },
-    },
+  // The startOfToday boundary + status=TODAY scoping live in the core so both
+  // paths share them; the caller only decides WHICH lens set applies.
+  return await getDoneTodayData(context.entities, {
+    userId: context.user.id,
+    lensIds,
   });
 }) satisfies GetDoneToday<{ lensId?: string }>;
 
@@ -212,28 +176,12 @@ export const toggleTaskDone = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const task = await context.entities.Task.findUnique({
-    where: { id: args.id },
-    select: { isDone: true, userId: true },
-  });
-  if (!task || task.userId !== context.user.id) {
-    throw new Error("Task not found.");
-  }
-  const next = !task.isDone;
-  const data: Record<string, unknown> = {
-    isDone: next,
-    completedAt: next ? new Date() : null,
-    startedAt: null,
-  };
-  // Outcome is part of the completion act, not the un-completion act. A future
-  // toggle-open preserves any captured note; re-completing with a new note is
-  // last-write-wins.
-  if (next && args.outcome !== undefined) {
-    data.outcome = args.outcome.trim() || null;
-  }
-  return await context.entities.Task.update({
-    where: { id: args.id },
-    data,
+  // Tenancy (findUnique + userId check) + the outcome/done-state payload live
+  // in the core; the wrapper is just auth.
+  return await toggleTaskDoneCore(context.entities, {
+    userId: context.user.id,
+    id: args.id,
+    outcome: args.outcome,
   });
 }) satisfies ToggleTaskDone<{ id: string; outcome?: string }>;
 
@@ -246,16 +194,11 @@ export const updateTaskStatus = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const task = await context.entities.Task.findUnique({
-    where: { id: args.id },
-    select: { userId: true },
-  });
-  if (!task || task.userId !== context.user.id) {
-    throw new Error("Task not found.");
-  }
-  return await context.entities.Task.update({
-    where: { id: args.id },
-    data: { status: args.status, dueDate: args.dueDate ?? undefined },
+  return await updateTaskStatusCore(context.entities, {
+    userId: context.user.id,
+    id: args.id,
+    status: args.status,
+    dueDate: args.dueDate,
   });
 }) satisfies UpdateTaskStatus<{
   id: string;
@@ -302,15 +245,8 @@ export const unscheduleOverdueTasks = (async (args, context) => {
 // puts real work in front of you, not behind a toggle (WORKFLOW.md §5.2).
 // Rank by priority (IMPORTANT > NORMAL > LOW), then size (smaller = quick win),
 // then oldest. Returns the top 1, or null when nothing's on the table.
-// Exported so the CLI `/api/cli/now` stub (auth/patRoutes.ts) ranks candidates
-// identically without re-implementing the maps — drift here would mean the
-// CLI surfaces a different "top" than the home screen.
-export const PRIORITY_RANK: Record<string, number> = {
-  IMPORTANT: 0,
-  NORMAL: 1,
-  LOW: 2,
-};
-export const SIZE_RANK: Record<string, number> = { S: 0, M: 1, L: 2, XL: 3 };
+// PRIORITY_RANK/SIZE_RANK + the comparator live in operationsCore.ts (re-
+// exported above) so the CLI's patRoutes.ts can rank the same pool.
 
 export const getTopTask = (async (args, context) => {
   if (!context.user) {
@@ -320,45 +256,12 @@ export const getTopTask = (async (args, context) => {
   // calls this; a FREE user lands on Me, so this passes — the guard exists for
   // the localStorage-bypass case where a Work lensId reaches the server.
   await assertLensAllowed(context, args.lensId);
-  // Candidate pool = the shared actionable predicate (WORKFLOW.md §5.2). Same
-  // filter the Today nav badge + lens pills count against, so Next and every
-  // count can never diverge. See tasks/activePool.ts.
-  const candidates = await context.entities.Task.findMany({
-    where: activePoolWhere({
-      userId: context.user.id,
-      lensId: args.lensId,
-    }),
-    include: {
-      project: { select: { id: true, name: true } },
-      goal: { select: { id: true, name: true } },
-    },
+  // Candidate fetch + sort live in the core so the CLI `/api/cli/now` route
+  // can rank candidates identically without re-implementing the comparator.
+  return await getTopTaskData(context.entities, {
+    userId: context.user.id,
+    lensId: args.lensId,
   });
-  if (candidates.length === 0) return null;
-
-  candidates.sort((a, b) => {
-    // An in-progress task (startedAt != null) is ALWAYS #1 — "Now" survives
-    // navigation. Among the rest, rank by priority > size > oldest.
-    const aStarted = a.startedAt ? 0 : 1;
-    const bStarted = b.startedAt ? 0 : 1;
-    if (aStarted !== bStarted) return aStarted - bStarted;
-    if (a.startedAt && b.startedAt) {
-      return a.startedAt.getTime() - b.startedAt.getTime();
-    }
-    // A committed-Today task outranks a bench (Upcoming) task at equal
-    // priority/size — you don't want a bench task stealing the slot of
-    // something you explicitly put on the court.
-    const aToday = a.status === "TODAY" ? 0 : 1;
-    const bToday = b.status === "TODAY" ? 0 : 1;
-    if (aToday !== bToday) return aToday - bToday;
-    const pr =
-      (PRIORITY_RANK[a.priority] ?? 1) - (PRIORITY_RANK[b.priority] ?? 1);
-    if (pr !== 0) return pr;
-    const sr = (SIZE_RANK[a.size] ?? 1) - (SIZE_RANK[b.size] ?? 1);
-    if (sr !== 0) return sr;
-    return a.createdAt.getTime() - b.createdAt.getTime();
-  });
-
-  return candidates[0];
 }) satisfies GetTopTask<{ lensId: string }>;
 
 // ----------------------------------------------------------------
@@ -393,56 +296,18 @@ export const getFocusedTask = (async (_args, context) => {
 // Presets: 1h / 3h / tomorrow / weekend → Task(status=UPCOMING, dueDate=then)
 //          someday                                   → Task(status=SOMEDAY, dueDate=null)
 // The task leaves the focus queue until the snooze expires (then it's a
-// candidate again via Upcoming/Today rollover).
-const SNOWIZE_OFFSETS: Record<string, number> = {
-  "1h": 3600_000,
-  "3h": 3 * 3600_000,
-};
+// candidate again via Upcoming/Today rollover). The pure `snoozeTarget`
+// helper (preset → {status, dueDate}) lives in operationsCore.ts and is unit-
+// tested there; the wrapper is just auth + tenancy + the write.
 
 export const snoozeTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const task = await context.entities.Task.findUnique({
-    where: { id: args.id },
-    select: { userId: true },
-  });
-  if (!task || task.userId !== context.user.id) {
-    throw new Error("Task not found.");
-  }
-
-  let status: "UPCOMING" | "SOMEDAY" = "UPCOMING";
-  let dueDate: Date | null = new Date();
-  switch (args.preset) {
-    case "1h":
-    case "3h":
-      dueDate = new Date(Date.now() + SNOWIZE_OFFSETS[args.preset]);
-      break;
-    case "tomorrow": {
-      const d = new Date();
-      d.setDate(d.getDate() + 1);
-      d.setHours(9, 0, 0, 0);
-      dueDate = d;
-      break;
-    }
-    case "weekend": {
-      const d = new Date();
-      const dow = d.getDay();
-      d.setDate(d.getDate() + ((6 - dow + 7) % 7 || 7)); // next Saturday
-      d.setHours(9, 0, 0, 0);
-      dueDate = d;
-      break;
-    }
-    case "someday":
-      status = "SOMEDAY";
-      dueDate = null;
-      break;
-  }
-
-  return await context.entities.Task.update({
-    where: { id: args.id },
-    data: { status, dueDate, startedAt: null },
-    select: { id: true, status: true, dueDate: true },
+  return await snoozeTaskCore(context.entities, {
+    userId: context.user.id,
+    id: args.id,
+    preset: args.preset,
   });
 }) satisfies SnoozeTask<{
   id: string;
@@ -460,32 +325,9 @@ export const startTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const task = await context.entities.Task.findUnique({
-    where: { id: args.id },
-    select: { userId: true },
-  });
-  if (!task || task.userId !== context.user.id) {
-    throw new Error("Task not found.");
-  }
-  await context.entities.Task.updateMany({
-    where: { userId: context.user.id, startedAt: { not: null } },
-    data: { startedAt: null },
-  });
-  // Defensive close on any prior task's open session — the updateMany above
-  // cleared the startedAt pointer on whatever was running, but its session row
-  // is still open. Close it so the totals stay honest across task switches.
-  await context.entities.TaskSession.updateMany({
-    where: { userId: context.user.id, endedAt: null },
-    data: { endedAt: new Date() },
-  });
-  const now = new Date();
-  await context.entities.TaskSession.create({
-    data: { taskId: args.id, userId: context.user.id, startedAt: now },
-  });
-  return await context.entities.Task.update({
-    where: { id: args.id },
-    data: { startedAt: now },
-    select: { id: true, startedAt: true },
+  return await startTaskCore(context.entities, {
+    userId: context.user.id,
+    id: args.id,
   });
 }) satisfies StartTask<{ id: string }, { id: string; startedAt: Date | null }>;
 
@@ -493,23 +335,9 @@ export const pauseTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const task = await context.entities.Task.findUnique({
-    where: { id: args.id },
-    select: { userId: true },
-  });
-  if (!task || task.userId !== context.user.id) {
-    throw new Error("Task not found.");
-  }
-  // Close this task's open session (if any) before clearing the pointer.
-  // updateMany is idempotent — pausing an already-paused task is a no-op here.
-  await context.entities.TaskSession.updateMany({
-    where: { taskId: args.id, endedAt: null },
-    data: { endedAt: new Date() },
-  });
-  return await context.entities.Task.update({
-    where: { id: args.id },
-    data: { startedAt: null },
-    select: { id: true, startedAt: true },
+  return await pauseTaskCore(context.entities, {
+    userId: context.user.id,
+    id: args.id,
   });
 }) satisfies PauseTask<{ id: string }, { id: string; startedAt: Date | null }>;
 
