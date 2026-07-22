@@ -25,7 +25,7 @@ export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
 
 export type FeedbackStatusCounts = Record<FeedbackStatus, number>;
 
-export interface AdminStats {
+export type AdminStats = {
   users: {
     total: number;
     signedUpToday: number;
@@ -44,10 +44,10 @@ export interface AdminStats {
     byStatus: FeedbackStatusCounts;
     total: number;
   };
-}
+};
 
 /** Fields mirrored from feedback/operationsCore.ts FEEDBACK_SELECT. */
-export interface FeedbackRow {
+export type FeedbackRow = {
   id: string;
   shortId: string;
   createdAt: Date;
@@ -63,7 +63,7 @@ export interface FeedbackRow {
   lensName: string | null;
   lensColor: string | null;
   userAgent: string | null;
-}
+};
 
 const FEEDBACK_SELECT = {
   id: true,
