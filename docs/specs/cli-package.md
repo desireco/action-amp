@@ -2,7 +2,7 @@
 id: cli-package
 kind: spec
 title: "CLI package + op refactor (Phase 1 of the CLI effort)"
-status: review
+status: building
 priority: P3
 feature: cli
 spec_owner: discover
