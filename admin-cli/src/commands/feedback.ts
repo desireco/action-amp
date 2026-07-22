@@ -78,7 +78,7 @@ export function makeFeedbackCommand(): Command {
   // ── feedback show ────────────────────────────────────────────────────────
   feedback
     .command("show <id>")
-    .description("show one feedback row in full")
+    .description("show one feedback row (id can be a shortId/UUID prefix)")
     .option("--json", "emit JSON output")
     .action(async (id: string, opts: { json?: boolean }) => {
       const ctx: OutputCtx = { json: opts.json ?? false };
@@ -97,7 +97,7 @@ export function makeFeedbackCommand(): Command {
   // ── feedback status ──────────────────────────────────────────────────────
   feedback
     .command("status <id> <status>")
-    .description(`set a feedback row's status: ${FEEDBACK_STATUSES.join(", ")}`)
+    .description(`set a feedback row's status (id can be a prefix): ${FEEDBACK_STATUSES.join(", ")}`)
     .option("--json", "emit JSON output")
     .action(async (id: string, status: string, opts: { json?: boolean }) => {
       const ctx: OutputCtx = { json: opts.json ?? false };

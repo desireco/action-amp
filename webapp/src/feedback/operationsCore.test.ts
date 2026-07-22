@@ -145,24 +145,51 @@ describe("listFeedbackCore", () => {
 });
 
 describe("showFeedbackCore", () => {
-  it("returns the findUnique result (null when absent)", async () => {
+  it("returns null when no row matches", async () => {
     const { entities } = mockContext();
-    entities.Feedback.findUnique.mockResolvedValue(null);
+    entities.Feedback.findFirst.mockResolvedValue(null);
     const result = await showFeedbackCore(entities, { id: "missing" });
     expect(result).toBeNull();
-    expect(entities.Feedback.findUnique).toHaveBeenCalledWith({
-      where: { id: "missing" },
-      select: expect.any(Object),
-    });
+    // Prefix lookup uses findFirst (newest-first), not findUnique.
+    expect(entities.Feedback.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { createdAt: "desc" },
+      }),
+    );
   });
 
-  it("resolves by shortId when the ref looks like one (case-insensitive)", async () => {
+  it("matches a shortId prefix (case-insensitive, partial ok)", async () => {
     const { entities } = mockContext();
-    entities.Feedback.findUnique.mockResolvedValue(FEEDBACK_ROW);
+    entities.Feedback.findFirst.mockResolvedValue(FEEDBACK_ROW);
+    await showFeedbackCore(entities, { id: "cfv" });
+    // "CFV" is ≤4 chars → no dash inserted → matches stored "ABCD-..." only if
+    // the stored shortId started with CFV; here we assert the prefix shape.
+    expect(entities.Feedback.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: [
+            { shortId: { startsWith: "CFV" } },
+            { id: { startsWith: "cfv" } },
+          ],
+        },
+      }),
+    );
+  });
+
+  it("matches a full shortId (dash re-inserted to match stored format)", async () => {
+    const { entities } = mockContext();
+    entities.Feedback.findFirst.mockResolvedValue(FEEDBACK_ROW);
     await showFeedbackCore(entities, { id: "abcd-1234" });
-    // normalizeShortId uppercases + keeps the dash → ABCD-1234.
-    expect(entities.Feedback.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { shortId: "ABCD-1234" } }),
+    // 8 chars → dash re-inserted at position 4 → "ABCD-1234" matches stored format.
+    expect(entities.Feedback.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: [
+            { shortId: { startsWith: "ABCD-1234" } },
+            { id: { startsWith: "abcd-1234" } },
+          ],
+        },
+      }),
     );
   });
 });
@@ -176,24 +203,27 @@ describe("updateFeedbackStatusCore", () => {
     ).rejects.toThrow(/Invalid status/);
   });
 
-  it("throws 'Feedback not found.' when the row is absent", async () => {
+  it("throws 'Feedback not found.' when no row matches", async () => {
     const { entities } = mockContext();
-    entities.Feedback.findUnique.mockResolvedValue(null);
+    entities.Feedback.findFirst.mockResolvedValue(null);
     await expect(
       updateFeedbackStatusCore(entities, { id: "missing", status: "RESOLVED" }),
     ).rejects.toThrow(/Feedback not found/);
   });
 
-  it("updates + returns the row", async () => {
+  it("updates by the resolved PK (not the input prefix)", async () => {
     const { entities } = mockContext();
-    entities.Feedback.findUnique.mockResolvedValue({ id: "fb-1" });
+    // findFirst resolves the row; its real id is "fb-1".
+    entities.Feedback.findFirst.mockResolvedValue({ id: "fb-1" });
     entities.Feedback.update.mockResolvedValue({ ...FEEDBACK_ROW, status: "RESOLVED" });
 
     const result = await updateFeedbackStatusCore(entities, {
-      id: "fb-1",
+      id: "CFV", // prefix — resolves to fb-1
       status: "RESOLVED",
     });
 
+    // Update uses the resolved PK, so a prefix that matches several rows can
+    // only ever touch the one findFirst returned.
     expect(entities.Feedback.update).toHaveBeenCalledWith({
       where: { id: "fb-1" },
       data: { status: "RESOLVED" },
@@ -202,15 +232,16 @@ describe("updateFeedbackStatusCore", () => {
     expect(result.status).toBe("RESOLVED");
   });
 
-  it("resolves by shortId when the ref looks like one", async () => {
+  it("uses findFirst (prefix) to resolve the row", async () => {
     const { entities } = mockContext();
-    entities.Feedback.findUnique.mockResolvedValue({ id: "fb-1" });
+    entities.Feedback.findFirst.mockResolvedValue({ id: "fb-1" });
     entities.Feedback.update.mockResolvedValue({ ...FEEDBACK_ROW, status: "CLOSED" });
 
-    await updateFeedbackStatusCore(entities, { id: "ABCD-1234", status: "CLOSED" });
+    await updateFeedbackStatusCore(entities, { id: "ABCD", status: "CLOSED" });
 
+    expect(entities.Feedback.findFirst).toHaveBeenCalled();
     expect(entities.Feedback.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { shortId: "ABCD-1234" } }),
+      expect.objectContaining({ where: { id: "fb-1" } }),
     );
   });
 });

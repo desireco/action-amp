@@ -28,7 +28,7 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Entities = Record<string, any>;
 
-import { uniqueShortId, normalizeShortId } from "../shared/shortId";
+import { uniqueShortId } from "../shared/shortId";
 
 export const FEEDBACK_STATUSES = [
   "OPEN",
@@ -154,32 +154,59 @@ export async function listFeedbackCore(
 }
 
 /**
- * Build a Prisma `where` for a feedback lookup, accepting either the UUID `id`
- * or the `XXXX-XXXX` shortId (canonicalized Crockford, case-insensitive).
- * Returns the single-key where the caller spreads into findUnique/update.
+ * Resolve a feedback ref to the first matching row, by prefix. The ref can be:
+ *   - a shortId prefix (any leading chars of the canonical XXXX-XXXX form,
+ *     case-insensitive — e.g. "CFV", "cfvs", "CFVS-J9AQ" all match),
+ *   - a UUID id prefix (e.g. "d1759ed5" or the full UUID).
+ * "First" = newest by createdAt, so an ambiguous prefix deterministically
+ * resolves to the most recent match (matches how `list` orders). Returns null
+ * when nothing matches — callers translate that to 404.
+ *
+ * Prefix (not exact) matching is intentional: the admin types a few chars from
+ * the list output and gets the newest match. Uniqueness is not required on the
+ * input; if two rows share a prefix, the newer one wins.
  */
-function feedbackWhere(ref: string): { id: string } | { shortId: string } {
-  const short = normalizeShortId(ref);
-  return short ? { shortId: short } : { id: ref };
+async function findFeedbackByRef(
+  entities: Entities,
+  ref: string,
+  select: object,
+) {
+  const trimmed = ref.trim();
+  if (!trimmed) return null;
+
+  // The stored shortId is formatted "XXXX-XXXX" (dash at index 4). Build a
+  // prefix in that same format so startsWith matches the stored value: strip
+  // any dash the user typed, upper-case, map ambiguous chars (0↔O, 1↔I/L per
+  // Crockford), then re-insert the dash once the prefix crosses 4 chars. So
+  // "cfv" → "CFV", "cfvs" → "CFVS", "cfvsj" → "CFVS-J", "cfvs-j9aq" → "CFVS-J9AQ".
+  const dashless = trimmed.toUpperCase().replace(/-/g, "").replace(/O/g, "0").replace(/[IL]/g, "1").replace(/U/g, "V");
+  const shortPrefix =
+    dashless.length <= 4 ? dashless : `${dashless.slice(0, 4)}-${dashless.slice(4, 8)}`;
+
+  return await entities.Feedback.findFirst({
+    where: {
+      OR: [{ shortId: { startsWith: shortPrefix } }, { id: { startsWith: trimmed } }],
+    },
+    orderBy: { createdAt: "desc" },
+    select,
+  });
 }
 
 // ----------------------------------------------------------------
 // Read: single feedback (admin triage surface)
 // ----------------------------------------------------------------
 export async function showFeedbackCore(entities: Entities, { id }: { id: string }) {
-  return await entities.Feedback.findUnique({
-    where: feedbackWhere(id),
-    select: FEEDBACK_SELECT,
-  });
+  return await findFeedbackByRef(entities, id, FEEDBACK_SELECT);
 }
 
 // ----------------------------------------------------------------
 // Write: update feedback status (admin triage surface)
 // ----------------------------------------------------------------
 // Validates the status value (defense-in-depth — the route + CLI also check),
-// updates the row, and returns it. Throws "Feedback not found." if the id is
-// absent so the route can map it to 404 via the standard `taskWriteError`-style
-// convention. `updatedAt` auto-stamps via `@updatedAt`.
+// resolves the row by prefix (see findFeedbackByRef), then updates by the
+// row's real PK id (a guaranteed singleton, so update can't touch two rows
+// even if the prefix matched several). Throws "Feedback not found." if no row
+// matches so the route maps it to 404. `updatedAt` auto-stamps via `@updatedAt`.
 export async function updateFeedbackStatusCore(
   entities: Entities,
   { id, status }: { id: string; status: FeedbackStatus },
@@ -190,17 +217,13 @@ export async function updateFeedbackStatusCore(
     );
   }
 
-  const where = feedbackWhere(id);
-  const existing = await entities.Feedback.findUnique({
-    where,
-    select: { id: true },
-  });
+  const existing = await findFeedbackByRef(entities, id, { id: true });
   if (!existing) {
     throw new Error("Feedback not found.");
   }
 
   return await entities.Feedback.update({
-    where,
+    where: { id: existing.id },
     data: { status },
     select: FEEDBACK_SELECT,
   });
