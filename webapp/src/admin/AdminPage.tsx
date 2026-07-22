@@ -3,7 +3,7 @@ import { useAuth } from "wasp/client/auth";
 import { useQuery, getAdminStats, getRecentFeedback } from "wasp/client/operations";
 import { SettingsLayout } from "../app/SettingsLayout";
 import { Button, Card, Chip, Table, type TableColumn } from "../components/ui";
-import type { FeedbackRow, AdminStats } from "./operationsCore";
+import type { FeedbackRow } from "./operationsCore";
 import "./AdminPage.css";
 
 function relativeTime(iso: string | Date): string {
