@@ -2,7 +2,7 @@
 id: cli-pat-plumbing
 kind: spec
 title: "CLI auth + PAT backend plumbing (Phase 0 of the CLI effort)"
-status: review
+status: done
 priority: P3              # opportunistic, not validation-critical
 feature: cli
 spec_owner: discover
