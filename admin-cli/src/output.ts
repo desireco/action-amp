@@ -6,7 +6,7 @@
  * writes a plain message to stderr for errors.
  */
 import chalk from "chalk";
-import type { Feedback, FeedbackStatus } from "./types.js";
+import type { AdminStats, Feedback, FeedbackStatus } from "./types.js";
 
 export type OutputCtx = { json: boolean };
 
@@ -69,5 +69,38 @@ export function formatFeedbackDetail(f: Feedback): string {
   if (f.lensName) lines.push(`lens:     ${f.lensName}${f.lensColor ? ` (${f.lensColor})` : ""}`);
   if (f.userAgent) lines.push(`agent:    ${f.userAgent}`);
   lines.push("", f.message);
+  return lines.join("\n");
+}
+
+/** Calm padded-key stats block (mirrors formatFeedbackDetail's label style). */
+export function formatStats(s: AdminStats): string {
+  const pct =
+    s.tasks.created7d > 0
+      ? Math.round((s.tasks.completed7d / s.tasks.created7d) * 100)
+      : null;
+  const lines = [
+    chalk.bold("Users"),
+    `  total:           ${s.users.total}`,
+    `  signed up today: ${s.users.signedUpToday}`,
+    `  signed up 7d:    ${s.users.signedUp7d}`,
+    `  signed up 30d:   ${s.users.signedUp30d}`,
+    "",
+    chalk.bold("Active users"),
+    `  today:           ${s.users.activeToday}`,
+    `  last 7 days:     ${s.users.active7d}`,
+    `  last 30 days:    ${s.users.active30d}`,
+    "",
+    chalk.bold("Tasks (last 7 days)"),
+    `  created:         ${s.tasks.created7d}`,
+    `  completed:       ${s.tasks.completed7d}${pct !== null ? `  (${pct}% of created)` : ""}`,
+    `  total:           ${s.tasks.total}`,
+    "",
+    chalk.bold("Feedback"),
+    `  open:         ${s.feedback.byStatus.OPEN}`,
+    `  in progress:  ${s.feedback.byStatus.IN_PROGRESS}`,
+    `  resolved:     ${s.feedback.byStatus.RESOLVED}`,
+    `  closed:       ${s.feedback.byStatus.CLOSED}`,
+    `  total:        ${s.feedback.total}`,
+  ];
   return lines.join("\n");
 }

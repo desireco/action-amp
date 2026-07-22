@@ -12,6 +12,7 @@
  *   actionamp-admin feedback list     list submitted feedback
  *   actionamp-admin feedback show <id>      show one feedback row
  *   actionamp-admin feedback status <id> <status>   set triage state
+ *   actionamp-admin stats             product stats (signups, active, tasks, feedback)
  *   actionamp-admin logout            clear saved admin token
  *
  * Every command supports --json for scripting. See admin-cli/README.md.
@@ -26,6 +27,7 @@ import { makeLoginCommand } from "./commands/login.js";
 import { makeWhoamiCommand } from "./commands/whoami.js";
 import { makeLogoutCommand } from "./commands/logout.js";
 import { makeFeedbackCommand } from "./commands/feedback.js";
+import { makeStatsCommand } from "./commands/stats.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -49,6 +51,7 @@ program
 program.addCommand(makeLoginCommand());
 program.addCommand(makeWhoamiCommand());
 program.addCommand(makeFeedbackCommand());
+program.addCommand(makeStatsCommand());
 program.addCommand(makeLogoutCommand());
 
 // Global error handler — catches ApiError + network failures, prints a calm

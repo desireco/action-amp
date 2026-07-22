@@ -31,6 +31,7 @@ npm run build && ./dist/index.js     # built
 | `feedback list [--status <s>] [--limit <n\|all>]` | List feedback, newest first (default 10; `--limit all` for everything) |
 | `feedback show <id>` | Show one feedback row in full |
 | `feedback status <id> <status>` | Set triage state (`OPEN\|IN_PROGRESS\|RESOLVED\|CLOSED`) |
+| `stats` | Product stats — signups, active users, tasks, feedback (JSON-ready for LLM/monitoring) |
 | `logout` | Clear the saved admin token |
 
 Every command supports `--json` for scripting / agent orchestration.
@@ -42,6 +43,7 @@ whoami           → { user: { id, email, fullName, plan, isAdmin } }
 feedback list    → { feedback: [ { id, shortId, status, message, userEmail, ... } ] }
 feedback show    → { feedback: { id, shortId, status, message, ... } }
 feedback status  → { feedback: { id, shortId, status, ... } }
+stats            → { stats: { users: {...}, tasks: {...}, feedback: {...} } }
 ```
 
 Each feedback row has a UUID `id` (the real PK) and a human-addressable

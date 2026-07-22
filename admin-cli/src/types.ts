@@ -60,3 +60,31 @@ export type Whoami = {
 export type FeedbackListResult = { feedback: Feedback[] };
 export type FeedbackShowResult = { feedback: Feedback };
 export type FeedbackStatusResult = { feedback: Feedback };
+
+// ----------------------------------------------------------------
+// Admin stats (actionamp-admin stats)
+// ----------------------------------------------------------------
+// Mirrors webapp/src/admin/operationsCore.ts AdminStats. JSON from the server
+// is the source of truth; this local type only types the formatter.
+export type AdminStats = {
+  users: {
+    total: number;
+    signedUpToday: number;
+    signedUp7d: number;
+    signedUp30d: number;
+    activeToday: number;
+    active7d: number;
+    active30d: number;
+  };
+  tasks: {
+    created7d: number;
+    completed7d: number;
+    total: number;
+  };
+  feedback: {
+    byStatus: { OPEN: number; IN_PROGRESS: number; RESOLVED: number; CLOSED: number };
+    total: number;
+  };
+};
+
+export type StatsResult = { stats: AdminStats };
