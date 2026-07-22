@@ -676,9 +676,9 @@
   .aa-landing::-webkit-scrollbar {
     width: 0;
   }
-  /* Each section snaps to the top of the scroll container; one swipe = one
-     section. The footer is intentionally NOT a snap target — it's a normal
-     trailing element after the storytelling sections. */
+  /* Each story section lands below the sticky nav. The footer is a final snap
+     target too: without one, mandatory snapping settles on the final CTA and
+     makes the footer unreachable. */
   .aa-landing section {
     scroll-snap-align: start;
     scroll-snap-stop: always;
@@ -688,13 +688,22 @@
     flex-direction: column;
     justify-content: center;
   }
-  /* Hero keeps its bespoke layout (content top-aligned, not centered) */
+  /* Hero keeps its bespoke layout (content top-aligned, not centered). Its
+     scroll margin reserves nav height, so a return snap never tucks its top
+     underneath the sticky bar. */
   .aa-landing .aa-hero {
     justify-content: flex-start;
+    scroll-margin-top: 57px;
+    min-height: calc(100vh - 57px);
+    min-height: calc(100svh - 57px);
+  }
+  .aa-landing > .aa-site-footer {
+    scroll-snap-align: end;
+    scroll-snap-stop: always;
   }
 
   .aa-hero {
-    padding: 56px 22px 72px;
+    padding: 32px 22px 34px;
     background:
       radial-gradient(
         ellipse 80% 50% at 50% 20%,
@@ -704,24 +713,60 @@
       var(--aa-bg);
   }
   .aa-hero-grid {
+    width: 100%;
+    padding: 0;
     grid-template-columns: 1fr;
-    gap: 48px;
+    gap: 24px;
+  }
+  .aa-hero-eyebrow {
+    font-size: 11px;
+    padding: 5px 10px;
+    margin-bottom: 14px;
   }
   .aa-hero h1 {
-    font-size: 44px;
+    font-size: 40px;
+    margin-bottom: 16px;
   }
   .aa-hero-sub {
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 1.45;
+    margin-bottom: 18px;
   }
   .aa-hero-meta {
-    gap: 16px;
-    font-size: 12px;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .aa-hero-cta {
+    margin-top: 20px;
+    padding: 11px 20px;
   }
   .aa-chaos {
     display: none;
   }
   .aa-wn-card {
-    padding: 32px 24px;
+    max-width: none;
+    padding: 20px 18px;
+  }
+  .aa-wn-ctx {
+    margin-bottom: 18px;
+  }
+  .aa-completion {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 14px;
+  }
+  .aa-wn-title {
+    font-size: 20px;
+  }
+  .aa-wn-meta {
+    margin-bottom: 10px;
+  }
+  .aa-wn-why {
+    margin-bottom: 16px;
+  }
+  .aa-wn-actions .aa-btn {
+    padding: 8px 16px;
   }
   .aa-wn-title {
     font-size: 20px;

@@ -11,6 +11,15 @@
 
 @import "./tokens.css";
 
+/* The marketing shell owns the viewport edge. Without this reset, browser
+   default body margins leave every shared chrome surface — most visibly the
+   footer — floating inside an 8px frame on public pages. */
+html,
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
 /* ============================================================
    Brand mark — the ActionAmp checkmark in a teal gradient tile.
    Used by the <BrandMark /> Astro component. The tile is 28×28 in the
@@ -103,8 +112,8 @@
    Site footer — normal flow, no scroll-snap anywhere.
    Brand + tagline in a wide left column, three equal-width link
    columns (Explore / Product / Legal) to its right. On mobile,
-   everything stacks into a single column. A hairline-separated
-   © bar sits full-width below.
+   link groups become a balanced two-column grid. Legal gets a quiet, inline
+   row beneath them; this keeps the footer short without making links tiny.
    ============================================================ */
 .aa-site-footer {
   width: 100%;
@@ -187,9 +196,8 @@
    ============================================================
    Nav: section anchors hide on mobile (they only make sense when the
    landing's sections are visible); the Log in link stays. Brand shrinks
-   slightly. Footer: grid collapses to a single stacked column; the
-   Product/Legal split widens to its own row so link columns never
-   compress below a comfortable tap-target width. */
+   slightly. Footer: brand spans its own row; navigation stays easy to scan
+   in two columns, with Legal as a compact full-width row. */
 @media (max-width: 768px) {
   .aa-nav {
     padding: 16px 20px;
@@ -209,11 +217,56 @@
     height: 24px;
   }
 
-  /* Footer — single column, generous vertical rhythm. */
+  /* Footer — brand leads; destination groups scan in two columns. */
   .aa-site-footer-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-    padding: 40px 20px 28px;
+    grid-template-areas:
+      "brand brand"
+      "explore product"
+      "legal legal";
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 30px;
+    padding: 36px 20px 24px;
+  }
+  .aa-site-footer-brand {
+    grid-area: brand;
+    grid-column: 1 / -1;
+    gap: 12px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--aa-border);
+  }
+  .aa-site-footer-col {
+    gap: 10px;
+  }
+  .aa-site-footer-heading {
+    margin-bottom: 2px;
+  }
+  .aa-site-footer-list {
+    gap: 2px;
+  }
+  .aa-site-footer-list a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 2px;
+  }
+  .aa-site-footer-col--legal {
+    padding-top: 4px;
+  }
+  .aa-site-footer-col--explore {
+    grid-area: explore;
+  }
+  .aa-site-footer-col--product {
+    grid-area: product;
+  }
+  .aa-site-footer-col--legal {
+    grid-area: legal;
+  }
+  .aa-site-footer-col--legal .aa-site-footer-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: 18px;
+    row-gap: 2px;
   }
   .aa-site-footer-bottom-inner {
     padding: 16px 20px;
