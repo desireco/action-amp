@@ -142,6 +142,23 @@ describe("listFeedbackCore", () => {
       expect.objectContaining({ where: { status: "RESOLVED" } }),
     );
   });
+
+  it("applies take when a limit is given", async () => {
+    const { entities } = mockContext();
+    entities.Feedback.findMany.mockResolvedValue([]);
+    await listFeedbackCore(entities, { limit: 25 });
+    expect(entities.Feedback.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 25 }),
+    );
+  });
+
+  it("omits take (unbounded) when no limit is given", async () => {
+    const { entities } = mockContext();
+    entities.Feedback.findMany.mockResolvedValue([]);
+    await listFeedbackCore(entities, {});
+    const call = entities.Feedback.findMany.mock.calls[0][0];
+    expect(call).not.toHaveProperty("take");
+  });
 });
 
 describe("showFeedbackCore", () => {

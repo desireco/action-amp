@@ -138,17 +138,18 @@ export async function submitFeedbackCore(
 // ----------------------------------------------------------------
 // Read: list feedback (admin triage surface)
 // ----------------------------------------------------------------
-// Newest first. Optional status filter narrows to one bucket. `limit` caps the
-// page (default 50) so an unbounded backlog never returns a huge payload in
-// one shot.
+// Newest first. Optional status filter narrows to one bucket. `limit` (when
+// given) caps the page; when omitted, returns everything matching the filter
+// (the caller — route/CLI — decides whether to cap). Bounds validation lives
+// in the route, not here: the core trusts a finite positive number or none.
 export async function listFeedbackCore(
   entities: Entities,
-  { status, limit = 50 }: { status?: FeedbackStatus; limit?: number },
+  { status, limit }: { status?: FeedbackStatus; limit?: number },
 ) {
   return await entities.Feedback.findMany({
     where: status ? { status } : undefined,
     orderBy: { createdAt: "desc" },
-    take: Math.min(Math.max(1, limit), 200),
+    ...(limit ? { take: limit } : {}),
     select: FEEDBACK_SELECT,
   });
 }

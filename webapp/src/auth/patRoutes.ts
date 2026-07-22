@@ -1086,7 +1086,8 @@ function requireAdmin(
 }
 
 // GET /api/cli/feedback/list — list feedback, newest first. Optional ?status=
-// narrows to one bucket; ?limit= caps the page (default 50, clamped 1–200).
+// narrows to one bucket; ?limit= caps the page (positive int) or "all" for
+// unbounded. Absent limit → unbounded (the CLI sends its own default of 10).
 export const cliFeedbackList = async (req: Request, res: Response, _context: unknown) => {
   const user = req.patUser;
   if (!requireAdmin(user, res)) return;
@@ -1102,10 +1103,17 @@ export const cliFeedbackList = async (req: Request, res: Response, _context: unk
     status = statusParam;
   }
 
+  // limit: "all" (or absent) → unbounded; a positive integer → cap. The CLI
+  // sends its own default (10) when the user passes nothing, so absence here
+  // only happens on an explicit --limit all or a direct API call.
   const limitRaw = queryString(req, "limit");
-  const limit = limitRaw !== null ? Number(limitRaw) : undefined;
-  if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
-    return res.status(400).json({ error: "limit must be a positive number." });
+  let limit: number | undefined;
+  if (limitRaw !== null && limitRaw !== "all") {
+    const n = Number(limitRaw);
+    if (!Number.isFinite(n) || n <= 0) {
+      return res.status(400).json({ error: "limit must be a positive number or 'all'." });
+    }
+    limit = Math.floor(n);
   }
 
   try {
