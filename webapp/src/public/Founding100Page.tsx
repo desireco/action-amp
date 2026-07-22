@@ -6,16 +6,19 @@ import { Button } from "../components/ui";
 import "./Founding100Page.css";
 
 /**
- * /founding-100 — the Founding 100 landing page (auth-required).
+ * /founding-100 — the Founding 100 landing page (public).
  *
  * A one-time $99 lifetime Pro tier, capped at exactly 100 spots. The live
  * spots-remaining count comes from getFounding100Status; the CTA is enabled
  * while spots remain. Once full, the button locks and the page says so.
  *
- * Auth is required at the route level (main.wasp.ts) — checkout needs a user
- * (createCheckoutSession is gated on context.user), so there's no point showing
- * this page to anonymous visitors. Wasp redirects them to /login and back here
- * after auth.
+ * The route is public (authRequired: false in main.wasp.ts) so logged-out
+ * visitors can read the offer — it's linked from PublicLayout and ProGate aimed
+ * at exactly that audience. Auth is handled at the CTA: an anonymous clicker is
+ * sent to /login (Wasp lands them on /app after auth, where they can return
+ * here to check out); an authed clicker starts Stripe Checkout. The server op
+ * createCheckoutSession gates on context.user, so this client guard is UX, not
+ * security.
  */
 export function Founding100Page() {
   const { data: user } = useAuth();
@@ -26,8 +29,16 @@ export function Founding100Page() {
   const remaining = status?.remaining;
   const isFull = status?.isFull ?? false;
   const alreadyFounder = user?.plan === "FOUNDER";
+  const isAnonymous = !user;
 
   async function handleCheckout() {
+    // Anonymous clicker → log in first. Wasp's onAuthSucceededRedirectTo lands
+    // them on /app; they return here to complete checkout. (No ?redirect=
+    // support wired up in LoginPage, so we don't try to thread a return path.)
+    if (isAnonymous) {
+      window.location.assign("/login");
+      return;
+    }
     setError(null);
     setLoading(true);
     try {
@@ -51,6 +62,8 @@ export function Founding100Page() {
   } else if (alreadyFounder) {
     ctaLabel = "You're a Founding Member";
     ctaDisabled = true;
+  } else if (isAnonymous) {
+    ctaLabel = "Log in to Claim Your Spot";
   }
 
   return (
@@ -112,10 +125,7 @@ export function Founding100Page() {
               "The Founding 100 is full. Thank you."
             ) : remaining !== undefined ? (
               <>
-                <strong>{remaining}</strong> of 100 spots remaining.{" "}
-                {user
-                  ? ""
-                  : "Log in to claim one."}
+                <strong>{remaining}</strong> of 100 spots remaining.
               </>
             ) : (
               "100 spots remaining. When they are gone, they are gone."
@@ -127,7 +137,7 @@ export function Founding100Page() {
             </p>
           )}
           <p className="aa-founding-spots">
-            <a href="https://actionamp.com/roadmap">See how we're doing →</a>
+            <a href="https://actionamp.com/roadmap">Look how we're doing?</a>
           </p>
         </div>
       </div>
