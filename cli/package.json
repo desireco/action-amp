@@ -1,6 +1,29 @@
 {
-  "name": "actionamp-cli-prototype",
+  "name": "actionamp",
+  "version": "0.1.0",
   "private": true,
-  "comment": "Throwaway prototype (docs/specs/cli-package.md §Prototype). The real cli/ package — typed, tested, commander-based — replaces this. The only purpose of this file is to set type:module so Node doesn't warn about MODULE_TYPELESS_PACKAGE_JSON when running actionamp.ts directly.",
-  "type": "module"
+  "description": "ActionAmp terminal client",
+  "type": "module",
+  "bin": {
+    "actionamp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "cli-truncate": "^4.0.0",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "msw": "^2.7.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
 }
