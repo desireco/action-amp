@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router";
+import { useAuth } from "wasp/client/auth";
 import "./SettingsLayout.css";
 
 /**
@@ -17,6 +18,11 @@ const TABS = [
 
 export function SettingsLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const { data: user } = useAuth();
+
+  const tabs = user?.isAdmin
+    ? [...TABS, { label: "Admin", to: "/app/settings/admin", exact: false }]
+    : TABS;
 
   return (
     <div className="aa-settings-hub">
@@ -30,7 +36,7 @@ export function SettingsLayout({ children }: { children: ReactNode }) {
       <h1 className="aa-settings-h">Settings</h1>
 
       <nav className="aa-settings-tabs" aria-label="Settings">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const active = tab.exact
             ? location.pathname === tab.to
             : location.pathname.startsWith(tab.to);

@@ -75,6 +75,7 @@ import {
 import { mintCliToken } from "./src/auth/cliMint" with { type: "ref" };
 import { patRouteMiddleware } from "./src/auth/patMiddleware" with { type: "ref" };
 import { PatSettingsPage } from "./src/app/PatSettingsPage" with { type: "ref" };
+import { AdminPage } from "./src/admin/AdminPage" with { type: "ref" };
 import { CliLoginPage } from "./src/auth/CliLoginPage" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
 import { LoginPage } from "./src/auth/email/LoginPage" with { type: "ref" };
@@ -187,6 +188,7 @@ export default app({
     ),
     route("LensesRoute", "/app/settings/lenses", page(LensesPage)),
     route("PatSettingsRoute", "/app/settings/pat", page(PatSettingsPage)),
+    route("AdminRoute", "/app/settings/admin", page(AdminPage)),
     route("TaskDetailRoute", "/app/tasks/:permalink", page(TaskDetailPage)),
     route("ProjectDetailRoute", "/app/projects/:permalink", page(ProjectDetailPage)),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
