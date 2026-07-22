@@ -12,6 +12,7 @@ import "../styles/roadmap.css";
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
 
 const shipped = [
+  { date: "Jul 22", trunk: "ActionAmp CLI — terminal client", summary: "A standalone terminal client for ActionAmp. OAuth browser login (no copy-paste tokens), 11 commands covering the full decision loop — now, task (start/pause/done/snooze/move), today, capture, inbox, project, goal, logbook — each with --json output for agents. The CLI talks to new /api/cli/* routes backed by pure op cores shared with the web app (zero duplicated logic). Plus 'actionamp llm' prints agent instructions." },
   { date: "Jul 21", trunk: "Installable PWA + resilient sessions", summary: "ActionAmp is now a real installable PWA — standalone display, maskable icons, and long-press app-icon shortcuts (Capture, Next, Today) on Chromium Android. A sliding 30-day session cookie rides alongside the existing token so iOS/Brave PWA users no longer get logged out by WebKit's 7-day storage cap or Brave's clear-on-exit." },
   { date: "Jul 21", trunk: "Daily Today reminder + version surfacing", summary: "Web Push reminder at a chosen local time, per-device subscriptions, a per-minute PgBoss job that sends at most once per user per day. App version (git SHA) now shows in Settings and the login footer, and a calm banner prompts you to refresh when a new build is deployed." },
   { date: "Jul 20", trunk: "Founding 100 price correction + public footer", summary: "Founding 100 price was advertised as $139 in several surfaces; corrected to $99 everywhere to match live checkout. Public page footer went full-bleed and in-app legal links repointed to the marketing apex." },
@@ -52,8 +53,8 @@ const shipped = [
         roadmap, not a feature wishlist.
       </p>
       <div class="aa-roadmap-stats">
-        <span class="aa-roadmap-stat"><strong>497</strong> commits</span>
-        <span class="aa-roadmap-stat"><strong>20</strong> major trunks</span>
+        <span class="aa-roadmap-stat"><strong>544</strong> commits</span>
+        <span class="aa-roadmap-stat"><strong>21</strong> major trunks</span>
         <span class="aa-roadmap-stat">Jun 16 → today</span>
       </div>
     </header>

@@ -239,6 +239,13 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
     `cli-pat-plumbing` (`ready`, the natural first pull), `cli-package`
     (`draft` — op-refactor scope unscoped), `cli-skills` (`draft` — depends on
     cli-package). Umbrella + cross-cutting decisions: `docs/specs/cli.md`.
+   **Phase 0 + Phase 1 shipped 2026-07-22** — see §Shipped. `cli-pat-plumbing`
+   (PAT auth + OAuth browser login + `/cli/login` page) and `cli-package`
+   (full 11-command surface: login/now/capture/whoami/task/today/inbox/
+   project/goal/logbook/logout + `llm` agent reference, all with `--json`,
+   55 tests, op-refactor extracting pure cores shared between web ops + CLI
+   routes) are in Review. Only `cli-skills` (Phase 2 — the four orchestration
+   skills) remains `draft`.
 5. **goal-planning** (`done` 2026-07-05, was `ready`) — **shipped**: full
    Goal/Project lifecycle (complete, reopen, edit, delete, re-link) + explicit
    `Project.order` sequencing under a Goal + Logbook surfacing of completed
@@ -303,6 +310,23 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **cli (Phase 0 + Phase 1)** (`review` 2026-07-22) — the ActionAmp terminal
+  client. A standalone `cli/` package (commander + chalk, ESM, TypeScript)
+  that talks to the webapp's `/api/cli/*` routes via PAT auth. **Phase 0
+  (`cli-pat-plumbing`):** `ApiKey` model + SHA-256 hashed tokens, OAuth browser
+  login flow (the `gh auth login` pattern — CLI opens browser, user confirms,
+  token comes back via localhost callback), `/cli/login` consent page, Settings
+  → Access tokens management UI, Bearer PAT middleware, `/api/cli/now` stub.
+  Entitlement-enforced (FREE users can't read Pro-gated lenses via the CLI).
+  **Phase 1 (`cli-package`):** full 11-command surface — login, now, capture,
+  whoami, task (show/start/pause/done/snooze/move), today (--done), inbox
+  (list/triage), project (list/show/create/add-task), goal (list/show/create),
+  logbook, logout, plus `actionamp llm` (prints agent/LLM instructions). Every
+  command supports `--json`. 55 CLI tests + the op-refactor (pure `*Core.ts`
+  files shared between Wasp ops and CLI routes — zero duplicated logic). The
+  throwaway prototype was replaced by the real package. Only `cli-skills`
+  (Phase 2 — orchestration skills) remains draft. Specs: `docs/specs/cli.md`
+  (umbrella), `cli-pat-plumbing.md`, `cli-package.md`, `cli-skills.md`.
 - **pwa-installable + session-resilience + web-push + version-banner**
   (`shipped` 2026-07-21) — four small trunks landing together because they
   share the same mobile-PWA failure surface. **(1) Installable PWA**: web
