@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "wasp/client/auth";
 import { useQuery, getAdminStats, getRecentFeedback } from "wasp/client/operations";
 import { SettingsLayout } from "../app/SettingsLayout";
@@ -42,14 +42,32 @@ function Tile({ value, label, sub }: { value: number | null; label: string; sub?
 export function AdminPage() {
   const { data: user } = useAuth();
 
-  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery(getAdminStats);
-  const [afterId, setAfterId] = useState<string | null>(null);
+  const { data: stats, isLoading: statsLoading, error: statsError, dataUpdatedAt } = useQuery(getAdminStats);
+  // Recent feedback with "Show more". The first page always loads; appended
+  // pages accumulate in state so repeated clicks don't drop intermediate pages.
+  // `fetchAfterId` is the pending cursor (set on click, cleared once the page
+  // is appended) — the next-page query only runs while a fetch is pending.
+  const [appended, setAppended] = useState<FeedbackRow[]>([]);
+  const [fetchAfterId, setFetchAfterId] = useState<string | null>(null);
+  // Whether the most recently appended page had a next page. Defaults to the
+  // first page's signal until something is appended.
+  const [appendedHasNext, setAppendedHasNext] = useState<boolean | null>(null);
   const { data: firstPage } = useQuery(getRecentFeedback, { afterId: null, limit: 10 });
-  const { data: nextPage, isLoading: moreLoading } = useQuery(
+  const { data: fetchedPage, isLoading: moreLoading } = useQuery(
     getRecentFeedback,
-    { afterId, limit: 10 },
-    { enabled: !!afterId },
+    fetchAfterId ? { afterId: fetchAfterId, limit: 10 } : undefined,
+    { enabled: !!fetchAfterId },
   );
+
+  // When a "Show more" fetch resolves, commit its items to `appended`, record
+  // its hasNext boundary, and clear the pending cursor so the query idles.
+  useEffect(() => {
+    if (fetchAfterId && fetchedPage) {
+      setAppended((prev) => [...prev, ...fetchedPage.items]);
+      setAppendedHasNext(fetchedPage.hasNext);
+      setFetchAfterId(null);
+    }
+  }, [fetchAfterId, fetchedPage]);
 
   if (!user?.isAdmin) {
     return (
@@ -76,16 +94,18 @@ export function AdminPage() {
   const f = stats?.feedback;
   const num = (n: number | undefined) => (statsLoading || n === undefined ? null : n);
   const completionPct =
-    u !== undefined && t && t.created7d > 0
+    t && t.created7d > 0
       ? Math.round((t.completed7d / t.created7d) * 100)
       : null;
 
-  // Accumulate feedback items across pages.
+  // Accumulate feedback items: first page + every appended page.
   const items: FeedbackRow[] = [
     ...(firstPage?.items ?? []),
-    ...(afterId ? (nextPage?.items ?? []) : []),
+    ...appended,
   ];
-  const hasNext = (afterId ? nextPage?.hasNext : firstPage?.hasNext) ?? false;
+  // hasNext reflects the most recently appended page's boundary, falling back
+  // to the first page's signal before any "Show more" has been clicked.
+  const hasNext = appendedHasNext ?? (firstPage?.hasNext ?? false);
 
   const feedbackColumns: TableColumn<FeedbackRow>[] = [
     {
@@ -107,7 +127,7 @@ export function AdminPage() {
       <h2 className="aa-settings-sh">Admin</h2>
       {stats?.users && (
         <p className="aa-admin-note">
-          Last refreshed {new Date().toLocaleString()}
+          Last refreshed {new Date(dataUpdatedAt).toLocaleString()}
         </p>
       )}
 
@@ -164,7 +184,7 @@ export function AdminPage() {
             variant="secondary"
             className="aa-admin-showmore"
             disabled={moreLoading}
-            onClick={() => setAfterId(items[items.length - 1]?.id ?? null)}
+            onClick={() => setFetchAfterId(items[items.length - 1]?.id ?? null)}
           >
             {moreLoading ? "Loading…" : "Show more"}
           </Button>
