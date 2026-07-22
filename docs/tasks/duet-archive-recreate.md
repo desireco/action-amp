@@ -7,6 +7,10 @@ priority: P3
 feature: github-projects-sync
 parent: github-projects-sync
 created: 2026-07-08
+
+# sync-managed (do not hand-edit; written by duet sync):
+gh_node_id: PVTI_lAHN6NzOAXMArs4M6Occ      # sync-managed (write-once)
+gh_synced_at: 2026-07-22T00:58:08Z   # sync-managed (drift detection)
 ---
 
 # Task: Push script — archive/file-delete reconciliation
