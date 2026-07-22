@@ -2,7 +2,7 @@
 id: session-cookie-finish-race
 kind: task
 title: "Session cookie write races with res finish (ERR_HTTP_HEADERS_SENT)"
-status: review             # fix applied in cli-pat-plumbing's review pass; awaits sign-off
+status: done              # signed off 2026-07-22; the guard fix held through Phase 0 + prototype e2e
 priority: P2
 feature: null
 spec_owner: discover
@@ -62,11 +62,14 @@ strictly worse than skipping a refresh.
 - [x] Verified: `POST /auth/email/login` no longer crashes the server (10-step
       PAT e2e in `docs/reviews/cli-pat-plumbing.md` completes with the server
       alive throughout).
-- [ ] **Discover sign-off** on the best-effort semantics: is "skip refresh if
-      headers sent" acceptable, or should the finish hook move to an earlier
-      event (`close` vs `finish`), or should the cookie write happen in the
-      route handler before `res.send()`? The applied guard is the minimal,
-      obviously-correct fix; the alternatives are larger and out of scope here.
+- [x] **Discover sign-off** (2026-07-22): the best-effort `!res.headersSent`
+      guard is the right call for now. The deeper rewrite (move the cookie
+      write out of `res.on("finish")` entirely, into the handler path before
+      `res.send()`) is a larger change with no marginal user-visible benefit
+      today — the sliding refresh fires on the paths where it can, and where
+      it can't, the client's existing session/Bearer still works. Filed as a
+      "not now" — revisit if cookie-refresh reliability becomes observable
+      (e.g. users getting logged out faster than the 30-day window implies).
 
 ## Non-goals
 
