@@ -364,11 +364,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="aa-app-brand-name">ActionAmp</span>
         </Link>
 
-        {/* ---- Universal nav — always visible, not bound to a mode ----
-            Inbox (capture destination) + Today (the day's commitment). Both
-            span every lens (WORKFLOW.md §3, §5.11), so they sit outside the
-            Work/Plan/Review expanding-section switch — switching modes no
-            longer hides Today. */}
+        {/* ---- Primary nav — always-visible destinations ----
+            Inbox (capture, universal), Today (day's commitment, universal),
+            Do (Next/What-Now chooser, lens-scoped). All three are flat links;
+            none belongs to a group, so they sit together at the top. */}
         <nav className="aa-app-nav">
           <NavItem
             icon={<InboxIcon />}
@@ -389,22 +388,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             to="/app/today"
             count={counts.today}
           />
-        </nav>
-
-        {/* ---- Focus nav ----
-            Do (flat link -> /app, the Next/What-Now chooser) + always-open
-            Plan and Review groups. The expanding-section switch (one open at
-            a time) is gone — it added a click before anything was visible and
-            auto-collapsed sections unpredictably on route changes. Plan and
-            Review now render their items directly under a static label. */}
-        <nav className="aa-focus-nav">
           <NavItem
             icon={<StarIcon />}
             label="Do"
             active={isActive("/app")}
             to="/app"
           />
+        </nav>
 
+        {/* ---- Group nav — always-open Plan + Review labeled groups ----
+            The expanding-section switch (one open at a time) is gone — it
+            added a click before anything was visible and auto-collapsed
+            sections unpredictably on route changes. Plan and Review render
+            their items directly under static labels. */}
+        <nav className="aa-focus-nav">
           <div className="aa-focus-group">
             <div className="aa-focus-label" aria-hidden="true">Plan</div>
             <div className="aa-focus-items">
