@@ -8,7 +8,7 @@ import "./LensPopover.css";
  * At ≤3 lenses AppShell renders <LensSwitch> (segmented control). At ≥4 that
  * control gets crowded, so the sidebar shows a single compact chip (active
  * color + name + ⌘L hint) that opens this popover listing every lens with its
- * purpose + today-count. ⌘L toggles it (wired in AppShell).
+ * purpose. ⌘L toggles it (wired in AppShell).
  *
  * Keyboard (per INTERACTION.md popover conventions):
  *   ↑↓  move the highlight
@@ -186,9 +186,6 @@ export function LensPopover({
                     <span className="aa-lens-popover__purpose">{opt.purpose}</span>
                   )}
                 </span>
-                {!!opt.count && opt.count > 0 && (
-                  <span className="aa-lens-popover__count">{opt.count}</span>
-                )}
                 {opt.proLocked && (
                   <span className="aa-lens-popover__pro" title="Pro feature">Pro</span>
                 )}

@@ -9,23 +9,20 @@ import { renderInContext } from "wasp/client/test";
 // AppShell (a lensOptions.length check), not here.
 
 const OPTS = [
-  { id: "l-work", label: "Work", color: "indigo", purpose: "deep client work", count: 12 },
-  { id: "l-me", label: "Me", color: "emerald", count: 3 },
-  { id: "l-studio", label: "Studio", color: "coral", purpose: "side projects", count: 0 },
-  { id: "l-admin", label: "Admin", color: "slate", purpose: "life ops", count: 5 },
+  { id: "l-work", label: "Work", color: "indigo", purpose: "deep client work" },
+  { id: "l-me", label: "Me", color: "emerald" },
+  { id: "l-studio", label: "Studio", color: "coral", purpose: "side projects" },
+  { id: "l-admin", label: "Admin", color: "slate", purpose: "life ops" },
 ];
 
 describe("LensPopover", () => {
-  it("renders one option per lens with name + purpose + count", () => {
+  it("renders one option per lens with name + purpose", () => {
     renderInContext(
       <LensPopover options={OPTS} active="l-work" onSelect={() => {}} onClose={() => {}} />,
     );
     expect(screen.getByText("Work")).toBeInTheDocument();
     expect(screen.getByText("deep client work")).toBeInTheDocument();
     expect(screen.getByText("Studio")).toBeInTheDocument();
-    // counts render for >0 only
-    expect(screen.getByText("12")).toBeInTheDocument();
-    expect(screen.queryByText("0")).not.toBeInTheDocument();
   });
 
   it("marks the active lens aria-selected", () => {
