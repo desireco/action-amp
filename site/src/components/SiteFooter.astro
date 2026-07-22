@@ -1,9 +1,13 @@
 ---
 // SiteFooter — the single shared site footer.
 //
-// Used on every page. Normal flow (never a scroll-snap target). The link set
-// matches what every public page already exposes. Styles live in
-// styles/site-chrome.css.
+// Standard marketing footer: brand + tagline in a wide left column,
+// three equal-width link columns to its right (Explore / Product / Legal),
+// and a hairline-separated © bar at the bottom. On mobile everything
+// stacks into a single column with the © bar full-width below.
+//
+// Used on every page. Normal flow (never a scroll-snap target). Styles
+// live in styles/site-chrome.css.
 import BrandMark from "./BrandMark.astro";
 
 interface Props {
@@ -11,23 +15,53 @@ interface Props {
 }
 
 const { appUrl } = Astro.props;
+const year = new Date().getFullYear();
 ---
 
 <footer class="aa-site-footer">
-  <div class="aa-site-footer-inner">
-    <a href="/" class="aa-brand" aria-label="ActionAmp home">
-      <BrandMark small />
-      <span class="aa-brand-name aa-brand-name-sm">ActionAmp</span>
-    </a>
-    <div class="aa-site-footer-links">
-      <a href="/blog">Blog</a>
-      <a href="/about">About</a>
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a>
-      <a href="/roadmap">Roadmap</a>
-      <a href="/rss.xml">RSS</a>
-      <a href={`${appUrl}/founding-100`}>Founding 100</a>
+  <div class="aa-site-footer-grid">
+    {/* ── Brand + tagline (wide left column) ── */}
+    <div class="aa-site-footer-brand">
+      <a href="/" class="aa-brand" aria-label="ActionAmp home">
+        <BrandMark small />
+        <span class="aa-brand-name aa-brand-name-sm">ActionAmp</span>
+      </a>
+      <p class="aa-site-footer-tagline">
+        One task. The next one that matters.
+      </p>
     </div>
-    <div class="aa-site-copy">© 2026 ActionAmp</div>
+
+    {/* ── Three equal-width link columns ── */}
+    <nav class="aa-site-footer-col" aria-label="Explore">
+      <h3 class="aa-site-footer-heading">Explore</h3>
+      <ul class="aa-site-footer-list">
+        <li><a href="/blog">Blog</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/roadmap">Roadmap</a></li>
+      </ul>
+    </nav>
+
+    <nav class="aa-site-footer-col" aria-label="Product">
+      <h3 class="aa-site-footer-heading">Product</h3>
+      <ul class="aa-site-footer-list">
+        <li><a href={`${appUrl}/login`}>Log in</a></li>
+        <li><a href={`${appUrl}/founding-100`}>Founding 100</a></li>
+      </ul>
+    </nav>
+
+    <nav class="aa-site-footer-col" aria-label="Legal">
+      <h3 class="aa-site-footer-heading">Legal</h3>
+      <ul class="aa-site-footer-list">
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/rss.xml">RSS</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="aa-site-footer-bottom">
+    <div class="aa-site-footer-bottom-inner">
+      <span class="aa-site-copy">© {year} ActionAmp</span>
+    </div>
   </div>
 </footer>

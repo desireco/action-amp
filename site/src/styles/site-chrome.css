@@ -101,33 +101,81 @@
 
 /* ============================================================
    Site footer — normal flow, no scroll-snap anywhere.
+   Brand + tagline in a wide left column, three equal-width link
+   columns (Explore / Product / Legal) to its right. On mobile,
+   everything stacks into a single column. A hairline-separated
+   © bar sits full-width below.
    ============================================================ */
 .aa-site-footer {
   width: 100%;
   border-top: 1px solid var(--aa-border);
   background: var(--aa-bg-soft);
 }
-.aa-site-footer-inner {
-  padding: 40px 56px;
+.aa-site-footer-grid {
   max-width: 1180px;
   margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
+  padding: 56px 56px 40px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  align-items: start;
 }
-.aa-site-footer-links {
+
+/* Brand column */
+.aa-site-footer-brand {
   display: flex;
-  gap: 22px;
+  flex-direction: column;
+  gap: 14px;
 }
-.aa-site-footer-links a {
-  font-size: 13px;
+.aa-site-footer-tagline {
+  font-size: 14px;
+  line-height: 1.5;
   color: var(--aa-text-3);
+  max-width: 28ch;
+  margin: 0;
 }
-.aa-site-footer-links a:hover {
+
+/* Link columns */
+.aa-site-footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.aa-site-footer-heading {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  margin: 0 0 4px;
+}
+.aa-site-footer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.aa-site-footer-list a {
+  font-size: 14px;
   color: var(--aa-text-2);
   text-decoration: none;
+  transition: color var(--aa-dur-fast);
+}
+.aa-site-footer-list a:hover {
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+}
+
+/* Bottom © bar — hairline above, full width */
+.aa-site-footer-bottom {
+  border-top: 1px solid var(--aa-border);
+}
+.aa-site-footer-bottom-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 56px;
 }
 .aa-site-copy {
   font-size: 12px;
@@ -139,7 +187,9 @@
    ============================================================
    Nav: section anchors hide on mobile (they only make sense when the
    landing's sections are visible); the Log in link stays. Brand shrinks
-   slightly. Footer: stack vertically, align left. */
+   slightly. Footer: grid collapses to a single stacked column; the
+   Product/Legal split widens to its own row so link columns never
+   compress below a comfortable tap-target width. */
 @media (max-width: 768px) {
   .aa-nav {
     padding: 16px 20px;
@@ -158,12 +208,14 @@
     width: 24px;
     height: 24px;
   }
-  .aa-site-footer {
-    padding: 28px 20px;
+
+  /* Footer — single column, generous vertical rhythm. */
+  .aa-site-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 40px 20px 28px;
   }
-  .aa-site-footer-inner {
-    padding: 0;
-    flex-direction: column;
-    align-items: flex-start;
+  .aa-site-footer-bottom-inner {
+    padding: 16px 20px;
   }
 }
