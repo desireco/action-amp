@@ -35,13 +35,11 @@ import "./AppShell.css";
  *   - Brand + Lens switch (context — Work/Me, always available)
  *   - Universal nav: Inbox + Today (always visible, span every lens)
  *   - Focus nav: Do (flat link → /app, the Next/What-Now chooser) + two
- *     expanding sections (Plan / Review), one open at a time.
+ *     always-open groups (Plan / Review) labeled with static headings.
  *   - User footer
  *
  * Capture is a lower-right floating action, pervasive across all modes.
  */
-
-type FocusSection = "plan" | "review";
 
 /** Routes for the Shift-letter navigation chords (useKeyboardShortcuts). */
 const NAV_ROUTE: Record<NavDestination, string> = {
@@ -54,18 +52,21 @@ const NAV_ROUTE: Record<NavDestination, string> = {
 };
 
 /**
- * Which focus section a route belongs to, or `null` for universal routes that
- * don't belong to any mode (Do/Next, Today, Inbox — WORKFLOW.md §3, §5.11).
- * Returning null tells the caller to leave the currently-expanded section
- * alone, so landing on a universal page doesn't collapse a section the user
- * opened. (Do used to be the "Work" expanding section; it's a flat link now,
- * so /app no longer drives expansion either.)
+ * Which focus section a route belongs to. Used only as freeform context for
+ * feedback (the focus switch itself is gone — Plan and Review are always-open
+ * nav groups now, not expanding sections). Universal routes (Today, Inbox)
+ * and the Do/Next route fall through to "work" — the focus-area label — so
+ * feedback always carries *some* context.
+ *
+ * Return type mirrors feedback/operations.ts FeedbackSection without importing
+ * it (the type isn't re-exported through wasp/client/operations).
  */
-function sectionForPath(pathname: string): FocusSection | null {
+function sectionForPath(pathname: string): "work" | "plan" | "review" {
   if (pathname.startsWith("/app/upcoming") || pathname.startsWith("/app/projects") || pathname.startsWith("/app/goals") || pathname.startsWith("/app/someday")) return "plan";
   if (pathname.startsWith("/app/logbook")) return "review";
-  // Universal pages (do/next, today, inbox) + unknown paths: don't force a section.
-  return null;
+  // Do/Next, Today, Inbox, and unknown paths all default to "work" — the
+  // focus-area label for feedback context.
+  return "work";
 }
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
@@ -265,6 +266,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isActive = (to: string) =>
     to === "/app" ? location.pathname === "/app" : location.pathname.startsWith(to);
 
+  // Section-level active state for the mobile dock (Plan/Review dock items
+  // each represent a whole section, not one route). Mirrors sectionForPath so
+  // the dock highlight agrees with the section label.
+  const inPlan = ["upcoming", "projects", "goals", "someday"].some((p) =>
+    location.pathname.startsWith(`/app/${p}`),
+  );
+  const inReview = location.pathname.startsWith("/app/logbook");
+
   // ponytail: 1–2 letter initials from fullName (first + last token). Good enough for an avatar.
   const initials = user
     ? user.fullName.split(/\s+/).map((s) => s[0] ?? "").slice(0, 2).join("").toUpperCase()
@@ -274,31 +283,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Auto-switches when the user navigates to a page in a different section.
   // Do/Next, Today, and Inbox are flat links outside this state (universal),
   // so only Plan/Review participate.
-  const [expandedFocus, setExpandedFocus] = useState<FocusSection>(() => {
-    if (typeof window === "undefined") return "plan";
-    // One-shot migration: "work" used to be a valid focus section (the old
-    // expanding Work section). With Work gone (Do is a flat link now), a stale
-    // "work" in localStorage would silently keep Plan/Review closed. Normalize
-    // it. Read as a broad string so the comparison type-checks.
-    const stored = localStorage.getItem("aa-focus");
-    if (stored === "work") {
-      localStorage.removeItem("aa-focus");
-      return "plan";
-    }
-    return (stored as FocusSection | null) ?? sectionForPath(location.pathname) ?? "plan";
-  });
-  // Sync with route changes (e.g. clicking a nav item, browser back/forward).
-  // Universal pages (do/today/inbox) return null — leave the current section
-  // alone so landing on them doesn't collapse a section the user opened.
+  // One-shot migration: the focus switch (expanding Plan/Review sections) is
+  // gone — both are always open now. Clear any stale "aa-focus" value the user
+  // persisted from the old single-section-open behavior so it doesn't linger
+  // as dead data. No-op after the first load post-update.
   useEffect(() => {
-    const next = sectionForPath(location.pathname);
-    if (next) setExpandedFocus(next);
-  }, [location.pathname]);
-
-  const handleSetFocus = (s: FocusSection) => {
-    setExpandedFocus(s);
-    localStorage.setItem("aa-focus", s);
-  };
+    if (typeof window !== "undefined" && localStorage.getItem("aa-focus")) {
+      localStorage.removeItem("aa-focus");
+    }
+  }, []);
 
   // ---- Overlays (capture popover, shortcut cheatsheet) ----
   // Focus mode is page-scoped (set by a task's onOpen), so it lives in pages,
@@ -399,11 +392,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         {/* ---- Focus nav ----
-            Do + expanding Plan/Review sections. Do is a flat link (Next, the
-            home screen) — it used to be the "Work" expanding section with a
-            single child, but that was an extra click for one item, and "Work"
-            the section collided with "Work" the lens. Renamed to Do (matches
-            the mobile dock's label) and flattened to a NavItem. */}
+            Do (flat link -> /app, the Next/What-Now chooser) + always-open
+            Plan and Review groups. The expanding-section switch (one open at
+            a time) is gone — it added a click before anything was visible and
+            auto-collapsed sections unpredictably on route changes. Plan and
+            Review now render their items directly under a static label. */}
         <nav className="aa-focus-nav">
           <NavItem
             icon={<StarIcon />}
@@ -412,41 +405,21 @@ export function AppShell({ children }: { children: ReactNode }) {
             to="/app"
           />
 
-          {/* Plan */}
-          <div className={`aa-focus-section ${expandedFocus === "plan" ? "open" : ""}`}>
-            <button
-              type="button"
-              className="aa-focus-header"
-              onClick={() => handleSetFocus("plan")}
-              aria-expanded={expandedFocus === "plan"}
-            >
-              Plan
-            </button>
-            {expandedFocus === "plan" && (
-              <div className="aa-focus-items">
-                <NavItem icon={<CalendarIcon />} label="Upcoming" active={isActive("/app/upcoming")} to="/app/upcoming" count={counts.upcoming} />
-                <NavItem icon={<ProjectsIcon />} label="Projects" active={isActive("/app/projects")} to="/app/projects" count={counts.projects} />
-                <NavItem icon={<GoalsIcon />} label="Goals" active={isActive("/app/goals")} to="/app/goals" count={counts.goals} />
-                <NavItem icon={<SomedayIcon />} label="Someday" active={isActive("/app/someday")} to="/app/someday" count={counts.someday} />
-              </div>
-            )}
+          <div className="aa-focus-group">
+            <div className="aa-focus-label" aria-hidden="true">Plan</div>
+            <div className="aa-focus-items">
+              <NavItem icon={<CalendarIcon />} label="Upcoming" active={isActive("/app/upcoming")} to="/app/upcoming" count={counts.upcoming} />
+              <NavItem icon={<ProjectsIcon />} label="Projects" active={isActive("/app/projects")} to="/app/projects" count={counts.projects} />
+              <NavItem icon={<GoalsIcon />} label="Goals" active={isActive("/app/goals")} to="/app/goals" count={counts.goals} />
+              <NavItem icon={<SomedayIcon />} label="Someday" active={isActive("/app/someday")} to="/app/someday" count={counts.someday} />
+            </div>
           </div>
 
-          {/* Review */}
-          <div className={`aa-focus-section ${expandedFocus === "review" ? "open" : ""}`}>
-            <button
-              type="button"
-              className="aa-focus-header"
-              onClick={() => handleSetFocus("review")}
-              aria-expanded={expandedFocus === "review"}
-            >
-              Review
-            </button>
-            {expandedFocus === "review" && (
-              <div className="aa-focus-items">
-                <NavItem icon={<LogbookIcon />} label="Logbook" active={isActive("/app/logbook")} to="/app/logbook" />
-              </div>
-            )}
+          <div className="aa-focus-group">
+            <div className="aa-focus-label" aria-hidden="true">Review</div>
+            <div className="aa-focus-items">
+              <NavItem icon={<LogbookIcon />} label="Logbook" active={isActive("/app/logbook")} to="/app/logbook" />
+            </div>
           </div>
         </nav>
 
@@ -569,11 +542,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             <StarIcon />
             <span>Do</span>
           </Link>
-          <Link className={`aa-mobile-dock__item ${expandedFocus === "plan" ? "active" : ""}`} to="/app/projects" aria-label="Plan">
+          <Link className={`aa-mobile-dock__item ${inPlan ? "active" : ""}`} to="/app/projects" aria-label="Plan">
             <ProjectsIcon />
             <span>Plan</span>
           </Link>
-          <Link className={`aa-mobile-dock__item ${expandedFocus === "review" ? "active" : ""}`} to="/app/logbook" aria-label="Review">
+          <Link className={`aa-mobile-dock__item ${inReview ? "active" : ""}`} to="/app/logbook" aria-label="Review">
             <LogbookIcon />
             <span>Review</span>
           </Link>
@@ -669,7 +642,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             await submitFeedback({
               message,
               route: `${location.pathname}${location.search}`,
-              section: expandedFocus,
+              section: sectionForPath(location.pathname),
               lens: activeLensValue,
               userAgent: typeof window === "undefined" ? null : window.navigator.userAgent,
             });

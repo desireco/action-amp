@@ -251,32 +251,28 @@ These were the open structural calls. All resolved:
    both `projectId` and `lensId`, and Classify shows `Destination: Project ·
    Lens` while skipping the standalone lens picker by default. See
    `docs/specs/done/triage-classify-step.md`.
-6. **Focus switch = expanding-section nav (one section open at a time).** The
-   sidebar has two orthogonal switches at the top:
+6. **Sidebar nav = flat links + always-open labeled groups (locked
+   2026-07-22).** The expanding-section focus switch (one section open at a
+   time) is gone — it added a click before anything was visible and
+   auto-collapsed sections unpredictably on route changes. Plan and Review
+   now render their items directly under static uppercase labels. History:
+   locked 2026-06-23 as a "soft focus" expanding-section nav; the Work
+   section was flattened to a "Do" link on 2026-07-21 (Work/Work name
+   collision, single-child wrapper was an extra click); the whole switch was
+   removed on 2026-07-22 in favor of always-open groups.
    - **Context switch** (Lens: Work / Me) — always available, orthogonal to
-     focus. "Which life context am I in?"
-   - **Focus switch** — Do (flat link → `/app`, the Next/What-Now chooser) +
-     two expanding sections (Plan / Review). Only one section is expanded at a
-     time; expanding one collapses the others. This delivers the "when you're
-     in a view, you don't see other things" property with plain nav state (no
-     routing-layer change).
-   - **Do** is a flat star-icon link to `/app` (Next, the home screen). It
-     used to be the "Work" expanding section with a single child (Next), but
-     that was an extra click for one item, and "Work" the section collided
-     with "Work" the lens. Renamed to Do (matches the mobile dock's label) and
-     flattened to a direct link on 2026-07-21.
-   - Expanding **Plan** shows: Upcoming, Projects, Goals, Someday.
-   - Expanding **Review** shows: Logbook, reports (when built).
-   - **Inbox and Today stay pinned outside the focus switch** — they're
-     universal (§3, §5.11). Capture is pervasive; Today is the day's global
-     commitment. Both appear at the top of the sidebar regardless of which
-     section is expanded, so switching to Plan no longer hides Today. (Today
-     moved up here from the Work section on 2026-07-21 when it went global —
-     previously it was scoped to the active lens and lived under Work. See
-     §5.11.)
-   - This is **soft focus now**. A future **hard focus** (each mode as a
-     distinct full-screen layout) is the north star, parked in
-     `docs/ROADMAP.md` §Icebox.
+     nav. "Which life context am I in?"
+   - **Universal nav**: Inbox + Today (always visible, span every lens —
+     §3, §5.11). Today moved here from the Work section on 2026-07-21 when
+     it went global.
+   - **Do** — flat star-icon link to `/app` (Next, the What-Now chooser).
+   - **Plan** group — Upcoming, Projects, Goals, Someday.
+   - **Review** group — Logbook, reports (when built).
+   - Mobile dock stays as-is (Inbox / Do / Plan / Review / Lens); the
+     dock items now highlight via route matching against the section's
+     routes (not the now-removed focus-section state).
+   - A future **hard focus** (each mode as a distinct full-screen layout)
+     remains the north star, parked in `docs/ROADMAP.md` §Icebox.
 7. **Today rolls over daily (locked 2026-06-30).** At the start of each new
    calendar day, every incomplete **Today** task flips to **Upcoming** so Today
    starts fresh each morning — a deliberate re-commitment, not a backlog.

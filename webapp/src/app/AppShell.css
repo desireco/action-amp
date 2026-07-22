@@ -539,7 +539,9 @@
   }
 }
 
-/* ---- Focus nav: expanding sections (one open at a time) ---- */
+/* ---- Focus nav: Do + always-open Plan/Review groups ----
+   The expanding-section switch is gone; both groups render their items
+   directly under a static uppercase label. */
 .aa-focus-nav {
   display: flex;
   flex-direction: column;
@@ -548,34 +550,20 @@
   flex: 1;
 }
 
-.aa-focus-section {
-  border-radius: var(--aa-radius-md);
+.aa-focus-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--aa-space-sm);
 }
 
-.aa-focus-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
+.aa-focus-label {
   padding: 7px 12px;
-  border: none;
-  background: transparent;
-  font-family: inherit;
   font-size: var(--aa-text-xs);
   font-weight: var(--aa-weight-bold);
   color: var(--aa-text-3);
-  cursor: pointer;
-  border-radius: var(--aa-radius-md);
-  transition: all var(--aa-dur-fast) var(--aa-ease-out);
-  text-align: left;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-.aa-focus-header:hover {
-  background: var(--aa-surface-muted);
-  color: var(--aa-text-2);
-}
-.aa-focus-section.open .aa-focus-header {
-  color: var(--aa-text);
 }
 
 .aa-focus-items {
