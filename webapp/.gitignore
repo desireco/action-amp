@@ -15,5 +15,6 @@ node_modules/
 
 test-results/
 
-# Playwright CLI skill scratch (page snapshots, not source)
+# Playwright scratch (page snapshots/console logs, not source)
 .playwright-cli/
+.playwright-mcp/

@@ -16,8 +16,9 @@ webapp/build/
 skills-lock.json
 .zcode/
 
-# playwright-cli artifacts (local screenshots/snapshots/traces)
+# playwright artifacts (local screenshots/snapshots/traces)
 .playwright-cli/
+.playwright-mcp/
 
 # scratch / ephemeral prototyping (canonical mockups live in docs/mockups/)
 _temp/
