@@ -74,34 +74,44 @@ const prisma = new PrismaClient();
  * Mirrored from .wasp/out/db/schema.prisma. If a model is added/renamed in
  * a future migration, update this list.
  */
+/**
+ * Per-user tables that carry a creation timestamp and a `userId` FK.
+ * Mirrored from .wasp/out/db/schema.prisma. If a model is added/renamed in a
+ * future migration, update this list.
+ *
+ * Most models use `createdAt`. `taskSession` uses `startedAt` (it has no
+ * `createdAt`) — the `field` override selects it instead. The timestamp is a
+ * "first activity" proxy in either case.
+ */
 const ACTIVITY_MODELS = [
-  "lens",
-  "goal",
-  "project",
-  "task",
-  "taskUpdate",
-  "taskSession",
-  "feedback",
-  "resource",
-  "inboxItem",
-  "apiKey",
-  "payment",
+  { model: "lens" },
+  { model: "goal" },
+  { model: "project" },
+  { model: "task" },
+  { model: "taskUpdate" },
+  { model: "taskSession", field: "startedAt" },
+  { model: "feedback" },
+  { model: "resource" },
+  { model: "inboxItem" },
+  { model: "apiKey" },
+  { model: "payment" },
 ];
 
 /**
- * Find the earliest `createdAt` across all of a user's activity records.
+ * Find the earliest creation timestamp across all of a user's activity records.
  * Issues one bounded `findFirst` per table (ordered asc, take 1) and takes
  * the min. Returns null if the user has no activity at all.
  */
 async function earliestActivity(userId) {
   let earliest = null;
-  for (const model of ACTIVITY_MODELS) {
-    const row = await prisma[model].findFirst({
+  for (const entry of ACTIVITY_MODELS) {
+    const field = entry.field ?? "createdAt";
+    const row = await prisma[entry.model].findFirst({
       where: { userId },
-      select: { createdAt: true },
-      orderBy: { createdAt: "asc" },
+      select: { [field]: true },
+      orderBy: { [field]: "asc" },
     });
-    const ts = row?.createdAt;
+    const ts = row?.[field];
     if (ts && (!earliest || ts.getTime() < earliest.getTime())) {
       earliest = ts;
     }
