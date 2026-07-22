@@ -2,7 +2,7 @@
 id: cli-package
 kind: spec
 title: "CLI package + op refactor (Phase 1 of the CLI effort)"
-status: review
+status: building
 priority: P3
 feature: cli
 spec_owner: discover
@@ -13,7 +13,7 @@ created: 2026-07-03
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsTx      # sync-managed (write-once)
-gh_synced_at: 2026-07-22T02:32:51Z
+gh_synced_at: 2026-07-22T03:18:14Z
 ---
 
 # Spec: CLI package (Phase 1)
@@ -213,30 +213,31 @@ lens in this order:**
 The `?lensId=` query param on the Phase 0 `/api/cli/now` stub is replaced by
 this resolution in the `cli/` package's `now` command.
 
-## Prototype — SHIPPED 2026-07-22 (throwaway; "discard on lock")
+## Prototype — IN PROGRESS (throwaway; "discard on lock")
 
-> **Status: `review`.** Built as the first Phase 1 pull. The four verbs work
-> end-to-end against a running dev server (see the verification log below). All
-> four steering questions are open — answer them after ~a week of use, then
-> decide which of the three Phase 1 scope forks (§"Phase 1 scope options") is
-> the real one.
+> **Status: `building`** (reworked 2026-07-22 from `review`). The first cut
+> used paste-a-token login — too much friction for daily use. Replacing the
+> login command with browser-OAuth (the `gh auth login` pattern): CLI opens
+> a browser, you authenticate there, the token comes back via a localhost
+> callback. `now`/`capture`/`logout`/`--json` from the first cut stay.
 
-A throwaway `cli/actionamp.ts` (~100 lines, pure Node 22+, **no dependencies**)
-that validates the transport *and* the feel of the loop before committing to
-the full surface. The spec's original §Prototypes called for this; the steering
-pass on 2026-07-22 (see the four questions in §"What the prototype tells us")
-narrowed it to the smallest thing that exercises every usage moment the user
-cares about. **Discard on lock** — replaced by the typed, tested,
+A throwaway `cli/actionamp.ts` (pure Node 22+, **no dependencies**) that
+validates the transport *and* the feel of the loop before committing to the
+full surface. **Discard on lock** — replaced by the typed, tested,
 `commander`-based package when real Phase 1 lands.
 
 ### Prototype command surface
 
 | Command | Default (human) output | `--json` output |
 |---|---|---|
-| `login` | Prompts for a token, validates against `/api/cli/now`, writes `~/.config/actionamp/config.json`. Refuses to save on 401. | `{ ok: true, user: {...} }` |
+| `login [--dev]` | Opens browser to `/cli/login`, you confirm, token comes back via localhost callback, written to `~/.config/actionamp/config.json`. | `{ ok: true, user: {...} }` |
 | `now` | `Description · in ProjectName` or `Nothing on the table.` | `{ task: {...} \| null, reason?: "no-lens" \| "no-candidates" }` |
 | `capture <text>` | `Captured.` | `{ ok: true, id, text }` |
 | `logout` | `Signed out.` | `{ ok: true }` |
+
+**`--dev` flag** switches `apiUrl` between `localhost:3001` (dev) and
+`api.actionamp.com` (prod, the default). Explicit, not auto-detection —
+auto-detecting "is there a dev server running?" is flaky.
 
 Four verbs, each with `--json`. **No `done` / `snooze` / `done today`** — the
 `done` semantics (no-arg = top task, prints next) are the riskiest design call
@@ -247,6 +248,88 @@ after the prototype has taught us whether `now`'s shape feels right.
 `chalk`, tests, the other 10 commands. The file is `.ts` for syntax but run
 via `node --experimental-strip-types` (Node 22+ supports this) — zero build
 step. Real Phase 1 rebuilds it properly.
+
+### The OAuth login flow (replaces paste-a-token)
+
+The pattern every modern CLI uses (`gh`, `stripe`, `vercel`): the CLI is not a
+trusted token-issuer — only the authed browser can mint — so the CLI asks the
+browser to do it, then receives the result via a localhost callback.
+
+```
+$ actionamp login --dev
+Opening browser to http://localhost:3001/cli/login?callback=http%3A%2F%2Flocalhost%3A42319%2Fcallback&state=a1b2c3…
+Waiting for authorization… (Ctrl+C to cancel)
+
+  ← browser opens →
+  ← if not logged in: redirects to /login, then back to /cli/login?callback=…&state=… →
+  ← "Authorize ActionAmp CLI?" page with a Confirm button (explicit consent) →
+  ← on click: mints an ApiKey via /api/pat/issue, redirects to the callback →
+
+✓ Signed in as zeljko@dakic.com.
+Token saved. You can revoke it from Settings → Access tokens.
+```
+
+Moving parts:
+
+1. **CLI spins up a throwaway `http.createServer` on a random high port**
+   (e.g. 42319), listens for exactly one request, then closes.
+2. **CLI generates a `state` nonce** (random hex) — CSRF protection. Stored
+   in-memory; the callback must echo it.
+3. **CLI opens the browser** (macOS: `open`; Linux: `xdg-open`) to
+   `${apiUrl}/cli/login?callback=${encodeURIComponent(localhostCallback)}&state=${state}`.
+4. **The `/cli/login` page** (new, session-authed, `authRequired: true`):
+   - Reads `callback` + `state` from query params.
+   - If unauthed, Wasp redirects to `/login` with a redirect-back to here
+     (preserving the query params).
+   - Once authed, shows **"Authorize ActionAmp CLI?"** with a Confirm button
+     showing the requested label (auto-generated: `CLI on <hostname>`).
+   - **Explicit consent** — a malicious site can embed a `callback=` pointing
+     at its own server, but it can't get the user to click Confirm on the real
+     `/cli/login` page without their action. The button is the consent gate.
+   - On click, the page calls `POST /api/pat/issue` (reusing the existing
+     session-authed route verbatim — `webapp/src/auth/patRoutes.ts:75`), gets
+     the plaintext token back, then redirects the browser to
+     `${callback}?token=${token}&state=${state}`.
+5. **CLI receives the callback** at its temp server, validates `state` matches,
+   stores the token in `~/.config/actionamp/config.json` (mode 0600), shuts
+   down the server, prints "Signed in as <email>." (email from a `whoami`
+   call — see below).
+
+**Token storage** is unchanged from the first cut — `patIssue` already does
+SHA-256 hashing + writes an `ApiKey` row. The OAuth flow is purely a *better
+delivery mechanism* for that row; the storage layer (the `ApiKey` table, the
+`/api/cli/*` middleware) is reused as-is.
+
+### What's reused vs. what's new
+
+**Reused (nothing wasted):**
+- `patIssue` route — the page calls it directly; no new mint route needed.
+- `ApiKey` model + `/api/cli/*` middleware — identical; the OAuth flow just
+  creates a row via the existing session-authed route.
+- Settings UI — stays as the manual management surface (revoke, see what's
+  issued); OAuth becomes the *primary* creation path.
+
+**New (this pull):**
+- One React page: `webapp/src/auth/CliLoginPage.tsx` — session-authed,
+  explicit-confirm, mints + redirects on click. Mirrors `Founding100Page`'s
+  `authRequired: true` route pattern (`main.wasp.ts:165`).
+- One route in `main.wasp.ts`: `route("CliLoginRoute", "/cli/login", page(CliLoginPage, { authRequired: true }))`.
+- Rewritten CLI `login` command: `node:http` server + `node:child_process`
+  browser-open + state validation + `--dev` flag.
+- A `whoami`-style endpoint OR reuse `/api/cli/now`'s resolved user (the
+  middleware already attaches `req.patUser` with id/plan/etc., but not email).
+  Lean: extend `req.patUser` to include `email`/`username` for the "Signed in
+  as X" line. One-line change to the middleware's `select`.
+
+### Open question (resolve during build)
+
+- **`onAuthSucceededRedirectTo` interaction.** Wasp's global setting is
+  `/app` (`main.wasp.ts:103`). After a fresh login on `/cli/login`, does Wasp
+  return the user to `/cli/login?callback=…` or send them to `/app`? The
+  `Founding100Route` comment at `main.wasp.ts:161-165` says Wasp returns them
+  to the intended page after auth — verify this holds for query-string-bearing
+  routes. If not, the page stores `callback`/`state` in `sessionStorage`
+  pre-login and reads them post-login.
 
 ### What the prototype tells us (the steering questions)
 
