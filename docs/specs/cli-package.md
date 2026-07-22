@@ -2,7 +2,7 @@
 id: cli-package
 kind: spec
 title: "CLI package + op refactor (Phase 1 of the CLI effort)"
-status: ready              # Open Q1 + Q2 resolved 2026-07-22; was draft.
+status: building
 priority: P3
 feature: cli
 spec_owner: discover
@@ -13,7 +13,7 @@ created: 2026-07-03
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4MgsTx      # sync-managed (write-once)
-gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
+gh_synced_at: 2026-07-22T02:32:51Z
 ---
 
 # Spec: CLI package (Phase 1)
@@ -213,16 +213,67 @@ lens in this order:**
 The `?lensId=` query param on the Phase 0 `/api/cli/now` stub is replaced by
 this resolution in the `cli/` package's `now` command.
 
-## Prototypes
+## Prototype (first Phase 1 pull — throwaway, "discard on lock")
 
-_(none yet — a throwaway `cli/` worktree proving `actionamp now --json` against
-a running `wasp start` is the cheapest validation that the transport +
-type-sourcing approach holds. Discard on lock. Belongs at the top of Phase 1,
-before the full command surface.)_
+A throwaway `cli/actionamp.ts` (~100 lines, pure Node 22+, **no dependencies**)
+that validates the transport *and* the feel of the loop before committing to
+the full surface. The spec's original §Prototypes called for this; the steering
+pass on 2026-07-22 (see the four questions in §"What the prototype tells us")
+narrowed it to the smallest thing that exercises every usage moment the user
+cares about. **Discard on lock** — replaced by the typed, tested,
+`commander`-based package when real Phase 1 lands.
+
+### Prototype command surface
+
+| Command | Default (human) output | `--json` output |
+|---|---|---|
+| `login` | Prompts for a token, validates against `/api/cli/now`, writes `~/.config/actionamp/config.json`. Refuses to save on 401. | `{ ok: true, user: {...} }` |
+| `now` | `Description · in ProjectName` or `Nothing on the table.` | `{ task: {...} \| null, reason?: "no-lens" \| "no-candidates" }` |
+| `capture <text>` | `Captured.` | `{ ok: true, id, text }` |
+| `logout` | `Signed out.` | `{ ok: true }` |
+
+Four verbs, each with `--json`. **No `done` / `snooze` / `done today`** — the
+`done` semantics (no-arg = top task, prints next) are the riskiest design call
+in the loop; testing them blind on the prototype would be guessing. Save for
+after the prototype has taught us whether `now`'s shape feels right.
+
+**Deliberately not in the prototype:** TypeScript + `tsc`, `commander`,
+`chalk`, tests, the other 10 commands. The file is `.ts` for syntax but run
+via `node --experimental-strip-types` (Node 22+ supports this) — zero build
+step. Real Phase 1 rebuilds it properly.
+
+### What the prototype tells us (the steering questions)
+
+After ~a week of use, the answers shape Phase 1's real scope:
+
+1. **Does `now` pull you back into focus, or do you open the tab anyway?** If
+   the tab wins, the CLI's value isn't the decision loop — it's `capture` +
+   a future `done today` reflection surface.
+2. **Is one token per machine fine, or do you want per-context tokens?**
+   Steers whether PAT scopes ship sooner.
+3. **Does `capture` from the terminal beat `⌘K` in the browser?** If not,
+   `capture`'s real home may be a global hotkey, not the CLI.
+4. **Does `--json` feel like a real constraint or an afterthought?** If human
+   and JSON outputs diverge a lot, the "one command, two outputs" model is
+   wrong and the surfaces should split.
+
+### Phase 1 scope options (decided *after* the prototype)
+
+Three honest forks, ordered by what the prototype is likeliest to confirm:
+
+- **Loop-first (5 verbs)** — `login` / `now` / `done` / `snooze` / `capture`
+  + `logout`. The decision-loop surface. Smaller than the current spec; ships
+  the value sooner. The browsing commands (`project list`, etc.) fold into a
+  later phase or into Phase 2 with the skills.
+- **Input/reflection surface** — `capture` + `done today` + `login`/`logout`.
+  The CLI as a side-channel, not a decision surface. Smaller still.
+- **Full surface (current spec)** — all ~14 commands + `--json` + op-refactor.
+  Largest. Only if the prototype confirms the browsing commands pull weight
+  from the terminal, which is the least likely outcome.
 
 ## Dependencies
 
 - **`cli-pat-plumbing`** (must ship first — the CLI calls `/api/cli/*` which
-  the PAT middleware protects).
+  the PAT middleware protects). ✅ shipped (in Review).
 - **`cli-comments-resources`** for the `task-research` skill only — not for
   this spec.
