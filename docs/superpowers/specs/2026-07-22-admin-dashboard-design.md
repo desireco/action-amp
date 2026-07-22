@@ -65,22 +65,31 @@ One-off, run once after migrate. For each `User`:
 
 Idempotent: only writes where `createdAt IS NULL`. Safe to re-run.
 
-### 3.3 Activity tracking — throttled global middleware
+### 3.3 Activity tracking — piggyback on `getAppData`
 
-A global API middleware (registered via `main.wasp.ts` global middleware config)
-that, for authenticated requests with a `context.user`:
+Global middleware is **already wired** (`main.wasp.ts:155-160` →
+`globalMiddlewareConfigFn` in `src/auth/serverMiddleware.ts`), but that function
+is a config-time factory with no request access — the wrong place. The session-
+cookie middleware in `src/auth/sessionCookie.ts` runs per-request but only has
+the `sessionId`, not the userId (the user augmentation isn't visible there).
 
-1. Reads the user's `lastActiveAt`.
-2. If null **or** older than **15 minutes**, fires a **non-awaited**
-   `User.update({ where:{ id }, data:{ lastActiveAt: now } })`.
-3. Always calls `next()` immediately — the write never blocks the request.
+The cleanest hook is **`getAppData`** in `webapp/src/app/operations.ts`: it runs
+on every app load (the truest "user is active" signal — not background API
+noise), already has `context.user.id`, and already does a `User.findUnique`
+select (line 54). We mirror the existing lazy-write pattern (the daily Today
+rollover in the same function):
 
-The 15-minute throttle bounds DB writes to ≤1/user/15min regardless of request
-volume. "Active today" is unaffected by the throttle (any touch in a day flips
-it). "Active in 7d/30d" inherits accuracy from the daily touch.
+1. Add `lastActiveAt: true` to the existing `select` on line 56.
+2. After the rollover block, add: if `lastActiveAt` is null **or** older than
+   **15 minutes**, fire a non-awaited
+   `context.entities.User.update({ where:{ id: userId }, data:{ lastActiveAt: now } })`
+   with a `.catch(() => {})` swallow (the write must never break an app load).
+3. The 15-minute throttle bounds writes to ≤1/user/15min. "Active today" is
+   unaffected by the throttle (any app-open in a day flips it). "Active in
+   7d/30d" inherits accuracy from the daily touch.
 
 **Failure mode:** if the throttled write throws (DB hiccup), it's swallowed
-(fire-and-forget with a `.catch(()=>{})`) — it must never break a user request.
+(fire-and-forget with a `.catch(()=>{})`) — it must never break an app load.
 
 ## 4. Shared core — `webapp/src/admin/operationsCore.ts`
 
@@ -212,6 +221,10 @@ query(getRecentFeedback, { entities: ["Feedback"], auth: true }),
 
 ### 5.2 CLI route — `patRoutes.ts`
 
+**Prerequisite:** add `User: authPrisma.user` to `authEntities` in
+`webapp/src/auth/prisma.ts` (currently absent — the admin cores read
+`entities.User`, which won't resolve without this). One line.
+
 `GET /api/cli/admin/stats` and `GET /api/cli/admin/feedback?after=<id>&limit=<n>`:
 
 ```ts
@@ -335,11 +348,12 @@ truth; the local type only types the formatter.
 
 **Modified:**
 - `webapp/schema.prisma` — `User.createdAt` + `User.lastActiveAt`.
-- `webapp/main.wasp.ts` — route, two queries, two API routes, global middleware,
-  import lines.
+- `webapp/main.wasp.ts` — route, two queries, two API routes, import lines.
 - `webapp/src/app/SettingsLayout.tsx` — conditional Admin tab.
+- `webapp/src/app/operations.ts` (`getAppData`) — throttled `lastActiveAt` write.
 - `webapp/src/auth/patRoutes.ts` — `cliAdminStats` + `cliAdminFeedback` route
   handlers.
+- `webapp/src/auth/prisma.ts` — add `User: authPrisma.user` to `authEntities`.
 - `admin-cli/src/types.ts` — `AdminStats` copy.
 - `admin-cli/src/index.ts` — register `stats` command.
 
