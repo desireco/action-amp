@@ -5,14 +5,16 @@ import type {
   RestoreArchivedItem,
   GetProjectsForResolver,
 } from "wasp/server/operations";
-import {
-  parseCapture,
-  type ParsedPriority,
-  type ParsedSize,
-} from "./parseCapture";
+import { type ParsedPriority, type ParsedSize } from "./parseCapture";
 import { FREE_LIMITS } from "../billing/config";
 import { assertLensAllowed, assertUnderCap } from "../billing/entitlementHttp";
-import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
+// Pure cores shared with /api/cli/* routes — auth + entitlement guards stay
+// here (the wrapper), the DB shape lives in the core. See operationsCore.ts.
+import {
+  createInboxItemCore,
+  getInboxItemsCore,
+  triageInboxItemCore,
+} from "./operationsCore";
 
 /**
  * Inbox operations — the capture destination + the triage transformation.
@@ -31,39 +33,10 @@ export const createInboxItem = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const raw = args.text?.trim();
-  if (!raw) {
-    throw new Error("Capture text is required.");
-  }
-  // Pull the user's custom lens names so `[[studio]]` is recognized at parse
-  // time. Seeded lenses (work/personal/me) are always known to the parser;
-  // custom names are user-defined and must be supplied per-call. (Grammar v2:
-  // unknown [[ ]] tokens stay literal — see parseCapture.ts.)
-  const customLenses = await context.entities.Lens.findMany({
-    where: { userId: context.user.id, kind: "CUSTOM" },
-    select: { name: true },
-  });
-  const parsed = parseCapture(
-    raw,
-    new Date(),
-    customLenses.map((l) => l.name),
-  );
-  return await context.entities.InboxItem.create({
-    data: {
-      text: parsed.cleanText,
-      userId: context.user.id,
-      parsedDate: parsed.parsedDate,
-      parsedPriority: parsed.parsedPriority,
-      parsedSize: parsed.parsedSize,
-      parsedTags: parsed.parsedTags,
-      // Explicit typeahead pick overrides anything the parser might extract
-      // from the first # token. The picker and parser both feed the same
-      // persisted project hint for triage resolution.
-      parsedProject:
-        args.projectName?.trim().toLowerCase() || parsed.parsedProject,
-      parsedLens: parsed.parsedLens,
-    },
-    select: { id: true, text: true, createdAt: true },
+  return await createInboxItemCore(context.entities, {
+    userId: context.user.id,
+    text: args.text,
+    projectName: args.projectName,
   });
 }) satisfies CreateInboxItem<
   { text: string; projectName?: string },
@@ -77,20 +50,8 @@ export const getInboxItems = (async (_args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  return await context.entities.InboxItem.findMany({
-    where: { userId: context.user.id, status: "UNPROCESSED" },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      text: true,
-      createdAt: true,
-      parsedDate: true,
-      parsedPriority: true,
-      parsedSize: true,
-      parsedTags: true,
-      parsedProject: true,
-      parsedLens: true,
-    },
+  return await getInboxItemsCore(context.entities, {
+    userId: context.user.id,
   });
 }) satisfies GetInboxItems<never>;
 
@@ -103,261 +64,34 @@ export const getInboxItems = (async (_args, context) => {
 //   archive    → mark InboxItem ARCHIVED (kept; recoverable from the Logbook)
 // Carries the InboxItem's parsed-* guesses onto the created entity. Resource
 // filing needs a parent picker (not yet built) — it throws a helpful error.
-// ---------------------------------------------------------------------------
-// triageInboxItem helpers — each arm of the transformation extracted so the
-// orchestrator reads as a flat sequence. Pure behavior-preserving splits; the
-// operations.test.ts suite pins the exact Prisma payloads each one emits.
-// ---------------------------------------------------------------------------
-type TriageContext = Parameters<typeof triageInboxItem>[1];
-
-/** Resolve captured #/@ tokens into per-user Tag records (prefix stripped, lower-cased). */
-async function resolveTagRecords(
-  entities: TriageContext["entities"],
-  userId: string,
-  parsedTags: string[] | null,
-) {
-  const names = (parsedTags ?? [])
-    .map((t) => t.replace(/^[@#]/, "").toLowerCase())
-    .filter((t) => t.length > 0);
-  if (names.length === 0) return [] as { id: string }[];
-  return Promise.all(
-    names.map((name) =>
-      entities.Tag.upsert({
-        where: { userId_name: { userId, name } },
-        create: { name, color: "teal", userId },
-        update: {},
-        select: { id: true },
-      }),
-    ),
-  );
-}
-
-/** Resolve the filing project: an explicit triage pick wins, else the lens's "General". */
-async function resolveEffectiveProject(
-  entities: TriageContext["entities"],
-  userId: string,
-  lensId: string,
-  projectId: string | null,
-): Promise<{ id: string | null; permalink: string | null }> {
-  if (projectId) {
-    const project = await entities.Project.findFirst({
-      where: { id: projectId, userId, lensId },
-      select: { id: true, permalink: true },
-    });
-    if (!project) {
-      throw new Error("Project not found.");
-    }
-    return { id: project.id, permalink: project.permalink };
-  }
-  const general = await entities.Project.findFirst({
-    where: { userId, lensId, name: "General" },
-    select: { id: true, permalink: true },
-  });
-  return { id: general?.id ?? null, permalink: general?.permalink ?? null };
-}
-
-/** task-today / upcoming / someday → a Task with the mapped status. */
-async function createTaskFromTriage(
-  entities: TriageContext["entities"],
-  userId: string,
-  opts: {
-    decision: "task-today" | "upcoming" | "someday";
-    title: string;
-    content: string | null;
-    lensId: string;
-    priority: ParsedPriority;
-    size: ParsedSize;
-    dueDate: Date | null;
-    projectId: string | null;
-    projectPermalink: string | null;
-    tagRecords: { id: string }[];
-  },
-): Promise<{ kind: "task"; id: string }> {
-  const status =
-    opts.decision === "task-today"
-      ? "TODAY"
-      : opts.decision === "upcoming"
-        ? "UPCOMING"
-        : "SOMEDAY";
-  const permalink = await uniquePermalink(
-    taskPermalinkSource(opts.title, opts.projectPermalink),
-    async (candidate) => {
-      const existing = await entities.Task.findFirst({
-        where: { userId, permalink: candidate },
-        select: { id: true },
-      });
-      return !!existing;
-    },
-  );
-  const task = await entities.Task.create({
-    data: {
-      description: opts.title,
-      permalink,
-      content: opts.content,
-      userId,
-      lensId: opts.lensId,
-      status,
-      priority: opts.priority,
-      size: opts.size,
-      dueDate: opts.dueDate,
-      projectId: opts.projectId,
-      // Tags carry onto tasks only (projects/goals drop them).
-      ...(opts.tagRecords.length > 0
-        ? { tags: { connect: opts.tagRecords.map((t) => ({ id: t.id })) } }
-        : {}),
-    },
-    select: { id: true },
-  });
-  return { kind: "task", id: task.id };
-}
-
-/** project → a new Project, enforcing the per-lens FREE cap first. */
-async function createProjectFromTriage(
-  context: TriageContext,
-  userId: string,
-  opts: { name: string; lensId: string; goalId?: string },
-): Promise<{ kind: "project"; id: string }> {
-  const projectCount = await context.entities.Project.count({
-    where: { userId, lensId: opts.lensId, isDone: false },
-  });
-  await assertUnderCap(context, opts.lensId, projectCount, FREE_LIMITS.projects, {
-    feature: "a 4th project",
-    reason: "organize more than 3 projects with Pro",
-  });
-  const permalink = await uniquePermalink(opts.name, async (candidate) => {
-    const existing = await context.entities.Project.findFirst({
-      where: { userId, permalink: candidate },
-      select: { id: true },
-    });
-    return !!existing;
-  });
-  const project = await context.entities.Project.create({
-    data: {
-      name: opts.name,
-      permalink,
-      userId,
-      lensId: opts.lensId,
-      goalId: opts.goalId,
-    },
-    select: { id: true },
-  });
-  return { kind: "project", id: project.id };
-}
-
+//
+// The orchestrator (triageInboxItemCore) lives in operationsCore.ts. The two
+// entitlement decisions it needs arrive as injected callbacks so the core
+// stays free of `wasp/server`: `assertLens` (FREE-lens filing guard) and
+// `assertProjectCap` (the per-lens project cap). Archive + resource-without-
+// parent are decided inside the core.
 export const triageInboxItem = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const userId = context.user.id;
-
-  const item = await context.entities.InboxItem.findUnique({
-    where: { id: args.inboxItemId },
+  return await triageInboxItemCore(context.entities, {
+    userId: context.user.id,
+    inboxItemId: args.inboxItemId,
+    decision: args.decision,
+    lensId: args.lensId,
+    goalId: args.goalId,
+    projectId: args.projectId,
+    name: args.name,
+    priority: args.priority,
+    size: args.size,
+    content: args.content,
+    assertLens: (lensId) => assertLensAllowed(context, lensId),
+    assertProjectCap: (lensId, currentCount) =>
+      assertUnderCap(context, lensId, currentCount, FREE_LIMITS.projects, {
+        feature: "a 4th project",
+        reason: "organize more than 3 projects with Pro",
+      }),
   });
-  if (!item || item.userId !== userId) {
-    throw new Error("Inbox item not found.");
-  }
-
-  const lensId = args.lensId;
-  // Entitlement: triage files entities into a lens. FREE users may only file
-  // into Me (the Work lens is visible-but-locked). Guards every decision that
-  // creates a lens-scoped entity (task/project). Archive + restore don't.
-  await assertLensAllowed(context, lensId);
-
-  // Precedence: explicit triage choice > the capture parser's guess > default.
-  // The triage wizard lets the user set Priority/Size deliberately (the spec
-  // step); when they do, that wins over whatever `~XL` / `!3` token they may
-  // have typed at capture time.
-  const priority = args.priority ?? item.parsedPriority ?? "NORMAL";
-  const size = args.size ?? item.parsedSize ?? "M";
-  const content = args.content?.trim() || null;
-  const title = args.name?.trim() || item.text;
-
-  // Tags carry onto Tasks only — Projects and Goals drop them (their scope is
-  // the whole collection, not a single actionable item).
-  const tagRecords = await resolveTagRecords(
-    context.entities,
-    userId,
-    item.parsedTags,
-  );
-
-  // Default-filing: an explicit project pick (resolved client-side in
-  // TriagePage) wins; otherwise file under the lens's "General" project so the
-  // task is never projectless.
-  const effectiveProject = await resolveEffectiveProject(
-    context.entities,
-    userId,
-    lensId,
-    args.projectId ?? null,
-  );
-
-  let result: { kind: "task" | "project" | "archive"; id: string };
-
-  switch (args.decision) {
-    case "task-today":
-    case "upcoming":
-    case "someday":
-      result = await createTaskFromTriage(context.entities, userId, {
-        decision: args.decision,
-        title,
-        content,
-        lensId,
-        priority,
-        size,
-        dueDate: item.parsedDate,
-        projectId: effectiveProject.id,
-        projectPermalink: effectiveProject.permalink,
-        tagRecords,
-      });
-      break;
-    case "project":
-      result = await createProjectFromTriage(context, userId, {
-        name: title,
-        lensId,
-        goalId: args.goalId,
-      });
-      break;
-    case "resource": {
-      // Resources require a parent (Project or Goal). A picker isn't built yet;
-      // surface a clear error so the UI can guide the user.
-      if (!args.projectId && !args.goalId) {
-        throw new Error("Resources must be filed under a project or goal.");
-      }
-      const resource = await context.entities.Resource.create({
-        data: {
-          title,
-          userId,
-          projectId: args.projectId ?? null,
-          goalId: args.goalId ?? null,
-        },
-        select: { id: true },
-      });
-      result = { kind: "project", id: resource.id }; // reuse for now
-      break;
-    }
-    case "archive": {
-      // "Archive" = I will not do now. Unlike the other decisions, this does
-      // NOT delete the InboxItem — it keeps the note, recoverable from the
-      // Logbook's Archived section. Capture is lossless; declining to act
-      // shouldn't cost the user their note.
-      await context.entities.InboxItem.update({
-        where: { id: item.id },
-        data: { status: "ARCHIVED", archivedAt: new Date() },
-      });
-      result = { kind: "archive", id: item.id };
-      break;
-    }
-    default:
-      throw new Error(`Unknown triage decision: ${args.decision}`);
-  }
-
-  // The transformation is committed — delete the seed InboxItem. (Archive is
-  // the exception: it marks the item ARCHIVED above, so this delete only runs
-  // for the create-type decisions.)
-  if (args.decision !== "archive") {
-    await context.entities.InboxItem.delete({ where: { id: item.id } });
-  }
-
-  return result;
 }) satisfies TriageInboxItem<{
   inboxItemId: string;
   decision:

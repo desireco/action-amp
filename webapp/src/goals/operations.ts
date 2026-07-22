@@ -9,7 +9,9 @@ import type {
 } from "wasp/server/operations";
 import { FREE_LIMITS } from "../billing/config";
 import { assertLensAllowed, assertUnderCap, throwHttpStatus } from "../billing/entitlementHttp";
-import { uniquePermalink } from "../shared/permalinks";
+// Pure cores shared with /api/cli/* routes — auth + entitlement guards stay
+// here (the wrapper), the DB shape lives in the core. See operationsCore.ts.
+import { getGoalsData, getGoalData, createGoalCore } from "./operationsCore";
 
 /**
  * Goals list for the Goals page, scoped to the active Lens.
@@ -26,38 +28,9 @@ export const getGoals = (async (args, context) => {
   // Entitlement: FREE users may only read the Me lens.
   await assertLensAllowed(context, args.lensId);
 
-  const goals = await context.entities.Goal.findMany({
-    where: {
-      userId: context.user.id,
-      lensId: args.lensId,
-      isDone: false,
-    },
-    orderBy: [{ name: "asc" }],
-    include: {
-      // Projects carry `order` so we can pick the first non-done one as "next".
-      projects: {
-        orderBy: [{ order: "asc" }, { name: "asc" }],
-        select: { id: true, permalink: true, name: true, isDone: true, order: true },
-      },
-    },
-  });
-
-  return goals.map((g) => {
-    const projectsDone = g.projects.filter((p) => p.isDone).length;
-    const projectsTotal = g.projects.length;
-    // Focus = first non-done project in sequence order. Absent when the goal
-    // has no projects or all are done (the "never lies" rule — no fabricated
-    // content). The goal-planning spec §E.
-    const nextProject = g.projects.find((p) => !p.isDone) ?? null;
-    return {
-      id: g.id,
-      permalink: g.permalink,
-      name: g.name,
-      description: g.description,
-      projectCount: projectsTotal,
-      progress: projectsTotal === 0 ? 0 : Math.round((projectsDone / projectsTotal) * 100),
-      nextProject: nextProject ? { id: nextProject.id, permalink: nextProject.permalink, name: nextProject.name } : null,
-    };
+  return await getGoalsData(context.entities, {
+    userId: context.user.id,
+    lensId: args.lensId,
   });
 }) satisfies GetGoals<{ lensId: string }>;
 
@@ -72,27 +45,9 @@ export const getGoal = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  return await context.entities.Goal.findFirst({
-    where: {
-      userId: context.user.id,
-      OR: [{ id: args.id }, { permalink: args.id }],
-    },
-    include: {
-      // Linked projects: name + done/total for a per-project progress read.
-      // Ordered by `order` then name — the goal-scoped sequence (spec §E).
-      projects: {
-        orderBy: [{ order: "asc" }, { name: "asc" }],
-        select: {
-          id: true,
-          permalink: true,
-          name: true,
-          isDone: true,
-          order: true,
-          dueDate: true,
-          tasks: { select: { id: true, isDone: true } },
-        },
-      },
-    },
+  return await getGoalData(context.entities, {
+    userId: context.user.id,
+    id: args.id,
   });
 }) satisfies GetGoal<{ id: string }>;
 
@@ -102,10 +57,6 @@ export const getGoal = (async (args, context) => {
 export const createGoal = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
-  }
-  const name = args.name?.trim();
-  if (!name) {
-    throw new Error("Goal name is required.");
   }
 
   // Entitlement: FREE users capped at FREE_LIMITS.goals per lens + Me-only.
@@ -118,23 +69,12 @@ export const createGoal = (async (args, context) => {
     reason: "link work to more than one outcome with Pro",
   });
 
-  const permalink = await uniquePermalink(name, async (candidate) => {
-    const existing = await context.entities.Goal.findFirst({
-      where: { userId: context.user!.id, permalink: candidate },
-      select: { id: true },
-    });
-    return !!existing;
-  });
-
-  return await context.entities.Goal.create({
-    data: {
-      name,
-      permalink,
-      userId: context.user.id,
-      lensId: args.lensId,
-      description: args.description,
-    },
-    select: { id: true, permalink: true, name: true },
+  // Name trim + permalink uniqueness + the create live in the core.
+  return await createGoalCore(context.entities, {
+    userId: context.user.id,
+    name: args.name,
+    lensId: args.lensId,
+    description: args.description,
   });
 }) satisfies CreateGoal<{
   name: string;

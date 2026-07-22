@@ -14,7 +14,14 @@ import {
   assertUnderCap,
   throwHttpStatus,
 } from "../billing/entitlementHttp";
-import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
+// Pure cores shared with /api/cli/* routes — auth + entitlement guards stay
+// here (the wrapper), the DB shape lives in the core. See operationsCore.ts.
+import {
+  getProjectsData,
+  getProjectData,
+  createProjectCore,
+  createTaskCore,
+} from "./operationsCore";
 
 /**
  * Projects list for the Projects page, scoped to the active Lens.
@@ -29,70 +36,18 @@ export const getProjects = (async (args, context) => {
   // Entitlement: FREE users may only read the Me lens.
   await assertLensAllowed(context, args.lensId);
 
-  const projects = await context.entities.Project.findMany({
-    where: {
-      userId: context.user.id,
-      lensId: args.lensId,
-      isDone: false,
-    },
-    orderBy: [{ name: "asc" }],
-    include: {
-      goal: { select: { id: true, name: true } },
-      tasks: {
-        where: { isDone: false },
-        select: {
-          id: true,
-          permalink: true,
-          description: true,
-          priority: true,
-          size: true,
-          status: true,
-          isDone: true,
-        },
-        orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
-        take: 1,
-      },
-      _count: { select: { tasks: { where: { isDone: false } } } },
-    },
+  return await getProjectsData(context.entities, {
+    userId: context.user.id,
+    lensId: args.lensId,
   });
-
-  // Total task count (done + open) for the progress fraction.
-  const totals = await context.entities.Project.findMany({
-    where: {
-      userId: context.user.id,
-      lensId: args.lensId,
-      isDone: false,
-    },
-    select: {
-      id: true,
-      _count: { select: { tasks: { where: { isDone: true } } } },
-    },
-  });
-  const doneCount = new Map(totals.map((p) => [p.id, p._count.tasks]));
-
-  return projects.map((p) => ({
-    id: p.id,
-    permalink: p.permalink,
-    name: p.name,
-    description: p.description,
-    dueDate: p.dueDate,
-    goal: p.goal,
-    openCount: p._count.tasks, // open (non-done) tasks
-    doneCount: doneCount.get(p.id) ?? 0,
-    nextAction: p.tasks[0] ?? null, // top-priority open task
-  }));
 }) satisfies GetProjects<{ lensId: string }>;
 
 // ----------------------------------------------------------------
-// Create a project (trige-to-project + a create UI)
+// Create a project (triage-to-project + a create UI)
 // ----------------------------------------------------------------
 export const createProject = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
-  }
-  const name = args.name?.trim();
-  if (!name) {
-    throw new Error("Project name is required.");
   }
 
   // Entitlement: FREE users capped at FREE_LIMITS.projects per lens, and the
@@ -112,36 +67,14 @@ export const createProject = (async (args, context) => {
     },
   );
 
-  // Seed `order` so a new project lands at the end of its goal's sequence
-  // (goal-planning spec §E). Standalone projects (no goal) keep order=0;
-  // they sort by name. We count existing projects under the goal — including
-  // done ones, since sequence order spans both.
-  let order = 0;
-  if (args.goalId) {
-    order = await context.entities.Project.count({
-      where: { userId: context.user.id, goalId: args.goalId },
-    });
-  }
-
-  const permalink = await uniquePermalink(name, async (candidate) => {
-    const existing = await context.entities.Project.findFirst({
-      where: { userId: context.user!.id, permalink: candidate },
-      select: { id: true },
-    });
-    return !!existing;
-  });
-
-  return await context.entities.Project.create({
-    data: {
-      name,
-      permalink,
-      userId: context.user.id,
-      lensId: args.lensId,
-      goalId: args.goalId,
-      description: args.description,
-      order,
-    },
-    select: { id: true, permalink: true, name: true },
+  // Name trim + order seeding + permalink uniqueness + the create live in the
+  // core.
+  return await createProjectCore(context.entities, {
+    userId: context.user.id,
+    name: args.name,
+    lensId: args.lensId,
+    goalId: args.goalId,
+    description: args.description,
   });
 }) satisfies CreateProject<
   {
@@ -156,7 +89,7 @@ export const createProject = (async (args, context) => {
 // ----------------------------------------------------------------
 // Read: a single project for the detail page, with its tasks
 // ----------------------------------------------------------------
-// Tenancy-safe (findUnique by id + userId). Returns the project fields plus its
+// Tenancy-safe (findFirst by id + userId). Returns the project fields plus its
 // full task list (open first by priority, then done) so the page can group by
 // horizon. lensId is included so callers can scope new tasks to the project's
 // lens — NOT the active sidebar lens, which may differ.
@@ -177,49 +110,13 @@ export const getProject = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const project = await context.entities.Project.findFirst({
-    where: {
-      userId: context.user.id,
-      OR: [{ id: args.id }, { permalink: args.id }],
-    },
-    include: {
-      goal: { select: { id: true, permalink: true, name: true } },
-      tasks: {
-        orderBy: [
-          { isDone: "asc" },
-          { priority: "desc" },
-          { createdAt: "asc" },
-        ],
-        select: {
-          id: true,
-          permalink: true,
-          description: true,
-          content: true,
-          isDone: true,
-          priority: true,
-          size: true,
-          status: true,
-          dueDate: true,
-          completedAt: true,
-        },
-      },
-    },
+  const project = await getProjectData(context.entities, {
+    userId: context.user.id,
+    id: args.id,
   });
   if (!project) return null;
-  // Entitlement: a FREE user may have an existing Work-lens project (seeded
-  // before the cap, or created on a lapsed plan). They can still open and use
-  // it (no data loss — spec invariant), so we do NOT block reads of existing
-  // projects. The lens guard applies to list/create, not to detail reads.
   return {
-    id: project.id,
-    permalink: project.permalink,
-    name: project.name,
-    description: project.description,
-    dueDate: project.dueDate,
-    isDone: project.isDone,
-    order: project.order,
-    lensId: project.lensId,
-    goal: project.goal,
+    ...project,
     tasks: project.tasks as ProjectTask[],
   };
 }) satisfies GetProject<{ id: string }>;
@@ -235,69 +132,18 @@ export const createTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const description = args.description?.trim();
-  if (!description) {
-    throw new Error("Task description is required.");
-  }
-  if (args.projectId && args.goalId) {
-    throw new Error("Task can only be attached to one parent.");
-  }
-
-  let lensId = args.lensId;
-  let projectPermalink: string | null = null;
-  if (args.projectId) {
-    const project = await context.entities.Project.findUnique({
-      where: { id: args.projectId, userId: context.user.id },
-      select: { id: true, lensId: true, permalink: true },
-    });
-    if (!project) {
-      throw new Error("Project not found.");
-    }
-    lensId = project.lensId;
-    projectPermalink = project.permalink;
-  } else if (args.goalId) {
-    const goal = await context.entities.Goal.findUnique({
-      where: { id: args.goalId, userId: context.user.id },
-      select: { id: true, lensId: true },
-    });
-    if (!goal) {
-      throw new Error("Goal not found.");
-    }
-    lensId = goal.lensId;
-  }
-
-  await assertLensAllowed(context, lensId);
-
-  const permalink = await uniquePermalink(
-    taskPermalinkSource(description, projectPermalink),
-    async (candidate) => {
-      const existing = await context.entities.Task.findFirst({
-        where: { userId: context.user!.id, permalink: candidate },
-        select: { id: true },
-      });
-      return !!existing;
-    },
-  );
-
-  const task = await context.entities.Task.create({
-    data: {
-      description,
-      permalink,
-      content: null,
-      userId: context.user.id,
-      lensId,
-      // A task is filed under a Project OR a Goal (or neither — standalone in
-      // the lens). Exactly one of projectId/goalId is typically set; both are
-      // nullable at the DB layer to support either parent.
-      projectId: args.projectId ?? null,
-      goalId: args.goalId ?? null,
-      status: "UPCOMING",
-      priority: "NORMAL",
-      size: "M",
-    },
-    select: { id: true, permalink: true },
+  // The core resolves the parent's lens + creates; the entitlement guard runs
+  // against the RESOLVED lens (injected as a callback so the core stays free of
+  // wasp/server). Lens resolution → guard → create happens in that order in the
+  // core, matching the pre-refactor op.
+  return await createTaskCore(context.entities, {
+    userId: context.user.id,
+    description: args.description,
+    lensId: args.lensId,
+    projectId: args.projectId,
+    goalId: args.goalId,
+    assertLens: (resolvedLensId) => assertLensAllowed(context, resolvedLensId),
   });
-  return { id: task.id, permalink: task.permalink };
 }) satisfies CreateTask<
   {
     description: string;
