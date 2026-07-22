@@ -87,8 +87,11 @@ appears in Work/Planning/Review except by coming through triage.
   - **Next** — the single focus task. State machine:
     `Next → (Start) → Now → (Done | Defer | Pause) → Next`. The Now state
     (`Task.startedAt`) persists across navigation.
-  - **Today** — the committed-for-today list, capped at 5 (F12). The cap is a
-    feature, not a limit — it forces the "what actually matters today" decision.
+  - **Today** — the global committed-for-today list (across all lenses), capped
+    at the user's `todayCap` (default 5, range 3–12, set in Preferences). The
+    cap is a feature, not a limit — it forces the "what actually matters today"
+    decision. Each row carries a trailing lens pill so the lens it came from is
+    visible without partitioning the list. (Reversed 2026-07-21, §5.11.)
 - **One Upcoming surface.** `UPCOMING` is the Task status for the bench —
   what's not yet committed to Today but still on the radar. It lives on a
   single page, `/app/upcoming` under Planning (locked 2026-07-05; re-reversed
@@ -157,11 +160,15 @@ appears in Work/Planning/Review except by coming through triage.
 - Every Task / Project / Goal / Resource belongs to exactly one **Lens**
   (a Work/Me default, plus any number of user-defined lenses on Pro). The
   active lens scopes every Work / Planning / Review view.
-- **Inbox and Capture are NOT scoped** — they're universal. A captured thought
-  has no lens until triage assigns one (implicitly via the active lens, or
-  explicitly if we adopt force-choice — §5).
-- Switching lenses swaps the entire Work / Planning / Review content; the Inbox
-  count in the sidebar stays the same regardless of lens.
+- **Inbox, Capture, and Today are NOT scoped** — they're universal. A captured
+  thought has no lens until triage assigns one (implicitly via the active lens,
+  or explicitly if we adopt force-choice — §5). Today is universal so the day's
+  commitment can be made across all lenses at once (reversed 2026-07-21, §5.11);
+  each Today row carries a lens pill so provenance is still visible without
+  partitioning the list.
+- Switching lenses swaps the Work / Planning / Review content that is
+  lens-scoped; the Inbox count and the Today list in the sidebar stay the same
+  regardless of lens.
 - **The switcher is adaptive.** At ≤3 lenses the sidebar shows the segmented
   control (today's `<LensSwitch>`); at ≥4 it collapses to a single chip that
   opens a keyboard-navigable popover (`⌘L`, `↑↓`/`↵`/`/`/`esc`). The swap is
@@ -174,12 +181,14 @@ appears in Work/Planning/Review except by coming through triage.
   key: Work = `indigo`, Me = `emerald`, plus 6 curated hues for user-defined
   lenses — see `styles/tokens.css`). The active lens's hue is mirrored onto
   `<html data-lens>` and surfaces immersively — a faint background wash, the
-  lens-switch dot + rail, the lens-scoped nav rail (Next/Today/Projects/Goals/
+  lens-switch dot + rail, the lens-scoped nav rail (Next/Projects/Goals/
   Someday/Logbook), the NextCard context label, and the Triage context-step.
-  This is **identity, not decoration**, and it never borrows the reserved hues:
-  teal = system/state (CTAs, links, the completion circle), amber = Important,
-  violet = projects/goals, rose = errors. Inbox and Capture stay neutral — they
-  have no lens. See `styles/tokens.css` (`--aa-lens-*`, `--aa-active-lens-*`).
+  Today is universal but still shows lens identity: each row carries a trailing
+  lens pill in the lens's hue. This is **identity, not decoration**, and it
+  never borrows the reserved hues: teal = system/state (CTAs, links, the
+  completion circle), amber = Important, violet = projects/goals, rose =
+  errors. Inbox and Capture stay neutral — they have no lens. See
+  `styles/tokens.css` (`--aa-lens-*`, `--aa-active-lens-*`).
 - **Lens configuration is Pro-only.** Creating, renaming, recoloring,
   editing-purpose, and deleting lenses all require Pro (the Settings → Lenses
   tab is `<ProGate>`'d for FREE). FREE gets the seeded two: Me usable, Work
@@ -232,7 +241,8 @@ These were the open structural calls. All resolved:
    nav/route cluster.
 4. **Work Area = Next (Now/Next chooser) + Today (committed list).** No
    third surface. Next shows the single focus task with its Next→Now state
-   machine; Today shows the committed-for-today list with the 5-item cap.
+   machine; Today shows the committed-for-today list with the `todayCap` cap
+   (default 5, range 3–12; global across lenses per §5.11).
 5. **Triage lens assignment lives in Classify (revised 2026-07-04).** Triage
    now opens on **Classify**, a combined Type + Destination step. Lens remains
    visible and reversible, but no longer gets its own standalone step. The
@@ -245,14 +255,25 @@ These were the open structural calls. All resolved:
    sidebar has two orthogonal switches at the top:
    - **Context switch** (Lens: Work / Me) — always available, orthogonal to
      focus. "Which life context am I in?"
-   - **Focus switch** (Work / Plan / Review) — an expanding-section nav. Only
-     one section is expanded at a time; expanding one collapses the others.
-     This delivers the "when you're in a view, you don't see other things"
-     property with plain nav state (no routing-layer change).
-   - Expanding **Work** shows: Next, Today.
+   - **Focus switch** — Do (flat link → `/app`, the Next/What-Now chooser) +
+     two expanding sections (Plan / Review). Only one section is expanded at a
+     time; expanding one collapses the others. This delivers the "when you're
+     in a view, you don't see other things" property with plain nav state (no
+     routing-layer change).
+   - **Do** is a flat star-icon link to `/app` (Next, the home screen). It
+     used to be the "Work" expanding section with a single child (Next), but
+     that was an extra click for one item, and "Work" the section collided
+     with "Work" the lens. Renamed to Do (matches the mobile dock's label) and
+     flattened to a direct link on 2026-07-21.
    - Expanding **Plan** shows: Upcoming, Projects, Goals, Someday.
    - Expanding **Review** shows: Logbook, reports (when built).
-   - **Capture stays pinned outside both switches** — it's pervasive.
+   - **Inbox and Today stay pinned outside the focus switch** — they're
+     universal (§3, §5.11). Capture is pervasive; Today is the day's global
+     commitment. Both appear at the top of the sidebar regardless of which
+     section is expanded, so switching to Plan no longer hides Today. (Today
+     moved up here from the Work section on 2026-07-21 when it went global —
+     previously it was scoped to the active lens and lived under Work. See
+     §5.11.)
    - This is **soft focus now**. A future **hard focus** (each mode as a
      distinct full-screen layout) is the north star, parked in
      `docs/ROADMAP.md` §Icebox.
@@ -336,8 +357,54 @@ These were the open structural calls. All resolved:
       `kind=COMPLETED` row. `Task.completedAt` stays as the existing
       completion timestamp (Today/Logbook read it); the typed row carries the
       user's optional completion note for Review. This is the focused slice
-      of `work-area-merged` — route merging and NOT_DOING/archive are still
-      out of scope.
+    of `work-area-merged` — route merging and NOT_DOING/archive are still
+    out of scope.
+11. **Today is universal, not lens-scoped (locked 2026-07-21).** Today stops
+    being scoped to the active lens and becomes global like Inbox and Capture.
+    The `/app/today` list and its Done-today section now span all accessible
+    lenses; each row carries a trailing lens pill so provenance stays visible
+    without partitioning the list.
+    - **Rationale:** Today is a commitment device for *the day* — lens is
+      context, not a partition. A day-commitment cut by lens is two smaller
+      commitments that never have to compete with each other, which defeats
+      the cap's "what actually matters today" forcing function. Inbox already
+      proved the universal pattern.
+    - **The cap is global and user-tunable.** `User.todayCap` (default 5,
+      range 3–12, set in Preferences) replaces the hardcoded `TODAY_CAP = 5`.
+      Going global flips the cap from "5 per lens" to "`todayCap` total" — so
+      a 2-lens user who previously had 10 slots now has `todayCap`; the
+      tunable range (up to 12) is the escape valve. This is a real behavior
+      change for multi-lens users, recorded here deliberately.
+    - **Entitlement is preserved via an accessible-lens filter**, not removed:
+      the global Today query filters `lensId ∈ getAccessibleLensIds(user)`
+      (FREE → one lens, Pro → all). A downgraded user no longer sees Today
+      tasks from now-inaccessible lenses. The per-task `assertLensAllowed`
+      guard is replaced by this set filter; FREE users with a single
+      accessible lens see no behavioral difference except the cap going global.
+    - **Today moved out of the Work nav section into the universal nav**,
+      alongside Inbox. Previously Today lived under the expanding Work section
+      (Decision 6), so switching to Plan collapsed Work and Today vanished
+      from the sidebar. With Today global that was wrong — a universal page
+      shouldn't disappear when you change mode. It now sits at the top of the
+      sidebar below Inbox, always visible regardless of which section is
+      expanded. `sectionForPath` returns null for `/app/today` so landing on
+      it no longer forces the Work section open. (Mobile dock unchanged for
+      now — it has its own slot constraints; Today stays reachable there via
+      the Next page link.)
+    - **What stays lens-scoped:** Next/What Now (`/app`, the focus engine and
+      `getTopTask`), Upcoming (`/app/upcoming`), Someday, Projects, Goals,
+      Logbook. So the Today → Upcoming cross-link still lands in the active
+      lens, as before.
+    - **Per-lens Today counts are gone from the switcher.** The lens
+      switcher used to show a per-lens Today badge (Work 4, Me 4) sourced from
+      a `todayByLens` map in `getAppData`. With Today global, that number no
+      longer reflects what the page shows (a user would see Work 4 + Me 4 in
+      the switcher but `todayCap` merged rows on the page), so the badge, the
+      `todayByLens` map, and its underlying `groupBy` were removed entirely.
+      The switcher now shows lens identity only (name + color + purpose).
+    - **Rollover is unaffected.** The daily `TODAY → UPCOMING` rollover
+      (§5.7) was already global (`where: { userId, status: "TODAY" }` — no
+      lens filter), so no change there.
 
 ## 6. Document cascade
 
@@ -381,6 +448,10 @@ The following were updated to match this doc (commit alongside):
 - `TRIAGE.md` §7.4 + §8 (revised 2026-07-05) — Classify lens UI is pills +
   one-line type rows (not positional A/S/D/F slots); property keys
   `[` `]` `-` `=` are now built (shared `PropertyChips` editor).
+- `FEATURES.md` + `PAGES.md` + `DATA-MODEL.md` (revised 2026-07-21) — Today
+  moved from lens-scoped to universal, matching §5.11. `DATA-MODEL.md` also
+  documents the new `User.todayCap` column. One-line tweaks only; no
+  structural changes beyond what §3 already records.
 
 ## 7. Code work implied by these decisions
 

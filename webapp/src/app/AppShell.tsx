@@ -33,15 +33,15 @@ import "./AppShell.css";
  *
  * Sidebar structure (WORKFLOW.md):
  *   - Brand + Lens switch (context — Work/Me, always available)
- *   - Inbox (universal — always visible, capture destination)
- *   - Focus nav: three expanding sections (Work / Plan / Review), one open
-n *     at a time. Expanding one collapses the others.
+ *   - Universal nav: Inbox + Today (always visible, span every lens)
+ *   - Focus nav: Do (flat link → /app, the Next/What-Now chooser) + two
+ *     expanding sections (Plan / Review), one open at a time.
  *   - User footer
  *
  * Capture is a lower-right floating action, pervasive across all modes.
  */
 
-type FocusSection = "work" | "plan" | "review";
+type FocusSection = "plan" | "review";
 
 /** Routes for the Shift-letter navigation chords (useKeyboardShortcuts). */
 const NAV_ROUTE: Record<NavDestination, string> = {
@@ -53,11 +53,19 @@ const NAV_ROUTE: Record<NavDestination, string> = {
   review: "/app/logbook",
 };
 
-function sectionForPath(pathname: string): FocusSection {
-  if (pathname === "/app" || pathname.startsWith("/app/today")) return "work";
+/**
+ * Which focus section a route belongs to, or `null` for universal routes that
+ * don't belong to any mode (Do/Next, Today, Inbox — WORKFLOW.md §3, §5.11).
+ * Returning null tells the caller to leave the currently-expanded section
+ * alone, so landing on a universal page doesn't collapse a section the user
+ * opened. (Do used to be the "Work" expanding section; it's a flat link now,
+ * so /app no longer drives expansion either.)
+ */
+function sectionForPath(pathname: string): FocusSection | null {
   if (pathname.startsWith("/app/upcoming") || pathname.startsWith("/app/projects") || pathname.startsWith("/app/goals") || pathname.startsWith("/app/someday")) return "plan";
   if (pathname.startsWith("/app/logbook")) return "review";
-  return "work";
+  // Universal pages (do/next, today, inbox) + unknown paths: don't force a section.
+  return null;
 }
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
@@ -140,11 +148,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     today: 0,
     upcoming: 0,
     someday: 0,
-    open: 0,
     projects: 0,
     goals: 0,
   };
-  const todayByLens = appData?.todayByLens ?? {};
+  // (todayByLens removed — Today is global, so per-lens Today counts in the
+  // switcher no longer reflect what the page shows. WORKFLOW.md §5.11.)
 
   // Capture autocomplete sources — fetched here (gated on user, same as
   // getAppData) and passed as props to CapturePopover so the popover stays a
@@ -209,14 +217,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           id: l.id,
           label: l.name,
           color: l.color ?? undefined,
-          count: todayByLens[l.id] ?? 0,
           purpose: l.purpose ?? undefined,
           // FREE: only PERSONAL is usable; WORK + CUSTOM are gated.
           proLocked: workLocked && l.kind !== "PERSONAL",
         }))
       : [
-          { id: "Work", label: "Work", color: "indigo", count: 0, purpose: undefined, proLocked: workLocked },
-          { id: "Me", label: "Me", color: "emerald", count: 0, purpose: undefined, proLocked: false },
+          { id: "Work", label: "Work", color: "indigo", purpose: undefined, proLocked: workLocked },
+          { id: "Me", label: "Me", color: "emerald", purpose: undefined, proLocked: false },
         ];
   // Adaptive switcher: ≤3 lenses → segmented control (today); ≥4 → chip + popover.
   // The swap is pure presentational state on lens count, no routing change.
@@ -265,14 +272,27 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   // ---- Focus nav: which section is expanded (one at a time) ----
   // Auto-switches when the user navigates to a page in a different section.
-  const [expandedFocus, setExpandedFocus] = useState<FocusSection>(() =>
-    typeof window === "undefined"
-      ? "work"
-      : (localStorage.getItem("aa-focus") as FocusSection) ?? sectionForPath(location.pathname),
-  );
+  // Do/Next, Today, and Inbox are flat links outside this state (universal),
+  // so only Plan/Review participate.
+  const [expandedFocus, setExpandedFocus] = useState<FocusSection>(() => {
+    if (typeof window === "undefined") return "plan";
+    // One-shot migration: "work" used to be a valid focus section (the old
+    // expanding Work section). With Work gone (Do is a flat link now), a stale
+    // "work" in localStorage would silently keep Plan/Review closed. Normalize
+    // it. Read as a broad string so the comparison type-checks.
+    const stored = localStorage.getItem("aa-focus");
+    if (stored === "work") {
+      localStorage.removeItem("aa-focus");
+      return "plan";
+    }
+    return (stored as FocusSection | null) ?? sectionForPath(location.pathname) ?? "plan";
+  });
   // Sync with route changes (e.g. clicking a nav item, browser back/forward).
+  // Universal pages (do/today/inbox) return null — leave the current section
+  // alone so landing on them doesn't collapse a section the user opened.
   useEffect(() => {
-    setExpandedFocus(sectionForPath(location.pathname));
+    const next = sectionForPath(location.pathname);
+    if (next) setExpandedFocus(next);
   }, [location.pathname]);
 
   const handleSetFocus = (s: FocusSection) => {
@@ -351,7 +371,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="aa-app-brand-name">ActionAmp</span>
         </Link>
 
-        {/* ---- Inbox (universal — always visible, capture destination) ---- */}
+        {/* ---- Universal nav — always visible, not bound to a mode ----
+            Inbox (capture destination) + Today (the day's commitment). Both
+            span every lens (WORKFLOW.md §3, §5.11), so they sit outside the
+            Work/Plan/Review expanding-section switch — switching modes no
+            longer hides Today. */}
         <nav className="aa-app-nav">
           <NavItem
             icon={<InboxIcon />}
@@ -365,27 +389,28 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
             countVariant={counts.inbox > 0 ? "urgent" : "done"}
           />
+          <NavItem
+            icon={<ClockIcon />}
+            label="Today"
+            active={isActive("/app/today")}
+            to="/app/today"
+            count={counts.today}
+          />
         </nav>
 
-        {/* ---- Focus nav: expanding sections, one open at a time ---- */}
+        {/* ---- Focus nav ----
+            Do + expanding Plan/Review sections. Do is a flat link (Next, the
+            home screen) — it used to be the "Work" expanding section with a
+            single child, but that was an extra click for one item, and "Work"
+            the section collided with "Work" the lens. Renamed to Do (matches
+            the mobile dock's label) and flattened to a NavItem. */}
         <nav className="aa-focus-nav">
-          {/* Work */}
-          <div className={`aa-focus-section ${expandedFocus === "work" ? "open" : ""}`}>
-            <button
-              type="button"
-              className="aa-focus-header"
-              onClick={() => handleSetFocus("work")}
-              aria-expanded={expandedFocus === "work"}
-            >
-              Work
-            </button>
-            {expandedFocus === "work" && (
-              <div className="aa-focus-items">
-                <NavItem icon={<StarIcon />} label="Next" active={isActive("/app")} to="/app" />
-                <NavItem icon={<ClockIcon />} label="Today" active={isActive("/app/today")} to="/app/today" count={counts.today} />
-              </div>
-            )}
-          </div>
+          <NavItem
+            icon={<StarIcon />}
+            label="Do"
+            active={isActive("/app")}
+            to="/app"
+          />
 
           {/* Plan */}
           <div className={`aa-focus-section ${expandedFocus === "plan" ? "open" : ""}`}>
@@ -527,7 +552,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 <span className="aa-mobile-lens-menu__dot" aria-hidden="true" />
                 <span>{l.label}</span>
-                {(l.count ?? 0) > 0 && <span className="aa-mobile-lens-menu__count">{l.count}</span>}
               </button>
             ))}
           </div>
