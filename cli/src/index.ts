@@ -27,6 +27,7 @@ import { makeInboxCommand } from "./commands/inbox.js";
 import { makeProjectCommand } from "./commands/project.js";
 import { makeGoalCommand } from "./commands/goal.js";
 import { makeLogbookCommand } from "./commands/logbook.js";
+import { makeLlmCommand } from "./commands/llm.js";
 import { makeLogoutCommand } from "./commands/logout.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -58,6 +59,7 @@ program.addCommand(makeInboxCommand());
 program.addCommand(makeProjectCommand());
 program.addCommand(makeGoalCommand());
 program.addCommand(makeLogbookCommand());
+program.addCommand(makeLlmCommand());
 program.addCommand(makeLogoutCommand());
 
 // Global error handler — catches ApiError + network failures, prints a calm
