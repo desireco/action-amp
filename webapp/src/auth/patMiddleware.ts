@@ -22,11 +22,12 @@
  * one job. See `create-verified-user.mjs` for the same pattern.
  */
 import type { MiddlewareConfigFn } from "wasp/server";
-import { PrismaClient } from "@prisma/client";
 import { hashToken, looksLikeToken } from "./pat";
+import { authPrisma as prisma } from "./prisma";
 
-// One client per process; reused across requests. Lazily instantiated.
-const prisma = new PrismaClient();
+// `prisma` is the shared process-level singleton from ./prisma.ts — reused
+// across the middleware + all /api/cli/* handlers so concurrent requests
+// don't each open their own connection pool.
 
 // The fields a CLI handler needs from the resolved user. Kept narrow so the
 // stub route can call `getTopTask` with the same shape a Wasp op's context

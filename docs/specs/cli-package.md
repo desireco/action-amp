@@ -2,7 +2,7 @@
 id: cli-package
 kind: spec
 title: "CLI package + op refactor (Phase 1 of the CLI effort)"
-status: draft              # was part of ready cli.md; unscoped refactor → draft
+status: ready              # Open Q1 + Q2 resolved 2026-07-22; was draft.
 priority: P3
 feature: cli
 spec_owner: discover
@@ -18,10 +18,9 @@ gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 
 # Spec: CLI package (Phase 1)
 
-> **Second of three specs split out of `cli.md` 2026-07-03.** This is `draft`:
-> the spec knows *what* commands the CLI needs, but the **op-refactor it
-> depends on is unscoped** — see Open Question 1. That's the one thing keeping
-> it from `ready`.
+> **Second of three specs split out of `cli.md` 2026-07-03.** `ready` as of
+> 2026-07-22 — Open Questions 1 (op-refactor scope) + 2 (lens scoping) resolved
+> by the Phase 0 Discover pass; see "Op refactor — decision table" below.
 
 ## Summary
 
@@ -76,10 +75,11 @@ skills (`cli-skills`) — they need a typed, scriptable surface with stable
 **Not built here:** edit description, delete anything, comments, attach/list
 resources. Filed as `cli-write-ops` + `cli-comments-resources` (deferred).
 
-## Done-conditions (draft — gated on Open Question 1)
+## Done-conditions
 
-- [ ] **The op-refactor scope is decided and executed** (Open Question 1).
-      This is the prerequisite for every CLI command's server-side call.
+- [ ] **Op refactor executed per the decision table above.** Every op in the
+      "Factor" rows gets a pure core extracted; the Wasp op + the `/api/cli/*`
+      route both delegate to it. No op needs Option (b) or (c).
 - [ ] **`cli/` builds and tests pass.** `tsc` clean; `npm test` (vitest + msw)
       green; `actionamp --help` lists every command.
 - [ ] **Auth + headline loop work against a running app.** `actionamp login`
@@ -105,38 +105,113 @@ resources. Filed as `cli-write-ops` + `cli-comments-resources` (deferred).
   is a later decision.
 - **No new focus-engine or ranking logic.** The CLI calls `getTopTask` as-is.
 
-## Open questions
-
-### 1. The op-refactor scope (this is why it's `draft`, not `ready`)
+## Op refactor — decision table (Open Q1, resolved 2026-07-22)
 
 The PAT transport (Option A, locked in `cli-pat-plumbing`) puts each CLI
 command behind an `/api/cli/<op>` route that delegates to a **pure function
-factored out of the existing `operations.ts`**. The original `cli.md` flagged
-this in a ponytail comment: *"the pure-function refactor is the part most
-likely to touch a lot of files; keep it mechanical."* That is an open question
-masquerading as a decision — Build doesn't know how invasive the refactor is
-until it starts, and "factor pure functions out of every op" is unbounded.
+factored out of the existing `operations.ts`**. The original concern was that
+"factor pure functions out of every op" is unbounded — so the Discover pass
+enumerated every op in the command surface and rated its factorability.
 
-**Resolution path (Discover's job before `ready`):** enumerate every op the
-command surface above touches (≈14 ops across tasks/projects/goals/inbox/lists)
-and decide, per op, one of:
-- **(a) Factor** — extract a pure function, both the browser op and the
-  `/api/cli` route call it. (Default; most ops.)
-- **(b) Inline** — the route re-implements the op's logic for the CLI path.
-  (Acceptable only where the op is trivially small and stable.)
-- **(c) Option B fallback** — for ops where factoring proves too invasive,
-  mint a Wasp session from the PAT and reuse the stock `/operations/*`
-  endpoint. (Last resort; couples to Wasp internals.)
+**Headline: the refactor is bounded and mechanical. Every op in the surface is
+factorable (15 EASY, 2 MEDIUM, 0 HARD). Nothing needs the Option B
+session-minting fallback.** The codebase already has the template —
+`billing/entitlements.ts` is a two-file split where pure decision functions
+take a loosely-typed `entities` object (not Wasp's `context`), and
+`billing/entitlementHttp.ts` is the only file that imports `wasp/server` to
+wrap them in `HttpError`. Every refactor below mirrors that split.
 
-The spec lists which ops go (a)/(b)/(c). Until that enumeration exists, the
-refactor is unscoped and the spec is not `ready`.
+### Template (applies to every "Factor" row)
 
-### 2. Lens scoping for `now`
+```
+operations.ts (today)              →  operations.ts (after)        +  operationsCore.ts (new)
+─────────────────────────────────      ──────────────────────────     ─────────────────────────
+export const getTasks = (async       export const getTasks =          export async function getTasksData(
+  (args, context) => {                 (async (args, context) => {      entities, { userId, ...args }
+  // auth check                        if (!context.user) throw …     ) { /* pure DB access */ }
+  // lens guard                        await assertLensAllowed(…)     )
+  // DB access  ←─ extract ────────▶   return getTasksData(
+  // shape                           context.entities,
+}) satisfies GetTasks<…>;              { userId: context.user.id, …args },
+                                    );
+                                  })
+```
+
+- The pure core takes `entities` (Prisma-client-shaped) + a plain args object,
+  returns data. No `wasp/server` import → unit-testable without mocking Wasp.
+- The Wasp op becomes a thin wrapper: auth check + `assertLensAllowed` +
+  `assertUnderCap` (the entitlement guards) + delegate to the core.
+- The `/api/cli/<op>` route does the same: resolve user from PAT middleware,
+  run the same guards (PAT-compatible — `req.patUser` carries the fields
+  `entitlementHttp.ts`'s `GuardContext` reads), delegate to the same core.
+
+### Per-op decisions
+
+**Factor (default — Option a):**
+
+| Op | Why factorable | Notes |
+|---|---|---|
+| `getTopTask` | sort comparator already duplicated as `rankTopTask` in `patRoutes.ts:34`; `activePoolWhere` already factored | The Phase 0 stub (`cliNow`) is already half this refactor — extracting the core *replaces* the stub's inline copy. |
+| `getTask` | single `findFirst`, no lens guard, no side effects | — |
+| `getTasks` | where-clause is already inline-pure | — |
+| `getDoneToday` | both entitlement helpers (`resolveAccessibleLenses` etc.) already pure | — |
+| `pauseTask` | 2 writes (close session + clear startedAt) | Simpler twin of `startTask`. |
+| `toggleTaskDone` | outcome-trim logic already pure inline | — |
+| `snoozeTask` | extract `snoozeTarget(preset, now)` as pure (testable); then a 1-write data fn. `SNOOZE_OFFSETS` is already pure | — |
+| `updateTaskStatus` | tenancy `findUnique` + single update | — |
+| `createInboxItem` | `parseCapture` already factored pure (`inbox/parseCapture.ts`) | — |
+| `getInboxItems` | single `findMany`, no lens guard (inbox is universal) | — |
+| `getProjects` / `getProject` / `createProject` / `createTask` | rollup maps already pure; cap + permalink (`uniquePermalink`) already factored | — |
+| `getGoals` / `getGoal` / `createGoal` | same shape as Projects | — |
+| `getLogbook` | `Promise.all` of 4 `findMany`s + 4 pure shape maps | NOTE: `getLogbook` currently lacks `assertLensAllowed` (pre-existing gap); the refactor should add it on the CLI path. |
+
+**Factor (MEDIUM — Option a, but watch the sequence):**
+
+| Op | Why medium | Notes |
+|---|---|---|
+| `startTask` | 3 writes (clear others' `startedAt`, close prior `TaskSession`, create new `TaskSession`) **not in `$transaction`** | Pre-existing smell, not a refactor cost. Extract `startTaskCore` keeping the write order; file a task to add `$transaction` separately. |
+| `triageInboxItem` | orchestrator body; but `resolveTagRecords`, `resolveEffectiveProject`, `createTaskFromTriage`, `createProjectFromTriage` (lines 113-245) are *already* standalone `async` functions | The hard parts are done. Extract `triageInboxItemCore(entities, userId, args)`. Multi-write (create + delete `InboxItem`) also not transactional — same filed-task caveat. |
+
+**Partial factor (Option a for the slice, b for the rest):**
+
+| Op | What to factor | Notes |
+|---|---|---|
+| `getAppData` | factor **only** `resolveActiveLens(lenses, requestedId)` (already pure inline at `app/operations.ts:79-82`; already re-implemented in `patRoutes.ts:165-184` — the duplication is visible). Leave the full bootstrap op alone. | The CLI's `now` needs only lens resolution, not the 5 counts + rollover write. Factoring the whole op is HARD and unnecessary. |
+
+**Option (b) Inline — none. Option (c) Option B session mint — none.** Every
+op in the surface goes Option (a) (or partial-a for `getAppData`).
+
+### PAT-route entitlement guards
+
+Every `/api/cli/<op>` route backing a lens-scoped op must run the equivalent
+of `assertLensAllowed`. This is already PAT-compatible:
+- `lensViolation` (`entitlements.ts:91`) is pure, takes a loosely-typed
+  `entities` + the user fields `{id, plan, planRenewsAt, isAdmin}`.
+- `req.patUser` from `patMiddleware.ts` carries exactly those fields.
+- A `/api/cli/*` route calls `resolveLens(entities, userId, lensId)` +
+  `lensViolation(user, lens, msg)`, translating a non-null result to a 402.
+- `assertUnderCap` follows the same pattern for create ops.
+
+The two-file split means `operationsCore.ts` can call these pure helpers
+directly (they don't import `wasp/server`); only the HTTP wrappers in
+`entitlementHttp.ts` do, and those are route-layer concerns.
+
+## Lens scoping for `now` (Open Q2, resolved 2026-07-22)
 
 `getTopTask` is lens-scoped; the browser resolves the active lens from
-`getAppData`. The CLI has no app shell. Lean: `actionamp now` reads a default
-lens from config (`~/.config/actionamp/config.json`), overridable with
-`--lens work|me`. Note the choice.
+`getAppData`. The CLI has no app shell. **Locked: `actionamp now` resolves the
+lens in this order:**
+
+1. `--lens <name>` flag if present (matched against the user's lenses by name,
+   case-insensitive; 404 if not found).
+2. Else `defaultLens` from `~/.config/actionamp/config.json` if set + still
+   owned by the user.
+3. Else the user's first lens by `createdAt` (the same fallback `getAppData`
+   uses at `app/operations.ts:79-82`). This is the zero-config path — a fresh
+   user with one Work lens gets Work without configuring anything.
+
+The `?lensId=` query param on the Phase 0 `/api/cli/now` stub is replaced by
+this resolution in the `cli/` package's `now` command.
 
 ## Prototypes
 

@@ -16,6 +16,14 @@
 import type { Request, Response } from "express";
 import { generateToken, hashToken, TOKEN_PREFIX } from "./pat";
 import { PRIORITY_RANK, SIZE_RANK } from "../tasks/operations";
+import { activePoolWhere } from "../tasks/activePool";
+import {
+  resolveLens,
+  resolveAccessibleLenses,
+  lensViolation,
+  WORK_LENS_MESSAGE,
+  type EntitlementUser,
+} from "../billing/entitlements";
 
 // Wasp injects `context.entities.<EntityName>` (Prisma clients) for every
 // entity listed in the route's `entities:` array. We type the slice we use so
@@ -141,10 +149,13 @@ export const patList = async (_req: Request, res: Response, context: WaspApiCont
 // invalid/revoked/missing PAT → 401 (handled by patRouteMiddleware before
 // this handler runs).
 //
-// `req.patUser` is attached by the middleware; we don't re-check it (the
-// middleware already 401'd if absent). Lens resolution mirrors getAppData: the
-// user's first lens (FREE users have one; PRO/FOUNDER pick). The `?lensId=`
-// query param overrides it when present and owned.
+// **Parity with `getTopTask` is load-bearing** (learned in review): the stub
+// must apply the same candidate predicate (`activePoolWhere` — including the
+// snooze guard) AND the same FREE-lens entitlement (`lensViolation`) as the
+// op it mirrors. Without both, the CLI either surfaces snoozed tasks the home
+// screen hides, or lets a FREE user read Pro-gated lens data. The pure
+// helpers in `tasks/activePool` + `billing/entitlements` are dependency-free
+// of Wasp, so importing them here costs nothing and removes the drift class.
 // ───────────────────────────────────────────────────────────────────────────
 export const cliNow = async (req: Request, res: Response, _context: unknown) => {
   const user = req.patUser;
@@ -153,53 +164,65 @@ export const cliNow = async (req: Request, res: Response, _context: unknown) => 
     return res.status(401).json({ error: "Not authenticated." });
   }
 
-  // Resolve lens: explicit query param (must be owned) else the user's first.
-  // Imported Prisma client — same precedent as create-verified-user.mjs. We
-  // can't use Wasp's context.entities here because PAT routes have no Wasp
+  // We can't use Wasp's context.entities here because PAT routes have no Wasp
   // context (only session-authed routes do). The `_context` arg is accepted
   // because Wasp's generated wrapper always passes one (empty for `auth: false`
-  // routes); ignoring it keeps the signature compatible.
-  const { PrismaClient } = await import("@prisma/client");
-  const prisma = new PrismaClient();
+  // routes); ignoring it keeps the signature compatible. Shared Prisma
+  // singleton from ./prisma.ts (process-level — never per-request; per-request
+  // pools exhaust Postgres under concurrent CLI traffic). `authEntities` is
+  // already the PascalCase shape the pure entitlement helpers expect.
+  const { authPrisma: prisma, authEntities: entities } = await import("./prisma");
+  // The entitlement helpers read {plan, planRenewsAt, isAdmin} — exactly what
+  // patMiddleware resolves onto req.patUser.
+  const entUser: EntitlementUser = {
+    plan: user.plan,
+    planRenewsAt: user.planRenewsAt,
+    isAdmin: user.isAdmin,
+  };
+
   try {
     const requestedLensId =
       typeof req.query.lensId === "string" ? req.query.lensId : null;
-    let lensId = requestedLensId;
-    if (!lensId) {
-      const firstLens = await prisma.lens.findFirst({
-        where: { userId: user.id },
-        orderBy: { createdAt: "asc" },
-        select: { id: true },
-      });
-      lensId = firstLens?.id ?? null;
-    } else {
-      // Tenancy: confirm the requested lens belongs to the user.
-      const owned = await prisma.lens.findFirst({
-        where: { id: lensId, userId: user.id },
-        select: { id: true },
-      });
-      if (!owned) {
+    let lensId: string | null;
+
+    if (requestedLensId) {
+      // Explicit lens: must be owned by the user (tenancy) AND entitled.
+      // resolveLens does the tenancy lookup; lensViolation enforces the FREE-
+      // lens rule on the resolved kind. 404 for not-owned keeps "no such lens"
+      // indistinguishable from "exists but not yours" (no oracle).
+      const lens = await resolveLens(entities, user.id, requestedLensId);
+      if (!lens) {
         return res.status(404).json({ error: "No such lens for this account." });
       }
+      const violation = lensViolation(entUser, lens, WORK_LENS_MESSAGE);
+      if (violation) {
+        return res.status(402).json({
+          error: `${violation.feature} is a Pro feature.`,
+          feature: violation.feature,
+          reason: violation.reason,
+        });
+      }
+      lensId = requestedLensId;
+    } else {
+      // No lens specified: default to the user's first *accessible* lens.
+      // resolveAccessibleLenses already applies the entitlement filter
+      // (FREE → PERSONAL-only), so the default can never land on a gated lens
+      // — matching the web app's behavior where a FREE user lands on Me.
+      const accessible = await resolveAccessibleLenses(entities, entUser, user.id);
+      lensId = accessible[0]?.id ?? null;
     }
 
     if (!lensId) {
-      // No lenses at all — the user hasn't completed onboarding. Return an
-      // explicit empty state instead of a 500.
+      // No accessible lenses at all — the user hasn't completed onboarding (or
+      // a FREE user with no PERSONAL lens, which shouldn't happen post-seed).
       return res.status(200).json({ task: null, reason: "no-lens" });
     }
 
-    // Candidate pool: same predicate shape as getTopTask (TODAY/UPCOMING,
-    // incomplete, this lens). Re-implemented inline rather than imported — the
-    // activePoolWhere helper lives in src/tasks and pulling it in would couple
-    // the CLI route to the op module before the refactor in cli-package.
+    // Candidate pool: the shared `activePoolWhere` predicate — same one
+    // `getTopTask` uses, including the snooze guard (`dueDate` clause) that
+    // keeps snoozed/scheduled tasks off Next until their time arrives.
     const candidates = await prisma.task.findMany({
-      where: {
-        userId: user.id,
-        lensId,
-        isDone: false,
-        status: { in: ["TODAY", "UPCOMING"] },
-      },
+      where: activePoolWhere({ userId: user.id, lensId }),
       include: {
         project: { select: { id: true, name: true } },
         goal: { select: { id: true, name: true } },
@@ -211,8 +234,11 @@ export const cliNow = async (req: Request, res: Response, _context: unknown) => 
       return res.status(200).json({ task: null, reason: "no-candidates" });
     }
     return res.status(200).json({ task: top });
-  } finally {
-    await prisma.$disconnect();
+    // NOTE: no `prisma.$disconnect()` — `prisma` is the shared process-level
+    // singleton; disconnecting here would break every subsequent request.
+  } catch (err) {
+    console.error("[cli/now] failed:", err);
+    return res.status(500).json({ error: "Could not resolve top task." });
   }
 };
 

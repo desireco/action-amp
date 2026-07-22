@@ -32,6 +32,9 @@
 | Vitest suite (418 tests, excluding the 2 pre-existing-WIP-broken files) | ✅ all pass |
 | Vitest suite (full) | ⚠️ 2 failures in `operations.test.ts` / `app/operations.test.ts` — **pre-existing, caused by uncommitted `getTodayTasks`/`todayCap` WIP in `operations.ts` that predates this card.** Proven by running the same tests with only my `export` edit applied (no WIP): all 108 pass. |
 | Manual e2e (10-step curl sequence against running server) | ✅ all pass (see below) |
+| Cold-context review — correctness | ✅ 2 BLOCKERs found + fixed (see §Review pass below) |
+| Cold-context review — security | ✅ 0 BLOCKERs; 3 CONCERNs addressed (see §Review pass below) |
+| Entitlement e2e (FREE user vs Work lens) | ✅ 402 holds, default lens resolves to Me (see §Review pass) |
 
 ## Done-conditions (from `docs/specs/cli-pat-plumbing.md`)
 
@@ -40,11 +43,11 @@
 - [x] **`POST /api/pat/revoke`** (session-authed) — delete by id; tenancy-safe (`findFirst({ id, userId })` → 404 if not owned). ✅
 - [x] **`GET /api/pat/list`** (session-authed) — returns `[{ id, label, createdAt, lastUsedAt }]`, never the hash. ✅
 - [x] **PAT middleware** — reads `Authorization: Bearer aa_<token>`, hashes (SHA-256), looks up by `hashedToken`, stamps `lastUsedAt`, resolves `User` onto `req.patUser`. Missing/malformed → 401 "Missing or malformed bearer token."; revoked/wrong → 401 "Invalid or revoked token." Modeled on `billing/webhookMiddleware.ts` + `statusMiddleware.ts`. ✅
-- [x] **Stub `/api/cli/now` route** — wired behind PAT middleware; calls the existing top-task ranking (via shared `PRIORITY_RANK`/`SIZE_RANK`); valid PAT returns the user's top task JSON, invalid → 401. ✅
+- [x] **Stub `/api/cli/now` route** — wired behind PAT middleware; calls the existing top-task ranking (via shared `PRIORITY_RANK`/`SIZE_RANK`); valid PAT returns the user's top task JSON, invalid → 401. **As of the review pass**: uses `activePoolWhere` (snooze guard parity with `getTopTask`) + `lensViolation` (FREE-lens entitlement parity). ✅
 - [x] **Settings UI** — new route `/app/settings/pat` + "Access tokens" tab in `SettingsLayout.TABS`; create (label → issue → plaintext-once reveal with copy + "won't be shown again" warning), list (label + last-used, no hash), revoke (per-row with `ConfirmDialog`). ✅
 - [x] **End-to-end auth verified** — see the 10-step curl sequence below. Issue → curl `/api/cli/now` returns the user's actual top task → revoke → same curl returns 401. ✅
 - [x] **`wasp compile` passes; existing suite green** — compile clean; suite green except the 2 pre-existing-WIP failures (proven unrelated). ✅
-- [ ] **Cold-context reviewer passes** — *not yet run.* Recommend launching ≥2 fresh-context reviewer subagents (correctness/regressions + security) before sign-off. The self-review below covers the angles but is not a substitute.
+- [x] **Cold-context reviewer passes** — 2 reviewer subagents launched (correctness + security); 2 BLOCKERs + 3 CONCERNs found, all addressed in the review pass (see §Review pass). ✅
 
 ## Manual e2e evidence (10-step curl sequence)
 
@@ -170,15 +173,95 @@ auth).
 
 ## Verdict
 
-**Ready for sign-off, pending two items:**
+**Ready for sign-off.** Two cold-context reviewer subagents were launched
+(correctness + security). They found 2 BLOCKERs + 3 CONCERNs; all are addressed
+in the §Review pass below, with re-verification. The one remaining gap is the
+UI browser pass — the curl e2e + the entitlement e2e prove the routes; a
+browser render of `PatSettingsPage` is still owed but low-risk (reuses only
+existing components).
 
-1. **Cold-context review.** Launch ≥2 fresh-context reviewer subagents
-   (correctness/regressions + security) against the diff. The self-review above
-   is not a substitute.
-2. **UI browser pass.** Render `PatSettingsPage`, exercise the issue → copy →
-   list → revoke flow once in a browser. The curl e2e proves the routes; this
-   confirms the React.
+The spawned `session-cookie-finish-race` task carries the one out-of-scope fix
+that landed alongside.
 
-Both are verification gaps, not known defects. The spec's done-conditions are
-met; the spawned `session-cookie-finish-race` task carries the one out-of-scope
-fix that landed alongside.
+## Review pass (post-commit, on `32ab053`)
+
+Two fresh-context reviewer subagents ran adversarial passes on the diff. Their
+findings are summarized here with the resolution for each. Findings that
+overlapped across reviewers are merged.
+
+### BLOCKERs (found + fixed)
+
+**B1 — `cliNow` candidate pool dropped the snooze guard** *(correctness reviewer)*.
+The stub's inline predicate `{ status: { in: ["TODAY","UPCOMING"] }, isDone: false }`
+omitted `activePoolWhere`'s `OR: [{ dueDate: null }, { dueDate: { lte: now } }]`
+clause — so a snoozed task (UPCOMING + future `dueDate`) would surface as the
+CLI's top task when the home screen would hide it. The shared `PRIORITY_RANK`/
+`SIZE_RANK` maps prevent tie-break drift but not pool drift.
+**Fix:** import + use `activePoolWhere({ userId, lensId })` — one-line change,
+removes the drift class. `activePool.ts` is dependency-free (just `@prisma/client`),
+so the "would couple to the ops module" reasoning in the original comment was wrong.
+
+**B2 — `cliNow` bypassed the FREE-lens entitlement** *(correctness reviewer; the
+load-bearing finding)*. `getTopTask` calls `assertLensAllowed` → `lensViolation`,
+which 402s for FREE users reading anything but their PERSONAL lens. The stub did
+no such check, AND fell back to `findFirst({ where: { userId } })` (oldest lens)
+— so a FREE user whose first lens was Work got Pro-gated data via the CLI.
+**This was a paywall hole.** The `PatUser` type already carried `plan`,
+`planRenewsAt`, `isAdmin` (the exact fields the check needs) — the data was
+there, just not consulted.
+**Fix:** (a) for explicit `?lensId=`, call `resolveLens` + `lensViolation` → 402
+on a non-null result. (b) for the default (no lensId), resolve via
+`resolveAccessibleLenses` (already applies the entitlement filter — FREE →
+PERSONAL-only) so the default can't land on a gated lens.
+**Re-verified:** created a FREE test user with both Me + Work lenses:
+- FREE user, no lensId → 200 (default resolves to Me).
+- FREE user, explicit Work lens → **402 "the Work lens is a Pro feature."**
+- FREE user, explicit Me lens → 200.
+
+### CONCERNs (found + addressed)
+
+**C1 — Schema comment said "argon2id"** *(both reviewers)*. `schema.prisma`
+described the rejected design as shipped, contradicting the SHA-256 code.
+**Fixed:** comment now says SHA-256 + points at `pat.ts` for reasoning.
+
+**Sec-C1 — `cliNow` instantiated `new PrismaClient()` per request** *(security
+reviewer)*. Each call opened its own connection pool; under concurrent CLI
+traffic this exhausts Postgres. Same PR used the correct singleton pattern 20
+lines earlier in `patMiddleware.ts`.
+**Fixed:** extracted `src/auth/prisma.ts` (process-level singleton +
+`authEntities` wrapper in the PascalCase shape the entitlement helpers expect).
+Both `patMiddleware.ts` and `patRoutes.ts` import it. The per-request
+`$disconnect` in `cliNow` is gone (it would have killed the shared client).
+
+**Sec-C3 — `pat.ts` comment cited HMAC-SHA256 precedent but code was plain
+SHA-256** *(security reviewer)*. The code is defensible (the HMAC insertion-
+attack defense requires DB write access, where the attacker wins bigger
+anyway), but citing HMAC as justification was misleading.
+**Fixed:** comment now honestly describes the plain-SHA-256 choice + the
+threat-model reasoning + when to revisit (read-replica with write access).
+
+**Sec-C2 — `/api/cli/*` protection is per-route, not per-prefix** *(security
+reviewer; CONCERN not BLOCKER because only one route exists)*. Wasp has no
+path-prefix middleware grouping — a future `/api/cli/foo` without
+`middlewareConfigFn: patRouteMiddleware` would be silently unauthenticated.
+**Addressed:** added a ⚠ comment in `main.wasp.ts` at the CLI route block
+making the requirement explicit + pointing at the e2e. A real prefix guard
+needs a regression test (curl every `/api/cli/*` route without a token, assert
+401) — filed as a follow-up for Phase 1 when the route count grows.
+
+### CONCERNs logged but deferred (per the spec's non-goals)
+
+- **No rate limiting on `/api/pat/issue` or `/api/cli/*`** — explicitly a spec
+  non-goal. The 256-bit token entropy defeats guessing; `lastUsedAt` write
+  amplification under a flood is the residual (not security) concern. Defer
+  until traffic warrants.
+
+### PASS verdicts from the reviewers (no action needed)
+
+- Token generation (256-bit CSPRNG + base64url + `aa_` prefix) — PASS
+- Token transport (no token material in logs or 401 bodies) — PASS
+- Timing on lookup (indexed, identical 401s for wrong vs revoked) — PASS
+- Tenancy / IDOR on issue/revoke/list — PASS
+- CORS (Bearer not browser-managed; `sessionCookieAuth` stripped) — PASS
+- Migration ↔ schema match — PASS
+- `patRouteMiddleware` deletion is route-scoped (no bleed) — PASS

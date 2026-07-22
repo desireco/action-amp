@@ -16,11 +16,15 @@
  * constant-time compare — but tokens have no "username" equivalent; the token
  * IS the lookup key.
  *
- * This is the standard model (GitHub and Stripe both use HMAC-SHA256 for
- * exactly this reason). The token carries 256 bits of entropy, so a slow KDF
- * adds no marginal brute-force resistance anyway — SHA-256 is correct here,
- * not a compromise. If we ever rotate the hashing scheme, old rows need a
- * re-hash migration.
+ * This is the same reasoning behind GitHub's and Stripe's token hashing (both
+ * use HMAC-SHA256). We use plain SHA-256 rather than HMAC-SHA256: the extra
+ * defense HMAC buys (an attacker with DB *write* access can't forge a row
+ * without the server secret) is moot once an attacker has write access to the
+ * users table — they already win bigger. HMAC would also add a key to manage
+ * + rotate. Revisit if the threat model changes (e.g. a read-replica with
+ * write access exposed to a wider blast radius). The token carries 256 bits
+ * of entropy, so a slow KDF adds no marginal brute-force resistance anyway.
+ * If we ever rotate the hashing scheme, old rows need a re-hash migration.
  */
 import { createHash, randomBytes } from "node:crypto";
 

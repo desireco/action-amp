@@ -264,6 +264,13 @@ export default app({
     // so Wasp doesn't add the session handler on top — the PAT middleware
     // resolves the user from the Bearer token. Replaced by the real CLI
     // surface in cli-package (Phase 1).
+    //
+    // ⚠ Every `/api/cli/*` route MUST set `middlewareConfigFn: patRouteMiddleware`.
+    // Wasp has no path-prefix middleware grouping — forgetting it makes the
+    // route silently unauthenticated (no session auth because `auth: false`,
+    // no PAT auth because the middleware never runs). The e2e test in
+    // `docs/reviews/cli-pat-plumbing.md` curls each `/api/cli/*` route
+    // without a token and asserts 401; update it whenever a CLI route is added.
     api("GET", "/api/cli/now", cliNow, {
       entities: [],
       auth: false,

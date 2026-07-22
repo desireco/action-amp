@@ -466,8 +466,10 @@ model Tag {
 // docs/specs/cli-pat-plumbing.md.
 model ApiKey {
   id          String   @id @default(uuid())
-  // argon2id hash of the plaintext token (same hasher as passwords). Looked up
-  // by hashing the inbound Bearer token on each /api/cli/* request.
+  // SHA-256 hash of the plaintext token (deterministic so the inbound Bearer
+  // token can be looked up by re-hashing). NOT argon2id — tokens are looked
+  // up by hash, which requires determinism; argon2id's random salt makes that
+  // impossible. See src/auth/pat.ts for the full reasoning.
   hashedToken String   @unique
   label       String // user-supplied name ("laptop", "ci", …)
   createdAt   DateTime @default(now())
