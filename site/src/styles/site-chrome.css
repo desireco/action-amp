@@ -60,6 +60,7 @@
   align-items: center;
   gap: 24px;
   padding: 20px 56px;
+  width: 100%;
   max-width: 1180px;
   margin: 0 auto;
   background: oklch(0.99 0.005 230 / 0.85);
