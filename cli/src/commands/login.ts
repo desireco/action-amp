@@ -120,6 +120,10 @@ async function login(ctx: OutputCtx, dev: boolean): Promise<void> {
     },
     ctx,
   );
+  // Explicit exit — the OAuth flow spins up an http.Server + fetch sockets that
+  // keep the event loop alive after the callback resolves. Without this, the
+  // process hangs instead of returning to the shell.
+  process.exit(0);
 }
 
 /** Check if logged in; if so, print who. Used by `actionamp whoami` too. */
