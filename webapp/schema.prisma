@@ -378,6 +378,12 @@ model Feedback {
   updatedAt DateTime @updatedAt
   message   String
 
+  // Human-addressable short id for the admin triage surface (the CLI shows +
+  // accepts this; the UUID id is the real PK). Crockford base32, `XXXX-XXXX`,
+  // minted at submit time via uniqueShortId + enforced unique here. Backfill:
+  // existing rows get a generated value in the migration.
+  shortId   String   @unique
+
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 

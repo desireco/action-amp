@@ -28,6 +28,8 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Entities = Record<string, any>;
 
+import { uniqueShortId, normalizeShortId } from "../shared/shortId";
+
 export const FEEDBACK_STATUSES = [
   "OPEN",
   "IN_PROGRESS",
@@ -49,6 +51,7 @@ function cleanOptional(value: string | null | undefined, max = 500): string | nu
 /** The fields the create + read paths select — one shape shared across surfaces. */
 const FEEDBACK_SELECT = {
   id: true,
+  shortId: true,
   createdAt: true,
   updatedAt: true,
   message: true,
@@ -104,8 +107,19 @@ export async function submitFeedbackCore(
     throw new Error("Feedback is too long.");
   }
 
+  // Mint a unique human-addressable short id (XXXX-XXXX). Retry-on-collision;
+  // the DB @unique constraint is the race backstop.
+  const shortId = await uniqueShortId(async (candidate) => {
+    const clash = await entities.Feedback.findUnique({
+      where: { shortId: candidate },
+      select: { id: true },
+    });
+    return !!clash;
+  });
+
   return await entities.Feedback.create({
     data: {
+      shortId,
       message: trimmed,
       userId,
       userName: cleanOptional(userName ?? null, 160),
@@ -139,12 +153,22 @@ export async function listFeedbackCore(
   });
 }
 
+/**
+ * Build a Prisma `where` for a feedback lookup, accepting either the UUID `id`
+ * or the `XXXX-XXXX` shortId (canonicalized Crockford, case-insensitive).
+ * Returns the single-key where the caller spreads into findUnique/update.
+ */
+function feedbackWhere(ref: string): { id: string } | { shortId: string } {
+  const short = normalizeShortId(ref);
+  return short ? { shortId: short } : { id: ref };
+}
+
 // ----------------------------------------------------------------
 // Read: single feedback (admin triage surface)
 // ----------------------------------------------------------------
 export async function showFeedbackCore(entities: Entities, { id }: { id: string }) {
   return await entities.Feedback.findUnique({
-    where: { id },
+    where: feedbackWhere(id),
     select: FEEDBACK_SELECT,
   });
 }
@@ -166,8 +190,9 @@ export async function updateFeedbackStatusCore(
     );
   }
 
+  const where = feedbackWhere(id);
   const existing = await entities.Feedback.findUnique({
-    where: { id },
+    where,
     select: { id: true },
   });
   if (!existing) {
@@ -175,7 +200,7 @@ export async function updateFeedbackStatusCore(
   }
 
   return await entities.Feedback.update({
-    where: { id },
+    where,
     data: { status },
     select: FEEDBACK_SELECT,
   });

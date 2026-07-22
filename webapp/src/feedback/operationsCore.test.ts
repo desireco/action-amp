@@ -22,6 +22,7 @@ import { mockContext } from "../test/mockContext";
 
 const FEEDBACK_ROW = {
   id: "fb-1",
+  shortId: "ABCD-1234",
   createdAt: new Date("2026-07-22T10:00:00Z"),
   updatedAt: new Date("2026-07-22T10:00:00Z"),
   message: "Looks great.",
@@ -68,6 +69,8 @@ describe("submitFeedbackCore", () => {
 
   it("trims the message + writes the denormalized context fields", async () => {
     const { entities } = mockContext();
+    // collision-check findUnique resolves undefined (no clash) → mint proceeds.
+    entities.Feedback.findUnique.mockResolvedValue(null);
     entities.Feedback.create.mockResolvedValue(FEEDBACK_ROW);
 
     await submitFeedbackCore(entities, {
@@ -83,6 +86,7 @@ describe("submitFeedbackCore", () => {
 
     expect(entities.Feedback.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
+        shortId: expect.stringMatching(/^[0-9A-Z]{4}-[0-9A-Z]{4}$/),
         message: "Looks great.",
         userId: "user-1",
         userName: "Zeljko Dakic",
@@ -94,8 +98,21 @@ describe("submitFeedbackCore", () => {
         lensColor: "indigo",
         userAgent: "Vitest",
       }),
-      select: expect.objectContaining({ id: true, status: true }),
+      select: expect.objectContaining({ id: true, shortId: true, status: true }),
     });
+  });
+
+  it("retries shortId mint on collision", async () => {
+    const { entities } = mockContext();
+    // First candidate clashes, second doesn't.
+    entities.Feedback.findUnique
+      .mockResolvedValueOnce({ id: "taken" })
+      .mockResolvedValueOnce(null);
+    entities.Feedback.create.mockResolvedValue(FEEDBACK_ROW);
+
+    await submitFeedbackCore(entities, { userId: "u1", message: "hi" });
+
+    expect(entities.Feedback.findUnique).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -138,6 +155,16 @@ describe("showFeedbackCore", () => {
       select: expect.any(Object),
     });
   });
+
+  it("resolves by shortId when the ref looks like one (case-insensitive)", async () => {
+    const { entities } = mockContext();
+    entities.Feedback.findUnique.mockResolvedValue(FEEDBACK_ROW);
+    await showFeedbackCore(entities, { id: "abcd-1234" });
+    // normalizeShortId uppercases + keeps the dash → ABCD-1234.
+    expect(entities.Feedback.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { shortId: "ABCD-1234" } }),
+    );
+  });
 });
 
 describe("updateFeedbackStatusCore", () => {
@@ -173,5 +200,17 @@ describe("updateFeedbackStatusCore", () => {
       select: expect.any(Object),
     });
     expect(result.status).toBe("RESOLVED");
+  });
+
+  it("resolves by shortId when the ref looks like one", async () => {
+    const { entities } = mockContext();
+    entities.Feedback.findUnique.mockResolvedValue({ id: "fb-1" });
+    entities.Feedback.update.mockResolvedValue({ ...FEEDBACK_ROW, status: "CLOSED" });
+
+    await updateFeedbackStatusCore(entities, { id: "ABCD-1234", status: "CLOSED" });
+
+    expect(entities.Feedback.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { shortId: "ABCD-1234" } }),
+    );
   });
 });
