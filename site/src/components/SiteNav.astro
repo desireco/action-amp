@@ -1,0 +1,43 @@
+---
+// SiteNav — the single shared site header.
+//
+// Sticky + blur backdrop + Log in link, used on every page. The link set is
+// page-aware: the landing shows in-page section anchors (#how/#soul/…),
+// every other page shows the site links (Blog/About/Roadmap). On mobile the
+// section/site links hide and only brand + Log in remain.
+//
+// Styles live in styles/site-chrome.css (imported by both index.astro and
+// PublicLayout.astro).
+import BrandMark from "./BrandMark.astro";
+
+interface Props {
+  appUrl: string;
+  variant?: "landing" | "site";
+}
+
+const { appUrl, variant = "site" } = Astro.props;
+---
+
+<nav class="aa-nav">
+  <a href="/" class="aa-brand" aria-label="ActionAmp home">
+    <BrandMark />
+    <span class="aa-brand-name">ActionAmp</span>
+  </a>
+  {variant === "landing" ? (
+    <div class="aa-nav-links">
+      <a class="aa-nav-link" href="#how">How it works</a>
+      <a class="aa-nav-link" href="#soul">Why</a>
+      <a class="aa-nav-link" href="#method">Methodology</a>
+      <a class="aa-nav-link" href="#faq">FAQ</a>
+    </div>
+  ) : (
+    <div class="aa-nav-links">
+      <a class="aa-nav-link" href="/blog">Blog</a>
+      <a class="aa-nav-link" href="/about">About</a>
+      <a class="aa-nav-link" href="/roadmap">Roadmap</a>
+    </div>
+  )}
+  <div class="aa-nav-auth">
+    <a class="aa-nav-link aa-nav-link-auth" href={`${appUrl}/login`}>Log in</a>
+  </div>
+</nav>

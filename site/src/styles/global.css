@@ -47,74 +47,27 @@
   box-sizing: border-box;
 }
 
-.aa-public a {
+/* Inline content links (markdown body — about/privacy/terms/blog articles).
+   Scoped to .aa-markdown-body so it doesn't bleed into the shared chrome
+   (nav, footer, blog cards), all of which set their own link colors.
+   Previously this was `.aa-public a`, which caught every link inside the
+   PublicLayout wrapper — including <SiteNav> once chrome unification moved
+   the nav inside .aa-public, overriding .aa-nav-link via specificity. */
+.aa-markdown-body a {
   color: var(--aa-teal-cta);
-  text-decoration: none;
-  transition: color var(--aa-dur-fast);
-}
-.aa-public a:hover {
-  color: var(--aa-teal-cta-hover);
   text-decoration: underline;
-}
-
-/* ---- NAV ---- */
-.aa-pub-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 56px;
-  max-width: 1180px;
-  margin: 0 auto;
-  width: 100%;
-  border-bottom: 1px solid var(--aa-border);
-}
-.aa-pub-nav-link {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--aa-text-3);
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
   transition: color var(--aa-dur-fast);
 }
-.aa-pub-nav-link:hover {
-  color: var(--aa-text);
-  text-decoration: none;
-}
-.aa-pub-nav-links {
-  display: flex;
-  align-items: center;
-  gap: 24px;
+.aa-markdown-body a:hover {
+  color: var(--aa-teal-cta-hover);
+  text-decoration-thickness: 2px;
 }
 
-/* shared brand (used in nav + footer) */
-.aa-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.aa-brand-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--aa-radius-md);
-  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px var(--aa-teal-tint-shadow);
-  flex-shrink: 0;
-}
-.aa-brand-mark-sm {
-  width: 22px;
-  height: 22px;
-  border-radius: var(--aa-radius-sm);
-}
-.aa-brand-name {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  color: var(--aa-text);
-}
-.aa-brand-name-sm {
-  font-size: 14px;
-}
+/* Nav + footer + brand-mark styles now live in styles/site-chrome.css,
+   shared with the landing page. This file keeps the layout shells
+   (.aa-public, .aa-pub-main) and the markdown body styles. */
 
 /* ---- MAIN — markdown body ---- */
 .aa-pub-main {
@@ -216,53 +169,9 @@
   border-top: 1px solid var(--aa-border);
   margin: 40px 0;
 }
-.aa-markdown-body a {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-thickness: 1px;
-}
-.aa-markdown-body a:hover {
-  text-decoration-thickness: 2px;
-}
-
-/* ---- FOOTER ---- */
-.aa-pub-footer {
-  width: 100%;
-  border-top: 1px solid var(--aa-border);
-  background: var(--aa-bg-soft);
-}
-.aa-pub-footer-inner {
-  padding: 40px 56px;
-  max-width: 1180px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.aa-pub-footer-links {
-  display: flex;
-  gap: 22px;
-}
-.aa-pub-footer-links a {
-  font-size: 13px;
-  color: var(--aa-text-3);
-}
-.aa-pub-footer-links a:hover {
-  color: var(--aa-text-2);
-  text-decoration: none;
-}
-.aa-pub-copy {
-  font-size: 12px;
-  color: var(--aa-text-4);
-}
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
-  .aa-pub-nav {
-    padding: 16px 20px;
-  }
   .aa-pub-main {
     padding: 40px 22px;
   }
@@ -274,14 +183,6 @@
   }
   .aa-markdown-body h2 {
     font-size: 20px;
-  }
-  .aa-pub-footer {
-    padding: 28px 20px;
-  }
-  .aa-pub-footer-inner {
-    padding: 0;
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 

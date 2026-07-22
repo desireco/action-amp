@@ -6,8 +6,10 @@
 //   - marketing routes (/, /about, /privacy, /terms, /roadmap) → relative
 //   - app routes (/founding-100, /login, /signup) → absolute to the app subdomain
 // The app origin comes from PUBLIC_APP_URL (dev: localhost:4000, prod: app.actionamp.com).
-import BrandMark from "../components/BrandMark.astro";
+import SiteNav from "../components/SiteNav.astro";
+import SiteFooter from "../components/SiteFooter.astro";
 import "../styles/global.css";
+import "../styles/site-chrome.css";
 
 interface Props {
   title: string;
@@ -97,40 +99,13 @@ const shareDescription = socialDescription ?? description;
   </head>
   <body>
     <div class="aa-public">
-      <nav class="aa-pub-nav">
-        <a href="/" class="aa-brand">
-          <BrandMark />
-          <span class="aa-brand-name">ActionAmp</span>
-        </a>
-        <div class="aa-pub-nav-links">
-          <a href="/blog" class="aa-pub-nav-link">Blog</a>
-          <a href="/about" class="aa-pub-nav-link">About</a>
-          <a href="/roadmap" class="aa-pub-nav-link">Roadmap</a>
-        </div>
-      </nav>
+      <SiteNav appUrl={appUrl} variant="site" />
 
       <main class={`aa-pub-main${fullWidth ? " aa-pub-main--wide" : ""}`}>
         <slot />
       </main>
 
-      <footer class="aa-pub-footer">
-        <div class="aa-pub-footer-inner">
-          <a href="/" class="aa-brand">
-            <BrandMark small />
-            <span class="aa-brand-name aa-brand-name-sm">ActionAmp</span>
-          </a>
-          <div class="aa-pub-footer-links">
-            <a href="/blog">Blog</a>
-            <a href="/about">About</a>
-            <a href="/privacy">Privacy</a>
-            <a href="/terms">Terms</a>
-            <a href="/roadmap">Roadmap</a>
-            <a href="/rss.xml">RSS</a>
-            <a href={`${appUrl}/founding-100`}>Founding 100</a>
-          </div>
-          <div class="aa-pub-copy">© 2026 ActionAmp</div>
-        </div>
-      </footer>
+      <SiteFooter appUrl={appUrl} />
     </div>
   </body>
 </html>

@@ -1,12 +1,12 @@
 ---
 // BrandMark — the ActionAmp checkmark in a teal gradient tile.
 // Ported from the inline SVG in webapp/src/shared/PublicLayout.tsx.
-// `small` is the footer variant (22px vs 28px).
+// `small` is the footer variant (22px vs 28px tile; 12px vs 15px glyph).
 interface Props {
   small?: boolean;
 }
 const { small = false } = Astro.props;
-const size = small ? 12 : 14;
+const size = small ? 12 : 15;
 ---
 
 <span class={`aa-brand-mark${small ? " aa-brand-mark-sm" : ""}`}>

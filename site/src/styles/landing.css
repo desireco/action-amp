@@ -29,87 +29,9 @@
   text-decoration: underline;
 }
 
-/* ============================================================
-   NAV
-   ============================================================ */
-.aa-nav {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 20px 56px;
-  max-width: 1180px;
-  margin: 0 auto;
-  background: oklch(0.99 0.005 230 / 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  border-bottom: 1px solid var(--aa-border);
-}
-.aa-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-right: auto;
-  color: var(--aa-text);
-  text-decoration: none;
-}
-.aa-brand:hover {
-  text-decoration: none;
-}
-.aa-brand-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--aa-radius-md);
-  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px var(--aa-teal-tint-shadow);
-  color: white;
-}
-.aa-brand-mark-sm {
-  width: 22px;
-  height: 22px;
-  border-radius: var(--aa-radius-sm);
-}
-.aa-brand-name {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  color: var(--aa-text);
-}
-.aa-brand-name-sm {
-  font-size: 14px;
-}
-.aa-nav-links {
-  display: flex;
-  gap: 28px;
-}
-.aa-nav-link {
-  font-size: 14px;
-  color: var(--aa-text-3);
-  font-weight: 500;
-}
-.aa-nav-link:hover {
-  color: var(--aa-text);
-  text-decoration: none;
-}
-/* Right-aligned auth link. Brand uses margin-right:auto, so this sits at the
-   far right. Survives mobile (the section anchors in .aa-nav-links don't). */
-.aa-nav-auth {
-  margin-left: 24px;
-}
-.aa-nav-link-auth {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--aa-text-2);
-}
-.aa-nav-link-auth:hover {
-  color: var(--aa-teal-cta);
-  text-decoration: none;
-}
+/* Nav + footer + brand-mark styles now live in styles/site-chrome.css,
+   shared with PublicLayout. The mobile scroll-snap rules below target
+   .aa-landing section only — the footer is no longer a snap target. */
 
 /* ============================================================
    HERO
@@ -735,38 +657,6 @@
   color: var(--aa-teal-cta-hover);
 }
 
-/* Footer */
-.aa-footer {
-  background: var(--aa-bg-soft);
-  border-top: 1px solid var(--aa-border);
-}
-.aa-footer-inner {
-  padding: 40px 56px;
-  max-width: 1180px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.aa-footer-links {
-  display: flex;
-  gap: 22px;
-}
-.aa-footer-links a {
-  font-size: 13px;
-  color: var(--aa-text-3);
-}
-.aa-footer-links a:hover {
-  color: var(--aa-text-2);
-  text-decoration: none;
-}
-.aa-footer-copy {
-  font-size: 12px;
-  color: var(--aa-text-4);
-}
-
 /* ============================================================
    RESPONSIVE — mobile (≤ 768px)
    ============================================================ */
@@ -786,8 +676,10 @@
   .aa-landing::-webkit-scrollbar {
     width: 0;
   }
-  .aa-landing section,
-  .aa-landing .aa-footer {
+  /* Each section snaps to the top of the scroll container; one swipe = one
+     section. The footer is intentionally NOT a snap target — it's a normal
+     trailing element after the storytelling sections. */
+  .aa-landing section {
     scroll-snap-align: start;
     scroll-snap-stop: always;
     min-height: 100vh;
@@ -796,33 +688,9 @@
     flex-direction: column;
     justify-content: center;
   }
-  .aa-landing .aa-footer-inner {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
   /* Hero keeps its bespoke layout (content top-aligned, not centered) */
   .aa-landing .aa-hero {
     justify-content: flex-start;
-  }
-
-  .aa-nav {
-    padding: 16px 20px;
-    gap: 12px;
-  }
-  .aa-nav-links {
-    display: none;
-  }
-  .aa-nav-auth {
-    margin-left: 0;
-  }
-  .aa-brand-name {
-    font-size: 15px;
-  }
-  .aa-brand-mark {
-    width: 24px;
-    height: 24px;
   }
 
   .aa-hero {
@@ -934,15 +802,6 @@
   }
   .aa-final h2 {
     font-size: 32px;
-  }
-
-  .aa-footer {
-    padding: 28px 22px;
-  }
-  .aa-footer-inner {
-    padding: 0;
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 

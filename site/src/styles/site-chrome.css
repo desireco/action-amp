@@ -1,0 +1,168 @@
+/* ============================================================
+   Site chrome — the single shared nav + footer across the site.
+   ============================================================
+   Imported by both `pages/index.astro` (landing) and
+   `layouts/PublicLayout.astro` (every other page), so the chrome is
+   identical everywhere. Page-aware link sets are handled in the
+   SiteNav component (anchors on the landing, site links elsewhere).
+
+   Tokens come from tokens.css, imported by both global.css and
+   landing.css — so this file is safe to load in either context. */
+
+@import "./tokens.css";
+
+/* ============================================================
+   Brand mark — the ActionAmp checkmark in a teal gradient tile.
+   Used by the <BrandMark /> Astro component. The tile is 28×28 in the
+   nav, 22×22 in the footer. ============================================================ */
+.aa-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+  color: var(--aa-text);
+  text-decoration: none;
+}
+.aa-brand:hover {
+  text-decoration: none;
+}
+.aa-brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--aa-radius-md);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px var(--aa-teal-tint-shadow);
+  color: white;
+}
+.aa-brand-mark-sm {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--aa-radius-sm);
+}
+.aa-brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--aa-text);
+}
+.aa-brand-name-sm {
+  font-size: 14px;
+}
+
+/* ============================================================
+   Site nav — sticky, blur backdrop, page-aware link set.
+   ============================================================ */
+.aa-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 56px;
+  max-width: 1180px;
+  margin: 0 auto;
+  background: oklch(0.99 0.005 230 / 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--aa-border);
+}
+.aa-nav-links {
+  display: flex;
+  gap: 28px;
+}
+.aa-nav-link {
+  font-size: 14px;
+  color: var(--aa-text-3);
+  font-weight: 500;
+}
+.aa-nav-link:hover {
+  color: var(--aa-text);
+  text-decoration: none;
+}
+/* Right-aligned auth link. Brand uses margin-right:auto, so this sits at the
+   far right. Survives mobile (the section anchors in .aa-nav-links don't). */
+.aa-nav-auth {
+  margin-left: 24px;
+}
+.aa-nav-link-auth {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--aa-text-2);
+}
+.aa-nav-link-auth:hover {
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+}
+
+/* ============================================================
+   Site footer — normal flow, no scroll-snap anywhere.
+   ============================================================ */
+.aa-site-footer {
+  width: 100%;
+  border-top: 1px solid var(--aa-border);
+  background: var(--aa-bg-soft);
+}
+.aa-site-footer-inner {
+  padding: 40px 56px;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.aa-site-footer-links {
+  display: flex;
+  gap: 22px;
+}
+.aa-site-footer-links a {
+  font-size: 13px;
+  color: var(--aa-text-3);
+}
+.aa-site-footer-links a:hover {
+  color: var(--aa-text-2);
+  text-decoration: none;
+}
+.aa-site-copy {
+  font-size: 12px;
+  color: var(--aa-text-4);
+}
+
+/* ============================================================
+   RESPONSIVE — mobile (≤ 768px)
+   ============================================================
+   Nav: section anchors hide on mobile (they only make sense when the
+   landing's sections are visible); the Log in link stays. Brand shrinks
+   slightly. Footer: stack vertically, align left. */
+@media (max-width: 768px) {
+  .aa-nav {
+    padding: 16px 20px;
+    gap: 12px;
+  }
+  .aa-nav-links {
+    display: none;
+  }
+  .aa-nav-auth {
+    margin-left: 0;
+  }
+  .aa-brand-name {
+    font-size: 15px;
+  }
+  .aa-brand-mark {
+    width: 24px;
+    height: 24px;
+  }
+  .aa-site-footer {
+    padding: 28px 20px;
+  }
+  .aa-site-footer-inner {
+    padding: 0;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
