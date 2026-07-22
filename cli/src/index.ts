@@ -20,8 +20,10 @@ import { fail, type OutputCtx } from "./output.js";
 import { makeLoginCommand } from "./commands/login.js";
 import { makeNowCommand } from "./commands/now.js";
 import { makeCaptureCommand } from "./commands/capture.js";
-import { makeLogoutCommand } from "./commands/logout.js";
 import { makeWhoamiCommand } from "./commands/whoami.js";
+import { makeTaskCommand } from "./commands/task.js";
+import { makeTodayCommand } from "./commands/today.js";
+import { makeLogoutCommand } from "./commands/logout.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -46,6 +48,8 @@ program.addCommand(makeLoginCommand());
 program.addCommand(makeNowCommand());
 program.addCommand(makeCaptureCommand());
 program.addCommand(makeWhoamiCommand());
+program.addCommand(makeTaskCommand());
+program.addCommand(makeTodayCommand());
 program.addCommand(makeLogoutCommand());
 
 // Global error handler — catches ApiError + network failures, prints a calm
