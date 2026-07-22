@@ -134,7 +134,8 @@ middleware · email sending. See the Advanced Features docs.
 | `context.entities.X undefined`                    | Add the entity to `entities: [...]` in the config declaration                                              |
 | Schema changes not applying                       | `wasp db migrate-dev --name <descriptive-name>`                                                            |
 | Can't login after email signup (`Dummy` provider) | Check server logs for the verification link, or set `SKIP_EMAIL_VERIFICATION_IN_DEV=true` in `.env.server` |
-| Wasp not recognizing changes                      | **WAIT PATIENTLY** — it recompiles. Re-run `wasp start` if needed.                                         |
-| Persistent weirdness after restart                | `wasp clean && wasp start`                                                                                 |
+| `Port 3001 is already in use` / crash loop         | A prior `wasp start` orphaned its server child on the port. Kill it with `pkill -f 'wasp start'; pkill -f bundle/server.js`, then use `npm run dev`. |
+| Wasp not recognizing changes                      | **WAIT PATIENTLY** — it recompiles. Re-run `npm run dev` if needed.                                        |
+| Persistent weirdness after restart                | `npm run dev -- --clean` (runs `wasp clean` before start)                                                 |
 
 Load the `wasp` skill for the full troubleshooting/dev workflow.
