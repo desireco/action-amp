@@ -53,7 +53,7 @@ export const getAppData = (async (args, context) => {
   // fields, but the User entity delegate always does.
   const userRow = await context.entities.User.findUnique({
     where: { id: userId },
-    select: { lastTodayRolloverAt: true, todayCap: true },
+    select: { lastTodayRolloverAt: true, todayCap: true, lastActiveAt: true },
   });
   const lastRoll = userRow?.lastTodayRolloverAt ?? null;
   if (!lastRoll || isDifferentDay(lastRoll, new Date())) {
@@ -64,6 +64,21 @@ export const getAppData = (async (args, context) => {
     await context.entities.User.update({
       where: { id: userId },
       data: { lastTodayRolloverAt: new Date() },
+    });
+  }
+
+  // ---- Activity tracking (admin dashboard "active" counts) ----
+  // Throttled: only stamp if null or older than 15 min. Non-awaited + swallow —
+  // an activity write must never break an app load. Mirrors the rollover's
+  // lazy-write idiom. Powers admin stats' activeToday/7d/30d.
+  const lastActive = userRow?.lastActiveAt ?? null;
+  const stale = !lastActive || Date.now() - lastActive.getTime() > 15 * 60 * 1000;
+  if (stale) {
+    context.entities.User.update({
+      where: { id: userId },
+      data: { lastActiveAt: new Date() },
+    }).catch(() => {
+      // Swallow — activity tracking is best-effort.
     });
   }
 

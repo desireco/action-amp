@@ -32,9 +32,12 @@ describe("getAppData — happy path", () => {
     });
     // Rollover already ran today → short-circuits so this test stays focused
     // on the count aggregation (covered in the rollover describe block).
+    // lastActiveAt is "recent" so the throttled activity write also short-
+    // circuits (this test is about counts, not activity tracking).
     m.entities.User.findUnique.mockResolvedValue({
       lastTodayRolloverAt: new Date(),
       todayCap: 5,
+      lastActiveAt: new Date(),
     });
     const lenses = [
       { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
@@ -129,7 +132,10 @@ describe("getAppData — happy path", () => {
     // or a renamed lens). Counts must still resolve against a real lens, not
     // silently zero out.
     const m = mockContext();
-    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
+    m.entities.User.findUnique.mockResolvedValue({
+      lastTodayRolloverAt: new Date(),
+      lastActiveAt: new Date(),
+    });
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
     ]);
@@ -182,7 +188,12 @@ describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
   it("does NOT roll when lastTodayRolloverAt is already today (idempotent)", async () => {
     const m = mockContext();
     const today = new Date();
-    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: today });
+    // lastActiveAt is also recent so the throttled activity write short-
+    // circuits too — this test asserts NO User.update calls at all.
+    m.entities.User.findUnique.mockResolvedValue({
+      lastTodayRolloverAt: today,
+      lastActiveAt: today,
+    });
     m.entities.Lens.findMany.mockResolvedValue([]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Task.count.mockResolvedValue(2);
@@ -264,6 +275,73 @@ describe("getAppData — daily Today → Upcoming rollover (lazy)", () => {
   });
 });
 
+describe("getAppData — throttled lastActiveAt stamp (admin dashboard)", () => {
+  // Powers admin "active today/7d/30d" counts. The stamp is throttled (≤15 min)
+  // and fire-and-forget — a non-awaited, .catch-swallowed write that must never
+  // break an app load. Mirrors the rollover's lazy-write idiom.
+
+  it("stamps lastActiveAt when it is null (first-ever load)", async () => {
+    const m = mockContext();
+    m.entities.User.findUnique.mockResolvedValue({
+      lastTodayRolloverAt: new Date(),
+      lastActiveAt: null,
+    });
+    m.entities.User.update.mockResolvedValue({});
+    m.entities.Lens.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(0);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+
+    await getAppData({ lensId: "Work" }, m.context);
+
+    expect(m.entities.User.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { lastActiveAt: expect.any(Date) },
+    });
+  });
+
+  it("stamps lastActiveAt when it is older than 15 minutes", async () => {
+    const m = mockContext();
+    const stale = new Date(Date.now() - 20 * 60 * 1000); // 20 min ago
+    m.entities.User.findUnique.mockResolvedValue({
+      lastTodayRolloverAt: new Date(),
+      lastActiveAt: stale,
+    });
+    m.entities.User.update.mockResolvedValue({});
+    m.entities.Lens.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(0);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+
+    await getAppData({ lensId: "Work" }, m.context);
+
+    expect(m.entities.User.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { lastActiveAt: expect.any(Date) },
+    });
+  });
+
+  it("does NOT stamp when lastActiveAt is within 15 minutes (throttled)", async () => {
+    const m = mockContext();
+    const recent = new Date(Date.now() - 60 * 1000); // 1 min ago
+    m.entities.User.findUnique.mockResolvedValue({
+      lastTodayRolloverAt: new Date(),
+      lastActiveAt: recent,
+    });
+    m.entities.Lens.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.count.mockResolvedValue(0);
+    m.entities.Task.count.mockResolvedValue(0);
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Goal.count.mockResolvedValue(0);
+
+    await getAppData({ lensId: "Work" }, m.context);
+
+    expect(m.entities.User.update).not.toHaveBeenCalled();
+  });
+});
+
 describe("getAppData — planning counter consistency", () => {
   it("keeps Today (global) distinct from Upcoming/Someday (lens-scoped)", async () => {
     // Today is its own global count; Upcoming/Someday come from the lens-scoped
@@ -274,7 +352,10 @@ describe("getAppData — planning counter consistency", () => {
       plan: "PRO",
       planRenewsAt: new Date(Date.now() + 86_400_000),
     });
-    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
+    m.entities.User.findUnique.mockResolvedValue({
+      lastTodayRolloverAt: new Date(),
+      lastActiveAt: new Date(),
+    });
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
     ]);
@@ -304,7 +385,10 @@ describe("getAppData — planning counter consistency", () => {
     // only see the PERSONAL lens, even though both exist. This is the badge-
     // level mirror of getTodayTasks' entitlement filter.
     const m = mockContext(); // FREE (no plan on the default mock)
-    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
+    m.entities.User.findUnique.mockResolvedValue({
+      lastTodayRolloverAt: new Date(),
+      lastActiveAt: new Date(),
+    });
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
       { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
@@ -335,7 +419,10 @@ describe("getAppData — planning counter consistency", () => {
     // accessible set is empty → today must short-circuit to 0 rather than fire
     // a Prisma `in: []` query that could surprise.
     const m = mockContext();
-    m.entities.User.findUnique.mockResolvedValue({ lastTodayRolloverAt: new Date() });
+    m.entities.User.findUnique.mockResolvedValue({
+      lastTodayRolloverAt: new Date(),
+      lastActiveAt: new Date(),
+    });
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
     ]);
