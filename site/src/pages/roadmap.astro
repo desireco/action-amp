@@ -12,6 +12,12 @@ import "../styles/roadmap.css";
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
 
 const shipped = [
+  { date: "Jul 21", trunk: "Installable PWA + resilient sessions", summary: "ActionAmp is now a real installable PWA — standalone display, maskable icons, and long-press app-icon shortcuts (Capture, Next, Today) on Chromium Android. A sliding 30-day session cookie rides alongside the existing token so iOS/Brave PWA users no longer get logged out by WebKit's 7-day storage cap or Brave's clear-on-exit." },
+  { date: "Jul 21", trunk: "Daily Today reminder + version surfacing", summary: "Web Push reminder at a chosen local time, per-device subscriptions, a per-minute PgBoss job that sends at most once per user per day. App version (git SHA) now shows in Settings and the login footer, and a calm banner prompts you to refresh when a new build is deployed." },
+  { date: "Jul 20", trunk: "Founding 100 price correction + public footer", summary: "Founding 100 price was advertised as $139 in several surfaces; corrected to $99 everywhere to match live checkout. Public page footer went full-bleed and in-app legal links repointed to the marketing apex." },
+  { date: "Jul 16", trunk: "Deps, email transport, billing boot guard", summary: "nodemailer bumped through 6→7→9 with an audit fix; unused @react-email/ui dropped. Billing server no longer crashes on boot when STRIPE_SECRET_KEY is absent. Semver-safe bumps across the webapp." },
+  { date: "Jul 15", trunk: "Mobile dock + task-row action drawer", summary: "Mobile bottom dock reorganized around a Do-first affordance with Today folded in. Task rows now open an action drawer on tap instead of navigating, keeping you in context. Logbook rows tightened." },
+  { date: "Jul 15", trunk: "E2E suite rebuild + dev worktrees", summary: "The Playwright suite was rebuilt around cross-layer invariants (trimmed 60→18, repaired against the refactored triage/planning UI). A general-purpose dev-worktree tool landed for parallel feature development with teardown and sync helpers." },
   { date: "Jul 10", trunk: "Planning surfaces unified", summary: "A design pass aligned Today, Upcoming, Logbook, and Someday to a shared surface scale and empty-state treatment. Inbox and triage preparation were refined, overdue tasks gained an unschedule recovery, and task edits now return to their originating view." },
   { date: "Jul 9", trunk: "Focus mobile + breadcrumb navigation", summary: "Focus mode went genuinely mobile: hold-to-complete, an action bar with Pause and Not-now, and pause-on-exit. Breadcrumbs were wired into every detail page through a route model, and Settings became reachable on mobile." },
   { date: "Jul 9", trunk: "Brand identity + production billing", summary: "A canonical brand kit — Attention Engine — was applied across the landing hero, Founding 100 page, and About, with a solid token-teal favicon and logo. Stripe production billing was verified end-to-end: a webhook gap was found and fixed, and live checkout confirmed." },
@@ -45,8 +51,8 @@ const shipped = [
         roadmap, not a feature wishlist.
       </p>
       <div class="aa-roadmap-stats">
-        <span class="aa-roadmap-stat"><strong>450</strong> commits</span>
-        <span class="aa-roadmap-stat"><strong>14</strong> major trunks</span>
+        <span class="aa-roadmap-stat"><strong>497</strong> commits</span>
+        <span class="aa-roadmap-stat"><strong>20</strong> major trunks</span>
         <span class="aa-roadmap-stat">Jun 16 → today</span>
       </div>
     </header>

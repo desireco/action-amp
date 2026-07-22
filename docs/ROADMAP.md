@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-08 (blog design locked — two-lane index + rotating featured zone; shareability split into blog-social-meta; both specs ready. 07-08 earlier: blog spec locked ready — SEO publication on the Astro marketing site; unparks the Tier-4 /blog note, slots into Now alongside newsletter as the discovery half of the owned-channel pair. 07-07: duet github-projects-sync spec realigned to upstream Projects-wins model; pinned: flag dropped; queue.md + tasks/ gap-fills landed alongside. 07-05 sweep: goal-planning shipped; 07-05 trunks in §Shipped: focus redesign Variant F, task page full-field editing, task notes + completion log, design-system token migration, Upcoming top-level nav) -->
+<!-- Last reviewed: 2026-07-21 (PWA shipped: installable manifest, maskable icons, sliding 30-day session cookie fallback — mobile users no longer lose their login to WebKit ITP / Brave clear-on-exit. Web Push daily Today reminder shipped: VAPID, PgBoss job, Preferences UI. Manifest MIME fixed by renaming to .json (Hikari's MIME table doesn't include .webmanifest). App version surfaced in Settings + login footer via injected git SHA; update-available banner wired through a restructured service worker. Earlier 07-15: test suite rebuilt around cross-layer invariants, parallel-dev worktree tooling landed, mobile dock + task-row action drawer shipped.) -->
 
 ---
 
@@ -10,10 +10,24 @@
 This is not a pre-launch product. It is a **soft-launched product with no
 audience yet**. That distinction changes the whole roadmap.
 
-**What's actually shipped and verified (updated 2026-07-04):**
+**What's actually shipped and verified (updated 2026-07-21):**
 
 - **Deployed to Railway**, live at `actionamp.com` + `api.actionamp.com` (both
   return HTTP 200). Postgres on Railway, Resend SMTP for auth email.
+- **Installable PWA**: web manifest with `display: standalone`, maskable icons,
+  and the correct MIME (renamed `manifest.webmanifest → manifest.json` after
+  Hikari's static MIME table refused to serve the spec extension). Long-press
+  app-icon shortcuts (Capture / Next / Today) work on Chromium Android.
+- **Resilient mobile sessions**: httpOnly cookie session fallback with sliding
+  30-day refresh alongside the existing localStorage token path. iOS/Brave
+  PWA users no longer get logged out by WebKit ITP's 7-day cap or Brave's
+  clear-on-exit.
+- **Web Push daily Today reminder**: VAPID-keyed, per-device subscriptions,
+  per-minute PgBoss job (sends at most once per user/calendar day at their
+  chosen local time), Preferences UI for permission + time.
+- **App version + update banner**: git SHA baked into the bundle at build time
+  (Settings → About + login footer); restructured service worker + banner
+  prompt users to refresh when a new build is deployed.
 - **Full core loop works end-to-end**: capture (`⌘K`) → inbox → triage →
   task/project → Next focus chooser → Today (capped at 5) → completion →
   Logbook. Every step has a real server operation and a route.
@@ -24,9 +38,10 @@ audience yet**. That distinction changes the whole roadmap.
 - **The wedge is built**: `getTopTask` priority-first matcher, Now/Next state
   machine (`startedAt` persists across navigation), the Next single-task
   home screen, focus-mode overlay.
-- **Test suite green in the latest cleanup pass**: 366 Vitest tests pass and
-  `wasp compile` is clean. E2E coverage exists for capture, login, inbox,
-  triage, projects, today, and next; run it before public-launch changes.
+- **Test suite green**: 630 Vitest tests pass and `wasp compile` is clean.
+  E2E coverage rebuilt around cross-layer invariants (capture, login, inbox,
+  triage, projects, today, next, entitlements); run it before public-launch
+  changes.
 - **Polished landing page**, design-system page, onboarding, dark mode,
   keyboard-shortcut system, focus-switch nav (Work/Plan/Review expanding
   sections).
@@ -288,6 +303,56 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **pwa-installable + session-resilience + web-push + version-banner**
+  (`shipped` 2026-07-21) — four small trunks landing together because they
+  share the same mobile-PWA failure surface. **(1) Installable PWA**: web
+  manifest with `display: standalone`, maskable icons rendered from the
+  existing `favicon.svg`, apple-mobile-web-app-capable metas. Chrome Android
+  now builds a true WebAPK and surfaces the Capture / Next / Today long-press
+  shortcuts. **(2) Session cookie fallback**: the session ID lived only in
+  `localStorage`, which WebKit's ITP caps at 7 days and Brave's clear-on-exit
+  wipes on app close — the daily-logout bug. Added an httpOnly cookie
+  (`sameSite=lax`, sliding 30-day refresh) alongside the existing token path;
+  if either survives, the user stays logged in. **(3) Web Push daily Today
+  reminder**: VAPID-keyed, per-device `PushSubscription` rows, a per-minute
+  PgBoss job that fires at most once per user/calendar day at their chosen
+  local time, Preferences UI for permission + time. **(4) Manifest MIME fix
+  + version display + update banner**: manifest renamed `.webmanifest → .json`
+  after discovering Hikari's static MIME table doesn't know the spec extension
+  (and that the file is served from the *client* service, so server-side
+  middleware can't fix it). App version (git SHA) injected at build time via
+  Vite `define` and surfaced in Settings → About + the login footer. Service
+  worker restructured (dropped unconditional `skipWaiting`, added a gated
+  `SKIP_WAITING` message handler) so a new deployment prompts the user to
+  refresh via a calm teal banner. Closes the "Native mobile / PWA install"
+  Icebox line (F23/F25).
+- **mobile-dock + task-row-action-drawer** (`shipped` ~2026-07-15) — the
+  mobile bottom dock reorganized around a Do-first affordance with Today
+  folded in (Next was demoted — the focus chooser lives at the top of /app,
+  not the dock). Task rows now open an action drawer on tap instead of
+  navigating, keeping the user in context. Project mobile rows streamlined.
+  Logbook row spacing tightened and title/outcome reflowed inline.
+- **e2e-suite-rebuild + dev-worktree-tooling** (`shipped` ~2026-07-15) — the
+  Playwright suite was trimmed from 60 tests to 18 cross-layer invariants
+  (capture, login, inbox, triage, projects, today, next, entitlements),
+  repairing it against the refactored triage/planning UI and fixing an
+  entitlements race. Added a general-purpose dev-worktree creator
+  (`webapp/scripts/dev-worktree.sh`) for parallel feature development, with
+  teardown + sync helpers run from inside the worktree. See
+  `docs/DEV-WORKTREES.md`.
+- **deps + email-transport-resilience** (`shipped` ~2026-07-16) — nodemailer
+  bumped 6→7→9 with a transitive-vuln audit fix, unused `@react-email/ui`
+  dropped. Billing server no longer crashes on boot when
+  `STRIPE_SECRET_KEY` is absent (dev/local-dev guard). Semver-safe package
+  bumps across the webapp.
+- **founding-100-price-correction** (`shipped` 2026-07-20) — Founding 100 was
+  advertised as $139 in several marketing + doc surfaces; corrected to $99
+  everywhere to match the live Stripe checkout price.
+- **public-footer-baseline + legal-link-routing** (`shipped` ~2026-07-18) —
+  public page footer went full-bleed (outer bg/border, inner max-width
+  wrapper), and in-app public legal/about links repointed to the marketing
+  apex (`actionamp.com`) instead of the app origin.
+
 - **doc-reconciliation** (`done` 2026-06-27) — canonical docs reconciled with
   shipped reality after the branch consolidation. Fixed Trash→Archive
   contradictions in WORKFLOW/TRIAGE/DATA-MODEL; confirmed the merged fix
@@ -394,8 +459,10 @@ specs — they predate the protocol.)
 
 ## Icebox
 
-- Native mobile / PWA install (F23/F25). Web-first is correct; mobile is a
-  post-PMF problem.
+- Native mobile / PWA install (F23/F25) — **partially unparked 2026-07-21**:
+  installable web manifest, maskable icons, sliding session cookie, and Web
+  Push daily reminder shipped. True native shells (iOS App Store, Android
+  Play) remain a post-PMF problem; web-first is still correct.
 - AI-tuned focus suggestions ("learn from what you pick/skip"). Explicitly
   Phase 2 in FEATURES.md; keep it there until the transparent matcher earns trust.
 - Email-in capture (F5), bulk clarify (F7), Pomodoro timer (F14).
