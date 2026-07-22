@@ -28,7 +28,7 @@ npm run build && ./dist/index.js     # built
 |---|---|
 | `login [--dev]` | OAuth browser login — **rejects non-admin accounts** |
 | `whoami` | Show the logged-in admin account |
-| `feedback list [--status <s>] [--limit <n>]` | List feedback, newest first |
+| `feedback list [--status <s>] [--limit <n\|all>]` | List feedback, newest first (default 10; `--limit all` for everything) |
 | `feedback show <id>` | Show one feedback row in full |
 | `feedback status <id> <status>` | Set triage state (`OPEN\|IN_PROGRESS\|RESOLVED\|CLOSED`) |
 | `logout` | Clear the saved admin token |

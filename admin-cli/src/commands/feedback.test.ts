@@ -97,10 +97,13 @@ describe("feedback command", () => {
   });
 
   // ── list ────────────────────────────────────────────────────────────────
-  it("list calls /api/cli/feedback/list by default", async () => {
+  it("list defaults to limit=10", async () => {
     requestMock.mockResolvedValue({ feedback: [ROW] });
     await runCommand(["list"]);
-    expect(requestMock).toHaveBeenCalledWith("/api/cli/feedback/list", undefined);
+    expect(requestMock).toHaveBeenCalledWith(
+      expect.stringContaining("limit=10"),
+      undefined,
+    );
   });
 
   it("list --json emits the feedback array", async () => {
@@ -142,11 +145,20 @@ describe("feedback command", () => {
     expect(stdout).toContain("No feedback.");
   });
 
-  it("list --limit passes the cap as a query param", async () => {
+  it("list --limit <n> passes the cap as a query param", async () => {
     requestMock.mockResolvedValue({ feedback: [] });
     await runCommand(["list", "--limit", "5"]);
     expect(requestMock).toHaveBeenCalledWith(
       expect.stringContaining("limit=5"),
+      undefined,
+    );
+  });
+
+  it("list --limit all passes limit=all (unbounded)", async () => {
+    requestMock.mockResolvedValue({ feedback: [] });
+    await runCommand(["list", "--limit", "all"]);
+    expect(requestMock).toHaveBeenCalledWith(
+      expect.stringContaining("limit=all"),
       undefined,
     );
   });
@@ -156,6 +168,26 @@ describe("feedback command", () => {
     const { exitCode } = await runCommand(["list", "--limit", "0"]);
     expect(exitCode).toBe(1);
     expect(requestMock).not.toHaveBeenCalled();
+  });
+
+  it("list --limit bogus is rejected client-side", async () => {
+    requestMock.mockResolvedValue({ feedback: [] });
+    const { exitCode } = await runCommand(["list", "--limit", "bogus"]);
+    expect(exitCode).toBe(1);
+    expect(requestMock).not.toHaveBeenCalled();
+  });
+
+  it("list combines --status and --limit", async () => {
+    requestMock.mockResolvedValue({ feedback: [] });
+    await runCommand(["list", "--status", "OPEN", "--limit", "all"]);
+    expect(requestMock).toHaveBeenCalledWith(
+      expect.stringContaining("status=OPEN"),
+      undefined,
+    );
+    expect(requestMock).toHaveBeenCalledWith(
+      expect.stringContaining("limit=all"),
+      undefined,
+    );
   });
 
   // ── show ────────────────────────────────────────────────────────────────

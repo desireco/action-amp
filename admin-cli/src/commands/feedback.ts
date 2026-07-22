@@ -34,11 +34,11 @@ export function makeFeedbackCommand(): Command {
   // ── feedback list ────────────────────────────────────────────────────────
   feedback
     .command("list")
-    .description("list feedback, newest first")
+    .description("list feedback, newest first (default 10; --limit all for everything)")
     .option("--status <status>", `filter by status: ${FEEDBACK_STATUSES.join(", ")}`)
-    .option("--limit <n>", "cap the number of rows (default 50)", (v) => Number(v))
+    .option("--limit <n|all>", "number of rows, or 'all' (default 10)")
     .option("--json", "emit JSON output")
-    .action(async (opts: { status?: string; limit?: number; json?: boolean }) => {
+    .action(async (opts: { status?: string; limit?: string; json?: boolean }) => {
       const ctx: OutputCtx = { json: opts.json ?? false };
 
       const params = new URLSearchParams();
@@ -51,14 +51,24 @@ export function makeFeedbackCommand(): Command {
         }
         params.set("status", opts.status);
       }
+
+      // limit: "all" → ask the server for everything; absent → default 10;
+      // a positive int → that many. Validated client-side for a clear error.
       if (opts.limit !== undefined) {
-        if (!Number.isFinite(opts.limit) || opts.limit <= 0) {
-          fail("limit must be a positive number.", ctx);
+        if (opts.limit === "all") {
+          params.set("limit", "all");
+        } else {
+          const n = Number(opts.limit);
+          if (!Number.isFinite(n) || n <= 0 || !Number.isInteger(n)) {
+            fail("limit must be a positive whole number or 'all'.", ctx);
+          }
+          params.set("limit", String(n));
         }
-        params.set("limit", String(Math.floor(opts.limit)));
+      } else {
+        params.set("limit", "10");
       }
 
-      const path = `/api/cli/feedback/list${params.size ? `?${params}` : ""}`;
+      const path = `/api/cli/feedback/list?${params}`;
       const result = await request<FeedbackListResult>(path);
       const rows = result.feedback;
 
