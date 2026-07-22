@@ -110,6 +110,9 @@ function Congratulations({ memberNumber }: { memberNumber: number | undefined })
           </Button>
         </Link>
         <p className="aa-founding-spots">Thank you, genuinely, for the bet.</p>
+        <p className="aa-founding-spots">
+          <a href="https://actionamp.com/roadmap">See how we're doing →</a>
+        </p>
       </div>
     </>
   );

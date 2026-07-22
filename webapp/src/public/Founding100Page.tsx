@@ -126,6 +126,9 @@ export function Founding100Page() {
               Thank you — you claimed one of the 100.
             </p>
           )}
+          <p className="aa-founding-spots">
+            <a href="https://actionamp.com/roadmap">See how we're doing →</a>
+          </p>
         </div>
       </div>
     </PublicLayout>

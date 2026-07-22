@@ -936,6 +936,18 @@
   text-decoration: none;
   transform: translateY(-1px);
 }
+.aa-founding-teaser-roadmap {
+  display: block;
+  margin: 12px auto 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--aa-text-muted, #6b7280);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.aa-founding-teaser-roadmap:hover {
+  color: var(--aa-teal, #0ea5e9);
+}
 
 @media (max-width: 768px) {
   .aa-founding-teaser {
