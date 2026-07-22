@@ -153,6 +153,79 @@
   letter-spacing: 0.04em;
 }
 
+/* ---- Lens pill — provenance on global Today rows ----
+   Trailing chip in the meta row. Only renders when the user has 2+ lenses
+   (TaskRow gates on showLens; TodayPage gates on lenses.length > 1), so a
+   single-lens user never sees it. Identity, not state — soft background, a
+   colored dot, and the lens name. Never borrows the reserved system hues
+   (teal/amber/violet/rose); each lens re-points --aa-active-lens* locally via
+   data-lens-color, the same convention as aa-triage-lens-pill. Subtle by
+   design: this sits alongside project/due/priority chips and must not outshout
+   them. */
+.aa-task-row__lens {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  padding: 1px 6px;
+  border-radius: var(--aa-radius-full);
+  white-space: nowrap;
+  line-height: var(--aa-leading-snug);
+  background: var(--aa-active-lens-soft-strong);
+  color: var(--aa-active-lens-text);
+}
+
+.aa-task-row__lens-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-active-lens);
+  flex-shrink: 0;
+}
+
+/* Re-point the active-lens vars per hue. Mirrors aa-triage-lens-pill. */
+.aa-task-row__lens[data-lens-color="indigo"] {
+  --aa-active-lens: var(--aa-lens-indigo);
+  --aa-active-lens-text: var(--aa-lens-indigo-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-indigo-soft-strong);
+}
+.aa-task-row__lens[data-lens-color="emerald"] {
+  --aa-active-lens: var(--aa-lens-emerald);
+  --aa-active-lens-text: var(--aa-lens-emerald-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-emerald-soft-strong);
+}
+.aa-task-row__lens[data-lens-color="slate"] {
+  --aa-active-lens: var(--aa-lens-slate);
+  --aa-active-lens-text: var(--aa-lens-slate-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-slate-soft-strong);
+}
+.aa-task-row__lens[data-lens-color="cyan"] {
+  --aa-active-lens: var(--aa-lens-cyan);
+  --aa-active-lens-text: var(--aa-lens-cyan-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-cyan-soft-strong);
+}
+.aa-task-row__lens[data-lens-color="coral"] {
+  --aa-active-lens: var(--aa-lens-coral);
+  --aa-active-lens-text: var(--aa-lens-coral-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-coral-soft-strong);
+}
+.aa-task-row__lens[data-lens-color="honey"] {
+  --aa-active-lens: var(--aa-lens-honey);
+  --aa-active-lens-text: var(--aa-lens-honey-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-honey-soft-strong);
+}
+.aa-task-row__lens[data-lens-color="lime"] {
+  --aa-active-lens: var(--aa-lens-lime);
+  --aa-active-lens-text: var(--aa-lens-lime-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-lime-soft-strong);
+}
+.aa-task-row__lens[data-lens-color="magenta"] {
+  --aa-active-lens: var(--aa-lens-magenta);
+  --aa-active-lens-text: var(--aa-lens-magenta-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-magenta-soft-strong);
+}
+
 /* ---- Actions — row of compact buttons, hover-revealed ----
    Stays a row so the project page's full-width move-picker (when expanded)
    can drop onto its own line via flex-wrap. On touch (no hover), always shown. */

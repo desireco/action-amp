@@ -19,6 +19,8 @@ export interface TaskRowTask {
   dueDate?: Date | string | null;
   project?: { id: string; name: string } | null;
   goal?: { id: string; name: string } | null;
+  /** Provenance lens — set by global Today so each row can show a lens pill. */
+  lens?: { id: string; name: string; color: string | null } | null;
 }
 
 interface TaskRowProps {
@@ -31,6 +33,12 @@ interface TaskRowProps {
   onOpen?: (task: TaskRowTask) => void;
   /** Whether a row-click action menu is currently expanded. */
   expanded?: boolean;
+  /**
+   * Render the trailing lens pill. Opt-in (Today/Done-today turn it on when
+   * the user has 2+ lenses); the lens-scoped lists pass nothing and stay as
+   * they were.
+   */
+  showLens?: boolean;
   className?: string;
   /** Right-aligned action slot — promote, Edit, Move, etc. Hover-revealed. */
   children?: ReactNode;
@@ -95,6 +103,7 @@ export function TaskRow({
   muted = false,
   onOpen,
   expanded = false,
+  showLens = false,
   className = "",
   children,
 }: TaskRowProps) {
@@ -106,11 +115,13 @@ export function TaskRow({
 
   const dotClass = dotClassFor(task);
   const due = task.dueDate ? formatDueChip(task.dueDate) : null;
+  const showLensPill = Boolean(showLens && task.lens);
   const hasMeta =
     task.priority === "IMPORTANT" ||
     Boolean(task.project) ||
     Boolean(due) ||
-    Boolean(task.size);
+    Boolean(task.size) ||
+    showLensPill;
 
   const rootClass = [
     "aa-task-row",
@@ -173,6 +184,16 @@ export function TaskRow({
               <Chip variant="muted" small className="aa-task-row__size-chip">
                 {task.size}
               </Chip>
+            )}
+            {showLensPill && task.lens && (
+              <span
+                className="aa-task-row__lens"
+                data-lens-color={task.lens.color ?? undefined}
+                title={`Lens: ${task.lens.name}`}
+              >
+                <span className="aa-task-row__lens-dot" aria-hidden="true" />
+                {task.lens.name}
+              </span>
             )}
           </div>
         )}
