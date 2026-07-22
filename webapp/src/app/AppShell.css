@@ -574,23 +574,31 @@
 }
 
 /* ============================================================
-   Update banner — surfaces when a new service worker is waiting
+   Update banner — surfaces when a new build is deployed
    ============================================================
    Token-driven so dark mode comes for free. Sits at the top of
    .aa-app-mainwrap, above page content, non-blocking (no scroll lock).
-   Mirrors the calm teal-soft recipe used by TodayPage's overflow banner. */
+   Mirrors the calm teal-soft recipe used by TodayPage's overflow banner.
+   Sticky so it stays visible while scrolling; z-20 keeps it above page
+   content but below the floating utility cluster (z-28) — the narrow
+   max-width keeps it clear of that cluster's top-right corner. */
 .aa-app-update-banner {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: var(--aa-space-md);
-  margin: var(--aa-space-md) var(--aa-space-md) 0;
+  margin: var(--aa-space-md) auto 0;
+  max-width: 520px;
   padding: var(--aa-space-sm) var(--aa-space-md);
   background: var(--aa-teal-soft);
   border: 1px solid var(--aa-teal-soft-strong);
   border-radius: var(--aa-radius-sm);
   font-size: var(--aa-text-sm);
   color: var(--aa-text);
+  box-shadow: var(--aa-shadow-sm);
   animation: aa-update-banner-in var(--aa-dur-base) var(--aa-ease-out-quart);
 }
 

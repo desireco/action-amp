@@ -1,4 +1,7 @@
 import { execSync } from "node:child_process";
+import { writeFileSync, mkdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { defineConfig } from "vite";
 import { wasp } from "wasp/client/vite";
 
@@ -12,6 +15,29 @@ const APP_VERSION = (() => {
     return "dev";
   }
 })();
+
+// Emit a static version manifest into public/ at config-eval time so the
+// deployed host serves /version.json. The client polls it (see
+// notifications/client.ts → useDeployedVersionUpdate) and compares against the
+// build-time __APP_VERSION__ baked into the bundle — a mismatch means a newer
+// build has shipped and the tab should offer to refresh. Written here (not in a
+// plugin hook) so it exists for both dev (served from disk) and prod (copied
+// into build output by Vite's public-dir handling). In dev the SHA matches
+// __APP_VERSION__, so no banner shows locally. Build artifact — gitignored.
+const VERSION_FILE = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "public",
+  "version.json",
+);
+try {
+  mkdirSync(dirname(VERSION_FILE), { recursive: true });
+  writeFileSync(
+    VERSION_FILE,
+    `${JSON.stringify({ version: APP_VERSION, builtAt: new Date().toISOString() }, null, 2)}\n`,
+  );
+} catch {
+  // Non-fatal — the client poll also fails silently if the file is absent.
+}
 
 export default defineConfig({
   plugins: [wasp()],

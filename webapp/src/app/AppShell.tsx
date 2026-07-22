@@ -9,7 +9,7 @@ import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcut
 import { FeedbackDialog } from "./FeedbackDialog";
 import { Button, CloseButton, CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate, LensChip, LensPopover, Kbd } from "../components/ui";
 import { useEntitled } from "../billing/useEntitled";
-import { registerServiceWorker, useServiceWorkerUpdate } from "../notifications/client";
+import { registerServiceWorker, useServiceWorkerUpdate, useDeployedVersionUpdate } from "../notifications/client";
 import {
   BrandMark,
   LensSwitch,
@@ -305,8 +305,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [updateDismissed, setUpdateDismissed] = useState(false);
 
   // New SW waiting → offer a one-click refresh into the next build.
-  const { updateAvailable, applyUpdate } = useServiceWorkerUpdate();
-  const showUpdateBanner = updateAvailable && !updateDismissed;
+  const sw = useServiceWorkerUpdate();
+  // Idle-tab fallback: poll /version.json and prompt when the deployed SHA
+  // drifts from this bundle's __APP_VERSION__. SW detection only fires on
+  // navigation; this closes the gap for tabs open across a deploy.
+  const deployed = useDeployedVersionUpdate();
+  const showUpdateBanner = (sw.updateAvailable || deployed.updateAvailable) && !updateDismissed;
+  // Pick whichever path surfaced the update: SW needs the SKIP_WAITING
+  // handoff, the poll path just reloads into the new build.
+  const applyUpdate = sw.updateAvailable ? sw.applyUpdate : deployed.applyUpdate;
 
   // Manifest shortcut and notification action: /app?capture=1 opens the same
   // universal capture surface as ⌘K, then removes the one-shot URL flag.
@@ -478,7 +485,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               A new version of ActionAmp is available.
             </span>
             <span className="aa-app-update-banner__actions">
-              <Button size="sm" variant="secondary" onClick={applyUpdate}>
+              <Button size="sm" variant="primary" onClick={applyUpdate}>
                 Refresh
               </Button>
               <CloseButton onClose={() => setUpdateDismissed(true)} label="Dismiss update banner" />

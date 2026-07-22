@@ -1,6 +1,10 @@
 .wasp/
 node_modules/
 
+# Build artifact — emitted by vite.config.ts from the same git SHA that defines
+# __APP_VERSION__. Served at /version.json for the client-side update poll.
+public/version.json
+
 # Ignore all dotenv files by default to prevent accidentally committing any secrets.
 # To include specific dotenv files, use the `!` operator or adjust these rules.
 .env
