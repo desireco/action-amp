@@ -32,6 +32,8 @@ describe("transactional email templates", () => {
       userName: "A <B>",
       userEmail: "a@example.com",
       userAgent: "Vitest",
+      viewport: "1440x900",
+      timezone: "America/Toronto",
     });
 
     expect(html).toContain("New ActionAmp feedback");

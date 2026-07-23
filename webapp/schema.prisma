@@ -411,6 +411,13 @@ model Feedback {
   lensColor String?
   userAgent String?
 
+  // Diagnostic context — answers the two most common "I can't repro this"
+  // questions without a round-trip to the reporter. Both one-liners from the
+  // browser, captured once at submit via the shared captureFeedbackContext
+  // helper. Optional: old rows + non-browser submits stay valid.
+  viewport  String?   // innerWidth x innerHeight, e.g. "1440x900"
+  timezone  String?   // IANA tz, e.g. "America/Toronto"
+
   // Soft-delete: an admin can remove a feedback row from the triage surfaces
   // (dashboard table, admin-cli list) without losing the record. When set,
   // every read core filters it out; the row + its audit trail stay in the DB.

@@ -12,6 +12,8 @@ export default function FeedbackEmailPreview() {
       userName="Zeljko Dakic"
       userEmail="zeljko@example.com"
       userAgent="React Email preview"
+      viewport="1440x900"
+      timezone="America/Toronto"
     />
   );
 }

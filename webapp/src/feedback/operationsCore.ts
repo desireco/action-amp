@@ -66,6 +66,8 @@ const FEEDBACK_SELECT = {
   lensName: true,
   lensColor: true,
   userAgent: true,
+  viewport: true,
+  timezone: true,
 };
 
 // ----------------------------------------------------------------
@@ -86,6 +88,8 @@ export async function submitFeedbackCore(
     section,
     lens,
     userAgent,
+    viewport,
+    timezone,
     userName,
     userEmail,
   }: {
@@ -95,6 +99,8 @@ export async function submitFeedbackCore(
     section?: string | null;
     lens?: { id?: string | null; name?: string | null; color?: string | null } | null;
     userAgent?: string | null;
+    viewport?: string | null;
+    timezone?: string | null;
     /** Resolved up-front by the wrapper (User.fullName lookup + Auth email). */
     userName?: string | null;
     userEmail?: string | null;
@@ -131,6 +137,8 @@ export async function submitFeedbackCore(
       lensName: cleanOptional(lens?.name, 120),
       lensColor: cleanOptional(lens?.color, 80),
       userAgent: cleanOptional(userAgent, 500),
+      viewport: cleanOptional(viewport, 20),
+      timezone: cleanOptional(timezone, 60),
     },
     select: FEEDBACK_SELECT,
   });

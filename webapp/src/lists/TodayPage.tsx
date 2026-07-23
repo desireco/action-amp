@@ -21,6 +21,7 @@ import {
 import { GroupedList, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { FeedbackDialog } from "../app/FeedbackDialog";
+import { captureFeedbackContext } from "../feedback/captureContext";
 import { ListEmpty } from "./ListShell";
 import { TODAY_CAP_DEFAULT } from "../app/operations";
 import "./ListShell.css";
@@ -317,13 +318,10 @@ export function TodayPage() {
           onSubmit={async (message) => {
             await submitFeedback({
               message: `Done task feedback: ${feedbackTask.description}\n\n${message}`,
-              route: location.pathname,
-              section: "work",
+              ...captureFeedbackContext(location),
               lens: lens
                 ? { id: lens.id, name: lens.name, color: lens.color }
                 : null,
-              userAgent:
-                typeof navigator === "undefined" ? null : navigator.userAgent,
             });
           }}
         />

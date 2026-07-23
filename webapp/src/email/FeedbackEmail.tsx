@@ -15,6 +15,8 @@ type FeedbackEmailProps = {
   userName: string | null;
   userEmail: string | null;
   userAgent: string | null;
+  viewport: string | null;
+  timezone: string | null;
 };
 
 function value(value: string | null) {
@@ -69,6 +71,10 @@ export function FeedbackEmail(feedback: FeedbackEmailProps) {
           {feedback.lensColor ? ` (${feedback.lensColor})` : ""}
           <br />
           User agent: {value(feedback.userAgent)}
+          <br />
+          Viewport: {value(feedback.viewport)}
+          <br />
+          Timezone: {value(feedback.timezone)}
         </Text>
         <FeedbackMessage message={feedback.message} />
       </>

@@ -68,6 +68,8 @@ export function formatFeedbackDetail(f: Feedback): string {
   if (f.section) lines.push(`section:  ${f.section}`);
   if (f.lensName) lines.push(`lens:     ${f.lensName}${f.lensColor ? ` (${f.lensColor})` : ""}`);
   if (f.userAgent) lines.push(`agent:    ${f.userAgent}`);
+  if (f.viewport) lines.push(`viewport: ${f.viewport}`);
+  if (f.timezone) lines.push(`timezone: ${f.timezone}`);
   lines.push("", f.message);
   return lines.join("\n");
 }

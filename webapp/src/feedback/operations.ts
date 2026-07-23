@@ -16,6 +16,8 @@ type SubmitFeedbackArgs = {
     color?: string | null;
   } | null;
   userAgent?: string | null;
+  viewport?: string | null;
+  timezone?: string | null;
 };
 
 type FeedbackEmailInput = {
@@ -28,6 +30,8 @@ type FeedbackEmailInput = {
   userName: string | null;
   userEmail: string | null;
   userAgent: string | null;
+  viewport: string | null;
+  timezone: string | null;
 };
 
 const prisma = new PrismaClient();
@@ -43,6 +47,8 @@ async function buildFeedbackEmail(feedback: FeedbackEmailInput) {
     `Section: ${feedback.section || "-"}`,
     `Lens: ${feedback.lensName || "-"}${feedback.lensColor ? ` (${feedback.lensColor})` : ""}`,
     `User agent: ${feedback.userAgent || "-"}`,
+    `Viewport: ${feedback.viewport || "-"}`,
+    `Timezone: ${feedback.timezone || "-"}`,
     "",
     feedback.message,
   ];
@@ -104,6 +110,8 @@ export const submitFeedback = (async (args: SubmitFeedbackArgs, context) => {
     section: args.section,
     lens: args.lens,
     userAgent: args.userAgent,
+    viewport: args.viewport,
+    timezone: args.timezone,
     userName,
     userEmail,
   });

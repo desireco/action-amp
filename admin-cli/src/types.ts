@@ -37,6 +37,8 @@ export type Feedback = {
   lensName: string | null;
   lensColor: string | null;
   userAgent: string | null;
+  viewport: string | null;
+  timezone: string | null;
 };
 
 /**

@@ -117,6 +117,8 @@ describe("getRecentFeedbackCore", () => {
     lensName: null,
     lensColor: null,
     userAgent: null,
+    viewport: null,
+    timezone: null,
   });
 
   it("first page: no afterId, take = limit+1, hasNext true when more exist", async () => {

@@ -84,6 +84,8 @@ const ROW = {
   lensName: "Work",
   lensColor: "indigo",
   userAgent: "Vitest",
+  viewport: null,
+  timezone: null,
 };
 
 describe("feedback command", () => {

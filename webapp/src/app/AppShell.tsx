@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
 import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcuts";
 import { FeedbackDialog } from "./FeedbackDialog";
+import { captureFeedbackContext } from "../feedback/captureContext";
 import { Button, CloseButton, CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate, LensChip, LensPopover, Kbd } from "../components/ui";
 import { useEntitled } from "../billing/useEntitled";
 import { registerServiceWorker, useServiceWorkerUpdate, useDeployedVersionUpdate } from "../notifications/client";
@@ -51,23 +52,6 @@ const NAV_ROUTE: Record<NavDestination, string> = {
   review: "/app/logbook",
 };
 
-/**
- * Which focus section a route belongs to. Used only as freeform context for
- * feedback (the focus switch itself is gone — Plan and Review are always-open
- * nav groups now, not expanding sections). Universal routes (Today, Inbox)
- * and the Do/Next route fall through to "work" — the focus-area label — so
- * feedback always carries *some* context.
- *
- * Return type mirrors feedback/operations.ts FeedbackSection without importing
- * it (the type isn't re-exported through wasp/client/operations).
- */
-function sectionForPath(pathname: string): "work" | "plan" | "review" {
-  if (pathname.startsWith("/app/upcoming") || pathname.startsWith("/app/projects") || pathname.startsWith("/app/goals") || pathname.startsWith("/app/someday")) return "plan";
-  if (pathname.startsWith("/app/logbook")) return "review";
-  // Do/Next, Today, Inbox, and unknown paths all default to "work" — the
-  // focus-area label for feedback context.
-  return "work";
-}
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
   const location = useLocation();
@@ -645,10 +629,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           onSubmit={async (message) => {
             await submitFeedback({
               message,
-              route: `${location.pathname}${location.search}`,
-              section: sectionForPath(location.pathname),
+              ...captureFeedbackContext(location),
               lens: activeLensValue,
-              userAgent: typeof window === "undefined" ? null : window.navigator.userAgent,
             });
           }}
         />

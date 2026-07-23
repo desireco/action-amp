@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Breadcrumb, Button, Markdown, PropertyChips, submitOnModEnter } from "../components/ui";
 import type { BreadcrumbItem } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
+import { captureFeedbackContext } from "../feedback/captureContext";
 import { usePropertyKeys } from "../components/ui/usePropertyKeys";
 import {
   taskPropertyFields,
@@ -228,11 +229,8 @@ export function TaskDetailPage() {
     try {
       await submitFeedback({
         message: `Done task feedback: ${task.description}\n\n${feedbackMessage.trim()}`,
-        route: location.pathname,
-        section: "work",
+        ...captureFeedbackContext(location),
         lens: lens ? { id: lens.id, name: lens.name, color: lens.color } : null,
-        userAgent:
-          typeof navigator === "undefined" ? null : navigator.userAgent,
       });
       setFeedbackMessage("");
     } catch {

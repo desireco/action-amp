@@ -38,6 +38,8 @@ const FEEDBACK_ROW = {
   lensName: "Work",
   lensColor: "indigo",
   userAgent: "Vitest",
+  viewport: null,
+  timezone: null,
 };
 
 describe("isFeedbackStatus", () => {
@@ -115,6 +117,38 @@ describe("submitFeedbackCore", () => {
     await submitFeedbackCore(entities, { userId: "u1", message: "hi" });
 
     expect(entities.Feedback.findUnique).toHaveBeenCalledTimes(2);
+  });
+
+  it("persists viewport + timezone when provided, clamped to their caps", async () => {
+    const { entities } = mockContext();
+    entities.Feedback.create.mockResolvedValue(FEEDBACK_ROW);
+
+    await submitFeedbackCore(entities, {
+      userId: "u1",
+      message: "hi",
+      viewport: "1440x900",
+      timezone: "America/Toronto",
+    });
+
+    expect(entities.Feedback.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        viewport: "1440x900",
+        timezone: "America/Toronto",
+      }),
+      select: expect.any(Object),
+    });
+  });
+
+  it("stores null viewport/timezone when omitted", async () => {
+    const { entities } = mockContext();
+    entities.Feedback.create.mockResolvedValue(FEEDBACK_ROW);
+
+    await submitFeedbackCore(entities, { userId: "u1", message: "hi" });
+
+    expect(entities.Feedback.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ viewport: null, timezone: null }),
+      select: expect.any(Object),
+    });
   });
 });
 

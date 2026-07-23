@@ -64,6 +64,8 @@ export type FeedbackRow = {
   lensName: string | null;
   lensColor: string | null;
   userAgent: string | null;
+  viewport: string | null;
+  timezone: string | null;
 };
 
 const FEEDBACK_SELECT = {
@@ -83,6 +85,8 @@ const FEEDBACK_SELECT = {
   lensName: true,
   lensColor: true,
   userAgent: true,
+  viewport: true,
+  timezone: true,
 };
 
 /** Compute the 3 time windows once per call (UTC, consistent within a call). */
