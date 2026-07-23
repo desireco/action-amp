@@ -24,11 +24,24 @@
 # cleanly with full tree kill; a crash restarts after backoff. Logs go to
 # $WEBAPP/.wasp/wasp-runner.log (timestamped) in addition to the terminal.
 #
+# Cache-corruption recovery: when wasp crashes with a known `.wasp/out/`
+# corruption signature (`removeDirectoryRecursive`, `EJSONPARSE`, half-written
+# package.json), the runner runs `wasp clean` once before the next attempt —
+# restarting into a corrupted tree just hits the same corruption. Guarded to
+# fire at most once per session (if clean itself fails, we fall back to plain
+# restart and let backoff escalate).
+#
+# Circuit breaker: after WASP_RUNNER_MAX_CRASHES consecutive short-lived
+# attempts, the runner stops and logs a "fix the real error" message instead
+# of looping forever.
+#
 # Config (override via env):
-#   WASP_RUNNER_PORTS       default: 3001:4000   server:client ports to free between runs
-#   WASP_RUNNER_BACKOFF     default: 3           initial backoff seconds after a crash
-#   WASP_RUNNER_BACKOFF_MAX default: 30          backoff cap (grows on repeated crashes)
-#   WASP_RUNNER_LOG         default: <webapp>/.wasp/wasp-runner.log
+#   WASP_RUNNER_PORTS            default: 3001:4000  server:client ports to free between runs
+#   WASP_RUNNER_BACKOFF          default: 3          initial backoff seconds after a crash
+#   WASP_RUNNER_BACKOFF_MAX      default: 30         backoff cap (grows on repeated crashes)
+#   WASP_RUNNER_CRASH_THRESHOLD  default: 10         uptime (sec) below which an attempt counts as a crash
+#   WASP_RUNNER_MAX_CRASHES      default: 6          consecutive crashes before the runner gives up
+#   WASP_RUNNER_LOG              default: <webapp>/.wasp/wasp-runner.log
 set -euo pipefail
 
 # ── helpers ────────────────────────────────────────────────────────────────
@@ -47,6 +60,8 @@ SAFE="$SCRIPT_DIR/wasp-safe.sh"
 PORTS="${WASP_RUNNER_PORTS:-3001:4000}"
 BACKOFF="${WASP_RUNNER_BACKOFF:-3}"
 BACKOFF_MAX="${WASP_RUNNER_BACKOFF_MAX:-30}"
+CRASH_THRESHOLD="${WASP_RUNNER_CRASH_THRESHOLD:-10}"
+MAX_CRASHES="${WASP_RUNNER_MAX_CRASHES:-6}"
 mkdir -p "$WEBAPP/.wasp"
 LOG="${WASP_RUNNER_LOG:-$WEBAPP/.wasp/wasp-runner.log}"
 
@@ -146,6 +161,29 @@ free_ports() {
   done
 }
 
+# ── crash classification ───────────────────────────────────────────────────
+# Classify a wasp exit using the captured output tail ($ATTEMPT_TAIL). Returns
+# a short reason string on stdout ("cache-corruption", "compile-error", or
+# empty for unknown). `cache-corruption` is the one the runner can auto-recover
+# from (via `wasp clean`); the others are informational only.
+classify_crash() {
+  local tail="${1:-}"
+  # `.wasp/out/` got into a bad state — Wasp tried to clear its own output dir
+  # mid-write, or left a package.json half-written. Restarting into the same
+  # tree just reproduces the crash; a `wasp clean` clears it.
+  if echo "$tail" | grep -qE 'removeDirectoryRecursive|Directory not empty|EJSONPARSE|Invalid package\.json|Unexpected end of JSON input'; then
+    echo "cache-corruption"
+    return
+  fi
+  # TypeScript / SDK build failure — real code error, not recoverable here.
+  # Surfaced so the log distinguishes "my code" from "wasp infra".
+  if echo "$tail" | grep -qE 'error TS[0-9]+|SDK build failed|failed to compile'; then
+    echo "compile-error"
+    return
+  fi
+  return 0
+}
+
 # ── logging ────────────────────────────────────────────────────────────────
 ts() { date '+%Y-%m-%d %H:%M:%S'; }
 log() { echo "[$(ts)] $*" | tee -a "$LOG" >&2; }
@@ -191,11 +229,21 @@ log "supervising wasp start (args: ${WASP_ARGS[*]:-none}) — Ctrl+C to stop, cr
 log "log file: $LOG"
 attempt=0
 current_backoff="$BACKOFF"
+crash_streak=0      # consecutive short-lived attempts; resets on a healthy run
+cleaned_this_session=0   # auto-clean guard: at most one `wasp clean` per session
+
 while [ "$EXITING" -eq 0 ]; do
   attempt=$((attempt + 1))
   log "=== attempt $attempt: starting wasp ==="
   start_ts=$(date +%s)
 
+  # Per-attempt output tail — last ~40 lines, captured so we can classify the
+  # crash *after* wasp exits. `tail` reads the same $LOG we append to (wasp's
+  # full output already lands there via the tee below); slicing the last 40
+  # lines of the *current attempt* would need a marker, so we snapshot the
+  # whole tail post-exit (good enough — the crash signature is always at the
+  # end, and wasp's own output is the only writer between attempts).
+  #
   # Run wasp in the BACKGROUND and poll for its exit (not `wait`, which in
   # a non-interactive script is not reliably interrupted by SIGINT — the
   # trap would never fire while blocked in `wait`). Polling in 1s ticks means
@@ -234,22 +282,56 @@ while [ "$EXITING" -eq 0 ]; do
     break
   fi
 
-  # Uptime heuristic: ran long enough → reset backoff (transient blip, not a
-  # tight crash loop). Ran <5s → grow backoff (something's wrong, don't hammer).
-  if [ "$dur" -ge 5 ]; then
-    if [ "$current_backoff" -ne "$BACKOFF" ]; then
-      log "ran ${dur}s — backoff reset to ${BACKOFF}s"
+  # Snapshot the tail now — before kill_tree/other output can dilute it.
+  attempt_tail="$(tail -40 "$LOG" 2>/dev/null || true)"
+  reason="$(classify_crash "$attempt_tail")"
+
+  # Uptime heuristic with a streak counter:
+  #   dur >= CRASH_THRESHOLD → healthy-ish run: reset streak + backoff.
+  #   dur <  CRASH_THRESHOLD → crash: grow streak + backoff.
+  # CRASH_THRESHOLD defaults to 10s (was 5s): cache-corruption and compile
+  # crashes routinely run 5–6s before dying, so the old 5s floor let them
+  # pass as "healthy" and never escalated — a tight silent loop.
+  if [ "$dur" -ge "$CRASH_THRESHOLD" ]; then
+    if [ "$crash_streak" -ne 0 ]; then
+      log "ran ${dur}s — crash streak reset, backoff reset to ${BACKOFF}s"
     fi
+    crash_streak=0
     current_backoff="$BACKOFF"
   else
+    crash_streak=$((crash_streak + 1))
     current_backoff=$((current_backoff * 2))
     [ "$current_backoff" -gt "$BACKOFF_MAX" ] && current_backoff="$BACKOFF_MAX"
-    log "ran only ${dur}s (rc=$rc) — possible crash loop, backoff ${current_backoff}s"
+    log "ran only ${dur}s (rc=$rc, reason=${reason:-unknown}) — crash streak $crash_streak, backoff ${current_backoff}s"
   fi
 
-  log "wasp exited (rc=$rc, uptime ${dur}s) — cleaning tree before restart"
+  log "wasp exited (rc=$rc, uptime ${dur}s${reason:+, $reason}) — cleaning tree before restart"
   kill_tree
   free_ports --force --quiet || log "warn: could not fully free ports"
+
+  # Circuit breaker: too many consecutive crashes → stop, don't loop forever.
+  # A real error (broken code, missing dep, bad config) won't fix itself by
+  # restarting; surface it and let the human fix + re-run.
+  if [ "$crash_streak" -ge "$MAX_CRASHES" ]; then
+    log "giving up after $crash_streak consecutive crashes — likely a real error, not a transient blip. Fix and re-run npm run dev."
+    exit 1
+  fi
+
+  # Cache-corruption auto-recovery: run `wasp clean` once before retrying.
+  # Restarting into a corrupted `.wasp/out/` reproduces the same crash; the
+  # clean forces a fresh `npm install` + rebuild, which is what un-corrupts
+  # the half-written package.json / blocked dir removal. Guarded to fire at
+  # most once per session — if clean itself fails (rare), we fall through to
+  # a plain restart and let backoff escalate rather than loop-cleaning.
+  if [ "$reason" = "cache-corruption" ] && [ "$cleaned_this_session" -eq 0 ]; then
+    cleaned_this_session=1
+    log "cache corruption detected — running \`wasp clean\` before retry (once per session)"
+    if "$SAFE" clean > >(tee -a "$LOG") 2>&1; then
+      log "wasp clean succeeded — retrying with a fresh .wasp/out/"
+    else
+      log "warn: wasp clean failed — retrying anyway, backoff will escalate if it keeps crashing"
+    fi
+  fi
 
   log "restarting in ${current_backoff}s (Ctrl+C to give up)"
   # Sleep in 1s ticks so the trap fires promptly on Ctrl+C.
