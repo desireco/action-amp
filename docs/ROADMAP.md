@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-21 (PWA shipped: installable manifest, maskable icons, sliding 30-day session cookie fallback — mobile users no longer lose their login to WebKit ITP / Brave clear-on-exit. Web Push daily Today reminder shipped: VAPID, PgBoss job, Preferences UI. Manifest MIME fixed by renaming to .json (Hikari's MIME table doesn't include .webmanifest). App version surfaced in Settings + login footer via injected git SHA; update-available banner wired through a restructured service worker. Earlier 07-15: test suite rebuilt around cross-layer invariants, parallel-dev worktree tooling landed, mobile dock + task-row action drawer shipped.) -->
+<!-- Last reviewed: 2026-07-23 (Admin dashboard shipped: a stats-first page at /app/settings/admin with global user/task/feedback counts across today/7d/30d windows, an inline feedback-status triage list, and a shared getAdminStatsCore. Activity tracking added (User.createdAt + lastActiveAt, throttled-stamped on app load, backfilled). actionamp-admin CLI gained `stats` (text + --json) backed by /api/cli/admin/stats. A full feedback-triage system landed: Feedback model with shortId (XXXX-XXXX Crockford base32), prefix-match lookups, admin-only /api/cli/feedback/* routes, and the actionamp-admin feedback commands (list/show/status). Earlier 07-22: ActionAmp CLI terminal client shipped — 11 commands, OAuth browser login, --json for agents, pure *Core.ts files shared with the web app.) -->
 
 ---
 
@@ -10,7 +10,7 @@
 This is not a pre-launch product. It is a **soft-launched product with no
 audience yet**. That distinction changes the whole roadmap.
 
-**What's actually shipped and verified (updated 2026-07-21):**
+**What's actually shipped and verified (updated 2026-07-23):**
 
 - **Deployed to Railway**, live at `actionamp.com` + `api.actionamp.com` (both
   return HTTP 200). Postgres on Railway, Resend SMTP for auth email.
@@ -28,6 +28,20 @@ audience yet**. That distinction changes the whole roadmap.
 - **App version + update banner**: git SHA baked into the bundle at build time
   (Settings → About + login footer); restructured service worker + banner
   prompt users to refresh when a new build is deployed.
+- **Admin dashboard**: a stats-first page at `/app/settings/admin` (admin-only
+  tab, reuses SettingsLayout) showing global user/task/feedback counts across
+  today / 7d / 30d windows, plus an inline recent-feedback list with status
+  picker. Backed by a shared `getAdminStatsCore` (pure, tested). Activity
+  tracking via `User.createdAt` + `lastActiveAt` (throttled-stamped on app
+  load in `getAppData`, backfilled from `Auth`/`AuthIdentity`). The
+  `actionamp-admin stats` CLI command (text + `--json`) reads from the same
+  core via `/api/cli/admin/stats`.
+- **Feedback triage system**: the in-app feedback button now feeds a real
+  `Feedback` model with a human-addressable `shortId` (XXXX-XXXX, Crockford
+  base32), prefix-match lookups (show/status accept a partial id), and
+  `FeedbackStatus` (OPEN / IN_PROGRESS / RESOLVED / CLOSED). Admin-only
+  `/api/cli/feedback/{list,show,status}` routes + the `actionamp-admin`
+  feedback commands (list/show/status) for terminal triage.
 - **Full core loop works end-to-end**: capture (`⌘K`) → inbox → triage →
   task/project → Next focus chooser → Today (capped at 5) → completion →
   Logbook. Every step has a real server operation and a route.
@@ -310,6 +324,29 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **admin-dashboard** (`shipped` 2026-07-22) — first in-app admin surface. A
+  stats-first page at `/app/settings/admin` (admin-only tab in SettingsLayout)
+  showing global counts across today / 7d / 30d windows: users (total, signed
+  up, active), tasks (created, completed, total), feedback (by status, total).
+  An inline recent-feedback list with a status picker lets the admin triage
+  without leaving the page. Backed by `getAdminStatsCore` + `getRecentFeedbackCore`
+  (pure, tested) shared between the Wasp query and `/api/cli/admin/stats` +
+  `/api/cli/admin/feedback` PAT routes. Activity tracking added:
+  `User.createdAt` + `User.lastActiveAt` (throttled-stamped on app load in
+  `getAppData`, backfilled from `Auth`/`AuthIdentity` for existing users).
+  The `actionamp-admin stats` command (text + `--json`) reads the same core.
+  Spec: `docs/superpowers/specs/2026-07-22-admin-dashboard-design.md`.
+- **feedback-triage** (`shipped` 2026-07-22) — the in-app feedback button
+  (the shell feedback widget) now feeds a real `Feedback` model with:
+  `FeedbackStatus` enum (OPEN / IN_PROGRESS / RESOLVED / CLOSED), a
+  human-addressable `shortId` (XXXX-XXXX, Crockford base32, generated + unique
+  at insert), prefix-match lookups (`show`/`status` accept a partial id or
+  shortId), and `updatedAt` (backfilled from `createdAt`, kept current via
+  `@updatedAt`). Admin-only `/api/cli/feedback/{list,show,status}` routes +
+  the `actionamp-admin` feedback commands (list/show/status) for terminal
+  triage. Pure `operationsCore.ts` (submit/list/show/updateStatus) shared
+  between the Wasp ops, the PAT routes, and the admin CLI — zero duplicated
+  logic. Tests cover all four cores.
 - **cli (Phase 0 + Phase 1)** (`review` 2026-07-22) — the ActionAmp terminal
   client. A standalone `cli/` package (commander + chalk, ESM, TypeScript)
   that talks to the webapp's `/api/cli/*` routes via PAT auth. **Phase 0
