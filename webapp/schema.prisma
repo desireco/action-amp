@@ -410,6 +410,14 @@ model Feedback {
   lensName  String?
   lensColor String?
   userAgent String?
+
+  // Soft-delete: an admin can remove a feedback row from the triage surfaces
+  // (dashboard table, admin-cli list) without losing the record. When set,
+  // every read core filters it out; the row + its audit trail stay in the DB.
+  // Deliberately separate from `status` — delete isn't a triage state, it's a
+  // removal flag, and folding it into FeedbackStatus would pollute the
+  // byStatus counts + the status chips UI.
+  deletedAt DateTime?
 }
 
 // ============================================================

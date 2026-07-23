@@ -8,6 +8,7 @@ import {
   listFeedbackCore,
   showFeedbackCore,
   updateFeedbackStatusCore,
+  deleteFeedbackCore,
   FEEDBACK_STATUSES,
   isFeedbackStatus,
 } from "./operationsCore";
@@ -25,6 +26,7 @@ const FEEDBACK_ROW = {
   shortId: "ABCD-1234",
   createdAt: new Date("2026-07-22T10:00:00Z"),
   updatedAt: new Date("2026-07-22T10:00:00Z"),
+  deletedAt: null,
   message: "Looks great.",
   status: "OPEN",
   userId: "user-1",
@@ -129,7 +131,7 @@ describe("listFeedbackCore", () => {
     expect(entities.Feedback.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: { createdAt: "desc" },
-        where: undefined,
+        where: { deletedAt: null },
       }),
     );
   });
@@ -139,7 +141,7 @@ describe("listFeedbackCore", () => {
     entities.Feedback.findMany.mockResolvedValue([]);
     await listFeedbackCore(entities, { status: "RESOLVED" });
     expect(entities.Feedback.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { status: "RESOLVED" } }),
+      expect.objectContaining({ where: { deletedAt: null, status: "RESOLVED" } }),
     );
   });
 
@@ -184,6 +186,7 @@ describe("showFeedbackCore", () => {
     expect(entities.Feedback.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
+          deletedAt: null,
           OR: [
             { shortId: { startsWith: "CFV" } },
             { id: { startsWith: "cfv" } },
@@ -201,6 +204,7 @@ describe("showFeedbackCore", () => {
     expect(entities.Feedback.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
+          deletedAt: null,
           OR: [
             { shortId: { startsWith: "ABCD-1234" } },
             { id: { startsWith: "abcd-1234" } },
@@ -260,5 +264,30 @@ describe("updateFeedbackStatusCore", () => {
     expect(entities.Feedback.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "fb-1" } }),
     );
+  });
+});
+
+describe("deleteFeedbackCore", () => {
+  it("throws 'Feedback not found.' when no row matches", async () => {
+    const { entities } = mockContext();
+    entities.Feedback.findFirst.mockResolvedValue(null);
+    await expect(deleteFeedbackCore(entities, { id: "missing" })).rejects.toThrow(
+      /Feedback not found/,
+    );
+  });
+
+  it("sets deletedAt (by resolved PK) without destroying the row", async () => {
+    const { entities } = mockContext();
+    entities.Feedback.findFirst.mockResolvedValue({ id: "fb-1" });
+    entities.Feedback.update.mockResolvedValue({ ...FEEDBACK_ROW, deletedAt: new Date("2026-07-23T10:00:00Z") });
+
+    const result = await deleteFeedbackCore(entities, { id: "CFV" });
+
+    expect(entities.Feedback.update).toHaveBeenCalledWith({
+      where: { id: "fb-1" },
+      data: { deletedAt: expect.any(Date) },
+      select: expect.any(Object),
+    });
+    expect(result.deletedAt).toBeTruthy();
   });
 });

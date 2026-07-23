@@ -72,6 +72,7 @@ const ROW = {
   shortId: "ABCD-1234",
   createdAt: "2026-07-22T10:00:00.000Z",
   updatedAt: "2026-07-22T10:00:00.000Z",
+  deletedAt: null,
   message: "Love the new What Now screen.",
   status: "OPEN",
   userId: "u1",
@@ -218,5 +219,24 @@ describe("feedback command", () => {
     const { exitCode } = await runCommand(["status", ROW.id, "BOGUS"]);
     expect(exitCode).toBe(1);
     expect(requestMock).not.toHaveBeenCalled();
+  });
+
+  // ── delete ──────────────────────────────────────────────────────────────
+  it("delete POSTs { id } to /api/cli/feedback/delete and prints confirmation", async () => {
+    requestMock.mockResolvedValue({ feedback: ROW });
+    const { stdout } = await runCommand(["delete", ROW.id]);
+    expect(requestMock).toHaveBeenCalledWith("/api/cli/feedback/delete", {
+      method: "POST",
+      body: { id: ROW.id },
+    });
+    expect(stdout).toContain("ABCD-1234");
+    expect(stdout).toContain("deleted");
+  });
+
+  it("delete --json emits the feedback object", async () => {
+    requestMock.mockResolvedValue({ feedback: ROW });
+    const { stdout } = await runCommand(["delete", ROW.id, "--json"]);
+    const parsed = JSON.parse(stdout);
+    expect(parsed.feedback.id).toBe(ROW.id);
   });
 });

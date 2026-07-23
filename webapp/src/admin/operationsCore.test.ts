@@ -105,6 +105,7 @@ describe("getRecentFeedbackCore", () => {
     shortId: id.toUpperCase(),
     createdAt: new Date("2026-07-22T10:00:00Z"),
     updatedAt: new Date("2026-07-22T10:00:00Z"),
+    deletedAt: null,
     message: "m",
     status: "OPEN",
     userId: "u",
@@ -155,5 +156,16 @@ describe("getRecentFeedbackCore", () => {
       take: 11,
     });
     expect(page.hasNext).toBe(false);
+  });
+
+  it("excludes soft-deleted rows (where deletedAt: null)", async () => {
+    const { entities } = mockContext();
+    entities.Feedback.findMany.mockResolvedValue([row("a")]);
+
+    await getRecentFeedbackCore(entities, { afterId: null, limit: 10 });
+
+    expect(entities.Feedback.findMany.mock.calls[0][0]).toMatchObject({
+      where: { deletedAt: null },
+    });
   });
 });

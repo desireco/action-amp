@@ -1,7 +1,7 @@
 import { HttpError } from "wasp/server";
-import type { GetAdminStats, GetRecentFeedback, UpdateFeedbackStatus } from "wasp/server/operations";
+import type { GetAdminStats, GetRecentFeedback, UpdateFeedbackStatus, DeleteFeedback } from "wasp/server/operations";
 import { getAdminStatsCore, getRecentFeedbackCore, type AdminStats, type FeedbackRow } from "./operationsCore";
-import { updateFeedbackStatusCore, type FeedbackStatus } from "../feedback/operationsCore";
+import { updateFeedbackStatusCore, deleteFeedbackCore, type FeedbackStatus } from "../feedback/operationsCore";
 
 /**
  * Admin dashboard stats — one round-trip bundle of counts. Gates on
@@ -53,3 +53,22 @@ export const updateFeedbackStatus = (async (
   }
   return updateFeedbackStatusCore(context.entities, { id, status });
 }) satisfies UpdateFeedbackStatus<UpdateFeedbackStatusArgs, UpdateFeedbackStatusResult>;
+
+export type DeleteFeedbackArgs = { id: string };
+export type DeleteFeedbackResult = FeedbackRow;
+
+/**
+ * Soft-delete from the admin dashboard's status dropdown. Sets `deletedAt`
+ * (every read core filters `deletedAt: null`); the row is not destroyed.
+ * Admin-gated like the other triage actions. Throws "Feedback not found." if
+ * no live row matches the id prefix, which the client surfaces as an error.
+ */
+export const deleteFeedback = (async (
+  { id }: DeleteFeedbackArgs,
+  context,
+) => {
+  if (!context.user?.isAdmin) {
+    throw new HttpError(403, "Admin only.");
+  }
+  return deleteFeedbackCore(context.entities, { id });
+}) satisfies DeleteFeedback<DeleteFeedbackArgs, DeleteFeedbackResult>;

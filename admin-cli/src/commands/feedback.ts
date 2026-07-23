@@ -4,6 +4,7 @@
  *   actionamp-admin feedback list [--status <s>] [--limit <n>]
  *   actionamp-admin feedback show <id>
  *   actionamp-admin feedback status <id> <status>
+ *   actionamp-admin feedback delete <id>
  *
  * All subcommands support --json. The status value is validated client-side
  * against the 4 allowed states for a fast, clear error before hitting the API.
@@ -25,6 +26,7 @@ import {
   type FeedbackListResult,
   type FeedbackShowResult,
   type FeedbackStatusResult,
+  type FeedbackDeleteResult,
 } from "../types.js";
 
 export function makeFeedbackCommand(): Command {
@@ -126,6 +128,26 @@ export function makeFeedbackCommand(): Command {
         result,
         () => {
           process.stdout.write(`${id} → ${colorStatus(f.status)}\n`);
+        },
+        ctx,
+      );
+    });
+
+  // ── feedback delete ──────────────────────────────────────────────────────
+  feedback
+    .command("delete <id>")
+    .description("soft-delete a feedback row (hides it from list + dashboard; row stays in DB)")
+    .option("--json", "emit JSON output")
+    .action(async (id: string, opts: { json?: boolean }) => {
+      const ctx: OutputCtx = { json: opts.json ?? false };
+      const result = await request<FeedbackDeleteResult>(
+        "/api/cli/feedback/delete",
+        { method: "POST", body: { id } },
+      );
+      emit(
+        result,
+        () => {
+          process.stdout.write(`${result.feedback.shortId} deleted (hidden from triage views)\n`);
         },
         ctx,
       );

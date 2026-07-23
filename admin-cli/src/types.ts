@@ -25,6 +25,7 @@ export type Feedback = {
   shortId: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
   message: string;
   status: FeedbackStatus;
   userId: string;
@@ -60,6 +61,7 @@ export type Whoami = {
 export type FeedbackListResult = { feedback: Feedback[] };
 export type FeedbackShowResult = { feedback: Feedback };
 export type FeedbackStatusResult = { feedback: Feedback };
+export type FeedbackDeleteResult = { feedback: Feedback };
 
 // ----------------------------------------------------------------
 // Admin stats (actionamp-admin stats)

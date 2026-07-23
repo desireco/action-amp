@@ -77,6 +77,7 @@ import {
   listFeedbackCore,
   showFeedbackCore,
   updateFeedbackStatusCore,
+  deleteFeedbackCore,
   isFeedbackStatus,
   FEEDBACK_STATUSES,
   type FeedbackStatus,
@@ -1178,6 +1179,31 @@ export const cliFeedbackStatus = async (req: Request, res: Response, _context: u
     }
     console.error("[cli/feedback/status] failed:", err);
     return res.status(500).json({ error: "Could not update feedback status." });
+  }
+};
+
+// POST /api/cli/feedback/delete — body { id }. Soft-deletes the row (sets
+// deletedAt; every read core filters deletedAt: null). Idempotent on the
+// server — the core re-stamps deletedAt if already deleted. Mirrors the
+// status route's shape so the CLI reuses the same error mapping.
+export const cliFeedbackDelete = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!requireAdmin(user, res)) return;
+
+  const id = bodyString(req.body, "id");
+  if (!id) {
+    return res.status(400).json({ error: "id is required." });
+  }
+
+  try {
+    const feedback = await deleteFeedbackCore(authEntities, { id });
+    return res.status(200).json({ feedback });
+  } catch (err) {
+    if (err instanceof Error && /not found/i.test(err.message)) {
+      return res.status(404).json({ error: err.message });
+    }
+    console.error("[cli/feedback/delete] failed:", err);
+    return res.status(500).json({ error: "Could not delete feedback." });
   }
 };
 

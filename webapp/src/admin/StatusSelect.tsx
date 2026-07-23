@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Chip } from "../components/ui";
+import { Chip, ConfirmDialog } from "../components/ui";
 import { FEEDBACK_STATUSES, type FeedbackStatus } from "../feedback/operationsCore";
 import "./StatusSelect.css";
 
@@ -15,6 +15,12 @@ interface StatusSelectProps {
   status: FeedbackStatus;
   /** Fired when the admin picks a new status. Resolve to persist; reject to abort. */
   onStatusChange: (status: FeedbackStatus) => Promise<void>;
+  /**
+   * Soft-delete the row. Optional — wired by the admin dashboard. Rendered as
+   * a separated, danger-styled option below the status list with a confirm
+   * dialog (destructive, even though the row stays in the DB).
+   */
+  onDelete?: () => Promise<void>;
 }
 
 /**
@@ -26,9 +32,10 @@ interface StatusSelectProps {
  * Admin-only by construction: the table that renders this only mounts for
  * admins, and the backing action gates on `context.user.isAdmin`.
  */
-export function StatusSelect({ status, onStatusChange }: StatusSelectProps) {
+export function StatusSelect({ status, onStatusChange, onDelete }: StatusSelectProps) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape (backdrop handles outside-click).
@@ -50,6 +57,23 @@ export function StatusSelect({ status, onStatusChange }: StatusSelectProps) {
     setOpen(false);
     try {
       await onStatusChange(next);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Soft-delete: close the dropdown, open the confirm, then run. Same saving
+  // guard as choose() so the row can't be double-acted on mid-flight.
+  async function requestDelete() {
+    if (saving) return;
+    setOpen(false);
+    setConfirmDelete(true);
+  }
+  async function confirmDeleteAction() {
+    setSaving(true);
+    setConfirmDelete(false);
+    try {
+      await onDelete?.();
     } finally {
       setSaving(false);
     }
@@ -103,8 +127,34 @@ export function StatusSelect({ status, onStatusChange }: StatusSelectProps) {
                 </li>
               );
             })}
+            {onDelete && (
+              <>
+                <li className="aa-status-select__divider" role="separator" />
+                <li>
+                  <button
+                    type="button"
+                    className="aa-status-select__option aa-status-select__option--danger"
+                    onClick={() => void requestDelete()}
+                    disabled={saving}
+                  >
+                    <span className="aa-status-select__option-label">Delete</span>
+                  </button>
+                </li>
+              </>
+            )}
           </ul>
         </>
+      )}
+
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete feedback?"
+          message="This hides the row from the admin dashboard and CLI. The record stays in the database (soft-delete) but won't appear in any triage view."
+          confirmLabel="Delete"
+          danger
+          onConfirm={() => void confirmDeleteAction()}
+          onClose={() => setConfirmDelete(false)}
+        />
       )}
     </div>
   );

@@ -54,6 +54,7 @@ const FEEDBACK_SELECT = {
   shortId: true,
   createdAt: true,
   updatedAt: true,
+  deletedAt: true,
   message: true,
   status: true,
   userId: true,
@@ -147,7 +148,8 @@ export async function listFeedbackCore(
   { status, limit }: { status?: FeedbackStatus; limit?: number },
 ) {
   return await entities.Feedback.findMany({
-    where: status ? { status } : undefined,
+    // Soft-deleted rows are hidden from every triage surface.
+    where: { deletedAt: null, ...(status ? { status } : {}) },
     orderBy: { createdAt: "desc" },
     ...(limit ? { take: limit } : {}),
     select: FEEDBACK_SELECT,
@@ -186,6 +188,7 @@ async function findFeedbackByRef(
 
   return await entities.Feedback.findFirst({
     where: {
+      deletedAt: null,
       OR: [{ shortId: { startsWith: shortPrefix } }, { id: { startsWith: trimmed } }],
     },
     orderBy: { createdAt: "desc" },
@@ -226,6 +229,32 @@ export async function updateFeedbackStatusCore(
   return await entities.Feedback.update({
     where: { id: existing.id },
     data: { status },
+    select: FEEDBACK_SELECT,
+  });
+}
+
+// ----------------------------------------------------------------
+// Soft-delete (admin triage surface)
+// ----------------------------------------------------------------
+// Marks the row removed: sets deletedAt (filtered out by every read core)
+// without destroying the record. The row + its audit trail stay queryable
+// directly in the DB. Not idempotent from the caller's view: because the
+// lookup filters deletedAt: null, deleting an already-deleted row throws
+// "Feedback not found." (the route maps that to 404). The UI prevents the
+// double-delete case by removing the row on success; the 404 is the correct
+// signal if a second delete somehow races in.
+export async function deleteFeedbackCore(
+  entities: Entities,
+  { id }: { id: string },
+) {
+  const existing = await findFeedbackByRef(entities, id, { id: true });
+  if (!existing) {
+    throw new Error("Feedback not found.");
+  }
+
+  return await entities.Feedback.update({
+    where: { id: existing.id },
+    data: { deletedAt: new Date() },
     select: FEEDBACK_SELECT,
   });
 }

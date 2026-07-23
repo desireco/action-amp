@@ -104,6 +104,26 @@
   font-weight: var(--aa-weight-medium);
 }
 
+/* Divider between statuses and the destructive Delete option. */
+.aa-status-select__divider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--aa-border);
+}
+
+/* Delete: rose text only — no fill, so it reads as a destination of last
+   resort rather than competing with the status options. */
+.aa-status-select__option--danger {
+  background: transparent;
+  color: var(--aa-rose-text);
+}
+
+.aa-status-select__option--danger:hover:not(:disabled),
+.aa-status-select__option--danger:focus-visible:not(:disabled) {
+  background: var(--aa-rose-soft);
+  outline: none;
+}
+
 .aa-status-select__check {
   flex-shrink: 0;
 }

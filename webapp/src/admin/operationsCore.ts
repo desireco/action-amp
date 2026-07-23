@@ -52,6 +52,7 @@ export type FeedbackRow = {
   shortId: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
   message: string;
   status: FeedbackStatus;
   userId: string;
@@ -70,6 +71,7 @@ const FEEDBACK_SELECT = {
   shortId: true,
   createdAt: true,
   updatedAt: true,
+  deletedAt: true,
   message: true,
   status: true,
   userId: true,
@@ -126,9 +128,13 @@ export async function getAdminStatsCore(
     entities.Task.count({ where: { createdAt: { gte: d7 } } }),
     entities.Task.count({ where: { isDone: true, completedAt: { gte: d7 } } }),
     entities.Task.count(),
-    entities.Feedback.count(),
+    // Soft-deleted feedback is excluded from both the total + the byStatus
+    // breakdown — those are triage signals, and a deleted row isn't being
+    // triaged anymore.
+    entities.Feedback.count({ where: { deletedAt: null } }),
     entities.Feedback.groupBy({
       by: ["status"],
+      where: { deletedAt: null },
       _count: { _all: true },
     }),
   ]);
@@ -172,6 +178,7 @@ export async function getRecentFeedbackCore(
 ): Promise<{ items: FeedbackRow[]; hasNext: boolean }> {
   const fetchLimit = limit + 1;
   const rows = (await entities.Feedback.findMany({
+    where: { deletedAt: null },
     ...(afterId
       ? {
           skip: 1,
