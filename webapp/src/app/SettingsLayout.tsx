@@ -16,7 +16,18 @@ const TABS = [
   { label: "Access tokens", to: "/app/settings/pat", exact: false },
 ];
 
-export function SettingsLayout({ children }: { children: ReactNode }) {
+export function SettingsLayout({
+  children,
+  fullWidth = false,
+}: {
+  children: ReactNode;
+  /**
+   * Drop the default 760px max-width so wide content (the admin dashboard's
+   * tile grid + feedback table) can use the full AppShell content width.
+   * Default settings pages stay narrow — full-width form fields read poorly.
+   */
+  fullWidth?: boolean;
+}) {
   const location = useLocation();
   const { data: user } = useAuth();
 
@@ -25,7 +36,7 @@ export function SettingsLayout({ children }: { children: ReactNode }) {
     : TABS;
 
   return (
-    <div className="aa-settings-hub">
+    <div className={`aa-settings-hub${fullWidth ? " aa-settings-hub--full" : ""}`}>
       <Link className="aa-settings-back" to="/app">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M10 3l-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

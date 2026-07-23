@@ -4,6 +4,10 @@
   max-width: 760px;
 }
 
+.aa-settings-hub--full {
+  max-width: none;
+}
+
 /* ---- Back link ---- */
 .aa-settings-back {
   display: inline-flex;

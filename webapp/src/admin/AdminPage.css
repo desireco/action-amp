@@ -61,6 +61,41 @@
   margin-top: var(--aa-space-md);
 }
 
+/* Route column — lens (what the user thinks in) + the path they were on.
+   Path truncates with ellipsis so a long query string doesn't blow out the
+   row. Full context (lens, section, route) in the cell title tooltip. */
+.aa-admin-feedback-route {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  max-width: 260px;
+  font-size: var(--aa-text-sm);
+}
+
+.aa-admin-feedback-route__lens {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--aa-text-2);
+  font-weight: var(--aa-weight-medium);
+  flex-shrink: 0;
+}
+
+.aa-admin-feedback-route__lens-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.aa-admin-feedback-route__path {
+  color: var(--aa-text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
 .aa-admin-error {
   margin-bottom: var(--aa-space-lg);
 }

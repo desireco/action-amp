@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "wasp/client/auth";
-import { useQuery, useAction, getAdminStats, getRecentFeedback, updateFeedbackStatus } from "wasp/client/operations";
+import { useQuery, useAction, getAdminStats, getRecentFeedback, updateFeedbackStatus, deleteFeedback } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { SettingsLayout } from "../app/SettingsLayout";
 import { Button, Card, Chip, Table, type TableColumn } from "../components/ui";
@@ -107,6 +107,7 @@ export function AdminPage() {
   // until the refetch lands. Errors are logged; the picker resets its pending
   // state and the stale row stays (no silent local mutation).
   const updateStatusAction = useAction(updateFeedbackStatus);
+  const deleteAction = useAction(deleteFeedback);
   const queryClient = useQueryClient();
   async function handleStatusChange(id: string, status: FeedbackStatus) {
     try {
@@ -117,19 +118,66 @@ export function AdminPage() {
       console.error("[admin] status update failed:", err);
     }
   }
+  // Soft-delete: the row disappears from the list + the byStatus counts once
+  // both refetches land. Same invalidate pattern as the status change.
+  async function handleDelete(id: string) {
+    try {
+      await deleteAction({ id });
+      await queryClient.invalidateQueries({ queryKey: ["getRecentFeedback"] });
+      await queryClient.invalidateQueries({ queryKey: ["getAdminStats"] });
+    } catch (err) {
+      console.error("[admin] delete failed:", err);
+    }
+  }
 
   const feedbackColumns: TableColumn<FeedbackRow>[] = [
     {
       key: "status",
       header: "Status",
       render: (r) => (
-        <StatusSelect
-          status={r.status}
-          onStatusChange={(s) => handleStatusChange(r.id, s)}
-        />
+            <StatusSelect
+              status={r.status}
+              onStatusChange={(s) => handleStatusChange(r.id, s)}
+              onDelete={() => handleDelete(r.id)}
+            />
       ),
     },
     { key: "message", header: "Message", render: (r) => r.message.split("\n")[0].slice(0, 80) },
+    {
+      key: "route",
+      header: "Route",
+      render: (r) => {
+        // Lens prefix (what the user thinks in) + the path they were on.
+        // section (work/plan/review) is captured but not shown — it's a
+        // URL-derived bucket that's almost always "work" (the default) and
+        // reads as noise next to the lens. Full context in the title.
+        if (!r.route && !r.lensName) return "—";
+        const title = [
+          r.lensName ? `lens: ${r.lensName}` : null,
+          r.section ? `section: ${r.section}` : null,
+          r.route ? `route: ${r.route}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n");
+        return (
+          <span className="aa-admin-feedback-route" title={title}>
+            {r.lensName && (
+              <span className="aa-admin-feedback-route__lens">
+                {r.lensColor && (
+                  <span
+                    className="aa-admin-feedback-route__lens-dot"
+                    style={{ background: r.lensColor }}
+                    aria-hidden="true"
+                  />
+                )}
+                {r.lensName}
+              </span>
+            )}
+            {r.route && <span className="aa-admin-feedback-route__path">{r.route}</span>}
+          </span>
+        );
+      },
+    },
     {
       key: "from",
       header: "From",
@@ -139,7 +187,7 @@ export function AdminPage() {
   ];
 
   return (
-    <SettingsLayout>
+    <SettingsLayout fullWidth>
       <h2 className="aa-settings-sh">Admin</h2>
       {stats?.users && (
         <p className="aa-admin-note">
