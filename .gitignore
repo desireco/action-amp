@@ -19,6 +19,7 @@ admin-cli/dist/
 .DS_Store
 skills-lock.json
 .zcode/
+.qoder/
 
 # playwright artifacts (local screenshots/snapshots/traces)
 .playwright-cli/
