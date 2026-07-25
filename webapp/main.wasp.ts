@@ -75,6 +75,8 @@ import {
 } from "./src/auth/patRoutes" with { type: "ref" };
 import { mintCliToken } from "./src/auth/cliMint" with { type: "ref" };
 import { patRouteMiddleware } from "./src/auth/patMiddleware" with { type: "ref" };
+import { shareCapture } from "./src/share/shareCapture" with { type: "ref" };
+import { shareRouteMiddleware } from "./src/share/shareRouteMiddleware" with { type: "ref" };
 import { PatSettingsPage } from "./src/app/PatSettingsPage" with { type: "ref" };
 import { AdminPage } from "./src/admin/AdminPage" with { type: "ref" };
 import { CliLoginPage } from "./src/auth/CliLoginPage" with { type: "ref" };
@@ -314,6 +316,14 @@ export default app({
     api("GET", "/api/pat/list", patList, {
       entities: ["ApiKey"],
       auth: true,
+    }),
+    // PWA share_target — form-urlencoded POST from the installed PWA's share
+    // sheet (Android/Chrome). auth:true resolves context.user from the
+    // wasp_session cookie. See docs/superpowers/specs/2026-07-25-pwa-share-target-design.md.
+    api("POST", "/api/share", shareCapture, {
+      entities: ["InboxItem", "User", "Lens"],
+      auth: true,
+      middlewareConfigFn: shareRouteMiddleware,
     }),
     // The CLI stub: PAT-middleware protected (not session auth). `auth: false`
     // so Wasp doesn't add the session handler on top — the PAT middleware
