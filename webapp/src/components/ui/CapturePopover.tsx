@@ -381,7 +381,7 @@ function CapturedChips({ parsed }: { parsed: ParsedCapture }) {
  * Extracted from two near-identical inline blocks; the variant differences
  * are intentional design choices per surface.
  */
-function ParsedCaptureChips({
+export function ParsedCaptureChips({
   parsed,
   variant,
 }: {
