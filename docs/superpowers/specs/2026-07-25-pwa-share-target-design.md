@@ -3,7 +3,7 @@
 > **Status:** draft spec (pending implementation plan)
 > **Date:** 2026-07-25
 > **Owner:** design phase
-> **Approach:** Option C — dedicated `/share` confirmation page (full signed-replay logged-out path)
+> **Approach:** Option C — dedicated `/share` confirmation page (logged-out → re-share after login)
 
 ## Problem
 
@@ -24,8 +24,9 @@ ActionAmp appears in the share sheet. Selecting it:
    (parsed chips + the stored text).
 3. Auto-dismisses after ~3s (attempting to close the window back to the source
    app on Android; otherwise navigating to `/app`).
-4. Never loses a share, even when the user is logged out — the payload survives
-   the login redirect via a short-lived signed token.
+4. Sends the user to normal login when the session has expired; after login
+   they land on `/app` and re-share. (We do not attempt to carry the share
+   across login — see §Logged-out path.)
 
 ## Non-goals
 
@@ -79,15 +80,9 @@ resolves `context.user` automatically.
        context.user set             context.user null
        (logged in)                  (logged out)
             │                            │
-   303 → /share?id=<itemId>      303 → /login?return=/share&payload=<signed>
-            │                            │
-            │                       (email auth runs normally)
-            │                            │
-            │                       303 → POST /api/share/replay?payload=<signed>
-            │                            │  (verify sig + expiry + one-shot,
-            │                            │   save via same core)
-            │                            │
-            │                       303 → /share?id=<itemId>
+   303 → /share?id=<itemId>      303 → /login
+            │                       (user signs in, lands on /app,
+            │                        re-shares from source app)
             ▼
        GET /share?id=<itemId>
        (full-screen "Captured" page, parsed chips + stored text)
@@ -112,7 +107,6 @@ mechanisms.
 | One-shot URL flag pattern | `/app?capture=1` (`webapp/src/app/AppShell.tsx:304-310`) — same "read query param, act, strip param" idea. |
 | Captured-confirmation visual | `.aa-capture__captured*` CSS + `aa-capture-slidein` keyframe (`webapp/src/components/ui/Overlays.css:463-524`); `ParsedCaptureChips` (`CapturePopover.tsx:384`, currently file-private — must add `export`). |
 | Post-capture invalidation | `queryClient.invalidateQueries(["getInboxItems"])` + `["getAppData"]` (mirror of `AppShell.tsx:611-622`). |
-| Env secret | `process.env.SHARE_PAYLOAD_SECRET` read at module top-level (mirrors `billing/stripe.ts:9`'s `process.env.STRIPE_SECRET_KEY`). Added to `webapp/.env.server`. |
 
 The parser, the data model, entitlements, the service worker, and the existing
 `createInboxItem` action are all **untouched**.
@@ -187,17 +181,26 @@ layout per AGENTS.md):
 export const shareCapture = async (req, res, context) => {
   // auth:true → context.user is set iff the cookie was present
   if (!context.user) {
-    return res.redirect(303, signLoginRedirect(extractFields(req.body)));
+    // Logged out: send to normal login. After auth the user lands on /app
+    // as usual and re-shares. We do not attempt to carry the share payload
+    // across the login redirect — the failure mode is "tap share again,"
+    // which is acceptable (see §Logged-out path below).
+    return res.redirect(303, "/login");
   }
 
   const text = composeShareText(extractFields(req.body));
   if (!text) return res.redirect(303, "/share?error=empty");
 
-  const created = await createInboxItemCore(context.entities, {
-    userId: context.user.id,
-    text,
-  });
-  return res.redirect(303, `/share?id=${created.id}`);
+  try {
+    const created = await createInboxItemCore(context.entities, {
+      userId: context.user.id,
+      text,
+    });
+    return res.redirect(303, `/share?id=${created.id}`);
+  } catch (err) {
+    console.error("[share] capture failed:", err);
+    return res.redirect(303, "/share?error=server");
+  }
 };
 ```
 
@@ -207,68 +210,30 @@ via a per-route `middlewareConfigFn` (the Wasp-supported knob; same mechanism
 the PAT routes use for their middleware). Implementation detail for the plan;
 flagged here so the spec is honest about the dependency.
 
-### 4. Logged-out path — signed replay
+### 4. Logged-out path — re-share after login
 
-Two new pure helpers, unit-tested: `signPayload(fields)` → token string,
-`verifyPayload(token)` → `{ ok, fields } | { ok: false, reason }`.
+When the share POST arrives without a session (`context.user` is null), the
+handler does **not** attempt to carry the payload across login. It simply
+`303`-redirects to `/login`. The user signs in, lands on `/app` per Wasp's
+default `onAuthSucceededRedirectTo`, and re-shares from the source app.
 
-**Token format:** `base64url(JSON.stringify({ fields, exp })) + "." + base64url(HMAC-SHA256(payload, secret))`.
-`exp` = `Date.now() + 60_000` (60s). Secret = `process.env.SHARE_PAYLOAD_SECRET`
-(read at module top-level; if unset in dev, fall back to a hardcoded dev value
-+ log a warning — never to a random per-process value, which would break across
-the redirect).
+**Why no signed-replay:** an earlier revision of this spec carried the share
+across login via a short-lived HMAC-signed token + a `GET /api/share/replay`
+handoff + a process-local LRU for replay protection. That's ~40% of the spec's
+complexity (a new secret env var, two pure helpers, a second route, an LRU, a
+login-redirect override) to serve a case the owner judges uncommon and cheap
+to recover from ("tap share again"). The failure mode is honest and small:
+a lost share on an expired session, recovered by one extra tap. Not worth the
+machinery.
 
-**Replay protection:** a process-local LRU set (cap 1000) of consumed token
-signatures (the HMAC portion). `verifyPayload` rejects any token whose
-signature is already in the set; on success, the signature is added. This
-prevents a leaked/observed URL from being replayed within its 60s window. Not
-distributed — acceptable because the window is short and the payload is just
-title/text/url (no PII, no auth escalation).
+**What this removes vs. the earlier draft:** no `signPayload` / `verifyPayload`
+helpers, no `SHARE_PAYLOAD_SECRET`, no `GET /api/share/replay` route, no
+consumed-token LRU, no `return=/share&payload=` override on the login success
+path. One route (`POST /api/share`), one redirect target (`/login`).
 
-**`/login` redirect:** `303 → /login?return=/share&payload=<token>`. Wasp's
-default `onAuthSucceededRedirectTo: "/app"` is a GET. To turn the post-auth
-redirect into a `POST /api/share/replay?payload=<token>`, the login success
-page reads `?return=/share&payload=...` and, when present, renders a tiny
-auto-submitting form (method POST, action `/api/share/replay`) carrying the
-payload as a hidden field — instead of navigating to `/app`. This is a small,
-self-contained patch to the existing login success path; no Wasp auth internals
-are touched. (Implementation shape — exact file/insertion point — is a plan
-detail.)
-
-**`POST /api/share/replay`** — second Wasp route, same middleware shape:
-
-```ts
-api("POST", "/api/share/replay", shareReplay, {
-  entities: ["InboxItem", "User", "Lens"],
-  auth: true,   // user must be authed by now
-})
-```
-
-```ts
-export const shareReplay = async (req, res, context) => {
-  if (!context.user) return res.redirect(303, "/login");
-  const token = typeof req.query?.payload === "string" ? req.query.payload : "";
-  const result = verifyPayload(token);   // also marks consumed
-  if (!result.ok) return res.redirect(303, "/share?error=expired");
-  const text = composeShareText(result.fields);
-  if (!text) return res.redirect(303, "/share?error=empty");
-  const created = await createInboxItemCore(context.entities, {
-    userId: context.user.id,
-    text,
-  });
-  return res.redirect(303, `/share?id=${created.id}`);
-};
-```
-
-**Failure modes:**
-
-| Case | Redirect |
-|------|----------|
-| Token signature invalid / tampered | `/share?error=expired` |
-| Token past 60s expiry | `/share?error=expired` |
-| Token already consumed (replay) | `/share?error=expired` |
-| `SHARE_PAYLOAD_SECRET` unset (prod) | handler throws 500 at boot; never silently falls back in prod |
-| Replay runs but `composeShareText` empty (race) | `/share?error=empty` |
+**If this proves painful in use,** the upgrade path is the signed-replay design
+(archived in git history at the pre-revision commit) — the route shape and
+`composeShareText` are unchanged, so the retrofit is additive, not a rewrite.
 
 ### 5. Confirmation page — `/share`
 
@@ -292,15 +257,20 @@ route reachable both authed and during the post-login window.
   `window.close()`. If the window is still open 100ms later (close failed — the
   common case for OS-opened windows), `navigate("/app")`.
 
-**State B — `?error=empty` (nothing to capture):**
+**Error states** — all share the same calm card layout (no checkmark), each
+with its own copy and a recovery link. None auto-dismiss; the user reads and
+dismisses manually. State is selected by the `?error=` query flag (or by
+`getInboxItem` resolving null):
 
-- Same card layout, no checkmark. Calm copy: "Nothing to capture." + a "Back to
-  ActionAmp" link to `/app`. No auto-dismiss — the user dismisses manually.
+| State | When | Copy | Link |
+|---|---|---|---|
+| `?error=empty` | Share had no title/text/url | "Nothing to capture." | → `/app` ("Back to ActionAmp") |
+| `?error=server` | `createInboxItemCore` threw (parser/DB) | "Capture failed — try again." | → `/app` |
+| `?error=missing` | `?id=` absent, or `getInboxItem` returned null (wrong user / unknown / deleted) | "Couldn't find that capture." | → `/app` |
 
-**State C — `?error=expired` (logged-out replay failed):**
-
-- Same card. Copy: "Your share expired — sign in and try again." + link to
-  `/login`. No auto-dismiss.
+No `?error=expired` state exists — there is no token to expire (see §Logged-out
+path). If the page is hit with an unknown `?error=` value, it falls through to
+`?error=missing`.
 
 **Visual treatment:** match the existing captured-toast aesthetic — teal
 checkmark (system/state accent), neutral card, system font, generous
@@ -340,51 +310,48 @@ safe to lift. `SharePage` imports it alongside the `ParsedCapture` type.
 2. `POST /api/share`:
    - Cookie present → `context.user` set → `composeShareText` →
      `createInboxItemCore` → `303 /share?id=<itemId>`.
-   - Cookie absent → `signPayload` → `303 /login?return=/share&payload=<token>`.
-3. (Logged-out branch) Email auth runs. Post-auth, `return=/share` redirects to
-   `POST /api/share/replay?payload=<token>` → `verifyPayload` (consumes) →
-   `composeShareText` → `createInboxItemCore` → `303 /share?id=<itemId>`.
-4. `GET /share?id=<itemId>` → `getInboxItem` → render chips + text → 3s →
+   - Cookie absent → `303 /login` (user signs in, lands on `/app`, re-shares).
+3. `GET /share?id=<itemId>` → `getInboxItem` → render chips + text → 3s →
    `window.close()` → fallback `navigate("/app")`.
 
 ## Error handling
 
-| Surface | Behavior |
-|---|---|
-| Empty share (all fields blank) | `303 /share?error=empty`; page shows "Nothing to capture." |
-| `createInboxItemCore` throws (e.g., parser error) | Handler catches, logs `[share] failed:`, `303 /share?error=server`; page shows "Capture failed — try again." + link to `/app`. |
-| Replay token invalid/expired/replayed | `303 /share?error=expired`; page shows expired message. |
-| `getInboxItem` returns null (wrong user / deleted) | Page falls through to State B copy ("Nothing to capture.") with link to `/app`. |
-| `SHARE_PAYLOAD_SECRET` unset in prod | Server boot fails loudly (no silent fallback). Dev falls back to a documented constant + warning log. |
-| Network failure mid-replay | The share is lost (same as any failed capture). Documented; not recovered. |
+Every error is a first-class page state on `/share` (see §Confirmation page
+states). The `?error=` query flag selects which state renders.
+
+| Surface | Redirect | Page state |
+|---|---|---|
+| Empty share (all fields blank) | `303 /share?error=empty` | "Nothing to capture." + link to `/app` |
+| `createInboxItemCore` throws (parser error, DB error) | handler catches, logs `[share] failed:`, `303 /share?error=server` | "Capture failed — try again." + link to `/app` |
+| Share arrives while logged out | `303 /login` | (no `/share` page; user signs in and re-shares) |
+| `getInboxItem` returns null (wrong user / unknown id / deleted) | (no redirect; query resolves null on the page) | Page renders the `error=missing` state: "Couldn't find that capture." + link to `/app` |
+| Network failure mid-POST | The share is lost (same as any failed capture). Browser shows its own network error; no recovery. Documented. |
 
 ## Testing
 
 - **Unit — `composeShareText`:** every row of the field-combination table;
   truncation at 2000 chars (with `…`); empty → `""`.
-- **Unit — `signPayload` / `verifyPayload`:** round-trip; tampered payload
-  rejected; expired rejected; consumed-token replay rejected; `exp` honored.
 - **Integration — `POST /api/share`:** with session cookie → 303 to
   `/share?id=...` + item created with composed text; without cookie → 303 to
-  `/login?return=/share&payload=...`. Form body parses (urlencoded middleware).
-- **Integration — `POST /api/share/replay`:** valid token → 303 + item created;
-  invalid/expired/consumed → 303 to `?error=expired`.
+  `/login`. Form body parses (urlencoded middleware). `createInboxItemCore`
+  throw → 303 to `/share?error=server`.
 - **Query — `getInboxItem`:** returns own item; returns null for another user's
   id; returns null for unknown id.
 - **E2E (Playwright):** `GET /share?id=<itemId>` renders parsed chips + stored
   text, then auto-dismisses (close attempt → navigate to `/app` after 100ms —
   Playwright can't `window.close()`, so the fallback path is what's asserted).
-  `?error=empty` and `?error=expired` render their respective states without
-  auto-dismiss.
-- **Manual QA on Android (documented in feature doc, not automated):** install
-  the PWA, share a URL from Chrome, confirm (a) item lands in inbox with
-  composed text, (b) Android returns to Chrome after the POST's 303. This is
-  the only way to truly validate `share_target`.
+  Each `?error=` state renders its own copy without auto-dismiss. `getInboxItem`
+  returning null renders the `?error=missing` state.
+- **Manual QA on Android (owner will test; not automated):** install the PWA,
+  share a URL from Chrome, confirm (a) item lands in inbox with composed text,
+  (b) Android returns to Chrome after the POST's 303. This is the only way to
+  truly validate `share_target`.
 
 ## Documentation updates
 
 - **`docs/features/pwa-notifications.md`** — new "Share target" section: the
-  manifest block, the `/share` flow, the logged-out replay, and the iOS gap.
+  manifest block, the `/share` flow, the logged-out behavior (re-share after
+  login), and the iOS gap.
 - **`docs/ROADMAP.md`** — add this feature to the active list; reinforce the
   existing Icebox note that iOS share requires a native Share Extension
   (post-PMF).
@@ -396,16 +363,15 @@ safe to lift. `SharePage` imports it alongside the `ParsedCapture` type.
 
 - [ ] `manifest.json` has a valid `share_target` block.
 - [ ] `POST /api/share` saves via `createInboxItemCore` and 303-redirects;
-  unit + integration tests pass.
-- [ ] `POST /api/share/replay` saves via the same core; token sign/verify/
-  expiry/replay tests pass.
+  logged-out → 303 to `/login`; `createInboxItemCore` throw → 303 to
+  `/share?error=server`. Integration tests pass.
 - [ ] `composeShareText` passes all field-combination + truncation unit tests.
 - [ ] `getInboxItem` query added + registered; ownership guard tested.
-- [ ] `/share` page renders all three states (captured / empty / expired);
-  auto-dismiss behavior verified in Playwright.
+- [ ] `/share` page renders all states (captured / `empty` / `server` /
+  `missing`); captured state auto-dismisses; error states don't. Verified in
+  Playwright.
 - [ ] `ParsedCaptureChips` exported and reused by `/share` (no duplication).
-- [ ] `SHARE_PAYLOAD_SECRET` documented in `webapp/AGENTS.md` env section.
 - [ ] `docs/features/pwa-notifications.md` + `docs/ROADMAP.md` + `AGENTS.md`
   updated.
 - [ ] `wasp compile` passes; existing tests still green.
-- [ ] Manual Android QA pass documented (or explicitly deferred with a note).
+- [ ] Owner's manual Android QA (not a code gate; tracked as a follow-up note).
