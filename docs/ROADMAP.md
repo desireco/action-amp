@@ -387,6 +387,22 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
   `SKIP_WAITING` message handler) so a new deployment prompts the user to
   refresh via a calm teal banner. Closes the "Native mobile / PWA install"
   Icebox line (F23/F25).
+- **pwa-share-target** (`shipped` 2026-07-25) — the installed PWA is an
+  Android/Chrome share target. A `share_target` block in `manifest.json`
+  POSTs the share sheet's `title`/`text`/`url` to a new session-authed
+  `POST /api/share` route, which composes a single string (`Title — url`
+  precedence, `composeShareText`) and saves via the existing pure
+  `createInboxItemCore` — same core `⌘K` capture and the CLI use. The route
+  303-redirects to a full-screen `/share` confirmation page (parsed chips +
+  stored text, auto-dismisses ~3s via `window.close()` with a `/app` fallback)
+  or a first-class error state (`empty` / `server` / `missing`). Logged-out
+  shares are **not** preserved across login — the user re-shares after
+  sign-in (deliberate scope cut; the signed-replay design is archived in the
+  spec's git history if it ever hurts). iOS gap: `share_target` is
+  Android/Chrome only; iOS Safari ignores the manifest block and a native
+  Share Extension remains a post-PMF concern (Icebox). Spec:
+  `docs/superpowers/specs/2026-07-25-pwa-share-target-design.md`; plan:
+  `docs/superpowers/plans/2026-07-25-pwa-share-target.md`.
 - **mobile-dock + task-row-action-drawer** (`shipped` ~2026-07-15) — the
   mobile bottom dock reorganized around a Do-first affordance with Today
   folded in (Next was demoted — the focus chooser lives at the top of /app,

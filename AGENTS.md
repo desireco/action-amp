@@ -71,6 +71,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | The CLI (`actionamp`) terminal client | `cli/README.md` + `cli/src/` + `webapp/src/auth/patRoutes.ts` (the `/api/cli/*` routes) + `webapp/src/*/operationsCore.ts` (the shared pure cores) |
 | The admin CLI (`actionamp-admin`) | `admin-cli/README.md` + `admin-cli/src/` + `webapp/src/auth/patRoutes.ts` (the admin-gated `/api/cli/feedback/*` routes) + `webapp/src/feedback/operationsCore.ts` |
 | The admin dashboard (in-app stats page + `actionamp-admin stats`) | `docs/superpowers/specs/2026-07-22-admin-dashboard-design.md` + `webapp/src/admin/` + `admin-cli/README.md` |
+| Share-to-inbox (PWA `share_target`, Android/Chrome) | `docs/features/pwa-notifications.md` (Share target §) + `webapp/src/share/` + `docs/superpowers/specs/2026-07-25-pwa-share-target-design.md` |
 | Marketing/public site | `docs/MARKETING.md` + `docs/PUBLIC-PAGES.md` |
 | Deployment / hosting | `docs/research/deployment-research.md` |
 | What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/backlog/` |
