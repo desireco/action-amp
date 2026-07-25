@@ -19,7 +19,7 @@ import { getGoals, getGoal } from "./src/goals/operations" with { type: "ref" };
 import { createGoal } from "./src/goals/operations" with { type: "ref" };
 import { setGoalDone, updateGoal, deleteGoal, reorderGoalProjects } from "./src/goals/operations" with { type: "ref" };
 import { getLogbook } from "./src/logbook/operations" with { type: "ref" };
-import { createInboxItem, getInboxItems, triageInboxItem, restoreArchivedItem, getProjectsForResolver } from "./src/inbox/operations" with { type: "ref" };
+import { createInboxItem, getInboxItem, getInboxItems, triageInboxItem, restoreArchivedItem, getProjectsForResolver } from "./src/inbox/operations" with { type: "ref" };
 import { TodayPage } from "./src/lists/TodayPage" with { type: "ref" };
 import { UpcomingPage } from "./src/lists/UpcomingPage" with { type: "ref" };
 import { SomedayPage } from "./src/lists/SomedayPage" with { type: "ref" };
@@ -277,6 +277,7 @@ export default app({
     action(setPreferredName, { entities: ["User"], auth: true }),
     action(completeOnboarding, { entities: ["User"], auth: true }),
     query(getInboxItems, { entities: ["InboxItem"], auth: true }),
+    query(getInboxItem, { entities: ["InboxItem"], auth: true }),
     query(getProjectsForResolver, { entities: ["Project", "Lens"], auth: true }),
     action(createInboxItem, { entities: ["InboxItem", "Lens"], auth: true }),
     action(triageInboxItem, { entities: ["InboxItem", "Task", "Project", "Resource", "Tag", "Lens"], auth: true }),

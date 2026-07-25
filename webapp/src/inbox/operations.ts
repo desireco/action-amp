@@ -1,5 +1,6 @@
 import type {
   CreateInboxItem,
+  GetInboxItem,
   GetInboxItems,
   TriageInboxItem,
   RestoreArchivedItem,
@@ -54,6 +55,27 @@ export const getInboxItems = (async (_args, context) => {
     userId: context.user.id,
   });
 }) satisfies GetInboxItems<never>;
+
+// ----------------------------------------------------------------
+// Read — a single InboxItem by id, gated to the requesting user.
+// Used by the /share confirmation page to render the just-captured item.
+// Returns null for an unknown id, a deleted item, or another user's item —
+// callers render the "missing" error state. Mirrors restoreArchivedItem's
+// findUnique + userId guard, but is a read query and returns the full row.
+// ----------------------------------------------------------------
+export const getInboxItem = (async (
+  args: { id: string },
+  context,
+) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const item = await context.entities.InboxItem.findUnique({
+    where: { id: args.id },
+  });
+  if (!item || item.userId !== context.user.id) return null;
+  return item;
+}) satisfies GetInboxItem<{ id: string }>;
 
 // ----------------------------------------------------------------
 // Transform — triage an InboxItem into its concrete type, then delete it.
