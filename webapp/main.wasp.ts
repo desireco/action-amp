@@ -77,6 +77,7 @@ import { mintCliToken } from "./src/auth/cliMint" with { type: "ref" };
 import { patRouteMiddleware } from "./src/auth/patMiddleware" with { type: "ref" };
 import { shareCapture } from "./src/share/shareCapture" with { type: "ref" };
 import { shareRouteMiddleware } from "./src/share/shareRouteMiddleware" with { type: "ref" };
+import { SharePage } from "./src/share/SharePage" with { type: "ref" };
 import { PatSettingsPage } from "./src/app/PatSettingsPage" with { type: "ref" };
 import { AdminPage } from "./src/admin/AdminPage" with { type: "ref" };
 import { CliLoginPage } from "./src/auth/CliLoginPage" with { type: "ref" };
@@ -204,6 +205,11 @@ export default app({
     // explicit for clarity.)
     route("Founding100Route", "/founding-100", page(Founding100Page, { authRequired: false })),
     route("Founding100WelcomeRoute", "/founding-100/welcome", page(Founding100WelcomePage)),
+    // PWA share_target confirmation page. authRequired:false so it renders
+    // during session resolution and after a logged-out → /login bounce (the
+    // page handles its own auth awareness via useQuery). See
+    // docs/superpowers/specs/2026-07-25-pwa-share-target-design.md.
+    route("ShareRoute", "/share", page(SharePage, { authRequired: false })),
     route("LoginRoute", "/login", page(LoginPage)),
     // CLI OAuth login — the browser half of `actionamp login`. Session-authed
     // (authRequired: true → Wasp redirects to /login then back here with the

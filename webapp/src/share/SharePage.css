@@ -1,0 +1,75 @@
+/* Full-screen /share confirmation page. Reuses the captured-toast aesthetic
+   (.aa-capture__captured* tokens + aa-capture-slidein keyframe) but centered
+   as a page, not an overlay.
+   Calm: teal checkmark, neutral card, system font, generous whitespace.
+   No exclamation marks, no streaks, no decorative color (per AGENTS.md). */
+
+.aa-share {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--aa-space-md);
+  background: var(--aa-bg);
+}
+
+.aa-share__card {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  animation: aa-capture-slidein 220ms var(--aa-ease-out, ease-out) both;
+}
+
+.aa-share__check {
+  /* mirrors .aa-capture__captured-check, scaled up for the page surface */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  color: var(--aa-surface);
+  margin-bottom: var(--aa-space-sm);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.aa-share__title {
+  font-size: var(--aa-text-lg);
+  font-weight: 600;
+  color: var(--aa-text);
+  margin: 0 0 var(--aa-space-xs);
+}
+
+.aa-share__text {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  line-height: 1.4;
+  margin: var(--aa-space-xs) auto var(--aa-space-sm);
+  max-width: 36ch;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.aa-share__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  margin: var(--aa-space-xs) 0;
+}
+
+.aa-share__link {
+  display: inline-block;
+  margin-top: var(--aa-space-sm);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+}
+
+.aa-share__link:hover {
+  text-decoration: underline;
+}
