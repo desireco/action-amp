@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router";
-import { LoginForm, login } from "wasp/client/auth";
+import { Link, Navigate, useSearchParams } from "react-router";
+import { LoginForm, login, useAuth } from "wasp/client/auth";
 import { prepareDevAutologin } from "wasp/client/operations";
 import { AuthLayout } from "../../components/ui";
 import { aaAuthAppearance } from "../appearance";
@@ -9,6 +9,7 @@ import { aaAuthAppearance } from "../appearance";
 const DEFAULT_DEV_EMAIL = "zeljko@dakic.com";
 
 export function LoginPage() {
+  const { data: user, status: authStatus } = useAuth();
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
@@ -34,6 +35,14 @@ export function LoginPage() {
       void devAutologin(devEmail);
     }
   }, [devEmail, showDevAutologin]);
+
+  // A logged-in user hitting /login (browser back, stale bookmark, the dev
+  // autologin just finished) should go straight to the app, not see the form.
+  // Wait for the session to resolve first (authStatus !== 'loading') so an
+  // initial anonymous render doesn't flash the form before redirecting.
+  if (authStatus !== "loading" && user) {
+    return <Navigate to="/app" replace />;
+  }
 
   return (
     <AuthLayout
