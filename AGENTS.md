@@ -84,6 +84,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | A specific feature spec (ready/draft status, done-conditions) | `docs/specs/<feature>.md` (index + order in `docs/ROADMAP.md`) |
 | Product thesis, tone, strategic principles (the "why") | `PRODUCT.md` |
 | Wasp mechanics (config, imports, migrations, ops) | `webapp/AGENTS.md` ← load the `wasp` skill too |
+| **Code review** (reviewing changes/PRs/diffs) | `code-review` skill — then auto-implement the fixes (see "Rules that always apply") |
 
 ## Implementation map (webapp/)
 
@@ -142,6 +143,14 @@ Pick the task; read the doc(s) on the right **before** writing code.
   caveman for security warnings, irreversible-action confirmations, and anywhere
   compression risks misread. Code/commits/PRs stay normal. Off: "stop caveman" /
   "normal mode". Switch: `/caveman lite|full|ultra`.
+- **Code review = fix loop.** When a code review is requested (explicit or
+  implied), load the `code-review` skill, run the review, then **continue
+  straight into implementing the fixes** — do not stop and wait for approval
+  unless a fix is destructive, outward-facing, or materially ambiguous. Group
+  fixes by file; verify with `wasp compile` (or the feature's test command) when
+  the change touches `webapp/`. Report what was reviewed, what was fixed, and
+  what was deferred (with reason) in the summary. Commits follow the existing
+  convention (direct to `main` unless told otherwise).
 
 ## Where to start if you're new
 
