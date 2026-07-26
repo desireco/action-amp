@@ -193,7 +193,16 @@ describe("logbook", () => {
   it("shows completed tasks with checkmarks", async () => {
     requestMock.mockResolvedValue({
       tasks: [
-        { id: "t1", description: "Ship it", isDone: true, priority: "NORMAL", size: "M", status: "TODAY", project: null, goal: null },
+        {
+          id: "t1",
+          title: "Ship it",
+          completedAt: "2026-07-26T00:00:00.000Z",
+          outcome: null,
+          size: "M",
+          project: { id: "p1", name: "MVP" },
+          goal: null,
+          kind: "task",
+        },
       ],
       projects: [],
       goals: [],
@@ -202,6 +211,42 @@ describe("logbook", () => {
     const { stdout } = await run(makeLogbookCommand(), []);
     expect(stdout).toContain("Completed tasks (1):");
     expect(stdout).toContain("Ship it");
+    // The parent context line (`· in ProjectName`) reads from the logbook's
+    // `project.name`, not the Task-shaped `project` — guards against the
+    // shape-regression this test was hiding.
+    expect(stdout).toContain("in MVP");
+  });
+
+  it("shows finished projects + achieved goals with their titles", async () => {
+    requestMock.mockResolvedValue({
+      tasks: [],
+      projects: [
+        {
+          id: "p1",
+          title: "Launch v1",
+          completedAt: "2026-07-26T00:00:00.000Z",
+          project: null,
+          goal: null,
+          kind: "project",
+        },
+      ],
+      goals: [
+        {
+          id: "g1",
+          title: "Run a 10k",
+          completedAt: "2026-07-26T00:00:00.000Z",
+          project: null,
+          goal: null,
+          kind: "goal",
+        },
+      ],
+      archived: [],
+    });
+    const { stdout } = await run(makeLogbookCommand(), []);
+    expect(stdout).toContain("Finished projects (1):");
+    expect(stdout).toContain("Launch v1");
+    expect(stdout).toContain("Achieved goals (1):");
+    expect(stdout).toContain("Run a 10k");
   });
 
   it("shows archived items", async () => {
@@ -210,7 +255,7 @@ describe("logbook", () => {
       projects: [],
       goals: [],
       archived: [
-        { id: "a1", text: "old idea", status: "ARCHIVED", createdAt: "2026-01-01T00:00:00.000Z" },
+        { id: "a1", title: "old idea", archivedAt: "2026-01-01T00:00:00.000Z", kind: "archived" },
       ],
     });
     const { stdout } = await run(makeLogbookCommand(), []);

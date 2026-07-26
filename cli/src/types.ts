@@ -73,11 +73,33 @@ export type Lens = {
   counts?: { goals: number; projects: number; tasks: number };
 };
 
+/**
+ * Logbook — the reflection feed.
+ *
+ * The backend (`logbook/operationsCore.ts`) normalizes completed tasks,
+ * finished projects, achieved goals, and archived inbox items into a unified
+ * shape keyed by `kind`. Each entry carries `title` (renamed from
+ * `description`/`name` server-side so the feed can group heterogeneous
+ * records under one heading), an ISO `completedAt`, the parent (if any), and
+ * — for tasks — the optional `outcome` captured at completion.
+ */
+export type LogbookItem = {
+  id: string;
+  title: string;
+  completedAt?: string;
+  archivedAt?: string;
+  outcome?: string | null;
+  size?: string;
+  project?: { id: string; name: string } | null;
+  goal?: { id: string; name: string } | null;
+  kind: "task" | "project" | "goal" | "archived";
+};
+
 export type LogbookEntry = {
-  tasks?: Task[];
-  projects?: Project[];
-  goals?: Goal[];
-  archived?: InboxItem[];
+  tasks?: LogbookItem[];
+  projects?: LogbookItem[];
+  goals?: LogbookItem[];
+  archived?: LogbookItem[];
 };
 
 export type Whoami = {
