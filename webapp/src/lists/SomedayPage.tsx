@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { getTasks } from "wasp/client/operations";
@@ -34,6 +35,12 @@ export function SomedayPage() {
   const count = tasks?.length ?? 0;
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
 
+  // Active row for the click-to-reveal action drawer. Null = no row open.
+  // Mirrors UpcomingPage/TodayPage. Without this, Someday rows would have no
+  // way to expose their promote control on hover-less devices; with it, the
+  // list reads as a list and a row becomes a deliberate drawer you open.
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+
   return (
     <div className="aa-someday">
       <header className="aa-list-header">
@@ -65,24 +72,43 @@ export function SomedayPage() {
       ) : (
         <ul className="aa-someday-list">
           {(tasks ?? []).map((task: Task) => (
-            <li key={task.id} className="aa-someday-row">
+            <li
+              key={task.id}
+              className={`aa-someday-row${activeTaskId === task.id ? " aa-someday-row--active" : ""}`}
+            >
               <TaskRow
                 as="div"
                 task={task}
                 muted
+                expanded={activeTaskId === task.id}
                 onOpen={() =>
-                  navigate(`/app/tasks/${task.permalink ?? task.id}`, {
-                    state: { returnTo },
-                  })
+                  setActiveTaskId((current) =>
+                    current === task.id ? null : task.id,
+                  )
                 }
               >
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => promoteToToday(task)}
+                  onClick={() => {
+                    setActiveTaskId(null);
+                    void promoteToToday(task);
+                  }}
                   title="Move to Today"
                 >
                   Today
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+                      state: { returnTo },
+                    })
+                  }
+                  title="Open task"
+                >
+                  Open
                 </Button>
               </TaskRow>
             </li>

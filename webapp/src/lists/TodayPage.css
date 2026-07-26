@@ -163,10 +163,11 @@
     opacity: 0;
     transition: opacity var(--aa-dur-base) var(--aa-ease-out);
   }
-  .aa-today__list .aa-grouped__item:hover .aa-task-row__actions,
+  /* Click-to-reveal: the row's `--active` modifier is toggled in TodayPage.tsx
+     on row click. `:focus-within` keeps keyboard accessibility. */
   .aa-today__list .aa-grouped__item:focus-within .aa-task-row__actions,
-  .aa-today__done-section .aa-grouped__item:hover .aa-task-row__actions,
-  .aa-today__done-section .aa-grouped__item:focus-within .aa-task-row__actions {
+  .aa-today__done-section .aa-grouped__item:focus-within .aa-task-row__actions,
+  .aa-today__list .aa-today__row--active .aa-task-row__actions {
     opacity: 1;
   }
   /* Touch fallback below resets opacity back to 1. */

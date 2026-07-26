@@ -226,9 +226,15 @@
   --aa-active-lens-soft-strong: var(--aa-lens-magenta-soft-strong);
 }
 
-/* ---- Actions — row of compact buttons, hover-revealed ----
+/* ---- Actions — row of compact buttons, click/focus-revealed ----
    Stays a row so the project page's full-width move-picker (when expanded)
-   can drop onto its own line via flex-wrap. On touch (no hover), always shown. */
+   can drop onto its own line via flex-wrap. Revealed three ways:
+   1. The owning page toggles a `--active` modifier on the row (click).
+   2. Keyboard focus inside the row (`:focus-within`) — accessibility.
+   3. Touch devices (`@media (hover: none)`) — always shown.
+   Hover-reveal was removed app-wide 2026-07-26 so a long list reads as a
+   list, not a wall of buttons: a row is a deliberate drawer you open.
+   Pages that want click-reveal attach their own `--active` rule. */
 .aa-task-row__actions {
   display: flex;
   align-items: center;
@@ -241,7 +247,6 @@
   transition: opacity var(--aa-dur-fast) var(--aa-ease-out);
 }
 
-.aa-task-row:hover .aa-task-row__actions,
 .aa-task-row:focus-within .aa-task-row__actions {
   opacity: 1;
 }

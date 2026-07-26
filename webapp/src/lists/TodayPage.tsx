@@ -79,6 +79,11 @@ export function TodayPage() {
   const [showDone, setShowDone] = useState(true);
   const { data: doneToday } = useQuery(getDoneToday, undefined);
 
+  // Active row for the click-to-reveal action drawer. Null = no row open.
+  // Mirrors UpcomingPage's pattern. Done-today rows navigate on click instead
+  // (review surface) and keep their always-visible Leave-feedback button.
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+
   // Open tasks: group the CAPPED set (first todayCap) by Goal.
   const groups = useMemo<GroupDef<TaskRowTask>[]>(
     () => (tasks ? groupByGoal(tasks.slice(0, todayCap)) : []),
@@ -215,10 +220,22 @@ export function TodayPage() {
                   key={task.id}
                   task={task}
                   showLens={showLensPill}
-                  onOpen={() => {
-                    pickTask(task);
-                  }}
+                  className={`aa-today__row${activeTaskId === task.id ? " aa-today__row--active" : ""}`}
+                  expanded={activeTaskId === task.id}
+                  onOpen={() =>
+                    setActiveTaskId((current) =>
+                      current === task.id ? null : task.id,
+                    )
+                  }
                 >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => pickTask(task)}
+                    title="Start focus on this task"
+                  >
+                    Do
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -230,7 +247,10 @@ export function TodayPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setDemoteTask(task)}
+                    onClick={() => {
+                      setActiveTaskId(null);
+                      setDemoteTask(task);
+                    }}
                     title="Move back to Upcoming"
                   >
                     Move to Upcoming
@@ -257,10 +277,23 @@ export function TodayPage() {
                       task={task}
                       showLens={showLensPill}
                       muted
-                      onOpen={() => {
-                        pickTask(task);
-                      }}
-                    />
+                      className={`aa-today__row${activeTaskId === task.id ? " aa-today__row--active" : ""}`}
+                      expanded={activeTaskId === task.id}
+                      onOpen={() =>
+                        setActiveTaskId((current) =>
+                          current === task.id ? null : task.id,
+                        )
+                      }
+                    >
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => pickTask(task)}
+                        title="Start focus on this task"
+                      >
+                        Do
+                      </Button>
+                    </TaskRow>
                   </li>
                 ))}
               </ul>

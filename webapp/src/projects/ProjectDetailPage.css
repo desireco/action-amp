@@ -395,14 +395,13 @@
   gap: var(--aa-space-xs);
 }
 
-/* Per-row controls are calm by default — they appear on hover / keyboard focus
-   so a long list reads as a list, not a wall of buttons. When the move picker
-   is open for a row, that row's controls stay visible. */
+/* Per-row controls are calm by default — they appear when the row is opened
+   (click toggles `--active`), keyboard-focused, or carrying an open move
+   picker. A long list reads as a list, not a wall of buttons. */
 .aa-project__row-ctrl {
   opacity: 0;
   transition: opacity var(--aa-dur-fast) var(--aa-ease-out);
 }
-.aa-grouped__item:hover .aa-project__row-ctrl,
 .aa-grouped__item:focus-within .aa-project__row-ctrl,
 .aa-project__row-ctrl[aria-expanded="true"] {
   opacity: 1;

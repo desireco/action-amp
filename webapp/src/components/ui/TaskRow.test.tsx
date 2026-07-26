@@ -182,7 +182,7 @@ describe("TaskRow", () => {
   });
 
   describe("actions slot", () => {
-    it("renders children inside the hover-revealed actions region", () => {
+    it("renders children inside the focus-revealed actions region", () => {
       const { container } = renderInContext(
         <TaskRow task={BASE_TASK}>
           <button type="button">Edit</button>
