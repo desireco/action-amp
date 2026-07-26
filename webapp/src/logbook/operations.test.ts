@@ -46,7 +46,13 @@ describe("getLogbook — query + return shape", () => {
       text: "Decline this for now",
       archivedAt: new Date("2026-06-25"),
     };
-    m.entities.Task.findMany.mockResolvedValue([taskRow]);
+    m.entities.Task.findMany
+      // First call (completed tasks) → the done row. Second call (wont-do)
+      // → empty in this scenario (no declined tasks). mockResolvedValueOnce
+      // pins each; a plain mockResolvedValue would return the same fixture
+      // for both calls.
+      .mockResolvedValueOnce([taskRow])
+      .mockResolvedValueOnce([]);
     m.entities.Project.findMany.mockResolvedValue([projectRow]);
     m.entities.Goal.findMany.mockResolvedValue([goalRow]);
     m.entities.InboxItem.findMany.mockResolvedValue([archivedRow]);
@@ -101,6 +107,7 @@ describe("getLogbook — query + return shape", () => {
           kind: "task",
         },
       ],
+      wontDo: [],
       projects: [
         {
           id: "p1",
@@ -139,6 +146,51 @@ describe("getLogbook — query + return shape", () => {
 
     const result = await getLogbook({ lensId: "lens-1" }, m.context);
 
-    expect(result).toEqual({ tasks: [], projects: [], goals: [], archived: [] });
+    expect(result).toEqual({ tasks: [], wontDo: [], projects: [], goals: [], archived: [] });
+  });
+
+  it("returns wont-do tasks (status=WONT_DO) tagged kind=wont-do", async () => {
+    // The core fires two Task.findMany calls — first for completed (isDone),
+    // second for wont-do (status=WONT_DO). mockResolvedValueOnce pins each.
+    const m = mockContext();
+    const wontDoRow = {
+      id: "t9",
+      description: "Investigate Firebase",
+      updatedAt: new Date("2026-07-20"),
+      size: "M",
+      project: { id: "p1", name: "MVP" },
+    };
+    // First call (completed tasks) → empty; second call (wont-do) → the row.
+    m.entities.Task.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([wontDoRow]);
+    m.entities.Project.findMany.mockResolvedValue([]);
+    m.entities.Goal.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.findMany.mockResolvedValue([]);
+
+    const result = await getLogbook({ lensId: "lens-1" }, m.context);
+
+    expect(result.wontDo).toEqual([
+      {
+        id: "t9",
+        title: "Investigate Firebase",
+        completedAt: wontDoRow.updatedAt,
+        size: "M",
+        project: wontDoRow.project,
+        kind: "wont-do",
+      },
+    ]);
+    // And the wont-do query is filtered correctly.
+    expect(m.entities.Task.findMany).toHaveBeenCalledWith({
+      where: { userId: "user-1", lensId: "lens-1", status: "WONT_DO" },
+      orderBy: { updatedAt: "desc" },
+      select: {
+        id: true,
+        description: true,
+        updatedAt: true,
+        size: true,
+        project: { select: { id: true, name: true } },
+      },
+    });
   });
 });

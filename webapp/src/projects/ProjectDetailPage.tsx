@@ -33,7 +33,7 @@ import { formatRelativeDue } from "../shared/dateFormat";
 import "./ProjectDetailPage.css";
 
 type ProjectTask = TaskRowTask & {
-  status: "TODAY" | "UPCOMING" | "SOMEDAY";
+  status: "TODAY" | "UPCOMING" | "SOMEDAY" | "WONT_DO";
   completedAt: Date | string | null;
 };
 

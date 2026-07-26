@@ -308,10 +308,17 @@ enum Size {
 
 // The post-triage "where it lives" bucket. INBOX is handled by InboxItem (pre-triage).
 // Defaults to SOMEDAY so triage never auto-clutters Today.
+//
+// WONT_DO — the "I considered this and chose not to do it" state. Distinct from
+// done (completed) and from delete (hard-removed at triage): the task stays in
+// the DB, drops out of every active list (positive status filters exclude it),
+// and surfaces in the Logbook's "Won't do" section, where it can be restored.
+// The non-destructive equivalent of delete for post-triage tasks.
 enum TaskStatus {
   SOMEDAY
   UPCOMING
   TODAY
+  WONT_DO
 }
 
 // ============================================================

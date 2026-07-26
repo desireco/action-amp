@@ -26,8 +26,10 @@ type Entities = Record<string, any>;
 // ----------------------------------------------------------------
 // Read: the Logbook — things no longer active, scoped to a Lens
 // ----------------------------------------------------------------
-// Four categories, all read-only (restore/reopen/delete are separate actions):
+// Five categories, all read-only except the wont-do restore (which lives in
+// the Wasp op layer — `updateTaskStatus`):
 //  - completed Tasks  (isDone, completedAt)
+//  - wont-do Tasks    (status=WONT_DO — "I considered this and chose not to")
 //  - completed Projects
 //  - completed Goals  (goal-planning spec §D — same shape as projects, with
 //                      goal: null since a goal has no parent goal)
@@ -40,7 +42,7 @@ export async function getLogbookData(
   entities: Entities,
   { userId, lensId }: { userId: string; lensId: string },
 ) {
-  const [tasks, projects, goals, archived] = await Promise.all([
+  const [tasks, wontDo, projects, goals, archived] = await Promise.all([
     entities.Task.findMany({
       where: {
         userId,
@@ -55,6 +57,24 @@ export async function getLogbookData(
         completedAt: true,
         size: true,
         outcome: true,
+        project: { select: { id: true, name: true } },
+      },
+    }),
+    // Won't-do tasks — status=WONT_DO. The "I considered and chose not to do
+    // this" bucket. Restorable to a horizon via updateTaskStatus (the Logbook
+    // UI is the only place reactivation lives; the task detail view is one-way).
+    entities.Task.findMany({
+      where: {
+        userId,
+        lensId,
+        status: "WONT_DO",
+      },
+      orderBy: { updatedAt: "desc" },
+      select: {
+        id: true,
+        description: true,
+        updatedAt: true,
+        size: true,
         project: { select: { id: true, name: true } },
       },
     }),
@@ -112,6 +132,14 @@ export async function getLogbookData(
       outcome: t.outcome,
       project: t.project,
       kind: "task" as const,
+    })),
+    wontDo: wontDo.map((t: { id: string; description: string; updatedAt: Date | null; size: unknown; project: unknown }) => ({
+      id: t.id,
+      title: t.description,
+      completedAt: t.updatedAt!,
+      size: t.size,
+      project: t.project,
+      kind: "wont-do" as const,
     })),
     projects: projects.map((p: { id: string; name: string; completedAt: Date | null; goal: unknown }) => ({
       id: p.id,

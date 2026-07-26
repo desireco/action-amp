@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "wasp/client/operations";
-import { getLogbook, restoreArchivedItem, setGoalDone, setProjectDone } from "wasp/client/operations";
+import { getLogbook, restoreArchivedItem, setGoalDone, setProjectDone, updateTaskStatus } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { BrandMark, Chip, GroupedList, Markdown, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
@@ -10,8 +10,8 @@ import "./LogbookPage.css";
 interface LogItem {
   id: string;
   title: string;
-  when: Date; // completedAt for tasks/projects/goals, archivedAt for archived notes
-  kind: "task" | "project" | "goal" | "archived";
+  when: Date; // completedAt for tasks/projects/goals, archivedAt for archived notes, updatedAt for wont-do
+  kind: "task" | "wont-do" | "project" | "goal" | "archived";
   size?: string;
   outcome?: string | null; // task only — "what happened" (task-fields §G)
   project?: { id: string; name: string } | null;
@@ -43,6 +43,8 @@ export function LogbookPage() {
       // has a different shape (title vs description, kind, etc.).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...logbook.tasks.map((t: any) => ({ ...t, when: new Date(t.completedAt) })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...logbook.wontDo.map((t: any) => ({ ...t, when: new Date(t.completedAt) })),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...logbook.projects.map((p: any) => ({ ...p, when: new Date(p.completedAt) })),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,6 +95,18 @@ export function LogbookPage() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
   }
 
+  async function handleRestoreWontDo(id: string) {
+    // Reactivate a wont-do task to Upcoming — the safe default horizon (it
+    // re-enters the planning surface without jumping straight onto Today).
+    await updateTaskStatus({ id, status: "UPCOMING" });
+    queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
+    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+    queryClient.invalidateQueries({ queryKey: ["getProject"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+  }
+
   return (
     <div className="aa-logbook">
       <header className="aa-list-header">
@@ -125,8 +139,13 @@ export function LogbookPage() {
                   <Chip variant="violet" small>Project</Chip>
                 ) : item.kind === "archived" ? (
                   <Chip variant="muted" small>Archived</Chip>
+                ) : item.kind === "wont-do" ? (
+                  <Chip variant="muted" small>Won't do</Chip>
                 ) : (
                   item.project && <Chip variant="violet" small>{item.project.name}</Chip>
+                )}
+                {item.kind === "wont-do" && item.project && (
+                  <Chip variant="violet" small>{item.project.name}</Chip>
                 )}
                 {item.goal && <Chip variant="teal" small>{item.goal.name}</Chip>}
               </div>
@@ -137,6 +156,16 @@ export function LogbookPage() {
                 className="aa-logbook-row__restore"
                 onClick={() => void handleRestore(item.id)}
                 title="Send back to the inbox"
+              >
+                Restore
+              </button>
+            )}
+            {item.kind === "wont-do" && (
+              <button
+                type="button"
+                className="aa-logbook-row__restore"
+                onClick={() => void handleRestoreWontDo(item.id)}
+                title="Reactivate — returns to Upcoming"
               >
                 Restore
               </button>

@@ -3,6 +3,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import type { TaskStatus } from "@prisma/client";
 import { Chip } from "./Chip";
 import { formatDueChip } from "../../shared/dateFormat";
 import "./TaskRow.css";
@@ -15,7 +16,9 @@ export interface TaskRowTask {
   isDone?: boolean;
   priority?: "LOW" | "NORMAL" | "IMPORTANT";
   size?: "S" | "M" | "L" | "XL";
-  status?: "TODAY" | "UPCOMING" | "SOMEDAY";
+  // WONT_DO is included so a row can render in restore-from-logbook contexts;
+  // active-list queries never produce it (positive status filters exclude it).
+  status?: TaskStatus;
   dueDate?: Date | string | null;
   project?: { id: string; name: string } | null;
   goal?: { id: string; name: string } | null;

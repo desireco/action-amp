@@ -202,7 +202,7 @@ export const updateTaskStatus = (async (args, context) => {
   });
 }) satisfies UpdateTaskStatus<{
   id: string;
-  status: "TODAY" | "UPCOMING" | "SOMEDAY";
+  status: "TODAY" | "UPCOMING" | "SOMEDAY" | "WONT_DO";
   dueDate?: Date | null;
 }>;
 

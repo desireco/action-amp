@@ -8,6 +8,7 @@ import {
   submitFeedback,
   setTaskOutcome,
   updateTaskDetails,
+  updateTaskStatus,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Breadcrumb, Button, Markdown, PropertyChips, submitOnModEnter } from "../components/ui";
@@ -104,6 +105,30 @@ export function TaskDetailPage() {
     !saving &&
     (description.trim() !== task!.description ||
       content.trim() !== (task!.content ?? ""));
+
+  // "Won't do" — the non-destructive decline. Sets status=WONT_DO (the task
+  // drops out of every active list — positive status filters exclude it) and
+  // surfaces in the Logbook's "Won't do" section, where it can be restored.
+  // One-way from this view per the wont-do spec: reactivation lives in the
+  // Logbook, not on the task detail page. Hidden for done tasks (you can't
+  // decline something you've already completed) and for already-wont-do tasks.
+  const markWontDo = async () => {
+    if (!task || task.isDone || task.status === "WONT_DO") return;
+    try {
+      await updateTaskStatus({ id: task.id, status: "WONT_DO" });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["getTask"] }),
+        queryClient.invalidateQueries({ queryKey: ["getTasks"] }),
+        queryClient.invalidateQueries({ queryKey: ["getTopTask"] }),
+        queryClient.invalidateQueries({ queryKey: ["getProjects"] }),
+        queryClient.invalidateQueries({ queryKey: ["getProject"] }),
+        queryClient.invalidateQueries({ queryKey: ["getLogbook"] }),
+      ]);
+      navigate(returnTo);
+    } catch {
+      setSaveError("Could not mark as won't-do.");
+    }
+  };
 
   const saveTask = async () => {
     if (!task || !canSave) return;
@@ -497,6 +522,28 @@ export function TaskDetailPage() {
             <p className="aa-task-edit__help">
               Save writes the title and notes. Chips above are live.
             </p>
+          )}
+          {/* Won't do — calm placement at the bottom, ghost variant. One-way
+              from here (restore lives in the Logbook). Hidden for done + for
+              already-wont-do tasks (no point declining what's already declined). */}
+          {!task.isDone && task.status !== "WONT_DO" && (
+            <div className="aa-task-edit__wont-do">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Mark this as something you won't do?\n\nIt leaves your lists and surfaces in the Logbook, where you can restore it.",
+                    )
+                  ) {
+                    void markWontDo();
+                  }
+                }}
+              >
+                Won't do
+              </Button>
+            </div>
           )}
         </div>
       )}

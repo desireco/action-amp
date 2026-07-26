@@ -388,7 +388,7 @@ export async function updateTaskStatusCore(
   }: {
     userId: string;
     id: string;
-    status: "TODAY" | "UPCOMING" | "SOMEDAY";
+    status: "TODAY" | "UPCOMING" | "SOMEDAY" | "WONT_DO";
     dueDate?: Date | null;
   },
 ) {

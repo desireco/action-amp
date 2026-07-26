@@ -101,7 +101,7 @@ type ProjectTask = {
   isDone: boolean;
   priority: "LOW" | "NORMAL" | "IMPORTANT";
   size: "S" | "M" | "L" | "XL";
-  status: "SOMEDAY" | "UPCOMING" | "TODAY";
+  status: "SOMEDAY" | "UPCOMING" | "TODAY" | "WONT_DO";
   dueDate: Date | null;
   completedAt: Date | null;
 };

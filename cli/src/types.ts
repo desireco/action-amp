@@ -92,11 +92,12 @@ export type LogbookItem = {
   size?: string;
   project?: { id: string; name: string } | null;
   goal?: { id: string; name: string } | null;
-  kind: "task" | "project" | "goal" | "archived";
+  kind: "task" | "wont-do" | "project" | "goal" | "archived";
 };
 
 export type LogbookEntry = {
   tasks?: LogbookItem[];
+  wontDo?: LogbookItem[];
   projects?: LogbookItem[];
   goals?: LogbookItem[];
   archived?: LogbookItem[];

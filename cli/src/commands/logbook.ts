@@ -46,11 +46,12 @@ export function makeLogbookCommand(): Command {
         result,
         () => {
           const tasks = result.tasks ?? [];
+          const wontDo = result.wontDo ?? [];
           const projects = result.projects ?? [];
           const goals = result.goals ?? [];
           const archived = result.archived ?? [];
 
-          if (tasks.length === 0 && projects.length === 0 && goals.length === 0 && archived.length === 0) {
+          if (tasks.length === 0 && wontDo.length === 0 && projects.length === 0 && goals.length === 0 && archived.length === 0) {
             process.stdout.write("Nothing in the logbook.\n");
             return;
           }
@@ -59,6 +60,12 @@ export function makeLogbookCommand(): Command {
             process.stdout.write(`Completed tasks (${tasks.length}):\n`);
             tasks.forEach((t) => {
               process.stdout.write(`  ${chalk.green("✓")} ${formatLogbookItem(t)}\n`);
+            });
+          }
+          if (wontDo.length > 0) {
+            process.stdout.write(`Won't do (${wontDo.length}):\n`);
+            wontDo.forEach((t) => {
+              process.stdout.write(`  ${chalk.gray("×")} ${formatLogbookItem(t)}\n`);
             });
           }
           if (projects.length > 0) {
