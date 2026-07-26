@@ -1,8 +1,20 @@
 /* Full-screen /share confirmation page. Reuses the captured-toast aesthetic
-   (.aa-capture__captured* tokens + aa-capture-slidein keyframe) but centered
-   as a page, not an overlay.
-   Calm: teal checkmark, neutral card, system font, generous whitespace.
-   No exclamation marks, no streaks, no decorative color (per AGENTS.md). */
+   (teal check, system font) but centered as a page, not an overlay.
+   Calm: no exclamation marks, no streaks, no decorative color (per AGENTS.md).
+   Self-contained — the @keyframes are defined locally because /share is the
+   PWA's share-target cold-launch surface: Overlays.css (where the original
+   aa-capture-slidein lives) may not be loaded yet on a direct /share hit. */
+
+@keyframes aa-share-slidein {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
 
 .aa-share {
   min-height: 100dvh;
@@ -17,7 +29,7 @@
   width: 100%;
   max-width: 420px;
   text-align: center;
-  animation: aa-capture-slidein 220ms var(--aa-ease-out, ease-out) both;
+  animation: aa-share-slidein 220ms var(--aa-ease-out, ease-out) both;
 }
 
 .aa-share__check {

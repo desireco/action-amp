@@ -327,7 +327,7 @@ export default app({
     // sheet (Android/Chrome). auth:true resolves context.user from the
     // wasp_session cookie. See docs/superpowers/specs/2026-07-25-pwa-share-target-design.md.
     api("POST", "/api/share", shareCapture, {
-      entities: ["InboxItem", "User", "Lens"],
+      entities: ["InboxItem", "Lens"],
       auth: true,
       middlewareConfigFn: shareRouteMiddleware,
     }),

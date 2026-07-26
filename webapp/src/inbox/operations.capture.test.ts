@@ -10,7 +10,7 @@ vi.mock("../billing/entitlementHttp", () => ({
   assertUnderCap: vi.fn().mockResolvedValue(undefined),
 }));
 import { mockContext } from "../test/mockContext";
-import { createInboxItem, getInboxItems, getProjectsForResolver } from "./operations";
+import { createInboxItem, getInboxItem, getInboxItems, getProjectsForResolver } from "./operations";
 
 /**
  * Capture + read — the lighter half of inbox operations (triage is covered in
@@ -124,6 +124,50 @@ describe("getInboxItems — scoping", () => {
         parsedLens: true,
       },
     });
+  });
+});
+
+describe("getInboxItem — guards + ownership", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(
+      getInboxItem({ id: "ix-1" }, m.context),
+    ).rejects.toThrow("Not authenticated.");
+  });
+
+  it("returns the full row for the requesting user's own item", async () => {
+    const m = mockContext("user-1");
+    const item = {
+      id: "ix-1", userId: "user-1", text: "Cool — https://x.com",
+      createdAt: new Date("2026-07-25T10:00"), status: "UNPROCESSED",
+      archivedAt: null, parsedDate: null, parsedPriority: null,
+      parsedSize: null, parsedTags: [], parsedProject: null, parsedLens: null,
+    };
+    m.entities.InboxItem.findUnique.mockResolvedValue(item);
+
+    const result = await getInboxItem({ id: "ix-1" }, m.context);
+
+    expect(result).toEqual(item);
+    expect(m.entities.InboxItem.findUnique).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+    });
+  });
+
+  it("returns null when the item belongs to another user", async () => {
+    const m = mockContext("user-1");
+    // A different user's item leaks out of findUnique (shouldn't, but defense).
+    m.entities.InboxItem.findUnique.mockResolvedValue({
+      ...{ id: "ix-1", userId: "user-2", text: "theirs" },
+    });
+    const result = await getInboxItem({ id: "ix-1" }, m.context);
+    expect(result).toBeNull();
+  });
+
+  it("returns null when the item does not exist", async () => {
+    const m = mockContext("user-1");
+    m.entities.InboxItem.findUnique.mockResolvedValue(null);
+    const result = await getInboxItem({ id: "nope" }, m.context);
+    expect(result).toBeNull();
   });
 });
 

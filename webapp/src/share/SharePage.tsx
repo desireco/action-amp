@@ -48,9 +48,11 @@ export function SharePage() {
   );
 
   // Happy-path auto-dismiss. Runs only once we have the item in hand.
+  // Deps use booleans (not the data object) so React Query refetches that
+  // re-emit a new `data` reference don't reset the 3s timer.
+  const hasItem = !!itemQuery.data;
   useEffect(() => {
-    if (!id) return;
-    if (itemQuery.isLoading || itemQuery.error || !itemQuery.data) return;
+    if (!id || itemQuery.isLoading || itemQuery.error || !hasItem) return;
 
     const timer = setTimeout(() => {
       // Invalidate so the shell's inbox count reflects the new item.
@@ -58,6 +60,8 @@ export function SharePage() {
       void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
 
       // Try to close (Android share activity / script-opened windows).
+      // window.close() is silently ignored on OS-opened windows; window.closed
+      // may not flip synchronously — best-effort, the /app fallback covers it.
       window.close();
 
       // If still open after a grace period, land on /app.
@@ -67,14 +71,7 @@ export function SharePage() {
     }, DISMISS_MS);
 
     return () => clearTimeout(timer);
-  }, [
-    id,
-    itemQuery.isLoading,
-    itemQuery.error,
-    itemQuery.data,
-    navigate,
-    queryClient,
-  ]);
+  }, [id, itemQuery.isLoading, itemQuery.error, hasItem, navigate, queryClient]);
 
   // Loading state (id present, query in flight).
   if (id && itemQuery.isLoading) {
@@ -84,11 +81,14 @@ export function SharePage() {
   // Happy path — render the captured item.
   if (id && itemQuery.data) {
     const item = itemQuery.data;
-    // ParsedCaptureChips reads these fields; cleanText is unused for display.
+    // ParsedCaptureChips reads these fields; cleanText is unused for display
+    // (it just satisfies the type). parsedDate is coerced — the wire format
+    // may be an ISO string depending on SuperJSON decoding; new Date() handles
+    // both Date and string, and ParsedCaptureChips re-wraps it anyway.
     const parsed: ParsedCapture = {
       cleanText: item.text,
       parsedLens: item.parsedLens,
-      parsedDate: item.parsedDate,
+      parsedDate: item.parsedDate ? new Date(item.parsedDate) : null,
       parsedProject: item.parsedProject,
       parsedPriority: item.parsedPriority,
       parsedSize: item.parsedSize,
