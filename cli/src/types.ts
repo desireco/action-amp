@@ -63,6 +63,16 @@ export type Goal = {
   _count?: { projects: number; tasks: number };
 };
 
+export type Lens = {
+  id: string;
+  name: string;
+  kind: "PERSONAL" | "WORK" | "CUSTOM";
+  color?: string | null;
+  purpose?: string | null;
+  createdAt?: string;
+  counts?: { goals: number; projects: number; tasks: number };
+};
+
 export type LogbookEntry = {
   tasks?: Task[];
   projects?: Project[];

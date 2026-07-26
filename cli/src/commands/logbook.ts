@@ -1,12 +1,15 @@
 /**
  * logbook — completed tasks, finished projects/goals, archived inbox items.
  *
- * The reflection surface. Optional --lens-id scopes to one lens; default is
- * global (all accessible lenses).
+ * The reflection surface. Optional --lens-id scopes to one lens; without a
+ * flag the active lens in config (set by `lens switch`) is used; if neither
+ * is set the logbook is global (all accessible lenses) — the same default
+ * the server picks when no lensId is sent.
  */
 import { Command } from "commander";
 import chalk from "chalk";
 import { request } from "../api.js";
+import { readConfig } from "../config.js";
 import { emit, formatTask, type OutputCtx } from "../output.js";
 import type { LogbookEntry } from "../types.js";
 
@@ -14,11 +17,12 @@ export function makeLogbookCommand(): Command {
   const cmd = new Command("logbook");
   cmd
     .description("show completed tasks, finished projects/goals, archived items")
-    .option("--lens-id <id>", "scope to one lens (default: all accessible)")
+    .option("--lens-id <id>", "scope to one lens (default: the active lens, else all accessible)")
     .option("--json", "emit JSON output")
     .action(async (opts: { lensId?: string; json?: boolean }) => {
       const ctx: OutputCtx = { json: opts.json ?? false };
-      const qs = opts.lensId ? `?lensId=${encodeURIComponent(opts.lensId)}` : "";
+      const lensId = opts.lensId ?? readConfig()?.lensId;
+      const qs = lensId ? `?lensId=${encodeURIComponent(lensId)}` : "";
       const result = await request<LogbookEntry>(`/api/cli/logbook${qs}`);
       emit(
         result,

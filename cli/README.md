@@ -33,6 +33,10 @@ npm run build && ./dist/index.js     # built
 | `task move <id> --to <list>` | Move (today, upcoming, someday) |
 | `inbox list` | Show unprocessed inbox items |
 | `inbox triage <id> --decision <d>` | Triage an inbox item |
+| `lens list` | List your lenses (active one marked) |
+| `lens show <id\|name>` | Show a single lens (by id or name) |
+| `lens switch <id\|name>` | Set the active lens — `now` / `project list` / `goal list` / `logbook` / `inbox triage` then scope to it without `--lens-id` |
+| `lens current` | Show the active lens |
 | `project list --lens-id <id>` | List projects in a lens |
 | `project show <id>` | Show a project |
 | `project create <name> --lens-id <id>` | Create a project |
@@ -55,12 +59,27 @@ today        → { tasks: [...] }
 task done    → { id, isDone, completedAt, ... }
 task snooze  → { id, status, dueDate }
 inbox list   → { items: [...] }
+lens list    → { lenses: [{ id, name, kind, color, purpose, counts }] }
+lens show    → { lens: {...} | null }
+lens switch  → { ok: true, id, name }
+lens current → { lens: {...} | null }
 project list → { projects: [...] }
 logbook      → { tasks: [...], projects: [...], goals: [...], archived: [...] }
 whoami       → { user: { id, email, fullName, plan } }
 ```
 
 Errors (in `--json` mode): `{ error: "<message>" }` to stdout, exit code 1.
+
+## Active lens
+
+`lens switch <id|name>` stores the active lens in config
+(`~/.config/actionamp/config.json`). Subsequent lens-scoped commands — `now`,
+`project list/create/add-task`, `goal list/create`, `logbook`, `inbox triage`
+— use it automatically when no `--lens-id` flag is passed. An explicit
+`--lens-id` always overrides. There is no server-side active lens; each CLI
+install tracks its own (mirrors the web app's `localStorage["aa-lens-id"]`).
+`today` stays global by design (the cross-lens view). `lens current` shows
+what's active; `lens list` marks it with `← active`.
 
 ## How login works
 

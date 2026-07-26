@@ -72,6 +72,7 @@ import {
   getGoalData,
   createGoalCore,
 } from "../goals/operationsCore";
+import { getLensesCore, getLensCore } from "../lenses/operationsCore";
 import { getLogbookData } from "../logbook/operationsCore";
 import {
   listFeedbackCore,
@@ -1007,6 +1008,54 @@ export const cliGoalCreate = async (req: Request, res: Response, _context: unkno
   } catch (err) {
     console.error("[cli/goal/create] failed:", err);
     return res.status(500).json({ error: "Could not create goal." });
+  }
+};
+
+// ───────────────────────────────────────────────────────────────────────────
+// Lens routes
+// ───────────────────────────────────────────────────────────────────────────
+
+// GET /api/cli/lens/list — every lens the user owns, with per-lens counts. No
+// entitlement gate: listing owned lenses is always allowed (matches the web
+// Settings Lenses tab); gating fires on *use* (lens-scoped reads/writes), not
+// on the listing itself. The active-lens decision lives client-side (the web
+// app stores it in localStorage; the CLI stores it in ~/.config/actionamp).
+export const cliLensList = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!user) {
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+  try {
+    const lenses = await getLensesCore(authEntities, { userId: user.id });
+    return res.status(200).json({ lenses });
+  } catch (err) {
+    console.error("[cli/lens/list] failed:", err);
+    return res.status(500).json({ error: "Could not load lenses." });
+  }
+};
+
+// GET /api/cli/lens/show — query ?idOrName (id OR name). No lens guard (detail
+// reads are unguarded; tenancy is the only check — a FREE user may own a
+// WORK lens seeded before a downgrade and we never block reads of owned data).
+// Resolving by name lets `lens switch Work` work without a uuid copy-paste.
+export const cliLensShow = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!user) {
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+  const idOrName = queryString(req, "idOrName");
+  if (!idOrName) {
+    return res.status(400).json({ error: "An idOrName is required." });
+  }
+  try {
+    const lens = await getLensCore(authEntities, { userId: user.id, idOrName });
+    if (!lens) {
+      return res.status(404).json({ error: "Lens not found." });
+    }
+    return res.status(200).json({ lens });
+  } catch (err) {
+    console.error("[cli/lens/show] failed:", err);
+    return res.status(500).json({ error: "Could not load lens." });
   }
 };
 

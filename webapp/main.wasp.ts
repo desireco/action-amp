@@ -65,6 +65,8 @@ import {
   cliGoalList,
   cliGoalShow,
   cliGoalCreate,
+  cliLensList,
+  cliLensShow,
   cliLogbook,
   cliFeedbackList,
   cliFeedbackShow,
@@ -454,6 +456,19 @@ export default app({
       middlewareConfigFn: patRouteMiddleware,
     }),
     api("POST", "/api/cli/goal/create", cliGoalCreate, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // Lens routes — list (all owned lenses w/ counts) + show (id-or-name).
+    // No entitlement gate: listing + detail reads of owned lenses are always
+    // allowed; gating fires on lens-scoped *use*, not on listing/show.
+    api("GET", "/api/cli/lens/list", cliLensList, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("GET", "/api/cli/lens/show", cliLensShow, {
       entities: [],
       auth: false,
       middlewareConfigFn: patRouteMiddleware,

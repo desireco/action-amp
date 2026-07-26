@@ -24,16 +24,24 @@ vi.mock("../api.js", () => ({
 }));
 
 let stdoutBuf = "";
+let stderrBuf = "";
 const origWrite = process.stdout.write.bind(process.stdout);
+const origErrWrite = process.stderr.write.bind(process.stderr);
 beforeEach(() => {
   stdoutBuf = "";
+  stderrBuf = "";
   process.stdout.write = (chunk: string | Uint8Array) => {
     stdoutBuf += chunk.toString();
+    return true;
+  };
+  process.stderr.write = (chunk: string | Uint8Array) => {
+    stderrBuf += chunk.toString();
     return true;
   };
 });
 afterEach(() => {
   process.stdout.write = origWrite;
+  process.stderr.write = origErrWrite;
 });
 
 const { writeConfig, getConfigPath } = await import("../config.js");
@@ -48,7 +56,7 @@ async function run(cmd: { parseAsync: (a: string[], o: unknown) => Promise<void>
   } catch {
     // commander errors
   }
-  return { stdout: stdoutBuf };
+  return { stdout: stdoutBuf, stderr: stderrBuf };
 }
 
 beforeEach(() => {
@@ -220,5 +228,84 @@ describe("logbook", () => {
     requestMock.mockResolvedValue({ tasks: [], projects: [], goals: [], archived: [] });
     await run(makeLogbookCommand(), ["--lens-id", "l1"]);
     expect(requestMock).toHaveBeenCalledWith("/api/cli/logbook?lensId=l1", undefined);
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Active-lens fallback (set by `lens switch`) — `--lens-id` is now optional on
+// the lens-scoped commands. Flag wins; else config; else a calm error.
+// ───────────────────────────────────────────────────────────────────────────
+
+describe("active-lens fallback", () => {
+  it("project list uses config.lensId when no flag is passed", async () => {
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    requestMock.mockResolvedValue({ projects: [] });
+    await run(makeProjectCommand(), ["list"]);
+    expect(requestMock).toHaveBeenCalledWith(
+      "/api/cli/project/list?lensId=from-cfg",
+      undefined,
+    );
+  });
+
+  it("project list: flag overrides config.lensId", async () => {
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    requestMock.mockResolvedValue({ projects: [] });
+    await run(makeProjectCommand(), ["list", "--lens-id", "from-flag"]);
+    expect(requestMock).toHaveBeenCalledWith(
+      "/api/cli/project/list?lensId=from-flag",
+      undefined,
+    );
+  });
+
+  it("project list: no flag and no config → error, no request", async () => {
+    const { stderr } = await run(makeProjectCommand(), ["list"]);
+    expect(requestMock).not.toHaveBeenCalled();
+    expect(stderr).toContain("lens-id required");
+  });
+
+  it("goal list uses config.lensId when no flag is passed", async () => {
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    requestMock.mockResolvedValue({ goals: [] });
+    await run(makeGoalCommand(), ["list"]);
+    expect(requestMock).toHaveBeenCalledWith(
+      "/api/cli/goal/list?lensId=from-cfg",
+      undefined,
+    );
+  });
+
+  it("goal create uses config.lensId when no flag is passed", async () => {
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    requestMock.mockResolvedValue({ goal: { id: "g1", name: "G", isDone: false } });
+    await run(makeGoalCommand(), ["create", "G"]);
+    expect(requestMock).toHaveBeenCalledWith("/api/cli/goal/create", {
+      method: "POST",
+      body: { name: "G", lensId: "from-cfg" },
+    });
+  });
+
+  it("logbook uses config.lensId when no flag is passed", async () => {
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    requestMock.mockResolvedValue({ tasks: [], projects: [], goals: [], archived: [] });
+    await run(makeLogbookCommand(), []);
+    expect(requestMock).toHaveBeenCalledWith(
+      "/api/cli/logbook?lensId=from-cfg",
+      undefined,
+    );
+  });
+
+  it("logbook: no flag and no config → global (no lensId in path)", async () => {
+    requestMock.mockResolvedValue({ tasks: [], projects: [], goals: [], archived: [] });
+    await run(makeLogbookCommand(), []);
+    expect(requestMock).toHaveBeenCalledWith("/api/cli/logbook", undefined);
+  });
+
+  it("inbox triage uses config.lensId when no flag is passed", async () => {
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    requestMock.mockResolvedValue({ kind: "task", id: "t1" });
+    await run(makeInboxCommand(), ["triage", "i1", "--decision", "task-today"]);
+    expect(requestMock).toHaveBeenCalledWith("/api/cli/inbox/triage", {
+      method: "POST",
+      body: { inboxItemId: "i1", decision: "task-today", lensId: "from-cfg" },
+    });
   });
 });

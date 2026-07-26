@@ -1,10 +1,15 @@
 /**
  * goal — list, show, create.
+ *
+ * `--lens-id` is optional on list/create: an explicit flag wins, else fall
+ * back to the active lens in config (set by `lens switch`). If neither is
+ * set, the command errors with a calm hint rather than the server 400.
  */
 import { Command } from "commander";
 import chalk from "chalk";
 import { request } from "../api.js";
-import { emit, type OutputCtx } from "../output.js";
+import { readConfig } from "../config.js";
+import { emit, fail, type OutputCtx } from "../output.js";
 import type { Goal } from "../types.js";
 
 export function makeGoalCommand(): Command {
@@ -14,12 +19,16 @@ export function makeGoalCommand(): Command {
   goal
     .command("list")
     .description("show goals in a lens")
-    .requiredOption("--lens-id <id>", "lens to list goals in")
+    .option("--lens-id <id>", "lens to list goals in (default: the active lens)")
     .option("--json", "emit JSON output")
-    .action(async (opts: { lensId: string; json?: boolean }) => {
+    .action(async (opts: { lensId?: string; json?: boolean }) => {
       const ctx: OutputCtx = { json: opts.json ?? false };
+      const lensId = opts.lensId ?? readConfig()?.lensId;
+      if (!lensId) {
+        fail("lens-id required (or run: actionamp lens switch <name>).", ctx);
+      }
       const result = await request<{ goals: Goal[] }>(
-        `/api/cli/goal/list?lensId=${encodeURIComponent(opts.lensId)}`,
+        `/api/cli/goal/list?lensId=${encodeURIComponent(lensId!)}`,
       );
       emit(
         result,
@@ -65,12 +74,16 @@ export function makeGoalCommand(): Command {
   goal
     .command("create <name>")
     .description("create a new goal")
-    .requiredOption("--lens-id <id>", "lens to create the goal in")
+    .option("--lens-id <id>", "lens to create the goal in (default: the active lens)")
     .option("--description <text>", "goal description")
     .option("--json", "emit JSON output")
-    .action(async (name: string, opts: { lensId: string; description?: string; json?: boolean }) => {
+    .action(async (name: string, opts: { lensId?: string; description?: string; json?: boolean }) => {
       const ctx: OutputCtx = { json: opts.json ?? false };
-      const body: Record<string, unknown> = { name, lensId: opts.lensId };
+      const lensId = opts.lensId ?? readConfig()?.lensId;
+      if (!lensId) {
+        fail("lens-id required (or run: actionamp lens switch <name>).", ctx);
+      }
+      const body: Record<string, unknown> = { name, lensId: lensId! };
       if (opts.description) body.description = opts.description;
       const result = await request<{ goal: Goal }>("/api/cli/goal/create", {
         method: "POST",
