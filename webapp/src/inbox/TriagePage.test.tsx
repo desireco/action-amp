@@ -301,4 +301,21 @@ describe("TriagePage", () => {
     // Archive bypasses Spec entirely.
     expect(screen.queryByText(/2 · Specify/i)).not.toBeInTheDocument();
   });
+
+  it("renders a Delete type and dispatches the delete decision on click", async () => {
+    triageInboxItem.mockResolvedValue({ id: "deleted-1" });
+    renderTriagePage();
+
+    // Choose the Delete type — Continue relabels to "Delete" and commits directly.
+    fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
+
+    await waitFor(() =>
+      expect(triageInboxItem).toHaveBeenCalledWith(
+        expect.objectContaining({ inboxItemId: "ix-1", decision: "delete" }),
+      ),
+    );
+    // Like Archive, Delete bypasses Spec.
+    expect(screen.queryByText(/2 · Specify/i)).not.toBeInTheDocument();
+  });
 });

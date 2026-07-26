@@ -128,6 +128,7 @@ export function useTriageKeyboard({
           "1": "task",
           "2": "project",
           "3": "resource",
+          "4": "delete",
         };
         const lensIndexByKey: Record<string, number> = {
           a: 0,

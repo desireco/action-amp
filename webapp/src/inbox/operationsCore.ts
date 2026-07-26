@@ -46,7 +46,8 @@ export type TriageDecision =
   | "someday"
   | "project"
   | "resource"
-  | "archive";
+  | "archive"
+  | "delete";
 
 // ----------------------------------------------------------------
 // Capture — create a raw InboxItem (used by the ⌘K popover)
@@ -326,8 +327,11 @@ export async function triageInboxItemCore(
 
   // Entitlement: triage files entities into a lens. FREE users may only file
   // into Me (the Work lens is visible-but-locked). Guards every decision that
-  // creates a lens-scoped entity (task/project). Archive + restore don't.
-  if (assertLens) {
+  // creates a lens-scoped entity (task/project). Archive + delete don't file
+  // anything — they discard — so neither needs a lens and neither runs the
+  // guard (the route still receives a lensId for API symmetry, but it's
+  // unused on these branches).
+  if (assertLens && decision !== "archive" && decision !== "delete") {
     await assertLens(lensId);
   }
 
@@ -358,7 +362,7 @@ export async function triageInboxItemCore(
     projectId ?? null,
   );
 
-  let result: { kind: "task" | "project" | "archive"; id: string };
+  let result: { kind: "task" | "project" | "archive" | "delete"; id: string };
 
   switch (decision) {
     case "task-today":
@@ -419,14 +423,26 @@ export async function triageInboxItemCore(
       result = { kind: "archive", id: item.id };
       break;
     }
+    case "delete": {
+      // "Delete" = captured by mistake. Hard-removes the InboxItem — the row
+      // is gone, not recoverable. This is distinct from Archive (kept) on
+      // purpose: capture-mistakes should be cleanable at the inbox before
+      // they become tasks/projects, and a destructive option honors the
+      // user's explicit "I don't want this stored" intent. Hard-delete
+      // matches every create-type branch (which already destroy the seed).
+      await entities.InboxItem.delete({ where: { id: item.id } });
+      result = { kind: "delete", id: item.id };
+      break;
+    }
     default:
       throw new Error(`Unknown triage decision: ${decision as string}`);
   }
 
-  // The transformation is committed — delete the seed InboxItem. (Archive is
-  // the exception: it marks the item ARCHIVED above, so this delete only runs
-  // for the create-type decisions.)
-  if (decision !== "archive") {
+  // The transformation is committed — delete the seed InboxItem. Archive is
+  // the exception (it marks the item ARCHIVED above); delete already removed
+  // the row in its own case. So this trailing delete only runs for the
+  // create-type decisions (task/project/resource).
+  if (decision !== "archive" && decision !== "delete") {
     await entities.InboxItem.delete({ where: { id: item.id } });
   }
 

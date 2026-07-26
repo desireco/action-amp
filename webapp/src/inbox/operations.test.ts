@@ -14,7 +14,7 @@ import { mockContext } from "../test/mockContext";
 
 /**
  * Triage — the inbox transformation. Canonical Tier C test: the op mutates
- * 4 possible entities across a 6-way decision, then deletes the seed item.
+ * 4 possible entities across a 7-way decision, then deletes the seed item.
  * Highest server-side risk surface in the app, so it gets the deepest cover.
  *
  * Strategy: call the op directly with a mocked context, assert the right
@@ -371,5 +371,29 @@ describe("triageInboxItem — project / resource / archive", () => {
       data: { status: "ARCHIVED", archivedAt: expect.any(Date) },
     });
     expect(m.entities.InboxItem.delete).not.toHaveBeenCalled();
+  });
+
+  it("delete hard-removes the InboxItem and creates nothing", async () => {
+    const m = arrange();
+    const result = await triageInboxItem(
+      { inboxItemId: "ix-1", decision: "delete", lensId: "l" },
+      m.context,
+    );
+
+    expect(result).toEqual({ kind: "delete", id: "ix-1" });
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
+    expect(m.entities.Project.create).not.toHaveBeenCalled();
+    expect(m.entities.Resource.create).not.toHaveBeenCalled();
+    // Delete is destructive: it removes the row outright, not a status flip.
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+    });
+    // And it does NOT also call update (no ARCHIVED status, no archivedAt).
+    expect(m.entities.InboxItem.update).not.toHaveBeenCalled();
+    // The trailing seed-delete guard runs once — but it skips delete (and
+    // archive), so InboxItem.delete is called exactly once (from the case),
+    // not twice. The `withCalledTimes` assertion guards against a regression
+    // where someone removes delete from the guard.
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledTimes(1);
   });
 });

@@ -122,6 +122,15 @@ export function LoudspeakerIcon(p: IconProps) {
   );
 }
 
+/* Delete — trash can (triage "delete" + won't-do surfaces) */
+export function TrashIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M3 4.5h10M6.5 4.5V3.2h3V4.5M5 4.5l.7 8.2h4.6l.7-8.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 /* Moon — theme (dark) */
 export function MoonIcon(p: IconProps) {
   return (

@@ -122,7 +122,8 @@ export const triageInboxItem = (async (args, context) => {
     | "someday"
     | "project"
     | "resource"
-    | "archive";
+    | "archive"
+    | "delete";
   lensId: string;
   goalId?: string;
   projectId?: string;

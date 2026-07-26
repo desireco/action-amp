@@ -95,15 +95,18 @@ What an InboxItem can become (DATA-MODEL.md §3). One input shape, five outputs.
 | reference, not action | **Resource** (link/note) under a **Project or Goal** | "Competitor PDF" → "Q3 launch" |
 | supports a bigger goal | **Project** linked to a **Goal** | "Launch newsletter" → Goal: "Grow audience" |
 | I will not do now | **Archive** — the note is kept (status=ARCHIVED), not deleted | "Maybe later idea" → Logbook |
+| captured by mistake | **Delete** — the InboxItem is hard-removed, not recoverable | misheard voice capture, wrong lens, duplicate |
 
-> **Archive is lossless (decided 2026-06-25).** The old "Trash" decision deleted
-> the InboxItem outright — but people are reluctant to lose a note for declining
-> to act on it, and capture should never be punishing. Archive instead marks the
-> item `ARCHIVED` + stamps `archivedAt`; it leaves the inbox (which filters
-> `UNPROCESSED`) and surfaces in the **Logbook's Archived section**, where a
-> Restore action returns it to the inbox for re-triage. The Logbook is the
-> catch-all record of things no longer active: completed tasks, past projects,
-> and archived notes alike.
+> **Archive vs Delete (re-decided 2026-07-26).** Archive is lossless: marks
+> the item `ARCHIVED` + stamps `archivedAt`, leaves the inbox (which filters
+> `UNPROCESSED`), surfaces in the **Logbook's Archived section**, where a
+> Restore action returns it to the inbox for re-triage. Use Archive for "not
+> now, but keep it." Delete (`4` in Classify) is the destructive path:
+> hard-removes the InboxItem, not recoverable. Use Delete for capture
+> mistakes (misheard voice, wrong lens, duplicate) — the case where the user
+> explicitly does not want the note stored at all. The two coexist because
+> "I'll do this later" and "I never meant to capture this" are different
+> intents; collapsing them into Archive-only lost the latter for months.
 
 **Promotion paths** (an item isn't locked in): Task→Project (the XL nudge),
 Resource→Task, Task→Resource, Task→Someday, Archive→Inbox (via Restore).
@@ -291,8 +294,9 @@ becomes and where it lands.
 | `1` | Type = Task |
 | `2` | Type = Project |
 | `3` | Type = Resource / Note |
+| `4` | Type = Delete (hard-removes the InboxItem — not recoverable) |
 | `/` | Open the full Lens picker when there are more choices |
-| `Enter` | Continue to Spec, or archive immediately when Archive is selected |
+| `Enter` | Continue to Spec, or dispatch immediately when Archive/Delete is selected |
 | `Del` / `Backspace` | Archive (lossless — kept, recoverable from the Logbook) |
 
 > **Lens selection UI (built 2026-07-05).** Lens renders as **large styled

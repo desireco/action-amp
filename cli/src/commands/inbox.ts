@@ -44,9 +44,9 @@ export function makeInboxCommand(): Command {
 
   inbox
     .command("triage <id>")
-    .description("triage an inbox item (decision: task-today, upcoming, someday, project, archive)")
+    .description("triage an inbox item (decision: task-today, upcoming, someday, project, archive, delete)")
     .requiredOption("--decision <decision>", "triage decision")
-    .option("--lens-id <id>", "lens to file into (required for task/project decisions)")
+    .option("--lens-id <id>", "lens to file into (required for task/project/resource; optional for archive/delete)")
     .option("--project-id <id>", "existing project to file into")
     .option("--json", "emit JSON output")
     .action(async (id: string, opts: { decision: string; lensId?: string; projectId?: string; json?: boolean }) => {

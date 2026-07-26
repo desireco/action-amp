@@ -18,6 +18,7 @@ import {
   ProjectsIcon,
   LogbookIcon,
   SomedayIcon,
+  TrashIcon,
 } from "../components/ui/icons";
 import { useActiveLens } from "../app/lensContext";
 import { getProjects } from "wasp/client/operations";
@@ -468,7 +469,9 @@ export function TriagePage() {
                 }}
                 onSetType={(t) => setW({ type: t })}
                 onContinue={() =>
-                  working.type === "archive" ? void dispatch() : setStep("spec")
+                  working.type === "archive" || working.type === "delete"
+                    ? void dispatch()
+                    : setStep("spec")
                 }
               />
             )}
@@ -530,6 +533,7 @@ const TRIAGE_TYPES = [
   { t: "project", label: "Project", sub: "an outcome needing more than one step", Icon: ProjectsIcon },
   { t: "resource", label: "Note", sub: "reference material — not an action", Icon: LogbookIcon },
   { t: "archive", label: "Archive", sub: "not now — keep it for later", Icon: SomedayIcon },
+  { t: "delete", label: "Delete", sub: "get rid of it — not kept", Icon: TrashIcon },
 ] as const;
 
 type ClassifyLens = { id: string; name: string; color?: string | null };
@@ -622,9 +626,17 @@ function ClassifyStep({
         variant="primary"
         className="aa-triage-step__continue"
         onClick={onContinue}
-        disabled={!chosenLensId}
+        // Archive + Delete discard the item — neither files into a lens, so
+        // neither should wait for a lens choice. Every other type does.
+        disabled={
+          !chosenLensId && working.type !== "archive" && working.type !== "delete"
+        }
       >
-        {working.type === "archive" ? "Archive" : "Continue"}
+        {working.type === "archive"
+          ? "Archive"
+          : working.type === "delete"
+            ? "Delete"
+            : "Continue"}
       </Button>
     </div>
   );

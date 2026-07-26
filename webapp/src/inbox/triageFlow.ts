@@ -2,8 +2,8 @@ import type { TriageChip, TriageExit } from "../components/ui";
 import type { ParsedPriority, ParsedSize } from "./parseCapture";
 import { formatRelativeDay } from "../shared/dateFormat";
 
-export type Outcome = "task-today" | "upcoming" | "someday" | "project" | "resource" | "archive";
-export type ChosenType = "task" | "project" | "resource" | "archive";
+export type Outcome = "task-today" | "upcoming" | "someday" | "project" | "resource" | "archive" | "delete";
+export type ChosenType = "task" | "project" | "resource" | "archive" | "delete";
 export type Step = "classify" | "spec";
 
 export const OUTCOME_EXIT: Record<Outcome, TriageExit> = {
@@ -13,6 +13,7 @@ export const OUTCOME_EXIT: Record<Outcome, TriageExit> = {
   project: "up",
   resource: "left",
   archive: "down",
+  delete: "down",
 };
 
 export const WHEN_OPTS = ["Today", "Upcoming", "Someday"] as const;
@@ -59,6 +60,7 @@ export function buildTriageChips(item: ParsedChipSource | null): TriageChip[] {
 }
 
 function buildOutcome(w: Working): Outcome {
+  if (w.type === "delete") return "delete";
   if (w.type === "archive") return "archive";
   if (w.type === "project") return "project";
   if (w.type === "resource") return "resource";
@@ -120,6 +122,7 @@ export function buildDispatchPayload(
       goalId: w.parentGoalId ?? undefined,
     };
   }
+  // archive + delete: just the base — neither files anything into a lens.
   return base;
 }
 

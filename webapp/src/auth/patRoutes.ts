@@ -645,10 +645,19 @@ export const cliInboxTriage = async (req: Request, res: Response, _context: unkn
   const inboxItemId = bodyString(req.body, "inboxItemId");
   const decision = bodyString(req.body, "decision") as TriageDecision | undefined;
   const lensId = bodyString(req.body, "lensId");
-  if (!inboxItemId || !decision || !lensId) {
+  if (!inboxItemId || !decision) {
     return res
       .status(400)
-      .json({ error: "inboxItemId, decision, and lensId are required." });
+      .json({ error: "inboxItemId and decision are required." });
+  }
+  // Archive + delete discard the item — neither files into a lens, so lensId
+  // is optional for them. Every other decision (task/project/resource) needs
+  // a lens to file into.
+  const lensOptional = decision === "archive" || decision === "delete";
+  if (!lensOptional && !lensId) {
+    return res.status(400).json({
+      error: `lensId is required for the "${decision}" decision.`,
+    });
   }
 
   // assertLens: resolve the lens (tenancy-safe) and check the FREE-lens rule.
@@ -699,7 +708,10 @@ export const cliInboxTriage = async (req: Request, res: Response, _context: unkn
       userId: user.id,
       inboxItemId,
       decision,
-      lensId,
+      // Core types lensId as a required string, but archive + delete don't
+      // use it (they discard the item). Pass an empty string in that case so
+      // the type holds; the core's assertLens guard skips the call for them.
+      lensId: lensId ?? "",
       goalId: bodyString(req.body, "goalId"),
       projectId: bodyString(req.body, "projectId"),
       name: bodyString(req.body, "name"),
