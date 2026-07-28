@@ -60,6 +60,14 @@
   gap: var(--aa-space-lg);
 }
 
+/* The empty state belongs to Today's committed-work column, so it follows the
+   same 840px measure as the commitment header instead of the narrower shared
+   empty-state default. */
+.aa-today #aa-today-body > .aa-list-empty {
+  width: 100%;
+  max-width: none;
+}
+
 .aa-today__list .aa-grouped__group {
   padding: var(--aa-space-lg);
   background: var(--aa-surface);
