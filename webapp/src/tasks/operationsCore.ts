@@ -219,7 +219,7 @@ export async function getTopTaskData(
  * equal priority/size. Exported so patRoutes / tests can rank the same pool
  * without duplicating the comparator.
  */
-export function rankTopTask<
+function rankTopTask<
   T extends {
     startedAt: Date | null;
     status: string;

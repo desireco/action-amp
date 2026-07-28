@@ -26,7 +26,7 @@
  * `res.status(402).json(...)` directly.
  */
 import type { Request, Response } from "express";
-import { generateToken, hashToken, TOKEN_PREFIX } from "./pat";
+import { generateToken, hashToken } from "./pat";
 import { authEntities } from "./prisma";
 // Side-effect import: loads the `declare module "express-serve-static-core"`
 // augmentation that adds `req.patUser` / `req.patApiKeyId` to Express's
@@ -1305,4 +1305,3 @@ export const cliAdminFeedback = async (req: Request, res: Response, _context: un
 };
 
 // Exported for tests + the CLI client (Phase 1) to reference the token format.
-export { TOKEN_PREFIX };

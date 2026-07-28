@@ -27,7 +27,7 @@ function rawId(): string {
 }
 
 /** Format an 8-char id as `XXXX-XXXX`. Pass through if already 8 chars. */
-export function formatShortId(raw: string): string {
+function formatShortId(raw: string): string {
   const clean = raw.replace(/-/g, "").toUpperCase().slice(0, ID_LEN);
   return `${clean.slice(0, GROUP_LEN)}-${clean.slice(GROUP_LEN)}`;
 }
@@ -55,7 +55,7 @@ export async function uniqueShortId(
  * isn't a plausible 8-char id (so callers can fall back to treating it as
  * a UUID).
  */
-export function normalizeShortId(input: string): string | null {
+function normalizeShortId(input: string): string | null {
   const stripped = input.replace(/-/g, "").toUpperCase();
   if (stripped.length !== ID_LEN) return null;
   // Crockford canonicalization: map confusable input back to the alphabet.

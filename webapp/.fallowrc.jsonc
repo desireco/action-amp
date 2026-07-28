@@ -25,7 +25,10 @@
     "node_modules/**",
     ".playwright-cli/**",
     "test-results/**",
-    "src/auth/google/**"
+    "src/auth/google/**",
+    // Browser-served PWA runtime asset; it is loaded by the browser rather
+    // than imported from the TypeScript module graph.
+    "public/service-worker.js"
   ],
 
   // ── Packages provided by the Wasp runtime / test harness ────────────────
@@ -60,7 +63,29 @@
   // shipped. Suppress the export + barrel re-export until the feature lands.
   "ignoreExports": [
     { "file": "src/components/ui/ResourcePickerSheet.tsx", "exports": ["ResourcePickerSheet"] },
-    { "file": "src/components/ui/index.ts", "exports": ["ResourcePickerSheet"] }
+    { "file": "src/components/ui/index.ts", "exports": ["ResourcePickerSheet"] },
+    {
+      "file": "src/admin/operationsCore.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "src/feedback/operationsCore.ts",
+      "exports": ["*"]
+    },
+    {
+      // Keep the legacy operations barrel stable for callers outside the
+      // module graph; the CLI routes intentionally import the pure cores.
+      "file": "src/tasks/operations.ts",
+      "exports": [
+        "PRIORITY_RANK",
+        "SIZE_RANK",
+        "getTopTaskData",
+        "toggleTaskDoneCore",
+        "snoozeTaskCore",
+        "startTaskCore",
+        "pauseTaskCore"
+      ]
+    }
   ],
 
   "ignoreExportsUsedInFile": false

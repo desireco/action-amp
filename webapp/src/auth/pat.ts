@@ -29,7 +29,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
 /** Prefix that identifies an ActionAmp PAT in logs and secret scanners. */
-export const TOKEN_PREFIX = "aa_";
+const TOKEN_PREFIX = "aa_";
 
 /** Generate a new plaintext PAT. Return this to the user exactly once. */
 export function generateToken(): string {
