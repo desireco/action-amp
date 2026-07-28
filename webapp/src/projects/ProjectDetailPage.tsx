@@ -170,14 +170,15 @@ export function ProjectDetailPage() {
       return ageMs <= 7 * 86_400_000;
     }).length ?? 0;
 
-  // Next-step candidate: the single TODAY task, lifted out as a pointer only
-  // when there is exactly one. With zero or 2+ TODAY tasks the Today group
-  // renders normally — we don't fabricate a winner from a tie.
+  // Next-step candidate: the first Today task. A project can have more than
+  // one task scheduled for today, but that should never hide the way to begin:
+  // start the first one right from this page and leave the remaining tasks in
+  // the Today group below.
   const todayTasks = useMemo(
     () => (project?.tasks ?? []).filter((t) => !t.isDone && t.status === "TODAY"),
     [project],
   );
-  const nextStep = todayTasks.length === 1 ? todayTasks[0] : null;
+  const nextStep = todayTasks[0] ?? null;
 
   // "Nothing queued for today" cue — shown only when there are zero open Today
   // tasks AND at least one open Upcoming task to promote. Today is a commitment
@@ -482,11 +483,10 @@ export function ProjectDetailPage() {
                   </div>
                 )}
 
-                {/* NEXT STEP — only when there is exactly one Today task. The page
-                    points at the one thing to do, same loop as the home screen's
-                    Do-this (startTask → /app/focus). With 0 or 2+ Today tasks the
-                    Today group below carries the load; we don't fabricate a
-                    winner from a tie. */}
+                {/* NEXT STEP — whenever the project has a Today task. The page
+                    always provides an immediate way to begin, using the same
+                    loop as the home screen (startTask → /app/focus). Other
+                    Today tasks remain available in the group below. */}
                 {nextStep && (
                   <div className="aa-project__next">
                     <div className="aa-project__next-eyebrow">Next step</div>

@@ -105,9 +105,7 @@ beforeEach(() => {
   updateTaskContent.mockResolvedValue({ id: "t1" });
 });
 
-/** Two Today tasks so the Next-step hero does NOT lift a row out of the list
- *  (the hero only renders for exactly one Today task). Keeps the move-task
- *  row-based assertions valid. */
+/** Two Today tasks to cover the multiple-task start affordance. */
 function makeProjectMultiToday(overrides: Record<string, unknown> = {}) {
   return makeProject({
     tasks: [
@@ -119,12 +117,14 @@ function makeProjectMultiToday(overrides: Record<string, unknown> = {}) {
 }
 
 function openTaskActions(description: string) {
-  fireEvent.click(screen.getByText(description));
+  const title = screen
+    .getAllByText(description)
+    .find((element) => element.classList.contains("aa-task-row__title"));
+  if (!title) throw new Error(`Couldn't find task row for ${description}.`);
+  fireEvent.click(title);
 }
 
 describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
-  // Uses the multi-Today fixture so the Next-step hero does not lift the row
-  // out of the list (the hero renders only for exactly one Today task).
   it("a task row exposes a Move button that expands the picker", () => {
     projectData.current = makeProjectMultiToday();
     lensProjectsData.current = [
@@ -228,7 +228,10 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
     projectData.current = makeProjectMultiToday();
     renderAt("/app/projects/p1");
 
-    const row = screen.getByText("Email Sarah").closest(".aa-project__row")!;
+    const row = screen
+      .getAllByText("Email Sarah")
+      .find((element) => element.classList.contains("aa-task-row__title"))
+      ?.closest(".aa-project__row")!;
     const trigger = row.querySelector(".aa-task-row__main")!;
     openTaskActions("Email Sarah");
 
@@ -321,14 +324,24 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
     expect(screen.getByRole("button", { name: /start/i })).toBeInTheDocument();
   });
 
-  it("does not render the hero when there are two or more Today tasks", () => {
+  it("renders the first Today task as a startable next step when multiple are scheduled", () => {
     projectData.current = makeProjectMultiToday();
     renderAt("/app/projects/p1");
 
-    expect(screen.queryByText(/next step/i)).not.toBeInTheDocument();
-    // Both tasks still appear in the Today group.
-    expect(screen.getByText("Email Sarah")).toBeInTheDocument();
+    expect(screen.getByText(/next step/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /email sarah/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /start/i })).toBeInTheDocument();
+    // The other task still remains available in the Today group.
     expect(screen.getByText("Draft the brief")).toBeInTheDocument();
+  });
+
+  it("Start begins the first Today task when multiple are scheduled", async () => {
+    projectData.current = makeProjectMultiToday();
+    renderAt("/app/projects/p1");
+
+    fireEvent.click(screen.getByRole("button", { name: /start/i }));
+
+    await waitFor(() => expect(startTask).toHaveBeenCalledWith({ id: "t1" }));
   });
 
   it("Start starts the task and routes to focus mode", async () => {
