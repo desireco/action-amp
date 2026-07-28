@@ -6,6 +6,10 @@ import { wasp } from "wasp/client/vite";
 // Scope: src/** only — excludes .wasp/out generated code.
 export default defineConfig({
   plugins: [wasp()],
+  define: {
+    // Keep the test environment aligned with Vite's production define.
+    __APP_VERSION__: JSON.stringify("test"),
+  },
   test: {
     environment: "jsdom",
     environmentOptions: {

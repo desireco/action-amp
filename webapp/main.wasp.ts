@@ -109,7 +109,7 @@ import { serverSetup } from "./src/serverSetup" with { type: "ref" };
 export default app({
   name: "ActionAmp",
   title: "ActionAmp",
-  wasp: { version: "^0.24.0" },
+  wasp: { version: "^0.25.0" },
   head: [
     "<link rel='icon' type='image/svg+xml' href='/favicon.svg' />",
     "<link rel='icon' type='image/x-icon' href='/favicon.ico' />",
