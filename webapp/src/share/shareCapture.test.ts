@@ -13,7 +13,7 @@ import { createInboxItemCore } from "../inbox/operationsCore";
 import type { Response } from "express";
 
 function makeRes(): Response {
-  return { redirect: vi.fn() } as unknown as Response;
+  return { redirect: vi.fn(), status: vi.fn().mockReturnThis(), json: vi.fn() } as unknown as Response;
 }
 
 beforeEach(() => {
@@ -73,5 +73,17 @@ describe("shareCapture", () => {
       303,
       `/share?id=${encodeURIComponent(trickyId)}`,
     );
+  });
+
+  it("returns redirect data for the service-worker bridge", async () => {
+    const req = { body: { url: "https://x.com" }, query: { response: "json" } } as any;
+    const res = makeRes();
+    (createInboxItemCore as any).mockResolvedValue({ id: "item-1" });
+
+    await shareCapture(req, res, { user: { id: "u1" }, entities: {} });
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ redirect: "/share?id=item-1" });
+    expect(res.redirect).not.toHaveBeenCalled();
   });
 });

@@ -19,6 +19,10 @@ import { composeShareText, type ShareFields } from "./composeShareText";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type WaspApiContext = { user?: { id: string }; entities: any };
 
+function respondWithRedirect(res: Response, redirect: string, json: boolean) {
+  return json ? res.status(200).json({ redirect }) : res.redirect(303, redirect);
+}
+
 function extractFields(body: unknown): ShareFields {
   if (!body || typeof body !== "object") return {};
   const b = body as Record<string, unknown>;
@@ -34,22 +38,27 @@ export const shareCapture = async (
   res: Response,
   context: WaspApiContext,
 ) => {
+  // The installed PWA's same-origin service worker forwards share forms here.
+  // It requests JSON so it can redirect the Android share activity back to the
+  // app origin; direct POSTs retain the normal 303 behavior.
+  const wantsJson = req.query?.response === "json";
+
   // auth:true → context.user is set iff the cookie was present.
   if (!context.user) {
-    return res.redirect(303, "/login");
+    return respondWithRedirect(res, "/login", wantsJson);
   }
 
   const text = composeShareText(extractFields(req.body));
-  if (!text) return res.redirect(303, "/share?error=empty");
+  if (!text) return respondWithRedirect(res, "/share?error=empty", wantsJson);
 
   try {
     const created = await createInboxItemCore(context.entities, {
       userId: context.user.id,
       text,
     });
-    return res.redirect(303, `/share?id=${encodeURIComponent(created.id)}`);
+    return respondWithRedirect(res, `/share?id=${encodeURIComponent(created.id)}`, wantsJson);
   } catch (err) {
     console.error("[share] capture failed:", err);
-    return res.redirect(303, "/share?error=server");
+    return respondWithRedirect(res, "/share?error=server", wantsJson);
   }
 };

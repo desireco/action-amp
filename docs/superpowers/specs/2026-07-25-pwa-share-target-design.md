@@ -68,10 +68,10 @@ resolves `context.user` automatically.
 [Other app] → share sheet → [ActionAmp PWA]
                                   │
                                   ▼  POST form-encoded (title/text/url)
-                      manifest.json share_target.action = "/api/share"
+                      manifest.json share_target.action = "/share"
                                   │
                                   ▼
-                      POST /api/share  (session-authed Wasp api, auth:true)
+                      service worker → POST /api/share  (session-authed Wasp api, auth:true)
                           │            ─ composes "Title — url" (§Text composition)
                           │            ─ createInboxItemCore() (the existing pure core)
                           │
@@ -133,9 +133,10 @@ Append to `webapp/public/manifest.json`:
 - `method: "POST"` (not GET) — keeps the payload out of URLs/history/referrers.
 - `enctype: "application/x-www-form-urlencoded"` (not `multipart/form-data`) —
   text fields only; smaller payload, simpler parsing.
-- `action: "/api/share"` — posts to the server handler, which 303-redirects
-  to `/share` for the confirmation page. The endpoint and page must remain
-  distinct: Wasp page routes do not handle form POSTs.
+- `action: "/share"` — share-target actions must stay on the PWA origin.
+  The service worker intercepts this POST, forwards it to `/api/share` on the
+  API origin with the session cookie, then redirects to `/share` for the
+  confirmation page. The static client host does not handle POSTs itself.
 - `params` maps the share sheet's `title`/`text`/`url` keys to form field names.
 
 ### 2. Text composition — `composeShareText`
@@ -306,8 +307,8 @@ safe to lift. `SharePage` imports it alongside the `ParsedCapture` type.
 
 ## Data flow
 
-1. User shares from another app → Android POSTs the form to `/api/share`.
-   ActionAmp redirects to `/share` with the result.
+1. User shares from another app → Android POSTs the form to `/share`. The
+   service worker forwards it to `/api/share`, then redirects to `/share`.
 2. `POST /api/share`:
    - Cookie present → `context.user` set → `composeShareText` →
      `createInboxItemCore` → `303 /share?id=<itemId>`.
