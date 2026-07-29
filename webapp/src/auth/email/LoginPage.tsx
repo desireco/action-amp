@@ -106,7 +106,7 @@ export function LoginPage() {
     <AuthLayout
       title={codeSent ? "Enter your code." : "Welcome back."}
       subtitle={codeSent
-        ? "We sent a six-digit code and a sign-in link to your email. Enter the code here, or use the link to sign in."
+        ? `We sent a six-digit code and a sign-in link to ${email}. Enter the code here, or use the link to sign in.`
         : "We’ll email a code. No password needed."}
       footer={
         <>
