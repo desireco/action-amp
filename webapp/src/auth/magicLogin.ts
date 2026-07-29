@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomInt, randomUUID } from "node:crypto";
 import { hashPassword } from "@wasp.sh/lib-auth/node";
 import { HttpError } from "wasp/server";
+import { emailSender } from "wasp/server/email";
 import type { RequestMagicLogin, VerifyMagicLogin } from "wasp/server/operations";
 import { createSession } from "wasp/auth/session";
 import { createProviderId, createUser, findAuthIdentity } from "wasp/server/auth";
@@ -54,8 +55,6 @@ function displayNameFromEmail(email: string): { fullName: string; firstName: str
 async function sendLoginEmail(email: string, code: string, token: string): Promise<void> {
   const baseUrl = process.env.WASP_WEB_CLIENT_URL ?? "http://localhost:4000";
   const loginUrl = `${baseUrl}/login?magic=${encodeURIComponent(token)}`;
-  const emailModule = "wasp/server/" + "email";
-  const { emailSender } = await import(emailModule);
   await emailSender.send({
     to: email,
     subject: "Your ActionAmp sign-in code",
