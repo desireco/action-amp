@@ -1,3 +1,4 @@
+import React from "react";
 import { Text, render } from "react-email";
 import {
   TransactionalEmail,
