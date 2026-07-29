@@ -39,8 +39,8 @@ shared content to the inbox.
 
 **Flow:**
 
-1. User shares from another app → Android opens the PWA at `/share` with a
-   POSTed form (`title` / `text` / `url`).
+1. User shares from another app → Android POSTs the form to `/api/share`.
+   ActionAmp redirects to `/share` with the result.
 2. `POST /api/share` composes a single string (`Title — url` precedence — see
    `composeShareText`) and saves it via `createInboxItemCore` — the same core
    `⌘K` capture and the CLI use.
@@ -57,7 +57,7 @@ shared content to the inbox.
 
 **Wiring:**
 
-- `webapp/public/manifest.json` — the `share_target` block (action `/share`,
+- `webapp/public/manifest.json` — the `share_target` block (action `/api/share`,
   method POST, enctype `application/x-www-form-urlencoded`).
 - `webapp/src/share/` — `shareCapture.ts` (route handler),
   `composeShareText.ts` (field composition), `shareRouteMiddleware.ts`

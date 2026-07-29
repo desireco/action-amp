@@ -68,7 +68,7 @@ resolves `context.user` automatically.
 [Other app] → share sheet → [ActionAmp PWA]
                                   │
                                   ▼  POST form-encoded (title/text/url)
-                      manifest.json share_target.action = "/share"
+                      manifest.json share_target.action = "/api/share"
                                   │
                                   ▼
                       POST /api/share  (session-authed Wasp api, auth:true)
@@ -133,8 +133,9 @@ Append to `webapp/public/manifest.json`:
 - `method: "POST"` (not GET) — keeps the payload out of URLs/history/referrers.
 - `enctype: "application/x-www-form-urlencoded"` (not `multipart/form-data`) —
   text fields only; smaller payload, simpler parsing.
-- `action: "/share"` — same path serves the POST (server route → 303) and the
-  GET (the confirmation page). One URL, two methods.
+- `action: "/api/share"` — posts to the server handler, which 303-redirects
+  to `/share` for the confirmation page. The endpoint and page must remain
+  distinct: Wasp page routes do not handle form POSTs.
 - `params` maps the share sheet's `title`/`text`/`url` keys to form field names.
 
 ### 2. Text composition — `composeShareText`
@@ -305,8 +306,8 @@ safe to lift. `SharePage` imports it alongside the `ParsedCapture` type.
 
 ## Data flow
 
-1. User shares from another app → Android opens the installed PWA at `/share`
-   with a POSTed form (`title` / `text` / `url`).
+1. User shares from another app → Android POSTs the form to `/api/share`.
+   ActionAmp redirects to `/share` with the result.
 2. `POST /api/share`:
    - Cookie present → `context.user` set → `composeShareText` →
      `createInboxItemCore` → `303 /share?id=<itemId>`.
