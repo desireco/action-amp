@@ -86,11 +86,10 @@ import { AdminPage } from "./src/admin/AdminPage" with { type: "ref" };
 import { CliLoginPage } from "./src/auth/CliLoginPage" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
 import { LoginPage } from "./src/auth/email/LoginPage" with { type: "ref" };
-import { PasswordResetPage } from "./src/auth/email/PasswordResetPage" with { type: "ref" };
-import { RequestPasswordResetPage } from "./src/auth/email/RequestPasswordResetPage" with { type: "ref" };
 import { SignupPage } from "./src/auth/email/SignupPage" with { type: "ref" };
 import { userSignupFields } from "./src/auth/email/userSignupFields" with { type: "ref" };
 import { prepareDevAutologin } from "./src/auth/devAutologin" with { type: "ref" };
+import { requestMagicLogin, verifyMagicLogin } from "./src/auth/magicLogin" with { type: "ref" };
 import { globalMiddlewareConfigFn } from "./src/auth/serverMiddleware" with { type: "ref" };
 // Google social auth — disabled to skip GOOGLE_CLIENT_ID/SECRET setup for now.
 // All supporting code (config, GoogleButton, userSignupFields) stays in place;
@@ -135,8 +134,11 @@ export default app({
         emailVerification: {
           clientRoute: "EmailVerificationRoute",
         },
+        // Wasp requires this config even though ActionAmp does not expose
+        // password reset. A stale provider reset link lands on passwordless
+        // login, where it cannot change a password.
         passwordReset: {
-          clientRoute: "PasswordResetRoute",
+          clientRoute: "LoginRoute",
         },
       },
       // Google social auth — disabled (see imports note above).
@@ -216,17 +218,13 @@ export default app({
     route("CliLoginRoute", "/cli/login", page(CliLoginPage, { authRequired: true })),
     route("SignupRoute", "/signup", page(SignupPage)),
     route(
-      "RequestPasswordResetRoute",
-      "/request-password-reset",
-      page(RequestPasswordResetPage),
-    ),
-    route("PasswordResetRoute", "/password-reset", page(PasswordResetPage)),
-    route(
       "EmailVerificationRoute",
       "/email-verification",
       page(EmailVerificationPage),
     ),
     action(prepareDevAutologin, { auth: false }),
+    action(requestMagicLogin, { entities: ["MagicLoginChallenge"], auth: false }),
+    action(verifyMagicLogin, { entities: ["MagicLoginChallenge"], auth: false }),
     // CLI OAuth mint — the /cli/login page calls this to mint a PAT on confirm.
     // A Wasp action (not a custom api route) so it goes through /operations/*
     // where CORS+credentials are properly handled cross-origin.

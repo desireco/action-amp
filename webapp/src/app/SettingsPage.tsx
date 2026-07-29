@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import { useAuth, logout, requestPasswordReset } from "wasp/client/auth";
+import { useAuth, logout } from "wasp/client/auth";
 import { updateProfile } from "wasp/client/operations";
 import { Button, ConfirmDialog } from "../components/ui";
 import { SettingsLayout } from "./SettingsLayout";
@@ -20,8 +20,6 @@ export function SettingsPage() {
   const [preferredName, setPreferredName] = useState("");
   const [profileStatus, setProfileStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [passwordStatus, setPasswordStatus] = useState<"idle" | "sending" | "sent">("idle");
-  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -45,22 +43,6 @@ export function SettingsPage() {
     } catch (err) {
       setProfileStatus("idle");
       setProfileError(err instanceof Error ? err.message : "Could not save profile.");
-    }
-  }
-
-  async function sendPasswordReset() {
-    if (!email) {
-      setPasswordError("Add an email login before changing password.");
-      return;
-    }
-    setPasswordStatus("sending");
-    setPasswordError(null);
-    try {
-      await requestPasswordReset({ email });
-      setPasswordStatus("sent");
-    } catch (err) {
-      setPasswordStatus("idle");
-      setPasswordError(err instanceof Error ? err.message : "Could not send reset link.");
     }
   }
 
@@ -119,31 +101,10 @@ export function SettingsPage() {
         <div className="aa-settings-section-head">
           <h2 className="aa-settings-sh">Sign-in</h2>
           <p className="aa-settings-note">
-            Email identifies the account. Password changes happen by reset link.
+            Email identifies the account. We send a fresh sign-in code when you log in.
           </p>
         </div>
         <Field label="Email address" description={email ? "Primary sign-in email." : "No email login attached."} value={email ?? "Not connected"} />
-        <Field
-          label="Password"
-          description={
-            email
-              ? "Send a reset link to your email."
-              : "Password changes require an email login."
-          }
-        >
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={sendPasswordReset}
-            disabled={!email || passwordStatus === "sending"}
-          >
-            {passwordStatus === "sending" ? "Sending" : "Send reset link"}
-          </Button>
-        </Field>
-        {passwordStatus === "sent" && (
-          <p className="aa-settings-success">Reset link sent to {email}.</p>
-        )}
-        {passwordError && <p className="aa-settings-error">{passwordError}</p>}
       </section>
 
       <section className="aa-settings-section">

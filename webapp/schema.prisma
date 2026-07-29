@@ -90,6 +90,22 @@ model User {
   lastActiveAt  DateTime?
 }
 
+// A short-lived, single-use credential for passwordless email login. Codes and
+// link tokens are stored as hashes only; the raw values exist only in the email.
+model MagicLoginChallenge {
+  id        String   @id
+  email     String
+  codeHash  String
+  tokenHash String   @unique
+  expiresAt DateTime
+  consumedAt DateTime?
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([expiresAt])
+}
+
 // One account may subscribe from several browsers/devices. Endpoints can be
 // revoked by their push provider, so send failures remove only that endpoint.
 model PushSubscription {

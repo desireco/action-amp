@@ -1,6 +1,6 @@
 ---
 slug: auth
-title: "Auth (email live; Google OAuth written but disabled)"
+title: "Auth (passwordless email live; Google OAuth written but disabled)"
 feature_area: foundation
 status: partial
 spec: social-auth-google.md     # done (code-side) — but see reality note
@@ -9,9 +9,10 @@ verified: 2026-07-03
 
 # Auth
 
-**Email — live.** `auth/email/*` (Login, Signup, EmailVerification,
-PasswordReset, RequestPasswordReset) + `userSignupFields`. Enabled in
-`main.wasp.ts`.
+**Passwordless email — live.** `/login` sends a one-time code and sign-in link;
+both create normal Wasp sessions. `auth/magicLogin.ts` owns the challenge flow.
+The email provider remains enabled underneath for identity + session support,
+but password reset is not offered.
 
 **Google OAuth — written, NOT wired.** Code exists (`auth/google/`,
 `GoogleButton.tsx`) but:

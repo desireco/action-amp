@@ -1,12 +1,27 @@
 # ActionAmp — Email Integration (Resend)
 
 > Status: **Implemented**. Transactional email — auth verification, password
-> reset, feedback, welcome — is sent through Wasp's native **Resend** provider.
+> feedback, welcome, and passwordless sign-in — is sent through Wasp's native
+> **Resend** provider.
 > `webapp/main.wasp.ts` is source of truth for the transport configuration.
 >
 > Companion docs: `webapp/main.wasp.ts` (`emailSender` config),
 > `webapp/src/auth/email/` (the auth email pages). Authority for *how* email is
 > delivered.
+
+## Passwordless sign-in
+
+`/login` is passwordless. A user enters their email, then can either enter the
+six-digit code from the email or click its one-time sign-in link. Both paths
+create a standard Wasp session, so the rest of the app keeps its normal auth
+behavior.
+
+- Codes and link tokens are hashed at rest, expire after 10 minutes, and are
+  consumed once.
+- Code verification permits five attempts; sends are limited to one active
+  challenge per address per minute.
+- On localhost, no email is sent; the code is always `111111` for manual QA.
+  Production generates a cryptographically random code and sends the email.
 
 ---
 
@@ -76,7 +91,7 @@ emailSender: {
 
 ## 5. Verifying delivery
 
-1. Trigger a real send (e.g. password reset on `app.actionamp.com/login`).
+1. Trigger a real send by requesting a passwordless sign-in code.
 2. Check **Resend dashboard → Logs**: the send's `last_event` should reach
    `delivered`.
 3. Programmatic check: `GET https://api.resend.com/emails` with
@@ -89,12 +104,9 @@ emailSender: {
 
 These cost real time during the original investigation — keep them in mind:
 
-- **`request-password-reset` returns `200` even when the send fails.** Wasp
-  swallows send errors (anti-enumeration) and logs them server-side. A `200`
-  response does **not** mean the email was sent.
-- **60-second resend cooldown.** Repeated reset requests inside 60s are silently
-  dropped (`isEmailResendAllowed`, `resendInterval = 60_000`). Rapid re-testing
-  looks like "no email" when really it's the cooldown.
+- **Passwordless sign-in requests are rate-limited to one active challenge per
+  address per minute.** Rapid re-testing looks like "no email" when the
+  existing challenge is still active.
 - **"Works locally, fails on prod" + `ETIMEDOUT` at `CONN` = network egress.**
   Not auth, not keys, not config. Reach for the HTTP API, don't tune SMTP.
 - **Separate databases.** A test email may be registered in dev (via the
