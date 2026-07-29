@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { createInboxItem } from "wasp/client/operations";
 import { composeShareText, type ShareFields } from "./composeShareText";
 import { clearPendingShare, getPendingShare } from "./pendingShare";
 import "./SharePage.css";
-
-const API_URL = (import.meta.env.REACT_APP_API_URL ?? "").replace(/\/$/, "");
 
 const ERROR_COPY: Record<string, string> = {
   empty: "Nothing to capture.",
@@ -47,25 +46,16 @@ export function SharePage() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const body = new URLSearchParams();
-      for (const [field, value] of Object.entries(pending.fields)) {
-        if (typeof value === "string") body.set(field, value);
-      }
-      const response = await fetch(`${API_URL}/api/share?response=json`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body,
-        credentials: "include",
-      });
-      const result = await response.json().catch(() => ({})) as { redirect?: string };
-      if (!response.ok || typeof result.redirect !== "string" || !result.redirect.startsWith("/")) {
-        throw new Error("Could not add this to your inbox.");
-      }
+      const text = composeShareText(pending.fields);
+      if (!text) throw new Error("Nothing to capture.");
+      // Use the normal Wasp capture action, not the cross-origin share API.
+      // Inbox reads through the same authenticated operation, so a confirmed
+      // item cannot be written under a different stale cookie session.
+      const created = await createInboxItem({ text });
       await clearPendingShare(pending.id);
       void queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-      const itemId = new URL(result.redirect, window.location.origin).searchParams.get("id");
-      navigate(itemId ? `/app/inbox?shared=${encodeURIComponent(itemId)}` : "/app/inbox", { replace: true });
+      navigate(`/app/inbox?shared=${encodeURIComponent(created.id)}`, { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Could not add this to your inbox.");
     } finally {
