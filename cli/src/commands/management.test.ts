@@ -110,13 +110,14 @@ describe("project list", () => {
   it("lists projects with counts", async () => {
     requestMock.mockResolvedValue({
       projects: [
-        { id: "p1", name: "ProjectX", permalink: "projectx", isDone: false, taskCount: 3 },
+        { id: "p1", name: "ProjectX", permalink: "projectx", isDone: false, taskCount: 3, resources: [{ id: "r1", title: "Launch brief", url: "https://example.com", notes: null }] },
         { id: "p2", name: "ProjectY", permalink: "projecty", isDone: true, taskCount: 0 },
       ],
     });
     const { stdout } = await run(makeProjectCommand(), ["list", "--lens-id", "l1"]);
     expect(stdout).toContain("ProjectX");
     expect(stdout).toContain("ProjectY");
+    expect(stdout).toContain("Launch brief");
     expect(stdout).toContain("(done)");
   });
 });

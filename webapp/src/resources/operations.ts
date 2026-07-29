@@ -4,41 +4,18 @@ import type {
   UpdateResource,
 } from "wasp/server/operations";
 import { assertLensAllowed, throwHttpStatus } from "../billing/entitlementHttp";
-
-function normalizeUrl(value: string | undefined): string | null {
-  const url = value?.trim();
-  if (!url) return null;
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      throw new Error();
-    }
-    return parsed.toString();
-  } catch {
-    throw new Error("Use a full http:// or https:// link.");
-  }
-}
+import { createResourceCore, deleteResourceCore, getResourceData, updateResourceCore } from "./operationsCore";
 
 export const createResource = (async (args, context) => {
   if (!context.user) throw new Error("Not authenticated.");
-  const project = await context.entities.Project.findUnique({
+  const project = await context.entities.Project.findFirst({
     where: { id: args.projectId, userId: context.user.id },
-    select: { id: true, lensId: true },
+    select: { lensId: true },
   });
   if (!project) throwHttpStatus(404, "Project not found.");
   await assertLensAllowed(context, project.lensId);
-  const title = args.title.trim();
-  if (!title) throw new Error("Resource title cannot be empty.");
-  return await context.entities.Resource.create({
-    data: {
-      title,
-      url: normalizeUrl(args.url),
-      notes: args.notes?.trim() || null,
-      userId: context.user.id,
-      projectId: project.id,
-    },
-    select: { id: true, title: true },
-  });
+  const result = await createResourceCore(context.entities, { userId: context.user.id, ...args });
+  return result.resource;
 }) satisfies CreateResource<
   { projectId: string; title: string; url?: string; notes?: string },
   { id: string; title: string }
@@ -46,19 +23,10 @@ export const createResource = (async (args, context) => {
 
 export const updateResource = (async (args, context) => {
   if (!context.user) throw new Error("Not authenticated.");
-  const resource = await context.entities.Resource.findUnique({
-    where: { id: args.id, userId: context.user.id },
-    include: { project: { select: { lensId: true } } },
-  });
-  if (!resource) throwHttpStatus(404, "Resource not found.");
-  await assertLensAllowed(context, resource.project.lensId);
-  const title = args.title.trim();
-  if (!title) throw new Error("Resource title cannot be empty.");
-  return await context.entities.Resource.update({
-    where: { id: resource.id },
-    data: { title, url: normalizeUrl(args.url), notes: args.notes?.trim() || null },
-    select: { id: true, title: true },
-  });
+  const existing = await getResourceData(context.entities, { userId: context.user.id, id: args.id }).catch(() => null);
+  if (!existing) throwHttpStatus(404, "Resource not found.");
+  await assertLensAllowed(context, existing.project.lensId);
+  return (await updateResourceCore(context.entities, { userId: context.user.id, ...args })).resource;
 }) satisfies UpdateResource<
   { id: string; title: string; url?: string; notes?: string },
   { id: string; title: string }
@@ -66,12 +34,9 @@ export const updateResource = (async (args, context) => {
 
 export const deleteResource = (async (args, context) => {
   if (!context.user) throw new Error("Not authenticated.");
-  const resource = await context.entities.Resource.findUnique({
-    where: { id: args.id, userId: context.user.id },
-    include: { project: { select: { lensId: true } } },
-  });
-  if (!resource) throwHttpStatus(404, "Resource not found.");
-  await assertLensAllowed(context, resource.project.lensId);
-  await context.entities.Resource.delete({ where: { id: resource.id } });
-  return { id: resource.id };
+  const existing = await getResourceData(context.entities, { userId: context.user.id, id: args.id }).catch(() => null);
+  if (!existing) throwHttpStatus(404, "Resource not found.");
+  await assertLensAllowed(context, existing.project.lensId);
+  const result = await deleteResourceCore(context.entities, { userId: context.user.id, id: args.id });
+  return { id: result.id };
 }) satisfies DeleteResource<{ id: string }, { id: string }>;

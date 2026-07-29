@@ -39,6 +39,19 @@ export type InboxItem = {
   parsedTags?: string[];
   parsedProject?: string | null;
   parsedLens?: string | null;
+  title?: string | null;
+  content?: string | null;
+  sourceUrl?: string | null;
+  attachments?: { id: string; filename: string; mimeType: string }[];
+};
+
+export type Resource = {
+  id: string;
+  title: string;
+  url: string | null;
+  notes: string | null;
+  projectId?: string;
+  createdAt?: string;
 };
 
 export type Project = {
@@ -51,6 +64,7 @@ export type Project = {
   lensId?: string;
   _count?: { tasks: number };
   taskCount?: number;
+  resources?: Resource[];
 };
 
 export type Goal = {

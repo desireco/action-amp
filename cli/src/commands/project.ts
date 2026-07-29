@@ -41,6 +41,9 @@ export function makeProjectCommand(): Command {
             const done = p.isDone ? chalk.gray(" (done)") : "";
             const count = p.taskCount != null ? chalk.gray(` (${p.taskCount})`) : "";
             process.stdout.write(`  ${chalk.gray(`${i + 1}.`)} ${p.name}${count}${done}\n`);
+            p.resources?.forEach((resource) => {
+              process.stdout.write(`     ${chalk.gray("↳")} ${resource.title}${resource.url ? chalk.gray(` — ${resource.url}`) : ""}\n`);
+            });
           });
         },
         ctx,
@@ -63,6 +66,12 @@ export function makeProjectCommand(): Command {
             process.stdout.write(`${result.project.name}\n`);
             if (result.project.description) {
               process.stdout.write(`  ${chalk.gray(result.project.description)}\n`);
+            }
+            if (result.project.resources?.length) {
+              process.stdout.write("  Resources:\n");
+              result.project.resources.forEach((resource) => {
+                process.stdout.write(`    - ${resource.title}${resource.url ? chalk.gray(` — ${resource.url}`) : ""}\n`);
+              });
             }
           } else {
             process.stdout.write("No such project.\n");

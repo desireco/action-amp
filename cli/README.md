@@ -37,10 +37,14 @@ npm run build && ./dist/index.js     # built
 | `lens show <id\|name>` | Show a single lens (by id or name) |
 | `lens switch <id\|name>` | Set the active lens — `now` / `project list` / `goal list` / `logbook` / `inbox triage` then scope to it without `--lens-id` |
 | `lens current` | Show the active lens |
-| `project list --lens-id <id>` | List projects in a lens |
-| `project show <id>` | Show a project |
+| `project list --lens-id <id>` | List projects in a lens, with saved resources |
+| `project show <id>` | Show a project and its resources |
 | `project create <name> --lens-id <id>` | Create a project |
 | `project add-task <desc> --lens-id <id>` | Add a task to a project/lens |
+| `resource list --project <id>` | List a project's links and notes |
+| `resource add <title> --project <id> [--url <url>] [--notes <text>]` | Add project reference material |
+| `resource update <id> [--title <text>] [--url <url>] [--notes <text>]` | Change a resource (`""` clears URL/notes) |
+| `resource delete <id>` | Remove project reference material |
 | `goal list --lens-id <id>` | List goals in a lens |
 | `goal show <id>` | Show a goal |
 | `goal create <name> --lens-id <id>` | Create a goal |

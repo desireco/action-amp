@@ -63,6 +63,10 @@ import {
   cliProjectShow,
   cliProjectCreate,
   cliProjectAddTask,
+  cliResourceList,
+  cliResourceCreate,
+  cliResourceUpdate,
+  cliResourceDelete,
   cliGoalList,
   cliGoalShow,
   cliGoalCreate,
@@ -440,6 +444,19 @@ export default app({
       entities: [],
       auth: false,
       middlewareConfigFn: patRouteMiddleware,
+    }),
+    // Project-owned resource routes.
+    api("GET", "/api/cli/resource/list", cliResourceList, {
+      entities: [], auth: false, middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/resource/create", cliResourceCreate, {
+      entities: [], auth: false, middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/resource/update", cliResourceUpdate, {
+      entities: [], auth: false, middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("POST", "/api/cli/resource/delete", cliResourceDelete, {
+      entities: [], auth: false, middlewareConfigFn: patRouteMiddleware,
     }),
     // Goal routes.
     api("GET", "/api/cli/goal/list", cliGoalList, {

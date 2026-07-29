@@ -75,6 +75,13 @@ import {
 import { getLensesCore, getLensCore } from "../lenses/operationsCore";
 import { getLogbookData } from "../logbook/operationsCore";
 import {
+  createResourceCore,
+  deleteResourceCore,
+  getProjectResourcesData,
+  getResourceData,
+  updateResourceCore,
+} from "../resources/operationsCore";
+import {
   listFeedbackCore,
   showFeedbackCore,
   updateFeedbackStatusCore,
@@ -915,6 +922,79 @@ export const cliProjectAddTask = async (
       return res.status(404).json({ error: err.message });
     }
     return res.status(500).json({ error: "Could not add task." });
+  }
+};
+
+// ───────────────────────────────────────────────────────────────────────────
+// Resource routes — project-owned links and notes. Resources are not blobs;
+// image attachments remain inbox-only capture data.
+// ───────────────────────────────────────────────────────────────────────────
+export const cliResourceList = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!user) return res.status(401).json({ error: "Not authenticated." });
+  const projectId = queryString(req, "projectId");
+  if (!projectId) return res.status(400).json({ error: "A projectId is required." });
+  try {
+    const project = await getProjectResourcesData(authEntities, { userId: user.id, projectId });
+    return res.status(200).json({ projectId: project.id, resources: project.resources });
+  } catch (err) {
+    if (err instanceof Error && /not found/i.test(err.message)) return res.status(404).json({ error: err.message });
+    console.error("[cli/resource/list] failed:", err);
+    return res.status(500).json({ error: "Could not load resources." });
+  }
+};
+
+export const cliResourceCreate = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!user) return res.status(401).json({ error: "Not authenticated." });
+  const projectId = bodyString(req.body, "projectId");
+  const title = bodyString(req.body, "title");
+  if (!projectId || !title) return res.status(400).json({ error: "projectId and title are required." });
+  const project = await authEntities.Project.findFirst({ where: { id: projectId, userId: user.id }, select: { lensId: true } });
+  if (!project) return res.status(404).json({ error: "Project not found." });
+  const gate = await gateLens(toEntUser(user), user.id, project.lensId);
+  if (gate.status === "denied") return sendViolation(res, gate.msg);
+  try {
+    const { resource } = await createResourceCore(authEntities, { userId: user.id, projectId, title, url: bodyString(req.body, "url"), notes: bodyString(req.body, "notes") });
+    return res.status(201).json({ resource });
+  } catch (err) {
+    console.error("[cli/resource/create] failed:", err);
+    return res.status(400).json({ error: err instanceof Error ? err.message : "Could not create resource." });
+  }
+};
+
+export const cliResourceUpdate = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!user) return res.status(401).json({ error: "Not authenticated." });
+  const id = bodyString(req.body, "id");
+  if (!id) return res.status(400).json({ error: "An id is required." });
+  try {
+    const existing = await getResourceData(authEntities, { userId: user.id, id });
+    const gate = await gateLens(toEntUser(user), user.id, existing.project.lensId);
+    if (gate.status === "denied") return sendViolation(res, gate.msg);
+    const { resource } = await updateResourceCore(authEntities, { userId: user.id, id, title: bodyString(req.body, "title"), url: bodyString(req.body, "url"), notes: bodyString(req.body, "notes") });
+    return res.status(200).json({ resource });
+  } catch (err) {
+    if (err instanceof Error && /not found/i.test(err.message)) return res.status(404).json({ error: err.message });
+    return res.status(400).json({ error: err instanceof Error ? err.message : "Could not update resource." });
+  }
+};
+
+export const cliResourceDelete = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!user) return res.status(401).json({ error: "Not authenticated." });
+  const id = bodyString(req.body, "id");
+  if (!id) return res.status(400).json({ error: "An id is required." });
+  try {
+    const existing = await getResourceData(authEntities, { userId: user.id, id });
+    const gate = await gateLens(toEntUser(user), user.id, existing.project.lensId);
+    if (gate.status === "denied") return sendViolation(res, gate.msg);
+    const result = await deleteResourceCore(authEntities, { userId: user.id, id });
+    return res.status(200).json({ id: result.id });
+  } catch (err) {
+    if (err instanceof Error && /not found/i.test(err.message)) return res.status(404).json({ error: err.message });
+    console.error("[cli/resource/delete] failed:", err);
+    return res.status(500).json({ error: "Could not delete resource." });
   }
 };
 

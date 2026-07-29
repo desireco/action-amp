@@ -62,6 +62,10 @@ export async function getProjectsData(
         orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
         take: 1,
       },
+      resources: {
+        orderBy: { createdAt: "desc" },
+        select: { id: true, title: true, url: true, notes: true, createdAt: true },
+      },
       _count: { select: { tasks: { where: { isDone: false } } } },
     },
   });
@@ -88,6 +92,7 @@ export async function getProjectsData(
     dueDate: Date | null;
     goal: { id: string; name: string } | null;
     tasks: unknown[];
+    resources: { id: string; title: string; url: string | null; notes: string | null; createdAt: Date }[];
     _count: { tasks: number };
   }) => ({
     id: p.id,
@@ -99,6 +104,7 @@ export async function getProjectsData(
     openCount: p._count.tasks, // open (non-done) tasks
     doneCount: doneCount.get(p.id) ?? 0,
     nextAction: p.tasks[0] ?? null, // top-priority open task
+    resources: p.resources,
   }));
 }
 
