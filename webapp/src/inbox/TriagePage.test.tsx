@@ -76,14 +76,14 @@ vi.mock("../app/lensContext", () => ({
 
 const { TriagePage } = await import("./TriagePage");
 
-function renderTriagePage() {
+function renderTriagePage(initialEntry = "/app/inbox/review") {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={["/app/inbox/review"]}>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path="/app/inbox/review" element={<TriagePage />} />
           <Route path="/app/inbox" element={<div>Inbox</div>} />
@@ -283,6 +283,37 @@ describe("TriagePage", () => {
     renderTriagePage();
     expect(await screen.findByText("Inbox zero.")).toBeInTheDocument();
     expect(screen.queryByText("1 · Classify")).not.toBeInTheDocument();
+  });
+
+  it("wraps to earlier inbox items after starting triage from a row", async () => {
+    inboxItems.current = [
+      { id: "ix-1", text: "First", createdAt: new Date(), parsedDate: null, parsedLens: null, parsedProject: null, parsedPriority: null, parsedSize: null, parsedTags: [] },
+      { id: "ix-2", text: "Middle", createdAt: new Date(), parsedDate: null, parsedLens: null, parsedProject: null, parsedPriority: null, parsedSize: null, parsedTags: [] },
+      { id: "ix-3", text: "Last", createdAt: new Date(), parsedDate: null, parsedLens: null, parsedProject: null, parsedPriority: null, parsedSize: null, parsedTags: [] },
+    ];
+    triageInboxItem.mockResolvedValue({ id: "task-1" });
+    renderTriagePage("/app/inbox/review?i=1");
+
+    async function readyCurrent(expectedCallCount: number) {
+      fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+      fireEvent.click(await screen.findByRole("button", { name: /^ready$/i }));
+      await waitFor(() => expect(triageInboxItem).toHaveBeenCalledTimes(expectedCallCount));
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      });
+    }
+
+    expect(await screen.findByText("Middle")).toBeInTheDocument();
+    await readyCurrent(1);
+    expect(await screen.findByText("Last")).toBeInTheDocument();
+    await readyCurrent(2);
+    expect(await screen.findByText("First")).toBeInTheDocument();
+    await readyCurrent(3);
+
+    expect(await screen.findByText("Inbox zero.")).toBeInTheDocument();
+    expect(triageInboxItem.mock.calls.map(([payload]) => payload.inboxItemId)).toEqual([
+      "ix-2", "ix-3", "ix-1",
+    ]);
   });
 
   it("renders a Delete type and dispatches the delete decision on click", async () => {

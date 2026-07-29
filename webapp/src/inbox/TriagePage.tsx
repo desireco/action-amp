@@ -83,7 +83,9 @@ export function TriagePage() {
   const { data: appData } = useQuery(getAppData, { lensId: activeLens?.id });
   const lenses = appData?.lenses ?? [];
 
-  const [idx, setIdx] = useState(startIdx);
+  // `startIdx` rotates the queue below; the walkthrough itself always starts
+  // at position zero in that rotated queue.
+  const [idx, setIdx] = useState(0);
   const [exit, setExit] = useState<TriageExit>(null);
   const [dispatched, setDispatched] = useState(false);
   const [entering, setEntering] = useState(false);
@@ -132,18 +134,20 @@ export function TriagePage() {
   useEffect(() => {
     if (!snapshot && list.length > 0) setSnapshot(list);
   }, [list, snapshot]);
-  const triageList = snapshot ?? list;
+
+  // A row click starts triage at that item, but never narrows the queue. Once
+  // the newer items have been specified, wrap around to the earlier ones so a
+  // triage session always drains every item that was waiting on entry.
+  const triageList = useMemo(() => {
+    const queue = snapshot ?? list;
+    if (queue.length === 0 || startIdx === 0) return queue;
+    const pivot = Math.min(startIdx, queue.length);
+    return [...queue.slice(pivot), ...queue.slice(0, pivot)];
+  }, [list, snapshot, startIdx]);
 
   const total = triageList.length;
-  // Clamp the start to the live list: a stale `?i` (manual URL, or a list that
-  // shrank between the inbox render and arrival) must never point past the end.
-  const start = Math.min(startIdx, total);
-  // Progress is session-relative: when arrived via a row click (?i=N), the
-  // walkthrough reviews from N to the end. Counting from `start` keeps the
-  // "n of m" label and bar honest — it reflects what YOU triaged this session,
-  // not items above N you never touched.
-  const remaining = Math.max(0, total - start);
-  const done = idx - start;
+  const remaining = total;
+  const done = idx;
   const isComplete = idx >= total;
 
   const item = triageList[idx] ?? null;
@@ -376,7 +380,7 @@ export function TriagePage() {
   });
 
   if (isComplete) {
-    return <TriageComplete start={start} onNavigate={navigate} />;
+    return <TriageComplete onNavigate={navigate} />;
   }
 
   // Effective project = manual picker choice > resolved #token link. Drives both
@@ -710,15 +714,8 @@ function SpecStep({
   );
 }
 
-/** The end-of-triage empty state ("Inbox zero" / "Caught up from here"). */
-function TriageComplete({
-  start,
-  onNavigate,
-}: {
-  start: number;
-  onNavigate: NavigateFunction;
-}) {
-  const reachedFromTop = start === 0;
+/** The end-of-triage empty state. */
+function TriageComplete({ onNavigate }: { onNavigate: NavigateFunction }) {
   return (
     <div className="aa-triage-empty">
       <div className="aa-empty-mark" aria-hidden="true">
@@ -726,22 +723,12 @@ function TriageComplete({
           <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <h2 className="aa-triage-empty__title">
-        {reachedFromTop ? "Inbox zero." : "Caught up from here."}
-      </h2>
+      <h2 className="aa-triage-empty__title">Inbox zero.</h2>
       <p className="aa-triage-empty__text">
-        {reachedFromTop
-          ? "Nothing left to decide. Go do something."
-          : `${start} earlier ${start === 1 ? "item is" : "items are"} still in the inbox.`}
+        Nothing left to decide. Go do something.
       </p>
       <div className="aa-triage-empty__actions">
-        {reachedFromTop ? (
-          <Button variant="primary" onClick={() => onNavigate("/app")}>Done →</Button>
-        ) : (
-          <Button variant="primary" onClick={() => onNavigate("/app/inbox/review")}>
-            Triage earlier →
-          </Button>
-        )}
+        <Button variant="primary" onClick={() => onNavigate("/app")}>Done →</Button>
         <Button variant="secondary" onClick={() => onNavigate("/app/inbox")}>Back to inbox</Button>
       </div>
     </div>
