@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { createInboxItem } from "wasp/client/operations";
-import { composeShareText, type ShareFields } from "./composeShareText";
+import { composeShareCapture, type ShareFields } from "./composeShareText";
 import { clearPendingShare, getPendingShare } from "./pendingShare";
 import "./SharePage.css";
 
@@ -46,12 +46,17 @@ export function SharePage() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const text = composeShareText(pending.fields);
-      if (!text) throw new Error("Nothing to capture.");
+      const capture = composeShareCapture(pending.fields);
+      if (!capture.text) throw new Error("Nothing to capture.");
       // Use the normal Wasp capture action, not the cross-origin share API.
       // Inbox reads through the same authenticated operation, so a confirmed
       // item cannot be written under a different stale cookie session.
-      const created = await createInboxItem({ text });
+      const created = await createInboxItem({
+        text: capture.text,
+        title: capture.title || undefined,
+        content: capture.content || undefined,
+        sourceUrl: capture.url || undefined,
+      });
       await clearPendingShare(pending.id);
       void queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
@@ -71,14 +76,16 @@ export function SharePage() {
   if (loadingPending) return renderShell("Preparing capture…");
 
   if (pendingId && pending) {
-    const text = composeShareText(pending.fields);
-    if (!text) return renderError(ERROR_COPY.empty);
+    const capture = composeShareCapture(pending.fields);
+    if (!capture.text) return renderError(ERROR_COPY.empty);
     return (
       <main className="aa-share">
         <div className="aa-share__card aa-share__card--review">
           <p className="aa-share__eyebrow">Inbox capture</p>
           <h1 className="aa-share__title">Add this to your inbox?</h1>
-          <p className="aa-share__text aa-share__text--review">{text}</p>
+          {capture.title && <h2 className="aa-share__capture-title">{capture.title}</h2>}
+          {capture.content && <p className="aa-share__text aa-share__text--review">{capture.content}</p>}
+          {capture.url && <p className="aa-share__property">Link attached</p>}
           {submitError && <p className="aa-share__error" role="alert">{submitError}</p>}
           <div className="aa-share__actions">
             <button className="aa-share__button" type="button" onClick={() => void confirmPending()} disabled={submitting}>

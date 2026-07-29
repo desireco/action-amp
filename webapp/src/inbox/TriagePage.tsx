@@ -17,7 +17,6 @@ import {
   StarIcon,
   ProjectsIcon,
   LogbookIcon,
-  SomedayIcon,
   TrashIcon,
 } from "../components/ui/icons";
 import { useActiveLens } from "../app/lensContext";
@@ -469,7 +468,7 @@ export function TriagePage() {
                 }}
                 onSetType={(t) => setW({ type: t })}
                 onContinue={() =>
-                  working.type === "archive" || working.type === "delete"
+                working.type === "delete"
                     ? void dispatch()
                     : setStep("spec")
                 }
@@ -532,13 +531,12 @@ const TRIAGE_TYPES = [
   { t: "task", label: "Task", sub: "an action — something to do", Icon: StarIcon },
   { t: "project", label: "Project", sub: "an outcome needing more than one step", Icon: ProjectsIcon },
   { t: "resource", label: "Note", sub: "reference material — not an action", Icon: LogbookIcon },
-  { t: "archive", label: "Archive", sub: "not now — keep it for later", Icon: SomedayIcon },
   { t: "delete", label: "Delete", sub: "get rid of it — not kept", Icon: TrashIcon },
 ] as const;
 
 type ClassifyLens = { id: string; name: string; color?: string | null };
 
-/** Step 1 — pick the type (Task/Project/Note/Archive) + Lens/Project destination. */
+/** Step 1 — pick the type (Task/Project/Note/Delete) + Lens/Project destination. */
 function ClassifyStep({
   working,
   chosenLensId,
@@ -626,17 +624,9 @@ function ClassifyStep({
         variant="primary"
         className="aa-triage-step__continue"
         onClick={onContinue}
-        // Archive + Delete discard the item — neither files into a lens, so
-        // neither should wait for a lens choice. Every other type does.
-        disabled={
-          !chosenLensId && working.type !== "archive" && working.type !== "delete"
-        }
+        disabled={!chosenLensId}
       >
-        {working.type === "archive"
-          ? "Archive"
-          : working.type === "delete"
-            ? "Delete"
-            : "Continue"}
+        {working.type === "delete" ? "Delete" : "Continue"}
       </Button>
     </div>
   );

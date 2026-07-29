@@ -62,7 +62,10 @@ export async function createInboxItemCore(
     userId,
     text,
     projectName,
-  }: { userId: string; text: string; projectName?: string },
+    title,
+    content,
+    sourceUrl,
+  }: { userId: string; text: string; projectName?: string; title?: string; content?: string; sourceUrl?: string },
 ) {
   const raw = text?.trim();
   if (!raw) {
@@ -84,6 +87,9 @@ export async function createInboxItemCore(
   return await entities.InboxItem.create({
     data: {
       text: parsed.cleanText,
+      title: title?.trim() || null,
+      content: content?.trim() || null,
+      sourceUrl: sourceUrl?.trim() || null,
       userId,
       parsedDate: parsed.parsedDate,
       parsedPriority: parsed.parsedPriority,
@@ -113,6 +119,9 @@ export async function getInboxItemsCore(
     select: {
       id: true,
       text: true,
+      title: true,
+      content: true,
+      sourceUrl: true,
       createdAt: true,
       parsedDate: true,
       parsedPriority: true,
@@ -342,7 +351,8 @@ export async function triageInboxItemCore(
   const resolvedPriority = priority ?? item.parsedPriority ?? "NORMAL";
   const resolvedSize = size ?? item.parsedSize ?? "M";
   const resolvedContent = content?.trim() || null;
-  const title = name?.trim() || item.text;
+  const title = name?.trim() || item.title || item.text;
+  const itemNotes = [item.content, item.sourceUrl].filter(Boolean).join("\n\n") || null;
 
   // Tags carry onto Tasks only — Projects and Goals drop them (their scope is
   // the whole collection, not a single actionable item).
@@ -371,7 +381,7 @@ export async function triageInboxItemCore(
       result = await createTaskFromTriage(entities, userId, {
         decision,
         title,
-        content: resolvedContent,
+        content: resolvedContent ?? itemNotes,
         lensId,
         priority: resolvedPriority,
         size: resolvedSize,
@@ -402,6 +412,8 @@ export async function triageInboxItemCore(
       const resource = await entities.Resource.create({
         data: {
           title,
+          url: item.sourceUrl,
+          notes: resolvedContent ?? item.content,
           userId,
           projectId: projectId ?? null,
           goalId: goalId ?? null,

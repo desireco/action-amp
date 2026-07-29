@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { composeShareText } from "./composeShareText";
+import { composeShareCapture, composeShareText } from "./composeShareText";
 
 describe("composeShareText", () => {
   it("returns empty when all fields absent", () => {
@@ -41,6 +41,19 @@ describe("composeShareText", () => {
       title: "Supply | Single Edge Razors | One Blade. Solid Steel.",
       text: "Supply | Single Edge Razors | One Blade. Solid Steel. https://share.google/example",
     })).toBe("Supply | Single Edge Razors | One Blade. Solid Steel. — https://share.google/example");
+  });
+
+  it("keeps Android title, body, and link as separate share properties", () => {
+    expect(composeShareCapture({
+      title: "Useful article",
+      text: "Useful article Read this later",
+      url: "https://example.com/article",
+    })).toEqual({
+      title: "Useful article",
+      content: "Read this later",
+      url: "https://example.com/article",
+      text: "Useful article: Read this later — https://example.com/article",
+    });
   });
 
   it("truncates each field to 2000 chars with ellipsis", () => {

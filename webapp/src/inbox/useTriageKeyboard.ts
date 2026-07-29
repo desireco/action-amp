@@ -142,11 +142,6 @@ export function useTriageKeyboard({
           setWorkingType(type);
           return;
         }
-        if (e.key === "Backspace" || e.key === "Delete") {
-          e.preventDefault();
-          setWorkingType("archive");
-          return;
-        }
         const lensIndex = lensIndexByKey[e.key.toLowerCase()];
         if (lensIndex !== undefined) {
           e.preventDefault();
@@ -159,7 +154,7 @@ export function useTriageKeyboard({
 
       e.preventDefault();
       if (step === "classify" && chosenLensId && working) {
-        if (working.type === "archive") {
+        if (working.type === "delete") {
           dispatch();
         } else {
           setStep("spec");

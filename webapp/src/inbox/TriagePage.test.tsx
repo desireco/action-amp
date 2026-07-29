@@ -285,23 +285,6 @@ describe("TriagePage", () => {
     expect(screen.queryByText("1 · Classify")).not.toBeInTheDocument();
   });
 
-  it("dispatches immediately on Archive without entering Spec", async () => {
-    triageInboxItem.mockResolvedValue({ id: "archived-1" });
-    renderTriagePage();
-
-    // Choose the Archive type — Continue becomes "Archive" and commits directly.
-    fireEvent.click(screen.getByRole("button", { name: /archive/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^archive$/i }));
-
-    await waitFor(() =>
-      expect(triageInboxItem).toHaveBeenCalledWith(
-        expect.objectContaining({ inboxItemId: "ix-1", decision: "archive" }),
-      ),
-    );
-    // Archive bypasses Spec entirely.
-    expect(screen.queryByText(/2 · Specify/i)).not.toBeInTheDocument();
-  });
-
   it("renders a Delete type and dispatches the delete decision on click", async () => {
     triageInboxItem.mockResolvedValue({ id: "deleted-1" });
     renderTriagePage();
@@ -315,7 +298,8 @@ describe("TriagePage", () => {
         expect.objectContaining({ inboxItemId: "ix-1", decision: "delete" }),
       ),
     );
-    // Like Archive, Delete bypasses Spec.
+    expect(screen.queryByRole("button", { name: /archive/i })).not.toBeInTheDocument();
+    // Delete bypasses Spec.
     expect(screen.queryByText(/2 · Specify/i)).not.toBeInTheDocument();
   });
 });

@@ -69,9 +69,11 @@ export function InboxPage() {
                 <li key={item.id} className="aa-inbox__item">
                   <Link to={`/app/inbox/review?i=${i}`} className="aa-inbox__row">
                     <div className="aa-inbox__row-content">
-                      <p className="aa-inbox__row-text">{item.text}</p>
+                      <p className="aa-inbox__row-text">{item.title ?? item.text}</p>
+                      {item.content && <p className="aa-inbox__row-content-text">{item.content}</p>}
                       <div className="aa-inbox__row-meta">
                         <span className="aa-inbox__row-ago">captured {formatAgo(item.createdAt)}</span>
+                        {item.sourceUrl && <Chip variant="teal" small>Link attached</Chip>}
                         {item.parsedDate && (
                           <Chip variant="teal" small>
                             <CalendarIcon className="aa-chip__icon" />

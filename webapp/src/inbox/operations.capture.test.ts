@@ -88,6 +88,25 @@ describe("createInboxItem — happy path", () => {
     const call = m.entities.InboxItem.create.mock.calls[0][0];
     expect(call.data.parsedProject).toBe("mvp");
   });
+
+  it("stores structured share fields alongside the capture text", async () => {
+    const m = mockContext();
+    m.entities.InboxItem.create.mockResolvedValue({ id: "ix-4", text: "Article", createdAt: new Date() });
+    m.entities.Lens.findMany.mockResolvedValue([]);
+
+    await createInboxItem({
+      text: "Article — https://example.com",
+      title: "Article",
+      content: "Read later",
+      sourceUrl: "https://example.com",
+    }, m.context);
+
+    expect(m.entities.InboxItem.create.mock.calls[0][0].data).toMatchObject({
+      title: "Article",
+      content: "Read later",
+      sourceUrl: "https://example.com",
+    });
+  });
 });
 
 describe("getInboxItems — guards", () => {
@@ -115,6 +134,9 @@ describe("getInboxItems — scoping", () => {
       select: {
         id: true,
         text: true,
+        title: true,
+        content: true,
+        sourceUrl: true,
         createdAt: true,
         parsedDate: true,
         parsedPriority: true,

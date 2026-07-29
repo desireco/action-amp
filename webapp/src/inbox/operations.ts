@@ -38,9 +38,12 @@ export const createInboxItem = (async (args, context) => {
     userId: context.user.id,
     text: args.text,
     projectName: args.projectName,
+    title: args.title,
+    content: args.content,
+    sourceUrl: args.sourceUrl,
   });
 }) satisfies CreateInboxItem<
-  { text: string; projectName?: string },
+  { text: string; projectName?: string; title?: string; content?: string; sourceUrl?: string },
   { id: string; text: string; createdAt: Date }
 >;
 

@@ -159,6 +159,14 @@
   overflow-wrap: anywhere;
 }
 
+.aa-inbox__row-content-text {
+  margin: 0 0 var(--aa-space-xs);
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  line-height: var(--aa-leading-normal);
+  overflow-wrap: anywhere;
+}
+
 .aa-inbox__row-meta {
   display: flex;
   align-items: center;

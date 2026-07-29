@@ -471,6 +471,9 @@ model Resource {
 model InboxItem {
   id        String   @id @default(uuid())
   text      String // raw captured text
+  title     String?  // structured title from an Android share (normal capture leaves this null)
+  content   String?  // structured body from an Android share
+  sourceUrl String?  // attached source link from an Android share
   status    InboxItemStatus @default(UNPROCESSED)
   archivedAt DateTime? // set when status → ARCHIVED (the Logbook sorts on this)
   createdAt DateTime @default(now())
