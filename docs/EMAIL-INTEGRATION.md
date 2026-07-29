@@ -1,13 +1,10 @@
 # ActionAmp — Email Integration (Resend)
 
-> Status: **Implemented** (HTTP-API path shipped 2026-07-08). Transactional
-> email — auth verification, password reset, feedback, welcome — is sent through
-> **Resend's HTTP API** from production and **SMTP** in dev. The architecture
-> below describes the live system; `webapp/src/serverSetup.ts` is the source of
-> truth for the runtime send path.
+> Status: **Implemented**. Transactional email — auth verification, password
+> reset, feedback, welcome — is sent through Wasp's native **Resend** provider.
+> `webapp/main.wasp.ts` is source of truth for the transport configuration.
 >
-> Companion docs: `webapp/src/serverSetup.ts` (the runtime patch),
-> `webapp/main.wasp.ts` (`emailSender` + `server.setupFn` config),
+> Companion docs: `webapp/main.wasp.ts` (`emailSender` config),
 > `webapp/src/auth/email/` (the auth email pages). Authority for *how* email is
 > delivered.
 
@@ -16,17 +13,12 @@
 ## 0. TL;DR
 
 - **Provider: Resend.** Domain `actionamp.com` is verified.
-- **Prod sends via Resend's HTTP API (`POST api.resend.com:443`), not SMTP.**
-  Railway → Resend SMTP (ports 465/587) is unreachable — constant `ETIMEDOUT`
-  at the connection phase. Resend's own guidance is "use the HTTP API for
-  production; SMTP is the fallback." HTTPS egress is never blocked.
-- **Wasp 0.24 has no native Resend provider** — `emailSender` supports only
-  SMTP / SendGrid / Mailgun / Dummy. We stay on Resend by patching nodemailer's
-  send path at runtime via a `server.setupFn`.
-- **Dev keeps SMTP** — the patch is gated on `RESEND_API_KEY`, which is absent
-  locally. Zero behavior change in `wasp start`.
-- **`SMTP_SECURE` is a no-op** in this Wasp version (see §3). Don't try to tune
-  SMTP TLS; it can't be fixed from config.
+- **All environments send via Resend's HTTPS API.** This avoids Railway's blocked
+  SMTP egress and removes the custom nodemailer runtime patch.
+- **Wasp 0.25 supports `provider: "Resend"` natively.** Wasp owns the provider
+  implementation while ActionAmp continues to use its existing templates and
+  `emailSender.send` calls.
+- **`RESEND_API_KEY` is required** wherever the server starts and may send mail.
 
 ---
 
@@ -44,66 +36,34 @@
 - **Port-hopping (465 ↔ 587) does not help** — both are unreachable from
   Railway. Only the API (port 443) works reliably.
 
-## 2. How it's wired (the runtime patch)
+## 2. How it's wired
 
-Wasp's generated `emailSender` is created **eagerly at bundle load** from the
-`emailSender.provider: "SMTP"` config (see `.wasp/out/server/bundle/server.js`:
-`initSmtpEmailSender` → `createTransport`). It runs before the server setup
-function, so the transport config can't be swapped at runtime.
+`webapp/main.wasp.ts` declares `emailSender.provider: "Resend"` and the
+standard `defaultFrom` sender. Wasp creates the HTTPS Resend transport and
+exposes it as `emailSender` from `wasp/server/email`.
 
-Instead, `webapp/src/serverSetup.ts` (registered as `app.server.setupFn`) does:
+ActionAmp's existing call sites (`src/onboarding/operations.ts` and
+`src/feedback/operations.ts`) keep calling `emailSender.send`; no template,
+recipient, or auth-flow behavior changes.
 
-1. Read `RESEND_API_KEY`. If absent (dev), return — original SMTP `sendMail`
-   runs unchanged.
-2. Take the shared nodemailer **Mailer prototype** via a throwaway transporter
-   (`Object.getPrototypeOf(createTransport(…))`). All transporter instances
-   share it, so the already-created `emailSender` is covered.
-3. Override `proto.sendMail` to `POST https://api.resend.com/emails` with
-   `Authorization: Bearer <key>` and the nodemailer mail fields
-   (`from`/`to`/`subject`/`text`/`html`), returning a nodemailer-compatible
-   `{ messageId, response }`.
-
-**Scope:** the app uses nodemailer only through Wasp's `emailSender`, so
-patching the shared prototype is safe. If nodemailer is ever used elsewhere,
-revisit this.
-
-## 3. The `SMTP_SECURE` no-op (don't repeat this)
-
-Wasp 0.24's generated SMTP provider calls `createTransport({ host, port, auth })`
-with **no `secure` option and never reads `SMTP_SECURE`**. So:
-
-- Setting `SMTP_SECURE=true` does nothing.
-- On port 465 (implicit TLS), nodemailer defaults to `secure:false` → plaintext
-  handshake on a TLS-only port → `ETIMEDOUT`.
-
-The HTTP-API patch sidesteps SMTP entirely, so this no longer matters in prod.
-In dev, SMTP on 465 works because local egress is clean.
-
-## 4. Configuration
+## 3. Configuration
 
 ### `webapp/main.wasp.ts`
 ```ts
 emailSender: {
-  provider: "SMTP",            // dev fallback; overridden at runtime in prod
+  provider: "Resend",
   defaultFrom: { name: "ActionAmp", email: "noreply@actionamp.com" },
-},
-server: {
-  setupFn: serverSetup,        // routes prod sends through Resend HTTP API
 },
 ```
 
 ### Environment (Railway → `action-amp-server`, production)
 | Var | Value | Purpose |
 |---|---|---|
-| `RESEND_API_KEY` | `re_…` | **Required for prod** — activates the HTTP-API patch |
-| `SMTP_HOST` | `smtp.resend.com` | Dev fallback (unused in prod) |
-| `SMTP_PORT` | `465` | Dev fallback |
-| `SMTP_USERNAME` | `resend` | Dev fallback |
-| `SMTP_PASSWORD` | `re_…` (same key) | Dev fallback |
+| `RESEND_API_KEY` | `re_…` | Required by Wasp's native Resend provider |
 
 `.env.server` is gitignored — secrets never enter the repo.
 
-## 5. DNS on `actionamp.com`
+## 4. DNS on `actionamp.com`
 
 | Record | Status | Action |
 |---|---|---|
@@ -114,7 +74,7 @@ server: {
 | **From address** | `ActionAmp <noreply@actionamp.com>` | keep (verified sender) |
 | MX | none | acceptable — domain is send-only |
 
-## 6. Verifying delivery
+## 5. Verifying delivery
 
 1. Trigger a real send (e.g. password reset on `app.actionamp.com/login`).
 2. Check **Resend dashboard → Logs**: the send's `last_event` should reach
@@ -125,7 +85,7 @@ server: {
    the inbox. Check spam/promotions for actual placement (especially the first
    sends from a domain).
 
-## 7. Debugging gotchas
+## 6. Debugging gotchas
 
 These cost real time during the original investigation — keep them in mind:
 
@@ -143,16 +103,15 @@ These cost real time during the original investigation — keep them in mind:
 - **Localhost sends appear in the same Resend Logs** as prod sends (same key),
   which can mislead you into thinking a send came from prod.
 
-## 8. Operations
+## 7. Operations
 
 - **Redeploy after changing `RESEND_API_KEY`** — env-var changes don't reach the
   running process until a redeploy.
-- **Rotating the Resend key:** revoke in Resend → create new → update both
-  `RESEND_API_KEY` and `SMTP_PASSWORD` on Railway → redeploy.
-- **Don't revert prod to SMTP.** It will break again (Railway egress). The
-  HTTP-API patch is load-bearing.
+- **Rotating the Resend key:** revoke in Resend → create new → update
+  `RESEND_API_KEY` in every server environment → redeploy.
+- **Don't revert prod to SMTP.** Railway SMTP egress previously timed out.
 
-## 9. Security
+## 8. Security
 
 - Rotate any secret that touches a transcript/log: **Stripe live key** (highest
   priority), **JWT secret**, **DB password**, **Resend API key**,

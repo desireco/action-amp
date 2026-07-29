@@ -105,7 +105,6 @@ import { Founding100WelcomePage } from "./src/public/Founding100WelcomePage" wit
 // / on the app subdomain redirects to the marketing apex (Astro on Pages).
 import { RedirectToMarketing } from "./src/public/RedirectToMarketing" with { type: "ref" };
 
-import { serverSetup } from "./src/serverSetup" with { type: "ref" };
 
 export default app({
   name: "ActionAmp",
@@ -154,17 +153,13 @@ export default app({
     onAuthFailedRedirectTo: "/login",
   },
   emailSender: {
-    provider: "SMTP",
+    provider: "Resend",
     defaultFrom: {
       name: "ActionAmp",
       email: "noreply@actionamp.com",
     },
   },
-  // Route outbound email through Resend's HTTP API (port 443) at runtime via a
-  // server setup fn — Railway can't reach Resend SMTP (ETIMEDOUT). See
-  // src/serverSetup.ts. SMTP config above is the fallback for dev.
   server: {
-    setupFn: serverSetup,
     // Adds the session-cookie fallback + sliding 30-day refresh. See
     // src/auth/sessionCookie.ts for the why (mobile PWA localStorage eviction).
     middlewareConfigFn: globalMiddlewareConfigFn,
