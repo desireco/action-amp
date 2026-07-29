@@ -39,6 +39,27 @@ import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Entities = Record<string, any>;
 
+const MAX_SHARE_IMAGE_BYTES = 5 * 1024 * 1024;
+type InboxAttachmentInput = { filename: string; mimeType: string; dataBase64: string };
+
+function prepareAttachments(attachments: InboxAttachmentInput[] | undefined) {
+  if (!attachments?.length) return undefined;
+  if (attachments.length > 1) throw new Error("Share one image at a time.");
+  return attachments.map((attachment) => {
+    if (!attachment.mimeType.startsWith("image/")) throw new Error("Only images can be attached.");
+    const data = Buffer.from(attachment.dataBase64, "base64");
+    if (!data.length || data.length > MAX_SHARE_IMAGE_BYTES) {
+      throw new Error("Images must be 5 MB or smaller.");
+    }
+    return {
+      filename: attachment.filename.trim().slice(0, 255) || "Shared image",
+      mimeType: attachment.mimeType,
+      size: data.length,
+      data,
+    };
+  });
+}
+
 /** The triage decisions (DATA-MODEL.md §3). */
 export type TriageDecision =
   | "task-today"
@@ -65,7 +86,8 @@ export async function createInboxItemCore(
     title,
     content,
     sourceUrl,
-  }: { userId: string; text: string; projectName?: string; title?: string; content?: string; sourceUrl?: string },
+    attachments,
+  }: { userId: string; text: string; projectName?: string; title?: string; content?: string; sourceUrl?: string; attachments?: InboxAttachmentInput[] },
 ) {
   const raw = text?.trim();
   if (!raw) {
@@ -84,12 +106,14 @@ export async function createInboxItemCore(
     new Date(),
     customLenses.map((l: { name: string }) => l.name),
   );
+  const preparedAttachments = prepareAttachments(attachments);
   return await entities.InboxItem.create({
     data: {
       text: parsed.cleanText,
       title: title?.trim() || null,
       content: content?.trim() || null,
       sourceUrl: sourceUrl?.trim() || null,
+      attachments: preparedAttachments ? { create: preparedAttachments } : undefined,
       userId,
       parsedDate: parsed.parsedDate,
       parsedPriority: parsed.parsedPriority,
@@ -122,6 +146,7 @@ export async function getInboxItemsCore(
       title: true,
       content: true,
       sourceUrl: true,
+      attachments: { select: { id: true, filename: true, mimeType: true } },
       createdAt: true,
       parsedDate: true,
       parsedPriority: true,

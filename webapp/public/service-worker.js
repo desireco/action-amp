@@ -19,7 +19,8 @@ self.addEventListener("message", (event) => {
 // Android share_target requests must stay on the PWA's origin (app.actionamp.com),
 // while ActionAmp's API runs at api.actionamp.com. Store the form body briefly
 // in same-origin IndexedDB, then send the activity to the review page. The
-// page saves only after the user chooses "Add to inbox".
+// page saves only after the user chooses "Add to inbox". Files are persisted
+// as IndexedDB Blobs so an image share survives the handoff to the review UI.
 const SHARE_PATH = "/share";
 const SHARE_DB_NAME = "actionamp-share";
 const SHARE_STORE_NAME = "pending";
@@ -39,7 +40,10 @@ async function handleShareTarget(request) {
       const value = formData.get(field);
       if (typeof value === "string") fields[field] = value;
     }
-    const id = await savePendingShare(fields);
+    const files = formData.getAll("files")
+      .filter((value) => value instanceof File && value.type.startsWith("image/"))
+      .map((file) => ({ blob: file, filename: file.name || "Shared image", mimeType: file.type, size: file.size }));
+    const id = await savePendingShare({ fields, files });
     return Response.redirect(new URL(`/share?pending=${encodeURIComponent(id)}`, self.location.origin), 303);
   } catch {
     return Response.redirect(new URL("/share?error=server", self.location.origin), 303);
@@ -55,12 +59,12 @@ function openShareDb() {
   });
 }
 
-async function savePendingShare(fields) {
+async function savePendingShare({ fields, files }) {
   const id = self.crypto.randomUUID();
   const db = await openShareDb();
   await new Promise((resolve, reject) => {
     const transaction = db.transaction(SHARE_STORE_NAME, "readwrite");
-    transaction.objectStore(SHARE_STORE_NAME).put({ id, fields, createdAt: Date.now() });
+    transaction.objectStore(SHARE_STORE_NAME).put({ id, fields, files, createdAt: Date.now() });
     transaction.oncomplete = resolve;
     transaction.onerror = () => reject(transaction.error);
     transaction.onabort = () => reject(transaction.error);

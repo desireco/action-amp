@@ -107,6 +107,23 @@ describe("createInboxItem — happy path", () => {
       sourceUrl: "https://example.com",
     });
   });
+
+  it("stores one shared image as an Inbox attachment", async () => {
+    const m = mockContext();
+    m.entities.InboxItem.create.mockResolvedValue({ id: "ix-image", text: "Shared image", createdAt: new Date() });
+    m.entities.Lens.findMany.mockResolvedValue([]);
+
+    await createInboxItem({
+      text: "Shared image",
+      attachments: [{ filename: "photo.jpg", mimeType: "image/jpeg", dataBase64: "aGVsbG8=" }],
+    }, m.context);
+
+    expect(m.entities.InboxItem.create.mock.calls[0][0].data.attachments.create[0]).toMatchObject({
+      filename: "photo.jpg",
+      mimeType: "image/jpeg",
+      size: 5,
+    });
+  });
 });
 
 describe("getInboxItems — guards", () => {
@@ -137,6 +154,7 @@ describe("getInboxItems — scoping", () => {
         title: true,
         content: true,
         sourceUrl: true,
+        attachments: { select: { id: true, filename: true, mimeType: true } },
         createdAt: true,
         parsedDate: true,
         parsedPriority: true,

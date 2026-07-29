@@ -44,7 +44,9 @@ The product bet: **overwhelm happens at step 3, not step 1.** The home screen is
 | **F4** | Capture-with-context (`Shift+Enter`) | 🟡 Phase 2 | Full editor from the palette (notes, subtasks, date pickers). |
 | **F5** | Email-in capture | 🟡 Phase 2 | Per-user inbox address; forwarding creates an item. |
 
-**Non-goals:** voice (handled by OS dictation into the text field), file attachments *(Phase 2)*.
+**Non-goals:** voice (handled by OS dictation into the text field), general
+file attachments *(Phase 2)*. One image from an Android/Chrome PWA share is
+supported as an Inbox attachment.
 
 ---
 

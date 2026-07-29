@@ -5,6 +5,10 @@ import type { InboxItem } from "@prisma/client";
 import { Chip, ArrowRightIcon, CalendarIcon, BoxIcon, HashIcon, StarIcon } from "../components/ui";
 import { formatAgo, formatRelativeDay } from "../shared/dateFormat";
 import "./InboxPage.css";
+
+type InboxItemWithAttachments = InboxItem & {
+  attachments: { id: string; filename: string; mimeType: string }[];
+};
 /**
  * Inbox — the capture destination. Untriaged items, newest first.
  *
@@ -65,7 +69,7 @@ export function InboxPage() {
               </Link>
             </div>
             <ul className="aa-inbox__list">
-              {list.map((item: InboxItem, i: number) => (
+              {list.map((item: InboxItemWithAttachments, i: number) => (
                 <li key={item.id} className="aa-inbox__item">
                   <Link to={`/app/inbox/review?i=${i}`} className="aa-inbox__row">
                     <div className="aa-inbox__row-content">
@@ -74,6 +78,7 @@ export function InboxPage() {
                       <div className="aa-inbox__row-meta">
                         <span className="aa-inbox__row-ago">captured {formatAgo(item.createdAt)}</span>
                         {item.sourceUrl && <Chip variant="teal" small>Link attached</Chip>}
+                        {item.attachments.length > 0 && <Chip variant="teal" small>Image attached</Chip>}
                         {item.parsedDate && (
                           <Chip variant="teal" small>
                             <CalendarIcon className="aa-chip__icon" />

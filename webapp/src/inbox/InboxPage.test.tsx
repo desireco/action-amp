@@ -16,6 +16,7 @@ interface InboxItem {
   parsedPriority: string | null;
   parsedSize: string | null;
   parsedTags: string[];
+  attachments: { id: string; filename: string; mimeType: string }[];
 }
 
 vi.mock("wasp/client/operations", () => ({
@@ -35,6 +36,7 @@ function item(id: string, text: string): InboxItem {
     parsedPriority: null,
     parsedSize: null,
     parsedTags: [],
+    attachments: [],
   };
 }
 

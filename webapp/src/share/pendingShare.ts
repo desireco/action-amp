@@ -3,7 +3,14 @@ import type { ShareFields } from "./composeShareText";
 const DB_NAME = "actionamp-share";
 const STORE_NAME = "pending";
 
-type PendingShare = { id: string; fields: ShareFields; createdAt: number };
+export type PendingShareImage = {
+  blob: Blob;
+  filename: string;
+  mimeType: string;
+  size: number;
+};
+
+type PendingShare = { id: string; fields: ShareFields; files?: PendingShareImage[]; createdAt: number };
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

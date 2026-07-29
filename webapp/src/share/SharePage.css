@@ -106,6 +106,16 @@
   margin: var(--aa-space-sm) 0 0;
 }
 
+.aa-share__image {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  margin-top: var(--aa-space-md);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  object-fit: contain;
+}
+
 .aa-share__actions {
   display: flex;
   align-items: center;

@@ -488,6 +488,21 @@ model InboxItem {
   parsedTags     String[] // raw tag strings: ["#work"] — grammar v2: @ is time-only, extra # mentions are tags
   parsedProject  String?  // first # mention / explicit autocomplete pick (resolved to projectId at triage)
   parsedLens     String?  // lens token from `[[name]]` (lowercased); resolved against the user's lenses at triage
+  attachments    InboxAttachment[]
+}
+
+// Image files shared from Android. Kept on the InboxItem so capture stays
+// self-contained; binary data is capped by the capture operation.
+model InboxAttachment {
+  id        String   @id @default(uuid())
+  filename  String
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  inboxItem   InboxItem @relation(fields: [inboxItemId], references: [id], onDelete: Cascade)
+  inboxItemId String
 }
 
 enum InboxItemStatus {

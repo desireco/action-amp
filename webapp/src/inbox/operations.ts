@@ -41,9 +41,10 @@ export const createInboxItem = (async (args, context) => {
     title: args.title,
     content: args.content,
     sourceUrl: args.sourceUrl,
+    attachments: args.attachments,
   });
 }) satisfies CreateInboxItem<
-  { text: string; projectName?: string; title?: string; content?: string; sourceUrl?: string },
+  { text: string; projectName?: string; title?: string; content?: string; sourceUrl?: string; attachments?: { filename: string; mimeType: string; dataBase64: string }[] },
   { id: string; text: string; createdAt: Date }
 >;
 

@@ -216,7 +216,9 @@ basic loop works.
 - ✅ **No loose Resources** — every Resource is filed under exactly one Project
   or Goal.
 - ✅ **No nested Projects** — a Project contains Tasks + Resources only.
-- ✅ **MVP Resources** = links + notes (bookmarks). File uploads = Phase 2.
+- ✅ **MVP Resources** = links + notes (bookmarks). General file uploads remain
+  Phase 2; a single image shared from Android/Chrome is retained as an
+  `InboxAttachment` until it is triaged.
 - ✅ **Priority scale** = **Low / Normal / Important** (3 levels).
 - ✅ **Size scale** = **S / M / L / XL**, with **XL prompting a break-down**
   (→ convert to Project, or add subtasks). *(InboxItem retention still open —

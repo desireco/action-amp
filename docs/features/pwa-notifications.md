@@ -39,12 +39,13 @@ review screen before anything is saved to the inbox.
 
 **Flow:**
 
-1. User shares from another app → Android POSTs the form to same-origin
+1. User shares text, a link, or one image from another app → Android POSTs the form to same-origin
    `/share`. The installed service worker writes the text fields to a
    short-lived, same-origin IndexedDB record and redirects to `/share?pending=`.
-2. `/share` separates a shared page's title, body, and source link before
+2. `/share` separates a shared page's title, body, source link, and image before
    showing **Add to inbox** and **Not now**. The source link is saved as an
-   attached-reference property; Android's duplicated page titles are removed.
+   attached-reference property; an image is previewed then saved as an Inbox
+   attachment (one image, up to 5 MB). Android's duplicated page titles are removed.
    Nothing reaches the server until the user confirms.
 3. **Add to inbox** calls the normal `createInboxItem` action; it uses the same
    authenticated capture path as `⌘K` and is therefore read by Inbox directly.
@@ -54,7 +55,7 @@ review screen before anything is saved to the inbox.
 **Wiring:**
 
 - `webapp/public/manifest.json` — the `share_target` block (action `/share`,
-  method POST, enctype `application/x-www-form-urlencoded`).
+  method POST, `multipart/form-data`, accepts `image/*`).
 - `webapp/src/share/` — `shareCapture.ts` (route handler),
   `composeShareText.ts` (field composition), `pendingShare.ts` (short-lived
   pending payload), `shareRouteMiddleware.ts` (urlencoded parsing),
