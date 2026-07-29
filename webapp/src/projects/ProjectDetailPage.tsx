@@ -12,6 +12,9 @@ import {
   updateProject,
   deleteProject,
   updateTask,
+  createResource,
+  updateResource,
+  deleteResource,
 } from "wasp/client/operations";
 import { Breadcrumb } from "../components/ui";
 import type { BreadcrumbItem } from "../components/ui";
@@ -22,6 +25,7 @@ import {
   TaskRow,
   CompletionCircle,
   ConfirmDialog,
+  BottomSheet,
   InlineEntityEditForm,
   PlusIcon,
   ArrowRightIcon,
@@ -56,6 +60,15 @@ type ProjectData = {
   lensId: string;
   goal: { id: string; permalink: string; name: string } | null;
   tasks: ProjectTask[];
+  resources: ProjectResource[];
+};
+
+type ProjectResource = {
+  id: string;
+  title: string;
+  url: string | null;
+  notes: string | null;
+  createdAt: Date | string;
 };
 
 type GoalOption = { id: string; permalink: string; name: string };
@@ -96,6 +109,13 @@ export function ProjectDetailPage() {
   const [editError, setEditError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [relinkError, setRelinkError] = useState<string | null>(null);
+  const [resourceEditor, setResourceEditor] = useState<ProjectResource | "new" | null>(null);
+  const [resourceTitle, setResourceTitle] = useState("");
+  const [resourceUrl, setResourceUrl] = useState("");
+  const [resourceNotes, setResourceNotes] = useState("");
+  const [resourceError, setResourceError] = useState<string | null>(null);
+  const [resourceSaving, setResourceSaving] = useState(false);
+  const [resourceToDelete, setResourceToDelete] = useState<ProjectResource | null>(null);
 
   // Re-link picker: fetch goals in the project's lens for the dropdown. Only
   // active goals (isDone:false) — you don't re-link to a completed goal.
@@ -326,6 +346,40 @@ export function ProjectDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     setConfirmDelete(false);
     navigate("/app/projects");
+  };
+
+  const openResourceEditor = (resource: ProjectResource | "new") => {
+    setResourceEditor(resource);
+    setResourceTitle(resource === "new" ? "" : resource.title);
+    setResourceUrl(resource === "new" ? "" : resource.url ?? "");
+    setResourceNotes(resource === "new" ? "" : resource.notes ?? "");
+    setResourceError(null);
+  };
+
+  const saveResource = async () => {
+    if (!project || !resourceEditor) return;
+    setResourceSaving(true);
+    setResourceError(null);
+    try {
+      if (resourceEditor === "new") {
+        await createResource({ projectId: project.id, title: resourceTitle, url: resourceUrl, notes: resourceNotes });
+      } else {
+        await updateResource({ id: resourceEditor.id, title: resourceTitle, url: resourceUrl, notes: resourceNotes });
+      }
+      queryClient.invalidateQueries({ queryKey: ["getProject"] });
+      setResourceEditor(null);
+    } catch (e) {
+      setResourceError(e instanceof Error ? e.message : "Couldn't save resource.");
+    } finally {
+      setResourceSaving(false);
+    }
+  };
+
+  const removeResource = async () => {
+    if (!resourceToDelete) return;
+    await deleteResource({ id: resourceToDelete.id });
+    queryClient.invalidateQueries({ queryKey: ["getProject"] });
+    setResourceToDelete(null);
   };
 
   // Breadcrumb chain: Goal › Project. A "Projects" list root is always present
@@ -810,6 +864,40 @@ export function ProjectDetailPage() {
               })}
             </div>
           )}
+
+          <section className="aa-project__resources" aria-labelledby="project-resources-heading">
+            <div className="aa-project__resources-head">
+              <div>
+                <h2 id="project-resources-heading" className="aa-project__resources-title">Resources</h2>
+                <p className="aa-project__resources-copy">Links, notes, and reference material for this project.</p>
+              </div>
+              <Button variant="secondary" size="sm" icon={<PlusIcon />} onClick={() => openResourceEditor("new")}>
+                Add resource
+              </Button>
+            </div>
+            {project.resources.length === 0 ? (
+              <p className="aa-project__resources-empty">Nothing saved here yet.</p>
+            ) : (
+              <ul className="aa-project__resources-list">
+                {project.resources.map((resource: ProjectResource) => (
+                  <li id={`resource-${resource.id}`} key={resource.id} className="aa-project__resource">
+                    <div className="aa-project__resource-main">
+                      {resource.url ? (
+                        <a className="aa-project__resource-link" href={resource.url} target="_blank" rel="noopener noreferrer">
+                          <span aria-hidden="true">↗</span> {resource.title}
+                        </a>
+                      ) : <span className="aa-project__resource-title">{resource.title}</span>}
+                      {resource.notes && <p className="aa-project__resource-notes">{resource.notes}</p>}
+                    </div>
+                    <div className="aa-project__resource-actions">
+                      <Button variant="ghost" size="sm" onClick={() => openResourceEditor(resource)}>Edit</Button>
+                      <Button variant="ghost" size="sm" onClick={() => setResourceToDelete(resource)}>Remove</Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </>
       )}
 
@@ -831,6 +919,32 @@ export function ProjectDetailPage() {
           danger
           onConfirm={handleDelete}
           onClose={() => setConfirmDelete(false)}
+        />
+      )}
+
+      {resourceEditor && (
+        <BottomSheet title={resourceEditor === "new" ? "Add resource" : "Edit resource"} onClose={() => setResourceEditor(null)}>
+          <form className="aa-project__resource-form" onSubmit={(e) => { e.preventDefault(); void saveResource(); }}>
+            <label>Title<input autoFocus value={resourceTitle} onChange={(e) => setResourceTitle(e.target.value)} placeholder="What is this?" /></label>
+            <label>Link <span>(optional)</span><input value={resourceUrl} onChange={(e) => setResourceUrl(e.target.value)} placeholder="https://…" type="url" /></label>
+            <label>Notes <span>(optional)</span><textarea value={resourceNotes} onChange={(e) => setResourceNotes(e.target.value)} placeholder="Why keep this?" rows={4} /></label>
+            {resourceError && <p className="aa-project__resource-error">{resourceError}</p>}
+            <div className="aa-project__resource-form-actions">
+              <Button variant="secondary" size="sm" onClick={() => setResourceEditor(null)}>Cancel</Button>
+              <Button variant="primary" size="sm" disabled={resourceSaving}>{resourceSaving ? "Saving…" : "Save resource"}</Button>
+            </div>
+          </form>
+        </BottomSheet>
+      )}
+
+      {resourceToDelete && (
+        <ConfirmDialog
+          title="Remove this resource?"
+          message={<>“{resourceToDelete.title}” will be removed from this project. Tasks and their Context links stay unchanged.</>}
+          confirmLabel="Remove resource"
+          danger
+          onConfirm={() => void removeResource()}
+          onClose={() => setResourceToDelete(null)}
         />
       )}
     </div>

@@ -14,7 +14,7 @@ import {
  *
  * Triage's Working draft uses string enums (`when: "Today"`, `priority:
  * "LOW"`, `size: "S"`, `due: "—"`, `kind: "Link"`). PropertyChips speaks
- * string values too, so most fields plug in directly. Project/Goal/parent
+ * string values too, so most fields plug in directly. Project/Goal/resource
  * fields are `externalPicker` — triage keeps its own PickerSheets because
  * they have rich semantics (custom titles with item text, switch-project↔
  * goal action rows) that don't fit PropertyChips' built-in sheet.
@@ -102,7 +102,7 @@ export function projectFields({
   ];
 }
 
-/** File-under + Kind fields for a Resource/Note spec. */
+/** Required Project + Kind fields for a Resource/Note spec. */
 export function resourceFields({
   working,
   parentName,
@@ -111,10 +111,10 @@ export function resourceFields({
     {
       key: "parent",
       variant: "parent",
-      value: working.parentProjectId ?? working.parentGoalId,
-      displayValue: parentName ?? "Pick parent…",
-      unset: !working.parentProjectId && !working.parentGoalId,
-      addLabel: "Parent",
+      value: working.parentProjectId,
+      displayValue: parentName ?? "Pick project…",
+      unset: !working.parentProjectId,
+      addLabel: "Project",
       externalPicker: true,
     },
     {

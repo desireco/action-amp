@@ -89,7 +89,7 @@ export const getInboxItem = (async (
 //   someday    → Task(status=SOMEDAY) · project  → new Project (text = name)
 //   archive    → mark InboxItem ARCHIVED (kept; recoverable from the Logbook)
 // Carries the InboxItem's parsed-* guesses onto the created entity. Resource
-// filing needs a parent picker (not yet built) — it throws a helpful error.
+// Resources require a Project destination.
 //
 // The orchestrator (triageInboxItemCore) lives in operationsCore.ts. The two
 // entitlement decisions it needs arrive as injected callbacks so the core

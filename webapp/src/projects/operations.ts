@@ -290,10 +290,7 @@ export const deleteProject = (async (args, context) => {
     where: { projectId: existing.id, userId: context.user.id },
     data: { projectId: null },
   });
-  // Resources are owned by exactly one Project OR Goal (DATA-MODEL). With their
-  // project gone, they'd be orphaned — detach to goalId=null is invalid (loose
-  // resource), so we delete them. This is a known edge: the confirm copy
-  // counts only tasks (the common case), and resource-only projects are rare.
+  // Resources are project-owned, so they leave with the deleted project.
   await context.entities.Resource.deleteMany({
     where: { projectId: existing.id, userId: context.user.id },
   });

@@ -15,7 +15,8 @@ verified: 2026-07-03
   preview. Inline create (`CreateInline`).
 - **Detail** (`/app/projects/:id`, `projects/ProjectDetailPage.tsx`) — tasks
   grouped by horizon (Today/Upcoming/Someday/Done), inline "Add task" (creates
-  with the project's `lensId`), horizon move buttons.
+  with the project's `lensId`), horizon move buttons, and a Resources review
+  section for project links and notes (open, add, edit, remove).
 
 **Files.** `projects/ProjectsPage.tsx`; `projects/ProjectDetailPage.tsx`.
 

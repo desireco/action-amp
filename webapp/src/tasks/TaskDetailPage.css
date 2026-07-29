@@ -111,6 +111,12 @@
   display: grid;
   gap: var(--aa-space-sm);
 }
+.aa-task-edit__notes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-sm);
+}
 
 .aa-task-label {
   color: var(--aa-text-4);

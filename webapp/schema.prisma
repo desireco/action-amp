@@ -18,7 +18,7 @@ generator client {
 //   - Tasks can exist WITHOUT a Project ("General", scoped per Lens).
 //   - Projects can exist WITHOUT a Goal (standalone).
 //   - Projects contain Tasks + Resources only (NEVER nested Projects).
-//   - Every Resource is filed under exactly one Project OR Goal (no loose resources).
+//   - Every Resource is filed under exactly one Project (no loose resources).
 //   - Task defaults: size=M, priority=Normal, status=Someday (triage never auto-clutters Today).
 
 model User {
@@ -204,7 +204,6 @@ model Goal {
 
   projects  Project[]
   tasks     Task[]     // legacy direct-goal tasks
-  resources Resource[] // resources filed directly under the goal
 
   @@unique([userId, name]) // unique goal names per user
   @@unique([userId, permalink])
@@ -437,9 +436,8 @@ model Feedback {
 // ============================================================
 // Resource — reference material (links + notes), NOT an action
 // ============================================================
-// Filed under exactly one Project OR Goal (no loose resources). Exactly one of
-// projectId/goalId must be set; the other null. Enforced at the app layer;
-// both FKs are nullable at the DB level to support either parent.
+// Filed under exactly one Project (no loose resources). Resources are shared
+// project context — links and notes needed to move that project forward.
 model Resource {
   id        String   @id @default(uuid())
   title     String
@@ -450,11 +448,8 @@ model Resource {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId String?
-
-  goal   Goal?  @relation(fields: [goalId], references: [id], onDelete: Cascade)
-  goalId String?
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
 }
 
 // ============================================================

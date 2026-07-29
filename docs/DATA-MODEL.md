@@ -84,7 +84,7 @@
   **Projects are never nested** (a Project contains Tasks + Resources only — no
   sub-Projects). (PARA "Project".)
 - **Resource** = non-actionable material. In the MVP this means **links + notes
-  (bookmarks)**. **Every Resource is filed under exactly one Project or Goal** —
+  (bookmarks)**. **Every Resource is filed under exactly one Project** —
   there are no loose/top-level Resources. Never surfaced by the focus engine.
   (PARA "Resource".)
 - **Goal** = the organizing layer — **replaces PARA's Areas.** Active &

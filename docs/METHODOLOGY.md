@@ -43,7 +43,7 @@ PARA stores things in 4 buckets. We adopt the **shape**, swap one bucket:
 **The substitution:** `Areas → Goals`. Everything else maps 1:1.
 
 > Open question: in PARA, Resources sit at the top level (by topic). Here we
-> file Resources **under a Project or Goal**, not loose. This keeps focus on
+> file Resources **under a Project**, not loose. This keeps focus on
 > action — loose reference material without a home isn't useful. *(Confirm or
 > relax.)*
 
@@ -80,7 +80,7 @@ Inbox            (GTD "Inbox" — universal, single)
 
 ## 5. Open questions (need your call)
 
-1. **Loose Resources** — must Resources always be under a Project/Goal, or can
+1. **Loose Resources** — must Resources always be under a Project, or can
    they be top-level (PARA-style)? *(Lean: always under something — keeps it action-focused.)*
 2. **Someday vs Archive** — GTD treats these separately (Someday = might-do,
    Archive = done). Keep both? *(Lean: yes — separate statuses.)*

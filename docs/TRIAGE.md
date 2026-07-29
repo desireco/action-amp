@@ -92,7 +92,7 @@ What an InboxItem can become (DATA-MODEL.md §3). One input shape, five outputs.
 | quick action | **Task** (standalone, dated) | "Email Sarah" → Today |
 | big outcome | **Project** (text becomes the Project name) | "Plan Q3 launch" → new Project |
 | step in existing work | **Task** inside an existing **Project** | "Draft press release" → "Q3 launch" |
-| reference, not action | **Resource** (link/note) under a **Project or Goal** | "Competitor PDF" → "Q3 launch" |
+| reference, not action | **Resource** (link/note) under a **Project** | "Competitor PDF" → "Q3 launch" |
 | supports a bigger goal | **Project** linked to a **Goal** | "Launch newsletter" → Goal: "Grow audience" |
 | captured by mistake | **Delete** — the InboxItem is hard-removed, not recoverable | misheard voice capture, wrong lens, duplicate |
 
@@ -159,7 +159,7 @@ Important/XL, violet = Project/Goal, gray = default.
 |---|---|
 | Task | When · Size · Priority · Project (file into) |
 | Project | Goal (supports, optional) · Due |
-| Resource (Note) | Parent (Project/Goal) · Kind (Link/Note) |
+| Resource (Note) | Project · Kind (Link/Note) |
 
 > "Goal" appears as a **spec row** only on Project (supports an existing goal),
 > not on Task. Projects make goals happen; tasks happen inside projects or
@@ -393,7 +393,7 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
   triage Spec + the task page. The property-key shortcuts work uniformly in
   both surfaces.
 - ✅ Type dispatch (Task/Project/Resource/Delete) + exit animations
-- ✅ Resource/Note parent picker (file under a Project or Goal)
+- ✅ Resource/Note project picker (file under a Project)
 - ✅ Transform action (`inbox/operations.ts :: triageInboxItem`)
 - ✅ Global `⌘K` capture
 

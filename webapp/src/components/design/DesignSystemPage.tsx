@@ -753,7 +753,7 @@ export function DesignSystemPage() {
               <DispatchButton
                 tone="amber"
                 label="Resource"
-                sub="reference — link or note, filed under a project or goal"
+                sub="reference — link or note, filed under a project"
                 kbd="R"
                 icon={<svg viewBox="0 0 16 16" fill="none"><path d="M3.5 13.5V3.5a1 1 0 011-1h5.5L13 5.5v8a1 1 0 01-1 1H4.5a1 1 0 01-1-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /><path d="M9.5 2.5V6h3.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>}
               />

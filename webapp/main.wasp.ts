@@ -14,6 +14,7 @@ import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { createProject } from "./src/projects/operations" with { type: "ref" };
 import { getProject, createTask } from "./src/projects/operations" with { type: "ref" };
 import { setProjectDone, updateProject, deleteProject, updateTask } from "./src/projects/operations" with { type: "ref" };
+import { createResource, updateResource, deleteResource } from "./src/resources/operations" with { type: "ref" };
 import { ProjectDetailPage } from "./src/projects/ProjectDetailPage" with { type: "ref" };
 import { getGoals, getGoal } from "./src/goals/operations" with { type: "ref" };
 import { createGoal } from "./src/goals/operations" with { type: "ref" };
@@ -254,12 +255,15 @@ export default app({
     action(completeTaskFromFocus, { entities: ["Task", "TaskUpdate", "TaskSession"], auth: true }),
     query(getProjects, { entities: ["Project", "Task", "Lens"], auth: true }),
     action(createProject, { entities: ["Project", "Lens"], auth: true }),
-    query(getProject, { entities: ["Project", "Task"], auth: true }),
+    query(getProject, { entities: ["Project", "Task", "Resource"], auth: true }),
     action(createTask, { entities: ["Task", "Project", "Goal", "Lens"], auth: true }),
     action(setProjectDone, { entities: ["Project", "Lens"], auth: true }),
     action(updateProject, { entities: ["Project", "Goal"], auth: true }),
     action(deleteProject, { entities: ["Project", "Task", "Resource"], auth: true }),
     action(updateTask, { entities: ["Task", "Project", "Goal"], auth: true }),
+    action(createResource, { entities: ["Resource", "Project"], auth: true }),
+    action(updateResource, { entities: ["Resource", "Project"], auth: true }),
+    action(deleteResource, { entities: ["Resource", "Project"], auth: true }),
     query(getGoals, { entities: ["Goal", "Project", "Task", "Lens"], auth: true }),
     query(getGoal, { entities: ["Goal", "Project", "Task"], auth: true }),
     action(createGoal, { entities: ["Goal", "Lens"], auth: true }),

@@ -123,11 +123,10 @@ past, and the memory you lose a week later.
   should note the reconciliation with this spec. (Build does this; the
   reversal is already locked here so Build isn't blocked on Discover.)
 
-- **Why markdown links don't get a "Resource picker" in v1.** A picker that
-  autocompletes the parent project's Resources into a markdown link is a
-  plausible v2 — it would give the convenience of structured attachment
-  without the join table. Non-goal for this spec; tracked as a future
-  enhancement once Resources are surfaced.
+- **Project Resource picker.** Task detail offers “Insert project resource”
+  when the task belongs to a Project with Resources. It writes a normal
+  markdown link into Context: external Resources link to their source; notes
+  link back to their Resource row on the Project page. No Task↔Resource join.
 
 ## Done-conditions
 

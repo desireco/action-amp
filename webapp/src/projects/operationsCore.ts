@@ -139,6 +139,10 @@ export async function getProjectData(
           completedAt: true,
         },
       },
+      resources: {
+        orderBy: [{ createdAt: "desc" }],
+        select: { id: true, title: true, url: true, notes: true, createdAt: true },
+      },
     },
   });
   if (!project) return null;
@@ -157,6 +161,7 @@ export async function getProjectData(
     lensId: project.lensId,
     goal: project.goal,
     tasks: project.tasks,
+    resources: project.resources,
   };
 }
 

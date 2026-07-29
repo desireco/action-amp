@@ -429,10 +429,9 @@ export async function triageInboxItemCore(
       );
       break;
     case "resource": {
-      // Resources require a parent (Project or Goal). A picker isn't built yet;
-      // surface a clear error so the UI can guide the user.
-      if (!projectId && !goalId) {
-        throw new Error("Resources must be filed under a project or goal.");
+      // Resources are shared project context. No loose or Goal-owned resources.
+      if (!projectId) {
+        throw new Error("Resources must be filed under a project.");
       }
       const resource = await entities.Resource.create({
         data: {
@@ -440,8 +439,7 @@ export async function triageInboxItemCore(
           url: item.sourceUrl,
           notes: resolvedContent ?? item.content,
           userId,
-          projectId: projectId ?? null,
-          goalId: goalId ?? null,
+          projectId,
         },
         select: { id: true },
       });

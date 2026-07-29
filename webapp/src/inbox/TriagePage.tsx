@@ -108,7 +108,6 @@ export function TriagePage() {
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
   const [goalPickerOpen, setGoalPickerOpen] = useState(false);
   const [parentProjectPickerOpen, setParentProjectPickerOpen] = useState(false);
-  const [parentGoalPickerOpen, setParentGoalPickerOpen] = useState(false);
 
   // Projects + goals scoped to the *confirmed* lens (step 1 output), not the
   // active one — filing targets must match where the item is actually landing.
@@ -245,7 +244,6 @@ export function TriagePage() {
       projectGoalId: null,
       due: "—",
       parentProjectId: null,
-      parentGoalId: null,
       kind: "Link",
     }),
     [item],
@@ -361,7 +359,7 @@ export function TriagePage() {
     chosenLensId,
     working,
     chipOpen,
-    pickerOpen: projectPickerOpen || goalPickerOpen || parentProjectPickerOpen || parentGoalPickerOpen,
+    pickerOpen: projectPickerOpen || goalPickerOpen || parentProjectPickerOpen,
     canComplete,
     dispatch,
     navigateToInbox: () => navigate("/app/inbox"),
@@ -391,9 +389,7 @@ export function TriagePage() {
   const parentName = working
     ? working.parentProjectId
       ? (projects ?? []).find((p: Project) => p.id === working.parentProjectId)?.name ?? null
-      : working.parentGoalId
-        ? (goals ?? []).find((g: Goal) => g.id === working.parentGoalId)?.name ?? null
-        : null
+      : null
     : null;
 
   // Lenses — fall back to the seeded two so the classify pills have something
@@ -498,13 +494,12 @@ export function TriagePage() {
         )}
       </div>
 
-      {/* ---- File-into pickers (Project / Goal / parent-Project / parent-Goal) ---- */}
+      {/* ---- File-into pickers (Project / Goal / Resource Project) ---- */}
       <TriagePickers
         open={{
           project: projectPickerOpen,
           goal: goalPickerOpen,
           parentProject: parentProjectPickerOpen,
-          parentGoal: parentGoalPickerOpen,
         }}
         itemPresent={!!item}
         shortText={shortText}
@@ -517,7 +512,6 @@ export function TriagePage() {
         setProjectOpen={setProjectPickerOpen}
         setGoalOpen={setGoalPickerOpen}
         setParentProjectOpen={setParentProjectPickerOpen}
-        setParentGoalOpen={setParentGoalPickerOpen}
       />
     </div>
   );
@@ -663,7 +657,7 @@ function SpecStep({
       </div>
       <div className="aa-triage-spec">
         {/* The chip row IS the editor — same component as the task page.
-            Project/Goal/Parent are external pickers (triage owns those
+            Project/Goal/Resource Project are external pickers (triage owns those
             sheets); task Notes stay a textarea — prose, not a chip. */}
         {working.type === "task" && (
           <>
@@ -757,7 +751,7 @@ function TriageComplete({
 type PickerProject = { id: string; name: string; goal?: { name: string } | null };
 type PickerGoal = { id: string; name: string };
 
-/** The four file-into pickers (Project / Goal / parent-Project / parent-Goal). */
+/** File-into pickers for tasks, projects, and project-owned resources. */
 function TriagePickers({
   open,
   itemPresent,
@@ -771,9 +765,8 @@ function TriagePickers({
   setProjectOpen,
   setGoalOpen,
   setParentProjectOpen,
-  setParentGoalOpen,
 }: {
-  open: { project: boolean; goal: boolean; parentProject: boolean; parentGoal: boolean };
+  open: { project: boolean; goal: boolean; parentProject: boolean };
   itemPresent: boolean;
   shortText: string;
   projects: PickerProject[];
@@ -785,7 +778,6 @@ function TriagePickers({
   setProjectOpen: (open: boolean) => void;
   setGoalOpen: (open: boolean) => void;
   setParentProjectOpen: (open: boolean) => void;
-  setParentGoalOpen: (open: boolean) => void;
 }) {
   return (
     <>
@@ -835,38 +827,14 @@ function TriagePickers({
             meta: p.goal?.name ?? null,
             current: p.id === working?.parentProjectId,
           }))}
-          action={{
-            label: "…or file under a goal",
-            onPick: () => {
-              setParentProjectOpen(false);
-              setParentGoalOpen(true);
-            },
-          }}
           onPick={(id) => {
-            setW({ parentProjectId: id, parentGoalId: null });
+            setW({ parentProjectId: id });
             setParentProjectOpen(false);
           }}
           onClose={() => setParentProjectOpen(false)}
         />
       )}
 
-      {open.parentGoal && itemPresent && (
-        <PickerSheet
-          title="File note under a goal"
-          items={goals.map((g) => ({
-            id: g.id,
-            label: g.name,
-            chip: lensChip,
-            current: g.id === working?.parentGoalId,
-          }))}
-          emptyMessage="No goals yet — make one on the Goals page."
-          onPick={(id) => {
-            setW({ parentGoalId: id, parentProjectId: null });
-            setParentGoalOpen(false);
-          }}
-          onClose={() => setParentGoalOpen(false)}
-        />
-      )}
     </>
   );
 }

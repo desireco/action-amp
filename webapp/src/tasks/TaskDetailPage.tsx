@@ -5,13 +5,14 @@ import {
   getTask,
   getProjects,
   getGoals,
+  getProject,
   submitFeedback,
   setTaskOutcome,
   updateTaskDetails,
   updateTaskStatus,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Breadcrumb, Button, Markdown, PropertyChips, submitOnModEnter } from "../components/ui";
+import { Breadcrumb, Button, Markdown, PickerSheet, PropertyChips, submitOnModEnter } from "../components/ui";
 import type { BreadcrumbItem } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { captureFeedbackContext } from "../feedback/captureContext";
@@ -97,6 +98,14 @@ export function TaskDetailPage() {
     lensId ? { lensId } : undefined,
     { enabled: !!lensId && !task?.isDone },
   );
+  // Project Resources are shared context. Fetch only for a task already filed
+  // into a project; standalone tasks deliberately have no resource picker.
+  const { data: projectWithResources } = useQuery(
+    getProject,
+    task?.project ? { id: task.project.id } : undefined,
+    { enabled: !!task?.project && !task?.isDone },
+  );
+  const [resourcePickerOpen, setResourcePickerOpen] = useState(false);
 
   const canSave =
     Boolean(task) &&
@@ -201,6 +210,16 @@ export function TaskDetailPage() {
   const handlePickerPick = (fieldKey: string, value: string | null): void => {
     if (fieldKey === "project") void writeTaskPatch({ projectId: value });
     else if (fieldKey === "goal") void writeTaskPatch({ goalId: value });
+  };
+
+  const insertProjectResource = (resource: { id: string; title: string; url: string | null }) => {
+    if (!task?.project) return;
+    // Link external sources directly. Notes-only Resources link back to their
+    // owning Project so the reference remains navigable without another model.
+    const href = resource.url ?? `/app/projects/${task.project.permalink}#resource-${resource.id}`;
+    const link = `[${resource.title}](${href})`;
+    setContent((current) => current.trim() ? `${current.trimEnd()}\n\n${link}` : link);
+    setResourcePickerOpen(false);
   };
 
   // Property-key shortcuts (TRIAGE.md §7.4/§7.6): [ / ] = size, - / = =
@@ -485,9 +504,14 @@ export function TaskDetailPage() {
               className="aa-task-edit__notes"
               aria-labelledby="task-notes"
             >
-              <label className="aa-task-label" id="task-notes">
-                Notes
-              </label>
+              <div className="aa-task-edit__notes-head">
+                <label className="aa-task-label" id="task-notes">Context</label>
+                {task.project && (projectWithResources?.resources.length ?? 0) > 0 && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setResourcePickerOpen(true)}>
+                    Insert project resource
+                  </Button>
+                )}
+              </div>
               <textarea
                 className="aa-task-textarea"
                 value={content}
@@ -544,6 +568,23 @@ export function TaskDetailPage() {
                 Won't do
               </Button>
             </div>
+          )}
+
+          {resourcePickerOpen && task.project && (
+            <PickerSheet
+              title="Insert project resource"
+              items={(projectWithResources?.resources ?? []).map((resource: { id: string; title: string; url: string | null; notes: string | null }) => ({
+                id: resource.id,
+                label: resource.title,
+                meta: resource.url ?? resource.notes ?? "Project note",
+              }))}
+              emptyMessage="No resources on this project yet."
+              onPick={(id) => {
+                const resource = (projectWithResources?.resources ?? []).find((item: { id: string }) => item.id === id);
+                if (resource) insertProjectResource(resource);
+              }}
+              onClose={() => setResourcePickerOpen(false)}
+            />
           )}
         </div>
       )}

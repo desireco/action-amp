@@ -32,7 +32,6 @@ export interface Working {
   projectGoalId: string | null;
   due: (typeof DUE_OPTS)[number];
   parentProjectId: string | null;
-  parentGoalId: string | null;
   kind: (typeof KIND_OPTS)[number];
 }
 
@@ -73,7 +72,7 @@ function buildOutcome(w: Working): Outcome {
  *
  *   - task:     projectId (manual pick > resolved #token), priority, size, content
  *   - project:  goalId (the goal it supports)
- *   - resource: parentId (a project or a goal it files under)
+ *   - resource: projectId (its required project home)
  *
  * `resolvedProjectId` is the capture-resolved project for the task path only;
  * it's the fallback when the user didn't pick one manually in the spec step.
@@ -117,7 +116,6 @@ export function buildDispatchPayload(
       ...base,
       name,
       projectId: w.parentProjectId ?? undefined,
-      goalId: w.parentGoalId ?? undefined,
     };
   }
   // Delete only needs the base — it does not file anything into a lens.
@@ -127,7 +125,7 @@ export function buildDispatchPayload(
 export function canComplete(w: Working | null, chosenLensId: string | null): boolean {
   if (!w || !chosenLensId) return false;
   if (!w.title.trim()) return false;
-  if (w.type === "resource") return !!w.parentProjectId || !!w.parentGoalId;
+  if (w.type === "resource") return !!w.parentProjectId;
   return true;
 }
 

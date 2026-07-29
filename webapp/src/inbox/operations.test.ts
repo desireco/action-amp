@@ -344,14 +344,14 @@ describe("triageInboxItem — project / resource / archive", () => {
     expect(m.entities.InboxItem.delete).toHaveBeenCalled();
   });
 
-  it("resource requires a parent project or goal", async () => {
+  it("resource requires a project", async () => {
     const m = arrange();
     await expect(
       triageInboxItem(
         { inboxItemId: "ix-1", decision: "resource", lensId: "l" },
         m.context,
       ),
-    ).rejects.toThrow(/project or goal/i);
+    ).rejects.toThrow(/filed under a project/i);
   });
 
   it("archive marks the item ARCHIVED (kept) and creates nothing", async () => {
