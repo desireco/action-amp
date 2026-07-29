@@ -58,8 +58,14 @@
       "url": "url",
       "files": [
         {
-          "name": "files",
-          "accept": ["image/*"]
+          "name": "images",
+          "accept": [
+            "image/jpeg", ".jpg", ".jpeg",
+            "image/png", ".png",
+            "image/webp", ".webp",
+            "image/gif", ".gif",
+            "image/heic", ".heic", ".heif"
+          ]
         }
       ]
     }

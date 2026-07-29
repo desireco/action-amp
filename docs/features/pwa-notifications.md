@@ -55,7 +55,8 @@ review screen before anything is saved to the inbox.
 **Wiring:**
 
 - `webapp/public/manifest.json` — the `share_target` block (action `/share`,
-  method POST, `multipart/form-data`, accepts `image/*`).
+  method POST, `multipart/form-data`, accepts common JPEG, PNG, WebP, GIF, and
+  HEIC/HEIF image types with matching extensions for Android intent matching).
 - `webapp/src/share/` — `shareCapture.ts` (route handler),
   `composeShareText.ts` (field composition), `pendingShare.ts` (short-lived
   pending payload), `shareRouteMiddleware.ts` (urlencoded parsing),

@@ -39,7 +39,7 @@ async function handleShareTarget(request) {
       const value = formData.get(field);
       if (typeof value === "string") fields[field] = value;
     }
-    const files = formData.getAll("files")
+    const files = formData.getAll("images")
       .filter((value) => value instanceof File && value.type.startsWith("image/"))
       .map((file) => ({ blob: file, filename: file.name || "Shared image", mimeType: file.type, size: file.size }));
     const id = await savePendingShare({ fields, files });
