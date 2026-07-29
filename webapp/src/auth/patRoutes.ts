@@ -376,17 +376,32 @@ export const cliCapture = async (req: Request, res: Response, _context: unknown)
     return res.status(400).json({ error: "Capture text is required." });
   }
   const projectName = bodyString(req.body, "projectName");
+  const attachments = Array.isArray(req.body?.attachments)
+    ? req.body.attachments.filter((attachment: unknown): attachment is { filename: string; mimeType: string; dataBase64: string } =>
+      typeof attachment === "object" && attachment !== null
+      && typeof (attachment as Record<string, unknown>).filename === "string"
+      && typeof (attachment as Record<string, unknown>).mimeType === "string"
+      && typeof (attachment as Record<string, unknown>).dataBase64 === "string",
+    )
+    : undefined;
+  if (Array.isArray(req.body?.attachments) && attachments?.length !== req.body.attachments.length) {
+    return res.status(400).json({ error: "Attachments must include filename, mimeType, and dataBase64." });
+  }
 
   try {
     const created = await createInboxItemCore(authEntities, {
       userId: user.id,
       text,
       projectName,
+      title: bodyString(req.body, "title"),
+      content: bodyString(req.body, "content"),
+      sourceUrl: bodyString(req.body, "sourceUrl"),
+      attachments,
     });
     return res.status(201).json({ ok: true, ...created });
   } catch (err) {
     console.error("[cli/capture] failed:", err);
-    return res.status(500).json({ error: "Could not capture." });
+    return res.status(400).json({ error: err instanceof Error ? err.message : "Could not capture." });
   }
 };
 

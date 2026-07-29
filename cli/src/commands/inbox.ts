@@ -36,6 +36,11 @@ export function makeInboxCommand(): Command {
           }
           result.items.forEach((item, i) => {
             process.stdout.write(`  ${chalk.gray(`${i + 1}.`)} ${item.text}\n`);
+            const attached = [
+              item.sourceUrl ? "link" : null,
+              item.attachments?.length ? `${item.attachments.length} image${item.attachments.length === 1 ? "" : "s"}` : null,
+            ].filter(Boolean).join(", ");
+            if (attached) process.stdout.write(`     ${chalk.gray(`attached: ${attached}`)}\n`);
           });
         },
         ctx,
