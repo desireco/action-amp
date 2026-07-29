@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { createInboxItem } from "wasp/client/operations";
+import { BrandMark } from "../components/ui/BrandMark";
+import { ArrowRightIcon, InboxIcon } from "../components/ui/icons";
 import { composeShareCapture, type ShareFields } from "./composeShareText";
 import { clearPendingShare, getPendingShare, type PendingShareImage } from "./pendingShare";
 import "./SharePage.css";
@@ -96,21 +98,40 @@ export function SharePage() {
     return (
       <main className="aa-share">
         <div className="aa-share__card aa-share__card--review">
-          <p className="aa-share__eyebrow">Inbox capture</p>
-          <h1 className="aa-share__title">Add this to your inbox?</h1>
-          {capture.title && <h2 className="aa-share__capture-title">{capture.title}</h2>}
-          {capture.content && <p className="aa-share__text aa-share__text--review">{capture.content}</p>}
-          {capture.url && <p className="aa-share__property">Link attached</p>}
-          {pending.files.map((file) => <ImagePreview key={`${file.filename}-${file.size}`} file={file} />)}
+          <header className="aa-share__header">
+            <span className="aa-share__brand"><BrandMark size="sm" /></span>
+            <span className="aa-share__brand-name">ActionAmp</span>
+            <span className="aa-share__destination"><InboxIcon /> Inbox</span>
+          </header>
+
+          <div className="aa-share__intro">
+            <p className="aa-share__eyebrow">Shared from another app</p>
+            <h1 className="aa-share__title">Keep this for later.</h1>
+            <p className="aa-share__lede">Review it once, then it waits in your Inbox until you are ready.</p>
+          </div>
+
+          <section className="aa-share__preview" aria-label="Shared item preview">
+            <div className="aa-share__preview-label">
+              <span className="aa-share__preview-dot" aria-hidden="true" />
+              Ready to capture
+            </div>
+            {capture.title && <h2 className="aa-share__capture-title">{capture.title}</h2>}
+            {capture.content && <p className="aa-share__text aa-share__text--review">{capture.content}</p>}
+            {capture.url && <SharedLink url={capture.url} />}
+            {pending.files.map((file) => <ImagePreview key={`${file.filename}-${file.size}`} file={file} />)}
+          </section>
           {submitError && <p className="aa-share__error" role="alert">{submitError}</p>}
           <div className="aa-share__actions">
             <button className="aa-share__button" type="button" onClick={() => void confirmPending()} disabled={submitting}>
-              {submitting ? "Adding…" : "Add to inbox"}
+              <InboxIcon />
+              {submitting ? "Adding…" : "Add to Inbox"}
+              {!submitting && <ArrowRightIcon />}
             </button>
             <button className="aa-share__link aa-share__link--button" type="button" onClick={() => void discardPending()}>
               Not now
             </button>
           </div>
+          <p className="aa-share__reassurance">Nothing is organized or scheduled yet.</p>
         </div>
       </main>
     );
@@ -127,6 +148,24 @@ function ImagePreview({ file }: { file: PendingShareImage }) {
     return () => URL.revokeObjectURL(objectUrl);
   }, [file.blob]);
   return url ? <img className="aa-share__image" src={url} alt="Shared image preview" /> : null;
+}
+
+function SharedLink({ url }: { url: string }) {
+  let label = url;
+  try {
+    const parsed = new URL(url);
+    label = `${parsed.hostname.replace(/^www\./, "")}${parsed.pathname === "/" ? "" : parsed.pathname}`;
+  } catch {
+    // Share payloads may contain a non-standard URL. Keep the original visible
+    // rather than hiding a source the user chose to capture.
+  }
+  return (
+    <div className="aa-share__source" title={url}>
+      <span className="aa-share__source-icon" aria-hidden="true">↗</span>
+      <span className="aa-share__source-label">Source</span>
+      <span className="aa-share__source-url">{label}</span>
+    </div>
+  );
 }
 
 function renderShell(label: string) {
