@@ -80,15 +80,16 @@
 .aa-roadmap-rail {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
 .aa-roadmap-rail::before {
   content: "";
   position: absolute;
   top: 14px;
-  left: calc(100% / 6);
-  right: calc(100% / 6);
+  /* Span between the first and last node centers (one-eighth of the rail each side). */
+  left: calc(100% / 8);
+  right: calc(100% / 8);
   height: 2px;
   background: var(--aa-border-strong);
   z-index: 0;

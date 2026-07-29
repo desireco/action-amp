@@ -12,6 +12,12 @@ import "../styles/roadmap.css";
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
 
 const shipped = [
+  { date: "Jul 29", trunk: "CLI: resources + shared capture", summary: "The terminal client gained project resource management (list, add, update, delete) and the capture command now accepts a shared page's title, body, source link, and one image attachment — mirroring the Android share target. Resources are full CRUD from the CLI, closing the last deferred CLI spec." },
+  { date: "Jul 28", trunk: "Project resources", summary: "The Resource entity is real: links and notes filed under a project, with add, edit, and remove on the project page. Ownership is project-only — the over-engineered 'project or goal' dual-parent was dropped, so the invariant is enforced by the database." },
+  { date: "Jul 28", trunk: "Share target: images + structured capture", summary: "The Android share target now separates a shared page's title, body, source link, and image before saving. One image (up to 5 MB) can be attached; the review page shows parsed chips so nothing reaches the inbox until you confirm." },
+  { date: "Jul 28", trunk: "Magic-link sign-in", summary: "Passwordless email sign-in replaces passwords. Enter your address and get a six-digit code or a sign-in link — either creates a normal session. The challenge is rate-limited, time-boxed, and consumed atomically; a failed delivery leaves no usable credential behind." },
+  { date: "Jul 28", trunk: "Task outcome field", summary: "Tasks gained an Outcome field — what happened, captured at completion — alongside the existing Context field. Both are optional markdown and invisible when empty; a one-line task stays a one-line task." },
+  { date: "Jul 26", trunk: "Won't-do state + CLI lenses", summary: "Tasks gained a fourth status, WONT_DO: the non-destructive decline for a task you considered and chose not to do. It drops out of every active list and surfaces in the Logbook with a Restore, so a 'no' is a recorded decision, not a deletion. The CLI also gained lens management (list, show, switch, current)." },
   { date: "Jul 23", trunk: "Admin dashboard + feedback triage", summary: "First in-app admin surface — a stats-first page at Settings → Admin showing global user, task, and feedback counts across today / 7-day / 30-day windows, with an inline feedback-status triage list. Activity tracking (when users signed up, when they were last active) wired through the core loop. A separate admin terminal client (actionamp-admin) gets `stats` and `feedback` commands backed by the same pure cores. The in-app feedback button now feeds a real Feedback model with human-addressable short IDs (XXXX-XXXX) and a triage workflow (open → in-progress → resolved → closed)." },
   { date: "Jul 22", trunk: "ActionAmp CLI — terminal client", summary: "A standalone terminal client for ActionAmp. OAuth browser login (no copy-paste tokens), 11 commands covering the full decision loop — now, task (start/pause/done/snooze/move), today, capture, inbox, project, goal, logbook — each with --json output for agents. The CLI talks to new /api/cli/* routes backed by pure op cores shared with the web app (zero duplicated logic). Plus 'actionamp llm' prints agent instructions." },
   { date: "Jul 21", trunk: "Installable PWA + resilient sessions", summary: "ActionAmp is now a real installable PWA — standalone display, maskable icons, and long-press app-icon shortcuts (Capture, Next, Today) on Chromium Android. A sliding 30-day session cookie rides alongside the existing token so iOS/Brave PWA users no longer get logged out by WebKit's 7-day storage cap or Brave's clear-on-exit." },
@@ -25,14 +31,14 @@ const shipped = [
   { date: "Jul 9", trunk: "Brand identity + production billing", summary: "A canonical brand kit — Attention Engine — was applied across the landing hero, Founding 100 page, and About, with a solid token-teal favicon and logo. Stripe production billing was verified end-to-end: a webhook gap was found and fixed, and live checkout confirmed." },
   { date: "Jul 8", trunk: "Blog, social meta, transactional email", summary: "A two-lane blog with a rotating featured zone and inline line illustrations for the three core essays, plus per-post Open Graph image and Twitter/LinkedIn cards. Transactional emails migrated to react-email and moved to the Resend HTTP API after Railway proved unable to reach SMTP." },
   { date: "Jul 6", trunk: "Astro marketing site", summary: "Landing, roadmap, about, privacy, and terms ported to a standalone Astro site on Cloudflare Pages, split out of the Wasp app. A public Founding 100 status endpoint, landing teaser, and llms.txt replaced the old in-app marketing routes." },
-  { date: "Jul 5", trunk: "Focus redesign + task page", summary: "The focus screen rebuilt around a margin clock (session live, honest total), summoned composer, and confirm-on-complete. Task permalinks and full-field chip editing landed, with a shared property-chips editor across triage and the task page." },
+  { date: "Jul 5", trunk: "Focus redesign + task page", summary: "The focus screen rebuilt around a margin clock (live session, running total), summoned composer, and confirm-on-complete. Task permalinks and full-field chip editing landed, with a shared property-chips editor across triage and the task page." },
   { date: "Jul 5", trunk: "Task notes + completion log", summary: "Tasks gained a notes thread and a timestamped completion log via a kind discriminator on TaskUpdate (NOTE | COMPLETED), surfaced in focus mode, triage, and task rows. Focus segments are now accounted through a TaskSession model." },
   { date: "Jul 5", trunk: "Upcoming + design tokens", summary: "Upcoming promoted to a top-level Plan nav item as a single surface with cross-links. The type scale, line-heights, and weights migrated to design tokens across the whole UI." },
   { date: "Jul 4", trunk: "Planning + triage polish", summary: "Goals and projects gained calmer lifecycle controls, shared record surfaces, and better task-row composition. Triage now starts with Classify and uses a resolved Project as the visible destination." },
   { date: "Jul 4", trunk: "Capture grammar + roadmap cleanup", summary: "Inline project autocomplete landed: first # is a project hint, later # tokens are tags, @ is time, and [[lens]] handles cross-lens capture." },
   { date: "Jul 3", trunk: "Entitlements + custom lenses", summary: "Free-tier caps enforced server-side and surfaced as calm Pro moments. Lenses became first-class: kinds, identity colors, Pro CRUD, adaptive switcher." },
   { date: "Jun 30", trunk: "Capture polish + lens theming", summary: "Rapid-fire capture with token parsing, per-lens identity color across the shell, mobile thumb-zone dock, in-app feedback, and signup CTAs on the landing page." },
-  { date: "Jun 27", trunk: "First-run, auth, friction cleanup", summary: "Onboarding routes new users to a magic moment; OAuth-ready legal pages; the honest 'why this?' line under Next; Someday promote, Goal detail, Today's Done section." },
+  { date: "Jun 27", trunk: "First-run, auth, friction cleanup", summary: "Onboarding routes new users to a magic moment; OAuth-ready legal pages; the real 'why this?' line under Next; Someday promote, Goal detail, Today's Done section." },
   { date: "Jun 25", trunk: "Project detail + triage wizard", summary: "A project page to work its tasks inline. Triage became a co-author wizard with lossless Archive — nothing is ever silently deleted." },
   { date: "Jun 22", trunk: "Founding 100 + test suite", summary: "Capped lifetime tier with live Stripe checkout and a real spots-remaining count. Vitest + Playwright stood up; the suite went green and stayed green." },
   { date: "Jun 16", trunk: "Foundation", summary: "Design system, the full core loop (capture → triage → Next → Today → Logbook), deploy to Railway on a custom domain, and the polished landing page." },
@@ -41,7 +47,7 @@ const shipped = [
 
 <PublicLayout
   title="Roadmap — ActionAmp"
-  description="What we're building, what shipped, where we're headed. The honest version of the roadmap, not a feature wishlist."
+  description="What we're building, what shipped, where we're headed. A living record of how ActionAmp is growing — one shipped step at a time."
   fullWidth
 >
   <div class="aa-roadmap">
@@ -49,12 +55,13 @@ const shipped = [
     <header class="aa-roadmap-hero">
       <h1>Building in the open</h1>
       <p class="aa-roadmap-lede">
-        What we're building, what shipped, where we're headed. ActionAmp is
-        soft-launched and self-funded — this page is the honest version of the
-        roadmap, not a feature wishlist.
+        ActionAmp didn't arrive finished. It's shipping every week — new
+        surfaces, fixes, and ideas, in the open. This is the record of how it's
+        growing up.
       </p>
       <div class="aa-roadmap-stats">
-        <span class="aa-roadmap-stat"><strong>23</strong> major trunks</span>
+        <span class="aa-roadmap-stat"><strong>23</strong> features shipped</span>
+        <span class="aa-roadmap-stat"><strong>642</strong> commits</span>
         <span class="aa-roadmap-stat">Jun 16 → today</span>
       </div>
     </header>
@@ -73,15 +80,20 @@ const shipped = [
         </div>
         <div class="aa-roadmap-phase">
           <div class="aa-roadmap-node aa-roadmap-node--current">●</div>
-          <div class="aa-roadmap-phase-label">Road to MVP</div>
+          <div class="aa-roadmap-phase-label">MVP</div>
           <div class="aa-roadmap-phase-state aa-roadmap-phase-state--current">
-            In progress
+            Live
           </div>
         </div>
         <div class="aa-roadmap-phase">
           <div class="aa-roadmap-node aa-roadmap-node--planned">○</div>
-          <div class="aa-roadmap-phase-label">Q3 2026</div>
-          <div class="aa-roadmap-phase-state">Planned</div>
+          <div class="aa-roadmap-phase-label">First users</div>
+          <div class="aa-roadmap-phase-state">Next</div>
+        </div>
+        <div class="aa-roadmap-phase">
+          <div class="aa-roadmap-node aa-roadmap-node--planned">○</div>
+          <div class="aa-roadmap-phase-label">Community</div>
+          <div class="aa-roadmap-phase-state">Later</div>
         </div>
       </div>
     </section>
@@ -97,35 +109,21 @@ const shipped = [
         <article class="aa-roadmap-card aa-roadmap-card--now">
           <div class="aa-roadmap-card-head">
             <span class="aa-roadmap-card-title">Now</span>
-            <span class="aa-roadmap-card-tag">Road to MVP</span>
+            <span class="aa-roadmap-card-tag">MVP live</span>
           </div>
           <ul class="aa-roadmap-items">
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
               <span>
-                <span class="aa-roadmap-item-name">Observability</span><br />
-                <span class="aa-roadmap-item-note">One privacy-respecting tracker; the funnel number.</span>
+                <span class="aa-roadmap-item-name">Shipping weekly</span><br />
+                <span class="aa-roadmap-item-note">Capture, focus, triage, billing, the CLI — all live and moving.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
               <span>
-                <span class="aa-roadmap-item-name">Newsletter capture</span><br />
-                <span class="aa-roadmap-item-note">Quiet hero/footer email capture before distribution.</span>
-              </span>
-            </li>
-            <li class="aa-roadmap-item">
-              <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
-              <span>
-                <span class="aa-roadmap-item-name">Retention critical-path</span><br />
-                <span class="aa-roadmap-item-note">First-7-days funnel; close the activation leaks.</span>
-              </span>
-            </li>
-            <li class="aa-roadmap-item">
-              <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
-              <span>
-                <span class="aa-roadmap-item-name">Google sign-in</span><br />
-                <span class="aa-roadmap-item-note">Code-ready; gating on the OAuth client config.</span>
+                <span class="aa-roadmap-item-name">Soft-launched, self-funded</span><br />
+                <span class="aa-roadmap-item-note">Deployed, real billing, the core loop end to end.</span>
               </span>
             </li>
           </ul>
@@ -135,28 +133,35 @@ const shipped = [
         <article class="aa-roadmap-card">
           <div class="aa-roadmap-card-head">
             <span class="aa-roadmap-card-title">Next</span>
-            <span class="aa-roadmap-card-tag">Post-signal</span>
+            <span class="aa-roadmap-card-tag">First users</span>
           </div>
           <ul class="aa-roadmap-items">
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
               <span>
-                <span class="aa-roadmap-item-name">Quiet launch</span><br />
-                <span class="aa-roadmap-item-note">Put the product in front of ~500 of the right people.</span>
+                <span class="aa-roadmap-item-name">Analytics</span><br />
+                <span class="aa-roadmap-item-note">One privacy-respecting tracker; the one funnel number that matters.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
               <span>
-                <span class="aa-roadmap-item-name">Command palette + search</span><br />
-                <span class="aa-roadmap-item-note">Fuzzy jump/run across everything.</span>
+                <span class="aa-roadmap-item-name">Newsletter capture</span><br />
+                <span class="aa-roadmap-item-note">Quiet hero/footer email capture before any distribution.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
               <span>
-                <span class="aa-roadmap-item-name">Tag management + matcher validation</span><br />
-                <span class="aa-roadmap-item-note">The gate before moment-aware matcher v2.</span>
+                <span class="aa-roadmap-item-name">Retention critical-path</span><br />
+                <span class="aa-roadmap-item-note">First-7-days funnel; close the activation leaks.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span>
+                <span class="aa-roadmap-item-name">Google sign-in</span><br />
+                <span class="aa-roadmap-item-note">Code-ready; gating on the OAuth client config.</span>
               </span>
             </li>
           </ul>
@@ -166,28 +171,29 @@ const shipped = [
         <article class="aa-roadmap-card">
           <div class="aa-roadmap-card-head">
             <span class="aa-roadmap-card-title">Later</span>
-            <span class="aa-roadmap-card-tag">Q3 2026</span>
+            <span class="aa-roadmap-card-tag">Beyond first users</span>
           </div>
           <ul class="aa-roadmap-items">
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
-              <span class="aa-roadmap-item-name">Moment-aware matcher v2</span>
+              <span>
+                <span class="aa-roadmap-item-name">Reflection on completed work</span><br />
+                <span class="aa-roadmap-item-note">Help users look back at what they finished — what worked, what they learned. Honest review, not streaks or guilt.</span>
+              </span>
             </li>
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
-              <span class="aa-roadmap-item-name">Project-owned resources</span>
+              <span>
+                <span class="aa-roadmap-item-name">Quiet distribution</span><br />
+                <span class="aa-roadmap-item-note">Put the product in front of ~500 of the right people.</span>
+              </span>
             </li>
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
-              <span class="aa-roadmap-item-name">Weekly & monthly review</span>
-            </li>
-            <li class="aa-roadmap-item">
-              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
-              <span class="aa-roadmap-item-name">Merged Work area</span>
-            </li>
-            <li class="aa-roadmap-item">
-              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
-              <span class="aa-roadmap-item-name">CLI + agent skills</span>
+              <span>
+                <span class="aa-roadmap-item-name">Then earn the open launch</span><br />
+                <span class="aa-roadmap-item-note">No dates until the numbers say go.</span>
+              </span>
             </li>
           </ul>
         </article>
