@@ -355,6 +355,43 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="aa-app-brand-name">ActionAmp</span>
         </Link>
 
+        <div className="aa-app-utility-cluster" aria-label="Shell utilities">
+          {/* Shortcuts (?) — keyboard-only; hidden on touch (see AppShell.css).
+              Desktop utility cluster order (right→left): shortcuts, feedback,
+              avatar/settings. On mobile, this lives in the header beside brand. */}
+          <button
+            type="button"
+            className="aa-app-utility-btn aa-app-shortcuts-btn"
+            onClick={() => setCheatsheetOpen(true)}
+            title="Shortcuts (?)"
+            aria-label="Shortcuts"
+          >
+            ?
+          </button>
+          <button
+            type="button"
+            className="aa-app-utility-btn"
+            onClick={() => setFeedbackOpen(true)}
+            title="Leave feedback"
+            aria-label="Leave feedback"
+          >
+            <LoudspeakerIcon />
+          </button>
+          {/* Mobile-only avatar → Settings. The sidebar footer that hosts the
+              desktop avatar/settings link is display:none at ≤768px, and the
+              bottom dock has no settings entry, so without this there is no path
+              to /app/settings (or Log out, which lives on the Account tab) on
+              mobile. Hidden on desktop (see AppShell.css). */}
+          <Link
+            to="/app/settings"
+            className={`aa-app-mobile-avatar ${isActive("/app/settings") ? "active" : ""}`}
+            title="Settings"
+            aria-label="Settings"
+          >
+            {initials || <UserIcon />}
+          </Link>
+        </div>
+
         {/* ---- Primary nav — always-visible destinations ----
             Inbox (capture, universal), Today (day's commitment, universal),
             Do (Next/What-Now chooser, lens-scoped). All three are flat links;
@@ -550,44 +587,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
         </div>
       </nav>
-
-      <div className="aa-app-utility-cluster" aria-label="Shell utilities">
-        {/* Shortcuts (?) — keyboard-only; hidden on touch (see AppShell.css).
-            Desktop utility cluster order (right→left): shortcuts, feedback,
-            avatar/settings. The feedback + shortcuts buttons precede the avatar
-            in the DOM so they sit to its left when the cluster is pinned right. */}
-        <button
-          type="button"
-          className="aa-app-utility-btn aa-app-shortcuts-btn"
-          onClick={() => setCheatsheetOpen(true)}
-          title="Shortcuts (?)"
-          aria-label="Shortcuts"
-        >
-          ?
-        </button>
-        <button
-          type="button"
-          className="aa-app-utility-btn"
-          onClick={() => setFeedbackOpen(true)}
-          title="Leave feedback"
-          aria-label="Leave feedback"
-        >
-          <LoudspeakerIcon />
-        </button>
-        {/* Mobile-only avatar → Settings. The sidebar footer that hosts the
-            desktop avatar/settings link is display:none at ≤768px, and the
-            bottom dock has no settings entry, so without this there is no path
-            to /app/settings (or Log out, which lives on the Account tab) on
-            mobile. Hidden on desktop (see AppShell.css). */}
-        <Link
-          to="/app/settings"
-          className={`aa-app-mobile-avatar ${isActive("/app/settings") ? "active" : ""}`}
-          title="Settings"
-          aria-label="Settings"
-        >
-          {initials || <UserIcon />}
-        </Link>
-      </div>
 
       <button
         type="button"

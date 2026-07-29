@@ -300,7 +300,7 @@
     padding-bottom: 136px;
   }
   .aa-app-side {
-    position: static;
+    position: relative;
     height: auto;
     padding: var(--aa-space-sm) var(--aa-space-md);
     border-right: none;
@@ -323,8 +323,10 @@
     padding: var(--aa-space-xl) var(--aa-space-lg);
   }
   .aa-app-utility-cluster {
+    position: absolute;
     top: max(var(--aa-space-sm), env(safe-area-inset-top));
     right: max(var(--aa-space-md), env(safe-area-inset-right));
+    gap: 6px;
   }
   /* Keyboard shortcuts have no surface on touch — hide the cheatsheet trigger. */
   .aa-app-shortcuts-btn {
@@ -334,8 +336,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
     border-radius: var(--aa-radius-sm);
     background: var(--aa-teal-cta);
     color: var(--aa-surface);
@@ -351,8 +353,8 @@
       border-color 0.15s var(--aa-ease-out);
   }
   .aa-app-mobile-avatar svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
   .aa-app-mobile-avatar.active {
     background: var(--aa-teal-soft);
@@ -362,6 +364,16 @@
   .aa-app-mobile-avatar:focus-visible {
     outline: 2px solid var(--aa-teal);
     outline-offset: 2px;
+  }
+  .aa-app-utility-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--aa-radius-sm);
+    box-shadow: none;
+  }
+  .aa-app-utility-btn svg {
+    width: 18px;
+    height: 18px;
   }
   .aa-mobile-dock {
     position: fixed;
