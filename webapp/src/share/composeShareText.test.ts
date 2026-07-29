@@ -36,6 +36,13 @@ describe("composeShareText", () => {
     })).toBe("Headline: body — https://x.com");
   });
 
+  it("does not repeat a title Android has also included in text", () => {
+    expect(composeShareText({
+      title: "Supply | Single Edge Razors | One Blade. Solid Steel.",
+      text: "Supply | Single Edge Razors | One Blade. Solid Steel. https://share.google/example",
+    })).toBe("Supply | Single Edge Razors | One Blade. Solid Steel. — https://share.google/example");
+  });
+
   it("truncates each field to 2000 chars with ellipsis", () => {
     const long = "a".repeat(2500);
     const out = composeShareText({ title: long, url: "https://x.com" });

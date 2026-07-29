@@ -43,6 +43,7 @@ review screen before anything is saved to the inbox.
    `/share`. The installed service worker writes the text fields to a
    short-lived, same-origin IndexedDB record and redirects to `/share?pending=`.
 2. `/share` shows the composed text with **Add to inbox** and **Not now**.
+   It removes duplicated page titles commonly included by Android shares.
    Nothing reaches the server until the user confirms.
 3. **Add to inbox** calls the normal `createInboxItem` action; it uses the same
    authenticated capture path as `⌘K` and is therefore read by Inbox directly.

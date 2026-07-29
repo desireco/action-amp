@@ -7,6 +7,7 @@
 //   url only    → "url"
 //   text + url  → "text — url"
 //   text only   → "text"
+//   title + duplicated text + url → "Title — url"
 //   title + text + url → "Title: text — url"
 //   nothing     → ""  (caller treats as error)
 // Each field is truncated to MAX_FIELD_LEN chars (+ "…") before composing.
@@ -28,11 +29,26 @@ function clean(v: string | undefined): string {
 
 export function composeShareText(fields: ShareFields): string {
   const title = clean(fields.title);
-  const text = clean(fields.text);
-  const url = clean(fields.url);
+  let text = clean(fields.text);
+  let url = clean(fields.url);
 
   // No content at all → empty (caller decides what to do).
   if (!title && !text && !url) return "";
+
+  // Some Android shares put the page title in `title`, then repeat it at the
+  // start of `text` before the URL. Keep the useful link without making the
+  // inbox item read like "Title: Title https://…".
+  if (title && text) {
+    const titlePrefix = `${title} `;
+    if (text === title) text = "";
+    else if (text.startsWith(titlePrefix)) {
+      text = text.slice(titlePrefix.length).trim();
+      if (!url && /^https?:\/\/\S+$/i.test(text)) {
+        url = text;
+        text = "";
+      }
+    }
+  }
 
   // URL always appended last, after " — ", when present.
   const tail = url ? ` — ${url}` : "";
