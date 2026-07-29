@@ -34,35 +34,29 @@ still route to the right screen where Web Push is supported.
 ## Share target (Android/Chrome)
 
 The installed PWA is a share target. Sharing from another app (browser,
-Twitter, notes) surfaces ActionAmp in the share sheet; selecting it saves the
-shared content to the inbox.
+Twitter, notes) surfaces ActionAmp in the share sheet; selecting it opens a
+review screen before anything is saved to the inbox.
 
 **Flow:**
 
 1. User shares from another app → Android POSTs the form to same-origin
-   `/share`. The installed service worker forwards it to `/api/share`, then
-   redirects ActionAmp to `/share` with the result.
-2. `POST /api/share` composes a single string (`Title — url` precedence — see
-   `composeShareText`) and saves it via `createInboxItemCore` — the same core
-   `⌘K` capture and the CLI use.
-3. The route 303-redirects:
-   - logged in, success → `/share?id=<itemId>` (confirmation page)
-   - logged in, empty payload → `/share?error=empty`
-   - logged in, save fails → `/share?error=server`
-   - logged out → `/login` (the share is **not** preserved; re-share after
-     sign-in — see the spec's "Logged-out path" for the rationale)
-4. `/share` shows the captured item (parsed chips + text) and auto-dismisses
-   in ~3s (closing the window back to the source app on Android, else landing
-   on `/app`). Error states render their own copy + a recovery link and do not
-   auto-dismiss.
+   `/share`. The installed service worker writes the text fields to a
+   short-lived, same-origin IndexedDB record and redirects to `/share?pending=`.
+2. `/share` shows the composed text with **Add to inbox** and **Not now**.
+   Nothing reaches the server until the user confirms.
+3. **Add to inbox** posts the form to `/api/share`; `composeShareText` and
+   `createInboxItemCore` save it using the same capture path as `⌘K` and CLI.
+4. `/share?id=<itemId>` acknowledges the saved item and stays put. No automatic
+   close or navigation; **View inbox** is the user's next action.
 
 **Wiring:**
 
 - `webapp/public/manifest.json` — the `share_target` block (action `/share`,
   method POST, enctype `application/x-www-form-urlencoded`).
 - `webapp/src/share/` — `shareCapture.ts` (route handler),
-  `composeShareText.ts` (field composition), `shareRouteMiddleware.ts`
-  (urlencoded parsing), `SharePage.tsx` (confirmation page).
+  `composeShareText.ts` (field composition), `pendingShare.ts` (short-lived
+  pending payload), `shareRouteMiddleware.ts` (urlencoded parsing),
+  `SharePage.tsx` (review + acknowledgement page).
 - `webapp/src/inbox/operations.ts` — `getInboxItem` query (single-item fetch
   for the confirmation page, ownership-gated).
 

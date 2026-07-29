@@ -1,31 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ParsedCapture } from "../inbox/parseCapture";
 import { ParsedCaptureChips } from "../components/ui/CapturePopover";
-// Note: the query function is imported from the generated "wasp/client/operations"
-// entry, not the source file — same pattern as InboxPage.tsx importing getInboxItems.
 import { getInboxItem } from "wasp/client/operations";
+import { composeShareText, type ShareFields } from "./composeShareText";
+import { clearPendingShare, getPendingShare } from "./pendingShare";
 import "./SharePage.css";
 
-// /share — the PWA share_target confirmation page. Shapes:
-//   ?id=<itemId>          → captured (checkmark + parsed chips + text); auto-dismiss ~3s
-//   ?error=empty|server   → first-class error state with copy + recovery link
-//   (id present but item unresolvable) → treated as ?error=missing
-//
-// Auto-dismiss: ~3s after mount (happy path only), invalidate the inbox queries
-// (so the sidebar count updates if the user lands in the shell), attempt
-// window.close() (works only for script-opened windows), and on failure
-// navigate to /app.
-//
-// NOTE: this page is registered with authRequired:false so it renders during
-// session resolution. The happy path requires an authed user (the POST already
-// authed them); if the item can't be loaded we show the missing state rather
-// than bouncing to /login.
-
-const DISMISS_MS = 3000;
-const CLOSE_GRACE_MS = 100;
+const API_URL = (import.meta.env.REACT_APP_API_URL ?? "").replace(/\/$/, "");
 
 const ERROR_COPY: Record<string, string> = {
   empty: "Nothing to capture.",
@@ -33,58 +17,95 @@ const ERROR_COPY: Record<string, string> = {
   missing: "Couldn't find that capture.",
 };
 
+type PendingState = { id: string; fields: ShareFields } | null;
+
 export function SharePage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
+  const pendingId = params.get("pending");
   const id = params.get("id");
-  const error = params.get("error"); // empty | server | missing | null
+  const error = params.get("error");
+  const [pending, setPending] = useState<PendingState>(null);
+  const [loadingPending, setLoadingPending] = useState(!!pendingId);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const itemQuery = useQuery(
-    getInboxItem,
-    { id: id ?? "" },
-    { enabled: !!id },
-  );
-
-  // Happy-path auto-dismiss. Runs only once we have the item in hand.
-  // Deps use booleans (not the data object) so React Query refetches that
-  // re-emit a new `data` reference don't reset the 3s timer.
-  const hasItem = !!itemQuery.data;
   useEffect(() => {
-    if (!id || itemQuery.isLoading || itemQuery.error || !hasItem) return;
+    if (!pendingId) return;
+    let mounted = true;
+    void getPendingShare(pendingId)
+      .then((stored) => {
+        if (mounted) setPending(stored ? { id: stored.id, fields: stored.fields } : null);
+      })
+      .catch(() => {
+        if (mounted) setPending(null);
+      })
+      .finally(() => {
+        if (mounted) setLoadingPending(false);
+      });
+    return () => { mounted = false; };
+  }, [pendingId]);
 
-    const timer = setTimeout(() => {
-      // Invalidate so the shell's inbox count reflects the new item.
+  const itemQuery = useQuery(getInboxItem, { id: id ?? "" }, { enabled: !!id });
+
+  async function confirmPending() {
+    if (!pending) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const body = new URLSearchParams();
+      for (const [field, value] of Object.entries(pending.fields)) {
+        if (typeof value === "string") body.set(field, value);
+      }
+      const response = await fetch(`${API_URL}/api/share?response=json`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body,
+        credentials: "include",
+      });
+      const result = await response.json().catch(() => ({})) as { redirect?: string };
+      if (!response.ok || typeof result.redirect !== "string" || !result.redirect.startsWith("/")) {
+        throw new Error("Could not add this to your inbox.");
+      }
+      await clearPendingShare(pending.id);
       void queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-
-      // Try to close (Android share activity / script-opened windows).
-      // window.close() is silently ignored on OS-opened windows; window.closed
-      // may not flip synchronously — best-effort, the /app fallback covers it.
-      window.close();
-
-      // If still open after a grace period, land on /app.
-      setTimeout(() => {
-        if (!window.closed) navigate("/app", { replace: true });
-      }, CLOSE_GRACE_MS);
-    }, DISMISS_MS);
-
-    return () => clearTimeout(timer);
-  }, [id, itemQuery.isLoading, itemQuery.error, hasItem, navigate, queryClient]);
-
-  // Loading state (id present, query in flight).
-  if (id && itemQuery.isLoading) {
-    return renderShell("Capturing…");
+      navigate(result.redirect, { replace: true });
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Could not add this to your inbox.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  // Happy path — render the captured item.
+  if (loadingPending) return renderShell("Preparing capture…");
+
+  if (pendingId && pending) {
+    const text = composeShareText(pending.fields);
+    if (!text) return renderError(ERROR_COPY.empty);
+    return (
+      <main className="aa-share">
+        <div className="aa-share__card aa-share__card--review">
+          <p className="aa-share__eyebrow">Inbox capture</p>
+          <h1 className="aa-share__title">Add this to your inbox?</h1>
+          <p className="aa-share__text aa-share__text--review">{text}</p>
+          {submitError && <p className="aa-share__error" role="alert">{submitError}</p>}
+          <div className="aa-share__actions">
+            <button className="aa-share__button" type="button" onClick={() => void confirmPending()} disabled={submitting}>
+              {submitting ? "Adding…" : "Add to inbox"}
+            </button>
+            <a className="aa-share__link" href="/app">Not now</a>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (id && itemQuery.isLoading) return renderShell("Loading capture…");
+
   if (id && itemQuery.data) {
     const item = itemQuery.data;
-    // ParsedCaptureChips reads these fields; cleanText is unused for display
-    // (it just satisfies the type). parsedDate is coerced — the wire format
-    // may be an ISO string depending on SuperJSON decoding; new Date() handles
-    // both Date and string, and ParsedCaptureChips re-wraps it anyway.
     const parsed: ParsedCapture = {
       cleanText: item.text,
       parsedLens: item.parsedLens,
@@ -98,40 +119,25 @@ export function SharePage() {
       <main className="aa-share">
         <div className="aa-share__card">
           <span className="aa-share__check" aria-hidden="true">✓</span>
-          <h1 className="aa-share__title">Captured</h1>
-          <div className="aa-share__chips">
-            <ParsedCaptureChips parsed={parsed} variant="captured" />
-          </div>
+          <h1 className="aa-share__title">Added to inbox</h1>
+          <div className="aa-share__chips"><ParsedCaptureChips parsed={parsed} variant="captured" /></div>
           <p className="aa-share__text">{item.text}</p>
-          <a className="aa-share__link" href="/app">View in inbox</a>
+          <a className="aa-share__link" href="/app">View inbox</a>
         </div>
       </main>
     );
   }
 
-  // Error states. If id was present but the item didn't resolve (wrong user /
-  // unknown / deleted), treat as missing. Otherwise read ?error=.
-  const copy =
-    id && !itemQuery.isLoading && !itemQuery.data
-      ? ERROR_COPY.missing
-      : ERROR_COPY[error ?? ""] ?? ERROR_COPY.missing;
-
-  return (
-    <main className="aa-share">
-      <div className="aa-share__card">
-        <h1 className="aa-share__title">{copy}</h1>
-        <a className="aa-share__link" href="/app">Back to ActionAmp</a>
-      </div>
-    </main>
-  );
+  const copy = id && !itemQuery.isLoading && !itemQuery.data
+    ? ERROR_COPY.missing
+    : ERROR_COPY[error ?? ""] ?? ERROR_COPY.missing;
+  return renderError(copy);
 }
 
 function renderShell(label: string) {
-  return (
-    <main className="aa-share">
-      <div className="aa-share__card">
-        <h1 className="aa-share__title">{label}</h1>
-      </div>
-    </main>
-  );
+  return <main className="aa-share"><div className="aa-share__card"><h1 className="aa-share__title">{label}</h1></div></main>;
+}
+
+function renderError(copy: string) {
+  return <main className="aa-share"><div className="aa-share__card"><h1 className="aa-share__title">{copy}</h1><a className="aa-share__link" href="/app">Back to ActionAmp</a></div></main>;
 }

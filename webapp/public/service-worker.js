@@ -17,14 +17,12 @@ self.addEventListener("message", (event) => {
 });
 
 // Android share_target requests must stay on the PWA's origin (app.actionamp.com),
-// while ActionAmp's API runs at api.actionamp.com. Intercept the POST at /share,
-// forward its form body to the API with the existing same-site session cookie,
-// then send the share activity to the app-origin confirmation page.
-//
-// This keeps the server API separate without asking the static client host to
-// accept POST requests. No share content is stored in the service worker.
+// while ActionAmp's API runs at api.actionamp.com. Store the form body briefly
+// in same-origin IndexedDB, then send the activity to the review page. The
+// page saves only after the user chooses "Add to inbox".
 const SHARE_PATH = "/share";
-const SHARE_API_URL = "https://api.actionamp.com/api/share?response=json";
+const SHARE_DB_NAME = "actionamp-share";
+const SHARE_STORE_NAME = "pending";
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
@@ -36,28 +34,39 @@ self.addEventListener("fetch", (event) => {
 async function handleShareTarget(request) {
   try {
     const formData = await request.formData();
-    const body = new URLSearchParams();
+    const fields = {};
     for (const field of ["title", "text", "url"]) {
       const value = formData.get(field);
-      if (typeof value === "string") body.set(field, value);
+      if (typeof value === "string") fields[field] = value;
     }
-
-    const response = await fetch(SHARE_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body,
-      credentials: "include",
-    });
-    if (!response.ok) return Response.redirect(new URL("/share?error=server", self.location.origin), 303);
-
-    const { redirect } = await response.json();
-    if (typeof redirect !== "string" || !redirect.startsWith("/")) {
-      return Response.redirect(new URL("/share?error=server", self.location.origin), 303);
-    }
-    return Response.redirect(new URL(redirect, self.location.origin), 303);
+    const id = await savePendingShare(fields);
+    return Response.redirect(new URL(`/share?pending=${encodeURIComponent(id)}`, self.location.origin), 303);
   } catch {
     return Response.redirect(new URL("/share?error=server", self.location.origin), 303);
   }
+}
+
+function openShareDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(SHARE_DB_NAME, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(SHARE_STORE_NAME, { keyPath: "id" });
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function savePendingShare(fields) {
+  const id = self.crypto.randomUUID();
+  const db = await openShareDb();
+  await new Promise((resolve, reject) => {
+    const transaction = db.transaction(SHARE_STORE_NAME, "readwrite");
+    transaction.objectStore(SHARE_STORE_NAME).put({ id, fields, createdAt: Date.now() });
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error);
+  });
+  db.close();
+  return id;
 }
 
 self.addEventListener("push", (event) => {

@@ -32,6 +32,19 @@
   animation: aa-share-slidein 220ms var(--aa-ease-out, ease-out) both;
 }
 
+.aa-share__card--review {
+  text-align: left;
+}
+
+.aa-share__eyebrow {
+  margin: 0 0 var(--aa-space-xs);
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .aa-share__check {
   /* mirrors .aa-capture__captured-check, scaled up for the page surface */
   display: inline-flex;
@@ -64,6 +77,44 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.aa-share__text--review {
+  color: var(--aa-text);
+  margin-left: 0;
+  margin-right: 0;
+  max-width: none;
+  -webkit-line-clamp: unset;
+}
+
+.aa-share__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-md);
+  margin-top: var(--aa-space-md);
+}
+
+.aa-share__button {
+  border: 0;
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-teal);
+  color: var(--aa-surface);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: 600;
+  padding: 10px 14px;
+}
+
+.aa-share__button:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.aa-share__error {
+  color: var(--aa-rose, #b3455a);
+  font-size: var(--aa-text-sm);
+  margin: var(--aa-space-sm) 0 0;
 }
 
 .aa-share__chips {

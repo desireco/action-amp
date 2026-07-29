@@ -18,12 +18,10 @@ this" should be one tap.
 When the user installs the ActionAmp PWA and shares content from any other app,
 ActionAmp appears in the share sheet. Selecting it:
 
-1. Saves the shared content to the inbox as an `InboxItem` (composed from the
-   share's `title` / `text` / `url` fields).
-2. Opens the PWA on a full-screen `/share` page that shows what was captured
-   (parsed chips + the stored text).
-3. Auto-dismisses after ~3s (attempting to close the window back to the source
-   app on Android; otherwise navigating to `/app`).
+1. Opens the PWA on a full-screen `/share` review page showing the composed
+   shared text.
+2. Saves an `InboxItem` only after the user chooses **Add to inbox**.
+3. Acknowledges the saved item and waits for the user's next action.
 4. Sends the user to normal login when the session has expired; after login
    they land on `/app` and re-share. (We do not attempt to carry the share
    across login — see §Logged-out path.)
@@ -71,27 +69,16 @@ resolves `context.user` automatically.
                       manifest.json share_target.action = "/share"
                                   │
                                   ▼
-                      service worker → POST /api/share  (session-authed Wasp api, auth:true)
-                          │            ─ composes "Title — url" (§Text composition)
-                          │            ─ createInboxItemCore() (the existing pure core)
-                          │
-            ┌─────────────┴──────────────┐
-            ▼                            ▼
-       context.user set             context.user null
-       (logged in)                  (logged out)
-            │                            │
-   303 → /share?id=<itemId>      303 → /login
-            │                       (user signs in, lands on /app,
-            │                        re-shares from source app)
-            ▼
-       GET /share?id=<itemId>
-       (full-screen "Captured" page, parsed chips + stored text)
-            │
-            ▼  ~3s after mount
-       window.close() attempt
-            │
-            ▼  if still open after 100ms
-       navigate("/app")
+                      service worker → IndexedDB pending share
+                                  │
+                                  ▼
+                    GET /share?pending=<id> (review)
+                                  │
+                                  ▼  user chooses "Add to inbox"
+                      POST /api/share (session-authed Wasp API)
+                                  │
+                                  ▼
+                         /share?id=<itemId> (acknowledgement)
 ```
 
 ### Reuse map
@@ -308,13 +295,13 @@ safe to lift. `SharePage` imports it alongside the `ParsedCapture` type.
 ## Data flow
 
 1. User shares from another app → Android POSTs the form to `/share`. The
-   service worker forwards it to `/api/share`, then redirects to `/share`.
-2. `POST /api/share`:
-   - Cookie present → `context.user` set → `composeShareText` →
-     `createInboxItemCore` → `303 /share?id=<itemId>`.
-   - Cookie absent → `303 /login` (user signs in, lands on `/app`, re-shares).
-3. `GET /share?id=<itemId>` → `getInboxItem` → render chips + text → 3s →
-   `window.close()` → fallback `navigate("/app")`.
+   service worker stores the form fields in same-origin IndexedDB and redirects
+   to `/share?pending=<id>`.
+2. The review page composes and shows the pending text. **Not now** leaves it
+   unsaved; **Add to inbox** POSTs it to `/api/share`.
+3. `POST /api/share` with a session → `composeShareText` →
+   `createInboxItemCore` → `/share?id=<itemId>`. The acknowledgement remains
+   open until the user chooses **View inbox**.
 
 ## Error handling
 
