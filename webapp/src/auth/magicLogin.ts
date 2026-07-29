@@ -105,7 +105,13 @@ export const requestMagicLogin = (async (args: MagicLoginInput, context) => {
   if (!isLocalhost()) {
     try {
       await sendLoginEmail(email, code, token);
-    } catch {
+    } catch (error) {
+      // The client receives a generic error, but keep the provider's reason in
+      // server logs. This is essential for diagnosing delivery failures without
+      // exposing provider details or a sign-in credential to the browser.
+      console.error("Magic login email delivery failed", {
+        message: error instanceof Error ? error.message : String(error),
+      });
       // Never leave a usable credential behind if delivery failed.
       await context.entities.MagicLoginChallenge.delete({ where: { id } }).catch(() => undefined);
       throw new HttpError(503, "Could not send email. Try again shortly.");
