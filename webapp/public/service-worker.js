@@ -5,11 +5,10 @@
  * clicks only. Keeping cache out avoids stale/private task data on a shared
  * device while still making the app installable and actionable.
  *
- * Update flow: activate immediately. The share target relies on this worker to
- * handle POSTs, and an installed PWA otherwise keeps an older worker until a
- * user sees and accepts an update prompt.
+ * Update flow: a new worker waits until the app's update banner asks it to
+ * activate. Auto-activating here races that banner and can cause reload loops
+ * in installed Android PWAs.
  */
-self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 
 self.addEventListener("message", (event) => {
