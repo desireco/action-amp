@@ -104,8 +104,8 @@ export function LoginPage() {
 
   return (
     <AuthLayout
-      title="Welcome back."
-      subtitle="We’ll email a code. No password needed."
+      title={codeSent ? "Enter your code." : "Welcome back."}
+      subtitle={codeSent ? "Use the six-digit code from your email." : "We’ll email a code. No password needed."}
       footer={
         <>
           <span>
@@ -117,17 +117,6 @@ export function LoginPage() {
       }
     >
       <form className="aa-auth-form" onSubmit={codeSent ? submitCode : requestCode}>
-        <label className="aa-auth-label" htmlFor="magic-email">Email</label>
-        <input
-          className="aa-auth-input"
-          id="magic-email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          disabled={isSubmitting}
-          required
-        />
         {codeSent && (
           <>
             <label className="aa-auth-label" htmlFor="magic-code">Six-digit code</label>
@@ -144,6 +133,21 @@ export function LoginPage() {
               disabled={isSubmitting}
               required
               autoFocus
+            />
+          </>
+        )}
+        {!codeSent && (
+          <>
+            <label className="aa-auth-label" htmlFor="magic-email">Email</label>
+            <input
+              className="aa-auth-input"
+              id="magic-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              disabled={isSubmitting}
+              required
             />
           </>
         )}
