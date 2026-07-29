@@ -83,7 +83,7 @@ Built in `webapp/src/inbox/TriagePage.tsx`. Card component:
 
 ---
 
-## 3. The five outcomes
+## 3. Triage outcomes
 
 What an InboxItem can become (DATA-MODEL.md §3). One input shape, five outputs.
 
@@ -94,22 +94,13 @@ What an InboxItem can become (DATA-MODEL.md §3). One input shape, five outputs.
 | step in existing work | **Task** inside an existing **Project** | "Draft press release" → "Q3 launch" |
 | reference, not action | **Resource** (link/note) under a **Project or Goal** | "Competitor PDF" → "Q3 launch" |
 | supports a bigger goal | **Project** linked to a **Goal** | "Launch newsletter" → Goal: "Grow audience" |
-| I will not do now | **Archive** — the note is kept (status=ARCHIVED), not deleted | "Maybe later idea" → Logbook |
 | captured by mistake | **Delete** — the InboxItem is hard-removed, not recoverable | misheard voice capture, wrong lens, duplicate |
 
-> **Archive vs Delete (re-decided 2026-07-26).** Archive is lossless: marks
-> the item `ARCHIVED` + stamps `archivedAt`, leaves the inbox (which filters
-> `UNPROCESSED`), surfaces in the **Logbook's Archived section**, where a
-> Restore action returns it to the inbox for re-triage. Use Archive for "not
-> now, but keep it." Delete (`4` in Classify) is the destructive path:
-> hard-removes the InboxItem, not recoverable. Use Delete for capture
-> mistakes (misheard voice, wrong lens, duplicate) — the case where the user
-> explicitly does not want the note stored at all. The two coexist because
-> "I'll do this later" and "I never meant to capture this" are different
-> intents; collapsing them into Archive-only lost the latter for months.
+**Delete** (`4` in Classify) hard-removes the InboxItem and is not recoverable.
+Use it for capture mistakes: misheard voice, wrong lens, or duplicate.
 
 **Promotion paths** (an item isn't locked in): Task→Project (the XL nudge),
-Resource→Task, Task→Resource, Task→Someday, Archive→Inbox (via Restore).
+Resource→Task, Task→Resource, Task→Someday.
 
 ---
 
@@ -128,7 +119,7 @@ are **one surface at different commitment levels.**
 The wizard (per item):
 
 1. **Classify** — one surface for **what this becomes** and **where it lands**:
-   Task / Project / Resource / Archive plus the selected Lens or resolved
+   Task / Project / Resource / Delete plus the selected Lens or resolved
    Project destination. Two inference paths
    (`docs/specs/done/capture-grammar.md`, locked 2026-07-04):
    - **`[[lens]]` token** (explicit): `[[work]]` / `[[personal]]` / `[[me]]` /
@@ -296,8 +287,7 @@ becomes and where it lands.
 | `3` | Type = Resource / Note |
 | `4` | Type = Delete (hard-removes the InboxItem — not recoverable) |
 | `/` | Open the full Lens picker when there are more choices |
-| `Enter` | Continue to Spec, or dispatch immediately when Archive/Delete is selected |
-| `Del` / `Backspace` | Archive (lossless — kept, recoverable from the Logbook) |
+| `Enter` | Continue to Spec, or dispatch immediately when Delete is selected |
 
 > **Lens selection UI (built 2026-07-05).** Lens renders as **large styled
 > pills**, not positional `A/S/D/F` slots — that keymap was retired. Type
@@ -402,7 +392,7 @@ That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
   `PropertyChips` editor (`components/ui/PropertyChips.tsx`), used across
   triage Spec + the task page. The property-key shortcuts work uniformly in
   both surfaces.
-- ✅ Type dispatch (Task/Project/Resource/Archive) + exit animations
+- ✅ Type dispatch (Task/Project/Resource/Delete) + exit animations
 - ✅ Resource/Note parent picker (file under a Project or Goal)
 - ✅ Transform action (`inbox/operations.ts :: triageInboxItem`)
 - ✅ Global `⌘K` capture

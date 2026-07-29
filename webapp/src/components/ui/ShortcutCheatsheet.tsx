@@ -57,9 +57,8 @@ const SECTIONS: ShortcutSection[] = [
   {
     title: "In triage",
     items: [
-      { keys: ["1", "2", "3"], label: "Task / Project / Resource", note: "classify step" },
+      { keys: ["1", "2", "3", "4"], label: "Task / Project / Resource / Delete", note: "classify step" },
       { keys: ["a", "s", "d", "f"], label: "Pick a lens", note: "by index" },
-      { keys: ["⌫"], label: "Archive", note: "Backspace" },
       { keys: ["↵"], label: "Continue / Complete" },
       { keys: ["Esc"], label: "Back a step / exit" },
     ],
