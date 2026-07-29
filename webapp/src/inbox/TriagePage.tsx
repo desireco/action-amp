@@ -524,13 +524,13 @@ export function TriagePage() {
 const TRIAGE_TYPES = [
   { t: "task", label: "Task", sub: "an action — something to do", Icon: StarIcon },
   { t: "project", label: "Project", sub: "an outcome needing more than one step", Icon: ProjectsIcon },
-  { t: "resource", label: "Note", sub: "reference material — not an action", Icon: LogbookIcon },
+  { t: "resource", label: "Resource", sub: "a link or reference — not an action", Icon: LogbookIcon },
   { t: "delete", label: "Delete", sub: "get rid of it — not kept", Icon: TrashIcon },
 ] as const;
 
 type ClassifyLens = { id: string; name: string; color?: string | null };
 
-/** Step 1 — pick the type (Task/Project/Note/Delete) + Lens/Project destination. */
+/** Step 1 — pick the type (Task/Project/Resource/Delete) + Lens/Project destination. */
 function ClassifyStep({
   working,
   chosenLensId,
@@ -653,7 +653,7 @@ function SpecStep({
   return (
     <div className="aa-triage-step">
       <div className="aa-triage-step__label">
-        2 · {working.type === "task" ? "Specify the task" : working.type === "project" ? "Specify the project" : "File the note"}
+        2 · {working.type === "task" ? "Specify the task" : working.type === "project" ? "Specify the project" : "File the resource"}
       </div>
       <div className="aa-triage-spec">
         {/* The chip row IS the editor — same component as the task page.
@@ -819,7 +819,7 @@ function TriagePickers({
 
       {open.parentProject && itemPresent && (
         <PickerSheet
-          title="File note under a project"
+          title="File resource under a project"
           items={projects.map((p) => ({
             id: p.id,
             label: p.name,

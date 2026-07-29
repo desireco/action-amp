@@ -5,6 +5,9 @@
    ============================================================ */
 .aa-triage-card {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-xl);
@@ -19,6 +22,9 @@
 }
 
 .aa-triage-card__body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   font-size: var(--aa-text-lg);
   font-weight: var(--aa-weight-semibold);
   letter-spacing: -0.01em;
@@ -45,6 +51,9 @@
 
 .aa-triage-card__title-input {
   width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   min-height: 2.75rem;
   max-height: 10rem;
   padding: var(--aa-space-sm) var(--aa-space-md);
