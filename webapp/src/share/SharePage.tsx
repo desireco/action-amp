@@ -79,6 +79,11 @@ export function SharePage() {
     }
   }
 
+  async function discardPending() {
+    if (pending) await clearPendingShare(pending.id);
+    navigate("/app", { replace: true });
+  }
+
   if (loadingPending) return renderShell("Preparing capture…");
 
   if (pendingId && pending) {
@@ -95,7 +100,9 @@ export function SharePage() {
             <button className="aa-share__button" type="button" onClick={() => void confirmPending()} disabled={submitting}>
               {submitting ? "Adding…" : "Add to inbox"}
             </button>
-            <a className="aa-share__link" href="/app">Not now</a>
+            <button className="aa-share__link aa-share__link--button" type="button" onClick={() => void discardPending()}>
+              Not now
+            </button>
           </div>
         </div>
       </main>
