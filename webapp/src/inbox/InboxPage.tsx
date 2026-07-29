@@ -73,8 +73,7 @@ export function InboxPage() {
                 <li key={item.id} className="aa-inbox__item">
                   <Link to={`/app/inbox/review?i=${i}`} className="aa-inbox__row">
                     <div className="aa-inbox__row-content">
-                      <p className="aa-inbox__row-text">{item.title ?? item.text}</p>
-                      {item.content && <p className="aa-inbox__row-content-text">{item.content}</p>}
+                      <InboxPreview item={item} />
                       <div className="aa-inbox__row-meta">
                         <span className="aa-inbox__row-ago">captured {formatAgo(item.createdAt)}</span>
                         {item.sourceUrl && <Chip variant="teal" small>Link attached</Chip>}
@@ -117,4 +116,25 @@ export function InboxPage() {
       </section>
     </div>
   );
+}
+
+function InboxPreview({ item }: { item: Pick<InboxItem, "text" | "title" | "content"> }) {
+  const title = item.title?.trim() || item.text;
+  // Some shares created before structured fields were consistently sent store
+  // the same composed value in both `text` and `content`. Keep the capture
+  // readable: render that value once, while preserving a genuinely distinct
+  // body for current structured shares.
+  const content = item.content?.trim();
+  const showContent = content && normalizePreview(content) !== normalizePreview(title);
+
+  return (
+    <>
+      <p className="aa-inbox__row-text">{title}</p>
+      {showContent && <p className="aa-inbox__row-content-text">{content}</p>}
+    </>
+  );
+}
+
+function normalizePreview(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
 }

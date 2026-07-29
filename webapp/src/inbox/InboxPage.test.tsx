@@ -10,6 +10,8 @@ const queryState = {
 interface InboxItem {
   id: string;
   text: string;
+  title?: string | null;
+  content?: string | null;
   createdAt: Date;
   parsedDate: Date | null;
   parsedProject: string | null;
@@ -87,6 +89,35 @@ describe("InboxPage", () => {
 
     expect(screen.getByText(/20 captured thoughts · newest first/i)).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(20);
+  });
+
+  it("does not repeat legacy shared text when it is also stored as the body", () => {
+    queryState.current = {
+      data: [{
+        ...item("shared", "Modern watch face https://example.com/watch"),
+        content: "Modern watch face https://example.com/watch",
+      }],
+      isLoading: false,
+    };
+    renderInbox();
+
+    expect(screen.getAllByText("Modern watch face https://example.com/watch")).toHaveLength(1);
+  });
+
+  it("keeps a distinct structured share body under its title", () => {
+    queryState.current = {
+      data: [{
+        ...item("shared", "Article: Read this later — https://example.com"),
+        title: "Article",
+        content: "Read this later",
+      }],
+      isLoading: false,
+    };
+    renderInbox();
+
+    expect(screen.getByText("Article")).toBeInTheDocument();
+    expect(screen.getByText("Read this later")).toBeInTheDocument();
+    expect(screen.queryByText("Article: Read this later — https://example.com")).not.toBeInTheDocument();
   });
 
   it("shows a stable loading surface instead of flashing the empty state", () => {
