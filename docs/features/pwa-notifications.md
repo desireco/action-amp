@@ -46,8 +46,8 @@ review screen before anything is saved to the inbox.
    Nothing reaches the server until the user confirms.
 3. **Add to inbox** posts the form to `/api/share`; `composeShareText` and
    `createInboxItemCore` save it using the same capture path as `⌘K` and CLI.
-4. `/share?id=<itemId>` acknowledges the saved item and stays put. No automatic
-   close or navigation; **View inbox** is the user's next action.
+4. After saving, ActionAmp opens `/app/inbox`, where the new item is first in
+   the universal inbox.
 
 **Wiring:**
 

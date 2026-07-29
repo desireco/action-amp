@@ -36,6 +36,10 @@
   text-align: left;
 }
 
+.aa-share__card--review .aa-share__title {
+  font-size: var(--aa-text-xl);
+}
+
 .aa-share__eyebrow {
   margin: 0 0 var(--aa-space-xs);
   color: var(--aa-text-3);
@@ -81,6 +85,7 @@
 
 .aa-share__text--review {
   color: var(--aa-text);
+  font-size: var(--aa-text-md);
   margin-left: 0;
   margin-right: 0;
   max-width: none;

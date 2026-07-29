@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { useQuery } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ParsedCapture } from "../inbox/parseCapture";
-import { ParsedCaptureChips } from "../components/ui/CapturePopover";
-import { getInboxItem } from "wasp/client/operations";
 import { composeShareText, type ShareFields } from "./composeShareText";
 import { clearPendingShare, getPendingShare } from "./pendingShare";
 import "./SharePage.css";
@@ -24,7 +20,6 @@ export function SharePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pendingId = params.get("pending");
-  const id = params.get("id");
   const error = params.get("error");
   const [pending, setPending] = useState<PendingState>(null);
   const [loadingPending, setLoadingPending] = useState(!!pendingId);
@@ -46,8 +41,6 @@ export function SharePage() {
       });
     return () => { mounted = false; };
   }, [pendingId]);
-
-  const itemQuery = useQuery(getInboxItem, { id: id ?? "" }, { enabled: !!id });
 
   async function confirmPending() {
     if (!pending) return;
@@ -71,7 +64,8 @@ export function SharePage() {
       await clearPendingShare(pending.id);
       void queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-      navigate(result.redirect, { replace: true });
+      const itemId = new URL(result.redirect, window.location.origin).searchParams.get("id");
+      navigate(itemId ? `/app/inbox?shared=${encodeURIComponent(itemId)}` : "/app/inbox", { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Could not add this to your inbox.");
     } finally {
@@ -109,36 +103,7 @@ export function SharePage() {
     );
   }
 
-  if (id && itemQuery.isLoading) return renderShell("Loading capture…");
-
-  if (id && itemQuery.data) {
-    const item = itemQuery.data;
-    const parsed: ParsedCapture = {
-      cleanText: item.text,
-      parsedLens: item.parsedLens,
-      parsedDate: item.parsedDate ? new Date(item.parsedDate) : null,
-      parsedProject: item.parsedProject,
-      parsedPriority: item.parsedPriority,
-      parsedSize: item.parsedSize,
-      parsedTags: item.parsedTags,
-    };
-    return (
-      <main className="aa-share">
-        <div className="aa-share__card">
-          <span className="aa-share__check" aria-hidden="true">✓</span>
-          <h1 className="aa-share__title">Added to inbox</h1>
-          <div className="aa-share__chips"><ParsedCaptureChips parsed={parsed} variant="captured" /></div>
-          <p className="aa-share__text">{item.text}</p>
-          <a className="aa-share__link" href="/app">View inbox</a>
-        </div>
-      </main>
-    );
-  }
-
-  const copy = id && !itemQuery.isLoading && !itemQuery.data
-    ? ERROR_COPY.missing
-    : ERROR_COPY[error ?? ""] ?? ERROR_COPY.missing;
-  return renderError(copy);
+  return renderError(ERROR_COPY[error ?? ""] ?? ERROR_COPY.missing);
 }
 
 function renderShell(label: string) {
