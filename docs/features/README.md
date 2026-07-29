@@ -8,7 +8,7 @@
 >
 > Owned by Discover. Build reads only.
 >
-> Last code-verified: **2026-07-05**.
+> Last code-verified: **2026-07-29**.
 
 ## How to read this
 
@@ -36,25 +36,26 @@
 - [upcoming-someday](./upcoming-someday.md) (`shipped`) — Upcoming (top-level Plan nav) + Someday.
 
 ### Planning
-- [projects](./projects.md) (`shipped`) — list + detail, inline task create, progress roll-up.
+- [projects](./projects.md) (`shipped`) — list + detail, inline task create, progress roll-up, project-owned Resources CRUD.
 - [goals](./goals.md) (`shipped`) — list + detail, aggregate progress, full lifecycle.
 - [goal-planning](./goal-planning.md) (`shipped`) — Goal/Project lifecycle (complete/reopen/edit/delete/re-link) + project ordering.
-- [logbook](./logbook.md) (`shipped`) — completed + Archived section, Restore, completed Goals.
+- [resources-project-owned](./resources-project-owned.md) (`shipped`, scope-cut) — project-owned links/notes CRUD (web + CLI + PAT routes); **no** `TaskResource` join (markdown links in Context instead), **no** delete-with-impact.
+- [logbook](./logbook.md) (`shipped`) — completed + Archived + Won't-do sections, Restore, completed Goals.
 
 ### Cross-cutting
 - [entitlements](./entitlements.md) (`shipped`) — server-side caps + ProGate paywall.
 - [billing](./billing.md) (`shipped`) — 3 Pro prices + Founding 100 (server-enforced cap).
 - [custom-lenses](./custom-lenses.md) (`shipped`) — user-defined lenses; Pro CRUD; `⌘L` switcher; per-lens identity.
 - [onboarding](./onboarding.md) (`shipped`) — `/welcome`, server flag, 3 seed tasks.
-- [auth](./auth.md) (`partial`) — email live; Google OAuth code present but disabled.
+- [auth](./auth.md) (`partial`) — **passwordless email live** (magic-link code + link, replaces passwords); Google OAuth code present but disabled.
 - [landing](./landing.md) (`partial`) — signup + Founding-100 CTAs; newsletter capture **missing but intended** (see [newsletter](./newsletter.md)).
 - [feedback](./feedback.md) (`shipped`) — loudspeaker → modal → admin email.
 - [shell-prefs](./shell-prefs.md) (`shipped`) — AppShell, focus-switch nav, shortcuts, dark mode, settings.
-- [task-fields](./task-fields.md) (`partial`) — **Context** shipped (Task.content via chip popovers); **Outcome** (`Task.outcome`) not yet shipped.
+- [task-fields](./task-fields.md) (`shipped`) — **Context** (`Task.content`) + **Outcome** (`Task.outcome`), both optional markdown via the shared `PropertyChips` editor.
+- [cli](./cli.md) (`partial`) — **Phase 0 + 1 shipped** (PAT auth + full command surface incl. `lens` + `resource` + shared-content/image `capture`); Phase 2 (orchestration skills) still `draft`.
 
 ### Planned (not in code)
 - [command-palette](./command-palette.md) (`missing`, spec `ready`) — `⌘\` fuzzy search.
-- [resources-project-owned](./resources-project-owned.md) (`missing`, spec `ready`) — project-owned links/notes + task refs; explicit `TaskResource` join (resolved 2026-07-03).
 - [breadcrumb-nav](./breadcrumb-nav.md) (`missing`, spec `ready` — route model locked) — crumbs navigate.
 - [focus-engine-v2](./focus-engine-v2.md) (`missing`, spec `draft`) — moment-aware matcher; needs tag-management UI + a mockup + matcher-test gate.
 - [observability-minimal](./observability-minimal.md) (`missing`, spec `ready`, gated by `gtm-analytics-account`) — analytics + funnel.
@@ -63,10 +64,6 @@
 - [weekly-monthly-review](./weekly-monthly-review.md) (`missing`, spec `draft`) — period debriefs; v2 gated on `work-area-merged`.
 - [newsletter](./newsletter.md) (`missing`, spec `draft`) — landing-page email capture (footer + quiet hero).
 - [blog](./blog.md) (`missing`, spec `ready`) — SEO-bound publication on the Astro marketing site (`/blog`, `/blog/[slug]`, RSS); ADHD/focus/GTD intent. Builds on the shipped Astro split; pure static. **Two-lane index + rotating featured zone** (design locked 2026-07-08; prototype at `docs/mockups/blog-directions.html`). Splits shareability into `blog-social-meta`.
-- [cli](./cli.md) (`missing`, **effort split into 3 specs 2026-07-03`) — power-user terminal surface:
-  - `cli-pat-plumbing` (`ready`, P3 opportunistic) — `ApiKey` + PAT routes + middleware + Settings UI.
-  - `cli-package` (`draft`) — the `cli/` package; draft because the op-refactor is unscoped.
-  - `cli-skills` (`draft`) — four orchestration skills; depends on `cli-package`.
 - [tag-management](./tag-management.md) (`missing`, spec `ready`) — Task-detail tag chips + reserved-name seeding; **unblocks `focus-engine-v2`**.
 - [github-projects-sync](./github-projects-sync.md) (`missing`, spec `ready`) — GitHub Projects board (org `desireco`); two-way sync on structured fields, one-way on prose; `gh_node_id` join; manual CLI for v1.
 

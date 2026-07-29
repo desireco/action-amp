@@ -4,15 +4,19 @@ title: "Auth (passwordless email live; Google OAuth written but disabled)"
 feature_area: foundation
 status: partial
 spec: social-auth-google.md     # done (code-side) — but see reality note
-verified: 2026-07-03
+verified: 2026-07-29
 ---
 
 # Auth
 
-**Passwordless email — live.** `/login` sends a one-time code and sign-in link;
-both create normal Wasp sessions. `auth/magicLogin.ts` owns the challenge flow.
-The email provider remains enabled underneath for identity + session support,
-but password reset is not offered.
+**Passwordless email — live (2026-07-28, replacing passwords).** `/login` sends
+a six-digit code *and* a sign-in link; either creates a normal Wasp session.
+`auth/magicLogin.ts` owns the `MagicLoginChallenge` flow: 10-min TTL, 1-min
+resend throttle, 5-attempt cap, atomic `consumedAt` consume (no double-session
+races), delivery failures logged + the credential deleted so nothing usable
+leaks. A newer request supersedes every older challenge for the same address.
+Passwords + password reset are gone from the UI; the email provider stays on
+for identity + code delivery. Localhost uses a fixed `111111` for manual QA.
 
 **Google OAuth — written, NOT wired.** Code exists (`auth/google/`,
 `GoogleButton.tsx`) but:

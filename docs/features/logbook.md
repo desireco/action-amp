@@ -1,10 +1,10 @@
 ---
 slug: logbook
-title: "Logbook (completed + Archived section, Restore)"
+title: "Logbook (completed + Archived + Won't-do, Restore)"
 feature_area: review
 status: shipped
 spec: —
-verified: 2026-07-03
+verified: 2026-07-29
 ---
 
 # Logbook
@@ -13,8 +13,11 @@ verified: 2026-07-03
 `logbook/LogbookPage.tsx`). Groups completed tasks + completed projects +
 archived notes by day (Today / Yesterday / weekday / date). Archived rows get an
 "Archived" chip and a **Restore** action that returns the note to the Inbox.
+A **Won't do** section lists `WONT_DO` tasks (the non-destructive decline,
+shipped 2026-07-26) with a Restore that returns them to an active status — the
+"I considered this and chose not to do it" decision stays recorded, not deleted.
 
-**Op.** `getLogbook` merges all three kinds.
+**Op.** `getLogbook` merges all kinds.
 
 **Files.** `logbook/LogbookPage.tsx`; `logbook/operations.ts`.
 

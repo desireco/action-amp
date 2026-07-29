@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-26 (CLI lens management shipped: `actionamp lens list/show/switch/current` + `/api/cli/lens/{list,show}` PAT routes backed by a new pure `lenses/operationsCore.ts`. `lens switch <id|name>` stores the active lens in `~/.config/actionamp/config.json`; `now`/`project`/`goal`/`logbook`/`inbox triage` now fall back to it when no `--lens-id` flag is passed — mirrors the web app's `localStorage["aa-lens-id"]`. No create/update/delete (Pro-only, stays on desktop). Earlier 07-23: Admin dashboard shipped: a stats-first page at /app/settings/admin with global user/task/feedback counts across today/7d/30d windows, an inline feedback-status triage list, and a shared getAdminStatsCore. Activity tracking added (User.createdAt + lastActiveAt, throttled-stamped on app load, backfilled). actionamp-admin CLI gained `stats` (text + --json) backed by /api/cli/admin/stats. A full feedback-triage system landed: Feedback model with shortId (XXXX-XXXX Crockford base32), prefix-match lookups, admin-only /api/cli/feedback/* routes, and the actionamp-admin feedback commands (list/show/status). Earlier 07-22: ActionAmp CLI terminal client shipped — 11 commands, OAuth browser login, --json for agents, pure *Core.ts files shared with the web app.) -->
+<!-- Last reviewed: 2026-07-29 (Resources shipped — project-owned links/notes CRUD on the Project detail page + `actionamp resource list/add/update/delete` CLI + `/api/cli/resource/*` PAT routes, all backed by a pure `resources/operationsCore.ts`. NO `TaskResource` join — references are markdown links in Task Context, per the task-fields reversal; NO delete-with-impact flow, just simple delete. Passwordless magic-link email sign-in shipped (six-digit code OR sign-in link, 10-min TTL, rate-limited, atomic consume; replaces passwords; localhost uses fixed `111111` for QA). Share target extended: structured capture props (`title`/`content`/`sourceUrl` on InboxItem) + image attachments (`InboxAttachment`, one image ≤5MB) + CLI `capture` with `--title/--content/--source-url/--file`. Task Outcome (`Task.outcome`) shipped — task-fields now complete. WONT_DO task state shipped — non-destructive decline for post-triage tasks, surfaces in the Logbook with Restore. Earlier 07-26: CLI lens management shipped. Earlier 07-23: Admin dashboard + feedback-triage system. Earlier 07-22: ActionAmp CLI terminal client shipped.) -->
 
 ---
 
@@ -10,7 +10,7 @@
 This is not a pre-launch product. It is a **soft-launched product with no
 audience yet**. That distinction changes the whole roadmap.
 
-**What's actually shipped and verified (updated 2026-07-23):**
+**What's actually shipped and verified (updated 2026-07-29):**
 
 - **Deployed to Railway**, live at `actionamp.com` + `api.actionamp.com` (both
   return HTTP 200). Postgres on Railway, Resend SMTP for auth email.
@@ -42,6 +42,39 @@ audience yet**. That distinction changes the whole roadmap.
   `FeedbackStatus` (OPEN / IN_PROGRESS / RESOLVED / CLOSED). Admin-only
   `/api/cli/feedback/{list,show,status}` routes + the `actionamp-admin`
   feedback commands (list/show/status) for terminal triage.
+- **Passwordless email sign-in (magic links)**: `/login` sends a six-digit code
+  *and* a sign-in link (both create a normal Wasp session). The
+  `MagicLoginChallenge` flow owns the challenge: 10-min TTL, 1-min resend
+  throttle, 5-attempt cap, atomic consume (no double-session races), delivery
+  failures logged + the credential deleted so nothing usable leaks. Passwords
+  + password reset are gone; the email provider stays on for identity + the
+  code delivery. Localhost uses a fixed `111111` for manual QA.
+- **Share-to-inbox with images + structured capture**: the Android/Chrome
+  `share_target` now carries structured fields (`title` / `content` /
+  `sourceUrl` on `InboxItem`) and one image attachment (`InboxAttachment`,
+  ≤5MB, image MIME-only). The `/share` review page shows parsed chips before
+  anything is saved; the CLI mirrors it (`capture --title/--content/
+  --source-url/--file`). Inbox rows badge "Link attached" / "Image attached."
+- **Project-owned Resources**: links + notes filed under a Project, full CRUD
+  on the Project detail page (add/edit/remove) + `actionamp resource
+  list/add/update/delete` on the CLI + `/api/cli/resource/*` PAT routes — all
+  backed by a pure `resources/operationsCore.ts`. The Resource model is
+  project-only (the "Project or Goal" dual-parent was dropped as
+  over-engineered). **Scope cut vs. the original spec:** no `TaskResource`
+  join (references stay markdown links in Task Context, per the `task-fields`
+  reversal) and no delete-with-impact flow — Resources have no task links to
+  impact, so delete is plain remove.
+- **Task Context + Outcome**: the task-enhancement pair is complete.
+  `Task.content` = Context (what you need to do it), `Task.outcome` = Outcome
+  (what happened, captured at completion). Both optional markdown, both
+  invisible when empty, both editable on the task page via a shared
+  `PropertyChips` editor; Outcome renders in the completed-task panel.
+- **WONT_DO task state**: a fourth `TaskStatus` — the non-destructive decline
+  for tasks that already left the inbox (where hard-delete is the right call).
+  A WONT_DO task drops out of every active list and surfaces in the Logbook's
+  "Won't do" section with a Restore affordance. Preserves the triage context
+  (priority/project/notes/due) so a "no, not this" is a recorded decision, not
+  a silent deletion.
 - **Full core loop works end-to-end**: capture (`⌘K`) → inbox → triage →
   task/project → Next focus chooser → Today (capped at 5) → completion →
   Logbook. Every step has a real server operation and a route.
@@ -209,29 +242,19 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
     `docs/specs/breadcrumb-nav.md` — `ready` (route model locked: crumbs
     navigate to the ancestor's existing route, uniform with the app, no new
     view-state layer).** Includes the goal-card hover-implies-clickable nit.
-2. **resources-project-owned** (`ready`, confirmed 2026-07-03) — make the
-    existing-but-invisible `Resource` entity real: project-owned links+notes,
-    surfaced on the Project detail page (add/edit/delete), with tasks
-    referencing their project's resources and a **delete-with-impact** flow
-    that shows which tasks depend on a resource before you remove it. Closes
-    the gap `PAGES.md` already promises; lands the PARA "reference material"
-    leg of the structure-depth differentiator (§"The threat the docs
-    under-price"). **Two structural questions resolved 2026-07-03:** (A) the
-    Task↔Resource link is an **explicit `TaskResource` join** (DB-enforces the
-    same-project invariant, not an app-layer guard); (B) reconciles with
-    `cli-comments-resources` (this spec is the source of truth for Resource's
-    shape). Spec at `docs/specs/resources-project-owned.md`. Gated on items
-    7–11 like the rest of this tier.
-3. **task-fields** (`ready`, new 2026-07-04) — the task enhancement pair:
-    **Context** (optional markdown, reuses `Task.content`; what you need *to
-    do* the task — background, links, pointers to project-level Resources) and
-    **Outcome** (optional markdown, new `Task.outcome` column; what *happened*,
-    captured at completion for Review/Logbook). Both render via
-    `react-markdown` + `remark-gfm`; both invisible when empty; NextCard stays
-    title-only. **Reverses** `resources-project-owned` on the Task↔Resource
-    link: markdown links in Context, no `TaskResource` join (see
-    §Resource linking in the spec). No migration for Context; one nullable
-    column for Outcome. Spec at `docs/specs/task-fields.md`.
+2. **resources-project-owned** → **shipped 2026-07-28/29** (scope-cut, see
+   §Shipped): project-owned links/notes CRUD on the Project detail page + the
+   CLI surface + PAT routes. **Shipped without** the `TaskResource` join
+   (reversed by `task-fields` — references are markdown links in Context) and
+   the delete-with-impact flow (no task links → nothing to impact; plain
+   delete). If a future need for structured task↔resource links or a
+   delete-impact surface resurfaces, reopen as a new spec — the current shape
+   is deliberately simpler than the `ready` spec's done-conditions.
+3. **task-fields** → **shipped complete 2026-07-28** (see §Shipped): Context
+   (`Task.content`) + Outcome (`Task.outcome`), both optional markdown, both
+   editable via the shared `PropertyChips` editor. Spec `task-fields.md` is
+   `done`. The Task↔Resource reversal it introduced (markdown links, no join)
+   is the reason `resources-project-owned` shipped scope-cut.
 4. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
     marketing pack, the real pricing page. Only worth doing once items 7–11
     prove someone stays and pays.
@@ -248,18 +271,18 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
     **opportunistically** (a self-contained, well-scoped piece of work; or when
     the skills need a machine interface), not a jump-the-queue item. Ships only
     what the backend already exposes; missing writes filed as
-    `cli-write-ops.md` (`deferred`) + `cli-comments-resources.md` (`deferred`,
-    unblocks the `task-research` skill). **Split into three specs 2026-07-03:**
-    `cli-pat-plumbing` (`ready`, the natural first pull), `cli-package`
-    (`draft` — op-refactor scope unscoped), `cli-skills` (`draft` — depends on
-    cli-package). Umbrella + cross-cutting decisions: `docs/specs/cli.md`.
-   **Phase 0 + Phase 1 shipped 2026-07-22** — see §Shipped. `cli-pat-plumbing`
-   (PAT auth + OAuth browser login + `/cli/login` page) and `cli-package`
-   (full 11-command surface: login/now/capture/whoami/task/today/inbox/
-   project/goal/logbook/logout + `llm` agent reference, all with `--json`,
-   55 tests, op-refactor extracting pure cores shared between web ops + CLI
-   routes) are in Review. Only `cli-skills` (Phase 2 — the four orchestration
-   skills) remains `draft`.
+    `cli-write-ops.md` (`deferred`). ~~`cli-comments-resources.md`~~ (was
+    `deferred`, unblocked the `task-research` skill) is **satisfied** by the
+    shipped `resource` CLI commands. **Split into three specs 2026-07-03:**
+    `cli-pat-plumbing`, `cli-package`, `cli-skills`. Umbrella + cross-cutting
+    decisions: `docs/specs/cli.md`.
+   **Phase 0 + Phase 1 shipped 2026-07-22** (see §Shipped); the surface has
+   since grown: `lens list/show/switch/current` (2026-07-26) and `resource
+   list/add/update/delete` (2026-07-29) landed, the latter satisfying the
+   formerly-deferred `cli-comments-resources` (Resources are now full CLI
+   CRUD). `capture` also gained shared-content + image flags
+   (`--title/--content/--source-url/--file`, 2026-07-29). Only `cli-skills`
+   (Phase 2 — the four orchestration skills) remains `draft`.
 5. **goal-planning** (`done` 2026-07-05, was `ready`) — **shipped**: full
    Goal/Project lifecycle (complete, reopen, edit, delete, re-link) + explicit
    `Project.order` sequencing under a Goal + Logbook surfacing of completed
@@ -308,7 +331,10 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
    → tag-management → matcher-validation → focus-engine-v2**. Focus-engine-v2
    stays draft until the tag UI, matcher test, and moment-bar design are closed.
 3. Opportunistic small ready work: **breadcrumb-nav**. Useful depth work once
-   there is signal: **goal-planning**, then **resources-project-owned**.
+   there is signal: ~~goal-planning~~ → shipped; ~~resources-project-owned~~
+   → shipped (scope-cut). The depth backlog now leans on **task-fields**
+   (shipped) feeding **weekly-monthly-review** (draft) and the still-open
+   **command-palette-search** / **tag-management** pair.
 4. Developer-surface work (**cli-pat-plumbing**, then `cli-package` /
    `cli-skills`) remains explicitly opportunistic, not validation-critical.
 5. **Tooling:** **github-projects-sync** (`ready`, P2, realigned 2026-07-07) —
@@ -324,6 +350,64 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **resources-project-owned (scope-cut)** (`shipped` 2026-07-28/29) — the
+  `Resource` entity is real: project-owned links + notes with full CRUD on the
+  Project detail page (add/edit/remove behind the ⋯ overflow), the CLI surface
+  (`actionamp resource list/add/update/delete`), and `/api/cli/resource/*` PAT
+  routes — all backed by a pure `resources/operationsCore.ts` shared across the
+  Wasp action, the CLI routes, and the triage resource branch. The dual-parent
+  "Project or Goal" was dropped as over-engineered: `Resource.projectId` is
+  required + NOT NULL (DB-enforced invariant). **Two scope cuts vs. the spec:**
+  (1) **no `TaskResource` join** — tasks reference project material as markdown
+  links in the Context field, per the `task-fields` reversal (the spec's §A
+  "explicit join" was itself reversed); (2) **no delete-with-impact flow** —
+  with no task links, delete is a plain remove (the "N tasks reference this"
+  surface has nothing to show). The spec stays `ready`-with-reversals rather
+  than moving to `done/`; its done-conditions for the join + impact flow are
+  formally superseded by this entry. `cli-comments-resources` (deferred) is now
+  unblocked and satisfied by the CLI surface.
+- **auth-magic-link** (`shipped` 2026-07-28) — passwordless email sign-in
+  replaces passwords. `/login` sends a six-digit code *and* a sign-in link;
+  either creates a normal Wasp session. New `MagicLoginChallenge` model: SHA-256
+  `codeHash` + `tokenHash`, 10-min TTL, 1-min resend throttle, 5-attempt cap,
+  atomic `consumedAt` consume (prevents concurrent code/link submissions from
+  creating two sessions). Email delivery failures are logged (provider detail
+  kept server-side) and the challenge row is deleted so no usable credential
+  survives a failed send. A newer request supersedes every older challenge for
+  the same address (one clear sign-in path). Passwords + password reset removed
+  from the UI; the email provider stays on for identity + code delivery.
+  Localhost uses a fixed `111111` for manual QA (prod is `randomInt(100000,
+  1000000)`). `auth.md` catalog entry + `docs/EMAIL-INTEGRATION.md` updated.
+  (Predates the duet protocol — no spec; tracked here for the record.)
+- **share-target-images-and-structured-capture** (`shipped` 2026-07-28/29) — the
+  Android/Chrome `share_target` outgrew plain-text capture. `InboxItem` gained
+  `title` / `content` / `sourceUrl` (structured fields from an Android page
+  share; normal capture leaves them null) and an `InboxAttachment` child model
+  (one image, ≤5MB, image MIME-only, binary capped in the capture op). The
+  `/share` review page separates a shared page's title/body/source/image and
+  shows parsed chips before save; Android's duplicated page titles are
+  de-duped. The CLI mirrors it: `capture --title/--content/--source-url/--file`
+  (file read, size-checked, base64-encoded). Inbox rows badge "Link attached"
+  / "Image attached." Service-worker + manifest fixes landed alongside
+  (update-loop guard, explicit + generic Android image MIME types). Builds on
+  `pwa-share-target`; the §Shipped entry below is extended, not superseded.
+- **task-fields (complete)** (`shipped` 2026-07-28, Outcome leg) — the
+  task-enhancement pair is now whole. **Context** (`Task.content`) shipped
+  2026-07-05; **Outcome** (`Task.outcome`) shipped 2026-07-28: a nullable column
+  captured at completion via `setTaskOutcome`, rendered (markdown) in the
+  completed-task panel on the task page, read for future Logbook/Review. Both
+  optional, both invisible when empty, both edited through the shared
+  `PropertyChips` chip-popover editor. `task-fields.md` spec flipped `ready →
+  done`; the partial `task-fields` catalog entry is now `shipped`. Feeds
+  `weekly-monthly-review`'s honest "what happened" surface.
+- **task-wont-do** (`shipped` 2026-07-26) — `TaskStatus` gained `WONT_DO`, the
+  non-destructive decline for tasks that already left the inbox (hard-delete
+  lives at triage only, before a row accumulates context). A WONT_DO task
+  carries its triage context (priority/project/notes/due), drops out of every
+  active list, and surfaces in the Logbook's "Won't do" section with a Restore
+  affordance. The "I considered this and chose not to do it" decision is now a
+  recorded event, not a silent delete. Migration is a single `ALTER TYPE ADD
+  VALUE` (no backfill). (No duet spec — small, self-contained.)
 - **admin-dashboard** (`shipped` 2026-07-22) — first in-app admin surface. A
   stats-first page at `/app/settings/admin` (admin-only tab in SettingsLayout)
   showing global counts across today / 7d / 30d windows: users (total, signed
@@ -403,6 +487,11 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
   Share Extension remains a post-PMF concern (Icebox). Spec:
   `docs/superpowers/specs/2026-07-25-pwa-share-target-design.md`; plan:
   `docs/superpowers/plans/2026-07-25-pwa-share-target.md`.
+  **Extended 2026-07-28/29** — see the `share-target-images-and-structured-capture`
+  entry at the top of §Shipped: `InboxItem` gained structured `title`/`content`/
+  `sourceUrl` + an `InboxAttachment` image model (one image, ≤5MB), the `/share`
+  review page separates a shared page's fields, and the CLI mirrors it
+  (`capture --title/--content/--source-url/--file`).
 - **mobile-dock + task-row-action-drawer** (`shipped` ~2026-07-15) — the
   mobile bottom dock reorganized around a Do-first affordance with Today
   folded in (Next was demoted — the focus chooser lives at the top of /app,
@@ -744,7 +833,11 @@ roadmaps forget and most launches stall on.
       OG images, Twitter/LinkedIn cards, share row)
 - [ ] Breadcrumb navigation → **`breadcrumb-nav`** (`ready`, spun out of friction-cleanup; route model locked 2026-07-03)
 - [ ] Tag management UI + reserved-tag seeding → **`tag-management`** (`ready`, written 2026-07-03; unblocks `focus-engine-v2`)
-- [ ] Project-owned Resources + Task references → **`resources-project-owned`** (`ready`, confirmed 2026-07-03)
+- [x] Project-owned Resources + Task references → **`resources-project-owned`**
+      (`shipped` 2026-07-28/29, scope-cut — no `TaskResource` join, no
+      delete-with-impact; see §Shipped)
+- [x] Task enhancement fields (Context + Outcome) → **`task-fields`** (`done`
+      2026-07-28 — Outcome shipped; Context shipped 2026-07-05)
 - [x] Goal/Project lifecycle (complete/edit/relink/sequence) → **`goal-planning`** (`done`)
 
 ### B. Non-code items the user owns (no spec — these are setup/decisions)

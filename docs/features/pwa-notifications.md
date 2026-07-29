@@ -1,10 +1,10 @@
 ---
 slug: pwa-notifications
-title: "PWA install, app-icon shortcuts, and daily Today reminder"
+title: "PWA install, app-icon shortcuts, daily Today reminder, share target"
 feature_area: app-shell
 status: shipped
 spec: —
-verified: 2026-07-21
+verified: 2026-07-29
 ---
 
 # PWA notifications
@@ -71,3 +71,9 @@ iOS requires a native Share Extension (a post-PMF native-shell concern; see
 
 **Spec + plan.** `docs/superpowers/specs/2026-07-25-pwa-share-target-design.md`
 + `docs/superpowers/plans/2026-07-25-pwa-share-target.md`.
+
+**CLI mirror (2026-07-29).** `actionamp capture` accepts the same structured
+fields and one image: `--title`, `--content`, `--source-url`, and `--file
+<path>` (read, size-checked ≤5MB, base64-encoded; JPEG/PNG/GIF/WebP/HEIC/HEIF).
+The `/api/cli/capture` route forwards them to the same `createInboxItemCore`,
+so a CLI capture and a PWA share produce identical InboxItem rows.

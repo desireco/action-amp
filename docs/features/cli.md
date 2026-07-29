@@ -2,33 +2,46 @@
 slug: cli
 title: "CLI + orchestration skills (power-user terminal surface)"
 feature_area: developer
-status: missing
+status: partial              # Phase 0 + Phase 1 shipped; Phase 2 (skills) draft
 spec: cli.md                       # umbrella; effort split into 3 specs 2026-07-03
-verified: 2026-07-03
+verified: 2026-07-29
 ---
 
 # CLI + orchestration skills
 
-**Wanted.** A top-level `cli/` package (typed library + thin binary) that
-talks to the ActionAmp HTTP API via **Personal Access Tokens**, plus four
-paired orchestration skills that shell out to `actionamp <cmd> --json`.
-Headline command `actionamp now`. Power-user / developer surface — **not part
-of the validation gauntlet**; `ready` for Build to pull opportunistically.
+**Phase 0 + Phase 1 shipped 2026-07-22; surface has since grown.** A standalone
+`cli/` package (commander + chalk, ESM, TypeScript) talks to the webapp's
+`/api/cli/*` routes via PAT auth (OAuth browser login — the `gh auth login`
+pattern). Entitlement-enforced (FREE users can't read Pro-gated lenses).
 
-**Today.** No CLI code; no PAT model; no skills.
+**Today's command surface** (every command supports `--json`):
+
+- **Auth/session:** `login`, `whoami`, `logout`.
+- **Focus/lists:** `now`, `today (--done)`, `logbook`.
+- **Capture/inbox:** `capture` (NL parsing + `--title/--content/--source-url/
+  --file` for shared content + one image), `inbox (list|triage)`.
+- **Tasks:** `task (show|start|pause|done|snooze|move)`.
+- **Planning:** `project (list|show|create|add-task)` (list/show carry
+  resources), `goal (list|show|create)`, `resource (list|add|update|delete)`.
+- **Lenses:** `lens (list|show|switch|current)` — `switch` stores the active
+  lens in `~/.config/actionamp/config.json`; most reads fall back to it
+  without `--lens-id`.
+- **Meta:** `llm` (prints agent/LLM instructions).
 
 **Spec — split into three 2026-07-03** (the original single spec was too large
 for one `ready` unit):
 
 | Spec | Status | What |
 |------|--------|------|
-| [`cli-pat-plumbing`](../specs/cli-pat-plumbing.md) | **`ready`** (P3) | `ApiKey` model + PAT routes + Bearer middleware + Settings UI. Self-contained backend slice. The natural first pull. |
-| [`cli-package`](../specs/cli-package.md) | `draft` | The `cli/` package — ~14 commands + `--json`. **Draft because the op-refactor scope is unscoped** (its Open Question 1). |
-| [`cli-skills`](../specs/cli-skills.md) | `draft` | Four orchestration skills. Depends on `cli-package`; one skill blocked on `cli-comments-resources`. |
+| [`cli-pat-plumbing`](../specs/cli-pat-plumbing.md) | **shipped 2026-07-22** | `ApiKey` model (SHA-256 hashed tokens) + PAT routes + Bearer middleware + `/cli/login` consent page + Settings → Access tokens UI. |
+| [`cli-package`](../specs/cli-package.md) | **shipped 2026-07-22** (surface grown since) | The `cli/` package — full command surface above + `--json`, backed by pure `*Core.ts` files shared with the Wasp ops (zero duplicated logic). |
+| [`cli-skills`](../specs/cli-skills.md) | `draft` | Four orchestration skills. Depends on `cli-package`; `task-research` was blocked on `cli-comments-resources`, now unblocked by the `resource` commands. |
 
 Umbrella design + cross-cutting decisions: [`docs/specs/cli.md`](../specs/cli.md).
 
 **Why it matters.** A focus app whose thesis is "decision, not capture" fits a
 terminal; the single-task answer should be reachable without a browser tab.
 The CLI is also the machine interface for orchestration skills. It does not
-change the wedge — it widens the surface for power users.
+change the wedge — it widens the surface for power users. **Not part of the
+validation gauntlet** — opportunistic, shipped because the surface was
+self-contained.

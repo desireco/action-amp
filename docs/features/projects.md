@@ -1,10 +1,10 @@
 ---
 slug: projects
-title: "Projects (list + detail, inline create, progress roll-up)"
+title: "Projects (list + detail, inline create, progress roll-up, Resources)"
 feature_area: planning
 status: shipped
 spec: —
-verified: 2026-07-03
+verified: 2026-07-29
 ---
 
 # Projects

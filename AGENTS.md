@@ -90,9 +90,12 @@ Pick the task; read the doc(s) on the right **before** writing code.
 
 - **`webapp/main.wasp.ts`** — every route, page, auth op, operation. The fastest
   way to see the app's full surface area.
-- **`webapp/schema.prisma`** — models: `User, Lens, Goal, Project, Task,
-  Resource, InboxItem, Tag, Payment`; enums: `Plan, Priority, Size, TaskStatus,
-  InboxItemStatus, PaymentStatus`.
+- **`webapp/schema.prisma`** — core models: `User, Lens, Goal, Project, Task,
+  Resource, InboxItem (+ InboxAttachment), Tag, Payment`; supporting models:
+  `MagicLoginChallenge` (passwordless email), `ApiKey` (CLI PATs), `Feedback`
+  (triage), `PushSubscription` (Web Push), `TaskSession` (focus accounting),
+  `TaskUpdate` (activity log). Enums: `Plan, Priority, Size, TaskStatus
+  (incl. WONT_DO), InboxItemStatus, PaymentStatus, FeedbackStatus`.
 - **`webapp/src/`** — vertical per feature. Each feature folder typically has its
   page (`*Page.tsx`), server ops (`operations.ts`), and styles (`*.css`):
   - `src/app/` — shell, What Now, Inbox, triage, settings, keyboard shortcuts
