@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router";
 import "./NavItem.css";
 
 interface NavItemProps {
@@ -74,9 +75,9 @@ export function NavItem({
 
   if (to) {
     return (
-      <a href={to} className={cls} aria-current={active ? "page" : undefined} title={soon ? "Coming soon" : undefined}>
+      <Link to={to} className={cls} aria-current={active ? "page" : undefined} title={soon ? "Coming soon" : undefined}>
         {content}
-      </a>
+      </Link>
     );
   }
 
