@@ -58,7 +58,8 @@
 - [command-palette](./command-palette.md) (`missing`, spec `ready`) — `⌘\` fuzzy search.
 - [breadcrumb-nav](./breadcrumb-nav.md) (`missing`, spec `ready` — route model locked) — crumbs navigate.
 - [focus-engine-v2](./focus-engine-v2.md) (`missing`, spec `draft`) — moment-aware matcher; needs tag-management UI + a mockup + matcher-test gate.
-- [observability-minimal](./observability-minimal.md) (`missing`, spec `ready`, gated by `gtm-analytics-account`) — analytics + funnel.
+- [observability-minimal](./observability-minimal.md) (`partial`, spec `ready`) — anonymous acquisition + funnel; StatCounter base tracker is live.
+- [growth-analytics](./growth-analytics.md) (`missing`, spec `ready`) — first-party sessions/events, source attribution, admin Growth dashboard, and cohorts.
 - [retention-criticalpath](./retention-criticalpath.md) (`missing`, spec `ready`, depends on observability) — first-7-days instrumentation.
 - [work-area-merged](./work-area-merged.md) (`missing`, spec `draft`) — merged Work area; one sub-piece (TaskUpdate.kind) shipped as `task-notes-completion-log`.
 - [weekly-monthly-review](./weekly-monthly-review.md) (`missing`, spec `draft`) — period debriefs; v2 gated on `work-area-merged`.
