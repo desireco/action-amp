@@ -40,7 +40,7 @@
 
 .aa-pricing-choices {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
   align-items: stretch;
 }
@@ -58,11 +58,11 @@
 
 .aa-plan--pro {
   border-color: var(--aa-teal);
-  box-shadow: var(--aa-shadow-md);
-}
-
-.aa-plan--monthly {
-  background: var(--aa-bg-soft);
+  box-shadow: var(--aa-shadow-lg);
+  transform: translateY(-12px) scale(1.035);
+  transform-origin: center;
+  position: relative;
+  z-index: 1;
 }
 
 .aa-plan--founding {
@@ -82,6 +82,57 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
+}
+
+.aa-plan-cycle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+  margin: 0 0 14px;
+  color: var(--aa-text-4);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.aa-plan-cycle-label--active {
+  color: var(--aa-text);
+  font-weight: 700;
+}
+
+.aa-plan-cycle-toggle {
+  display: inline-flex;
+  align-items: center;
+  width: 38px;
+  height: 22px;
+  padding: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--aa-border-strong);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.aa-plan-cycle-toggle[aria-checked="true"] {
+  background: var(--aa-teal-cta);
+}
+
+.aa-plan-cycle-toggle:focus-visible {
+  outline: 2px solid var(--aa-teal-cta);
+  outline-offset: 3px;
+}
+
+.aa-plan-cycle-toggle span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--aa-surface);
+  box-shadow: var(--aa-shadow-sm);
+  transition: transform 0.2s ease;
+}
+
+.aa-plan-cycle-toggle[aria-checked="true"] span {
+  transform: translateX(16px);
 }
 
 .aa-plan-price {
@@ -247,6 +298,14 @@
 
   .aa-plan {
     min-height: 0;
+  }
+
+  .aa-plan--pro {
+    transform: none;
+  }
+
+  .aa-pricing-choices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .aa-pricing-explainer {

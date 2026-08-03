@@ -62,10 +62,22 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
       <article class="aa-plan aa-plan--pro">
         <div class="aa-plan-heading">
           <p class="aa-plan-label">Pro <span>Regular plan</span></p>
-          <p class="aa-plan-period">Annual subscription</p>
-          <p class="aa-plan-price"><span>$79.50</span> <strong>every 12 months</strong></p>
-          <p class="aa-plan-billing">Billed yearly · renews yearly</p>
-          <p class="aa-plan-summary">For work, more than a few projects, and the full system.</p>
+          <div class="aa-plan-cycle" aria-label="Pro billing period">
+            <span data-cycle-label="yearly" class="aa-plan-cycle-label--active">Yearly</span>
+            <button
+              class="aa-plan-cycle-toggle"
+              type="button"
+              role="switch"
+              aria-checked="false"
+              aria-label="Switch to monthly billing"
+              data-pro-billing-switch
+            ><span></span></button>
+            <span data-cycle-label="monthly">Monthly</span>
+          </div>
+          <p class="aa-plan-period" data-pro-period>Annual subscription</p>
+          <p class="aa-plan-price"><span data-pro-price>$79.50</span> <strong data-pro-price-copy>every 12 months</strong></p>
+          <p class="aa-plan-billing" data-pro-billing>Billed yearly · renews yearly</p>
+          <p class="aa-plan-summary" data-pro-summary>For work, more than a few projects, and the full system.</p>
         </div>
         <ul>
           <li>Everything in Free</li>
@@ -75,25 +87,7 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
           <li>Command palette and Logbook search</li>
         </ul>
         <a class="aa-btn aa-btn--primary aa-plan-cta" href={`${appUrl}/signup`}>Start free, upgrade when ready</a>
-        <p class="aa-plan-note">About $6.63 per month when paid annually.</p>
-      </article>
-
-      <article class="aa-plan aa-plan--monthly">
-        <div class="aa-plan-heading">
-          <p class="aa-plan-label">Pro <span>Flexible plan</span></p>
-          <p class="aa-plan-period">Monthly subscription</p>
-          <p class="aa-plan-price"><span>$12.95</span> <strong>every month</strong></p>
-          <p class="aa-plan-billing">Billed monthly · cancel from billing anytime</p>
-          <p class="aa-plan-summary">Full Pro access, without a yearly commitment.</p>
-        </div>
-        <ul>
-          <li>Everything in Free</li>
-          <li>Work, Me, and custom Lenses</li>
-          <li>Unlimited projects, goals, history, and devices</li>
-          <li>Command palette and Logbook search</li>
-        </ul>
-        <a class="aa-btn aa-btn--secondary aa-plan-cta" href={`${appUrl}/signup`}>Start free, choose monthly later</a>
-        <p class="aa-plan-note">Prefer no renewal? Get a prepaid Pro year for $90.</p>
+        <p class="aa-plan-note" data-pro-note>About $6.63 per month when paid annually. Prefer no renewal? Get a prepaid Pro year for $90.</p>
       </article>
     </section>
 
@@ -128,3 +122,49 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
     </section>
   </div>
 </PublicLayout>
+
+<script>
+  const billingSwitch = document.querySelector<HTMLButtonElement>("[data-pro-billing-switch]");
+
+  if (billingSwitch) {
+    const plans = {
+      yearly: {
+        period: "Annual subscription",
+        price: "$79.50",
+        priceCopy: "every 12 months",
+        billing: "Billed yearly · renews yearly",
+        summary: "For work, more than a few projects, and the full system.",
+        note: "About $6.63 per month when paid annually. Prefer no renewal? Get a prepaid Pro year for $90.",
+      },
+      monthly: {
+        period: "Monthly subscription",
+        price: "$12.95",
+        priceCopy: "every month",
+        billing: "Billed monthly · cancel from billing anytime",
+        summary: "Full Pro access, without a yearly commitment.",
+        note: "Prefer no renewal? Get a prepaid Pro year for $90.",
+      },
+    };
+
+    const setBillingPeriod = (period: keyof typeof plans) => {
+      const plan = plans[period];
+      const isMonthly = period === "monthly";
+
+      billingSwitch.setAttribute("aria-checked", String(isMonthly));
+      billingSwitch.setAttribute("aria-label", isMonthly ? "Switch to yearly billing" : "Switch to monthly billing");
+      document.querySelectorAll<HTMLElement>("[data-cycle-label]").forEach((label) => {
+        label.classList.toggle("aa-plan-cycle-label--active", label.dataset.cycleLabel === period);
+      });
+      document.querySelector<HTMLElement>("[data-pro-period]")!.textContent = plan.period;
+      document.querySelector<HTMLElement>("[data-pro-price]")!.textContent = plan.price;
+      document.querySelector<HTMLElement>("[data-pro-price-copy]")!.textContent = plan.priceCopy;
+      document.querySelector<HTMLElement>("[data-pro-billing]")!.textContent = plan.billing;
+      document.querySelector<HTMLElement>("[data-pro-summary]")!.textContent = plan.summary;
+      document.querySelector<HTMLElement>("[data-pro-note]")!.textContent = plan.note;
+    };
+
+    billingSwitch.addEventListener("click", () => {
+      setBillingPeriod(billingSwitch.getAttribute("aria-checked") === "true" ? "yearly" : "monthly");
+    });
+  }
+</script>
