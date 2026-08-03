@@ -15,7 +15,7 @@ import StatCounter from "../components/StatCounter.astro";
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
 const apiUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3001";
 
-// Hero demo tasks — cycles on click.
+// Hero demo tasks — the card can focus, switch recommendations, or complete.
 const HERO_TASKS = [
   { title: "Email Sarah re: Q3 invoice", why: "★ Important · the reason this is next", meta: "Due today · 15 min" },
   { title: "Review pull request #284", why: "Normal · fits in 30 min", meta: "Due today · 30 min" },
@@ -105,15 +105,15 @@ const FAQ_ITEMS = [
 
           <div class="aa-wn-wrap">
             <div class="aa-wn-card" id="hero-card">
-              <div class="aa-wn-ctx">
+              <div class="aa-wn-ctx" id="aa-wn-ctx" aria-live="polite">
                 <span class="aa-dot"></span>
                 Right now · 30 min
               </div>
               <button
                 class="aa-completion"
                 id="aa-completion"
-                aria-label="Mark task complete"
-                title="Click to complete"
+                aria-label="Mark this task complete"
+                title="Mark complete"
               >
                 <svg class="aa-check" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
@@ -123,8 +123,8 @@ const FAQ_ITEMS = [
               <div class="aa-wn-meta" id="aa-wn-meta">{HERO_TASKS[0].meta}</div>
               <div class="aa-wn-why" id="aa-wn-why">{HERO_TASKS[0].why}</div>
               <div class="aa-wn-actions">
-                <button class="aa-btn aa-btn--primary" id="aa-do-this">Do this</button>
-                <button class="aa-btn aa-btn--secondary">Switch</button>
+                <button type="button" class="aa-btn aa-btn--primary" id="aa-start-focus">Start focus</button>
+                <button type="button" class="aa-btn aa-btn--secondary" id="aa-switch-task">Switch task</button>
               </div>
             </div>
           </div>
@@ -281,44 +281,72 @@ const FAQ_ITEMS = [
     </div>
 
     <script is:inline define:vars={{ HERO_TASKS, apiUrl }}>
-      // Hero card — click completion or "Do this" → fill → cycle to next task.
-      // Ported from the React useState/handleComplete logic.
+      // Hero card — Start focus previews working; Switch task changes the
+      // recommendation; only the completion ring marks a task done.
       (function () {
+        var card = document.getElementById("hero-card");
         var completion = document.getElementById("aa-completion");
-        var doBtn = document.getElementById("aa-do-this");
+        var focusBtn = document.getElementById("aa-start-focus");
+        var switchBtn = document.getElementById("aa-switch-task");
+        var contextEl = document.getElementById("aa-wn-ctx");
         var titleEl = document.getElementById("aa-wn-title");
         var metaEl = document.getElementById("aa-wn-meta");
         var whyEl = document.getElementById("aa-wn-why");
-        if (!completion || !doBtn || !titleEl) return;
+        if (!card || !completion || !focusBtn || !switchBtn || !contextEl || !titleEl || !metaEl || !whyEl) return;
 
         var idx = 0;
         var done = false;
 
+        function showTask(nextIdx) {
+          idx = nextIdx;
+          var task = HERO_TASKS[idx];
+          done = false;
+          card.classList.remove("is-focusing");
+          completion.classList.remove("filled", "burst");
+          completion.disabled = false;
+          focusBtn.classList.remove("is-focusing");
+          focusBtn.textContent = "Start focus";
+          focusBtn.disabled = false;
+          switchBtn.disabled = false;
+          contextEl.innerHTML = '<span class="aa-dot"></span>Right now · 30 min';
+          titleEl.textContent = task.title;
+          metaEl.textContent = task.meta;
+          whyEl.textContent = task.why;
+          titleEl.style.animation = "none";
+          void titleEl.offsetWidth;
+          titleEl.style.animation = "";
+        }
+
+        function startFocus() {
+          if (done || card.classList.contains("is-focusing")) return;
+          card.classList.add("is-focusing");
+          focusBtn.classList.add("is-focusing");
+          focusBtn.textContent = "Focusing now";
+          focusBtn.disabled = true;
+          contextEl.innerHTML = '<span class="aa-dot"></span>In focus · 30 min';
+        }
+
         function complete() {
           if (done) return;
           done = true;
+          card.classList.remove("is-focusing");
           completion.classList.add("filled", "burst");
-          doBtn.classList.add("is-done");
-          doBtn.textContent = "Done ✓";
+          completion.disabled = true;
+          focusBtn.classList.remove("is-focusing");
+          focusBtn.textContent = "Completed";
+          focusBtn.disabled = true;
+          switchBtn.disabled = true;
+          contextEl.innerHTML = '<span class="aa-dot"></span>Completed';
           setTimeout(function () {
-            completion.classList.remove("filled", "burst");
-            doBtn.classList.remove("is-done");
-            doBtn.textContent = "Do this";
-            idx = (idx + 1) % HERO_TASKS.length;
-            var task = HERO_TASKS[idx];
-            titleEl.textContent = task.title;
-            metaEl.textContent = task.meta;
-            whyEl.textContent = task.why;
-            // restart the rise animation
-            titleEl.style.animation = "none";
-            void titleEl.offsetWidth;
-            titleEl.style.animation = "";
-            done = false;
-          }, 2400);
+            showTask((idx + 1) % HERO_TASKS.length);
+          }, 1200);
         }
 
         completion.addEventListener("click", complete);
-        doBtn.addEventListener("click", complete);
+        focusBtn.addEventListener("click", startFocus);
+        switchBtn.addEventListener("click", function () {
+          if (!done) showTask((idx + 1) % HERO_TASKS.length);
+        });
       })();
 
       // FAQ accordion — click toggles .open (CSS handles the expand).

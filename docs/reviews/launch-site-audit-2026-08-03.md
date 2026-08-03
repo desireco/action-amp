@@ -149,11 +149,14 @@ verification notes.
         The responsive padding remains; sections now size to their content and
         the footer follows in ordinary document flow.
 
-- [ ] **F07 — Repair hero demo semantics.** “Switch” does nothing. “Do this”
-      immediately changes to “Done ✓” and cycles tasks, teaching that starting
+- [x] **F07 — Repair hero demo semantics.** “Switch” did nothing. “Do this”
+      immediately changed to “Done ✓” and cycled tasks, teaching that starting
       work equals completing work.
       - Done when: Switch visibly changes the proposed task; Do this previews a
         focus/working state or is relabeled to match completion behavior.
+      - Resolved 2026-08-03: “Start focus” now enters a visible in-focus state,
+        “Switch task” changes the recommendation, and only the completion ring
+        marks a task done before advancing to the next recommendation.
 
 - [ ] **F08 — Simplify hero task-card parsing.** Current card contains an
       unlabeled completion ring, `Right now · 30 min`, `Due today · 15 min`, an

@@ -195,6 +195,15 @@
   text-align: center;
   width: 100%;
   max-width: 380px;
+  transition:
+    border-color var(--aa-dur-base),
+    box-shadow var(--aa-dur-base),
+    transform var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-wn-card.is-focusing {
+  border-color: var(--aa-teal);
+  box-shadow: 0 0 0 4px var(--aa-teal-soft), var(--aa-hero-shadow);
+  transform: translateY(-2px);
 }
 .aa-wn-ctx {
   display: inline-flex;
@@ -333,9 +342,13 @@
   font-size: 13.5px;
   padding: 9px 20px;
 }
-.aa-wn-actions .aa-btn--primary.is-done {
+.aa-wn-actions .aa-btn--primary.is-focusing {
   background: var(--aa-teal);
-  pointer-events: none;
+  opacity: 0.82;
+}
+.aa-wn-actions .aa-btn:disabled,
+.aa-completion:disabled {
+  cursor: default;
 }
 /*
  * Link-button override (the bug fix).
