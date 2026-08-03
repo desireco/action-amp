@@ -10,6 +10,7 @@ import "../styles/landing.css";
 import "../styles/site-chrome.css";
 import SiteNav from "../components/SiteNav.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import StatCounter from "../components/StatCounter.astro";
 
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
 const apiUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3001";
@@ -50,6 +51,7 @@ const FAQ_ITEMS = [
     <meta name="twitter:card" content="summary" />
   </head>
   <body>
+    <StatCounter />
     <div class="aa-landing">
     <SiteNav appUrl={appUrl} variant="landing" />
 

@@ -8,6 +8,7 @@
 // The app origin comes from PUBLIC_APP_URL (dev: localhost:4000, prod: app.actionamp.com).
 import SiteNav from "../components/SiteNav.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import StatCounter from "../components/StatCounter.astro";
 import "../styles/global.css";
 import "../styles/site-chrome.css";
 
@@ -98,6 +99,7 @@ const shareDescription = socialDescription ?? description;
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
   </head>
   <body>
+    <StatCounter />
     <div class="aa-public">
       <SiteNav appUrl={appUrl} variant="site" />
 

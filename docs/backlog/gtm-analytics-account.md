@@ -18,16 +18,18 @@ gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 
 ## What
 
-Pick Plausible vs PostHog (lean: **Plausible** — privacy-respecting, calm, fits
-the brand), create the site, get the key. The `observability-minimal` code
-can't go live without it.
+**Resolved 2026-08-03: StatCounter.** The project has been created for
+`actionamp.com`; its production snippet is available to wire across the
+marketing site and app. The `observability-minimal` event funnel still needs
+its four explicit conversion events.
 
 ## Done-conditions
 
-- [ ] Provider chosen (Plausible recommended) + rationale noted.
-- [ ] Site created in the provider dashboard for `actionamp.com`.
-- [ ] API key / snippet available to wire into the app.
-- [ ] Handed to Build (or noted as ready) → `observability-minimal` unblocked.
+- [x] Provider chosen: StatCounter (visitor journeys, session replay, and
+      heatmaps fit the team's preference).
+- [x] Site created in the provider dashboard for `actionamp.com`.
+- [x] Snippet available to wire into the marketing site and app.
+- [x] Handed to Build → `observability-minimal` unblocked.
 
 ## Why
 

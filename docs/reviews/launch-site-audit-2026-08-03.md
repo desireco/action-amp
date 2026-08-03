@@ -127,8 +127,10 @@ verification notes.
         required.” Marketing and public-pages source docs match; `ROADMAP.md`
         already identified the product as soft-launched.
 
-- [ ] **F05 — Add minimal funnel measurement before distribution.** Current
-      visitor-to-signup and visitor-to-checkout rates are unknown.
+- [ ] **F05 — Add minimal funnel measurement before distribution.** StatCounter
+      base tracking is now installed across the production marketing site and
+      app; explicit visitor-to-signup and visitor-to-checkout events remain
+      unknown.
       - Source spec: `docs/specs/observability-minimal.md`.
       - Done when: landing view, signup complete, first app open, and checkout
         started form one privacy-respecting production funnel.

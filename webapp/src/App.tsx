@@ -1,6 +1,7 @@
 import { Outlet, useLocation, Navigate, ScrollRestoration } from "react-router";
 import { useAuth } from "wasp/client/auth";
 import { AppShell } from "./app/AppShell";
+import { StatCounter } from "./analytics/StatCounter";
 import "./App.css";
 
 /**
@@ -52,11 +53,15 @@ export function App() {
   }
 
   return isApp ? (
-    <AppShell>
-      <Outlet />
-    </AppShell>
+    <>
+      <StatCounter />
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    </>
   ) : (
     <>
+      <StatCounter />
       {/* Scroll to top on route change. Without this, navigating between
           public pages inherits the previous page's scroll offset — so
           clicking a footer link (bottom of page) landed you at the bottom

@@ -14,11 +14,10 @@ gh_synced_at: 2026-07-08T19:45:22Z
 
 # Feature: Minimal observability (the one funnel number)
 
-> **Status: `ready`, but GATED.** The code can be written now, but going live
-> requires a provider pick (Plausible, recommended) + site creation — tracked
-> in `docs/backlog/gtm-analytics-account.md` (P0, user-owned). This is the
-> single highest-leverage spec in the validation gauntlet; the gate is the one
-> non-code action that unlocks SUCCESS.md Bet 1's measurability.
+> **Status: `ready`, provider unblocked.** StatCounter was selected and the
+> `actionamp.com` project created on 2026-08-03. Its base tracker is installed
+> on the production marketing site and app; the four explicit funnel events
+> below remain to be implemented.
 
 ## Summary
 
@@ -41,13 +40,11 @@ is in instrumenting the four steps that decide the business.
 
 ## Done-conditions
 
-- [ ] **One analytics provider is chosen and wired.** PostHog (self-hostable,
-      privacy-respecting, free tier) OR Plausible — Discover's lean is
-      **Plausible** for the calm/privacy brand fit (no cookies, no PII), but
-      Build may pick PostHog if its React integration is materially simpler.
-      State the choice + reason in the review. The snippet loads on every page
-      (public + app) via a single inclusion point (the Wasp `head` array in
-      `main.wasp.ts`, or `App.tsx`).
+- [x] **One analytics provider is chosen and wired.** StatCounter was selected
+      for its visitor journeys, session replay, and heatmaps. The production
+      snippet loads on the Astro marketing site and the Wasp app, while local
+      development is excluded. Record any consent or privacy-policy changes
+      required for this provider before public distribution.
 - [ ] **The four funnel events are emitted**, nothing more:
       1. `landing_view` — fired on `/` load.
       2. `signup_complete` — fired on successful auth (email or Google).
@@ -59,19 +56,17 @@ is in instrumenting the four steps that decide the business.
 - [ ] **Events are no-PII.** No task content, no email, no names — only the
       event name + an anonymous id. Verified: a grep of the new code shows no
       user/email/content fields passed to the tracker.
-- [ ] **A cookie banner / consent is added only if legally required.** Lean:
-      Plausible needs none (cookieless); PostHog may. Build decides based on
-      the chosen provider; if a banner is needed, keep it to one line and
-      default to "on" where legal (PRODUCT.md bans manipulation, but a calm
-      opt-out is not manipulation).
-- [ ] **Prod env var is set.** The provider's site key / domain is in Railway
-      service vars (not committed). Document the var name in the review.
-- [ ] **The funnel is visible in the provider's UI.** Build confirms (screenshot
-      or described steps) that the four events appear as a funnel in the
-      PostHog/Plausible dashboard after a test run.
-- [ ] **Dev is excluded.** Analytics does not fire on `localhost` (guard on
-      `import.meta.env.DEV` or `WASP_WEB_CLIENT_URL` origin) so dev sessions
-      don't pollute the funnel.
+- [ ] **A cookie banner / consent is added only if legally required.** Assess
+      StatCounter's data collection against the jurisdictions we serve. If a
+      banner is required, keep it to one line and provide a calm opt-out.
+- [x] **Production tracker is configured.** StatCounter project `13339807` is
+      committed as the public browser snippet; no server-side key is needed.
+- [ ] **The funnel is visible in the provider's UI.** Confirm that StatCounter
+      can display the four selected conversion steps after a production test,
+      or document the smallest complementary reporting method needed.
+- [x] **Dev is excluded.** Analytics does not fire on `localhost` (guarded by
+      `import.meta.env.PROD` in Astro and `import.meta.env.DEV` in the Wasp
+      client) so development sessions do not pollute production reporting.
 - [ ] **`wasp compile` passes. No new tests strictly required** (analytics is
       side-effect-only; a unit test asserting "dev does not track" is nice-to-
       have, not a gate).

@@ -1,0 +1,28 @@
+---
+// Keep local development traffic out of the production StatCounter project.
+const enabled = import.meta.env.PROD;
+---
+
+{enabled && (
+  <>
+    <!-- Default StatCounter code for ActionAmp — actionamp.com -->
+    <script is:inline>
+      var sc_project = 13339807;
+      var sc_invisible = 1;
+      var sc_security = "f345783e";
+    </script>
+    <script is:inline src="https://www.statcounter.com/counter/counter.js" async></script>
+    <noscript>
+      <div class="statcounter">
+        <a title="Web Analytics Made Easy - Statcounter" href="https://statcounter.com/" target="_blank">
+          <img
+            class="statcounter"
+            src="https://c.statcounter.com/13339807/0/f345783e/1/"
+            alt="Web Analytics Made Easy - Statcounter"
+            referrerpolicy="no-referrer-when-downgrade"
+          />
+        </a>
+      </div>
+    </noscript>
+  </>
+)}
