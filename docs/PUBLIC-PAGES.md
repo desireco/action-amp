@@ -46,14 +46,15 @@ The whole story in one page. Spec'd section-by-section in `MARKETING.md §2` and
 - How it works — Capture → Triage → Focus (3 steps)
 - "Next" spotlight — *the home screen isn't a list, it's a decision*
 - Methodology — GTD-compatible, Goals-over-Areas (PARA flavor)
-- FAQ — honest answers (incl. *"Soon. When it's ready, you'll know."*)
+- FAQ — honest answers (incl. *"Yes. ActionAmp is live in early access. Start
+  free today."*)
 - Final CTA — *Do the next thing. Not all the things.* + "Make an account"
 - Footer — logo · About · Privacy · Terms · **Founding 100** · ©
 
 **Newsletter gaps to fill (per §0 decision):**
 1. **Hero — add a quiet newsletter field** alongside (or below) the existing
    "Make an account" CTA. Anti-sales microcopy underneath. This is the new
-   pre-launch/default capture; "Make an account" stays for people ready now.
+   default capture; "Make an account" stays for people ready now.
 2. **Footer — add a newsletter signup** (single email field + subscribe button)
    with the same honest microcopy. Lives next to the existing footer links.
 

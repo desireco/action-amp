@@ -115,12 +115,17 @@ verification notes.
         year, has no renewal bill, and breaks even after about 15 months. Astro
         build passed; desktop and 390px browser checks passed.
 
-- [ ] **F04 — Correct launch-state copy.** Homepage says “When does it launch?
+- [x] **F04 — Correct launch-state copy.** Homepage says “When does it launch?
       Soon” while the product is live and accepting accounts and payments.
       - Recommended answer: “ActionAmp is live in early access. Start free
         today.”
       - Done when: homepage, FAQ, marketing docs, roadmap, and CTAs agree on
         current availability.
+      - Resolved 2026-08-03: the public FAQ now asks whether ActionAmp is
+        available and answers, “Yes. ActionAmp is live in early access. Start
+        free today.” The final CTA reference now says “Start free. No card
+        required.” Marketing and public-pages source docs match; `ROADMAP.md`
+        already identified the product as soft-launched.
 
 - [ ] **F05 — Add minimal funnel measurement before distribution.** Current
       visitor-to-signup and visitor-to-checkout rates are unknown.
@@ -301,3 +306,4 @@ Append one entry per resolved finding:
 | 2026-08-03 | F01 | Shared passwordless flow for `/signup` and `/login`; removed password signup UI | 7 auth tests; local account creation → `/app`; `wasp compile` | Uncommitted |
 | 2026-08-03 | F02 | Validated Founding `returnTo` through code and magic-link authentication | 18 auth tests; logged-out Founding → new account → returned offer; `wasp compile` | Uncommitted |
 | 2026-08-03 | F03 | Public Free / annual Pro / monthly Pro / Founding comparison and homepage annual-price anchor | Astro build; desktop + 390px browser checks | Uncommitted |
+| 2026-08-03 | F04 | Replaced pre-launch and beta copy with live early-access language | Astro build; stale-copy search | Uncommitted |

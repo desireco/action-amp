@@ -85,11 +85,11 @@ gaps marked **(to add)** are the newsletter work per `PUBLIC-PAGES.md` §1.
 ### S7. FAQ (honest answers)
 - *Is this just another todo app?* — No. The list is demoted; "what now" is the home screen.
 - *Do I need to know GTD?* — No. It's there if you want it; invisible if you don't.
-- *When does it launch?* — Soon. When it's ready, you'll know.
+- *Is ActionAmp available now?* — Yes. ActionAmp is live in early access. Start free today.
 
 ### S8. Final CTA
 - Headline: *Do the next thing. Not all the things.*
-- "Free while we're in beta."
+- "Start free. No card required."
 - Button: **"Make an account"** → `/signup`.
 - Secondary: *"Already use it? Log in."*
 
