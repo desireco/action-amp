@@ -15,8 +15,8 @@ import "./Founding100Page.css";
  * The route is public (authRequired: false in main.wasp.ts) so logged-out
  * visitors can read the offer — it's linked from PublicLayout and ProGate aimed
  * at exactly that audience. Auth is handled at the CTA: an anonymous clicker is
- * sent to /login (Wasp lands them on /app after auth, where they can return
- * here to check out); an authed clicker starts Stripe Checkout. The server op
+ * sent to /login with this offer as the validated return path; an authed
+ * clicker starts Stripe Checkout. The server op
  * createCheckoutSession gates on context.user, so this client guard is UX, not
  * security.
  */
@@ -32,11 +32,9 @@ export function Founding100Page() {
   const isAnonymous = !user;
 
   async function handleCheckout() {
-    // Anonymous clicker → log in first. Wasp's onAuthSucceededRedirectTo lands
-    // them on /app; they return here to complete checkout. (No ?redirect=
-    // support wired up in LoginPage, so we don't try to thread a return path.)
+    // Preserve purchase intent through code entry and emailed magic links.
     if (isAnonymous) {
-      window.location.assign("/login");
+      window.location.assign("/login?returnTo=%2Ffounding-100");
       return;
     }
     setError(null);

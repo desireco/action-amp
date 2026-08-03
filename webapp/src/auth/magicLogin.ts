@@ -6,12 +6,13 @@ import type { RequestMagicLogin, VerifyMagicLogin } from "wasp/server/operations
 import { createSession } from "wasp/auth/session";
 import { createProviderId, createUser, findAuthIdentity } from "wasp/server/auth";
 import { renderMagicLoginEmailHtml } from "./magicLoginEmail";
+import { buildMagicLoginUrl, safeAuthReturnTo } from "./returnTo";
 
 const CODE_TTL_MS = 10 * 60 * 1000;
 const RESEND_INTERVAL_MS = 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
-type MagicLoginInput = { email: string };
+type MagicLoginInput = { email: string; returnTo?: string };
 type VerifyMagicLoginInput = { email?: string; code?: string; token?: string };
 
 function normalizeEmail(value: unknown): string {
@@ -52,9 +53,14 @@ function displayNameFromEmail(email: string): { fullName: string; firstName: str
   return { fullName, firstName: fullName.split(/\s+/)[0] ?? "There" };
 }
 
-async function sendLoginEmail(email: string, code: string, token: string): Promise<void> {
+async function sendLoginEmail(
+  email: string,
+  code: string,
+  token: string,
+  returnTo: string,
+): Promise<void> {
   const baseUrl = process.env.WASP_WEB_CLIENT_URL ?? "http://localhost:4000";
-  const loginUrl = `${baseUrl}/login?magic=${encodeURIComponent(token)}`;
+  const loginUrl = buildMagicLoginUrl(baseUrl, token, returnTo);
   await emailSender.send({
     to: email,
     subject: "Your ActionAmp sign-in code",
@@ -65,6 +71,7 @@ async function sendLoginEmail(email: string, code: string, token: string): Promi
 
 export const requestMagicLogin = (async (args: MagicLoginInput, context) => {
   const email = normalizeEmail(args.email);
+  const returnTo = safeAuthReturnTo(args.returnTo);
   const recent = await context.entities.MagicLoginChallenge.findFirst({
     where: {
       email,
@@ -103,7 +110,7 @@ export const requestMagicLogin = (async (args: MagicLoginInput, context) => {
   // Localhost has a fixed code for fast manual QA. No email provider needed.
   if (!isLocalhost()) {
     try {
-      await sendLoginEmail(email, code, token);
+      await sendLoginEmail(email, code, token, returnTo);
     } catch (error) {
       // The client receives a generic error, but keep the provider's reason in
       // server logs. This is essential for diagnosing delivery failures without

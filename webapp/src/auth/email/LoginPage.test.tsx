@@ -41,6 +41,8 @@ vi.mock("wasp/client/auth", () => ({
 
 vi.mock("wasp/client/operations", () => ({
   prepareDevAutologin: vi.fn(),
+  requestMagicLogin: vi.fn(),
+  verifyMagicLogin: vi.fn(),
 }));
 
 // Importing LoginPage AFTER vi.mock so it picks up the mocked useAuth.
