@@ -183,9 +183,10 @@ before visitors are asked to assess the $99 lifetime offer.
 
 ## 4. Tier 4 — Growth / content → moved to BACKLOG
 
-`/blog`, `/guides`, `/community` are real ideas but not shipping work — they're
-**Phase 2** (parked). This doc stays focused on what ships. When one of them is
-ready to build, it gets a spec in `docs/specs/` and returns here as a Tier 3 item.
+`/community` remains Phase 2 (parked). `/blog` is shipped. `/guides` now has
+an architecture and ordered backlog in `docs/SEO.md`; it remains planning work
+until its implementation spec lands. This doc stays focused on shipped public
+surfaces.
 
 ---
 
