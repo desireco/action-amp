@@ -157,10 +157,15 @@ When the user opens Inbox for the first time with ≥1 item, a one-time coach ov
 - Post-auth redirect → `/welcome` (first run) or `/` (returning user).
 
 ### P7. `/pricing` — Pricing
-- **Defer until there's a standard paid tier.** Today the only paid surface is the
-  Founding 100 (`/founding-100`); standard Pro is yearly-only *after* the Founding
-  100 fills. Don't build a `/pricing` page until there's a recurring tier to show;
-  a "Free while we're in beta" line on the home + Founding 100 covers it.
+**Live on the public Astro site.** This is the canonical comparison page for
+Free, regular Pro, and Founding 100. It makes the regular annual price visible
+before visitors are asked to assess the $99 lifetime offer.
+
+- **Free:** $0 forever; core focus loop, personal scope, 3 projects, 1 goal.
+- **Pro:** $79.50/year; the normal recurring plan. Prepaid ($90, no auto-renew)
+  and monthly ($12.95) remain secondary options.
+- **Founding 100:** $99 once for lifetime Pro; $19.50 more than first-year Pro,
+  no renewal bill, capped at 100 memberships.
 
 ### P8. `/help` — Help / docs
 - Shortcuts reference (the `?` cheatsheet, web-version)

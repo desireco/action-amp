@@ -924,6 +924,19 @@
   color: var(--aa-text-2);
   font-weight: 600;
 }
+.aa-founding-teaser-pricing {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--aa-teal-cta);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.aa-founding-teaser-pricing:hover {
+  color: var(--aa-teal-cta-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .aa-founding-teaser-count {
   color: var(--aa-amber-text);
   font-weight: 600;
