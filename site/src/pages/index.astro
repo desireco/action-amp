@@ -48,8 +48,24 @@ const FAQ_ITEMS = [
     <meta property="og:title" content="ActionAmp — One task. The next one that matters." />
     <meta property="og:description" content="Every other app opens to your list. ActionAmp opens to the one task that matters next — an attention engine, not a todo app." />
     <meta property="og:url" content="https://actionamp.com/" />
+    <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ActionAmp" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://actionamp.com/og/share-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="ActionAmp — Choose the next thing." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://actionamp.com/og/share-card.png" />
+    <meta name="twitter:image:alt" content="ActionAmp — Choose the next thing." />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        { "@type": "WebSite", "@id": "https://actionamp.com/#website", url: "https://actionamp.com/", name: "ActionAmp" },
+        { "@type": "Organization", "@id": "https://actionamp.com/#organization", name: "ActionAmp", url: "https://actionamp.com/", logo: "https://actionamp.com/favicon.svg" },
+        { "@type": "SoftwareApplication", name: "ActionAmp", applicationCategory: "ProductivityApplication", operatingSystem: "Web", url: "https://actionamp.com/", image: "https://actionamp.com/og/share-card.png", description: "A focus app that helps you choose the one task that matters next." },
+      ],
+    })} />
   </head>
   <body>
     <StatCounter />

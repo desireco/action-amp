@@ -26,6 +26,6 @@ Because it has to be capped to mean something. An unlimited "founding tier" that
 
 ## How to claim
 
-The claim flow lives in the app. If spots remain, the home page surfaces the live count; once it hits zero, the tier is gone and a waitlist takes over.
+The claim flow lives in the app. If spots remain, the home page surfaces the live count; once it hits zero, the tier is gone. The free tier remains available.
 
 No pressure, no urgency theater. If it's right for you and the timing's right, claim a spot. If not, the app will still be here, and the free tier isn't going anywhere. This is for the people who want to be in early and want that to mean something.

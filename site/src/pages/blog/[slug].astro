@@ -42,19 +42,33 @@ const canonicalUrl = new URL(`/blog/${post.id}/`, siteUrl).href;
 const isFind = d.kind === "find";
 const isSpecial = d.contentType === "guide" || d.contentType === "offer";
 const specialLabel = d.contentType === "guide" ? "Guide" : "Offer";
+const articleImage = d.ogImage ?? "/og/share-card.png";
+const structuredData = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Article",
+  mainEntityOfPage: canonicalUrl,
+  headline: d.title,
+  description: d.description,
+  image: new URL(articleImage, siteUrl).href,
+  datePublished: isoPub,
+  dateModified: isoMod,
+  author: { "@type": "Organization", name: "ActionAmp", url: siteUrl.href },
+  publisher: { "@type": "Organization", name: "ActionAmp", url: siteUrl.href, logo: new URL("/favicon.svg", siteUrl).href },
+});
 ---
 
 <PublicLayout
   title={`${d.title} — ActionAmp Blog`}
   description={d.description}
   ogType="article"
-  ogImage={d.ogImage ?? "/og/default.png"}
+  ogImage={articleImage}
   socialDescription={d.socialDescription}
   publishedTime={isoPub}
   modifiedTime={isoMod}
   author="ActionAmp"
   tags={d.tags}
 >
+  <script type="application/ld+json" set:html={structuredData} />
   <article class="aa-blog-article">
     <a class="aa-blog-back" href="/blog">
       <span class="aa-blog-back-arrow">←</span>

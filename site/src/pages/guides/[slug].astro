@@ -23,10 +23,12 @@ const structuredData = JSON.stringify({
   "@type": "Article",
   headline: guide.data.title,
   description: guide.data.description,
+  mainEntityOfPage: new URL(`/guides/${guide.id}/`, Astro.site ?? "https://actionamp.com").href,
+  image: new URL("/og/share-card.png", Astro.site ?? "https://actionamp.com").href,
   datePublished: guide.data.pubDate.toISOString(),
   dateModified: (guide.data.updatedDate ?? guide.data.pubDate).toISOString(),
-  author: { "@type": "Organization", name: "ActionAmp" },
-  publisher: { "@type": "Organization", name: "ActionAmp" },
+  author: { "@type": "Organization", name: "ActionAmp", url: "https://actionamp.com/" },
+  publisher: { "@type": "Organization", name: "ActionAmp", url: "https://actionamp.com/", logo: "https://actionamp.com/favicon.svg" },
 });
 ---
 

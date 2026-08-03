@@ -1,6 +1,6 @@
 ---
-title: "A calm GTD setup in 15 minutes"
-description: "Inbox, triage, one goal, one project, one task. The minimum viable system, and why it's enough to start. No five-step seminar required."
+title: "Why a GTD system should start imperfect"
+description: "A system earns complexity through use. Start with inbox, triage, one goal, one project, and one task — then let reality shape the rest."
 pubDate: 2026-07-01
 kind: essay
 contentType: guide
@@ -11,6 +11,8 @@ featuredAs: take
 ---
 
 Getting Things Done is famously elaborate, which is a shame, because the part of it that actually works is about fifteen minutes of setup. The rest is elaboration — useful for some, fatal for many, because elaborate systems don't survive a bad week.
+
+For a practical starting sequence, use [A calm GTD setup in 15 minutes](/guides/calm-gtd-setup/). This essay is about the reason to stop there first.
 
 Here is the whole thing, stripped to what earns its keep.
 

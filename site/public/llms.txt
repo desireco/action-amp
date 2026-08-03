@@ -22,6 +22,13 @@ list. ADHD is the design muse, not the marketing target.
 - [A calm GTD setup in 15 minutes](https://actionamp.com/blog/a-calm-gtd-setup-in-15-minutes/): inbox, triage, one goal, one project, one task. The minimum viable system.
 - [RSS feed](https://actionamp.com/rss.xml): all published posts, both streams.
 
+## Guides
+
+- [Guides](https://actionamp.com/guides/): practical, short systems for choosing what matters next.
+- [Choose your next task](https://actionamp.com/guides/choose-next-task/): choose one doable next action when everything feels important.
+- [Task lists are necessary. Living inside them is not.](https://actionamp.com/guides/task-lists-are-necessary/): keep commitments accounted for without showing every commitment all day.
+- [Use a notebook and ActionAmp together](https://actionamp.com/guides/notebook-and-actionamp/): paper for thinking; ActionAmp for commitments and next actions.
+
 ## Optional
 
 - [Privacy](https://actionamp.com/privacy)

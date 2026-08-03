@@ -20,11 +20,8 @@ interface Props {
   // need a wider canvas (the blog index's two-lane grid). Article pages keep it.
   fullWidth?: boolean;
   // --- Social share meta (blog-social-meta) ---
-  // OG image path (root-absolute, e.g. "/og/default.png"). No default — pages
-  // that don't pass one render without og:image. The blog article page passes
-  // "/og/default.png" explicitly (the branded blog default), so non-blog pages
-  // (privacy/terms/etc.) aren't given a blog-branded card. Per spec non-goal:
-  // "No work outside /blog."
+  // Root-absolute path. Every public page gets the branded fallback so a shared
+  // link is never text-only; individual posts can still provide their own art.
   ogImage?: string;
   socialDescription?: string;
   twitterCard?: "summary" | "summary_large_image";
@@ -40,7 +37,7 @@ const {
   description,
   ogType = "website",
   fullWidth = false,
-  ogImage,
+  ogImage = "/og/share-card.png",
   socialDescription,
   twitterCard = ogType === "article" ? "summary_large_image" : "summary",
   publishedTime,
@@ -56,6 +53,34 @@ const canonical = new URL(Astro.url.pathname, siteUrl);
 const ogImageUrl = ogImage ? new URL(ogImage, siteUrl).href : undefined;
 // socialDescription wins for share tags; falls back to the SEO description.
 const shareDescription = socialDescription ?? description;
+const siteStructuredData = JSON.stringify({
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}#website`,
+      url: siteUrl.href,
+      name: "ActionAmp",
+      description: "A focus app that opens to one task: the next thing that matters.",
+    },
+    {
+      "@type": "Organization",
+      "@id": `${siteUrl}#organization`,
+      name: "ActionAmp",
+      url: siteUrl.href,
+      logo: new URL("/favicon.svg", siteUrl).href,
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "ActionAmp",
+      applicationCategory: "ProductivityApplication",
+      operatingSystem: "Web",
+      url: siteUrl.href,
+      image: ogImageUrl,
+      description: "A focus app that helps you choose the one task that matters next.",
+    },
+  ],
+});
 ---
 
 <!doctype html>
@@ -70,6 +95,7 @@ const shareDescription = socialDescription ?? description;
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={canonical} />
+    <script type="application/ld+json" set:html={siteStructuredData} />
     <!-- RSS feed — the blog publishes here. -->
     <link rel="alternate" type="application/rss+xml" title="ActionAmp — Blog" href="/rss.xml" />
     <!-- Open Graph -->
@@ -81,6 +107,7 @@ const shareDescription = socialDescription ?? description;
     {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
     {ogImageUrl && <meta property="og:image:width" content="1200" />}
     {ogImageUrl && <meta property="og:image:height" content="630" />}
+    {ogImageUrl && <meta property="og:image:type" content="image/png" />}
     {ogImageUrl && <meta property="og:image:alt" content={title} />}
     {/* Article-specific OG (LinkedIn rich previews) — emitted as a block only
         on article pages. Keeps the head readable and gates once, not four times. */}
@@ -97,6 +124,7 @@ const shareDescription = socialDescription ?? description;
     <meta name="twitter:title" content={title} />
     {shareDescription && <meta name="twitter:description" content={shareDescription} />}
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+    {ogImageUrl && <meta name="twitter:image:alt" content={title} />}
   </head>
   <body>
     <StatCounter />

@@ -25,7 +25,7 @@ search / trusted mention → useful guide or essay → related ActionAmp method
 ## 2. Foundations — required before promotion
 
 - Verify `actionamp.com` in Google Search Console and Bing Webmaster Tools;
-  submit `https://actionamp.com/sitemap-index.xml`.
+  submit `https://actionamp.com/sitemap.xml`.
 - Review indexability: public Astro pages index; app, auth, checkout, preview,
   and other private pages do not.
 - Keep one canonical URL, unique title, and unique meta description per public
@@ -36,6 +36,10 @@ search / trusted mention → useful guide or essay → related ActionAmp method
 - Add valid `Organization` / `SoftwareApplication` structured data to the
   public site and `Article` structured data to essays and guides when routes
   ship. Structured data clarifies meaning; it is not a ranking promise.
+- Every public route needs a 1200 × 630 branded Open Graph image. Use it in
+  `og:image`, X/Twitter image tags, and article `image` structured data.
+  This makes shared guide/article links legible and gives Google an explicit
+  image candidate. Add page-specific art only when it adds meaning.
 - Track organic landing page → newsletter signup → account signup → first app
   open → checkout. Search Console supplies queries/impressions; product
   analytics supplies conversion. No task content or other PII in analytics.
