@@ -80,6 +80,14 @@ const guides = defineCollection({
     // One guide-specific closing answer. This makes product relevance explicit
     // without repeating the same generic CTA across every guide.
     actionAmp: z.string(),
+    // A compact real-world decision slip. Optional so a guide earns it only
+    // when a concrete before/after teaches more than another paragraph.
+    example: z.object({
+      label: z.string(),
+      before: z.string(),
+      after: z.string(),
+      why: z.string(),
+    }).optional(),
     draft: z.boolean().default(false),
     nextGuide: z.string().optional(),
   }),

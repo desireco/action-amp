@@ -8,6 +8,11 @@ featured: true
 featuredRank: 1
 readTime: "6 min"
 actionAmp: "ActionAmp keeps the whole system accounted for—Inbox, projects, Upcoming, Someday, and completed work—while Next shows one task instead of the entire inventory. The list remains trustworthy without becoming your working environment."
+example:
+  label: "Tuesday, 10:17"
+  before: "Forty-seven tasks, three projects, and several things you might do someday."
+  after: "Open the proposal brief. Write three questions the client must answer."
+  why: "The full inventory stays safe. Only the action with a useful next move reaches your working surface."
 nextGuide: choose-next-task
 ---
 
@@ -23,6 +28,8 @@ You also need an **action surface**: a deliberately small view of work that can 
 
 These are not competing systems. They are two jobs. The first answers, “Have I forgotten anything important?” The second answers, “What am I doing next?”
 
+This split is especially useful when a list feels stressful but deleting it would make you less safe. Keep the promise. Change the screen you use to work.
+
 ## Let the full list appear at the right time
 
 Open the whole system when you capture, triage, plan, or review. Those are decision-making moments. Do not open it every time you want to begin work.
@@ -30,3 +37,9 @@ Open the whole system when you capture, triage, plan, or review. Those are decis
 When you sit down to act, start with one next task. If it is wrong, switch deliberately. If it is right, do not reopen the argument just because forty-nine other tasks still exist.
 
 The aim is not to hide commitments from yourself. It is to stop confusing “I need to remember this” with “I need to look at this right now.”
+
+## A list should answer one question at a time
+
+At review time, ask: **what is in my system, and is it in the right place?** That is where projects, dates, and someday ideas belong.
+
+At work time, ask: **what can I move now?** Do not turn a review question into a starting question. The list is still doing its job when it is not visible.

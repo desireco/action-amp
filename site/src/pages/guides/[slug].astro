@@ -53,6 +53,18 @@ const structuredData = JSON.stringify({
       <span>Notice</span><i aria-hidden="true"></i><span>Decide</span><i aria-hidden="true"></i><span>Do</span>
     </div>
 
+    {guide.data.example && (
+      <aside class="aa-guide-example" aria-label={`Example: ${guide.data.example.label}`}>
+        <p class="aa-guide-example-label">Example <span>{guide.data.example.label}</span></p>
+        <div class="aa-guide-example-flow">
+          <div><span>Before</span><p>{guide.data.example.before}</p></div>
+          <i aria-hidden="true">→</i>
+          <div><span>Next</span><p>{guide.data.example.after}</p></div>
+        </div>
+        <p class="aa-guide-example-why"><b>Why this works</b>{guide.data.example.why}</p>
+      </aside>
+    )}
+
     <div class="aa-guide-body aa-markdown-body"><Content /></div>
 
     <aside class="aa-guide-actionamp">
