@@ -8,7 +8,7 @@ export const analyticsMiddleware: MiddlewareConfigFn = (middlewareConfig) => {
   // an OPTIONS preflight on this anonymous, no-cookie endpoint. Parse that
   // body here while leaving the app's normal JSON parser untouched.
   middlewareConfig.set("express.text", express.text({ type: "text/plain" }));
-    middlewareConfig.set("corsApex", (req, res, next) => {
+  middlewareConfig.set("corsApex", (req, res, next) => {
     const origin = req.headers.origin;
     if (origin && ORIGINS.has(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
