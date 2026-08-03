@@ -180,13 +180,16 @@ verification notes.
         brings one task forward, explains why, and keeps your plan one click
         away.”
 
-- [ ] **F10 — Make FAQ keyboard-accessible.** FAQ rows are clickable `<div>`
+- [x] **F10 — Make FAQ keyboard-accessible.** FAQ rows were clickable `<div>`
       elements with no role or `tabindex`, conflicting with the keyboard-first
       promise.
       - Recommended primitive: `<details>/<summary>` or a native `<button>` with
         `aria-expanded` and controlled panel association.
       - Done when: FAQ works with Tab, Enter, Space, pointer, and screen-reader
         state announcements.
+      - Resolved 2026-08-03: each question is now a native button with
+        `aria-expanded`, `aria-controls`, a labelled answer region, and a
+        visible keyboard focus treatment.
 
 - [ ] **F11 — Bring interactive targets to 44px on mobile.** Measured examples:
       28px completion circle, 37px hero buttons, 36px footer links.

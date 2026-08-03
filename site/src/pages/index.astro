@@ -249,10 +249,26 @@ const FAQ_ITEMS = [
         <div class="aa-eyebrow">FAQ</div>
         <h2 class="aa-display aa-display-sm">Answers to Your Burning Questions.</h2>
         <div class="aa-faq-list">
-          {FAQ_ITEMS.map((item) => (
+          {FAQ_ITEMS.map((item, index) => (
             <div class="aa-faq-item">
-              <div class="aa-faq-q">{item.q}</div>
-              <div class="aa-faq-a">{item.a}</div>
+              <button
+                type="button"
+                class="aa-faq-q"
+                id={`aa-faq-question-${index}`}
+                aria-expanded="false"
+                aria-controls={`aa-faq-answer-${index}`}
+              >
+                {item.q}
+              </button>
+              <div
+                class="aa-faq-a"
+                id={`aa-faq-answer-${index}`}
+                role="region"
+                aria-labelledby={`aa-faq-question-${index}`}
+                aria-hidden="true"
+              >
+                {item.a}
+              </div>
             </div>
           ))}
         </div>
@@ -351,10 +367,17 @@ const FAQ_ITEMS = [
         });
       })();
 
-      // FAQ accordion — click toggles .open (CSS handles the expand).
-      document.querySelectorAll(".aa-faq-item").forEach(function (item) {
-        item.addEventListener("click", function () {
-          item.classList.toggle("open");
+      // FAQ accordion — native buttons provide pointer + keyboard activation;
+      // aria-expanded mirrors the visual state for assistive technology.
+      document.querySelectorAll(".aa-faq-q").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var item = button.closest(".aa-faq-item");
+          if (!item) return;
+          var isOpen = button.getAttribute("aria-expanded") === "true";
+          var answer = document.getElementById(button.getAttribute("aria-controls"));
+          button.setAttribute("aria-expanded", String(!isOpen));
+          if (answer) answer.setAttribute("aria-hidden", String(isOpen));
+          item.classList.toggle("open", !isOpen);
         });
       });
 

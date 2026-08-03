@@ -573,18 +573,29 @@
 .aa-faq-item {
   padding: 22px 0;
   border-bottom: 1px solid var(--aa-border);
-  cursor: pointer;
 }
 .aa-faq-item:first-child {
   border-top: 1px solid var(--aa-border);
 }
 .aa-faq-q {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
   font-size: 18px;
   font-weight: 600;
   color: var(--aa-text);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  cursor: pointer;
+  text-align: left;
+}
+.aa-faq-q:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 6px;
+  border-radius: var(--aa-radius-sm);
 }
 .aa-faq-q::after {
   content: "+";
