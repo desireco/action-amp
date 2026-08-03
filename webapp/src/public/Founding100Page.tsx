@@ -71,53 +71,32 @@ export function Founding100Page() {
   return (
     <PublicLayout>
       <div className="aa-founding aa-markdown-body">
-        <h1>The Founding 100</h1>
-        <p className="aa-founding-sub">Lifetime Pro, capped at 100 spots.</p>
+        <header className="aa-founding-intro">
+          <p className="aa-founding-eyebrow">The Founding 100</p>
+          <h1>Pro for the long run. One payment.</h1>
+          <p className="aa-founding-sub">
+            A small early-member group with lifetime Pro and a direct line to the people building ActionAmp.
+          </p>
+        </header>
 
-        <p>
-          ActionAmp is being built in the open, and we wanted a way to make
-          that real for the people who show up at the start.
-        </p>
-        <p>
-          The Founding 100 is a one-time tier — <strong>$99, lifetime Pro</strong>
-          {" "}— for the first hundred people who claim a spot. When the hundred
-          are gone, the tier retires for good. No countdown timer, no fake
-          scarcity. Just a fixed number, in public, that goes down as people
-          claim it.
-        </p>
+        <section className="aa-founding-offer" aria-label="Founding membership offer">
+          <div className="aa-founding-price">
+            <span>$99</span>
+            <strong>once</strong>
+          </div>
+          <p className="aa-founding-price-note">Regular Pro is $79.50 per year.</p>
+          <p className="aa-founding-comparison">$19.50 more than year one. Breaks even after about 15 months.</p>
 
-        <h2>What lifetime Pro means</h2>
-        <p>
-          Everything in Pro, for as long as ActionAmp exists, for the one-time
-          price. No recurring fee, no renewal. If we add paid features later,
-          Founding members get them. The bet is that the people who back the
-          project early are the ones worth keeping close, and that treating
-          them as long-term is cheaper than the churn math of chasing them
-          again next year.
-        </p>
+          <h2>What you get</h2>
+          <ul className="aa-founding-includes">
+            <li>Unlimited projects, goals, and Logbook history</li>
+            <li>Work, personal, and custom Lenses</li>
+            <li>Command palette, search, and multi-device sync</li>
+            <li>Every future Pro feature, with no renewal</li>
+            <li>A direct line for feedback and product input</li>
+          </ul>
 
-        <h2>Why capped at 100</h2>
-        <p>
-          Because lifetime plans are dangerous for software businesses. A hard
-          100-spot cap funds launch momentum without compromising long-term
-          health. Once the 100th spot is claimed, the tier is permanently
-          retired.
-        </p>
-        <p>
-          100 is also small enough that we can mean it when we say we'll listen.
-          Founding members get a direct line — feedback that reaches the people
-          building, not a ticket queue. That's the real thing being offered: a
-          small, early cohort whose input shapes the product.
-        </p>
-
-        <p>
-          No pressure, no urgency theater. If it's right for you and the timing
-          is right, claim a spot. If not, the free tier isn't going anywhere.
-          This is for the people who want to be in early and want that to mean
-          something.
-        </p>
-
-        <div className="aa-founding-cta">
+          <div className="aa-founding-cta">
           {error && <p className="aa-founding-error">{error}</p>}
           <Button variant="primary" size="lg" onClick={handleCheckout} disabled={ctaDisabled}>
             {loading ? "Opening checkout…" : ctaLabel}
@@ -133,15 +112,45 @@ export function Founding100Page() {
               "100 spots remaining. When they are gone, they are gone."
             )}
           </p>
+          <p className="aa-founding-free">
+            Not ready for Pro? <a href="/signup">Start with Free instead</a> — no card required.
+          </p>
+          </div>
+        </section>
+
+        <section className="aa-founding-details" aria-label="Founding membership details">
+          <h2>A direct line, not a ticket queue</h2>
+          <p>
+            Founding members are a small cohort close to the product. Your feedback reaches the people making decisions,
+            and the early input helps set the direction.
+          </p>
+
+          <h2>Why only 100</h2>
+          <p>
+            Lifetime access needs a hard limit to keep ActionAmp sustainable. The cap is fixed: once the 100th membership
+            is claimed, this option retires.
+          </p>
+
+          <h2>What “lifetime” means</h2>
+          <p>
+            You keep Pro for as long as ActionAmp exists. There is no recurring fee, no renewal date, and future paid
+            features are included.
+          </p>
+
+          <h2>The trade-off</h2>
+          <p>
+            This is an early product and a one-time purchase, not a subscription with an annual exit point. The membership
+            helps fund the work now; in return, you get permanent Pro access while the service operates.
+          </p>
           {alreadyFounder && (
             <p className="aa-founding-spots">
               Thank you — you claimed one of the 100.
             </p>
           )}
           <p className="aa-founding-spots">
-            <a href="https://actionamp.com/roadmap">Look how we're doing?</a>
+            <a href="https://actionamp.com/roadmap">See the product roadmap</a>
           </p>
-        </div>
+        </section>
       </div>
     </PublicLayout>
   );

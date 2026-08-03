@@ -1,11 +1,23 @@
 /* Founding 100 landing page — layers on top of .aa-markdown-body typography
  * (shared with About/Privacy) for the prose, adds the CTA + scarcity block. */
 
+.aa-founding-intro {
+  max-width: 620px;
+}
+
+.aa-founding-eyebrow {
+  color: var(--aa-teal);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.65rem;
+  text-transform: uppercase;
+}
+
 .aa-founding-sub {
   color: var(--aa-text-3);
-  font-size: 1.05rem;
-  margin-top: -0.5rem;
-  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  margin-bottom: 2.25rem;
 }
 
 .aa-founding-pending {
@@ -13,10 +25,65 @@
 }
 
 .aa-founding-cta {
-  margin-top: 2.5rem;
-  padding-top: 2rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--aa-border);
   text-align: center;
+}
+
+.aa-founding-offer {
+  background: var(--aa-surface-muted);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  padding: 2rem;
+}
+
+.aa-founding-offer h2 {
+  margin-top: 1.75rem;
+}
+
+.aa-founding-price {
+  align-items: baseline;
+  color: var(--aa-text);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.aa-founding-price span {
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.aa-founding-price strong {
+  color: var(--aa-text-2);
+  font-size: 1rem;
+}
+
+.aa-founding-price-note,
+.aa-founding-comparison {
+  color: var(--aa-text-3);
+  font-size: 0.95rem;
+  margin: 0.5rem 0 0;
+}
+
+.aa-founding-comparison {
+  color: var(--aa-text-2);
+}
+
+.aa-founding-includes {
+  margin-bottom: 0;
+}
+
+.aa-founding-free {
+  color: var(--aa-text-3);
+  font-size: 0.9rem;
+  margin: 1rem auto 0;
+}
+
+.aa-founding-details {
+  margin-top: 3.5rem;
 }
 
 .aa-founding-error {
@@ -29,4 +96,16 @@
   margin-top: 1rem;
   color: var(--aa-text-3);
   font-size: 0.95rem;
+}
+
+@media (max-width: 600px) {
+  .aa-founding-offer {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+    padding: 1.5rem;
+  }
+
+  .aa-founding-price span {
+    font-size: 2.4rem;
+  }
 }
