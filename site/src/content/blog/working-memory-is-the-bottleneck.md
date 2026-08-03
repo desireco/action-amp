@@ -52,7 +52,7 @@ Showing a single next task does three things that a list cannot, and all three m
 
 First, it removes comparison. The brain doesn't have to hold forty options and evaluate. The choice is made, and the four slots are free for *doing* the work rather than choosing it. This is why people report a drop in anxiety the moment the list disappears: the contention set emptied.
 
-Second, it creates commitment. When one thing is on the screen, switching away has a cost the brain can feel — you're leaving the chosen task. With a list, switching is free and invisible, because nothing was chosen. The single-task surface makes switching honest, and honest switching happens less.
+Second, it creates commitment. When one thing is on the screen, switching away has a cost the brain can feel — you're leaving the chosen task. With a list, switching is free and invisible, because nothing was chosen. The single-task surface makes switching visible, and visible switching happens less.
 
 Third, it respects the slot limit. You can't do two things at once; you can only switch between them, and switching has a tax. A surface that assumes one thing at a time is a surface designed for the hardware it's running on.
 
@@ -64,7 +64,7 @@ This matters for how we build. If working memory is the bottleneck, then a focus
 
 The list is still there. It has to be; you need somewhere to store the ninety-three. But the home screen isn't the list. The home screen is the one thing the four slots are for, and everything else gets out of their way.
 
-## The honest part
+## The constraint
 
 This is also why a single-task surface can't be faked with willpower. You cannot, by effort, hold more slots. You can only protect the ones you have. Tools that ask you to protect them yourself — by resisting the list, ignoring the badges, not switching — are outsourcing the accommodation to the user. Tools that do the subtraction for you are returning the slots.
 

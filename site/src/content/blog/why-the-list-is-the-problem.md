@@ -73,7 +73,7 @@ Most apps stop at the list because the list is safe. It doesn't commit. It just 
 
 ## The test
 
-Here's the honest test of whether a tool is helping you decide or just helping you record. Open it right now. What do you see?
+Here's the clearest test of whether a tool is helping you decide or just helping you record. Open it right now. What do you see?
 
 If you see a list, the app is optimizing capture. If you see one thing — the next thing — the app is optimizing the decision. The first feels productive. The second is.
 

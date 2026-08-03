@@ -15,6 +15,6 @@ Tiimo is one of the few focus apps that commits to single-tasking at the schedul
 
 What's worth studying is the trade-off that commitment implies. Tiimo picks the *when* for you, which means it's deciding in advance. GTD, by contrast, keeps the decision of *what next* open until the moment of doing — you triage, but you don't schedule, because the right task depends on the context you're in when you sit down.
 
-Both are defensible. Scheduling wins on friction and follow-through. Open choice wins on fit. The honest question isn't which is right. It's where you want the decision to happen: in advance, when you have perspective, or in the moment, when you have information. Most people assume one and need the other.
+Both are defensible. Scheduling wins on friction and follow-through. Open choice wins on fit. The real question isn't which is right. It's where you want the decision to happen: in advance, when you have perspective, or in the moment, when you have information. Most people assume one and need the other.
 
 A calm app doesn't force the answer. It makes the choice visible and lets you move it.

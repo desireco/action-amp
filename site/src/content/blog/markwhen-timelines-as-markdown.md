@@ -15,4 +15,4 @@ The reason this matters for project sequencing is that most task apps show you *
 
 Markwhen's bet is that markdown is cheap enough. Write the sequence; see the shape. If a timeline tool is heavy enough that you avoid opening it, it has failed at the only job it had. This one stays out of the way.
 
-Not for every project. But when the sequence is the thing — a launch, a migration, a multi-step setup — a flat list is the wrong data structure, and a markdown timeline is a surprisingly honest one.
+Not for every project. But when the sequence is the thing — a launch, a migration, a multi-step setup — a flat list is the wrong data structure, and a markdown timeline is a surprisingly clear one.

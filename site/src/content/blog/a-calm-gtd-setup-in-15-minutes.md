@@ -28,7 +28,7 @@ That's it. Inbox, triage, goal, project, task. You can build this on paper. The 
 
 The mistake is thinking the system needs to be complete before it's useful. It doesn't. A partial system you actually use beats a perfect one you avoid, every time, because the value is in the *practice* — the regular capture and the regular triage — not in the taxonomy.
 
-You will notice, after a week or two, that certain things don't fit. A second goal emerges. A project turns out to be two. A task keeps stalling and needs breaking down. *That's how the structure grows* — from use, from the friction you actually hit, not from a template you build up front. The fifteen-minute start is honest because it's under-built, and under-built systems get shaped by reality. Over-built ones get abandoned by it.
+You will notice, after a week or two, that certain things don't fit. A second goal emerges. A project turns out to be two. A task keeps stalling and needs breaking down. *That's how the structure grows* — from use, from the friction you actually hit, not from a template you build up front. The fifteen-minute start works because it's under-built, and under-built systems get shaped by reality. Over-built ones get abandoned by it.
 
 ## The one habit that makes it work
 

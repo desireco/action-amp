@@ -66,7 +66,7 @@ const liIntent = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeUR
             btn.classList.remove("is-copied");
           }, 2000);
         }
-        // Failure: honest feedback, not a silent no-op. The user needs to know
+        // Failure: clear feedback, not a silent no-op. The user needs to know
         // the copy didn't happen so they can copy manually. Calm, not alarming.
         function fail() {
           if (label) label.textContent = "Press ⌘C to copy";
