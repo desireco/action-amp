@@ -1,0 +1,68 @@
+---
+import { getCollection, render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import PublicLayout from "../../layouts/PublicLayout.astro";
+import "../../styles/guides.css";
+
+export async function getStaticPaths() {
+  const guides = await getCollection("guides", ({ data }) => !data.draft);
+  return guides.map((guide) => ({ params: { slug: guide.id }, props: { guide } }));
+}
+interface Props { guide: CollectionEntry<"guides">; }
+const { guide } = Astro.props;
+const { Content } = await render(guide);
+const all = await getCollection("guides", ({ data }) => !data.draft);
+const next = guide.data.nextGuide ? all.find((entry) => entry.id === guide.data.nextGuide) : undefined;
+// Content dates are date-only editorial values. Format in UTC so a guide dated
+// 2026-08-03 never renders as Aug 2 for visitors west of Greenwich.
+const fmt = (date: Date) => date.toLocaleDateString("en-US", {
+  year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
+});
+const structuredData = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: guide.data.title,
+  description: guide.data.description,
+  datePublished: guide.data.pubDate.toISOString(),
+  dateModified: (guide.data.updatedDate ?? guide.data.pubDate).toISOString(),
+  author: { "@type": "Organization", name: "ActionAmp" },
+  publisher: { "@type": "Organization", name: "ActionAmp" },
+});
+---
+
+<PublicLayout
+  title={`${guide.data.title} — ActionAmp Guides`}
+  description={guide.data.description}
+  ogType="article"
+  publishedTime={guide.data.pubDate.toISOString()}
+  modifiedTime={(guide.data.updatedDate ?? guide.data.pubDate).toISOString()}
+  author="ActionAmp"
+  tags={[guide.data.group]}
+>
+  <script type="application/ld+json" set:html={structuredData} />
+  <article class="aa-guide-article">
+    <a class="aa-guide-back" href="/guides"><span aria-hidden="true">←</span> All guides</a>
+    <p class="aa-guide-eyebrow">{guide.data.group.replace("-", " ")} guide <span>·</span> {guide.data.readTime}</p>
+    <h1>{guide.data.title}</h1>
+    <p class="aa-guide-lede">{guide.data.description}</p>
+    <p class="aa-guide-date">Published {fmt(guide.data.pubDate)}</p>
+
+    <div class="aa-guide-path" aria-label="ActionAmp method: notice, decide, do">
+      <span>Notice</span><i aria-hidden="true"></i><span>Decide</span><i aria-hidden="true"></i><span>Do</span>
+    </div>
+
+    <div class="aa-guide-body aa-markdown-body"><Content /></div>
+
+    <aside class="aa-guide-actionamp">
+      <p class="aa-guide-actionamp-label">Use this in ActionAmp</p>
+      <p>{guide.data.actionAmp}</p>
+      <a href="https://app.actionamp.com/signup">Make an account <span aria-hidden="true">→</span></a>
+    </aside>
+
+    {next && (
+      <a class="aa-guide-next" href={`/guides/${next.id}`}>
+        <span>Next guide</span><strong>{next.data.title}</strong><b aria-hidden="true">→</b>
+      </a>
+    )}
+  </article>
+</PublicLayout>

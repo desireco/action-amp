@@ -63,4 +63,24 @@ const blog = defineCollection({
     }),
 });
 
-export const collections = { pages, blog };
+// Guides are evergreen, outcome-led resources. Unlike blog posts, they live in
+// a small, intentionally bounded library grouped by the reader job at hand.
+const guides = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/guides" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.coerce.date(),
+    updatedDate: z.coerce.date().optional(),
+    group: z.enum(["choose", "setup", "start", "keep-going"]),
+    order: z.number().int().min(1),
+    readTime: z.string(),
+    // One guide-specific closing answer. This makes product relevance explicit
+    // without repeating the same generic CTA across every guide.
+    actionAmp: z.string(),
+    draft: z.boolean().default(false),
+    nextGuide: z.string().optional(),
+  }),
+});
+
+export const collections = { pages, blog, guides };

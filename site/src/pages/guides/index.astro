@@ -1,0 +1,75 @@
+---
+import { getCollection } from "astro:content";
+import PublicLayout from "../../layouts/PublicLayout.astro";
+import "../../styles/guides.css";
+
+const all = await getCollection("guides", ({ data }) => !data.draft);
+const groups = [
+  { id: "choose", label: "Choose", note: "Decide what matters now." },
+  { id: "setup", label: "Set up", note: "Create a system that stays light." },
+  { id: "start", label: "Start", note: "Make work easier to begin." },
+  { id: "keep-going", label: "Keep going", note: "Maintain trust without maintenance theater." },
+] as const;
+const featured = all.find((guide) => guide.id === "choose-next-task") ?? all[0];
+const byOrder = (a: (typeof all)[number], b: (typeof all)[number]) => a.data.order - b.data.order;
+---
+
+<PublicLayout
+  title="Guides — ActionAmp"
+  description="Practical systems for choosing what matters next. Calm, step-by-step guides for overloaded task lists and distracted days."
+  fullWidth
+>
+  <div class="aa-guides">
+    <header class="aa-guides-hero">
+      <p class="aa-guides-kicker">ActionAmp guides</p>
+      <h1><span class="aa-light">Practical systems for</span> choosing what matters next.</h1>
+      <p>Small, complete guides for when your list is louder than your attention. Pick the problem you have today. Leave the rest for later.</p>
+    </header>
+
+    {featured && (
+      <section class="aa-guides-feature" aria-labelledby="featured-guide">
+        <div class="aa-guides-feature-rail" aria-hidden="true"></div>
+        <div>
+          <p class="aa-guides-feature-label">Start here</p>
+          <h2 id="featured-guide">{featured.data.title}</h2>
+          <p>{featured.data.description}</p>
+          <a href={`/guides/${featured.id}`}>Read the guide <span aria-hidden="true">→</span></a>
+        </div>
+      </section>
+    )}
+
+    <div class="aa-guides-shelves">
+      {groups.map((group) => {
+        const guides = all.filter((guide) => guide.data.group === group.id).sort(byOrder);
+        return (
+          <section class="aa-guides-shelf" aria-labelledby={`guide-group-${group.id}`}>
+            <header class="aa-guides-shelf-head">
+              <div>
+                <p class="aa-guides-shelf-label">{group.label}</p>
+                <h2 id={`guide-group-${group.id}`}>{group.note}</h2>
+              </div>
+              <span>{guides.length} guides</span>
+            </header>
+            <div class="aa-guides-cards">
+              {guides.map((guide) => (
+                <a class="aa-guide-card" href={`/guides/${guide.id}`}>
+                  <span class="aa-guide-card-dot" aria-hidden="true"></span>
+                  <div>
+                    <h3>{guide.data.title}</h3>
+                    <p>{guide.data.description}</p>
+                  </div>
+                  <span class="aa-guide-card-meta">{guide.data.readTime} <b aria-hidden="true">→</b></span>
+                </a>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+
+    <section class="aa-guides-blog-note">
+      <p>Looking for an idea, not a system?</p>
+      <a href="/blog">Read the blog <span aria-hidden="true">→</span></a>
+    </section>
+  </div>
+</PublicLayout>
