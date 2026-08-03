@@ -137,13 +137,17 @@ verification notes.
 
 ### P1 — Site structure and product comprehension
 
-- [ ] **F06 — Remove mandatory mobile scroll snapping.** Mobile forces eight
+- [x] **F06 — Remove mandatory mobile scroll snapping.** Mobile forced eight
       full-screen sections and roughly nine swipes before the footer. This
       prevents normal launch-page skimming and exaggerates empty space.
       - Evidence: `site/src/styles/landing.css` mobile rules; measured landing
         scroll height 7,277px at a 390x844 viewport.
       - Done when: mobile uses normal document flow, content determines section
         height, and footer remains naturally reachable.
+      - Resolved 2026-08-03: removed the mobile-only fixed-height scroll
+        container, mandatory snap targets, and viewport-height section rules.
+        The responsive padding remains; sections now size to their content and
+        the footer follows in ordinary document flow.
 
 - [ ] **F07 — Repair hero demo semantics.** “Switch” does nothing. “Do this”
       immediately changes to “Done ✓” and cycles tasks, teaching that starting

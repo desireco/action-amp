@@ -661,47 +661,6 @@
    RESPONSIVE — mobile (≤ 768px)
    ============================================================ */
 @media (max-width: 768px) {
-  /* Scroll-snap storytelling: each section fills the screen, scrolls lock
-     to section boundaries, one swipe = advance one section. The landing
-     wrapper itself becomes the scroll container (page-scoped, so this
-     doesn't leak to other routes). svh handles iOS Safari's dynamic toolbar. */
-  .aa-landing {
-    height: 100vh;
-    height: 100svh;
-    overflow-y: auto;
-    scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-  }
-  .aa-landing::-webkit-scrollbar {
-    width: 0;
-  }
-  /* Each story section lands below the sticky nav. The footer is a final snap
-     target too: without one, mandatory snapping settles on the final CTA and
-     makes the footer unreachable. */
-  .aa-landing section {
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-    min-height: 100vh;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  /* Hero keeps its bespoke layout (content top-aligned, not centered). Its
-     scroll margin reserves nav height, so a return snap never tucks its top
-     underneath the sticky bar. */
-  .aa-landing .aa-hero {
-    justify-content: flex-start;
-    scroll-margin-top: 57px;
-    min-height: calc(100vh - 57px);
-    min-height: calc(100svh - 57px);
-  }
-  .aa-landing > .aa-site-footer {
-    scroll-snap-align: end;
-    scroll-snap-stop: always;
-  }
-
   .aa-hero {
     padding: 32px 22px 34px;
     background:
