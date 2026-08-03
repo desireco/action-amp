@@ -733,6 +733,7 @@
   .aa-hero-cta {
     margin-top: 20px;
     padding: 11px 20px;
+    min-height: 44px;
   }
   .aa-chaos {
     display: none;
@@ -745,8 +746,46 @@
     margin-bottom: 18px;
   }
   .aa-completion {
+    width: 44px;
+    height: 44px;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+  .aa-completion::before {
+    inset: 4px;
+  }
+  .aa-completion::after {
+    content: "";
+    position: absolute;
     width: 28px;
     height: 28px;
+    border: 2.5px solid var(--aa-border-strong);
+    border-radius: var(--aa-radius-full);
+    transition:
+      border-color var(--aa-dur-base),
+      background var(--aa-dur-base),
+      box-shadow var(--aa-dur-base);
+  }
+  .aa-completion .aa-check {
+    position: relative;
+    z-index: 1;
+  }
+  .aa-completion:hover {
+    border-color: transparent;
+  }
+  .aa-completion:hover::after {
+    border-color: var(--aa-teal);
+  }
+  .aa-completion.filled {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .aa-completion.filled::after {
+    background: var(--aa-teal);
+    border-color: var(--aa-teal);
+    box-shadow: 0 8px 20px var(--aa-teal-tint-shadow);
   }
   .aa-wn-complete {
     margin-bottom: 14px;
@@ -762,6 +801,7 @@
   }
   .aa-wn-actions .aa-btn {
     padding: 8px 16px;
+    min-height: 44px;
   }
   .aa-wn-title {
     font-size: 20px;
@@ -846,6 +886,7 @@
   }
   .aa-faq-q {
     font-size: 16px;
+    min-height: 44px;
   }
   .aa-faq-a {
     font-size: 14px;
@@ -860,6 +901,11 @@
   }
   .aa-final h2 {
     font-size: 32px;
+  }
+  .aa-final-login a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
 

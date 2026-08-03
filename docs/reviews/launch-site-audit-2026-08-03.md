@@ -191,10 +191,13 @@ verification notes.
         `aria-expanded`, `aria-controls`, a labelled answer region, and a
         visible keyboard focus treatment.
 
-- [ ] **F11 — Bring interactive targets to 44px on mobile.** Measured examples:
+- [x] **F11 — Bring interactive targets to 44px on mobile.** Measured examples:
       28px completion circle, 37px hero buttons, 36px footer links.
       - Done when: mobile interactive controls meet the 44px target without
         making visual chrome feel oversized.
+      - Resolved 2026-08-03: hero actions, FAQ controls, nav/footer links, and
+        final-login link now have 44px targets. The completion control has a
+        44px transparent target while retaining a 28px visual ring.
 
 ### P1 — Pricing and Founding presentation
 

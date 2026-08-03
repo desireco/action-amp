@@ -200,7 +200,8 @@ body {
    in two columns, with Legal as a compact full-width row. */
 @media (max-width: 768px) {
   .aa-nav {
-    padding: 16px 20px;
+    min-height: 56px;
+    padding: 6px 20px;
     gap: 12px;
   }
   .aa-nav-links {
@@ -208,6 +209,12 @@ body {
   }
   .aa-nav-auth {
     margin-left: 0;
+  }
+  .aa-brand,
+  .aa-nav-link-auth {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
   .aa-brand-name {
     font-size: 15px;
@@ -247,7 +254,7 @@ body {
   .aa-site-footer-list a {
     display: inline-flex;
     align-items: center;
-    min-height: 36px;
+    min-height: 44px;
     padding: 0 2px;
   }
   .aa-site-footer-col--legal {
