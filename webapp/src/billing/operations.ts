@@ -48,6 +48,7 @@ import type {
   CreateCheckoutSession,
   CreateCustomerPortalSession,
 } from "wasp/server/operations";
+import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 
 export const createCheckoutSession = (async (
   args: { priceKey: "proYearly" | "proMonthly" | "proPrepaid" | "founder" },
@@ -153,6 +154,13 @@ export const createCheckoutSession = (async (
   if (!session.url) {
     throw new Error("Stripe Checkout Session has no URL.");
   }
+
+  void recordAnalyticsEventCore(context.entities, {
+    name: "CHECKOUT_STARTED",
+    visitorId: `user_${dbUser.id}`,
+    route: priceKey === "founder" ? "/founding-100" : "/app/settings/billing",
+    metadata: { plan: priceKey },
+  }, dbUser.id).catch(() => {});
 
   return { url: session.url };
 }) satisfies CreateCheckoutSession<{ priceKey: "proYearly" | "proMonthly" | "proPrepaid" | "founder" }, { url: string }>;

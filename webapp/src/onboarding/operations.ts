@@ -6,6 +6,7 @@ import type {
 import { PrismaClient } from "@prisma/client";
 import { buildWelcomeEmail } from "./welcomeEmail";
 import { uniquePermalink } from "../shared/permalinks";
+import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 
 /**
  * Onboarding — the one-time first-run flow (runs when a user signs up).
@@ -235,6 +236,12 @@ export const completeOnboarding = (async (_args, context) => {
     where: { id: context.user.id },
     data: { hasSeenOnboarding: true },
   });
+
+  void recordAnalyticsEventCore(context.entities, {
+    name: "ONBOARDING_COMPLETED",
+    visitorId: `user_${context.user.id}`,
+    route: "/welcome",
+  }, context.user.id).catch(() => {});
 
   try {
     await sendWelcomeEmail(context.user);

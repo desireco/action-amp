@@ -91,6 +91,7 @@ import {
   type FeedbackStatus,
 } from "../feedback/operationsCore";
 import { getAdminStatsCore, getRecentFeedbackCore } from "../admin/operationsCore";
+import { getFunnelStatsCore, type FunnelRange } from "../analytics/operationsCore";
 
 // Wasp injects `context.entities.<EntityName>` (Prisma clients) for every
 // entity listed in the route's `entities:` array. We type the slice we use so
@@ -1373,11 +1374,27 @@ export const cliAdminStats = async (req: Request, res: Response, _context: unkno
   const user = req.patUser;
   if (!requireAdmin(user, res)) return;
   try {
-    const stats = await getAdminStatsCore(authEntities);
+    const rawRange = queryString(req, "range");
+    const range: FunnelRange = rawRange === "7d" || rawRange === "all" ? rawRange : "30d";
+    const stats = await getAdminStatsCore(authEntities, range);
     return res.status(200).json({ stats });
   } catch (err) {
     console.error("[cli/admin/stats] failed:", err);
     return res.status(500).json({ error: "Could not load admin stats." });
+  }
+};
+
+export const cliAdminGrowth = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!requireAdmin(user, res)) return;
+  try {
+    const rawRange = queryString(req, "range");
+    const range: FunnelRange = rawRange === "7d" || rawRange === "all" ? rawRange : "30d";
+    const funnel = await getFunnelStatsCore(authEntities, range);
+    return res.status(200).json(funnel);
+  } catch (err) {
+    console.error("[cli/admin/growth] failed:", err);
+    return res.status(500).json({ error: "Could not load growth funnel." });
   }
 };
 

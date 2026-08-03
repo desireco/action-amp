@@ -72,26 +72,39 @@ body {
   width: 100%;
   max-width: 1180px;
   margin: 0 auto;
-  background: oklch(0.99 0.005 230 / 0.85);
+  background:
+    linear-gradient(90deg, var(--aa-teal-soft) 0%, oklch(0.99 0.005 230 / 0.88) 28%, oklch(0.99 0.005 230 / 0.88) 100%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
   z-index: 50;
-  border-bottom: 1px solid var(--aa-border);
+  border-bottom: 1px solid var(--aa-teal-soft-strong);
 }
 .aa-nav-links {
   display: flex;
-  gap: 28px;
+  align-items: center;
+  gap: 6px;
 }
 .aa-nav-link {
   font-size: 14px;
-  color: var(--aa-text-3);
-  font-weight: 500;
+  color: var(--aa-teal-cta);
+  font-weight: 600;
+  padding: 7px 10px;
+  border-radius: var(--aa-radius-sm);
+  white-space: nowrap;
+  transition: color var(--aa-dur-fast), background var(--aa-dur-fast);
 }
 .aa-nav-link:hover {
-  color: var(--aa-text);
+  color: var(--aa-teal-cta-hover);
+  background: var(--aa-teal-soft);
   text-decoration: none;
+}
+.aa-nav-link--active,
+.aa-nav-link--active:hover {
+  color: var(--aa-teal-cta);
+  background: var(--aa-teal-soft-strong);
+  box-shadow: inset 0 -2px 0 var(--aa-teal);
 }
 /* Right-aligned auth link. Brand uses margin-right:auto, so this sits at the
    far right. Survives mobile (the section anchors in .aa-nav-links don't). */
@@ -101,7 +114,7 @@ body {
 .aa-nav-link-auth {
   font-size: 14px;
   font-weight: 600;
-  color: var(--aa-text-2);
+  color: var(--aa-teal-cta);
 }
 .aa-nav-link-auth:hover {
   color: var(--aa-teal-cta);
@@ -201,11 +214,27 @@ body {
 @media (max-width: 768px) {
   .aa-nav {
     min-height: 56px;
-    padding: 6px 20px;
-    gap: 12px;
+    padding: 6px 20px 0;
+    gap: 8px 12px;
+    flex-wrap: wrap;
   }
   .aa-nav-links {
+    order: 3;
+    width: calc(100% + 40px);
+    margin: 0 -20px;
+    padding: 6px 20px 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-top: 1px solid var(--aa-teal-soft-strong);
+  }
+  .aa-nav-links::-webkit-scrollbar {
     display: none;
+  }
+  .aa-nav-link {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 10px;
   }
   .aa-nav-auth {
     margin-left: 0;

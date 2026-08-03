@@ -81,7 +81,7 @@ export function formatStats(s: AdminStats): string {
       ? Math.round((s.tasks.completed7d / s.tasks.created7d) * 100)
       : null;
   const lines = [
-    chalk.bold("Users"),
+    chalk.bold(`Users (${s.range ?? "30d"})`),
     `  total:           ${s.users.total}`,
     `  signed up today: ${s.users.signedUpToday}`,
     `  signed up 7d:    ${s.users.signedUp7d}`,
@@ -103,6 +103,14 @@ export function formatStats(s: AdminStats): string {
     `  resolved:     ${s.feedback.byStatus.RESOLVED}`,
     `  closed:       ${s.feedback.byStatus.CLOSED}`,
     `  total:        ${s.feedback.total}`,
+    "",
+    chalk.bold("Payments"),
+    `  confirmed:       ${s.payments?.confirmed ?? "—"}`,
+    `  checkout → paid: ${s.payments?.checkoutToPaidPct == null ? "—" : `${s.payments.checkoutToPaidPct}%`}`,
+    "",
+    chalk.bold("Product activity"),
+    `  captures:        ${s.activity?.captures ?? "—"}`,
+    `  triage:          ${s.activity?.triageCompleted ?? "—"}`,
   ];
   return lines.join("\n");
 }

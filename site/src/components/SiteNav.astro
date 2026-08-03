@@ -1,10 +1,10 @@
 ---
 // SiteNav — the single shared site header.
 //
-// Sticky + blur backdrop + Log in link, used on every page. The link set is
-// page-aware: the landing shows in-page section anchors (#how/#soul/…),
-// every other page shows the site links (Blog/About/Roadmap). On mobile the
-// section/site links hide and only brand + Log in remain.
+// Sticky teal-tinted site navigation, used on every public page. The route map
+// stays identical across the landing and content surfaces so a visitor never
+// has to relearn navigation. Current route gets a quiet teal marker. On mobile
+// links remain available in a horizontally scrollable row.
 //
 // Styles live in styles/site-chrome.css (imported by both index.astro and
 // PublicLayout.astro).
@@ -12,10 +12,18 @@ import BrandMark from "./BrandMark.astro";
 
 interface Props {
   appUrl: string;
-  variant?: "landing" | "site";
 }
 
-const { appUrl, variant = "site" } = Astro.props;
+const { appUrl } = Astro.props;
+const currentPath = Astro.url.pathname.replace(/\/+$/, "") || "/";
+const links = [
+  { label: "How it works", href: "/#how", active: currentPath === "/" },
+  { label: "Guides", href: "/guides", active: currentPath === "/guides" || currentPath.startsWith("/guides/") },
+  { label: "Blog", href: "/blog", active: currentPath === "/blog" || currentPath.startsWith("/blog/") },
+  { label: "Pricing", href: "/pricing", active: currentPath === "/pricing" },
+  { label: "About", href: "/about", active: currentPath === "/about" },
+  { label: "Roadmap", href: "/roadmap", active: currentPath === "/roadmap" },
+];
 ---
 
 <nav class="aa-nav">
@@ -23,24 +31,13 @@ const { appUrl, variant = "site" } = Astro.props;
     <BrandMark />
     <span class="aa-brand-name">ActionAmp</span>
   </a>
-  {variant === "landing" ? (
-    <div class="aa-nav-links">
-      <a class="aa-nav-link" href="#how">How it works</a>
-      <a class="aa-nav-link" href="/guides">Guides</a>
-      <a class="aa-nav-link" href="#soul">Why</a>
-      <a class="aa-nav-link" href="/pricing">Pricing</a>
-      <a class="aa-nav-link" href="#method">Methodology</a>
-      <a class="aa-nav-link" href="#faq">FAQ</a>
-    </div>
-  ) : (
-    <div class="aa-nav-links">
-      <a class="aa-nav-link" href="/pricing">Pricing</a>
-      <a class="aa-nav-link" href="/guides">Guides</a>
-      <a class="aa-nav-link" href="/blog">Blog</a>
-      <a class="aa-nav-link" href="/about">About</a>
-      <a class="aa-nav-link" href="/roadmap">Roadmap</a>
-    </div>
-  )}
+  <div class="aa-nav-links" aria-label="Primary navigation">
+    {links.map((link) => (
+      <a class:list={["aa-nav-link", { "aa-nav-link--active": link.active }]} href={link.href} aria-current={link.active ? "page" : undefined}>
+        {link.label}
+      </a>
+    ))}
+  </div>
   <div class="aa-nav-auth">
     <a class="aa-nav-link aa-nav-link-auth" href={`${appUrl}/login`}>Log in</a>
   </div>

@@ -492,6 +492,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               {user ? user.fullName : ""}
             </span>
           </Link>
+          {user?.isAdmin && (
+            <Link
+              to="/app/admin/overview"
+              className={`aa-app-admin-link ${isActive("/app/admin") ? "active" : ""}`}
+            >
+              Admin
+            </Link>
+          )}
           <button type="button" className="aa-app-logout" onClick={() => setConfirmLogout(true)}>
             Log out
           </button>

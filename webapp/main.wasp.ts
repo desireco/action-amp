@@ -36,6 +36,9 @@ import { getNotificationPreferences, saveDailyReminder, savePushSubscription } f
 import { sendDailyTodayReminder } from "./src/notifications/dailyReminderJob" with { type: "ref" };
 import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
 import { getAdminStats, getRecentFeedback, updateFeedbackStatus, deleteFeedback } from "./src/admin/operations" with { type: "ref" };
+import { getAdminFunnel, recordAnalyticsEvent } from "./src/analytics/operations" with { type: "ref" };
+import { recordAnalyticsEventApi } from "./src/analytics/eventApi" with { type: "ref" };
+import { analyticsMiddleware } from "./src/analytics/analyticsMiddleware" with { type: "ref" };
 import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status, founding100StatusHandler } from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
@@ -78,6 +81,7 @@ import {
   cliFeedbackStatus,
   cliFeedbackDelete,
   cliAdminStats,
+  cliAdminGrowth,
   cliAdminFeedback,
 } from "./src/auth/patRoutes" with { type: "ref" };
 import { mintCliToken } from "./src/auth/cliMint" with { type: "ref" };
@@ -87,6 +91,9 @@ import { shareRouteMiddleware } from "./src/share/shareRouteMiddleware" with { t
 import { SharePage } from "./src/share/SharePage" with { type: "ref" };
 import { PatSettingsPage } from "./src/app/PatSettingsPage" with { type: "ref" };
 import { AdminPage } from "./src/admin/AdminPage" with { type: "ref" };
+import { AdminFeedbackPage } from "./src/admin/AdminFeedbackPage" with { type: "ref" };
+import { AdminFunnelPage } from "./src/admin/AdminFunnelPage" with { type: "ref" };
+import { AdminRedirectPage } from "./src/admin/AdminRedirectPage" with { type: "ref" };
 import { CliLoginPage } from "./src/auth/CliLoginPage" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
 import { LoginPage } from "./src/auth/email/LoginPage" with { type: "ref" };
@@ -196,7 +203,11 @@ export default app({
     ),
     route("LensesRoute", "/app/settings/lenses", page(LensesPage)),
     route("PatSettingsRoute", "/app/settings/pat", page(PatSettingsPage)),
-    route("AdminRoute", "/app/settings/admin", page(AdminPage)),
+    route("AdminRoute", "/app/admin", page(AdminRedirectPage)),
+    route("AdminOverviewRoute", "/app/admin/overview", page(AdminPage)),
+    route("AdminFunnelRoute", "/app/admin/funnel", page(AdminFunnelPage)),
+    route("AdminFeedbackRoute", "/app/admin/feedback", page(AdminFeedbackPage)),
+    route("LegacyAdminRoute", "/app/settings/admin", page(AdminRedirectPage)),
     route("TaskDetailRoute", "/app/tasks/:permalink", page(TaskDetailPage)),
     route("ProjectDetailRoute", "/app/projects/:permalink", page(ProjectDetailPage)),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
@@ -276,10 +287,12 @@ export default app({
     action(savePushSubscription, { entities: ["PushSubscription"], auth: true }),
     action(saveDailyReminder, { entities: ["User"], auth: true }),
     action(submitFeedback, { entities: ["User", "Feedback"], auth: true }),
-    query(getAdminStats, { entities: ["User", "Task", "Feedback"], auth: true }),
+    query(getAdminStats, { entities: ["User", "Task", "Feedback", "Payment", "AnalyticsSession", "AnalyticsEvent"], auth: true }),
+    query(getAdminFunnel, { entities: ["AnalyticsSession", "AnalyticsEvent"], auth: true }),
     query(getRecentFeedback, { entities: ["Feedback"], auth: true }),
     action(updateFeedbackStatus, { entities: ["Feedback"], auth: true }),
     action(deleteFeedback, { entities: ["Feedback"], auth: true }),
+    action(recordAnalyticsEvent, { entities: ["AnalyticsSession", "AnalyticsEvent"], auth: true }),
     action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),
     action(createLens, { entities: ["Lens"], auth: true }),
     action(updateLens, { entities: ["Lens"], auth: true }),
@@ -305,6 +318,11 @@ export default app({
       entities: ["User"],
       auth: false,
       middlewareConfigFn: publicStatusMiddleware,
+    }),
+    api("POST", "/api/analytics/event", recordAnalyticsEventApi, {
+      entities: ["AnalyticsSession", "AnalyticsEvent"],
+      auth: false,
+      middlewareConfigFn: analyticsMiddleware,
     }),
     // ── CLI auth (PAT plumbing) ────────────────────────────────────────────
     // The three session-authed token-management routes. `auth: true` (the
@@ -517,6 +535,11 @@ export default app({
       middlewareConfigFn: patRouteMiddleware,
     }),
     api("GET", "/api/cli/admin/stats", cliAdminStats, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    api("GET", "/api/cli/admin/growth", cliAdminGrowth, {
       entities: [],
       auth: false,
       middlewareConfigFn: patRouteMiddleware,

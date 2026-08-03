@@ -53,9 +53,20 @@ export const globalMiddlewareConfigFn: MiddlewareConfigFn = (
   // allowlist, adds credentials true). See the file header for why this is
   // global, not per-route.
   middlewareConfig.delete("cors");
+  const configuredOrigins = config.allowedCORSOrigins;
   middlewareConfig.set(
     "cors",
-    cors({ origin: config.allowedCORSOrigins, credentials: true }),
+    cors({
+      origin: (origin, callback) => {
+        const configured = !!origin && configuredOrigins.some((entry) =>
+          typeof entry === "string" ? entry === origin : entry.test(origin),
+        );
+        // The Astro marketing site posts anonymous funnel events to this API.
+        // Keep it explicit; no wildcard credentials.
+        callback(null, configured || origin === "https://actionamp.com");
+      },
+      credentials: true,
+    }),
   );
 
   // Insertion order matters: this runs after cookieParser (already in the

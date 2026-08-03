@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "wasp/client/auth";
 import { useQuery, createCheckoutSession, getFounding100Status } from "wasp/client/operations";
 import { PublicLayout } from "../shared/PublicLayout";
+import { trackStatCounterEvent } from "../analytics/StatCounter";
 import { Button } from "../components/ui";
 import "./Founding100Page.css";
 
@@ -41,7 +42,10 @@ export function Founding100Page() {
     setLoading(true);
     try {
       const result = await createCheckoutSession({ priceKey: "founder" });
-      if (result.url) window.location.href = result.url;
+      if (result.url) {
+        trackStatCounterEvent("checkout_started", "founding", "founder");
+        window.location.href = result.url;
+      }
     } catch (err) {
       console.error("Checkout error:", err);
       setError(

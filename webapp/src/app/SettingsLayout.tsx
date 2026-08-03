@@ -31,9 +31,7 @@ export function SettingsLayout({
   const location = useLocation();
   const { data: user } = useAuth();
 
-  const tabs = user?.isAdmin
-    ? [...TABS, { label: "Admin", to: "/app/settings/admin", exact: false }]
-    : TABS;
+  const tabs = TABS;
 
   return (
     <div className={`aa-settings-hub${fullWidth ? " aa-settings-hub--full" : ""}`}>

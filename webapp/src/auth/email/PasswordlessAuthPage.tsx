@@ -9,6 +9,8 @@ import {
 } from "wasp/client/operations";
 import { AuthLayout } from "../../components/ui";
 import { safeAuthReturnTo } from "../returnTo";
+import { trackAnalyticsEvent } from "../../analytics/tracking";
+import { trackStatCounterEvent } from "../../analytics/StatCounter";
 
 const DEFAULT_DEV_EMAIL = "zeljko@dakic.com";
 
@@ -45,6 +47,10 @@ export function PasswordlessAuthPage({
 
   async function finishLogin(sessionId: string) {
     setSessionId(sessionId);
+    if (mode === "signup") {
+      trackAnalyticsEvent({ name: "SIGNUP_COMPLETED", route: "/signup", metadata: { surface: "signup" } });
+      trackStatCounterEvent("signup_complete", "signup");
+    }
     window.location.assign(returnTo);
   }
 

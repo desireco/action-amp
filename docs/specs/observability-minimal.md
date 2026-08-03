@@ -44,7 +44,7 @@ is in instrumenting the four steps that decide the business.
       snippet loads on the Astro marketing site and the Wasp app, while local
       development is excluded. Record any consent or privacy-policy changes
       required for this provider before public distribution.
-- [ ] **The four anonymous funnel events are emitted** to StatCounter:
+- [x] **The four anonymous funnel events are emitted** to StatCounter:
       1. `landing_view` — fired on `/` load.
       2. `signup_complete` — fired on successful auth (email or Google).
       3. `app_first_open` — fired once per user on first `/app` load (guarded
@@ -52,7 +52,7 @@ is in instrumenting the four steps that decide the business.
          it's not double-counted).
       4. `checkout_started` — fired when the user opens the Stripe checkout
          URL (the redirect from `createCheckoutSession`).
-- [ ] **Events and tags are no-PII.** No task content, email, name, or user ID
+- [x] **Events and tags are no-PII.** No task content, email, name, or user ID
       is passed to StatCounter. The allowed tags are `event`, `surface`,
       `plan`, and `landing_variant`; account-linked records belong to
       `growth-analytics` in the first-party database.

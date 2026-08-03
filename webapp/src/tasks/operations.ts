@@ -19,6 +19,7 @@ import type {
 } from "wasp/server/operations";
 import { assertLensAllowed } from "../billing/entitlementHttp";
 import { resolveAccessibleLenses } from "../billing/entitlements";
+import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 // Pure cores shared with /api/cli/* routes — auth + entitlement guards stay
 // here (the wrapper), the DB shape lives in the core. See operationsCore.ts.
 import {
@@ -325,10 +326,16 @@ export const startTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  return await startTaskCore(context.entities, {
+  const result = await startTaskCore(context.entities, {
     userId: context.user.id,
     id: args.id,
   });
+  void recordAnalyticsEventCore(context.entities, {
+    name: "FOCUS_STARTED",
+    visitorId: `user_${context.user.id}`,
+    route: "/app/focus",
+  }, context.user.id).catch(() => {});
+  return result;
 }) satisfies StartTask<{ id: string }, { id: string; startedAt: Date | null }>;
 
 export const pauseTask = (async (args, context) => {
@@ -626,6 +633,11 @@ export const completeTaskFromFocus = (async (args, context) => {
       userId: context.user.id,
     },
   });
+  void recordAnalyticsEventCore(context.entities, {
+    name: "TASK_COMPLETED",
+    visitorId: `user_${context.user.id}`,
+    route: "/app/focus",
+  }, context.user.id).catch(() => {});
   return { id: updated.id, completedAt: updated.completedAt };
 }) satisfies CompleteTaskFromFocus<
   { taskId: string; outcome?: string },

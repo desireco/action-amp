@@ -16,6 +16,7 @@
  */
 import Stripe from "stripe";
 import { stripe } from "./stripe";
+import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 // Wasp API handlers receive Express req/res; our express.raw middleware puts
 // raw bytes in req.body as a Buffer (not in the type signature).
 import type { Request, Response } from "express";
@@ -254,6 +255,13 @@ async function handleCheckoutCompleted(event: Stripe.Event, context: WaspApiCont
     },
   });
 
+  void recordAnalyticsEventCore(context.entities as unknown as Record<string, unknown>, {
+    name: "PAYMENT_CONFIRMED",
+    visitorId: `user_${userId}`,
+    route: priceKey === "founder" ? "/founding-100" : "/app/settings/billing",
+    metadata: { plan: priceKey },
+  }, userId).catch(() => {});
+
   console.log(`[webhook] Checkout completed: userId=${userId}, plan=${entitlement.plan}`);
 }
 
@@ -307,6 +315,13 @@ async function handleInvoicePaid(event: Stripe.Event, context: WaspApiContext) {
       stripePaymentIntentId: extractPaymentIntentId(invoice) ?? undefined,
     },
   });
+
+  void recordAnalyticsEventCore(context.entities as unknown as Record<string, unknown>, {
+    name: "PAYMENT_CONFIRMED",
+    visitorId: `user_${userId}`,
+    route: "/app/settings/billing",
+    metadata: { plan: priceKey ?? "subscription" },
+  }, userId).catch(() => {});
 
   console.log(`[webhook] Invoice paid: userId=${userId}, plan=${plan}`);
 }

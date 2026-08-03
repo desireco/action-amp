@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import { useAuth } from "wasp/client/auth";
 import { useQuery, useAction, getAdminStats, getRecentFeedback, updateFeedbackStatus, deleteFeedback } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { SettingsLayout } from "../app/SettingsLayout";
+import { AdminLayout } from "./AdminLayout";
 import { Button, Card, Chip, Table, type TableColumn } from "../components/ui";
 import type { FeedbackRow } from "./operationsCore";
 import type { FeedbackStatus } from "../feedback/operationsCore";
+import type { FunnelRange } from "../analytics/operationsCore";
 import { StatusSelect } from "./StatusSelect";
 import "./AdminPage.css";
 
@@ -33,10 +35,23 @@ function Tile({ value, label, sub }: { value: number | null; label: string; sub?
   );
 }
 
+const RANGE_OPTIONS: Array<{ label: string; value: FunnelRange }> = [
+  { label: "7 days", value: "7d" },
+  { label: "30 days", value: "30d" },
+  { label: "All time", value: "all" },
+];
+
+const FUNNEL_LABELS: Record<string, string> = {
+  LANDING_VIEW: "Landing", SIGNUP_COMPLETED: "Signup", APP_OPENED: "App open",
+  CAPTURE_CREATED: "Capture", TRIAGE_COMPLETED: "Triage", CHECKOUT_STARTED: "Checkout", PAYMENT_CONFIRMED: "Paid",
+};
+
 export function AdminPage() {
   const { data: user } = useAuth();
+  const [params, setParams] = useSearchParams();
+  const range = params.get("range") === "7d" || params.get("range") === "all" ? params.get("range") as FunnelRange : "30d";
 
-  const { data: stats, isLoading: statsLoading, error: statsError, dataUpdatedAt } = useQuery(getAdminStats);
+  const { data: stats, isLoading: statsLoading, error: statsError, dataUpdatedAt } = useQuery(getAdminStats, { range });
   // Recent feedback with "Show more". The first page always loads; appended
   // pages accumulate in state so repeated clicks don't drop intermediate pages.
   // `fetchAfterId` is the pending cursor (set on click, cleared once the page
@@ -65,32 +80,27 @@ export function AdminPage() {
 
   if (!user?.isAdmin) {
     return (
-      <SettingsLayout>
+      <AdminLayout>
         <Card padding="lg">
           <p>You don't have access to this page.</p>
         </Card>
-      </SettingsLayout>
+      </AdminLayout>
     );
   }
 
   if (statsError) {
     return (
-      <SettingsLayout>
+      <AdminLayout>
         <Card padding="lg" className="aa-admin-error">
           <p>{statsError.message}</p>
         </Card>
-      </SettingsLayout>
+      </AdminLayout>
     );
   }
 
   const u = stats?.users;
-  const t = stats?.tasks;
   const f = stats?.feedback;
-  const num = (n: number | undefined) => (statsLoading || n === undefined ? null : n);
-  const completionPct =
-    t && t.created7d > 0
-      ? Math.round((t.completed7d / t.created7d) * 100)
-      : null;
+  const num = (n: number | null | undefined) => (statsLoading || n === undefined || n === null ? null : n);
 
   // Accumulate feedback items: first page + every appended page.
   const items: FeedbackRow[] = [
@@ -187,8 +197,17 @@ export function AdminPage() {
   ];
 
   return (
-    <SettingsLayout fullWidth>
-      <h2 className="aa-settings-sh">Admin</h2>
+    <AdminLayout>
+      <div className="aa-admin-page-heading">
+        <p className="aa-settings-eyebrow">Admin workspace</p>
+        <h1 className="aa-settings-h">Overview</h1>
+        <p className="aa-admin-note">A quiet read on product health. Funnel details live in Funnel.</p>
+      </div>
+      <div className="aa-admin-filter-row" aria-label="Overview range">
+        {RANGE_OPTIONS.map((option) => (
+          <button key={option.value} type="button" className={`aa-admin-filter${range === option.value ? " active" : ""}`} aria-pressed={range === option.value} onClick={() => setParams({ range: option.value })}>{option.label}</button>
+        ))}
+      </div>
       {stats?.users && (
         <p className="aa-admin-note">
           Last refreshed {new Date(dataUpdatedAt).toLocaleString()}
@@ -199,26 +218,29 @@ export function AdminPage() {
         <h3 className="aa-admin-group__title">Users</h3>
         <div className="aa-admin-tiles">
           <Tile value={num(u?.total)} label="Total signups" />
-          <Tile value={num(u?.signedUpToday)} label="Today" />
-          <Tile value={num(u?.signedUp7d)} label="Last 7 days" />
-          <Tile value={num(u?.signedUp30d)} label="Last 30 days" />
+          <Tile value={num(u?.selectedSignups)} label={`New signups · ${range}`} />
+          <Tile value={num(u?.selectedActive)} label={`Active users · ${range}`} />
         </div>
       </div>
 
       <div className="aa-admin-group">
-        <h3 className="aa-admin-group__title">Active users</h3>
+        <h3 className="aa-admin-group__title">Operating snapshot</h3>
         <div className="aa-admin-tiles">
-          <Tile value={num(u?.activeToday)} label="Today" />
-          <Tile value={num(u?.active7d)} label="Last 7 days" />
-          <Tile value={num(u?.active30d)} label="Last 30 days" />
+          <Tile value={num(stats?.payments.confirmed)} label="Confirmed payments" />
+          <Tile value={num(stats?.payments.checkoutToPaidPct)} label="Checkout → paid" sub={stats?.payments.checkoutToPaidPct === null ? "No checkout starts yet" : "% of checkout starts"} />
+          <Tile value={num(stats?.activity.tasksCompleted)} label="Tasks completed" />
+          <Tile value={num(stats?.activity.taskCompletionPct)} label="Task completion" sub={stats?.activity.taskCompletionPct === null ? "No tasks created yet" : "% of tasks created"} />
         </div>
       </div>
 
       <div className="aa-admin-group">
-        <h3 className="aa-admin-group__title">Tasks (last 7 days)</h3>
+        <div className="aa-admin-section-head"><h3 className="aa-admin-group__title">Product activity</h3><Link to={`/app/admin/funnel?range=${range}`}>View funnel →</Link></div>
         <div className="aa-admin-tiles">
-          <Tile value={num(t?.created7d)} label="Created" />
-          <Tile value={num(t?.completed7d)} label="Completed" sub={completionPct !== null ? `${completionPct}% of created` : undefined} />
+          <Tile value={num(stats?.activity.captures)} label="Captures" />
+          <Tile value={num(stats?.activity.triageCompleted)} label="Triage completed" />
+        </div>
+        <div className="aa-admin-pulse" aria-label="Funnel pulse">
+          {(stats?.funnel ?? []).map((step) => <span key={step.name}><strong>{step.count.toLocaleString()}</strong> {FUNNEL_LABELS[step.name] ?? step.name}</span>)}
         </div>
       </div>
 
@@ -254,6 +276,6 @@ export function AdminPage() {
           </Button>
         )}
       </section>
-    </SettingsLayout>
+    </AdminLayout>
   );
 }

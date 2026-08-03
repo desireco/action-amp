@@ -28,6 +28,7 @@ import { makeWhoamiCommand } from "./commands/whoami.js";
 import { makeLogoutCommand } from "./commands/logout.js";
 import { makeFeedbackCommand } from "./commands/feedback.js";
 import { makeStatsCommand } from "./commands/stats.js";
+import { makeGrowthCommand } from "./commands/growth.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -52,6 +53,7 @@ program.addCommand(makeLoginCommand());
 program.addCommand(makeWhoamiCommand());
 program.addCommand(makeFeedbackCommand());
 program.addCommand(makeStatsCommand());
+program.addCommand(makeGrowthCommand());
 program.addCommand(makeLogoutCommand());
 
 // Global error handler — catches ApiError + network failures, prints a calm

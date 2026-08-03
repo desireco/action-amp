@@ -28,10 +28,11 @@ audience yet**. That distinction changes the whole roadmap.
 - **App version + update banner**: git SHA baked into the bundle at build time
   (Settings → About + login footer); restructured service worker + banner
   prompt users to refresh when a new build is deployed.
-- **Admin dashboard**: a stats-first page at `/app/settings/admin` (admin-only
-  tab, reuses SettingsLayout) showing global user/task/feedback counts across
-  today / 7d / 30d windows, plus an inline recent-feedback list with status
-  picker. Backed by a shared `getAdminStatsCore` (pure, tested). Activity
+- **Admin workspace**: a dedicated admin-only `/app/admin` shell with Overview,
+  Funnel, and Feedback routes; `/app/settings/admin` redirects for old
+  bookmarks. Overview retains global user/task/feedback counts, Funnel reads
+  the first-party event ledger, and Feedback is the full triage queue. Backed
+  by shared aggregate cores. Activity
   tracking via `User.createdAt` + `lastActiveAt` (throttled-stamped on app
   load in `getAppData`, backfilled from `Auth`/`AuthIdentity`). The
   `actionamp-admin stats` CLI command (text + `--json`) reads from the same

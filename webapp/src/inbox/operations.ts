@@ -16,6 +16,7 @@ import {
   getInboxItemsCore,
   triageInboxItemCore,
 } from "./operationsCore";
+import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 
 /**
  * Inbox operations — the capture destination + the triage transformation.
@@ -34,7 +35,7 @@ export const createInboxItem = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  return await createInboxItemCore(context.entities, {
+  const created = await createInboxItemCore(context.entities, {
     userId: context.user.id,
     text: args.text,
     projectName: args.projectName,
@@ -43,6 +44,12 @@ export const createInboxItem = (async (args, context) => {
     sourceUrl: args.sourceUrl,
     attachments: args.attachments,
   });
+  void recordAnalyticsEventCore(context.entities, {
+    name: "CAPTURE_CREATED",
+    visitorId: `user_${context.user.id}`,
+    route: "/app/inbox",
+  }, context.user.id).catch(() => {});
+  return created;
 }) satisfies CreateInboxItem<
   { text: string; projectName?: string; title?: string; content?: string; sourceUrl?: string; attachments?: { filename: string; mimeType: string; dataBase64: string }[] },
   { id: string; text: string; createdAt: Date }
@@ -100,7 +107,7 @@ export const triageInboxItem = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  return await triageInboxItemCore(context.entities, {
+  const result = await triageInboxItemCore(context.entities, {
     userId: context.user.id,
     inboxItemId: args.inboxItemId,
     decision: args.decision,
@@ -118,6 +125,12 @@ export const triageInboxItem = (async (args, context) => {
         reason: "organize more than 3 projects with Pro",
       }),
   });
+  void recordAnalyticsEventCore(context.entities, {
+    name: "TRIAGE_COMPLETED",
+    visitorId: `user_${context.user.id}`,
+    route: "/app/inbox/review",
+  }, context.user.id).catch(() => {});
+  return result;
 }) satisfies TriageInboxItem<{
   inboxItemId: string;
   decision:

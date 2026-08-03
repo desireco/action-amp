@@ -1,7 +1,9 @@
 import { Outlet, useLocation, Navigate, ScrollRestoration } from "react-router";
+import { useEffect } from "react";
 import { useAuth } from "wasp/client/auth";
 import { AppShell } from "./app/AppShell";
-import { StatCounter } from "./analytics/StatCounter";
+import { StatCounter, trackStatCounterEvent } from "./analytics/StatCounter";
+import { trackAnalyticsEvent } from "./analytics/tracking";
 import "./App.css";
 
 /**
@@ -23,6 +25,18 @@ export function App() {
   const location = useLocation();
   const { data: user, status } = useAuth();
   const isApp = location.pathname.startsWith("/app");
+  const isAdminWorkspace = location.pathname.startsWith("/app/admin") || location.pathname === "/app/settings/admin";
+
+  useEffect(() => {
+    if (user && isApp && location.pathname !== "/app/settings/admin") {
+      trackAnalyticsEvent({ name: "APP_OPENED", route: location.pathname });
+      const firstOpenKey = "actionamp.statcounter.app_first_open";
+      if (!window.localStorage.getItem(firstOpenKey)) {
+        window.localStorage.setItem(firstOpenKey, "1");
+        trackStatCounterEvent("app_first_open", "app");
+      }
+    }
+  }, [user?.id, isApp]);
 
   // Auth gate. Wasp wraps each *page* in `createAuthRequiredPage`, but this is
   // the layout (the `rootElement`), so it isn't wrapped. Without a gate here,
@@ -52,12 +66,17 @@ export function App() {
     return <Navigate to="/welcome" replace />;
   }
 
-  return isApp ? (
+  return isApp && !isAdminWorkspace ? (
     <>
       <StatCounter />
       <AppShell>
         <Outlet />
       </AppShell>
+    </>
+  ) : isApp ? (
+    <>
+      <StatCounter />
+      <Outlet />
     </>
   ) : (
     <>

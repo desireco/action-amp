@@ -14,6 +14,7 @@
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Entities = Record<string, any>;
+import { getFunnelStatsCore, type FunnelRange, type FunnelStats } from "../analytics/operationsCore";
 
 export const FEEDBACK_STATUSES = [
   "OPEN",
@@ -26,6 +27,8 @@ export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
 export type FeedbackStatusCounts = Record<FeedbackStatus, number>;
 
 export type AdminStats = {
+  range: FunnelRange;
+  since: string | null;
   users: {
     total: number;
     signedUpToday: number;
@@ -34,12 +37,27 @@ export type AdminStats = {
     activeToday: number;
     active7d: number;
     active30d: number;
+    selectedSignups: number;
+    selectedActive: number;
   };
   tasks: {
     created7d: number;
     completed7d: number;
     total: number;
   };
+  payments: {
+    confirmed: number;
+    total: number;
+    checkoutToPaidPct: number | null;
+  };
+  activity: {
+    captures: number;
+    triageCompleted: number;
+    tasksCreated: number;
+    tasksCompleted: number;
+    taskCompletionPct: number | null;
+  };
+  funnel: FunnelStats["funnel"];
   feedback: {
     byStatus: FeedbackStatusCounts;
     total: number;
@@ -105,8 +123,12 @@ function windows() {
 
 export async function getAdminStatsCore(
   entities: Entities,
+  range: FunnelRange = "30d",
 ): Promise<AdminStats> {
   const { today, d7, d30 } = windows();
+  const now = Date.now();
+  const sinceDate = range === "all" ? null : new Date(now - (range === "7d" ? 7 : 30) * 24 * 60 * 60 * 1000);
+  const selectedSince = sinceDate ? { gte: sinceDate } : undefined;
 
   const [
     total,
@@ -119,6 +141,14 @@ export async function getAdminStatsCore(
     tasksCreated7d,
     tasksCompleted7d,
     tasksTotal,
+    selectedSignups,
+    selectedActive,
+    paymentsConfirmed,
+    paymentsTotal,
+    captures,
+    triageCompleted,
+    tasksCreatedSelected,
+    tasksCompletedSelected,
     feedbackTotal,
     feedbackByStatusRaw,
   ] = await Promise.all([
@@ -132,6 +162,22 @@ export async function getAdminStatsCore(
     entities.Task.count({ where: { createdAt: { gte: d7 } } }),
     entities.Task.count({ where: { isDone: true, completedAt: { gte: d7 } } }),
     entities.Task.count(),
+    entities.User.count({ where: selectedSince ? { createdAt: selectedSince } : undefined }),
+    entities.User.count({ where: selectedSince ? { lastActiveAt: selectedSince } : undefined }),
+    entities.Payment?.count
+      ? entities.Payment.count({ where: { status: "SUCCEEDED", ...(selectedSince ? { paidAt: selectedSince } : {}) } })
+      : Promise.resolve(0),
+    entities.Payment?.count
+      ? entities.Payment.count({ where: { status: "SUCCEEDED" } })
+      : Promise.resolve(0),
+    entities.AnalyticsEvent?.count
+      ? entities.AnalyticsEvent.count({ where: { name: "CAPTURE_CREATED", ...(selectedSince ? { occurredAt: selectedSince } : {}) } })
+      : Promise.resolve(0),
+    entities.AnalyticsEvent?.count
+      ? entities.AnalyticsEvent.count({ where: { name: "TRIAGE_COMPLETED", ...(selectedSince ? { occurredAt: selectedSince } : {}) } })
+      : Promise.resolve(0),
+    entities.Task.count({ where: selectedSince ? { createdAt: selectedSince } : undefined }),
+    entities.Task.count({ where: { isDone: true, ...(selectedSince ? { completedAt: selectedSince } : {}) } }),
     // Soft-deleted feedback is excluded from both the total + the byStatus
     // breakdown — those are triage signals, and a deleted row isn't being
     // triaged anymore.
@@ -155,7 +201,18 @@ export async function getAdminStatsCore(
     }
   }
 
+  const funnel = entities.AnalyticsSession?.findMany
+    ? (await getFunnelStatsCore(entities, range)).funnel
+    : [];
+  const taskCompletionPct = tasksCreatedSelected > 0
+    ? Math.round((tasksCompletedSelected / tasksCreatedSelected) * 1000) / 10
+    : null;
+  const checkoutCount = funnel.find((step) => step.name === "CHECKOUT_STARTED")?.count ?? 0;
+  const paymentCount = funnel.find((step) => step.name === "PAYMENT_CONFIRMED")?.count ?? paymentsConfirmed;
+
   return {
+    range,
+    since: sinceDate?.toISOString() ?? null,
     users: {
       total,
       signedUpToday,
@@ -164,8 +221,23 @@ export async function getAdminStatsCore(
       activeToday,
       active7d,
       active30d,
+      selectedSignups,
+      selectedActive,
     },
     tasks: { created7d: tasksCreated7d, completed7d: tasksCompleted7d, total: tasksTotal },
+    payments: {
+      confirmed: paymentsConfirmed,
+      total: paymentsTotal,
+      checkoutToPaidPct: checkoutCount ? Math.round((paymentCount / checkoutCount) * 1000) / 10 : null,
+    },
+    activity: {
+      captures,
+      triageCompleted,
+      tasksCreated: tasksCreatedSelected,
+      tasksCompleted: tasksCompletedSelected,
+      taskCompletionPct,
+    },
+    funnel,
     feedback: { byStatus, total: feedbackTotal },
   };
 }
@@ -178,11 +250,11 @@ export async function getAdminStatsCore(
 // limit is bounded (1–50) by the caller. Mirrors the FEEDBACK_SELECT shape.
 export async function getRecentFeedbackCore(
   entities: Entities,
-  { afterId, limit }: { afterId?: string | null; limit: number },
+  { afterId, limit, statuses }: { afterId?: string | null; limit: number; statuses?: FeedbackStatus[] },
 ): Promise<{ items: FeedbackRow[]; hasNext: boolean }> {
   const fetchLimit = limit + 1;
   const rows = (await entities.Feedback.findMany({
-    where: { deletedAt: null },
+    where: { deletedAt: null, ...(statuses?.length ? { status: { in: statuses } } : {}) },
     ...(afterId
       ? {
           skip: 1,

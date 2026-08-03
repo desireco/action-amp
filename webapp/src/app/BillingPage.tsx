@@ -1,6 +1,7 @@
 import { useQuery, getBillingStatus, createCheckoutSession, createCustomerPortalSession } from "wasp/client/operations";
 import { useState } from "react";
 import { SettingsLayout } from "./SettingsLayout";
+import { trackStatCounterEvent } from "../analytics/StatCounter";
 import { Button, Card, Chip, Table, type TableColumn } from "../components/ui";
 import { PLAN_LABEL } from "../billing/config";
 import "./BillingPage.css";
@@ -193,6 +194,7 @@ function FreeUpgradeScreen() {
     try {
       const result = await createCheckoutSession({ priceKey });
       if (result.url) {
+        trackStatCounterEvent("checkout_started", "billing", priceKey);
         window.location.href = result.url;
       }
     } catch (err) {

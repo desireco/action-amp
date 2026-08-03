@@ -142,6 +142,17 @@
   white-space: nowrap;
 }
 
+.aa-app-admin-link {
+  align-self: flex-start;
+  padding: 2px var(--aa-space-sm);
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  text-decoration: none;
+}
+.aa-app-admin-link:hover,
+.aa-app-admin-link.active { color: var(--aa-teal-cta); }
+.aa-app-admin-link:focus-visible { outline: 2px solid var(--aa-teal); outline-offset: 2px; }
+
 .aa-app-logout {
   align-self: flex-start;
   background: none;

@@ -71,6 +71,8 @@ export type FeedbackDeleteResult = { feedback: Feedback };
 // Mirrors webapp/src/admin/operationsCore.ts AdminStats. JSON from the server
 // is the source of truth; this local type only types the formatter.
 export type AdminStats = {
+  range: "7d" | "30d" | "all";
+  since: string | null;
   users: {
     total: number;
     signedUpToday: number;
@@ -79,6 +81,8 @@ export type AdminStats = {
     activeToday: number;
     active7d: number;
     active30d: number;
+    selectedSignups: number;
+    selectedActive: number;
   };
   tasks: {
     created7d: number;
@@ -89,6 +93,18 @@ export type AdminStats = {
     byStatus: { OPEN: number; IN_PROGRESS: number; RESOLVED: number; CLOSED: number };
     total: number;
   };
+  payments: { confirmed: number; total: number; checkoutToPaidPct: number | null };
+  activity: { captures: number; triageCompleted: number; tasksCreated: number; tasksCompleted: number; taskCompletionPct: number | null };
+  funnel: Array<{ name: string; count: number; fromPreviousPct: number | null; fromLandingPct: number | null }>;
 };
 
 export type StatsResult = { stats: AdminStats };
+
+export type FunnelRange = "7d" | "30d" | "all";
+export type FunnelStats = {
+  range: FunnelRange;
+  since: string | null;
+  funnel: Array<{ name: string; count: number; fromPreviousPct: number | null; fromLandingPct: number | null }>;
+  sources: Array<{ source: string; sessions: number; signups: number; checkouts: number; payments: number; conversionPct: number | null }>;
+  retention: { d1Pct: number | null; d7Pct: number | null; note?: string };
+};

@@ -12,6 +12,7 @@
 
 .aa-table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
   font-family: var(--aa-font);
   font-size: var(--aa-text-sm);

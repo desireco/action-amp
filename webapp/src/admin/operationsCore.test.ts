@@ -54,8 +54,8 @@ describe("getAdminStatsCore", () => {
 
     await getAdminStatsCore(entities);
 
-    // 7 calls: total, today, 7d, 30d (signups) + today, 7d, 30d (active)
-    expect(entities.User.count).toHaveBeenCalledTimes(7);
+    // 9 calls: legacy windows plus selected-range signup and active counts.
+    expect(entities.User.count).toHaveBeenCalledTimes(9);
     // The signedUp7d call includes a createdAt gte filter.
     const calls = entities.User.count.mock.calls.map((c) => c[0]);
     const signup7d = calls.find(
@@ -85,11 +85,13 @@ describe("getAdminStatsCore", () => {
     entities.Feedback.count.mockResolvedValue(0);
     entities.Feedback.groupBy.mockResolvedValue([]);
 
-    // 3 Task.count calls: created7d, completed7d, total.
+    // Task.count calls: legacy 7d/total windows plus selected range activity.
     entities.Task.count
       .mockResolvedValueOnce(10) // created7d
       .mockResolvedValueOnce(4)  // completed7d
-      .mockResolvedValueOnce(100); // total
+      .mockResolvedValueOnce(100) // total
+      .mockResolvedValueOnce(10) // selected created
+      .mockResolvedValueOnce(4); // selected completed
 
     const stats = await getAdminStatsCore(entities);
 

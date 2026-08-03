@@ -1,0 +1,45 @@
+---
+type Props = { event: string; surface?: string };
+const { event, surface = "marketing" } = Astro.props;
+const apiUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3001";
+---
+
+<script is:inline data-actionamp-funnel data-event={event} data-surface={surface} data-api={apiUrl}>
+  (() => {
+    const node = document.currentScript;
+    if (!node || !node.hasAttribute("data-actionamp-funnel")) return;
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
+    const key = "actionamp.analytics.visitor";
+    const current = window.localStorage.getItem(key);
+    const visitorId = current && /^[a-zA-Z0-9_-]+$/.test(current)
+      ? current
+      : (crypto.randomUUID ? crypto.randomUUID().replaceAll("-", "") : `${Date.now()}_${Math.random().toString(36).slice(2)}`);
+    window.localStorage.setItem(key, visitorId);
+    const params = new URLSearchParams(window.location.search);
+    const payload = {
+      name: node.dataset.event,
+      visitorId,
+      route: window.location.pathname,
+      initialPath: window.location.pathname,
+      referrerHost: document.referrer ? new URL(document.referrer).hostname : null,
+      utmSource: params.get("utm_source"),
+      utmMedium: params.get("utm_medium"),
+      utmCampaign: params.get("utm_campaign"),
+      utmContent: params.get("utm_content"),
+      utmTerm: params.get("utm_term"),
+      deviceClass: window.matchMedia("(max-width: 768px)").matches ? "mobile" : "desktop",
+      metadata: { surface: node.dataset.surface },
+    };
+    if (node.dataset.event === "LANDING_VIEW") {
+      window._statcounter = window._statcounter || [];
+      window._statcounter.push({ tags: { event: "landing_view", surface: node.dataset.surface || "marketing" } });
+      if (typeof window._statcounter.record_pageview === "function") window._statcounter.record_pageview();
+    }
+    void fetch(`${node.dataset.api}/api/analytics/event`, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => {});
+  })();
+</script>

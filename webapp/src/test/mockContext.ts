@@ -79,6 +79,8 @@ export function mockContext(userId: string | MockUser | null = "user-1"): MockCo
     Lens: entitySpy(),
     Tag: entitySpy(),
     Payment: entitySpy(),
+    AnalyticsSession: entitySpy(),
+    AnalyticsEvent: entitySpy(),
     Feedback: entitySpy(),
   };
   // Normalize: string → { id }, MockUser → as-is, null → unauthenticated.

@@ -2,20 +2,22 @@ import { HttpError } from "wasp/server";
 import type { GetAdminStats, GetRecentFeedback, UpdateFeedbackStatus, DeleteFeedback } from "wasp/server/operations";
 import { getAdminStatsCore, getRecentFeedbackCore, type AdminStats, type FeedbackRow } from "./operationsCore";
 import { updateFeedbackStatusCore, deleteFeedbackCore, type FeedbackStatus } from "../feedback/operationsCore";
+import type { FunnelRange } from "../analytics/operationsCore";
 
 /**
  * Admin dashboard stats — one round-trip bundle of counts. Gates on
  * context.user.isAdmin; non-admins get a 403 (also enforced by the hidden tab
  * + the page's belt-and-suspenders check, but the server gate is the boundary).
  */
-export const getAdminStats = (async (_args, context) => {
+export const getAdminStats = (async ({ range = "30d" }: { range?: FunnelRange } = {}, context) => {
   if (!context.user?.isAdmin) {
     throw new HttpError(403, "Admin only.");
   }
-  return getAdminStatsCore(context.entities);
-}) satisfies GetAdminStats<void, AdminStats>;
+  const validRange: FunnelRange = range === "7d" || range === "all" ? range : "30d";
+  return getAdminStatsCore(context.entities, validRange);
+}) satisfies GetAdminStats<{ range?: FunnelRange }, AdminStats>;
 
-export type RecentFeedbackArgs = { afterId?: string | null; limit?: number };
+export type RecentFeedbackArgs = { afterId?: string | null; limit?: number; statuses?: FeedbackStatus[] };
 export type RecentFeedbackResult = { items: FeedbackRow[]; hasNext: boolean };
 
 /**
@@ -23,7 +25,7 @@ export type RecentFeedbackResult = { items: FeedbackRow[]; hasNext: boolean };
  * the last shown item's id (cursor); `limit` clamped to 1–50, default 10.
  */
 export const getRecentFeedback = (async (
-  { afterId, limit = 10 }: RecentFeedbackArgs,
+  { afterId, limit = 10, statuses }: RecentFeedbackArgs,
   context,
 ) => {
   if (!context.user?.isAdmin) {
@@ -32,6 +34,7 @@ export const getRecentFeedback = (async (
   return getRecentFeedbackCore(context.entities, {
     afterId: afterId ?? null,
     limit: Math.max(1, Math.min(50, Math.floor(limit))),
+    statuses,
   });
 }) satisfies GetRecentFeedback<RecentFeedbackArgs, RecentFeedbackResult>;
 

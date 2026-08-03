@@ -1,5 +1,6 @@
 ---
 import PublicLayout from "../layouts/PublicLayout.astro";
+import FunnelTracker from "../components/FunnelTracker.astro";
 import "../styles/pricing.css";
 
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
@@ -10,6 +11,7 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
   description="Start free. Pro is $79.50 per year. Founding membership is $99 once for lifetime Pro, capped at 100 memberships."
   fullWidth
 >
+  <FunnelTracker event="PRICING_VIEW" surface="pricing" />
   <div class="aa-pricing">
     <header class="aa-pricing-hero">
       <p class="aa-pricing-eyebrow">Simple pricing</p>
