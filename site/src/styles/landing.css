@@ -750,22 +750,40 @@
   }
   .aa-flow {
     grid-template-columns: 1fr;
-    gap: 8px;
-    margin-top: 36px;
+    gap: 12px;
+    margin-top: 32px;
   }
   .aa-flow-step {
-    padding: 24px 0 0;
-    border-left: 1.5px solid var(--aa-border);
-    padding-left: 20px;
+    position: relative;
+    min-height: 132px;
+    padding: 20px 20px 20px 22px;
+    border: 1px solid var(--aa-border);
+    border-left: 3px solid var(--aa-teal);
+    border-radius: var(--aa-radius-lg);
+    background: var(--aa-surface);
+    box-shadow: var(--aa-shadow-sm);
   }
   .aa-flow-step:first-child {
-    padding-left: 20px;
+    padding-left: 22px;
+  }
+  .aa-flow-step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 19px;
+    bottom: -13px;
+    width: 1px;
+    height: 12px;
+    background: var(--aa-teal);
   }
   .aa-flow-arrow {
     display: none;
   }
+  .aa-flow-num {
+    margin-bottom: 10px;
+  }
   .aa-flow-step h3 {
     font-size: 19px;
+    margin-bottom: 6px;
   }
 
   .aa-soul {
