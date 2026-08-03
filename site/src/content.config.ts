@@ -74,6 +74,8 @@ const guides = defineCollection({
     updatedDate: z.coerce.date().optional(),
     group: z.enum(["choose", "setup", "start", "keep-going"]),
     order: z.number().int().min(1),
+    featured: z.boolean().default(false),
+    featuredRank: z.number().int().min(1).optional(),
     readTime: z.string(),
     // One guide-specific closing answer. This makes product relevance explicit
     // without repeating the same generic CTA across every guide.

@@ -3,12 +3,18 @@
 .aa-guides-kicker, .aa-guides-shelf-label, .aa-guides-feature-label, .aa-guide-eyebrow, .aa-guide-actionamp-label { margin: 0; color: var(--aa-teal-cta); font-size: var(--aa-text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .09em; }
 .aa-guides h1 { margin: var(--aa-space-sm) 0 var(--aa-space-lg); font-size: clamp(38px, 5.2vw, 58px); line-height: 1.06; letter-spacing: -.045em; }
 .aa-guides-hero > p:last-child { max-width: 57ch; margin: 0; font-size: 20px; line-height: 1.55; color: var(--aa-text-3); }
-.aa-guides-feature { display: grid; grid-template-columns: 4px 1fr; gap: var(--aa-space-xl); padding: var(--aa-space-xl) 0; border-top: 1px solid var(--aa-border); border-bottom: 1px solid var(--aa-border); }
+.aa-guides-feature { display: grid; grid-template-columns: 4px minmax(0, 1fr); gap: var(--aa-space-xl); padding: var(--aa-space-xl) 0; border-top: 1px solid var(--aa-border); border-bottom: 1px solid var(--aa-border); }
 .aa-guides-feature-rail { border-radius: var(--aa-radius-full); background: var(--aa-teal); }
 .aa-guides-feature h2 { margin: var(--aa-space-sm) 0; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.03em; }
 .aa-guides-feature p:not(.aa-guides-feature-label) { max-width: 60ch; color: var(--aa-text-3); margin: 0 0 var(--aa-space-md); font-size: var(--aa-text-md); }
 .aa-guides a { color: var(--aa-text); text-decoration: none; }
 .aa-guides-feature a, .aa-guides-blog-note a, .aa-guide-actionamp a { color: var(--aa-teal-cta); font-weight: 650; }
+.aa-guides-feature-more { grid-column: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--aa-space-md); margin-top: var(--aa-space-sm); }
+.aa-guides-feature-more a { display: grid; grid-template-columns: 1fr auto; gap: 3px var(--aa-space-sm); padding-top: var(--aa-space-md); border-top: 1px solid var(--aa-border); color: var(--aa-text); }
+.aa-guides-feature-more a:hover { color: var(--aa-teal-cta); }
+.aa-guides-feature-more span { color: var(--aa-text-4); font-size: var(--aa-text-xs); text-transform: uppercase; letter-spacing: .07em; }
+.aa-guides-feature-more strong { grid-column: 1; font-size: var(--aa-text-base); line-height: 1.35; }
+.aa-guides-feature-more b { grid-column: 2; grid-row: 1 / 3; align-self: center; color: var(--aa-teal-cta); }
 .aa-guides-shelves { margin-top: var(--aa-space-4xl); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--aa-space-4xl) var(--aa-space-2xl); }
 .aa-guides-shelf-head { display: flex; justify-content: space-between; gap: var(--aa-space-md); align-items: end; padding-bottom: var(--aa-space-md); border-bottom: 1px solid var(--aa-border); }
 .aa-guides-shelf-head h2 { margin: var(--aa-space-xs) 0 0; font-size: var(--aa-text-lg); letter-spacing: -.015em; }
@@ -44,5 +50,5 @@
 .aa-guide-next span { color: var(--aa-text-4); font-size: var(--aa-text-xs); text-transform: uppercase; letter-spacing: .07em; }
 .aa-guide-next strong { grid-column: 1; font-size: var(--aa-text-lg); }
 .aa-guide-next b { grid-column: 2; grid-row: 1 / 3; align-self: center; color: var(--aa-teal-cta); font-size: var(--aa-text-xl); }
-@media (max-width: 760px) { .aa-guides { padding: 0 var(--aa-space-lg) var(--aa-space-3xl); } .aa-guides-hero { padding: var(--aa-space-3xl) 0 var(--aa-space-2xl); } .aa-guides-shelves { grid-template-columns: 1fr; gap: var(--aa-space-3xl); margin-top: var(--aa-space-3xl); } .aa-guides-feature { gap: var(--aa-space-lg); } .aa-guides-blog-note { display: block; } .aa-guides-blog-note a { display: inline-block; margin-top: var(--aa-space-sm); } .aa-guide-path i { width: 18px; } }
+@media (max-width: 760px) { .aa-guides { padding: 0 var(--aa-space-lg) var(--aa-space-3xl); } .aa-guides-hero { padding: var(--aa-space-3xl) 0 var(--aa-space-2xl); } .aa-guides-shelves { grid-template-columns: 1fr; gap: var(--aa-space-3xl); margin-top: var(--aa-space-3xl); } .aa-guides-feature { gap: var(--aa-space-lg); } .aa-guides-feature-more { grid-template-columns: 1fr; } .aa-guides-blog-note { display: block; } .aa-guides-blog-note a { display: inline-block; margin-top: var(--aa-space-sm); } .aa-guide-path i { width: 18px; } }
 @media (prefers-reduced-motion: reduce) { .aa-guide-card-dot { transition: none; } }

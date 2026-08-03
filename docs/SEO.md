@@ -134,6 +134,7 @@ taxonomy. Guide pages cross-link sparingly: one natural next guide, not a
 | **How to choose your next task when everything feels important** | Turn an overwhelming list into one doable next action in 10 minutes. |
 | **How to prioritize when every task feels urgent** | Separate real deadlines, consequences, and noise without a complicated scoring system. |
 | **How to reset an overwhelming to-do list** | Triage an ignored backlog into now, later, reference, and let-go without rebuilding the whole system. |
+| **Task lists are necessary. Living inside them is not.** | Keep commitments accounted for without keeping every commitment visible all day. |
 
 ### Set up — create a system that stays light
 

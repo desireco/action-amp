@@ -4,6 +4,8 @@ description: "Let paper hold thinking and ActionAmp hold commitments, with no du
 pubDate: 2026-08-03
 group: setup
 order: 2
+featured: true
+featuredRank: 3
 readTime: "6 min"
 actionAmp: "ActionAmp is the place for the marks that survive the page: a follow-up, a deadline, a project, a next action. Its Inbox makes the handoff quick; triage makes sure a captured thought does not become another forgotten list."
 nextGuide: projects-vs-tasks

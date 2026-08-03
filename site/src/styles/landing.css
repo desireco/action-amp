@@ -528,6 +528,56 @@
   line-height: 1.55;
 }
 
+/* Guides — one quiet editorial doorway between the product thesis and the
+   offer. The two-column split is structural: core idea on the left, only two
+   related paths plus library link on the right. */
+.aa-guides-teaser {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 96px 56px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(250px, .65fr);
+  gap: 80px;
+  border-top: 1px solid var(--aa-border);
+}
+.aa-guides-teaser h2 {
+  margin: 0 0 18px;
+  max-width: 18ch;
+  color: var(--aa-text);
+  font-size: clamp(30px, 3.5vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+.aa-guides-teaser > div > p:not(.aa-eyebrow) {
+  max-width: 48ch;
+  margin: 0 0 20px;
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-md);
+  line-height: 1.6;
+}
+.aa-guides-teaser > div > a,
+.aa-guides-teaser-links a {
+  color: var(--aa-teal-cta);
+  font-weight: 650;
+  text-decoration: none;
+}
+.aa-guides-teaser-links {
+  display: flex;
+  flex-direction: column;
+  align-self: end;
+  border-top: 1px solid var(--aa-border);
+}
+.aa-guides-teaser-links a {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  padding: 15px 0;
+  border-bottom: 1px solid var(--aa-border);
+  color: var(--aa-text-2);
+  font-size: var(--aa-text-sm);
+}
+.aa-guides-teaser-links a:hover { color: var(--aa-teal-cta); text-decoration: none; }
+
 /* Method */
 .aa-method {
   padding-top: 120px;

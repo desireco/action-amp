@@ -4,6 +4,8 @@ description: "Turn an overwhelming list into one doable next action in 10 minute
 pubDate: 2026-08-03
 group: choose
 order: 1
+featured: true
+featuredRank: 2
 readTime: "6 min"
 actionAmp: "ActionAmp keeps the full list safe, then brings one next task forward with the reason it won. You can change the decision, but you do not have to re-make it every time you open the app."
 nextGuide: calm-gtd-setup
