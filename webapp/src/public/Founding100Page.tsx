@@ -103,13 +103,13 @@ export function Founding100Page() {
           </Button>
           <p className="aa-founding-spots">
             {isFull ? (
-              "The Founding 100 is full. Thank you."
+              "All public Founding memberships are claimed."
             ) : remaining !== undefined ? (
               <>
-                <strong>{remaining}</strong> of 100 spots remaining.
+                <strong>{remaining}</strong> public memberships remaining. Two spots are reserved for launch partners.
               </>
             ) : (
-              "100 spots remaining. When they are gone, they are gone."
+              "98 public memberships available. Two spots are reserved for launch partners."
             )}
           </p>
           <p className="aa-founding-free">

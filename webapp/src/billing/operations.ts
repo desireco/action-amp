@@ -1,5 +1,11 @@
 import type { GetBillingStatus } from "wasp/server/operations";
-import { isPaidPlan, FOUNDING_100_CAP, FOUNDING_100_PRICE_CENTS } from "./config";
+import {
+  isPaidPlan,
+  FOUNDING_100_CAP,
+  FOUNDING_100_LAUNCH_PARTNER_RESERVE,
+  FOUNDING_100_PRICE_CENTS,
+  FOUNDING_100_PUBLIC_CAP,
+} from "./config";
 import { stripe, getPriceId } from "./stripe";
 import { HttpError } from "wasp/server";
 import type { Request, Response } from "express";
@@ -60,7 +66,8 @@ export const createCheckoutSession = (async (
 
   const { priceKey } = args;
 
-  // Founding 100 cap: hard business invariant — exactly 100 lifetime spots, ever.
+  // Founding 100 cap: 98 memberships are available through public checkout;
+  // two are reserved for launch partners and granted manually.
   // Enforced server-side (the one place that matters); the client just renders
   // the count. A race between two checkouts is acceptable (the webhook is the
   // final source of truth and the count is re-checked here); the cap is a soft
@@ -70,8 +77,8 @@ export const createCheckoutSession = (async (
     const claimed = await context.entities.User.count({
       where: { plan: "FOUNDER" },
     });
-    if (claimed >= FOUNDING_100_CAP) {
-      throw new HttpError(409, "All 100 Founding spots have been claimed.");
+    if (claimed >= FOUNDING_100_PUBLIC_CAP) {
+      throw new HttpError(409, "All public Founding memberships have been claimed.");
     }
   }
 
@@ -196,7 +203,8 @@ export const createCustomerPortalSession = (async (_args, context) => {
 }) satisfies CreateCustomerPortalSession<void, { url: string }>;
 
 /**
- * The Founding 100 status: how many of the 100 lifetime spots remain.
+ * The Founding 100 status: how many public memberships remain. Two of the 100
+ * lifetime spots are held for launch partners.
  * Public (auth not required) so the landing page can render the live count.
  * User-specific state ("am I already a founder?") comes from useAuth() on the
  * client — this query returns only the global count.
@@ -209,9 +217,10 @@ export const getFounding100Status = (async (_args, context) => {
   });
   return {
     cap: FOUNDING_100_CAP,
+    reserved: FOUNDING_100_LAUNCH_PARTNER_RESERVE,
     claimed,
-    remaining: Math.max(0, FOUNDING_100_CAP - claimed),
-    isFull: claimed >= FOUNDING_100_CAP,
+    remaining: Math.max(0, FOUNDING_100_PUBLIC_CAP - claimed),
+    isFull: claimed >= FOUNDING_100_PUBLIC_CAP,
   };
 }) satisfies GetFounding100Status<void>;
 
@@ -239,8 +248,9 @@ export const founding100StatusHandler = async (
   res.set("Cache-Control", "public, max-age=60");
   return res.json({
     cap: FOUNDING_100_CAP,
+    reserved: FOUNDING_100_LAUNCH_PARTNER_RESERVE,
     claimed,
-    remaining: Math.max(0, FOUNDING_100_CAP - claimed),
-    isFull: claimed >= FOUNDING_100_CAP,
+    remaining: Math.max(0, FOUNDING_100_PUBLIC_CAP - claimed),
+    isFull: claimed >= FOUNDING_100_PUBLIC_CAP,
   });
 };

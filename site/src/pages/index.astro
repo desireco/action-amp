@@ -210,7 +210,8 @@ const FAQ_ITEMS = [
             <h2>Lifetime Pro for $99 once.</h2>
             <p>
               Regular Pro is <b>$79.50/year</b>. Founding costs $19.50 more than
-              your first year, with no renewal bill. Capped at exactly 100 spots.
+              your first year, with no renewal bill. Capped at 100 memberships,
+              with two reserved for launch partners.
               <span class="aa-founding-teaser-count" id="aa-founding-count"></span>
             </p>
             <a href="/pricing" class="aa-founding-teaser-pricing">Compare Free, Pro, and Founding →</a>
@@ -399,10 +400,10 @@ const FAQ_ITEMS = [
           })
           .then(function (data) {
             if (data.isFull) {
-              countEl.textContent = " All 100 spots have been claimed.";
+              countEl.textContent = " All public memberships have been claimed.";
               ctaLabel.textContent = "Join the waitlist";
             } else if (typeof data.remaining === "number") {
-              countEl.textContent = " " + data.remaining + " of 100 spots left.";
+              countEl.textContent = " " + data.remaining + " public memberships left.";
             }
             teaser.hidden = false;
           })

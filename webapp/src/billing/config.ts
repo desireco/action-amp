@@ -55,10 +55,13 @@ export const PLAN_LABEL: Record<Plan, string> = {
 
 /**
  * The Founding 100 — a one-time $99 lifetime Pro tier, capped at exactly 100
- * spots. Enforcement lives in the checkout action (count current FOUNDER
- * users, reject if >= cap) once the CTA on /founding-100 is enabled.
+ * spots. Two memberships are held back for launch partners, so public checkout
+ * closes after 98 claims. The reserve is disclosed wherever availability is
+ * shown and partner memberships are granted manually.
  */
 export const FOUNDING_100_CAP = 100;
+export const FOUNDING_100_LAUNCH_PARTNER_RESERVE = 2;
+export const FOUNDING_100_PUBLIC_CAP = FOUNDING_100_CAP - FOUNDING_100_LAUNCH_PARTNER_RESERVE;
 
 /**
  * The Founding 100 price, in cents. Charged inline via Stripe Checkout's
