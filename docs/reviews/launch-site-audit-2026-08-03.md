@@ -158,7 +158,7 @@ verification notes.
         “Switch task” changes the recommendation, and only the completion ring
         marks a task done before advancing to the next recommendation.
 
-- [ ] **F08 — Simplify hero task-card parsing.** Current card contains an
+- [x] **F08 — Simplify hero task-card parsing.** Current card contained an
       unlabeled completion ring, `Right now · 30 min`, `Due today · 15 min`, an
       amber reason badge, and two actions. Available time and estimate are easy
       to confuse.
@@ -166,14 +166,19 @@ verification notes.
         `Why this: important and due today`.
       - Done when: a first-time viewer can explain each visible value without
         learning the app first.
+      - Resolved 2026-08-03: the card now labels `30 min available`, `Mark
+        done`, `15 min estimate · Due today`, and `Why this: …` directly.
 
-- [ ] **F09 — Put reassurance beside the core promise.** Hero says ActionAmp
-      “hides the rest.” The reassurance that the list remains available appears
+- [x] **F09 — Put reassurance beside the core promise.** Hero said ActionAmp
+      “hides the rest.” The reassurance that the list remains available appeared
       several sections later. This validates the supplied anxiety feedback
       without prescribing a permanent progress bar.
       - Recommended hero subhead: “Capture everything. ActionAmp brings one
         task forward, tells you why, and keeps your plan one click away.”
       - Done when: first viewport communicates both focus and retained control.
+      - Resolved 2026-08-03: the hero now says “Capture everything. ActionAmp
+        brings one task forward, explains why, and keeps your plan one click
+        away.”
 
 - [ ] **F10 — Make FAQ keyboard-accessible.** FAQ rows are clickable `<div>`
       elements with no role or `tabindex`, conflicting with the keyboard-first

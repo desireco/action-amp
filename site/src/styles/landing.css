@@ -225,7 +225,7 @@
   height: 32px;
   border-radius: var(--aa-radius-full);
   border: 2.5px solid var(--aa-border-strong);
-  margin-bottom: 26px;
+  margin: 0;
   position: relative;
   cursor: pointer;
   background: transparent;
@@ -233,6 +233,16 @@
     transform var(--aa-dur-base) var(--aa-ease-out),
     border-color var(--aa-dur-base),
     background var(--aa-dur-base);
+}
+.aa-wn-complete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 26px;
+  color: var(--aa-text-4);
+  font-size: 11px;
+  font-weight: 600;
 }
 .aa-completion:hover {
   transform: scale(1.08);
@@ -726,6 +736,8 @@
   .aa-completion {
     width: 28px;
     height: 28px;
+  }
+  .aa-wn-complete {
     margin-bottom: 14px;
   }
   .aa-wn-title {

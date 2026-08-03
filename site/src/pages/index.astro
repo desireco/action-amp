@@ -17,11 +17,11 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3001";
 
 // Hero demo tasks — the card can focus, switch recommendations, or complete.
 const HERO_TASKS = [
-  { title: "Email Sarah re: Q3 invoice", why: "★ Important · the reason this is next", meta: "Due today · 15 min" },
-  { title: "Review pull request #284", why: "Normal · fits in 30 min", meta: "Due today · 30 min" },
-  { title: "Prep notes for 1:1 with Marco", why: "Low · quick win", meta: "Tomorrow · 10 min" },
-  { title: "Reply to legal re: contract", why: "★ Important · overdue", meta: "Was due yesterday" },
-  { title: "Draft the Q3 launch plan", why: "Important · break it down", meta: "This week · XL" },
+  { title: "Email Sarah re: Q3 invoice", why: "Why this: important and due today", meta: "15 min estimate · Due today" },
+  { title: "Review pull request #284", why: "Why this: due today and fits your time", meta: "30 min estimate · Due today" },
+  { title: "Prep notes for 1:1 with Marco", why: "Why this: a quick task you can finish now", meta: "10 min estimate · Tomorrow" },
+  { title: "Reply to legal re: contract", why: "Why this: important and overdue", meta: "20 min estimate · Due yesterday" },
+  { title: "Draft the Q3 launch plan", why: "Why this: important—start with one next step", meta: "45 min estimate · This week" },
 ];
 
 const FAQ_ITEMS = [
@@ -73,9 +73,8 @@ const FAQ_ITEMS = [
               The <span class="aa-accent">next one</span> that matters.
             </h1>
             <p class="aa-hero-sub">
-              Every other app opens to your list. ActionAmp opens to{" "}
-              <b>one task</b> to do next, and hides the rest. From intention to
-              action.
+              Capture everything. ActionAmp brings <b>one task</b> forward,
+              explains why, and keeps your plan one click away.
             </p>
             <div class="aa-hero-meta">
               <span>
@@ -107,18 +106,21 @@ const FAQ_ITEMS = [
             <div class="aa-wn-card" id="hero-card">
               <div class="aa-wn-ctx" id="aa-wn-ctx" aria-live="polite">
                 <span class="aa-dot"></span>
-                Right now · 30 min
+                30 min available
               </div>
-              <button
-                class="aa-completion"
-                id="aa-completion"
-                aria-label="Mark this task complete"
-                title="Mark complete"
-              >
-                <svg class="aa-check" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </button>
+              <div class="aa-wn-complete">
+                <button
+                  class="aa-completion"
+                  id="aa-completion"
+                  aria-label="Mark this task complete"
+                  title="Mark complete"
+                >
+                  <svg class="aa-check" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+                <span>Mark done</span>
+              </div>
               <div class="aa-wn-title" id="aa-wn-title">{HERO_TASKS[0].title}</div>
               <div class="aa-wn-meta" id="aa-wn-meta">{HERO_TASKS[0].meta}</div>
               <div class="aa-wn-why" id="aa-wn-why">{HERO_TASKS[0].why}</div>
@@ -308,7 +310,7 @@ const FAQ_ITEMS = [
           focusBtn.textContent = "Start focus";
           focusBtn.disabled = false;
           switchBtn.disabled = false;
-          contextEl.innerHTML = '<span class="aa-dot"></span>Right now · 30 min';
+          contextEl.innerHTML = '<span class="aa-dot"></span>30 min available';
           titleEl.textContent = task.title;
           metaEl.textContent = task.meta;
           whyEl.textContent = task.why;
@@ -323,7 +325,7 @@ const FAQ_ITEMS = [
           focusBtn.classList.add("is-focusing");
           focusBtn.textContent = "Focusing now";
           focusBtn.disabled = true;
-          contextEl.innerHTML = '<span class="aa-dot"></span>In focus · 30 min';
+          contextEl.innerHTML = '<span class="aa-dot"></span>In focus · 30 min available';
         }
 
         function complete() {
