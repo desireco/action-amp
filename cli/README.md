@@ -4,6 +4,12 @@
 > web app's decision loop (now → done → next) and gives agents a `--json`
 > machine interface.
 
+## Pro access
+
+The CLI and personal API tokens are included with Pro and Founding membership.
+Free accounts cannot authorize the CLI or use existing CLI tokens. Upgrade in
+ActionAmp under **Settings → Billing**, then run `actionamp login` again.
+
 ## Install (local dev)
 
 ```sh

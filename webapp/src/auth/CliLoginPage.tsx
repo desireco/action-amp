@@ -3,6 +3,7 @@ import { useAuth } from "wasp/client/auth";
 import { mintCliToken } from "wasp/client/operations";
 import { PublicLayout } from "../shared/PublicLayout";
 import { Button } from "../components/ui";
+import { useEntitled } from "../billing/useEntitled";
 import "./CliLoginPage.css";
 
 /**
@@ -60,6 +61,7 @@ function autoLabel(): string {
 
 export function CliLoginPage() {
   const { data: user } = useAuth();
+  const entitled = useEntitled();
   const params = readParams();
   const [status, setStatus] = useState<"idle" | "working" | "done" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +133,11 @@ export function CliLoginPage() {
           Settings → Access tokens.
         </p>
 
-        {status === "done" ? (
+        {!entitled ? (
+          <p className="aa-cli-login__error">
+            CLI and API access are included with Pro. Upgrade from Settings → Billing, then run this command again.
+          </p>
+        ) : status === "done" ? (
           <p className="aa-cli-login__success">Authorized. You can close this tab.</p>
         ) : (
           <Button

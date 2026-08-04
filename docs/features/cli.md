@@ -12,7 +12,11 @@ verified: 2026-07-29
 **Phase 0 + Phase 1 shipped 2026-07-22; surface has since grown.** A standalone
 `cli/` package (commander + chalk, ESM, TypeScript) talks to the webapp's
 `/api/cli/*` routes via PAT auth (OAuth browser login — the `gh auth login`
-pattern). Entitlement-enforced (FREE users can't read Pro-gated lenses).
+pattern). **Pro-only:** Free accounts cannot issue CLI tokens or call any CLI/API
+route; an active Pro plan or Founding membership is required. Existing tokens
+also stop working immediately if an account returns to Free. Staff accounts
+retain the standard entitlement bypass. Lens and cap checks remain in place
+inside the Pro CLI surface.
 
 **Today's command surface** (every command supports `--json`):
 

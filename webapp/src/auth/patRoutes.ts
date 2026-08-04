@@ -39,6 +39,7 @@ import {
   resolveAccessibleLenses,
   lensViolation,
   capViolation,
+  cliAccessViolation,
   WORK_LENS_MESSAGE,
   type EntitlementUser,
   type EntitlementMessage,
@@ -97,7 +98,12 @@ import { getFunnelStatsCore, type FunnelRange } from "../analytics/operationsCor
 // entity listed in the route's `entities:` array. We type the slice we use so
 // the handler is self-documenting; Wasp's runtime types this as `any`.
 type WaspApiContext = {
-  user?: { id: string };
+  user?: {
+    id: string;
+    plan: string;
+    planRenewsAt: Date | null;
+    isAdmin: boolean;
+  };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entities: any;
 };
@@ -224,6 +230,10 @@ function taskWriteError(
 export const patIssue = async (req: Request, res: Response, context: WaspApiContext) => {
   if (!context.user) {
     return res.status(401).json({ error: "Not authenticated." });
+  }
+  const cliViolation = cliAccessViolation(context.user);
+  if (cliViolation) {
+    return sendViolation(res, cliViolation);
   }
   const label =
     typeof req.body?.label === "string" ? req.body.label.trim().slice(0, 80) : "";

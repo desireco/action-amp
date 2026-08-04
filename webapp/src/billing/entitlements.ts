@@ -44,6 +44,12 @@ export interface EntitlementUser {
   isAdmin?: boolean | null;
 }
 
+/** CLI access is a whole-account Pro capability, not a per-Lens exception. */
+export const CLI_ACCESS_MESSAGE: EntitlementMessage = {
+  feature: "CLI and API access",
+  reason: "use ActionAmp from the terminal or with an agent",
+};
+
 /**
  * Is this user entitled to paid features right now?
  * Server mirror of the client `useAuth`-based check — same `isPlanActive`.
@@ -56,6 +62,13 @@ export function isEntitled(
 ): boolean {
   if (isAdmin) return true; // staff/dev bypass — no Stripe checkout needed
   return isPlanActive(plan as never, planRenewsAt);
+}
+
+/** Return the Pro message unless this account can use the CLI/API surface. */
+export function cliAccessViolation(user: EntitlementUser | null): EntitlementMessage | null {
+  return isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)
+    ? null
+    : CLI_ACCESS_MESSAGE;
 }
 
 /**

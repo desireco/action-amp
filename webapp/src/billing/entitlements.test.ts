@@ -4,6 +4,8 @@ import {
   capViolation,
   lensViolation,
   lensConfigViolation,
+  cliAccessViolation,
+  CLI_ACCESS_MESSAGE,
   resolveLens,
   WORK_LENS_MESSAGE,
   CUSTOM_LENSES_MESSAGE,
@@ -62,6 +64,19 @@ describe("isEntitled", () => {
     expect(isEntitled("FREE", null, false)).toBe(false);
     expect(isEntitled("FREE", null, undefined)).toBe(false);
     expect(isEntitled("PRO", FUTURE, false)).toBe(true);
+  });
+});
+
+describe("cliAccessViolation", () => {
+  it("allows active Pro, Founding, and admins", () => {
+    expect(cliAccessViolation({ plan: "PRO", planRenewsAt: FUTURE })).toBeNull();
+    expect(cliAccessViolation({ plan: "FOUNDER", planRenewsAt: null })).toBeNull();
+    expect(cliAccessViolation({ plan: "FREE", planRenewsAt: null, isAdmin: true })).toBeNull();
+  });
+
+  it("blocks Free and expired Pro accounts across the entire CLI/API surface", () => {
+    expect(cliAccessViolation({ plan: "FREE", planRenewsAt: null })).toEqual(CLI_ACCESS_MESSAGE);
+    expect(cliAccessViolation({ plan: "PRO", planRenewsAt: PAST })).toEqual(CLI_ACCESS_MESSAGE);
   });
 });
 

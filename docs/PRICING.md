@@ -183,6 +183,7 @@ Pro = Work + unlimited structure + power.
 | Command palette (F20) | — | ✅ |
 | Full-text search across Logbook (F22) | — | ✅ |
 | Multi-device sync (F25) | 1 device | Unlimited |
+| CLI + personal API tokens (terminal + agents) | — | ✅ |
 | Energy/time tags for the matcher (refinement) | — | ✅ |
 
 **Why these exact caps:**

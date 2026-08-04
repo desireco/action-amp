@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { SettingsLayout } from "./SettingsLayout";
 import { Field } from "./Field";
-import { Button, ConfirmDialog } from "../components/ui";
+import { Button, ConfirmDialog, ProGate } from "../components/ui";
+import { useEntitled } from "../billing/useEntitled";
 import "./Field.css";
 import "./PatSettingsPage.css";
 
@@ -77,6 +78,7 @@ function formatLastUsed(iso: string | null): string {
 }
 
 export function PatSettingsPage() {
+  const entitled = useEntitled();
   const [keys, setKeys] = useState<PatKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
@@ -158,38 +160,46 @@ export function PatSettingsPage() {
         <div className="aa-settings-section-head">
           <h2 className="aa-settings-sh">Access tokens</h2>
           <p className="aa-settings-note">
-            For the ActionAmp CLI. A token authenticates <code>actionamp</code> against
-            your account — paste it in once. The plaintext is shown only at issue;
-            we store the hash.
+            CLI and API access are included with Pro. Tokens authenticate <code>actionamp</code>
+            against your account; their plaintext is shown only at issue, and we store the hash.
           </p>
         </div>
 
-        {/* Issue form */}
-        <form
-          className="aa-pat-issue"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void handleIssue();
-          }}
-        >
-          <input
-            className="aa-settings-input aa-pat-issue__input"
-            type="text"
-            value={label}
-            onChange={(e) => {
-              setLabel(e.target.value);
-              setIssueError(null);
-            }}
-            placeholder="Label this token (e.g. laptop, ci)"
-            maxLength={80}
-            disabled={issuing}
-            autoComplete="off"
+        {entitled ? (
+          <>
+            <form
+              className="aa-pat-issue"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleIssue();
+              }}
+            >
+              <input
+                className="aa-settings-input aa-pat-issue__input"
+                type="text"
+                value={label}
+                onChange={(e) => {
+                  setLabel(e.target.value);
+                  setIssueError(null);
+                }}
+                placeholder="Label this token (e.g. laptop, ci)"
+                maxLength={80}
+                disabled={issuing}
+                autoComplete="off"
+              />
+              <Button type="submit" variant="secondary" size="sm" disabled={!label.trim() || issuing}>
+                {issuing ? "Issuing" : "Issue token"}
+              </Button>
+            </form>
+            {issueError && <p className="aa-settings-error">{issueError}</p>}
+          </>
+        ) : (
+          <ProGate
+            feature="CLI and API access"
+            reason="Use ActionAmp from the terminal or with an agent with Pro."
+            className="aa-pat-progate"
           />
-          <Button type="submit" variant="secondary" size="sm" disabled={!label.trim() || issuing}>
-            {issuing ? "Issuing" : "Issue token"}
-          </Button>
-        </form>
-        {issueError && <p className="aa-settings-error">{issueError}</p>}
+        )}
 
         {/* Issued-once reveal */}
         {issued && (

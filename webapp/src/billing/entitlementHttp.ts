@@ -4,6 +4,7 @@ import {
   capViolation,
   lensViolation,
   lensConfigViolation,
+  cliAccessViolation,
   resolveLens,
   WORK_LENS_MESSAGE,
   CUSTOM_LENSES_MESSAGE,
@@ -105,4 +106,9 @@ export function assertLensConfigAllowed(
   msg: EntitlementMessage = CUSTOM_LENSES_MESSAGE,
 ): void {
   throwIfViolation(lensConfigViolation(context.user ?? null, msg));
+}
+
+/** Guard CLI token issuance from a Wasp operation (the browser OAuth flow). */
+export function assertCliAccess(context: GuardContext): void {
+  throwIfViolation(cliAccessViolation(context.user ?? null));
 }

@@ -24,6 +24,7 @@
 import type { MiddlewareConfigFn } from "wasp/server";
 import { hashToken, looksLikeToken } from "./pat";
 import { authPrisma as prisma } from "./prisma";
+import { cliAccessViolation } from "../billing/entitlements";
 
 // `prisma` is the shared process-level singleton from ./prisma.ts — reused
 // across the middleware + all /api/cli/* handlers so concurrent requests
@@ -140,6 +141,19 @@ async function patAuthMiddleware(
     // Same response for "wrong token" and "revoked" so an attacker can't tell
     // them apart by probing.
     res.status(401).json({ error: "Invalid or revoked token." });
+    return;
+  }
+
+  // A token proves who the caller is, but does not grant a Free account the
+  // paid developer surface. Check this before every CLI route so an old token
+  // stops working immediately when a plan ends or is downgraded.
+  const cliViolation = cliAccessViolation(user);
+  if (cliViolation) {
+    res.status(402).json({
+      error: `${cliViolation.feature} is a Pro feature.`,
+      feature: cliViolation.feature,
+      reason: cliViolation.reason,
+    });
     return;
   }
 

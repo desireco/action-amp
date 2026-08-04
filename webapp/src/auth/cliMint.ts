@@ -16,11 +16,13 @@
  */
 import type { MintCliToken } from "wasp/server/operations";
 import { generateToken, hashToken } from "./pat";
+import { assertCliAccess } from "../billing/entitlementHttp";
 
 export const mintCliToken = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+  assertCliAccess(context);
   const label =
     typeof args?.label === "string" ? args.label.trim().slice(0, 80) : "CLI";
   const plaintext = generateToken();
