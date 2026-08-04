@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Last reviewed: 2026-07-29 (Resources shipped — project-owned links/notes CRUD on the Project detail page + `actionamp resource list/add/update/delete` CLI + `/api/cli/resource/*` PAT routes, all backed by a pure `resources/operationsCore.ts`. NO `TaskResource` join — references are markdown links in Task Context, per the task-fields reversal; NO delete-with-impact flow, just simple delete. Passwordless magic-link email sign-in shipped (six-digit code OR sign-in link, 10-min TTL, rate-limited, atomic consume; replaces passwords; localhost uses fixed `111111` for QA). Share target extended: structured capture props (`title`/`content`/`sourceUrl` on InboxItem) + image attachments (`InboxAttachment`, one image ≤5MB) + CLI `capture` with `--title/--content/--source-url/--file`. Task Outcome (`Task.outcome`) shipped — task-fields now complete. WONT_DO task state shipped — non-destructive decline for post-triage tasks, surfaces in the Logbook with Restore. Earlier 07-26: CLI lens management shipped. Earlier 07-23: Admin dashboard + feedback-triage system. Earlier 07-22: ActionAmp CLI terminal client shipped.) -->
+<!-- Last reviewed: 2026-08-03 (CLI/API access is now Pro-only: Free accounts cannot issue or use personal API tokens; existing tokens stop working when an account returns to Free. CLI package publishing is in progress. Resources shipped — project-owned links/notes CRUD on the Project detail page + `actionamp resource list/add/update/delete` CLI + `/api/cli/resource/*` PAT routes, all backed by a pure `resources/operationsCore.ts`. NO `TaskResource` join — references are markdown links in Task Context, per the task-fields reversal; NO delete-with-impact flow, just simple delete. Passwordless magic-link email sign-in shipped (six-digit code OR sign-in link, 10-min TTL, rate-limited, atomic consume; replaces passwords; localhost uses fixed `111111` for QA). Share target extended: structured capture props (`title`/`content`/`sourceUrl` on `InboxItem`) + image attachments (`InboxAttachment`, one image ≤5MB) + CLI `capture` with `--title/--content/--source-url/--file`. Task Outcome (`Task.outcome`) shipped — task-fields now complete. WONT_DO task state shipped — non-destructive decline for post-triage tasks, surfaces in the Logbook with Restore. Earlier 07-26: CLI lens management shipped. Earlier 07-23: Admin dashboard + feedback-triage system. Earlier 07-22: ActionAmp CLI terminal client shipped.) -->
 
 ---
 
@@ -283,7 +283,11 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
    formerly-deferred `cli-comments-resources` (Resources are now full CLI
    CRUD). `capture` also gained shared-content + image flags
    (`--title/--content/--source-url/--file`, 2026-07-29). Only `cli-skills`
-   (Phase 2 — the four orchestration skills) remains `draft`.
+   (Phase 2 — the four orchestration skills) remains `draft`. **Pro-only
+   access shipped 2026-08-03:** Free accounts cannot issue CLI/PAT tokens or
+   use `/api/cli/*`; active Pro and Founding members can. **CLI package
+   publishing is in progress**; do not publish customer install guidance until
+   that release path is ready.
 5. **goal-planning** (`done` 2026-07-05, was `ready`) — **shipped**: full
    Goal/Project lifecycle (complete, reopen, edit, delete, re-link) + explicit
    `Project.order` sequencing under a Goal + Logbook surfacing of completed
@@ -432,23 +436,29 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
   triage. Pure `operationsCore.ts` (submit/list/show/updateStatus) shared
   between the Wasp ops, the PAT routes, and the admin CLI — zero duplicated
   logic. Tests cover all four cores.
-- **cli (Phase 0 + Phase 1)** (`review` 2026-07-22) — the ActionAmp terminal
+- **cli (Phase 0 + Phase 1)** (`shipped; package publishing in progress`,
+  updated 2026-08-03) — the ActionAmp terminal
   client. A standalone `cli/` package (commander + chalk, ESM, TypeScript)
   that talks to the webapp's `/api/cli/*` routes via PAT auth. **Phase 0
   (`cli-pat-plumbing`):** `ApiKey` model + SHA-256 hashed tokens, OAuth browser
   login flow (the `gh auth login` pattern — CLI opens browser, user confirms,
   token comes back via localhost callback), `/cli/login` consent page, Settings
   → Access tokens management UI, Bearer PAT middleware, `/api/cli/now` stub.
-  Entitlement-enforced (FREE users can't read Pro-gated lenses via the CLI).
+  **Pro-only entitlement enforced:** Free accounts cannot issue a token or
+  call any CLI/API route; an active Pro plan or Founding membership is
+  required, and existing tokens stop working immediately when an account
+  returns to Free. Staff retain the standard internal entitlement bypass.
   **Phase 1 (`cli-package`):** full 11-command surface — login, now, capture,
   whoami, task (show/start/pause/done/snooze/move), today (--done), inbox
   (list/triage), project (list/show/create/add-task), goal (list/show/create),
   logbook, logout, plus `actionamp llm` (prints agent/LLM instructions). Every
   command supports `--json`. 55 CLI tests + the op-refactor (pure `*Core.ts`
   files shared between Wasp ops and CLI routes — zero duplicated logic). The
-  throwaway prototype was replaced by the real package. Only `cli-skills`
-  (Phase 2 — orchestration skills) remains draft. Specs: `docs/specs/cli.md`
-  (umbrella), `cli-pat-plumbing.md`, `cli-package.md`, `cli-skills.md`.
+  throwaway prototype was replaced by the real package. **CLI package
+  publishing is in progress**; public install documentation follows the
+  release, not before it. Only `cli-skills` (Phase 2 — orchestration skills)
+  remains draft. Specs: `docs/specs/cli.md` (umbrella),
+  `cli-pat-plumbing.md`, `cli-package.md`, `cli-skills.md`.
 - **pwa-installable + session-resilience + web-push + version-banner**
   (`shipped` 2026-07-21) — four small trunks landing together because they
   share the same mobile-PWA failure surface. **(1) Installable PWA**: web
