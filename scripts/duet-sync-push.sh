@@ -348,6 +348,7 @@ def backfill_existing(item_id, fm, path, rel_path, do_body):
 now_iso = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 created_count = 0
 updated_count = 0
+skipped_count = 0
 errors = []
 file_commits = 0
 
@@ -361,6 +362,17 @@ for slug, path in units:
         fm, _ = parse_frontmatter(path, slug)
     except Exception as e:
         errors.append(f"{slug}: can't parse frontmatter: {e}")
+        continue
+
+    # Skip files whose work is done OR explicitly opted out of the active
+    # board. Keeps a shipped card from respawning once its card is deleted;
+    # the file stays as history (see ROADMAP §Shipped). Two triggers:
+    #   status: done         — work complete, signed off (auto)
+    #   sync: skip           — shipped-but-kept-ready (manual; for specs whose
+    #                          done-conditions were superseded by scope cuts,
+    #                          not met — e.g. resources-project-owned)
+    if (fm.get('status', '').lower() == 'done') or (fm.get('sync', '').lower() == 'skip'):
+        skipped_count += 1
         continue
 
     node_id = fm.get('gh_node_id')
@@ -430,6 +442,7 @@ for slug, path in units:
 print()
 print(f"created: {created_count}")
 print(f"updated: {updated_count}")
+print(f"skipped: {skipped_count}")
 print(f"file commits: {file_commits}")
 if dry_run:
     print("(dry-run: nothing was changed)")

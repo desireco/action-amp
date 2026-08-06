@@ -1,6 +1,7 @@
 ---
 feature: resources-project-owned
 status: ready                # confirmed ready 2026-07-03 after resolving Gap A + B
+sync: skip                   # shipped scope-cut 2026-07-28/29; status stays ready-with-reversals per ROADMAP §Shipped (done-conditions superseded, not met)
 reconciles_with: cli-comments-resources.md   # the CLI spec deferred until this lands
 spec_owner: discover
 build_owner: build

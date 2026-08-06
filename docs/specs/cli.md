@@ -3,6 +3,7 @@ id: cli
 kind: spec
 title: "ActionAmp CLI + orchestration skills (umbrella)"
 status: ready                  # the EFFORT is ready to pull, starting with cli-pat-plumbing
+sync: skip                     # Phase 0+1 shipped; Phase 2 (cli-skills) tracked on its own card. status stays ready.
 priority: P3                   # opportunistic — not validation-critical
 feature: cli
 spec_owner: discover

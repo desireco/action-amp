@@ -2,7 +2,7 @@
 id: build-pulls-from-board
 kind: spec
 title: "Build pulls from the board, not the files"
-status: ready
+status: done                  # shipped: duet-pull-next.sh + queue.md rewrite landed (done-conditions A/B/D)
 priority: P1
 feature: build-pulls-from-board
 spec_owner: discover
