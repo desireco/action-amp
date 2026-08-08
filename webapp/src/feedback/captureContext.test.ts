@@ -15,6 +15,9 @@ describe("sectionForPath", () => {
 
   it("maps review routes", () => {
     expect(sectionForPath("/app/logbook")).toBe("review");
+    expect(sectionForPath("/app/review/today")).toBe("review");
+    expect(sectionForPath("/app/review/week")).toBe("review");
+    expect(sectionForPath("/app/review/month")).toBe("review");
   });
 
   it("defaults Do/Next/Today/Inbox + unknown to work", () => {

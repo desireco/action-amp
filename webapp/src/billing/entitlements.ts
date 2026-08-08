@@ -50,6 +50,12 @@ export const CLI_ACCESS_MESSAGE: EntitlementMessage = {
   reason: "use ActionAmp from the terminal or with an agent",
 };
 
+/** Sitewide retrieval is a whole-account Pro capability. */
+export const SITEWIDE_SEARCH_MESSAGE: EntitlementMessage = {
+  feature: "Command palette and search",
+  reason: "find and move through all your ActionAmp work from one place",
+};
+
 /**
  * Is this user entitled to paid features right now?
  * Server mirror of the client `useAuth`-based check — same `isPlanActive`.
@@ -65,10 +71,21 @@ export function isEntitled(
 }
 
 /** Return the Pro message unless this account can use the CLI/API surface. */
-export function cliAccessViolation(user: EntitlementUser | null): EntitlementMessage | null {
+export function cliAccessViolation(
+  user: EntitlementUser | null,
+): EntitlementMessage | null {
   return isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)
     ? null
     : CLI_ACCESS_MESSAGE;
+}
+
+/** Return the Pro message unless this account can use sitewide search. */
+export function sitewideSearchViolation(
+  user: EntitlementUser | null,
+): EntitlementMessage | null {
+  return isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)
+    ? null
+    : SITEWIDE_SEARCH_MESSAGE;
 }
 
 /**
@@ -81,7 +98,8 @@ export function capViolation(
   cap: number,
   msg: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)) return null; // paid → unlimited
+  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin))
+    return null; // paid → unlimited
   if (currentCount >= cap) return msg;
   return null;
 }
@@ -106,7 +124,8 @@ export function lensViolation(
   lens: EntitlementLens | null,
   msg?: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)) return null; // paid → all lenses
+  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin))
+    return null; // paid → all lenses
   if (lens && lens.kind !== "PERSONAL") {
     return msg ?? WORK_LENS_MESSAGE;
   }
@@ -125,7 +144,8 @@ export function lensConfigViolation(
   user: EntitlementUser | null,
   msg?: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)) return null; // paid → may configure
+  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin))
+    return null; // paid → may configure
   return msg ?? CUSTOM_LENSES_MESSAGE;
 }
 
@@ -147,13 +167,20 @@ export async function resolveLens(
   // test mock; we only read Lens.findFirst(). Matching the exact generic
   // delegate across ops isn't worth it for this one-shot helper.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  entities: { Lens: { findFirst: (a: any) => Promise<any> } } | Record<string, unknown>,
+  entities:
+    { Lens: { findFirst: (a: any) => Promise<any> } } | Record<string, unknown>,
   userId: string,
   lensId: string | undefined | null,
 ): Promise<EntitlementLens | null> {
   if (!lensId) return null;
-  const lens = await (entities as { Lens: { findFirst: (a: unknown) => Promise<EntitlementLens | null> } })
-    .Lens.findFirst({ where: { id: lensId, userId }, select: { name: true, kind: true } });
+  const lens = await (
+    entities as {
+      Lens: { findFirst: (a: unknown) => Promise<EntitlementLens | null> };
+    }
+  ).Lens.findFirst({
+    where: { id: lensId, userId },
+    select: { name: true, kind: true },
+  });
   return lens ?? null;
 }
 
@@ -173,16 +200,31 @@ export async function resolveLens(
  */
 export async function resolveAccessibleLenses(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  entities: { Lens: { findMany: (a: any) => Promise<any> } } | Record<string, unknown>,
+  entities:
+    { Lens: { findMany: (a: any) => Promise<any> } } | Record<string, unknown>,
   user: EntitlementUser | null,
   userId: string,
-): Promise<{ id: string; name: string; color: string | null; kind: LensKind }[]> {
-  const where = isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)
+): Promise<
+  { id: string; name: string; color: string | null; kind: LensKind }[]
+> {
+  const where = isEntitled(
+    user?.plan,
+    user?.planRenewsAt ?? null,
+    user?.isAdmin,
+  )
     ? { userId }
     : { userId, kind: "PERSONAL" as const };
-  return await (entities as {
-    Lens: { findMany: (a: unknown) => Promise<{ id: string; name: string; color: string | null; kind: LensKind }[]> };
-  }).Lens.findMany({
+  return await (
+    entities as {
+      Lens: {
+        findMany: (
+          a: unknown,
+        ) => Promise<
+          { id: string; name: string; color: string | null; kind: LensKind }[]
+        >;
+      };
+    }
+  ).Lens.findMany({
     where,
     select: { id: true, name: true, color: true, kind: true },
   });
@@ -197,5 +239,6 @@ export const WORK_LENS_MESSAGE: EntitlementMessage = {
 /** Default ProGate copy for the custom-lenses gate (lens configuration). */
 export const CUSTOM_LENSES_MESSAGE: EntitlementMessage = {
   feature: "Custom lenses",
-  reason: "add more life contexts — a Studio, a side project, a board role — with Pro",
+  reason:
+    "add more life contexts — a Studio, a side project, a board role — with Pro",
 };

@@ -41,7 +41,7 @@ export function sectionForPath(pathname: string): FeedbackSection {
   ) {
     return "plan";
   }
-  if (pathname.startsWith("/app/logbook")) return "review";
+  if (pathname.startsWith("/app/logbook") || pathname.startsWith("/app/review")) return "review";
   // Do/Next, Today, Inbox, and unknown paths all default to "work" — the
   // focus-area label for feedback context.
   return "work";

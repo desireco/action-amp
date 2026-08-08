@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router";
 import { useQuery } from "wasp/client/operations";
 import {
@@ -109,13 +109,38 @@ export function ProjectDetailPage() {
   const [editError, setEditError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [relinkError, setRelinkError] = useState<string | null>(null);
-  const [resourceEditor, setResourceEditor] = useState<ProjectResource | "new" | null>(null);
+  const [resourceEditor, setResourceEditor] = useState<
+    ProjectResource | "new" | null
+  >(null);
   const [resourceTitle, setResourceTitle] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
   const [resourceNotes, setResourceNotes] = useState("");
   const [resourceError, setResourceError] = useState<string | null>(null);
   const [resourceSaving, setResourceSaving] = useState(false);
-  const [resourceToDelete, setResourceToDelete] = useState<ProjectResource | null>(null);
+  const [resourceToDelete, setResourceToDelete] =
+    useState<ProjectResource | null>(null);
+  const targetResourceId = location.hash.startsWith("#resource-")
+    ? location.hash.slice("#resource-".length)
+    : null;
+
+  useEffect(() => {
+    if (
+      !targetResourceId ||
+      !project?.resources.some(
+        (resource: ProjectResource) => resource.id === targetResourceId,
+      )
+    )
+      return;
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(`resource-${targetResourceId}`)?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "center",
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [project, targetResourceId]);
 
   // Re-link picker: fetch goals in the project's lens for the dropdown. Only
   // active goals (isDone:false) — you don't re-link to a completed goal.
@@ -179,10 +204,9 @@ export function ProjectDetailPage() {
   // already-loaded task list (no extra query). "This week" = last 7 days,
   // measured from completedAt (set when a task is marked done).
   const openCount = total - doneCount;
-  const todayOpenCount =
-    (project?.tasks ?? []).filter(
-      (t) => !t.isDone && t.status === "TODAY",
-    ).length;
+  const todayOpenCount = (project?.tasks ?? []).filter(
+    (t) => !t.isDone && t.status === "TODAY",
+  ).length;
   const doneThisWeek =
     (project?.tasks ?? []).filter((t) => {
       if (!t.isDone || !t.completedAt) return false;
@@ -195,7 +219,8 @@ export function ProjectDetailPage() {
   // start the first one right from this page and leave the remaining tasks in
   // the Today group below.
   const todayTasks = useMemo(
-    () => (project?.tasks ?? []).filter((t) => !t.isDone && t.status === "TODAY"),
+    () =>
+      (project?.tasks ?? []).filter((t) => !t.isDone && t.status === "TODAY"),
     [project],
   );
   const nextStep = todayTasks[0] ?? null;
@@ -209,8 +234,7 @@ export function ProjectDetailPage() {
       (project?.tasks ?? []).some((t) => !t.isDone && t.status === "UPCOMING"),
     [project],
   );
-  const showNoTodayCue =
-    !nextStep && todayTasks.length === 0 && hasUpcoming;
+  const showNoTodayCue = !nextStep && todayTasks.length === 0 && hasUpcoming;
 
   const setStatus = async (
     task: ProjectTask,
@@ -351,8 +375,8 @@ export function ProjectDetailPage() {
   const openResourceEditor = (resource: ProjectResource | "new") => {
     setResourceEditor(resource);
     setResourceTitle(resource === "new" ? "" : resource.title);
-    setResourceUrl(resource === "new" ? "" : resource.url ?? "");
-    setResourceNotes(resource === "new" ? "" : resource.notes ?? "");
+    setResourceUrl(resource === "new" ? "" : (resource.url ?? ""));
+    setResourceNotes(resource === "new" ? "" : (resource.notes ?? ""));
     setResourceError(null);
   };
 
@@ -362,14 +386,26 @@ export function ProjectDetailPage() {
     setResourceError(null);
     try {
       if (resourceEditor === "new") {
-        await createResource({ projectId: project.id, title: resourceTitle, url: resourceUrl, notes: resourceNotes });
+        await createResource({
+          projectId: project.id,
+          title: resourceTitle,
+          url: resourceUrl,
+          notes: resourceNotes,
+        });
       } else {
-        await updateResource({ id: resourceEditor.id, title: resourceTitle, url: resourceUrl, notes: resourceNotes });
+        await updateResource({
+          id: resourceEditor.id,
+          title: resourceTitle,
+          url: resourceUrl,
+          notes: resourceNotes,
+        });
       }
       queryClient.invalidateQueries({ queryKey: ["getProject"] });
       setResourceEditor(null);
     } catch (e) {
-      setResourceError(e instanceof Error ? e.message : "Couldn't save resource.");
+      setResourceError(
+        e instanceof Error ? e.message : "Couldn't save resource.",
+      );
     } finally {
       setResourceSaving(false);
     }
@@ -385,10 +421,22 @@ export function ProjectDetailPage() {
   // Breadcrumb chain: Goal › Project. A "Projects" list root is always present
   // so there's always a way back to /app/projects even when the project has no
   // goal ancestor. Crumb id IS the destination route.
-  const projectActiveRoute = project ? `/app/projects/${project.permalink}` : "";
-  const projectCrumbs: BreadcrumbItem[] = [{ id: "/app/projects", label: "Projects" }];
-  if (project?.goal) projectCrumbs.push({ id: `/app/goals/${project.goal.permalink}`, label: project.goal.name });
-  if (project) projectCrumbs.push({ id: projectActiveRoute, label: project.name || "Project" });
+  const projectActiveRoute = project
+    ? `/app/projects/${project.permalink}`
+    : "";
+  const projectCrumbs: BreadcrumbItem[] = [
+    { id: "/app/projects", label: "Projects" },
+  ];
+  if (project?.goal)
+    projectCrumbs.push({
+      id: `/app/goals/${project.goal.permalink}`,
+      label: project.goal.name,
+    });
+  if (project)
+    projectCrumbs.push({
+      id: projectActiveRoute,
+      label: project.name || "Project",
+    });
 
   const handleCrumbSelect = (dest: string) => {
     if (dest !== projectActiveRoute) navigate(dest);
@@ -552,7 +600,12 @@ export function ProjectDetailPage() {
                         Today
                         {nextStep.size && (
                           <>
-                            <span className="aa-project__next-sep" aria-hidden="true">·</span>
+                            <span
+                              className="aa-project__next-sep"
+                              aria-hidden="true"
+                            >
+                              ·
+                            </span>
                             {SIZE_DURATION[nextStep.size] ?? nextStep.size}
                           </>
                         )}
@@ -616,7 +669,11 @@ export function ProjectDetailPage() {
                     size="sm"
                     className="aa-project__calm"
                     onClick={handleComplete}
-                    title={project.isDone ? "Return to active projects" : "Mark this project done"}
+                    title={
+                      project.isDone
+                        ? "Return to active projects"
+                        : "Mark this project done"
+                    }
                   >
                     {project.isDone ? "Reopen" : "Complete"}
                   </Button>
@@ -675,17 +732,26 @@ export function ProjectDetailPage() {
               {/* Momentum — three small stats computed from the loaded list.
                   Compact by design: the row redesign is the page's main visual,
                   this is just a glance. */}
-              <div className="aa-project__momentum" aria-label="Project momentum">
+              <div
+                className="aa-project__momentum"
+                aria-label="Project momentum"
+              >
                 <div className="aa-project__momentum-stat">
                   <span className="aa-project__momentum-num">{openCount}</span>
                   <span className="aa-project__momentum-label">Open</span>
                 </div>
                 <div className="aa-project__momentum-stat">
-                  <span className="aa-project__momentum-num">{doneThisWeek}</span>
-                  <span className="aa-project__momentum-label">Done this week</span>
+                  <span className="aa-project__momentum-num">
+                    {doneThisWeek}
+                  </span>
+                  <span className="aa-project__momentum-label">
+                    Done this week
+                  </span>
                 </div>
                 <div className="aa-project__momentum-stat">
-                  <span className="aa-project__momentum-num">{todayOpenCount}</span>
+                  <span className="aa-project__momentum-num">
+                    {todayOpenCount}
+                  </span>
                   <span className="aa-project__momentum-label">Today</span>
                 </div>
               </div>
@@ -732,9 +798,12 @@ export function ProjectDetailPage() {
                           }
                           onOpen={() => {
                             if (task.isDone) {
-                              navigate(`/app/tasks/${task.permalink ?? task.id}`, {
-                                state: { returnTo },
-                              });
+                              navigate(
+                                `/app/tasks/${task.permalink ?? task.id}`,
+                                {
+                                  state: { returnTo },
+                                },
+                              );
                               return;
                             }
                             setActiveTaskId((current) =>
@@ -744,116 +813,119 @@ export function ProjectDetailPage() {
                         >
                           {!task.isDone ? (
                             <>
-                            <div className="aa-project__horizon">
-                              {task.status !== "TODAY" && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="aa-project__row-ctrl"
-                                  onClick={() =>
-                                    setStatus(
-                                      task,
-                                      task.status === "SOMEDAY"
-                                        ? "UPCOMING"
-                                        : "TODAY",
-                                    )
-                                  }
-                                >
-                                  {task.status === "SOMEDAY"
-                                    ? "Upcoming"
-                                    : "Today"}
-                                </Button>
-                              )}
-                              {task.status === "TODAY" && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="aa-project__row-ctrl"
-                                  onClick={() => setStatus(task, "UPCOMING")}
-                                >
-                                  Not today
-                                </Button>
-                              )}
-                              {/* §C "move to project" affordance — opens an inline
+                              <div className="aa-project__horizon">
+                                {task.status !== "TODAY" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="aa-project__row-ctrl"
+                                    onClick={() =>
+                                      setStatus(
+                                        task,
+                                        task.status === "SOMEDAY"
+                                          ? "UPCOMING"
+                                          : "TODAY",
+                                      )
+                                    }
+                                  >
+                                    {task.status === "SOMEDAY"
+                                      ? "Upcoming"
+                                      : "Today"}
+                                  </Button>
+                                )}
+                                {task.status === "TODAY" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="aa-project__row-ctrl"
+                                    onClick={() => setStatus(task, "UPCOMING")}
+                                  >
+                                    Not today
+                                  </Button>
+                                )}
+                                {/* §C "move to project" affordance — opens an inline
                                   picker scoped to the project's Lens. */}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="aa-project__row-ctrl"
+                                  onClick={() => {
+                                    setMovingTaskId((cur) =>
+                                      cur === task.id ? null : task.id,
+                                    );
+                                    setMoveError(null);
+                                  }}
+                                  aria-expanded={movingTaskId === task.id}
+                                  aria-label={`Move ${task.description} to another project`}
+                                >
+                                  Move
+                                </Button>
+                              </div>
+                              {/* Edit takes open tasks to their full task editor.
+                                Done tasks are review-only; tapping their row
+                                opens the actual task detail instead. */}
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 className="aa-project__row-ctrl"
-                                onClick={() => {
-                                  setMovingTaskId((cur) =>
-                                    cur === task.id ? null : task.id,
-                                  );
-                                  setMoveError(null);
-                                }}
-                                aria-expanded={movingTaskId === task.id}
-                                aria-label={`Move ${task.description} to another project`}
-                              >
-                                Move
-                              </Button>
-                            </div>
-                            {/* Edit takes open tasks to their full task editor.
-                                Done tasks are review-only; tapping their row
-                                opens the actual task detail instead. */}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="aa-project__row-ctrl"
-                              onClick={() =>
-                                navigate(`/app/tasks/${task.permalink ?? task.id}`, {
-                                  state: { returnTo },
-                                })
-                              }
-                              aria-label={`Edit ${task.description}`}
-                            >
-                              Edit
-                            </Button>
-                            {movingTaskId === task.id && (
-                            <div className="aa-project__move-picker">
-                              <span className="aa-project__move-hint">
-                                Move to:
-                              </span>
-                              {/* Unlink to standalone (keep any goal link). */}
-                              <button
-                                type="button"
-                                className="aa-project__relink-opt"
                                 onClick={() =>
-                                  void handleMoveTask(task.id, null)
+                                  navigate(
+                                    `/app/tasks/${task.permalink ?? task.id}`,
+                                    {
+                                      state: { returnTo },
+                                    },
+                                  )
                                 }
+                                aria-label={`Edit ${task.description}`}
                               >
-                                Standalone
-                              </button>
-                              {moveTargets.length === 0 && (
-                                <span className="aa-project__move-empty">
-                                  No other projects in this Lens.
-                                </span>
-                              )}
-                              {moveTargets.map((p) => (
-                                <button
-                                  key={p.id}
-                                  type="button"
-                                  className="aa-project__relink-opt"
-                                  onClick={() =>
-                                    void handleMoveTask(task.id, p.id)
-                                  }
-                                >
-                                  {p.name}
-                                </button>
-                              ))}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setMovingTaskId(null)}
-                              >
-                                Cancel
+                                Edit
                               </Button>
-                              {moveError && (
-                                <p className="aa-project__inline-err">
-                                  {moveError}
-                                </p>
+                              {movingTaskId === task.id && (
+                                <div className="aa-project__move-picker">
+                                  <span className="aa-project__move-hint">
+                                    Move to:
+                                  </span>
+                                  {/* Unlink to standalone (keep any goal link). */}
+                                  <button
+                                    type="button"
+                                    className="aa-project__relink-opt"
+                                    onClick={() =>
+                                      void handleMoveTask(task.id, null)
+                                    }
+                                  >
+                                    Standalone
+                                  </button>
+                                  {moveTargets.length === 0 && (
+                                    <span className="aa-project__move-empty">
+                                      No other projects in this Lens.
+                                    </span>
+                                  )}
+                                  {moveTargets.map((p) => (
+                                    <button
+                                      key={p.id}
+                                      type="button"
+                                      className="aa-project__relink-opt"
+                                      onClick={() =>
+                                        void handleMoveTask(task.id, p.id)
+                                      }
+                                    >
+                                      {p.name}
+                                    </button>
+                                  ))}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setMovingTaskId(null)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  {moveError && (
+                                    <p className="aa-project__inline-err">
+                                      {moveError}
+                                    </p>
+                                  )}
+                                </div>
                               )}
-                            </div>
-                            )}
                             </>
                           ) : null}
                         </TaskRow>
@@ -865,33 +937,79 @@ export function ProjectDetailPage() {
             </div>
           )}
 
-          <section className="aa-project__resources" aria-labelledby="project-resources-heading">
+          <section
+            className="aa-project__resources"
+            aria-labelledby="project-resources-heading"
+          >
             <div className="aa-project__resources-head">
               <div>
-                <h2 id="project-resources-heading" className="aa-project__resources-title">Resources</h2>
-                <p className="aa-project__resources-copy">Links, notes, and reference material for this project.</p>
+                <h2
+                  id="project-resources-heading"
+                  className="aa-project__resources-title"
+                >
+                  Resources
+                </h2>
+                <p className="aa-project__resources-copy">
+                  Links, notes, and reference material for this project.
+                </p>
               </div>
-              <Button variant="secondary" size="sm" icon={<PlusIcon />} onClick={() => openResourceEditor("new")}>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<PlusIcon />}
+                onClick={() => openResourceEditor("new")}
+              >
                 Add resource
               </Button>
             </div>
             {project.resources.length === 0 ? (
-              <p className="aa-project__resources-empty">Nothing saved here yet.</p>
+              <p className="aa-project__resources-empty">
+                Nothing saved here yet.
+              </p>
             ) : (
               <ul className="aa-project__resources-list">
                 {project.resources.map((resource: ProjectResource) => (
-                  <li id={`resource-${resource.id}`} key={resource.id} className="aa-project__resource">
+                  <li
+                    id={`resource-${resource.id}`}
+                    key={resource.id}
+                    className={`aa-project__resource${resource.id === targetResourceId ? " is-search-target" : ""}`}
+                  >
                     <div className="aa-project__resource-main">
                       {resource.url ? (
-                        <a className="aa-project__resource-link" href={resource.url} target="_blank" rel="noopener noreferrer">
+                        <a
+                          className="aa-project__resource-link"
+                          href={resource.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <span aria-hidden="true">↗</span> {resource.title}
                         </a>
-                      ) : <span className="aa-project__resource-title">{resource.title}</span>}
-                      {resource.notes && <p className="aa-project__resource-notes">{resource.notes}</p>}
+                      ) : (
+                        <span className="aa-project__resource-title">
+                          {resource.title}
+                        </span>
+                      )}
+                      {resource.notes && (
+                        <p className="aa-project__resource-notes">
+                          {resource.notes}
+                        </p>
+                      )}
                     </div>
                     <div className="aa-project__resource-actions">
-                      <Button variant="ghost" size="sm" onClick={() => openResourceEditor(resource)}>Edit</Button>
-                      <Button variant="ghost" size="sm" onClick={() => setResourceToDelete(resource)}>Remove</Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openResourceEditor(resource)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setResourceToDelete(resource)}
+                      >
+                        Remove
+                      </Button>
                     </div>
                   </li>
                 ))}
@@ -923,15 +1041,58 @@ export function ProjectDetailPage() {
       )}
 
       {resourceEditor && (
-        <BottomSheet title={resourceEditor === "new" ? "Add resource" : "Edit resource"} onClose={() => setResourceEditor(null)}>
-          <form className="aa-project__resource-form" onSubmit={(e) => { e.preventDefault(); void saveResource(); }}>
-            <label>Title<input autoFocus value={resourceTitle} onChange={(e) => setResourceTitle(e.target.value)} placeholder="What is this?" /></label>
-            <label>Link <span>(optional)</span><input value={resourceUrl} onChange={(e) => setResourceUrl(e.target.value)} placeholder="https://…" type="url" /></label>
-            <label>Notes <span>(optional)</span><textarea value={resourceNotes} onChange={(e) => setResourceNotes(e.target.value)} placeholder="Why keep this?" rows={4} /></label>
-            {resourceError && <p className="aa-project__resource-error">{resourceError}</p>}
+        <BottomSheet
+          title={resourceEditor === "new" ? "Add resource" : "Edit resource"}
+          onClose={() => setResourceEditor(null)}
+        >
+          <form
+            className="aa-project__resource-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void saveResource();
+            }}
+          >
+            <label>
+              Title
+              <input
+                autoFocus
+                value={resourceTitle}
+                onChange={(e) => setResourceTitle(e.target.value)}
+                placeholder="What is this?"
+              />
+            </label>
+            <label>
+              Link <span>(optional)</span>
+              <input
+                value={resourceUrl}
+                onChange={(e) => setResourceUrl(e.target.value)}
+                placeholder="https://…"
+                type="url"
+              />
+            </label>
+            <label>
+              Notes <span>(optional)</span>
+              <textarea
+                value={resourceNotes}
+                onChange={(e) => setResourceNotes(e.target.value)}
+                placeholder="Why keep this?"
+                rows={4}
+              />
+            </label>
+            {resourceError && (
+              <p className="aa-project__resource-error">{resourceError}</p>
+            )}
             <div className="aa-project__resource-form-actions">
-              <Button variant="secondary" size="sm" onClick={() => setResourceEditor(null)}>Cancel</Button>
-              <Button variant="primary" size="sm" disabled={resourceSaving}>{resourceSaving ? "Saving…" : "Save resource"}</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setResourceEditor(null)}
+              >
+                Cancel
+              </Button>
+              <Button variant="primary" size="sm" disabled={resourceSaving}>
+                {resourceSaving ? "Saving…" : "Save resource"}
+              </Button>
             </div>
           </form>
         </BottomSheet>
@@ -940,7 +1101,12 @@ export function ProjectDetailPage() {
       {resourceToDelete && (
         <ConfirmDialog
           title="Remove this resource?"
-          message={<>“{resourceToDelete.title}” will be removed from this project. Tasks and their Context links stay unchanged.</>}
+          message={
+            <>
+              “{resourceToDelete.title}” will be removed from this project.
+              Tasks and their Context links stay unchanged.
+            </>
+          }
           confirmLabel="Remove resource"
           danger
           onConfirm={() => void removeResource()}

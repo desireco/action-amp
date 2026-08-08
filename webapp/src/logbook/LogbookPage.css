@@ -164,3 +164,8 @@
   border-color: var(--aa-teal);
   color: var(--aa-teal-cta);
 }
+
+.aa-logbook-row.is-search-target {
+  border-radius: var(--aa-radius-sm);
+  box-shadow: 0 0 0 2px var(--aa-teal);
+}

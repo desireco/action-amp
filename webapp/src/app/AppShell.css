@@ -20,8 +20,11 @@
      reads as "in" the active context (indigo atmosphere for Work, emerald for
      Me). Fades down so it stays calm. Reinforced by the lens switch fill and
      the active nav rail — three coordinated signals, no side-stripe needed. */
-  background:
-    linear-gradient(180deg, var(--aa-active-lens-soft-strong) 0%, var(--aa-bg-soft) 65%);
+  background: linear-gradient(
+    180deg,
+    var(--aa-active-lens-soft-strong) 0%,
+    var(--aa-bg-soft) 65%
+  );
   height: 100vh;
   height: 100dvh;
   position: sticky;
@@ -150,8 +153,13 @@
   text-decoration: none;
 }
 .aa-app-admin-link:hover,
-.aa-app-admin-link.active { color: var(--aa-teal-cta); }
-.aa-app-admin-link:focus-visible { outline: 2px solid var(--aa-teal); outline-offset: 2px; }
+.aa-app-admin-link.active {
+  color: var(--aa-teal-cta);
+}
+.aa-app-admin-link:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
 
 .aa-app-logout {
   align-self: flex-start;
@@ -229,6 +237,34 @@
 .aa-app-utility-btn:focus-visible {
   outline: 2px solid var(--aa-teal);
   outline-offset: 2px;
+}
+
+.aa-app-utility-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.aa-app-search-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.aa-app-search-btn {
+  position: relative;
+}
+
+.aa-app-search-pro {
+  position: absolute;
+  right: -3px;
+  bottom: -5px;
+  color: var(--aa-text-4);
+  font-size: 8px;
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: 0.02em;
+}
+
+.aa-app.is-in-focus .aa-app-search-btn {
+  display: none;
 }
 
 /* ---- Page content ---- */
@@ -398,8 +434,11 @@
     padding: var(--aa-space-xs);
     border: 1px solid var(--aa-border);
     border-radius: var(--aa-radius-lg);
-    background:
-      linear-gradient(180deg, var(--aa-surface) 0%, var(--aa-bg-soft) 100%);
+    background: linear-gradient(
+      180deg,
+      var(--aa-surface) 0%,
+      var(--aa-bg-soft) 100%
+    );
     box-shadow: var(--aa-shadow-lg);
   }
   .aa-mobile-dock__row {
@@ -457,10 +496,12 @@
     background: var(--aa-active-lens);
     flex: none;
   }
-  .aa-mobile-lens-menu__item[data-lens-color="indigo"] .aa-mobile-lens-menu__dot {
+  .aa-mobile-lens-menu__item[data-lens-color="indigo"]
+    .aa-mobile-lens-menu__dot {
     background: var(--aa-lens-indigo);
   }
-  .aa-mobile-lens-menu__item[data-lens-color="emerald"] .aa-mobile-lens-menu__dot {
+  .aa-mobile-lens-menu__item[data-lens-color="emerald"]
+    .aa-mobile-lens-menu__dot {
     background: var(--aa-lens-emerald);
   }
   .aa-mobile-lens-menu__count {

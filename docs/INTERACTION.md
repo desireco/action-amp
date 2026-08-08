@@ -94,6 +94,7 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
   - `⌘K` — Capture mode (works in text fields — the focus-protector)
   - `⇧C` — Capture (typing-safe convenience; same as ⌘K)
   - `⌘\` — Command mode
+  - `/` — Search mode (same popover, search-first empty state; disabled while typing)
   - `⌘L` — toggle the Lens switcher (segmented ≤3 lenses; chip + popover ≥4). Works in text fields like the other ⌘-chords.
   - `⇧I` / `⇧N` / `⇧T` / `⇧G` / `⇧P` / `⇧R` — jump to Inbox / Next / Today / TriaGe / Planning / Review
   - `←` / `→` — peek past / future
@@ -185,9 +186,18 @@ fields suppress these single-key commands.
 - **Entry:** `⌘\`.
 - **Exit:** `Enter` (run) / `Esc` (cancel).
 - **Keyset:** type fuzzy query; ↑↓ navigate; Enter runs.
-- **Mobile:** not applicable (mouse/keyboard power-user feature); long-press brand mark as equivalent.
+- **Mobile:** no hidden long-press command entry. The visible search control opens the same touch-usable component in Search intent; Command remains a hardware-keyboard accelerator.
 - **Chrome:** palette overlay.
 - **Indicator:** `COMMAND`.
+
+### SEARCH mode (`/`)
+
+- **Purpose:** find user-owned records across every Lens and lifecycle state.
+- **Entry:** `/` from Normal mode; the visible search button is the pointer/touch equivalent.
+- **Exit:** `Enter` (open result) / `Esc` (cancel).
+- **Keyset:** type query; ↑↓ navigate; Enter opens. `/` never steals text from an input/editor.
+- **Chrome:** same palette overlay as Command, with search-first empty copy rather than command rows.
+- **Indicator:** `SEARCH`.
 
 ### ZOOM mode (Goal/Project scope)
 
@@ -210,6 +220,8 @@ Bottom-left, where the hint pill lives now. Subtle but always visible:
 -- PAUSED --        (amber)
 -- CAPTURE --       (teal, while palette open)
 -- TRIAGE -- 3/7    (teal, with progress)
+-- COMMAND --       (teal, while command palette open)
+-- SEARCH --        (teal, while search palette open)
 -- NORMAL --        (hidden by default — it's the default)
 ```
 
@@ -329,7 +341,7 @@ context. Used for quick capture and inline edits.
 
 - **⌘K Capture** — the universal quick-add
 - **Quick edit** — inline field edits that need room
-- **Search / command palette** (Phase 2)
+- **Search / command palette** (shipped; desktop and touch browser-verified)
 
 **Anatomy:** centered card (max-width 480px) · auto-focus input · footer with
 submit hint (`⏎ to save`).

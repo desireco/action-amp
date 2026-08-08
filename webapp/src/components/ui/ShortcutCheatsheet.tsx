@@ -29,6 +29,12 @@ const SECTIONS: ShortcutSection[] = [
     title: "Global",
     items: [
       { keys: ["⌘K"], label: "Capture", note: "works in text fields" },
+      { keys: ["/"], label: "Search" },
+      {
+        keys: ["⌘\\"],
+        label: "Command palette",
+        note: "Pro · works in text fields",
+      },
       { keys: ["Space"], label: "Go to Next" },
       { keys: ["?"], label: "Show this sheet", note: "also ⌘?" },
       { keys: ["Esc"], label: "Close / back" },
@@ -57,7 +63,11 @@ const SECTIONS: ShortcutSection[] = [
   {
     title: "In triage",
     items: [
-      { keys: ["1", "2", "3", "4"], label: "Task / Project / Resource / Delete", note: "classify step" },
+      {
+        keys: ["1", "2", "3", "4"],
+        label: "Task / Project / Resource / Delete",
+        note: "classify step",
+      },
       { keys: ["a", "s", "d", "f"], label: "Pick a lens", note: "by index" },
       { keys: ["↵"], label: "Continue / Complete" },
       { keys: ["Esc"], label: "Back a step / exit" },
@@ -67,7 +77,11 @@ const SECTIONS: ShortcutSection[] = [
     title: "Properties",
     items: [
       { keys: ["[", "]"], label: "Size down / up", note: "triage + task page" },
-      { keys: ["-", "="], label: "Priority down / up", note: "triage + task page" },
+      {
+        keys: ["-", "="],
+        label: "Priority down / up",
+        note: "triage + task page",
+      },
       { keys: ["H"], label: "Cycle When", note: "Today → Upcoming → Someday" },
     ],
   },
@@ -128,7 +142,8 @@ export function ShortcutCheatsheet({ onClose }: { onClose: () => void }) {
 
         <div className="aa-cheatsheet__foot">
           <span className="aa-cheatsheet__tip">
-            Shortcuts change by mode — what works in capture may differ in triage.
+            Shortcuts change by mode — what works in capture may differ in
+            triage.
           </span>
           <button
             type="button"

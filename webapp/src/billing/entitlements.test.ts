@@ -5,7 +5,9 @@ import {
   lensViolation,
   lensConfigViolation,
   cliAccessViolation,
+  sitewideSearchViolation,
   CLI_ACCESS_MESSAGE,
+  SITEWIDE_SEARCH_MESSAGE,
   resolveLens,
   WORK_LENS_MESSAGE,
   CUSTOM_LENSES_MESSAGE,
@@ -33,7 +35,10 @@ import { mockContext } from "../test/mockContext";
 const FUTURE = new Date(Date.now() + 86_400_000);
 const PAST = new Date(Date.now() - 86_400_000);
 
-const MSG = { feature: "a 4th project", reason: "organize more than 3 projects with Pro" };
+const MSG = {
+  feature: "a 4th project",
+  reason: "organize more than 3 projects with Pro",
+};
 
 describe("isEntitled", () => {
   it("FREE (undefined plan) → false", () => {
@@ -69,79 +74,181 @@ describe("isEntitled", () => {
 
 describe("cliAccessViolation", () => {
   it("allows active Pro, Founding, and admins", () => {
-    expect(cliAccessViolation({ plan: "PRO", planRenewsAt: FUTURE })).toBeNull();
-    expect(cliAccessViolation({ plan: "FOUNDER", planRenewsAt: null })).toBeNull();
-    expect(cliAccessViolation({ plan: "FREE", planRenewsAt: null, isAdmin: true })).toBeNull();
+    expect(
+      cliAccessViolation({ plan: "PRO", planRenewsAt: FUTURE }),
+    ).toBeNull();
+    expect(
+      cliAccessViolation({ plan: "FOUNDER", planRenewsAt: null }),
+    ).toBeNull();
+    expect(
+      cliAccessViolation({ plan: "FREE", planRenewsAt: null, isAdmin: true }),
+    ).toBeNull();
   });
 
   it("blocks Free and expired Pro accounts across the entire CLI/API surface", () => {
-    expect(cliAccessViolation({ plan: "FREE", planRenewsAt: null })).toEqual(CLI_ACCESS_MESSAGE);
-    expect(cliAccessViolation({ plan: "PRO", planRenewsAt: PAST })).toEqual(CLI_ACCESS_MESSAGE);
+    expect(cliAccessViolation({ plan: "FREE", planRenewsAt: null })).toEqual(
+      CLI_ACCESS_MESSAGE,
+    );
+    expect(cliAccessViolation({ plan: "PRO", planRenewsAt: PAST })).toEqual(
+      CLI_ACCESS_MESSAGE,
+    );
+  });
+});
+
+describe("sitewideSearchViolation", () => {
+  it("allows active Pro, Founding, and admins", () => {
+    expect(
+      sitewideSearchViolation({ plan: "PRO", planRenewsAt: FUTURE }),
+    ).toBeNull();
+    expect(
+      sitewideSearchViolation({ plan: "FOUNDER", planRenewsAt: null }),
+    ).toBeNull();
+    expect(
+      sitewideSearchViolation({
+        plan: "FREE",
+        planRenewsAt: null,
+        isAdmin: true,
+      }),
+    ).toBeNull();
+  });
+
+  it("blocks Free and expired Pro accounts", () => {
+    expect(
+      sitewideSearchViolation({ plan: "FREE", planRenewsAt: null }),
+    ).toEqual(SITEWIDE_SEARCH_MESSAGE);
+    expect(
+      sitewideSearchViolation({ plan: "PRO", planRenewsAt: PAST }),
+    ).toEqual(SITEWIDE_SEARCH_MESSAGE);
   });
 });
 
 describe("capViolation", () => {
   it("FREE at the cap returns the message", () => {
     expect(
-      capViolation({ plan: "FREE", planRenewsAt: null }, FREE_LIMITS.projects, FREE_LIMITS.projects, MSG),
+      capViolation(
+        { plan: "FREE", planRenewsAt: null },
+        FREE_LIMITS.projects,
+        FREE_LIMITS.projects,
+        MSG,
+      ),
     ).toEqual(MSG);
   });
 
   it("FREE under the cap returns null (count 2, cap 3)", () => {
     expect(
-      capViolation({ plan: "FREE", planRenewsAt: null }, 2, FREE_LIMITS.projects, MSG),
+      capViolation(
+        { plan: "FREE", planRenewsAt: null },
+        2,
+        FREE_LIMITS.projects,
+        MSG,
+      ),
     ).toBeNull();
   });
 
   it("active PRO is unlimited — null even over the cap", () => {
     expect(
-      capViolation({ plan: "PRO", planRenewsAt: FUTURE }, 999, FREE_LIMITS.projects, MSG),
+      capViolation(
+        { plan: "PRO", planRenewsAt: FUTURE },
+        999,
+        FREE_LIMITS.projects,
+        MSG,
+      ),
     ).toBeNull();
   });
 
   it("expired PRO is treated as FREE — returns the message at the cap", () => {
     expect(
-      capViolation({ plan: "PRO", planRenewsAt: PAST }, FREE_LIMITS.goals, FREE_LIMITS.goals, MSG),
+      capViolation(
+        { plan: "PRO", planRenewsAt: PAST },
+        FREE_LIMITS.goals,
+        FREE_LIMITS.goals,
+        MSG,
+      ),
     ).toEqual(MSG);
   });
 
   it("FOUNDER is unlimited — null even over the cap", () => {
     expect(
-      capViolation({ plan: "FOUNDER", planRenewsAt: null }, 999, FREE_LIMITS.goals, MSG),
+      capViolation(
+        { plan: "FOUNDER", planRenewsAt: null },
+        999,
+        FREE_LIMITS.goals,
+        MSG,
+      ),
     ).toBeNull();
   });
 
   it("admin bypass — null even over the cap (FREE plan, but isAdmin)", () => {
     expect(
-      capViolation({ plan: "FREE", planRenewsAt: null, isAdmin: true }, 999, FREE_LIMITS.projects, MSG),
+      capViolation(
+        { plan: "FREE", planRenewsAt: null, isAdmin: true },
+        999,
+        FREE_LIMITS.projects,
+        MSG,
+      ),
     ).toBeNull();
   });
 });
 
 describe("lensViolation", () => {
   it("FREE + WORK lens → returns the Work-lens message", () => {
-    expect(lensViolation({ plan: "FREE", planRenewsAt: null }, { name: "Work", kind: "WORK" })).toEqual(WORK_LENS_MESSAGE);
+    expect(
+      lensViolation(
+        { plan: "FREE", planRenewsAt: null },
+        { name: "Work", kind: "WORK" },
+      ),
+    ).toEqual(WORK_LENS_MESSAGE);
   });
 
   it("FREE + PERSONAL lens → null", () => {
-    expect(lensViolation({ plan: "FREE", planRenewsAt: null }, { name: "Me", kind: "PERSONAL" })).toBeNull();
+    expect(
+      lensViolation(
+        { plan: "FREE", planRenewsAt: null },
+        { name: "Me", kind: "PERSONAL" },
+      ),
+    ).toBeNull();
   });
 
   it("FREE + CUSTOM lens → message (custom lenses are Pro-only)", () => {
-    expect(lensViolation({ plan: "FREE", planRenewsAt: null }, { name: "Studio", kind: "CUSTOM" })).toEqual(WORK_LENS_MESSAGE);
+    expect(
+      lensViolation(
+        { plan: "FREE", planRenewsAt: null },
+        { name: "Studio", kind: "CUSTOM" },
+      ),
+    ).toEqual(WORK_LENS_MESSAGE);
   });
 
   it("active PRO + WORK lens → null (all lenses)", () => {
-    expect(lensViolation({ plan: "PRO", planRenewsAt: FUTURE }, { name: "Work", kind: "WORK" })).toBeNull();
+    expect(
+      lensViolation(
+        { plan: "PRO", planRenewsAt: FUTURE },
+        { name: "Work", kind: "WORK" },
+      ),
+    ).toBeNull();
   });
 
   it("admin bypass + WORK lens → null (FREE plan, but isAdmin)", () => {
-    expect(lensViolation({ plan: "FREE", planRenewsAt: null, isAdmin: true }, { name: "Work", kind: "WORK" })).toBeNull();
-    expect(lensViolation({ plan: "FREE", planRenewsAt: null, isAdmin: true }, { name: "Studio", kind: "CUSTOM" })).toBeNull();
+    expect(
+      lensViolation(
+        { plan: "FREE", planRenewsAt: null, isAdmin: true },
+        { name: "Work", kind: "WORK" },
+      ),
+    ).toBeNull();
+    expect(
+      lensViolation(
+        { plan: "FREE", planRenewsAt: null, isAdmin: true },
+        { name: "Studio", kind: "CUSTOM" },
+      ),
+    ).toBeNull();
   });
 
   it("expired PRO + WORK lens → message (treated as FREE)", () => {
-    expect(lensViolation({ plan: "PRO", planRenewsAt: PAST }, { name: "Work", kind: "WORK" })).toEqual(WORK_LENS_MESSAGE);
+    expect(
+      lensViolation(
+        { plan: "PRO", planRenewsAt: PAST },
+        { name: "Work", kind: "WORK" },
+      ),
+    ).toEqual(WORK_LENS_MESSAGE);
   });
 
   // The load-bearing rename-safety test. The seeded "Work" lens is renameable
@@ -149,27 +256,45 @@ describe("lensViolation", () => {
   // even when the name is no longer "Work". This is the whole point of the
   // LensKind enum — without it, a rename breaks FREE gating.
   it("rename-safe: FREE + WORK lens renamed to 'Studio' → still gated", () => {
-    expect(lensViolation({ plan: "FREE", planRenewsAt: null }, { name: "Studio", kind: "WORK" })).toEqual(WORK_LENS_MESSAGE);
+    expect(
+      lensViolation(
+        { plan: "FREE", planRenewsAt: null },
+        { name: "Studio", kind: "WORK" },
+      ),
+    ).toEqual(WORK_LENS_MESSAGE);
   });
 
   it("rename-safe: FREE + PERSONAL lens renamed to 'Life' → still allowed", () => {
-    expect(lensViolation({ plan: "FREE", planRenewsAt: null }, { name: "Life", kind: "PERSONAL" })).toBeNull();
+    expect(
+      lensViolation(
+        { plan: "FREE", planRenewsAt: null },
+        { name: "Life", kind: "PERSONAL" },
+      ),
+    ).toBeNull();
   });
 
   it("accepts a custom message override", () => {
     expect(
-      lensViolation({ plan: "FREE", planRenewsAt: null }, { name: "Work", kind: "WORK" }, MSG),
+      lensViolation(
+        { plan: "FREE", planRenewsAt: null },
+        { name: "Work", kind: "WORK" },
+        MSG,
+      ),
     ).toEqual(MSG);
   });
 
   it("null lens → null (defensive: missing lens is not a violation)", () => {
-    expect(lensViolation({ plan: "FREE", planRenewsAt: null }, null)).toBeNull();
+    expect(
+      lensViolation({ plan: "FREE", planRenewsAt: null }, null),
+    ).toBeNull();
   });
 });
 
 describe("lensConfigViolation", () => {
   it("FREE → custom-lenses message (configuration is Pro-only)", () => {
-    expect(lensConfigViolation({ plan: "FREE", planRenewsAt: null })).toEqual(CUSTOM_LENSES_MESSAGE);
+    expect(lensConfigViolation({ plan: "FREE", planRenewsAt: null })).toEqual(
+      CUSTOM_LENSES_MESSAGE,
+    );
   });
 
   it("FREE (no user) → message", () => {
@@ -177,19 +302,27 @@ describe("lensConfigViolation", () => {
   });
 
   it("active PRO → null (may configure)", () => {
-    expect(lensConfigViolation({ plan: "PRO", planRenewsAt: FUTURE })).toBeNull();
+    expect(
+      lensConfigViolation({ plan: "PRO", planRenewsAt: FUTURE }),
+    ).toBeNull();
   });
 
   it("expired PRO → message (treated as FREE)", () => {
-    expect(lensConfigViolation({ plan: "PRO", planRenewsAt: PAST })).toEqual(CUSTOM_LENSES_MESSAGE);
+    expect(lensConfigViolation({ plan: "PRO", planRenewsAt: PAST })).toEqual(
+      CUSTOM_LENSES_MESSAGE,
+    );
   });
 
   it("FOUNDER → null (lifetime Pro)", () => {
-    expect(lensConfigViolation({ plan: "FOUNDER", planRenewsAt: null })).toBeNull();
+    expect(
+      lensConfigViolation({ plan: "FOUNDER", planRenewsAt: null }),
+    ).toBeNull();
   });
 
   it("accepts a custom message override", () => {
-    expect(lensConfigViolation({ plan: "FREE", planRenewsAt: null }, MSG)).toEqual(MSG);
+    expect(
+      lensConfigViolation({ plan: "FREE", planRenewsAt: null }, MSG),
+    ).toEqual(MSG);
   });
 });
 

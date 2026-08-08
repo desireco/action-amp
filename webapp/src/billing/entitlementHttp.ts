@@ -5,6 +5,7 @@ import {
   lensViolation,
   lensConfigViolation,
   cliAccessViolation,
+  sitewideSearchViolation,
   resolveLens,
   WORK_LENS_MESSAGE,
   CUSTOM_LENSES_MESSAGE,
@@ -58,7 +59,12 @@ export function throwHttpStatus(statusCode: number, message: string): never {
  * treat its absence as "not entitled."
  */
 interface GuardContext {
-  user?: { id: string; plan?: string | null; planRenewsAt?: Date | null; isAdmin?: boolean | null } | null;
+  user?: {
+    id: string;
+    plan?: string | null;
+    planRenewsAt?: Date | null;
+    isAdmin?: boolean | null;
+  } | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entities: any;
 }
@@ -111,4 +117,9 @@ export function assertLensConfigAllowed(
 /** Guard CLI token issuance from a Wasp operation (the browser OAuth flow). */
 export function assertCliAccess(context: GuardContext): void {
   throwIfViolation(cliAccessViolation(context.user ?? null));
+}
+
+/** Guard sitewide search from direct operation calls by non-Pro accounts. */
+export function assertSitewideSearchAccess(context: GuardContext): void {
+  throwIfViolation(sitewideSearchViolation(context.user ?? null));
 }

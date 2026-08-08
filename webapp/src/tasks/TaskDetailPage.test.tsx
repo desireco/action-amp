@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // ---- Mock wasp ops ----
 const taskData: { current: unknown } = { current: null };
 const getTask = vi.fn();
+const getProject = vi.fn();
 const getProjects = vi.fn(() => []);
 const getGoals = vi.fn(() => []);
 const submitFeedback = vi.fn();
@@ -17,12 +18,15 @@ const updateTaskDetails = vi.fn();
 
 vi.mock("wasp/client/operations", () => ({
   useQuery: (fn: unknown) => {
-    if (fn === getTask) return { data: taskData.current, isLoading: false, error: null };
+    if (fn === getTask)
+      return { data: taskData.current, isLoading: false, error: null };
+    if (fn === getProject) return { data: null, isLoading: false, error: null };
     if (fn === getProjects) return { data: [], isLoading: false, error: null };
     if (fn === getGoals) return { data: [], isLoading: false, error: null };
     return { data: undefined, isLoading: false, error: null };
   },
   getTask,
+  getProject,
   getProjects,
   getGoals,
   submitFeedback,
@@ -63,9 +67,18 @@ function renderAt(entry: string | { pathname: string; state?: unknown }) {
       <MemoryRouter initialEntries={[entry]}>
         <Routes>
           <Route path="/app/tasks/:permalink" element={<TaskDetailPage />} />
-          <Route path="/app/goals/:permalink" element={<div data-testid="goal-detail" />} />
-          <Route path="/app/projects/:permalink" element={<div data-testid="project-detail" />} />
-          <Route path="/app/upcoming" element={<div data-testid="upcoming" />} />
+          <Route
+            path="/app/goals/:permalink"
+            element={<div data-testid="goal-detail" />}
+          />
+          <Route
+            path="/app/projects/:permalink"
+            element={<div data-testid="project-detail" />}
+          />
+          <Route
+            path="/app/upcoming"
+            element={<div data-testid="upcoming" />}
+          />
           <Route path="/app" element={<div data-testid="home" />} />
         </Routes>
       </MemoryRouter>

@@ -9,18 +9,65 @@ import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
 import { LensesPage } from "./src/lenses/LensesPage" with { type: "ref" };
 import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
-import { getTask, getTasks, getTodayTasks, getDoneToday, getTopTask, getFocusedTask, toggleTaskDone, updateTaskStatus, unscheduleOverdueTasks, snoozeTask, startTask, pauseTask, completeFocusSession, addTaskUpdate, updateTaskContent, updateTaskDetails, setTaskOutcome, completeTaskFromFocus } from "./src/tasks/operations" with { type: "ref" };
+import {
+  getTask,
+  getTasks,
+  getTodayTasks,
+  getDoneToday,
+  getTopTask,
+  getFocusedTask,
+  toggleTaskDone,
+  updateTaskStatus,
+  unscheduleOverdueTasks,
+  snoozeTask,
+  startTask,
+  pauseTask,
+  completeFocusSession,
+  addTaskUpdate,
+  updateTaskContent,
+  updateTaskDetails,
+  setTaskOutcome,
+  completeTaskFromFocus,
+} from "./src/tasks/operations" with { type: "ref" };
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { createProject } from "./src/projects/operations" with { type: "ref" };
-import { getProject, createTask } from "./src/projects/operations" with { type: "ref" };
-import { setProjectDone, updateProject, deleteProject, updateTask } from "./src/projects/operations" with { type: "ref" };
-import { createResource, updateResource, deleteResource } from "./src/resources/operations" with { type: "ref" };
+import {
+  getProject,
+  createTask,
+} from "./src/projects/operations" with { type: "ref" };
+import {
+  setProjectDone,
+  updateProject,
+  deleteProject,
+  updateTask,
+} from "./src/projects/operations" with { type: "ref" };
+import {
+  createResource,
+  updateResource,
+  deleteResource,
+} from "./src/resources/operations" with { type: "ref" };
 import { ProjectDetailPage } from "./src/projects/ProjectDetailPage" with { type: "ref" };
 import { getGoals, getGoal } from "./src/goals/operations" with { type: "ref" };
 import { createGoal } from "./src/goals/operations" with { type: "ref" };
-import { setGoalDone, updateGoal, deleteGoal, reorderGoalProjects } from "./src/goals/operations" with { type: "ref" };
+import {
+  setGoalDone,
+  updateGoal,
+  deleteGoal,
+  reorderGoalProjects,
+} from "./src/goals/operations" with { type: "ref" };
 import { getLogbook } from "./src/logbook/operations" with { type: "ref" };
-import { createInboxItem, getInboxItem, getInboxItems, triageInboxItem, restoreArchivedItem, getProjectsForResolver } from "./src/inbox/operations" with { type: "ref" };
+import {
+  getCommandPaletteIndex,
+  searchSite,
+} from "./src/search/operations" with { type: "ref" };
+import {
+  createInboxItem,
+  getInboxItem,
+  getInboxItems,
+  triageInboxItem,
+  restoreArchivedItem,
+  getProjectsForResolver,
+} from "./src/inbox/operations" with { type: "ref" };
 import { TodayPage } from "./src/lists/TodayPage" with { type: "ref" };
 import { UpcomingPage } from "./src/lists/UpcomingPage" with { type: "ref" };
 import { SomedayPage } from "./src/lists/SomedayPage" with { type: "ref" };
@@ -143,7 +190,10 @@ import { LoginPage } from "./src/auth/email/LoginPage" with { type: "ref" };
 import { SignupPage } from "./src/auth/email/SignupPage" with { type: "ref" };
 import { userSignupFields } from "./src/auth/email/userSignupFields" with { type: "ref" };
 import { prepareDevAutologin } from "./src/auth/devAutologin" with { type: "ref" };
-import { requestMagicLogin, verifyMagicLogin } from "./src/auth/magicLogin" with { type: "ref" };
+import {
+  requestMagicLogin,
+  verifyMagicLogin,
+} from "./src/auth/magicLogin" with { type: "ref" };
 import { globalMiddlewareConfigFn } from "./src/auth/serverMiddleware" with { type: "ref" };
 // Google social auth — disabled to skip GOOGLE_CLIENT_ID/SECRET setup for now.
 // All supporting code (config, GoogleButton, userSignupFields) stays in place;
@@ -157,7 +207,6 @@ import { Founding100Page } from "./src/public/Founding100Page" with { type: "ref
 import { Founding100WelcomePage } from "./src/public/Founding100WelcomePage" with { type: "ref" };
 // / on the app subdomain redirects to the marketing apex (Astro on Pages).
 import { RedirectToMarketing } from "./src/public/RedirectToMarketing" with { type: "ref" };
-
 
 export default app({
   name: "ActionAmp",
@@ -224,7 +273,11 @@ export default app({
     rootComponent: App,
   },
   spec: [
-    route("LandingRoute", "/", page(RedirectToMarketing, { authRequired: false })),
+    route(
+      "LandingRoute",
+      "/",
+      page(RedirectToMarketing, { authRequired: false }),
+    ),
     route("AppRoute", "/app", page(NextPage)),
     route("FocusRoute", "/app/focus", page(FocusPage)),
     route("InboxRoute", "/app/inbox", page(InboxPage)),
@@ -256,17 +309,33 @@ export default app({
     route("AdminFeedbackRoute", "/app/admin/feedback", page(AdminFeedbackPage)),
     route("LegacyAdminRoute", "/app/settings/admin", page(AdminRedirectPage)),
     route("TaskDetailRoute", "/app/tasks/:permalink", page(TaskDetailPage)),
-    route("ProjectDetailRoute", "/app/projects/:permalink", page(ProjectDetailPage)),
+    route(
+      "ProjectDetailRoute",
+      "/app/projects/:permalink",
+      page(ProjectDetailPage),
+    ),
     route("OnboardingRoute", "/welcome", page(OnboardingPage)),
-    route("DesignSystemRoute", "/design-system", page(DesignSystemPage, { authRequired: false })),
+    route(
+      "DesignSystemRoute",
+      "/design-system",
+      page(DesignSystemPage, { authRequired: false }),
+    ),
     // Public: /founding-100 is a marketing/landing offer linked from PublicLayout
     // and ProGate aimed at logged-out visitors, so it must render for everyone.
     // The CTA handles auth itself — an anonymous clicker is sent to /login, an
     // authed clicker starts Stripe Checkout (createCheckoutSession gates on
     // context.user server-side). (authRequired defaults to false in Wasp 0.24 —
     // explicit for clarity.)
-    route("Founding100Route", "/founding-100", page(Founding100Page, { authRequired: false })),
-    route("Founding100WelcomeRoute", "/founding-100/welcome", page(Founding100WelcomePage)),
+    route(
+      "Founding100Route",
+      "/founding-100",
+      page(Founding100Page, { authRequired: false }),
+    ),
+    route(
+      "Founding100WelcomeRoute",
+      "/founding-100/welcome",
+      page(Founding100WelcomePage),
+    ),
     // PWA share_target confirmation page. authRequired:false so it renders
     // during session resolution and after a logged-out → /login bounce (the
     // page handles its own auth awareness via useQuery). See
@@ -277,7 +346,11 @@ export default app({
     // (authRequired: true → Wasp redirects to /login then back here with the
     // callback/state query params preserved). Explicit-consent confirm mints
     // an ApiKey and redirects to the CLI's localhost callback.
-    route("CliLoginRoute", "/cli/login", page(CliLoginPage, { authRequired: true })),
+    route(
+      "CliLoginRoute",
+      "/cli/login",
+      page(CliLoginPage, { authRequired: true }),
+    ),
     route("SignupRoute", "/signup", page(SignupPage)),
     route(
       "EmailVerificationRoute",
@@ -285,8 +358,14 @@ export default app({
       page(EmailVerificationPage),
     ),
     action(prepareDevAutologin, { auth: false }),
-    action(requestMagicLogin, { entities: ["MagicLoginChallenge"], auth: false }),
-    action(verifyMagicLogin, { entities: ["MagicLoginChallenge"], auth: false }),
+    action(requestMagicLogin, {
+      entities: ["MagicLoginChallenge"],
+      auth: false,
+    }),
+    action(verifyMagicLogin, {
+      entities: ["MagicLoginChallenge"],
+      auth: false,
+    }),
     // CLI OAuth mint — the /cli/login page calls this to mint a PAT on confirm.
     // A Wasp action (not a custom api route) so it goes through /operations/*
     // where CORS+credentials are properly handled cross-origin.
@@ -296,38 +375,86 @@ export default app({
     query(getTodayTasks, { entities: ["Task", "Lens"], auth: true }),
     query(getDoneToday, { entities: ["Task", "Lens"], auth: true }),
     query(getTopTask, { entities: ["Task", "Lens"], auth: true }),
-    query(getFocusedTask, { entities: ["Task", "TaskSession", "User"], auth: true }),
+    query(getFocusedTask, {
+      entities: ["Task", "TaskSession", "User"],
+      auth: true,
+    }),
     action(toggleTaskDone, { entities: ["Task"], auth: true }),
     action(updateTaskStatus, { entities: ["Task"], auth: true }),
     action(unscheduleOverdueTasks, { entities: ["Task", "Lens"], auth: true }),
     action(snoozeTask, { entities: ["Task"], auth: true }),
-    action(startTask, { entities: ["Task", "TaskSession", "User"], auth: true }),
+    action(startTask, {
+      entities: ["Task", "TaskSession", "User"],
+      auth: true,
+    }),
     action(pauseTask, { entities: ["Task", "TaskSession"], auth: true }),
-    action(completeFocusSession, { entities: ["Task", "TaskSession"], auth: true }),
+    action(completeFocusSession, {
+      entities: ["Task", "TaskSession"],
+      auth: true,
+    }),
     action(addTaskUpdate, { entities: ["Task", "TaskUpdate"], auth: true }),
     action(updateTaskContent, { entities: ["Task"], auth: true }),
     action(setTaskOutcome, { entities: ["Task"], auth: true }),
-    action(updateTaskDetails, { entities: ["Task", "Project", "Goal"], auth: true }),
-    action(completeTaskFromFocus, { entities: ["Task", "TaskUpdate", "TaskSession"], auth: true }),
+    action(updateTaskDetails, {
+      entities: ["Task", "Project", "Goal"],
+      auth: true,
+    }),
+    action(completeTaskFromFocus, {
+      entities: ["Task", "TaskUpdate", "TaskSession"],
+      auth: true,
+    }),
     query(getProjects, { entities: ["Project", "Task", "Lens"], auth: true }),
     action(createProject, { entities: ["Project", "Lens"], auth: true }),
-    query(getProject, { entities: ["Project", "Task", "Resource"], auth: true }),
-    action(createTask, { entities: ["Task", "Project", "Goal", "Lens"], auth: true }),
+    query(getProject, {
+      entities: ["Project", "Task", "Resource"],
+      auth: true,
+    }),
+    action(createTask, {
+      entities: ["Task", "Project", "Goal", "Lens"],
+      auth: true,
+    }),
     action(setProjectDone, { entities: ["Project", "Lens"], auth: true }),
     action(updateProject, { entities: ["Project", "Goal"], auth: true }),
-    action(deleteProject, { entities: ["Project", "Task", "Resource"], auth: true }),
+    action(deleteProject, {
+      entities: ["Project", "Task", "Resource"],
+      auth: true,
+    }),
     action(updateTask, { entities: ["Task", "Project", "Goal"], auth: true }),
     action(createResource, { entities: ["Resource", "Project"], auth: true }),
     action(updateResource, { entities: ["Resource", "Project"], auth: true }),
     action(deleteResource, { entities: ["Resource", "Project"], auth: true }),
-    query(getGoals, { entities: ["Goal", "Project", "Task", "Lens"], auth: true }),
+    query(getGoals, {
+      entities: ["Goal", "Project", "Task", "Lens"],
+      auth: true,
+    }),
     query(getGoal, { entities: ["Goal", "Project", "Task"], auth: true }),
     action(createGoal, { entities: ["Goal", "Lens"], auth: true }),
     action(setGoalDone, { entities: ["Goal", "Lens"], auth: true }),
     action(updateGoal, { entities: ["Goal"], auth: true }),
-    action(deleteGoal, { entities: ["Goal", "Project", "Task", "Resource"], auth: true }),
+    action(deleteGoal, {
+      entities: ["Goal", "Project", "Task", "Resource"],
+      auth: true,
+    }),
     action(reorderGoalProjects, { entities: ["Goal", "Project"], auth: true }),
-    query(getLogbook, { entities: ["Task", "Project", "Goal", "InboxItem"], auth: true }),
+    query(getLogbook, {
+      entities: ["Task", "Project", "Goal", "InboxItem"],
+      auth: true,
+    }),
+    query(searchSite, {
+      entities: [
+        "Task",
+        "TaskUpdate",
+        "Project",
+        "Goal",
+        "Resource",
+        "InboxItem",
+      ],
+      auth: true,
+    }),
+    query(getCommandPaletteIndex, {
+      entities: ["Task", "Project", "Goal", "Resource", "InboxItem", "Lens"],
+      auth: true,
+    }),
     query(getReview, {
       entities: [
         "Review",
@@ -345,33 +472,76 @@ export default app({
       entities: ["Review", "Task", "Project", "Goal", "Lens", "TaskSession"],
       auth: true,
     }),
-    query(getAppData, { entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
+    query(getAppData, {
+      entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"],
+      auth: true,
+    }),
     action(updateProfile, { entities: ["User"], auth: true }),
     action(saveTodayCap, { entities: ["User"], auth: true }),
     action(saveFocusSessionMinutes, { entities: ["User"], auth: true }),
     action(saveReviewPreferences, { entities: ["User"], auth: true }),
     query(getNotificationPreferences, { entities: ["User"], auth: true }),
-    action(savePushSubscription, { entities: ["PushSubscription"], auth: true }),
+    action(savePushSubscription, {
+      entities: ["PushSubscription"],
+      auth: true,
+    }),
     action(saveDailyReminder, { entities: ["User"], auth: true }),
     action(submitFeedback, { entities: ["User", "Feedback"], auth: true }),
-    query(getAdminStats, { entities: ["User", "Task", "Feedback", "Payment", "AnalyticsSession", "AnalyticsEvent"], auth: true }),
-    query(getAdminFunnel, { entities: ["AnalyticsSession", "AnalyticsEvent"], auth: true }),
+    query(getAdminStats, {
+      entities: [
+        "User",
+        "Task",
+        "Feedback",
+        "Payment",
+        "AnalyticsSession",
+        "AnalyticsEvent",
+      ],
+      auth: true,
+    }),
+    query(getAdminFunnel, {
+      entities: ["AnalyticsSession", "AnalyticsEvent"],
+      auth: true,
+    }),
     query(getRecentFeedback, { entities: ["Feedback"], auth: true }),
     action(updateFeedbackStatus, { entities: ["Feedback"], auth: true }),
     action(deleteFeedback, { entities: ["Feedback"], auth: true }),
-    action(recordAnalyticsEvent, { entities: ["AnalyticsSession", "AnalyticsEvent"], auth: true }),
-    action(ensureOnboarded, { entities: ["Lens", "Project", "Task"], auth: true }),
+    action(recordAnalyticsEvent, {
+      entities: ["AnalyticsSession", "AnalyticsEvent"],
+      auth: true,
+    }),
+    action(ensureOnboarded, {
+      entities: ["Lens", "Project", "Task"],
+      auth: true,
+    }),
     action(createLens, { entities: ["Lens"], auth: true }),
     action(updateLens, { entities: ["Lens"], auth: true }),
-    action(deleteLens, { entities: ["Lens", "Task", "Project", "Goal"], auth: true }),
+    action(deleteLens, {
+      entities: ["Lens", "Task", "Project", "Goal"],
+      auth: true,
+    }),
     query(getLenses, { entities: ["Lens"], auth: true }),
     action(setPreferredName, { entities: ["User"], auth: true }),
     action(completeOnboarding, { entities: ["User"], auth: true }),
-    query(getInboxItems, { entities: ["InboxItem", "InboxAttachment"], auth: true }),
-    query(getInboxItem, { entities: ["InboxItem", "InboxAttachment"], auth: true }),
-    query(getProjectsForResolver, { entities: ["Project", "Lens"], auth: true }),
-    action(createInboxItem, { entities: ["InboxItem", "InboxAttachment", "Lens"], auth: true }),
-    action(triageInboxItem, { entities: ["InboxItem", "Task", "Project", "Resource", "Tag", "Lens"], auth: true }),
+    query(getInboxItems, {
+      entities: ["InboxItem", "InboxAttachment"],
+      auth: true,
+    }),
+    query(getInboxItem, {
+      entities: ["InboxItem", "InboxAttachment"],
+      auth: true,
+    }),
+    query(getProjectsForResolver, {
+      entities: ["Project", "Lens"],
+      auth: true,
+    }),
+    action(createInboxItem, {
+      entities: ["InboxItem", "InboxAttachment", "Lens"],
+      auth: true,
+    }),
+    action(triageInboxItem, {
+      entities: ["InboxItem", "Task", "Project", "Resource", "Tag", "Lens"],
+      auth: true,
+    }),
     action(restoreArchivedItem, { entities: ["InboxItem"], auth: true }),
     query(getBillingStatus, { entities: ["Payment"], auth: true }),
     query(getFounding100Status, { entities: ["User"], auth: false }),
@@ -532,16 +702,24 @@ export default app({
     }),
     // Project-owned resource routes.
     api("GET", "/api/cli/resource/list", cliResourceList, {
-      entities: [], auth: false, middlewareConfigFn: patRouteMiddleware,
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
     }),
     api("POST", "/api/cli/resource/create", cliResourceCreate, {
-      entities: [], auth: false, middlewareConfigFn: patRouteMiddleware,
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
     }),
     api("POST", "/api/cli/resource/update", cliResourceUpdate, {
-      entities: [], auth: false, middlewareConfigFn: patRouteMiddleware,
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
     }),
     api("POST", "/api/cli/resource/delete", cliResourceDelete, {
-      entities: [], auth: false, middlewareConfigFn: patRouteMiddleware,
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
     }),
     // Goal routes.
     api("GET", "/api/cli/goal/list", cliGoalList, {

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render } from "@testing-library/react";
-import { useKeyboardShortcuts, type ShortcutHandlers } from "./useKeyboardShortcuts";
+import {
+  useKeyboardShortcuts,
+  type ShortcutHandlers,
+} from "./useKeyboardShortcuts";
 
 // Harness: a tiny component that invokes the hook. The hook attaches a
 // window keydown listener; we dispatch synthetic KeyboardEvents and assert
@@ -12,10 +15,19 @@ function Harness(props: ShortcutHandlers) {
 }
 
 /** Dispatch a keydown on window with the given key + modifier state. */
-function press(key: string, opts: { meta?: boolean; shift?: boolean; target?: Element } = {}) {
+function press(
+  key: string,
+  opts: {
+    meta?: boolean;
+    shift?: boolean;
+    target?: Element;
+    code?: string;
+  } = {},
+) {
   window.dispatchEvent(
     new KeyboardEvent("keydown", {
       key,
+      code: opts.code,
       bubbles: true,
       metaKey: opts.meta ?? false,
       shiftKey: opts.shift ?? false,
@@ -42,9 +54,12 @@ beforeEach(() => {
   // typing quirk), so one localized cast here keeps the rest of the file clean.
   handlers = {
     onCapture: vi.fn(),
+    onSearch: vi.fn(),
+    onCommandPalette: vi.fn(),
     onGoHome: vi.fn(),
     onNavigate: vi.fn(),
     onToggleCheatsheet: vi.fn(),
+    onToggleLens: vi.fn(),
     onCloseOverlay: vi.fn(),
   } as unknown as Required<ShortcutHandlers>;
 });
@@ -77,10 +92,55 @@ describe("useKeyboardShortcuts — capture", () => {
     expect(handlers.onCapture).not.toHaveBeenCalled();
   });
 
-  it("bare / does NOT open capture (retired — Firefox quick-find conflict)", () => {
+  it("bare / opens search, not capture", () => {
     render(<Harness {...handlers} />);
     press("/");
     expect(handlers.onCapture).not.toHaveBeenCalled();
+    expect(handlers.onSearch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("useKeyboardShortcuts — sitewide search", () => {
+  it("⌘\\ opens command mode", () => {
+    render(<Harness {...handlers} />);
+    press("\\", { meta: true });
+    expect(handlers.onCommandPalette).toHaveBeenCalledTimes(1);
+  });
+
+  it("⌘\\ works inside a text field", () => {
+    const input = setTypingTarget("INPUT");
+    render(<Harness {...handlers} />);
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "\\", metaKey: true, bubbles: true }),
+    );
+    expect(handlers.onCommandPalette).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses physical Backslash as a layout-safe fallback", () => {
+    render(<Harness {...handlers} />);
+    press("Dead", { meta: true, code: "Backslash" });
+    expect(handlers.onCommandPalette).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts Ctrl+Backslash on non-Mac keyboards", () => {
+    render(<Harness {...handlers} />);
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "\\",
+        ctrlKey: true,
+        bubbles: true,
+      }),
+    );
+    expect(handlers.onCommandPalette).toHaveBeenCalledTimes(1);
+  });
+
+  it("bare / stays typing-guarded", () => {
+    const input = setTypingTarget("INPUT");
+    render(<Harness {...handlers} />);
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "/", bubbles: true }),
+    );
+    expect(handlers.onSearch).not.toHaveBeenCalled();
   });
 });
 
@@ -116,7 +176,9 @@ describe("useKeyboardShortcuts — Shift-letter navigation", () => {
   it("navigation chords are typing-guarded (no fire inside a text field)", () => {
     const input = setTypingTarget("INPUT");
     render(<Harness {...handlers} />);
-    input.dispatchEvent(new KeyboardEvent("keydown", { key: "I", shiftKey: true, bubbles: true }));
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "I", shiftKey: true, bubbles: true }),
+    );
     expect(handlers.onNavigate).not.toHaveBeenCalled();
   });
 
@@ -133,7 +195,12 @@ describe("useKeyboardShortcuts — cheatsheet", () => {
     const input = setTypingTarget("INPUT");
     render(<Harness {...handlers} />);
     input.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "?", metaKey: true, shiftKey: true, bubbles: true }),
+      new KeyboardEvent("keydown", {
+        key: "?",
+        metaKey: true,
+        shiftKey: true,
+        bubbles: true,
+      }),
     );
     expect(handlers.onToggleCheatsheet).toHaveBeenCalledTimes(1);
   });
@@ -165,7 +232,9 @@ describe("useKeyboardShortcuts — navigation", () => {
     render(<Harness {...handlers} />);
     const btn = document.createElement("button");
     document.body.appendChild(btn);
-    btn.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    btn.dispatchEvent(
+      new KeyboardEvent("keydown", { key: " ", bubbles: true }),
+    );
     expect(handlers.onGoHome).not.toHaveBeenCalled();
   });
 
@@ -178,7 +247,9 @@ describe("useKeyboardShortcuts — navigation", () => {
   it("Esc fires even inside a text field", () => {
     const input = setTypingTarget("INPUT");
     render(<Harness {...handlers} />);
-    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
     expect(handlers.onCloseOverlay).toHaveBeenCalledTimes(1);
   });
 });
@@ -189,7 +260,9 @@ describe("useKeyboardShortcuts — typing guard", () => {
     (tagName) => {
       const el = setTypingTarget(tagName);
       render(<Harness {...handlers} />);
-      el.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+      el.dispatchEvent(
+        new KeyboardEvent("keydown", { key: " ", bubbles: true }),
+      );
       expect(handlers.onGoHome).not.toHaveBeenCalled();
     },
   );
@@ -204,7 +277,9 @@ describe("useKeyboardShortcuts — typing guard", () => {
     div.focus();
     vi.spyOn(document, "activeElement", "get").mockReturnValue(div);
     render(<Harness {...handlers} />);
-    div.dispatchEvent(new KeyboardEvent("keydown", { key: "?", shiftKey: true, bubbles: true }));
+    div.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "?", shiftKey: true, bubbles: true }),
+    );
     expect(handlers.onToggleCheatsheet).not.toHaveBeenCalled();
   });
 });

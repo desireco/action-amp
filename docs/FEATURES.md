@@ -13,8 +13,8 @@
 > code-verified, and the source of truth. **This catalog wins over FEATURES.md**
 > on existence/status questions; FEATURES.md wins only on the F-number scheme.
 >
-> **For *where* things live** (areas, modes, routing), `WORKFLOW.md` is
-> canonical and overrides this doc. This doc describes *what* each feature does,
+> **For _where_ things live** (areas, modes, routing), `WORKFLOW.md` is
+> canonical and overrides this doc. This doc describes _what_ each feature does,
 > not where it sits.
 
 ---
@@ -30,38 +30,38 @@ Every other todo app optimizes step 1. ActionAmp optimizes step 3.
    inbox            how long?         hide the rest     view             light momentum
 ```
 
-The product bet: **overwhelm happens at step 3, not step 1.** The home screen is the *chooser*, not the *list*. See `PRODUCT.md` and `SUCCESS.md` for the thesis and the testable bets.
+The product bet: **overwhelm happens at step 3, not step 1.** The home screen is the _chooser_, not the _list_. See `PRODUCT.md` and `SUCCESS.md` for the thesis and the testable bets.
 
 ---
 
 ## 1. Capture — thought → inbox in under 2 seconds
 
-| # | Feature | Status | Notes |
-|---|---|---|---|
-| **F1** | Global quick-add (`⌘K`) | ✅ Shipped | `CapturePopover.tsx`. Floating input from anywhere; stays on current screen. |
-| **F2** | Natural-language parsing | ✅ Shipped | `parseCapture.ts`. `tomorrow` → date, `#x` → project, `@x` → tag, `!2` → priority, `~20m` → size. Tokens show as inline chips. |
-| **F3** | Inbox | ✅ Shipped | Everything lands here unassigned until triaged. The only "queue" concept. |
-| **F4** | Capture-with-context (`Shift+Enter`) | 🟡 Phase 2 | Full editor from the palette (notes, subtasks, date pickers). |
-| **F5** | Email-in capture | 🟡 Phase 2 | Per-user inbox address; forwarding creates an item. |
+| #      | Feature                              | Status     | Notes                                                                                                                          |
+| ------ | ------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **F1** | Global quick-add (`⌘K`)              | ✅ Shipped | `CapturePopover.tsx`. Floating input from anywhere; stays on current screen.                                                   |
+| **F2** | Natural-language parsing             | ✅ Shipped | `parseCapture.ts`. `tomorrow` → date, `#x` → project, `@x` → tag, `!2` → priority, `~20m` → size. Tokens show as inline chips. |
+| **F3** | Inbox                                | ✅ Shipped | Everything lands here unassigned until triaged. The only "queue" concept.                                                      |
+| **F4** | Capture-with-context (`Shift+Enter`) | 🟡 Phase 2 | Full editor from the palette (notes, subtasks, date pickers).                                                                  |
+| **F5** | Email-in capture                     | 🟡 Phase 2 | Per-user inbox address; forwarding creates an item.                                                                            |
 
 **Non-goals:** voice (handled by OS dictation into the text field), general
-file attachments *(Phase 2)*. One image from an Android/Chrome PWA share is
+file attachments _(Phase 2)_. One image from an Android/Chrome PWA share is
 supported as an Inbox attachment.
 
 ---
 
 ## 2. Clarify — triage the inbox
 
-Goal: move items *out* of the inbox into a place the focus engine can use. This is the only list-y screen — intentionally a temporary staging area, not a home.
+Goal: move items _out_ of the inbox into a place the focus engine can use. This is the only list-y screen — intentionally a temporary staging area, not a home.
 
-| # | Feature | Status | Notes |
-|---|---|---|---|
-| **F6** | Inbox review (triage wizard) | ✅ Shipped (reworked) | **No longer one-key dispatch.** A per-item *specification wizard*: Context → Type → Spec → Complete. See `TRIAGE.md` §4. The old `1/2/3/4/Del` keymap is obsolete; `Del` is now lossless **Archive** (kept in Logbook). |
-| **F7** | Bulk clarify | 🟡 Phase 2 | Multi-select + assign goal/lens/date in one keystroke. |
+| #      | Feature                      | Status                | Notes                                                                                                                                                                                                                   |
+| ------ | ---------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F6** | Inbox review (triage wizard) | ✅ Shipped (reworked) | **No longer one-key dispatch.** A per-item _specification wizard_: Context → Type → Spec → Complete. See `TRIAGE.md` §4. The old `1/2/3/4/Del` keymap is obsolete; `Del` is now lossless **Archive** (kept in Logbook). |
+| **F7** | Bulk clarify                 | 🟡 Phase 2            | Multi-select + assign goal/lens/date in one keystroke.                                                                                                                                                                  |
 
 **The model** (GTD + PARA flavor — full detail in `DATA-MODEL.md`, structural authority in `WORKFLOW.md`):
 
-- **Inbox** — unprocessed. · **Today** — committed to today *(capped — see F12)*.
+- **Inbox** — unprocessed. · **Today** — committed to today _(capped — see F12)_.
 - **Upcoming** — dated future. · **Someday** — no date, not forgotten, not nagging.
 - **Lens** — active life-context switch (Work / Me; custom lenses are Pro — F26).
 - **Goals** — organizing layer (replaces PARA's "Areas"): active outcomes.
@@ -111,49 +111,50 @@ The home screen (`/app`). Every other app opens to a list. ActionAmp opens to a 
 
 **Principle:** every primary action has a keyboard shortcut; the mouse is optional. `?` shows the cheatsheet; hover hints on buttons.
 
-| Shortcut | Action | Source |
-|---|---|---|
-| `⌘K` | Quick capture (from anywhere) | F1 |
-| `Space` | Open "Next" (home) | — |
-| `?` | Shortcut cheat sheet | F21 |
-| `J` / `K` | Move selection down / up | — |
-| `Enter` | Open selected item | — |
-| `⌘Enter` / `D` | Mark done | F16 |
-| `E` | Edit | — |
-| `H` | Snooze / hide ("not now") | F11 |
-| `T` | Set time-available · `G` | Set energy | F9 (when built) |
-| `F` | Enter focus mode | F13 |
-| `P` | Pin to top of Today | — |
-| `Esc` | Close / back | — |
+| Shortcut       | Action                        | Source     |
+| -------------- | ----------------------------- | ---------- |
+| `⌘K`           | Quick capture (from anywhere) | F1         |
+| `Space`        | Open "Next" (home)            | —          |
+| `?`            | Shortcut cheat sheet          | F21        |
+| `J` / `K`      | Move selection down / up      | —          |
+| `Enter`        | Open selected item            | —          |
+| `⌘Enter` / `D` | Mark done                     | F16        |
+| `E`            | Edit                          | —          |
+| `H`            | Snooze / hide ("not now")     | F11        |
+| `T`            | Set time-available · `G`      | Set energy | F9 (when built) |
+| `F`            | Enter focus mode              | F13        |
+| `P`            | Pin to top of Today           | —          |
+| `Esc`          | Close / back                  | —          |
 
 > The triage keymap lives in `TRIAGE.md` §4 (Context → Type → Spec → Complete wizard), not here.
 
-| # | Feature | Status | Notes |
-|---|---|---|---|
-| **F20** | Command palette (`⌘\`) | 🔵 Spec | `specs/command-palette-search.md` (ready, not built). Fuzzy jump/run/find over everything. |
-| **F21** | Keyboard hints | ✅ Shipped | `ShortcutCheatsheet.tsx`. `?` overlay; discoverable shortcuts. |
+| #       | Feature                | Status     | Notes                                                                                                                                                                                                            |
+| ------- | ---------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F20** | Command palette (`⌘\`) | ✅ Shipped | Safe-command registry, fuzzy entity/Lens index, shared Pro gate, accessible popover, and desktop/touch browser verification. See `specs/command-palette-search.md`. |
+| **F21** | Keyboard hints         | ✅ Shipped | `ShortcutCheatsheet.tsx`. `?` overlay; discoverable shortcuts.                                                                                                                                                   |
 
 ---
 
 ## 7. Cross-cutting
 
-| # | Feature | Status | Notes |
-|---|---|---|---|
-| **F22** | Full-text search | 🟡 Phase 2 | Across items, notes, Logbook. No dedicated search op yet. |
-| **F23** | Offline-capable | 🟡 Phase 2 | Capture & complete offline; sync on reconnect (React Query cache helps). |
-| **F24** | Dark mode + calm default | ✅ Shipped | `[data-theme="dark"]` via Settings → Preferences. See `DESIGN-SYSTEM.md` §3. |
-| **F25** | Multi-device sync | 🟡 Phase 2 | Web now; Wasp architecture gets us cross-device later. |
-| **F26** | Custom Lenses | ✅ Shipped | `/app/settings/lenses`. Pro-only CRUD beyond the seeded Work/Me pair. See `specs/custom-lenses.md`. |
+| #       | Feature                  | Status     | Notes                                                                                                                                                                           |
+| ------- | ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F22** | Sitewide search (`/`)    | ✅ Shipped | Bounded relevance-safe search covers all Task states plus Project, Goal, Resource, and live/archived Inbox text with exact destinations and browser-verified pointer/touch entry. |
+| **F23** | Offline-capable          | 🟡 Phase 2 | Capture & complete offline; sync on reconnect (React Query cache helps).                                                                                                        |
+| **F24** | Dark mode + calm default | ✅ Shipped | `[data-theme="dark"]` via Settings → Preferences. See `DESIGN-SYSTEM.md` §3.                                                                                                    |
+| **F25** | Multi-device sync        | 🟡 Phase 2 | Web now; Wasp architecture gets us cross-device later.                                                                                                                          |
+| **F26** | Custom Lenses            | ✅ Shipped | `/app/settings/lenses`. Pro-only CRUD beyond the seeded Work/Me pair. See `specs/custom-lenses.md`.                                                                             |
 
 ---
 
 ## 8. Status legend
 
-| Mark | Meaning |
-|---|---|
-| ✅ Shipped | Built and live in `webapp/src/`. |
-| 🔵 Spec | Spec exists (`docs/specs/`), ready/draft, not yet built. |
-| 🟡 Phase 2 | Explicitly deferred; no spec yet. |
-| ⛔ Banned | Removed by design (violates PRODUCT.md calm principles). |
+| Mark       | Meaning                                                               |
+| ---------- | --------------------------------------------------------------------- |
+| ✅ Shipped | Built and live in `webapp/src/`.                                      |
+| 🟠 Partial | Some code exists, but named user-facing or verification work remains. |
+| 🔵 Spec    | Spec exists (`docs/specs/`), ready/draft, not yet built.              |
+| 🟡 Phase 2 | Explicitly deferred; no spec yet.                                     |
+| ⛔ Banned  | Removed by design (violates PRODUCT.md calm principles).              |
 
 **What changed since the original v1 draft:** F6 reworked from one-key dispatch → specification wizard; F10 candidate pool expanded (Today+Upcoming, not Today/overdue only); F17 (momentum) banned outright; F26 (custom lenses) added; structural claims (3 modes / 5 areas / where things live) moved to `WORKFLOW.md`. Open decisions from §9 of the original are all resolved — home = Next, Today cap = 5 default, matcher = priority-first, timer = Phase 2.

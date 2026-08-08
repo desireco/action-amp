@@ -26,6 +26,9 @@ const updateProject = vi.fn();
 const deleteProject = vi.fn();
 const updateTask = vi.fn();
 const updateTaskContent = vi.fn();
+const createResource = vi.fn();
+const updateResource = vi.fn();
+const deleteResource = vi.fn();
 
 vi.mock("wasp/client/operations", () => ({
   useQuery: (fn: unknown) => {
@@ -51,6 +54,9 @@ vi.mock("wasp/client/operations", () => ({
   deleteProject,
   updateTask,
   updateTaskContent,
+  createResource,
+  updateResource,
+  deleteResource,
 }));
 
 const { ProjectDetailPage } = await import("./ProjectDetailPage");
@@ -68,8 +74,16 @@ function makeProject(overrides: Record<string, unknown> = {}) {
     lensId: "lens-1",
     goal: null,
     tasks: [
-      { id: "t1", description: "Email Sarah", isDone: false, status: "TODAY", priority: "NORMAL", size: "M" },
+      {
+        id: "t1",
+        description: "Email Sarah",
+        isDone: false,
+        status: "TODAY",
+        priority: "NORMAL",
+        size: "M",
+      },
     ],
+    resources: [],
     ...overrides,
   };
 }
@@ -82,10 +96,22 @@ function renderAt(path: string) {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
-          <Route path="/app/projects/:permalink" element={<ProjectDetailPage />} />
-          <Route path="/app/projects" element={<div data-testid="projects-list" />} />
-          <Route path="/app/goals/:permalink" element={<div data-testid="goal-detail" />} />
-          <Route path="/app/tasks/:permalink" element={<div data-testid="task-detail" />} />
+          <Route
+            path="/app/projects/:permalink"
+            element={<ProjectDetailPage />}
+          />
+          <Route
+            path="/app/projects"
+            element={<div data-testid="projects-list" />}
+          />
+          <Route
+            path="/app/goals/:permalink"
+            element={<div data-testid="goal-detail" />}
+          />
+          <Route
+            path="/app/tasks/:permalink"
+            element={<div data-testid="task-detail" />}
+          />
           <Route path="/app/focus" element={<div data-testid="focus" />} />
         </Routes>
       </MemoryRouter>
@@ -96,7 +122,12 @@ function renderAt(path: string) {
 beforeEach(() => {
   vi.clearAllMocks();
   updateTask.mockResolvedValue({ id: "t1", projectId: "p2", goalId: null });
-  updateProject.mockResolvedValue({ id: "p1", name: "X", description: null, goalId: "g1" });
+  updateProject.mockResolvedValue({
+    id: "p1",
+    name: "X",
+    description: null,
+    goalId: "g1",
+  });
   setProjectDone.mockResolvedValue({ id: "p1" });
   deleteProject.mockResolvedValue({ id: "p1", reparentedCount: 0 });
   createTask.mockResolvedValue({ id: "new-task" });
@@ -109,8 +140,22 @@ beforeEach(() => {
 function makeProjectMultiToday(overrides: Record<string, unknown> = {}) {
   return makeProject({
     tasks: [
-      { id: "t1", description: "Email Sarah", isDone: false, status: "TODAY", priority: "NORMAL", size: "M" },
-      { id: "t2", description: "Draft the brief", isDone: false, status: "TODAY", priority: "NORMAL", size: "S" },
+      {
+        id: "t1",
+        description: "Email Sarah",
+        isDone: false,
+        status: "TODAY",
+        priority: "NORMAL",
+        size: "M",
+      },
+      {
+        id: "t2",
+        description: "Draft the brief",
+        isDone: false,
+        status: "TODAY",
+        priority: "NORMAL",
+        size: "S",
+      },
     ],
     ...overrides,
   });
@@ -124,23 +169,54 @@ function openTaskActions(description: string) {
   fireEvent.click(title);
 }
 
+describe("ProjectDetailPage — search destination", () => {
+  it("scrolls the exact resource anchor into view", async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: vi.fn(() => ({ matches: false })),
+    });
+    projectData.current = makeProject({
+      resources: [
+        {
+          id: "policy",
+          title: "Insurance policy",
+          url: null,
+          notes: "Renewal terms",
+          createdAt: new Date("2026-08-01"),
+        },
+      ],
+    });
+
+    renderAt("/app/projects/ship-product-v2#resource-policy");
+
+    expect(document.getElementById("resource-policy")).toHaveClass(
+      "is-search-target",
+    );
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+  });
+});
+
 describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
   it("a task row exposes a Move button that expands the picker", () => {
     projectData.current = makeProjectMultiToday();
-    lensProjectsData.current = [
-      { id: "p2", name: "Other project" },
-    ];
+    lensProjectsData.current = [{ id: "p2", name: "Other project" }];
     renderAt("/app/projects/p1");
 
     // The Move button is present on the open task row.
     openTaskActions("Email Sarah");
-    const moveBtn = screen.getByRole("button", { name: /move email sarah to another project/i });
+    const moveBtn = screen.getByRole("button", {
+      name: /move email sarah to another project/i,
+    });
     fireEvent.click(moveBtn);
 
     // Picker reveals the sibling project as an option.
     expect(screen.getByText("Other project")).toBeInTheDocument();
     // And the standalone (unlink) option.
-    expect(screen.getByRole("button", { name: /^standalone$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^standalone$/i }),
+    ).toBeInTheDocument();
   });
 
   it("selecting a sibling project fires updateTask with the target projectId", async () => {
@@ -149,7 +225,11 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
     renderAt("/app/projects/p1");
 
     openTaskActions("Email Sarah");
-    fireEvent.click(screen.getByRole("button", { name: /move email sarah to another project/i }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /move email sarah to another project/i,
+      }),
+    );
     fireEvent.click(screen.getByText("Other project"));
 
     await waitFor(() =>
@@ -163,7 +243,11 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
     renderAt("/app/projects/p1");
 
     openTaskActions("Email Sarah");
-    fireEvent.click(screen.getByRole("button", { name: /move email sarah to another project/i }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /move email sarah to another project/i,
+      }),
+    );
     fireEvent.click(screen.getByRole("button", { name: /^standalone$/i }));
 
     await waitFor(() =>
@@ -180,7 +264,11 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
     renderAt("/app/projects/p1");
 
     openTaskActions("Email Sarah");
-    fireEvent.click(screen.getByRole("button", { name: /move email sarah to another project/i }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /move email sarah to another project/i,
+      }),
+    );
     // Only "Other project" appears as an option button, not the current project.
     const movePicker = screen.getByText("Other project").parentElement!;
     expect(movePicker).not.toHaveTextContent("Ship product v2");
@@ -192,8 +280,14 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
     renderAt("/app/projects/p1");
 
     openTaskActions("Email Sarah");
-    fireEvent.click(screen.getByRole("button", { name: /move email sarah to another project/i }));
-    expect(screen.getByText(/no other projects in this lens/i)).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /move email sarah to another project/i,
+      }),
+    );
+    expect(
+      screen.getByText(/no other projects in this lens/i),
+    ).toBeInTheDocument();
   });
 });
 
@@ -212,14 +306,23 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
   it("done tasks open their review-only task detail without an Edit button", () => {
     projectData.current = makeProject({
       tasks: [
-        { id: "t1", description: "Email Sarah", isDone: true, status: "TODAY", priority: "NORMAL", size: "M" },
+        {
+          id: "t1",
+          description: "Email Sarah",
+          isDone: true,
+          status: "TODAY",
+          priority: "NORMAL",
+          size: "M",
+        },
       ],
     });
     renderAt("/app/projects/p1");
 
     // Completion freezes task fields, so the project row has no misleading
     // Edit affordance. The row itself remains the route to task review.
-    expect(screen.queryByRole("button", { name: /edit email sarah/i })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /edit email sarah/i }),
+    ).toBeNull();
     fireEvent.click(screen.getByText("Email Sarah"));
     expect(screen.getByTestId("task-detail")).toBeInTheDocument();
   });
@@ -310,7 +413,9 @@ describe("ProjectDetailPage — re-link to goal (spec §C)", () => {
 
     // The "Edit goal" control on the WHY line opens the picker.
     fireEvent.click(screen.getByRole("button", { name: /edit goal/i }));
-    expect(screen.getByRole("button", { name: /none \(standalone\)/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /none \(standalone\)/i }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -320,7 +425,9 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
     renderAt("/app/projects/p1");
 
     expect(screen.getByText(/next step/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /email sarah/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /email sarah/i }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /start/i })).toBeInTheDocument();
   });
 
@@ -329,7 +436,9 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
     renderAt("/app/projects/p1");
 
     expect(screen.getByText(/next step/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /email sarah/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /email sarah/i }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /start/i })).toBeInTheDocument();
     // The other task still remains available in the Today group.
     expect(screen.getByText("Draft the brief")).toBeInTheDocument();
@@ -360,14 +469,24 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
     fireEvent.click(screen.getByRole("button", { name: /not now/i }));
 
     await waitFor(() =>
-      expect(updateTaskStatus).toHaveBeenCalledWith({ id: "t1", status: "UPCOMING" }),
+      expect(updateTaskStatus).toHaveBeenCalledWith({
+        id: "t1",
+        status: "UPCOMING",
+      }),
     );
   });
 
   it("does not render the hero when there are zero Today tasks", () => {
     projectData.current = makeProject({
       tasks: [
-        { id: "t1", description: "Email Sarah", isDone: false, status: "UPCOMING", priority: "NORMAL", size: "M" },
+        {
+          id: "t1",
+          description: "Email Sarah",
+          isDone: false,
+          status: "UPCOMING",
+          priority: "NORMAL",
+          size: "M",
+        },
       ],
     });
     renderAt("/app/projects/p1");
@@ -378,7 +497,14 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
   it("shows the calm cue when there are zero Today tasks but Upcoming exists", () => {
     projectData.current = makeProject({
       tasks: [
-        { id: "t1", description: "Email Sarah", isDone: false, status: "UPCOMING", priority: "NORMAL", size: "M" },
+        {
+          id: "t1",
+          description: "Email Sarah",
+          isDone: false,
+          status: "UPCOMING",
+          priority: "NORMAL",
+          size: "M",
+        },
       ],
     });
     renderAt("/app/projects/p1");
@@ -391,11 +517,20 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
   it("does not show the calm cue when there are zero Today and zero Upcoming tasks", () => {
     projectData.current = makeProject({
       tasks: [
-        { id: "t1", description: "Maybe a leaderboard", isDone: false, status: "SOMEDAY", priority: "NORMAL", size: "M" },
+        {
+          id: "t1",
+          description: "Maybe a leaderboard",
+          isDone: false,
+          status: "SOMEDAY",
+          priority: "NORMAL",
+          size: "M",
+        },
       ],
     });
     renderAt("/app/projects/p1");
 
-    expect(screen.queryByText(/nothing queued for today/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/nothing queued for today/i),
+    ).not.toBeInTheDocument();
   });
 });

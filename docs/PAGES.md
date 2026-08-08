@@ -42,7 +42,7 @@ Persistent UI that frames every page:
 └──────────┴──────────────────────────────────────────────┘
 ```
 
-- **Lens switch** at the top of the sidebar — changes scope of *everything* below it.
+- **Lens switch** at the top of the sidebar — changes scope of _everything_ below it.
 - **Focus switch** (Work / Plan / Review) is an expanding-section nav — only one
   section open at a time. Capture (`⌘K`) and Inbox stay pinned outside both.
 - Active page highlighted. Counts (Inbox `(4)`) live-update.
@@ -53,7 +53,7 @@ Persistent UI that frames every page:
 
 These are the main destinations. All scoped to the active Lens.
 
-### P1. Next  →  `/app`
+### P1. Next → `/app`
 
 **The home page. The wedge.** Not a list — a chooser. (FEATURES F8/F10.)
 
@@ -64,7 +64,7 @@ These are the main destinations. All scoped to the active Lens.
 - Empty state: if no Today items → gentle prompt to triage Inbox or plan Today.
 - If Inbox is untriaged and Today is empty → nudge toward triage.
 
-### P2. Inbox  →  `/app/inbox`
+### P2. Inbox → `/app/inbox`
 
 The universal queue. (FEATURES F3.) Shows untriaged InboxItems as a list.
 
@@ -74,7 +74,7 @@ The universal queue. (FEATURES F3.) Shows untriaged InboxItems as a list.
 - Queue header: count + "Start triage" button → enters review mode. Empty state
   keeps the same bounded queue surface and points back to universal `⌘K` capture.
 
-### P2b. Inbox Triage  →  `/app/inbox/review`
+### P2b. Inbox Triage → `/app/inbox/review`
 
 Per-item co-author wizard (DATA-MODEL §3, TRIAGE.md §4). The
 single-card one-key dispatch is **gone**. Three steps per item:
@@ -87,9 +87,9 @@ single-card one-key dispatch is **gone**. Three steps per item:
 - **Ready** — commits the spec; the InboxItem is transformed and removed.
 - Progress dot: "3 of 7 triaged."
 
-### P3. Today  →  `/app/today`
+### P3. Today → `/app/today`
 
-**Planning view** of today's commitments — distinct from Next (which is *doing*).
+**Planning view** of today's commitments — distinct from Next (which is _doing_).
 
 - List of Tasks due today/overdue, grouped by Goal.
 - Enforces the **Today cap** (FEATURES F12): adding a 6th requires bumping one out.
@@ -97,7 +97,7 @@ single-card one-key dispatch is **gone**. Three steps per item:
 - "Done today" section scoped to `status === "TODAY"` only (locked 2026-07-05).
 - Cross-links to `/app/upcoming` from the hero.
 
-### P4. Upcoming  →  `/app/upcoming`
+### P4. Upcoming → `/app/upcoming`
 
 The forward-planning view of `status=UPCOMING` tasks (the bench).
 
@@ -107,7 +107,7 @@ The forward-planning view of `status=UPCOMING` tasks (the bench).
   rose-tinted overdue, inline notes, per-row promote-to-Today.
 - Cross-links back to `/app/today` from the hero.
 
-### P5. Someday  →  `/app/someday`
+### P5. Someday → `/app/someday`
 
 No-date, not-forgotten, not-nagging Tasks. (GTD "Someday/Maybe".) Lives under
 the Plan section of the focus-switch nav.
@@ -115,14 +115,14 @@ the Plan section of the focus-switch nav.
 - Grouped by Goal (or flat). Lighter visual weight.
 - Promote to Today/Upcoming when ready.
 
-### P6. Projects  →  `/app/projects`
+### P6. Projects → `/app/projects`
 
 All Projects in the active Lens, with Goal alignment shown on each card.
 
 - Each row: name, progress (X/Y tasks done), due date if any, next-action preview.
 - "No next action" badge if a Project has no actionable Task — a GTD health nudge.
 
-### P7. Goals  →  `/app/goals`
+### P7. Goals → `/app/goals`
 
 All Goals in the active Lens, with project roll-up. Full lifecycle (locked
 2026-07-05): complete / reopen / edit / delete / re-link; `Project.order`
@@ -140,11 +140,11 @@ Goals, and supports optional saved reflection. Reviews span all Lenses;
 Week/Month can filter inside the page. `/app/review` resolves to the first
 enabled cadence, then Logbook when all are disabled.
 
-### P9. Logbook  →  `/app/logbook`
+### P9. Logbook → `/app/logbook`
 
 Completed + archived items. (PARA "Archive" / FEATURES F18.)
 
-- Searchable. Grouped by completion date.
+- Grouped by completion date and discoverable through the sitewide palette.
 - **Completed Goals surface here** since 2026-07-05, with a Reopen affordance.
 - No editing — restore or permanently delete only.
 
@@ -152,7 +152,7 @@ Completed + archived items. (PARA "Archive" / FEATURES F18.)
 
 ## 2. Detail pages
 
-### D1. Project detail  →  `/app/projects/:permalink`
+### D1. Project detail → `/app/projects/:permalink`
 
 - Header: name, parent Goal, due date, status. Editable inline (lifecycle
   shipped 2026-07-05: complete / reopen / edit / delete / re-link).
@@ -161,7 +161,7 @@ Completed + archived items. (PARA "Archive" / FEATURES F18.)
 - Convert Task → Project (XL break-down path). Promote Resource → Task.
 - "Next action" highlighted. **Move-to-Project** affordance on each task row.
 
-### D2. Goal detail  →  `/app/goals/:permalink`
+### D2. Goal detail → `/app/goals/:permalink`
 
 - Header: name, description ("the why").
 - Linked Projects (ordered by `Project.order`), with progress.
@@ -169,17 +169,17 @@ Completed + archived items. (PARA "Archive" / FEATURES F18.)
 - Aggregate roll-up: % complete across linked Projects.
 - Lifecycle actions: complete / reopen / edit / delete / re-link.
 
-### D3. Task detail  →  `/app/tasks/:permalink`
+### D3. Task detail → `/app/tasks/:permalink`
 
 Task permalink page (shipped 2026-07-05). Full-field chip-popover editing via
 the shared `PropertyChips` editor (priority, size, due, project, goal, tags).
 Notes thread rendered as a thread + composer (writes a `TaskUpdate`,
 `kind=NOTE`). Completed task detail becomes feedback-only.
 
-### D4. Focus  →  `/app/focus`
+### D4. Focus → `/app/focus`
 
 Single-task execution route (FEATURES F13, Variant F). The task, its margin
-clock (live session + honest total), summoned composer, and *nothing else*.
+clock (live session + honest total), summoned composer, and _nothing else_.
 
 - Entered from Next's one-tap "Start" or any task row's focus affordance.
 - Minimal chrome — sidebar hidden.
@@ -196,27 +196,27 @@ clock (live session + honest total), summoned composer, and *nothing else*.
 These aren't pages but are core surfaces:
 
 - **O1. Quick-add palette** (`⌘K`) — floating input, NL parsing, chips preview. (F1/F2.)
-- **O2. Command palette** (`⌘\`) — fuzzy jump/run over everything. (F20, not yet built.)
+- **O2. Command palette + sitewide search** (`⌘\` Command; `/` Search) — one shared Pro popover for safe commands, cross-Lens entity jumps, and text results across Tasks, Projects, Goals, Resources, and Inbox records. (F20/F22 shipped and browser-verified.)
 - **O3. Shortcut cheatsheet** (`?` / `⌘?`) — overlay of all shortcuts. (F21.)
-- **O4. Search** (`/` or via palette) — full-text results overlay across items/notes/logbook. (F22, not yet built.)
+- **O4. Search** — `/` enters Search intent inside O2's shared popover; no separate page or Logbook-only box. (F22; see `specs/command-palette-search.md`.)
 - **O5. XL break-down prompt** — modal when a Task is set to XL. (F9c.)
 
 ---
 
 ## 4. Auth pages
 
-| Route | Page | Notes |
-|---|---|---|
-| `/login` | Login | email + social (Google OAuth client config pending) |
-| `/signup` | Signup | email + social |
-| `/password-reset` | Reset | email only |
-| `/email-verification` | Verify email | email only |
+| Route                 | Page         | Notes                                               |
+| --------------------- | ------------ | --------------------------------------------------- |
+| `/login`              | Login        | email + social (Google OAuth client config pending) |
+| `/signup`             | Signup       | email + social                                      |
+| `/password-reset`     | Reset        | email only                                          |
+| `/email-verification` | Verify email | email only                                          |
 
 Post-auth redirect → `/app` (Next).
 
 ---
 
-## 5. Settings  →  `/app/settings`
+## 5. Settings → `/app/settings`
 
 - **Account** — email, password, linked social accounts, delete account.
 - **Preferences** — theme (dark default), Today cap (default 5, or off), confirmation sounds, momentum toggle.
@@ -273,7 +273,7 @@ Auth:
 
 ## 7. Resolved decisions (historical)
 
-These were open calls during scaffold; all resolved. Kept as a record of *why*
+These were open calls during scaffold; all resolved. Kept as a record of _why_
 the routes are shaped the way they are.
 
 1. **Today vs. Next** → two pages. Next (`/app`) = the chooser (doing); Today

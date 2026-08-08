@@ -2,15 +2,45 @@ import type { ReactNode } from "react";
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuth, logout } from "wasp/client/auth";
-import { useQuery, ensureOnboarded, getAppData, createInboxItem, submitFeedback, getProjectsForResolver } from "wasp/client/operations";
+import {
+  useQuery,
+  ensureOnboarded,
+  getAppData,
+  createInboxItem,
+  submitFeedback,
+  getProjectsForResolver,
+} from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
-import { useKeyboardShortcuts, type NavDestination } from "./useKeyboardShortcuts";
+import {
+  useKeyboardShortcuts,
+  type NavDestination,
+} from "./useKeyboardShortcuts";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { captureFeedbackContext } from "../feedback/captureContext";
-import { Button, CloseButton, CapturePopover, ShortcutCheatsheet, ConfirmDialog, ProGate, LensChip, LensPopover, Kbd } from "../components/ui";
+import {
+  Button,
+  CloseButton,
+  CapturePopover,
+  ShortcutCheatsheet,
+  ConfirmDialog,
+  ProGate,
+  LensChip,
+  LensPopover,
+  Kbd,
+} from "../components/ui";
 import { useEntitled } from "../billing/useEntitled";
-import { registerServiceWorker, useServiceWorkerUpdate, useDeployedVersionUpdate } from "../notifications/client";
+import {
+  CommandPalette,
+  type CommandPaletteMode,
+} from "../search/CommandPalette";
+import { isPaletteBlocked } from "../search/paletteAvailability";
+import { applyTheme, preferredTheme, toggleTheme } from "./theme";
+import {
+  registerServiceWorker,
+  useServiceWorkerUpdate,
+  useDeployedVersionUpdate,
+} from "../notifications/client";
 import {
   BrandMark,
   LensSwitch,
@@ -26,6 +56,7 @@ import {
   GoalsIcon,
   LogbookIcon,
   UserIcon,
+  SearchIcon,
 } from "../components/ui";
 import "./AppShell.css";
 
@@ -87,10 +118,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // persisted/system value on app entry so the tokens are active before a
   // settings page is visited.
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("aa-theme") as "light" | "dark" | null;
-    const theme = stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    document.documentElement.dataset.theme = theme;
+    applyTheme(preferredTheme());
   }, []);
 
   // Push and notification actions are handled by the production service worker.
@@ -149,9 +177,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   // pure-UI component with no queries/auth of its own. CapturePopover renders
   // outside the LensContext provider, so making it do its own queries was racy
   // (auth not resolved at mount → 500s). One query site, one auth gate.
-  const { data: resolverProjects } = useQuery(getProjectsForResolver, undefined, {
-    enabled: !!user,
-  });
+  const { data: resolverProjects } = useQuery(
+    getProjectsForResolver,
+    undefined,
+    {
+      enabled: !!user,
+    },
+  );
   // Lens names for the [[ ]] parser — seeded (work/personal/me) are always
   // known to the parser; custom names must be supplied.
   const customLensNames = lenses
@@ -183,7 +215,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     (rawId ? lenses.find((l) => l.id === rawId) : undefined) ?? lenses[0];
   const activeLens =
     !entitled && resolvedLens && resolvedLens.kind !== "PERSONAL"
-      ? lenses.find((l) => l.kind === "PERSONAL") ?? resolvedLens
+      ? (lenses.find((l) => l.kind === "PERSONAL") ?? resolvedLens)
       : resolvedLens;
   const activeLensName = activeLens?.name ?? "Me";
   // Self-heal: if the stored id no longer matches a lens (deleted?), persist
@@ -212,8 +244,20 @@ export function AppShell({ children }: { children: ReactNode }) {
           proLocked: workLocked && l.kind !== "PERSONAL",
         }))
       : [
-          { id: "Work", label: "Work", color: "indigo", purpose: undefined, proLocked: workLocked },
-          { id: "Me", label: "Me", color: "emerald", purpose: undefined, proLocked: false },
+          {
+            id: "Work",
+            label: "Work",
+            color: "indigo",
+            purpose: undefined,
+            proLocked: workLocked,
+          },
+          {
+            id: "Me",
+            label: "Me",
+            color: "emerald",
+            purpose: undefined,
+            proLocked: false,
+          },
         ];
   // Adaptive switcher: ≤3 lenses → segmented control (today); ≥4 → chip + popover.
   // The swap is pure presentational state on lens count, no routing change.
@@ -235,7 +279,13 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   // The value pages consume via useActiveLens() to scope their queries.
   const activeLensValue = activeLens
-    ? { id: activeLens.id, name: activeLens.name, color: activeLens.color ?? null, kind: activeLens.kind, purpose: activeLens.purpose }
+    ? {
+        id: activeLens.id,
+        name: activeLens.name,
+        color: activeLens.color ?? null,
+        kind: activeLens.kind,
+        purpose: activeLens.purpose,
+      }
     : null;
 
   // Mirror the active lens's identity color onto <html data-lens="..."> so CSS
@@ -253,7 +303,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [activeLensColor]);
 
   const isActive = (to: string) =>
-    to === "/app" ? location.pathname === "/app" : location.pathname.startsWith(to);
+    to === "/app"
+      ? location.pathname === "/app"
+      : location.pathname.startsWith(to);
 
   // Section-level active state for the mobile dock (Plan/Review dock items
   // each represent a whole section, not one route). Mirrors sectionForPath so
@@ -298,7 +350,30 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileLensOpen, setMobileLensOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [lensPopoverOpen, setLensPopoverOpen] = useState(false);
+  const [paletteMode, setPaletteMode] = useState<CommandPaletteMode | null>(
+    null,
+  );
   const [updateDismissed, setUpdateDismissed] = useState(false);
+
+  const closeGlobalOverlays = () => {
+    setCaptureOpen(false);
+    setCheatsheetOpen(false);
+    setConfirmLogout(false);
+    setMobileLensOpen(false);
+    setFeedbackOpen(false);
+    setLensPopoverOpen(false);
+    setPaletteMode(null);
+  };
+
+  const openCapture = () => {
+    closeGlobalOverlays();
+    setCaptureOpen(true);
+  };
+
+  const openPalette = (mode: CommandPaletteMode) => {
+    closeGlobalOverlays();
+    setPaletteMode(mode);
+  };
 
   // New SW waiting → offer a one-click refresh into the next build.
   const sw = useServiceWorkerUpdate();
@@ -306,45 +381,89 @@ export function AppShell({ children }: { children: ReactNode }) {
   // drifts from this bundle's __APP_VERSION__. SW detection only fires on
   // navigation; this closes the gap for tabs open across a deploy.
   const deployed = useDeployedVersionUpdate();
-  const showUpdateBanner = (sw.updateAvailable || deployed.updateAvailable) && !updateDismissed;
+  const showUpdateBanner =
+    (sw.updateAvailable || deployed.updateAvailable) && !updateDismissed;
   // Pick whichever path surfaced the update: SW needs the SKIP_WAITING
   // handoff, the poll path just reloads into the new build.
-  const applyUpdate = sw.updateAvailable ? sw.applyUpdate : deployed.applyUpdate;
+  const applyUpdate = sw.updateAvailable
+    ? sw.applyUpdate
+    : deployed.applyUpdate;
 
   // Manifest shortcut and notification action: /app?capture=1 opens the same
   // universal capture surface as ⌘K, then removes the one-shot URL flag.
   useEffect(() => {
     if (new URLSearchParams(location.search).get("capture") !== "1") return;
-    setCaptureOpen(true);
+    openCapture();
     const params = new URLSearchParams(location.search);
     params.delete("capture");
-    navigate({ pathname: location.pathname, search: params.toString() ? `?${params}` : "" }, { replace: true });
+    navigate(
+      {
+        pathname: location.pathname,
+        search: params.toString() ? `?${params}` : "",
+      },
+      { replace: true },
+    );
   }, [location.pathname, location.search, navigate]);
 
+  const inSettings = isActive("/app/settings");
+  const inFocus = location.pathname.startsWith("/app/focus");
+  const inTriage = location.pathname.startsWith("/app/inbox/review");
+  const paletteBlocked = isPaletteBlocked({
+    working: inFocus,
+    triage: inTriage,
+    capture: captureOpen,
+    shortcuts: cheatsheetOpen,
+    confirmation: confirmLogout,
+    feedback: feedbackOpen,
+    mobileLens: mobileLensOpen,
+    palette: Boolean(paletteMode),
+  });
+
   useKeyboardShortcuts({
-    onCapture: () => setCaptureOpen(true),
+    onCapture: openCapture,
+    onSearch: () => {
+      if (!paletteBlocked) openPalette("search");
+    },
+    onCommandPalette: () => {
+      if (!paletteBlocked) openPalette("command");
+    },
     onGoHome: () => navigate("/app"),
     onNavigate: (dest) => navigate(NAV_ROUTE[dest]),
-    onToggleCheatsheet: () => setCheatsheetOpen((v) => !v),
-    onToggleLens: () => setLensPopoverOpen((v) => !v),
+    onToggleCheatsheet: () => {
+      const next = !cheatsheetOpen;
+      closeGlobalOverlays();
+      setCheatsheetOpen(next);
+    },
+    onToggleLens: () => {
+      const next = !lensPopoverOpen;
+      closeGlobalOverlays();
+      setLensPopoverOpen(next);
+    },
     onCloseOverlay: () => {
-      setCaptureOpen(false);
-      setCheatsheetOpen(false);
-      setConfirmLogout(false);
-      setMobileLensOpen(false);
-      setFeedbackOpen(false);
-      setLensPopoverOpen(false);
+      if (paletteMode) setPaletteMode(null);
+      else if (captureOpen) setCaptureOpen(false);
+      else if (cheatsheetOpen) setCheatsheetOpen(false);
+      else if (confirmLogout) setConfirmLogout(false);
+      else if (feedbackOpen) setFeedbackOpen(false);
+      else if (lensPopoverOpen) setLensPopoverOpen(false);
+      else if (mobileLensOpen) setMobileLensOpen(false);
     },
   });
 
   // Lock body scroll while any overlay is open.
   useEffect(() => {
-    const open = captureOpen || cheatsheetOpen || confirmLogout || feedbackOpen;
+    const open = Boolean(
+      captureOpen ||
+      cheatsheetOpen ||
+      confirmLogout ||
+      feedbackOpen ||
+      paletteMode,
+    );
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [captureOpen, cheatsheetOpen, confirmLogout, feedbackOpen]);
+  }, [captureOpen, cheatsheetOpen, confirmLogout, feedbackOpen, paletteMode]);
 
   // On mobile, hide the bottom dock while in Settings or Focus mode. Settings
   // is a deliberate detour from the focus loop (its tabs are all inactive
@@ -352,9 +471,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   // keyboard-rail hints. In both, reclaiming the thumb zone helps and the FAB
   // stays for capture. Desktop is unaffected (the dock is already display:none
   // above 768px).
-  const inSettings = isActive("/app/settings");
-  const inFocus = location.pathname.startsWith("/app/focus");
-
   return (
     <div
       className={`aa-app${inSettings ? " is-in-settings" : ""}${inFocus ? " is-in-focus" : ""}`}
@@ -368,13 +484,27 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
 
         <div className="aa-app-utility-cluster" aria-label="Shell utilities">
+          <button
+            type="button"
+            className="aa-app-utility-btn aa-app-search-btn"
+            onClick={() => openPalette("search")}
+            title={entitled ? "Search (/)" : "Sitewide search (Pro)"}
+            aria-label={entitled ? "Search" : "Search (Pro)"}
+            disabled={paletteBlocked}
+          >
+            <SearchIcon />
+            {!entitled && <span className="aa-app-search-pro">Pro</span>}
+          </button>
           {/* Shortcuts (?) — keyboard-only; hidden on touch (see AppShell.css).
               Desktop utility cluster order (right→left): shortcuts, feedback,
               avatar/settings. On mobile, this lives in the header beside brand. */}
           <button
             type="button"
             className="aa-app-utility-btn aa-app-shortcuts-btn"
-            onClick={() => setCheatsheetOpen(true)}
+            onClick={() => {
+              closeGlobalOverlays();
+              setCheatsheetOpen(true);
+            }}
             title="Shortcuts (?)"
             aria-label="Shortcuts"
           >
@@ -383,7 +513,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button
             type="button"
             className="aa-app-utility-btn"
-            onClick={() => setFeedbackOpen(true)}
+            onClick={() => {
+              closeGlobalOverlays();
+              setFeedbackOpen(true);
+            }}
             title="Leave feedback"
             aria-label="Leave feedback"
           >
@@ -414,11 +547,27 @@ export function AppShell({ children }: { children: ReactNode }) {
             label="Inbox"
             active={isActive("/app/inbox")}
             to="/app/inbox"
-            count={counts.inbox > 0 ? counts.inbox : (
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-label="Inbox zero">
-                <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
+            count={
+              counts.inbox > 0 ? (
+                counts.inbox
+              ) : (
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  aria-label="Inbox zero"
+                >
+                  <path
+                    d="M3.5 8.5l3 3 6-7"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )
+            }
             countVariant={counts.inbox > 0 ? "urgent" : "done"}
           />
           <NavItem
@@ -538,7 +687,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                     active={activeLens?.id ?? ""}
                     onSelect={selectLens}
                     onClose={() => setLensPopoverOpen(false)}
-                    onNewLens={entitled ? () => navigate("/app/settings/lenses") : undefined}
+                    onNewLens={
+                      entitled
+                        ? () => navigate("/app/settings/lenses")
+                        : undefined
+                    }
                     newLensProLocked={!entitled}
                   />
                 )}
@@ -556,7 +709,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             className={`aa-app-user-btn ${isActive("/app/settings") ? "active" : ""}`}
             title="Settings"
           >
-            <span className="aa-app-user-avatar" aria-hidden="true">{initials || <UserIcon />}</span>
+            <span className="aa-app-user-avatar" aria-hidden="true">
+              {initials || <UserIcon />}
+            </span>
             <span className="aa-app-user-name">
               {user ? user.fullName : ""}
             </span>
@@ -569,7 +724,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               Admin
             </Link>
           )}
-          <button type="button" className="aa-app-logout" onClick={() => setConfirmLogout(true)}>
+          <button
+            type="button"
+            className="aa-app-logout"
+            onClick={() => setConfirmLogout(true)}
+          >
             Log out
           </button>
         </div>
@@ -578,7 +737,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* ============================ MAIN ============================ */}
       <div className="aa-app-mainwrap">
         {showUpdateBanner && (
-          <div className="aa-app-update-banner" role="status" aria-live="polite">
+          <div
+            className="aa-app-update-banner"
+            role="status"
+            aria-live="polite"
+          >
             <span className="aa-app-update-banner__copy">
               A new version of ActionAmp is available.
             </span>
@@ -586,7 +749,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Button size="sm" variant="primary" onClick={applyUpdate}>
                 Refresh
               </Button>
-              <CloseButton onClose={() => setUpdateDismissed(true)} label="Dismiss update banner" />
+              <CloseButton
+                onClose={() => setUpdateDismissed(true)}
+                label="Dismiss update banner"
+              />
             </span>
           </div>
         )}
@@ -609,9 +775,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      <nav className={`aa-mobile-dock ${mobileLensOpen ? "is-lens-open" : ""}`} aria-label="Mobile navigation">
+      <nav
+        className={`aa-mobile-dock ${mobileLensOpen ? "is-lens-open" : ""}`}
+        aria-label="Mobile navigation"
+      >
         {mobileLensOpen && (
-          <div className="aa-mobile-lens-menu" role="menu" aria-label="Choose Lens">
+          <div
+            className="aa-mobile-lens-menu"
+            role="menu"
+            aria-label="Choose Lens"
+          >
             {lensOptions.map((l) => (
               <button
                 key={l.id}
@@ -686,14 +859,31 @@ export function AppShell({ children }: { children: ReactNode }) {
         className={`aa-app-capture-fab ${mobileLensOpen ? "is-hidden-while-lens-open" : ""}`}
         title="Capture (⌘K)"
         aria-label="Capture"
-        onClick={() => setCaptureOpen(true)}
+        onClick={openCapture}
       >
         <PlusIcon width={18} height={18} />
         <span>Capture</span>
         <Kbd>⌘K</Kbd>
       </button>
 
-      {/* ---- Global overlays (capture popover + shortcut cheatsheet) ---- */}
+      {/* ---- Global overlays ---- */}
+      {paletteMode && (
+        <CommandPalette
+          mode={paletteMode}
+          entitled={entitled}
+          lenses={lenses.map((lens) => ({
+            id: lens.id,
+            name: lens.name,
+            color: lens.color,
+          }))}
+          onClose={() => setPaletteMode(null)}
+          onNavigate={(href) => navigate(href)}
+          onSwitchLens={selectLens}
+          onCapture={openCapture}
+          onToggleTheme={toggleTheme}
+          onOpenShortcuts={() => setCheatsheetOpen(true)}
+        />
+      )}
       {captureOpen && (
         <CapturePopover
           onClose={() => setCaptureOpen(false)}
@@ -714,7 +904,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           }}
         />
       )}
-      {cheatsheetOpen && <ShortcutCheatsheet onClose={() => setCheatsheetOpen(false)} />}
+      {cheatsheetOpen && (
+        <ShortcutCheatsheet onClose={() => setCheatsheetOpen(false)} />
+      )}
       {feedbackOpen && (
         <FeedbackDialog
           onClose={() => setFeedbackOpen(false)}

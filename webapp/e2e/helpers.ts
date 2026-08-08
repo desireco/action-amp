@@ -8,8 +8,8 @@ import path from "node:path";
  *
  * Each feature spec needs a clean, deterministic user state. Strategy: create
  * a fresh, email-verified user via direct DB insert (scripts/create-verified-
- * user.mjs) then log in via the UI. Bypasses signup because the
- * SKIP_EMAIL_VERIFICATION_IN_DEV flag is unreliable in this dev server.
+ * user.mjs) then log in through the local-only dev autologin route. This keeps
+ * tests independent from email delivery and the current passwordless UI.
  * Tests encode FEATURES.md / TRIAGE.md requirements, NOT the implementation.
  */
 
@@ -30,7 +30,7 @@ export function uniqueEmail(): string {
 
 /** Create a fresh verified user via direct DB insert. No email round-trip. */
 export function createVerifiedUser(
-  opts: { email?: string; fullName?: string; password?: string } = {},
+  opts: { email?: string; fullName?: string; password?: string; admin?: boolean } = {},
 ): string {
   const email = opts.email ?? uniqueEmail();
   const fullName = opts.fullName ?? "E2E Tester";
@@ -38,7 +38,7 @@ export function createVerifiedUser(
   // Synchronous: the script is fast (one DB round-trip) and tests need the
   // user to exist before they navigate. execSync keeps the helper simple.
   execSync(
-    `node scripts/create-verified-user.mjs --email "${email}" --password "${password}" --fullName "${fullName}"`,
+    `node scripts/create-verified-user.mjs --email "${email}" --password "${password}" --fullName "${fullName}"${opts.admin ? " --admin" : ""}`,
     { cwd: WEBAPP, env: { ...process.env, DATABASE_URL }, stdio: ["pipe", "pipe", "inherit"] },
   );
   return email;
@@ -50,16 +50,10 @@ export function createVerifiedUser(
  */
 export async function signupNewUser(
   page: Page,
-  opts: { fullName?: string; email?: string; password?: string } = {},
+  opts: { fullName?: string; email?: string; password?: string; admin?: boolean } = {},
 ): Promise<string> {
   const email = createVerifiedUser(opts);
-  const password = opts.password ?? TEST_PASS;
-
-  await page.goto("/login");
-  await page.locator('input[type="email"]').fill(email);
-  await page.locator('input[type="password"]').fill(password);
-  await page.getByRole("button", { name: /log in/i }).click();
-
+  await page.goto(`/login?devEmail=${encodeURIComponent(email)}`);
   await page.waitForURL(/\/app/, { timeout: 15_000 });
   return email;
 }
@@ -72,7 +66,10 @@ export async function signupNewUser(
  */
 export async function openCapture(page: Page) {
   // Wait for the app shell to be interactive so the global key handler is live.
-  await page.getByRole("link", { name: /^next$/i }).waitFor({ state: "visible", timeout: 10_000 });
+  await page
+    .getByRole("button", { name: /capture/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 10_000 });
   await page.keyboard.press("Meta+K");
   const dialog = page.getByRole("dialog", { name: /quick capture/i });
   try {

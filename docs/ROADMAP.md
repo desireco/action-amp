@@ -221,10 +221,7 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
    bar is under-designed for the wedge surface (needs a locked mockup); (C) the
    fallback-invariant test claim was incorrect. Details in the spec; the
    matcher-test run resolves the gate while Discover closes the gaps.
-4. **command-palette-search** (`ready`) — command palette + full-text search across **all**
-    tasks (open + done). The two Pro-tier features most likely to justify the
-    price to an existing user. Depends on entitlement-enforcement.
-5. **triage-classify-step** (`in-progress`, core flow implemented 2026-07-04)
+4. **triage-classify-step** (`in-progress`, core flow implemented 2026-07-04)
    — replace the separate Context + Type triage steps with **Classify**
    (`Classify → Spec → Complete`). Concrete Project resolution shows
    `Destination: Project · Lens` and skips the standalone lens selection by
@@ -308,23 +305,6 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
     so it sits in this tier (post-gauntlet), not the validation gauntlet.
     Interactive prototype at `docs/mockups/today-merged.html`. Spec at
     `docs/specs/work-area-merged.md`.
-6. **weekly-monthly-review** (`draft`, spec written) — the Review area is
-    WORKFLOW.md §2.5's "least-built area, net-new work": today it's just the
-    Logbook (a flat list grouped by day). Adds `/app/review/weekly` +
-    `/app/review/monthly` — period debriefs that group the window's completed
-    tasks/projects **by Goal/Project** (not by day), show a **progress delta**
-    vs. the prior period reusing `getGoals`' rollup math, and surface
-    **stuck/aging** items (overdue, interrupted-Now >7d, never-Today >30d) —
-    all inspectable today, surfaced nowhere. Split: **v1 range review**
-    (completions + stuck, buildable on the current schema) and **v2 activity
-    review** (timeline progress), **gated on `work-area-merged`'s `kind` enum
-    on `TaskUpdate`** — the Started/Paused/Completed events don't exist yet.
-    Entitlement lean: **Pro-only** (sidesteps the half-enforced 30-day Logbook
-    cap in PRICING.md §4, fits the tier). Calm by rule: trends yes,
-    streaks/guilt-trip red dots never (PRODUCT.md bans them). Spec at
-    `docs/specs/weekly-monthly-review.md` — `ready` needs the entitlement call
-    confirmed + a `docs/mockups/review-week.html` throwaway.
-
 ## Queue notes
 
 **Open actions on main:**
@@ -332,14 +312,14 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
 1. The validation queue is **observability-minimal → newsletter →
    retention-criticalpath → distribution-quietlaunch**. Observability is gated
    by the user-owned analytics-provider setup.
-2. The product-depth queue after validation signal is **command-palette-search
-   → tag-management → matcher-validation → focus-engine-v2**. Focus-engine-v2
+2. The product-depth queue after validation signal is **tag-management →
+   matcher-validation → focus-engine-v2**. Focus-engine-v2
    stays draft until the tag UI, matcher test, and moment-bar design are closed.
 3. Opportunistic small ready work: **breadcrumb-nav**. Useful depth work once
    there is signal: ~~goal-planning~~ → shipped; ~~resources-project-owned~~
    → shipped (scope-cut). The depth backlog now leans on **task-fields**
-   (shipped) feeding **weekly-monthly-review** (draft) and the still-open
-   **command-palette-search** / **tag-management** pair.
+   and **weekly-monthly-review** are shipped; **tag-management** is the next
+   open depth unit.
 4. Developer-surface work (**cli-pat-plumbing**, then `cli-package` /
    `cli-skills`) remains explicitly opportunistic, not validation-critical.
 5. **Tooling:** **github-projects-sync** (`ready`, P2, realigned 2026-07-07) —
@@ -355,6 +335,26 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **weekly-monthly-review** (`shipped` 2026-08-08) — Review now has distinct
+  Today, Week, and Month debriefs plus the unchanged Logbook. All cadences show
+  completed Goals, Projects, and every Task across Lenses; Week adds aging-task
+  choices, Month adds open-loop choices and next-month Goal emphasis. Optional
+  reflections autosave into a new `Review` record whose completion snapshot
+  preserves historical evidence. Settings independently enable each cadence
+  (all on by default); navigation and direct-route guards honor every toggle
+  combination. IANA-zone period helpers cover Monday weeks, calendar months,
+  and DST days. Available to all accounts; no streaks, scores, reminders,
+  comparative judgment, or Logbook rewrite. Prototype:
+  `docs/mockups/review-rhythms.html`; spec:
+  `docs/specs/weekly-monthly-review.md`.
+- **command-palette-search** (`shipped` 2026-08-08) — `/` opens bounded
+  sitewide Search and `⌘\` opens fuzzy Command without displacing `⌘K`
+  Capture. Paid users can find Tasks in every lifecycle state plus Projects,
+  Goals, Resources, and live/archived Inbox records across Lenses; results
+  preserve exact permalink or anchored destinations. Safe commands, shared
+  entitlement behavior, responsive pointer entry, 900 passing unit/component
+  tests, and four passing Playwright journeys are recorded in
+  `docs/specs/command-palette-search.md`.
 - **resources-project-owned (scope-cut)** (`shipped` 2026-07-28/29) — the
   `Resource` entity is real: project-owned links + notes with full CRUD on the
   Project detail page (add/edit/remove behind the ⋯ overflow), the CLI surface
@@ -713,7 +713,7 @@ Known remaining entitlement questions are product-scope, not launch blockers:
 |---|---|
 | Logbook ≤ 30 days | Still not enforced; defer until Review/logbook becomes a paid surface. |
 | Multi-device: 1 device | No device model exists; not worth building before usage signal. |
-| Command palette / search | Feature missing; spec is ready and should be Pro-gated when built. |
+| Command palette / search | Shipped and server-authoritatively Pro-gated. |
 | Energy/time matcher tags | Feature missing; gated behind tag-management + focus-engine-v2. |
 
 ### B. Free-user experience — improved, still unmeasured
@@ -834,7 +834,7 @@ roadmaps forget and most launches stall on.
       Google console + Railway env vars)
 - [x] Entitlement caps → **`entitlement-enforcement`** (`done`)
 - [x] Friction cleanup → **`friction-cleanup`** (`done`; breadcrumb-nav spun out)
-- [ ] Command palette + search → **`command-palette-search`** (`ready`)
+- [x] Command palette + search → **`command-palette-search`** (`done`)
 - [ ] Newsletter capture → **`newsletter`** (`draft`; product copy + provider
       decision still needed)
 - [ ] Blog (SEO publication) → **`blog`** (`ready`; builds on the shipped Astro

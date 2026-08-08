@@ -13,6 +13,8 @@ import { useEffect } from "react";
  * single, memorable rule.
  *
  *   ⌘K           → open capture popover (always works, even in text fields)
+ *   ⌘\\           → open command palette (always works, even in text fields)
+ *   /            → open sitewide search (outside text fields)
  *   ⌘L           → toggle the lens switcher (always works; ⌘-chords don't type)
  *   Shift+I/N/T/G/P/R → jump to Inbox / Next / Today / TriaGe / Planning / Review
  *   Shift+C      → capture (typing-safe; ⌘K remains the focus-protector)
@@ -26,15 +28,12 @@ import { useEffect } from "react";
 
 /** Areas reachable via the Shift-letter navigation chords. */
 export type NavDestination =
-  | "inbox"
-  | "next"
-  | "today"
-  | "triage"
-  | "planning"
-  | "review";
+  "inbox" | "next" | "today" | "triage" | "planning" | "review";
 
 export interface ShortcutHandlers {
   onCapture?: () => void;
+  onSearch?: () => void;
+  onCommandPalette?: () => void;
   onGoHome?: () => void;
   onNavigate?: (dest: NavDestination) => void;
   onToggleCheatsheet?: () => void;
@@ -62,6 +61,13 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       if (meta && e.key.toLowerCase() === "k") {
         e.preventDefault();
         handlers.onCapture?.();
+        return;
+      }
+
+      // ⌘\ / Ctrl+\ — command palette. Works in fields like capture.
+      if (meta && (e.code === "Backslash" || e.key === "\\")) {
+        e.preventDefault();
+        handlers.onCommandPalette?.();
         return;
       }
 
@@ -93,6 +99,14 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
 
       // Below shortcuts are disabled while typing.
       if (isTypingTarget(e.target)) return;
+
+      // / — sitewide search. Kept below the typing guard so slash remains a
+      // normal character in inputs, textareas, selects, and editors.
+      if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        handlers.onSearch?.();
+        return;
+      }
 
       // Shift + letter → navigation + capture. One grammar: Shift + the first
       // letter of the destination. Capitals never clash with triage's lowercase

@@ -1,7 +1,7 @@
 # Feature Catalog
 
 > **Authoritative inventory of what features exist.** One file per feature, 1:1
-> with its spec. Status is *code-verified* (what's wired today), not what
+> with its spec. Status is _code-verified_ (what's wired today), not what
 > FEATURES.md or PRODUCT.md claim. When those prose docs disagree with this
 > catalog, **this catalog wins on "does it exist / what does it do,"** and the
 > prose doc is due for correction.
@@ -24,11 +24,13 @@
 ## Index (by area; status in parens)
 
 ### Capture & Triage
+
 - [capture](./capture.md) (`shipped`) — `⌘K` quick-add + grammar v2 (`#` projects, `@` time, `[[lens]]`) → universal Inbox.
 - [inbox-triage](./inbox-triage.md) (`shipped`) — per-item spec wizard; lossless Archive.
 - [triage-classify-step](./triage-classify-step.md) (`shipped`) — Classify → Spec → Ready (replaces separate Context + Type steps).
 
 ### Focus — the wedge
+
 - [next-what-now](./next-what-now.md) (`shipped`) — home = one task; `getTopTask`; "why this?" line.
 - [today](./today.md) (`shipped`) — committed-for-today list, cap 5, Done-today section.
 - [focus-mode](./focus-mode.md) (`shipped`) — dedicated `/app/focus` route; Variant F redesign (margin clock, summoned composer, confirm-on-complete).
@@ -36,6 +38,7 @@
 - [upcoming-someday](./upcoming-someday.md) (`shipped`) — Upcoming (top-level Plan nav) + Someday.
 
 ### Planning
+
 - [projects](./projects.md) (`shipped`) — list + detail, inline task create, progress roll-up, project-owned Resources CRUD.
 - [goals](./goals.md) (`shipped`) — list + detail, aggregate progress, full lifecycle.
 - [goal-planning](./goal-planning.md) (`shipped`) — Goal/Project lifecycle (complete/reopen/edit/delete/re-link) + project ordering.
@@ -43,6 +46,7 @@
 - [logbook](./logbook.md) (`shipped`) — completed + Archived + Won't-do sections, Restore, completed Goals.
 
 ### Cross-cutting
+
 - [entitlements](./entitlements.md) (`shipped`) — server-side caps + ProGate paywall.
 - [billing](./billing.md) (`shipped`) — 3 Pro prices + Founding 100 (server-enforced cap).
 - [custom-lenses](./custom-lenses.md) (`shipped`) — user-defined lenses; Pro CRUD; `⌘L` switcher; per-lens identity.
@@ -54,9 +58,10 @@
 - [weekly-monthly-review](./weekly-monthly-review.md) (`shipped`, spec `done`) — optional Today, Week, and Month debriefs with saved snapshots and every completion inspectable.
 - [task-fields](./task-fields.md) (`shipped`) — **Context** (`Task.content`) + **Outcome** (`Task.outcome`), both optional markdown via the shared `PropertyChips` editor.
 - [cli](./cli.md) (`partial`) — **Phase 0 + 1 shipped** (PAT auth + full command surface incl. `lens` + `resource` + shared-content/image `capture`); Phase 2 (orchestration skills) still `draft`.
+- [command-palette](./command-palette.md) (`shipped`, spec `done`) — safe commands, cross-Lens fuzzy jumps, bounded sitewide text search, calm ProGate, exact destinations, and desktop/touch browser verification.
 
 ### Planned (not in code)
-- [command-palette](./command-palette.md) (`missing`, spec `ready`) — `⌘\` fuzzy search.
+
 - [breadcrumb-nav](./breadcrumb-nav.md) (`missing`, spec `ready` — route model locked) — crumbs navigate.
 - [focus-engine-v2](./focus-engine-v2.md) (`missing`, spec `draft`) — moment-aware matcher; needs tag-management UI + a mockup + matcher-test gate.
 - [observability-minimal](./observability-minimal.md) (`partial`, spec `ready`) — anonymous acquisition + funnel; StatCounter base tracker is live.
@@ -69,6 +74,7 @@
 - [github-projects-sync](./github-projects-sync.md) (`missing`, spec `ready`) — GitHub Projects board (org `desireco`); two-way sync on structured fields, one-way on prose; `gh_node_id` join; manual CLI for v1.
 
 ### Deliberately not built (Phase 2 / Icebox)
+
 - Subtasks, Pomodoro timer, email-in capture, AI-tuned suggestions, native mobile,
   hard focus mode. See ROADMAP §Icebox.
 
@@ -95,6 +101,6 @@ These prose claims do not match the code. The catalog reflects code reality:
 
 When a spec ships or a feature changes, update the relevant `features/<slug>.md`
 file **in the same commit.** The `specs/` status and the `features/` status must
-not drift — spec status tracks *done-conditions met*; feature status tracks
-*exists in code*. They usually move together but are not identical (a feature can
+not drift — spec status tracks _done-conditions met_; feature status tracks
+_exists in code_. They usually move together but are not identical (a feature can
 be `shipped` while its spec is `done`; a partial feature has no clean spec state).

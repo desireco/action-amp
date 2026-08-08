@@ -276,12 +276,20 @@
   animation: aa-inbox-pulse 1.2s ease-in-out infinite alternate;
 }
 
-.aa-inbox__loading-line--short { width: 34%; }
-.aa-inbox__loading-line--mid { width: 55%; }
+.aa-inbox__loading-line--short {
+  width: 34%;
+}
+.aa-inbox__loading-line--mid {
+  width: 55%;
+}
 
 @keyframes aa-inbox-pulse {
-  from { opacity: 0.55; }
-  to { opacity: 1; }
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @media (max-width: 620px) {
@@ -325,4 +333,9 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+.aa-inbox__item.is-search-target {
+  border-radius: var(--aa-radius-sm);
+  box-shadow: 0 0 0 2px var(--aa-teal);
 }

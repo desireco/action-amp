@@ -1,8 +1,21 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getLogbook, restoreArchivedItem, setGoalDone, setProjectDone, updateTaskStatus } from "wasp/client/operations";
+import {
+  getLogbook,
+  restoreArchivedItem,
+  setGoalDone,
+  setProjectDone,
+  updateTaskStatus,
+} from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { BrandMark, Chip, GroupedList, Markdown, type GroupDef } from "../components/ui";
+import {
+  BrandMark,
+  Chip,
+  GroupedList,
+  Markdown,
+  type GroupDef,
+} from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "../lists/ListShell";
 import "./LogbookPage.css";
@@ -26,6 +39,7 @@ interface LogItem {
  * projects carry a Reopen action (returns them to the active list).
  */
 export function LogbookPage() {
+  const [searchParams] = useSearchParams();
   const lens = useActiveLens();
   const queryClient = useQueryClient();
   const { data: logbook, isLoading } = useQuery(
@@ -42,15 +56,30 @@ export function LogbookPage() {
       // Prisma type directly causes spread/overload mismatches because LogItem
       // has a different shape (title vs description, kind, etc.).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...logbook.tasks.map((t: any) => ({ ...t, when: new Date(t.completedAt) })),
+      ...logbook.tasks.map((t: any) => ({
+        ...t,
+        when: new Date(t.completedAt),
+      })),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...logbook.wontDo.map((t: any) => ({ ...t, when: new Date(t.completedAt) })),
+      ...logbook.wontDo.map((t: any) => ({
+        ...t,
+        when: new Date(t.completedAt),
+      })),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...logbook.projects.map((p: any) => ({ ...p, when: new Date(p.completedAt) })),
+      ...logbook.projects.map((p: any) => ({
+        ...p,
+        when: new Date(p.completedAt),
+      })),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...logbook.goals.map((g: any) => ({ ...g, when: new Date(g.completedAt) })),
+      ...logbook.goals.map((g: any) => ({
+        ...g,
+        when: new Date(g.completedAt),
+      })),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...logbook.archived.map((a: any) => ({ ...a, when: new Date(a.archivedAt) })),
+      ...logbook.archived.map((a: any) => ({
+        ...a,
+        when: new Date(a.archivedAt),
+      })),
     ].sort((a, b) => b.when.getTime() - a.when.getTime());
 
     const byDay = new Map<string, LogItem[]>();
@@ -59,13 +88,41 @@ export function LogbookPage() {
       if (!byDay.has(key)) byDay.set(key, []);
       byDay.get(key)!.push(item);
     }
-    return Array.from(byDay, ([label, items]) => ({ key: label, label, items }));
+    return Array.from(byDay, ([label, items]) => ({
+      key: label,
+      label,
+      items,
+    }));
   }, [logbook]);
+  const targetItemId = searchParams.get("item");
+
+  useEffect(() => {
+    if (
+      !targetItemId ||
+      !groups.some((group) =>
+        group.items.some((item) => item.id === targetItemId),
+      )
+    )
+      return;
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(`logbook-item-${targetItemId}`)?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "center",
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [groups, targetItemId]);
 
   if (!isLoading && groups.length === 0) {
     return (
       <ListEmpty
-        icon={<span className="aa-logbook-empty-mark"><BrandMark size="md" /></span>}
+        icon={
+          <span className="aa-logbook-empty-mark">
+            <BrandMark size="md" />
+          </span>
+        }
         title="Nothing here yet."
         text="Completed work and archived notes land here — a calm record, not a guilt trip. Check off a task or archive a note and it'll show up."
       />
@@ -121,9 +178,16 @@ export function LogbookPage() {
       <GroupedList
         groups={groups}
         renderItem={(item) => (
-          <div className="aa-logbook-row">
+          <div
+            id={`logbook-item-${item.id}`}
+            className={`aa-logbook-row${item.id === targetItemId ? " is-search-target" : ""}`}
+          >
             <span className="aa-logbook-row__check" aria-hidden="true">
-              {item.kind === "archived" ? <ArchiveMark /> : <BrandMark size="sm" />}
+              {item.kind === "archived" ? (
+                <ArchiveMark />
+              ) : (
+                <BrandMark size="sm" />
+              )}
             </span>
             <div className="aa-logbook-row__main">
               <span className="aa-logbook-row__title">{item.title}</span>
@@ -134,20 +198,38 @@ export function LogbookPage() {
               )}
               <div className="aa-logbook-row__meta">
                 {item.kind === "goal" ? (
-                  <Chip variant="teal" small>Goal</Chip>
+                  <Chip variant="teal" small>
+                    Goal
+                  </Chip>
                 ) : item.kind === "project" ? (
-                  <Chip variant="violet" small>Project</Chip>
+                  <Chip variant="violet" small>
+                    Project
+                  </Chip>
                 ) : item.kind === "archived" ? (
-                  <Chip variant="muted" small>Archived</Chip>
+                  <Chip variant="muted" small>
+                    Archived
+                  </Chip>
                 ) : item.kind === "wont-do" ? (
-                  <Chip variant="muted" small>Won't do</Chip>
+                  <Chip variant="muted" small>
+                    Won't do
+                  </Chip>
                 ) : (
-                  item.project && <Chip variant="violet" small>{item.project.name}</Chip>
+                  item.project && (
+                    <Chip variant="violet" small>
+                      {item.project.name}
+                    </Chip>
+                  )
                 )}
                 {item.kind === "wont-do" && item.project && (
-                  <Chip variant="violet" small>{item.project.name}</Chip>
+                  <Chip variant="violet" small>
+                    {item.project.name}
+                  </Chip>
                 )}
-                {item.goal && <Chip variant="teal" small>{item.goal.name}</Chip>}
+                {item.goal && (
+                  <Chip variant="teal" small>
+                    {item.goal.name}
+                  </Chip>
+                )}
               </div>
             </div>
             {item.kind === "archived" && (
@@ -200,10 +282,34 @@ export function LogbookPage() {
 /** A muted box icon for archived notes — distinct from the BrandMark check. */
 function ArchiveMark() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <rect x="2" y="3" width="12" height="3" rx="1" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M3 6v7a1 1 0 001 1h8a1 1 0 001-1V6" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-      <path d="M6.5 9h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect
+        x="2"
+        y="3"
+        width="12"
+        height="3"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <path
+        d="M3 6v7a1 1 0 001 1h8a1 1 0 001-1V6"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6.5 9h3"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -216,6 +322,11 @@ function dayLabel(d: Date): string {
   const diffDays = Math.round((now.getTime() - target.getTime()) / 86_400_000);
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return target.toLocaleDateString(undefined, { weekday: "long" });
-  return target.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+  if (diffDays < 7)
+    return target.toLocaleDateString(undefined, { weekday: "long" });
+  return target.toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
