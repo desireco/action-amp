@@ -54,9 +54,7 @@
   box-shadow: var(--aa-shadow-sm);
 }
 
-.aa-review__period-nav button,
-.aa-review__decision-actions button,
-.aa-review__decision-actions a {
+.aa-review__period-nav button {
   min-height: 34px;
   border: 0;
   border-right: 1px solid var(--aa-border);
@@ -70,13 +68,10 @@
   cursor: pointer;
 }
 
-.aa-review__period-nav button:last-child,
-.aa-review__decision-actions > :last-child {
+.aa-review__period-nav button:last-child {
   border-right: 0;
 }
-.aa-review__period-nav button:hover,
-.aa-review__decision-actions button:hover,
-.aa-review__decision-actions a:hover {
+.aa-review__period-nav button:hover {
   background: var(--aa-surface-muted);
   color: var(--aa-teal-cta);
 }
@@ -305,37 +300,33 @@
   font-size: 1.35rem;
 }
 
-.aa-review__decisions {
+.aa-review__highlights {
   display: grid;
   gap: var(--aa-space-sm);
 }
-.aa-review__decision {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.aa-review__highlight {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
   gap: var(--aa-space-md);
-  padding: 13px 14px;
+  padding: var(--aa-space-lg);
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-md);
   background: var(--aa-surface);
 }
-.aa-review__decision > div:first-child {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 5px 9px;
+.aa-review__highlight a {
+  color: var(--aa-text);
+  font-weight: var(--aa-weight-semibold);
+  text-decoration: none;
 }
-.aa-review__decision > div:first-child > span:last-child {
-  grid-column: 2;
+.aa-review__highlight a:hover {
+  color: var(--aa-teal-cta);
+}
+.aa-review__highlight > div > span {
+  display: block;
+  margin-top: 4px;
   color: var(--aa-text-3);
   font-size: var(--aa-text-xs);
-}
-.aa-review__decision-actions {
-  display: inline-flex;
-  flex-shrink: 0;
-  border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-sm);
-  overflow: hidden;
 }
 
 .aa-review__reflection {
@@ -426,18 +417,6 @@
   }
   .aa-review__metrics {
     grid-template-columns: 1fr;
-  }
-  .aa-review__decision {
-    align-items: stretch;
-    flex-direction: column;
-  }
-  .aa-review__decision-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .aa-review__decision-actions > * {
-    text-align: center;
-    border-bottom: 1px solid var(--aa-border);
   }
   .aa-review__finish {
     align-items: stretch;

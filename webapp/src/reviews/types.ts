@@ -34,6 +34,7 @@ export type ReviewTaskItem = {
   title: string;
   permalink: string;
   outcome: string | null;
+  size?: "S" | "M" | "L" | "XL";
   completedAt: string;
   lens: ReviewLensRef;
   project: ReviewProjectRef | null;
@@ -78,25 +79,6 @@ export type ReviewSnapshot = {
   weeklySlices: { startDate: string; completedTasks: number }[];
 };
 
-export type ReviewTaskDecision = {
-  id: string;
-  title: string;
-  permalink: string;
-  status: "TODAY" | "UPCOMING" | "SOMEDAY";
-  reason: "Overdue" | "Interrupted" | "Quiet";
-  lens: ReviewLensRef;
-  project: ReviewProjectRef | null;
-};
-
-export type ReviewOpenLoopDecision = {
-  id: string;
-  kind: "goal" | "project";
-  name: string;
-  permalink: string;
-  reason: string;
-  lens: ReviewLensRef;
-};
-
 export type ReviewResult = {
   cadence: ReviewCadence;
   period: {
@@ -114,6 +96,4 @@ export type ReviewResult = {
   evidenceSource: "live" | "snapshot";
   newCompletionCount: number;
   availableGoals: ReviewGoalOption[];
-  taskDecisions: ReviewTaskDecision[];
-  openLoopDecisions: ReviewOpenLoopDecision[];
 };

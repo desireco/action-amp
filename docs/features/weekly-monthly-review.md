@@ -25,15 +25,15 @@ without splitting the ritual. Recorded focus time is derived from overlapping
 completed Task sessions.
 
 **Cadence differences.** Today has one optional memory prompt and a Close today
-action. Week adds effort shape, up to five overdue/interrupted/quiet task
-decisions, and two alignment prompts. Month adds weekly slices, up to three
-Goal/Project open-loop decisions, three direction prompts, and an optional
-active Goal emphasis for next month.
+action. Week and Month lead with up to five completed Medium/Large actions,
+then retain the complete accomplishment history. Week adds effort shape and two
+alignment prompts. Month adds weekly slices, three direction prompts, and an
+optional active Goal emphasis for next month.
 
-**Persistence.** `Review` stores validated optional answers and a stable
-accomplishment snapshot keyed by user, cadence, and period start. Current
-periods remain live; if new work lands after review, Update review refreshes
-the snapshot without discarding answers.
+**Persistence.** Optional answers autosave into `Review`, keyed by user,
+cadence, and period start. Week and Month require no finish action and remain
+editable. Close today records a stable accomplishment snapshot; current-day
+work remains live until updated.
 
 **Preferences.** Settings → Preferences → Reviews independently toggles Today,
 Week, and Month; all default on. Disabled routes redirect to the first enabled

@@ -23,13 +23,14 @@ Review is not another report and not a renamed Logbook.
 - **Logbook** answers: “What happened, and when?” It remains the complete,
   reverse-chronological record.
 - **Today review** answers: “What did I finish today, and can I let today end?”
-- **Week review** answers: “Where did my effort go, and what needs a decision?”
+- **Week review** answers: “Which meaningful actions moved work forward?”
 - **Month review** answers: “Which goals moved or landed, and what deserves my
   attention next?”
 
 All three reviews use the same completion data, but each has a different
-information hierarchy, reflection depth, and closing action. They must not be
-implemented as one generic report with a different date range.
+information hierarchy and reflection depth. Today has a closing action; Week
+and Month autosave without requiring completion. They must not be implemented
+as one generic report with a different date range.
 
 ## Why this change
 
@@ -53,8 +54,8 @@ No overdue-review badge, streak, score, nag, or shame state exists.
    space—not confetti or gamification.
 4. **Reflection stays optional.** Users can complete a review without writing.
    Existing task Outcome notes supply useful reflection automatically.
-5. **Review creates decisions, not cleanup work.** Week and Month may surface
-   unresolved work, but present one calm choice at a time.
+5. **Review recognizes accomplishment, not cleanup work.** Week and Month lead
+   with completed Medium/Large actions rather than unresolved commitments.
 6. **No comparison as judgment.** Previous-period numbers may provide context,
    but never “better,” “worse,” red/green arrows, records, or rankings.
 7. **Completion data is never deleted by settings.** Disabling a cadence hides
@@ -113,8 +114,8 @@ Every cadence uses a common frame while keeping distinct content:
 - completed Project recognition, when present;
 - complete task evidence with Outcome text when available;
 - optional reflection fields;
-- one cadence-specific closing action;
-- “Reviewed” state with timestamp and ability to reopen/edit.
+- autosave for every reflection field;
+- a closing action and “Reviewed” state for Today only.
 
 Keyboard baseline:
 
@@ -122,8 +123,8 @@ Keyboard baseline:
 - `J` / `K` — move through visible groups or prompts;
 - `Enter` — open selected item or activate selected choice;
 - `E` — edit reflection;
-- `R` — mark review complete / update completed review;
-- `Esc` — leave edit/decision state without losing saved content.
+- `R` — close/update Today review;
+- `Esc` — leave edit state without losing saved content.
 
 Shortcuts must not fire while typing in an input or textarea.
 
@@ -198,16 +199,14 @@ navigable.
 4. **Effort shape** — neutral supporting summary: tasks completed per Goal,
    Projects completed, focus time when TaskSession data exists. No score or
    previous-week verdict.
-5. **Needs a decision** — at most five active items, selected by explicit,
-   testable reasons: overdue; interrupted Now older than seven days; Upcoming
-   older than thirty days with no TaskUpdate or TaskSession activity. Each
-   offers `Keep`, `Someday`, `Won’t do`, or `Open`. Nothing changes until user
-   chooses.
-6. **Optional reflection** — two prompts:
+5. **Actions completed** — up to five completed Medium/Large Tasks, with Large
+   first and the most recent within each size. Show title, project/goal context,
+   completion date, and Outcome when present.
+6. **Optional reflection** — two prompts; responses autosave:
    - “What moved forward?”
    - “What should change next week?”
-7. **Close week** — saves review. Loose-item decisions already applied remain
-   ordinary task history, not hidden review-only state.
+
+Week has no Close or Finish action. Saved responses remain editable.
 
 ### Progressive disclosure
 
@@ -245,17 +244,18 @@ Calendar month in the user’s time zone. Default is the current month, labeled
    visually secondary. Never label them wasted or unaligned.
 5. **Month shape** — week-by-week slices showing when work landed. This is
    context, not a heat map and not a streak calendar.
-6. **Open loops worth choosing** — at most three Goal/Project-level decisions,
-   not a long task cleanup queue. Actions: `Keep active`, `Complete`, or `Open`.
-   v1 does not invent a Someday state for Goals or Projects.
-7. **Optional reflection** — three prompts:
+6. **Actions completed** — up to five completed Medium/Large Tasks, with Large
+   first and the most recent within each size. This provides a deliberate
+   accomplishment summary before the complete history.
+7. **Optional reflection** — three prompts; responses autosave:
    - “What are you proud of?”
    - “What did this month teach you?”
    - “What deserves attention next month?”
 8. **Choose next-month emphasis** — optional single Goal selection. This does
    not silently reorder Projects or override the Next matcher; it is stored as
    review reflection until a separate planning decision defines product effect.
-9. **Close month** — saves review.
+
+Month has no Close or Finish action. Saved responses remain editable.
 
 ### Completed-task guarantee
 
@@ -323,16 +323,16 @@ Review
   unique(userId, cadence, periodStart)
 ```
 
-`answers` uses a versioned, runtime-validated shape per cadence. `snapshot`
-stores the visible accomplishment evidence when the review is completed:
+`answers` uses a versioned, runtime-validated shape per cadence. For Today,
+`snapshot` stores the visible accomplishment evidence when the day is closed:
 task/project/goal IDs, names, Outcomes, hierarchy labels, Lens labels, and
 completion timestamps. This prevents a past review from losing its story when
 an item is later reopened, renamed, moved, or deleted.
 
-Before completion, review data is live. If more work completes after a review
-was closed in an in-progress period, page shows “N new completions since this
-review” and offers **Update review**. Updating refreshes snapshot without
-discarding answers.
+Week and Month remain live and need no completion state. If more work completes,
+their accomplishment evidence updates while saved answers remain. If more work
+completes after Today was closed, page shows the new completion count and offers
+**Update review** without discarding answers.
 
 ### Read operation
 
@@ -343,8 +343,8 @@ discarding answers.
 - completed Goals, Projects, and every Task in range;
 - hierarchy and Lens metadata needed for grouping;
 - task Outcomes and relevant TaskUpdate/TaskSession summaries;
-- cadence-specific decision candidates;
-- count of completions newer than saved snapshot.
+- Task size for selecting weekly/monthly Medium/Large highlights;
+- count of current-day completions newer than Today’s saved snapshot.
 
 Authorization always keys on authenticated `userId`. Time zone must be a valid
 IANA identifier. Range helpers receive an injectable clock and have DST tests.
@@ -352,9 +352,7 @@ IANA identifier. Range helpers receive an injectable clock and have DST tests.
 ### Write operations
 
 - `saveReviewDraft({ cadence, periodStart, timeZone, answers })`
-- `completeReview({ cadence, periodStart, timeZone, answers })`
-- existing task/project/goal operations handle decisions; review code does not
-  duplicate lifecycle mutations.
+- `completeReview({ cadence: DAILY, periodStart, timeZone, answers })`
 
 Writes are idempotent through the unique period key. Client autosaves answers
 after a short debounce and shows a quiet Saved/Error state.
@@ -370,9 +368,9 @@ It uses current ActionAmp tokens and shell, with four switchable states:
 1. **Today** — six completed tasks across two Lenses, one completed Goal,
    Outcome excerpts, reflection, Close today.
 2. **Week** — eighteen tasks grouped by Goal/Project, one Goal completion,
-   five decision candidates, two reflection prompts.
+   five Medium/Large accomplishment highlights, two reflection prompts.
 3. **Month** — two Goal completions, several Project groups, four weekly
-   slices, three open-loop decisions, next-month emphasis.
+   slices, up to five Medium/Large accomplishment highlights, next-month emphasis.
 4. **Review settings** — three live toggles demonstrating nav removal and
    all-disabled fallback to Logbook.
 
@@ -381,9 +379,8 @@ Prototype interactions:
 - switch cadence and period;
 - expand/collapse completed-task groups;
 - open Outcome details;
-- choose a weekly/monthly open-loop action;
 - type reflection and see Saved state;
-- close/reopen review;
+- close/reopen Today review;
 - toggle cadences in Settings and see Review nav adapt;
 - light/dark and desktop/mobile layouts;
 - reduced-motion behavior.
@@ -394,7 +391,7 @@ Prototype questions resolved during implementation:
 2. Can users distinguish Today closure, Week alignment, and Month direction in
    five seconds?
 3. Is every completed task findable without making Month feel like a list app?
-4. Does `Needs a decision` feel helpful rather than accusatory?
+4. Do the Medium/Large highlights make meaningful accomplishment visible fast?
 5. Does mobile’s direct jump to the first enabled cadence remain understandable
    without a Review home?
 
@@ -460,12 +457,11 @@ Prototype questions resolved during implementation:
 - [x] Every completed task in selected period is inspectable.
 - [x] Completed Projects and Goals are recognized; completed Goals receive the
       strongest calm celebration.
-- [x] Today supports closure; Week supports alignment decisions; Month supports
-      direction-setting.
+- [x] Today supports closure; Week and Month foreground 3–5 completed
+      Medium/Large actions when available.
 - [x] Reflection is optional, autosaved, and revisitable.
-- [x] Completed review preserves a stable accomplishment snapshot.
-- [x] Later completions can update an in-progress period review without losing
-      answers.
+- [x] Closed Today review preserves a stable accomplishment snapshot.
+- [x] Week and Month responses autosave without a Close or Finish action.
 - [x] No streaks, badges, scores, red-dot nags, confetti, or guilt copy.
 - [x] Review UI supports keyboard, mobile, dark mode, and reduced motion.
 - [x] Time-zone/DST boundaries are correct and tested.

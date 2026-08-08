@@ -147,8 +147,9 @@ appears in Work/Planning/Review except by coming through triage.
 - **Today, Week, and Month reviews** turn completion history into three distinct
   reflection rhythms: daily closure, weekly alignment, and monthly direction.
   Each shows completed Goals first, completed Projects, and every completed
-  Task with its Outcome. Week adds aging-work decisions; Month adds open-loop
-  decisions and a next-month Goal emphasis. Reflections are optional and saved.
+  Task with its Outcome. Week and Month highlight up to five completed
+  Medium/Large actions before the full history; Month also offers a next-month
+  Goal emphasis. Reflections are optional and autosaved.
 - Cadence reviews are universal across Lenses, like Today. Rows keep Lens
   provenance and Week/Month offer an in-page Lens filter. This is the deliberate
   exception to the active-Lens rule; a person should not need separate rituals
@@ -162,9 +163,10 @@ appears in Work/Planning/Review except by coming through triage.
   Reopen), and **archived notes** ("I will not do now" from triage — kept
   lossless, restorable to the inbox). This area is the _view over it_ (counts,
   trends — kept calm, no guilt-trip red dots, no streaks).
-- Completed reviews preserve a stable accomplishment snapshot so later edits,
-  moves, reopenings, or deletion do not erase the reflection's historical view.
-  See `docs/specs/weekly-monthly-review.md`.
+- Closing Today preserves a stable accomplishment snapshot so later edits,
+  moves, reopenings, or deletion do not erase that day's historical view. Week
+  and Month stay live and need no closing action. See
+  `docs/specs/weekly-monthly-review.md`.
 
 ## 3. Context (Lens) scoping
 

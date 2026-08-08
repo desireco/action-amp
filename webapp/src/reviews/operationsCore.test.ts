@@ -297,6 +297,17 @@ describe("review operation core", () => {
       }),
     );
   });
+
+  it("does not close weekly or monthly reviews", async () => {
+    await expect(
+      completeReviewData(db, "user-1", {
+        cadence: "MONTHLY",
+        forDate: "2026-08-08",
+        timeZone: "UTC",
+        answers: {},
+      }),
+    ).rejects.toThrow("Only Today reviews can be closed.");
+  });
 });
 
 describe("validateAnswers", () => {

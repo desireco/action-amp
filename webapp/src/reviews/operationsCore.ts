@@ -8,11 +8,9 @@ import type {
   ReviewAnswers,
   ReviewGoalItem,
   ReviewGoalOption,
-  ReviewOpenLoopDecision,
   ReviewProjectItem,
   ReviewResult,
   ReviewSnapshot,
-  ReviewTaskDecision,
   ReviewTaskItem,
 } from "./types";
 
@@ -37,13 +35,7 @@ export async function getReviewData(
   now = new Date(),
 ): Promise<ReviewResult> {
   const period = reviewPeriod(args.cadence, args.forDate, args.timeZone, now);
-  const [
-    saved,
-    liveEvidence,
-    availableGoals,
-    taskDecisions,
-    openLoopDecisions,
-  ] = await Promise.all([
+  const [saved, liveEvidence, availableGoals] = await Promise.all([
     entities.Review.findUnique({
       where: {
         userId_cadence_periodStart: {
@@ -62,21 +54,18 @@ export async function getReviewData(
       now,
     ),
     loadAvailableGoals(entities, userId),
-    args.cadence === "WEEKLY"
-      ? loadTaskDecisions(entities, userId, now)
-      : Promise.resolve([]),
-    args.cadence === "MONTHLY"
-      ? loadOpenLoopDecisions(entities, userId, period.start, period.end, now)
-      : Promise.resolve([]),
   ]);
 
   const savedSnapshot = parseSnapshot(saved?.snapshot);
   const useStableSnapshot = Boolean(
-    saved?.completedAt && !period.inProgress && savedSnapshot,
+    args.cadence === "DAILY" &&
+      saved?.completedAt &&
+      !period.inProgress &&
+      savedSnapshot,
   );
   const evidence = useStableSnapshot ? savedSnapshot! : liveEvidence;
   const newCompletionCount =
-    savedSnapshot && period.inProgress
+    args.cadence === "DAILY" && savedSnapshot && period.inProgress
       ? countNewCompletions(savedSnapshot, liveEvidence)
       : 0;
 
@@ -97,8 +86,6 @@ export async function getReviewData(
     evidenceSource: useStableSnapshot ? "snapshot" : "live",
     newCompletionCount,
     availableGoals,
-    taskDecisions,
-    openLoopDecisions,
   };
 }
 
@@ -140,6 +127,9 @@ export async function completeReviewData(
   args: SaveReviewArgs,
   now = new Date(),
 ) {
+  if (args.cadence !== "DAILY") {
+    throw new Error("Only Today reviews can be closed.");
+  }
   const period = reviewPeriod(args.cadence, args.forDate, args.timeZone, now);
   const answers = validateAnswers(args.cadence, args.answers);
   const snapshot = await loadEvidence(
@@ -199,6 +189,7 @@ async function loadEvidence(
         description: true,
         permalink: true,
         outcome: true,
+        size: true,
         completedAt: true,
         lens: { select: { id: true, name: true, color: true } },
         goal: { select: { id: true, name: true, permalink: true } },
@@ -256,6 +247,7 @@ async function loadEvidence(
     title: task.description,
     permalink: task.permalink,
     outcome: task.outcome ?? null,
+    size: task.size,
     completedAt: new Date(task.completedAt).toISOString(),
     lens: task.lens,
     project: task.project,
@@ -336,151 +328,6 @@ async function loadAvailableGoals(
       lens: { select: { id: true, name: true, color: true } },
     },
   });
-}
-
-async function loadTaskDecisions(
-  entities: Entities,
-  userId: string,
-  now: Date,
-): Promise<ReviewTaskDecision[]> {
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 86_400_000);
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86_400_000);
-  const tasks = await entities.Task.findMany({
-    where: {
-      userId,
-      isDone: false,
-      status: { in: ["TODAY", "UPCOMING"] },
-      OR: [
-        { dueDate: { lt: now } },
-        { startedAt: { lt: sevenDaysAgo } },
-        {
-          status: "UPCOMING",
-          createdAt: { lt: thirtyDaysAgo },
-          updates: { none: {} },
-          sessions: { none: {} },
-        },
-      ],
-    },
-    orderBy: [{ dueDate: "asc" }, { createdAt: "asc" }],
-    take: 12,
-    select: {
-      id: true,
-      description: true,
-      permalink: true,
-      status: true,
-      dueDate: true,
-      startedAt: true,
-      createdAt: true,
-      lens: { select: { id: true, name: true, color: true } },
-      project: { select: { id: true, name: true, permalink: true } },
-    },
-  });
-
-  return tasks
-    .map((task: any) => ({
-      id: task.id,
-      title: task.description,
-      permalink: task.permalink,
-      status: task.status,
-      reason:
-        task.dueDate && new Date(task.dueDate) < now
-          ? "Overdue"
-          : task.startedAt && new Date(task.startedAt) < sevenDaysAgo
-            ? "Interrupted"
-            : "Quiet",
-      lens: task.lens,
-      project: task.project,
-    }))
-    .slice(0, 5);
-}
-
-async function loadOpenLoopDecisions(
-  entities: Entities,
-  userId: string,
-  start: Date,
-  end: Date,
-  now: Date,
-): Promise<ReviewOpenLoopDecision[]> {
-  const range = { gte: start, lt: end };
-  const [projects, goals] = await Promise.all([
-    entities.Project.findMany({
-      where: { userId, isDone: false },
-      orderBy: [{ dueDate: "asc" }, { createdAt: "asc" }],
-      take: 8,
-      select: {
-        id: true,
-        name: true,
-        permalink: true,
-        dueDate: true,
-        createdAt: true,
-        lens: { select: { id: true, name: true, color: true } },
-        tasks: {
-          where: { isDone: true, completedAt: range },
-          select: { id: true },
-        },
-      },
-    }),
-    entities.Goal.findMany({
-      where: { userId, isDone: false },
-      orderBy: { createdAt: "asc" },
-      take: 8,
-      select: {
-        id: true,
-        name: true,
-        permalink: true,
-        createdAt: true,
-        lens: { select: { id: true, name: true, color: true } },
-        projects: {
-          select: {
-            completedAt: true,
-            tasks: {
-              where: { isDone: true, completedAt: range },
-              select: { id: true },
-            },
-          },
-        },
-      },
-    }),
-  ]);
-
-  const projectRows: ReviewOpenLoopDecision[] = projects
-    .filter(
-      (project: any) =>
-        project.tasks.length === 0 ||
-        (project.dueDate && new Date(project.dueDate) < now),
-    )
-    .map((project: any) => ({
-      id: project.id,
-      kind: "project" as const,
-      name: project.name,
-      permalink: project.permalink,
-      reason:
-        project.dueDate && new Date(project.dueDate) < now
-          ? "Past its due date"
-          : "No completed tasks this month",
-      lens: project.lens,
-    }));
-  const goalRows: ReviewOpenLoopDecision[] = goals
-    .filter(
-      (goal: any) =>
-        !goal.projects.some(
-          (project: any) =>
-            (project.completedAt &&
-              new Date(project.completedAt) >= start &&
-              new Date(project.completedAt) < end) ||
-            project.tasks.length > 0,
-        ),
-    )
-    .map((goal: any) => ({
-      id: goal.id,
-      kind: "goal" as const,
-      name: goal.name,
-      permalink: goal.permalink,
-      reason: "No recorded movement this month",
-      lens: goal.lens,
-    }));
-
-  return [...projectRows, ...goalRows].slice(0, 3);
 }
 
 export function validateAnswers(

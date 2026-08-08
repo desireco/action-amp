@@ -5,6 +5,7 @@ import {
   firstReviewRoute,
   Reflection,
   reviewShortcutFor,
+  selectSignificantActions,
   TaskEvidence,
 } from "./ReviewPage";
 import type { ReviewGoalOption, ReviewTaskItem } from "./types";
@@ -17,6 +18,7 @@ function task(index: number): ReviewTaskItem {
     title: `Completed task ${index}`,
     permalink: `completed-task-${index}`,
     outcome: index === 1 ? "The customer **approved** it." : null,
+    size: "M",
     completedAt: `2026-08-${String(index + 1).padStart(2, "0")}T12:00:00.000Z`,
     lens,
     goal: { id: "goal-1", name: "Launch", permalink: "launch" },
@@ -52,8 +54,31 @@ describe("review keyboard map", () => {
     expect(reviewShortcutFor("k", false)).toBe("up");
     expect(reviewShortcutFor("e", false)).toBe("edit");
     expect(reviewShortcutFor("r", false)).toBe("record");
+    expect(reviewShortcutFor("r", false, false)).toBeNull();
     expect(reviewShortcutFor("r", true)).toBeNull();
     expect(reviewShortcutFor("x", false)).toBeNull();
+  });
+});
+
+describe("significant completed actions", () => {
+  it("lists at most five Large then Medium actions and excludes other sizes", () => {
+    const tasks = [
+      { ...task(1), size: "S" as const },
+      { ...task(2), size: "M" as const },
+      { ...task(3), size: "L" as const },
+      { ...task(4), size: "XL" as const },
+      { ...task(5), size: "M" as const },
+      { ...task(6), size: "L" as const },
+      { ...task(7), size: "M" as const },
+      { ...task(8), size: "L" as const },
+    ];
+
+    const selected = selectSignificantActions(tasks);
+
+    expect(selected).toHaveLength(5);
+    expect(selected.map((item) => item.size)).toEqual(["L", "L", "L", "M", "M"]);
+    expect(selected.map((item) => item.id)).not.toContain("task-1");
+    expect(selected.map((item) => item.id)).not.toContain("task-4");
   });
 });
 

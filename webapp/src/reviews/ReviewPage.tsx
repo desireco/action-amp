@@ -5,9 +5,6 @@ import {
   getAppData,
   getReview,
   saveReviewDraft,
-  setGoalDone,
-  setProjectDone,
-  updateTaskStatus,
   useQuery,
 } from "wasp/client/operations";
 import { BrandMark, Button, Chip, Markdown } from "../components/ui";
@@ -21,10 +18,8 @@ import type {
   ReviewAnswers,
   ReviewGoalItem,
   ReviewGoalOption,
-  ReviewOpenLoopDecision,
   ReviewProjectItem,
   ReviewResult,
-  ReviewTaskDecision,
   ReviewTaskItem,
 } from "./types";
 import "./ReviewPage.css";
@@ -45,13 +40,14 @@ type ReviewShortcut = "previous" | "next" | "edit" | "record" | "down" | "up";
 export function reviewShortcutFor(
   key: string,
   editable: boolean,
+  canRecord = true,
 ): ReviewShortcut | null {
   if (editable) return null;
   if (key === "[") return "previous";
   if (key === "]") return "next";
   const normalized = key.toLowerCase();
   if (normalized === "e") return "edit";
-  if (normalized === "r") return "record";
+  if (normalized === "r" && canRecord) return "record";
   if (normalized === "j") return "down";
   if (normalized === "k") return "up";
   return null;
@@ -115,7 +111,6 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
     "idle" | "saving" | "saved" | "error"
   >("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [lensFilter, setLensFilter] = useState("all");
   const [completing, setCompleting] = useState(false);
   const editRevision = useRef(0);
@@ -135,7 +130,6 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
     setAnswers(data.answers ?? {});
     setDirty(false);
     setSaveState("idle");
-    setDismissed(new Set());
     setLensFilter("all");
     editRevision.current += 1;
   }, [identity]);
@@ -185,7 +179,7 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
   }
 
   async function finishReview() {
-    if (completing) return;
+    if (cadence !== "DAILY" || completing) return;
     setCompleting(true);
     setSaveError(null);
     editRevision.current += 1;
@@ -215,6 +209,7 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
         Boolean(
           target?.matches("input, textarea, select, [contenteditable='true']"),
         ),
+        cadence === "DAILY",
       );
       if (!action || !data || enabled === false) return;
       if (action === "previous") {
@@ -272,10 +267,6 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
       ...evidence.tasks.map((item) => [item.lens.id, item.lens] as const),
       ...evidence.projects.map((item) => [item.lens.id, item.lens] as const),
       ...evidence.goals.map((item) => [item.lens.id, item.lens] as const),
-      ...data.taskDecisions.map((item) => [item.lens.id, item.lens] as const),
-      ...data.openLoopDecisions.map(
-        (item) => [item.lens.id, item.lens] as const,
-      ),
     ]).values(),
   );
   const visibleEvidence =
@@ -319,7 +310,7 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
                 In progress
               </Chip>
             )}
-            {data.completedAt && (
+            {cadence === "DAILY" && data.completedAt && (
               <Chip variant="teal" small>
                 Reviewed
               </Chip>
@@ -382,6 +373,13 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
         cadence={cadence}
       />
       <ProjectCelebration projects={visibleEvidence.projects} />
+
+      {cadence !== "DAILY" && (
+        <SignificantActions
+          tasks={selectSignificantActions(visibleEvidence.tasks)}
+          cadence={cadence}
+        />
+      )}
 
       <section
         className="aa-review__section"
@@ -446,29 +444,6 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
         </section>
       )}
 
-      {cadence === "WEEKLY" && (
-        <TaskDecisions
-          decisions={data.taskDecisions.filter(
-            (item) =>
-              (lensFilter === "all" || item.lens.id === lensFilter) &&
-              !dismissed.has(item.id),
-          )}
-          onDismiss={(id) => setDismissed((set) => new Set(set).add(id))}
-          onError={setSaveError}
-        />
-      )}
-      {cadence === "MONTHLY" && (
-        <OpenLoopDecisions
-          decisions={data.openLoopDecisions.filter(
-            (item) =>
-              (lensFilter === "all" || item.lens.id === lensFilter) &&
-              !dismissed.has(`${item.kind}:${item.id}`),
-          )}
-          onDismiss={(key) => setDismissed((set) => new Set(set).add(key))}
-          onError={setSaveError}
-        />
-      )}
-
       <Reflection
         cadence={cadence}
         answers={answers}
@@ -476,27 +451,25 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
         onChange={updateAnswer}
       />
 
-      <footer className="aa-review__finish">
-        <div>
-          <strong>
-            {totalCompleted > 0
-              ? `${totalCompleted} accomplishments recorded.`
-              : "Reflection is enough."}
-          </strong>
-          <span>No score. No streak. This review is yours.</span>
-        </div>
-        <Button onClick={() => void finishReview()} disabled={completing}>
-          {completing
-            ? "Recording"
-            : data.completedAt
-              ? "Update review"
-              : cadence === "DAILY"
-                ? "Close today"
-                : cadence === "WEEKLY"
-                  ? "Close week"
-                  : "Close month"}
-        </Button>
-      </footer>
+      {cadence === "DAILY" && (
+        <footer className="aa-review__finish">
+          <div>
+            <strong>
+              {totalCompleted > 0
+                ? `${totalCompleted} accomplishments recorded.`
+                : "Reflection is enough."}
+            </strong>
+            <span>No score. No streak. This review is yours.</span>
+          </div>
+          <Button onClick={() => void finishReview()} disabled={completing}>
+            {completing
+              ? "Recording"
+              : data.completedAt
+                ? "Update review"
+                : "Close today"}
+          </Button>
+        </footer>
+      )}
       {saveError && (
         <p className="aa-review__error" role="alert">
           {saveError}
@@ -629,146 +602,63 @@ export function TaskEvidence({
   );
 }
 
-function TaskDecisions({
-  decisions,
-  onDismiss,
-  onError,
-}: {
-  decisions: ReviewTaskDecision[];
-  onDismiss: (id: string) => void;
-  onError: (message: string) => void;
-}) {
-  if (decisions.length === 0) return null;
-  async function decide(
-    item: ReviewTaskDecision,
-    status: "UPCOMING" | "SOMEDAY" | "WONT_DO",
-  ) {
-    try {
-      await updateTaskStatus({ id: item.id, status });
-      onDismiss(item.id);
-    } catch (error) {
-      onError(
-        error instanceof Error ? error.message : "Could not update this task.",
-      );
-    }
-  }
-  return (
-    <section
-      className="aa-review__section"
-      aria-labelledby="task-decisions-heading"
-    >
-      <SectionHeading
-        id="task-decisions-heading"
-        title="Needs a decision"
-        detail="Up to five"
-      />
-      <div className="aa-review__decisions">
-        {decisions.map((item) => (
-          <article
-            key={item.id}
-            className="aa-review__decision"
-            tabIndex={0}
-            data-review-stop
-          >
-            <div>
-              <Chip
-                variant={item.reason === "Overdue" ? "rose" : "muted"}
-                small
-              >
-                {item.reason}
-              </Chip>
-              <strong>{item.title}</strong>
-              <span>{item.project?.name ?? item.lens.name}</span>
-            </div>
-            <div className="aa-review__decision-actions">
-              <button type="button" onClick={() => onDismiss(item.id)}>
-                Keep
-              </button>
-              <button
-                type="button"
-                onClick={() => void decide(item, "SOMEDAY")}
-              >
-                Someday
-              </button>
-              <button
-                type="button"
-                onClick={() => void decide(item, "WONT_DO")}
-              >
-                Won’t do
-              </button>
-              <Link to={`/app/tasks/${item.permalink}`}>Open</Link>
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
+export function selectSignificantActions(
+  tasks: ReviewTaskItem[],
+): ReviewTaskItem[] {
+  const sizeRank = { L: 0, M: 1 } as const;
+  return tasks
+    .filter(
+      (task): task is ReviewTaskItem & { size: "L" | "M" } =>
+        task.size === "L" || task.size === "M",
+    )
+    .sort(
+      (left, right) =>
+        sizeRank[left.size] - sizeRank[right.size] ||
+        Date.parse(right.completedAt) - Date.parse(left.completedAt),
+    )
+    .slice(0, 5);
 }
 
-function OpenLoopDecisions({
-  decisions,
-  onDismiss,
-  onError,
+export function SignificantActions({
+  tasks,
+  cadence,
 }: {
-  decisions: ReviewOpenLoopDecision[];
-  onDismiss: (key: string) => void;
-  onError: (message: string) => void;
+  tasks: ReviewTaskItem[];
+  cadence: ReviewCadence;
 }) {
-  if (decisions.length === 0) return null;
-  async function complete(item: ReviewOpenLoopDecision) {
-    try {
-      if (item.kind === "goal")
-        await setGoalDone({ id: item.id, isDone: true });
-      else await setProjectDone({ id: item.id, isDone: true });
-      onDismiss(`${item.kind}:${item.id}`);
-    } catch (error) {
-      onError(
-        error instanceof Error
-          ? error.message
-          : `Could not update this ${item.kind}.`,
-      );
-    }
-  }
+  if (tasks.length === 0) return null;
   return (
     <section
       className="aa-review__section"
-      aria-labelledby="open-loops-heading"
+      aria-labelledby="significant-actions-heading"
     >
       <SectionHeading
-        id="open-loops-heading"
-        title="Open loops worth choosing"
-        detail="Up to three"
+        id="significant-actions-heading"
+        title="Actions completed"
+        detail="Up to 5 Medium or Large"
       />
-      <div className="aa-review__decisions">
-        {decisions.map((item) => (
+      <div className="aa-review__highlights">
+        {tasks.map((task) => (
           <article
-            key={`${item.kind}:${item.id}`}
-            className="aa-review__decision"
+            key={task.id}
+            className="aa-review__highlight"
             tabIndex={0}
             data-review-stop
           >
+            <Chip variant="muted" small>
+              {task.size === "L" ? "Large" : "Medium"}
+            </Chip>
             <div>
-              <Chip variant="violet" small>
-                {item.kind === "goal" ? "Goal" : "Project"}
-              </Chip>
-              <strong>{item.name}</strong>
-              <span>{item.reason}</span>
-            </div>
-            <div className="aa-review__decision-actions">
-              <button
-                type="button"
-                onClick={() => onDismiss(`${item.kind}:${item.id}`)}
-              >
-                Keep active
-              </button>
-              <button type="button" onClick={() => void complete(item)}>
-                Complete
-              </button>
-              <Link
-                to={`/app/${item.kind === "goal" ? "goals" : "projects"}/${item.permalink}`}
-              >
-                Open
-              </Link>
+              <Link to={`/app/tasks/${task.permalink}`}>{task.title}</Link>
+              <span>
+                {task.project?.name ?? task.goal?.name ?? task.lens.name} ·{" "}
+                {formatCompletion(task.completedAt, cadence)}
+              </span>
+              {task.outcome && (
+                <div className="aa-review__outcome">
+                  <Markdown>{task.outcome}</Markdown>
+                </div>
+              )}
             </div>
           </article>
         ))}
@@ -823,7 +713,7 @@ export function Reflection({
       <SectionHeading
         id="reflection-heading"
         title="Reflection"
-        detail="Optional"
+        detail="Optional · autosaves"
       />
       {fields.map((field) => (
         <label key={field.key}>

@@ -61,8 +61,8 @@
 > leaves the Task in focus; Task completion remains a separate action.
 >
 > v8 (2026-08-08): **Saved Review rhythms.** `Review` stores a user's
-> DAILY/WEEKLY/MONTHLY reflection by normalized period, with optional answers
-> and a stable accomplishment snapshot. Three `User` booleans independently
+> DAILY/WEEKLY/MONTHLY reflection by normalized period, with optional autosaved
+> answers and a stable accomplishment snapshot when Today is closed. Three `User` booleans independently
 > enable Today, Week, and Month reviews. Cadence review reads are deliberately
 > cross-Lens; ownership remains strictly keyed by `userId`.
 
