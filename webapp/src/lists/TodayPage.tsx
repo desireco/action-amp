@@ -12,6 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
+  CountLinkButton,
   TaskRow,
   CompletionCircle,
   Chip,
@@ -162,11 +163,11 @@ export function TodayPage() {
         {/* Cross-link to the Upcoming page — the only way over. Upcoming count
             rides the shared getAppData query (same one feeding the Plan nav
             chip), so it stays accurate without a second status=UPCOMING fetch. */}
-        <Link to="/app/upcoming" title="Open Upcoming" aria-label="Open Upcoming">
-          <Button variant="secondary" size="sm">
-            Upcoming{upcomingCount > 0 ? ` ${upcomingCount}` : ""}
-          </Button>
-        </Link>
+        <CountLinkButton
+          label="Upcoming"
+          count={appData ? upcomingCount : undefined}
+          to="/app/upcoming"
+        />
       </header>
 
       <div id="aa-today-body">

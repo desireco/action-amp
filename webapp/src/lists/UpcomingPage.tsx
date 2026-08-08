@@ -1,10 +1,15 @@
 import { useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "wasp/client/operations";
-import { getTasks, unscheduleOverdueTasks } from "wasp/client/operations";
+import {
+  getAppData,
+  getTasks,
+  unscheduleOverdueTasks,
+} from "wasp/client/operations";
 import {
   Button,
+  CountLinkButton,
   TaskRow,
   CompletionCircle,
   GroupedList,
@@ -43,6 +48,7 @@ export function UpcomingPage() {
     lens ? { lensId: lens.id, status: "UPCOMING", isDone: false } : undefined,
     { enabled: !!lens },
   );
+  const { data: appData } = useQuery(getAppData);
 
   const groups = useMemo<GroupDef<TaskRowTask>[]>(() => {
     if (!tasks) return [];
@@ -115,11 +121,11 @@ export function UpcomingPage() {
         </div>
         {/* Symmetric cross-link — Today ↔ Upcoming. Mirrors the Upcoming link
             on Today's hero so the two pages point at each other. */}
-        <Link to="/app/today" title="Open Today" aria-label="Open Today">
-          <Button variant="secondary" size="sm">
-            Today
-          </Button>
-        </Link>
+        <CountLinkButton
+          label="Today"
+          count={appData?.counts.today}
+          to="/app/today"
+        />
       </header>
 
       {overdueCount > 0 && (

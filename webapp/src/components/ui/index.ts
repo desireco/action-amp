@@ -7,6 +7,7 @@ export { CapturePopover } from "./CapturePopover";
 export { Card } from "./Card";
 export { Chip } from "./Chip";
 export { CompletionCircle } from "./CompletionCircle";
+export { CountLinkButton } from "./CountLinkButton";
 export { CloseButton } from "./CloseButton";
 export { ConfirmDialog } from "./ConfirmDialog";
 export { BottomSheet } from "./BottomSheet";

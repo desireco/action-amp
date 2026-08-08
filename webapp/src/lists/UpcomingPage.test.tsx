@@ -4,11 +4,13 @@ import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getTasks = vi.fn();
+const getAppData = vi.fn();
 const unscheduleOverdueTasks = vi.fn();
 const promoteToToday = vi.fn();
 const moveToSomeday = vi.fn();
 const queryState = {
   current: { data: [] as UpcomingTask[], isLoading: false },
+  appData: { counts: { today: 3 } },
 };
 
 interface UpcomingTask {
@@ -22,8 +24,12 @@ interface UpcomingTask {
 
 vi.mock("wasp/client/operations", () => ({
   getTasks,
+  getAppData,
   unscheduleOverdueTasks,
-  useQuery: () => queryState.current,
+  useQuery: (operation: unknown) =>
+    operation === getAppData
+      ? { data: queryState.appData, isLoading: false }
+      : queryState.current,
 }));
 
 vi.mock("../app/lensContext", () => ({
@@ -51,10 +57,19 @@ function renderPage() {
 
 beforeEach(() => {
   queryState.current = { data: [], isLoading: false };
+  queryState.appData = { counts: { today: 3 } };
   vi.clearAllMocks();
 });
 
 describe("UpcomingPage overdue recovery", () => {
+  it("shows the Today item count in the shared cross-link button", () => {
+    renderPage();
+
+    expect(
+      screen.getByRole("link", { name: "Open Today, 3 items" }),
+    ).toBeInTheDocument();
+  });
+
   it("offers one bulk unschedule action and individual Someday actions", () => {
     queryState.current = {
       data: [

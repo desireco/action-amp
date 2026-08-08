@@ -1,0 +1,16 @@
+@import "../../styles/tokens.css";
+
+.aa-count-link-button {
+  text-decoration: none;
+}
+
+.aa-count-link-button__count {
+  min-width: 1ch;
+  color: var(--aa-text-4);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.aa-count-link-button:hover .aa-count-link-button__count {
+  color: var(--aa-text-2);
+}
