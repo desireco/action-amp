@@ -118,6 +118,9 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
   const autosaveTimer = useRef<number | null>(null);
   const saveChain = useRef<Promise<unknown>>(Promise.resolve());
   const identity = data ? `${cadence}:${data.period.start}` : null;
+  const canCloseToday = Boolean(
+    cadence === "DAILY" && data?.period.inProgress && !data.completedAt,
+  );
 
   useEffect(
     () => () => {
@@ -180,7 +183,7 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
   }
 
   async function finishReview() {
-    if (cadence !== "DAILY" || completing) return;
+    if (!canCloseToday || completing) return;
     setCompleting(true);
     setSaveError(null);
     editRevision.current += 1;
@@ -210,7 +213,7 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
         Boolean(
           target?.matches("input, textarea, select, [contenteditable='true']"),
         ),
-        cadence === "DAILY",
+        canCloseToday,
       );
       if (!action || !data || enabled === false) return;
       if (action === "previous") {
@@ -298,15 +301,19 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
     visibleEvidence.tasks.length +
     visibleEvidence.projects.length +
     visibleEvidence.goals.length;
+  const inProgress =
+    data.period.inProgress && !(cadence === "DAILY" && data.completedAt);
 
   return (
     <main className="aa-review" aria-labelledby="review-title">
       <header className="aa-review__header">
         <div>
-          <div className="aa-review__eyebrow">Review · {cadenceName}</div>
+          <div className="aa-review__eyebrow">
+            {inProgress ? "Check-in" : "Review"} · {cadenceName}
+          </div>
           <h1 id="review-title">{data.period.label}</h1>
           <div className="aa-review__status-line">
-            {data.period.inProgress && (
+            {inProgress && (
               <Chip variant="muted" small>
                 In progress
               </Chip>
@@ -380,8 +387,12 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
           <SignificantActions
             tasks={selectSignificantActions(visibleEvidence.tasks)}
             cadence={cadence}
+            inProgress={inProgress}
           />
-          <ActionCountsByLens tasks={visibleEvidence.tasks} />
+          <ActionCountsByLens
+            tasks={visibleEvidence.tasks}
+            inProgress={inProgress}
+          />
         </>
       )}
 
@@ -393,10 +404,16 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
           id="completed-heading"
           title={
             cadence === "DAILY"
-              ? "Tasks completed"
+              ? inProgress
+                ? "Tasks completed so far"
+                : "Tasks completed"
               : cadence === "WEEKLY"
-                ? "What moved"
-                : "Progress by goal"
+                ? inProgress
+                  ? "What is moving"
+                  : "What moved"
+                : inProgress
+                  ? "Progress by goal so far"
+                  : "Progress by goal"
           }
           detail={`${visibleEvidence.tasks.length} ${visibleEvidence.tasks.length === 1 ? "task" : "tasks"}`}
         />
@@ -448,14 +465,17 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
         </section>
       )}
 
+      {!inProgress && <EarlierCheckIn answers={answers} />}
+
       <Reflection
         cadence={cadence}
         answers={answers}
         goals={data.availableGoals}
+        inProgress={inProgress}
         onChange={updateAnswer}
       />
 
-      {cadence === "DAILY" && (
+      {canCloseToday && (
         <footer className="aa-review__finish">
           <div>
             <strong>
@@ -466,11 +486,7 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
             <span>No score. No streak. This review is yours.</span>
           </div>
           <Button onClick={() => void finishReview()} disabled={completing}>
-            {completing
-              ? "Recording"
-              : data.completedAt
-                ? "Update review"
-                : "Close today"}
+            {completing ? "Recording" : "Close today"}
           </Button>
         </footer>
       )}
@@ -606,7 +622,13 @@ export function TaskEvidence({
   );
 }
 
-export function ActionCountsByLens({ tasks }: { tasks: ReviewTaskItem[] }) {
+export function ActionCountsByLens({
+  tasks,
+  inProgress = false,
+}: {
+  tasks: ReviewTaskItem[];
+  inProgress?: boolean;
+}) {
   const counts = countActionsByLens(tasks);
   if (counts.length === 0) return null;
   return (
@@ -616,7 +638,11 @@ export function ActionCountsByLens({ tasks }: { tasks: ReviewTaskItem[] }) {
     >
       <SectionHeading
         id="actions-by-lens-heading"
-        title="Completed actions by lens"
+        title={
+          inProgress
+            ? "Actions completed so far by lens"
+            : "Completed actions by lens"
+        }
       />
       <div className="aa-review__lens-counts">
         {counts.map(({ lens, count }) => (
@@ -633,9 +659,11 @@ export function ActionCountsByLens({ tasks }: { tasks: ReviewTaskItem[] }) {
 export function SignificantActions({
   tasks,
   cadence,
+  inProgress = false,
 }: {
   tasks: ReviewTaskItem[];
   cadence: ReviewCadence;
+  inProgress?: boolean;
 }) {
   if (tasks.length === 0) return null;
   return (
@@ -645,7 +673,7 @@ export function SignificantActions({
     >
       <SectionHeading
         id="significant-actions-heading"
-        title="Actions completed"
+        title={inProgress ? "Actions completed so far" : "Actions completed"}
         detail="Up to 5 Medium or Large"
       />
       <div className="aa-review__highlights">
@@ -682,15 +710,35 @@ export function Reflection({
   cadence,
   answers,
   goals,
+  inProgress = false,
   onChange,
 }: {
   cadence: ReviewCadence;
   answers: ReviewAnswers;
   goals: ReviewGoalOption[];
+  inProgress?: boolean;
   onChange: (key: keyof ReviewAnswers, value: string) => void;
 }) {
-  const fields =
+  const currentPeriod =
     cadence === "DAILY"
+      ? "today"
+      : cadence === "WEEKLY"
+        ? "this week"
+        : "this month";
+  const fields = inProgress
+    ? [
+        {
+          key: "howGoing" as const,
+          label: `How is ${currentPeriod} going?`,
+        },
+        { key: "goingWell" as const, label: "What is going well?" },
+        { key: "challenges" as const, label: "What is challenging?" },
+        {
+          key: "currentAttention" as const,
+          label: `What deserves attention for the rest of ${currentPeriod}?`,
+        },
+      ]
+    : cadence === "DAILY"
       ? [
           {
             key: "memory" as const,
@@ -723,7 +771,7 @@ export function Reflection({
     >
       <SectionHeading
         id="reflection-heading"
-        title="Reflection"
+        title={inProgress ? "Check-in" : "Reflection"}
         detail="Optional · autosaves"
       />
       {fields.map((field) => (
@@ -737,7 +785,7 @@ export function Reflection({
           />
         </label>
       ))}
-      {cadence === "MONTHLY" && emphasisGoals.length > 0 && (
+      {!inProgress && cadence === "MONTHLY" && emphasisGoals.length > 0 && (
         <label>
           <span>
             Goal to emphasize next month <small>Optional reflection only</small>
@@ -755,6 +803,42 @@ export function Reflection({
           </select>
         </label>
       )}
+    </section>
+  );
+}
+
+export function EarlierCheckIn({ answers }: { answers: ReviewAnswers }) {
+  const entries = [
+    { label: "How it was going", value: answers.howGoing },
+    { label: "What was going well", value: answers.goingWell },
+    { label: "What was challenging", value: answers.challenges },
+    {
+      label: "What needed attention before the period ended",
+      value: answers.currentAttention,
+    },
+  ].filter((entry): entry is { label: string; value: string } =>
+    Boolean(entry.value),
+  );
+  if (entries.length === 0) return null;
+
+  return (
+    <section
+      className="aa-review__section aa-review__earlier-check-in"
+      aria-labelledby="earlier-check-in-heading"
+    >
+      <SectionHeading
+        id="earlier-check-in-heading"
+        title="While it was happening"
+        detail="Earlier check-in"
+      />
+      <dl>
+        {entries.map((entry) => (
+          <div key={entry.label}>
+            <dt>{entry.label}</dt>
+            <dd>{entry.value}</dd>
+          </div>
+        ))}
+      </dl>
     </section>
   );
 }

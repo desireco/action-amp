@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import {
+  EarlierCheckIn,
   firstReviewRoute,
   Reflection,
   reviewShortcutFor,
@@ -123,6 +124,32 @@ describe("TaskEvidence", () => {
 });
 
 describe("Reflection", () => {
+  it("renders check-in prompts while a period is still happening", () => {
+    const onChange = vi.fn();
+    render(
+      <Reflection
+        cadence="WEEKLY"
+        answers={{}}
+        goals={[]}
+        inProgress
+        onChange={onChange}
+      />,
+    );
+
+    expect(screen.getByText("Check-in")).toBeInTheDocument();
+    expect(screen.getByText("How is this week going?")).toBeInTheDocument();
+    expect(screen.getByText("What is going well?")).toBeInTheDocument();
+    expect(screen.getByText("What is challenging?")).toBeInTheDocument();
+    expect(
+      screen.getByText("What deserves attention for the rest of this week?"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("What moved forward?")).not.toBeInTheDocument();
+    fireEvent.change(screen.getAllByRole("textbox")[0]!, {
+      target: { value: "Steady progress." },
+    });
+    expect(onChange).toHaveBeenCalledWith("howGoing", "Steady progress.");
+  });
+
   it("renders distinct monthly prompts and emits optional answers", () => {
     const onChange = vi.fn();
     const goals: ReviewGoalOption[] = [
@@ -155,5 +182,55 @@ describe("Reflection", () => {
     });
     expect(onChange).toHaveBeenCalledWith("proud", "We shipped.");
     expect(screen.getByRole("combobox")).toHaveTextContent("Launch");
+  });
+
+  it("keeps next-month emphasis out of an active month check-in", () => {
+    render(
+      <Reflection
+        cadence="MONTHLY"
+        answers={{}}
+        goals={[
+          {
+            id: "goal-1",
+            name: "Launch",
+            permalink: "launch",
+            lens,
+            isDone: false,
+          },
+        ]}
+        inProgress
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("What are you proud of?"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("How is this month going?")).toBeInTheDocument();
+  });
+});
+
+describe("EarlierCheckIn", () => {
+  it("shows saved active-period context during a finished review", () => {
+    render(
+      <EarlierCheckIn
+        answers={{
+          howGoing: "Momentum was building.",
+          challenges: "Approval was blocked.",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("While it was happening")).toBeInTheDocument();
+    expect(screen.getByText("Momentum was building.")).toBeInTheDocument();
+    expect(screen.getByText("Approval was blocked.")).toBeInTheDocument();
+  });
+
+  it("renders nothing when no earlier check-in exists", () => {
+    const { container } = render(
+      <EarlierCheckIn answers={{ proud: "Done" }} />,
+    );
+    expect(container).toBeEmptyDOMElement();
   });
 });

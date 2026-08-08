@@ -357,6 +357,28 @@
   padding-top: var(--aa-space-lg);
   border-top: 1px solid var(--aa-border);
 }
+.aa-review__earlier-check-in {
+  padding: var(--aa-space-lg);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-bg-soft);
+}
+.aa-review__earlier-check-in dl {
+  display: grid;
+  gap: var(--aa-space-md);
+  margin: 0;
+}
+.aa-review__earlier-check-in dt {
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-medium);
+}
+.aa-review__earlier-check-in dd {
+  margin: 4px 0 0;
+  color: var(--aa-text-2);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
 .aa-review__reflection label {
   display: grid;
   gap: 8px;
