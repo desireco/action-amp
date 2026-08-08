@@ -75,6 +75,9 @@ import {
 } from "../goals/operationsCore";
 import { getLensesCore, getLensCore } from "../lenses/operationsCore";
 import { getLogbookData } from "../logbook/operationsCore";
+import { getReviewData } from "../reviews/operationsCore";
+import { localDateFor, shiftReviewDate } from "../reviews/period";
+import { buildReviewReport } from "../reviews/report";
 import {
   createResourceCore,
   deleteResourceCore,
@@ -1233,6 +1236,66 @@ export const cliLogbook = async (req: Request, res: Response, _context: unknown)
   } catch (err) {
     console.error("[cli/logbook] failed:", err);
     return res.status(500).json({ error: "Could not load logbook." });
+  }
+};
+
+// ───────────────────────────────────────────────────────────────────────────
+// Review report route — read-only Week/Month evidence for humans and agents.
+// ───────────────────────────────────────────────────────────────────────────
+
+// GET /api/cli/review?cadence=WEEKLY|MONTHLY&for=YYYY-MM-DD&timeZone=IANA
+// Optional: previous=true, lensId=<owned lens>. Review stays universal unless
+// lensId is explicit; unlike Logbook, it never inherits a default lens.
+export const cliReview = async (req: Request, res: Response, _context: unknown) => {
+  const user = req.patUser;
+  if (!user) {
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+  const cadenceRaw = queryString(req, "cadence")?.toUpperCase();
+  if (cadenceRaw !== "WEEKLY" && cadenceRaw !== "MONTHLY") {
+    return res.status(400).json({ error: "Cadence must be WEEKLY or MONTHLY." });
+  }
+  const timeZone = queryString(req, "timeZone") ?? "UTC";
+  const requestedFor = queryString(req, "for");
+  const previous = queryString(req, "previous") === "true";
+  if (requestedFor && previous) {
+    return res.status(400).json({ error: "Use either for or previous, not both." });
+  }
+
+  const requestedLensId = queryString(req, "lensId");
+  if (requestedLensId) {
+    const gate = await gateLens(toEntUser(user), user.id, requestedLensId);
+    if (gate.status === "not-found") {
+      return res.status(404).json({ error: "No such lens for this account." });
+    }
+    if (gate.status === "denied") {
+      return sendViolation(res, gate.msg);
+    }
+  }
+
+  try {
+    const currentDate = localDateFor(new Date(), timeZone);
+    const forDate = requestedFor
+      ? requestedFor
+      : previous
+        ? shiftReviewDate(currentDate, cadenceRaw, -1)
+        : currentDate;
+    const result = await getReviewData(authEntities, user.id, {
+      cadence: cadenceRaw,
+      forDate,
+      timeZone,
+    });
+    const report = buildReviewReport(result, timeZone, requestedLensId);
+    return res.status(200).json({ report });
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      (/Review date/.test(err.message) || /Time zone/.test(err.message))
+    ) {
+      return res.status(400).json({ error: err.message });
+    }
+    console.error("[cli/review] failed:", err);
+    return res.status(500).json({ error: "Could not load review report." });
   }
 };
 

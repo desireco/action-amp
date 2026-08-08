@@ -166,6 +166,7 @@ import {
   cliLensList,
   cliLensShow,
   cliLogbook,
+  cliReview,
   cliFeedbackList,
   cliFeedbackShow,
   cliFeedbackStatus,
@@ -752,6 +753,12 @@ export default app({
     }),
     // Logbook route (optional ?lensId; defaults to the first accessible lens).
     api("GET", "/api/cli/logbook", cliLogbook, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // Review reports are universal by default; optional lensId filters them.
+    api("GET", "/api/cli/review", cliReview, {
       entities: [],
       auth: false,
       middlewareConfigFn: patRouteMiddleware,
