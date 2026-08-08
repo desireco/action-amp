@@ -1,14 +1,20 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  CircularProgressbarWithChildren,
+  buildStyles,
+} from "react-circular-progressbar";
+import { NotePencil, Pause, Play, Timer } from "@phosphor-icons/react";
 import { Button } from "./Button";
 import { CloseButton } from "./CloseButton";
-import { CompletionCircle } from "./CompletionCircle";
 import { Kbd, submitOnModEnter } from "./keyboard";
 import { Markdown } from "./Markdown";
 import { SnoozeSheet, type SnoozePreset } from "./SnoozeSheet";
 import { formatDuration } from "../../shared/timeFormat";
+import "react-circular-progressbar/dist/styles.css";
 import "./Overlays.css";
 
 export type TaskUpdateKind = "NOTE" | "COMPLETED";
+type ComposerMode = "note" | "completion" | null;
 
 export interface TaskUpdateEntry {
   id: string;
@@ -28,25 +34,28 @@ export interface FocusTask {
   startedAt?: Date | null;
   /** When the current open session began (drives the live session clock). */
   sessionStartedAt?: Date | null;
-  /** Total focused time across all sessions for this task, in ms. Includes
-   *  elapsed-so-far on the open session so the total ticks alongside. */
-  totalFocusedMs?: number;
+  /** Duration selected when this session opened. */
+  focusSessionMinutes: 25 | 45;
+  /** Latest session reached its countdown and was recorded successfully. */
+  sessionComplete?: boolean;
+  /** Completed countdowns recorded against this Task. */
+  completedFocusSessions?: number;
   updates: TaskUpdateEntry[];
 }
 
 /**
- * FocusMode — full-screen single-task view (Variant F, locked 2026-07-05).
+ * FocusMode — full-screen single-task view (centered session, 2026-08-07).
  *
  * The task is the protagonist; the clock is chrome. Layout:
- *   - top-left margin clock (elapsed time, never a countdown)
- *   - centered hero completion circle (static at rest, fills on completion)
- *   - task title + meta beneath the circle
+ *   - centered Pomodoro countdown ring with pause/resume
+ *   - task title + clarification beneath the ring
+ *   - explicit Add note / Pause / Complete task actions
  *   - append-only progress thread (newest first)
  *   - bottom rail of subtle keyboard hints
  *
- * Interactions: `n` summons the notes composer, `Enter` (or clicking the
- * circle) opens a confirm dialog before completing, `Esc` exits. The
- * keyboard map is the only chrome. See `docs/mockups/focus-f-final.html`
+ * Interactions: `n` summons the notes composer, `d` opens the completion
+ * reflection in that same area, and `Esc` exits. The keyboard map is the only
+ * chrome.
  * and `docs/specs/focus-engine-v2.md` § "Focus screen — RESOLVED
  * 2026-07-05".
  */
@@ -54,16 +63,22 @@ export function FocusMode({
   task,
   onClose,
   onComplete,
+  onCompleteSession,
+  onStartSession,
   onAddNote,
   onSaveContent,
   onSnooze,
 }: {
   task: FocusTask;
   onClose: () => void;
-  /** Called when the user confirms completion. Receives any Outcome note the
-   *  user typed into the completion sheet (empty string = skipped). The parent
+  /** Called when the user completes from the inline reflection. Receives any
+   *  Outcome note the user typed (empty string = skipped). The parent
    *  persists it alongside the done toggle. */
   onComplete?: (outcome: string) => Promise<void> | void;
+  /** Records a countdown reaching zero without completing the Task. */
+  onCompleteSession?: () => Promise<void> | void;
+  /** Opens another recorded countdown on the same focused Task. */
+  onStartSession?: () => Promise<void> | void;
   onAddNote?: (body: string) => Promise<void> | void;
   onSaveContent?: (content: string) => Promise<void> | void;
   /** Called when the user picks a snooze preset from the "Not now" sheet. The
@@ -71,10 +86,13 @@ export function FocusMode({
    *  away. Only reachable from the mobile action bar. */
   onSnooze?: (preset: SnoozePreset) => Promise<void> | void;
 }) {
-  // Composer state — summoned via `n`, posts via ⌘↵.
-  const [composerOpen, setComposerOpen] = useState(false);
+  // One notes-area composer handles both progress notes and completion
+  // reflection. Completion stays in the task flow instead of opening a modal.
+  const [composerMode, setComposerMode] = useState<ComposerMode>(null);
   const [draft, setDraft] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [completingTask, setCompletingTask] = useState(false);
+  const [completionError, setCompletionError] = useState<string | null>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
   // Durable content editor — separate from the append-only thread. Kept
@@ -84,34 +102,19 @@ export function FocusMode({
   const [editingContent, setEditingContent] = useState(false);
   const [savingContent, setSavingContent] = useState(false);
 
-  // Confirm dialog before completion — the payoff animation is optimistic.
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [completedLocally, setCompletedLocally] = useState(false);
 
-  // Snooze sheet ("Not now") — opened from the mobile action bar. Same layering
-  // as the composer/confirm: Esc closes it before falling through to exit.
+  // Snooze sheet ("Not now") — opened from the mobile action bar. Esc closes it
+  // before falling through to exit.
   const [snoozeOpen, setSnoozeOpen] = useState(false);
 
-  // Hold-to-complete (touch only). Pressing and holding the hero circle fills a
-  // ring around it over HOLD_MS; when the fill completes, the confirm dialog
-  // opens. Releasing early cancels the fill. A short tap still opens confirm via
-  // the circle's native click — so the gesture stays discoverable. Desktop
-  // (mouse/trackpad) is unaffected: it keeps the instant click → confirm path.
-  const [holding, setHolding] = useState(false);
-  const holdCompletedRef = useRef(false);
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const HOLD_MS = 600;
+  const completingSessionRef = useRef(false);
 
-  // Outcome draft captured at completion (task-fields §F). Non-blocking: the
-  // field appears on the completion sheet, the user can type or skip; either
-  // way the task completes. Preserved across the confirm toggle so opening the
-  // sheet, typing half a thought, and dismissing doesn't lose it within this
-  // focus session.
+  // Outcome draft captured in the notes area at completion (task-fields §F).
+  // Non-blocking: the user can type or skip; either way the task completes.
   const [outcomeDraft, setOutcomeDraft] = useState("");
-  const outcomeRef = useRef<HTMLTextAreaElement>(null);
 
-  // Elapsed-time tick — informational, 15s cadence (slow enough to ignore,
-  // fast enough to feel alive). Derived from `task.startedAt`.
+  // Countdown tick. One-second cadence keeps the large center time honest.
   const [, setTick] = useState(0);
 
   // Reset transient state when the task changes. Content drafts key off
@@ -124,13 +127,13 @@ export function FocusMode({
     setContent(nextContent);
     setContentDraft(nextContent);
     setEditingContent(false);
-    setComposerOpen(false);
+    setComposerMode(null);
     setDraft("");
-    setConfirmOpen(false);
     setCompletedLocally(false);
+    setCompletingTask(false);
+    setCompletionError(null);
     setSnoozeOpen(false);
-    // Cancel any in-flight hold-to-complete when the task changes.
-    clearHold();
+    completingSessionRef.current = false;
   }, [task.id, task.content]);
 
   // Outcome reset is split out so it doesn't re-run on every content change
@@ -139,28 +142,23 @@ export function FocusMode({
     setOutcomeDraft(task.outcome ?? "");
   }, [task.id]);
 
-  // Elapsed clock ticker.
+  // Countdown ticker.
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 15_000);
+    const id = setInterval(() => setTick((t) => t + 1), 1_000);
     return () => clearInterval(id);
   }, []);
 
-  // Focus the composer when it opens.
+  // Focus whichever notes-area composer opens.
   useEffect(() => {
-    if (composerOpen) {
-      const id = setTimeout(() => composerRef.current?.focus(), 60);
+    if (composerMode) {
+      const id = setTimeout(() => {
+        const field = composerRef.current;
+        field?.focus({ preventScroll: true });
+        field?.scrollIntoView?.({ block: "center" });
+      }, 60);
       return () => clearTimeout(id);
     }
-  }, [composerOpen]);
-
-  // Focus the Outcome field when the completion sheet opens — typing the note
-  // is the expected path; the user can skip with Enter/Complete.
-  useEffect(() => {
-    if (confirmOpen) {
-      const id = setTimeout(() => outcomeRef.current?.focus(), 60);
-      return () => clearTimeout(id);
-    }
-  }, [confirmOpen]);
+  }, [composerMode]);
 
   // Session clock — elapsed since the current open session began (resets on
   // each Start). Falls back to startedAt for the rare case where a task has
@@ -170,26 +168,51 @@ export function FocusMode({
     : task.startedAt
       ? Math.max(0, Date.now() - task.startedAt.getTime())
       : null;
-  const totalMs = task.totalFocusedMs ?? 0;
+  const sessionDurationMs = task.focusSessionMinutes * 60_000;
+  const completedFocusSessions = Math.max(
+    0,
+    Math.floor(task.completedFocusSessions ?? 0),
+  );
+  const sessionRunning =
+    Boolean(task.sessionStartedAt) && !task.sessionComplete;
+  const remainingMs = task.sessionComplete
+    ? 0
+    : Math.max(0, sessionDurationMs - (sessionElapsedMs ?? 0));
+  const remainingPercent = sessionDurationMs
+    ? (remainingMs / sessionDurationMs) * 100
+    : 0;
 
-  // Window-scoped keyboard handler. Order matters: composer/confirm swallow
-  // Esc before it falls through to exit. The global handler in AppShell
+  // Reaching zero records the Pomodoro but leaves the Task in focus. Guard the
+  // request so render ticks cannot submit it twice while the query refreshes.
+  useEffect(() => {
+    if (
+      !sessionRunning ||
+      remainingMs > 0 ||
+      completingSessionRef.current ||
+      !onCompleteSession
+    ) {
+      return;
+    }
+    completingSessionRef.current = true;
+    void Promise.resolve(onCompleteSession()).catch(() => {
+      completingSessionRef.current = false;
+    });
+  }, [onCompleteSession, remainingMs, sessionRunning]);
+
+  // Window-scoped keyboard handler. Order matters: composer/snooze swallow Esc
+  // before it falls through to exit. The global handler in AppShell
   // also listens for Esc but only closes AppShell-level overlays (capture,
   // cheatsheet, lens) — it's a no-op for focus state, so the two coexist.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // Esc — close the topmost layer first.
       if (e.key === "Escape") {
-        if (confirmOpen) {
-          setConfirmOpen(false);
-          return;
-        }
         if (snoozeOpen) {
           setSnoozeOpen(false);
           return;
         }
-        if (composerOpen) {
-          setComposerOpen(false);
+        if (composerMode) {
+          setComposerMode(null);
           return;
         }
         if (editingContent) {
@@ -205,39 +228,49 @@ export function FocusMode({
       // must not steal keystrokes from the composer/editor.
       const target = e.target as HTMLElement | null;
       if (isTypingTarget(target)) return;
-      if (confirmOpen || snoozeOpen) return;
+      if (snoozeOpen) return;
 
       // `n` → toggle the summoned composer.
       if (e.key === "n" || e.key === "N") {
         if (!onAddNote) return;
         e.preventDefault();
-        setComposerOpen((v) => !v);
+        setComposerMode((mode) => (mode === "note" ? null : "note"));
         return;
       }
 
-      // `p` → pause (exit focus, stop the clock). Same as Esc/X, but more
-      // intentional and discoverable in the keyset alongside n/↵.
-      if (e.key === "p" || e.key === "P") {
+      // `p` / Space → pause (exit focus, stop the clock).
+      if (e.key === "p" || e.key === "P" || e.key === " ") {
         e.preventDefault();
         onClose();
         return;
       }
 
-      // Enter → open the completion confirm.
-      if (e.key === "Enter" && onComplete) {
+      // `d` → open the inline completion reflection. Enter is intentionally
+      // free: the timer and Task completion are separate controls.
+      if ((e.key === "d" || e.key === "D") && onComplete) {
         e.preventDefault();
-        setConfirmOpen(true);
+        setComposerMode("completion");
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, onComplete, onAddNote, composerOpen, confirmOpen, snoozeOpen, editingContent, content]);
+  }, [
+    onClose,
+    onComplete,
+    onAddNote,
+    composerMode,
+    snoozeOpen,
+    editingContent,
+    content,
+  ]);
 
   // Composer: ⌘↵ / Ctrl+↵ posts (shared helper). Plain Enter inserts a
   // newline — the composer is summoned and dedicated, so multi-line input
   // is expected.
   const handleComposerKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    submitOnModEnter(e, () => void submitNote());
+    submitOnModEnter(e, () =>
+      composerMode === "completion" ? void completeTask() : void submitNote(),
+    );
   };
 
   const submitNote = async () => {
@@ -248,7 +281,7 @@ export function FocusMode({
     try {
       await onAddNote(body);
       setDraft("");
-      setComposerOpen(false);
+      setComposerMode(null);
     } finally {
       setSubmitting(false);
     }
@@ -268,66 +301,32 @@ export function FocusMode({
     }
   };
 
-  const handleConfirm = () => {
-    // Optimistic payoff: circle fills, title strikes. The parent's
+  const completeTask = () => {
+    if (!onComplete || completingTask) return;
+    // Optimistic payoff: title strikes. The parent's
     // onComplete then awaits the server + navigates; if it's slow the
     // user sees the payoff, if fast they're already moving. Pass the Outcome
     // draft (may be empty — skipped is a first-class choice).
-    const note = outcomeDraft.trim();
-    setConfirmOpen(false);
+    const originalDraft = outcomeDraft;
+    const note = originalDraft.trim();
+    setCompletionError(null);
+    setComposerMode(null);
     setCompletedLocally(true);
+    setCompletingTask(true);
     setOutcomeDraft("");
-    void onComplete?.(note);
+    void Promise.resolve(onComplete(note)).catch(() => {
+      setCompletedLocally(false);
+      setCompletingTask(false);
+      setOutcomeDraft(originalDraft);
+      setComposerMode("completion");
+      setCompletionError("Could not complete the task. Try again.");
+    });
   };
 
-  const openConfirm = () => {
+  const openCompletionComposer = () => {
     if (!onComplete) return;
-    setComposerOpen(false);
-    setConfirmOpen(true);
-  };
-
-  // ---- Hold-to-complete (touch) ----
-  // Pointer Events cover both touch and mouse. We only arm the hold timer for
-  // touch presses — mouse/trackpad keep the instant click. When the timer
-  // fires we open the confirm and set a flag so the subsequent synthetic click
-  // (browsers fire click after pointerup) is a no-op, preventing a double-open.
-  const clearHold = () => {
-    if (holdTimerRef.current) {
-      clearTimeout(holdTimerRef.current);
-      holdTimerRef.current = null;
-    }
-    setHolding(false);
-  };
-  const onCirclePointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType !== "touch" || !onComplete) return;
-    holdCompletedRef.current = false;
-    setHolding(true);
-    holdTimerRef.current = setTimeout(() => {
-      holdCompletedRef.current = true;
-      clearHold();
-      openConfirm();
-    }, HOLD_MS);
-  };
-  const onCirclePointerUp = () => {
-    if (holdTimerRef.current) clearHold();
-  };
-  // The fill animation runs only while `holding`; if it reaches the end before
-  // the user releases, onAnimationEnd fires openConfirm (a backup to the
-  // timer — whichever fires first wins, the other is a no-op via the flag).
-  const onCircleAnimEnd = (e: React.AnimationEvent) => {
-    if (e.animationName !== "aa-hold-fill" || !holding) return;
-    if (holdCompletedRef.current) return;
-    holdCompletedRef.current = true;
-    clearHold();
-    openConfirm();
-  };
-  // Circle click: if the hold already opened the confirm, swallow the click.
-  const onCircleClick = () => {
-    if (holdCompletedRef.current) {
-      holdCompletedRef.current = false;
-      return;
-    }
-    openConfirm();
+    setCompletionError(null);
+    setComposerMode("completion");
   };
 
   return (
@@ -337,113 +336,95 @@ export function FocusMode({
       aria-modal="true"
       aria-label={`Focus: ${task.title}`}
     >
-      <div className="aa-focus__top">
-        {/* LEFT: margin clock — session (live, motivating) + total (honest record). */}
-        <div className="aa-clock">
-          <div className="aa-clock__row">
-            <span className="aa-clock__num">
-              {sessionElapsedMs !== null ? formatDuration(sessionElapsedMs) : "—"}
-            </span>
-            <span className="aa-clock__unit">in</span>
-          </div>
-          {totalMs > 0 && (
-            <div className="aa-clock__total">
-              total {formatDuration(totalMs)}
-            </div>
-          )}
-          <div className="aa-clock__label">
-            <span className="aa-clock__dot" aria-hidden="true" />
-            in focus
-          </div>
-        </div>
-
-        {/* RIGHT: session footprint + close. */}
-        <div className="aa-focus__top-right">
-          {task.startedAt && (
-            <div className="aa-session">
-              started {formatTime(task.startedAt)}
-              {task.project ? (
-                <>
-                  <span className="aa-session__sep">·</span>
-                  on {task.project}
-                </>
-              ) : null}
-            </div>
-          )}
-          <button
-            type="button"
-            className="aa-focus__close"
-            onClick={onClose}
-            aria-label="Pause and exit focus (Esc or P)"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M4 4l8 8M12 4l-8 8"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
+      <CloseButton
+        onClose={onClose}
+        label="Pause and exit focus"
+        title="Pause and exit focus (Esc)"
+        className="aa-focus__close"
+      />
 
       <div className="aa-focus__body">
-        <div className="aa-presence">
-          <div className="aa-presence__halo" aria-hidden="true" />
-          <div
-            className={`aa-presence__circle${holding ? " aa-presence__circle--holding" : ""}`}
-            onPointerDown={onCirclePointerDown}
-            onPointerUp={onCirclePointerUp}
-            onPointerLeave={onCirclePointerUp}
-            onPointerCancel={onCirclePointerUp}
-            onAnimationEnd={onCircleAnimEnd}
-          >
-            <CompletionCircle
-              filled={completedLocally}
-              size="lg"
-              onClick={onComplete ? onCircleClick : undefined}
-              className={completedLocally ? "aa-cc--burst" : undefined}
-            />
+        <section className="aa-focus-timer" aria-label="Focus session timer">
+          <div className="aa-focus-timer__glow" aria-hidden="true" />
+          <div className="aa-focus-timer__ring">
+            <CircularProgressbarWithChildren
+              value={remainingPercent}
+              strokeWidth={1.6}
+              styles={buildStyles({
+                pathColor: "var(--aa-teal)",
+                trailColor: "var(--aa-border-strong)",
+                strokeLinecap: "round",
+                pathTransitionDuration: 0.8,
+              })}
+            >
+              <time
+                className="aa-focus-timer__time"
+                dateTime={`PT${Math.ceil(remainingMs / 1000)}S`}
+                aria-live="off"
+              >
+                {formatCountdown(remainingMs)}
+              </time>
+              <span className="aa-focus-timer__label">
+                {task.sessionComplete
+                  ? "session complete"
+                  : `${task.focusSessionMinutes} min focus`}
+              </span>
+              {completedFocusSessions > 0 && (
+                <span
+                  className="aa-focus-timer__cycles"
+                  aria-label={`${completedFocusSessions} completed focus ${
+                    completedFocusSessions === 1 ? "session" : "sessions"
+                  }`}
+                  title={`${completedFocusSessions} completed focus ${
+                    completedFocusSessions === 1 ? "session" : "sessions"
+                  }`}
+                >
+                  <Timer size={16} weight="fill" aria-hidden />
+                  <span aria-hidden>{completedFocusSessions}</span>
+                </span>
+              )}
+              <button
+                type="button"
+                className="aa-focus-timer__control"
+                onClick={() =>
+                  task.sessionComplete ? void onStartSession?.() : onClose()
+                }
+                aria-label={
+                  task.sessionComplete
+                    ? "Start another focus session"
+                    : "Pause focus session"
+                }
+              >
+                {task.sessionComplete ? (
+                  <Play size={24} weight="fill" aria-hidden />
+                ) : (
+                  <Pause size={24} weight="fill" aria-hidden />
+                )}
+              </button>
+            </CircularProgressbarWithChildren>
           </div>
-        </div>
+        </section>
 
         <h1 className="aa-title">{task.title}</h1>
 
-        {(task.project || task.due || task.size) && (
-          <p className="aa-meta">
-            {[task.project, task.due, task.size].filter(Boolean).join(" · ")}
-          </p>
-        )}
-
-        {/* Durable content (working notes) — separate from the thread. */}
-        <section className="aa-focus__notes" aria-label="Notes">
-          <div className="aa-focus__notes-top">
-            <span className="aa-focus__notes-label">Working notes</span>
-            {onSaveContent && !editingContent && (
-              <button
-                type="button"
-                className="aa-focus__notes-action"
-                onClick={() => setEditingContent(true)}
-              >
-                {content ? "Edit" : "Add notes"}
-              </button>
-            )}
-          </div>
-
+        <section className="aa-focus__clarification" aria-label="Task details">
           {editingContent ? (
             <div className="aa-focus__notes-editor">
               <textarea
                 className="aa-focus__content-editor"
-                aria-label="Task notes"
+                aria-label="Task details"
                 value={contentDraft}
                 onChange={(e) => setContentDraft(e.target.value)}
                 rows={5}
                 disabled={savingContent}
               />
               <div className="aa-focus__notes-actions">
-                <Button variant="primary" onClick={saveContent} disabled={savingContent}>
-                  Save notes
+                <Button
+                  variant="primary"
+                  onClick={saveContent}
+                  disabled={savingContent}
+                >
+                  Save details
                 </Button>
                 <Button
                   variant="secondary"
@@ -460,31 +441,187 @@ export function FocusMode({
           ) : content ? (
             <div className="aa-focus__content">
               <Markdown>{content}</Markdown>
+              {onSaveContent && (
+                <button
+                  type="button"
+                  className="aa-focus__details-edit"
+                  onClick={() => setEditingContent(true)}
+                >
+                  Edit details
+                </button>
+              )}
             </div>
           ) : (
-            <p className="aa-focus__content-empty">No task notes yet.</p>
+            onSaveContent && (
+              <button
+                type="button"
+                className="aa-focus__details-empty"
+                onClick={() => setEditingContent(true)}
+              >
+                Add task details to clarify what done looks like.
+              </button>
+            )
           )}
         </section>
+
+        <div className="aa-focus__primary-actions" aria-label="Task actions">
+          {onAddNote && (
+            <button
+              type="button"
+              className="aa-focus-action aa-focus-action--note"
+              onClick={() => setComposerMode("note")}
+            >
+              <NotePencil size={20} aria-hidden />
+              <span>Add note</span>
+            </button>
+          )}
+          <button
+            type="button"
+            className="aa-focus-action aa-focus-action--pause"
+            onClick={onClose}
+          >
+            <Pause size={20} weight="fill" aria-hidden />
+            <span>Pause</span>
+          </button>
+          {onComplete && (
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={openCompletionComposer}
+              aria-expanded={composerMode === "completion"}
+              aria-controls="aa-focus-completion-composer"
+              className="aa-focus-action aa-focus-action--complete"
+            >
+              Complete task
+            </Button>
+          )}
+        </div>
+
+        {composerMode && (
+          <section
+            id={
+              composerMode === "completion"
+                ? "aa-focus-completion-composer"
+                : "aa-focus-note-composer"
+            }
+            className={`aa-focus-composer aa-focus-composer--${composerMode}`}
+            aria-label={
+              composerMode === "completion"
+                ? "Complete task reflection"
+                : "Progress note"
+            }
+          >
+            <div className="aa-focus-composer__head">
+              <div>
+                <h2 className="aa-focus-composer__title">
+                  {composerMode === "completion"
+                    ? "How did it go?"
+                    : "Add a note"}
+                </h2>
+                <p className="aa-focus-composer__prompt">
+                  {composerMode === "completion"
+                    ? `${
+                        sessionElapsedMs !== null
+                          ? `You focused for ${formatDuration(sessionElapsedMs)}. `
+                          : ""
+                      }Capture what changed, what you learned, or the next step.`
+                    : "Capture a decision, blocker, or next step without leaving focus."}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="aa-focus-composer__dismiss"
+                onClick={() => setComposerMode(null)}
+                aria-label={
+                  composerMode === "completion"
+                    ? "Close completion reflection"
+                    : "Close progress note"
+                }
+              >
+                <Kbd>esc</Kbd>
+              </button>
+            </div>
+
+            <textarea
+              ref={composerRef}
+              className="aa-focus-composer__text"
+              aria-label={
+                composerMode === "completion"
+                  ? "Completion note optional"
+                  : "Progress note"
+              }
+              placeholder={
+                composerMode === "completion"
+                  ? "A result, decision, learning, or next step…"
+                  : "What did you learn, decide, or get stuck on?"
+              }
+              value={composerMode === "completion" ? outcomeDraft : draft}
+              onChange={(event) =>
+                composerMode === "completion"
+                  ? setOutcomeDraft(event.target.value)
+                  : setDraft(event.target.value)
+              }
+              onKeyDown={handleComposerKey}
+              rows={3}
+              disabled={submitting || completingTask}
+            />
+
+            {composerMode === "completion" && completionError && (
+              <p className="aa-focus-composer__error" role="alert">
+                {completionError}
+              </p>
+            )}
+
+            <div className="aa-focus-composer__foot">
+              <span className="aa-focus-composer__hint">
+                <Kbd>⌘↵</Kbd>{" "}
+                {composerMode === "completion" ? "complete" : "post note"}
+              </span>
+              <div className="aa-focus-composer__actions">
+                {composerMode === "completion" && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setComposerMode(null)}
+                    disabled={completingTask}
+                  >
+                    Keep working
+                  </Button>
+                )}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={
+                    composerMode === "completion" ? completeTask : submitNote
+                  }
+                  disabled={
+                    composerMode === "completion"
+                      ? completingTask
+                      : !draft.trim() || submitting
+                  }
+                >
+                  {composerMode === "completion"
+                    ? "Complete task"
+                    : "Post note"}
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Append-only progress thread — newest first (column-reverse). */}
         <ol className="aa-thread" aria-label="Activity">
           {task.updates.length === 0 && (
-            <li className="aa-thread__empty">
-              {onAddNote ? (
-                <>
-                  press <Kbd>n</Kbd> to add a note
-                </>
-              ) : (
-                "No notes yet."
-              )}
-            </li>
+            <li className="aa-thread__empty">No notes yet.</li>
           )}
           {task.updates.map((u) =>
             u.kind === "COMPLETED" ? (
               <li key={u.id} className="aa-thread__event">
                 <span className="aa-thread__event-dot" aria-hidden="true" />
                 <span className="aa-thread__event-text">Completed</span>
-                <span className="aa-thread__time">{formatTime(u.createdAt)}</span>
+                <span className="aa-thread__time">
+                  {formatTime(u.createdAt)}
+                </span>
               </li>
             ) : (
               <li key={u.id} className="aa-thread__note">
@@ -494,170 +631,17 @@ export function FocusMode({
             ),
           )}
         </ol>
-      </div>
 
-      {/* Bottom rail: subtle keyboard map. Low opacity until hovered. */}
-      <div className="aa-focus__rail">
-        {onAddNote && (
+        {onSnooze && (
           <button
             type="button"
-            className="aa-hint"
-            onClick={() => setComposerOpen((v) => !v)}
-          >
-            <Kbd>n</Kbd> note
-          </button>
-        )}
-        {onComplete && (
-          <button type="button" className="aa-hint" onClick={openConfirm}>
-            <Kbd>↵</Kbd> complete
-          </button>
-        )}
-        <button type="button" className="aa-hint" onClick={onClose}>
-          <Kbd>p</Kbd> pause
-        </button>
-      </div>
-
-      {/* Mobile action bar: tappable Pause + Not now. The keyboard rail above is
-          useless on touch (no keyboard); this bar replaces it on mobile. CSS
-          toggles visibility — desktop shows the rail, mobile shows this. */}
-      <div className="aa-focus__actions">
-        <Button variant="secondary" size="md" onClick={onClose} className="aa-focus__action-btn">
-          Pause
-        </Button>
-        {onSnooze && (
-          <Button
-            variant="ghost"
-            size="md"
+            className="aa-focus__not-now"
             onClick={() => setSnoozeOpen(true)}
-            className="aa-focus__action-btn"
           >
             Not now
-          </Button>
+          </button>
         )}
       </div>
-
-      {/* Summoned notes composer — slides up when open. */}
-      {composerOpen && (
-        <div className="aa-composer" role="region" aria-label="Progress note">
-          <div className="aa-composer__label">
-            <span>Progress note</span>
-            <button
-              type="button"
-              className="aa-composer__dismiss"
-              onClick={() => setComposerOpen(false)}
-              aria-label="Dismiss"
-            >
-              <Kbd>esc</Kbd>
-            </button>
-          </div>
-          <textarea
-            ref={composerRef}
-            className="aa-composer__text"
-            placeholder="What did you learn, decide, or get stuck on?"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={handleComposerKey}
-            rows={3}
-            disabled={submitting}
-          />
-          <div className="aa-composer__foot">
-            <span className="aa-composer__hint">
-              <Kbd>⌘↵</Kbd> to post
-            </span>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={submitNote}
-              disabled={!draft.trim() || submitting}
-            >
-              Post note
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Completion sheet — Outcome capture at the moment of completion
-          (task-fields §F). Non-blocking: the note is optional, Enter/Complete
-          skips it in one keystroke; typing + ⌘↵ posts both in one motion. */}
-      {confirmOpen && (
-        <div
-          className="aa-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Mark this done?"
-          onClick={() => setConfirmOpen(false)}
-        >
-          <div
-            className="aa-overlay-card aa-overlay-card--sm aa-confirm"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="aa-confirm__head">
-              <h2 className="aa-confirm__title">Mark this done?</h2>
-              <CloseButton onClose={() => setConfirmOpen(false)} />
-            </div>
-
-            <div className="aa-confirm__body">
-              <p className="aa-confirm__meta">
-                {sessionElapsedMs !== null
-                  ? totalMs > 0
-                    ? `${formatDuration(sessionElapsedMs)} this session · ${formatDuration(totalMs)} total`
-                    : `${formatDuration(sessionElapsedMs)} this session`
-                  : "This will mark the task complete."}
-              </p>
-              <div className="aa-confirm__outcome">
-                <label
-                  className="aa-confirm__outcome-label"
-                  htmlFor="aa-focus-outcome"
-                >
-                  Outcome
-                  <span className="aa-confirm__outcome-hint">optional</span>
-                </label>
-                <textarea
-                  ref={outcomeRef}
-                  id="aa-focus-outcome"
-                  className="aa-confirm__outcome-input"
-                  placeholder="What happened?"
-                  value={outcomeDraft}
-                  onChange={(e) => setOutcomeDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    // ⌘↵ / Ctrl+↵ always completes (with whatever's typed).
-                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                      e.preventDefault();
-                      handleConfirm();
-                      return;
-                    }
-                    // Bare Enter completes ONLY when the field is empty — so
-                    // "skip" stays one keystroke (the spec's §F promise). Once
-                    // the user has typed anything, Enter inserts a newline so
-                    // multi-line outcomes work.
-                    if (e.key === "Enter" && !outcomeDraft.trim()) {
-                      e.preventDefault();
-                      handleConfirm();
-                    }
-                  }}
-                  rows={3}
-                />
-                <span className="aa-confirm__outcome-kbd">
-                  <Kbd>⌘↵</Kbd> complete
-                </span>
-              </div>
-            </div>
-
-            <div className="aa-confirm__foot">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setConfirmOpen(false)}
-              >
-                Not yet
-              </Button>
-              <Button variant="primary" size="sm" onClick={handleConfirm}>
-                Complete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Snooze sheet — "Not now" from the mobile action bar. Reuses the same
           SnoozeSheet the home screen uses (5 presets). The parent's onSnooze
@@ -680,6 +664,13 @@ function formatTime(date: Date): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function formatCountdown(ms: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 // True when keystrokes should go to a field, not a global handler. Mirrors

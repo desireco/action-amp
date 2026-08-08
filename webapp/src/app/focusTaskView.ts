@@ -27,8 +27,14 @@ export function toFocusTask(task: {
   size?: string | null;
   startedAt?: Date | string | null;
   project?: { name: string } | null;
+  user?: { focusSessionMinutes?: number | null } | null;
   updates?: { id: string; body: string; createdAt: Date; kind: string }[];
-  sessions?: { startedAt: Date | string; endedAt?: Date | string | null }[];
+  sessions?: {
+    startedAt: Date | string;
+    endedAt?: Date | string | null;
+    plannedMinutes?: number | null;
+    completed?: boolean;
+  }[];
 }): FocusTask {
   const due =
     task.status === "TODAY"
@@ -44,13 +50,12 @@ export function toFocusTask(task: {
   const sessions = (task.sessions ?? []).map((s) => ({
     startedAt: new Date(s.startedAt),
     endedAt: s.endedAt ? new Date(s.endedAt) : null,
+    plannedMinutes:
+      s.plannedMinutes === 45 ? 45 : s.plannedMinutes === 25 ? 25 : null,
+    completed: s.completed === true,
   }));
   const openSession = sessions.find((s) => s.endedAt === null) ?? null;
-  const now = Date.now();
-  const totalFocusedMs = sessions.reduce((sum, s) => {
-    const end = s.endedAt ? s.endedAt.getTime() : now;
-    return sum + Math.max(0, end - s.startedAt.getTime());
-  }, 0);
+  const latestSession = sessions.at(-1) ?? null;
 
   return {
     id: task.id,
@@ -62,7 +67,15 @@ export function toFocusTask(task: {
     outcome: task.outcome ?? null,
     startedAt: task.startedAt ? new Date(task.startedAt) : null,
     sessionStartedAt: openSession?.startedAt ?? null,
-    totalFocusedMs,
+    focusSessionMinutes:
+      openSession?.plannedMinutes === 45 || openSession?.plannedMinutes === 25
+        ? openSession.plannedMinutes
+        : task.user?.focusSessionMinutes === 45
+          ? 45
+          : 25,
+    sessionComplete: !openSession && latestSession?.completed === true,
+    completedFocusSessions: sessions.filter((session) => session.completed)
+      .length,
     updates:
       task.updates?.map((u) => ({
         id: u.id,

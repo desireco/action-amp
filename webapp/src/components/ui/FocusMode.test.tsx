@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { FocusMode, type FocusTask } from "./FocusMode";
 import { renderInContext } from "wasp/client/test";
 
-// FocusMode — Variant F (locked 2026-07-05). These tests pin the component
+// FocusMode — centered session (revised 2026-08-07). These tests pin the component
 // contract for the focus surface:
-//   1. The margin clock derives elapsed time from `task.startedAt`.
+//   1. The center ring counts down the configured focus session.
 //   2. The thread renders NOTE vs COMPLETED entries distinctly.
 //   3. The composer is summoned via `n` and posts via ⌘↵ (Enter inserts a
 //      newline — the composer is dedicated and multi-line).
-//   4. Completion opens a confirm dialog before firing onComplete, with an
-//      optimistic payoff (circle fills, title strikes through).
+//   4. Completion opens an inline reflection before firing onComplete, with an
+//      optimistic payoff (title strikes through).
 //   5. Esc dismisses composer → confirm → exit, in that order.
 //
 // Uses fireEvent over user-event (no dep), matching the rest of the suite.
 
-// 18 minutes ago — gives a stable "18" for the margin clock assertion.
+// 18 minutes ago — leaves about seven minutes on a 25-minute countdown.
 const STARTED_MS = Date.now() - 18 * 60 * 1000;
 
 const BASE_TASK: FocusTask = {
@@ -27,7 +27,8 @@ const BASE_TASK: FocusTask = {
   content: "Follow up on the launch retro.",
   startedAt: new Date(STARTED_MS),
   sessionStartedAt: new Date(STARTED_MS),
-  totalFocusedMs: 0,
+  focusSessionMinutes: 25,
+  sessionComplete: false,
   updates: [],
 };
 
@@ -42,40 +43,33 @@ describe("FocusMode", () => {
 
     it("renders durable task content", () => {
       renderInContext(<FocusMode task={BASE_TASK} onClose={() => {}} />);
-      expect(screen.getByText(/Follow up on the launch retro/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Follow up on the launch retro/),
+      ).toBeInTheDocument();
     });
 
-    it("renders the margin clock with the live session duration", () => {
+    it("renders the centered countdown with configured duration", () => {
       renderInContext(<FocusMode task={BASE_TASK} onClose={() => {}} />);
-      // BASE_TASK.sessionStartedAt is 18 min ago. The session clock shows the
-      // formatted duration ("18 min") + the "in" unit + the "in focus" label.
-      const clock = screen.getByText("18 min");
-      expect(clock).toHaveClass("aa-clock__num");
-      expect(screen.getByText("in")).toBeInTheDocument();
-      expect(screen.getByText(/in focus/i)).toBeInTheDocument();
+      expect(screen.getByText(/^(06:59|07:00)$/)).toHaveClass(
+        "aa-focus-timer__time",
+      );
+      expect(screen.getByText(/25 min focus/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /pause focus session/i }),
+      ).toBeInTheDocument();
     });
 
-    it("renders the per-task total when totalFocusedMs > 0", () => {
-      // Two closed 30-min sessions + the open 18-min one = ~1h 18m total.
+    it("shows a timer symbol and count for completed focus sessions", () => {
       renderInContext(
         <FocusMode
-          task={{
-            ...BASE_TASK,
-            totalFocusedMs: 78 * 60_000,
-          }}
+          task={{ ...BASE_TASK, completedFocusSessions: 3 }}
           onClose={() => {}}
         />,
       );
-      // 78 min = 1h 18m. The total reads "total 1h 18m" and is distinct from
-      // the session number ("18 min").
-      expect(screen.getByText(/total 1h 18m/i)).toBeInTheDocument();
-    });
 
-    it("hides the total when there is no prior focused time", () => {
-      renderInContext(<FocusMode task={BASE_TASK} onClose={() => {}} />);
-      // BASE_TASK has no sessions, so no total line should render — "total 0
-      // min" would be noise on a fresh start.
-      expect(screen.queryByText(/^total /i)).toBeNull();
+      const cycles = screen.getByLabelText("3 completed focus sessions");
+      expect(cycles.querySelectorAll("svg")).toHaveLength(1);
+      expect(cycles).toHaveTextContent("3");
     });
 
     it("falls back to startedAt for the session clock when no open session is present", () => {
@@ -87,29 +81,70 @@ describe("FocusMode", () => {
           onClose={() => {}}
         />,
       );
-      expect(screen.getByText("18 min")).toBeInTheDocument();
+      expect(screen.getByText(/^(06:59|07:00)$/)).toBeInTheDocument();
     });
 
-    it("renders a placeholder when neither session nor startedAt is set", () => {
+    it("renders a fresh configured duration when no legacy start exists", () => {
       renderInContext(
         <FocusMode
           task={{ ...BASE_TASK, startedAt: null, sessionStartedAt: null }}
           onClose={() => {}}
         />,
       );
-      expect(screen.getByText("—")).toBeInTheDocument();
+      expect(screen.getByText("25:00")).toBeInTheDocument();
+    });
+
+    it("records an elapsed focus session without completing the task", async () => {
+      const onCompleteSession = vi.fn().mockResolvedValue(undefined);
+      renderInContext(
+        <FocusMode
+          task={{
+            ...BASE_TASK,
+            sessionStartedAt: new Date(Date.now() - 26 * 60_000),
+          }}
+          onClose={() => {}}
+          onCompleteSession={onCompleteSession}
+        />,
+      );
+
+      await waitFor(() => expect(onCompleteSession).toHaveBeenCalledTimes(1));
+    });
+
+    it("offers another session after a countdown is recorded", () => {
+      const onStartSession = vi.fn();
+      renderInContext(
+        <FocusMode
+          task={{ ...BASE_TASK, sessionStartedAt: null, sessionComplete: true }}
+          onClose={() => {}}
+          onStartSession={onStartSession}
+        />,
+      );
+
+      expect(screen.getByText("00:00")).toBeInTheDocument();
+      fireEvent.click(
+        screen.getByRole("button", { name: /start another focus session/i }),
+      );
+      expect(onStartSession).toHaveBeenCalledTimes(1);
     });
 
     it("can save edited durable task content", async () => {
       const onSaveContent = vi.fn().mockResolvedValue(undefined);
       renderInContext(
-        <FocusMode task={BASE_TASK} onClose={() => {}} onSaveContent={onSaveContent} />,
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onSaveContent={onSaveContent}
+        />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
-      const editor = screen.getByLabelText(/task notes/i) as HTMLTextAreaElement;
-      fireEvent.change(editor, { target: { value: "  Bring the contract notes  " } });
-      fireEvent.click(screen.getByRole("button", { name: /save notes/i }));
+      fireEvent.click(screen.getByRole("button", { name: /edit details/i }));
+      const editor = screen.getByRole("textbox", {
+        name: /task details/i,
+      }) as HTMLTextAreaElement;
+      fireEvent.change(editor, {
+        target: { value: "  Bring the contract notes  " },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /save details/i }));
 
       await waitFor(() =>
         expect(onSaveContent).toHaveBeenCalledWith("Bring the contract notes"),
@@ -126,11 +161,13 @@ describe("FocusMode", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: /add notes/i }));
-      fireEvent.change(screen.getByLabelText(/task notes/i), {
+      fireEvent.click(
+        screen.getByRole("button", { name: /add task details/i }),
+      );
+      fireEvent.change(screen.getByRole("textbox", { name: /task details/i }), {
         target: { value: "Opening call bullets" },
       });
-      fireEvent.click(screen.getByRole("button", { name: /save notes/i }));
+      fireEvent.click(screen.getByRole("button", { name: /save details/i }));
 
       await waitFor(() =>
         expect(onSaveContent).toHaveBeenCalledWith("Opening call bullets"),
@@ -140,13 +177,11 @@ describe("FocusMode", () => {
 
   // ---- Flow 1: the progress thread ----
   describe("progress thread", () => {
-    it("shows the empty hint when there are no updates and onAddNote is wired", () => {
+    it("shows the calm empty state when there are no updates", () => {
       renderInContext(
         <FocusMode task={BASE_TASK} onClose={() => {}} onAddNote={vi.fn()} />,
       );
-      // Empty state doubles as a keyboard hint pointing at the `n` shortcut.
-      expect(screen.getByText(/press/i)).toBeInTheDocument();
-      expect(screen.getByText(/to add a note/i)).toBeInTheDocument();
+      expect(screen.getByText("No notes yet.")).toBeInTheDocument();
     });
 
     it("renders a user NOTE as a note row with body + time", () => {
@@ -161,12 +196,14 @@ describe("FocusMode", () => {
           },
         ],
       };
-      const { container } = renderInContext(<FocusMode task={task} onClose={() => {}} />);
+      const { container } = renderInContext(
+        <FocusMode task={task} onClose={() => {}} />,
+      );
       expect(screen.getByText("Drafted the outline")).toBeInTheDocument();
       expect(container.querySelector(".aa-thread__note")).not.toBeNull();
-      expect(container.querySelector(".aa-thread__note-body")?.textContent).toBe(
-        "Drafted the outline",
-      );
+      expect(
+        container.querySelector(".aa-thread__note-body")?.textContent,
+      ).toBe("Drafted the outline");
       expect(container.querySelector(".aa-thread__time")).not.toBeNull();
       // No COMPLETED system row when only a note is present.
       expect(container.querySelector(".aa-thread__event")).toBeNull();
@@ -184,7 +221,9 @@ describe("FocusMode", () => {
           },
         ],
       };
-      const { container } = renderInContext(<FocusMode task={task} onClose={() => {}} />);
+      const { container } = renderInContext(
+        <FocusMode task={task} onClose={() => {}} />,
+      );
       expect(screen.getByText(/Completed/i)).toBeInTheDocument();
       expect(container.querySelector(".aa-thread__event")).not.toBeNull();
       // A COMPLETED entry must NOT render as a note card.
@@ -195,11 +234,23 @@ describe("FocusMode", () => {
       const task: FocusTask = {
         ...BASE_TASK,
         updates: [
-          { id: "tu-1", body: "Started drafting", createdAt: new Date("2026-07-04T09:00:00Z"), kind: "NOTE" },
-          { id: "tu-2", body: "Completed", createdAt: new Date("2026-07-04T09:41:00Z"), kind: "COMPLETED" },
+          {
+            id: "tu-1",
+            body: "Started drafting",
+            createdAt: new Date("2026-07-04T09:00:00Z"),
+            kind: "NOTE",
+          },
+          {
+            id: "tu-2",
+            body: "Completed",
+            createdAt: new Date("2026-07-04T09:41:00Z"),
+            kind: "COMPLETED",
+          },
         ],
       };
-      const { container } = renderInContext(<FocusMode task={task} onClose={() => {}} />);
+      const { container } = renderInContext(
+        <FocusMode task={task} onClose={() => {}} />,
+      );
       const notes = container.querySelectorAll(".aa-thread__note");
       const events = container.querySelectorAll(".aa-thread__event");
       expect(notes).toHaveLength(1);
@@ -226,7 +277,9 @@ describe("FocusMode", () => {
         <FocusMode task={BASE_TASK} onClose={() => {}} onAddNote={onAddNote} />,
       );
       fireEvent.keyDown(window, { key: "n" });
-      const composer = screen.getByPlaceholderText(/learn, decide/i) as HTMLTextAreaElement;
+      const composer = screen.getByPlaceholderText(
+        /learn, decide/i,
+      ) as HTMLTextAreaElement;
       fireEvent.change(composer, { target: { value: "  Ship it  " } });
       fireEvent.keyDown(composer, { key: "Enter", metaKey: true });
 
@@ -258,7 +311,9 @@ describe("FocusMode", () => {
         <FocusMode task={BASE_TASK} onClose={() => {}} onAddNote={onAddNote} />,
       );
       fireEvent.keyDown(window, { key: "n" });
-      const composer = screen.getByPlaceholderText(/learn, decide/i) as HTMLTextAreaElement;
+      const composer = screen.getByPlaceholderText(
+        /learn, decide/i,
+      ) as HTMLTextAreaElement;
       fireEvent.change(composer, { target: { value: "two lines" } });
       fireEvent.keyDown(composer, { key: "Enter" });
       expect(onAddNote).not.toHaveBeenCalled();
@@ -272,7 +327,9 @@ describe("FocusMode", () => {
       // Open the composer, focus it, then press `n` to type into it — the
       // global handler must not toggle it closed.
       fireEvent.keyDown(window, { key: "n" });
-      const composer = screen.getByPlaceholderText(/learn, decide/i) as HTMLTextAreaElement;
+      const composer = screen.getByPlaceholderText(
+        /learn, decide/i,
+      ) as HTMLTextAreaElement;
       composer.focus();
       fireEvent.keyDown(composer, { key: "n" });
       // Still open — the in-field keystroke was not hijacked.
@@ -280,128 +337,192 @@ describe("FocusMode", () => {
     });
   });
 
-  // ---- Flow 3: completion is gated behind a confirm dialog ----
-  // Clicking the hero circle (or pressing Enter) opens a calm confirm that
-  // shows the elapsed time. Only confirming fires onComplete — the op-level
-  // behavior (stamps isDone + completedAt + writes COMPLETED row) is covered
-  // in operations.test.ts.
-  describe("completion — confirm before firing", () => {
-    it("clicking the hero circle opens the confirm dialog", () => {
+  // ---- Flow 3: completion reflects inline in the notes area ----
+  // Clicking the explicit Complete task action (or pressing D) opens a calm,
+  // optional Outcome prompt in the existing notes flow. Only its final action
+  // fires onComplete; the op-level behavior is covered in operations.test.ts.
+  describe("completion — inline reflection before firing", () => {
+    it("clicking Complete task opens the inline reflection", () => {
       const onComplete = vi.fn();
       renderInContext(
-        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+        />,
       );
-      // Circle is a button labelled "Mark complete".
-      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
+      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
       expect(
-        screen.getByRole("dialog", { name: /mark this done/i }),
+        screen.getByRole("region", { name: /complete task reflection/i }),
       ).toBeInTheDocument();
+      expect(screen.getByText("How did it go?")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("dialog", { name: /mark this done/i }),
+      ).toBeNull();
       expect(onComplete).not.toHaveBeenCalled();
     });
 
-    it("pressing Enter opens the confirm dialog", () => {
+    it("pressing D opens the inline reflection", () => {
       const onComplete = vi.fn();
       renderInContext(
-        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+        />,
       );
-      fireEvent.keyDown(window, { key: "Enter" });
+      fireEvent.keyDown(window, { key: "d" });
       expect(
-        screen.getByRole("dialog", { name: /mark this done/i }),
+        screen.getByRole("region", { name: /complete task reflection/i }),
       ).toBeInTheDocument();
     });
 
-    it("confirming fires onComplete (the focus → complete path)", () => {
+    it("the reflection action fires onComplete", () => {
       const onComplete = vi.fn();
       renderInContext(
-        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+        />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
-      fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      const reflection = screen.getByRole("region", {
+        name: /complete task reflection/i,
+      });
+      fireEvent.click(
+        within(reflection).getByRole("button", { name: /complete task/i }),
+      );
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
 
-    // Outcome capture (task-fields §F): the completion sheet shows an optional
-    // Outcome field. Skipping (Complete with empty field) passes an empty
-    // string; typing a note passes the trimmed text.
+    // Outcome capture (task-fields §F): the notes area shows an optional
+    // reflection. Completing with an empty field passes an empty string;
+    // typing a note passes trimmed text.
     it("passes an empty outcome when completing without a note", () => {
       const onComplete = vi.fn();
       renderInContext(
-        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+        />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
-      fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      const reflection = screen.getByRole("region", {
+        name: /complete task reflection/i,
+      });
+      fireEvent.click(
+        within(reflection).getByRole("button", { name: /complete task/i }),
+      );
       expect(onComplete).toHaveBeenCalledWith("");
     });
 
     it("passes the typed outcome when completing with a note", () => {
       const onComplete = vi.fn();
       renderInContext(
-        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+        />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
-      fireEvent.change(screen.getByLabelText(/outcome/i), {
+      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.change(screen.getByLabelText(/completion note optional/i), {
         target: { value: "Shipped the draft to Sarah." },
       });
-      fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+      const reflection = screen.getByRole("region", {
+        name: /complete task reflection/i,
+      });
+      fireEvent.click(
+        within(reflection).getByRole("button", { name: /complete task/i }),
+      );
       expect(onComplete).toHaveBeenCalledWith("Shipped the draft to Sarah.");
     });
 
-    // Skipping outcome stays one keystroke (task-fields §F): bare Enter in an
-    // empty Outcome field completes. Once the user types, Enter inserts a
-    // newline (multi-line outcomes) and ⌘↵ completes-with-content.
-    it("bare Enter completes when the outcome field is empty (one-keystroke skip)", () => {
+    it("bare Enter remains available for a multi-line reflection", () => {
       const onComplete = vi.fn();
       renderInContext(
-        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+        />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
-      fireEvent.keyDown(screen.getByLabelText(/outcome/i), { key: "Enter" });
-      expect(onComplete).toHaveBeenCalledTimes(1);
-      expect(onComplete).toHaveBeenCalledWith("");
-    });
-
-    it("bare Enter does NOT complete once the user has typed an outcome", () => {
-      const onComplete = vi.fn();
-      renderInContext(
-        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
-      );
-      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
-      fireEvent.change(screen.getByLabelText(/outcome/i), {
-        target: { value: "Shipped." },
+      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.keyDown(screen.getByLabelText(/completion note optional/i), {
+        key: "Enter",
       });
-      fireEvent.keyDown(screen.getByLabelText(/outcome/i), { key: "Enter" });
       expect(onComplete).not.toHaveBeenCalled();
     });
 
     it("⌘↵ completes with the typed outcome", () => {
       const onComplete = vi.fn();
       renderInContext(
-        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+        />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
-      fireEvent.change(screen.getByLabelText(/outcome/i), {
+      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.change(screen.getByLabelText(/completion note optional/i), {
         target: { value: "Shipped the draft." },
       });
-      fireEvent.keyDown(screen.getByLabelText(/outcome/i), {
+      fireEvent.keyDown(screen.getByLabelText(/completion note optional/i), {
         key: "Enter",
         metaKey: true,
       });
       expect(onComplete).toHaveBeenCalledWith("Shipped the draft.");
     });
 
-    it("cancelling closes the confirm without firing onComplete", () => {
+    it("Keep working closes the reflection without firing onComplete", () => {
       const onComplete = vi.fn();
       renderInContext(
-        <FocusMode task={BASE_TASK} onClose={() => {}} onComplete={onComplete} />,
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+        />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
-      fireEvent.click(screen.getByRole("button", { name: /not yet/i }));
+      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /keep working/i }));
       expect(onComplete).not.toHaveBeenCalled();
-      expect(screen.queryByRole("dialog", { name: /mark this done/i })).toBeNull();
+      expect(
+        screen.queryByRole("region", { name: /complete task reflection/i }),
+      ).toBeNull();
+    });
+
+    it("restores the reflection and typed outcome when completion fails", async () => {
+      const onComplete = vi.fn().mockRejectedValue(new Error("offline"));
+      renderInContext(
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.change(screen.getByLabelText(/completion note optional/i), {
+        target: { value: "Keep this outcome" },
+      });
+      const reflection = screen.getByRole("region", {
+        name: /complete task reflection/i,
+      });
+      fireEvent.click(
+        within(reflection).getByRole("button", { name: /complete task/i }),
+      );
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        /could not complete/i,
+      );
+      expect(screen.getByLabelText(/completion note optional/i)).toHaveValue(
+        "Keep this outcome",
+      );
     });
   });
 
-  // ---- Flow 4: Esc dismisses composer → confirm → exit ----
+  // ---- Flow 4: Esc dismisses composer → exit ----
   describe("Esc — topmost layer wins", () => {
     it("Esc exits focus when nothing else is open", () => {
       const onClose = vi.fn();
@@ -423,15 +544,21 @@ describe("FocusMode", () => {
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    it("Esc closes the confirm dialog without exiting focus", () => {
+    it("Esc closes the completion reflection without exiting focus", () => {
       const onClose = vi.fn();
       const onComplete = vi.fn();
       renderInContext(
-        <FocusMode task={BASE_TASK} onClose={onClose} onComplete={onComplete} />,
+        <FocusMode
+          task={BASE_TASK}
+          onClose={onClose}
+          onComplete={onComplete}
+        />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /mark complete/i }));
+      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
       fireEvent.keyDown(window, { key: "Escape" });
-      expect(screen.queryByRole("dialog", { name: /mark this done/i })).toBeNull();
+      expect(
+        screen.queryByRole("region", { name: /complete task reflection/i }),
+      ).toBeNull();
       expect(onClose).not.toHaveBeenCalled();
       expect(onComplete).not.toHaveBeenCalled();
     });
@@ -444,7 +571,9 @@ describe("FocusMode", () => {
       );
       // Open the snooze sheet via the "Not now" button.
       fireEvent.click(screen.getByRole("button", { name: /not now/i }));
-      expect(screen.getByRole("dialog", { name: /not now/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("dialog", { name: /not now/i }),
+      ).toBeInTheDocument();
       // Esc should close the sheet, not exit focus.
       fireEvent.keyDown(window, { key: "Escape" });
       expect(screen.queryByRole("dialog", { name: /not now/i })).toBeNull();

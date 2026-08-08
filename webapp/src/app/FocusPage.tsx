@@ -5,6 +5,8 @@ import {
   addTaskUpdate,
   updateTaskContent,
   completeTaskFromFocus,
+  completeFocusSession,
+  startTask,
   pauseTask,
   snoozeTask,
 } from "wasp/client/operations";
@@ -69,6 +71,14 @@ export function FocusPage() {
         );
         refreshTaskState();
         navigate("/app");
+      }}
+      onCompleteSession={async () => {
+        await completeFocusSession({ id: task.id });
+        await queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
+      }}
+      onStartSession={async () => {
+        await startTask({ id: task.id });
+        await queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
       }}
       onAddNote={async (body) => {
         await addTaskUpdate({ taskId: task.id, body });
