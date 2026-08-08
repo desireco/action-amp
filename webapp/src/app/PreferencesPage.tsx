@@ -8,6 +8,7 @@ import {
   savePushSubscription,
   saveTodayCap,
   saveFocusSessionMinutes,
+  saveReviewPreferences,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { SettingsLayout } from "./SettingsLayout";
@@ -23,7 +24,11 @@ import {
 } from "./operations";
 import "./Field.css";
 import "./PreferencesPage.css";
-import { supportsPushNotifications, urlBase64ToUint8Array } from "../notifications/client";
+import {
+  supportsPushNotifications,
+  urlBase64ToUint8Array,
+} from "../notifications/client";
+import { applyTheme, preferredTheme } from "./theme";
 
 /**
  * Preferences — app behavior. Theme toggle is live (wired to [data-theme] +
@@ -34,26 +39,37 @@ import { supportsPushNotifications, urlBase64ToUint8Array } from "../notificatio
 
 export function PreferencesPage() {
   // ---- Theme: live, persisted ----
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") return "light";
-    const stored = localStorage.getItem("aa-theme") as "light" | "dark" | null;
-    if (stored) return stored;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  });
+  const [theme, setTheme] = useState(preferredTheme);
   const toggleTheme = (next: boolean) => {
     const value = next ? "dark" : "light";
-    setTheme(value);
-    localStorage.setItem("aa-theme", value);
-    document.documentElement.dataset.theme = value;
+    setTheme(applyTheme(value));
   };
-  const { data: notificationPrefs, refetch: refetchNotifications } = useQuery(getNotificationPreferences);
+  const { data: notificationPrefs, refetch: refetchNotifications } = useQuery(
+    getNotificationPreferences,
+  );
   const { data: appData } = useQuery(getAppData);
   const queryClient = useQueryClient();
   const saveCapAction = useAction(saveTodayCap);
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState("09:00");
-  const [notificationStatus, setNotificationStatus] = useState<"idle" | "saving" | "error">("idle");
-  const [notificationError, setNotificationError] = useState<string | null>(null);
+  const [notificationStatus, setNotificationStatus] = useState<
+    "idle" | "saving" | "error"
+  >("idle");
+  const [notificationError, setNotificationError] = useState<string | null>(
+    null,
+  );
+  const storedReviewPreferences = appData?.reviewPreferences ?? {
+    today: true,
+    week: true,
+    month: true,
+  };
+  const [reviewPreferences, setReviewPreferences] = useState(
+    storedReviewPreferences,
+  );
+  const [reviewStatus, setReviewStatus] = useState<"idle" | "saving" | "error">(
+    "idle",
+  );
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!notificationPrefs) return;
@@ -61,10 +77,43 @@ export function PreferencesPage() {
     setReminderTime(notificationPrefs.dailyReminderTime);
   }, [notificationPrefs]);
 
+  useEffect(() => {
+    setReviewPreferences(storedReviewPreferences);
+  }, [
+    storedReviewPreferences.today,
+    storedReviewPreferences.week,
+    storedReviewPreferences.month,
+  ]);
+
+  async function commitReviewPreference(
+    cadence: "today" | "week" | "month",
+    enabled: boolean,
+  ) {
+    const previous = reviewPreferences;
+    const next = { ...reviewPreferences, [cadence]: enabled };
+    setReviewPreferences(next);
+    setReviewStatus("saving");
+    setReviewError(null);
+    try {
+      await saveReviewPreferences(next);
+      setReviewStatus("idle");
+    } catch (error) {
+      setReviewPreferences(previous);
+      setReviewStatus("error");
+      setReviewError(
+        error instanceof Error
+          ? error.message
+          : "Could not save review preferences.",
+      );
+    }
+  }
+
   // ---- Today cap (global, user-tunable) ----
   const storedCap = appData?.todayCap ?? TODAY_CAP_DEFAULT;
   const [draftCap, setDraftCap] = useState<number>(storedCap);
-  const [capStatus, setCapStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [capStatus, setCapStatus] = useState<"idle" | "saving" | "error">(
+    "idle",
+  );
   const [capError, setCapError] = useState<string | null>(null);
   const capDirty = draftCap !== storedCap;
 
@@ -101,7 +150,10 @@ export function PreferencesPage() {
   }
 
   async function commitCap(value: number) {
-    const clamped = Math.max(TODAY_CAP_MIN, Math.min(TODAY_CAP_MAX, Math.round(value)));
+    const clamped = Math.max(
+      TODAY_CAP_MIN,
+      Math.min(TODAY_CAP_MAX, Math.round(value)),
+    );
     setDraftCap(clamped);
     if (clamped === storedCap) return;
     setCapStatus("saving");
@@ -113,7 +165,9 @@ export function PreferencesPage() {
       setCapStatus("idle");
     } catch (error) {
       setCapStatus("error");
-      setCapError(error instanceof Error ? error.message : "Could not save Today cap.");
+      setCapError(
+        error instanceof Error ? error.message : "Could not save Today cap.",
+      );
     }
   }
 
@@ -122,18 +176,30 @@ export function PreferencesPage() {
     setNotificationError(null);
     try {
       if (enabled) {
-        if (!supportsPushNotifications()) throw new Error("This browser does not support push notifications.");
-        if (!notificationPrefs?.vapidPublicKey) throw new Error("Notifications are not configured on this ActionAmp server yet.");
+        if (!supportsPushNotifications())
+          throw new Error("This browser does not support push notifications.");
+        if (!notificationPrefs?.vapidPublicKey)
+          throw new Error(
+            "Notifications are not configured on this ActionAmp server yet.",
+          );
         const permission = await Notification.requestPermission();
-        if (permission !== "granted") throw new Error("Notification permission was not granted.");
+        if (permission !== "granted")
+          throw new Error("Notification permission was not granted.");
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(notificationPrefs.vapidPublicKey),
+          applicationServerKey: urlBase64ToUint8Array(
+            notificationPrefs.vapidPublicKey,
+          ),
         });
         const json = subscription.toJSON();
-        if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) throw new Error("Could not create notification subscription.");
-        await savePushSubscription({ endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth });
+        if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth)
+          throw new Error("Could not create notification subscription.");
+        await savePushSubscription({
+          endpoint: json.endpoint,
+          p256dh: json.keys.p256dh,
+          auth: json.keys.auth,
+        });
       }
       await saveDailyReminder({
         enabled,
@@ -145,7 +211,9 @@ export function PreferencesPage() {
       await refetchNotifications();
     } catch (error) {
       setNotificationStatus("error");
-      setNotificationError(error instanceof Error ? error.message : "Could not update reminders.");
+      setNotificationError(
+        error instanceof Error ? error.message : "Could not update reminders.",
+      );
     }
   }
 
@@ -197,7 +265,11 @@ export function PreferencesPage() {
           label="Today cap"
           description={`Today is global across lenses. Cap the day's commitment between ${TODAY_CAP_MIN} and ${TODAY_CAP_MAX}. Default ${TODAY_CAP_DEFAULT}.`}
         >
-          <div className="aa-settings-stepper" role="group" aria-label="Today cap">
+          <div
+            className="aa-settings-stepper"
+            role="group"
+            aria-label="Today cap"
+          >
             <button
               type="button"
               className="aa-settings-stepper__btn"
@@ -219,7 +291,9 @@ export function PreferencesPage() {
                 const n = Number.parseInt(e.target.value, 10);
                 setDraftCap(Number.isFinite(n) ? n : storedCap);
               }}
-              onBlur={(e) => void commitCap(Number.parseInt(e.target.value, 10) || storedCap)}
+              onBlur={(e) =>
+                void commitCap(Number.parseInt(e.target.value, 10) || storedCap)
+              }
               disabled={capStatus === "saving"}
               aria-label="Today cap value"
             />
@@ -241,17 +315,28 @@ export function PreferencesPage() {
                 Save
               </button>
             )}
-            {capStatus === "saving" && <Chip variant="muted" small>saving…</Chip>}
+            {capStatus === "saving" && (
+              <Chip variant="muted" small>
+                saving…
+              </Chip>
+            )}
           </div>
         </Field>
         {capError && <p className="aa-settings-error">{capError}</p>}
         <Field
           label="Daily Today reminder"
           description="One quiet nudge at your chosen local time. It opens Today, Next, or Capture."
-          toggle={{ checked: reminderEnabled, onChange: (next) => void setDailyReminder(next), disabled: notificationStatus === "saving" }}
+          toggle={{
+            checked: reminderEnabled,
+            onChange: (next) => void setDailyReminder(next),
+            disabled: notificationStatus === "saving",
+          }}
         />
         {reminderEnabled && (
-          <Field label="Reminder time" description="Uses this device's current time zone.">
+          <Field
+            label="Reminder time"
+            description="Uses this device's current time zone."
+          >
             <input
               className="aa-settings-input"
               type="time"
@@ -264,7 +349,49 @@ export function PreferencesPage() {
             />
           </Field>
         )}
-        {notificationError && <p className="aa-settings-error">{notificationError}</p>}
+        {notificationError && (
+          <p className="aa-settings-error">{notificationError}</p>
+        )}
+      </section>
+
+      <section className="aa-settings-section">
+        <div className="aa-settings-section-head">
+          <h2 className="aa-settings-sh">Reviews</h2>
+          <p className="aa-settings-note">
+            Choose which reflection rhythms appear in Review. Turning one off
+            hides it; it does not remove completed work or past reviews.
+          </p>
+        </div>
+        <Field
+          label="Today review"
+          description="A short closure: every task, project, and goal completed today."
+          toggle={{
+            checked: reviewPreferences.today,
+            onChange: (enabled) =>
+              void commitReviewPreference("today", enabled),
+            disabled: reviewStatus === "saving",
+          }}
+        />
+        <Field
+          label="Week review"
+          description="See where effort went and make decisions about loose work."
+          toggle={{
+            checked: reviewPreferences.week,
+            onChange: (enabled) => void commitReviewPreference("week", enabled),
+            disabled: reviewStatus === "saving",
+          }}
+        />
+        <Field
+          label="Month review"
+          description="Celebrate goals, see the month’s shape, and choose future attention."
+          toggle={{
+            checked: reviewPreferences.month,
+            onChange: (enabled) =>
+              void commitReviewPreference("month", enabled),
+            disabled: reviewStatus === "saving",
+          }}
+        />
+        {reviewError && <p className="aa-settings-error">{reviewError}</p>}
       </section>
 
       <section className="aa-settings-section">
@@ -273,13 +400,17 @@ export function PreferencesPage() {
           label="Completion sounds"
           description="A soft sound when you complete a task. Off by default."
         >
-          <Chip variant="muted" small>soon</Chip>
+          <Chip variant="muted" small>
+            soon
+          </Chip>
         </Field>
         <Field
           label="Momentum"
           description="A light 'X done today' counter. No badges, no guilt trips."
         >
-          <Chip variant="muted" small>soon</Chip>
+          <Chip variant="muted" small>
+            soon
+          </Chip>
         </Field>
       </section>
     </SettingsLayout>

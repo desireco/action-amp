@@ -59,6 +59,12 @@
 > selected duration at session start, while `TaskSession.completed` distinguishes
 > a full countdown from a manual pause. Timer completion closes the session but
 > leaves the Task in focus; Task completion remains a separate action.
+>
+> v8 (2026-08-08): **Saved Review rhythms.** `Review` stores a user's
+> DAILY/WEEKLY/MONTHLY reflection by normalized period, with optional answers
+> and a stable accomplishment snapshot. Three `User` booleans independently
+> enable Today, Week, and Month reviews. Cadence review reads are deliberately
+> cross-Lens; ownership remains strictly keyed by `userId`.
 
 ---
 
@@ -79,6 +85,7 @@
                      (focus refinements — Phase 2 nuance; `#`-prefixed at capture per grammar v2)
   Archive         ← PARa's A: completed/dead items  [Logbook]
   Inbox           ← GTD's Inbox: universal, single queue
+  Review          ← saved daily/weekly/monthly reflection + stable evidence snapshot
 ```
 
 **Atomic vs. container:**
@@ -102,6 +109,9 @@
   whole UI and the focus engine.
 - **Archive** = where completed/dead items go. (PARA "Archive" / our Logbook.)
 - **Tag** = GTD "@context" — cross-cutting labels for focus refinement.
+- **Review** = one user-owned cadence/period record. `answers` and `snapshot`
+  are JSON; `snapshot` preserves names, Outcomes, hierarchy/Lens labels, and
+  completion timestamps as they appeared when the review was recorded.
 
 **Priority** (Low / Normal / Important) is the primary sort key for focus.
 **Size** (S / M / L / XL) is the secondary signal and a built-in nudge:

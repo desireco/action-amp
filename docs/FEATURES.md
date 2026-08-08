@@ -72,38 +72,38 @@ Goal: move items *out* of the inbox into a place the focus engine can use. This 
 
 ## 3. Focus — "Next?" (the soul of the app)
 
-The home screen (`/app`). Every other app opens to a list. ActionAmp opens to a *decision*.
+The home screen (`/app`). Every other app opens to a list. ActionAmp opens to a _decision_.
 
-| # | Feature | Status | Notes |
-|---|---|---|---|
-| **F8** | "Next" view (default home) | ✅ Shipped | `NextPage.tsx` + `NextCard.tsx`. Surfaces one item (default 1, max 3), hides the rest. |
-| **F9** | Moment bar | 🔵 Mockup | `mockups/moment-bar.html` only. Not in the live app. Set time-available + energy + optional lens. |
-| **F9b** | Task attributes (Priority + Size) | ✅ Shipped | Priority `Low/Normal/Important` (primary focus sort); Size `S/M/L/XL` (secondary). Set inline from keyboard. |
-| **F9c** | XL prompts break-down | ✅ Shipped | Setting XL prompts "break it down?" → convert to Project / add subtasks / dismiss. |
-| **F10** | Focus matcher | ✅ Shipped (reworked) | `getTopTask` in `tasks/operations.ts`. **Priority-first, transparent.** Candidate pool is `Today + Upcoming` with a `dueDate ≤ now` (or null) guard — not "Today/overdue only" as the original plan said. A freshly-triaged Upcoming task surfaces on Next; a snoozed task auto-resurfaces when due. One-line "why this?" under the suggestion. See `WORKFLOW.md` §5.2. |
-| **F11** | "Not now" behaviors | ✅ Shipped | `SnoozeSheet.tsx`. Snooze (1h/3h/tomorrow/weekend), → Someday, skip-once. |
+| #       | Feature                           | Status                | Notes                                                                                                                                                                                                                                                                                                                                                                   |
+| ------- | --------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F8**  | "Next" view (default home)        | ✅ Shipped            | `NextPage.tsx` + `NextCard.tsx`. Surfaces one item (default 1, max 3), hides the rest.                                                                                                                                                                                                                                                                                  |
+| **F9**  | Moment bar                        | 🔵 Mockup             | `mockups/moment-bar.html` only. Not in the live app. Set time-available + energy + optional lens.                                                                                                                                                                                                                                                                       |
+| **F9b** | Task attributes (Priority + Size) | ✅ Shipped            | Priority `Low/Normal/Important` (primary focus sort); Size `S/M/L/XL` (secondary). Set inline from keyboard.                                                                                                                                                                                                                                                            |
+| **F9c** | XL prompts break-down             | ✅ Shipped            | Setting XL prompts "break it down?" → convert to Project / add subtasks / dismiss.                                                                                                                                                                                                                                                                                      |
+| **F10** | Focus matcher                     | ✅ Shipped (reworked) | `getTopTask` in `tasks/operations.ts`. **Priority-first, transparent.** Candidate pool is `Today + Upcoming` with a `dueDate ≤ now` (or null) guard — not "Today/overdue only" as the original plan said. A freshly-triaged Upcoming task surfaces on Next; a snoozed task auto-resurfaces when due. One-line "why this?" under the suggestion. See `WORKFLOW.md` §5.2. |
+| **F11** | "Not now" behaviors               | ✅ Shipped            | `SnoozeSheet.tsx`. Snooze (1h/3h/tomorrow/weekend), → Someday, skip-once.                                                                                                                                                                                                                                                                                               |
 
 ---
 
 ## 4. Do — single-item execution
 
-| # | Feature | Status | Notes |
-|---|---|---|---|
-| **F12** | Today cap | ✅ Shipped | `TodayPage.tsx` (`TODAY_CAP = 5`). A 6th requires bumping one out. Configurable. A *feature*, not a limit — forces the "what actually matters today" decision. |
-| **F13** | Focus mode (single-task view) | ✅ Shipped | `FocusMode.tsx`. Full-screen single task + notes; no sidebar/list/counts. |
-| **F14** | Configurable focus timer | ✅ Shipped | Centered 25/45-minute countdown. Completed countdowns are recorded as completed `TaskSession` rows without completing the Task. |
-| **F15** | Subtasks | 🟡 Phase 2 | Checklist within a task. Completing all subtasks does *not* auto-complete the parent. |
+| #       | Feature                       | Status     | Notes                                                                                                                                                          |
+| ------- | ----------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F12** | Today cap                     | ✅ Shipped | `TodayPage.tsx` (`TODAY_CAP = 5`). A 6th requires bumping one out. Configurable. A _feature_, not a limit — forces the "what actually matters today" decision. |
+| **F13** | Focus mode (single-task view) | ✅ Shipped | `FocusMode.tsx`. Full-screen single task + notes; no sidebar/list/counts.                                                                                      |
+| **F14** | Configurable focus timer      | ✅ Shipped | Centered 25/45-minute countdown. Completed countdowns are recorded as completed `TaskSession` rows without completing the Task.                                |
+| **F15** | Subtasks                      | 🟡 Phase 2 | Checklist within a task. Completing all subtasks does _not_ auto-complete the parent.                                                                          |
 
 ---
 
 ## 5. Complete & reflect
 
-| # | Feature | Status | Notes |
-|---|---|---|---|
-| **F16** | Satisfying completion | ✅ Shipped | `CompletionCircle.tsx`. Check animation, optimistic removal, soft confirmation. |
-| **F17** | Momentum | ⛔ Banned | **Removed by design.** Streaks/badges/guilt-trip counters are banned by `PRODUCT.md` and `DESIGN-SYSTEM.md`. References are historical only. |
-| **F18** | Logbook | ✅ Shipped | `/app/logbook`. Completed items archive here (Things-style). Searchable, not in your face. |
-| **F19** | Weekly review | 🔵 Spec | `specs/weekly-monthly-review.md` (ready, not built). Gentle nudge to clear Inbox + pick tomorrow's top 3. |
+| #       | Feature               | Status     | Notes                                                                                                                                        |
+| ------- | --------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F16** | Satisfying completion | ✅ Shipped | `CompletionCircle.tsx`. Check animation, optimistic removal, soft confirmation.                                                              |
+| **F17** | Momentum              | ⛔ Banned  | **Removed by design.** Streaks/badges/guilt-trip counters are banned by `PRODUCT.md` and `DESIGN-SYSTEM.md`. References are historical only. |
+| **F18** | Logbook               | ✅ Shipped | `/app/logbook`. Completed items archive here (Things-style). Searchable, not in your face.                                                   |
+| **F19** | Review cadences       | ✅ Shipped | Optional Today, Week, and Month debriefs with saved reflection, stable evidence snapshots, preference-aware navigation, and no gamification. |
 
 ---
 

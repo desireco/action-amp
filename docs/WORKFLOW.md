@@ -144,34 +144,41 @@ appears in Work/Planning/Review except by coming through triage.
 
 ### 2.5 Review / Reporting Area — reflection
 
-- Statistics and reports: how many tasks completed today/this week, what's
-  stuck, what's been deferred repeatedly.
+- **Today, Week, and Month reviews** turn completion history into three distinct
+  reflection rhythms: daily closure, weekly alignment, and monthly direction.
+  Each shows completed Goals first, completed Projects, and every completed
+  Task with its Outcome. Week adds aging-work decisions; Month adds open-loop
+  decisions and a next-month Goal emphasis. Reflections are optional and saved.
+- Cadence reviews are universal across Lenses, like Today. Rows keep Lens
+  provenance and Week/Month offer an in-page Lens filter. This is the deliberate
+  exception to the active-Lens rule; a person should not need separate rituals
+  to understand one day, week, or month.
+- Review preferences independently hide Today, Week, or Month. All default on;
+  disabling a cadence deletes nothing. No reminders, scores, streaks, badges,
+  red-dot nags, or guilt comparisons.
 - The **Logbook** is the catch-all record of things no longer active:
   completed tasks (each carrying a `kind=COMPLETED` `TaskUpdate` since
   2026-07-05), past projects, **completed goals** (since 2026-07-05, with
   Reopen), and **archived notes** ("I will not do now" from triage — kept
   lossless, restorable to the inbox). This area is the _view over it_ (counts,
   trends — kept calm, no guilt-trip red dots, no streaks).
-- The activity log itself (`TaskUpdate` rows, kind = NOTE | COMPLETED) is the
-  substrate the future Review v2 activity timeline will render — see
-  `docs/specs/weekly-monthly-review.md`.
-- Currently the least-built area — net-new work. (See
-  `docs/specs/work-area-merged.md` + `docs/specs/weekly-monthly-review.md`.)
+- Completed reviews preserve a stable accomplishment snapshot so later edits,
+  moves, reopenings, or deletion do not erase the reflection's historical view.
+  See `docs/specs/weekly-monthly-review.md`.
 
 ## 3. Context (Lens) scoping
 
 - Every Task / Project / Goal / Resource belongs to exactly one **Lens**
   (a Work/Me default, plus any number of user-defined lenses on Pro). The
-  active lens scopes every Work / Planning / Review view.
-- **Inbox, Capture, and Today are NOT scoped** — they're universal. A captured
+  active lens scopes every Work / Planning view and the Logbook.
+- **Inbox, Capture, Today, and cadence Reviews are NOT scoped** — they're universal. A captured
   thought has no lens until triage assigns one (implicitly via the active lens,
   or explicitly if we adopt force-choice — §5). Today is universal so the day's
   commitment can be made across all lenses at once (reversed 2026-07-21, §5.11);
-  each Today row carries a lens pill so provenance is still visible without
-  partitioning the list.
-- Switching lenses swaps the Work / Planning / Review content that is
-  lens-scoped; the Inbox count and the Today list in the sidebar stay the same
-  regardless of lens.
+  each Today or Review row carries Lens provenance so it stays visible without
+  partitioning the ritual.
+- Switching lenses swaps Work, Planning, and Logbook content. Inbox, Today,
+  and cadence Review content stay the same; Week/Month can filter inside the page.
 - **The switcher is adaptive.** At ≤3 lenses the sidebar shows the segmented
   control (today's `<LensSwitch>`); at ≥4 it collapses to a single chip that
   opens a keyboard-navigable popover (`⌘L`, `↑↓`/`↵`/`/`/`esc`). The swap is
@@ -269,7 +276,7 @@ Lens` while skipping the standalone lens picker by default. See
      it went global.
    - **Do** — flat star-icon link to `/app` (Next, the What-Now chooser).
    - **Plan** group — Upcoming, Projects, Goals, Someday.
-   - **Review** group — Logbook, reports (when built).
+   - **Review** group — enabled Today, Week, and Month cadences, then Logbook.
    - Mobile dock stays as-is (Inbox / Do / Plan / Review / Lens); the
      dock items now highlight via route matching against the section's
      routes (not the now-removed focus-section state).

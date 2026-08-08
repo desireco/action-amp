@@ -1,42 +1,51 @@
 ---
 slug: weekly-monthly-review
-title: "Weekly + Monthly Review"
+title: "Today, Week + Month Reviews"
 feature_area: review
-status: missing
+status: shipped
 spec: weekly-monthly-review
-verified: 2026-07-03
+verified: 2026-08-08
 ---
 
-# Weekly + Monthly Review
+# Today, Week + Month Reviews
 
-**What.** Period debrief surfaces (`/app/review/weekly`,
-`/app/review/monthly`, **not yet built**) that collect the window's completed
-tasks/projects **grouped by Goal/Project** (not by day, as the Logbook does),
-show a **progress delta** vs. the previous period, and surface **stuck/aging**
-items (overdue, interrupted-Now >7d, never-Today >30d). A reflection view over
-the same data the Logbook shows flat.
+**What.** Three distinct completion debriefs over the same underlying history:
+Today closes the day, Week aligns effort and aging work, and Month celebrates
+Goal progress and chooses direction. Logbook remains the chronological record.
 
-**Status today.** Not in code. The Review focus-nav section exists
-(`AppShell.tsx`) but contains only "Logbook" — no Weekly/Monthly entries, no
-routes. The underlying data is all queryable now (`Task.completedAt`,
-`Project.completedAt`, `getGoals` rollup); the missing piece is the period
-view over it.
+**Routes.** `/app/review` resolves from the user's enabled cadences;
+`/app/review/today`, `/app/review/week`, and `/app/review/month` accept a local
+calendar date through `?for=`. Review periods use the browser IANA time zone;
+weeks run Monday–Sunday and month boundaries follow the local calendar.
 
-**Planned op.** `getReview({ lensId, period, for })` — one lens-scoped query
-returning completed-in-period, per-goal progress delta, and stuck/aging
-groupings. Goes through `assertLensAllowed` like the other lens reads.
+**Evidence.** Completed Goals receive the strongest calm treatment, followed
+by completed Projects and every completed Task. Tasks retain Outcome,
+Goal/Project, Lens, and completion-time context. Week/Month can filter by Lens
+without splitting the ritual. Recorded focus time is derived from overlapping
+completed Task sessions.
 
-**Entitlement lean.** **Pro-only** (open question in the spec). Sidesteps the
-half-enforced 30-day Logbook cap (PRICING.md §4) and fits the tier the
-feature lives in (ROADMAP §Then — post-validation).
+**Cadence differences.** Today has one optional memory prompt and a Close today
+action. Week adds effort shape, up to five overdue/interrupted/quiet task
+decisions, and two alignment prompts. Month adds weekly slices, up to three
+Goal/Project open-loop decisions, three direction prompts, and an optional
+active Goal emphasis for next month.
 
-**Pair with.** `work-area-merged`. v1 (completions + stuck) ships on the
-current schema; **v2 (timeline progress)** is gated on `work-area-merged`'s
-`kind` enum on `TaskUpdate`, which is the missing Started/Paused/Completed
-signal.
+**Persistence.** `Review` stores validated optional answers and a stable
+accomplishment snapshot keyed by user, cadence, and period start. Current
+periods remain live; if new work lands after review, Update review refreshes
+the snapshot without discarding answers.
 
-**Spec.** `docs/specs/weekly-monthly-review.md` (`draft`).
+**Preferences.** Settings → Preferences → Reviews independently toggles Today,
+Week, and Month; all default on. Disabled routes redirect to the first enabled
+cadence, then Logbook. Disabling never deletes completion data or saved reviews.
 
-**Note.** WORKFLOW.md §2.5 names this area "least-built — net-new work" and
-describes the surfaces in general terms; the spec makes them concrete without
-rewriting the area definition.
+**Guardrails.** Available to every account. No reminders, AI summaries,
+arbitrary ranges, export, team reporting, streaks, scores, badges, confetti,
+red-dot nags, or judgmental period comparisons.
+
+**Implementation.** `webapp/src/reviews/`, `webapp/schema.prisma`, migration
+`20260808120000_review_rhythms`, Review routes/operations in `main.wasp.ts`, and
+preference/navigation integration in `webapp/src/app/`.
+
+**Spec + prototype.** `docs/specs/weekly-monthly-review.md` and
+`docs/mockups/review-rhythms.html`.

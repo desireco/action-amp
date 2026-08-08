@@ -8,7 +8,7 @@
 >
 > Owned by Discover. Build reads only.
 >
-> Last code-verified: **2026-07-29**.
+> Last code-verified: **2026-08-08**.
 
 ## How to read this
 
@@ -51,6 +51,7 @@
 - [landing](./landing.md) (`partial`) — signup + Founding-100 CTAs; newsletter capture **missing but intended** (see [newsletter](./newsletter.md)).
 - [feedback](./feedback.md) (`shipped`) — loudspeaker → modal → admin email.
 - [shell-prefs](./shell-prefs.md) (`shipped`) — AppShell, focus-switch nav, shortcuts, dark mode, settings.
+- [weekly-monthly-review](./weekly-monthly-review.md) (`shipped`, spec `done`) — optional Today, Week, and Month debriefs with saved snapshots and every completion inspectable.
 - [task-fields](./task-fields.md) (`shipped`) — **Context** (`Task.content`) + **Outcome** (`Task.outcome`), both optional markdown via the shared `PropertyChips` editor.
 - [cli](./cli.md) (`partial`) — **Phase 0 + 1 shipped** (PAT auth + full command surface incl. `lens` + `resource` + shared-content/image `capture`); Phase 2 (orchestration skills) still `draft`.
 
@@ -62,7 +63,6 @@
 - [growth-analytics](./growth-analytics.md) (`missing`, spec `ready`) — first-party sessions/events, source attribution, admin Growth dashboard, and cohorts.
 - [retention-criticalpath](./retention-criticalpath.md) (`missing`, spec `ready`, depends on observability) — first-7-days instrumentation.
 - [work-area-merged](./work-area-merged.md) (`missing`, spec `draft`) — merged Work area; one sub-piece (TaskUpdate.kind) shipped as `task-notes-completion-log`.
-- [weekly-monthly-review](./weekly-monthly-review.md) (`missing`, spec `draft`) — period debriefs; v2 gated on `work-area-merged`.
 - [newsletter](./newsletter.md) (`missing`, spec `draft`) — landing-page email capture (footer + quiet hero).
 - [blog](./blog.md) (`missing`, spec `ready`) — SEO-bound publication on the Astro marketing site (`/blog`, `/blog/[slug]`, RSS); ADHD/focus/GTD intent. Builds on the shipped Astro split; pure static. **Two-lane index + rotating featured zone** (design locked 2026-07-08; prototype at `docs/mockups/blog-directions.html`). Splits shareability into `blog-social-meta`.
 - [tag-management](./tag-management.md) (`missing`, spec `ready`) — Task-detail tag chips + reserved-name seeding; **unblocks `focus-engine-v2`**.

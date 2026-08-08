@@ -49,7 +49,7 @@ const NAV_ROUTE: Record<NavDestination, string> = {
   today: "/app/today",
   triage: "/app/inbox/review",
   planning: "/app/projects",
-  review: "/app/logbook",
+  review: "/app/review",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -135,6 +135,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     someday: 0,
     projects: 0,
     goals: 0,
+  };
+  const reviewPreferences = appData?.reviewPreferences ?? {
+    today: true,
+    week: true,
+    month: true,
   };
   // (todayByLens removed — Today is global, so per-lens Today counts in the
   // switcher no longer reflect what the page shows. WORKFLOW.md §5.11.)
@@ -256,11 +261,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   const inPlan = ["upcoming", "projects", "goals", "someday"].some((p) =>
     location.pathname.startsWith(`/app/${p}`),
   );
-  const inReview = location.pathname.startsWith("/app/logbook");
+  const inReview =
+    location.pathname.startsWith("/app/review") ||
+    location.pathname.startsWith("/app/logbook");
 
   // ponytail: 1–2 letter initials from fullName (first + last token). Good enough for an avatar.
   const initials = user
-    ? user.fullName.split(/\s+/).map((s) => s[0] ?? "").slice(0, 2).join("").toUpperCase()
+    ? user.fullName
+        .split(/\s+/)
+        .map((s) => s[0] ?? "")
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
     : "";
 
   // ---- Focus nav: which section is expanded (one at a time) ----
@@ -431,19 +443,76 @@ export function AppShell({ children }: { children: ReactNode }) {
             their items directly under static labels. */}
         <nav className="aa-focus-nav">
           <div className="aa-focus-group">
-            <div className="aa-focus-label" aria-hidden="true">Plan</div>
+            <div className="aa-focus-label" aria-hidden="true">
+              Plan
+            </div>
             <div className="aa-focus-items">
-              <NavItem icon={<CalendarIcon />} label="Upcoming" active={isActive("/app/upcoming")} to="/app/upcoming" count={counts.upcoming} />
-              <NavItem icon={<ProjectsIcon />} label="Projects" active={isActive("/app/projects")} to="/app/projects" count={counts.projects} />
-              <NavItem icon={<GoalsIcon />} label="Goals" active={isActive("/app/goals")} to="/app/goals" count={counts.goals} />
-              <NavItem icon={<SomedayIcon />} label="Someday" active={isActive("/app/someday")} to="/app/someday" count={counts.someday} />
+              <NavItem
+                icon={<CalendarIcon />}
+                label="Upcoming"
+                active={isActive("/app/upcoming")}
+                to="/app/upcoming"
+                count={counts.upcoming}
+              />
+              <NavItem
+                icon={<ProjectsIcon />}
+                label="Projects"
+                active={isActive("/app/projects")}
+                to="/app/projects"
+                count={counts.projects}
+              />
+              <NavItem
+                icon={<GoalsIcon />}
+                label="Goals"
+                active={isActive("/app/goals")}
+                to="/app/goals"
+                count={counts.goals}
+              />
+              <NavItem
+                icon={<SomedayIcon />}
+                label="Someday"
+                active={isActive("/app/someday")}
+                to="/app/someday"
+                count={counts.someday}
+              />
             </div>
           </div>
 
           <div className="aa-focus-group">
-            <div className="aa-focus-label" aria-hidden="true">Review</div>
+            <div className="aa-focus-label" aria-hidden="true">
+              Review
+            </div>
             <div className="aa-focus-items">
-              <NavItem icon={<LogbookIcon />} label="Logbook" active={isActive("/app/logbook")} to="/app/logbook" />
+              {reviewPreferences.today && (
+                <NavItem
+                  icon={<ClockIcon />}
+                  label="Today"
+                  active={isActive("/app/review/today")}
+                  to="/app/review/today"
+                />
+              )}
+              {reviewPreferences.week && (
+                <NavItem
+                  icon={<CalendarIcon />}
+                  label="Week"
+                  active={isActive("/app/review/week")}
+                  to="/app/review/week"
+                />
+              )}
+              {reviewPreferences.month && (
+                <NavItem
+                  icon={<GoalsIcon />}
+                  label="Month"
+                  active={isActive("/app/review/month")}
+                  to="/app/review/month"
+                />
+              )}
+              <NavItem
+                icon={<LogbookIcon />}
+                label="Logbook"
+                active={isActive("/app/logbook")}
+                to="/app/logbook"
+              />
             </div>
           </div>
         </nav>
@@ -567,19 +636,35 @@ export function AppShell({ children }: { children: ReactNode }) {
               "Today" leaves the dock (its slot is covered by a Today link on
               the Next page, plus the Today↔Upcoming cross-link). Desktop keeps
               the full Next/Today sidebar split. */}
-          <Link className={`aa-mobile-dock__item ${isActive("/app/inbox") ? "active" : ""}`} to="/app/inbox" aria-label="Inbox">
+          <Link
+            className={`aa-mobile-dock__item ${isActive("/app/inbox") ? "active" : ""}`}
+            to="/app/inbox"
+            aria-label="Inbox"
+          >
             <InboxIcon />
             <span>Inbox</span>
           </Link>
-          <Link className={`aa-mobile-dock__item ${isActive("/app") ? "active" : ""}`} to="/app" aria-label="Do">
+          <Link
+            className={`aa-mobile-dock__item ${isActive("/app") ? "active" : ""}`}
+            to="/app"
+            aria-label="Do"
+          >
             <StarIcon />
             <span>Do</span>
           </Link>
-          <Link className={`aa-mobile-dock__item ${inPlan ? "active" : ""}`} to="/app/projects" aria-label="Plan">
+          <Link
+            className={`aa-mobile-dock__item ${inPlan ? "active" : ""}`}
+            to="/app/projects"
+            aria-label="Plan"
+          >
             <ProjectsIcon />
             <span>Plan</span>
           </Link>
-          <Link className={`aa-mobile-dock__item ${inReview ? "active" : ""}`} to="/app/logbook" aria-label="Review">
+          <Link
+            className={`aa-mobile-dock__item ${inReview ? "active" : ""}`}
+            to="/app/review"
+            aria-label="Review"
+          >
             <LogbookIcon />
             <span>Review</span>
           </Link>

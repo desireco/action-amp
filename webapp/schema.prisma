@@ -43,6 +43,7 @@ model User {
   apiKeys           ApiKey[] // Personal Access Tokens (CLI auth); deleted with the user
   analyticsSessions AnalyticsSession[]
   analyticsEvents   AnalyticsEvent[]
+  reviews           Review[]
 
   // ---- Daily Today reminder (Web Push) ----
   // Stored server-side so reminders remain reliable after the installed PWA is
@@ -63,6 +64,13 @@ model User {
   // Pomodoro countdown duration selected in Preferences. The UI offers only
   // 25 or 45 minutes; saveFocusSessionMinutes enforces that closed set.
   focusSessionMinutes Int @default(25)
+
+  // ---- Optional review rhythms ----
+  // Cadence pages are universal across lenses. Disabling one hides its ritual
+  // from navigation; it never deletes completion data or saved reviews.
+  todayReviewEnabled Boolean @default(true)
+  weekReviewEnabled  Boolean @default(true)
+  monthReviewEnabled Boolean @default(true)
 
   // ---- Billing (Stripe) ----
   // Entitlement state. Mutated ONLY by the Stripe webhook (the source of
@@ -373,6 +381,39 @@ model TaskUpdate {
 enum TaskUpdateKind {
   NOTE
   COMPLETED
+}
+
+// ============================================================
+// Review — saved daily/weekly/monthly reflection + stable evidence snapshot
+// ============================================================
+// Draft reviews read live completion data. Completing a review records the
+// visible accomplishments as JSON so later rename/reopen/delete operations do
+// not rewrite history. `answers` and `snapshot` are runtime-validated by the
+// review operations; JSON keeps cadence-specific prompts versionable without
+// sparse columns for every future reflection question.
+model Review {
+  id          String        @id @default(uuid())
+  cadence     ReviewCadence
+  periodStart DateTime
+  periodEnd   DateTime
+  timeZone    String
+  answers     Json
+  snapshot    Json?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@unique([userId, cadence, periodStart])
+  @@index([userId, cadence, periodStart])
+}
+
+enum ReviewCadence {
+  DAILY
+  WEEKLY
+  MONTHLY
 }
 
 // ============================================================

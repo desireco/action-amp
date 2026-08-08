@@ -1,7 +1,7 @@
 # ActionAmp — Pages & Routes
 
 > Status: route + page reference. Code-verified against `main.wasp.ts`
-> 2026-07-05.
+> 2026-08-08.
 > **Structural authority has moved to `WORKFLOW.md`** (2026-06-23). The nav is
 > reorganized into three **focus-mode sections** (Work / Plan / Review) as an
 > expanding-section nav (one open at a time), with the **context switch (Lens)**
@@ -131,7 +131,16 @@ sequences projects under each goal ("Next: <name>").
 - Each Goal: linked Projects (ordered), aggregate progress, current focus project.
 - Create/edit Goal inline.
 
-### P8. Logbook  →  `/app/logbook`
+### P8. Review cadences → `/app/review/today`, `/app/review/week`, `/app/review/month`
+
+Three distinct completion debriefs: Today closes the day, Week aligns effort
+and aging work, Month celebrates Goal progress and chooses direction. Each
+keeps every completed Task inspectable, recognizes completed Projects and
+Goals, and supports optional saved reflection. Reviews span all Lenses;
+Week/Month can filter inside the page. `/app/review` resolves to the first
+enabled cadence, then Logbook when all are disabled.
+
+### P9. Logbook  →  `/app/logbook`
 
 Completed + archived items. (PARA "Archive" / FEATURES F18.)
 
@@ -234,6 +243,10 @@ Authenticated app routes (all under /app):
   /app/goals                              Goals list
   /app/goals/:permalink                   Goal detail
   /app/tasks/:permalink                   Task permalink (full-field editor)
+  /app/review                             Preference-aware Review redirect
+  /app/review/today                       Today review (?for=local date)
+  /app/review/week                        Week review (?for=local date)
+  /app/review/month                       Month review (?for=local date)
   /app/logbook                            Logbook (completed + archived + completed goals)
   /app/settings                           Settings
   /app/settings/billing                   Billing

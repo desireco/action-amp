@@ -28,18 +28,61 @@ import { ProjectsPage } from "./src/projects/ProjectsPage" with { type: "ref" };
 import { GoalsPage } from "./src/goals/GoalsPage" with { type: "ref" };
 import { GoalDetailPage } from "./src/goals/GoalDetailPage" with { type: "ref" };
 import { LogbookPage } from "./src/logbook/LogbookPage" with { type: "ref" };
-import { ensureOnboarded, setPreferredName, completeOnboarding } from "./src/onboarding/operations" with { type: "ref" };
-import { createLens, updateLens, deleteLens } from "./src/lenses/operations" with { type: "ref" };
+import {
+  ReviewRedirectPage,
+  TodayReviewPage,
+  WeekReviewPage,
+  MonthReviewPage,
+} from "./src/reviews/ReviewPage" with { type: "ref" };
+import {
+  getReview,
+  saveReviewDraft,
+  completeReview,
+} from "./src/reviews/operations" with { type: "ref" };
+import {
+  ensureOnboarded,
+  setPreferredName,
+  completeOnboarding,
+} from "./src/onboarding/operations" with { type: "ref" };
+import {
+  createLens,
+  updateLens,
+  deleteLens,
+} from "./src/lenses/operations" with { type: "ref" };
 import { getLenses } from "./src/lenses/operations" with { type: "ref" };
-import { getAppData, updateProfile, saveTodayCap, saveFocusSessionMinutes } from "./src/app/operations" with { type: "ref" };
-import { getNotificationPreferences, saveDailyReminder, savePushSubscription } from "./src/notifications/operations" with { type: "ref" };
+import {
+  getAppData,
+  updateProfile,
+  saveTodayCap,
+  saveFocusSessionMinutes,
+  saveReviewPreferences,
+} from "./src/app/operations" with { type: "ref" };
+import {
+  getNotificationPreferences,
+  saveDailyReminder,
+  savePushSubscription,
+} from "./src/notifications/operations" with { type: "ref" };
 import { sendDailyTodayReminder } from "./src/notifications/dailyReminderJob" with { type: "ref" };
 import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
-import { getAdminStats, getRecentFeedback, updateFeedbackStatus, deleteFeedback } from "./src/admin/operations" with { type: "ref" };
-import { getAdminFunnel, recordAnalyticsEvent } from "./src/analytics/operations" with { type: "ref" };
+import {
+  getAdminStats,
+  getRecentFeedback,
+  updateFeedbackStatus,
+  deleteFeedback,
+} from "./src/admin/operations" with { type: "ref" };
+import {
+  getAdminFunnel,
+  recordAnalyticsEvent,
+} from "./src/analytics/operations" with { type: "ref" };
 import { recordAnalyticsEventApi } from "./src/analytics/eventApi" with { type: "ref" };
 import { analyticsMiddleware } from "./src/analytics/analyticsMiddleware" with { type: "ref" };
-import { getBillingStatus, createCheckoutSession, createCustomerPortalSession, getFounding100Status, founding100StatusHandler } from "./src/billing/operations" with { type: "ref" };
+import {
+  getBillingStatus,
+  createCheckoutSession,
+  createCustomerPortalSession,
+  getFounding100Status,
+  founding100StatusHandler,
+} from "./src/billing/operations" with { type: "ref" };
 import { stripeWebhook } from "./src/billing/webhook" with { type: "ref" };
 import { stripeWebhookMiddleware } from "./src/billing/webhookMiddleware" with { type: "ref" };
 import { publicStatusMiddleware } from "./src/billing/statusMiddleware" with { type: "ref" };
@@ -194,6 +237,10 @@ export default app({
     route("GoalsRoute", "/app/goals", page(GoalsPage)),
     route("GoalDetailRoute", "/app/goals/:permalink", page(GoalDetailPage)),
     route("LogbookRoute", "/app/logbook", page(LogbookPage)),
+    route("ReviewRoute", "/app/review", page(ReviewRedirectPage)),
+    route("TodayReviewRoute", "/app/review/today", page(TodayReviewPage)),
+    route("WeekReviewRoute", "/app/review/week", page(WeekReviewPage)),
+    route("MonthReviewRoute", "/app/review/month", page(MonthReviewPage)),
     route("SettingsRoute", "/app/settings", page(SettingsPage)),
     route("BillingRoute", "/app/settings/billing", page(BillingPage)),
     route(
@@ -281,10 +328,28 @@ export default app({
     action(deleteGoal, { entities: ["Goal", "Project", "Task", "Resource"], auth: true }),
     action(reorderGoalProjects, { entities: ["Goal", "Project"], auth: true }),
     query(getLogbook, { entities: ["Task", "Project", "Goal", "InboxItem"], auth: true }),
+    query(getReview, {
+      entities: [
+        "Review",
+        "Task",
+        "Project",
+        "Goal",
+        "Lens",
+        "TaskSession",
+        "TaskUpdate",
+      ],
+      auth: true,
+    }),
+    action(saveReviewDraft, { entities: ["Review"], auth: true }),
+    action(completeReview, {
+      entities: ["Review", "Task", "Project", "Goal", "Lens", "TaskSession"],
+      auth: true,
+    }),
     query(getAppData, { entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(updateProfile, { entities: ["User"], auth: true }),
     action(saveTodayCap, { entities: ["User"], auth: true }),
     action(saveFocusSessionMinutes, { entities: ["User"], auth: true }),
+    action(saveReviewPreferences, { entities: ["User"], auth: true }),
     query(getNotificationPreferences, { entities: ["User"], auth: true }),
     action(savePushSubscription, { entities: ["PushSubscription"], auth: true }),
     action(saveDailyReminder, { entities: ["User"], auth: true }),

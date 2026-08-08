@@ -3,6 +3,7 @@ import type {
   UpdateProfile,
   SaveTodayCap,
   SaveFocusSessionMinutes,
+  SaveReviewPreferences,
 } from "wasp/server/operations";
 import { isEntitled } from "../billing/entitlements";
 
@@ -62,6 +63,9 @@ export const getAppData = (async (args, context) => {
       lastTodayRolloverAt: true,
       todayCap: true,
       focusSessionMinutes: true,
+      todayReviewEnabled: true,
+      weekReviewEnabled: true,
+      monthReviewEnabled: true,
       lastActiveAt: true,
     },
   });
@@ -175,6 +179,11 @@ export const getAppData = (async (args, context) => {
     focusSessionMinutes: normalizeFocusSessionMinutes(
       userRow?.focusSessionMinutes,
     ),
+    reviewPreferences: {
+      today: userRow?.todayReviewEnabled ?? true,
+      week: userRow?.weekReviewEnabled ?? true,
+      month: userRow?.monthReviewEnabled ?? true,
+    },
   };
 }) satisfies GetAppData<
   { lensId?: string | null },
@@ -190,6 +199,7 @@ export const getAppData = (async (args, context) => {
     };
     todayCap: number;
     focusSessionMinutes: FocusSessionMinutes;
+    reviewPreferences: { today: boolean; week: boolean; month: boolean };
   }
 >;
 
@@ -298,5 +308,29 @@ export const saveFocusSessionMinutes = (async (args, context) => {
   return { ok: true as const };
 }) satisfies SaveFocusSessionMinutes<
   { minutes: FocusSessionMinutes },
+  { ok: true }
+>;
+
+/** Optional cadence visibility. Saving never touches Review or work records. */
+export const saveReviewPreferences = (async (args, context) => {
+  if (!context.user) throw new Error("Not authenticated.");
+  if (
+    typeof args.today !== "boolean" ||
+    typeof args.week !== "boolean" ||
+    typeof args.month !== "boolean"
+  ) {
+    throw new Error("Review preferences must be true or false.");
+  }
+  await context.entities.User.update({
+    where: { id: context.user.id },
+    data: {
+      todayReviewEnabled: args.today,
+      weekReviewEnabled: args.week,
+      monthReviewEnabled: args.month,
+    },
+  });
+  return { ok: true as const };
+}) satisfies SaveReviewPreferences<
+  { today: boolean; week: boolean; month: boolean },
   { ok: true }
 >;

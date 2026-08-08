@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ActionAmp — Review rhythms prototype</title>
+  <style>
+    :root {
+      --font: ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,sans-serif;
+      --bg: oklch(.99 .005 230); --bg-soft: oklch(.97 .008 230); --surface: oklch(1 .003 230);
+      --muted: oklch(.96 .008 230); --border: oklch(.91 .01 230); --strong: oklch(.86 .012 230);
+      --text: oklch(.2 .015 230); --text2: oklch(.36 .015 230); --text3: oklch(.5 .015 230);
+      --teal: oklch(.72 .15 220); --teal-cta: oklch(.58 .16 225); --teal-soft: oklch(.95 .04 220);
+      --amber: oklch(.78 .16 70); --amber-soft: oklch(.95 .06 75); --violet: oklch(.62 .2 295);
+      --rose: oklch(.62 .2 20); --shadow: 0 2px 6px oklch(.2 .02 230/.05),0 18px 48px oklch(.2 .02 230/.06);
+    }
+    [data-theme="dark"] { --bg:oklch(.18 .012 230);--bg-soft:oklch(.21 .012 230);--surface:oklch(.25 .013 230);--muted:oklch(.29 .013 230);--border:oklch(.32 .013 230);--strong:oklch(.4 .015 230);--text:oklch(.96 .005 230);--text2:oklch(.85 .008 230);--text3:oklch(.7 .012 230);--teal-soft:oklch(.3 .05 220);--amber-soft:oklch(.3 .06 75) }
+    * { box-sizing:border-box } body { margin:0; min-height:100vh; font-family:var(--font); background:var(--bg); color:var(--text) }
+    button,textarea,select { font:inherit } button { cursor:pointer }
+    .app { display:grid; grid-template-columns:220px minmax(0,1fr); min-height:100vh }
+    aside { position:sticky; top:0; height:100vh; padding:24px 16px; border-right:1px solid var(--border); background:var(--bg-soft) }
+    .brand { display:flex; align-items:center; gap:10px; margin:0 8px 28px; font-weight:700 }.brand svg{width:24px;height:24px}
+    .label { margin:22px 10px 8px; color:var(--text3); font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase }
+    .nav { display:grid; gap:3px }.nav button { width:100%; padding:9px 10px; border:0; border-radius:7px; color:var(--text2); background:transparent; text-align:left }.nav button.active{color:var(--teal-cta);background:var(--teal-soft);font-weight:650}.nav button[hidden]{display:none}
+    .tools { position:absolute; left:16px; right:16px; bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:6px }.tools button{padding:8px;border:1px solid var(--strong);border-radius:7px;background:var(--surface);color:var(--text2)}
+    main { width:min(880px,100%); margin:0 auto; padding:42px 28px 100px }.screen[hidden]{display:none}
+    header { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; margin-bottom:38px }.eyebrow{color:var(--teal-cta);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}h1{margin:6px 0 8px;font-size:clamp(30px,5vw,42px);letter-spacing:-.03em}.sub{color:var(--text3);font-size:13px}.period{display:flex;border:1px solid var(--strong);border-radius:8px;overflow:hidden;background:var(--surface)}.period button{padding:8px 12px;border:0;border-right:1px solid var(--border);background:transparent;color:var(--text2)}
+    section { margin:0 0 38px }.section-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:13px}.section-head h2{margin:0;font-size:18px}.section-head span{color:var(--text3);font-size:12px}
+    .goal { padding:25px;border:1px solid color-mix(in oklch,var(--amber) 35%,var(--border));border-radius:8px;background:var(--amber-soft) }.goal small{display:block;color:var(--text3);font-weight:700;letter-spacing:.08em;text-transform:uppercase}.goal h2{margin:10px 0 6px;font-size:24px}.goal p{margin:0;color:var(--text2)}
+    .projects,.metrics,.slices { display:grid;grid-template-columns:repeat(3,1fr);gap:10px }.card,.metric,.slice { padding:16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:var(--shadow) }.card strong,.card span,.metric strong,.metric span,.slice strong,.slice span{display:block}.card span,.metric span,.slice span{margin-top:5px;color:var(--text3);font-size:12px}.metric strong{font-size:24px}
+    details { margin-bottom:9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow:hidden } summary { display:flex;justify-content:space-between;padding:13px 15px;color:var(--text2);font-weight:650;cursor:pointer } ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--border)}li{display:grid;grid-template-columns:20px 1fr;gap:9px;padding:13px 15px;border-bottom:1px solid var(--border)}li:last-child{border:0}.check{color:var(--teal);font-weight:800}.meta{margin-top:4px;color:var(--text3);font-size:12px}.outcome{margin-top:7px;color:var(--text2);font-size:13px}
+    .decision { display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:8px;padding:13px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface) }.decision small{display:block;margin-top:4px;color:var(--text3)}.actions{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}.actions button{padding:7px 9px;border:0;border-right:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px}.actions button:last-child{border:0}
+    label { display:grid;gap:7px;margin-bottom:15px;color:var(--text2);font-size:13px;font-weight:650 } textarea,select{width:100%;padding:12px;border:1px solid var(--strong);border-radius:8px;background:var(--surface);color:var(--text);resize:vertical}.finish{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px;border:1px solid var(--border);border-radius:8px;background:var(--bg-soft)}.finish span{display:block;margin-top:4px;color:var(--text3);font-size:12px}.primary{padding:10px 15px;border:0;border-radius:7px;background:var(--teal-cta);color:white;font-weight:650}
+    dialog { width:min(560px,calc(100% - 32px));padding:0;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);box-shadow:var(--shadow)}dialog::backdrop{background:oklch(.1 .01 230/.35)}.settings{padding:25px}.settings h2{margin-top:0}.setting{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 0;border-top:1px solid var(--border)}.setting span{display:block}.setting small{display:block;margin-top:4px;color:var(--text3)}.switch{width:44px;height:25px;padding:3px;border:0;border-radius:99px;background:var(--strong)}.switch::after{content:"";display:block;width:19px;height:19px;border-radius:50%;background:var(--surface);transition:transform .18s}.switch.on{background:var(--teal)}.switch.on::after{transform:translateX(19px)}.close{float:right;border:0;background:transparent;color:var(--text3);font-size:22px}
+    @media(max-width:700px){.app{display:block}aside{position:fixed;z-index:5;left:0;right:0;top:auto;bottom:0;width:auto;height:72px;padding:8px 10px;border:0;border-top:1px solid var(--border)}.brand,.label,.tools{display:none}.nav{grid-template-columns:repeat(4,1fr)}.nav button{text-align:center;font-size:12px}.nav button[data-kind="logbook"]{display:none}main{padding:26px 16px 100px}header{display:block}.period{margin-top:16px}.period button{flex:1}.projects,.metrics,.slices{grid-template-columns:1fr}.decision,.finish{align-items:stretch;flex-direction:column}.actions{display:grid;grid-template-columns:repeat(2,1fr)}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><svg viewBox="0 0 512 512" aria-hidden="true"><rect x="32" y="32" width="448" height="448" rx="112" fill="#008AC0"/><path d="M156 268l64 64 168-184" fill="none" stroke="#F9FCFE" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/></svg>ActionAmp</div>
+    <div class="label">Review</div>
+    <nav class="nav">
+      <button class="active" data-screen="today">Today</button><button data-screen="week">Week</button><button data-screen="month">Month</button><button data-kind="logbook">Logbook</button>
+    </nav>
+    <div class="tools"><button id="theme">Dark</button><button id="settings">Settings</button></div>
+  </aside>
+  <main>
+    <article class="screen" id="today">
+      <header><div><div class="eyebrow">Review · Today</div><h1>Saturday, August 8</h1><div class="sub">In progress · Saved</div></div><div class="period"><button>‹</button><button>Current</button><button>›</button></div></header>
+      <section class="goal"><small>A goal landed</small><h2>Launch the new onboarding</h2><p>New accounts reach their first clear next action without setup fatigue.</p></section>
+      <section><div class="section-head"><h2>Projects completed</h2><span>1</span></div><div class="projects"><div class="card"><strong>Activation walkthrough</strong><span>Launch the new onboarding</span></div></div></section>
+      <section><div class="section-head"><h2>Tasks completed</h2><span>6 tasks</span></div><div class="task-groups"></div></section>
+      <section><div class="section-head"><h2>Reflection</h2><span>Optional</span></div><label>What do you want to remember from today?<textarea rows="3">The quiet launch felt better than rushing it.</textarea></label></section>
+      <div class="finish"><div><strong>8 accomplishments recorded.</strong><span>No score. No streak. This review is yours.</span></div><button class="primary">Close today</button></div>
+    </article>
+    <article class="screen" id="week" hidden>
+      <header><div><div class="eyebrow">Review · Week</div><h1>Aug 3 – Aug 9, 2026</h1><div class="sub">In progress · Saving…</div></div><div class="period"><button>‹</button><button>Current</button><button>›</button></div></header>
+      <section class="goal"><small>A goal landed</small><h2>Launch the new onboarding</h2><p>A full outcome, not a productivity badge.</p></section>
+      <section><div class="section-head"><h2>What moved</h2><span>18 tasks</span></div><div class="task-groups"></div></section>
+      <section><div class="section-head"><h2>Effort shape</h2></div><div class="metrics"><div class="metric"><strong>18</strong><span>tasks completed</span></div><div class="metric"><strong>2</strong><span>projects completed</span></div><div class="metric"><strong>4h 35m</strong><span>recorded focus</span></div></div></section>
+      <section><div class="section-head"><h2>Needs a decision</h2><span>Up to five</span></div><div class="decisions"></div></section>
+      <section><div class="section-head"><h2>Reflection</h2><span>Optional</span></div><label>What moved forward?<textarea rows="3"></textarea></label><label>What should change next week?<textarea rows="3"></textarea></label></section>
+      <div class="finish"><div><strong>21 accomplishments recorded.</strong><span>Loose work stays a choice, not a reprimand.</span></div><button class="primary">Close week</button></div>
+    </article>
+    <article class="screen" id="month" hidden>
+      <header><div><div class="eyebrow">Review · Month</div><h1>August 2026</h1><div class="sub">In progress · Saved</div></div><div class="period"><button>‹</button><button>Current</button><button>›</button></div></header>
+      <section class="goal"><small>Two goals landed</small><h2>Launch the new onboarding</h2><p>Plus: Publish the customer proof library.</p></section>
+      <section><div class="section-head"><h2>Progress by goal</h2><span>58 tasks</span></div><div class="task-groups"></div></section>
+      <section><div class="section-head"><h2>Month shape</h2><span>Context, not a score</span></div><div class="slices"><div class="slice"><span>Week of Aug 3</span><strong>12</strong><span>tasks</span></div><div class="slice"><span>Week of Aug 10</span><strong>18</strong><span>tasks</span></div><div class="slice"><span>Week of Aug 17</span><strong>9</strong><span>tasks</span></div><div class="slice"><span>Week of Aug 24</span><strong>19</strong><span>tasks</span></div></div></section>
+      <section><div class="section-head"><h2>Open loops worth choosing</h2><span>Up to three</span></div><div class="decisions"></div></section>
+      <section><div class="section-head"><h2>Reflection</h2><span>Optional</span></div><label>What are you proud of?<textarea rows="3"></textarea></label><label>What did this month teach you?<textarea rows="3"></textarea></label><label>What deserves attention next month?<textarea rows="3"></textarea></label><label>Goal to emphasize next month<select><option>No selection</option><option>Make onboarding trustworthy</option><option>Earn first customer proof</option></select></label></section>
+      <div class="finish"><div><strong>64 accomplishments recorded.</strong><span>Direction, not ranking.</span></div><button class="primary">Close month</button></div>
+    </article>
+  </main>
+</div>
+<dialog id="settingsDialog"><div class="settings"><button class="close" aria-label="Close">×</button><h2>Reviews</h2><p class="sub">Turning one off hides it. Completed work and past reviews remain.</p><div class="setting"><div><span>Today review</span><small>Closure and recognition.</small></div><button class="switch on" data-toggle="today" aria-label="Today review"></button></div><div class="setting"><div><span>Week review</span><small>Alignment and loose-item decisions.</small></div><button class="switch on" data-toggle="week" aria-label="Week review"></button></div><div class="setting"><div><span>Month review</span><small>Goals and future direction.</small></div><button class="switch on" data-toggle="month" aria-label="Month review"></button></div></div></dialog>
+<script>
+  const taskNames=["Send launch note","Fix account handoff","Call Dana","Publish help article","Review customer proof","Close billing checklist","Prepare onboarding copy","Verify mobile login","Tighten empty state","Record product walkthrough","Answer launch replies","Archive stale draft","Ship review route","Write migration","Test week boundary","Confirm goal copy","Review dark mode","Complete release notes"];
+  function taskGroups(target,count){const el=document.querySelector(`#${target} .task-groups`);const groups=target==='today'?[['Work · Activation walkthrough',6]]:target==='week'?[['Launch onboarding · Activation walkthrough',8],['Customer proof · Research',6],['No goal · General',4]]:[['Launch onboarding · Activation walkthrough',18],['Customer proof · Research',16],['Make focus calmer · General',14],['No goal · General',10]];let offset=0;el.innerHTML=groups.map(([name,n])=>`<details ${offset<9?'open':''}><summary><span>${name}</span><span>${n}</span></summary><ul>${Array.from({length:n},(_,i)=>{const title=taskNames[(offset+i)%taskNames.length];return `<li><span class="check">✓</span><div><strong>${title}</strong><div class="meta">Work · ${target==='today'?'3:42 PM':'Aug '+(3+(offset+i)%28)}</div>${i===0?'<div class="outcome">Outcome: Shipped cleanly and got a clear response.</div>':''}</div></li>`}).join('')}</ul></details>`).join('');}
+  taskGroups('today',6);taskGroups('week',18);taskGroups('month',58);
+  document.querySelector('#week .decisions').innerHTML=['Update pricing FAQ','Finish partner follow-up','Old launch checklist'].map((x,i)=>`<div class="decision"><div><strong>${x}</strong><small>${i?'Quiet':'Overdue'} · Work</small></div><div class="actions"><button>Keep</button><button>Someday</button><button>Won’t do</button><button>Open</button></div></div>`).join('');
+  document.querySelector('#month .decisions').innerHTML=['Website conversion pass','Customer interview series','Make onboarding trustworthy'].map((x,i)=>`<div class="decision"><div><strong>${x}</strong><small>${i===2?'Goal':'Project'} · No recorded movement</small></div><div class="actions"><button>Keep active</button><button>Complete</button><button>Open</button></div></div>`).join('');
+  document.querySelectorAll('[data-screen]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-screen]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('.screen').forEach(x=>x.hidden=x.id!==btn.dataset.screen)}));
+  document.getElementById('theme').addEventListener('click',e=>{const dark=document.documentElement.dataset.theme==='dark';document.documentElement.dataset.theme=dark?'light':'dark';e.currentTarget.textContent=dark?'Dark':'Light'});
+  const dialog=document.getElementById('settingsDialog');document.getElementById('settings').addEventListener('click',()=>dialog.showModal());dialog.querySelector('.close').addEventListener('click',()=>dialog.close());
+  dialog.querySelectorAll('.switch').forEach(btn=>btn.addEventListener('click',()=>{btn.classList.toggle('on');const nav=document.querySelector(`[data-screen="${btn.dataset.toggle}"]`);nav.hidden=!btn.classList.contains('on');if(nav.classList.contains('active')&&nav.hidden){const next=[...document.querySelectorAll('[data-screen]')].find(x=>!x.hidden);next?.click()}}));
+  document.querySelectorAll('textarea,select').forEach(field=>field.addEventListener('input',()=>{const sub=field.closest('.screen').querySelector('.sub');sub.textContent='Saving…';clearTimeout(field.saveTimer);field.saveTimer=setTimeout(()=>sub.textContent='Saved',500)}));
+  document.querySelectorAll('.decision .actions button').forEach(btn=>btn.addEventListener('click',()=>{const row=btn.closest('.decision');if(btn.textContent==='Open'){row.querySelector('small').textContent='Would open the source item in production';return}row.style.opacity='.5';row.querySelector('small').textContent=`Decision: ${btn.textContent}`}));
+  document.querySelectorAll('.finish .primary').forEach(btn=>btn.addEventListener('click',()=>{const closed=btn.dataset.closed==='true';btn.dataset.closed=String(!closed);btn.textContent=closed?btn.dataset.original:(btn.dataset.original??=btn.textContent, 'Reopen review');const sub=btn.closest('.screen').querySelector('.sub');sub.textContent=closed?'In progress · Saved':'Reviewed · Snapshot saved'}));
+  document.querySelectorAll('.period button').forEach(btn=>btn.addEventListener('click',()=>{if(btn.textContent==='Current')return;const h1=btn.closest('header').querySelector('h1');h1.style.opacity='.45';setTimeout(()=>h1.style.opacity='1',160)}));
+</script>
+</body>
+</html>

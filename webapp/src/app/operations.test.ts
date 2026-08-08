@@ -4,6 +4,7 @@ import {
   updateProfile,
   saveTodayCap,
   saveFocusSessionMinutes,
+  saveReviewPreferences,
 } from "./operations";
 import { mockContext } from "../test/mockContext";
 
@@ -43,6 +44,9 @@ describe("getAppData — happy path", () => {
       lastTodayRolloverAt: new Date(),
       todayCap: 5,
       focusSessionMinutes: 25,
+      todayReviewEnabled: true,
+      weekReviewEnabled: false,
+      monthReviewEnabled: true,
       lastActiveAt: new Date(),
     });
     const lenses = [
@@ -77,6 +81,7 @@ describe("getAppData — happy path", () => {
       },
       todayCap: 5,
       focusSessionMinutes: 25,
+      reviewPreferences: { today: true, week: false, month: true },
     });
 
     // Inbox is global (no lens) but only counts unprocessed items, matching
@@ -553,6 +558,42 @@ describe("saveFocusSessionMinutes", () => {
     expect(m.entities.User.update).toHaveBeenCalledWith({
       where: { id: "user-1" },
       data: { focusSessionMinutes: minutes },
+    });
+  });
+});
+
+describe("saveReviewPreferences", () => {
+  it("requires authentication and boolean values", async () => {
+    await expect(
+      saveReviewPreferences(
+        { today: true, week: true, month: true },
+        mockContext(null).context,
+      ),
+    ).rejects.toThrow(/Not authenticated/);
+
+    const m = mockContext();
+    await expect(
+      saveReviewPreferences(
+        { today: true, week: "yes" as never, month: false },
+        m.context,
+      ),
+    ).rejects.toThrow(/true or false/);
+  });
+
+  it("saves all cadence switches without touching review history", async () => {
+    const m = mockContext();
+    const result = await saveReviewPreferences(
+      { today: false, week: true, month: false },
+      m.context,
+    );
+    expect(result).toEqual({ ok: true });
+    expect(m.entities.User.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: {
+        todayReviewEnabled: false,
+        weekReviewEnabled: true,
+        monthReviewEnabled: false,
+      },
     });
   });
 });

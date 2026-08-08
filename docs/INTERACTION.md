@@ -103,6 +103,16 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
 - **Chrome:** full HUD — top bar (brand/lens/breadcrumb/theme), side rails, bottom dial + zoom + capture.
 - **Indicator:** `NORMAL` (or hidden — it's the default).
 
+### Review cadence navigation
+
+Review has three direct debrief routes: Today, Week, and Month. Desktop shows
+each enabled cadence under the always-open Review nav group; `⇧R` opens the
+first enabled cadence. Mobile keeps one Review dock destination with the same
+preference-aware resolution, falling back to Logbook when every cadence is
+disabled. Inside a review, `[` / `]` move periods, `J` / `K` move through
+evidence, `E` focuses reflection, and `R` records or updates the review. Form
+fields suppress these single-key commands.
+
 ### WORKING mode (the sanctuary) — centered focus session, revised 2026-08-07
 
 - **Purpose:** you are doing the thing. The card is the world.
