@@ -59,9 +59,9 @@ export async function getReviewData(
   const savedSnapshot = parseSnapshot(saved?.snapshot);
   const useStableSnapshot = Boolean(
     args.cadence === "DAILY" &&
-      saved?.completedAt &&
-      !period.inProgress &&
-      savedSnapshot,
+    saved?.completedAt &&
+    !period.inProgress &&
+    savedSnapshot,
   );
   const evidence = useStableSnapshot ? savedSnapshot! : liveEvidence;
   const newCompletionCount =
@@ -339,10 +339,26 @@ export function validateAnswers(
   }
   const allowed =
     cadence === "DAILY"
-      ? ["memory"]
+      ? ["howGoing", "goingWell", "challenges", "currentAttention", "memory"]
       : cadence === "WEEKLY"
-        ? ["moved", "change"]
-        : ["proud", "learned", "attention", "emphasisGoalId"];
+        ? [
+            "howGoing",
+            "goingWell",
+            "challenges",
+            "currentAttention",
+            "moved",
+            "change",
+          ]
+        : [
+            "howGoing",
+            "goingWell",
+            "challenges",
+            "currentAttention",
+            "proud",
+            "learned",
+            "attention",
+            "emphasisGoalId",
+          ];
   const clean: ReviewAnswers = {};
   for (const key of allowed) {
     const raw = value[key as keyof ReviewAnswers];
@@ -361,6 +377,10 @@ function normalizeAnswers(value: unknown): ReviewAnswers {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const answers: ReviewAnswers = {};
   for (const key of [
+    "howGoing",
+    "goingWell",
+    "challenges",
+    "currentAttention",
     "memory",
     "moved",
     "change",

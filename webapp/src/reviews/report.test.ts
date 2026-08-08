@@ -79,7 +79,34 @@ describe("review reports", () => {
       ["Me", 1],
     ]);
     expect(report.reflection.proud).toBe("Shipped calmly.");
+    expect(report.state).toBe("finished");
+    expect(report.checkIn).toEqual({});
     expect(report.weeklySlices).toHaveLength(5);
+  });
+
+  it("separates an active-period check-in from its later reflection", () => {
+    const active = result("WEEKLY");
+    active.period.inProgress = true;
+    active.answers = {
+      howGoing: "Moving steadily.",
+      goingWell: "Customer calls.",
+      challenges: "A dependency.",
+      currentAttention: "Unblock the release.",
+      moved: "Earlier retrospective stays saved.",
+    };
+
+    const report = buildReviewReport(active, "UTC");
+
+    expect(report.state).toBe("in_progress");
+    expect(report.checkIn).toEqual({
+      howGoing: "Moving steadily.",
+      goingWell: "Customer calls.",
+      challenges: "A dependency.",
+      currentAttention: "Unblock the release.",
+    });
+    expect(report.reflection).toEqual({
+      moved: "Earlier retrospective stays saved.",
+    });
   });
 
   it("filters evidence, totals, and focus by lens", () => {

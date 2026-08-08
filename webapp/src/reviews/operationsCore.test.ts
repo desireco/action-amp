@@ -313,10 +313,30 @@ describe("review operation core", () => {
 describe("validateAnswers", () => {
   it("keeps only cadence fields, trims, and rejects overlong values", () => {
     expect(
-      validateAnswers("DAILY", { memory: "  remembered  ", moved: "drop" }),
-    ).toEqual({ memory: "remembered" });
+      validateAnswers("DAILY", {
+        howGoing: "  steady  ",
+        memory: "  remembered  ",
+        moved: "drop",
+      }),
+    ).toEqual({ howGoing: "steady", memory: "remembered" });
     expect(() =>
       validateAnswers("WEEKLY", { moved: "x".repeat(4_001) }),
     ).toThrow(/4,000/);
+  });
+
+  it("preserves check-in and retrospective answers for the same period", () => {
+    expect(
+      validateAnswers("MONTHLY", {
+        howGoing: "Momentum is building.",
+        challenges: "Two blocked decisions.",
+        proud: "We shipped onboarding.",
+        learned: "Smaller releases work.",
+      }),
+    ).toEqual({
+      howGoing: "Momentum is building.",
+      challenges: "Two blocked decisions.",
+      proud: "We shipped onboarding.",
+      learned: "Smaller releases work.",
+    });
   });
 });

@@ -15,6 +15,7 @@ export type ReviewLensCount = {
 
 export type ReviewReport = {
   cadence: "WEEKLY" | "MONTHLY";
+  state: "in_progress" | "finished";
   period: ReviewResult["period"];
   lensId: string | null;
   totals: {
@@ -29,6 +30,10 @@ export type ReviewReport = {
   projects: ReviewProjectItem[];
   goals: ReviewGoalItem[];
   weeklySlices: { startDate: string; completedTasks: number }[];
+  checkIn: Pick<
+    ReviewAnswers,
+    "howGoing" | "goingWell" | "challenges" | "currentAttention"
+  >;
   reflection: ReviewAnswers;
   emphasisGoal: {
     id: string;
@@ -37,6 +42,17 @@ export type ReviewReport = {
     lens: ReviewLensRef;
   } | null;
 };
+
+function compactAnswers<K extends keyof ReviewAnswers>(
+  answers: ReviewAnswers,
+  keys: K[],
+): Pick<ReviewAnswers, K> {
+  return Object.fromEntries(
+    keys.flatMap((key) =>
+      answers[key] === undefined ? [] : [[key, answers[key]]],
+    ),
+  ) as Pick<ReviewAnswers, K>;
+}
 
 export function selectSignificantActions(
   tasks: ReviewTaskItem[],
@@ -93,6 +109,7 @@ export function buildReviewReport(
 
   return {
     cadence: result.cadence,
+    state: result.period.inProgress ? "in_progress" : "finished",
     period: result.period,
     lensId,
     totals: {
@@ -115,7 +132,18 @@ export function buildReviewReport(
             timeZone,
           )
         : [],
-    reflection: result.answers,
+    checkIn: compactAnswers(result.answers, [
+      "howGoing",
+      "goingWell",
+      "challenges",
+      "currentAttention",
+    ]),
+    reflection: compactAnswers(
+      result.answers,
+      result.cadence === "WEEKLY"
+        ? ["moved", "change"]
+        : ["proud", "learned", "attention", "emphasisGoalId"],
+    ),
     emphasisGoal:
       result.availableGoals.find(
         (goal) => goal.id === result.answers.emphasisGoalId,
