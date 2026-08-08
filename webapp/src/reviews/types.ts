@@ -1,6 +1,10 @@
 import type { ReviewCadence } from "./period";
 
 export type ReviewAnswers = {
+  howGoing?: string;
+  goingWell?: string;
+  challenges?: string;
+  currentAttention?: string;
   memory?: string;
   moved?: string;
   change?: string;
