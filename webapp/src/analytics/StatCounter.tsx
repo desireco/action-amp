@@ -7,10 +7,22 @@ type StatCounterQueue = Array<{ tags: Record<string, string> }> & { record_pagev
 
 const ALLOWED_EVENTS = new Set(["landing_view", "signup_complete", "app_first_open", "checkout_started"]);
 
+export function isLocalStatCounterHost(hostname: string) {
+  const normalized = hostname.toLowerCase();
+  return normalized === "localhost"
+    || normalized.endsWith(".localhost")
+    || normalized === "127.0.0.1"
+    || normalized === "::1";
+}
+
+function statCounterEnabled() {
+  return !import.meta.env.DEV && !isLocalStatCounterHost(window.location.hostname);
+}
+
 /** Record one of the four anonymous observability milestones as a StatCounter
  * custom-tagged pageview. Never pass identity, task content, or account data. */
 export function trackStatCounterEvent(event: string, surface?: string, plan?: string) {
-  if (import.meta.env.DEV || !ALLOWED_EVENTS.has(event)) return;
+  if (!statCounterEnabled() || !ALLOWED_EVENTS.has(event)) return;
   const tags: Record<string, string> = { event };
   if (surface) tags.surface = surface.slice(0, 40);
   if (plan) tags.plan = plan.slice(0, 40);
@@ -22,7 +34,7 @@ export function trackStatCounterEvent(event: string, surface?: string, plan?: st
 /** Loads StatCounter only in production, keeping local development traffic out. */
 export function StatCounter() {
   useEffect(() => {
-    if (import.meta.env.DEV || document.getElementById(SCRIPT_ID)) return;
+    if (!statCounterEnabled() || document.getElementById(SCRIPT_ID)) return;
 
     window.sc_project = Number(PROJECT_ID);
     window.sc_invisible = 1;
