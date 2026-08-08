@@ -36,6 +36,9 @@ actionamp goal list --lens-id <id>      # goals in a lens
 actionamp goal show <id>       # a single goal
 actionamp logbook              # completed tasks, finished projects/goals, archived
 actionamp logbook --lens-id <id>        # scoped to one lens
+actionamp review week                   # read-only weekly accomplishment report
+actionamp review month --previous       # read-only previous-month overview
+actionamp review month --lens-id <id>   # explicitly scoped report
 actionamp whoami               # the logged-in account
 \`\`\`
 
@@ -80,6 +83,7 @@ project show → { project: {...} | null }
 goal list    → { goals: [...] }
 goal show    → { goal: {...} | null }
 logbook      → { tasks: [...], projects: [...], goals: [...], archived: [...] }
+review week/month → { report: { period, totals, actionsByLens, highlights, tasks, projects, goals, weeklySlices, reflection, emphasisGoal } }
 whoami       → { user: { id, email, fullName, plan } }
 capture      → { ok: true, id, text, createdAt }
 \`\`\`
@@ -121,6 +125,13 @@ project { id, name }, goal { id, name }
 2. \`actionamp today --done\` — what's finished.
 3. \`actionamp logbook\` — the full history (completed tasks, finished projects/goals, archived).
 
+### Review the week or month
+1. \`actionamp review week --json\` or \`actionamp review month --json\`.
+2. Ground the overview in completed Goals, Projects, significant L/M actions,
+   counts by Lens, focus time, and the user's saved reflection.
+3. Summarize evidence. Do not invent comparisons, scores, or productivity
+   judgments. Review commands are read-only and cannot close a period.
+
 ### Capture a thought
 \`actionamp capture "fix the pagination bug #backend !important"\`
 NL parsing extracts: \`#project\`, \`@date\`, \`!priority\`, \`#tags\`, \`[[lens]]\`.
@@ -138,6 +149,7 @@ NL parsing extracts: \`#project\`, \`@date\`, \`!priority\`, \`#tags\`, \`[[lens
 - **Respect Today's cap.** Today holds at most 5 items. Don't move more than 5 to Today without surfacing the cap.
 - **Lenses scope everything.** Most reads take \`--lens-id\`. If you don't know the lens, use \`now\` (resolves the default) or check the user's lenses in the web app.
 - **No autonomous triage.** Triage transforms inbox items into tasks/projects — always confirm the decision with the user first.
+- **Review is read-only.** Agents may report and summarize review evidence, but cannot write reflection answers or close Today.
 `;
 
 export function makeLlmCommand(): Command {
@@ -147,7 +159,9 @@ export function makeLlmCommand(): Command {
     .option("--json", "emit the instructions as a JSON string")
     .action((opts: { json?: boolean }) => {
       if (opts.json) {
-        process.stdout.write(JSON.stringify({ instructions: INSTRUCTIONS }) + "\n");
+        process.stdout.write(
+          JSON.stringify({ instructions: INSTRUCTIONS }) + "\n",
+        );
       } else {
         process.stdout.write(INSTRUCTIONS);
       }
