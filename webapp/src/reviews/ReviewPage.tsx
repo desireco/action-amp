@@ -375,10 +375,13 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
       <ProjectCelebration projects={visibleEvidence.projects} />
 
       {cadence !== "DAILY" && (
-        <SignificantActions
-          tasks={selectSignificantActions(visibleEvidence.tasks)}
-          cadence={cadence}
-        />
+        <>
+          <SignificantActions
+            tasks={selectSignificantActions(visibleEvidence.tasks)}
+            cadence={cadence}
+          />
+          <ActionCountsByLens tasks={visibleEvidence.tasks} />
+        </>
       )}
 
       <section
@@ -617,6 +620,48 @@ export function selectSignificantActions(
         Date.parse(right.completedAt) - Date.parse(left.completedAt),
     )
     .slice(0, 5);
+}
+
+export function countActionsByLens(tasks: ReviewTaskItem[]) {
+  const counts = new Map<
+    string,
+    { lens: ReviewTaskItem["lens"]; count: number }
+  >();
+  for (const task of tasks) {
+    const current = counts.get(task.lens.id);
+    counts.set(task.lens.id, {
+      lens: task.lens,
+      count: (current?.count ?? 0) + 1,
+    });
+  }
+  return Array.from(counts.values()).sort(
+    (left, right) =>
+      right.count - left.count || left.lens.name.localeCompare(right.lens.name),
+  );
+}
+
+export function ActionCountsByLens({ tasks }: { tasks: ReviewTaskItem[] }) {
+  const counts = countActionsByLens(tasks);
+  if (counts.length === 0) return null;
+  return (
+    <section
+      className="aa-review__section"
+      aria-labelledby="actions-by-lens-heading"
+    >
+      <SectionHeading
+        id="actions-by-lens-heading"
+        title="Completed actions by lens"
+      />
+      <div className="aa-review__lens-counts">
+        {counts.map(({ lens, count }) => (
+          <div key={lens.id} className="aa-review__lens-count">
+            <strong>{count}</strong>
+            <span>{lens.name}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export function SignificantActions({

@@ -329,6 +329,30 @@
   font-size: var(--aa-text-xs);
 }
 
+.aa-review__lens-counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--aa-space-sm);
+}
+.aa-review__lens-count {
+  padding: var(--aa-space-lg);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface);
+}
+.aa-review__lens-count strong,
+.aa-review__lens-count span {
+  display: block;
+}
+.aa-review__lens-count strong {
+  font-size: 1.35rem;
+}
+.aa-review__lens-count span {
+  margin-top: 4px;
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-xs);
+}
+
 .aa-review__reflection {
   padding-top: var(--aa-space-lg);
   border-top: 1px solid var(--aa-border);

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import {
+  countActionsByLens,
   firstReviewRoute,
   Reflection,
   reviewShortcutFor,
@@ -76,9 +77,31 @@ describe("significant completed actions", () => {
     const selected = selectSignificantActions(tasks);
 
     expect(selected).toHaveLength(5);
-    expect(selected.map((item) => item.size)).toEqual(["L", "L", "L", "M", "M"]);
+    expect(selected.map((item) => item.size)).toEqual([
+      "L",
+      "L",
+      "L",
+      "M",
+      "M",
+    ]);
     expect(selected.map((item) => item.id)).not.toContain("task-1");
     expect(selected.map((item) => item.id)).not.toContain("task-4");
+  });
+
+  it("counts every completed action by lens", () => {
+    const personal = { id: "lens-2", name: "Me", color: "emerald" };
+    const counts = countActionsByLens([
+      task(1),
+      task(2),
+      { ...task(3), lens: personal },
+    ]);
+
+    expect(
+      counts.map(({ lens: itemLens, count }) => [itemLens.name, count]),
+    ).toEqual([
+      ["Work", 2],
+      ["Me", 1],
+    ]);
   });
 });
 
