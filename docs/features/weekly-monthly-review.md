@@ -10,7 +10,7 @@ verified: 2026-08-08
 # Today, Week + Month Reviews
 
 **What.** Three distinct completion debriefs over the same underlying history:
-Today closes the day, Week aligns effort and aging work, and Month celebrates
+Today closes the day, Week recognizes meaningful movement, and Month celebrates
 Goal progress and chooses direction. Logbook remains the chronological record.
 
 **Routes.** `/app/review` resolves from the user's enabled cadences;
@@ -46,6 +46,10 @@ red-dot nags, or judgmental period comparisons.
 **Implementation.** `webapp/src/reviews/`, `webapp/schema.prisma`, migration
 `20260808120000_review_rhythms`, Review routes/operations in `main.wasp.ts`, and
 preference/navigation integration in `webapp/src/app/`.
+
+**CLI.** `actionamp review week` and `actionamp review month` expose the same
+evidence as read-only human or `--json` reports. They support previous/exact
+periods and explicit Lens filters, but cannot write reflection or close Today.
 
 **Spec + prototype.** `docs/specs/weekly-monthly-review.md` and
 `docs/mockups/review-rhythms.html`.

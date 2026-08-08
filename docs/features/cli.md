@@ -4,7 +4,7 @@ title: "CLI + orchestration skills (power-user terminal surface)"
 feature_area: developer
 status: partial              # Phase 0 + Phase 1 shipped; Phase 2 (skills) draft
 spec: cli.md                       # umbrella; effort split into 3 specs 2026-07-03
-verified: 2026-07-29
+verified: 2026-08-08
 ---
 
 # CLI + orchestration skills
@@ -21,7 +21,8 @@ inside the Pro CLI surface.
 **Today's command surface** (every command supports `--json`):
 
 - **Auth/session:** `login`, `whoami`, `logout`.
-- **Focus/lists:** `now`, `today (--done)`, `logbook`.
+- **Focus/lists:** `now`, `today (--done)`, `logbook`, read-only
+  `review (week|month)` reports (`--previous`, `--for`, optional explicit Lens).
 - **Capture/inbox:** `capture` (NL parsing + `--title/--content/--source-url/
   --file` for shared content + one image), `inbox (list|triage)`.
 - **Tasks:** `task (show|start|pause|done|snooze|move)`.

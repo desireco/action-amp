@@ -362,6 +362,16 @@ IANA identifier. Range helpers receive an injectable clock and have DST tests.
 Writes are idempotent through the unique period key. Client autosaves answers
 after a short debounce and shows a quiet Saved/Error state.
 
+### Read-only CLI report
+
+`actionamp review week|month` reads the shared review core through the
+PAT-protected `GET /api/cli/review` route. Default scope remains universal
+across Lenses; `--lens-id` is explicit and never inherited from CLI config.
+`--previous` and `--for YYYY-MM-DD` select the period. `--json` returns named
+evidence, totals, action counts by Lens, up to five L/M highlights, focus time,
+saved reflection, and monthly Goal emphasis. No CLI review write or close
+operation exists.
+
 ## Interactive prototype
 
 `docs/mockups/review-rhythms.html` is the interactive, disposable design

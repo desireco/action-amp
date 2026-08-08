@@ -55,6 +55,8 @@ npm run build && ./dist/index.js     # built
 | `goal show <id>` | Show a goal |
 | `goal create <name> --lens-id <id>` | Create a goal |
 | `logbook [--lens-id <id>]` | Completed tasks, finished projects/goals, archived |
+| `review week [--previous\|--for <date>]` | Read-only weekly accomplishment report |
+| `review month [--previous\|--for <date>]` | Read-only monthly accomplishment report |
 | `whoami` | Show the logged-in account |
 | `logout` | Clear the saved token |
 
@@ -80,6 +82,7 @@ lens switch  → { ok: true, id, name }
 lens current → { lens: {...} | null }
 project list → { projects: [...] }
 logbook      → { tasks: [...], projects: [...], goals: [...], archived: [...] }
+review week/month → { report: { period, totals, actionsByLens, highlights, tasks, projects, goals, weeklySlices, reflection, emphasisGoal } }
 whoami       → { user: { id, email, fullName, plan } }
 ```
 
@@ -94,7 +97,12 @@ Errors (in `--json` mode): `{ error: "<message>" }` to stdout, exit code 1.
 `--lens-id` always overrides. There is no server-side active lens; each CLI
 install tracks its own (mirrors the web app's `localStorage["aa-lens-id"]`).
 `today` stays global by design (the cross-lens view). `lens current` shows
-what's active; `lens list` marks it with `← active`.
+what’s active; `lens list` marks it with `← active`.
+
+Week and Month reviews are also cross-lens by default. They do not inherit the
+active CLI lens. Pass `--lens-id <id>` only when a report should be filtered.
+Review commands are read-only: they cannot write reflection responses or close
+a review.
 
 ## How login works
 
@@ -136,6 +144,6 @@ Override origins with env vars: `ACTIONAMP_API_URL`, `ACTIONAMP_WEB_URL`.
 ## Tests
 
 ```sh
-cd cli && npm test          # 55 unit tests (mocks request, no real HTTP)
+cd cli && npm test          # unit tests (mocks request, no real HTTP)
 cd webapp && npm test       # backend tests (op cores + route handlers)
 ```
