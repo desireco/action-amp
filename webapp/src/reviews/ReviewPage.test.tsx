@@ -2,13 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import {
-  countActionsByLens,
   firstReviewRoute,
   Reflection,
   reviewShortcutFor,
-  selectSignificantActions,
   TaskEvidence,
 } from "./ReviewPage";
+import { countActionsByLens, selectSignificantActions } from "./report";
 import type { ReviewGoalOption, ReviewTaskItem } from "./types";
 
 const lens = { id: "lens-1", name: "Work", color: "indigo" };

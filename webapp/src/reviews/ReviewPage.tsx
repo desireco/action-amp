@@ -14,6 +14,7 @@ import {
   shiftReviewDate,
   type ReviewCadence,
 } from "./period";
+import { countActionsByLens, selectSignificantActions } from "./report";
 import type {
   ReviewAnswers,
   ReviewGoalItem,
@@ -602,41 +603,6 @@ export function TaskEvidence({
         </details>
       ))}
     </div>
-  );
-}
-
-export function selectSignificantActions(
-  tasks: ReviewTaskItem[],
-): ReviewTaskItem[] {
-  const sizeRank = { L: 0, M: 1 } as const;
-  return tasks
-    .filter(
-      (task): task is ReviewTaskItem & { size: "L" | "M" } =>
-        task.size === "L" || task.size === "M",
-    )
-    .sort(
-      (left, right) =>
-        sizeRank[left.size] - sizeRank[right.size] ||
-        Date.parse(right.completedAt) - Date.parse(left.completedAt),
-    )
-    .slice(0, 5);
-}
-
-export function countActionsByLens(tasks: ReviewTaskItem[]) {
-  const counts = new Map<
-    string,
-    { lens: ReviewTaskItem["lens"]; count: number }
-  >();
-  for (const task of tasks) {
-    const current = counts.get(task.lens.id);
-    counts.set(task.lens.id, {
-      lens: task.lens,
-      count: (current?.count ?? 0) + 1,
-    });
-  }
-  return Array.from(counts.values()).sort(
-    (left, right) =>
-      right.count - left.count || left.lens.name.localeCompare(right.lens.name),
   );
 }
 
