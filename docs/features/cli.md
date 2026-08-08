@@ -2,8 +2,8 @@
 slug: cli
 title: "CLI + orchestration skills (power-user terminal surface)"
 feature_area: developer
-status: partial              # Phase 0 + Phase 1 shipped; Phase 2 (skills) draft
-spec: cli.md                       # umbrella; effort split into 3 specs 2026-07-03
+status: partial # Phase 0 + Phase 1 shipped; Phase 2 (skills) draft
+spec: cli.md # umbrella; effort split into 3 specs 2026-07-03
 verified: 2026-08-08
 ---
 
@@ -22,9 +22,10 @@ inside the Pro CLI surface.
 
 - **Auth/session:** `login`, `whoami`, `logout`.
 - **Focus/lists:** `now`, `today (--done)`, `logbook`, read-only
-  `review (week|month)` reports (`--previous`, `--for`, optional explicit Lens).
+  `review (week|month)` check-ins/reports (`--previous`, `--for`, optional
+  explicit Lens).
 - **Capture/inbox:** `capture` (NL parsing + `--title/--content/--source-url/
-  --file` for shared content + one image), `inbox (list|triage)`.
+--file` for shared content + one image), `inbox (list|triage)`.
 - **Tasks:** `task (show|start|pause|done|snooze|move)`.
 - **Planning:** `project (list|show|create|add-task)` (list/show carry
   resources), `goal (list|show|create)`, `resource (list|add|update|delete)`.
@@ -36,11 +37,11 @@ inside the Pro CLI surface.
 **Spec — split into three 2026-07-03** (the original single spec was too large
 for one `ready` unit):
 
-| Spec | Status | What |
-|------|--------|------|
-| [`cli-pat-plumbing`](../specs/cli-pat-plumbing.md) | **shipped 2026-07-22** | `ApiKey` model (SHA-256 hashed tokens) + PAT routes + Bearer middleware + `/cli/login` consent page + Settings → Access tokens UI. |
-| [`cli-package`](../specs/cli-package.md) | **shipped 2026-07-22** (surface grown since) | The `cli/` package — full command surface above + `--json`, backed by pure `*Core.ts` files shared with the Wasp ops (zero duplicated logic). |
-| [`cli-skills`](../specs/cli-skills.md) | `draft` | Four orchestration skills. Depends on `cli-package`; `task-research` was blocked on `cli-comments-resources`, now unblocked by the `resource` commands. |
+| Spec                                               | Status                                       | What                                                                                                                                                    |
+| -------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`cli-pat-plumbing`](../specs/cli-pat-plumbing.md) | **shipped 2026-07-22**                       | `ApiKey` model (SHA-256 hashed tokens) + PAT routes + Bearer middleware + `/cli/login` consent page + Settings → Access tokens UI.                      |
+| [`cli-package`](../specs/cli-package.md)           | **shipped 2026-07-22** (surface grown since) | The `cli/` package — full command surface above + `--json`, backed by pure `*Core.ts` files shared with the Wasp ops (zero duplicated logic).           |
+| [`cli-skills`](../specs/cli-skills.md)             | `draft`                                      | Four orchestration skills. Depends on `cli-package`; `task-research` was blocked on `cli-comments-resources`, now unblocked by the `resource` commands. |
 
 Umbrella design + cross-cutting decisions: [`docs/specs/cli.md`](../specs/cli.md).
 

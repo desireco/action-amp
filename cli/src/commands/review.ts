@@ -31,10 +31,15 @@ function countLabel(count: number, singular: string): string {
 }
 
 export function formatReviewReport(report: ReviewReport): string {
-  const lines = [report.period.label];
-  if (report.period.inProgress) lines.push(chalk.gray("In progress"));
+  const cadence = report.cadence === "WEEKLY" ? "Week" : "Month";
+  const lines = [
+    `${cadence} ${report.state === "in_progress" ? "check-in" : "review"}`,
+    report.period.label,
+  ];
   lines.push("");
-  lines.push("Completed");
+  lines.push(
+    report.state === "in_progress" ? "Completed so far" : "Accomplished",
+  );
   lines.push(
     `  ${countLabel(report.totals.actions, "action")} · ${countLabel(report.totals.projects, "project")} · ${countLabel(report.totals.goals, "goal")}`,
   );
@@ -66,6 +71,17 @@ export function formatReviewReport(report: ReviewReport): string {
       lines.push(`  ${formatAction(task)}`);
       if (task.outcome) lines.push(chalk.gray(`     ${task.outcome}`));
     }
+  }
+
+  const checkIn = [
+    report.checkIn.howGoing,
+    report.checkIn.goingWell,
+    report.checkIn.challenges,
+    report.checkIn.currentAttention,
+  ].filter((value): value is string => Boolean(value));
+  if (checkIn.length > 0) {
+    lines.push("", "Check-in");
+    for (const value of checkIn) lines.push(`  ${value}`);
   }
 
   const reflections = [

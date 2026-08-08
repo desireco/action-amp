@@ -83,7 +83,7 @@ project show → { project: {...} | null }
 goal list    → { goals: [...] }
 goal show    → { goal: {...} | null }
 logbook      → { tasks: [...], projects: [...], goals: [...], archived: [...] }
-review week/month → { report: { period, totals, actionsByLens, highlights, tasks, projects, goals, weeklySlices, reflection, emphasisGoal } }
+review week/month → { report: { state, period, totals, actionsByLens, highlights, tasks, projects, goals, weeklySlices, checkIn, reflection, emphasisGoal } }
 whoami       → { user: { id, email, fullName, plan } }
 capture      → { ok: true, id, text, createdAt }
 \`\`\`
@@ -128,8 +128,12 @@ project { id, name }, goal { id, name }
 ### Review the week or month
 1. \`actionamp review week --json\` or \`actionamp review month --json\`.
 2. Ground the overview in completed Goals, Projects, significant L/M actions,
-   counts by Lens, focus time, and the user's saved reflection.
-3. Summarize evidence. Do not invent comparisons, scores, or productivity
+   counts by Lens, focus time, and the user's saved responses.
+3. When \`state\` is \`in_progress\`, report momentum so far, what is going well,
+   challenges, and remaining attention. Use present tense; do not pronounce a
+   final verdict. When \`state\` is \`finished\`, report accomplishments, lessons,
+   and carry-forward using retrospective language.
+4. Summarize evidence. Do not invent comparisons, scores, or productivity
    judgments. Review commands are read-only and cannot close a period.
 
 ### Capture a thought

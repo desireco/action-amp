@@ -25,40 +25,40 @@ npm run build && ./dist/index.js     # built
 
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `login [--dev]` | OAuth browser login (default: prod; `--dev` → localhost) |
-| `now` | Print your top task (same one `/app` shows) |
-| `capture "<text>"` | Quick-capture to inbox (NL parsing: `#project @date !priority`) |
-| `today [--done]` | Today's committed tasks (`--done` → completed today) |
-| `task show <id>` | Show a single task |
-| `task start <id>` | Start a task (sets it as focused) |
-| `task pause <id>` | Pause the focused task |
-| `task done <id> [--outcome <text>]` | Mark a task done |
-| `task snooze <id> [--preset <p>]` | Snooze (presets: `1h\|3h\|tomorrow\|weekend\|someday`) |
-| `task move <id> --to <list>` | Move (today, upcoming, someday) |
-| `inbox list` | Show unprocessed inbox items |
-| `inbox triage <id> --decision <d>` | Triage an inbox item |
-| `lens list` | List your lenses (active one marked) |
-| `lens show <id\|name>` | Show a single lens (by id or name) |
-| `lens switch <id\|name>` | Set the active lens — `now` / `project list` / `goal list` / `logbook` / `inbox triage` then scope to it without `--lens-id` |
-| `lens current` | Show the active lens |
-| `project list --lens-id <id>` | List projects in a lens, with saved resources |
-| `project show <id>` | Show a project and its resources |
-| `project create <name> --lens-id <id>` | Create a project |
-| `project add-task <desc> --lens-id <id>` | Add a task to a project/lens |
-| `resource list --project <id>` | List a project's links and notes |
-| `resource add <title> --project <id> [--url <url>] [--notes <text>]` | Add project reference material |
-| `resource update <id> [--title <text>] [--url <url>] [--notes <text>]` | Change a resource (`""` clears URL/notes) |
-| `resource delete <id>` | Remove project reference material |
-| `goal list --lens-id <id>` | List goals in a lens |
-| `goal show <id>` | Show a goal |
-| `goal create <name> --lens-id <id>` | Create a goal |
-| `logbook [--lens-id <id>]` | Completed tasks, finished projects/goals, archived |
-| `review week [--previous\|--for <date>]` | Read-only weekly accomplishment report |
-| `review month [--previous\|--for <date>]` | Read-only monthly accomplishment report |
-| `whoami` | Show the logged-in account |
-| `logout` | Clear the saved token |
+| Command                                                                | What it does                                                                                                                 |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `login [--dev]`                                                        | OAuth browser login (default: prod; `--dev` → localhost)                                                                     |
+| `now`                                                                  | Print your top task (same one `/app` shows)                                                                                  |
+| `capture "<text>"`                                                     | Quick-capture to inbox (NL parsing: `#project @date !priority`)                                                              |
+| `today [--done]`                                                       | Today's committed tasks (`--done` → completed today)                                                                         |
+| `task show <id>`                                                       | Show a single task                                                                                                           |
+| `task start <id>`                                                      | Start a task (sets it as focused)                                                                                            |
+| `task pause <id>`                                                      | Pause the focused task                                                                                                       |
+| `task done <id> [--outcome <text>]`                                    | Mark a task done                                                                                                             |
+| `task snooze <id> [--preset <p>]`                                      | Snooze (presets: `1h\|3h\|tomorrow\|weekend\|someday`)                                                                       |
+| `task move <id> --to <list>`                                           | Move (today, upcoming, someday)                                                                                              |
+| `inbox list`                                                           | Show unprocessed inbox items                                                                                                 |
+| `inbox triage <id> --decision <d>`                                     | Triage an inbox item                                                                                                         |
+| `lens list`                                                            | List your lenses (active one marked)                                                                                         |
+| `lens show <id\|name>`                                                 | Show a single lens (by id or name)                                                                                           |
+| `lens switch <id\|name>`                                               | Set the active lens — `now` / `project list` / `goal list` / `logbook` / `inbox triage` then scope to it without `--lens-id` |
+| `lens current`                                                         | Show the active lens                                                                                                         |
+| `project list --lens-id <id>`                                          | List projects in a lens, with saved resources                                                                                |
+| `project show <id>`                                                    | Show a project and its resources                                                                                             |
+| `project create <name> --lens-id <id>`                                 | Create a project                                                                                                             |
+| `project add-task <desc> --lens-id <id>`                               | Add a task to a project/lens                                                                                                 |
+| `resource list --project <id>`                                         | List a project's links and notes                                                                                             |
+| `resource add <title> --project <id> [--url <url>] [--notes <text>]`   | Add project reference material                                                                                               |
+| `resource update <id> [--title <text>] [--url <url>] [--notes <text>]` | Change a resource (`""` clears URL/notes)                                                                                    |
+| `resource delete <id>`                                                 | Remove project reference material                                                                                            |
+| `goal list --lens-id <id>`                                             | List goals in a lens                                                                                                         |
+| `goal show <id>`                                                       | Show a goal                                                                                                                  |
+| `goal create <name> --lens-id <id>`                                    | Create a goal                                                                                                                |
+| `logbook [--lens-id <id>]`                                             | Completed tasks, finished projects/goals, archived                                                                           |
+| `review week [--previous\|--for <date>]`                               | Read-only weekly check-in or finished review                                                                                 |
+| `review month [--previous\|--for <date>]`                              | Read-only monthly check-in or finished review                                                                                |
+| `whoami`                                                               | Show the logged-in account                                                                                                   |
+| `logout`                                                               | Clear the saved token                                                                                                        |
 
 Every command supports `--json` for scripting / agent orchestration.
 
@@ -82,7 +82,7 @@ lens switch  → { ok: true, id, name }
 lens current → { lens: {...} | null }
 project list → { projects: [...] }
 logbook      → { tasks: [...], projects: [...], goals: [...], archived: [...] }
-review week/month → { report: { period, totals, actionsByLens, highlights, tasks, projects, goals, weeklySlices, reflection, emphasisGoal } }
+review week/month → { report: { state, period, totals, actionsByLens, highlights, tasks, projects, goals, weeklySlices, checkIn, reflection, emphasisGoal } }
 whoami       → { user: { id, email, fullName, plan } }
 ```
 
@@ -104,6 +104,10 @@ active CLI lens. Pass `--lens-id <id>` only when a report should be filtered.
 Review commands are read-only: they cannot write reflection responses or close
 a review.
 
+Current periods return `state: "in_progress"` and a separate `checkIn` object.
+Past periods return `state: "finished"`; retrospective answers live in
+`reflection`. An earlier check-in remains available after its period ends.
+
 ## How login works
 
 The CLI is not a trusted token-issuer — only the authed browser can mint — so
@@ -124,6 +128,7 @@ login time — `now`/`capture`/etc. don't need `--dev`.
 ## Config
 
 `~/.config/actionamp/config.json`:
+
 ```json
 { "token": "aa_…", "apiUrl": "http://localhost:3001" }
 ```

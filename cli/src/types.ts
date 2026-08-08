@@ -176,6 +176,7 @@ export type ReviewTask = {
 
 export type ReviewReport = {
   cadence: "WEEKLY" | "MONTHLY";
+  state: "in_progress" | "finished";
   period: {
     start: string;
     end: string;
@@ -212,6 +213,12 @@ export type ReviewReport = {
     lens: ReviewLensRef;
   }[];
   weeklySlices: { startDate: string; completedTasks: number }[];
+  checkIn: {
+    howGoing?: string;
+    goingWell?: string;
+    challenges?: string;
+    currentAttention?: string;
+  };
   reflection: {
     moved?: string;
     change?: string;

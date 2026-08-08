@@ -14,6 +14,7 @@ const originalWrite = process.stdout.write.bind(process.stdout);
 const RESULT: ReviewReportResult = {
   report: {
     cadence: "MONTHLY",
+    state: "finished",
     period: {
       start: "2026-08-01T00:00:00.000Z",
       end: "2026-09-01T00:00:00.000Z",
@@ -64,6 +65,7 @@ const RESULT: ReviewReportResult = {
       },
     ],
     weeklySlices: [],
+    checkIn: {},
     reflection: { proud: "We made setup calmer." },
     emphasisGoal: {
       id: "goal-2",
@@ -98,12 +100,39 @@ describe("review command", () => {
     const output = await run(["month", "--time-zone", "UTC"]);
 
     expect(output).toContain("August 2026");
+    expect(output).toContain("Month review");
+    expect(output).toContain("Accomplished");
     expect(output).toContain("3 actions · 1 project · 1 goal");
     expect(output).toContain("Work  2");
     expect(output).toContain("L  Ship onboarding");
     expect(output).toContain("Customers reached value faster.");
     expect(output).toContain("We made setup calmer.");
     expect(output).toContain("Next emphasis: Earn customer trust");
+  });
+
+  it("distinguishes an active check-in from a finished review", async () => {
+    requestMock.mockResolvedValue({
+      report: {
+        ...RESULT.report,
+        cadence: "WEEKLY",
+        state: "in_progress",
+        period: { ...RESULT.report.period, inProgress: true },
+        checkIn: {
+          howGoing: "The week has momentum.",
+          challenges: "Waiting on approval.",
+        },
+        reflection: {},
+        emphasisGoal: null,
+      },
+    });
+
+    const output = await run(["week", "--time-zone", "UTC"]);
+
+    expect(output).toContain("Week check-in");
+    expect(output).toContain("Completed so far");
+    expect(output).toContain("The week has momentum.");
+    expect(output).toContain("Waiting on approval.");
+    expect(output).not.toContain("Reflection");
   });
 
   it("requests the previous week without a write payload", async () => {
