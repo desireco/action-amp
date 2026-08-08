@@ -8,6 +8,7 @@ import type {
   SnoozeTask,
   StartTask,
   PauseTask,
+  CompleteFocusSession,
   ToggleTaskDone,
   UpdateTaskStatus,
   UnscheduleOverdueTasks,
@@ -33,6 +34,7 @@ import {
   updateTaskStatusCore,
   startTaskCore,
   pauseTaskCore,
+  completeFocusSessionCore,
   PRIORITY_RANK,
   SIZE_RANK,
 } from "./operationsCore";
@@ -47,6 +49,7 @@ export {
   snoozeTaskCore,
   startTaskCore,
   pauseTaskCore,
+  completeFocusSessionCore,
 };
 
 /**
@@ -285,6 +288,7 @@ export const getFocusedTask = (async (_args, context) => {
       tags: true,
       updates: { orderBy: { createdAt: "asc" } },
       sessions: { orderBy: { startedAt: "asc" } },
+      user: { select: { focusSessionMinutes: true } },
       project: { select: { id: true, permalink: true, name: true } },
       goal: { select: { id: true, permalink: true, name: true } },
     },
@@ -326,9 +330,14 @@ export const startTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+  const user = await context.entities.User.findUnique({
+    where: { id: context.user.id },
+    select: { focusSessionMinutes: true },
+  });
   const result = await startTaskCore(context.entities, {
     userId: context.user.id,
     id: args.id,
+    focusSessionMinutes: user?.focusSessionMinutes === 45 ? 45 : 25,
   });
   void recordAnalyticsEventCore(context.entities, {
     name: "FOCUS_STARTED",
@@ -347,6 +356,19 @@ export const pauseTask = (async (args, context) => {
     id: args.id,
   });
 }) satisfies PauseTask<{ id: string }, { id: string; startedAt: Date | null }>;
+
+export const completeFocusSession = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  return await completeFocusSessionCore(context.entities, {
+    userId: context.user.id,
+    id: args.id,
+  });
+}) satisfies CompleteFocusSession<
+  { id: string },
+  { completed: false } | { completed: true; endedAt: Date }
+>;
 
 // ----------------------------------------------------------------
 // Task notes + completion log (task-notes-completion-log.md)

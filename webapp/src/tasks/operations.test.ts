@@ -22,6 +22,7 @@ import {
   snoozeTask,
   startTask,
   pauseTask,
+  completeFocusSession,
   addTaskUpdate,
   updateTaskContent,
   updateTaskDetails,
@@ -119,6 +120,7 @@ describe("getFocusedTask", () => {
       tags: [],
       updates: [],
       sessions: [],
+      user: { focusSessionMinutes: 25 },
       project: null,
       goal: null,
     };
@@ -138,6 +140,7 @@ describe("getFocusedTask", () => {
         tags: true,
         updates: { orderBy: { createdAt: "asc" } },
         sessions: { orderBy: { startedAt: "asc" } },
+        user: { select: { focusSessionMinutes: true } },
         project: { select: { id: true, permalink: true, name: true } },
         goal: { select: { id: true, permalink: true, name: true } },
       },
@@ -740,6 +743,7 @@ describe("startTask", () => {
 
   it("opens a TaskSession for the task and closes any prior open sessions", async () => {
     const m = mockContext();
+    m.entities.User.findUnique.mockResolvedValue({ focusSessionMinutes: 45 });
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.updateMany.mockResolvedValue({ count: 0 });
     m.entities.Task.update.mockResolvedValue({ id: "task-1", startedAt: new Date() });
@@ -758,8 +762,38 @@ describe("startTask", () => {
         taskId: "task-1",
         userId: "user-1",
         startedAt: expect.any(Date),
+        plannedMinutes: 45,
+        completed: false,
       },
     });
+  });
+});
+
+describe("completeFocusSession", () => {
+  it("records the finished countdown without clearing task focus", async () => {
+    const m = mockContext();
+    const startedAt = new Date(Date.now() - 25 * 60_000);
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.TaskSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      startedAt,
+      plannedMinutes: 25,
+    });
+
+    const result = await completeFocusSession({ id: "task-1" }, m.context);
+
+    expect(result).toEqual({
+      completed: true,
+      endedAt: new Date(startedAt.getTime() + 25 * 60_000),
+    });
+    expect(m.entities.TaskSession.update).toHaveBeenCalledWith({
+      where: { id: "session-1" },
+      data: {
+        endedAt: new Date(startedAt.getTime() + 25 * 60_000),
+        completed: true,
+      },
+    });
+    expect(m.entities.Task.update).not.toHaveBeenCalled();
   });
 });
 

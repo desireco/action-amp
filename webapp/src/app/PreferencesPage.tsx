@@ -7,12 +7,20 @@ import {
   saveDailyReminder,
   savePushSubscription,
   saveTodayCap,
+  saveFocusSessionMinutes,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { SettingsLayout } from "./SettingsLayout";
 import { Field } from "./Field";
 import { Chip } from "../components/ui";
-import { TODAY_CAP_DEFAULT, TODAY_CAP_MIN, TODAY_CAP_MAX } from "./operations";
+import {
+  TODAY_CAP_DEFAULT,
+  TODAY_CAP_MIN,
+  TODAY_CAP_MAX,
+  FOCUS_SESSION_DEFAULT,
+  FOCUS_SESSION_OPTIONS,
+  type FocusSessionMinutes,
+} from "./operations";
 import "./Field.css";
 import "./PreferencesPage.css";
 import { supportsPushNotifications, urlBase64ToUint8Array } from "../notifications/client";
@@ -20,8 +28,8 @@ import { supportsPushNotifications, urlBase64ToUint8Array } from "../notificatio
 /**
  * Preferences — app behavior. Theme toggle is live (wired to [data-theme] +
  * localStorage); the rest are stubbed with "soon" chips until their features
- * ship, per the honesty-over-fake-toggles principle. The Today cap is live
- * (global ceiling, default 5, range 3–12).
+ * ship, per the honesty-over-fake-toggles principle. Today cap and focus
+ * session length are live.
  */
 
 export function PreferencesPage() {
@@ -65,6 +73,32 @@ export function PreferencesPage() {
     // invalidation, or a change made elsewhere).
     setDraftCap(storedCap);
   }, [storedCap]);
+
+  // ---- Focus session length (closed 25/45-minute preference) ----
+  const storedFocusMinutes =
+    appData?.focusSessionMinutes ?? FOCUS_SESSION_DEFAULT;
+  const [focusStatus, setFocusStatus] = useState<"idle" | "saving" | "error">(
+    "idle",
+  );
+  const [focusError, setFocusError] = useState<string | null>(null);
+
+  async function commitFocusMinutes(minutes: FocusSessionMinutes) {
+    if (minutes === storedFocusMinutes || focusStatus === "saving") return;
+    setFocusStatus("saving");
+    setFocusError(null);
+    try {
+      await saveFocusSessionMinutes({ minutes });
+      await queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+      setFocusStatus("idle");
+    } catch (error) {
+      setFocusStatus("error");
+      setFocusError(
+        error instanceof Error
+          ? error.message
+          : "Could not save focus session length.",
+      );
+    }
+  }
 
   async function commitCap(value: number) {
     const clamped = Math.max(TODAY_CAP_MIN, Math.min(TODAY_CAP_MAX, Math.round(value)));
@@ -125,6 +159,36 @@ export function PreferencesPage() {
           description="Switch the app to a dark theme. Respects your system setting on first visit."
           toggle={{ checked: theme === "dark", onChange: toggleTheme }}
         />
+      </section>
+
+      <section className="aa-settings-section">
+        <h2 className="aa-settings-sh">Focus</h2>
+        <Field
+          label="Focus session"
+          description="Choose the countdown used when you start a task. Each finished countdown is recorded separately from task completion."
+        >
+          <div
+            className="aa-settings-choice"
+            role="radiogroup"
+            aria-label="Focus session length"
+            aria-busy={focusStatus === "saving"}
+          >
+            {FOCUS_SESSION_OPTIONS.map((minutes) => (
+              <button
+                key={minutes}
+                type="button"
+                role="radio"
+                aria-checked={storedFocusMinutes === minutes}
+                className={`aa-settings-choice__option${storedFocusMinutes === minutes ? " is-selected" : ""}`}
+                onClick={() => void commitFocusMinutes(minutes)}
+                disabled={focusStatus === "saving"}
+              >
+                {minutes} min
+              </button>
+            ))}
+          </div>
+        </Field>
+        {focusError && <p className="aa-settings-error">{focusError}</p>}
       </section>
 
       <section className="aa-settings-section">

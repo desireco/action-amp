@@ -1,4 +1,9 @@
-import type { GetAppData, UpdateProfile, SaveTodayCap } from "wasp/server/operations";
+import type {
+  GetAppData,
+  UpdateProfile,
+  SaveTodayCap,
+  SaveFocusSessionMinutes,
+} from "wasp/server/operations";
 import { isEntitled } from "../billing/entitlements";
 
 /**
@@ -53,7 +58,12 @@ export const getAppData = (async (args, context) => {
   // fields, but the User entity delegate always does.
   const userRow = await context.entities.User.findUnique({
     where: { id: userId },
-    select: { lastTodayRolloverAt: true, todayCap: true, lastActiveAt: true },
+    select: {
+      lastTodayRolloverAt: true,
+      todayCap: true,
+      focusSessionMinutes: true,
+      lastActiveAt: true,
+    },
   });
   const lastRoll = userRow?.lastTodayRolloverAt ?? null;
   if (!lastRoll || isDifferentDay(lastRoll, new Date())) {
@@ -162,6 +172,9 @@ export const getAppData = (async (args, context) => {
     // enforced in saveTodayCap. The shell passes it through so TodayPage and
     // PreferencesPage read one shared value.
     todayCap: userRow?.todayCap ?? 5,
+    focusSessionMinutes: normalizeFocusSessionMinutes(
+      userRow?.focusSessionMinutes,
+    ),
   };
 }) satisfies GetAppData<
   { lensId?: string | null },
@@ -176,6 +189,7 @@ export const getAppData = (async (args, context) => {
       goals: number;
     };
     todayCap: number;
+    focusSessionMinutes: FocusSessionMinutes;
   }
 >;
 
@@ -258,3 +272,31 @@ export const saveTodayCap = (async (args, context) => {
 export const TODAY_CAP_DEFAULT = 5;
 export const TODAY_CAP_MIN = 3;
 export const TODAY_CAP_MAX = 12;
+
+export const FOCUS_SESSION_OPTIONS = [25, 45] as const;
+export type FocusSessionMinutes = (typeof FOCUS_SESSION_OPTIONS)[number];
+export const FOCUS_SESSION_DEFAULT: FocusSessionMinutes = 25;
+
+export function normalizeFocusSessionMinutes(
+  value: number | null | undefined,
+): FocusSessionMinutes {
+  return value === 45 ? 45 : FOCUS_SESSION_DEFAULT;
+}
+
+/** Store the closed-set Pomodoro duration used when opening new TaskSessions. */
+export const saveFocusSessionMinutes = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  if (!FOCUS_SESSION_OPTIONS.includes(args.minutes as FocusSessionMinutes)) {
+    throw new Error("Focus session must be 25 or 45 minutes.");
+  }
+  await context.entities.User.update({
+    where: { id: context.user.id },
+    data: { focusSessionMinutes: args.minutes },
+  });
+  return { ok: true as const };
+}) satisfies SaveFocusSessionMinutes<
+  { minutes: FocusSessionMinutes },
+  { ok: true }
+>;

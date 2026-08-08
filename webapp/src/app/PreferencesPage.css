@@ -96,9 +96,58 @@
   outline-offset: 2px;
 }
 
+/* ---- Focus session length ---- */
+.aa-settings-choice {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface-muted);
+}
+
+.aa-settings-choice__option {
+  min-width: 70px;
+  min-height: 32px;
+  border: 0;
+  border-radius: calc(var(--aa-radius-md) - 3px);
+  background: transparent;
+  color: var(--aa-text-3);
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  cursor: pointer;
+  transition:
+    background 0.12s var(--aa-ease-out),
+    color 0.12s var(--aa-ease-out);
+}
+
+.aa-settings-choice__option:hover:not(:disabled) {
+  color: var(--aa-text);
+}
+
+.aa-settings-choice__option.is-selected {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+
+.aa-settings-choice__option:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-settings-choice__option:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 @media (max-width: 480px) {
   .aa-settings-stepper {
     align-self: stretch;
     justify-content: flex-start;
+  }
+
+  .aa-settings-choice {
+    align-self: flex-start;
   }
 }

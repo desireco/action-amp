@@ -480,7 +480,15 @@ export const cliTaskStart = async (req: Request, res: Response, _context: unknow
     return res.status(400).json({ error: "An id is required." });
   }
   try {
-    const result = await startTaskCore(authEntities, { userId: user.id, id });
+    const prefs = await authEntities.User.findUnique({
+      where: { id: user.id },
+      select: { focusSessionMinutes: true },
+    });
+    const result = await startTaskCore(authEntities, {
+      userId: user.id,
+      id,
+      focusSessionMinutes: prefs?.focusSessionMinutes === 45 ? 45 : 25,
+    });
     return res.status(200).json(result);
   } catch (err) {
     return taskWriteError(res, err, "start");

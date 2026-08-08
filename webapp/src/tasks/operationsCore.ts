@@ -414,7 +414,11 @@ export async function updateTaskStatusCore(
 // the focus slot.
 export async function startTaskCore(
   entities: Entities,
-  { userId, id }: { userId: string; id: string },
+  {
+    userId,
+    id,
+    focusSessionMinutes,
+  }: { userId: string; id: string; focusSessionMinutes: 25 | 45 },
 ) {
   const task = await entities.Task.findUnique({
     where: { id },
@@ -436,13 +440,59 @@ export async function startTaskCore(
   });
   const now = new Date();
   await entities.TaskSession.create({
-    data: { taskId: id, userId, startedAt: now },
+    data: {
+      taskId: id,
+      userId,
+      startedAt: now,
+      plannedMinutes: focusSessionMinutes,
+      completed: false,
+    },
   });
   return await entities.Task.update({
     where: { id },
     data: { startedAt: now },
     select: { id: true, startedAt: true },
   });
+}
+
+/**
+ * Close a countdown that reached zero without completing or defocusing its
+ * Task. This is the key domain boundary: focus-session completion records a
+ * successful Pomodoro; Task completion remains explicit and separate.
+ */
+export async function completeFocusSessionCore(
+  entities: Entities,
+  { userId, id }: { userId: string; id: string },
+) {
+  const task = await entities.Task.findUnique({
+    where: { id },
+    select: { userId: true },
+  });
+  if (!task || task.userId !== userId) {
+    throw new Error("Task not found.");
+  }
+
+  const session = await entities.TaskSession.findFirst({
+    where: { taskId: id, userId, endedAt: null },
+    orderBy: { startedAt: "desc" },
+    select: { id: true, startedAt: true, plannedMinutes: true },
+  });
+  if (!session) return { completed: false as const };
+
+  const plannedMinutes = session.plannedMinutes === 45 ? 45 : 25;
+  const now = new Date();
+  const targetEnd = new Date(
+    session.startedAt.getTime() + plannedMinutes * 60_000,
+  );
+  if (now.getTime() < targetEnd.getTime()) {
+    throw new Error("Focus session is still running.");
+  }
+
+  await entities.TaskSession.update({
+    where: { id: session.id },
+    data: { endedAt: targetEnd, completed: true },
+  });
+  return { completed: true as const, endedAt: targetEnd };
 }
 
 export async function pauseTaskCore(

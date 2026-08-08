@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { getAppData, updateProfile, saveTodayCap } from "./operations";
+import {
+  getAppData,
+  updateProfile,
+  saveTodayCap,
+  saveFocusSessionMinutes,
+} from "./operations";
 import { mockContext } from "../test/mockContext";
 
 /**
@@ -37,6 +42,7 @@ describe("getAppData — happy path", () => {
     m.entities.User.findUnique.mockResolvedValue({
       lastTodayRolloverAt: new Date(),
       todayCap: 5,
+      focusSessionMinutes: 25,
       lastActiveAt: new Date(),
     });
     const lenses = [
@@ -70,6 +76,7 @@ describe("getAppData — happy path", () => {
         goals: 2,
       },
       todayCap: 5,
+      focusSessionMinutes: 25,
     });
 
     // Inbox is global (no lens) but only counts unprocessed items, matching
@@ -521,6 +528,31 @@ describe("saveTodayCap", () => {
     expect(m.entities.User.update).toHaveBeenCalledWith({
       where: { id: "user-1" },
       data: { todayCap: value },
+    });
+  });
+});
+
+describe("saveFocusSessionMinutes", () => {
+  it("rejects unauthenticated and unsupported durations", async () => {
+    await expect(
+      saveFocusSessionMinutes({ minutes: 25 }, mockContext(null).context),
+    ).rejects.toThrow(/Not authenticated/);
+
+    const m = mockContext();
+    await expect(
+      saveFocusSessionMinutes({ minutes: 30 as 25 }, m.context),
+    ).rejects.toThrow(/25 or 45/);
+    expect(m.entities.User.update).not.toHaveBeenCalled();
+  });
+
+  it.each([25, 45] as const)("persists %s minutes", async (minutes) => {
+    const m = mockContext();
+    const result = await saveFocusSessionMinutes({ minutes }, m.context);
+
+    expect(result).toEqual({ ok: true });
+    expect(m.entities.User.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { focusSessionMinutes: minutes },
     });
   });
 });

@@ -22,36 +22,36 @@ generator client {
 //   - Task defaults: size=M, priority=Normal, status=Someday (triage never auto-clutters Today).
 
 model User {
-  id             String @id @default(uuid())
-  fullName       String
-  firstName      String
-  preferredName  String? // set during onboarding; defaults to firstName when null
+  id                String  @id @default(uuid())
+  fullName          String
+  firstName         String
+  preferredName     String? // set during onboarding; defaults to firstName when null
   hasSeenOnboarding Boolean @default(false) // true once the user has completed/skipped /welcome (server-side, not localStorage)
 
   // Work-tracker entities
-  lenses     Lens[]
-  goals      Goal[]
-  projects   Project[]
-  tasks      Task[]
-  taskUpdates TaskUpdate[] // activity-log entries authored by this user
-  taskSessions TaskSession[] // focus-segment rows authored by this user
-  resources  Resource[]
-  inboxItems InboxItem[]
-  tags       Tag[]
-  feedback   Feedback[]
+  lenses            Lens[]
+  goals             Goal[]
+  projects          Project[]
+  tasks             Task[]
+  taskUpdates       TaskUpdate[] // activity-log entries authored by this user
+  taskSessions      TaskSession[] // focus-segment rows authored by this user
+  resources         Resource[]
+  inboxItems        InboxItem[]
+  tags              Tag[]
+  feedback          Feedback[]
   pushSubscriptions PushSubscription[]
-  apiKeys    ApiKey[] // Personal Access Tokens (CLI auth); deleted with the user
+  apiKeys           ApiKey[] // Personal Access Tokens (CLI auth); deleted with the user
   analyticsSessions AnalyticsSession[]
-  analyticsEvents AnalyticsEvent[]
+  analyticsEvents   AnalyticsEvent[]
 
   // ---- Daily Today reminder (Web Push) ----
   // Stored server-side so reminders remain reliable after the installed PWA is
   // closed. Time zone is supplied by the device whenever notification settings
   // are saved; time is local HH:mm.
-  dailyReminderEnabled Boolean @default(false)
-  dailyReminderTime    String  @default("09:00")
-  dailyReminderTimeZone String @default("UTC")
-  lastDailyReminderAt  DateTime?
+  dailyReminderEnabled  Boolean   @default(false)
+  dailyReminderTime     String    @default("09:00")
+  dailyReminderTimeZone String    @default("UTC")
+  lastDailyReminderAt   DateTime?
 
   // ---- Today cap (user-tunable, enforced globally across lenses) ----
   // The committed-for-today list ceiling. Default 5, range 3–12 (enforced in
@@ -59,12 +59,17 @@ model User {
   // to the merged cross-lens list, not per-lens.
   todayCap Int @default(5)
 
+  // ---- Focus-session length ----
+  // Pomodoro countdown duration selected in Preferences. The UI offers only
+  // 25 or 45 minutes; saveFocusSessionMinutes enforces that closed set.
+  focusSessionMinutes Int @default(25)
+
   // ---- Billing (Stripe) ----
   // Entitlement state. Mutated ONLY by the Stripe webhook (the source of
   // truth) — never by client actions. See docs/BILLING-INTEGRATION.md.
-  payments        Payment[]
-  plan            Plan    @default(FREE)
-  stripeCustomerId String?   // set on first checkout; links to the Stripe customer
+  payments         Payment[]
+  plan             Plan      @default(FREE)
+  stripeCustomerId String? // set on first checkout; links to the Stripe customer
   planRenewsAt     DateTime? // null for FREE + FOUNDER (lifetime); set by webhook for PRO
 
   // ---- Staff / dev bypass ----
@@ -73,7 +78,7 @@ model User {
   // Pro surfaces without a Stripe checkout. NOT surfaced in any UI; set via the
   // DB or scripts/create-verified-user.mjs --admin. Stripe remains the source of
   // truth for real plan state — this only adds a bypass, never overrides down.
-  isAdmin          Boolean @default(false)
+  isAdmin Boolean @default(false)
 
   // ---- Today rollover (lazy, on app load) ----
   // Tracks the last calendar day the Today→Upcoming rollover ran for this
@@ -88,21 +93,21 @@ model User {
   // lastActiveAt: throttled-stamped on app load (getAppData, 15-min window).
   // Null for legacy users until their next app open. Powers the admin
   // dashboard's active-today / 7d / 30d counts.
-  createdAt     DateTime @default(now())
-  lastActiveAt  DateTime?
+  createdAt    DateTime  @default(now())
+  lastActiveAt DateTime?
 }
 
 // A short-lived, single-use credential for passwordless email login. Codes and
 // link tokens are stored as hashes only; the raw values exist only in the email.
 model MagicLoginChallenge {
-  id        String   @id
-  email     String
-  codeHash  String
-  tokenHash String   @unique
-  expiresAt DateTime
+  id         String    @id
+  email      String
+  codeHash   String
+  tokenHash  String    @unique
+  expiresAt  DateTime
   consumedAt DateTime?
-  attempts  Int      @default(0)
-  createdAt DateTime @default(now())
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
 
   @@index([email, createdAt])
   @@index([expiresAt])
@@ -143,18 +148,18 @@ model Payment {
   userId String
 
   // Stripe references (for reconciliation / dedupe)
-  stripePaymentIntentId  String? @unique
-  stripeInvoiceId        String? @unique
+  stripePaymentIntentId   String? @unique
+  stripeInvoiceId         String? @unique
   stripeCheckoutSessionId String?
 
   // What they paid and what it granted
-  amount      Int    // in cents (Stripe convention)
+  amount      Int // in cents (Stripe convention)
   currency    String @default("usd")
-  plan        Plan   // the plan this payment granted
+  plan        Plan // the plan this payment granted
   description String // human label: "Pro Yearly", "Founding 100", etc.
 
-  status   PaymentStatus @default(PENDING)
-  paidAt   DateTime?
+  status PaymentStatus @default(PENDING)
+  paidAt DateTime?
 }
 
 enum PaymentStatus {
@@ -195,8 +200,8 @@ model Lens {
 // guard branches on kind, so renaming "Work" → "Studio" can't escape FREE gating.
 enum LensKind {
   PERSONAL // the seeded "Me" lens
-  WORK     // the seeded "Work" lens
-  CUSTOM   // user-defined (Pro only)
+  WORK // the seeded "Work" lens
+  CUSTOM // user-defined (Pro only)
 }
 
 // ============================================================
@@ -206,12 +211,12 @@ enum LensKind {
 // WHY they matter. Legacy direct-goal Tasks may exist, but new product flows
 // should align goals through Projects.
 model Goal {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   name        String
   permalink   String
   description String?
-  isDone      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isDone      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
   completedAt DateTime?
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -220,8 +225,8 @@ model Goal {
   lens   Lens   @relation(fields: [lensId], references: [id], onDelete: Cascade)
   lensId String
 
-  projects  Project[]
-  tasks     Task[]     // legacy direct-goal tasks
+  projects Project[]
+  tasks    Task[] // legacy direct-goal tasks
 
   @@unique([userId, name]) // unique goal names per user
   @@unique([userId, permalink])
@@ -252,7 +257,7 @@ model Project {
   lens   Lens   @relation(fields: [lensId], references: [id], onDelete: Cascade)
   lensId String
 
-  goal   Goal?  @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  goal   Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
   goalId String?
 
   tasks     Task[]
@@ -272,19 +277,19 @@ model Project {
 //           happened), read in Logbook + future Review. Markdown like content.
 // updates: an activity log of status notes / progress over time.
 model Task {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   description String // the title — what to do
   permalink   String // stable human-readable route key
   content     String? // Context — longer notes / markdown body
   outcome     String? // Outcome — captured at completion, read in Logbook/Review
-  isDone      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isDone      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
   completedAt DateTime?
   startedAt   DateTime? // non-null = "Now" (in progress); null = "Next" (candidate). Cleared on done/defer/pause.
 
   // ---- Focus attributes (read by the Next engine) ----
   priority Priority   @default(NORMAL) // primary sort key
-  size     Size       @default(M)      // secondary signal + XL break-down nudge
+  size     Size       @default(M) // secondary signal + XL break-down nudge
   status   TaskStatus @default(SOMEDAY) // TODAY | UPCOMING | SOMEDAY (pre-filters focus)
   dueDate  DateTime?
   order    Int        @default(0) // manual sort order within a list
@@ -298,11 +303,11 @@ model Task {
   project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   projectId String?
 
-  goal   Goal?  @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  goal   Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
   goalId String?
 
-  tags   Tag[]
-  updates TaskUpdate[] // activity log / progress notes
+  tags     Tag[]
+  updates  TaskUpdate[] // activity log / progress notes
   sessions TaskSession[] // per-task focus-segment accounting (the clock totals)
 
   @@unique([userId, permalink])
@@ -380,9 +385,11 @@ enum TaskUpdateKind {
 // stays pure accounting. Single open session per task is the invariant,
 // enforced by close-before-open in startTask/pauseTask/completeTaskFromFocus.
 model TaskSession {
-  id        String   @id @default(uuid())
-  startedAt DateTime @default(now())
-  endedAt   DateTime? // null = open/active; set on pause/complete
+  id             String    @id @default(uuid())
+  startedAt      DateTime  @default(now())
+  endedAt        DateTime? // null = open/active; set on pause/complete
+  plannedMinutes Int? // 25 or 45 for recorded Pomodoro sessions; null on legacy rows
+  completed      Boolean   @default(false) // true only when countdown reaches zero
 
   task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId String
@@ -415,7 +422,7 @@ model Feedback {
   // accepts this; the UUID id is the real PK). Crockford base32, `XXXX-XXXX`,
   // minted at submit time via uniqueShortId + enforced unique here. Backfill:
   // existing rows get a generated value in the migration.
-  shortId   String   @unique
+  shortId String @unique
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
@@ -439,8 +446,8 @@ model Feedback {
   // questions without a round-trip to the reporter. Both one-liners from the
   // browser, captured once at submit via the shared captureFeedbackContext
   // helper. Optional: old rows + non-browser submits stay valid.
-  viewport  String?   // innerWidth x innerHeight, e.g. "1440x900"
-  timezone  String?   // IANA tz, e.g. "America/Toronto"
+  viewport String? // innerWidth x innerHeight, e.g. "1440x900"
+  timezone String? // IANA tz, e.g. "America/Toronto"
 
   // Soft-delete: an admin can remove a feedback row from the triage surfaces
   // (dashboard table, admin-cli list) without losing the record. When set,
@@ -459,20 +466,20 @@ model Feedback {
 // inbox, email, or name content in it. StatCounter remains anonymous/browser
 // reporting; this ledger powers the authenticated admin Funnel workspace.
 model AnalyticsSession {
-  id             String   @id @default(uuid())
-  visitorId      String   @unique
-  userId         String?
-  firstSeenAt    DateTime @default(now())
-  lastSeenAt     DateTime @updatedAt
-  referrerHost   String?
-  utmSource      String?
-  utmMedium      String?
-  utmCampaign    String?
-  utmContent     String?
-  utmTerm        String?
-  initialPath    String?
-  deviceClass    String?
-  createdAt      DateTime @default(now())
+  id           String   @id @default(uuid())
+  visitorId    String   @unique
+  userId       String?
+  firstSeenAt  DateTime @default(now())
+  lastSeenAt   DateTime @updatedAt
+  referrerHost String?
+  utmSource    String?
+  utmMedium    String?
+  utmCampaign  String?
+  utmContent   String?
+  utmTerm      String?
+  initialPath  String?
+  deviceClass  String?
+  createdAt    DateTime @default(now())
 
   user   User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   events AnalyticsEvent[]
@@ -482,14 +489,14 @@ model AnalyticsSession {
 }
 
 model AnalyticsEvent {
-  id          String             @id @default(uuid())
-  name        AnalyticsEventName
-  occurredAt  DateTime           @default(now())
-  route       String?
-  appVersion  String?
-  metadata    Json?
-  sessionId   String
-  userId      String?
+  id         String             @id @default(uuid())
+  name       AnalyticsEventName
+  occurredAt DateTime           @default(now())
+  route      String?
+  appVersion String?
+  metadata   Json?
+  sessionId  String
+  userId     String?
 
   session AnalyticsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   user    User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -547,14 +554,14 @@ model Resource {
 // section. Capture is cheap and lossless; people shouldn't lose a note for
 // declining to act on it.
 model InboxItem {
-  id        String   @id @default(uuid())
-  text      String // raw captured text
-  title     String?  // structured title from an Android share (normal capture leaves this null)
-  content   String?  // structured body from an Android share
-  sourceUrl String?  // attached source link from an Android share
-  status    InboxItemStatus @default(UNPROCESSED)
+  id         String          @id @default(uuid())
+  text       String // raw captured text
+  title      String? // structured title from an Android share (normal capture leaves this null)
+  content    String? // structured body from an Android share
+  sourceUrl  String? // attached source link from an Android share
+  status     InboxItemStatus @default(UNPROCESSED)
   archivedAt DateTime? // set when status → ARCHIVED (the Logbook sorts on this)
-  createdAt DateTime @default(now())
+  createdAt  DateTime        @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
@@ -564,8 +571,8 @@ model InboxItem {
   parsedPriority Priority?
   parsedSize     Size?
   parsedTags     String[] // raw tag strings: ["#work"] — grammar v2: @ is time-only, extra # mentions are tags
-  parsedProject  String?  // first # mention / explicit autocomplete pick (resolved to projectId at triage)
-  parsedLens     String?  // lens token from `[[name]]` (lowercased); resolved against the user's lenses at triage
+  parsedProject  String? // first # mention / explicit autocomplete pick (resolved to projectId at triage)
+  parsedLens     String? // lens token from `[[name]]` (lowercased); resolved against the user's lenses at triage
   attachments    InboxAttachment[]
 }
 
@@ -611,14 +618,14 @@ model Tag {
 // — scoping/expiresAt are deferred (revocation is the safety valve). See
 // docs/specs/cli-pat-plumbing.md.
 model ApiKey {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   // SHA-256 hash of the plaintext token (deterministic so the inbound Bearer
   // token can be looked up by re-hashing). NOT argon2id — tokens are looked
   // up by hash, which requires determinism; argon2id's random salt makes that
   // impossible. See src/auth/pat.ts for the full reasoning.
-  hashedToken String   @unique
+  hashedToken String    @unique
   label       String // user-supplied name ("laptop", "ci", …)
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   lastUsedAt  DateTime? // stamped on every successful /api/cli/* auth
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

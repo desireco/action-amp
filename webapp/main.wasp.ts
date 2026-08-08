@@ -9,7 +9,7 @@ import { BillingPage } from "./src/app/BillingPage" with { type: "ref" };
 import { PreferencesPage } from "./src/app/PreferencesPage" with { type: "ref" };
 import { LensesPage } from "./src/lenses/LensesPage" with { type: "ref" };
 import { TaskDetailPage } from "./src/tasks/TaskDetailPage" with { type: "ref" };
-import { getTask, getTasks, getTodayTasks, getDoneToday, getTopTask, getFocusedTask, toggleTaskDone, updateTaskStatus, unscheduleOverdueTasks, snoozeTask, startTask, pauseTask, addTaskUpdate, updateTaskContent, updateTaskDetails, setTaskOutcome, completeTaskFromFocus } from "./src/tasks/operations" with { type: "ref" };
+import { getTask, getTasks, getTodayTasks, getDoneToday, getTopTask, getFocusedTask, toggleTaskDone, updateTaskStatus, unscheduleOverdueTasks, snoozeTask, startTask, pauseTask, completeFocusSession, addTaskUpdate, updateTaskContent, updateTaskDetails, setTaskOutcome, completeTaskFromFocus } from "./src/tasks/operations" with { type: "ref" };
 import { getProjects } from "./src/projects/operations" with { type: "ref" };
 import { createProject } from "./src/projects/operations" with { type: "ref" };
 import { getProject, createTask } from "./src/projects/operations" with { type: "ref" };
@@ -31,7 +31,7 @@ import { LogbookPage } from "./src/logbook/LogbookPage" with { type: "ref" };
 import { ensureOnboarded, setPreferredName, completeOnboarding } from "./src/onboarding/operations" with { type: "ref" };
 import { createLens, updateLens, deleteLens } from "./src/lenses/operations" with { type: "ref" };
 import { getLenses } from "./src/lenses/operations" with { type: "ref" };
-import { getAppData, updateProfile, saveTodayCap } from "./src/app/operations" with { type: "ref" };
+import { getAppData, updateProfile, saveTodayCap, saveFocusSessionMinutes } from "./src/app/operations" with { type: "ref" };
 import { getNotificationPreferences, saveDailyReminder, savePushSubscription } from "./src/notifications/operations" with { type: "ref" };
 import { sendDailyTodayReminder } from "./src/notifications/dailyReminderJob" with { type: "ref" };
 import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
@@ -249,13 +249,14 @@ export default app({
     query(getTodayTasks, { entities: ["Task", "Lens"], auth: true }),
     query(getDoneToday, { entities: ["Task", "Lens"], auth: true }),
     query(getTopTask, { entities: ["Task", "Lens"], auth: true }),
-    query(getFocusedTask, { entities: ["Task", "TaskSession"], auth: true }),
+    query(getFocusedTask, { entities: ["Task", "TaskSession", "User"], auth: true }),
     action(toggleTaskDone, { entities: ["Task"], auth: true }),
     action(updateTaskStatus, { entities: ["Task"], auth: true }),
     action(unscheduleOverdueTasks, { entities: ["Task", "Lens"], auth: true }),
     action(snoozeTask, { entities: ["Task"], auth: true }),
-    action(startTask, { entities: ["Task", "TaskSession"], auth: true }),
+    action(startTask, { entities: ["Task", "TaskSession", "User"], auth: true }),
     action(pauseTask, { entities: ["Task", "TaskSession"], auth: true }),
+    action(completeFocusSession, { entities: ["Task", "TaskSession"], auth: true }),
     action(addTaskUpdate, { entities: ["Task", "TaskUpdate"], auth: true }),
     action(updateTaskContent, { entities: ["Task"], auth: true }),
     action(setTaskOutcome, { entities: ["Task"], auth: true }),
@@ -283,6 +284,7 @@ export default app({
     query(getAppData, { entities: ["User", "Lens", "InboxItem", "Task", "Project", "Goal"], auth: true }),
     action(updateProfile, { entities: ["User"], auth: true }),
     action(saveTodayCap, { entities: ["User"], auth: true }),
+    action(saveFocusSessionMinutes, { entities: ["User"], auth: true }),
     query(getNotificationPreferences, { entities: ["User"], auth: true }),
     action(savePushSubscription, { entities: ["PushSubscription"], auth: true }),
     action(saveDailyReminder, { entities: ["User"], auth: true }),

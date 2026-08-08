@@ -9,6 +9,7 @@ import {
   getTopTaskData,
   toggleTaskDoneCore,
   pauseTaskCore,
+  completeFocusSessionCore,
 } from "./operationsCore";
 import { mockContext } from "../test/mockContext";
 
@@ -376,5 +377,37 @@ describe("pauseTaskCore", () => {
       where: { id: "task-1" },
       select: { userId: true },
     });
+  });
+});
+
+describe("completeFocusSessionCore", () => {
+  it("rejects completion before the planned duration", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.TaskSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      startedAt: new Date(),
+      plannedMinutes: 25,
+    });
+
+    await expect(
+      completeFocusSessionCore(m.entities, {
+        userId: "user-1",
+        id: "task-1",
+      }),
+    ).rejects.toThrow(/still running/i);
+  });
+
+  it("is idempotent when no session is open", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    m.entities.TaskSession.findFirst.mockResolvedValue(null);
+
+    await expect(
+      completeFocusSessionCore(m.entities, {
+        userId: "user-1",
+        id: "task-1",
+      }),
+    ).resolves.toEqual({ completed: false });
   });
 });
