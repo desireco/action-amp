@@ -7,16 +7,18 @@
 Review now has four destinations instead of one overloaded history surface:
 
 - **Today** closes the day with named accomplishments and one optional memory.
-- **Week** connects work to Goals and Projects, summarizes effort neutrally,
-  and offers at most five explicit loose-item decisions.
-- **Month** leads with completed Goals, shows the month's weekly shape, and
-  supports one optional next-month Goal emphasis.
+- **Week** connects work to Goals and Projects, leads with up to five completed
+  Medium/Large actions, counts all completed actions by Lens, and summarizes
+  effort neutrally.
+- **Month** leads with completed Goals and up to five completed Medium/Large
+  actions, counts all completed actions by Lens, shows the month's weekly shape,
+  and supports one optional next-month Goal emphasis.
 - **Logbook** remains the chronological record and cannot be disabled.
 
 Preferences now expose independent Today, Week, and Month switches. All default
 on. Turning one off changes navigation only; it deletes no review or completion
-data. Review drafts, completed snapshots, and post-close updates persist through
-the new `Review` model.
+data. Review responses autosave through the new `Review` model. Only Today has
+an explicit close action and completed snapshot.
 
 ## Gates run
 
@@ -30,7 +32,8 @@ the new `Review` model.
 - **Full unit/component suite:** 900/900 pass across 67 files after shared
   Project/Task fixtures and concurrent command-palette assertions were repaired.
 - **Prototype browser QA:** pass for cadence switching, dense task disclosure,
-  decisions, autosave, settings/nav adaptation, desktop/mobile, and light/dark.
+  accomplishment highlights, autosave, settings/nav adaptation, desktop/mobile,
+  and light/dark.
 - **Live-app browser smoke:** pass on the running development server for Today,
   Week, and Month routes, desktop and mobile layouts, with zero console errors.
   A dedicated automated Review E2E remains deferred.
@@ -46,8 +49,8 @@ the new `Review` model.
 3. **Focus accounting:** sessions crossing a review boundary were counted in
    full. They are clipped to the period and aggregated by Lens, so filters remain
    accurate.
-4. **Async recovery:** failed decision actions and failed review queries now
-   produce visible recovery states instead of silent rejection or an empty page.
+4. **Async recovery:** failed review queries produce visible recovery states
+   instead of silent rejection or an empty page.
 5. **Month emphasis:** a saved completed Goal remains displayable while new
    choices are limited to active Goals.
 6. **Coverage gaps:** added all eight preference combinations, shortcut typing
@@ -63,8 +66,8 @@ the new `Review` model.
       honest Goal/Project/Lens grouping.
 - [x] Completed Goals receive the strongest calm visual emphasis; no streaks,
       scores, confetti, nags, or judgmental comparisons.
-- [x] Optional autosaved reflection, stable completed snapshots, and safe
-      refresh when new work lands in an already reviewed active period.
+- [x] Optional autosaved reflection for every cadence, no Week/Month close
+      action, and stable completed snapshots for Today closure.
 - [x] Monday weeks, calendar months, IANA zones, and 23/25-hour days tested.
 - [x] Keyboard suppression, responsive layout, dark mode, and reduced-motion
       treatment implemented and covered by component/static-browser checks.

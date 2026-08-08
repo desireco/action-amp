@@ -338,9 +338,10 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
 - **weekly-monthly-review** (`shipped` 2026-08-08) — Review now has distinct
   Today, Week, and Month debriefs plus the unchanged Logbook. All cadences show
   completed Goals, Projects, and every Task across Lenses; Week and Month lead
-  with up to five completed Medium/Large actions, and Month adds next-month Goal
-  emphasis. Optional reflections autosave into a new `Review` record; only Today
-  needs an explicit close and historical snapshot. Settings independently enable each cadence
+  with up to five completed Medium/Large actions and count all completed actions
+  by Lens; Month adds next-month Goal emphasis. Optional reflections autosave
+  into a new `Review` record; only Today needs an explicit close and historical
+  snapshot. Settings independently enable each cadence
   (all on by default); navigation and direct-route guards honor every toggle
   combination. IANA-zone period helpers cover Monday weeks, calendar months,
   and DST days. Available to all accounts; no streaks, scores, reminders,

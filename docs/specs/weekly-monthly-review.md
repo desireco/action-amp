@@ -113,6 +113,7 @@ Every cadence uses a common frame while keeping distinct content:
 - completed Goal celebration, when present;
 - completed Project recognition, when present;
 - complete task evidence with Outcome text when available;
+- completed Task counts by Lens in Week and Month;
 - optional reflection fields;
 - autosave for every reflection field;
 - a closing action and “Reviewed” state for Today only.
@@ -202,7 +203,9 @@ navigable.
 5. **Actions completed** — up to five completed Medium/Large Tasks, with Large
    first and the most recent within each size. Show title, project/goal context,
    completion date, and Outcome when present.
-6. **Optional reflection** — two prompts; responses autosave:
+6. **Completed actions by Lens** — count every completed Task in the period,
+   grouped by Lens. The in-page Lens filter scopes these counts.
+7. **Optional reflection** — two prompts; responses autosave:
    - “What moved forward?”
    - “What should change next week?”
 
@@ -247,11 +250,13 @@ Calendar month in the user’s time zone. Default is the current month, labeled
 6. **Actions completed** — up to five completed Medium/Large Tasks, with Large
    first and the most recent within each size. This provides a deliberate
    accomplishment summary before the complete history.
-7. **Optional reflection** — three prompts; responses autosave:
+7. **Completed actions by Lens** — count every completed Task in the month,
+   grouped by Lens. The in-page Lens filter scopes these counts.
+8. **Optional reflection** — three prompts; responses autosave:
    - “What are you proud of?”
    - “What did this month teach you?”
    - “What deserves attention next month?”
-8. **Choose next-month emphasis** — optional single Goal selection. This does
+9. **Choose next-month emphasis** — optional single Goal selection. This does
    not silently reorder Projects or override the Next matcher; it is stored as
    review reflection until a separate planning decision defines product effect.
 

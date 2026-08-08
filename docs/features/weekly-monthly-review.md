@@ -21,8 +21,8 @@ weeks run Monday–Sunday and month boundaries follow the local calendar.
 **Evidence.** Completed Goals receive the strongest calm treatment, followed
 by completed Projects and every completed Task. Tasks retain Outcome,
 Goal/Project, Lens, and completion-time context. Week/Month can filter by Lens
-without splitting the ritual. Recorded focus time is derived from overlapping
-completed Task sessions.
+without splitting the ritual, and count completed actions by Lens. Recorded
+focus time is derived from overlapping completed Task sessions.
 
 **Cadence differences.** Today has one optional memory prompt and a Close today
 action. Week and Month lead with up to five completed Medium/Large actions,

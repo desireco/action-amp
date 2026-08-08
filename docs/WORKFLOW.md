@@ -148,8 +148,9 @@ appears in Work/Planning/Review except by coming through triage.
   reflection rhythms: daily closure, weekly alignment, and monthly direction.
   Each shows completed Goals first, completed Projects, and every completed
   Task with its Outcome. Week and Month highlight up to five completed
-  Medium/Large actions before the full history; Month also offers a next-month
-  Goal emphasis. Reflections are optional and autosaved.
+  Medium/Large actions before the full history and count all completed actions
+  by Lens; Month also offers a next-month Goal emphasis. Reflections are
+  optional and autosaved.
 - Cadence reviews are universal across Lenses, like Today. Rows keep Lens
   provenance and Week/Month offer an in-page Lens filter. This is the deliberate
   exception to the active-Lens rule; a person should not need separate rituals
