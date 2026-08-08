@@ -7,11 +7,11 @@ priority: P2
 feature: task-fields
 spec_owner: discover
 build_owner: build
-reverses: resources-project-owned.md   # on the Task↔Resource link question (see §Resource linking)
+reverses: resources-project-owned.md # on the Task↔Resource link question (see §Resource linking)
 created: 2026-07-04
 
 # sync-managed (do not hand-edit; written by duet sync):
-gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsep      # sync-managed (write-once)
+gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsep # sync-managed (write-once)
 gh_synced_at: 2026-07-08T19:30:30Z
 ---
 
@@ -32,17 +32,17 @@ what to do", `schema.prisma:202`). When a task needs more there is nowhere to
 put it — not before, not after. This spec adds two optional, markdown-rendered
 fields that bookend a task's life:
 
-- **Context** — what you need *to do* it. Background, rationale, the spec link,
+- **Context** — what you need _to do_ it. Background, rationale, the spec link,
   pointers to the resources you'll need. Captured anytime; read in Focus mode
   and Task detail.
-- **Outcome** — what *happened*. Captured at completion (optional, never
+- **Outcome** — what _happened_. Captured at completion (optional, never
   mandatory); read in the Logbook and future Review.
 
 Both stay invisible when empty. A one-line task remains a one-line task.
 
 ## Why
 
-The product's wedge is *the one task that matters* (`NextCard.tsx:38-49`).
+The product's wedge is _the one task that matters_ (`NextCard.tsx:38-49`).
 Surfacing the task is half the job. The other half — having what you need to
 act, and remembering what came of it — lives nowhere in the app today. It lives
 in the tab you forgot to open, the doc you can't find, the chat you scrolled
@@ -53,13 +53,13 @@ past, and the memory you lose a week later.
 - **Outcome** is for review. ADHD brains re-litigate completed work ("did I
   actually finish anything today?"). A short note captured at completion gives
   Review and the Logbook something honest to show — not a streak, not a badge,
-  just *what happened*, in your own words, when it was fresh. It is never
+  just _what happened_, in your own words, when it was fresh. It is never
   required; the field exists for when it's interesting.
 
 ## Decisions locked
 
 - **Context reuses `Task.content`.** The field already exists
-  (`schema.prisma:202`, *"longer notes / markdown body"*), is already read by
+  (`schema.prisma:202`, _"longer notes / markdown body"_), is already read by
   `getTask` / `getTopTask`, and is already rendered in Focus mode
   (`FocusMode.tsx:56`). A new column would duplicate it and break the schema's
   naming convention (Goal/Project → `description`; Resource → `notes`; Task →
@@ -102,14 +102,14 @@ past, and the memory you lose a week later.
 
 - **Why reverse it.** With Context as the markdown home for "what you need to
   do this task," a parallel structured-attachment mechanism becomes redundant —
-  a task would have two places resources appear (Context prose links *and* a
+  a task would have two places resources appear (Context prose links _and_ a
   linked-resources list). Markdown links keep everything in one writable
   surface, need no schema change, and match how people actually reference
   things while writing. The cost is real and accepted: **renaming or deleting a
   Resource silently breaks Context links** — no query, no "tasks using this"
   surface. That trade-off was chosen with eyes open.
 
-- **What stays from `resources-project-owned.md`.** The *non*-TaskResource
+- **What stays from `resources-project-owned.md`.** The _non_-TaskResource
   parts of that spec are untouched: Resources becoming **project-owned**
   (`projectId` required, `NOT NULL`, `goalId` removed), the Resources section
   on Project detail (add/edit/delete), and the delete-with-impact flow all
@@ -153,7 +153,7 @@ past, and the memory you lose a week later.
 
 - [ ] `toggleTaskDone` (`tasks/operations.ts:97-113`) accepts an optional
       `outcome?: string` arg, written **only when marking done** (`next ===
-      true`). Un-completing a task does **not** clear an existing `outcome`
+    true`). Un-completing a task does **not** clear an existing `outcome`
       (you might re-complete with a new note — last write wins, but the prior
       note isn't blown away merely by toggling).
 - [ ] Alternatively (Build's call): a separate `setTaskOutcome({ id, outcome })`
@@ -188,10 +188,9 @@ past, and the memory you lose a week later.
 
 ### F. Capture — Outcome at completion
 
-- [ ] Completing a task surfaces an optional Outcome affordance. Exact surface
-      is Build's call (a sheet on completion, a prompt on the completion
-      circle, or a field revealed on the just-completed card) — but it must
-      appear **at the moment of completion**, not only after the fact.
+- [ ] Completing a task surfaces an optional Outcome affordance. The shipped
+      Focus surface reveals **How did it go?** in the existing notes area; it
+      must appear **at the moment of completion**, not only after the fact.
 - [ ] Skipping is one keystroke / click; the task completes regardless.
 - [ ] Outcome remains editable afterward (via Task detail, and visible in the
       Logbook).
@@ -224,7 +223,7 @@ past, and the memory you lose a week later.
   for the list.
 - **No rich-text / WYSIWYG editor.** Markdown source in, rendered markdown out.
 - **No Outcome on incomplete tasks.** Outcome is captured/edited freely but
-  only becomes *meaningful* on completed tasks; the read surface (Logbook)
+  only becomes _meaningful_ on completed tasks; the read surface (Logbook)
   shows it only for done tasks.
 - **No mandatory Outcome.** Ever. Completion never gates on it.
 - **No streaks / badges / completion score.** Outcome is prose for review, not

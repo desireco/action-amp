@@ -4,7 +4,7 @@ title: "Focus mode (single-task surface)"
 feature_area: focus
 status: shipped
 spec: —
-verified: 2026-07-05
+verified: 2026-08-07
 ---
 
 # Focus mode
@@ -13,17 +13,23 @@ verified: 2026-07-05
 `main.wasp.ts:108`), entered from Next's one-tap "Start" or from any task row.
 Hides the sidebar; no counts, no list — just the one task. Esc exits.
 
-**Shipped 2026-07-05 (Variant F).** The redesigned focus screen:
-- **Two-number margin clock** — live session timer + honest total (the
-  cumulative time across pause/resume segments, sourced from the
-  `TaskSession` model — see `task-notes-completion-log`).
-- **Summoned composer** — the notes thread is always visible; the composer
-  appears on demand rather than permanently.
-- **Confirm-on-complete** — the Done button was renamed to "Complete" and
-  now asks for confirmation; completion writes a `TaskUpdate` with
-  `kind=COMPLETED`.
-- **Session accounting** — start/pause/complete maintain `TaskSession` rows
-  (`schema.prisma:311`) so the clock total is honest across interruptions.
+**Revised 2026-08-07 (centered focus session).** The focus screen:
+
+- **Centered countdown ring** — one 25- or 45-minute Pomodoro control replaces
+  both the detached margin clock and ambiguous completion circle. The ring owns
+  time and pause/resume only.
+- **Explicit Task actions** — Add note, Pause, and Complete task sit together
+  below the title and clarification. Completion no longer hides behind a circle.
+- **One inline composer** — the notes thread is always visible; the composer
+  appears on demand rather than permanently. Add note opens a progress prompt.
+  Complete opens the same notes-area surface with a leading **How did it go?**
+  question and optional Outcome. **Keep working** dismisses it; **Complete
+  task** finishes without a modal or backdrop. Completion writes a `TaskUpdate`
+  with `kind=COMPLETED`.
+- **Recorded sessions** — start stores `plannedMinutes`; countdown completion
+  closes the row with `completed=true`; manual pause closes it incomplete. A
+  completed focus session never completes the Task. Completed sessions appear
+  as a small timer symbol and count inside the ring, scoped to the current Task.
 - **Dedicated route** (replaces the old overlay invocation) — `NextPage`
   and `ProjectDetailPage` `navigate("/app/focus")` into it.
 
@@ -33,5 +39,5 @@ Hides the sidebar; no counts, no list — just the one task. Esc exits.
 **Files.** `app/FocusRoute.tsx`, `app/FocusMode.tsx`; segment accounting in
 `tasks/operations.ts` (`startTask`/`pauseTask`/`toggleTaskDone`).
 
-**Done?** Shipped for the Variant F scope. Pomodoro / hard full-screen modes
-remain Phase 2 (Icebox).
+**Done?** Shipped. Focus timer and explicit action hierarchy are live; broader
+hard-mode work remains separate.

@@ -53,6 +53,12 @@
 > sequencing — projects under a goal sort by `order` then name; the first
 > non-done project surfaces as "Next: <name>". See `docs/specs/task-notes-
 > completion-log.md` and `docs/specs/done/goal-planning.md`.
+>
+> v7 (2026-08-07): **Recorded focus sessions.** `User.focusSessionMinutes`
+> stores the 25/45-minute preference. `TaskSession.plannedMinutes` records the
+> selected duration at session start, while `TaskSession.completed` distinguishes
+> a full countdown from a manual pause. Timer completion closes the session but
+> leaves the Task in focus; Task completion remains a separate action.
 
 ---
 
@@ -66,7 +72,7 @@
                    (Projects under a Goal sort by `Project.order` then name)
              ├─ Task        ← an atomic action (THE focus candidate)
              │    ├─ TaskUpdate   ← append-only notes/activity log (kind = NOTE | COMPLETED)
-             │    └─ TaskSession  ← per-task focus-segment accounting (startedAt/endedAt)
+             │    └─ TaskSession  ← recorded focus session (start/end, planned minutes, completed)
              └─ Resource    ← reference material, not an action  [PARA Resource]
 
   Tag             ← GTD "@context": #errands, #phone, ~15m, low-energy

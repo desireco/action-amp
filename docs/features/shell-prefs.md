@@ -4,7 +4,7 @@ title: "Shell, nav, shortcuts, dark mode, settings"
 feature_area: foundation
 status: shipped
 spec: —
-verified: 2026-07-03
+verified: 2026-08-07
 ---
 
 # Shell, nav, shortcuts, dark mode, settings
@@ -23,8 +23,8 @@ Esc close.
 
 **Settings** (`app/SettingsPage.tsx`) — Account (name/email/call-me + log out;
 "change email/password/delete account coming soon"). **Preferences**
-(`app/PreferencesPage.tsx`) — Today cap, completion sounds, Momentum counter are
-**stubs** with "soon" chips (not fake toggles).
+(`app/PreferencesPage.tsx`) — Today cap and focus-session length (25 or 45
+minutes) are live. Completion sounds and Momentum remain honest "soon" stubs.
 
 **Files.** `app/AppShell.tsx`; `app/SettingsPage.tsx`; `app/PreferencesPage.tsx`;
 `app/useKeyboardShortcuts.ts`; `components/ui/ShortcutCheatsheet.tsx`.

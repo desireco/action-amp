@@ -3,13 +3,13 @@
 > Status: CANONICAL — 2026-06-23
 > Authority for: the app's area structure, what lives where, and how items move
 > between areas. When this document conflicts with `FEATURES.md`, `PAGES.md`,
-> `DATA-MODEL.md`, or `TRIAGE.md` on *structure* (areas, contexts, destinations),
+> `DATA-MODEL.md`, or `TRIAGE.md` on _structure_ (areas, contexts, destinations),
 > **this document wins** and those are due for update.
 >
 > See "Decisions locked" (§5) for the resolved structural calls and
 > "Code work implied" (§7) for the follow-up build items.
 > When this document conflicts with `FEATURES.md`, `PAGES.md`,
-> `DATA-MODEL.md`, or `TRIAGE.md` on *structure* (areas, contexts, destinations),
+> `DATA-MODEL.md`, or `TRIAGE.md` on _structure_ (areas, contexts, destinations),
 > **this document wins.**
 
 ## 1. The mental model
@@ -58,7 +58,7 @@ appears in Work/Planning/Review except by coming through triage.
   have no sigil — the resolver matches them from free text (a matched project
   carries its Project + Lens into triage Classify). See `docs/specs/done/capture-grammar.md`.
 - Capture never asks "where does this go?" — that's triage's job. But capture
-  *can* hint: `[[work]]` / `[[personal]]` / `[[custom]]` preselects the Lens on
+  _can_ hint: `[[work]]` / `[[personal]]` / `[[custom]]` preselects the Lens on
   triage's Classify step, and a matched Project can supply both Project and
   Lens. Capture is about speed (target: thought → inbox in under 2 seconds).
 
@@ -114,10 +114,13 @@ appears in Work/Planning/Review except by coming through triage.
   Now state) is preserved.
 - This is the only area with a focus mode. Focus is a **dedicated route**
   (`/app/focus`, `FocusRoute` in `main.wasp.ts`) entered from Next's one-tap "Start"
-  or any task row's focus affordance. The redesigned screen (Variant F, locked
-  2026-07-05) carries a **two-number margin clock** — live session + honest
-  total sourced from `TaskSession` rows — a **summoned composer** for notes,
-  and **confirm-on-complete**. Completing a task from focus appends a
+  or any task row's focus affordance. The centered-session redesign (locked
+  2026-08-07) removes the detached margin clock. One large centered countdown
+  ring carries the user's 25- or 45-minute focus-session preference and the
+  pause/resume control. Task title, task clarification, and explicit Note / Pause /
+  Complete actions follow in one centered decision path. A completed countdown
+  closes and marks its `TaskSession` complete without completing the Task; another
+  focus session can begin on the same Task. Completing the Task still appends a
   `kind=COMPLETED` row to the task's `TaskUpdate` thread while leaving
   `status` untouched (so Today's Done section stays accurate). See
   `docs/features/focus-mode.md` + `docs/features/task-notes-completion-log.md`.
@@ -136,7 +139,7 @@ appears in Work/Planning/Review except by coming through triage.
   re-link; completed Goals surface in the Logbook with a Reopen affordance.
 - **Someday** lives here (pending confirmation — §5): items with no date and no
   commitment, kept for "when I'm ready." A planning concept, not a working one.
-- Creating Projects and Goals happens here (not in triage — triage *files into*
+- Creating Projects and Goals happens here (not in triage — triage _files into_
   them; Shift+P / last-picker-row is the one bridge, which navigates here).
 
 ### 2.5 Review / Reporting Area — reflection
@@ -147,7 +150,7 @@ appears in Work/Planning/Review except by coming through triage.
   completed tasks (each carrying a `kind=COMPLETED` `TaskUpdate` since
   2026-07-05), past projects, **completed goals** (since 2026-07-05, with
   Reopen), and **archived notes** ("I will not do now" from triage — kept
-  lossless, restorable to the inbox). This area is the *view over it* (counts,
+  lossless, restorable to the inbox). This area is the _view over it_ (counts,
   trends — kept calm, no guilt-trip red dots, no streaks).
 - The activity log itself (`TaskUpdate` rows, kind = NOTE | COMPLETED) is the
   substrate the future Review v2 activity timeline will render — see
@@ -196,16 +199,15 @@ appears in Work/Planning/Review except by coming through triage.
   `PRO_LIMITS.lenses`. The seeded two are renameable/recolorable but never
   deletable — they're the stable handles. See `docs/specs/done/custom-lenses.md`.
 
-
 ## 4. The three modes
 
 The three modes are framings, not separate apps. Each maps to an area cluster:
 
-| Mode   | Primary area | What you do there |
-|--------|--------------|-------------------|
-| **Work** | Work Area (§2.3) | Execute: pick the Next task, start it, finish it. |
-| **Planning** | Planning Area (§2.4) | Organize: arrange projects, goals, Someday. |
-| **Review** | Review Area (§2.5) | Reflect: metrics, completion history, stuck items. |
+| Mode         | Primary area         | What you do there                                  |
+| ------------ | -------------------- | -------------------------------------------------- |
+| **Work**     | Work Area (§2.3)     | Execute: pick the Next task, start it, finish it.  |
+| **Planning** | Planning Area (§2.4) | Organize: arrange projects, goals, Someday.        |
+| **Review**   | Review Area (§2.5)   | Reflect: metrics, completion history, stuck items. |
 
 Capture (§2.1) is available in all three. Triage (§2.2) is the transfer gate
 between Capture and any of them.
@@ -216,7 +218,7 @@ These were the open structural calls. All resolved:
 
 1. **Upcoming is one top-level Planning page.** (History: locked 2026-06-23
    as "not a top-level area"; reversed 2026-07-02 to keep the route; reversed
-   again 2026-07-05 to promote it into the Plan nav *with* a same-page
+   again 2026-07-05 to promote it into the Plan nav _with_ a same-page
    Today swap toggle; simplified later 2026-07-05 to **drop the toggle**
    — one surface per intent was clearer than two surfaces rendering the same
    `UPCOMING` data in different shapes.) `UPCOMING` is the Task status — the
@@ -232,10 +234,10 @@ These were the open structural calls. All resolved:
    (Upcoming, no due) surfaces as Next immediately; Today stays un-cluttered.
    The due-guard preserves snooze: a snoozed task (Upcoming + future `dueDate`)
    stays off Next until its time arrives — at which point it auto-resurfaces
-   (the behavior §7 had deferred). *(Previously locked 2026-06-23 as "Today
+   (the behavior §7 had deferred). _(Previously locked 2026-06-23 as "Today
    only"; reversed because a triaged task should be actionable, not invisible —
    the Someday default change in `TRIAGE.md` §5 made Today-only the wrong
-   default-pool pairing.)* Someday is never a Next candidate.
+   default-pool pairing.)_ Someday is never a Next candidate.
 3. **Someday lives in the Planning Area.** It's a "maybe later" organizing
    concept, not a working one. The `/someday` page moves under Planning in the
    nav/route cluster.
@@ -249,7 +251,7 @@ These were the open structural calls. All resolved:
    active lens is the fallback default. `[[lens]]` preselects a Lens and still
    shows the lens choices. A concrete resolved Project is stronger: it supplies
    both `projectId` and `lensId`, and Classify shows `Destination: Project ·
-   Lens` while skipping the standalone lens picker by default. See
+Lens` while skipping the standalone lens picker by default. See
    `docs/specs/done/triage-classify-step.md`.
 6. **Sidebar nav = flat links + always-open labeled groups (locked
    2026-07-22).** The expanding-section focus switch (one section open at a
@@ -312,7 +314,7 @@ These were the open structural calls. All resolved:
      No archive infrastructure — reassign moves content to a chosen lens;
      delete hard-removes (cascade via FK). Goal name-collision on reassign is
      caught (409) because Goal has `@@unique([userId, name])`.
-   See `docs/specs/done/custom-lenses.md` + `docs/reviews/custom-lenses.md`.
+     See `docs/specs/done/custom-lenses.md` + `docs/reviews/custom-lenses.md`.
 9. **Capture grammar v2 + lens token (locked 2026-07-04).** The capture NL
    grammar keeps `#` as a project-first sigil while cleaning up `@` and lens
    intent. Three structural calls:
@@ -340,27 +342,31 @@ These were the open structural calls. All resolved:
      supplies the Lens, but Classify still shows the actual destination before
      dispatch.
 10. **Focus is a dedicated route; tasks carry an activity log (locked
-    2026-07-05).** Two structural calls from the Variant F redesign + the
+    2026-07-05; centered-session layout revised 2026-08-07).** Two structural
+    calls from the focus redesign + the
     task-notes-completion-log spec:
     - **`/app/focus` is its own route**, not an overlay. Entered from Next's
       one-tap "Start" or any task row's focus affordance; `NextPage` and
       `ProjectDetailPage` `navigate("/app/focus")` into it. The screen carries
-      a margin clock (live session + total), summoned composer, and
-      confirm-on-complete. `TaskSession` (startedAt/endedAt) accounts for
-      focus segments across pause/resume so the total is honest.
+      one centered 25/45-minute countdown ring, explicit Note / Pause / Complete
+      actions, and one inline notes-area composer. Choosing Complete reveals a
+      brief optional Outcome reflection in that same composer; no modal interrupts
+      the focus surface. `TaskSession`
+      (`startedAt`/`endedAt`/`plannedMinutes`/`completed`) records focus segments;
+      timer completion is distinct from Task completion.
     - **`TaskUpdate.kind` (NOTE | COMPLETED) is the activity-log
       discriminator.** Notes are appended any time; completion appends a
       `kind=COMPLETED` row. `Task.completedAt` stays as the existing
       completion timestamp (Today/Logbook read it); the typed row carries the
       user's optional completion note for Review. This is the focused slice
-    of `work-area-merged` — route merging and NOT_DOING/archive are still
-    out of scope.
+      of `work-area-merged` — route merging and NOT_DOING/archive are still
+      out of scope.
 11. **Today is universal, not lens-scoped (locked 2026-07-21).** Today stops
     being scoped to the active lens and becomes global like Inbox and Capture.
     The `/app/today` list and its Done-today section now span all accessible
     lenses; each row carries a trailing lens pill so provenance stays visible
     without partitioning the list.
-    - **Rationale:** Today is a commitment device for *the day* — lens is
+    - **Rationale:** Today is a commitment device for _the day_ — lens is
       context, not a partition. A day-commitment cut by lens is two smaller
       commitments that never have to compete with each other, which defeats
       the cap's "what actually matters today" forcing function. Inbox already

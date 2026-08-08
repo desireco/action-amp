@@ -91,7 +91,7 @@ The home screen (`/app`). Every other app opens to a list. ActionAmp opens to a 
 |---|---|---|---|
 | **F12** | Today cap | ✅ Shipped | `TodayPage.tsx` (`TODAY_CAP = 5`). A 6th requires bumping one out. Configurable. A *feature*, not a limit — forces the "what actually matters today" decision. |
 | **F13** | Focus mode (single-task view) | ✅ Shipped | `FocusMode.tsx`. Full-screen single task + notes; no sidebar/list/counts. |
-| **F14** | Optional timer | 🟡 Phase 2 | Pomodoro-style. *(Some F14 references in code mean "in-progress persists," which is shipped — the timer itself is not.)* |
+| **F14** | Configurable focus timer | ✅ Shipped | Centered 25/45-minute countdown. Completed countdowns are recorded as completed `TaskSession` rows without completing the Task. |
 | **F15** | Subtasks | 🟡 Phase 2 | Checklist within a task. Completing all subtasks does *not* auto-complete the parent. |
 
 ---
