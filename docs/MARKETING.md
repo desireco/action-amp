@@ -165,6 +165,19 @@ pages.)
 4. **Newsletter mechanic:** plain email capture, no referral/skip-the-line, no incentives. One line of copy: *"One email when there's something to say."*
 5. **Tone:** calm, not chirpy (no exclamation marks); direct, not clinical; opinionated, not aggressive; honest, not salesy. (`PRODUCT.md` §Tone of Voice.)
 
+### Working one-minute pitch
+
+Most task apps give you another place to organize work: more lists, more tabs,
+more things to maintain.
+
+ActionAmp gives you confidence nothing gets lost, then clears space to act.
+Capture every thought, task, and obligation in one trusted place. It organizes
+work around your goals and shows you one focused next action.
+
+No guessing what matters. No mental load from trying to remember everything.
+You know your work is safe, your priorities are clear, and you can move forward
+with confidence.
+
 ---
 
 ## 7. Open decisions (need your call)
