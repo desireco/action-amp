@@ -133,10 +133,12 @@ sequences projects under each goal ("Next: <name>").
 
 ### P8. Review cadences → `/app/review/today`, `/app/review/week`, `/app/review/month`
 
-Three distinct completion debriefs: Today closes the day, Week aligns effort
-and aging work, Month celebrates Goal progress and chooses direction. Each
-keeps every completed Task inspectable, recognizes completed Projects and
-Goals, and supports optional saved reflection. Reviews span all Lenses;
+Three distinct completion debriefs: Today closes the day, Week recognizes
+meaningful movement, and Month celebrates Goal progress and chooses direction.
+An unfinished day/week/month presents a check-in; a past or closed period
+presents retrospective reflection. Both answer sets autosave independently.
+Each keeps every completed Task inspectable, recognizes completed Projects and
+Goals, and supports optional saved responses. Reviews span all Lenses;
 Week/Month can filter inside the page. `/app/review` resolves to the first
 enabled cadence, then Logbook when all are disabled.
 

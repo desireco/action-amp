@@ -109,13 +109,15 @@ Every cadence uses a common frame while keeping distinct content:
 
 - cadence label + human-readable period;
 - previous/next period controls;
-- “In progress” label when reviewing an unfinished day/week/month;
+- “Check-in” and “In progress” labels for an unfinished day/week/month;
 - completed Goal celebration, when present;
 - completed Project recognition, when present;
 - complete task evidence with Outcome text when available;
 - completed Task counts by Lens in Week and Month;
-- optional reflection fields;
-- autosave for every reflection field;
+- optional context-sensitive response fields: check-in while underway,
+  retrospective reflection after completion;
+- autosave for every response field, with check-in and reflection stored
+  separately;
 - a closing action and “Reviewed” state for Today only.
 
 Keyboard baseline:
@@ -124,7 +126,7 @@ Keyboard baseline:
 - `J` / `K` — move through visible groups or prompts;
 - `Enter` — open selected item or activate selected choice;
 - `E` — edit reflection;
-- `R` — close/update Today review;
+- `R` — close the current open Today review;
 - `Esc` — leave edit state without losing saved content.
 
 Shortcuts must not fire while typing in an input or textarea.
@@ -149,9 +151,12 @@ Reviewing before midnight is allowed and marked “Today · in progress.”
 3. **Projects completed** — compact recognition cards.
 4. **Tasks completed** — every completed task, grouped by Lens then Project.
    Each row shows title, completion time, and Outcome when present.
-5. **Optional reflection** — one prompt: “What do you want to remember from
-   today?” One multiline answer, blank allowed.
-6. **Close today** — marks this review complete. It does not roll tasks over,
+5. **Optional check-in** while Today remains open: how it is going, what is
+   going well, what is challenging, and what deserves attention for the rest
+   of today.
+6. **Close today** — marks this review complete and replaces the visible
+   check-in prompts with one retrospective prompt: “What do you want to
+   remember from today?” It does not roll tasks over,
    change Next, or force tomorrow planning.
 
 ### Celebration behavior
@@ -205,9 +210,15 @@ navigable.
    completion date, and Outcome when present.
 6. **Completed actions by Lens** — count every completed Task in the period,
    grouped by Lens. The in-page Lens filter scopes these counts.
-7. **Optional reflection** — two prompts; responses autosave:
-   - “What moved forward?”
-   - “What should change next week?”
+7. **Optional response**, selected automatically by period state:
+   - current-week check-in: “How is this week going?”, “What is going well?”,
+     “What is challenging?”, and “What deserves attention for the rest of this
+     week?”;
+   - past-week reflection: “What moved forward?” and “What should change next
+     week?”.
+
+Check-in and retrospective fields persist independently. When the week ends,
+the earlier check-in remains saved while the visible prompts switch to review.
 
 Week has no Close or Finish action. Saved responses remain editable.
 
@@ -252,11 +263,14 @@ Calendar month in the user’s time zone. Default is the current month, labeled
    accomplishment summary before the complete history.
 7. **Completed actions by Lens** — count every completed Task in the month,
    grouped by Lens. The in-page Lens filter scopes these counts.
-8. **Optional reflection** — three prompts; responses autosave:
-   - “What are you proud of?”
-   - “What did this month teach you?”
-   - “What deserves attention next month?”
-9. **Choose next-month emphasis** — optional single Goal selection. This does
+8. **Optional response**, selected automatically by period state:
+   - current-month check-in: “How is this month going?”, “What is going well?”,
+     “What is challenging?”, and “What deserves attention for the rest of this
+     month?”;
+   - past-month reflection: “What are you proud of?”, “What did this month teach
+     you?”, and “What deserves attention next month?”.
+9. **Choose next-month emphasis** — available only for a finished month as an
+   optional single Goal selection. This does
    not silently reorder Projects or override the Next matcher; it is stored as
    review reflection until a separate planning decision defines product effect.
 
@@ -328,16 +342,18 @@ Review
   unique(userId, cadence, periodStart)
 ```
 
-`answers` uses a versioned, runtime-validated shape per cadence. For Today,
+`answers` uses a runtime-validated shape per cadence. Active-period keys
+(`howGoing`, `goingWell`, `challenges`, `currentAttention`) coexist with each
+cadence's retrospective keys; switching state never overwrites either set. For Today,
 `snapshot` stores the visible accomplishment evidence when the day is closed:
 task/project/goal IDs, names, Outcomes, hierarchy labels, Lens labels, and
 completion timestamps. This prevents a past review from losing its story when
 an item is later reopened, renamed, moved, or deleted.
 
-Week and Month remain live and need no completion state. If more work completes,
+Week and Month remain live and need no closing action. If more work completes,
 their accomplishment evidence updates while saved answers remain. If more work
-completes after Today was closed, page shows the new completion count and offers
-**Update review** without discarding answers.
+completes after Today was closed, page shows the new completion count without
+reopening its saved responses.
 
 ### Read operation
 
@@ -369,7 +385,8 @@ PAT-protected `GET /api/cli/review` route. Default scope remains universal
 across Lenses; `--lens-id` is explicit and never inherited from CLI config.
 `--previous` and `--for YYYY-MM-DD` select the period. `--json` returns named
 evidence, totals, action counts by Lens, up to five L/M highlights, focus time,
-saved reflection, and monthly Goal emphasis. No CLI review write or close
+explicit `in_progress`/`finished` state, separate saved `checkIn` and
+`reflection`, and monthly Goal emphasis. No CLI review write or close
 operation exists.
 
 ## Interactive prototype
@@ -381,11 +398,11 @@ layout before the production UI was finalized.
 It uses current ActionAmp tokens and shell, with four switchable states:
 
 1. **Today** — six completed tasks across two Lenses, one completed Goal,
-   Outcome excerpts, reflection, Close today.
+   Outcome excerpts, current-period check-in, Close today.
 2. **Week** — eighteen tasks grouped by Goal/Project, one Goal completion,
-   five Medium/Large accomplishment highlights, two reflection prompts.
+   five Medium/Large accomplishment highlights, context-sensitive prompts.
 3. **Month** — two Goal completions, several Project groups, four weekly
-   slices, up to five Medium/Large accomplishment highlights, next-month emphasis.
+   slices, up to five Medium/Large accomplishment highlights, active check-in.
 4. **Review settings** — three live toggles demonstrating nav removal and
    all-disabled fallback to Logbook.
 
@@ -395,7 +412,7 @@ Prototype interactions:
 - expand/collapse completed-task groups;
 - open Outcome details;
 - type reflection and see Saved state;
-- close/reopen Today review;
+- close Today and switch from check-in to retrospective reflection;
 - toggle cadences in Settings and see Review nav adapt;
 - light/dark and desktop/mobile layouts;
 - reduced-motion behavior.
@@ -474,7 +491,7 @@ Prototype questions resolved during implementation:
       strongest calm celebration.
 - [x] Today supports closure; Week and Month foreground 3–5 completed
       Medium/Large actions when available.
-- [x] Reflection is optional, autosaved, and revisitable.
+- [x] Check-in and reflection are optional, autosaved separately, and revisitable.
 - [x] Closed Today review preserves a stable accomplishment snapshot.
 - [x] Week and Month responses autosave without a Close or Finish action.
 - [x] No streaks, badges, scores, red-dot nags, confetti, or guilt copy.

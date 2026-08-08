@@ -98,12 +98,12 @@ The home screen (`/app`). Every other app opens to a list. ActionAmp opens to a 
 
 ## 5. Complete & reflect
 
-| #       | Feature               | Status     | Notes                                                                                                                                        |
-| ------- | --------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **F16** | Satisfying completion | ✅ Shipped | `CompletionCircle.tsx`. Check animation, optimistic removal, soft confirmation.                                                              |
-| **F17** | Momentum              | ⛔ Banned  | **Removed by design.** Streaks/badges/guilt-trip counters are banned by `PRODUCT.md` and `DESIGN-SYSTEM.md`. References are historical only. |
-| **F18** | Logbook               | ✅ Shipped | `/app/logbook`. Completed items archive here (Things-style). Searchable, not in your face.                                                   |
-| **F19** | Review cadences       | ✅ Shipped | Optional Today, Week, and Month debriefs with saved reflection, stable evidence snapshots, preference-aware navigation, and no gamification. |
+| #       | Feature               | Status     | Notes                                                                                                                                                          |
+| ------- | --------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F16** | Satisfying completion | ✅ Shipped | `CompletionCircle.tsx`. Check animation, optimistic removal, soft confirmation.                                                                                |
+| **F17** | Momentum              | ⛔ Banned  | **Removed by design.** Streaks/badges/guilt-trip counters are banned by `PRODUCT.md` and `DESIGN-SYSTEM.md`. References are historical only.                   |
+| **F18** | Logbook               | ✅ Shipped | `/app/logbook`. Completed items archive here (Things-style). Searchable, not in your face.                                                                     |
+| **F19** | Review cadences       | ✅ Shipped | Optional Today, Week, and Month check-ins/reviews with separate autosaved responses, stable Today snapshots, preference-aware navigation, and no gamification. |
 
 ---
 
@@ -128,22 +128,22 @@ The home screen (`/app`). Every other app opens to a list. ActionAmp opens to a 
 
 > The triage keymap lives in `TRIAGE.md` §4 (Context → Type → Spec → Complete wizard), not here.
 
-| #       | Feature                | Status     | Notes                                                                                                                                                                                                            |
-| ------- | ---------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #       | Feature                | Status     | Notes                                                                                                                                                               |
+| ------- | ---------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **F20** | Command palette (`⌘\`) | ✅ Shipped | Safe-command registry, fuzzy entity/Lens index, shared Pro gate, accessible popover, and desktop/touch browser verification. See `specs/command-palette-search.md`. |
-| **F21** | Keyboard hints         | ✅ Shipped | `ShortcutCheatsheet.tsx`. `?` overlay; discoverable shortcuts.                                                                                                                                                   |
+| **F21** | Keyboard hints         | ✅ Shipped | `ShortcutCheatsheet.tsx`. `?` overlay; discoverable shortcuts.                                                                                                      |
 
 ---
 
 ## 7. Cross-cutting
 
-| #       | Feature                  | Status     | Notes                                                                                                                                                                           |
-| ------- | ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #       | Feature                  | Status     | Notes                                                                                                                                                                             |
+| ------- | ------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **F22** | Sitewide search (`/`)    | ✅ Shipped | Bounded relevance-safe search covers all Task states plus Project, Goal, Resource, and live/archived Inbox text with exact destinations and browser-verified pointer/touch entry. |
-| **F23** | Offline-capable          | 🟡 Phase 2 | Capture & complete offline; sync on reconnect (React Query cache helps).                                                                                                        |
-| **F24** | Dark mode + calm default | ✅ Shipped | `[data-theme="dark"]` via Settings → Preferences. See `DESIGN-SYSTEM.md` §3.                                                                                                    |
-| **F25** | Multi-device sync        | 🟡 Phase 2 | Web now; Wasp architecture gets us cross-device later.                                                                                                                          |
-| **F26** | Custom Lenses            | ✅ Shipped | `/app/settings/lenses`. Pro-only CRUD beyond the seeded Work/Me pair. See `specs/custom-lenses.md`.                                                                             |
+| **F23** | Offline-capable          | 🟡 Phase 2 | Capture & complete offline; sync on reconnect (React Query cache helps).                                                                                                          |
+| **F24** | Dark mode + calm default | ✅ Shipped | `[data-theme="dark"]` via Settings → Preferences. See `DESIGN-SYSTEM.md` §3.                                                                                                      |
+| **F25** | Multi-device sync        | 🟡 Phase 2 | Web now; Wasp architecture gets us cross-device later.                                                                                                                            |
+| **F26** | Custom Lenses            | ✅ Shipped | `/app/settings/lenses`. Pro-only CRUD beyond the seeded Work/Me pair. See `specs/custom-lenses.md`.                                                                               |
 
 ---
 

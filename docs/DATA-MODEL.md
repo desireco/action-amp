@@ -2,8 +2,8 @@
 
 > Status: DRAFT v6 — GTD + PARA flavor; Areas replaced by Goals. Code-verified
 > against `webapp/schema.prisma` 2026-07-05.
-> **Structural authority has moved to `WORKFLOW.md`** (2026-06-23) for *where
-> things live* (the §4 list below). Confirmed against the locked decisions:
+> **Structural authority has moved to `WORKFLOW.md`** (2026-06-23) for _where
+> things live_ (the §4 list below). Confirmed against the locked decisions:
 >
 > - **`InboxItem` stays unscoped** (no `lensId`) — capture is universal; the
 >   Lens is assigned at triage (inheriting the active lens).
@@ -17,7 +17,7 @@
 > below remain the data-model authority.
 >
 > Core idea: **the Inbox is universal; every item is a seed that becomes
-> something during triage.** The triage step decides *what kind of thing* it is,
+> something during triage.** The triage step decides _what kind of thing_ it is,
 > not just what date it has.
 >
 > v3: **Goals replace PARA's Areas** as the organizing layer (Goals are active /
@@ -52,7 +52,7 @@
 > across interruptions. **`Project.order`** (Int) added for goal-scoped
 > sequencing — projects under a goal sort by `order` then name; the first
 > non-done project surfaces as "Next: <name>". See `docs/specs/task-notes-
-> completion-log.md` and `docs/specs/done/goal-planning.md`.
+completion-log.md` and `docs/specs/done/goal-planning.md`.
 >
 > v7 (2026-08-07): **Recorded focus sessions.** `User.focusSessionMinutes`
 > stores the 25/45-minute preference. `TaskSession.plannedMinutes` records the
@@ -65,6 +65,11 @@
 > answers and a stable accomplishment snapshot when Today is closed. Three `User` booleans independently
 > enable Today, Week, and Month reviews. Cadence review reads are deliberately
 > cross-Lens; ownership remains strictly keyed by `userId`.
+>
+> v9 (2026-08-08): **Check-in vs. review.** `Review.answers` keeps separate
+> runtime-validated keys for observations made during an active period and
+> retrospective answers written after it ends. Transitioning a period never
+> replaces its earlier check-in.
 
 ---
 
@@ -102,7 +107,7 @@
   (PARA "Resource".)
 - **Goal** = the organizing layer — **replaces PARA's Areas.** Active &
   outcome-oriented ("Run a 10k", "Ship product v2") rather than passive buckets
-  ("Health", "Work"). Projects link to a Goal to express *why* they matter;
+  ("Health", "Work"). Projects link to a Goal to express _why_ they matter;
   Tasks do not align directly to Goals.
 - **Lens** = the scoping switch (Work / Me). **Every Goal, Project, and
   standalone Task belongs to exactly one Lens.** Switching Lens re-scopes the
@@ -116,8 +121,8 @@
 **Priority** (Low / Normal / Important) is the primary sort key for focus.
 **Size** (S / M / L / XL) is the secondary signal and a built-in nudge:
 setting a Task to **XL prompts you to break it down** (convert it to a Project,
- or add subtasks) — XL work shouldn't sit as a single Task. Time/energy tags are
- a refinement layer we'll add later, on top of priority + size.
+or add subtasks) — XL work shouldn't sit as a single Task. Time/energy tags are
+a refinement layer we'll add later, on top of priority + size.
 
 ---
 
@@ -127,24 +132,24 @@ setting a Task to **XL prompts you to break it down** (convert it to a Project,
 - An inbox entry is an **InboxItem**: raw text + parsed metadata — `parsedDate`,
   `parsedPriority`, `parsedSize`, `parsedTags`, `parsedProject` (legacy, unused
   by the server — see v5 below), `parsedLens` (the `[[lens]]` token, or null) —
-  + `status: unprocessed`. The InboxItem itself is still **unscoped** (no
-  `lensId`); `parsedLens` is a *hint* that pre-fills the triage Context step,
-  not an assignment. Capture is universal; the lens is confirmed at triage.
+  - `status: unprocessed`. The InboxItem itself is still **unscoped** (no
+    `lensId`); `parsedLens` is a _hint_ that pre-fills the triage Context step,
+    not an assignment. Capture is universal; the lens is confirmed at triage.
 - Nothing leaves the Inbox by aging or by being dated — it only leaves through **triage**.
 
 ---
 
-## 3. Triage — what an InboxItem can *become*
+## 3. Triage — what an InboxItem can _become_
 
 This is the heart of the model. During triage, each InboxItem is transformed into one of:
 
-| Triage decision | Result | Example |
-|---|---|---|
-| **"This is a quick action"** | → **Task** (standalone, dated) | "Email Sarah re: invoice" → Today |
-| **"This is actually a big outcome"** | → **Project** (the text becomes the Project name) | "Plan Q3 launch" → new Project |
-| **"This is a step in something I'm already doing"** | → **Task** inside an existing **Project** | "Draft press release" → "Q3 launch" project |
-| **"This is reference, not an action"** | → **Resource** filed under a **Project** | "Competitor pricing PDF" → "Q3 launch" resources |
-| **"This supports a bigger goal"** | → **Project** linked to a **Goal** | "Launch newsletter" → Goal: "Grow audience" |
+| Triage decision                                     | Result                                            | Example                                          |
+| --------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------ |
+| **"This is a quick action"**                        | → **Task** (standalone, dated)                    | "Email Sarah re: invoice" → Today                |
+| **"This is actually a big outcome"**                | → **Project** (the text becomes the Project name) | "Plan Q3 launch" → new Project                   |
+| **"This is a step in something I'm already doing"** | → **Task** inside an existing **Project**         | "Draft press release" → "Q3 launch" project      |
+| **"This is reference, not an action"**              | → **Resource** filed under a **Project**          | "Competitor pricing PDF" → "Q3 launch" resources |
+| **"This supports a bigger goal"**                   | → **Project** linked to a **Goal**                | "Launch newsletter" → Goal: "Grow audience"      |
 
 So the InboxItem is **polymorphic at rest, concrete after triage.** One input shape, five possible output shapes.
 
@@ -170,16 +175,16 @@ An item isn't locked into its first decision:
 
 ## 4. Where things live after triage (the "lists")
 
-Once triaged, items live in views defined by their attributes — *not* by folders:
+Once triaged, items live in views defined by their attributes — _not_ by folders:
 
-- **Today** — Tasks with `due <= today` or manually flagged Today. *(Capped — see FEATURES §12.)*
+- **Today** — Tasks with `due <= today` or manually flagged Today. _(Capped — see FEATURES §12.)_
 - **Upcoming** — Tasks/Projects with a future date.
 - **Someday** — Tasks with no date and no Project (GTD "Someday/Maybe").
 - **Projects** — all Projects, grouped by Goal.
 - **Goals** — all Goals in the active Lens, with their linked Projects rolled up.
 - **Archive / Logbook** — completed/dead items (PARA "Archive").
 
-The Inbox is the *only* queue. Everything else is a *view* derived from each item's attributes and relationships.
+The Inbox is the _only_ queue. Everything else is a _view_ derived from each item's attributes and relationships.
 
 ---
 
@@ -237,8 +242,8 @@ basic loop works.
   `InboxAttachment` until it is triaged.
 - ✅ **Priority scale** = **Low / Normal / Important** (3 levels).
 - ✅ **Size scale** = **S / M / L / XL**, with **XL prompting a break-down**
-  (→ convert to Project, or add subtasks). *(InboxItem retention still open —
-  see below.)*
+  (→ convert to Project, or add subtasks). _(InboxItem retention still open —
+  see below.)_
 
 ### Added 2026-06-16 (triage design)
 
@@ -268,7 +273,7 @@ basic loop works.
 ## 9. Still open
 
 - **InboxItem retention** — **DECIDED: delete on transform** (the transformed
-  entity *is* the record; Archive is the lossless path for "not now"). This has
+  entity _is_ the record; Archive is the lossless path for "not now"). This has
   been the shipped behavior since the triage wizard landed.
 - **Goal/Project lifecycle** — **DECIDED + SHIPPED 2026-07-05**: complete /
   reopen / edit / delete (lossless) / re-link all exist as server ops + UI on

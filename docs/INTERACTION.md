@@ -111,8 +111,10 @@ each enabled cadence under the always-open Review nav group; `⇧R` opens the
 first enabled cadence. Mobile keeps one Review dock destination with the same
 preference-aware resolution, falling back to Logbook when every cadence is
 disabled. Inside a review, `[` / `]` move periods, `J` / `K` move through
-evidence, `E` focuses reflection, and `R` records or updates the review. Form
-fields suppress these single-key commands.
+evidence, `E` focuses the current check-in or reflection, and `R` closes Today
+only while the current day remains open. Current periods use check-in prompts;
+past periods use retrospective prompts. Form fields suppress these single-key
+commands.
 
 ### WORKING mode (the sanctuary) — centered focus session, revised 2026-08-07
 

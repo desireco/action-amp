@@ -17,8 +17,10 @@ Review now has four destinations instead of one overloaded history surface:
 
 Preferences now expose independent Today, Week, and Month switches. All default
 on. Turning one off changes navigation only; it deletes no review or completion
-data. Review responses autosave through the new `Review` model. Only Today has
-an explicit close action and completed snapshot.
+data. Review responses autosave through the new `Review` model. Current periods
+use check-in prompts; past periods use retrospective prompts, with both answer
+sets preserved independently. Only current, open Today has an explicit close
+action and completed snapshot.
 
 ## Gates run
 
@@ -66,8 +68,8 @@ an explicit close action and completed snapshot.
       honest Goal/Project/Lens grouping.
 - [x] Completed Goals receive the strongest calm visual emphasis; no streaks,
       scores, confetti, nags, or judgmental comparisons.
-- [x] Optional autosaved reflection for every cadence, no Week/Month close
-      action, and stable completed snapshots for Today closure.
+- [x] Optional autosaved check-in and reflection for every cadence, no
+      Week/Month close action, and stable completed snapshots for Today closure.
 - [x] Monday weeks, calendar months, IANA zones, and 23/25-hour days tested.
 - [x] Keyboard suppression, responsive layout, dark mode, and reduced-motion
       treatment implemented and covered by component/static-browser checks.

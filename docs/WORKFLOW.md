@@ -149,8 +149,12 @@ appears in Work/Planning/Review except by coming through triage.
   Each shows completed Goals first, completed Projects, and every completed
   Task with its Outcome. Week and Month highlight up to five completed
   Medium/Large actions before the full history and count all completed actions
-  by Lens; Month also offers a next-month Goal emphasis. Reflections are
-  optional and autosaved.
+  by Lens. A period still underway is a **check-in**: how it is going, what is
+  going well, what is challenging, and what deserves attention before it ends.
+  A finished period is a **review**: accomplishments, learning, and direction.
+  Check-in and review answers are stored separately so hindsight never
+  overwrites what the user observed while work was happening. Month offers a
+  next-month Goal emphasis only after the month ends. Every response autosaves.
 - Cadence reviews are universal across Lenses, like Today. Rows keep Lens
   provenance and Week/Month offer an in-page Lens filter. This is the deliberate
   exception to the active-Lens rule; a person should not need separate rituals
@@ -164,7 +168,8 @@ appears in Work/Planning/Review except by coming through triage.
   Reopen), and **archived notes** ("I will not do now" from triage — kept
   lossless, restorable to the inbox). This area is the _view over it_ (counts,
   trends — kept calm, no guilt-trip red dots, no streaks).
-- Closing Today preserves a stable accomplishment snapshot so later edits,
+- Current Today alone offers **Close today**. Closing switches it from check-in
+  to finished-day reflection and preserves a stable accomplishment snapshot so later edits,
   moves, reopenings, or deletion do not erase that day's historical view. Week
   and Month stay live and need no closing action. See
   `docs/specs/weekly-monthly-review.md`.

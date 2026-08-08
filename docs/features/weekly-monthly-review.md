@@ -24,16 +24,22 @@ Goal/Project, Lens, and completion-time context. Week/Month can filter by Lens
 without splitting the ritual, and count completed actions by Lens. Recorded
 focus time is derived from overlapping completed Task sessions.
 
-**Cadence differences.** Today has one optional memory prompt and a Close today
-action. Week and Month lead with up to five completed Medium/Large actions,
-then retain the complete accomplishment history. Week adds effort shape and two
-alignment prompts. Month adds weekly slices, three direction prompts, and an
-optional active Goal emphasis for next month.
+**Current versus past.** A period still happening is a check-in: how it is
+going, what is going well, what is challenging, and what deserves attention
+before it ends. A finished period is a review: Today preserves one memory,
+Week asks what moved and what should change, and Month asks about pride,
+learning, and next-month attention. Check-in and reflection answers autosave
+separately and remain available across the transition.
+
+**Cadence differences.** Today alone has a Close today action while the current
+day is open. Week and Month lead with up to five completed Medium/Large actions,
+then retain the complete accomplishment history. Week adds effort shape. Month
+adds weekly slices and an optional active Goal emphasis after the month ends.
 
 **Persistence.** Optional answers autosave into `Review`, keyed by user,
 cadence, and period start. Week and Month require no finish action and remain
-editable. Close today records a stable accomplishment snapshot; current-day
-work remains live until updated.
+editable. Close today records a stable accomplishment snapshot and changes the
+current day from check-in to review.
 
 **Preferences.** Settings → Preferences → Reviews independently toggles Today,
 Week, and Month; all default on. Disabled routes redirect to the first enabled
