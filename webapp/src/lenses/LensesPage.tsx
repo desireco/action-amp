@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "wasp/client/operations";
 import {
@@ -205,10 +205,11 @@ function LensRowItem({
           submit={async (vals) => {
             await updateLens({ id: lens.id, ...vals });
           }}
-          submitLabel="Save"
+            submitLabel="Save changes"
           submittingLabel="Saving…"
           errorPreamble="Couldn't save. Try again."
           onCancel={() => setEditing(false)}
+          onDelete={!isSeeded ? () => setDeleting(true) : undefined}
           onDone={async () => {
             setEditing(false);
             await onSaved();
@@ -222,6 +223,18 @@ function LensRowItem({
             cancelLabel={null}
             onConfirm={() => setTypeBlocked(false)}
             onClose={() => setTypeBlocked(false)}
+          />
+        )}
+        {deleting && (
+          <DeleteLensDialog
+            lens={lens}
+            allLenses={allLenses}
+            onClose={() => setDeleting(false)}
+            onDeleted={async () => {
+              setDeleting(false);
+              setEditing(false);
+              await onSaved();
+            }}
           />
         )}
       </>
@@ -257,15 +270,6 @@ function LensRowItem({
           <button type="button" className="aa-lenses-act" onClick={() => setEditing(true)}>
             Edit
           </button>
-          <button
-            type="button"
-            className="aa-lenses-act aa-lenses-act--danger"
-            onClick={() => setDeleting(true)}
-            disabled={isSeeded}
-            title={isSeeded ? "Default lenses can't be deleted" : undefined}
-          >
-            Delete
-          </button>
         </div>
       </div>
 
@@ -296,6 +300,7 @@ function LensForm({
   namePlaceholder,
   autoFocusName,
   onCancel,
+  onDelete,
   onDone,
 }: {
   initial: { name: string; purpose: string; color: string; type: "LIFE_AREA" | "SIMPLE_LIST" };
@@ -309,6 +314,7 @@ function LensForm({
   namePlaceholder?: string;
   autoFocusName?: boolean;
   onCancel: () => void;
+  onDelete?: () => void;
   onDone: () => Promise<void>;
 }) {
   const [name, setName] = useState(initial.name);
@@ -317,6 +323,9 @@ function LensForm({
   const [type, setType] = useState(initial.type);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const saveCue = initial.name
+    ? <>Changes save only when you select <strong>{submitLabel}</strong>.</>
+    : <>Your lens is created only when you select <strong>{submitLabel}</strong>.</>;
 
   async function save() {
     setSaving(true);
@@ -340,18 +349,42 @@ function LensForm({
     setType(nextType);
   }
 
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!saving && name.trim()) void save();
+  }
+
   return (
-    <div className="aa-lenses-edit" data-lens-color={color || undefined}>
-      <div className="aa-lenses-edit__row">
-        <label className="aa-lenses-edit__label">Name</label>
-        <input
-          className="aa-lenses-edit__input"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={namePlaceholder}
-          disabled={saving}
-          autoFocus={autoFocusName}
-        />
+    <form className="aa-lenses-edit" data-lens-color={color || undefined} onSubmit={handleSubmit}>
+      <header className="aa-lenses-edit__head">
+        <div>
+          <p className="aa-lenses-edit__eyebrow">{initial.name ? "Editing lens" : "New lens"}</p>
+          <h3>{initial.name || "Create a new life context"}</h3>
+        </div>
+        <p>{saveCue}</p>
+      </header>
+      <div className="aa-lenses-edit__fields">
+        <div className="aa-lenses-edit__row">
+          <label className="aa-lenses-edit__label">Name</label>
+          <input
+            className="aa-lenses-edit__input"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={namePlaceholder}
+            disabled={saving}
+            autoFocus={autoFocusName}
+          />
+        </div>
+        <div className="aa-lenses-edit__row">
+          <label className="aa-lenses-edit__label">Purpose <span>Optional</span></label>
+          <input
+            className="aa-lenses-edit__input"
+            value={purpose}
+            onChange={(e) => setPurpose(e.target.value)}
+            placeholder="What this lens is for"
+            disabled={saving}
+          />
+        </div>
       </div>
       <fieldset className="aa-lenses-type">
         <legend className="aa-lenses-edit__label">Lens type</legend>
@@ -388,16 +421,6 @@ function LensForm({
         )}
       </fieldset>
       <div className="aa-lenses-edit__row">
-        <label className="aa-lenses-edit__label">Purpose</label>
-        <input
-          className="aa-lenses-edit__input"
-          value={purpose}
-          onChange={(e) => setPurpose(e.target.value)}
-          placeholder="What this lens is for"
-          disabled={saving}
-        />
-      </div>
-      <div className="aa-lenses-edit__row">
         <label className="aa-lenses-edit__label">Color</label>
         <div className="aa-lenses-palette">
           {PALETTE.map((p) => (
@@ -416,20 +439,28 @@ function LensForm({
         </div>
       </div>
       {error && <p className="aa-lenses-error">{error}</p>}
-      <div className="aa-lenses-edit__acts">
-        <button type="button" className="aa-lenses-act" onClick={onCancel} disabled={saving}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="aa-lenses-act aa-lenses-act--primary"
-          onClick={save}
-          disabled={saving || !name.trim()}
-        >
-          {saving ? submittingLabel : submitLabel}
-        </button>
-      </div>
-    </div>
+      <footer className="aa-lenses-edit__acts">
+        <div>
+          {onDelete && (
+            <button type="button" className="aa-lenses-act aa-lenses-act--danger" onClick={onDelete} disabled={saving}>
+              Delete lens
+            </button>
+          )}
+        </div>
+        <div className="aa-lenses-edit__save-actions">
+          <button type="button" className="aa-lenses-act" onClick={onCancel} disabled={saving}>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="aa-lenses-act aa-lenses-act--primary aa-lenses-act--save"
+            disabled={saving || !name.trim()}
+          >
+            {saving ? submittingLabel : submitLabel}
+          </button>
+        </div>
+      </footer>
+    </form>
   );
 }
 

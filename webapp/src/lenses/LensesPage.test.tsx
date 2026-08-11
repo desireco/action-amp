@@ -120,7 +120,7 @@ describe("LensesPage Lens types", () => {
     const row = screen.getByText("Errands").closest(".aa-lenses-row") as HTMLElement;
     fireEvent.click(within(row).getByRole("button", { name: "Edit" }));
     fireEvent.click(screen.getByRole("radio", { name: /simple list/i }));
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     await waitFor(() => expect(updateLens).toHaveBeenCalledWith(expect.objectContaining({
       id: "empty",
       type: "SIMPLE_LIST",
@@ -150,11 +150,12 @@ describe("LensesPage Lens types", () => {
     expect(within(dialog).queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
   });
 
-  it("offers only same-type reassignment targets", () => {
+  it("offers only same-type reassignment targets", async () => {
     renderPage();
     const shoppingRow = screen.getByText("Shopping").closest(".aa-lenses-row") as HTMLElement;
-    fireEvent.click(within(shoppingRow).getByRole("button", { name: "Delete" }));
-    const dialog = screen.getByRole("dialog", { name: /delete the "Shopping" lens/i });
+    fireEvent.click(within(shoppingRow).getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete lens" }));
+    const dialog = await screen.findByRole("dialog", { name: /delete the "Shopping" lens/i });
     const options = within(dialog).getAllByRole("option").map((option) => option.textContent);
     expect(options).toEqual(["Packing"]);
     expect(within(dialog).getByText(/8 open items, 3 checked items/i)).toBeInTheDocument();
