@@ -81,10 +81,17 @@ export type Lens = {
   id: string;
   name: string;
   kind: "PERSONAL" | "WORK" | "CUSTOM";
+  type: "LIFE_AREA" | "SIMPLE_LIST";
   color?: string | null;
   purpose?: string | null;
   createdAt?: string;
-  counts?: { goals: number; projects: number; tasks: number };
+  counts?: {
+    goals: number;
+    projects: number;
+    tasks: number;
+    openItems: number;
+    checkedItems: number;
+  };
 };
 
 /**

@@ -10,7 +10,9 @@ import { join } from "node:path";
 const { TMP_HOME } = vi.hoisted(() => {
   const { tmpdir } = require("node:os") as typeof import("node:os");
   const { join } = require("node:path") as typeof import("node:path");
-  return { TMP_HOME: join(tmpdir(), `aa-lens-test-${process.pid}-${Date.now()}`) };
+  return {
+    TMP_HOME: join(tmpdir(), `aa-lens-test-${process.pid}-${Date.now()}`),
+  };
 });
 vi.mock("node:os", () => ({ homedir: () => TMP_HOME }));
 
@@ -18,7 +20,10 @@ const requestMock = vi.fn();
 vi.mock("../api.js", () => ({
   request: (path: string, init?: unknown) => requestMock(path, init),
   ApiError: class ApiError extends Error {
-    constructor(public status: number, public body: Record<string, unknown>) {
+    constructor(
+      public status: number,
+      public body: Record<string, unknown>,
+    ) {
       super(body.error ?? "error");
     }
   },
@@ -48,7 +53,10 @@ afterEach(() => {
 const { writeConfig, readConfig, getConfigPath } = await import("../config.js");
 const { makeLensCommand } = await import("./lens.js");
 
-async function run(cmd: { parseAsync: (a: string[], o: unknown) => Promise<void> }, args: string[]) {
+async function run(
+  cmd: { parseAsync: (a: string[], o: unknown) => Promise<void> },
+  args: string[],
+) {
   try {
     await cmd.parseAsync(args, { from: "user" });
   } catch {
@@ -70,19 +78,31 @@ const LENS_ME = {
   id: "l1",
   name: "Me",
   kind: "PERSONAL",
+  type: "LIFE_AREA",
   color: null,
   purpose: null,
   createdAt: "2026-07-01T00:00:00.000Z",
-  counts: { goals: 0, projects: 0, tasks: 2 },
+  counts: { goals: 0, projects: 0, tasks: 2, openItems: 0, checkedItems: 0 },
 };
 const LENS_WORK = {
   id: "l2",
   name: "Work",
   kind: "WORK",
+  type: "LIFE_AREA",
   color: "indigo",
   purpose: "Day job",
   createdAt: "2026-07-02T00:00:00.000Z",
-  counts: { goals: 1, projects: 3, tasks: 12 },
+  counts: { goals: 1, projects: 3, tasks: 12, openItems: 0, checkedItems: 0 },
+};
+const LENS_SHOPPING = {
+  id: "l3",
+  name: "Shopping",
+  kind: "CUSTOM",
+  type: "SIMPLE_LIST",
+  color: "cyan",
+  purpose: "Groceries",
+  createdAt: "2026-07-03T00:00:00.000Z",
+  counts: { goals: 0, projects: 0, tasks: 0, openItems: 4, checkedItems: 2 },
 };
 
 describe("lens list", () => {
@@ -96,19 +116,26 @@ describe("lens list", () => {
     requestMock.mockResolvedValue({ lenses: [LENS_ME, LENS_WORK] });
     const { stdout } = await run(makeLensCommand(), ["list"]);
     expect(stdout).toContain("Me");
-    expect(stdout).toContain("(personal)");
+    expect(stdout).toContain("(personal · life area)");
     expect(stdout).toContain("Work");
-    expect(stdout).toContain("(work)");
+    expect(stdout).toContain("(work · life area)");
     expect(stdout).toContain("Day job");
+    expect(stdout).toContain("life area");
   });
 
   it("marks the active lens (matches config.lensId)", async () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "l2" });
+    writeConfig({
+      token: "aa_test",
+      apiUrl: "http://localhost:3001",
+      lensId: "l2",
+    });
     requestMock.mockResolvedValue({ lenses: [LENS_ME, LENS_WORK] });
     const { stdout } = await run(makeLensCommand(), ["list"]);
     // The Work row carries the active marker; the Me row does not.
     const workLine = stdout.split("\n").find((l) => l.includes("Work")) ?? "";
-    const meLine = stdout.split("\n").find((l) => l.includes("Me") && !l.includes("Work")) ?? "";
+    const meLine =
+      stdout.split("\n").find((l) => l.includes("Me") && !l.includes("Work")) ??
+      "";
     expect(workLine).toContain("← active");
     expect(meLine).not.toContain("← active");
   });
@@ -150,12 +177,20 @@ describe("lens show", () => {
     requestMock.mockResolvedValue({ lens: LENS_WORK });
     const { stdout } = await run(makeLensCommand(), ["show", "Work"]);
     expect(stdout).toContain("Work");
-    expect(stdout).toContain("(work)");
+    expect(stdout).toContain("(work · life area)");
     expect(stdout).toContain("Day job");
     expect(stdout).toContain("12 tasks");
     expect(stdout).toContain("3 projects");
     expect(stdout).toContain("1 goal");
     expect(stdout).toContain("l2");
+  });
+
+  it("shows Simple-list type and checklist counts", async () => {
+    requestMock.mockResolvedValue({ lens: LENS_SHOPPING });
+    const { stdout } = await run(makeLensCommand(), ["show", "Shopping"]);
+    expect(stdout).toContain("simple list");
+    expect(stdout).toContain("4 open · 2 checked");
+    expect(stdout).not.toContain("projects");
   });
 
   it("null → 'No such lens.'", async () => {
@@ -165,7 +200,11 @@ describe("lens show", () => {
   });
 
   it("marks the lens as active when it matches config.lensId", async () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "l2" });
+    writeConfig({
+      token: "aa_test",
+      apiUrl: "http://localhost:3001",
+      lensId: "l2",
+    });
     requestMock.mockResolvedValue({ lens: LENS_WORK });
     const { stdout } = await run(makeLensCommand(), ["show", "l2"]);
     expect(stdout).toContain("(active)");
@@ -180,16 +219,36 @@ describe("lens switch", () => {
     expect(readConfig()?.lensId).toBe("l2");
   });
 
-  it("--json emits { ok, id, name }", async () => {
+  it("--json emits { ok, id, name, type }", async () => {
     requestMock.mockResolvedValue({ lens: LENS_WORK });
-    const { stdout } = await run(makeLensCommand(), ["switch", "Work", "--json"]);
+    const { stdout } = await run(makeLensCommand(), [
+      "switch",
+      "Work",
+      "--json",
+    ]);
     const parsed = JSON.parse(stdout);
-    expect(parsed).toEqual({ ok: true, id: "l2", name: "Work" });
+    expect(parsed).toEqual({
+      ok: true,
+      id: "l2",
+      name: "Work",
+      type: "LIFE_AREA",
+    });
+  });
+
+  it("does not promise Life-area commands after switching to a Simple list", async () => {
+    requestMock.mockResolvedValue({ lens: LENS_SHOPPING });
+    const { stdout } = await run(makeLensCommand(), ["switch", "Shopping"]);
+    expect(stdout).toContain("This is a simple list");
+    expect(stdout).not.toContain("project list");
+    expect(readConfig()?.lensId).toBe("l3");
   });
 
   it("not-found → human error on stderr, exit 1, no config write", async () => {
     requestMock.mockResolvedValue({ lens: null });
-    const { stderr, stdout } = await run(makeLensCommand(), ["switch", "Ghost"]);
+    const { stderr, stdout } = await run(makeLensCommand(), [
+      "switch",
+      "Ghost",
+    ]);
     expect(stderr).toContain("error:");
     expect(stderr).toContain("No such lens.");
     expect(stdout).not.toContain("Switched");
@@ -198,7 +257,11 @@ describe("lens switch", () => {
 
   it("not-found --json → { error } on stdout, no config write", async () => {
     requestMock.mockResolvedValue({ lens: null });
-    const { stdout } = await run(makeLensCommand(), ["switch", "Ghost", "--json"]);
+    const { stdout } = await run(makeLensCommand(), [
+      "switch",
+      "Ghost",
+      "--json",
+    ]);
     expect(JSON.parse(stdout).error).toBe("No such lens.");
     expect(readConfig()?.lensId).toBeUndefined();
   });
@@ -216,7 +279,11 @@ describe("lens current", () => {
   });
 
   it("active lens set → fetches it by id and prints name", async () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "l2" });
+    writeConfig({
+      token: "aa_test",
+      apiUrl: "http://localhost:3001",
+      lensId: "l2",
+    });
     requestMock.mockResolvedValue({ lens: LENS_WORK });
     const { stdout } = await run(makeLensCommand(), ["current"]);
     expect(requestMock).toHaveBeenCalledWith(
@@ -227,7 +294,11 @@ describe("lens current", () => {
   });
 
   it("active lens id no longer resolves → 'was deleted'", async () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "stale" });
+    writeConfig({
+      token: "aa_test",
+      apiUrl: "http://localhost:3001",
+      lensId: "stale",
+    });
     requestMock.mockResolvedValue({ lens: null });
     const { stdout } = await run(makeLensCommand(), ["current"]);
     expect(stdout).toContain("deleted");

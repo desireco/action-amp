@@ -104,6 +104,16 @@ describe("inbox triage", () => {
       body: { inboxItemId: "i1", decision: "task-today", lensId: "l1" },
     });
   });
+
+  it("supports a confirmed Simple-list destination", async () => {
+    requestMock.mockResolvedValue({ kind: "list-item", id: "li1" });
+    const { stdout } = await run(makeInboxCommand(), ["triage", "i1", "--decision", "list-item", "--lens-id", "shopping"]);
+    expect(requestMock).toHaveBeenCalledWith("/api/cli/inbox/triage", {
+      method: "POST",
+      body: { inboxItemId: "i1", decision: "list-item", lensId: "shopping" },
+    });
+    expect(stdout).toContain("Triaged to list-item.");
+  });
 });
 
 describe("project list", () => {

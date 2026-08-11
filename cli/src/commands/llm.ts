@@ -144,7 +144,8 @@ NL parsing extracts: \`#project\`, \`@date\`, \`!priority\`, \`#tags\`, \`[[lens
 1. \`actionamp inbox list\` — see unprocessed items.
 2. \`actionamp inbox triage <id> --decision task-today --lens-id <id>\` — file it.
    Decisions: \`task-today\`, \`upcoming\`, \`someday\`, \`project\`,
-   \`resource\`, \`archive\`, \`delete\`.
+   \`resource\`, \`list-item\`, \`archive\`, \`delete\`. Use \`list-item\`
+   only with a Simple-list Lens; it creates a flat checklist row without task metadata.
 
 ## Rules for agents
 
@@ -152,7 +153,7 @@ NL parsing extracts: \`#project\`, \`@date\`, \`!priority\`, \`#tags\`, \`[[lens
 - **Read before writing.** Always \`now\` or \`task show\` before \`task done\` — confirm the task exists and is the right one.
 - **Respect Today's cap.** Today holds at most 5 items. Don't move more than 5 to Today without surfacing the cap.
 - **Lenses scope everything.** Most reads take \`--lens-id\`. If you don't know the lens, use \`now\` (resolves the default) or check the user's lenses in the web app.
-- **No autonomous triage.** Triage transforms inbox items into tasks/projects — always confirm the decision with the user first.
+- **No autonomous triage.** Triage transforms inbox items into tasks, projects, resources, or list items — always confirm the decision with the user first.
 - **Review is read-only.** Agents may report and summarize review evidence, but cannot write reflection answers or close Today.
 `;
 
