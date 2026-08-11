@@ -22,7 +22,7 @@ const DATABASE_URL =
 
 export const TEST_PASS = "Testpass123!";
 
-/** Random email so parallel tests + re-runs never collide. */
+/** Random disposable email; global setup/teardown removes this exact pattern. */
 export function uniqueEmail(): string {
   const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   return `e2e-${stamp}@test.actionamp.dev`;

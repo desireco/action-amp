@@ -4,6 +4,18 @@
  * this project.
  */
 export default async function globalSetup() {
+  // A prior interrupted run can leave disposable E2E identities behind. The
+  // matching cleanup after every run lives in global-teardown.ts.
+  const { execFileSync } = await import("node:child_process");
+  const { fileURLToPath } = await import("node:url");
+  const path = await import("node:path");
+  const webapp = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  const databaseUrl = process.env.E2E_DATABASE_URL ?? "postgresql://jake@localhost:5432/actionamp_dev";
+  execFileSync("node", ["scripts/cleanup-e2e-users.mjs", "--delete"], {
+    cwd: webapp,
+    env: { ...process.env, DATABASE_URL: databaseUrl },
+    stdio: "inherit",
+  });
   const url = process.env.E2E_BASE_URL ?? "http://localhost:4000";
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
