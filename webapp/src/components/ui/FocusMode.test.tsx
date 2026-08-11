@@ -49,7 +49,17 @@ describe("FocusMode", () => {
     });
 
     it("renders the centered countdown with configured duration", () => {
-      renderInContext(<FocusMode task={BASE_TASK} onClose={() => {}} />);
+      const freshStartedAt = new Date(Date.now() - 18 * 60 * 1000);
+      renderInContext(
+        <FocusMode
+          task={{
+            ...BASE_TASK,
+            startedAt: freshStartedAt,
+            sessionStartedAt: freshStartedAt,
+          }}
+          onClose={() => {}}
+        />,
+      );
       expect(screen.getByText(/^(06:59|07:00)$/)).toHaveClass(
         "aa-focus-timer__time",
       );
@@ -75,9 +85,14 @@ describe("FocusMode", () => {
     it("falls back to startedAt for the session clock when no open session is present", () => {
       // Legacy task that has startedAt but no matching session row (migration
       // gap). The clock should still tick using startedAt.
+      const freshStartedAt = new Date(Date.now() - 18 * 60 * 1000);
       renderInContext(
         <FocusMode
-          task={{ ...BASE_TASK, sessionStartedAt: null }}
+          task={{
+            ...BASE_TASK,
+            startedAt: freshStartedAt,
+            sessionStartedAt: null,
+          }}
           onClose={() => {}}
         />,
       );
