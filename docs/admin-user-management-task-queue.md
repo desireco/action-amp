@@ -1,6 +1,6 @@
 # Admin user management — parked execution queue
 
-> Queue state: **active**. AU01 and AU02 are complete; AU03 is next and
+> Queue state: **active**. AU01–AU04 are complete; AU05 is next and
 > dependency-ready. This does not authorize server starts, deployment, external
 > Stripe writes, or production migration.
 >
@@ -203,7 +203,7 @@ references and generated auth entry points.
 
 ### AU04 — Pure user-directory and account-action cores
 
-**Status:** pending
+**Status:** done
 **Preferred model:** `gpt-5.6-sol` high
 **Acceptable model:** `gpt-5.6-terra` xhigh
 **Depends on:** AU01, AU02, AU03
@@ -248,6 +248,10 @@ and deletion before Wasp wrappers or React UI.
 
 **Stop condition:** pure behavior and its focused tests pass. Do not register
 Wasp operations, modify route config, or build UI.
+
+**Evidence:** focused admin-core tests passed (14 tests) and `git diff --check`
+passed. The core validates list inputs before reads, uses page-wide groupBy
+aggregates, and requires a caller-provided transaction for local mutations.
 
 ### AU05 — Guarded Wasp operations and registration
 
