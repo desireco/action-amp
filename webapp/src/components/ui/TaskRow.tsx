@@ -37,7 +37,7 @@ interface TaskRowProps {
   /** Whether a row-click action menu is currently expanded. */
   expanded?: boolean;
   /**
-   * Render the trailing lens pill. Opt-in (Today/Done-today turn it on when
+   * Render the leading lens pill. Opt-in (Today/Done-today turn it on when
    * the user has 2+ lenses); the lens-scoped lists pass nothing and stay as
    * they were.
    */
@@ -123,8 +123,7 @@ export function TaskRow({
     task.priority === "IMPORTANT" ||
     Boolean(task.project) ||
     Boolean(due) ||
-    Boolean(task.size) ||
-    showLensPill;
+    Boolean(task.size);
 
   const rootClass = [
     "aa-task-row",
@@ -165,7 +164,19 @@ export function TaskRow({
         {...clickableProps(mainClickable, openTask)}
         aria-expanded={mainClickable ? expanded : undefined}
       >
-        <span className="aa-task-row__title">{task.description}</span>
+        <span className="aa-task-row__title">
+          {showLensPill && task.lens && (
+            <span
+              className="aa-task-row__lens"
+              data-lens-color={task.lens.color ?? undefined}
+              title={`Lens: ${task.lens.name}`}
+            >
+              <span className="aa-task-row__lens-dot" aria-hidden="true" />
+              {task.lens.name}
+            </span>
+          )}
+          {task.description}
+        </span>
         {hasMeta && (
           <div className="aa-task-row__meta">
             {task.priority === "IMPORTANT" && (
@@ -187,16 +198,6 @@ export function TaskRow({
               <Chip variant="muted" small className="aa-task-row__size-chip">
                 {task.size}
               </Chip>
-            )}
-            {showLensPill && task.lens && (
-              <span
-                className="aa-task-row__lens"
-                data-lens-color={task.lens.color ?? undefined}
-                title={`Lens: ${task.lens.name}`}
-              >
-                <span className="aa-task-row__lens-dot" aria-hidden="true" />
-                {task.lens.name}
-              </span>
             )}
           </div>
         )}
