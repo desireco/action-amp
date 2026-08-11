@@ -12,7 +12,8 @@ generator client {
 // then run `wasp db studio` to open Prisma Studio and view your db models.
 //
 // DATA MODEL AUTHORITY: docs/DATA-MODEL.md (v3). Hierarchy:
-//   Lens → Goal → Project → {Task, Resource}
+//   Lens(type=LIFE_AREA) → Goal → Project → {Task, Resource}
+//   Lens(type=SIMPLE_LIST) → ListItem
 // Key constraints:
 //   - Every Goal/Project/standalone Task belongs to exactly one Lens.
 //   - Tasks can exist WITHOUT a Project ("General", scoped per Lens).
@@ -30,6 +31,7 @@ model User {
 
   // Work-tracker entities
   lenses            Lens[]
+  listItems         ListItem[]
   goals             Goal[]
   projects          Project[]
   tasks             Task[]
@@ -188,6 +190,7 @@ model Lens {
   id        String   @id @default(uuid())
   name      String // user-facing label (default "Work"/"Me"; user-defined on Pro)
   kind      LensKind @default(CUSTOM) // stable handle — WORK/PERSONAL for seeded, CUSTOM for user-defined
+  type      LensType @default(LIFE_AREA) // behavioral boundary: structured work or direct checklist
   color     String? // identity color key ("indigo", "emerald", …) from the lens palette in tokens.css
   purpose   String? // one short line: what this lens is for
   createdAt DateTime @default(now())
@@ -198,6 +201,7 @@ model Lens {
   goals    Goal[]
   projects Project[]
   tasks    Task[] // standalone tasks directly in this lens
+  listItems ListItem[]
 
   @@unique([userId, name]) // one user can't have two lenses with the same name
 }
@@ -210,6 +214,33 @@ enum LensKind {
   PERSONAL // the seeded "Me" lens
   WORK // the seeded "Work" lens
   CUSTOM // user-defined (Pro only)
+}
+
+enum LensType {
+  LIFE_AREA
+  SIMPLE_LIST
+}
+
+// A direct checklist row owned by one SIMPLE_LIST Lens. It intentionally has
+// none of Task's planning, focus, hierarchy, or review semantics.
+model ListItem {
+  id          String    @id @default(uuid())
+  text        String
+  content     String?   // optional captured body/context; never task planning metadata
+  sourceUrl   String?   // optional captured source link
+  isDone      Boolean   @default(false)
+  order       Int       @default(0)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  lens   Lens   @relation(fields: [lensId], references: [id], onDelete: Cascade)
+  lensId String
+
+  @@index([lensId, isDone, order])
 }
 
 // ============================================================
