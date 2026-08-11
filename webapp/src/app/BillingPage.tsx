@@ -113,6 +113,7 @@ export function BillingPage() {
           rows={data?.payments ?? []}
           rowKey={(p) => p.id}
           emptyMessage="No payments yet."
+          className="aa-billing-history"
         />
       </section>
     </SettingsLayout>
@@ -154,7 +155,7 @@ function ActivePlanState({
           Manage subscription, payment method, invoices, and cancellation through Stripe.
         </p>
       </div>
-      <Card padding="lg">
+      <Card padding="md" className="aa-billing-current-card">
         <div className="aa-billing-active">
           <div>
             <div className="aa-billing-active-title">
@@ -187,10 +188,10 @@ function ActivePlanState({
    Free user — upgrade screen
    ============================================================ */
 function FreeUpgradeScreen() {
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<PriceKey | null>(null);
 
   const handleCheckout = async (priceKey: PriceKey) => {
-    setCheckoutLoading(true);
+    setCheckoutLoading(priceKey);
     try {
       const result = await createCheckoutSession({ priceKey });
       if (result.url) {
@@ -199,7 +200,7 @@ function FreeUpgradeScreen() {
       }
     } catch (err) {
       console.error("Checkout error:", err);
-      setCheckoutLoading(false);
+      setCheckoutLoading(null);
     }
   };
 
@@ -208,14 +209,20 @@ function FreeUpgradeScreen() {
       <section className="aa-billing-section">
         <div className="aa-settings-section-head">
           <h2 className="aa-settings-sh">Current plan</h2>
-          <p className="aa-settings-note">Free includes personal scope, 3 projects, and 1 goal.</p>
+          <p className="aa-settings-note">Your access and billing status.</p>
         </div>
-        <Card padding="lg">
+        <Card padding="md" className="aa-billing-current-card">
           <div className="aa-billing-active">
-            <div className="aa-billing-active-title">
-              <Chip variant="muted">Free</Chip>
-              <span>No payment method on file</span>
+            <div>
+              <div className="aa-billing-active-title">
+                <Chip variant="muted">Free</Chip>
+                <span>Free plan</span>
+              </div>
+              <p className="aa-billing-active-renewal">
+                Personal scope · 3 projects · 1 goal
+              </p>
             </div>
+            <span className="aa-billing-payment-state">No payment method</span>
           </div>
         </Card>
       </section>
@@ -236,18 +243,26 @@ function FreeUpgradeScreen() {
               <button
                 type="button"
                 className="aa-billing-plan"
-                disabled={checkoutLoading}
+                disabled={checkoutLoading !== null}
                 onClick={() => handleCheckout(plan.id)}
+                aria-label={`Choose ${plan.name} Pro for ${plan.price} ${plan.period}`}
               >
-                {plan.badge && <span className="aa-billing-plan-badge">{plan.badge}</span>}
+                <div className="aa-billing-plan-head">
+                  <span className="aa-billing-plan-name">{plan.name}</span>
+                  {plan.badge && <span className="aa-billing-plan-badge">{plan.badge}</span>}
+                </div>
                 <div className="aa-billing-plan-price">
                   <span className="aa-billing-plan-amount">{plan.price}</span>
                   <span className="aa-billing-plan-period">{plan.period}</span>
                 </div>
-                <div className="aa-billing-plan-name">{plan.name}</div>
-                <div className="aa-billing-plan-pitch">{plan.pitch}</div>
+                <p className="aa-billing-plan-pitch">{plan.pitch}</p>
                 <span className="aa-billing-plan-cta">
-                  {checkoutLoading ? "Opening checkout…" : "Choose plan"}
+                  {checkoutLoading === plan.id ? "Opening checkout…" : `Choose ${plan.name.toLowerCase()}`}
+                  {checkoutLoading !== plan.id && (
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M3 8h9M9 4.5 12.5 8 9 11.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
                 </span>
               </button>
             </Card>

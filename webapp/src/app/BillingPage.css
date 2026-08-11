@@ -8,6 +8,14 @@
   margin-bottom: var(--aa-space-2xl);
 }
 
+.aa-billing-section .aa-settings-section-head {
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-billing-section .aa-settings-sh {
+  margin-bottom: var(--aa-space-xs);
+}
+
 .aa-billing-section:last-child {
   margin-bottom: 0;
 }
@@ -46,6 +54,10 @@
   gap: var(--aa-space-lg);
 }
 
+.aa-billing-current-card {
+  background: var(--aa-bg-soft);
+}
+
 .aa-billing-active-title {
   display: flex;
   align-items: center;
@@ -61,19 +73,29 @@
   margin: var(--aa-space-xs) 0 0;
 }
 
+.aa-billing-payment-state {
+  flex: none;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-3);
+}
+
 /* ============================================================
    Plan picker grid
    ============================================================ */
 .aa-billing-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--aa-space-sm);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--aa-space-md);
+  align-items: stretch;
 }
 
 /* The Card is the visual container; the button fills it. The interactive
    variant adds hover lift; highlighted (recommended) gets the teal border. */
 .aa-billing-plan-card {
   display: flex;
+  min-width: 0;
+  min-height: 248px;
 }
 
 .aa-billing-plan {
@@ -88,11 +110,28 @@
   font-family: var(--aa-font);
   text-align: left;
   cursor: pointer;
+  color: inherit;
 }
 
 .aa-billing-plan:disabled {
   cursor: wait;
   opacity: 0.55;
+}
+
+.aa-billing-plan:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 5px;
+  border-radius: var(--aa-radius-xs);
+}
+
+.aa-billing-plan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 24px;
+  gap: var(--aa-space-sm);
+  margin-bottom: var(--aa-space-lg);
 }
 
 .aa-billing-plan-badge {
@@ -104,14 +143,15 @@
   background: var(--aa-teal-soft);
   padding: 2px 7px;
   border-radius: var(--aa-radius-xs);
-  margin-bottom: var(--aa-space-md);
+  flex: none;
 }
 
 .aa-billing-plan-price {
   display: flex;
   align-items: baseline;
   gap: var(--aa-space-xs);
-  margin-bottom: var(--aa-space-sm);
+  margin-bottom: var(--aa-space-md);
+  white-space: nowrap;
 }
 
 .aa-billing-plan-amount {
@@ -131,21 +171,39 @@
   font-size: var(--aa-text-base);
   font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
-  margin-bottom: 2px;
 }
 
 .aa-billing-plan-pitch {
   font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
   line-height: var(--aa-leading-snug);
-  margin-bottom: var(--aa-space-lg);
+  margin: 0 0 var(--aa-space-xl);
   flex: 1;
 }
 
 .aa-billing-plan-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
   font-size: var(--aa-text-sm);
   font-weight: var(--aa-weight-semibold);
   color: var(--aa-teal-cta);
+}
+
+.aa-billing-plan-cta svg {
+  transition: transform var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-billing-plan:hover:not(:disabled) .aa-billing-plan-cta svg {
+  transform: translateX(2px);
+}
+
+.aa-billing-history {
+  background: var(--aa-surface);
+  box-shadow: var(--aa-shadow-sm);
 }
 
 /* ---- Responsive ---- */
@@ -156,5 +214,15 @@
   .aa-billing-active {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .aa-billing-plan-card {
+    min-height: 220px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-billing-plan-cta svg {
+    transition: none;
   }
 }
