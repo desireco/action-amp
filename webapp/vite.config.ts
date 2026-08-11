@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { defineConfig } from "vite";
 import { wasp } from "wasp/client/vite";
+import tidewave from 'tidewave/vite-plugin';
 
 // Embedded at build time so the deployed bundle can report what commit it
 // was built from (Settings → About, login footer, support/debug signal).
@@ -40,7 +41,7 @@ try {
 }
 
 export default defineConfig({
-  plugins: [wasp()],
+  plugins: [tidewave(), wasp()],
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),
   },
