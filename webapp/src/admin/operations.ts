@@ -1,5 +1,5 @@
 import { HttpError, prisma } from "wasp/server";
-import type { GetAdminStats, GetRecentFeedback, UpdateFeedbackStatus, DeleteFeedback, GetAdminUsers, GrantAdminUserAccess, RemoveAdminUserAccess, DeleteAdminUser } from "wasp/server/operations";
+import type { GetAdminStats, GetRecentFeedback, UpdateFeedbackStatus, DeleteFeedback, GetAdminUsers, GrantAdminUserAccess, RemoveAdminUserAccess, DeleteAdminUser, DeleteAdminUsers } from "wasp/server/operations";
 import { getAdminStatsCore, getRecentFeedbackCore, type AdminStats, type FeedbackRow } from "./operationsCore";
 import { updateFeedbackStatusCore, deleteFeedbackCore, type FeedbackStatus } from "../feedback/operationsCore";
 import type { FunnelRange } from "../analytics/operationsCore";
@@ -8,6 +8,7 @@ import {
   grantAdminUserAccessCore,
   removeAdminUserAccessCore,
   deleteAdminUserCore,
+  deleteAdminUsersCore,
   type ManualGrant,
   type UserAccessFilter,
   type UserSort,
@@ -114,9 +115,16 @@ export const removeAdminUserAccess = (async (args: RemoveAdminUserAccessArgs, co
   return removeAdminUserAccessCore(adminMutationEntities(context.entities), { actorUserId: context.user.id, ...args });
 }) satisfies RemoveAdminUserAccess<RemoveAdminUserAccessArgs, void>;
 
-export type DeleteAdminUserArgs = { targetUserId: string; confirmedEmail: string };
+export type DeleteAdminUserArgs = { targetUserId: string };
 export const deleteAdminUser = (async (args: DeleteAdminUserArgs, context) => {
   requireAdmin(context);
-  if (!args?.targetUserId || typeof args.confirmedEmail !== "string") throw new HttpError(400, "Target user and confirmation email are required.");
+  if (!args?.targetUserId) throw new HttpError(400, "Target user is required.");
   return deleteAdminUserCore(adminMutationEntities(context.entities), { actorUserId: context.user.id, ...args });
 }) satisfies DeleteAdminUser<DeleteAdminUserArgs, void>;
+
+export type DeleteAdminUsersArgs = { targetUserIds: string[] };
+export const deleteAdminUsers = (async (args: DeleteAdminUsersArgs, context) => {
+  requireAdmin(context);
+  if (!Array.isArray(args?.targetUserIds)) throw new HttpError(400, "Users to delete are required.");
+  return deleteAdminUsersCore(adminMutationEntities(context.entities), { actorUserId: context.user.id, ...args });
+}) satisfies DeleteAdminUsers<DeleteAdminUsersArgs, Awaited<ReturnType<typeof deleteAdminUsersCore>>>;

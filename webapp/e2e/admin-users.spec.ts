@@ -14,3 +14,15 @@ test("non-admin cannot use the Users directory", async ({ page }) => {
   await page.goto("/app/admin/users");
   await expect(page.getByText(/admin access required|don't have access/i)).toBeVisible();
 });
+
+test("admin can select visible users and cancel one bulk-delete confirmation", async ({ page }) => {
+  await signupNewUser(page);
+  await signupNewUser(page, { admin: true });
+  await page.goto("/app/admin/users");
+  await page.getByRole("button", { name: "Select visible users" }).click();
+  await expect(page.getByText(/selected on this page/)).toBeVisible();
+  await page.getByRole("button", { name: "Delete selected" }).click();
+  await expect(page.getByRole("dialog", { name: "Delete selected users" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByRole("dialog", { name: "Delete selected users" })).not.toBeVisible();
+});

@@ -1,9 +1,9 @@
 .aa-admin-users__filters { display:flex; flex-wrap:wrap; gap:var(--aa-space-sm); margin-bottom:var(--aa-space-lg); }
 .aa-admin-users__filters input,.aa-admin-users__filters select { min-height:36px; padding:0 var(--aa-space-sm); border:1px solid var(--aa-border); border-radius:var(--aa-radius-sm); background:var(--aa-surface); color:var(--aa-text); font:inherit; }
 .aa-admin-users__actions { display:flex; flex-wrap:wrap; gap:4px; min-width:180px; }
+.aa-admin-users__bulk { align-items:center; display:flex; gap:var(--aa-space-sm); justify-content:flex-end; margin:0 0 var(--aa-space-sm); }
 .aa-admin-users__actions button { border:0; background:transparent; color:var(--aa-teal-cta); cursor:pointer; font:inherit; font-size:var(--aa-text-xs); padding:2px; text-align:left; }
 .aa-admin-users__actions button.danger { color:var(--aa-danger); }
 .aa-table td small,.aa-table td span small,.aa-table td strong { display:block; }
 .aa-table td small { color:var(--aa-text-4); font-size:var(--aa-text-xs); margin-top:3px; }
 .aa-admin-users__missing { color:var(--aa-text-4); }
-.aa-confirm label input { display:block; width:100%; margin-top:var(--aa-space-sm); padding:8px; border:1px solid var(--aa-border); border-radius:var(--aa-radius-sm); }

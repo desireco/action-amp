@@ -129,6 +129,7 @@ import {
   grantAdminUserAccess,
   removeAdminUserAccess,
   deleteAdminUser,
+  deleteAdminUsers,
 } from "./src/admin/operations" with { type: "ref" };
 import {
   getAdminFunnel,
@@ -524,6 +525,7 @@ export default app({
     action(grantAdminUserAccess, { entities: ["User", "AdminUserAction"], auth: true }),
     action(removeAdminUserAccess, { entities: ["User", "AdminUserAction"], auth: true }),
     action(deleteAdminUser, { entities: ["User", "AdminUserAction", "MagicLoginChallenge"], auth: true }),
+    action(deleteAdminUsers, { entities: ["User", "AdminUserAction", "MagicLoginChallenge"], auth: true }),
     query(getAdminFunnel, {
       entities: ["AnalyticsSession", "AnalyticsEvent"],
       auth: true,

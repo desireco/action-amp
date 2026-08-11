@@ -15,7 +15,7 @@ describe("AdminUsersPage contract", () => {
   });
 
   it("renders the required activity and protected actions", () => {
-    for (const text of ["Last login", "Last active", "Tasks finished", "Grant Friend", "Grant Founder", "Delete user data", "Not recorded"]) {
+    for (const text of ["Last login", "Last active", "Tasks finished", "Grant Friend", "Grant Founder", "Delete user data", "Delete selected", "Select visible users", "Not recorded"]) {
       expect(source).toContain(text);
     }
   });

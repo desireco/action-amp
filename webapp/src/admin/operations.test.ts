@@ -6,7 +6,7 @@ describe("admin user operations", () => {
   const source = readFileSync(resolve(process.cwd(), "src/admin/operations.ts"), "utf8");
 
   it("places admin authorization before each user core call", () => {
-    for (const operation of ["getAdminUsers", "grantAdminUserAccess", "removeAdminUserAccess", "deleteAdminUser"]) {
+    for (const operation of ["getAdminUsers", "grantAdminUserAccess", "removeAdminUserAccess", "deleteAdminUser", "deleteAdminUsers"]) {
       const start = source.indexOf(`export const ${operation}`);
       const body = source.slice(start, source.indexOf("}) satisfies", start));
       expect(body.indexOf("requireAdmin(context)")).toBeGreaterThanOrEqual(0);
@@ -16,6 +16,7 @@ describe("admin user operations", () => {
 
   it("keeps argument validation in grant and delete wrappers", () => {
     expect(source).toContain('throw new HttpError(400, "Target user and grant are required.")');
-    expect(source).toContain('throw new HttpError(400, "Target user and confirmation email are required.")');
+    expect(source).toContain('throw new HttpError(400, "Target user is required.")');
+    expect(source).toContain('throw new HttpError(400, "Users to delete are required.")');
   });
 });

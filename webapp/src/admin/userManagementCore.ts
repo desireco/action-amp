@@ -122,11 +122,10 @@ export async function removeAdminUserAccessCore(entities: Entities, args: { acto
   });
 }
 
-export async function deleteAdminUserCore(entities: Entities, args: { actorUserId: string; targetUserId: string; confirmedEmail: string }) {
+async function deleteEligibleAdminUser(entities: Entities, args: { actorUserId: string; targetUserId: string }) {
   const target = await entities.User.findUnique({ where: { id: args.targetUserId }, select: { id: true, isAdmin: true, manualAccessGrant: true, stripeCustomerId: true, auth: { select: { identities: emailSelect } } } });
   assertTarget(args.actorUserId, target);
   const email = target.auth?.identities?.[0]?.providerUserId?.trim().toLowerCase();
-  if (!email || args.confirmedEmail.trim().toLowerCase() !== email) throw new AdminUserDeletionBlockedError("Type the account email exactly to delete it.");
   if (target.stripeCustomerId) {
     try {
       const subscriptions = await stripe.subscriptions.list({ customer: target.stripeCustomerId, status: "all", limit: 100 });
@@ -136,8 +135,30 @@ export async function deleteAdminUserCore(entities: Entities, args: { actorUserI
   const tx = entities.$transaction;
   if (!tx) throw new AdminUserMutationError("Admin transaction support is unavailable.");
   return tx(async (db: Entities) => {
-    await db.MagicLoginChallenge.deleteMany({ where: { email } });
+    if (email) await db.MagicLoginChallenge.deleteMany({ where: { email } });
     await db.AdminUserAction.create({ data: { actorUserId: args.actorUserId, targetUserId: target.id, action: "DELETE_USER", previousGrant: target.manualAccessGrant, nextGrant: null } });
     await db.User.delete({ where: { id: target.id } });
   });
+}
+
+export async function deleteAdminUserCore(entities: Entities, args: { actorUserId: string; targetUserId: string }) {
+  return deleteEligibleAdminUser(entities, args);
+}
+
+export async function deleteAdminUsersCore(entities: Entities, args: { actorUserId: string; targetUserIds: string[] }) {
+  const ids = [...new Set(args.targetUserIds ?? [])];
+  if (!ids.length || ids.length > 25 || ids.some((id) => typeof id !== "string" || !id)) {
+    throw new AdminUserInputError("Select between 1 and 25 users to delete.");
+  }
+  const deletedIds: string[] = [];
+  const skipped: Array<{ targetUserId: string; reason: string }> = [];
+  for (const targetUserId of ids) {
+    try {
+      await deleteEligibleAdminUser(entities, { actorUserId: args.actorUserId, targetUserId });
+      deletedIds.push(targetUserId);
+    } catch (error) {
+      skipped.push({ targetUserId, reason: error instanceof Error ? error.message : "Could not delete this account." });
+    }
+  }
+  return { deletedIds, skipped };
 }

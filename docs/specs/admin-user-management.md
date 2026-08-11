@@ -73,8 +73,10 @@ the few account-level changes that support launch operations.
    records actor id, target id, action, previous/new manual grant, and time in
    the same transaction as a grant change or deletion. It contains no email,
    task, or payment content.
-9. **Deletion is permanent but billing-safe.** An administrator confirms by
-   typing the account email. The server rejects self-deletion, deletion of an
+9. **Deletion is permanent but billing-safe.** An administrator confirms in a
+   standard destructive confirmation dialog. They can select up to one visible
+   page of 25 eligible accounts for one cleanup confirmation; the server reports
+   protected accounts it skips. The server rejects self-deletion, deletion of an
    admin account, and deletion of an account with active recurring Stripe
    billing. It performs a read-only Stripe subscription lookup using the
    existing customer id; lookup failure fails closed with a named retryable
@@ -159,8 +161,8 @@ Delete user data
 
 Grant actions are explicit confirmation dialogs identifying the effective
 access outcome. Buttons disable while pending; server errors remain visible and
-do not optimistically mutate the row. Deletion uses `ConfirmDialog`, requires
-the exact normalized email, and says which local data is removed versus which
+do not optimistically mutate the row. Deletion uses `ConfirmDialog` with a
+standard destructive confirmation and says which local data is removed versus which
 payment/anonymous analytics records remain.
 
 ## Data and architecture
@@ -265,7 +267,7 @@ silently skipping rows.
 |---|---|---|---|---|
 | List/query users | admin required | global admin data only | n/a | no auth provider data |
 | Grant/remove access | admin required | any non-self non-admin account | n/a | valid grant, Founder cap |
-| Delete user | admin required | any non-self non-admin account | n/a | exact email, no active recurring billing |
+| Delete user(s) | admin required | any non-self non-admin account | max 25 visible | no active recurring billing |
 | Login recorder | authenticated auth flow only | current authenticated account | n/a | provider allow-list |
 
 ## Existing-data and rollout behavior
@@ -298,7 +300,7 @@ silently skipping rows.
       and central entitlement checks honor them consistently.
 - [ ] Every grant/removal/deletion either changes data and writes one audit row
       atomically or changes nothing.
-- [ ] Deletion rejects self, admin targets, bad confirmation, and active
+- [ ] Deletion rejects self, admin targets, and active
   recurring billing or unavailable subscription check; an eligible deletion removes local account data while
       retaining detached payment audit records.
 - [ ] Focused unit tests, admin page tests, authorization tests, relevant
