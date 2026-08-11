@@ -7,6 +7,7 @@ import { createSession } from "wasp/auth/session";
 import { createProviderId, createUser, findAuthIdentity } from "wasp/server/auth";
 import { renderMagicLoginEmailHtml } from "./magicLoginEmail";
 import { buildMagicLoginUrl, safeAuthReturnTo } from "./returnTo";
+import { recordLoginActivitySafely } from "./loginActivity";
 
 const CODE_TTL_MS = 10 * 60 * 1000;
 const RESEND_INTERVAL_MS = 60 * 1000;
@@ -168,6 +169,7 @@ export const verifyMagicLogin = (async (args: VerifyMagicLoginInput, context) =>
   const providerId = createProviderId("email", challenge.email);
   const identity = await findAuthIdentity(providerId);
   let authId = identity?.authId;
+  let userId: string | undefined;
   if (!authId) {
     const { fullName, firstName } = displayNameFromEmail(challenge.email);
     const user = await createUser(
@@ -181,9 +183,19 @@ export const verifyMagicLogin = (async (args: VerifyMagicLoginInput, context) =>
       { fullName, firstName },
     );
     authId = user.auth?.id;
+    userId = user.id;
   }
   if (!authId) throw new HttpError(500, "Could not create your session.");
 
   const session = await createSession(authId);
+  if (!userId) {
+    const user = await context.entities.User.findFirst({ where: { auth: { id: authId } } });
+    userId = user?.id;
+  }
+  if (userId) {
+    await recordLoginActivitySafely(context.entities, userId, "magic");
+  } else {
+    console.error("Login activity recording skipped", { authId, provider: "magic" });
+  }
   return { sessionId: session.id };
 }) satisfies VerifyMagicLogin<VerifyMagicLoginInput, { sessionId: string }>;

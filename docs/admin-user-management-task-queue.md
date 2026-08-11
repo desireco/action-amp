@@ -152,7 +152,7 @@ last duplicate client-side admin bypass; Fallow reported no new issues.
 
 ### AU03 — Successful-login recorder
 
-**Status:** pending
+**Status:** done
 **Preferred model:** `gpt-5.6-sol` high
 **Acceptable model:** `gpt-5.6-terra` xhigh
 **Depends on:** AU01
@@ -195,6 +195,11 @@ without turning telemetry failure into authentication failure.
 
 **Stop condition:** successful-auth recording is complete. Do not expose any
 admin directory query or UI.
+
+**Evidence:** focused auth tests passed (21 tests), `./scripts/wasp-safe.sh
+compile` passed, and `git diff --check` passed. Review found no actionable
+issues; Fallow's changed-export report is a false positive for Wasp config
+references and generated auth entry points.
 
 ### AU04 — Pure user-directory and account-action cores
 

@@ -204,6 +204,7 @@ import {
   requestMagicLogin,
   verifyMagicLogin,
 } from "./src/auth/magicLogin" with { type: "ref" };
+import { onAfterLogin } from "./src/auth/hooks" with { type: "ref" };
 import { globalMiddlewareConfigFn } from "./src/auth/serverMiddleware" with { type: "ref" };
 // Google social auth — disabled to skip GOOGLE_CLIENT_ID/SECRET setup for now.
 // All supporting code (config, GoogleButton, userSignupFields) stays in place;
@@ -261,6 +262,7 @@ export default app({
       // },
     },
     onAuthSucceededRedirectTo: "/app",
+    onAfterLogin,
     // Relative /login — stays on the app subdomain (app.actionamp.com/login).
     // Wasp's auth-required route guard redirects unauthenticated visitors here,
     // then returns them to the intended page after login. (Earlier this was the
@@ -374,7 +376,7 @@ export default app({
       auth: false,
     }),
     action(verifyMagicLogin, {
-      entities: ["MagicLoginChallenge"],
+      entities: ["MagicLoginChallenge", "User", "LoginEvent"],
       auth: false,
     }),
     // CLI OAuth mint — the /cli/login page calls this to mint a PAT on confirm.
