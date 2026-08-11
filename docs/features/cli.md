@@ -4,7 +4,7 @@ title: "CLI + orchestration skills (power-user terminal surface)"
 feature_area: developer
 status: partial # Phase 0 + Phase 1 shipped; Phase 2 (skills) draft
 spec: cli.md # umbrella; effort split into 3 specs 2026-07-03
-verified: 2026-08-08
+verified: 2026-08-10
 ---
 
 # CLI + orchestration skills
@@ -24,6 +24,18 @@ inside the Pro CLI surface.
 - **Focus/lists:** `now`, `today (--done)`, `logbook`, read-only
   `review (week|month)` check-ins/reports (`--previous`, `--for`, optional
   explicit Lens).
+
+**`now` context (added 2026-08-10 — focus-goal-context spec).** `actionamp now`
+emits a calm labeled block: the Task description first (unlabelled), then
+available `Project:`, resolved `Goal:`, truthful `Why now:` (matcher reason), and
+Goal-backed `Why it matters:` (description or `Toward <name>.` fallback) lines.
+Unavailable lines are omitted — no placeholders, no invented rationale, no
+color-dependent meaning. `--json` gains one additive top-level `context` field
+(`{ project, goal, whyNow, whyItMatters }`, each nullable); `task` and `reason`
+meanings are unchanged, and a null Task returns null `context`. Context is built
+server-side from the authenticated ranked + hydrated Task (`buildNowContext`); the
+client supplies no Project/Goal/why data. Verified 2026-08-10:
+`cli/src/commands/now.test.ts` (13 cases) + `cli run build` + `wasp compile`.
 - **Capture/inbox:** `capture` (NL parsing + `--title/--content/--source-url/
 --file` for shared content + one image), `inbox (list|triage)`.
 - **Tasks:** `task (show|start|pause|done|snooze|move)`.

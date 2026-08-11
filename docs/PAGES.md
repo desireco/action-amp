@@ -62,8 +62,36 @@ These are the main Life-area destinations. Scoped surfaces use the active
 
 - Shows 1 (max 3) Tasks ranked by priority → size → due.
 - Context line ("Important · due today · S"), Start / Not now / ⋯ actions.
-- **Focus affordance** — `Start` navigates to `/app/focus` (D3) and starts
+- **Focus affordance** — `Start` navigates to `/app/focus` (D4) and starts
   the task (sets `Task.startedAt`).
+- **Three rationale layers, in order, never conflated** (locked 2026-08-10;
+  implementation pending — see `specs/focus-goal-context.md`):
+  1. **Matcher "why now"** (shipped). The existing `composeWhy` line from the
+     actual ranking factors, with amber emphasis. Unchanged.
+  2. **Goal rationale "why at all"** (pending). Renders **only in the `next`
+     candidate state**, directly after the matcher rationale. Resolution:
+     `task.project.goal` → legacy `task.goal` → none. With a described Goal:
+     `Why does this matter?` / trimmed description / `Goal · <name>` (quiet
+     violet). With a description-less Goal: `Why does this matter?` /
+     `Toward <Goal name>.` (no duplicate attribution). With no resolved Goal:
+     nothing. Never manufactured from Project/Task text, priority, due date,
+     or matcher/work history.
+  3. **Paused-work continuity** (pending). Renders **only in the `next`
+     candidate state**, after Goal rationale (or directly after matcher
+     rationale when no Goal exists). Derived from closed sessions and NOTE
+     updates only. Stats row omits zero segments and uses correct
+     singular/plural; worked time sums valid closed sessions (`endedAt >
+     startedAt`), rounds to the nearest whole minute, and renders `<1 min
+     worked` for positive sub-minute work. Notes count trimmed non-empty NOTE
+     updates only; `COMPLETED` rows excluded. Newest valid NOTE surfaces as a
+     passive two-line `Latest note` preview — no link/editor/disclosure/thread
+     on Next. A fresh Task, or one with no valid history, renders no continuity
+     block, no empty row, no prompt.
+  - The **`now` state** (work in progress) does **not** show the paused-work
+    summary — live execution context belongs in Focus. Matcher and Goal
+    rationale behavior in the `now` state is unchanged from prior code.
+  - All added context stays subordinate to the Task title and actions, narrower
+    in visual weight, and must not cause horizontal overflow at mobile widths.
 - Empty state: if no Today items → gentle prompt to triage Inbox or plan Today.
 - If Inbox is untriaged and Today is empty → nudge toward triage.
 
@@ -201,11 +229,23 @@ Notes thread rendered as a thread + composer (writes a `TaskUpdate`,
 
 ### D4. Focus → `/app/focus`
 
-Single-task execution route (FEATURES F13, Variant F). The task, its margin
-clock (live session + honest total), summoned composer, and _nothing else_.
+Single-task execution route (FEATURES F13, Variant F). The task, its centered
+countdown ring, explicit Note/Pause/Complete actions, inline composer, and
+_nothing else_.
 
 - Entered from Next's one-tap "Start" or any task row's focus affordance.
 - Minimal chrome — sidebar hidden.
+- **Goal rationale** (locked 2026-08-10; implementation pending — see
+  `specs/focus-goal-context.md`). Same resolution and copy rules as P1 Next:
+  `task.project.goal` → legacy `task.goal` → none. With a described Goal:
+  `Why does this matter?` / trimmed description / `Goal · <name>` (quiet
+  violet). With a description-less Goal: `Why does this matter?` /
+  `Toward <Goal name>.` With no resolved Goal: nothing. Placed directly below
+  the Task title and above editable Task details, in the existing centered
+  content column. No card, icon, link, disclosure, animation, badge, or action.
+  - Focus **does not repeat** the matcher "why now" rationale or the
+    paused-work continuity summary. Its timer and activity thread already
+    provide live and historical execution context.
 - Confirm-on-complete appends a `kind=COMPLETED` `TaskUpdate`; `Task.completedAt`
   stamps; `status` is left untouched.
 - `TaskSession` rows (startedAt/endedAt) are maintained across start/pause/

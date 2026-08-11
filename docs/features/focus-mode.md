@@ -4,7 +4,7 @@ title: "Focus mode (single-task surface)"
 feature_area: focus
 status: shipped
 spec: —
-verified: 2026-08-07
+verified: 2026-08-10
 ---
 
 # Focus mode
@@ -33,11 +33,30 @@ Hides the sidebar; no counts, no list — just the one task. Esc exits.
 - **Dedicated route** (replaces the old overlay invocation) — `NextPage`
   and `ProjectDetailPage` `navigate("/app/focus")` into it.
 
+**Added 2026-08-10 (Goal rationale — focus-goal-context spec).** Focus shows a
+quiet **Goal rationale** block directly below the Task title and above the
+editable Task details, in the existing centered column. Resolution:
+`task.project.goal` → legacy `task.goal` → none. With a described Goal it
+renders `Why does this matter?` / the trimmed description / `Goal · <name>`
+(quiet violet — the Project/Goal identity hue). With a description-less Goal it
+renders `Why does this matter?` / `Toward <Goal name>.` (no duplicate
+attribution). With no Goal it renders nothing. The block is passive: no card,
+icon, link, disclosure, animation, badge, or action. Focus **does not repeat**
+the matcher "why now" rationale or the paused-work continuity summary — its
+timer and activity thread already provide live and historical execution
+context. Normalized by the shared pure `app/taskContext.ts` (`resolveGoal`);
+mapped by `app/focusTaskView.ts` (`toFocusTask.goalContext`).
+
 **Related.** Task notes thread + completion log: see
 `features/task-notes-completion-log.md`.
 
-**Files.** `app/FocusRoute.tsx`, `app/FocusMode.tsx`; segment accounting in
-`tasks/operations.ts` (`startTask`/`pauseTask`/`toggleTaskDone`).
+**Files.** `app/FocusPage.tsx`, `components/ui/FocusMode.tsx`; Goal mapping in
+`app/focusTaskView.ts`; pure normalization in `app/taskContext.ts`; segment
+accounting in `tasks/operations.ts` (`startTask`/`pauseTask`/`toggleTaskDone`).
+
+**Verified 2026-08-10.** `app/focusTaskView.test.ts` (Goal precedence +
+trimming), `components/ui/FocusMode.test.tsx` (described / Toward fallback /
+absent states; matcher rationale + continuity not repeated), `wasp compile`.
 
 **Done?** Shipped. Focus timer and explicit action hierarchy are live; broader
 hard-mode work remains separate.

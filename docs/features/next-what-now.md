@@ -4,7 +4,7 @@ title: "Next / What Now (the home screen + the wedge matcher)"
 feature_area: focus
 status: shipped
 spec: focus-why-transparent.md   # done — the "why this?" line
-verified: 2026-07-03
+verified: 2026-08-10
 ---
 
 # Next / What Now
@@ -28,8 +28,37 @@ active lens, not done. **No moment/time-of-day/energy factor yet** — that is
 **"Why this?" line** (`app/focusWhy.ts`, `composeWhy`). Composed from the actual
 ranking factors, never fabricated; omitted entirely when nothing truthful applies.
 
-**Files.** `app/NextPage.tsx`; `tasks/operations.ts` (`getTopTask`);
-`app/focusWhy.ts`.
+**Added 2026-08-10 — three rationale layers, never conflated**
+(focus-goal-context spec). Next candidate (`state="next"`) shows, in order:
+
+1. **Matcher "why now"** — the existing `composeWhy` line, amber emphasis,
+   unchanged.
+2. **Goal rationale "why at all"** — `Why does this matter?` / trimmed Goal
+   description / `Goal · <name>` (quiet violet), or `Toward <Goal name>.` when
+   the Goal has no description, or nothing when no Goal resolves. Resolution:
+   `task.project.goal` → legacy `task.goal` → none. Never manufactured from
+   Project/Task text, priority, due date, or work history.
+3. **Paused-work continuity** — a compact stats row (`<n> min worked · <n>
+   sessions · <n> notes`, zero segments omitted, correct singular/plural) plus
+   an optional two-line `Latest note` preview. Derived from valid closed
+   `TaskSession`s (`endedAt > startedAt`; sub-60s → `<1 min worked`) and
+   trimmed non-empty `TaskUpdate.kind === NOTE` rows (COMPLETED excluded).
+   Newest NOTE only, passive plain text. A fresh Task renders no block.
+
+The home **`now` state** does **not** show the paused-work summary — live
+execution context belongs in Focus. History relations attach only to the ranked
+winner (not every candidate) via a shared owned hydration core
+(`hydrateTopTaskData`); normalization lives in the pure `app/taskContext.ts`.
+
+**Files.** `app/NextPage.tsx`; `components/ui/NextCard.tsx`; `tasks/operations.ts`
+(`getTopTask` → rank → `hydrateTopTaskData`); `tasks/operationsCore.ts`
+(`getTopTaskData`, `hydrateTopTaskData`); `app/focusWhy.ts`; `app/taskContext.ts`.
+
+**Verified 2026-08-10.** `tasks/operationsCore.test.ts` + `tasks/operations.test.ts`
+(ranking unchanged + winner hydration), `app/taskContext.test.ts` (Goal
+precedence, time arithmetic, NOTE filtering, grammar), `components/ui/NextCard.test.tsx`
+(Goal described/fallback/absent, combined/time-only/notes-only stats, latest-note
+preview, zero suppression, fresh state, `now`-state suppression), `wasp compile`.
 
 **Done?** Shipped + verified. The transparent "why this?" shipped under the
 `focus-why-transparent` spec (done 2026-06-27). The matcher itself is the MVP

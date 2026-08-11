@@ -141,6 +141,46 @@ Triage drains the universal Inbox across both Lens types.
   `status` untouched (so Today's Done section stays accurate). See
   `docs/features/focus-mode.md` + `docs/features/task-notes-completion-log.md`.
 - A **Now** state (`Task.startedAt`) persists across navigation.
+- **Three rationale layers on the Work surfaces, never conflated** (locked
+  2026-08-10; implementation pending — see `specs/focus-goal-context.md`).
+  Next and Focus already explain one question; Goal rationale and paused-work
+  continuity answer two others. They stay visually and conceptually separate:
+  1. **Matcher rationale — "why now"** (shipped under `focus-why-transparent`).
+     Composed by `composeWhy` from the actual ranking factors (in-progress,
+     priority, size-fit, due/overdue). Truthful, omit-when-empty, amber
+     emphasis. This explains why the matcher selected the Task **now**. It is
+     **not** changed by Goal rationale.
+  2. **Goal rationale — "why at all"** (pending). Explains why the user chose
+     this work **at all**, drawn from the Task's resolved Goal, not from
+     matcher signals. Resolution precedence:
+     `task.project.goal` → legacy `task.goal` → `null`. Project Goal wins over
+     a conflicting legacy direct Goal; one Goal is shown, never merged. With a
+     non-empty Goal description it renders the Goal question, the trimmed
+     description, and a `Goal · <name>` attribution (quiet violet, the existing
+     Project/Goal identity hue). With no usable description it renders only
+     `Toward <Goal name>.` — no duplicate attribution line. With no resolved
+     Goal it renders nothing. It must never manufacture rationale from Project
+     name, Task content, priority, due date, matcher signals, or work history.
+  3. **Paused-work continuity** (pending). Derived from closed `TaskSession`s
+     and user-authored `TaskUpdate.kind === NOTE` rows. Appears **only on a
+     Next candidate in the `next` state** — i.e. when the user is deciding
+     whether to (re)start. The home `now` state does not show a stale summary
+     while work is active; live execution context belongs in Focus. A valid
+     session has `endedAt > startedAt`; open, zero-length, reversed, or invalid
+     sessions do not count. Worked time is the sum of valid closed-session
+     durations. Positive sub-minute work renders `<1 min worked`; otherwise the
+     aggregate rounds to the nearest whole minute with correct singular/plural.
+     Session and note counts use correct grammar; `0` segments are omitted and
+     an empty row is never shown. Notes count only trimmed non-empty NOTE
+     updates; `kind=COMPLETED` rows do not count. Only the newest valid NOTE
+     surfaces, as a passive two-line plain-text preview labeled `Latest note`
+     — no link, editor, disclosure, or full thread on Next. Fresh Tasks and
+     Tasks with no valid history render no continuity block.
+- **Goal rationale appears on both Next (candidate state) and Focus** (below
+  the Task title, above editable Task details, in the existing centered
+  column). Focus does **not** repeat matcher rationale or the continuity
+  summary: its timer and activity thread already provide live and historical
+  execution context. Next shows continuity; Focus does not.
 
 ### 2.4 Planning Area — organizing
 

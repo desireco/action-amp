@@ -1,6 +1,7 @@
 # Goal Rationale and Work Continuity — Model-friendly Task Queue
 
-> Queue state: **parked**. Planning only; implementation has not started.
+> Queue state: **active**. Execution authorized via `duet-execute-plan`
+> 2026-08-10.
 >
 > Product contract:
 > [`specs/focus-goal-context.md`](specs/focus-goal-context.md).
@@ -48,7 +49,12 @@ NEXT: next dependency-ready task
 
 ### FG01 — Canonical Work-area contract cascade
 
-**Status:** pending  
+**Status:** done 2026-08-10 via `duet-execute-plan`. Canonical prose in
+`docs/WORKFLOW.md` §2.3 and `docs/PAGES.md` P1+D4 now distinguish matcher "why
+now" (shipped), Goal "why at all" (pending), and paused-work continuity (Next
+`next` state only), with exact placement, fallback, absence, time arithmetic,
+and latest-note behavior. `rg` check + `git diff --check` clean. Uncommitted —
+queue contract pt 7 forbids commits pending separate authorization.
 **Preferred model:** `gpt-5.6-terra` high  
 **Acceptable model:** `gpt-5.6-sol` medium  
 **Depends on:** none
@@ -91,9 +97,15 @@ feature-catalog edits.
 
 ### FG02 — Shared owned Task context hydration
 
-**Status:** pending  
-**Preferred model:** `gpt-5.6-terra` high  
-**Acceptable model:** `gpt-5.6-sol` medium  
+**Status:** done 2026-08-10 via `duet-execute-plan`. Added pure
+`hydrateTopTaskData` core (scoped by userId + id; returns Project→nested Goal,
+direct Goal + description, sessions by startedAt, NOTE updates newest-first;
+null on race). Wired `getTopTask` to rank then hydrate; extended
+`getFocusedTask` project/goal selection. Tests: 118 pass (29 core + 89 ops);
+`wasp compile` clean; `git diff --check` clean. Uncommitted — queue contract
+pt 7 forbids commits pending separate authorization.
+**Preferred model:** `gpt-5.6-terra` high
+**Acceptable model:** `gpt-5.6-sol` medium
 **Depends on:** `FG01`
 
 **Goal:** one pure hydration core returns owned Goal and history data for the
@@ -148,9 +160,16 @@ CLI route/output or presentation helpers yet.
 
 ### FG03 — Pure Goal and continuity normalization
 
-**Status:** pending  
-**Preferred model:** `gpt-5.6-terra` high  
-**Acceptable model:** `gpt-5.6-sol` medium  
+**Status:** done 2026-08-10 via `duet-execute-plan`. Created pure
+`webapp/src/app/taskContext.ts`: `resolveGoal` (Project→direct→null precedence),
+`goalRationale` (described/Toward fallback), `resolveContinuity` (valid
+closed-session sum, `<1 min` on raw sub-60s threshold, NOTE-only count,
+newest-note selection), `continuityStatsRow` (grammar + zero suppression),
+`buildNowContext` (CLI Project/Goal/whyNow/whyItMatters). 41 tests pass;
+`git diff --check` clean. No query/JSX/CSS/existing-file edits. Uncommitted —
+queue contract pt 7.
+**Preferred model:** `gpt-5.6-terra` high
+**Acceptable model:** `gpt-5.6-sol` medium
 **Depends on:** `FG02`
 
 **Goal:** one pure module resolves Goal precedence, prior-work summary, and
@@ -204,9 +223,17 @@ edits.
 
 ### FG04 — Goal rationale in active Focus
 
-**Status:** pending  
-**Preferred model:** `gpt-5.6-terra` high  
-**Acceptable model:** `gpt-5.6-sol` medium  
+**Status:** done 2026-08-10 via `duet-execute-plan`. Extended `toFocusTask`
+(goalContext via shared resolveGoal) and `FocusTask` interface; rendered a
+semantic `Goal context` section in FocusMode below the title (described →
+question+answer+violet attribution; description-less → Toward fallback, no
+attribution; absent → no block). Added `.aa-focus__goal` styles (quiet violet,
+no card/icon/link/focus-target). Focus does NOT repeat matcher rationale or
+continuity. Tests: 82 pass (5 focusTaskView + 41 taskContext + 36 FocusMode
+incl. 5 new Goal cases); `wasp compile` clean; `git diff --check` clean.
+Uncommitted — queue contract pt 7.
+**Preferred model:** `gpt-5.6-terra` high
+**Acceptable model:** `gpt-5.6-sol` medium
 **Depends on:** `FG03`
 
 **Goal:** Focus shows quiet Goal rationale without changing execution behavior.
@@ -256,9 +283,19 @@ browser, or feature-catalog edits.
 
 ### FG05 — Goal rationale and prior work on Next
 
-**Status:** pending  
-**Preferred model:** `gpt-5.6-terra` high  
-**Acceptable model:** `gpt-5.6-sol` medium  
+**Status:** done 2026-08-10 via `duet-execute-plan`. NextPage normalizes
+goalContext + continuity from the hydrated winner (resolveGoal /
+resolveContinuity / continuityStatsRow) and passes presentation values to
+NextCard only in the `next` state. NextCard renders a semantic `Goal and
+previous work` section after the matcher rationale: Goal block (described →
+question+answer+violet attribution; description-less → Toward; absent → none)
+and continuity (stats row + optional two-line `Latest note` preview). Zero
+segments suppressed; `now` state shows neither. CSS: violet attribution,
+tabular-nums stats, -webkit-line-clamp 2. Tests: 62 pass (41 taskContext + 21
+NextCard incl. 13 new); `wasp compile` clean; `git diff --check` clean.
+Uncommitted — queue contract pt 7.
+**Preferred model:** `gpt-5.6-terra` high
+**Acceptable model:** `gpt-5.6-sol` medium
 **Depends on:** `FG04`
 
 **Goal:** Next candidate shows purpose and restart context while fresh and Now
@@ -312,9 +349,17 @@ query, Focus, browser, or feature-catalog edits.
 
 ### FG06 — CLI `now` Project, Goal, and why context
 
-**Status:** pending  
-**Preferred model:** `gpt-5.6-terra` high  
-**Acceptable model:** `gpt-5.6-sol` medium  
+**Status:** done 2026-08-10 via `duet-execute-plan`. cliNow now hydrates the
+ranked winner (hydrateTopTaskData) and builds additive `context` server-side
+(buildNowContext); returns `{task, context}` for a Task, `{task: null,
+context: null, reason}` for empty/race. Raw ranked Task stays in `task`;
+sessions/updates not serialized. CLI types.ts gained nullable `NowContext`;
+now.ts human output is a labeled block (Task first, then available Project/
+Goal/Why now/Why it matters, omitted when unavailable); `--json` is the direct
+server result. now.test.ts (13 cases) + cli build + webapp tests (70) + wasp
+compile + git diff --check all clean. Uncommitted — queue contract pt 7.
+**Preferred model:** `gpt-5.6-terra` high
+**Acceptable model:** `gpt-5.6-sol` medium
 **Depends on:** `FG05`
 
 **Goal:** `actionamp now` emits calm human context and stable additive JSON for
@@ -381,9 +426,18 @@ additive response. No browser, live API call, or feature-catalog edits.
 
 ### FG07 — Cross-layer, CLI, and visual verification
 
-**Status:** pending  
-**Preferred model:** `gpt-5.6-sol` high  
-**Acceptable model:** `gpt-5.6-terra` high  
+**Status:** done (automated) 2026-08-10 via `duet-execute-plan`. All focused
+webapp tests pass (221: operationsCore 29, operations 89, taskContext 41,
+focusTaskView 5, FocusMode 36, NextCard 21) + CLI now.test.ts (13) + cli build
++ wasp compile + git diff --check clean. e2e/next.spec.ts needs no change
+(additive Goal/continuity content doesn't appear in the freshly-triaged-task
+flow the suite exercises). Feature docs updated with exact evidence
+(focus-mode.md, next-what-now.md, cli.md). NOT claimed: browser visual QA and
+live `actionamp now` CLI QA — these require an authorized running dev server,
+which queue contract pt 7 forbids starting; record as incomplete, not as
+acceptance. Uncommitted — queue contract pt 7.
+**Preferred model:** `gpt-5.6-sol` high
+**Acceptable model:** `gpt-5.6-terra` high
 **Depends on:** `FG06`
 
 **Goal:** verify complete web and CLI context behavior, then update
