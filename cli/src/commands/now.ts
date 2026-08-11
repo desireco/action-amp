@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import { request } from "../api.js";
 import { readConfig } from "../config.js";
-import { emit, formatTask, type OutputCtx } from "../output.js";
+import { emit, type OutputCtx } from "../output.js";
 import type { NowResult } from "../types.js";
 
 export function makeNowCommand(): Command {
@@ -21,10 +21,31 @@ export function makeNowCommand(): Command {
       emit(
         result,
         () => {
+          // Human output is a short labeled block (focus-goal-context spec):
+          // Task description first and unlabelled, then available Project,
+          // resolved Goal, truthful Why now, and Goal-backed Why it matters
+          // lines. Unavailable lines are omitted — no placeholders, no
+          // invented rationale, no color-dependent meaning, no exclamation.
           if (result.task) {
-            process.stdout.write(formatTask(result.task) + "\n");
+            const lines: string[] = [result.task.description];
+            const c = result.context;
+            if (c?.project) {
+              lines.push(`Project: ${c.project.name}`);
+            }
+            if (c?.goal) {
+              lines.push(`Goal: ${c.goal.name}`);
+            }
+            if (c?.whyNow) {
+              lines.push(`Why now: ${c.whyNow}`);
+            }
+            if (c?.whyItMatters) {
+              lines.push(`Why it matters: ${c.whyItMatters}`);
+            }
+            process.stdout.write(lines.join("\n") + "\n");
           } else if (result.reason === "no-lens") {
-            process.stdout.write("No lens yet. Complete onboarding in the app first.\n");
+            process.stdout.write(
+              "No lens yet. Complete onboarding in the app first.\n",
+            );
           } else {
             process.stdout.write("Nothing on the table.\n");
           }

@@ -28,7 +28,7 @@ npm run build && ./dist/index.js     # built
 | Command                                                                | What it does                                                                                                                 |
 | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `login [--dev]`                                                        | OAuth browser login (default: prod; `--dev` → localhost)                                                                     |
-| `now`                                                                  | Print your top task (same one `/app` shows)                                                                                  |
+| `now`                                                                  | Print your top task with Project, Goal, and why context (same one `/app` shows)                                              |
 | `capture "<text>"`                                                     | Quick-capture to inbox (NL parsing: `#project @date !priority`)                                                              |
 | `today [--done]`                                                       | Today's committed tasks (`--done` → completed today)                                                                         |
 | `task show <id>`                                                       | Show a single task                                                                                                           |
@@ -70,7 +70,14 @@ do not upload files.
 ## `--json` output shapes
 
 ```
-now          → { task: {...} | null, reason?: "no-lens" | "no-candidates" }
+now          → { task: {...} | null, context: NowContext | null, reason?: "no-lens" | "no-candidates" }
+               # context is non-null for a Task (fields nullable individually),
+               # null for empty states (no-lens / no-candidates).
+               # NowContext = { project, goal, whyNow, whyItMatters }
+               #   project:     { id, name, permalink? } | null
+               #   goal:        { id, name, permalink?, description } | null
+               #   whyNow:      string | null   (truthful matcher reason)
+               #   whyItMatters: string | null   (Goal description or "Toward <name>." fallback) }
 capture      → { ok: true, id, text, createdAt }
 today        → { tasks: [...] }
 task done    → { id, isDone, completedAt, ... }

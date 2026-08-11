@@ -133,8 +133,27 @@ export type Whoami = {
   };
 };
 
+/**
+ * `actionamp now` response. The additive `context` field (focus-goal-context
+ * spec) carries Project, resolved Goal, truthful matcher `whyNow`, and
+ * Goal-backed `whyItMatters`. For a null Task (no-lens / no-candidates),
+ * `context` is null too. Existing `task` and `reason` meanings are unchanged.
+ */
+export type NowContext = {
+  project: { id: string; name: string; permalink?: string } | null;
+  goal: {
+    id: string;
+    name: string;
+    permalink?: string;
+    description: string | null;
+  } | null;
+  whyNow: string | null;
+  whyItMatters: string | null;
+};
+
 export type NowResult = {
   task: Task | null;
+  context: NowContext | null;
   reason?: "no-lens" | "no-candidates";
 };
 
