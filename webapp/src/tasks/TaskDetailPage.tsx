@@ -12,7 +12,7 @@ import {
   updateTaskStatus,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Breadcrumb, Button, Markdown, PickerSheet, PropertyChips, submitOnModEnter } from "../components/ui";
+import { Breadcrumb, Button, CloseButton, Markdown, PickerSheet, PropertyChips, submitOnModEnter } from "../components/ui";
 import type { BreadcrumbItem } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { captureFeedbackContext } from "../feedback/captureContext";
@@ -524,38 +524,15 @@ export function TaskDetailPage() {
           {saveError && <p className="aa-task-edit__err">{saveError}</p>}
 
           <div className="aa-task-edit__actions">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate(returnTo)}
-            >
-              {task.isDone ? "Back" : "Cancel"}
-            </Button>
-            {task.isDone ? null : (
-              <Button
-                type="button"
-                variant="primary"
-                disabled={!canSave}
-                onClick={() => void saveTask()}
-              >
-                {saving ? "Saving" : "Save task"}
-              </Button>
-            )}
-          </div>
-          {!task.isDone && (
-            <p className="aa-task-edit__help">
-              Save writes the title and notes. Chips above are live.
-            </p>
-          )}
-          {/* Won't do — calm placement at the bottom, ghost variant. One-way
-              from here (restore lives in the Logbook). Hidden for done + for
-              already-wont-do tasks (no point declining what's already declined). */}
-          {!task.isDone && task.status !== "WONT_DO" && (
-            <div className="aa-task-edit__wont-do">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
+            {/* One-way from here (restore lives in the Logbook). An X keeps
+                the decline action compact but its label remains available to
+                assistive technology and on hover. */}
+            {!task.isDone && task.status !== "WONT_DO" && (
+              <CloseButton
+                className="aa-task-edit__wont-do"
+                label="Mark as won't do"
+                title="Mark as won't do"
+                onClose={() => {
                   if (
                     window.confirm(
                       "Mark this as something you won't do?\n\nIt leaves your lists and surfaces in the Logbook, where you can restore it.",
@@ -564,12 +541,33 @@ export function TaskDetailPage() {
                     void markWontDo();
                   }
                 }}
+              />
+            )}
+            <div className="aa-task-edit__actions-main">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => navigate(returnTo)}
               >
-                Won't do
+                {task.isDone ? "Back" : "Cancel"}
               </Button>
+              {task.isDone ? null : (
+                <Button
+                  type="button"
+                  variant="primary"
+                  disabled={!canSave}
+                  onClick={() => void saveTask()}
+                >
+                  {saving ? "Saving" : "Save task"}
+                </Button>
+              )}
             </div>
+          </div>
+          {!task.isDone && (
+            <p className="aa-task-edit__help">
+              Save writes the title and notes. Chips above are live.
+            </p>
           )}
-
           {resourcePickerOpen && task.project && (
             <PickerSheet
               title="Insert project resource"

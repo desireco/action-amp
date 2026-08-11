@@ -252,9 +252,46 @@
 
 .aa-task-edit__actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--aa-space-sm);
   padding-top: var(--aa-space-xs);
+}
+
+.aa-task-edit__actions-main {
+  display: flex;
+  gap: var(--aa-space-sm);
+  margin-left: auto;
+}
+
+/* Reuse the shared X affordance, but make it a peer of the footer actions
+   rather than an overlay control. */
+.aa-task-edit__wont-do {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-rose-text);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-task-edit__wont-do:hover {
+  border-color: var(--aa-rose-text);
+  background: var(--aa-rose-soft);
+  color: var(--aa-rose-text);
+}
+
+.aa-task-edit__wont-do:focus-visible {
+  outline: 2px solid var(--aa-rose-text);
+  outline-offset: 2px;
+}
+
+.aa-task-edit__actions {
 }
 
 .aa-task-edit__state,
@@ -336,7 +373,10 @@
   }
 
   .aa-task-edit__actions {
-    align-items: stretch;
-    flex-direction: column-reverse;
+    align-items: center;
+  }
+
+  .aa-task-edit__actions-main {
+    margin-left: auto;
   }
 }
