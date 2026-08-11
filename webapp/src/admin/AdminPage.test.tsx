@@ -6,7 +6,7 @@ const source = readFileSync(resolve(process.cwd(), "src/admin/AdminPage.tsx"), "
 
 describe("AdminPage device activity contract", () => {
   it("shows 7- and 30-day unique-user device evidence", () => {
-    for (const text of ["Active users by device", "Mobile", "Tablet", "Desktop", "Unclassified", "7 days", "30 days"]) {
+    for (const text of ["Active users by device", "Mobile users", "Tablet users", "Desktop users", "in 30 days", "Unclassified"]) {
       expect(source).toContain(text);
     }
   });

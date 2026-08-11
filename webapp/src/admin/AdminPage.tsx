@@ -226,21 +226,12 @@ export function AdminPage() {
       <div className="aa-admin-group">
         <h3 className="aa-admin-group__title">Active users by device</h3>
         <p className="aa-admin-note">Unique signed-in app opens. A person using more than one device appears in each matching row.</p>
-        <Table
-          columns={[
-            { key: "device", header: "Device", render: (row: { device: string; sevenDays: number; thirtyDays: number }) => row.device },
-            { key: "seven", header: "7 days", render: (row: { sevenDays: number }) => row.sevenDays.toLocaleString() },
-            { key: "thirty", header: "30 days", render: (row: { thirtyDays: number }) => row.thirtyDays.toLocaleString() },
-          ]}
-          rows={[
-            { device: "Mobile", sevenDays: u?.deviceActivity.sevenDays.mobile ?? 0, thirtyDays: u?.deviceActivity.thirtyDays.mobile ?? 0 },
-            { device: "Tablet", sevenDays: u?.deviceActivity.sevenDays.tablet ?? 0, thirtyDays: u?.deviceActivity.thirtyDays.tablet ?? 0 },
-            { device: "Desktop", sevenDays: u?.deviceActivity.sevenDays.desktop ?? 0, thirtyDays: u?.deviceActivity.thirtyDays.desktop ?? 0 },
-            { device: "Unclassified", sevenDays: u?.deviceActivity.sevenDays.unknown ?? 0, thirtyDays: u?.deviceActivity.thirtyDays.unknown ?? 0 },
-          ]}
-          rowKey={(row) => row.device}
-          emptyMessage="No device activity recorded yet."
-        />
+        <div className="aa-admin-tiles">
+          <Tile value={num(u?.deviceActivity.sevenDays.mobile)} label="Mobile users · 7 days" sub={`${num(u?.deviceActivity.thirtyDays.mobile) ?? "—"} in 30 days`} />
+          <Tile value={num(u?.deviceActivity.sevenDays.tablet)} label="Tablet users · 7 days" sub={`${num(u?.deviceActivity.thirtyDays.tablet) ?? "—"} in 30 days`} />
+          <Tile value={num(u?.deviceActivity.sevenDays.desktop)} label="Desktop users · 7 days" sub={`${num(u?.deviceActivity.thirtyDays.desktop) ?? "—"} in 30 days`} />
+        </div>
+        {(u?.deviceActivity.sevenDays.unknown || u?.deviceActivity.thirtyDays.unknown) ? <p className="aa-admin-note">Unclassified: {u.deviceActivity.sevenDays.unknown} in 7 days · {u.deviceActivity.thirtyDays.unknown} in 30 days.</p> : null}
       </div>
 
       <div className="aa-admin-group">
