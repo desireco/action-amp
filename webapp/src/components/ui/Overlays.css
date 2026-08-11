@@ -923,6 +923,32 @@
   margin: calc(-1 * var(--aa-space-md)) 0 0;
 }
 
+/* ---- Goal rationale (focus-goal-context) — quiet, below the title ----
+   Question: small muted supporting text. Answer: normal body weight, below
+   title prominence. Attribution: quiet violet (the existing Project/Goal
+   identity hue — never amber). No card, icon, link, or focus target. */
+.aa-focus__goal {
+  max-width: 620px;
+  margin: var(--aa-space-sm) 0 var(--aa-space-lg);
+  text-align: left;
+}
+.aa-focus__goal-question {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  margin: 0 0 var(--aa-space-xs);
+}
+.aa-focus__goal-answer {
+  font-size: var(--aa-text-md);
+  color: var(--aa-text-2);
+  line-height: 1.45;
+  margin: 0;
+}
+.aa-focus__goal-attribution {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-violet-text);
+  margin: var(--aa-space-xs) 0 0;
+}
+
 /* ---- Durable content (working notes) — editable, separate from thread ---- */
 .aa-focus__notes {
   width: 100%;

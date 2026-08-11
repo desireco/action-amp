@@ -190,6 +190,75 @@ describe("FocusMode", () => {
     });
   });
 
+  // ---- Goal rationale (focus-goal-context spec FG04) ----
+  // Focus renders a quiet Goal block below the title when a Goal resolves,
+  // and renders nothing when it doesn't. The block is passive: no link,
+  // editor, focus target, or action. Matcher rationale/continuity are NOT
+  // repeated on Focus.
+  describe("goal rationale", () => {
+    it("renders the described Goal block: question + description + attribution", () => {
+      const { container } = renderInContext(
+        <FocusMode
+          task={{
+            ...BASE_TASK,
+            goalContext: { name: "Reach 100 paid", description: "Prove demand." },
+          }}
+          onClose={() => {}}
+        />,
+      );
+      const section = screen.getByRole("region", { name: /goal context/i });
+      expect(section).toBeInTheDocument();
+      expect(within(section).getByText("Why does this matter?")).toBeInTheDocument();
+      expect(within(section).getByText("Prove demand.")).toBeInTheDocument();
+      expect(
+        within(section).getByText("Goal · Reach 100 paid"),
+      ).toBeInTheDocument();
+      // Quiet violet attribution.
+      expect(container.querySelector(".aa-focus__goal-attribution")).not.toBeNull();
+    });
+
+    it("renders the Toward fallback for a description-less Goal, with no attribution line", () => {
+      const { container } = renderInContext(
+        <FocusMode
+          task={{
+            ...BASE_TASK,
+            goalContext: { name: "Reach 100 paid", description: null },
+          }}
+          onClose={() => {}}
+        />,
+      );
+      const section = screen.getByRole("region", { name: /goal context/i });
+      expect(within(section).getByText("Toward Reach 100 paid.")).toBeInTheDocument();
+      // No attribution line in the fallback state.
+      expect(container.querySelector(".aa-focus__goal-attribution")).toBeNull();
+    });
+
+    it("renders no Goal block when goalContext is null", () => {
+      renderInContext(<FocusMode task={BASE_TASK} onClose={() => {}} />);
+      expect(
+        screen.queryByRole("region", { name: /goal context/i }),
+      ).toBeNull();
+    });
+
+    it("does not render matcher rationale or continuity on Focus", () => {
+      // Focus never shows "why now" or worked-time/notes continuity — its
+      // timer + activity thread already provide live + historical context.
+      renderInContext(
+        <FocusMode
+          task={{
+            ...BASE_TASK,
+            goalContext: { name: "G", description: "desc" },
+          }}
+          onClose={() => {}}
+        />,
+      );
+      // The Goal block exists; matcher/continuity copy does not.
+      expect(screen.getByRole("region", { name: /goal context/i })).toBeInTheDocument();
+      expect(screen.queryByText(/min worked/i)).toBeNull();
+      expect(screen.queryByText(/latest note/i)).toBeNull();
+    });
+  });
+
   // ---- Flow 1: the progress thread ----
   describe("progress thread", () => {
     it("shows the calm empty state when there are no updates", () => {

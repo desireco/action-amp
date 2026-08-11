@@ -10,6 +10,7 @@ import { Kbd, submitOnModEnter } from "./keyboard";
 import { Markdown } from "./Markdown";
 import { SnoozeSheet, type SnoozePreset } from "./SnoozeSheet";
 import { formatDuration } from "../../shared/timeFormat";
+import type { GoalContext } from "../../app/taskContext";
 import "react-circular-progressbar/dist/styles.css";
 import "./Overlays.css";
 
@@ -31,6 +32,8 @@ export interface FocusTask {
   size?: string | null;
   content?: string | null;
   outcome?: string | null;
+  /** Optional Goal rationale (null when the Task has no resolved Goal). */
+  goalContext?: GoalContext | null;
   startedAt?: Date | null;
   /** When the current open session began (drives the live session clock). */
   sessionStartedAt?: Date | null;
@@ -406,6 +409,20 @@ export function FocusMode({
         </section>
 
         <h1 className="aa-title">{task.title}</h1>
+
+        {task.goalContext && (
+          <section className="aa-focus__goal" aria-label="Goal context">
+            <p className="aa-focus__goal-question">Why does this matter?</p>
+            <p className="aa-focus__goal-answer">
+              {task.goalContext.description ?? `Toward ${task.goalContext.name}.`}
+            </p>
+            {task.goalContext.description && (
+              <p className="aa-focus__goal-attribution">
+                Goal · {task.goalContext.name}
+              </p>
+            )}
+          </section>
+        )}
 
         <section className="aa-focus__clarification" aria-label="Task details">
           {editingContent ? (

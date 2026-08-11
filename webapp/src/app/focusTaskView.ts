@@ -1,4 +1,9 @@
 import type { FocusTask } from "../components/ui";
+import {
+  resolveGoal,
+  type GoalContext,
+  type GoalRef,
+} from "./taskContext";
 
 export function sizeLabel(size: string | null | undefined): string {
   if (!size) return "";
@@ -26,7 +31,11 @@ export function toFocusTask(task: {
   dueDate?: Date | string | null;
   size?: string | null;
   startedAt?: Date | string | null;
-  project?: { name: string } | null;
+  // focus-goal-context: Project carries nested Goal (id/name/description) so
+  // resolveGoal can apply Project-Goal precedence; direct Goal gains
+  // description. Both are optional — a Task with no Goal yields no block.
+  project?: { id?: string; name: string; goal?: GoalRef | null } | null;
+  goal?: GoalRef | null;
   user?: { focusSessionMinutes?: number | null } | null;
   updates?: { id: string; body: string; createdAt: Date; kind: string }[];
   sessions?: {
@@ -57,6 +66,14 @@ export function toFocusTask(task: {
   const openSession = sessions.find((s) => s.endedAt === null) ?? null;
   const latestSession = sessions.at(-1) ?? null;
 
+  // Goal rationale (focus-goal-context spec): resolve one Goal with Project-Goal
+  // precedence. Null when the Task has no Goal — Focus renders no block then.
+  // resolveGoal only reads project.goal + goal; pass a GoalRef-only project
+  // shape so the precedence helper stays the single source of truth.
+  const goalContext: GoalContext | null = resolveGoal({
+    goal: task.project?.goal ?? task.goal ?? null,
+  });
+
   return {
     id: task.id,
     title: task.description,
@@ -65,6 +82,9 @@ export function toFocusTask(task: {
     size: sizeLabel(task.size ?? null),
     content: task.content ?? null,
     outcome: task.outcome ?? null,
+    // Optional Goal context (null when the Task has no resolved Goal). Focus
+    // renders the block only when this is non-null.
+    goalContext,
     startedAt: task.startedAt ? new Date(task.startedAt) : null,
     sessionStartedAt: openSession?.startedAt ?? null,
     focusSessionMinutes:
