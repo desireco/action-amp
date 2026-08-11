@@ -14,6 +14,10 @@ desktop and horizontal tab row on mobile. It has Overview, Users, Funnel, and Fe
 destinations. The profile Admin entry opens Overview; the old
 `/app/settings/admin` route redirects for bookmark compatibility.
 
+**Device use.** Overview separates unique signed-in app users by mobile,
+tablet, desktop, and unclassified browser-session evidence for rolling 7- and
+30-day windows. One person can appear in more than one device row.
+
 **Security.** Client navigation hides Admin from non-admin users. Every admin
 page and server query/action independently checks `user.isAdmin`.
 

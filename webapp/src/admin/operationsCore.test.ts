@@ -99,6 +99,27 @@ describe("getAdminStatsCore", () => {
     expect(stats.tasks.completed7d).toBe(4);
     expect(stats.tasks.total).toBe(100);
   });
+
+  it("counts unique active users by mobile, tablet, desktop, and window", async () => {
+    const { entities } = mockContext();
+    entities.User.count.mockResolvedValue(0);
+    entities.Task.count.mockResolvedValue(0);
+    entities.Feedback.count.mockResolvedValue(0);
+    entities.Feedback.groupBy.mockResolvedValue([]);
+    const now = Date.now();
+    entities.AnalyticsSession.findMany.mockResolvedValueOnce([
+      { deviceClass: "mobile", events: [{ userId: "mobile-user", occurredAt: new Date(now - 2 * 86_400_000) }, { userId: "mobile-user", occurredAt: new Date(now - 3 * 86_400_000) }] },
+      { deviceClass: "tablet", events: [{ userId: "tablet-user", occurredAt: new Date(now - 8 * 86_400_000) }] },
+      { deviceClass: "desktop", events: [{ userId: "shared-user", occurredAt: new Date(now - 1 * 86_400_000) }] },
+      { deviceClass: null, events: [{ userId: "unknown-user", occurredAt: new Date(now - 1 * 86_400_000) }] },
+      { deviceClass: "mobile", events: [{ userId: "shared-user", occurredAt: new Date(now - 1 * 86_400_000) }] },
+    ]);
+
+    const stats = await getAdminStatsCore(entities);
+
+    expect(stats.users.deviceActivity.sevenDays).toEqual({ mobile: 2, tablet: 0, desktop: 1, unknown: 1 });
+    expect(stats.users.deviceActivity.thirtyDays).toEqual({ mobile: 2, tablet: 1, desktop: 1, unknown: 1 });
+  });
 });
 
 describe("getRecentFeedbackCore", () => {

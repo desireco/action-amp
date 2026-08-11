@@ -16,7 +16,9 @@ database is the source of truth for signed-in activity and payment facts.
 
 **Today.** The app records typed first-party sessions/events at landing, signup,
 app open, onboarding, capture, triage, focus, task completion, checkout, and
-verified payment boundaries. Admin Funnel reads those aggregates; StatCounter
+verified payment boundaries. Browser sessions are classified as mobile, tablet,
+or desktop; Admin Overview shows unique signed-in app users by device for the
+rolling 7- and 30-day windows. Admin Funnel reads those aggregates; StatCounter
 remains the anonymous acquisition context.
 
 **Spec.** `docs/specs/growth-analytics.md` (`ready`).

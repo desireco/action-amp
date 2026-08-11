@@ -39,6 +39,10 @@ export type AdminStats = {
     active30d: number;
     selectedSignups: number;
     selectedActive: number;
+    deviceActivity: {
+      sevenDays: DeviceUserCounts;
+      thirtyDays: DeviceUserCounts;
+    };
   };
   tasks: {
     created7d: number;
@@ -63,6 +67,8 @@ export type AdminStats = {
     total: number;
   };
 };
+
+export type DeviceUserCounts = { mobile: number; tablet: number; desktop: number; unknown: number };
 
 /** Fields mirrored from feedback/operationsCore.ts FEEDBACK_SELECT. */
 export type FeedbackRow = {
@@ -121,6 +127,31 @@ function windows() {
   };
 }
 
+function deviceUserCounts(sessions: any[], d7: Date, d30: Date): { sevenDays: DeviceUserCounts; thirtyDays: DeviceUserCounts } {
+  const blank = (): DeviceUserCounts => ({ mobile: 0, tablet: 0, desktop: 0, unknown: 0 });
+  const seven = new Map<keyof DeviceUserCounts, Set<string>>();
+  const thirty = new Map<keyof DeviceUserCounts, Set<string>>();
+  for (const kind of ["mobile", "tablet", "desktop", "unknown"] as const) {
+    seven.set(kind, new Set());
+    thirty.set(kind, new Set());
+  }
+  for (const session of sessions) {
+    const kind: keyof DeviceUserCounts = session.deviceClass === "mobile" || session.deviceClass === "tablet" || session.deviceClass === "desktop" ? session.deviceClass : "unknown";
+    for (const event of session.events ?? []) {
+      if (!event.userId) continue;
+      const occurredAt = new Date(event.occurredAt);
+      if (occurredAt >= d30) thirty.get(kind)!.add(event.userId);
+      if (occurredAt >= d7) seven.get(kind)!.add(event.userId);
+    }
+  }
+  const count = (sets: Map<keyof DeviceUserCounts, Set<string>>) => {
+    const result = blank();
+    for (const [kind, users] of sets) result[kind] = users.size;
+    return result;
+  };
+  return { sevenDays: count(seven), thirtyDays: count(thirty) };
+}
+
 export async function getAdminStatsCore(
   entities: Entities,
   range: FunnelRange = "30d",
@@ -151,6 +182,7 @@ export async function getAdminStatsCore(
     tasksCompletedSelected,
     feedbackTotal,
     feedbackByStatusRaw,
+    deviceSessions,
   ] = await Promise.all([
     entities.User.count(),
     entities.User.count({ where: { createdAt: { gte: today } } }),
@@ -187,6 +219,12 @@ export async function getAdminStatsCore(
       where: { deletedAt: null },
       _count: { _all: true },
     }),
+    entities.AnalyticsSession?.findMany
+      ? entities.AnalyticsSession.findMany({
+          where: { events: { some: { name: "APP_OPENED", occurredAt: { gte: d30 }, userId: { not: null } } } },
+          select: { deviceClass: true, events: { where: { name: "APP_OPENED", occurredAt: { gte: d30 }, userId: { not: null } }, select: { userId: true, occurredAt: true } } },
+        })
+      : Promise.resolve([]),
   ]);
 
   const byStatus: FeedbackStatusCounts = {
@@ -223,6 +261,7 @@ export async function getAdminStatsCore(
       active30d,
       selectedSignups,
       selectedActive,
+      deviceActivity: deviceUserCounts(deviceSessions ?? [], d7, d30),
     },
     tasks: { created7d: tasksCreated7d, completed7d: tasksCompleted7d, total: tasksTotal },
     payments: {

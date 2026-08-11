@@ -14,6 +14,14 @@ function visitorId(): string {
   return value;
 }
 
+function deviceClass(): "mobile" | "tablet" | "desktop" {
+  const ua = navigator.userAgent;
+  // iPadOS can present a desktop-like Macintosh UA; touch points distinguish it.
+  if (/iPad|Tablet|PlayBook|Silk|Kindle/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua)) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return "tablet";
+  if (/Mobi|Android|iPhone|iPod|Windows Phone/i.test(ua)) return "mobile";
+  return "desktop";
+}
+
 export function trackAnalyticsEvent(input: Omit<AnalyticsEventInput, "visitorId">) {
   if (import.meta.env.DEV) return;
   void recordAnalyticsEvent({
@@ -23,7 +31,7 @@ export function trackAnalyticsEvent(input: Omit<AnalyticsEventInput, "visitorId"
     appVersion: import.meta.env.VITE_APP_VERSION ?? undefined,
     referrerHost: document.referrer ? new URL(document.referrer).hostname : undefined,
     initialPath: window.location.pathname,
-    deviceClass: window.matchMedia("(max-width: 768px)").matches ? "mobile" : "desktop",
+    deviceClass: deviceClass(),
   }).catch(() => {
     // Analytics must never interrupt product work.
   });
