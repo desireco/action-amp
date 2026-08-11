@@ -11,6 +11,7 @@ import type {
 import { FREE_LIMITS } from "../billing/config";
 import {
   assertLensAllowed,
+  assertLifeAreaLens,
   assertUnderCap,
   throwHttpStatus,
 } from "../billing/entitlementHttp";
@@ -35,6 +36,7 @@ export const getProjects = (async (args, context) => {
 
   // Entitlement: FREE users may only read the Me lens.
   await assertLensAllowed(context, args.lensId);
+  await assertLifeAreaLens(context, args.lensId);
 
   return await getProjectsData(context.entities, {
     userId: context.user.id,
@@ -53,6 +55,7 @@ export const createProject = (async (args, context) => {
   // Entitlement: FREE users capped at FREE_LIMITS.projects per lens, and the
   // Work lens is locked. Count non-done projects so finishing work frees a slot.
   await assertLensAllowed(context, args.lensId);
+  await assertLifeAreaLens(context, args.lensId);
   const projectCount = await context.entities.Project.count({
     where: { userId: context.user.id, lensId: args.lensId, isDone: false },
   });
@@ -142,7 +145,10 @@ export const createTask = (async (args, context) => {
     lensId: args.lensId,
     projectId: args.projectId,
     goalId: args.goalId,
-    assertLens: (resolvedLensId) => assertLensAllowed(context, resolvedLensId),
+    assertLens: async (resolvedLensId) => {
+      await assertLensAllowed(context, resolvedLensId);
+      await assertLifeAreaLens(context, resolvedLensId);
+    },
   });
 }) satisfies CreateTask<
   {

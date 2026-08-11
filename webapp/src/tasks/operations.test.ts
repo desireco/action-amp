@@ -7,8 +7,10 @@ import { describe, it, expect, vi } from "vitest";
 // Stub the server-only HttpError layer so this test never loads `wasp/server`.
 vi.mock("../billing/entitlementHttp", () => ({
   assertLensAllowed: vi.fn().mockResolvedValue(undefined),
+  assertLifeAreaLens: vi.fn().mockResolvedValue(undefined),
   assertUnderCap: vi.fn().mockResolvedValue(undefined),
 }));
+import { assertLifeAreaLens } from "../billing/entitlementHttp";
 import {
   getTask,
   getTasks,
@@ -216,6 +218,8 @@ describe("getDoneToday", () => {
     m.entities.Task.findMany.mockResolvedValue([]);
 
     await getDoneToday({ lensId: "lens-1" }, m.context);
+
+    expect(assertLifeAreaLens).toHaveBeenCalledWith(m.context, "lens-1");
 
     const call = m.entities.Task.findMany.mock.calls[0][0];
     expect(call.where).toMatchObject({
@@ -518,6 +522,7 @@ describe("getTopTask", () => {
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
     expect(result).toBeNull();
+    expect(assertLifeAreaLens).toHaveBeenCalledWith(m.context, "lens-1");
     expect(m.entities.Task.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",

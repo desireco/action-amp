@@ -50,8 +50,8 @@ describe("getAppData — happy path", () => {
       lastActiveAt: new Date(),
     });
     const lenses = [
-      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
-      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
+      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", type: "LIFE_AREA", purpose: null },
+      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", type: "LIFE_AREA", purpose: null },
     ];
 
     m.entities.Lens.findMany.mockResolvedValue(lenses);
@@ -133,7 +133,7 @@ describe("getAppData — happy path", () => {
     // Lenses carry their identity color + stable kind handle + purpose.
     expect(m.entities.Lens.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        select: { id: true, name: true, color: true, kind: true, purpose: true },
+        select: { id: true, name: true, color: true, kind: true, type: true, purpose: true },
       }),
     );
   });
@@ -149,7 +149,7 @@ describe("getAppData — happy path", () => {
       lastActiveAt: new Date(),
     });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
+      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", type: "LIFE_AREA", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);
@@ -369,7 +369,7 @@ describe("getAppData — planning counter consistency", () => {
       lastActiveAt: new Date(),
     });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
+      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", type: "LIFE_AREA", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);
@@ -402,8 +402,8 @@ describe("getAppData — planning counter consistency", () => {
       lastActiveAt: new Date(),
     });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
-      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
+      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", type: "LIFE_AREA", purpose: null },
+      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", type: "LIFE_AREA", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);
@@ -436,7 +436,7 @@ describe("getAppData — planning counter consistency", () => {
       lastActiveAt: new Date(),
     });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
+      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", type: "LIFE_AREA", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);

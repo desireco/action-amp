@@ -9,8 +9,9 @@
 import { describe, it, expect, vi } from "vitest";
 
 const assertLensAllowed = vi.fn().mockResolvedValue(undefined);
+const assertLifeAreaLens = vi.fn().mockResolvedValue(undefined);
 const assertUnderCap = vi.fn().mockResolvedValue(undefined);
-vi.mock("../billing/entitlementHttp", () => ({ assertLensAllowed, assertUnderCap }));
+vi.mock("../billing/entitlementHttp", () => ({ assertLensAllowed, assertLifeAreaLens, assertUnderCap }));
 
 // Import AFTER the mock so the ops pick up the stubbed guards.
 const { createProject } = await import("../projects/operations");
@@ -26,6 +27,7 @@ const FREE_USER: MockUser = { id: "user-1", plan: "FREE", planRenewsAt: null };
  * longer calls Lens.findFirst itself — clear spies between tests. */
 function resetSpies() {
   assertLensAllowed.mockClear();
+  assertLifeAreaLens.mockClear();
   assertUnderCap.mockClear();
 }
 
@@ -39,6 +41,7 @@ describe("createProject — invokes the project cap + lens guards", () => {
     await createProject({ name: "x", lensId: "lens-1" }, m.context);
 
     expect(assertLensAllowed).toHaveBeenCalledWith(m.context, "lens-1");
+    expect(assertLifeAreaLens).toHaveBeenCalledWith(m.context, "lens-1");
     expect(assertUnderCap).toHaveBeenCalledWith(
       m.context,
       "lens-1",

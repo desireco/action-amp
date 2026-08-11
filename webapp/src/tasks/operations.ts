@@ -18,7 +18,7 @@ import type {
   SetTaskOutcome,
   CompleteTaskFromFocus,
 } from "wasp/server/operations";
-import { assertLensAllowed } from "../billing/entitlementHttp";
+import { assertLensAllowed, assertLifeAreaLens } from "../billing/entitlementHttp";
 import { resolveAccessibleLenses } from "../billing/entitlements";
 import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 // Pure cores shared with /api/cli/* routes — auth + entitlement guards stay
@@ -91,6 +91,7 @@ export const getTasks = (async (args, context) => {
   // locked). The detail reads (getTask) are unguarded — no data loss for
   // existing content; only list/scope reads enforce the lens rule.
   await assertLensAllowed(context, args.lensId);
+  await assertLifeAreaLens(context, args.lensId);
 
   return await getTasksData(context.entities, {
     userId: context.user.id,
@@ -148,6 +149,7 @@ export const getDoneToday = (async (args, context) => {
   if (args?.lensId) {
     // Lens-scoped path: enforce the FREE-lens entitlement for this one lens.
     await assertLensAllowed(context, args.lensId);
+    await assertLifeAreaLens(context, args.lensId);
     lensIds = [args.lensId];
   } else {
     // Global path: filter by the accessible-lens SET (entitlement-preserving).
@@ -222,6 +224,7 @@ export const unscheduleOverdueTasks = (async (args, context) => {
     throw new Error("Not authenticated.");
   }
   await assertLensAllowed(context, args.lensId);
+  await assertLifeAreaLens(context, args.lensId);
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -260,6 +263,7 @@ export const getTopTask = (async (args, context) => {
   // calls this; a FREE user lands on Me, so this passes — the guard exists for
   // the localStorage-bypass case where a Work lensId reaches the server.
   await assertLensAllowed(context, args.lensId);
+  await assertLifeAreaLens(context, args.lensId);
   // Candidate fetch + sort live in the core so the CLI `/api/cli/now` route
   // can rank candidates identically without re-implementing the comparator.
   return await getTopTaskData(context.entities, {

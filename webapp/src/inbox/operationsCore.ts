@@ -30,6 +30,7 @@ import {
   type ParsedSize,
 } from "./parseCapture";
 import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
+import { createListItemCore } from "../simpleLists/operationsCore";
 
 /**
  * The entities slice these cores read. Loosely typed (same approach as
@@ -67,6 +68,7 @@ export type TriageDecision =
   | "someday"
   | "project"
   | "resource"
+  | "list-item"
   | "archive"
   | "delete";
 
@@ -354,6 +356,7 @@ export async function triageInboxItemCore(
 ) {
   const item = await entities.InboxItem.findUnique({
     where: { id: inboxItemId },
+    include: { attachments: { select: { id: true } } },
   });
   if (!item || item.userId !== userId) {
     throw new Error("Inbox item not found.");
@@ -365,8 +368,21 @@ export async function triageInboxItemCore(
   // anything — they discard — so neither needs a lens and neither runs the
   // guard (the route still receives a lensId for API symmetry, but it's
   // unused on these branches).
-  if (assertLens && decision !== "archive" && decision !== "delete") {
-    await assertLens(lensId);
+  const filesIntoLens = decision !== "archive" && decision !== "delete";
+  if (assertLens && filesIntoLens) await assertLens(lensId);
+
+  const destinationLens = filesIntoLens
+    ? await entities.Lens.findFirst({
+        where: { id: lensId, userId },
+        select: { type: true },
+      })
+    : null;
+  if (filesIntoLens && !destinationLens) throw new Error("Lens not found.");
+  if (decision === "list-item" && destinationLens?.type !== "SIMPLE_LIST") {
+    throw new Error("List items require a Simple-list Lens.");
+  }
+  if (filesIntoLens && decision !== "list-item" && destinationLens?.type !== "LIFE_AREA") {
+    throw new Error("Tasks, Projects, and Resources require a Life-area Lens.");
   }
 
   // Precedence: explicit triage choice > the capture parser's guess > default.
@@ -379,30 +395,19 @@ export async function triageInboxItemCore(
   const title = name?.trim() || item.title || item.text;
   const itemNotes = [item.content, item.sourceUrl].filter(Boolean).join("\n\n") || null;
 
-  // Tags carry onto Tasks only — Projects and Goals drop them (their scope is
-  // the whole collection, not a single actionable item).
-  const tagRecords = await resolveTagRecords(
-    entities,
-    userId,
-    item.parsedTags,
-  );
-
-  // Default-filing: an explicit project pick (resolved client-side in
-  // TriagePage) wins; otherwise file under the lens's "General" project so the
-  // task is never projectless.
-  const effectiveProject = await resolveEffectiveProject(
-    entities,
-    userId,
-    lensId,
-    projectId ?? null,
-  );
-
-  let result: { kind: "task" | "project" | "archive" | "delete"; id: string };
+  let result: { kind: "task" | "project" | "list-item" | "archive" | "delete"; id: string };
 
   switch (decision) {
     case "task-today":
     case "upcoming":
-    case "someday":
+    case "someday": {
+      const tagRecords = await resolveTagRecords(entities, userId, item.parsedTags);
+      const effectiveProject = await resolveEffectiveProject(
+        entities,
+        userId,
+        lensId,
+        projectId ?? null,
+      );
       result = await createTaskFromTriage(entities, userId, {
         decision,
         title,
@@ -416,6 +421,7 @@ export async function triageInboxItemCore(
         tagRecords,
       });
       break;
+    }
     case "project":
       result = await createProjectFromTriage(
         entities,
@@ -444,6 +450,20 @@ export async function triageInboxItemCore(
         select: { id: true },
       });
       result = { kind: "project", id: resource.id }; // reuse for now
+      break;
+    }
+    case "list-item": {
+      if (item.attachments?.length) {
+        throw new Error("Image attachments cannot be filed to a Simple list. Choose a Life area so the image stays attached.");
+      }
+      const listItem = await createListItemCore(entities, {
+        userId,
+        lensId,
+        text: title,
+        content: resolvedContent ?? item.content,
+        sourceUrl: item.sourceUrl,
+      });
+      result = { kind: "list-item", id: listItem.id };
       break;
     }
     case "archive": {
@@ -476,7 +496,7 @@ export async function triageInboxItemCore(
   // The transformation is committed — delete the seed InboxItem. Archive is
   // the exception (it marks the item ARCHIVED above); delete already removed
   // the row in its own case. So this trailing delete only runs for the
-  // create-type decisions (task/project/resource).
+  // create-type decisions (task/project/resource/list-item).
   if (decision !== "archive" && decision !== "delete") {
     await entities.InboxItem.delete({ where: { id: item.id } });
   }

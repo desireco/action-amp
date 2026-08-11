@@ -7,6 +7,7 @@ import { describe, it, expect, vi } from "vitest";
 // Stub the server-only HttpError layer so this test never loads `wasp/server`.
 vi.mock("../billing/entitlementHttp", () => ({
   assertLensAllowed: vi.fn().mockResolvedValue(undefined),
+  assertLifeAreaLens: vi.fn().mockResolvedValue(undefined),
   assertUnderCap: vi.fn().mockResolvedValue(undefined),
 }));
 import { triageInboxItem } from "./operations";
@@ -30,17 +31,90 @@ const BASE_ITEM = {
   parsedDate: null as Date | null,
   parsedTags: [] as string[],
   parsedProject: null as string | null,
+  content: null as string | null,
+  sourceUrl: null as string | null,
+  attachments: [] as { id: string }[],
 };
 
 /** Arrange the common precondition: the inbox item exists and is ours. */
 function arrange(overrides: Partial<typeof BASE_ITEM> = {}) {
   const m = mockContext();
+  m.entities.Lens.findFirst.mockResolvedValue({ type: "LIFE_AREA" });
   m.entities.InboxItem.findUnique.mockResolvedValue({
     ...BASE_ITEM,
     ...overrides,
   });
   return m;
 }
+
+describe("triageInboxItem — Simple-list decisions", () => {
+  it("creates a flat ListItem, preserves captured context, then deletes the InboxItem", async () => {
+    const m = arrange({
+      text: "Read later",
+      content: "Useful checklist patterns",
+      sourceUrl: "https://example.com/list",
+    });
+    m.entities.Lens.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST" });
+    m.entities.ListItem.findFirst.mockResolvedValue({ order: 2 });
+    m.entities.ListItem.create.mockResolvedValue({ id: "li-1" });
+
+    const result = await triageInboxItem(
+      { inboxItemId: "ix-1", decision: "list-item", lensId: "shopping" },
+      m.context,
+    );
+
+    expect(result).toEqual({ kind: "list-item", id: "li-1" });
+    expect(m.entities.ListItem.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: "user-1",
+        lensId: "shopping",
+        text: "Read later",
+        content: "Useful checklist patterns",
+        sourceUrl: "https://example.com/list",
+      }),
+    });
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
+    expect(m.entities.Project.findFirst).not.toHaveBeenCalled();
+    expect(m.entities.Tag.upsert).not.toHaveBeenCalled();
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({ where: { id: "ix-1" } });
+  });
+
+  it("keeps an attachment-backed InboxItem untouched", async () => {
+    const m = arrange({ attachments: [{ id: "image-1" }] });
+    m.entities.Lens.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST" });
+
+    await expect(
+      triageInboxItem(
+        { inboxItemId: "ix-1", decision: "list-item", lensId: "shopping" },
+        m.context,
+      ),
+    ).rejects.toThrow(/image attachments cannot be filed/i);
+
+    expect(m.entities.ListItem.create).not.toHaveBeenCalled();
+    expect(m.entities.InboxItem.delete).not.toHaveBeenCalled();
+  });
+
+  it("rejects decision and Lens-type mismatches before creating output", async () => {
+    const simple = arrange();
+    simple.entities.Lens.findFirst.mockResolvedValue({ type: "SIMPLE_LIST" });
+    await expect(
+      triageInboxItem(
+        { inboxItemId: "ix-1", decision: "upcoming", lensId: "shopping" },
+        simple.context,
+      ),
+    ).rejects.toThrow(/require a Life-area Lens/i);
+    expect(simple.entities.Task.create).not.toHaveBeenCalled();
+
+    const life = arrange();
+    await expect(
+      triageInboxItem(
+        { inboxItemId: "ix-1", decision: "list-item", lensId: "work" },
+        life.context,
+      ),
+    ).rejects.toThrow(/require a Simple-list Lens/i);
+    expect(life.entities.ListItem.create).not.toHaveBeenCalled();
+  });
+});
 
 describe("triageInboxItem — guards", () => {
   it("throws if not authenticated", async () => {

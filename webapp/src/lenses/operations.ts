@@ -11,6 +11,7 @@ import {
   assertUnderCap,
   throwHttpStatus,
 } from "../billing/entitlementHttp";
+import { getLensesCore, type LensSummary } from "./operationsCore";
 
 const prisma = new PrismaClient();
 
@@ -41,47 +42,8 @@ export const getLenses = (async (_args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const lenses = await context.entities.Lens.findMany({
-    where: { userId: context.user.id },
-    orderBy: { createdAt: "asc" },
-    include: {
-      _count: {
-        select: {
-          goals: { where: { isDone: false } },
-          projects: { where: { isDone: false } },
-          tasks: { where: { isDone: false } },
-        },
-      },
-    },
-  });
-  // Sort seeded-first (PERSONAL, then WORK), then CUSTOM by createdAt. Prisma
-  // can't express "seeded first" cleanly (kind is an enum, alphabetical order
-  // is CUSTOM < PERSONAL < WORK — the opposite of what we want), so sort in JS.
-  const KIND_ORDER: Record<string, number> = { PERSONAL: 0, WORK: 1, CUSTOM: 2 };
-  lenses.sort((a, b) => (KIND_ORDER[a.kind] ?? 9) - (KIND_ORDER[b.kind] ?? 9));
-  return lenses.map((l) => ({
-    id: l.id,
-    name: l.name,
-    kind: l.kind,
-    color: l.color,
-    purpose: l.purpose,
-    counts: {
-      goals: l._count.goals,
-      projects: l._count.projects,
-      tasks: l._count.tasks,
-    },
-  }));
-}) satisfies GetLenses<
-  Record<string, never>,
-  {
-    id: string;
-    name: string;
-    kind: string;
-    color: string | null;
-    purpose: string | null;
-    counts: { goals: number; projects: number; tasks: number };
-  }[]
->;
+  return getLensesCore(context.entities, { userId: context.user.id });
+}) satisfies GetLenses<Record<string, never>, LensSummary[]>;
 
 /** The curated color palette keys (see styles/tokens.css `--aa-lens-*`).
  * Free-form hex is a non-goal per the spec; the picker renders these only. */
@@ -113,6 +75,10 @@ export const createLens = (async (args, context) => {
     throwHttpStatus(400, "Unknown lens color.");
   }
   const purpose = args.purpose?.trim() || null;
+  const type = args.type ?? "LIFE_AREA";
+  if (type !== "LIFE_AREA" && type !== "SIMPLE_LIST") {
+    throwHttpStatus(400, "Unknown lens type.");
+  }
 
   // Entitlement: lens configuration is Pro-only. Cap check uses Pro because
   // FREE never reaches here (the config gate above throws first).
@@ -130,11 +96,12 @@ export const createLens = (async (args, context) => {
       data: {
         name,
         kind: "CUSTOM",
+        type,
         color: args.color ?? null,
         purpose,
         userId: context.user.id,
       },
-      select: { id: true, name: true, kind: true, color: true, purpose: true },
+      select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
     });
   } catch (e) {
     // Prisma P2002 = unique constraint violation on [userId, name].
@@ -144,8 +111,8 @@ export const createLens = (async (args, context) => {
     throw e;
   }
 }) satisfies CreateLens<
-  { name: string; color?: string | null; purpose?: string },
-  { id: string; name: string; kind: string; color: string | null; purpose: string | null }
+  { name: string; type?: "LIFE_AREA" | "SIMPLE_LIST"; color?: string | null; purpose?: string },
+  { id: string; name: string; kind: string; type: string; color: string | null; purpose: string | null }
 >;
 
 export const updateLens = (async (args, context) => {
@@ -153,11 +120,14 @@ export const updateLens = (async (args, context) => {
     throw new Error("Not authenticated.");
   }
   assertLensConfigAllowed(context);
+  if ("type" in args) {
+    throwHttpStatus(400, "Lens type cannot be changed after creation.");
+  }
 
   // Tenancy-scoped lookup (Lens has no compound id+userId index → findFirst).
   const existing = await context.entities.Lens.findFirst({
     where: { id: args.id, userId: context.user.id },
-    select: { id: true, name: true, kind: true },
+    select: { id: true, name: true, kind: true, type: true },
   });
   if (!existing) {
     throwHttpStatus(404, "Lens not found.");
@@ -187,7 +157,7 @@ export const updateLens = (async (args, context) => {
       return await context.entities.Lens.update({
         where: { id: existing.id },
         data,
-        select: { id: true, name: true, kind: true, color: true, purpose: true },
+        select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
       });
     } catch (e) {
       if (e && typeof e === "object" && "code" in e && e.code === "P2002") {
@@ -200,7 +170,7 @@ export const updateLens = (async (args, context) => {
   return await context.entities.Lens.update({
     where: { id: existing.id },
     data,
-    select: { id: true, name: true, kind: true, color: true, purpose: true },
+    select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
   });
 }) satisfies UpdateLens<
   {
@@ -209,7 +179,7 @@ export const updateLens = (async (args, context) => {
     purpose?: string;
     color?: string | null;
   },
-  { id: string; name: string; kind: string; color: string | null; purpose: string | null }
+  { id: string; name: string; kind: string; type: string; color: string | null; purpose: string | null }
 >;
 
 export const deleteLens = (async (args, context) => {
@@ -220,7 +190,7 @@ export const deleteLens = (async (args, context) => {
 
   const existing = await context.entities.Lens.findFirst({
     where: { id: args.id, userId: context.user.id },
-    select: { id: true, kind: true, name: true },
+    select: { id: true, kind: true, type: true, name: true },
   });
   if (!existing) {
     throwHttpStatus(404, "Lens not found.");
@@ -240,10 +210,13 @@ export const deleteLens = (async (args, context) => {
     // Tenancy-check the target.
     const target = await context.entities.Lens.findFirst({
       where: { id: args.targetLensId, userId: context.user.id },
-      select: { id: true },
+      select: { id: true, type: true },
     });
     if (!target) {
       throwHttpStatus(404, "Target lens not found.");
+    }
+    if (target.type !== existing.type) {
+      throwHttpStatus(400, "Content can only move to a Lens of the same type.");
     }
     // Move all content to the target lens, then drop the now-empty lens. Keep
     // the multi-entity move transactional so a later failure rolls back earlier
@@ -254,9 +227,13 @@ export const deleteLens = (async (args, context) => {
     const moveData = { lensId: args.targetLensId };
     try {
       return await prisma.$transaction(async (tx) => {
-        await tx.goal.updateMany({ where: moveWhere, data: moveData });
-        await tx.task.updateMany({ where: moveWhere, data: moveData });
-        await tx.project.updateMany({ where: moveWhere, data: moveData });
+        if (existing.type === "SIMPLE_LIST") {
+          await tx.listItem.updateMany({ where: moveWhere, data: moveData });
+        } else {
+          await tx.goal.updateMany({ where: moveWhere, data: moveData });
+          await tx.task.updateMany({ where: moveWhere, data: moveData });
+          await tx.project.updateMany({ where: moveWhere, data: moveData });
+        }
         return await tx.lens.delete({
           where: { id: existing.id },
           select: { id: true },
@@ -280,12 +257,13 @@ export const deleteLens = (async (args, context) => {
   // but the server is the boundary. Cascade via the Goal/Project/Task FKs
   // (ON DELETE CASCADE in schema.prisma) removes any stragglers an empty lens
   // wouldn't have anyway.
-  const [goalCount, projectCount, taskCount] = await Promise.all([
+  const [goalCount, projectCount, taskCount, listItemCount] = await Promise.all([
     context.entities.Goal.count({ where: { lensId: existing.id } }),
     context.entities.Project.count({ where: { lensId: existing.id } }),
     context.entities.Task.count({ where: { lensId: existing.id } }),
+    context.entities.ListItem.count({ where: { lensId: existing.id } }),
   ]);
-  if (goalCount + projectCount + taskCount > 0) {
+  if (goalCount + projectCount + taskCount + listItemCount > 0) {
     return throwHttpStatus(
       409,
       "This lens still has content. Move it to another lens first, then delete.",

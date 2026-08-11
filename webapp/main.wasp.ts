@@ -97,6 +97,15 @@ import {
   deleteLens,
 } from "./src/lenses/operations" with { type: "ref" };
 import { getLenses } from "./src/lenses/operations" with { type: "ref" };
+import { SimpleListPage } from "./src/simpleLists/SimpleListPage" with { type: "ref" };
+import {
+  getSimpleList,
+  createListItem,
+  renameListItem,
+  setListItemDone,
+  deleteListItem,
+  clearCompletedListItems,
+} from "./src/simpleLists/operations" with { type: "ref" };
 import {
   getAppData,
   updateProfile,
@@ -280,6 +289,7 @@ export default app({
       page(RedirectToMarketing, { authRequired: false }),
     ),
     route("AppRoute", "/app", page(NextPage)),
+    route("SimpleListRoute", "/app/list", page(SimpleListPage)),
     route("FocusRoute", "/app/focus", page(FocusPage)),
     route("InboxRoute", "/app/inbox", page(InboxPage)),
     route("InboxTriageRoute", "/app/inbox/review", page(TriagePage)),
@@ -514,13 +524,22 @@ export default app({
       entities: ["Lens", "Project", "Task"],
       auth: true,
     }),
-    action(createLens, { entities: ["Lens"], auth: true }),
+    action(createLens, { entities: ["Lens", "ListItem"], auth: true }),
     action(updateLens, { entities: ["Lens"], auth: true }),
     action(deleteLens, {
-      entities: ["Lens", "Task", "Project", "Goal"],
+      entities: ["Lens", "Task", "Project", "Goal", "ListItem"],
       auth: true,
     }),
-    query(getLenses, { entities: ["Lens"], auth: true }),
+    query(getLenses, { entities: ["Lens", "ListItem"], auth: true }),
+    query(getSimpleList, { entities: ["Lens", "ListItem"], auth: true }),
+    action(createListItem, { entities: ["Lens", "ListItem"], auth: true }),
+    action(renameListItem, { entities: ["Lens", "ListItem"], auth: true }),
+    action(setListItemDone, { entities: ["Lens", "ListItem"], auth: true }),
+    action(deleteListItem, { entities: ["Lens", "ListItem"], auth: true }),
+    action(clearCompletedListItems, {
+      entities: ["Lens", "ListItem"],
+      auth: true,
+    }),
     action(setPreferredName, { entities: ["User"], auth: true }),
     action(completeOnboarding, { entities: ["User"], auth: true }),
     query(getInboxItems, {
@@ -540,7 +559,7 @@ export default app({
       auth: true,
     }),
     action(triageInboxItem, {
-      entities: ["InboxItem", "Task", "Project", "Resource", "Tag", "Lens"],
+      entities: ["InboxItem", "InboxAttachment", "ListItem", "Task", "Project", "Resource", "Tag", "Lens"],
       auth: true,
     }),
     action(restoreArchivedItem, { entities: ["InboxItem"], auth: true }),

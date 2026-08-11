@@ -34,9 +34,16 @@ export type LensSummary = {
   id: string;
   name: string;
   kind: "PERSONAL" | "WORK" | "CUSTOM";
+  type: "LIFE_AREA" | "SIMPLE_LIST";
   color: string | null;
   purpose: string | null;
-  counts: { goals: number; projects: number; tasks: number };
+  counts: {
+    goals: number;
+    projects: number;
+    tasks: number;
+    openItems: number;
+    checkedItems: number;
+  };
 };
 
 export type LensDetail = LensSummary & { createdAt: string };
@@ -65,6 +72,7 @@ export async function getLensesCore(
           tasks: { where: { isDone: false } },
         },
       },
+      listItems: { select: { isDone: true } },
     },
   });
   lenses.sort(
@@ -82,20 +90,25 @@ export async function getLensesCore(
       id: string;
       name: string;
       kind: "PERSONAL" | "WORK" | "CUSTOM";
+      type: "LIFE_AREA" | "SIMPLE_LIST";
       color: string | null;
       purpose: string | null;
       createdAt: string;
       _count: { goals: number; projects: number; tasks: number };
+      listItems: { isDone: boolean }[];
     }): LensSummary => ({
       id: l.id,
       name: l.name,
       kind: l.kind,
+      type: l.type,
       color: l.color,
       purpose: l.purpose,
       counts: {
         goals: l._count.goals,
         projects: l._count.projects,
         tasks: l._count.tasks,
+        openItems: l.listItems.filter((item) => !item.isDone).length,
+        checkedItems: l.listItems.filter((item) => item.isDone).length,
       },
     }),
   );
@@ -126,6 +139,7 @@ export async function getLensCore(
           tasks: { where: { isDone: false } },
         },
       },
+      listItems: { select: { isDone: true } },
     },
   });
   if (!lens) return null;
@@ -133,6 +147,7 @@ export async function getLensCore(
     id: lens.id,
     name: lens.name,
     kind: lens.kind,
+    type: lens.type,
     color: lens.color,
     purpose: lens.purpose,
     createdAt: lens.createdAt,
@@ -140,6 +155,8 @@ export async function getLensCore(
       goals: lens._count.goals,
       projects: lens._count.projects,
       tasks: lens._count.tasks,
+      openItems: lens.listItems.filter((item: { isDone: boolean }) => !item.isDone).length,
+      checkedItems: lens.listItems.filter((item: { isDone: boolean }) => item.isDone).length,
     },
   };
 }

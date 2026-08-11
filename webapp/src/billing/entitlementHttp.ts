@@ -7,6 +7,7 @@ import {
   cliAccessViolation,
   sitewideSearchViolation,
   resolveLens,
+  resolveLensType,
   WORK_LENS_MESSAGE,
   CUSTOM_LENSES_MESSAGE,
 } from "./entitlements";
@@ -100,6 +101,20 @@ export async function assertLensAllowed(
     ? await resolveLens(context.entities, context.user.id, lensId)
     : null;
   throwIfViolation(lensViolation(context.user ?? null, lens, msg));
+}
+
+/** Product-type guard, deliberately separate from paid entitlement checks. */
+export async function assertLifeAreaLens(
+  context: GuardContext,
+  lensId: string,
+): Promise<void> {
+  const type = context.user
+    ? await resolveLensType(context.entities, context.user.id, lensId)
+    : null;
+  if (!type) throwHttpStatus(404, "Lens not found.");
+  if (type !== "LIFE_AREA") {
+    throwHttpStatus(400, "This action requires a Life-area Lens. Add checklist items directly in this list.");
+  }
 }
 
 /**

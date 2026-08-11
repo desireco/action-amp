@@ -184,6 +184,24 @@ export async function resolveLens(
   return lens ?? null;
 }
 
+/** Resolve only the behavioral Lens type, tenancy-safe. Kept separate from
+ * entitlement resolution because type eligibility is a product boundary, not
+ * a paid-plan decision. */
+export async function resolveLensType(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  entities: { Lens: { findFirst: (a: any) => Promise<any> } } | Record<string, unknown>,
+  userId: string,
+  lensId: string,
+): Promise<"LIFE_AREA" | "SIMPLE_LIST" | null> {
+  const lens = await (
+    entities as { Lens: { findFirst: (a: unknown) => Promise<{ type: "LIFE_AREA" | "SIMPLE_LIST" } | null> } }
+  ).Lens.findFirst({
+    where: { id: lensId, userId },
+    select: { type: true },
+  });
+  return lens?.type ?? null;
+}
+
 /**
  * The lens ids a user is allowed to READ — the entitlement filter for global,
  * cross-lens views (Today per WORKFLOW.md §5.11). Mirrors `lensViolation`'s

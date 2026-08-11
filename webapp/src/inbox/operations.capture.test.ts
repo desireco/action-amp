@@ -7,6 +7,7 @@ import { describe, it, expect, vi } from "vitest";
 // Stub the server-only HttpError layer so this test never loads `wasp/server`.
 vi.mock("../billing/entitlementHttp", () => ({
   assertLensAllowed: vi.fn().mockResolvedValue(undefined),
+  assertLifeAreaLens: vi.fn().mockResolvedValue(undefined),
   assertUnderCap: vi.fn().mockResolvedValue(undefined),
 }));
 import { mockContext } from "../test/mockContext";
@@ -76,6 +77,22 @@ describe("createInboxItem — happy path", () => {
     const call = m.entities.InboxItem.create.mock.calls[0][0];
     expect(call.data.parsedLens).toBe("studio");
     expect(call.data.text).toBe("ship");
+    expect(m.entities.Lens.findMany).toHaveBeenCalledWith({
+      where: { userId: "user-1", kind: "CUSTOM" },
+      select: { name: true },
+    });
+  });
+
+  it("recognizes a Simple-list [[lens]] token for later triage", async () => {
+    const m = mockContext();
+    m.entities.InboxItem.create.mockResolvedValue({ id: "ix-list", text: "milk", createdAt: new Date() });
+    m.entities.Lens.findMany.mockResolvedValue([{ name: "Shopping", type: "SIMPLE_LIST" }]);
+
+    await createInboxItem({ text: "milk [[shopping]]" }, m.context);
+
+    expect(m.entities.InboxItem.create.mock.calls[0][0].data).toEqual(
+      expect.objectContaining({ text: "milk", parsedLens: "shopping" }),
+    );
   });
 
   it("persists an explicit projectName override from the typeahead", async () => {
@@ -239,10 +256,11 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
       { id: "p-1", name: "MVP", lensId: "lens-work", lensName: "Work" },
       { id: "p-2", name: "Groceries", lensId: "lens-me", lensName: "Me" },
     ]);
-    // No lensId filter — all projects, all lenses.
+    // Resolver stays cross-entitlement, but only Life-area Lenses are eligible.
     expect(m.entities.Project.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",
+        lensId: { in: ["lens-me", "lens-work"] },
         isDone: false,
       },
       select: { id: true, name: true, lensId: true },
@@ -264,8 +282,10 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
 
     const result = await getProjectsForResolver({} as never, m.context);
 
-    // All lenses visible — no lensId { in: [...] } filter at all.
-    expect(m.entities.Project.findMany.mock.calls[0][0].where).not.toHaveProperty("lensId");
+    // All eligible Life-area lenses remain visible regardless of entitlement.
+    expect(m.entities.Project.findMany.mock.calls[0][0].where.lensId).toEqual({
+      in: ["lens-me", "lens-work", "lens-studio"],
+    });
     expect(result).toHaveLength(2);
   });
 });

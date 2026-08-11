@@ -26,6 +26,8 @@ export interface ActiveLens {
    * FREE gating. See docs/specs/custom-lenses.md §"Stable handle".
    */
   kind: string;
+  /** Behavioral boundary for the structured workspace or direct checklist. */
+  type: "LIFE_AREA" | "SIMPLE_LIST";
   /** One short line: what this lens is for. */
   purpose: string | null;
 }

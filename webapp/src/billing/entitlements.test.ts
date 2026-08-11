@@ -9,6 +9,7 @@ import {
   CLI_ACCESS_MESSAGE,
   SITEWIDE_SEARCH_MESSAGE,
   resolveLens,
+  resolveLensType,
   WORK_LENS_MESSAGE,
   CUSTOM_LENSES_MESSAGE,
 } from "./entitlements";
@@ -356,5 +357,23 @@ describe("resolveLens", () => {
     m.entities.Lens.findFirst.mockResolvedValue(null);
     const lens = await resolveLens(m.entities, "user-1", "nope");
     expect(lens).toBeNull();
+  });
+});
+
+describe("resolveLensType", () => {
+  it("returns type from a tenancy-safe lookup", async () => {
+    const m = mockContext("user-1");
+    m.entities.Lens.findFirst.mockResolvedValue({ type: "SIMPLE_LIST" });
+    await expect(resolveLensType(m.entities, "user-1", "shopping")).resolves.toBe("SIMPLE_LIST");
+    expect(m.entities.Lens.findFirst).toHaveBeenCalledWith({
+      where: { id: "shopping", userId: "user-1" },
+      select: { type: true },
+    });
+  });
+
+  it("returns null for a missing or cross-tenant Lens", async () => {
+    const m = mockContext("user-1");
+    m.entities.Lens.findFirst.mockResolvedValue(null);
+    await expect(resolveLensType(m.entities, "user-1", "other")).resolves.toBeNull();
   });
 });

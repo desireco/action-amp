@@ -11,6 +11,7 @@ import { describe, it, expect, vi } from "vitest";
 // (402 status + ProGate body) is verified end-to-end, not here.
 vi.mock("../billing/entitlementHttp", () => ({
   assertLensAllowed: vi.fn().mockResolvedValue(undefined),
+  assertLifeAreaLens: vi.fn().mockResolvedValue(undefined),
   assertUnderCap: vi.fn().mockResolvedValue(undefined),
   throwHttpStatus: vi.fn((status: number, message: string) => {
     throw new Error(`[${status}] ${message}`);

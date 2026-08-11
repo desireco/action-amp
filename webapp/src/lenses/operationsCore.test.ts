@@ -16,28 +16,45 @@ const ME = {
   id: "l1",
   name: "Me",
   kind: "PERSONAL",
+  type: "LIFE_AREA",
   color: null,
   purpose: null,
   createdAt: "2026-07-01T00:00:00.000Z",
   _count: { goals: 0, projects: 0, tasks: 2 },
+  listItems: [],
 };
 const WORK = {
   id: "l2",
   name: "Work",
   kind: "WORK",
+  type: "LIFE_AREA",
   color: "indigo",
   purpose: "Day job",
   createdAt: "2026-07-02T00:00:00.000Z",
   _count: { goals: 1, projects: 3, tasks: 12 },
+  listItems: [],
 };
 const STUDIO = {
   id: "l3",
   name: "Studio",
   kind: "CUSTOM",
+  type: "LIFE_AREA",
   color: "coral",
   purpose: "Side projects",
   createdAt: "2026-07-03T00:00:00.000Z",
   _count: { goals: 0, projects: 1, tasks: 4 },
+  listItems: [],
+};
+const SHOPPING = {
+  id: "l4",
+  name: "Shopping",
+  kind: "CUSTOM",
+  type: "SIMPLE_LIST",
+  color: "cyan",
+  purpose: "Groceries",
+  createdAt: "2026-07-04T00:00:00.000Z",
+  _count: { goals: 0, projects: 0, tasks: 0 },
+  listItems: [{ isDone: false }, { isDone: false }, { isDone: true }],
 };
 
 describe("getLensesCore", () => {
@@ -56,6 +73,7 @@ describe("getLensesCore", () => {
             tasks: { where: { isDone: false } },
           },
         },
+        listItems: { select: { isDone: true } },
       },
     });
   });
@@ -69,11 +87,22 @@ describe("getLensesCore", () => {
         id: "l2",
         name: "Work",
         kind: "WORK",
+        type: "LIFE_AREA",
         color: "indigo",
         purpose: "Day job",
-        counts: { goals: 1, projects: 3, tasks: 12 },
+        counts: { goals: 1, projects: 3, tasks: 12, openItems: 0, checkedItems: 0 },
       },
     ]);
+  });
+
+  it("returns open and checked counts for a Simple-list Lens", async () => {
+    const m = mockContext("user-1");
+    m.entities.Lens.findMany.mockResolvedValue([SHOPPING]);
+    const out = await getLensesCore(m.entities, { userId: "user-1" });
+    expect(out[0]).toMatchObject({
+      type: "SIMPLE_LIST",
+      counts: { openItems: 2, checkedItems: 1 },
+    });
   });
 
   it("sorts seeded-first (PERSONAL, WORK) then CUSTOM by createdAt", async () => {
@@ -109,8 +138,16 @@ describe("getLensCore", () => {
             tasks: { where: { isDone: false } },
           },
         },
+        listItems: { select: { isDone: true } },
       },
     });
+  });
+
+  it("returns type-specific counts for Simple-list detail", async () => {
+    const m = mockContext("user-1");
+    m.entities.Lens.findFirst.mockResolvedValue(SHOPPING);
+    const out = await getLensCore(m.entities, { userId: "user-1", idOrName: "Shopping" });
+    expect(out).toMatchObject({ type: "SIMPLE_LIST", counts: { openItems: 2, checkedItems: 1 } });
   });
 
   it("resolves by name (not just id)", async () => {

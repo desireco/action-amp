@@ -118,7 +118,9 @@ export const triageInboxItem = (async (args, context) => {
     priority: args.priority,
     size: args.size,
     content: args.content,
-    assertLens: (lensId) => assertLensAllowed(context, lensId),
+    assertLens: async (lensId) => {
+      await assertLensAllowed(context, lensId);
+    },
     assertProjectCap: (lensId, currentCount) =>
       assertUnderCap(context, lensId, currentCount, FREE_LIMITS.projects, {
         feature: "a 4th project",
@@ -139,6 +141,7 @@ export const triageInboxItem = (async (args, context) => {
     | "someday"
     | "project"
     | "resource"
+    | "list-item"
     | "archive"
     | "delete";
   lensId: string;
@@ -195,12 +198,12 @@ export const getProjectsForResolver = (async (_args, context) => {
   }
   const user = context.user;
   const lenses = await context.entities.Lens.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, type: "LIFE_AREA" },
     select: { id: true, name: true },
   });
   const lensNameById = new Map(lenses.map((l) => [l.id, l.name]));
   const projects = await context.entities.Project.findMany({
-    where: { userId: user.id, isDone: false },
+    where: { userId: user.id, lensId: { in: lenses.map((lens) => lens.id) }, isDone: false },
     select: { id: true, name: true, lensId: true },
     orderBy: [{ name: "asc" }],
   });
