@@ -7,6 +7,7 @@ import { describe, it, expect } from "vitest";
 import {
   snoozeTarget,
   getTopTaskData,
+  hydrateTopTaskData,
   toggleTaskDoneCore,
   pauseTaskCore,
   completeFocusSessionCore,
@@ -204,6 +205,103 @@ describe("getTopTaskData", () => {
     });
 
     expect(result).toMatchObject({ id: "older" });
+  });
+});
+
+// ----------------------------------------------------------------
+// hydrateTopTaskData — owned winner hydration (focus-goal-context spec)
+// ----------------------------------------------------------------
+// After getTopTaskData ranks candidates and returns the winner id, the Wasp
+// getTopTask op + CLI /api/cli/now route hydrate THAT row with Project→Goal +
+// session + NOTE context. Scoped by userId AND id; returns null when the row
+// vanishes between ranking and hydration. History attaches only to the winner.
+describe("hydrateTopTaskData", () => {
+  it("queries by both userId and id (no caller hydrates another user's task)", async () => {
+    const m = mockContext();
+    m.entities.Task.findFirst.mockResolvedValue(null);
+
+    await hydrateTopTaskData(m.entities, {
+      userId: "user-1",
+      id: "task-1",
+    });
+
+    expect(m.entities.Task.findFirst).toHaveBeenCalledWith({
+      where: { id: "task-1", userId: "user-1" },
+      include: {
+        project: {
+          select: {
+            id: true,
+            permalink: true,
+            name: true,
+            goal: { select: { id: true, name: true, description: true } },
+          },
+        },
+        goal: {
+          select: { id: true, permalink: true, name: true, description: true },
+        },
+        sessions: {
+          orderBy: { startedAt: "asc" },
+          select: { startedAt: true, endedAt: true },
+        },
+        updates: {
+          where: { kind: "NOTE" },
+          orderBy: { createdAt: "desc" },
+          select: { body: true, createdAt: true },
+        },
+      },
+    });
+  });
+
+  it("returns null when the ranked winner vanished before hydration", async () => {
+    const m = mockContext();
+    m.entities.Task.findFirst.mockResolvedValue(null);
+
+    const result = await hydrateTopTaskData(m.entities, {
+      userId: "user-1",
+      id: "gone",
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it("returns the hydrated row with Project→Goal, direct Goal, sessions, and NOTE updates", async () => {
+    const m = mockContext();
+    const hydrated = {
+      ...BASE_TASK,
+      project: {
+        id: "p1",
+        permalink: "launch",
+        name: "Launch v2",
+        goal: { id: "g1", name: "Reach 100 paid", description: "Prove demand." },
+      },
+      goal: {
+        id: "g-direct",
+        permalink: "legacy",
+        name: "Legacy goal",
+        description: null,
+      },
+      sessions: [{ startedAt: new Date(), endedAt: new Date() }],
+      updates: [{ body: "shipped", createdAt: new Date() }],
+    };
+    m.entities.Task.findFirst.mockResolvedValue(hydrated);
+
+    const result = await hydrateTopTaskData(m.entities, {
+      userId: "user-1",
+      id: "task-1",
+    });
+
+    expect(result).toEqual(hydrated);
+  });
+
+  it("filters TaskUpdate to NOTE only (COMPLETED rows stay out of the continuity math)", async () => {
+    const m = mockContext();
+    m.entities.Task.findFirst.mockResolvedValue(null);
+
+    await hydrateTopTaskData(m.entities, { userId: "user-1", id: "task-1" });
+
+    const call = m.entities.Task.findFirst.mock.calls[0][0];
+    expect(call.include.updates.where).toEqual({ kind: "NOTE" });
+    expect(call.include.updates.orderBy).toEqual({ createdAt: "desc" });
   });
 });
 

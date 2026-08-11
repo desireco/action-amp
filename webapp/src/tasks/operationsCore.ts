@@ -212,6 +212,55 @@ export async function getTopTaskData(
   return candidates[0];
 }
 
+// ----------------------------------------------------------------
+// Read: owned winner hydration (focus-goal-context spec)
+// ----------------------------------------------------------------
+// After `getTopTaskData` ranks candidates and returns the winner's id, both
+// the Wasp `getTopTask` op and the CLI `/api/cli/now` route hydrate THAT ONE
+// row with the Project→Goal + session + NOTE history context the Next/Focus
+// surfaces and the CLI context need. The history relations are intentionally
+// NOT attached to every candidate in `getTopTaskData` — only the owned winner
+// pays for them.
+//
+// Scoped by both `userId` and `id`: no caller can hydrate another user's Task.
+// If the ranked row vanishes between ranking and hydration (deleted, triaged
+// away, done), return `null` — never stale data.
+export async function hydrateTopTaskData(
+  entities: Entities,
+  { userId, id }: { userId: string; id: string },
+) {
+  return await entities.Task.findFirst({
+    where: { id, userId },
+    include: {
+      project: {
+        select: {
+          id: true,
+          permalink: true,
+          name: true,
+          goal: { select: { id: true, name: true, description: true } },
+        },
+      },
+      goal: {
+        select: { id: true, permalink: true, name: true, description: true },
+      },
+      // Sessions ordered by start; select only the duration fields continuity
+      // math needs (startedAt/endedAt). See app/taskContext.ts (FG03).
+      sessions: {
+        orderBy: { startedAt: "asc" },
+        select: { startedAt: true, endedAt: true },
+      },
+      // NOTE updates newest-first; select the fields count + latest-note
+      // display need. COMPLETED rows are filtered out here so the continuity
+      // math never has to sort them. FG03 builds the presentation values.
+      updates: {
+        where: { kind: "NOTE" },
+        orderBy: { createdAt: "desc" },
+        select: { body: true, createdAt: true },
+      },
+    },
+  });
+}
+
 /**
  * The shared top-task comparator: an in-progress task (startedAt != null) is
  * ALWAYS #1 — "Now" survives navigation. Among the rest, rank by priority >
