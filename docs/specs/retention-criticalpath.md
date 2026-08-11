@@ -77,22 +77,13 @@ Split into **instrumentation** (shippable now) and **known dead-ends**
 These are inspectable in the code today; they're friction regardless of what
 the numbers eventually say.
 
-- [ ] **Onboarding connects to the starter set.** The final onboarding panel
-      (or the Next first-paint) acknowledges the starter tasks — e.g. the focus
-      panel reads "We put a few light tasks on your table" instead of the
-      generic "Next picks the next thing." The seed exists; onboarding
-      pretends it doesn't. (`OnboardingPage.tsx` STEPS[2] / `NextPage.tsx`
-      first-paint.)
-- [ ] **The post-completion dead-end is closed.** Today, completing the seed
-      task flips Next to *"Nothing on the table. Capture something with ⌘K"*
-      — a dead-end that assumes the loop is internalized. Replace with a calm,
-      specific next step that references the just-completed action: e.g.
-      *"Done. Capture your own with ⌘K — what's actually on your mind?"*
-      (`NextPage.tsx` empty state, lines ~77-82.)
-- [ ] **The empty Inbox has a single next action**, not just a zero state.
-      Today's Inbox zero ("Capture something with ⌘K") is correct copy but
-      offers no affordance. Add the `⌘K` hint as a tappable/clickable control
-      that opens capture, not just text. (`inbox/InboxPage.tsx` empty state.)
+- [x] **Onboarding connects to one practice task.** The final panel says exactly
+      what follows and opens the real Next → Focus path.
+- [x] **The post-completion dead-end is closed.** Completing the practice task
+      leads to a persisted Capture instruction, then a persisted Triage
+      instruction after the first real capture.
+- [x] **The empty Inbox has a single next action.** The keyboard hint remains,
+      with a tappable/clickable Capture action beside it.
 
 ### C. Data-gated fixes — explicitly deferred (NOT in this spec)
 

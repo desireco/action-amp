@@ -40,14 +40,14 @@ const STEPS: {
     page: "triage",
     eyebrow: "2 of 3 · triage",
     title: "Decide what each thing becomes.",
-    body: "Some thoughts are tasks. Some are projects. Some are just later. Triage is where you decide without cluttering today.",
+    body: "Some thoughts are tasks. Some need a project. Some can wait. Triage is where you decide without cluttering today.",
     visual: "triage",
   },
   {
     page: "focus",
     eyebrow: "3 of 3 · focus",
     title: "Start with one thing.",
-    body: "We put a few light starter tasks on your table. Next will show them one at a time, then get out of the way.",
+    body: "We’ll put one practice task on your table. Complete it, then try the real loop with one thought of your own.",
     visual: "focus",
   },
 ];
@@ -317,7 +317,7 @@ export function OnboardingPage() {
         onClick={() => void finish()}
         disabled={completing}
       >
-        I'll figure it out
+        Skip intro
       </button>
 
       <div className="aa-ob-stage">
@@ -366,7 +366,7 @@ export function OnboardingPage() {
                 {completing
                   ? "Saving…"
                   : stepIdx >= STEPS.length - 1
-                    ? "Show me my starter tasks →"
+                    ? "Try the practice task →"
                     : "Next →"}
               </button>
             </div>

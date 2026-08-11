@@ -55,6 +55,7 @@ export function FocusPage() {
   return (
     <FocusMode
       task={toFocusTask(task)}
+      skipCompletionReflection={task.isOnboardingSample}
       onClose={async () => {
         // Leaving focus = pausing the task. The X / Esc / "esc exit" all flow
         // through here. Without this, exiting left the session open and the

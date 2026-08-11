@@ -426,6 +426,25 @@ describe("FocusMode", () => {
   // optional Outcome prompt in the existing notes flow. Only its final action
   // fires onComplete; the op-level behavior is covered in operations.test.ts.
   describe("completion — inline reflection before firing", () => {
+    it("completes a practice task immediately without asking for reflection", () => {
+      const onComplete = vi.fn();
+      renderInContext(
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+          skipCompletionReflection
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+
+      expect(onComplete).toHaveBeenCalledWith("");
+      expect(
+        screen.queryByRole("region", { name: /complete task reflection/i }),
+      ).toBeNull();
+    });
+
     it("clicking Complete task opens the inline reflection", () => {
       const onComplete = vi.fn();
       renderInContext(

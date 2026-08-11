@@ -376,6 +376,27 @@ describe("toggleTaskDone", () => {
     });
   });
 
+  it("advances onboarding when the sample is completed outside Focus", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      isDone: false,
+      userId: "user-1",
+      isOnboardingSample: true,
+    });
+    m.entities.Task.update.mockResolvedValue({
+      ...BASE_TASK,
+      isDone: true,
+      isOnboardingSample: true,
+    });
+
+    await toggleTaskDone({ id: "task-1" }, m.context);
+
+    expect(m.entities.User.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-1", onboardingStage: "SAMPLE_TASK" },
+      data: { onboardingStage: "CAPTURE" },
+    });
+  });
+
   it("marks a done task open and clears completedAt", async () => {
     const m = mockContext();
     m.entities.Task.findUnique.mockResolvedValue({

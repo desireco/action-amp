@@ -227,7 +227,7 @@ describe("ensureOnboarded — first-run seed", () => {
         status: "TODAY",
         priority: "NORMAL",
         size: "S",
-        description: "Try it: complete this task",
+        description: "Practice: complete this task",
         isOnboardingSample: true,
       }),
       select: { id: true },

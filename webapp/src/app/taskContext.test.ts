@@ -1,6 +1,6 @@
 // @vitest-environment node
 // Pure module — no DOM, no Wasp. Node is the right environment.
-import { describe, it, expect } from "vitest";
+import { afterAll, beforeAll, describe, it, expect, vi } from "vitest";
 import {
   resolveGoal,
   goalRationale,
@@ -19,6 +19,12 @@ import type { FocusWhyInput } from "./focusWhy";
  */
 
 const NOW = new Date("2026-08-10T10:00:00Z");
+beforeAll(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(NOW);
+});
+afterAll(() => vi.useRealTimers());
+
 const iso = (d: Date): string => d.toISOString();
 const minutesAfter = (base: Date, m: number): Date =>
   new Date(base.getTime() + m * 60_000);

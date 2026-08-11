@@ -39,7 +39,7 @@ const DEFAULT_LENSES = [
   kind: "WORK" | "PERSONAL";
   color: string;
 }[];
-const STARTER_TASK = "Try it: complete this task";
+const STARTER_TASK = "Practice: complete this task";
 
 // The recipient address is NOT on context.user (the User entity has no email
 // column — even billing creates Stripe customers without one). It lives on

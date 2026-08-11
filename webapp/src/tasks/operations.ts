@@ -186,11 +186,18 @@ export const toggleTaskDone = (async (args, context) => {
   }
   // Tenancy (findUnique + userId check) + the outcome/done-state payload live
   // in the core; the wrapper is just auth.
-  return await toggleTaskDoneCore(context.entities, {
+  const result = await toggleTaskDoneCore(context.entities, {
     userId: context.user.id,
     id: args.id,
     outcome: args.outcome,
   });
+  if (result.isDone && result.isOnboardingSample) {
+    await context.entities.User.updateMany({
+      where: { id: context.user.id, onboardingStage: "SAMPLE_TASK" },
+      data: { onboardingStage: "CAPTURE" },
+    });
+  }
+  return result;
 }) satisfies ToggleTaskDone<{ id: string; outcome?: string }>;
 
 // ----------------------------------------------------------------

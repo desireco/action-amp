@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CircularProgressbarWithChildren,
   buildStyles,
@@ -71,6 +71,7 @@ export function FocusMode({
   onAddNote,
   onSaveContent,
   onSnooze,
+  skipCompletionReflection = false,
 }: {
   task: FocusTask;
   onClose: () => void;
@@ -84,6 +85,9 @@ export function FocusMode({
   onStartSession?: () => Promise<void> | void;
   onAddNote?: (body: string) => Promise<void> | void;
   onSaveContent?: (content: string) => Promise<void> | void;
+  /** Completes immediately for disposable practice tasks that have no useful
+   * outcome to reflect on. Ordinary work keeps the inline reflection. */
+  skipCompletionReflection?: boolean;
   /** Called when the user picks a snooze preset from the "Not now" sheet. The
    *  parent runs snoozeTask (the task leaves the focus queue) and navigates
    *  away. Only reachable from the mobile action bar. */
@@ -119,6 +123,36 @@ export function FocusMode({
 
   // Countdown tick. One-second cadence keeps the large center time honest.
   const [, setTick] = useState(0);
+
+  const completeTask = useCallback(() => {
+    if (!onComplete || completingTask) return;
+    // Optimistic payoff: title strikes. The parent's onComplete then awaits
+    // server + navigation; if slow, user sees payoff. If fast, they move on.
+    const originalDraft = outcomeDraft;
+    const note = originalDraft.trim();
+    setCompletionError(null);
+    setComposerMode(null);
+    setCompletedLocally(true);
+    setCompletingTask(true);
+    setOutcomeDraft("");
+    void Promise.resolve(onComplete(note)).catch(() => {
+      setCompletedLocally(false);
+      setCompletingTask(false);
+      setOutcomeDraft(originalDraft);
+      setComposerMode("completion");
+      setCompletionError("Could not complete the task. Try again.");
+    });
+  }, [completingTask, onComplete, outcomeDraft]);
+
+  const openCompletionComposer = useCallback(() => {
+    if (!onComplete) return;
+    if (skipCompletionReflection) {
+      completeTask();
+      return;
+    }
+    setCompletionError(null);
+    setComposerMode("completion");
+  }, [completeTask, onComplete, skipCompletionReflection]);
 
   // Reset transient state when the task changes. Content drafts key off
   // task.content (they reflect a server-backed field that can change); outcome
@@ -252,7 +286,7 @@ export function FocusMode({
       // free: the timer and Task completion are separate controls.
       if ((e.key === "d" || e.key === "D") && onComplete) {
         e.preventDefault();
-        setComposerMode("completion");
+        openCompletionComposer();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -265,6 +299,7 @@ export function FocusMode({
     snoozeOpen,
     editingContent,
     content,
+    openCompletionComposer,
   ]);
 
   // Composer: ⌘↵ / Ctrl+↵ posts (shared helper). Plain Enter inserts a
@@ -302,34 +337,6 @@ export function FocusMode({
     } finally {
       setSavingContent(false);
     }
-  };
-
-  const completeTask = () => {
-    if (!onComplete || completingTask) return;
-    // Optimistic payoff: title strikes. The parent's
-    // onComplete then awaits the server + navigates; if it's slow the
-    // user sees the payoff, if fast they're already moving. Pass the Outcome
-    // draft (may be empty — skipped is a first-class choice).
-    const originalDraft = outcomeDraft;
-    const note = originalDraft.trim();
-    setCompletionError(null);
-    setComposerMode(null);
-    setCompletedLocally(true);
-    setCompletingTask(true);
-    setOutcomeDraft("");
-    void Promise.resolve(onComplete(note)).catch(() => {
-      setCompletedLocally(false);
-      setCompletingTask(false);
-      setOutcomeDraft(originalDraft);
-      setComposerMode("completion");
-      setCompletionError("Could not complete the task. Try again.");
-    });
-  };
-
-  const openCompletionComposer = () => {
-    if (!onComplete) return;
-    setCompletionError(null);
-    setComposerMode("completion");
   };
 
   return (
@@ -505,8 +512,16 @@ export function FocusMode({
               variant="primary"
               size="lg"
               onClick={openCompletionComposer}
-              aria-expanded={composerMode === "completion"}
-              aria-controls="aa-focus-completion-composer"
+              aria-expanded={
+                skipCompletionReflection
+                  ? undefined
+                  : composerMode === "completion"
+              }
+              aria-controls={
+                skipCompletionReflection
+                  ? undefined
+                  : "aa-focus-completion-composer"
+              }
               className="aa-focus-action aa-focus-action--complete"
             >
               Complete task

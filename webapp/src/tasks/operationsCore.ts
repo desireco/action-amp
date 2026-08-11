@@ -318,7 +318,7 @@ export async function toggleTaskDoneCore(
 ) {
   const task = await entities.Task.findUnique({
     where: { id },
-    select: { isDone: true, userId: true },
+    select: { isDone: true, userId: true, isOnboardingSample: true },
   });
   if (!task || task.userId !== userId) {
     throw new Error("Task not found.");

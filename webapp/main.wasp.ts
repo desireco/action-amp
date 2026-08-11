@@ -390,7 +390,7 @@ export default app({
       entities: ["Task", "TaskSession", "User"],
       auth: true,
     }),
-    action(toggleTaskDone, { entities: ["Task"], auth: true }),
+    action(toggleTaskDone, { entities: ["Task", "User"], auth: true }),
     action(updateTaskStatus, { entities: ["Task"], auth: true }),
     action(unscheduleOverdueTasks, { entities: ["Task", "Lens"], auth: true }),
     action(snoozeTask, { entities: ["Task"], auth: true }),

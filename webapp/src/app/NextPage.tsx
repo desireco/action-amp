@@ -224,20 +224,22 @@ function OnboardingGuide({ stage }: { stage: "CAPTURE" | "TRIAGE" }) {
   const capture = stage === "CAPTURE";
   return (
     <section className="aa-wn aa-wn-guide" aria-labelledby="onboarding-guide-title">
-      <p className="aa-wn-eyebrow">One more step</p>
+      <p className="aa-wn-eyebrow">
+        Try the real loop · {capture ? "capture" : "triage"}
+      </p>
       <h1 id="onboarding-guide-title" className="aa-wn-empty">
-        {capture ? "Get one real thing out of your head." : "Your thought is waiting."}
+        {capture ? "Capture one real thought." : "Now decide what it becomes."}
       </h1>
       <p className="aa-wn-empty-sub">
         {capture
-          ? "It will wait in Inbox until you decide what it becomes."
-          : "Give it a home so ActionAmp can put the right next thing on your table."}
+          ? "Put down anything you want to remember. It will wait in Inbox until you decide what it becomes."
+          : "Give your thought a home. ActionAmp will bring actionable work back when it matters."}
       </p>
       <Link
         className="aa-wn-guide__action"
         to={capture ? "/app?capture=1" : "/app/inbox/review"}
       >
-        {capture ? "Capture a thought" : "Triage it"} →
+        {capture ? "Open Capture" : "Triage your thought"} →
       </Link>
     </section>
   );
