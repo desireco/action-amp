@@ -566,3 +566,10 @@
     animation-duration: 0.01ms !important;
   }
 }
+.aa-triage-list-note {
+  margin: var(--aa-space-sm) 0 0;
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  line-height: 1.45;
+}
+.aa-triage-list-note.is-error { color: var(--aa-rose-text); }

@@ -465,6 +465,9 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 2px;
   }
+  .aa-mobile-dock__row.is-simple-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .aa-mobile-lens-menu {
     position: absolute;
     left: 8px;

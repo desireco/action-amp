@@ -18,6 +18,7 @@ import {
   ProjectsIcon,
   LogbookIcon,
   TrashIcon,
+  BoxIcon,
 } from "../components/ui/icons";
 import { useActiveLens } from "../app/lensContext";
 import { getProjects } from "wasp/client/operations";
@@ -114,15 +115,17 @@ export function TriagePage() {
   // Projects + goals scoped to the *confirmed* lens (step 1 output), not the
   // active one — filing targets must match where the item is actually landing.
   const scopedLensId = chosenLensId ?? activeLens?.id ?? null;
+  const scopedLens = lenses.find((lens) => lens.id === scopedLensId) ?? activeLens;
+  const isSimpleListDestination = scopedLens?.type === "SIMPLE_LIST";
   const { data: projects } = useQuery(
     getProjects,
-    scopedLensId ? { lensId: scopedLensId } : undefined,
-    { enabled: !!scopedLensId },
+    scopedLensId && !isSimpleListDestination ? { lensId: scopedLensId } : undefined,
+    { enabled: !!scopedLensId && !isSimpleListDestination },
   );
   const { data: goals } = useQuery(
     getGoals,
-    scopedLensId ? { lensId: scopedLensId } : undefined,
-    { enabled: !!scopedLensId },
+    scopedLensId && !isSimpleListDestination ? { lensId: scopedLensId } : undefined,
+    { enabled: !!scopedLensId && !isSimpleListDestination },
   );
 
   // Snapshot the list on first arrival. The triage walkthrough navigates this
@@ -212,19 +215,19 @@ export function TriagePage() {
     return match ? { projectId: match.id, lensId: match.lensId, projectName: match.name } : null;
   }, [resolverProjects, item?.parsedProject, item?.text]);
 
-  // A concrete Project is the strongest destination signal: it supplies both
-  // Project and Lens. A Lens token still preselects a visible Lens choice when
-  // there is no concrete Project destination.
+  // An explicit [[lens]] token wins over inferred project context. This is
+  // essential for [[simple-list]] capture: project-like text must not divert
+  // the item back into a Life-area task flow.
   const projectDestinationLens = projectBridge
     ? (lenses ?? []).find((l) => l.id === projectBridge.lensId) ?? null
     : null;
-  const inferredLens = projectDestinationLens ?? inferredLensFromToken ?? null;
-  const hasProjectDestination = !!projectBridge && !!projectDestinationLens;
+  const inferredLens = inferredLensFromToken ?? projectDestinationLens ?? null;
+  const hasProjectDestination = !inferredLensFromToken && !!projectBridge && !!projectDestinationLens;
   // Drives the hint label: "from project MVP" vs "from [[work]]".
-  const lensInferenceLabel = projectBridge && inferredLens
-      ? `from project ${projectBridge.projectName}`
-      : inferredLensFromToken
-        ? `from [[${item?.parsedLens}]] in your capture`
+  const lensInferenceLabel = inferredLensFromToken
+      ? `from [[${item?.parsedLens}]] in your capture`
+      : projectBridge && inferredLens
+        ? `from project ${projectBridge.projectName}`
       : null;
 
   // ---- Initialize a fresh working spec for a new item ----
@@ -287,6 +290,19 @@ export function TriagePage() {
     );
   }, [item, hasProjectDestination, projectBridge, projectDestinationLens]);
 
+  useEffect(() => {
+    if (!working || !scopedLens) return;
+    if (
+      scopedLens.type === "SIMPLE_LIST" &&
+      working.type !== "list-item" &&
+      working.type !== "delete"
+    ) {
+      setWorking({ ...working, type: "list-item" });
+    } else if (scopedLens.type === "LIFE_AREA" && working.type === "list-item") {
+      setWorking({ ...working, type: "task" });
+    }
+  }, [scopedLens?.id, scopedLens?.type, working?.type]);
+
   const setW = useCallback(
     (patch: Partial<Working>) => setWorking((w) => (w ? { ...w, ...patch } : w)),
     [],
@@ -302,8 +318,8 @@ export function TriagePage() {
       lenses.length > 0
         ? lenses
         : [
-            { id: "Work", name: "Work", color: "indigo" },
-            { id: "Me", name: "Me", color: "emerald" },
+            { id: "Work", name: "Work", color: "indigo", type: "LIFE_AREA" as const },
+            { id: "Me", name: "Me", color: "emerald", type: "LIFE_AREA" as const },
           ],
     [lenses],
   );
@@ -337,7 +353,9 @@ export function TriagePage() {
       // Await the task-list refetch so navigating to Today/Upcoming/Someday
       // after completing an item never shows the stale pre-triage cache (the
       // race where a just-triaged task appears missing until a manual refresh).
-      await queryClient.refetchQueries({ queryKey: ["getTasks"] });
+      if (payload.decision !== "list-item") {
+        await queryClient.refetchQueries({ queryKey: ["getTasks"] });
+      }
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Triage failed.");
@@ -371,6 +389,10 @@ export function TriagePage() {
     setStep,
     setWorkingType: (type) => {
       if (type === "project" && hasProjectDestination) return;
+      if (isSimpleListDestination && type !== "delete") {
+        setW({ type: "list-item" });
+        return;
+      }
       setW({ type });
     },
     selectLensByIndex,
@@ -399,11 +421,11 @@ export function TriagePage() {
   // Lenses — fall back to the seeded two so the classify pills have something
   // to show even before getAppData resolves (and during tests). Mirrors the
   // fallback the old lens radiogroup used.
-  const lensList = lenses.length > 0
+  const lensList: ClassifyLens[] = lenses.length > 0
     ? lenses
     : [
-        { id: "Work", name: "Work", color: "indigo", kind: "WORK", purpose: null },
-        { id: "Me", name: "Me", color: "emerald", kind: "PERSONAL", purpose: null },
+        { id: "Work", name: "Work", color: "indigo", type: "LIFE_AREA" },
+        { id: "Me", name: "Me", color: "emerald", type: "LIFE_AREA" },
       ];
   // The active lens as a picker chip — passed to PickerSheet items so each
   // project row shows which lens (context) it lives in. All projects in these
@@ -411,7 +433,7 @@ export function TriagePage() {
   // reinforces the context and future-proofs for cross-lens filing.
   const activeLensForChip = lensList.find((l) => l.id === (scopedLensId ?? chosenLensId));
   const lensChip = activeLensForChip
-    ? { label: activeLensForChip.name, color: activeLensForChip.color }
+    ? { label: activeLensForChip.name, color: activeLensForChip.color ?? null }
     : null;
 
   return (
@@ -440,9 +462,9 @@ export function TriagePage() {
           <TriageCard
             key={item.id}
             body={working.title}
-            onBodyChange={step === "spec" ? (title) => setW({ title }) : undefined}
+            onBodyChange={step === "spec" || isSimpleListDestination ? (title) => setW({ title }) : undefined}
             meta={`captured ${formatAgo(item.createdAt)}`}
-            chips={triageChips}
+            chips={isSimpleListDestination ? [] : triageChips}
             exit={exit}
             dispatched={dispatched}
             entering={entering}
@@ -453,6 +475,9 @@ export function TriagePage() {
                 working={working}
                 chosenLensId={chosenLensId}
                 lenses={lensList}
+                selectedLensType={scopedLens?.type ?? "LIFE_AREA"}
+                selectedLensName={scopedLens?.name ?? "list"}
+                hasAttachments={Boolean(item.attachments?.length)}
                 hasProjectDestination={hasProjectDestination}
                 destination={
                   hasProjectDestination && projectBridge && projectDestinationLens
@@ -468,7 +493,7 @@ export function TriagePage() {
                 }}
                 onSetType={(t) => setW({ type: t })}
                 onContinue={() =>
-                working.type === "delete"
+                  working.type === "delete" || working.type === "list-item"
                     ? void dispatch()
                     : setStep("spec")
                 }
@@ -499,7 +524,7 @@ export function TriagePage() {
       </div>
 
       {/* ---- File-into pickers (Project / Goal / Resource Project) ---- */}
-      <TriagePickers
+      {!isSimpleListDestination && <TriagePickers
         open={{
           project: projectPickerOpen,
           goal: goalPickerOpen,
@@ -516,7 +541,7 @@ export function TriagePage() {
         setProjectOpen={setProjectPickerOpen}
         setGoalOpen={setGoalPickerOpen}
         setParentProjectOpen={setParentProjectPickerOpen}
-      />
+      />}
     </div>
   );
 }
@@ -529,16 +554,20 @@ const TRIAGE_TYPES = [
   { t: "task", label: "Task", sub: "an action — something to do", Icon: StarIcon },
   { t: "project", label: "Project", sub: "an outcome needing more than one step", Icon: ProjectsIcon },
   { t: "resource", label: "Resource", sub: "a link or reference — not an action", Icon: LogbookIcon },
+  { t: "list-item", label: "List item", sub: "a flat item to check off", Icon: BoxIcon },
   { t: "delete", label: "Delete", sub: "get rid of it — not kept", Icon: TrashIcon },
 ] as const;
 
-type ClassifyLens = { id: string; name: string; color?: string | null };
+type ClassifyLens = { id: string; name: string; color?: string | null; type: "LIFE_AREA" | "SIMPLE_LIST" };
 
 /** Step 1 — pick the type (Task/Project/Resource/Delete) + Lens/Project destination. */
 function ClassifyStep({
   working,
   chosenLensId,
   lenses,
+  selectedLensType,
+  selectedLensName,
+  hasAttachments,
   hasProjectDestination,
   destination,
   inferenceLabel,
@@ -551,6 +580,9 @@ function ClassifyStep({
   working: Working;
   chosenLensId: string | null;
   lenses: ClassifyLens[];
+  selectedLensType: "LIFE_AREA" | "SIMPLE_LIST";
+  selectedLensName: string;
+  hasAttachments: boolean;
   hasProjectDestination: boolean;
   destination: { project: string; lens: string } | null;
   inferenceLabel: string | null;
@@ -602,6 +634,11 @@ function ClassifyStep({
       )}
       <div className="aa-triage-types">
         {TRIAGE_TYPES
+          .filter(({ t }) =>
+            selectedLensType === "SIMPLE_LIST"
+              ? t === "list-item" || t === "delete"
+              : t !== "list-item"
+          )
           // A captured/resolved project means this is a task *in* that project
           // by default, not a new project by the same name — hide that option.
           .filter(({ t }) => !(t === "project" && (hasParsedProject || hasProjectDestination)))
@@ -618,13 +655,24 @@ function ClassifyStep({
             </button>
           ))}
       </div>
+      {selectedLensType === "SIMPLE_LIST" && (
+        <p className={`aa-triage-list-note${hasAttachments ? " is-error" : ""}`}>
+          {hasAttachments
+            ? "This capture includes an image. Choose a Life area to keep it attached."
+            : `No dates, priority, projects, or other setup. This becomes one item in ${selectedLensName}.`}
+        </p>
+      )}
       <Button
         variant="primary"
         className="aa-triage-step__continue"
         onClick={onContinue}
-        disabled={!chosenLensId}
+        disabled={!chosenLensId || !working.title.trim() || (working.type === "list-item" && hasAttachments)}
       >
-        {working.type === "delete" ? "Delete" : "Continue"}
+        {working.type === "delete"
+          ? "Delete"
+          : working.type === "list-item"
+            ? `Add to ${selectedLensName}`
+            : "Continue"}
       </Button>
     </div>
   );

@@ -37,9 +37,16 @@ type LensRow = {
   id: string;
   name: string;
   kind: string;
+  type: "LIFE_AREA" | "SIMPLE_LIST";
   color: string | null;
   purpose: string | null;
-  counts: { goals: number; projects: number; tasks: number };
+  counts: {
+    goals: number;
+    projects: number;
+    tasks: number;
+    openItems: number;
+    checkedItems: number;
+  };
 };
 
 function operationErrorMessage(err: unknown, fallback: string): string {
@@ -123,7 +130,8 @@ function LensList({
 
         {creating ? (
           <LensForm
-            initial={{ name: "", purpose: "", color: "coral" }}
+            initial={{ name: "", purpose: "", color: "coral", type: "LIFE_AREA" }}
+            allowType
             submit={async (vals) => {
               await createLens(vals);
             }}
@@ -185,8 +193,9 @@ function LensRowItem({
           name: lens.name,
           purpose: lens.purpose ?? "",
           color: lens.color ?? "indigo",
+          type: lens.type,
         }}
-        submit={async (vals) => {
+        submit={async ({ type: _type, ...vals }) => {
           await updateLens({ id: lens.id, ...vals });
         }}
         submitLabel="Save"
@@ -208,14 +217,23 @@ function LensRowItem({
         <div className="aa-lenses-row__main">
           <div className="aa-lenses-row__name">
             {lens.name}
-            <span className="aa-lenses-row__kind">{KIND_LABEL[lens.kind] ?? lens.kind}</span>
+            <span className="aa-lenses-row__kind">
+              {lens.type === "SIMPLE_LIST" ? "Simple list" : KIND_LABEL[lens.kind] ?? lens.kind}
+            </span>
           </div>
           {lens.purpose && <div className="aa-lenses-row__purpose">{lens.purpose}</div>}
-          <div className="aa-lenses-row__meta">
-            <span>{lens.counts.goals} goals</span>
-            <span>{lens.counts.projects} projects</span>
-            <span>{lens.counts.tasks} tasks</span>
-          </div>
+          {lens.type === "SIMPLE_LIST" ? (
+            <div className="aa-lenses-row__meta">
+              <span>{lens.counts.openItems} open</span>
+              <span>{lens.counts.checkedItems} checked</span>
+            </div>
+          ) : (
+            <div className="aa-lenses-row__meta">
+              <span>{lens.counts.goals} goals</span>
+              <span>{lens.counts.projects} projects</span>
+              <span>{lens.counts.tasks} tasks</span>
+            </div>
+          )}
         </div>
         <div className="aa-lenses-row__acts">
           <button type="button" className="aa-lenses-act" onClick={() => setEditing(true)}>
@@ -250,6 +268,7 @@ function LensRowItem({
 
 function LensForm({
   initial,
+  allowType = false,
   submit,
   submitLabel,
   submittingLabel,
@@ -259,8 +278,9 @@ function LensForm({
   onCancel,
   onDone,
 }: {
-  initial: { name: string; purpose: string; color: string };
-  submit: (vals: { name: string; purpose: string; color: string }) => Promise<void>;
+  initial: { name: string; purpose: string; color: string; type: "LIFE_AREA" | "SIMPLE_LIST" };
+  allowType?: boolean;
+  submit: (vals: { name: string; purpose: string; color: string; type?: "LIFE_AREA" | "SIMPLE_LIST" }) => Promise<void>;
   submitLabel: string;
   submittingLabel: string;
   errorPreamble: string;
@@ -272,6 +292,7 @@ function LensForm({
   const [name, setName] = useState(initial.name);
   const [purpose, setPurpose] = useState(initial.purpose);
   const [color, setColor] = useState(initial.color);
+  const [type, setType] = useState(initial.type);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -279,7 +300,7 @@ function LensForm({
     setSaving(true);
     setError(null);
     try {
-      await submit({ name, purpose, color });
+      await submit({ name, purpose, color, ...(allowType ? { type } : {}) });
       await onDone();
     } catch (e) {
       setError(operationErrorMessage(e, errorPreamble));
@@ -301,6 +322,40 @@ function LensForm({
           autoFocus={autoFocusName}
         />
       </div>
+      <fieldset className="aa-lenses-type">
+        <legend className="aa-lenses-edit__label">Lens type</legend>
+        {allowType ? (
+          <div className="aa-lenses-type__options">
+            <label className={`aa-lenses-type__option ${type === "LIFE_AREA" ? "selected" : ""}`}>
+              <input
+                type="radio"
+                name="lens-type"
+                value="LIFE_AREA"
+                checked={type === "LIFE_AREA"}
+                onChange={() => setType("LIFE_AREA")}
+                disabled={saving}
+              />
+              <span><strong>Life area</strong><small>Tasks, projects, goals, planning, and review.</small></span>
+            </label>
+            <label className={`aa-lenses-type__option ${type === "SIMPLE_LIST" ? "selected" : ""}`}>
+              <input
+                type="radio"
+                name="lens-type"
+                value="SIMPLE_LIST"
+                checked={type === "SIMPLE_LIST"}
+                onChange={() => setType("SIMPLE_LIST")}
+                disabled={saving}
+              />
+              <span><strong>Simple list</strong><small>Add items directly and check them off.</small></span>
+            </label>
+          </div>
+        ) : (
+          <p className="aa-lenses-type__readonly">
+            {type === "SIMPLE_LIST" ? "Simple list" : "Life area"}
+            <span>Lens type cannot be changed after creation.</span>
+          </p>
+        )}
+      </fieldset>
       <div className="aa-lenses-edit__row">
         <label className="aa-lenses-edit__label">Purpose</label>
         <input
@@ -362,14 +417,20 @@ function DeleteLensDialog({
   // prop from the parent for simplicity, but re-fetch here to be safe against
   // a stale closure (the parent's list could be from before a sibling edit).
   const { data: liveLenses } = useQuery(getLenses);
-  const targets = (liveLenses ?? allLenses).filter((l) => l.id !== lens.id);
-  const hasContent = lens.counts.goals + lens.counts.projects + lens.counts.tasks > 0;
+  const targets = (liveLenses ?? allLenses).filter(
+    (candidate) => candidate.id !== lens.id && candidate.type === lens.type,
+  );
+  const hasContent = lens.type === "SIMPLE_LIST"
+    ? lens.counts.openItems + lens.counts.checkedItems > 0
+    : lens.counts.goals + lens.counts.projects + lens.counts.tasks > 0;
   const [mode, setMode] = useState<"reassign" | "delete">(hasContent ? "reassign" : "delete");
   const [targetId, setTargetId] = useState(targets[0]?.id ?? "");
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const contentSummary = `${lens.counts.goals} goals, ${lens.counts.projects} projects, ${lens.counts.tasks} tasks`;
+  const contentSummary = lens.type === "SIMPLE_LIST"
+    ? `${lens.counts.openItems} open items, ${lens.counts.checkedItems} checked items`
+    : `${lens.counts.goals} goals, ${lens.counts.projects} projects, ${lens.counts.tasks} tasks`;
   const cannotReassign = mode === "reassign" && !targetId;
 
   useEffect(() => {
@@ -428,19 +489,12 @@ function DeleteLensDialog({
                   </select>
                 </span>
               </label>
-              <label className="aa-lenses-delete__opt">
-                <input
-                  type="radio"
-                  name="delete-mode"
-                  checked={mode === "delete"}
-                  onChange={() => setMode("delete")}
-                  disabled={deleting}
-                />
-                <span>
-                  <strong>Delete everything</strong>
-                  <em>{contentSummary} will be permanently removed.</em>
-                </span>
-              </label>
+              {targets.length === 0 && (
+                <p>
+                  Create another {lens.type === "SIMPLE_LIST" ? "Simple list" : "Life area"}
+                  {" "}first, or empty this lens before deleting it.
+                </p>
+              )}
             </>
           ) : (
             <p>This lens is empty. Deleting it removes only the lens itself.</p>

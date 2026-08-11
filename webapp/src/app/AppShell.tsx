@@ -43,7 +43,6 @@ import {
 } from "../notifications/client";
 import {
   BrandMark,
-  LensSwitch,
   NavItem,
   PlusIcon,
   LoudspeakerIcon,
@@ -82,6 +81,32 @@ const NAV_ROUTE: Record<NavDestination, string> = {
   planning: "/app/projects",
   review: "/app/review",
 };
+
+function ListIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M6 4h7M6 8h7M6 12h7"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="m2.5 4 1 1 1.5-2M2.5 8l1 1L5 7M2.5 12l1 1L5 11"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
@@ -218,6 +243,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       ? (lenses.find((l) => l.kind === "PERSONAL") ?? resolvedLens)
       : resolvedLens;
   const activeLensName = activeLens?.name ?? "Me";
+  const isSimpleListLens = activeLens?.type === "SIMPLE_LIST";
   // Self-heal: if the stored id no longer matches a lens (deleted?), persist
   // the fallback so we don't keep looking up a stale id.
   useEffect(() => {
@@ -227,6 +253,29 @@ export function AppShell({ children }: { children: ReactNode }) {
       setWorkGated(false);
     }
   }, [activeLens, lensId]);
+
+  // A Lens type owns its workflow routes. Keep settings/admin reachable as
+  // persistent account surfaces, but normalize every workflow route after the
+  // active Lens resolves so stale URLs cannot expose the other workflow.
+  useEffect(() => {
+    if (!activeLens) return;
+    const isPersistentRoute =
+      location.pathname.startsWith("/app/settings") ||
+      location.pathname.startsWith("/app/admin") ||
+      location.pathname.startsWith("/app/inbox");
+    if (
+      activeLens.type === "SIMPLE_LIST" &&
+      location.pathname !== "/app/list" &&
+      !isPersistentRoute
+    ) {
+      navigate("/app/list", { replace: true });
+    } else if (
+      activeLens.type === "LIFE_AREA" &&
+      location.pathname === "/app/list"
+    ) {
+      navigate("/app", { replace: true });
+    }
+  }, [activeLens?.id, activeLens?.type, location.pathname, navigate]);
 
   // The Work lens is "visible-but-locked" for FREE users: shown in the switch
   // with a tiny "Pro" affordance (proLocked), but selecting it shows the gate.
@@ -240,6 +289,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           label: l.name,
           color: l.color ?? undefined,
           purpose: l.purpose ?? undefined,
+          type: l.type,
           // FREE: only PERSONAL is usable; WORK + CUSTOM are gated.
           proLocked: workLocked && l.kind !== "PERSONAL",
         }))
@@ -249,6 +299,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             label: "Work",
             color: "indigo",
             purpose: undefined,
+            type: "LIFE_AREA" as const,
             proLocked: workLocked,
           },
           {
@@ -256,13 +307,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             label: "Me",
             color: "emerald",
             purpose: undefined,
+            type: "LIFE_AREA" as const,
             proLocked: false,
           },
         ];
   // Lens is persistent context, not a set of peer pages. Always show the current
   // lens as one trigger, then reveal the complete choice set in its popover.
   // This stays compact and legible when users add custom lenses.
-  const usePopover = true;
 
   // Select handler with FREE gating: a non-entitled user picking a non-PERSONAL
   // lens sees the ProGate in the main area instead of switching (their queries
@@ -276,6 +327,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
     setWorkGated(false);
     setLens(id);
+    if (target?.type === "SIMPLE_LIST" && !location.pathname.startsWith("/app/inbox")) navigate("/app/list");
+    else if (target?.type === "LIFE_AREA" && location.pathname === "/app/list")
+      navigate("/app");
   };
 
   // The value pages consume via useActiveLens() to scope their queries.
@@ -285,6 +339,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         name: activeLens.name,
         color: activeLens.color ?? null,
         kind: activeLens.kind,
+        type: activeLens.type,
         purpose: activeLens.purpose,
       }
     : null;
@@ -428,8 +483,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     onCommandPalette: () => {
       if (!paletteBlocked) openPalette("command");
     },
-    onGoHome: () => navigate("/app"),
-    onNavigate: (dest) => navigate(NAV_ROUTE[dest]),
+    onGoHome: isSimpleListLens ? undefined : () => navigate("/app"),
+    onNavigate: (dest) =>
+      navigate(isSimpleListLens ? "/app/list" : NAV_ROUTE[dest]),
     onToggleCheatsheet: () => {
       const next = !cheatsheetOpen;
       closeGlobalOverlays();
@@ -477,7 +533,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       className={`aa-app${inSettings ? " is-in-settings" : ""}${inFocus ? " is-in-focus" : ""}`}
     >
       <aside className="aa-app-side">
-        <Link className="aa-app-brand" to="/app" title="Next">
+        <Link
+          className="aa-app-brand"
+          to={isSimpleListLens ? "/app/list" : "/app"}
+          title={isSimpleListLens ? "List" : "Next"}
+        >
           <span className="aa-app-mark" aria-hidden="true">
             <BrandMark size="sm" />
           </span>
@@ -542,166 +602,175 @@ export function AppShell({ children }: { children: ReactNode }) {
             Inbox (capture, universal), Today (day's commitment, universal),
             Do (Next/What-Now chooser, lens-scoped). All three are flat links;
             none belongs to a group, so they sit together at the top. */}
-        <nav className="aa-app-nav">
-          <NavItem
-            icon={<InboxIcon />}
-            label="Inbox"
-            active={isActive("/app/inbox")}
-            to="/app/inbox"
-            count={
-              counts.inbox > 0 ? (
-                counts.inbox
-              ) : (
-                <svg
-                  width="11"
-                  height="11"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  aria-label="Inbox zero"
-                >
-                  <path
-                    d="M3.5 8.5l3 3 6-7"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )
-            }
-            countVariant={counts.inbox > 0 ? "urgent" : "done"}
-          />
-          <NavItem
-            icon={<ClockIcon />}
-            label="Today"
-            active={isActive("/app/today")}
-            to="/app/today"
-            count={counts.today}
-          />
-          <NavItem
-            icon={<StarIcon />}
-            label="Do"
-            active={isActive("/app")}
-            to="/app"
-          />
-        </nav>
+        {isSimpleListLens && (
+          <nav className="aa-app-nav" aria-label="List navigation">
+            <NavItem
+              icon={<InboxIcon />}
+              label="Inbox"
+              active={isActive("/app/inbox")}
+              to="/app/inbox"
+              count={counts.inbox || undefined}
+            />
+            <NavItem
+              icon={<ListIcon />}
+              label="List"
+              active={isActive("/app/list")}
+              to="/app/list"
+            />
+          </nav>
+        )}
+        {!isSimpleListLens && (
+          <>
+            <nav className="aa-app-nav">
+              <NavItem
+                icon={<InboxIcon />}
+                label="Inbox"
+                active={isActive("/app/inbox")}
+                to="/app/inbox"
+                count={
+                  counts.inbox > 0 ? (
+                    counts.inbox
+                  ) : (
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      aria-label="Inbox zero"
+                    >
+                      <path
+                        d="M3.5 8.5l3 3 6-7"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )
+                }
+                countVariant={counts.inbox > 0 ? "urgent" : "done"}
+              />
+              <NavItem
+                icon={<ClockIcon />}
+                label="Today"
+                active={isActive("/app/today")}
+                to="/app/today"
+                count={counts.today}
+              />
+              <NavItem
+                icon={<StarIcon />}
+                label="Do"
+                active={isActive("/app")}
+                to="/app"
+              />
+            </nav>
 
-        {/* ---- Group nav — always-open Plan + Review labeled groups ----
+            {/* ---- Group nav — always-open Plan + Review labeled groups ----
             The expanding-section switch (one open at a time) is gone — it
             added a click before anything was visible and auto-collapsed
             sections unpredictably on route changes. Plan and Review render
             their items directly under static labels. */}
-        <nav className="aa-focus-nav">
-          <div className="aa-focus-group">
-            <div className="aa-focus-label" aria-hidden="true">
-              Plan
-            </div>
-            <div className="aa-focus-items">
-              <NavItem
-                icon={<CalendarIcon />}
-                label="Upcoming"
-                active={isActive("/app/upcoming")}
-                to="/app/upcoming"
-                count={counts.upcoming}
-              />
-              <NavItem
-                icon={<ProjectsIcon />}
-                label="Projects"
-                active={isActive("/app/projects")}
-                to="/app/projects"
-                count={counts.projects}
-              />
-              <NavItem
-                icon={<GoalsIcon />}
-                label="Goals"
-                active={isActive("/app/goals")}
-                to="/app/goals"
-                count={counts.goals}
-              />
-              <NavItem
-                icon={<SomedayIcon />}
-                label="Someday"
-                active={isActive("/app/someday")}
-                to="/app/someday"
-                count={counts.someday}
-              />
-            </div>
-          </div>
+            <nav className="aa-focus-nav">
+              <div className="aa-focus-group">
+                <div className="aa-focus-label" aria-hidden="true">
+                  Plan
+                </div>
+                <div className="aa-focus-items">
+                  <NavItem
+                    icon={<CalendarIcon />}
+                    label="Upcoming"
+                    active={isActive("/app/upcoming")}
+                    to="/app/upcoming"
+                    count={counts.upcoming}
+                  />
+                  <NavItem
+                    icon={<ProjectsIcon />}
+                    label="Projects"
+                    active={isActive("/app/projects")}
+                    to="/app/projects"
+                    count={counts.projects}
+                  />
+                  <NavItem
+                    icon={<GoalsIcon />}
+                    label="Goals"
+                    active={isActive("/app/goals")}
+                    to="/app/goals"
+                    count={counts.goals}
+                  />
+                  <NavItem
+                    icon={<SomedayIcon />}
+                    label="Someday"
+                    active={isActive("/app/someday")}
+                    to="/app/someday"
+                    count={counts.someday}
+                  />
+                </div>
+              </div>
 
-          <div className="aa-focus-group">
-            <div className="aa-focus-label" aria-hidden="true">
-              Review
-            </div>
-            <div className="aa-focus-items">
-              {reviewPreferences.today && (
-                <NavItem
-                  icon={<ClockIcon />}
-                  label="Today"
-                  active={isActive("/app/review/today")}
-                  to="/app/review/today"
-                />
-              )}
-              {reviewPreferences.week && (
-                <NavItem
-                  icon={<CalendarIcon />}
-                  label="Week"
-                  active={isActive("/app/review/week")}
-                  to="/app/review/week"
-                />
-              )}
-              {reviewPreferences.month && (
-                <NavItem
-                  icon={<GoalsIcon />}
-                  label="Month"
-                  active={isActive("/app/review/month")}
-                  to="/app/review/month"
-                />
-              )}
-              <NavItem
-                icon={<LogbookIcon />}
-                label="Logbook"
-                active={isActive("/app/logbook")}
-                to="/app/logbook"
-              />
-            </div>
-          </div>
-        </nav>
+              <div className="aa-focus-group">
+                <div className="aa-focus-label" aria-hidden="true">
+                  Review
+                </div>
+                <div className="aa-focus-items">
+                  {reviewPreferences.today && (
+                    <NavItem
+                      icon={<ClockIcon />}
+                      label="Today"
+                      active={isActive("/app/review/today")}
+                      to="/app/review/today"
+                    />
+                  )}
+                  {reviewPreferences.week && (
+                    <NavItem
+                      icon={<CalendarIcon />}
+                      label="Week"
+                      active={isActive("/app/review/week")}
+                      to="/app/review/week"
+                    />
+                  )}
+                  {reviewPreferences.month && (
+                    <NavItem
+                      icon={<GoalsIcon />}
+                      label="Month"
+                      active={isActive("/app/review/month")}
+                      to="/app/review/month"
+                    />
+                  )}
+                  <NavItem
+                    icon={<LogbookIcon />}
+                    label="Logbook"
+                    active={isActive("/app/logbook")}
+                    to="/app/logbook"
+                  />
+                </div>
+              </div>
+            </nav>
+          </>
+        )}
 
         {/* User footer */}
         <div className="aa-app-user">
-          {/* Adaptive lens switcher: segmented control at ≤3 lenses (today,
-              unchanged), chip + popover at ≥4 (when segmented gets crowded).
-              ⌘L toggles the popover; the wrapper is positioned relative so the
-              popover anchors under the chip. */}
+          {/* Lens is persistent context, exposed through one compact trigger.
+              ⌘L toggles the popover; the wrapper anchors it under the chip. */}
           <div className="aa-app-lens">
-            {usePopover ? (
-              <>
-                <LensChip
-                  label={activeLensName}
-                  color={activeLens?.color ?? undefined}
-                  open={lensPopoverOpen}
-                  onClick={() => setLensPopoverOpen((v) => !v)}
-                />
-                {lensPopoverOpen && (
-                  <LensPopover
-                    options={lensOptions}
-                    active={activeLens?.id ?? ""}
-                    onSelect={selectLens}
-                    onClose={() => setLensPopoverOpen(false)}
-                    onNewLens={
-                      entitled
-                        ? () => navigate("/app/settings/lenses")
-                        : undefined
-                    }
-                    newLensProLocked={!entitled}
-                  />
-                )}
-              </>
-            ) : (
-              <LensSwitch
+            <LensChip
+              label={activeLensName}
+              color={activeLens?.color ?? undefined}
+              open={lensPopoverOpen}
+              onClick={() => setLensPopoverOpen((v) => !v)}
+            />
+            {lensPopoverOpen && (
+              <LensPopover
                 options={lensOptions}
                 active={activeLens?.id ?? ""}
                 onSelect={selectLens}
+                onClose={() => setLensPopoverOpen(false)}
+                onNewLens={
+                  entitled
+                    ? () => navigate("/app/settings/lenses")
+                    : undefined
+                }
+                newLensProLocked={!entitled}
               />
             )}
           </div>
@@ -805,66 +874,101 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </div>
         )}
-        <div className="aa-mobile-dock__row">
-          {/* Mobile dock: "Do" is the Next/What-Now chooser (the home screen).
+        <div
+          className={`aa-mobile-dock__row${isSimpleListLens ? " is-simple-list" : ""}`}
+        >
+          {isSimpleListLens ? (
+            <>
+              <Link
+                className={`aa-mobile-dock__item ${isActive("/app/inbox") ? "active" : ""}`}
+                to="/app/inbox"
+                aria-label="Inbox"
+              >
+                <InboxIcon />
+                <span>Inbox</span>
+              </Link>
+              <Link
+                className={`aa-mobile-dock__item ${isActive("/app/list") ? "active" : ""}`}
+                to="/app/list"
+                aria-label="List"
+              >
+                <ListIcon />
+                <span>List</span>
+              </Link>
+              <button
+                type="button"
+                className={`aa-mobile-dock__item aa-mobile-dock__lens-btn ${mobileLensOpen ? "active" : ""}`}
+                aria-label={`Lens: ${activeLensName}`}
+                aria-expanded={mobileLensOpen}
+                onClick={() => setMobileLensOpen((v) => !v)}
+              >
+                <span className="aa-mobile-dock__lens-dot" aria-hidden="true" />
+                <span>{activeLensName}</span>
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Mobile dock: "Do" is the Next/What-Now chooser (the home screen).
               "Today" leaves the dock (its slot is covered by a Today link on
               the Next page, plus the Today↔Upcoming cross-link). Desktop keeps
               the full Next/Today sidebar split. */}
-          <Link
-            className={`aa-mobile-dock__item ${isActive("/app/inbox") ? "active" : ""}`}
-            to="/app/inbox"
-            aria-label="Inbox"
-          >
-            <InboxIcon />
-            <span>Inbox</span>
-          </Link>
-          <Link
-            className={`aa-mobile-dock__item ${isActive("/app") ? "active" : ""}`}
-            to="/app"
-            aria-label="Do"
-          >
-            <StarIcon />
-            <span>Do</span>
-          </Link>
-          <Link
-            className={`aa-mobile-dock__item ${inPlan ? "active" : ""}`}
-            to="/app/projects"
-            aria-label="Plan"
-          >
-            <ProjectsIcon />
-            <span>Plan</span>
-          </Link>
-          <Link
-            className={`aa-mobile-dock__item ${inReview ? "active" : ""}`}
-            to="/app/review"
-            aria-label="Review"
-          >
-            <LogbookIcon />
-            <span>Review</span>
-          </Link>
-          <button
-            type="button"
-            className={`aa-mobile-dock__item aa-mobile-dock__lens-btn ${mobileLensOpen ? "active" : ""}`}
-            aria-label={`Lens: ${activeLensName}`}
-            aria-expanded={mobileLensOpen}
-            onClick={() => setMobileLensOpen((v) => !v)}
-          >
-            <span className="aa-mobile-dock__lens-dot" aria-hidden="true" />
-            <span>{activeLensName}</span>
-          </button>
+              <Link
+                className={`aa-mobile-dock__item ${isActive("/app/inbox") ? "active" : ""}`}
+                to="/app/inbox"
+                aria-label="Inbox"
+              >
+                <InboxIcon />
+                <span>Inbox</span>
+              </Link>
+              <Link
+                className={`aa-mobile-dock__item ${isActive("/app") ? "active" : ""}`}
+                to="/app"
+                aria-label="Do"
+              >
+                <StarIcon />
+                <span>Do</span>
+              </Link>
+              <Link
+                className={`aa-mobile-dock__item ${inPlan ? "active" : ""}`}
+                to="/app/projects"
+                aria-label="Plan"
+              >
+                <ProjectsIcon />
+                <span>Plan</span>
+              </Link>
+              <Link
+                className={`aa-mobile-dock__item ${inReview ? "active" : ""}`}
+                to="/app/review"
+                aria-label="Review"
+              >
+                <LogbookIcon />
+                <span>Review</span>
+              </Link>
+              <button
+                type="button"
+                className={`aa-mobile-dock__item aa-mobile-dock__lens-btn ${mobileLensOpen ? "active" : ""}`}
+                aria-label={`Lens: ${activeLensName}`}
+                aria-expanded={mobileLensOpen}
+                onClick={() => setMobileLensOpen((v) => !v)}
+              >
+                <span className="aa-mobile-dock__lens-dot" aria-hidden="true" />
+                <span>{activeLensName}</span>
+              </button>
+            </>
+          )}
         </div>
       </nav>
 
       <button
-        type="button"
-        className={`aa-app-capture-fab ${mobileLensOpen ? "is-hidden-while-lens-open" : ""}`}
-        title="Capture (⌘K)"
-        aria-label="Capture"
-        onClick={openCapture}
-      >
-        <PlusIcon width={18} height={18} />
-        <span>Capture</span>
-        <Kbd>⌘K</Kbd>
+          type="button"
+          className={`aa-app-capture-fab ${mobileLensOpen ? "is-hidden-while-lens-open" : ""}`}
+          title="Capture (⌘K)"
+          aria-label="Capture"
+          onClick={openCapture}
+        >
+          <PlusIcon width={18} height={18} />
+          <span>Capture</span>
+          <Kbd>⌘K</Kbd>
       </button>
 
       {/* ---- Global overlays ---- */}
@@ -883,6 +987,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           onCapture={openCapture}
           onToggleTheme={toggleTheme}
           onOpenShortcuts={() => setCheatsheetOpen(true)}
+          activeLensType={activeLens?.type ?? "LIFE_AREA"}
         />
       )}
       {captureOpen && (

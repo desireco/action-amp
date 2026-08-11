@@ -16,17 +16,17 @@ const inboxItems = {
       parsedSize: null,
       parsedTags: [],
     },
-  ],
+  ] as any[],
 };
 
 const appData = {
   current: {
-    lenses: [{ id: "lens-1", name: "Work", kind: "WORK", color: "indigo" }],
+    lenses: [{ id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" }],
   },
 };
 
 const activeLens = {
-  current: { id: "lens-1", name: "Work", kind: "WORK", color: "indigo" },
+  current: { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" },
 };
 
 const projects = {
@@ -98,9 +98,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.useRealTimers();
   appData.current = {
-    lenses: [{ id: "lens-1", name: "Work", kind: "WORK", color: "indigo" }],
+    lenses: [{ id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" }],
   };
-  activeLens.current = { id: "lens-1", name: "Work", kind: "WORK", color: "indigo" };
+  activeLens.current = { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" };
   projects.current = [];
   resolverProjects.current = [];
   inboxItems.current = [
@@ -120,6 +120,74 @@ beforeEach(() => {
 });
 
 describe("TriagePage", () => {
+  it("offers Simple-list Lenses as destination choices", () => {
+    appData.current = {
+      lenses: [
+        { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" },
+        { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" },
+      ],
+    };
+    renderTriagePage();
+    expect(screen.getByRole("radio", { name: "Work" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Shopping" })).toBeInTheDocument();
+  });
+
+  it("uses one editable confirmation to add a captured item to a Simple list", async () => {
+    appData.current = {
+      lenses: [
+        { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" },
+        { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" },
+      ],
+    };
+    activeLens.current = { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" };
+    triageInboxItem.mockResolvedValue({ kind: "list-item", id: "li-1" });
+    renderTriagePage();
+
+    const title = await screen.findByRole("textbox", { name: "Title" });
+    expect(screen.getByRole("button", { name: "Add to Shopping" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /project/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/2 · Specify/i)).not.toBeInTheDocument();
+    fireEvent.change(title, { target: { value: "Oat milk" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add to Shopping" }));
+
+    await waitFor(() => expect(triageInboxItem).toHaveBeenCalledWith({
+      inboxItemId: "ix-1",
+      decision: "list-item",
+      lensId: "shopping",
+      name: "Oat milk",
+    }));
+  });
+
+  it("lets an explicit Simple-list token override inferred project context", async () => {
+    appData.current = {
+      lenses: [
+        { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" },
+        { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" },
+      ],
+    };
+    resolverProjects.current = [{ id: "project-1", name: "Groceries", lensId: "lens-1" }];
+    inboxItems.current[0] = {
+      ...inboxItems.current[0],
+      text: "Buy milk Groceries",
+      parsedLens: "shopping",
+      parsedProject: "Groceries",
+    };
+    renderTriagePage();
+    expect(await screen.findByRole("radio", { name: "Shopping" })).toBeChecked();
+    expect(screen.getByRole("button", { name: "Add to Shopping" })).toBeInTheDocument();
+  });
+
+  it("keeps image-backed captures in Inbox instead of dropping attachments", async () => {
+    appData.current = {
+      lenses: [{ id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" }],
+    };
+    activeLens.current = { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" };
+    inboxItems.current[0] = { ...inboxItems.current[0], attachments: [{ id: "image-1" }] };
+    renderTriagePage();
+    expect(await screen.findByText(/choose a Life area to keep it attached/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add to Shopping" })).toBeDisabled();
+  });
+
   it("starts on Classify and advances straight to Spec with one Continue", async () => {
     renderTriagePage();
 
@@ -148,11 +216,11 @@ describe("TriagePage", () => {
   it("uses a resolved Project as the destination and skips standalone Lens selection", async () => {
     appData.current = {
       lenses: [
-        { id: "lens-1", name: "Work", kind: "WORK", color: "indigo" },
-        { id: "lens-2", name: "Me", kind: "PERSONAL", color: "emerald" },
+        { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" },
+        { id: "lens-2", name: "Me", kind: "PERSONAL", type: "LIFE_AREA", color: "emerald" },
       ],
     };
-    activeLens.current = { id: "lens-2", name: "Me", kind: "PERSONAL", color: "emerald" };
+    activeLens.current = { id: "lens-2", name: "Me", kind: "PERSONAL", type: "LIFE_AREA", color: "emerald" };
     inboxItems.current = [
       {
         id: "ix-1",

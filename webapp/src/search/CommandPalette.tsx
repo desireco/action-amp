@@ -59,6 +59,7 @@ export function CommandPalette({
   onCapture,
   onToggleTheme,
   onOpenShortcuts,
+  activeLensType = "LIFE_AREA",
 }: {
   mode: CommandPaletteMode;
   entitled: boolean;
@@ -69,6 +70,7 @@ export function CommandPalette({
   onCapture: () => void;
   onToggleTheme: () => void;
   onOpenShortcuts: () => void;
+  activeLensType?: "LIFE_AREA" | "SIMPLE_LIST";
 }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -109,7 +111,11 @@ export function CommandPalette({
 
   const commands = useMemo<PaletteCommand[]>(
     () =>
-      PALETTE_COMMANDS.map((definition) => ({
+      PALETTE_COMMANDS.filter(
+        (definition) =>
+          !definition.lensTypes ||
+          definition.lensTypes.includes(activeLensType),
+      ).map((definition) => ({
         id: `command-${definition.id}`,
         title: definition.title,
         subtitle: definition.subtitle,
@@ -122,7 +128,7 @@ export function CommandPalette({
           else if (definition.action === "shortcuts") onOpenShortcuts();
         },
       })),
-    [onCapture, onNavigate, onOpenShortcuts, onToggleTheme],
+    [activeLensType, onCapture, onNavigate, onOpenShortcuts, onToggleTheme],
   );
 
   const indexedCommands = useMemo<PaletteCommand[]>(() => {
@@ -159,7 +165,12 @@ export function CommandPalette({
   const items = useMemo<PaletteItem[]>(() => {
     if (showCommands) {
       const commonIds = new Set(
-        PALETTE_COMMANDS.filter((definition) => definition.common).map(
+        PALETTE_COMMANDS.filter(
+          (definition) =>
+            definition.common &&
+            (!definition.lensTypes ||
+              definition.lensTypes.includes(activeLensType)),
+        ).map(
           (definition) => `command-${definition.id}`,
         ),
       );
@@ -208,7 +219,7 @@ export function CommandPalette({
     return matchPaletteEntries([...entries.values()], normalized).map(
       (entry) => entry.payload,
     );
-  }, [commands, currentData, indexedCommands, mode, normalized, showCommands]);
+  }, [activeLensType, commands, currentData, indexedCommands, mode, normalized, showCommands]);
 
   useEffect(() => setSelectedId(null), [query]);
   useEffect(() => {

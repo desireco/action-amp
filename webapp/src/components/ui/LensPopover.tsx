@@ -3,12 +3,10 @@ import type { LensSwitchOption } from "./LensSwitch";
 import "./LensPopover.css";
 
 /**
- * LensPopover — the ≥4-lenses switcher (chip + popover).
+ * LensPopover — the compact Lens switcher (chip + popover).
  *
- * At ≤3 lenses AppShell renders <LensSwitch> (segmented control). At ≥4 that
- * control gets crowded, so the sidebar shows a single compact chip (active
- * color + name + ⌘L hint) that opens this popover listing every lens with its
- * purpose. ⌘L toggles it (wired in AppShell).
+ * AppShell shows one compact chip (active color + name + ⌘L hint) that opens
+ * this popover listing every Lens and its purpose. ⌘L toggles it.
  *
  * Keyboard (per INTERACTION.md popover conventions):
  *   ↑↓  move the highlight
@@ -16,7 +14,6 @@ import "./LensPopover.css";
  *   /   focus the inline filter
  *   esc close (handled by the parent's onCloseOverlay → onClose prop)
  *
- * FREE users cap at the seeded two, so this ≥4 branch is Pro-only in practice.
  * A `proLocked` option still renders its chip; selecting it calls onSelect and
  * the parent's setLens runs the FREE gate. The "+ New lens" row (onNewLens, if
  * provided) opens the Settings Lenses tab.
@@ -50,12 +47,15 @@ export function LensPopover({
   active,
   onSelect,
   onClose,
-  onNewLens: _onNewLens,
-  newLensProLocked: _newLensProLocked = false,
+  onNewLens,
+  newLensProLocked = false,
   ariaLabel = "Lens",
 }: LensPopoverProps) {
   const [highlight, setHighlight] = useState(() =>
-    Math.max(0, options.findIndex((o) => o.id === active)),
+    Math.max(
+      0,
+      options.findIndex((o) => o.id === active),
+    ),
   );
   const [filter, setFilter] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -69,7 +69,9 @@ export function LensPopover({
   }, []);
 
   const filtered = filter
-    ? options.filter((o) => o.label.toLowerCase().includes(filter.toLowerCase()))
+    ? options.filter((o) =>
+        o.label.toLowerCase().includes(filter.toLowerCase()),
+      )
     : options;
 
   // Clamp highlight when the filter shrinks the list.
@@ -189,16 +191,38 @@ export function LensPopover({
                 <span className="aa-lens-popover__main">
                   <span className="aa-lens-popover__name">{opt.label}</span>
                   {opt.purpose && (
-                    <span className="aa-lens-popover__purpose">{opt.purpose}</span>
+                    <span className="aa-lens-popover__purpose">
+                      {opt.purpose}
+                    </span>
                   )}
                 </span>
                 {opt.proLocked && (
-                  <span className="aa-lens-popover__pro" title="Pro feature">Pro</span>
+                  <span className="aa-lens-popover__pro" title="Pro feature">
+                    Pro
+                  </span>
                 )}
               </button>
             );
           })}
         </div>
+        {onNewLens && (
+          <button
+            type="button"
+            className="aa-lens-popover__add"
+            onClick={() => {
+              onNewLens();
+              onClose();
+            }}
+          >
+            <span className="aa-lens-popover__plus" aria-hidden="true">
+              +
+            </span>
+            <span>New lens…</span>
+            {newLensProLocked && (
+              <span className="aa-lens-popover__pro-tag">Pro</span>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -235,7 +259,9 @@ export function LensChip({
       <span className="aa-lens-chip__dot" aria-hidden="true" />
       <span className="aa-lens-chip__name">{label}</span>
       <kbd className="aa-lens-chip__kbd">⌘L</kbd>
-      <span className="aa-lens-chip__caret" aria-hidden="true">▾</span>
+      <span className="aa-lens-chip__caret" aria-hidden="true">
+        ▾
+      </span>
     </button>
   );
 }

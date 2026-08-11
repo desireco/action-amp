@@ -154,7 +154,7 @@ export function useTriageKeyboard({
 
       e.preventDefault();
       if (step === "classify" && chosenLensId && working) {
-        if (working.type === "delete") {
+        if (working.type === "delete" || working.type === "list-item") {
           dispatch();
         } else {
           setStep("spec");

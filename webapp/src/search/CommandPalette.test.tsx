@@ -103,6 +103,18 @@ describe("CommandPalette", () => {
     expect(props.onCapture).toHaveBeenCalledTimes(1);
   });
 
+  it("shows only compatible workflow commands for a Simple-list Lens", () => {
+    const { props } = renderPalette({
+      mode: "command",
+      activeLensType: "SIMPLE_LIST",
+    });
+    fireEvent.click(screen.getByRole("option", { name: /List.*Open checklist/i }));
+    expect(props.onNavigate).toHaveBeenCalledWith("/app/list");
+    expect(screen.queryByRole("option", { name: /Next/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /Capture a thought/ })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /Inbox/ })).toBeInTheDocument();
+  });
+
   it("debounces search, renders grouped results, and opens the selected destination", () => {
     useQuery.mockImplementation((operation) => ({
       data:

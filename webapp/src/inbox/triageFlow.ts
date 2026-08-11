@@ -2,8 +2,8 @@ import type { TriageChip, TriageExit } from "../components/ui";
 import type { ParsedPriority, ParsedSize } from "./parseCapture";
 import { formatRelativeDay } from "../shared/dateFormat";
 
-export type Outcome = "task-today" | "upcoming" | "someday" | "project" | "resource" | "delete";
-export type ChosenType = "task" | "project" | "resource" | "delete";
+export type Outcome = "task-today" | "upcoming" | "someday" | "project" | "resource" | "list-item" | "delete";
+export type ChosenType = "task" | "project" | "resource" | "list-item" | "delete";
 export type Step = "classify" | "spec";
 
 export const OUTCOME_EXIT: Record<Outcome, TriageExit> = {
@@ -12,6 +12,7 @@ export const OUTCOME_EXIT: Record<Outcome, TriageExit> = {
   someday: "left",
   project: "up",
   resource: "left",
+  "list-item": "right",
   delete: "down",
 };
 
@@ -61,6 +62,7 @@ function buildOutcome(w: Working): Outcome {
   if (w.type === "delete") return "delete";
   if (w.type === "project") return "project";
   if (w.type === "resource") return "resource";
+  if (w.type === "list-item") return "list-item";
   return w.when === "Today" ? "task-today" : w.when === "Upcoming" ? "upcoming" : "someday";
 }
 
@@ -118,6 +120,7 @@ export function buildDispatchPayload(
       projectId: w.parentProjectId ?? undefined,
     };
   }
+  if (w.type === "list-item") return { ...base, name };
   // Delete only needs the base — it does not file anything into a lens.
   return base;
 }
@@ -142,6 +145,7 @@ export function summaryFor(
     const goalBit = w.projectGoalId ? ` · supports ${goalName}` : "";
     return `→ new Project${goalBit}`;
   }
+  if (w.type === "list-item") return "→ add to simple list";
   return `→ ${w.kind} filed under ${parentName ?? "—"}`;
 }
 

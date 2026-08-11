@@ -16,6 +16,7 @@ import { useEffect } from "react";
  *   ⌘\\           → open command palette (always works, even in text fields)
  *   /            → open sitewide search (outside text fields)
  *   ⌘L           → toggle the lens switcher (always works; ⌘-chords don't type)
+ *   Space        → return to Next (outside fields and interactive controls)
  *   Shift+I/N/T/G/P/R → jump to Inbox / Next / Today / TriaGe / Planning / Review
  *   Shift+C      → capture (typing-safe; ⌘K remains the focus-protector)
  *   ? · ⌘?       → toggle the shortcut cheatsheet
@@ -98,6 +99,18 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
 
       // Below shortcuts are disabled while typing.
       if (isTypingTarget(e.target)) return;
+
+      // Space → Next. Do not steal native activation from buttons, links, or
+      // other interactive controls; the global shape is only for bare page
+      // chrome. Simple-list shells map onGoHome to their list route.
+      if (e.key === " " && handlers.onGoHome) {
+        const target = e.target instanceof HTMLElement ? e.target : null;
+        if (target?.closest("button, a, [role='button'], [role='link']"))
+          return;
+        e.preventDefault();
+        handlers.onGoHome();
+        return;
+      }
 
       // / — sitewide search. Kept below the typing guard so slash remains a
       // normal character in inputs, textareas, selects, and editors.
