@@ -30,10 +30,10 @@ vi.mock("../app/SettingsLayout", () => ({
 }));
 vi.mock("../components/ui", () => ({
   ProGate: () => <div>Pro gate</div>,
-  ConfirmDialog: ({ title, message, confirmLabel, onConfirm, onClose }: any) => (
+  ConfirmDialog: ({ title, message, confirmLabel, cancelLabel = "Cancel", onConfirm, onClose }: any) => (
     <div role="dialog" aria-label={title}>
       {message}
-      <button onClick={onClose}>Cancel</button>
+      {cancelLabel !== null && <button onClick={onClose}>{cancelLabel}</button>}
       <button onClick={onConfirm}>{confirmLabel}</button>
     </div>
   ),
@@ -48,6 +48,7 @@ const lifeArea = {
   type: "LIFE_AREA",
   color: "coral",
   purpose: "Products",
+  hasAnyContent: true,
   counts: { goals: 1, projects: 2, tasks: 3, openItems: 0, checkedItems: 0 },
 };
 const shopping = {
@@ -57,6 +58,7 @@ const shopping = {
   type: "SIMPLE_LIST",
   color: "cyan",
   purpose: "Groceries",
+  hasAnyContent: true,
   counts: { goals: 0, projects: 0, tasks: 0, openItems: 8, checkedItems: 3 },
 };
 const packing = {
@@ -64,6 +66,13 @@ const packing = {
   id: "packing",
   name: "Packing",
   counts: { ...shopping.counts, openItems: 1, checkedItems: 0 },
+};
+const emptyLifeArea = {
+  ...lifeArea,
+  id: "empty",
+  name: "Errands",
+  hasAnyContent: false,
+  counts: { goals: 0, projects: 0, tasks: 0, openItems: 0, checkedItems: 0 },
 };
 
 function renderPage() {
@@ -79,7 +88,7 @@ beforeEach(() => {
   createLens.mockResolvedValue({ id: "new" });
   updateLens.mockResolvedValue({ id: "updated" });
   deleteLens.mockResolvedValue({ id: "deleted" });
-  rows.current = [lifeArea, shopping, packing];
+  rows.current = [lifeArea, shopping, packing, emptyLifeArea];
 });
 
 describe("LensesPage Lens types", () => {
@@ -106,12 +115,39 @@ describe("LensesPage Lens types", () => {
     expect(within(shoppingRow).getByText("3 checked")).toBeInTheDocument();
   });
 
-  it("shows immutable type metadata while editing", () => {
+  it("converts an empty custom Lens through the edit form", async () => {
     renderPage();
-    const shoppingRow = screen.getByText("Shopping").closest(".aa-lenses-row") as HTMLElement;
-    fireEvent.click(within(shoppingRow).getByRole("button", { name: "Edit" }));
-    expect(screen.getByText("Lens type cannot be changed after creation.")).toBeInTheDocument();
-    expect(screen.queryByRole("radio", { name: /life area/i })).not.toBeInTheDocument();
+    const row = screen.getByText("Errands").closest(".aa-lenses-row") as HTMLElement;
+    fireEvent.click(within(row).getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("radio", { name: /simple list/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(updateLens).toHaveBeenCalledWith(expect.objectContaining({
+      id: "empty",
+      type: "SIMPLE_LIST",
+    })));
+  });
+
+  it("explains in a modal why a populated Life-area Lens cannot convert", () => {
+    renderPage();
+    const row = screen.getByText("Studio").closest(".aa-lenses-row") as HTMLElement;
+    fireEvent.click(within(row).getByRole("button", { name: "Edit" }));
+    const lifeAreaOption = screen.getByRole("radio", { name: /life area/i });
+    fireEvent.click(screen.getByRole("radio", { name: /simple list/i }));
+    const dialog = screen.getByRole("dialog", { name: "Can't change lens type yet" });
+    expect(within(dialog).getByText(/1 goal, 2 projects, 3 tasks/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/move or remove this work/i)).toBeInTheDocument();
+    expect(lifeAreaOption).toBeChecked();
+  });
+
+  it("explains why checklist items block conversion to a Life area", () => {
+    renderPage();
+    const row = screen.getByText("Shopping").closest(".aa-lenses-row") as HTMLElement;
+    fireEvent.click(within(row).getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("radio", { name: /life area/i }));
+    const dialog = screen.getByRole("dialog", { name: "Can't change lens type yet" });
+    expect(within(dialog).getByText(/11 checklist items/i)).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Got it" })).toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
   });
 
   it("offers only same-type reassignment targets", () => {

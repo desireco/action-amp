@@ -288,11 +288,15 @@ reviews or the Logbook.
   errors. Inbox and Capture stay neutral — they have no lens. See
   `styles/tokens.css` (`--aa-lens-*`, `--aa-active-lens-*`).
 - **Lens configuration is Pro-only.** Creating, renaming, recoloring,
-  editing-purpose, and deleting lenses all require Pro (the Settings → Lenses
+  editing-purpose, changing an empty custom Lens's behavioral type, and deleting
+  lenses all require Pro (the Settings → Lenses
   tab is `<ProGate>`'d for FREE). FREE gets the seeded two: Me usable, Work
   visible-but-locked (selecting it shows the gate). Pro is soft-capped at
   `PRO_LIMITS.lenses`. The seeded two are renameable/recolorable but never
-  deletable — they're the stable handles. See `docs/specs/done/custom-lenses.md`.
+  deletable or type-convertible — they're the stable handles. A custom Lens may
+  switch between Life area and Simple list only while empty. When content makes
+  conversion ambiguous, Settings explains the block in a modal rather than
+  silently disabling or discarding content. See `docs/specs/done/custom-lenses.md`.
 
 ## 4. The three modes
 

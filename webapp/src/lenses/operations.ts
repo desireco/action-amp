@@ -63,6 +63,79 @@ function isLensColor(s: unknown): s is LensColor {
   return typeof s === "string" && (LENS_COLORS as readonly string[]).includes(s);
 }
 
+type LensContentEntities = {
+  Goal: { count: (args: { where: { lensId: string } }) => Promise<number> };
+  Project: { count: (args: { where: { lensId: string } }) => Promise<number> };
+  Task: { count: (args: { where: { lensId: string } }) => Promise<number> };
+  ListItem: { count: (args: { where: { lensId: string } }) => Promise<number> };
+};
+
+type LensType = "LIFE_AREA" | "SIMPLE_LIST";
+type LensUpdateArgs = {
+  id: string;
+  name?: string;
+  purpose?: string;
+  color?: string | null;
+  type?: LensType;
+};
+type LensUpdateData = {
+  name?: string;
+  purpose?: string | null;
+  color?: string | null;
+  type?: LensType;
+};
+
+async function lensHasContent(entities: LensContentEntities, lensId: string): Promise<boolean> {
+  const counts = await Promise.all([
+    entities.Goal.count({ where: { lensId } }),
+    entities.Project.count({ where: { lensId } }),
+    entities.Task.count({ where: { lensId } }),
+    entities.ListItem.count({ where: { lensId } }),
+  ]);
+  return counts.some((count) => count > 0);
+}
+
+function assertValidLensType(type: unknown): asserts type is LensType | undefined {
+  if (type !== undefined && type !== "LIFE_AREA" && type !== "SIMPLE_LIST") {
+    throwHttpStatus(400, "Unknown lens type.");
+  }
+}
+
+async function assertLensTypeChangeAllowed(
+  entities: LensContentEntities,
+  existing: { id: string; kind: string; type: string },
+  nextType: LensType | undefined,
+): Promise<void> {
+  if (nextType === undefined || nextType === existing.type) return;
+  if (existing.kind !== "CUSTOM") {
+    throwHttpStatus(409, "Default lenses always remain Life areas.");
+  }
+  if (await lensHasContent(entities, existing.id)) {
+    throwHttpStatus(
+      409,
+      "This lens still has content. Move or remove it before changing lens type.",
+    );
+  }
+}
+
+function buildLensUpdateData(args: LensUpdateArgs): LensUpdateData {
+  const data: LensUpdateData = {};
+  if (args.name !== undefined) {
+    const name = args.name.trim();
+    if (!name) throw new Error("Lens name cannot be empty.");
+    data.name = name;
+  }
+  if (args.purpose !== undefined) data.purpose = args.purpose.trim() || null;
+  if (args.color !== undefined) {
+    if (args.color !== null && !isLensColor(args.color)) {
+      throwHttpStatus(400, "Unknown lens color.");
+    }
+    data.color = args.color;
+  }
+  if (args.type !== undefined) data.type = args.type;
+  return data;
+}
+
 export const createLens = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
@@ -120,9 +193,7 @@ export const updateLens = (async (args, context) => {
     throw new Error("Not authenticated.");
   }
   assertLensConfigAllowed(context);
-  if ("type" in args) {
-    throwHttpStatus(400, "Lens type cannot be changed after creation.");
-  }
+  assertValidLensType(args.type);
 
   // Tenancy-scoped lookup (Lens has no compound id+userId index → findFirst).
   const existing = await context.entities.Lens.findFirst({
@@ -133,22 +204,8 @@ export const updateLens = (async (args, context) => {
     throwHttpStatus(404, "Lens not found.");
   }
 
-  // Build the patch from the provided fields only (partial update).
-  const data: { name?: string; purpose?: string | null; color?: string | null } = {};
-  if (args.name !== undefined) {
-    const name = args.name.trim();
-    if (!name) throw new Error("Lens name cannot be empty.");
-    data.name = name;
-  }
-  if (args.purpose !== undefined) {
-    data.purpose = args.purpose.trim() || null;
-  }
-  if (args.color !== undefined) {
-    if (args.color !== null && !isLensColor(args.color)) {
-      throwHttpStatus(400, "Unknown lens color.");
-    }
-    data.color = args.color;
-  }
+  await assertLensTypeChangeAllowed(context.entities, existing, args.type);
+  const data = buildLensUpdateData(args);
 
   if (args.name !== undefined && args.name.trim() !== existing.name) {
     // Rename: enforce [userId, name] uniqueness. A collision throws P2002 on
@@ -173,12 +230,7 @@ export const updateLens = (async (args, context) => {
     select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
   });
 }) satisfies UpdateLens<
-  {
-    id: string;
-    name?: string;
-    purpose?: string;
-    color?: string | null;
-  },
+  LensUpdateArgs,
   { id: string; name: string; kind: string; type: string; color: string | null; purpose: string | null }
 >;
 
@@ -257,13 +309,7 @@ export const deleteLens = (async (args, context) => {
   // but the server is the boundary. Cascade via the Goal/Project/Task FKs
   // (ON DELETE CASCADE in schema.prisma) removes any stragglers an empty lens
   // wouldn't have anyway.
-  const [goalCount, projectCount, taskCount, listItemCount] = await Promise.all([
-    context.entities.Goal.count({ where: { lensId: existing.id } }),
-    context.entities.Project.count({ where: { lensId: existing.id } }),
-    context.entities.Task.count({ where: { lensId: existing.id } }),
-    context.entities.ListItem.count({ where: { lensId: existing.id } }),
-  ]);
-  if (goalCount + projectCount + taskCount + listItemCount > 0) {
+  if (await lensHasContent(context.entities, existing.id)) {
     return throwHttpStatus(
       409,
       "This lens still has content. Move it to another lens first, then delete.",

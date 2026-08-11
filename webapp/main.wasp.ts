@@ -525,12 +525,18 @@ export default app({
       auth: true,
     }),
     action(createLens, { entities: ["Lens", "ListItem"], auth: true }),
-    action(updateLens, { entities: ["Lens"], auth: true }),
+    action(updateLens, {
+      entities: ["Lens", "Task", "Project", "Goal", "ListItem"],
+      auth: true,
+    }),
     action(deleteLens, {
       entities: ["Lens", "Task", "Project", "Goal", "ListItem"],
       auth: true,
     }),
-    query(getLenses, { entities: ["Lens", "ListItem"], auth: true }),
+    query(getLenses, {
+      entities: ["Lens", "Task", "Project", "Goal", "ListItem"],
+      auth: true,
+    }),
     query(getSimpleList, { entities: ["Lens", "ListItem"], auth: true }),
     action(createListItem, { entities: ["Lens", "ListItem"], auth: true }),
     action(renameListItem, { entities: ["Lens", "ListItem"], auth: true }),

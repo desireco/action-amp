@@ -47,10 +47,13 @@ Settings uses a mutually exclusive **Lens type** field, not a checkbox:
 The control may render as a select or two radio cards. Radio cards are preferred
 because the explanatory copy matters more than saving vertical space.
 
-Type is selected when creating a Lens and is immutable in v1. Converting an
-existing Lens raises ambiguous questions about Projects, Goals, task status,
-focus history, and completion evidence. Delete and recreate is the explicit v1
-path when an empty Lens was created with the wrong type.
+Type is selected when creating a Lens. An empty custom Lens may later switch
+between Life area and Simple list because no content meaning changes. Seeded
+Work and Me Lenses never switch type. A populated custom Lens also keeps its
+type: converting Projects, Goals, Tasks, focus history, or ListItems would be
+ambiguous. Selecting the unavailable type opens an explanatory modal naming the
+blocking content and telling the user to move or remove it first. Server checks
+the same invariant before every type update.
 
 ### Entitlement and limits
 
@@ -134,8 +137,11 @@ Groceries and household supplies
 8 open · 3 checked                         Edit  Delete
 ```
 
-Life-area rows retain Goal, Project, and Task counts. Edit shows type as
-read-only metadata.
+Life-area rows retain Goal, Project, and Task counts. Edit offers both types for
+custom Lenses. Empty custom Lenses can save the new type. Selecting a different
+type on a populated Lens opens a `Can't change lens type yet` modal explaining
+the block; no form state or content is changed. Seeded rows show fixed Life-area
+metadata with copy explaining that default Lenses always remain Life areas.
 
 ### Simple-list page
 
@@ -325,11 +331,14 @@ completion reversal, deletion, and clear-completed behavior.
 **Files:** `webapp/src/lenses/operations.ts`, `operationsCore.ts`,
 `LensesPage.tsx`, CSS, and tests.
 
-**Work:** carry type through Lens reads/writes; add creation selector; show
-type-appropriate counts; keep type immutable; restrict reassignment targets.
+**Work:** carry type through Lens reads/writes; add creation and edit selectors;
+show type-appropriate counts; allow empty custom-Lens conversion; explain
+blocked populated conversions in a modal; keep seeded types fixed; restrict
+reassignment targets.
 
-**Verification:** tests cover seeded type restriction, creation, response shape,
-counts, and same-type reassign rules.
+**Verification:** tests cover seeded type restriction, empty conversion,
+populated conversion block and modal, creation, response shape, counts, and
+same-type reassign rules.
 
 **Stop condition:** management cannot create an invalid Lens or propose an
 invalid conversion.

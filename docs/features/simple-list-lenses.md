@@ -44,6 +44,12 @@ removed a non-empty Lens deletion choice the server cannot honor, made explicit
 `[[lens]]` capture targets outrank inferred Projects, and restricted clickable
 captured sources to HTTP(S).
 
+**Type conversion.** Empty custom Lenses may switch between Life area and
+Simple list from Edit. Seeded Work/Me types remain fixed. Populated custom
+Lenses cannot switch because doing so would reinterpret or discard structured
+work or checklist rows; choosing the other type opens an explanatory modal with
+the blocking counts and recovery instruction.
+
 **Implementation files.** `webapp/schema.prisma` and
 `webapp/migrations/20260811025912_simple_list_lenses/`; Wasp registration in
 `webapp/main.wasp.ts`; `webapp/src/simpleLists/`; Lens management in

@@ -283,7 +283,7 @@ Post-auth redirect → `/app` (Next).
 
 - **Account** — email, password, linked social accounts, delete account.
 - **Preferences** — theme (dark default), Today cap (default 5, or off), confirmation sounds, momentum toggle.
-- **Lenses** (`/app/settings/lenses`) — Pro-only CRUD for lenses: add/rename/recolor/edit-purpose/delete. Creation requires a behavioral type: **Life area** or **Simple list**. Type is immutable after creation in the first release. FREE gets `<ProGate>`. Seeded two are Life areas, renameable/recolorable, and never deletable.
+- **Lenses** (`/app/settings/lenses`) — Pro-only CRUD for lenses: add/rename/recolor/edit-purpose/change-empty-custom-type/delete. Creation requires a behavioral type: **Life area** or **Simple list**. Empty custom Lenses may switch type. Populated Lenses keep their type; selecting the other type opens a modal explaining which content must be moved or removed first. FREE gets `<ProGate>`. Seeded two are Life areas, renameable/recolorable, and never deletable or type-convertible.
 - **Billing** (`/app/settings/billing`) — Stripe-managed subscription surface.
 - **Shortcuts** — view/customize keyboard map.
 

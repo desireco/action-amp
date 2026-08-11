@@ -21,6 +21,9 @@ const ME = {
   purpose: null,
   createdAt: "2026-07-01T00:00:00.000Z",
   _count: { goals: 0, projects: 0, tasks: 2 },
+  goals: [],
+  projects: [],
+  tasks: [{ id: "t1" }],
   listItems: [],
 };
 const WORK = {
@@ -32,6 +35,9 @@ const WORK = {
   purpose: "Day job",
   createdAt: "2026-07-02T00:00:00.000Z",
   _count: { goals: 1, projects: 3, tasks: 12 },
+  goals: [{ id: "g1" }],
+  projects: [{ id: "p1" }],
+  tasks: [{ id: "t1" }],
   listItems: [],
 };
 const STUDIO = {
@@ -43,6 +49,9 @@ const STUDIO = {
   purpose: "Side projects",
   createdAt: "2026-07-03T00:00:00.000Z",
   _count: { goals: 0, projects: 1, tasks: 4 },
+  goals: [],
+  projects: [{ id: "p1" }],
+  tasks: [{ id: "t1" }],
   listItems: [],
 };
 const SHOPPING = {
@@ -54,6 +63,9 @@ const SHOPPING = {
   purpose: "Groceries",
   createdAt: "2026-07-04T00:00:00.000Z",
   _count: { goals: 0, projects: 0, tasks: 0 },
+  goals: [],
+  projects: [],
+  tasks: [],
   listItems: [{ isDone: false }, { isDone: false }, { isDone: true }],
 };
 
@@ -73,6 +85,9 @@ describe("getLensesCore", () => {
             tasks: { where: { isDone: false } },
           },
         },
+        goals: { select: { id: true }, take: 1 },
+        projects: { select: { id: true }, take: 1 },
+        tasks: { select: { id: true }, take: 1 },
         listItems: { select: { isDone: true } },
       },
     });
@@ -90,6 +105,7 @@ describe("getLensesCore", () => {
         type: "LIFE_AREA",
         color: "indigo",
         purpose: "Day job",
+        hasAnyContent: true,
         counts: { goals: 1, projects: 3, tasks: 12, openItems: 0, checkedItems: 0 },
       },
     ]);
@@ -138,6 +154,9 @@ describe("getLensCore", () => {
             tasks: { where: { isDone: false } },
           },
         },
+        goals: { select: { id: true }, take: 1 },
+        projects: { select: { id: true }, take: 1 },
+        tasks: { select: { id: true }, take: 1 },
         listItems: { select: { isDone: true } },
       },
     });
@@ -147,7 +166,18 @@ describe("getLensCore", () => {
     const m = mockContext("user-1");
     m.entities.Lens.findFirst.mockResolvedValue(SHOPPING);
     const out = await getLensCore(m.entities, { userId: "user-1", idOrName: "Shopping" });
-    expect(out).toMatchObject({ type: "SIMPLE_LIST", counts: { openItems: 2, checkedItems: 1 } });
+    expect(out).toMatchObject({ type: "SIMPLE_LIST", hasAnyContent: true, counts: { openItems: 2, checkedItems: 1 } });
+  });
+
+  it("detects completed structured content even when active counts are zero", async () => {
+    const m = mockContext("user-1");
+    m.entities.Lens.findFirst.mockResolvedValue({
+      ...ME,
+      _count: { goals: 0, projects: 0, tasks: 0 },
+      tasks: [{ id: "completed-task" }],
+    });
+    const out = await getLensCore(m.entities, { userId: "user-1", idOrName: "Me" });
+    expect(out).toMatchObject({ hasAnyContent: true, counts: { tasks: 0 } });
   });
 
   it("resolves by name (not just id)", async () => {

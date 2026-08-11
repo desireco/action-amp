@@ -37,6 +37,7 @@ export type LensSummary = {
   type: "LIFE_AREA" | "SIMPLE_LIST";
   color: string | null;
   purpose: string | null;
+  hasAnyContent: boolean;
   counts: {
     goals: number;
     projects: number;
@@ -72,6 +73,9 @@ export async function getLensesCore(
           tasks: { where: { isDone: false } },
         },
       },
+      goals: { select: { id: true }, take: 1 },
+      projects: { select: { id: true }, take: 1 },
+      tasks: { select: { id: true }, take: 1 },
       listItems: { select: { isDone: true } },
     },
   });
@@ -95,6 +99,9 @@ export async function getLensesCore(
       purpose: string | null;
       createdAt: string;
       _count: { goals: number; projects: number; tasks: number };
+      goals: { id: string }[];
+      projects: { id: string }[];
+      tasks: { id: string }[];
       listItems: { isDone: boolean }[];
     }): LensSummary => ({
       id: l.id,
@@ -103,6 +110,11 @@ export async function getLensesCore(
       type: l.type,
       color: l.color,
       purpose: l.purpose,
+      hasAnyContent:
+        l.goals.length > 0 ||
+        l.projects.length > 0 ||
+        l.tasks.length > 0 ||
+        l.listItems.length > 0,
       counts: {
         goals: l._count.goals,
         projects: l._count.projects,
@@ -139,6 +151,9 @@ export async function getLensCore(
           tasks: { where: { isDone: false } },
         },
       },
+      goals: { select: { id: true }, take: 1 },
+      projects: { select: { id: true }, take: 1 },
+      tasks: { select: { id: true }, take: 1 },
       listItems: { select: { isDone: true } },
     },
   });
@@ -150,6 +165,11 @@ export async function getLensCore(
     type: lens.type,
     color: lens.color,
     purpose: lens.purpose,
+    hasAnyContent:
+      lens.goals.length > 0 ||
+      lens.projects.length > 0 ||
+      lens.tasks.length > 0 ||
+      lens.listItems.length > 0,
     createdAt: lens.createdAt,
     counts: {
       goals: lens._count.goals,

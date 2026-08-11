@@ -40,6 +40,7 @@ type LensRow = {
   type: "LIFE_AREA" | "SIMPLE_LIST";
   color: string | null;
   purpose: string | null;
+  hasAnyContent: boolean;
   counts: {
     goals: number;
     projects: number;
@@ -184,29 +185,46 @@ function LensRowItem({
 }) {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [typeBlocked, setTypeBlocked] = useState(false);
   const isSeeded = lens.kind !== "CUSTOM";
+  const hasContent = lens.hasAnyContent;
 
   if (editing) {
     return (
-      <LensForm
-        initial={{
-          name: lens.name,
-          purpose: lens.purpose ?? "",
-          color: lens.color ?? "indigo",
-          type: lens.type,
-        }}
-        submit={async ({ type: _type, ...vals }) => {
-          await updateLens({ id: lens.id, ...vals });
-        }}
-        submitLabel="Save"
-        submittingLabel="Saving…"
-        errorPreamble="Couldn't save. Try again."
-        onCancel={() => setEditing(false)}
-        onDone={async () => {
-          setEditing(false);
-          await onSaved();
-        }}
-      />
+      <>
+        <LensForm
+          initial={{
+            name: lens.name,
+            purpose: lens.purpose ?? "",
+            color: lens.color ?? "indigo",
+            type: lens.type,
+          }}
+          allowType={!isSeeded}
+          fixedTypeReason={isSeeded ? "Default lenses always remain Life areas." : undefined}
+          onBlockedTypeChange={hasContent ? () => setTypeBlocked(true) : undefined}
+          submit={async (vals) => {
+            await updateLens({ id: lens.id, ...vals });
+          }}
+          submitLabel="Save"
+          submittingLabel="Saving…"
+          errorPreamble="Couldn't save. Try again."
+          onCancel={() => setEditing(false)}
+          onDone={async () => {
+            setEditing(false);
+            await onSaved();
+          }}
+        />
+        {typeBlocked && (
+          <ConfirmDialog
+            title="Can't change lens type yet"
+            message={<TypeChangeBlockedMessage lens={lens} />}
+            confirmLabel="Got it"
+            cancelLabel={null}
+            onConfirm={() => setTypeBlocked(false)}
+            onClose={() => setTypeBlocked(false)}
+          />
+        )}
+      </>
     );
   }
 
@@ -269,6 +287,8 @@ function LensRowItem({
 function LensForm({
   initial,
   allowType = false,
+  fixedTypeReason,
+  onBlockedTypeChange,
   submit,
   submitLabel,
   submittingLabel,
@@ -280,6 +300,8 @@ function LensForm({
 }: {
   initial: { name: string; purpose: string; color: string; type: "LIFE_AREA" | "SIMPLE_LIST" };
   allowType?: boolean;
+  fixedTypeReason?: string;
+  onBlockedTypeChange?: () => void;
   submit: (vals: { name: string; purpose: string; color: string; type?: "LIFE_AREA" | "SIMPLE_LIST" }) => Promise<void>;
   submitLabel: string;
   submittingLabel: string;
@@ -309,6 +331,15 @@ function LensForm({
     }
   }
 
+  function chooseType(nextType: "LIFE_AREA" | "SIMPLE_LIST") {
+    if (nextType === type) return;
+    if (onBlockedTypeChange) {
+      onBlockedTypeChange();
+      return;
+    }
+    setType(nextType);
+  }
+
   return (
     <div className="aa-lenses-edit" data-lens-color={color || undefined}>
       <div className="aa-lenses-edit__row">
@@ -332,7 +363,7 @@ function LensForm({
                 name="lens-type"
                 value="LIFE_AREA"
                 checked={type === "LIFE_AREA"}
-                onChange={() => setType("LIFE_AREA")}
+                onChange={() => chooseType("LIFE_AREA")}
                 disabled={saving}
               />
               <span><strong>Life area</strong><small>Tasks, projects, goals, planning, and review.</small></span>
@@ -343,7 +374,7 @@ function LensForm({
                 name="lens-type"
                 value="SIMPLE_LIST"
                 checked={type === "SIMPLE_LIST"}
-                onChange={() => setType("SIMPLE_LIST")}
+                onChange={() => chooseType("SIMPLE_LIST")}
                 disabled={saving}
               />
               <span><strong>Simple list</strong><small>Add items directly and check them off.</small></span>
@@ -352,7 +383,7 @@ function LensForm({
         ) : (
           <p className="aa-lenses-type__readonly">
             {type === "SIMPLE_LIST" ? "Simple list" : "Life area"}
-            <span>Lens type cannot be changed after creation.</span>
+            <span>{fixedTypeReason ?? "Lens type is fixed."}</span>
           </p>
         )}
       </fieldset>
@@ -402,6 +433,34 @@ function LensForm({
   );
 }
 
+function TypeChangeBlockedMessage({ lens }: { lens: LensRow }) {
+  if (lens.type === "SIMPLE_LIST") {
+    const total = lens.counts.openItems + lens.counts.checkedItems;
+    return (
+      <p>
+        {lens.name} contains {total} checklist {total === 1 ? "item" : "items"}.
+        Move or remove {total === 1 ? "it" : "them"} before changing this Lens to a Life area.
+      </p>
+    );
+  }
+  const parts = ([
+    [lens.counts.goals, "goal"],
+    [lens.counts.projects, "project"],
+    [lens.counts.tasks, "task"],
+  ] as const)
+    .filter(([count]) => count > 0)
+    .map(([count, label]) => `${count} ${label}${count === 1 ? "" : "s"}`);
+  const contentDescription = parts.length > 0
+    ? parts.join(", ")
+    : "completed work or history";
+  return (
+    <p>
+      {lens.name} contains {contentDescription}.
+      Move or remove this work before changing this Lens to a Simple list.
+    </p>
+  );
+}
+
 function DeleteLensDialog({
   lens,
   allLenses,
@@ -420,17 +479,18 @@ function DeleteLensDialog({
   const targets = (liveLenses ?? allLenses).filter(
     (candidate) => candidate.id !== lens.id && candidate.type === lens.type,
   );
-  const hasContent = lens.type === "SIMPLE_LIST"
-    ? lens.counts.openItems + lens.counts.checkedItems > 0
-    : lens.counts.goals + lens.counts.projects + lens.counts.tasks > 0;
+  const hasContent = lens.hasAnyContent;
   const [mode, setMode] = useState<"reassign" | "delete">(hasContent ? "reassign" : "delete");
   const [targetId, setTargetId] = useState(targets[0]?.id ?? "");
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const visibleStructuredCount = lens.counts.goals + lens.counts.projects + lens.counts.tasks;
   const contentSummary = lens.type === "SIMPLE_LIST"
     ? `${lens.counts.openItems} open items, ${lens.counts.checkedItems} checked items`
-    : `${lens.counts.goals} goals, ${lens.counts.projects} projects, ${lens.counts.tasks} tasks`;
+    : visibleStructuredCount > 0
+      ? `${lens.counts.goals} goals, ${lens.counts.projects} projects, ${lens.counts.tasks} tasks`
+      : "completed work or history";
   const cannotReassign = mode === "reassign" && !targetId;
 
   useEffect(() => {
