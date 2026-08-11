@@ -318,6 +318,24 @@ describe("completeOnboarding — guards + behavior", () => {
     });
   });
 
+  it("lets a returning member skip guided practice", async () => {
+    const m = mockContext();
+    m.context.user = {
+      ...m.context.user,
+      firstName: "Jake",
+      preferredName: null,
+      hasSeenOnboarding: false,
+    };
+    m.entities.User.update.mockResolvedValue({});
+
+    await completeOnboarding({ skipGuidance: true }, m.context);
+
+    expect(m.entities.User.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { hasSeenOnboarding: true, onboardingStage: "COMPLETE" },
+    });
+  });
+
   it("does not update or resend when onboarding is already complete", async () => {
     const m = mockContext();
     m.context.user = {

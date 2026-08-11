@@ -259,6 +259,8 @@ reviews or the Logbook.
   work users must manually clear.
 - Returning members are not re-onboarded. Once complete, normal empty states
   and the pervasive Capture control remain the guidance surfaces.
+- A member who already knows the product may skip the explainer and guided
+  practice loop. Skip records this path as complete and seeds no sample task.
 
 ## 3. Context (Lens) scoping
 

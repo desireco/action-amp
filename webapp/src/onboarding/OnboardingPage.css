@@ -36,22 +36,26 @@
 
 /* skip link */
 .aa-ob-skip {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  z-index: 10;
-  font-size: 13px;
+  margin-top: var(--aa-space-md);
+  padding: 4px 8px;
+  font-size: var(--aa-text-sm);
   font-weight: 500;
-  color: oklch(0.78 0.01 230 / 0.68);
-  padding: 6px 14px;
-  border-radius: var(--aa-radius-full);
+  color: var(--aa-text-4);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
   transition: color var(--aa-dur-base);
   cursor: pointer;
   background: transparent;
   border: none;
 }
 .aa-ob-skip:hover {
-  color: oklch(0.8 0.01 230 / 0.8);
+  color: var(--aa-text-3);
+}
+.aa-ob-skip:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+  border-radius: var(--aa-radius-sm);
 }
 
 /* stage */
@@ -351,10 +355,6 @@
    RESPONSIVE
    ============================================================ */
 @media (max-width: 768px) {
-  .aa-ob-skip {
-    top: 22px;
-    right: 18px;
-  }
   .aa-ob-stage {
     padding: 78px 28px 54px;
   }

@@ -219,7 +219,7 @@ export const setPreferredName = (async (args, context) => {
  * a no-op. Replaces the old localStorage gate (which didn't survive a browser
  * switch or a clear).
  */
-export const completeOnboarding = (async (_args, context) => {
+export const completeOnboarding = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
@@ -229,7 +229,12 @@ export const completeOnboarding = (async (_args, context) => {
 
   await context.entities.User.update({
     where: { id: context.user.id },
-    data: { hasSeenOnboarding: true, onboardingStage: "SAMPLE_TASK" },
+    data: {
+      hasSeenOnboarding: true,
+      // Returning members can bypass the explainer and guided practice loop.
+      // COMPLETE prevents ensureOnboarded from seeding the practice task.
+      onboardingStage: args?.skipGuidance ? "COMPLETE" : "SAMPLE_TASK",
+    },
   });
 
   void recordAnalyticsEventCore(context.entities, {
@@ -246,4 +251,7 @@ export const completeOnboarding = (async (_args, context) => {
   }
 
   return { hasSeenOnboarding: true };
-}) satisfies CompleteOnboarding<never, { hasSeenOnboarding: boolean }>;
+}) satisfies CompleteOnboarding<
+  { skipGuidance?: boolean },
+  { hasSeenOnboarding: boolean }
+>;

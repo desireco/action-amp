@@ -123,9 +123,13 @@ function NameStep({
 
 function WelcomeStep({
   onAdvance,
+  onSkip,
+  completing,
   headingRef,
 }: {
   onAdvance: () => void;
+  onSkip: () => void;
+  completing: boolean;
   headingRef: RefObject<HTMLHeadingElement | null>;
 }) {
   return (
@@ -135,11 +139,13 @@ function WelcomeStep({
         It opens to one task, not a list.
       </h1>
       <p className="aa-ob-body aa-ob-body--intro">
-        ActionAmp is built for the moment after capture: deciding what actually
-        deserves your attention now.
+        Accomplish your goals, one task at a time.
       </p>
       <button className="aa-ob-cta aa-ob-cta--inline" onClick={onAdvance}>
         Show me →
+      </button>
+      <button className="aa-ob-skip" onClick={onSkip} disabled={completing}>
+        Skip intro
       </button>
     </div>
   );
@@ -232,15 +238,16 @@ export function OnboardingPage() {
   const stepIdx = STEPS.findIndex((step) => step.page === currentPage);
   const currentStep = stepIdx >= 0 ? STEPS[stepIdx] : null;
 
-  // Carousel content replaces in place. Move focus to the newly visible
-  // heading so keyboard and screen-reader users receive the new instruction.
+  // Carousel content replaces in place. Move focus to guided-step headings so
+  // keyboard and screen-reader users receive the new instruction. The welcome
+  // screen stays unfocused: autofocus there creates a distracting outline.
   useEffect(() => {
-    if (currentPage === "name") return;
+    if (currentPage === "welcome" || currentPage === "name") return;
     const frame = requestAnimationFrame(() => headingRef.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [currentPage]);
 
-  const finish = useCallback(async () => {
+  const finish = useCallback(async (skipGuidance = false) => {
     // Persist the flag server-side so onboarding shows exactly once across
     // devices. If this fails, do NOT navigate to /app — the gate in App.tsx
     // reads the same server flag, so a false flag would bounce the user right
@@ -248,7 +255,7 @@ export function OnboardingPage() {
     setCompleting(true);
     setCompletionError(false);
     try {
-      await completeOnboarding();
+      await completeOnboarding({ skipGuidance });
       // Optimistically update the cached auth user so the App.tsx first-run
       // gate sees hasSeenOnboarding=true without waiting on a refetch round-
       // trip. Wasp's auth query lives under the ['auth/me'] cache key (see
@@ -259,7 +266,7 @@ export function OnboardingPage() {
           ? {
               ...(old as object),
               hasSeenOnboarding: true,
-              onboardingStage: "SAMPLE_TASK",
+              onboardingStage: skipGuidance ? "COMPLETE" : "SAMPLE_TASK",
             }
           : old,
       );
@@ -271,7 +278,7 @@ export function OnboardingPage() {
       return; // stay on the last panel; let the user retry
     }
     setCompleting(false);
-  }, [navigate]);
+  }, [navigate, queryClient]);
 
   const next = useCallback(() => {
     if (pageIdx >= pages.length - 1) {
@@ -300,7 +307,7 @@ export function OnboardingPage() {
         e.preventDefault();
         setPageIdx(pageIdx - 1);
       } else if (e.key === "Escape") {
-        void finish();
+        void finish(true);
       }
     };
     window.addEventListener("keydown", handler);
@@ -311,18 +318,14 @@ export function OnboardingPage() {
     <div className={`aa-onboarding ${leaving ? "leaving" : ""}`}>
       <div className="aa-ob-bg" />
 
-      {/* Skip link — skips straight to /app, still flips the server flag */}
-      <button
-        className="aa-ob-skip"
-        onClick={() => void finish()}
-        disabled={completing}
-      >
-        Skip intro
-      </button>
-
       <div className="aa-ob-stage">
         {currentPage === "welcome" && (
-          <WelcomeStep onAdvance={next} headingRef={headingRef} />
+          <WelcomeStep
+            onAdvance={next}
+            onSkip={() => void finish(true)}
+            completing={completing}
+            headingRef={headingRef}
+          />
         )}
 
         {currentPage === "name" && (
