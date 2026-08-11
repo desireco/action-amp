@@ -22,14 +22,14 @@ function relativeTime(iso: string | Date): string {
   return `${day}d ago`;
 }
 
-function Tile({ value, label, sub }: { value: number | null; label: string; sub?: string }) {
+function Tile({ value, label, sub, to }: { value: number | null; label: string; sub?: string; to?: string }) {
   const loading = value === null;
   return (
     <Card padding="md" className="aa-admin-tile">
       <span className={`aa-admin-tile__num ${loading ? "aa-admin-tile__num--placeholder" : ""}`}>
         {loading ? "—" : value!.toLocaleString()}
       </span>
-      <span className="aa-admin-tile__label">{label}</span>
+      {to ? <Link className="aa-admin-tile__label" to={to}>{label}</Link> : <span className="aa-admin-tile__label">{label}</span>}
       {sub && <span className="aa-admin-tile__sub">{sub}</span>}
     </Card>
   );
@@ -217,9 +217,9 @@ export function AdminPage() {
       <div className="aa-admin-group">
         <h3 className="aa-admin-group__title">Users</h3>
         <div className="aa-admin-tiles">
-          <Tile value={num(u?.total)} label="Total signups" />
-          <Tile value={num(u?.selectedSignups)} label={`New signups · ${range}`} />
-          <Tile value={num(u?.selectedActive)} label={`Active users · ${range}`} />
+          <Tile value={num(u?.total)} label="Total signups" to="/app/admin/users?sort=signup_desc" />
+          <Tile value={num(u?.selectedSignups)} label={`New signups · ${range}`} to={`/app/admin/users${range === "all" ? "?sort=signup_desc" : `?joined=${range}&sort=signup_desc`}`} />
+          <Tile value={num(u?.selectedActive)} label={`Active users · ${range}`} to={`/app/admin/users${range === "all" ? "?sort=last_active_desc" : `?active=${range}&sort=last_active_desc`}`} />
         </div>
       </div>
 

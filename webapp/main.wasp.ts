@@ -196,6 +196,7 @@ import { SharePage } from "./src/share/SharePage" with { type: "ref" };
 import { PatSettingsPage } from "./src/app/PatSettingsPage" with { type: "ref" };
 import { AdminPage } from "./src/admin/AdminPage" with { type: "ref" };
 import { AdminFeedbackPage } from "./src/admin/AdminFeedbackPage" with { type: "ref" };
+import { AdminUsersPage } from "./src/admin/AdminUsersPage" with { type: "ref" };
 import { AdminFunnelPage } from "./src/admin/AdminFunnelPage" with { type: "ref" };
 import { AdminRedirectPage } from "./src/admin/AdminRedirectPage" with { type: "ref" };
 import { CliLoginPage } from "./src/auth/CliLoginPage" with { type: "ref" };
@@ -322,6 +323,7 @@ export default app({
     route("PatSettingsRoute", "/app/settings/pat", page(PatSettingsPage)),
     route("AdminRoute", "/app/admin", page(AdminRedirectPage)),
     route("AdminOverviewRoute", "/app/admin/overview", page(AdminPage)),
+    route("AdminUsersRoute", "/app/admin/users", page(AdminUsersPage)),
     route("AdminFunnelRoute", "/app/admin/funnel", page(AdminFunnelPage)),
     route("AdminFeedbackRoute", "/app/admin/feedback", page(AdminFeedbackPage)),
     route("LegacyAdminRoute", "/app/settings/admin", page(AdminRedirectPage)),

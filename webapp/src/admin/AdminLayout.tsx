@@ -6,6 +6,7 @@ import "./AdminLayout.css";
 
 const NAV = [
   { label: "Overview", to: "/app/admin/overview", end: true },
+  { label: "Users", to: "/app/admin/users", end: false },
   { label: "Funnel", to: "/app/admin/funnel", end: false },
   { label: "Feedback", to: "/app/admin/feedback", end: false },
 ];

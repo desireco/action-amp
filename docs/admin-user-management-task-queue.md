@@ -1,6 +1,6 @@
 # Admin user management — parked execution queue
 
-> Queue state: **active**. AU01–AU05 are complete; AU06 is next and
+> Queue state: **active**. AU01–AU06 are complete; AU07 is next and
 > dependency-ready. This does not authorize server starts, deployment, external
 > Stripe writes, or production migration.
 >
@@ -300,7 +300,7 @@ source because Wasp blocks client Vitest from importing server-only modules.
 
 ### AU06 — Users page, navigation, and action UX
 
-**Status:** pending
+**Status:** done
 **Preferred model:** `gpt-5.6-terra` xhigh
 **Acceptable model:** `gpt-5.6-sol` high
 **Depends on:** AU05
@@ -348,6 +348,10 @@ duplicating dashboard metrics or leaking a non-admin surface.
 
 **Stop condition:** browser implementation is wired but unverified in an
 actual browser. Do not perform deployment or change billing pages.
+
+**Evidence:** focused Users page contract test passed (2 tests),
+`./scripts/wasp-safe.sh compile` passed, and `git diff --check` passed. No
+browser server was started; browser verification remains AU07 work.
 
 ### AU07 — Integration, adversarial checks, and code-verified docs
 
