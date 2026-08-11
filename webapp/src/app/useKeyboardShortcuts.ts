@@ -18,7 +18,6 @@ import { useEffect } from "react";
  *   ⌘L           → toggle the lens switcher (always works; ⌘-chords don't type)
  *   Shift+I/N/T/G/P/R → jump to Inbox / Next / Today / TriaGe / Planning / Review
  *   Shift+C      → capture (typing-safe; ⌘K remains the focus-protector)
- *   Space        → go to Next (home) — the long-standing convention
  *   ? · ⌘?       → toggle the shortcut cheatsheet
  *   Esc          → close any open overlay (cheatsheet, capture, focus mode)
  *
@@ -136,13 +135,6 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
           handlers.onCapture?.();
           return;
         }
-      }
-
-      // Space — Next (home). Avoid hijacking button-activation space.
-      if (e.key === " " && !(e.target instanceof HTMLButtonElement)) {
-        e.preventDefault();
-        handlers.onGoHome?.();
-        return;
       }
 
       // ? — cheatsheet (Shift+/). Only when not typing — Shift+/ in a field
