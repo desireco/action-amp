@@ -1007,6 +1007,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             // and the new item doesn't appear until a manual reload.
             queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
             queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+            // Capture can advance the first-run guidance stage. Refresh auth
+            // data so Next immediately changes from "Capture" to "Triage".
+            queryClient.invalidateQueries({ queryKey: ["auth/me"] });
           }}
         />
       )}

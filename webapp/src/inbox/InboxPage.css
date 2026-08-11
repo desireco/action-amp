@@ -246,6 +246,10 @@
   font-size: var(--aa-text-sm);
 }
 
+.aa-inbox__empty-cta {
+  margin-top: var(--aa-space-lg);
+}
+
 .aa-inbox__kbd {
   font-family: var(--aa-font-mono);
   font-size: var(--aa-text-sm);

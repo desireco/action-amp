@@ -14,7 +14,7 @@ export const ANALYTICS_EVENTS = [
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[number];
 
 const ONE_TIME_EVENTS = new Set<AnalyticsEventName>([
-  "SIGNUP_COMPLETED", "APP_OPENED", "ONBOARDING_COMPLETED",
+  "SIGNUP_COMPLETED", "ONBOARDING_COMPLETED",
   "CAPTURE_CREATED", "TRIAGE_COMPLETED",
 ]);
 

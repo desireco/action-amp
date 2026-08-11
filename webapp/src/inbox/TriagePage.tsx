@@ -350,6 +350,8 @@ export function TriagePage() {
       queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+      // The first completed triage advances first-run guidance to complete.
+      queryClient.invalidateQueries({ queryKey: ["auth/me"] });
       // Await the task-list refetch so navigating to Today/Upcoming/Someday
       // after completing an item never shows the stale pre-triage cache (the
       // race where a just-triaged task appears missing until a manual refresh).

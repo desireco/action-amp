@@ -44,6 +44,10 @@ export const createInboxItem = (async (args, context) => {
     sourceUrl: args.sourceUrl,
     attachments: args.attachments,
   });
+  await context.entities.User.updateMany({
+    where: { id: context.user.id, onboardingStage: "CAPTURE" },
+    data: { onboardingStage: "TRIAGE" },
+  });
   void recordAnalyticsEventCore(context.entities, {
     name: "CAPTURE_CREATED",
     visitorId: `user_${context.user.id}`,
@@ -126,6 +130,10 @@ export const triageInboxItem = (async (args, context) => {
         feature: "a 4th project",
         reason: "organize more than 3 projects with Pro",
       }),
+  });
+  await context.entities.User.updateMany({
+    where: { id: context.user.id, onboardingStage: "TRIAGE" },
+    data: { onboardingStage: "COMPLETE" },
   });
   void recordAnalyticsEventCore(context.entities, {
     name: "TRIAGE_COMPLETED",

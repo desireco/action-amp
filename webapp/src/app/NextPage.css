@@ -45,6 +45,33 @@
   max-width: 480px;
 }
 
+.aa-wn-guide {
+  padding: var(--aa-space-xl) 0;
+}
+
+.aa-wn-guide__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: var(--aa-space-xl);
+  padding: 10px 18px;
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-teal-cta);
+  color: white;
+  font-weight: var(--aa-weight-semibold);
+  text-decoration: none;
+}
+
+.aa-wn-guide__action:hover {
+  background: var(--aa-teal-cta-hover);
+}
+
+.aa-wn-guide__action:focus-visible {
+  outline: none;
+  box-shadow: var(--aa-focus-ring);
+}
+
 /* Inline kbd hint inside the empty state copy */
 .aa-wn-kbd {
   font-family: var(--aa-font-mono);
@@ -72,4 +99,3 @@
   color: var(--aa-teal-cta);
   text-decoration: none;
 }
-

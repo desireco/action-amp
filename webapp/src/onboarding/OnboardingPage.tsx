@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import type { RefObject } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "wasp/client/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -60,9 +61,11 @@ const STEPS: {
 function NameStep({
   user,
   onAdvance,
+  headingRef,
 }: {
   user: { firstName?: string } | null | undefined;
   onAdvance: () => void;
+  headingRef: RefObject<HTMLHeadingElement | null>;
 }) {
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
@@ -85,7 +88,9 @@ function NameStep({
   return (
     <div className="aa-ob-page aa-ob-enter">
       <div className="aa-ob-eyebrow">First, a quick hello</div>
-      <h1 className="aa-ob-h1">What should we call you?</h1>
+      <h1 ref={headingRef} tabIndex={-1} className="aa-ob-h1">
+        What should we call you?
+      </h1>
       <p className="aa-ob-body">
         First name, nickname, whatever feels right. You can change it later in
         Settings.
@@ -93,6 +98,7 @@ function NameStep({
       <input
         className="aa-ob-name-input"
         type="text"
+        aria-label="Your name"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={user?.firstName ?? "Your name"}
@@ -115,11 +121,17 @@ function NameStep({
   );
 }
 
-function WelcomeStep({ onAdvance }: { onAdvance: () => void }) {
+function WelcomeStep({
+  onAdvance,
+  headingRef,
+}: {
+  onAdvance: () => void;
+  headingRef: RefObject<HTMLHeadingElement | null>;
+}) {
   return (
     <div className="aa-ob-page aa-ob-enter">
       <div className="aa-ob-eyebrow">Welcome to ActionAmp</div>
-      <h1 className="aa-ob-h1 aa-ob-h1--wide">
+      <h1 ref={headingRef} tabIndex={-1} className="aa-ob-h1 aa-ob-h1--wide">
         It opens to one task, not a list.
       </h1>
       <p className="aa-ob-body aa-ob-body--intro">
@@ -207,6 +219,7 @@ export function OnboardingPage() {
   const [leaving, setLeaving] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [completionError, setCompletionError] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   const pages = useMemo<Page[]>(() => {
     const needsName = user ? !user.firstName?.trim() : false;
@@ -218,6 +231,14 @@ export function OnboardingPage() {
   const currentPage = pages[pageIdx] ?? "welcome";
   const stepIdx = STEPS.findIndex((step) => step.page === currentPage);
   const currentStep = stepIdx >= 0 ? STEPS[stepIdx] : null;
+
+  // Carousel content replaces in place. Move focus to the newly visible
+  // heading so keyboard and screen-reader users receive the new instruction.
+  useEffect(() => {
+    if (currentPage === "name") return;
+    const frame = requestAnimationFrame(() => headingRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [currentPage]);
 
   const finish = useCallback(async () => {
     // Persist the flag server-side so onboarding shows exactly once across
@@ -234,7 +255,13 @@ export function OnboardingPage() {
       // sdk useAuth.js -> getMe.queryCacheKey); without this, the stale cached
       // flag bounces us right back to /welcome — an infinite redirect loop.
       queryClient.setQueryData(["auth/me"], (old: unknown) =>
-        old ? { ...(old as object), hasSeenOnboarding: true } : old,
+        old
+          ? {
+              ...(old as object),
+              hasSeenOnboarding: true,
+              onboardingStage: "SAMPLE_TASK",
+            }
+          : old,
       );
       setLeaving(true);
       navigate("/app");
@@ -254,10 +281,18 @@ export function OnboardingPage() {
     }
   }, [pageIdx, pages.length, finish]);
 
-  // keyboard nav
+  // Keyboard nav applies to reading panels, never to editable controls. The
+  // name step owns Enter; arrow keys must retain their native text behavior.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (pageIdx === 0) return; // name page manages its own input keys
+      const target = e.target as HTMLElement | null;
+      if (
+        currentPage === "name" ||
+        target?.matches("input, textarea, select, [contenteditable='true']")
+      ) {
+        return;
+      }
+      if (pageIdx === 0) return;
       if (e.key === "ArrowRight" || e.key === "Enter") {
         e.preventDefault();
         next();
@@ -270,7 +305,7 @@ export function OnboardingPage() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [pageIdx, next, finish]);
+  }, [pageIdx, currentPage, next, finish]);
 
   return (
     <div className={`aa-onboarding ${leaving ? "leaving" : ""}`}>
@@ -286,15 +321,19 @@ export function OnboardingPage() {
       </button>
 
       <div className="aa-ob-stage">
-        {currentPage === "welcome" && <WelcomeStep onAdvance={next} />}
+        {currentPage === "welcome" && (
+          <WelcomeStep onAdvance={next} headingRef={headingRef} />
+        )}
 
-        {currentPage === "name" && <NameStep user={user} onAdvance={next} />}
+        {currentPage === "name" && (
+          <NameStep user={user} onAdvance={next} headingRef={headingRef} />
+        )}
 
         {/* LOOP STEPS */}
         {currentStep && (
           <div className="aa-ob-page aa-ob-enter" key={stepIdx}>
             <div className="aa-ob-eyebrow">{currentStep.eyebrow}</div>
-            <h2 className="aa-ob-h2">
+            <h2 ref={headingRef} tabIndex={-1} className="aa-ob-h2">
               <StepTitle
                 title={currentStep.title}
                 mobileTitle={currentStep.mobileTitle}
@@ -304,7 +343,7 @@ export function OnboardingPage() {
 
             <LoopVisual kind={currentStep.visual} />
 
-            <div className="aa-ob-dots">
+            <div className="aa-ob-dots" aria-hidden="true">
               {STEPS.map((_, i) => (
                 <span
                   key={i}

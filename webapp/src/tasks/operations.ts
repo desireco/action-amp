@@ -643,7 +643,13 @@ export const completeTaskFromFocus = (async (args, context) => {
   }
   const task = await context.entities.Task.findUnique({
     where: { id: args.taskId },
-    select: { isDone: true, completedAt: true, startedAt: true, userId: true },
+    select: {
+      isDone: true,
+      completedAt: true,
+      startedAt: true,
+      userId: true,
+      isOnboardingSample: true,
+    },
   });
   if (!task || task.userId !== context.user.id) {
     throw new Error("Task not found.");
@@ -685,10 +691,17 @@ export const completeTaskFromFocus = (async (args, context) => {
       userId: context.user.id,
     },
   });
+  if (task.isOnboardingSample) {
+    await context.entities.User.updateMany({
+      where: { id: context.user.id, onboardingStage: "SAMPLE_TASK" },
+      data: { onboardingStage: "CAPTURE" },
+    });
+  }
   void recordAnalyticsEventCore(context.entities, {
     name: "TASK_COMPLETED",
     visitorId: `user_${context.user.id}`,
     route: "/app/focus",
+    metadata: task.isOnboardingSample ? { surface: "onboarding_sample" } : undefined,
   }, context.user.id).catch(() => {});
   return { id: updated.id, completedAt: updated.completedAt };
 }) satisfies CompleteTaskFromFocus<

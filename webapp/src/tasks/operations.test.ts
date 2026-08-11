@@ -1362,6 +1362,7 @@ describe("completeTaskFromFocus", () => {
       completedAt: null,
       startedAt: new Date("2026-07-04T09:00:00Z"),
       userId: "user-1",
+      isOnboardingSample: false,
     });
     m.entities.Task.update.mockResolvedValue({
       id: "task-1",
@@ -1393,6 +1394,25 @@ describe("completeTaskFromFocus", () => {
     expect(m.entities.TaskSession.updateMany).toHaveBeenCalledWith({
       where: { taskId: "task-1", endedAt: null },
       data: { endedAt: expect.any(Date) },
+    });
+  });
+
+  it("advances a completed sample task to real capture", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({
+      isDone: false,
+      completedAt: null,
+      startedAt: new Date("2026-07-04T09:00:00Z"),
+      userId: "user-1",
+      isOnboardingSample: true,
+    });
+    m.entities.Task.update.mockResolvedValue({ id: "task-1", completedAt: new Date() });
+
+    await completeTaskFromFocus({ taskId: "task-1" }, m.context);
+
+    expect(m.entities.User.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-1", onboardingStage: "SAMPLE_TASK" },
+      data: { onboardingStage: "CAPTURE" },
     });
   });
 

@@ -65,6 +65,10 @@ describe("createInboxItem — happy path", () => {
     expect(call.data.parsedTags).toEqual([]);
     expect(call.data.parsedLens).toBeNull();
     expect(call.select).toEqual({ id: true, text: true, createdAt: true });
+    expect(m.entities.User.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-1", onboardingStage: "CAPTURE" },
+      data: { onboardingStage: "TRIAGE" },
+    });
   });
 
   it("recognizes a custom [[lens]] token via the user's CUSTOM lenses", async () => {

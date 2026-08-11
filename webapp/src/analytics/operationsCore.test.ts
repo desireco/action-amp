@@ -31,12 +31,26 @@ describe("recordAnalyticsEventCore", () => {
     entities.AnalyticsEvent.findFirst.mockResolvedValue({ id: "existing" });
 
     const result = await recordAnalyticsEventCore(entities, {
-      name: "APP_OPENED",
+      name: "CAPTURE_CREATED",
       visitorId: "user_user-1",
     }, "user-1");
 
     expect(result).toEqual({ recorded: false, id: "existing" });
     expect(entities.AnalyticsEvent.create).not.toHaveBeenCalled();
+  });
+
+  it("records every app open so return cohorts can be computed", async () => {
+    const { entities } = mockContext();
+    entities.AnalyticsSession.findFirst.mockResolvedValue({ id: "session-1", userId: "user-1" });
+    entities.AnalyticsEvent.create.mockResolvedValue({ id: "event-2" });
+
+    const result = await recordAnalyticsEventCore(entities, {
+      name: "APP_OPENED",
+      visitorId: "user_user-1",
+    }, "user-1");
+
+    expect(result).toEqual({ recorded: true, id: "event-2" });
+    expect(entities.AnalyticsEvent.findFirst).not.toHaveBeenCalled();
   });
 });
 

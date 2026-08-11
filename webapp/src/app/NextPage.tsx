@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { useQuery } from "wasp/client/operations";
+import { useAuth } from "wasp/client/auth";
 import {
   getTopTask,
   getTask,
@@ -28,6 +29,7 @@ import "./NextPage.css";
  * or a calm empty state when nothing's on the table. Scoped to the active Lens.
  */
 export function NextPage() {
+  const { data: user } = useAuth();
   const lens = useActiveLens();
   const navigate = useNavigate();
   const { permalink } = useParams<{ permalink: string }>();
@@ -94,6 +96,14 @@ export function NextPage() {
         <h1 className="aa-wn-empty">…</h1>
       </div>
     );
+  }
+
+  if (!selectedTaskToken && user?.onboardingStage === "CAPTURE") {
+    return <OnboardingGuide stage="CAPTURE" />;
+  }
+
+  if (!selectedTaskToken && user?.onboardingStage === "TRIAGE") {
+    return <OnboardingGuide stage="TRIAGE" />;
   }
 
   if (!task) {
@@ -207,5 +217,28 @@ export function NextPage() {
         />
       )}
     </>
+  );
+}
+
+function OnboardingGuide({ stage }: { stage: "CAPTURE" | "TRIAGE" }) {
+  const capture = stage === "CAPTURE";
+  return (
+    <section className="aa-wn aa-wn-guide" aria-labelledby="onboarding-guide-title">
+      <p className="aa-wn-eyebrow">One more step</p>
+      <h1 id="onboarding-guide-title" className="aa-wn-empty">
+        {capture ? "Get one real thing out of your head." : "Your thought is waiting."}
+      </h1>
+      <p className="aa-wn-empty-sub">
+        {capture
+          ? "It will wait in Inbox until you decide what it becomes."
+          : "Give it a home so ActionAmp can put the right next thing on your table."}
+      </p>
+      <Link
+        className="aa-wn-guide__action"
+        to={capture ? "/app?capture=1" : "/app/inbox/review"}
+      >
+        {capture ? "Capture a thought" : "Triage it"} →
+      </Link>
+    </section>
   );
 }

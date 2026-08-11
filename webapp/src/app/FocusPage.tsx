@@ -70,6 +70,8 @@ export function FocusPage() {
           outcome ? { taskId: task.id, outcome } : { taskId: task.id },
         );
         refreshTaskState();
+        // Completing the one sample task advances onboarding to real capture.
+        await queryClient.invalidateQueries({ queryKey: ["auth/me"] });
         navigate("/app");
       }}
       onCompleteSession={async () => {

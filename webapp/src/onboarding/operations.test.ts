@@ -199,7 +199,7 @@ describe("ensureOnboarded — idempotency", () => {
 });
 
 describe("ensureOnboarded — first-run seed", () => {
-  it("seeds three light TODAY tasks in the Me lens when the user has zero tasks", async () => {
+  it("seeds one sample TODAY task for the SAMPLE_TASK stage when the user has zero tasks", async () => {
     const m = mockContext();
     // Both lenses already exist (colors already set); both General projects
     // exist (we're isolating the seed path, not the lens/project find-or-create).
@@ -211,15 +211,16 @@ describe("ensureOnboarded — first-run seed", () => {
     m.entities.Project.findFirst
       .mockResolvedValueOnce({ id: "gen-work" })
       .mockResolvedValueOnce({ id: "gen-me" });
+    m.entities.User.findUnique.mockResolvedValue({ onboardingStage: "SAMPLE_TASK" });
     m.entities.Task.count.mockResolvedValue(0); // ← zero-task guard triggers
     m.entities.Task.create.mockResolvedValue({ id: "seed-task" });
 
     await ensureOnboarded(undefined as never, m.context);
 
-    // Three tiny tasks, in the Me lens, TODAY/NORMAL/S, enough to teach the
-    // loop without filling the user's day.
-    expect(m.entities.Task.create).toHaveBeenCalledTimes(3);
-    expect(m.entities.Task.create).toHaveBeenNthCalledWith(1, {
+    // One harmless Task teaches focus. Capture + triage are real stage-backed
+    // actions, never instruction tasks the user must manually clear.
+    expect(m.entities.Task.create).toHaveBeenCalledTimes(1);
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         userId: "user-1",
         lensId: "lens-me",
@@ -227,31 +228,26 @@ describe("ensureOnboarded — first-run seed", () => {
         priority: "NORMAL",
         size: "S",
         description: "Try it: complete this task",
+        isOnboardingSample: true,
       }),
       select: { id: true },
     });
-    expect(m.entities.Task.create).toHaveBeenNthCalledWith(2, {
-      data: expect.objectContaining({
-        userId: "user-1",
-        lensId: "lens-me",
-        status: "TODAY",
-        priority: "NORMAL",
-        size: "S",
-        description: "Capture one real thing on your mind",
-      }),
-      select: { id: true },
-    });
-    expect(m.entities.Task.create).toHaveBeenNthCalledWith(3, {
-      data: expect.objectContaining({
-        userId: "user-1",
-        lensId: "lens-me",
-        status: "TODAY",
-        priority: "NORMAL",
-        size: "S",
-        description: "Open the Inbox and decide what that thing becomes",
-      }),
-      select: { id: true },
-    });
+  });
+
+  it("does not seed an existing member with no tasks", async () => {
+    const m = mockContext();
+    m.entities.Lens.findFirst
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: "emerald" })
+      .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
+      .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: "emerald" });
+    m.entities.Project.findFirst.mockResolvedValue({ id: "general" });
+    m.entities.User.findUnique.mockResolvedValue({ onboardingStage: "COMPLETE" });
+    m.entities.Task.count.mockResolvedValue(0);
+
+    await ensureOnboarded(undefined as never, m.context);
+
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
   });
 
   it("seeds nothing when the user already has at least one task", async () => {
@@ -297,7 +293,7 @@ describe("completeOnboarding — guards + behavior", () => {
     ).rejects.toThrow(/Not authenticated/);
   });
 
-  it("sets hasSeenOnboarding=true on the user", async () => {
+  it("starts the sample-task guidance when onboarding finishes", async () => {
     const m = mockContext();
     m.context.user = {
       ...m.context.user,
@@ -312,7 +308,7 @@ describe("completeOnboarding — guards + behavior", () => {
     expect(result).toEqual({ hasSeenOnboarding: true });
     expect(m.entities.User.update).toHaveBeenCalledWith({
       where: { id: "user-1" },
-      data: { hasSeenOnboarding: true },
+      data: { hasSeenOnboarding: true, onboardingStage: "SAMPLE_TASK" },
     });
     // The email path ran (auth queried for the address) even though the
     // default mock returns no identity, so nothing was sent.

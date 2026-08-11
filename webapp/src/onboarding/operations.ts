@@ -39,11 +39,7 @@ const DEFAULT_LENSES = [
   kind: "WORK" | "PERSONAL";
   color: string;
 }[];
-const STARTER_TASKS = [
-  "Try it: complete this task",
-  "Capture one real thing on your mind",
-  "Open the Inbox and decide what that thing becomes",
-] as const;
+const STARTER_TASK = "Try it: complete this task";
 
 // The recipient address is NOT on context.user (the User entity has no email
 // column — even billing creates Stripe customers without one). It lives on
@@ -155,37 +151,36 @@ export const ensureOnboarded = (async (_args, context) => {
     }
   }
 
-  // Seed a tiny starter set for brand-new users so Next is non-empty and the
-  // first session teaches the loop by doing it. Guarded by "user has zero
-  // tasks" so existing users get nothing new (idempotent across logins).
-  // Placed in the Me lens, status=TODAY so getTopTask surfaces them.
+  // Seed one harmless sample task only after the user finishes onboarding.
+  // Capture and triage are stage-backed actions, not pretend Tasks; that keeps
+  // the user's real table clean and gives each next step the right CTA.
   if (meLensId) {
+    const onboarding = await context.entities.User.findUnique({
+      where: { id: userId },
+      select: { onboardingStage: true },
+    });
     const taskCount = await context.entities.Task.count({ where: { userId } });
-    if (taskCount === 0) {
-      for (const description of STARTER_TASKS) {
-        const permalink = await uniquePermalink(
-          description,
-          async (candidate) => {
-            const existing = await context.entities.Task.findFirst({
-              where: { userId, permalink: candidate },
-              select: { id: true },
-            });
-            return !!existing;
-          },
-        );
-        await context.entities.Task.create({
-          data: {
-            description,
-            permalink,
-            userId,
-            lensId: meLensId,
-            status: "TODAY",
-            priority: "NORMAL",
-            size: "S",
-          },
+    if (onboarding?.onboardingStage === "SAMPLE_TASK" && taskCount === 0) {
+      const permalink = await uniquePermalink(STARTER_TASK, async (candidate) => {
+        const existing = await context.entities.Task.findFirst({
+          where: { userId, permalink: candidate },
           select: { id: true },
         });
-      }
+        return !!existing;
+      });
+      await context.entities.Task.create({
+        data: {
+          description: STARTER_TASK,
+          permalink,
+          userId,
+          lensId: meLensId,
+          status: "TODAY",
+          priority: "NORMAL",
+          size: "S",
+          isOnboardingSample: true,
+        },
+        select: { id: true },
+      });
     }
   }
 
@@ -234,7 +229,7 @@ export const completeOnboarding = (async (_args, context) => {
 
   await context.entities.User.update({
     where: { id: context.user.id },
-    data: { hasSeenOnboarding: true },
+    data: { hasSeenOnboarding: true, onboardingStage: "SAMPLE_TASK" },
   });
 
   void recordAnalyticsEventCore(context.entities, {

@@ -77,6 +77,10 @@ describe("triageInboxItem — Simple-list decisions", () => {
     expect(m.entities.Project.findFirst).not.toHaveBeenCalled();
     expect(m.entities.Tag.upsert).not.toHaveBeenCalled();
     expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({ where: { id: "ix-1" } });
+    expect(m.entities.User.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-1", onboardingStage: "TRIAGE" },
+      data: { onboardingStage: "COMPLETE" },
+    });
   });
 
   it("keeps an attachment-backed InboxItem untouched", async () => {

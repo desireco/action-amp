@@ -411,7 +411,7 @@ export default app({
       auth: true,
     }),
     action(completeTaskFromFocus, {
-      entities: ["Task", "TaskUpdate", "TaskSession"],
+      entities: ["Task", "TaskUpdate", "TaskSession", "User"],
       auth: true,
     }),
     query(getProjects, { entities: ["Project", "Task", "Lens"], auth: true }),
@@ -521,7 +521,7 @@ export default app({
       auth: true,
     }),
     action(ensureOnboarded, {
-      entities: ["Lens", "Project", "Task"],
+      entities: ["Lens", "Project", "Task", "User"],
       auth: true,
     }),
     action(createLens, { entities: ["Lens", "ListItem"], auth: true }),
@@ -561,11 +561,11 @@ export default app({
       auth: true,
     }),
     action(createInboxItem, {
-      entities: ["InboxItem", "InboxAttachment", "Lens"],
+      entities: ["InboxItem", "InboxAttachment", "Lens", "User"],
       auth: true,
     }),
     action(triageInboxItem, {
-      entities: ["InboxItem", "InboxAttachment", "ListItem", "Task", "Project", "Resource", "Tag", "Lens"],
+      entities: ["InboxItem", "InboxAttachment", "ListItem", "Task", "Project", "Resource", "Tag", "Lens", "User"],
       auth: true,
     }),
     action(restoreArchivedItem, { entities: ["InboxItem"], auth: true }),

@@ -97,6 +97,10 @@ export function InboxPage() {
             <p className="aa-inbox__empty-hint">
               Capture anytime <span className="aa-inbox__kbd">⌘K</span>
             </p>
+            <Link to="/app?capture=1" className="aa-inbox__cta aa-inbox__empty-cta">
+              <span>Capture a thought</span>
+              <ArrowRightIcon />
+            </Link>
           </div>
         ) : (
           <>
