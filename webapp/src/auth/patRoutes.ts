@@ -51,12 +51,14 @@ import {
   getTodayTasksData,
   getDoneTodayData,
   getTopTaskData,
+  hydrateTopTaskData,
   toggleTaskDoneCore,
   snoozeTaskCore,
   updateTaskStatusCore,
   startTaskCore,
   pauseTaskCore,
 } from "../tasks/operationsCore";
+import { buildNowContext } from "../app/taskContext";
 import {
   createInboxItemCore,
   getInboxItemsCore,
@@ -409,7 +411,9 @@ export const cliNow = async (
     if (!lensId) {
       // No accessible lenses at all — the user hasn't completed onboarding (or
       // a FREE user with no PERSONAL lens, which shouldn't happen post-seed).
-      return res.status(200).json({ task: null, reason: "no-lens" });
+      return res
+        .status(200)
+        .json({ task: null, context: null, reason: "no-lens" });
     }
 
     // Candidate pool + ranking live in the pure core (shared with getTopTask):
@@ -421,9 +425,28 @@ export const cliNow = async (
     });
 
     if (!top) {
-      return res.status(200).json({ task: null, reason: "no-candidates" });
+      return res
+        .status(200)
+        .json({ task: null, context: null, reason: "no-candidates" });
     }
-    return res.status(200).json({ task: top });
+
+    // focus-goal-context: hydrate the owned winner (Project→Goal + sessions +
+    // NOTE updates) and build the additive `context` server-side. The raw
+    // ranked Task stays in `task` (unchanged semantics); sessions/updates are
+    // NOT serialized into the response — only the documented context fields.
+    // If the row vanished between ranking and hydration, return null task +
+    // null context rather than stale data.
+    const hydrated = await hydrateTopTaskData(authEntities, {
+      userId: user.id,
+      id: top.id,
+    });
+    if (!hydrated) {
+      return res
+        .status(200)
+        .json({ task: null, context: null, reason: "no-candidates" });
+    }
+    const context = buildNowContext(hydrated, hydrated.project);
+    return res.status(200).json({ task: top, context });
   } catch (err) {
     console.error("[cli/now] failed:", err);
     return res.status(500).json({ error: "Could not resolve top task." });

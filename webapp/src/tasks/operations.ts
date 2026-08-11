@@ -29,6 +29,7 @@ import {
   getTodayTasksData,
   getDoneTodayData,
   getTopTaskData,
+  hydrateTopTaskData,
   toggleTaskDoneCore,
   snoozeTaskCore,
   updateTaskStatusCore,
@@ -45,6 +46,7 @@ export {
   PRIORITY_RANK,
   SIZE_RANK,
   getTopTaskData,
+  hydrateTopTaskData,
   toggleTaskDoneCore,
   snoozeTaskCore,
   startTaskCore,
@@ -266,10 +268,21 @@ export const getTopTask = (async (args, context) => {
   await assertLifeAreaLens(context, args.lensId);
   // Candidate fetch + sort live in the core so the CLI `/api/cli/now` route
   // can rank candidates identically without re-implementing the comparator.
-  return await getTopTaskData(context.entities, {
+  const ranked = await getTopTaskData(context.entities, {
     userId: context.user.id,
     lensId: args.lensId,
   });
+  if (!ranked) return null;
+  // Hydrate the owned winner with Project→Goal + session + NOTE context
+  // (focus-goal-context spec). History relations attach only to the winner,
+  // not to every candidate. If the row vanished between ranking and hydration,
+  // return null rather than stale data.
+  return (
+    (await hydrateTopTaskData(context.entities, {
+      userId: context.user.id,
+      id: ranked.id,
+    })) ?? null
+  );
 }) satisfies GetTopTask<{ lensId: string }>;
 
 // ----------------------------------------------------------------
@@ -293,8 +306,21 @@ export const getFocusedTask = (async (_args, context) => {
       updates: { orderBy: { createdAt: "asc" } },
       sessions: { orderBy: { startedAt: "asc" } },
       user: { select: { focusSessionMinutes: true } },
-      project: { select: { id: true, permalink: true, name: true } },
-      goal: { select: { id: true, permalink: true, name: true } },
+      // focus-goal-context spec: Goal rationale needs the Project's nested Goal
+      // (id/name/description) and the legacy direct Goal's description. Project
+      // Goal wins over a conflicting legacy direct Goal; both are selected so
+      // the pure resolver in app/taskContext.ts can apply precedence.
+      project: {
+        select: {
+          id: true,
+          permalink: true,
+          name: true,
+          goal: { select: { id: true, name: true, description: true } },
+        },
+      },
+      goal: {
+        select: { id: true, permalink: true, name: true, description: true },
+      },
     },
   });
 }) satisfies GetFocusedTask<void>;

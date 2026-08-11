@@ -143,8 +143,20 @@ describe("getFocusedTask", () => {
         updates: { orderBy: { createdAt: "asc" } },
         sessions: { orderBy: { startedAt: "asc" } },
         user: { select: { focusSessionMinutes: true } },
-        project: { select: { id: true, permalink: true, name: true } },
-        goal: { select: { id: true, permalink: true, name: true } },
+        // focus-goal-context: Project carries nested Goal (id/name/description)
+        // and direct Goal gains description, so the pure resolver can apply
+        // Project-Goal precedence and render Goal rationale on Focus.
+        project: {
+          select: {
+            id: true,
+            permalink: true,
+            name: true,
+            goal: { select: { id: true, name: true, description: true } },
+          },
+        },
+        goal: {
+          select: { id: true, permalink: true, name: true, description: true },
+        },
       },
     });
   });
@@ -507,6 +519,21 @@ function candidate(overrides: Partial<typeof BASE_TASK> = {}) {
   return { ...BASE_TASK, project: null, goal: null, ...overrides };
 }
 
+// getTopTask now ranks via getTopTaskData (Task.findMany) THEN hydrates the
+// winner via hydrateTopTaskData (Task.findFirst). This helper stubs the
+// hydration lookup to echo back the ranked id, so ranking tests can still
+// assert on the winner's id through the full rank → hydrate → return chain.
+function mockHydrationEcho(m: ReturnType<typeof mockContext>) {
+  m.entities.Task.findFirst.mockImplementation(async (args: { where: { id: string } }) => ({
+    ...BASE_TASK,
+    id: args.where.id,
+    project: null,
+    goal: null,
+    sessions: [],
+    updates: [],
+  }));
+}
+
 describe("getTopTask", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
@@ -552,12 +579,63 @@ describe("getTopTask", () => {
     expect(call.where).toMatchObject(expected);
   });
 
+  it("hydrates the ranked winner through the owned hydration core", async () => {
+    // After ranking, getTopTask calls hydrateTopTaskData with the winner id +
+    // authenticated userId. The hydration query must scope by BOTH so no caller
+    // can hydrate another user's task. History relations attach only here, not
+    // to every candidate.
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([candidate({ id: "top" })]);
+    mockHydrationEcho(m);
+
+    await getTopTask({ lensId: "lens-1" }, m.context);
+
+    expect(m.entities.Task.findFirst).toHaveBeenCalledWith({
+      where: { id: "top", userId: "user-1" },
+      include: {
+        project: {
+          select: {
+            id: true,
+            permalink: true,
+            name: true,
+            goal: { select: { id: true, name: true, description: true } },
+          },
+        },
+        goal: {
+          select: { id: true, permalink: true, name: true, description: true },
+        },
+        sessions: {
+          orderBy: { startedAt: "asc" },
+          select: { startedAt: true, endedAt: true },
+        },
+        updates: {
+          where: { kind: "NOTE" },
+          orderBy: { createdAt: "desc" },
+          select: { body: true, createdAt: true },
+        },
+      },
+    });
+  });
+
+  it("returns null when the ranked winner vanishes before hydration", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([candidate({ id: "top" })]);
+    // Hydration finds nothing — the row was deleted/done between ranking and
+    // hydration. The op must return null, not stale ranked data.
+    m.entities.Task.findFirst.mockResolvedValue(null);
+
+    const result = await getTopTask({ lensId: "lens-1" }, m.context);
+
+    expect(result).toBeNull();
+  });
+
   it("ranks by priority first (IMPORTANT beats NORMAL)", async () => {
     const m = mockContext();
     m.entities.Task.findMany.mockResolvedValue([
       candidate({ id: "low", priority: "NORMAL" }),
       candidate({ id: "top", priority: "IMPORTANT" }),
     ]);
+    mockHydrationEcho(m);
 
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
@@ -570,6 +648,7 @@ describe("getTopTask", () => {
       candidate({ id: "big", priority: "NORMAL", size: "M" }),
       candidate({ id: "quick", priority: "NORMAL", size: "S" }),
     ]);
+    mockHydrationEcho(m);
 
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
@@ -582,6 +661,7 @@ describe("getTopTask", () => {
       candidate({ id: "newer", createdAt: new Date("2026-06-21T10:00:00Z") }),
       candidate({ id: "older", createdAt: new Date("2026-06-19T10:00:00Z") }),
     ]);
+    mockHydrationEcho(m);
 
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
@@ -596,6 +676,7 @@ describe("getTopTask", () => {
       candidate({ id: "bench", status: "UPCOMING" }),
       candidate({ id: "court", status: "TODAY" }),
     ]);
+    mockHydrationEcho(m);
 
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
@@ -854,6 +935,7 @@ describe("getTopTask — Now state ordering", () => {
       candidate({ id: "started", priority: "LOW", startedAt: new Date() }),
       candidate({ id: "important", priority: "IMPORTANT", startedAt: null }),
     ]);
+    mockHydrationEcho(m);
 
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
@@ -866,6 +948,7 @@ describe("getTopTask — Now state ordering", () => {
       candidate({ id: "normal", priority: "NORMAL", startedAt: null }),
       candidate({ id: "important", priority: "IMPORTANT", startedAt: null }),
     ]);
+    mockHydrationEcho(m);
 
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
