@@ -38,7 +38,7 @@ manipulating; it does not apologize for selling.
 | `/login` · `/signup` | Auth | live | Funnel from CTAs. |
 | `/help` | Help / docs | Phase 2 | Onboarding replay + shortcuts reference. |
 | `/changelog` | Changelog | Phase 2 | "What's new" — pairs with the newsletter. |
-| `/pricing` | Pricing | live | Compare Free, regular Pro, and Founding 100 before signup. |
+| `/pricing` | Pricing | live | Compare Free, regular Pro, and Founding 100; yearly Pro includes one goal-setting workshop. |
 
 **Tier 4 growth pages** (`/blog`, `/guides`, `/community`) are parked as
 Phase 2 — see `docs/PUBLIC-PAGES.md` §4.

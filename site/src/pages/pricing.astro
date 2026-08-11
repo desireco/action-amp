@@ -8,7 +8,7 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
 
 <PublicLayout
   title="Pricing — ActionAmp"
-  description="Start free. Pro is $79.50 per year. Founding membership is $99 once for lifetime Pro, capped at 100 memberships."
+  description="Start free. Choose yearly Pro and get a goal-setting workshop. Founding membership is $99 once for lifetime Pro, capped at 100 memberships."
   fullWidth
 >
   <FunnelTracker event="PRICING_VIEW" surface="pricing" />
@@ -42,25 +42,6 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
         <p class="aa-plan-note">Stay Free for as long as it fits.</p>
       </article>
 
-      <article class="aa-plan aa-plan--founding">
-        <div class="aa-plan-heading">
-          <p class="aa-plan-label">Founding 100 <span>Early adopter membership</span></p>
-          <p class="aa-plan-period">One-time payment</p>
-          <p class="aa-plan-price"><span>$99</span> <strong>once</strong></p>
-          <p class="aa-plan-billing">One payment · no renewal, ever</p>
-          <p class="aa-plan-summary">Lifetime Pro. No renewal bill. Capped at 100 memberships.</p>
-        </div>
-        <ul>
-          <li>Everything in Pro, for as long as ActionAmp exists</li>
-          <li>No subscription or renewal</li>
-          <li>$19.50 more than your first annual Pro year</li>
-          <li>Breaks even after about 15 months of annual Pro</li>
-          <li>A direct line to the people building the product</li>
-        </ul>
-        <a class="aa-btn aa-btn--primary aa-plan-cta" href={`${appUrl}/founding-100`}>See Founding membership</a>
-        <p class="aa-plan-note">When 100 memberships are claimed, this option retires.</p>
-      </article>
-
       <article class="aa-plan aa-plan--pro">
         <div class="aa-plan-heading">
           <p class="aa-plan-label">Pro <span>Regular plan</span></p>
@@ -79,18 +60,38 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
           <p class="aa-plan-period" data-pro-period>Annual subscription</p>
           <p class="aa-plan-price"><span data-pro-price>$79.50</span> <strong data-pro-price-copy>every 12 months</strong></p>
           <p class="aa-plan-billing" data-pro-billing>Billed yearly · renews yearly</p>
-          <p class="aa-plan-summary" data-pro-summary>For work, more than a few projects, and the full system.</p>
+          <p class="aa-plan-summary aa-plan-summary--workshop" data-pro-summary>The full system, plus a goal-setting workshop to get you started.</p>
         </div>
         <ul>
+          <li data-pro-yearly-benefit>Goal Setting workshop</li>
           <li>Everything in Free</li>
-          <li>Work, Me, and custom Lenses</li>
+          <li>Organize Lenses how it works for you</li>
           <li>Unlimited projects, goals, and history</li>
           <li>Unlimited devices</li>
           <li>Command palette and Logbook search</li>
           <li>CLI and API access for your terminal tools and agents</li>
         </ul>
         <a class="aa-btn aa-btn--primary aa-plan-cta" href={`${appUrl}/signup`}>Start free, upgrade when ready</a>
-        <p class="aa-plan-note" data-pro-note>About $6.63 per month when paid annually. Prefer no renewal? Get a prepaid Pro year for $90.</p>
+        <p class="aa-plan-note" data-pro-note>About $6.63 per month when paid yearly.</p>
+      </article>
+
+      <article class="aa-plan aa-plan--founding">
+        <div class="aa-plan-heading">
+          <p class="aa-plan-label">Founding 100 <span>Early adopter membership</span></p>
+          <p class="aa-plan-period">One-time payment</p>
+          <p class="aa-plan-price"><span>$99</span> <strong>once</strong></p>
+          <p class="aa-plan-billing">One payment · no renewal, ever</p>
+          <p class="aa-plan-summary">Lifetime Pro. No renewal bill. Capped at 100 memberships.</p>
+        </div>
+        <ul>
+          <li>Everything in Pro, for as long as ActionAmp exists</li>
+          <li>No subscription or renewal</li>
+          <li>$19.50 more than your first annual Pro year</li>
+          <li>Breaks even after about 15 months of annual Pro</li>
+          <li>A direct line to the people building the product</li>
+        </ul>
+        <a class="aa-btn aa-btn--primary aa-plan-cta" href={`${appUrl}/founding-100`}>See Founding membership</a>
+        <p class="aa-plan-note">When 100 memberships are claimed, this option retires.</p>
       </article>
     </section>
 
@@ -106,7 +107,7 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
         </div>
         <div>
           <dt>Ready to run more of life in one place?</dt>
-          <dd>Choose annual Pro for the lowest regular price, or monthly Pro if you want to pay month to month.</dd>
+          <dd>Choose annual Pro for the lowest regular price and a goal-setting workshop, or monthly Pro if you want to pay month to month.</dd>
         </div>
         <div>
           <dt>Prefer one payment?</dt>
@@ -118,7 +119,7 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
     <section class="aa-pricing-fine-print" aria-labelledby="pricing-details-title">
       <h2 id="pricing-details-title">The details, plainly.</h2>
       <div class="aa-pricing-details-grid">
-        <p><strong>Annual Pro</strong> renews yearly at $79.50. If you do not want renewal, choose the $90 prepaid year instead.</p>
+        <p><strong>Yearly Pro</strong> renews yearly at $79.50 and includes one goal-setting workshop. Scheduling details are provided after purchase.</p>
         <p><strong>Founding membership</strong> is not a trial or a discounted first year. It is $99 once for lifetime Pro access, limited to 100 people.</p>
         <p><strong>Nothing is deleted</strong> if a paid plan ends. Your account returns to Free and paid-only structure is kept safely until you upgrade again.</p>
       </div>
@@ -136,8 +137,8 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
         price: "$79.50",
         priceCopy: "every 12 months",
         billing: "Billed yearly · renews yearly",
-        summary: "For work, more than a few projects, and the full system.",
-        note: "About $6.63 per month when paid annually. Prefer no renewal? Get a prepaid Pro year for $90.",
+        summary: "The full system, plus a goal-setting workshop to get you started.",
+        note: "About $6.63 per month when paid yearly.",
       },
       monthly: {
         period: "Monthly subscription",
@@ -145,7 +146,7 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
         priceCopy: "every month",
         billing: "Billed monthly · cancel from billing anytime",
         summary: "Full Pro access, without a yearly commitment.",
-        note: "Prefer no renewal? Get a prepaid Pro year for $90.",
+        note: "Switch to yearly Pro to include the goal-setting workshop.",
       },
     };
 
@@ -163,7 +164,9 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
       document.querySelector<HTMLElement>("[data-pro-price-copy]")!.textContent = plan.priceCopy;
       document.querySelector<HTMLElement>("[data-pro-billing]")!.textContent = plan.billing;
       document.querySelector<HTMLElement>("[data-pro-summary]")!.textContent = plan.summary;
+      document.querySelector<HTMLElement>("[data-pro-summary]")!.classList.toggle("aa-plan-summary--workshop", !isMonthly);
       document.querySelector<HTMLElement>("[data-pro-note]")!.textContent = plan.note;
+      document.querySelector<HTMLElement>("[data-pro-yearly-benefit]")!.hidden = isMonthly;
     };
 
     billingSwitch.addEventListener("click", () => {

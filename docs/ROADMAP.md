@@ -2,6 +2,7 @@
 
 <!-- Discover owns this file. Build reads only. -->
 <!-- Active product work, 2026-08-10: Simple-list Lenses are implemented locally and in final verification. They add a flat checklist Lens alongside Life areas, with direct entry plus universal Capture -> Inbox -> compact ListItem triage. This is not deployment evidence. -->
+<!-- Next publish bundle, 2026-08-11: guided first-run practice, Goal rationale in Next/Focus/CLI, empty-Lens type conversion, and the yearly Pro goal-setting workshop offer. Changes are on main; this note is not production deployment evidence. -->
 <!-- Last reviewed: 2026-08-03 (CLI/API access is now Pro-only: Free accounts cannot issue or use personal API tokens; existing tokens stop working when an account returns to Free. CLI package publishing is in progress. Resources shipped — project-owned links/notes CRUD on the Project detail page + `actionamp resource list/add/update/delete` CLI + `/api/cli/resource/*` PAT routes, all backed by a pure `resources/operationsCore.ts`. NO `TaskResource` join — references are markdown links in Task Context, per the task-fields reversal; NO delete-with-impact flow, just simple delete. Passwordless magic-link email sign-in shipped (six-digit code OR sign-in link, 10-min TTL, rate-limited, atomic consume; replaces passwords; localhost uses fixed `111111` for QA). Share target extended: structured capture props (`title`/`content`/`sourceUrl` on `InboxItem`) + image attachments (`InboxAttachment`, one image ≤5MB) + CLI `capture` with `--title/--content/--source-url/--file`. Task Outcome (`Task.outcome`) shipped — task-fields now complete. WONT_DO task state shipped — non-destructive decline for post-triage tasks, surfaces in the Logbook with Restore. Earlier 07-26: CLI lens management shipped. Earlier 07-23: Admin dashboard + feedback-triage system. Earlier 07-22: ActionAmp CLI terminal client shipped.) -->
 
 ---
@@ -155,6 +156,14 @@ body/source context, rejects image filing until lossless attachment transfer
 exists, and retains the existing Pro custom-Lens entitlement. Spec:
 [`docs/specs/simple-list-lenses.md`](specs/simple-list-lenses.md). Verification
 record: [`docs/features/simple-list-lenses.md`](features/simple-list-lenses.md).
+
+**Active commercial enhancement:** **yearly Pro goal-setting workshop**
+(`release-ready`; production publish not claimed) — one goal-setting workshop
+is included with recurring yearly Pro. Monthly, Free, Founding 100, and the
+unadvertised prepaid option remain outside the offer. Fulfillment is
+human-arranged after purchase; this is a pricing/GTM offer, not a new app
+entitlement or booking feature. `docs/PRICING.md`, public-page documentation,
+and the Astro pricing page carry the same rule.
 
 1. **doc-reconciliation** (`done` 2026-06-27) — canonical docs reconciled with
    shipped reality: Trash→Archive leftovers fixed in WORKFLOW/TRIAGE/DATA-MODEL;

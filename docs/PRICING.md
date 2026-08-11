@@ -21,6 +21,10 @@
   positioning (~$1.53/week). See §5.
 - **Prepaid option:** **$90/yr non-recurring (DECIDED)** — same Pro product,
   no auto-renew, for the anti-subscription crowd (+$10.50 over recurring). See §5.
+- **Yearly bonus:** **one goal-setting workshop (DECIDED 2026-08-11)** —
+  included with recurring yearly Pro. Monthly, Free, Founding 100, and the
+  unadvertised $90 prepaid option do not include the workshop. Scheduling is
+  handled after purchase; no automated booking flow is claimed.
 - **Founding 100:** **$99 one-time, lifetime (DECIDED 2026-07-10)** — capped at
   exactly 100 spots; a launch patron tier. CTA disabled until checkout + cap
   enforcement are wired. See §3 Model C.
@@ -222,8 +226,8 @@ one-time lifetime option alongside the recurring/prepaid Pro ladder.)*
 | Tier | Price | Story |
 |---|---|---|
 | **Free** | $0 (feature-capped) | The full focus loop, **personal scope only**, capped at 3 Projects / 1 Goal. Tasks unlimited. See §4. |
-| **Pro** *(regular annual)* | **$79.50/yr** | Charm-priced. "About a dollar-fifty a week." (~$1.53/wk, ~$6.63/mo equiv) |
-| **Pro prepaid** *(non-recurring)* | **$90/yr** | Same Pro, **no auto-renew**. +$10.50 for control & peace of mind. For the anti-subscription crowd. |
+| **Pro** *(regular annual)* | **$79.50/yr** | Charm-priced. "About a dollar-fifty a week." (~$1.53/wk, ~$6.63/mo equiv). Includes one goal-setting workshop. |
+| **Pro prepaid** *(non-recurring, not publicly advertised)* | **$90/yr** | Same Pro, **no auto-renew**. Retained as an internal option, not part of public pricing copy. |
 | **Pro monthly** *(optional)* | **$12.95/mo** | Commitment-phobe option — ~2.0× the annual equiv, a clear push to yearly. |
 | **Founding 100** *(launch, lifetime)* | **$99 once** | Exactly 100 spots. Lifetime Pro, no recurring charge. Permanently retired once the 100th spot is claimed. See §3 Model C. |
 
@@ -231,8 +235,13 @@ one-time lifetime option alongside the recurring/prepaid Pro ladder.)*
 
 > *ActionAmp Pro costs about a dollar-fifty a week.*
 
-The ladder is ~2 things on the page: Free, and Pro (with a recurring-vs-prepaid
-billing toggle). Monthly is the escape hatch, not a headline.
+Public pricing uses three cards in decision order: Free, Pro, then Founding 100.
+Pro owns the yearly/monthly switch. Monthly is the escape hatch, not a headline;
+the $90 prepaid option stays off the public page.
+
+Paying for recurring yearly Pro also includes one goal-setting workshop. This
+is a human-delivered offer, not a software entitlement or automated booking
+feature. Monthly, Free, Founding 100, and prepaid stay outside this offer.
 
 ### Why $80 anchor (the user's call)
 
@@ -256,8 +265,9 @@ billing toggle). Monthly is the escape hatch, not a headline.
 
 - **Captures the anti-subscription segment without committing to lifetime (Model
   B).** Users who hate auto-renew pay a $10.50 premium for control.
-- **It's a billing toggle, not a new tier** — same Pro product, no auto-renew.
-  Reads on the page as one line: *"Pro: $79.50/yr, or $90 prepaid (no auto-renew)."*
+- **It's not a new tier** — same Pro product, no auto-renew. It remains
+  available in billing infrastructure but is deliberately omitted from public
+  pricing copy.
 - **Implementation:** one-time Stripe checkout that grants a 12-month entitlement
   (`plan=PRO`, `planRenewsAt=+1yr`). On expiry → drops to FREE with a
   soft-lock on the excess (never delete). Full mechanics in
@@ -352,3 +362,4 @@ webhook as source of truth, signature verification, idempotency).
 | 2026-06-16 | **Monthly price: $12.95/mo** | Push-to-annual rate (~$155/yr equiv ≈ 2.0× the $79.50 annual). Still above market 1.2–1.4× norm — intentional |
 | 2026-06-22 | **Founder tier reversed: dropped from catalog, schema, and UI** | Lifetime-locked tier added entitlement-model complexity (third plan state, non-expiring `planRenewsAt`) for a benefit the $90 prepaid already covers. Trust-gap concern real but cheaper to solve with a time-limited launch discount later if churn demands it. Removed `FOUNDER` from `Plan` enum, `billing/`, `BillingPage`, and docs. |
 | 2026-07-10 | **Founding 100 launch price: $99 one-time, lifetime, capped at 100 spots** | Lower launch price improves early conversion while preserving a hard 100-spot cap. $99 pays for itself in ~1.25yr vs annual. Existing page, checkout, webhook entitlement, and cap enforcement are used. |
+| 2026-08-11 | **Recurring yearly Pro includes one goal-setting workshop; prepaid stays unadvertised** | Strengthens yearly value with hands-on help turning priorities into goals. Monthly, Free, Founding 100, and prepaid are excluded; scheduling follows purchase. |

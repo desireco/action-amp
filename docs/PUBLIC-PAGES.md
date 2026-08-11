@@ -163,8 +163,9 @@ Free, regular Pro, and Founding 100. It makes the regular annual price visible
 before visitors are asked to assess the $99 lifetime offer.
 
 - **Free:** $0 forever; core focus loop, personal scope, 3 projects, 1 goal.
-- **Pro:** $79.50/year; the normal recurring plan. Prepaid ($90, no auto-renew)
-  and monthly ($12.95) remain secondary options.
+- **Pro:** $79.50/year; the normal recurring plan, including one goal-setting
+  workshop. Monthly ($12.95) remains a secondary option without the workshop.
+  The $90 prepaid option is not advertised publicly.
 - **Founding 100:** $99 once for lifetime Pro; $19.50 more than first-year Pro,
   no renewal bill, capped at 100 memberships.
 

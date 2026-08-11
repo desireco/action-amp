@@ -186,6 +186,14 @@
   line-height: 1.5;
 }
 
+.aa-plan-summary--workshop {
+  padding: 11px 14px;
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-teal-soft);
+  color: var(--aa-text-2);
+  font-weight: 700;
+}
+
 .aa-plan ul {
   display: grid;
   gap: 12px;
