@@ -75,15 +75,14 @@
 /* ============================================================
    LensPopover — the dropdown opened by the chip / ⌘L
    ============================================================
-   Anchored under the chip. The sidebar footer is position:relative so the
-   popover's absolute positioning lands just under the chip, right-aligned to
-   the sidebar edge. The backdrop is transparent + full-screen so outside-clicks
-   close without obscuring the sidebar.
+   Anchored below the context trigger, in the sidebar's normal reading path.
+   The backdrop is transparent + full-screen so outside-clicks close without
+   obscuring the sidebar.
 */
 .aa-lens-popover {
   position: absolute;
-  /* Sit just below the chip, aligned to the sidebar's right edge. */
-  bottom: calc(100% + 6px);
+  /* Sit below the chip, aligned to the sidebar's right edge. */
+  top: calc(100% + 6px);
   right: 0;
   left: 0;
   z-index: 90;
@@ -100,10 +99,10 @@
   border-radius: var(--aa-radius-lg);
   box-shadow: var(--aa-shadow-md);
   overflow: hidden;
-  animation: aa-lens-popover-rise 0.18s var(--aa-ease-out) both;
+  animation: aa-lens-popover-drop 0.18s var(--aa-ease-out) both;
 }
-@keyframes aa-lens-popover-rise {
-  from { opacity: 0; transform: translateY(4px); }
+@keyframes aa-lens-popover-drop {
+  from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 

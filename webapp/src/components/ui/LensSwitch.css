@@ -17,6 +17,10 @@
    This is the "tabs should show which color is theirs" requirement. */
 .aa-lens__btn {
   flex: 1;
+  /* min-width:0 overrides the flex default (auto) so a long label can't force
+     the button past its equal share of the row — without it, "Shopping" keeps
+     the segmented control from shrinking and it overflows/loses centering. */
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -86,6 +90,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Label truncates inside its (now-shrinkable) button when a long lens name
+   would otherwise crowd the segmented control — same ellipsis idiom as
+   .aa-app-user-name. The dot/icon stay fixed-width via flex: none. */
+.aa-lens__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Identity-color swatch — the dot is the primary "this tab's color" marker.

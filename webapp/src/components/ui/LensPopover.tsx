@@ -50,8 +50,8 @@ export function LensPopover({
   active,
   onSelect,
   onClose,
-  onNewLens,
-  newLensProLocked = false,
+  onNewLens: _onNewLens,
+  newLensProLocked: _newLensProLocked = false,
   ariaLabel = "Lens",
 }: LensPopoverProps) {
   const [highlight, setHighlight] = useState(() =>
@@ -61,6 +61,12 @@ export function LensPopover({
   const [filterOpen, setFilterOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLInputElement>(null);
+
+  // The popover opens from a button, so move keyboard focus into its list.
+  // This makes Arrow keys and Enter immediately operate on lens options.
+  useEffect(() => {
+    listRef.current?.focus();
+  }, []);
 
   const filtered = filter
     ? options.filter((o) => o.label.toLowerCase().includes(filter.toLowerCase()))
@@ -192,26 +198,6 @@ export function LensPopover({
               </button>
             );
           })}
-        </div>
-        {onNewLens && (
-          <button
-            type="button"
-            className="aa-lens-popover__add"
-            onClick={() => {
-              onNewLens();
-              onClose();
-            }}
-          >
-            <span className="aa-lens-popover__plus" aria-hidden="true">+</span>
-            <span>New lens…</span>
-            {newLensProLocked && <span className="aa-lens-popover__pro-tag">Pro</span>}
-          </button>
-        )}
-        <div className="aa-lens-popover__foot">
-          <span>↑↓ move</span>
-          <span>↵ select</span>
-          <span>/ filter</span>
-          <span>esc</span>
         </div>
       </div>
     </div>

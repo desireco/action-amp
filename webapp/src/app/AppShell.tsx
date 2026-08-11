@@ -259,9 +259,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             proLocked: false,
           },
         ];
-  // Adaptive switcher: ≤3 lenses → segmented control (today); ≥4 → chip + popover.
-  // The swap is pure presentational state on lens count, no routing change.
-  const usePopover = lensOptions.length >= 4;
+  // Lens is persistent context, not a set of peer pages. Always show the current
+  // lens as one trigger, then reveal the complete choice set in its popover.
+  // This stays compact and legible when users add custom lenses.
+  const usePopover = true;
 
   // Select handler with FREE gating: a non-entitled user picking a non-PERSONAL
   // lens sees the ProGate in the main area instead of switching (their queries

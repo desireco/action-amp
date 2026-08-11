@@ -66,9 +66,28 @@
 .aa-app-lens {
   width: 100%;
   flex: none;
-  margin-bottom: var(--aa-space-xs);
-  /* Positioning context for the ≥4-lens popover (LensPopover anchors here). */
-  position: relative;
+  position: absolute;
+  top: 72px;
+  left: var(--aa-space-md);
+  right: var(--aa-space-md);
+  width: auto;
+  z-index: 1;
+}
+
+.aa-app-lens::before {
+  content: "CURRENT LENS";
+  display: block;
+  margin: 0 0 5px 2px;
+  color: var(--aa-text-3);
+  font-size: 10px;
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+/* Make room for the persistent context header before universal navigation. */
+.aa-app-nav {
+  margin-top: 54px;
 }
 
 /* ---- Nav sections ---- */
