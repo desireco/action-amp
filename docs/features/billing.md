@@ -14,7 +14,7 @@ $79.50/yr (recommended), Prepaid $90/yr (no renew). Plus **Founding 100**
 $99 lifetime, capped at 100 spots.
 
 **Founding 100 cap** — server-enforced in `createCheckoutSession`: counts
-`plan:FOUNDER` users, throws `HttpError(409)` when claimed ≥ 100. Status exposed
+`plan:FOUNDER` users plus manual Founder grants, throws `HttpError(409)` when claimed ≥ 100. Friend grants are explicitly excluded. Status exposed
 via `getFounding100Status`. Landing `/founding-100` shows live spots-remaining
 and locks the CTA when full.
 

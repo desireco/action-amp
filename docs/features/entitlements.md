@@ -10,8 +10,9 @@ verified: 2026-07-03
 # Entitlement enforcement
 
 **What.** The free-tier caps in PRICING.md §4 enforced server-side (the billing
-boundary) + surfaced as calm "Pro feature" paywall moments client-side. Uses
-`isPlanActive` (expired PRO → FREE).
+boundary) + surfaced as calm "Pro feature" paywall moments client-side. Uses a
+central effective-access resolver: expired PRO → FREE, while admin and internal
+Pro/Founder/Friend grants are entitled without rewriting Stripe plan data.
 
 **Caps enforced** (`FREE_LIMITS = { projects: 3, goals: 1, workLens: false }`):
 - `createProject` — under-cap (3 projects/lens).

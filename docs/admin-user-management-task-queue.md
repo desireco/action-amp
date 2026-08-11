@@ -1,7 +1,7 @@
 # Admin user management — parked execution queue
 
-> Queue state: **active**. AU01–AU06 are complete; AU07 is next and
-> dependency-ready. This does not authorize server starts, deployment, external
+> Queue state: **active**. AU01–AU06 are complete; AU07 is in progress. This
+> does not authorize server starts, deployment, external
 > Stripe writes, or production migration.
 >
 > Product contract: [`specs/admin-user-management.md`](specs/admin-user-management.md).
@@ -355,7 +355,7 @@ browser server was started; browser verification remains AU07 work.
 
 ### AU07 — Integration, adversarial checks, and code-verified docs
 
-**Status:** pending
+**Status:** in_progress
 **Preferred model:** `gpt-5.6-sol` high
 **Acceptable model:** `gpt-5.6-terra` xhigh
 **Depends on:** AU06

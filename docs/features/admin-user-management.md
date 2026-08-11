@@ -2,16 +2,21 @@
 slug: admin-user-management
 title: "Admin user management and activity directory"
 feature_area: foundation
-status: missing
+status: partial
 spec: admin-user-management.md
 ---
 
 # Admin user management and activity directory
 
-**Planned, not in code.** The admin workspace currently has aggregate user
-metrics but no individual user directory. This feature adds an admin-only Users
-route with user activity, signup/login timestamps, manual Pro/Founder/Friend
-grants, and safe account deletion.
+**Implemented locally; browser runtime verification pending.** `/app/admin/users`
+is an admin-only, cursor-paged directory with signed-up, last-login, and
+last-active timestamps plus rolling login, app-open, creation, and completion
+metrics. Search, access filters, and sort state are URL-backed.
+
+**Account actions.** Admins can grant Pro, Founder, or Friend access, remove a
+manual grant, and permanently delete an eligible local account after typing its
+email. Each mutation is audited; deletion fails closed when recurring Stripe
+billing cannot be verified and preserves detached payment records.
 
 **Locked access distinction.** Friend is unlimited internal access but is not
 Founder, does not consume a Founding-100 slot, and never creates Stripe/payment

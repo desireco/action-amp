@@ -18,6 +18,11 @@ leaks. A newer request supersedes every older challenge for the same address.
 Passwords + password reset are gone from the UI; the email provider stays on
 for identity + code delivery. Localhost uses a fixed `111111` for manual QA.
 
+**Successful-login evidence.** Both magic login and Wasp's built-in successful
+login hook best-effort update `User.lastLoginAt` and append a bounded-provider
+`LoginEvent`. Recorder failures never invalidate an already-created session;
+legacy accounts are not backfilled.
+
 **Google OAuth — written, NOT wired.** Code exists (`auth/google/`,
 `GoogleButton.tsx`) but:
 - The google provider block in `main.wasp.ts` is **commented out** ("disabled to
