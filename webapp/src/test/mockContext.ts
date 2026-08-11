@@ -83,6 +83,8 @@ export function mockContext(userId: string | MockUser | null = "user-1"): MockCo
     Payment: entitySpy(),
     AnalyticsSession: entitySpy(),
     AnalyticsEvent: entitySpy(),
+    LoginEvent: entitySpy(),
+    AdminUserAction: entitySpy(),
     Feedback: entitySpy(),
     Review: entitySpy(),
   };

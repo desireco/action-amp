@@ -1,7 +1,8 @@
 # Admin user management — parked execution queue
 
-> Queue state: **parked**. Recording this plan does not authorize code work,
-> migrations, server starts, deployment, or external Stripe changes.
+> Queue state: **active**. AU01 is authorized and in progress; later tasks
+> remain pending. This does not authorize server starts, deployment, external
+> Stripe writes, or production migration.
 >
 > Product contract: [`specs/admin-user-management.md`](specs/admin-user-management.md).
 
@@ -45,7 +46,7 @@ NEXT: next dependency-ready task
 
 ### AU01 — Schema, migration, and test-fixture foundation
 
-**Status:** pending
+**Status:** done
 **Preferred model:** `gpt-5.6-sol` high
 **Acceptable model:** `gpt-5.6-terra` xhigh
 **Depends on:** none
@@ -86,6 +87,10 @@ storage without changing existing effective access.
 
 **Stop condition:** schema and fixture foundation compile. Do not add auth,
 entitlement, admin operations, or UI.
+
+**Evidence:** migration `20260811182556_admin_user_management` generated and
+applied only to local `actionamp_dev`; generated SQL has no reset/drop-table
+operation; `./scripts/wasp-safe.sh compile` passed.
 
 ### AU02 — Central effective-access resolver and Founder-cap semantics
 
@@ -389,5 +394,6 @@ Wasp contracts, admin operation boundaries, or documentation truth.
 
 ## Plan validation
 
-Every contract done condition maps to AU01-AU07. Queue remains **parked** until
-the user explicitly stages it through the project board or requests a task run.
+Every contract done condition maps to AU01-AU07. Queue is **active**: AU01 is
+done; AU02 and AU03 are dependency-ready but require a separate explicit task
+run or whole-queue instruction.
