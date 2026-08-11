@@ -9,7 +9,7 @@
  * Every `/api/cli/*` handler follows the same shape:
  *   1. Read `req.patUser` (resolved by `patRouteMiddleware`). 401 if absent
  *      (defensive — the middleware already rejects bad tokens).
- *   2. Build `entUser` (the `{plan, planRenewsAt, isAdmin}` slice the pure
+ *   2. Build `entUser` (the account access slice the pure
  *      entitlement helpers read).
  *   3. For lens-scoped reads/writes, resolve the lens via `resolveLens` +
  *      enforce the FREE-lens rule via the PURE `lensViolation` (NOT
@@ -115,6 +115,7 @@ type WaspApiContext = {
     plan: string;
     planRenewsAt: Date | null;
     isAdmin: boolean;
+    manualAccessGrant: "PRO" | "FOUNDER" | "FRIEND" | null;
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entities: any;
@@ -127,16 +128,18 @@ type WaspApiContext = {
 // pure cores (rightfully) know nothing about.
 // ───────────────────────────────────────────────────────────────────────────
 
-/** Build the `{plan, planRenewsAt, isAdmin}` slice the entitlement helpers read. */
+/** Build the account-access slice the entitlement helpers read. */
 function toEntUser(user: {
   plan: string;
   planRenewsAt: Date | null;
   isAdmin: boolean;
+  manualAccessGrant: "PRO" | "FOUNDER" | "FRIEND" | null;
 }): EntitlementUser {
   return {
     plan: user.plan,
     planRenewsAt: user.planRenewsAt,
     isAdmin: user.isAdmin,
+    manualAccessGrant: user.manualAccessGrant,
   };
 }
 

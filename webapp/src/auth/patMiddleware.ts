@@ -39,6 +39,7 @@ export type PatUser = {
   plan: string;
   planRenewsAt: Date | null;
   isAdmin: boolean;
+  manualAccessGrant: "PRO" | "FOUNDER" | "FRIEND" | null;
   email: string | null;
   fullName: string;
 };
@@ -104,6 +105,7 @@ async function patAuthMiddleware(
             plan: true,
             planRenewsAt: true,
             isAdmin: true,
+            manualAccessGrant: true,
             fullName: true,
             auth: {
               select: {
@@ -126,6 +128,7 @@ async function patAuthMiddleware(
         plan: row.user.plan,
         planRenewsAt: row.user.planRenewsAt,
         isAdmin: row.user.isAdmin,
+        manualAccessGrant: row.user.manualAccessGrant,
         email,
         fullName: row.user.fullName,
       };

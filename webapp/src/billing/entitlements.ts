@@ -42,6 +42,47 @@ export interface EntitlementUser {
   plan?: string | null;
   planRenewsAt?: Date | null;
   isAdmin?: boolean | null;
+  manualAccessGrant?: "PRO" | "FOUNDER" | "FRIEND" | null;
+}
+
+export type EffectiveAccess = "FREE" | "PRO" | "FOUNDER" | "FRIEND" | "ADMIN";
+
+export type EffectiveAccessSource = "none" | "stripe" | "manual" | "admin";
+
+export interface EffectiveAccessResolution {
+  access: EffectiveAccess;
+  source: EffectiveAccessSource;
+  isEntitled: boolean;
+}
+
+/**
+ * Resolve product access without changing Stripe billing facts. Manual grants
+ * take precedence over the billed plan; admins retain the strongest bypass.
+ */
+export function resolveEffectiveAccess(
+  user: EntitlementUser | null | undefined,
+): EffectiveAccessResolution {
+  if (user?.isAdmin) {
+    return { access: "ADMIN", source: "admin", isEntitled: true };
+  }
+
+  if (user?.manualAccessGrant) {
+    return {
+      access: user.manualAccessGrant,
+      source: "manual",
+      isEntitled: true,
+    };
+  }
+
+  if (isPlanActive(user?.plan as never, user?.planRenewsAt ?? null)) {
+    return {
+      access: user?.plan === "FOUNDER" ? "FOUNDER" : "PRO",
+      source: "stripe",
+      isEntitled: true,
+    };
+  }
+
+  return { access: "FREE", source: "none", isEntitled: false };
 }
 
 /** CLI access is a whole-account Pro capability, not a per-Lens exception. */
@@ -65,16 +106,21 @@ export function isEntitled(
   plan: string | undefined | null,
   planRenewsAt: Date | null,
   isAdmin?: boolean | null,
+  manualAccessGrant?: EntitlementUser["manualAccessGrant"],
 ): boolean {
-  if (isAdmin) return true; // staff/dev bypass — no Stripe checkout needed
-  return isPlanActive(plan as never, planRenewsAt);
+  return resolveEffectiveAccess({
+    plan,
+    planRenewsAt,
+    isAdmin,
+    manualAccessGrant,
+  }).isEntitled;
 }
 
 /** Return the Pro message unless this account can use the CLI/API surface. */
 export function cliAccessViolation(
   user: EntitlementUser | null,
 ): EntitlementMessage | null {
-  return isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)
+  return resolveEffectiveAccess(user).isEntitled
     ? null
     : CLI_ACCESS_MESSAGE;
 }
@@ -83,7 +129,7 @@ export function cliAccessViolation(
 export function sitewideSearchViolation(
   user: EntitlementUser | null,
 ): EntitlementMessage | null {
-  return isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin)
+  return resolveEffectiveAccess(user).isEntitled
     ? null
     : SITEWIDE_SEARCH_MESSAGE;
 }
@@ -98,7 +144,7 @@ export function capViolation(
   cap: number,
   msg: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin))
+  if (resolveEffectiveAccess(user).isEntitled)
     return null; // paid → unlimited
   if (currentCount >= cap) return msg;
   return null;
@@ -124,7 +170,7 @@ export function lensViolation(
   lens: EntitlementLens | null,
   msg?: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin))
+  if (resolveEffectiveAccess(user).isEntitled)
     return null; // paid → all lenses
   if (lens && lens.kind !== "PERSONAL") {
     return msg ?? WORK_LENS_MESSAGE;
@@ -144,7 +190,7 @@ export function lensConfigViolation(
   user: EntitlementUser | null,
   msg?: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (isEntitled(user?.plan, user?.planRenewsAt ?? null, user?.isAdmin))
+  if (resolveEffectiveAccess(user).isEntitled)
     return null; // paid → may configure
   return msg ?? CUSTOM_LENSES_MESSAGE;
 }
@@ -225,11 +271,7 @@ export async function resolveAccessibleLenses(
 ): Promise<
   { id: string; name: string; color: string | null; kind: LensKind }[]
 > {
-  const where = isEntitled(
-    user?.plan,
-    user?.planRenewsAt ?? null,
-    user?.isAdmin,
-  )
+  const where = resolveEffectiveAccess(user).isEntitled
     ? { userId }
     : { userId, kind: "PERSONAL" as const };
   return await (

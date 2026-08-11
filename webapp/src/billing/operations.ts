@@ -5,6 +5,7 @@ import {
   FOUNDING_100_LAUNCH_PARTNER_RESERVE,
   FOUNDING_100_PRICE_CENTS,
   FOUNDING_100_PUBLIC_CAP,
+  FOUNDER_MEMBERSHIP_WHERE,
 } from "./config";
 import { stripe, getPriceId } from "./stripe";
 import { HttpError } from "wasp/server";
@@ -75,7 +76,7 @@ export const createCheckoutSession = (async (
   // throughput ever made this racy we'd add a SELECT FOR UPDATE or a counter row.
   if (priceKey === "founder") {
     const claimed = await context.entities.User.count({
-      where: { plan: "FOUNDER" },
+      where: FOUNDER_MEMBERSHIP_WHERE,
     });
     if (claimed >= FOUNDING_100_PUBLIC_CAP) {
       throw new HttpError(409, "All public Founding memberships have been claimed.");
@@ -213,7 +214,7 @@ import type { GetFounding100Status } from "wasp/server/operations";
 
 export const getFounding100Status = (async (_args, context) => {
   const claimed = await context.entities.User.count({
-    where: { plan: "FOUNDER" },
+    where: FOUNDER_MEMBERSHIP_WHERE,
   });
   return {
     cap: FOUNDING_100_CAP,
@@ -243,7 +244,7 @@ export const founding100StatusHandler = async (
   context: StatusApiContext
 ) => {
   const claimed = await context.entities.User.count({
-    where: { plan: "FOUNDER" },
+    where: FOUNDER_MEMBERSHIP_WHERE,
   });
   res.set("Cache-Control", "public, max-age=60");
   return res.json({

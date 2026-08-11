@@ -1,4 +1,4 @@
-import type { Plan } from "@prisma/client";
+import type { Plan, Prisma } from "@prisma/client";
 
 /**
  * Billing constants — the single source of truth for the free-tier caps and
@@ -62,6 +62,14 @@ export const PLAN_LABEL: Record<Plan, string> = {
 export const FOUNDING_100_CAP = 100;
 export const FOUNDING_100_LAUNCH_PARTNER_RESERVE = 2;
 export const FOUNDING_100_PUBLIC_CAP = FOUNDING_100_CAP - FOUNDING_100_LAUNCH_PARTNER_RESERVE;
+
+/** Billed and manual Founders claim Founding-100; Friends deliberately do not. */
+export const FOUNDER_MEMBERSHIP_WHERE = {
+  OR: [
+    { plan: "FOUNDER" },
+    { manualAccessGrant: "FOUNDER" },
+  ],
+} satisfies Prisma.UserWhereInput;
 
 /**
  * The Founding 100 price, in cents. Charged inline via Stripe Checkout's

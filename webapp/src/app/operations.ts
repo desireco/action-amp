@@ -118,7 +118,12 @@ export const getAppData = (async (args, context) => {
   // to re-merge them — the scopes disagree by design.
   const accessibleLensIds = lenses
     .filter((l) =>
-      isEntitled(context.user?.plan ?? null, context.user?.planRenewsAt ?? null, context.user?.isAdmin)
+      isEntitled(
+        context.user?.plan ?? null,
+        context.user?.planRenewsAt ?? null,
+        context.user?.isAdmin,
+        context.user?.manualAccessGrant,
+      )
         ? true
         : l.kind === "PERSONAL",
     )

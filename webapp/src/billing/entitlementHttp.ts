@@ -65,6 +65,7 @@ interface GuardContext {
     plan?: string | null;
     planRenewsAt?: Date | null;
     isAdmin?: boolean | null;
+    manualAccessGrant?: "PRO" | "FOUNDER" | "FRIEND" | null;
   } | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entities: any;

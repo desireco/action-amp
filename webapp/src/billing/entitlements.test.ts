@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   isEntitled,
+  resolveEffectiveAccess,
   capViolation,
   lensViolation,
   lensConfigViolation,
@@ -71,6 +72,24 @@ describe("isEntitled", () => {
     expect(isEntitled("FREE", null, undefined)).toBe(false);
     expect(isEntitled("PRO", FUTURE, false)).toBe(true);
   });
+
+  it("manual Pro, Founder, and Friend grants are unlimited", () => {
+    expect(isEntitled("FREE", null, false, "PRO")).toBe(true);
+    expect(isEntitled("FREE", null, false, "FOUNDER")).toBe(true);
+    expect(isEntitled("PRO", PAST, false, "FRIEND")).toBe(true);
+  });
+
+  it("resolves access source and falls back to the billed plan when a grant is removed", () => {
+    expect(
+      resolveEffectiveAccess({ plan: "FREE", planRenewsAt: null, manualAccessGrant: "FRIEND" }),
+    ).toEqual({ access: "FRIEND", source: "manual", isEntitled: true });
+    expect(
+      resolveEffectiveAccess({ plan: "PRO", planRenewsAt: PAST, manualAccessGrant: null }),
+    ).toEqual({ access: "FREE", source: "none", isEntitled: false });
+    expect(
+      resolveEffectiveAccess({ plan: "PRO", planRenewsAt: FUTURE, manualAccessGrant: null }),
+    ).toEqual({ access: "PRO", source: "stripe", isEntitled: true });
+  });
 });
 
 describe("cliAccessViolation", () => {
@@ -84,6 +103,14 @@ describe("cliAccessViolation", () => {
     expect(
       cliAccessViolation({ plan: "FREE", planRenewsAt: null, isAdmin: true }),
     ).toBeNull();
+  });
+
+  it("allows every manual grant", () => {
+    for (const manualAccessGrant of ["PRO", "FOUNDER", "FRIEND"] as const) {
+      expect(
+        cliAccessViolation({ plan: "FREE", planRenewsAt: null, manualAccessGrant }),
+      ).toBeNull();
+    }
   });
 
   it("blocks Free and expired Pro accounts across the entire CLI/API surface", () => {

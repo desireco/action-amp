@@ -1,7 +1,7 @@
 # Admin user management — parked execution queue
 
-> Queue state: **active**. AU01 is authorized and in progress; later tasks
-> remain pending. This does not authorize server starts, deployment, external
+> Queue state: **active**. AU01 and AU02 are complete; AU03 is next and
+> dependency-ready. This does not authorize server starts, deployment, external
 > Stripe writes, or production migration.
 >
 > Product contract: [`specs/admin-user-management.md`](specs/admin-user-management.md).
@@ -94,7 +94,7 @@ operation; `./scripts/wasp-safe.sh compile` passed.
 
 ### AU02 — Central effective-access resolver and Founder-cap semantics
 
-**Status:** pending
+**Status:** done
 **Preferred model:** `gpt-5.6-sol` high
 **Acceptable model:** `gpt-5.6-terra` xhigh
 **Depends on:** AU01
@@ -145,6 +145,10 @@ entitlement without changing Stripe billing truth.
 
 **Stop condition:** central resolver works in current permitted callers. Do not
 add grant-mutating admin actions or Users UI.
+
+**Evidence:** focused billing tests passed (47 tests), `./scripts/wasp-safe.sh
+compile` passed, and `git diff --check` passed. Review found and removed the
+last duplicate client-side admin bypass; Fallow reported no new issues.
 
 ### AU03 — Successful-login recorder
 

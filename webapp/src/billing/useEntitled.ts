@@ -1,22 +1,21 @@
 import { useAuth } from "wasp/client/auth";
-import { isPlanActive } from "./config";
+import { resolveEffectiveAccess } from "./entitlements";
 import type { EntitlementMessage } from "./entitlement-types";
 
 /**
  * Client-side entitlement read — the mirror of the server `isEntitled` check.
  *
- * `plan` + `planRenewsAt` + `isAdmin` live on the auth user (the User entity
- * spreads into AuthUserData), so no extra query is needed. Returns true while
- * the user is entitled to paid features (active PRO, FOUNDER, or the admin
- * bypass). Use this to decide whether to show cap UI, the Work-lens gate, etc.
+ * Account-access fields live on the auth user (the User entity spreads into
+ * AuthUserData), so no extra query is needed. Returns true while the user is
+ * entitled to paid features. Use this to decide whether to show cap UI, the
+ * Work-lens gate, etc.
  *
  * The client gate is the friendly surface; the server guard
  * (`assertLensAllowed` / `assertUnderCap`) is the non-negotiable boundary.
  */
 export function useEntitled(): boolean {
   const { data: user } = useAuth();
-  if (user?.isAdmin) return true; // staff/dev bypass
-  return isPlanActive(user?.plan, user?.planRenewsAt ?? null);
+  return resolveEffectiveAccess(user).isEntitled;
 }
 
 /**
