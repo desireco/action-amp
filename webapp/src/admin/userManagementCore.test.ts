@@ -8,6 +8,7 @@ function coreEntities() {
   entities.User.count.mockResolvedValue(1);
   entities.User.findMany.mockResolvedValue([]);
   entities.User.findUnique.mockResolvedValue({ id: "target", isAdmin: false, manualAccessGrant: null });
+  entities.MagicLoginChallenge = { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) } as any;
   (entities as any).$transaction = async (fn: any) => fn(entities);
   return entities as any;
 }
@@ -59,5 +60,20 @@ describe("admin user mutations", () => {
     entities.User.findUnique.mockResolvedValueOnce({ id: "target", isAdmin: false, manualAccessGrant: "FRIEND", stripeCustomerId: null, auth: { identities: [{ providerUserId: "target@example.com" }] } });
     await expect(deleteAdminUserCore(entities, { actorUserId: "actor", targetUserId: "target", confirmedEmail: "wrong@example.com" })).rejects.toBeInstanceOf(AdminUserDeletionBlockedError);
     expect(entities.User.delete).not.toHaveBeenCalled();
+  });
+
+  it("deletes an eligible local account only after writing its audit record", async () => {
+    const entities = coreEntities();
+    entities.User.findUnique.mockResolvedValueOnce({ id: "target", isAdmin: false, manualAccessGrant: "FRIEND", stripeCustomerId: null, auth: { identities: [{ providerUserId: "target@example.com" }] } });
+    await deleteAdminUserCore(entities, { actorUserId: "actor", targetUserId: "target", confirmedEmail: "target@example.com" });
+    expect(entities.MagicLoginChallenge.deleteMany).toHaveBeenCalledWith({ where: { email: "target@example.com" } });
+    expect(entities.AdminUserAction.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "DELETE_USER", previousGrant: "FRIEND" }) }));
+    expect(entities.User.delete).toHaveBeenCalledWith({ where: { id: "target" } });
+  });
+
+  it("does not let Friend grants consume a Founding-100 membership", async () => {
+    const entities = coreEntities();
+    await grantAdminUserAccessCore(entities, { actorUserId: "actor", targetUserId: "target", grant: "FRIEND" });
+    expect(entities.User.count).not.toHaveBeenCalled();
   });
 });
