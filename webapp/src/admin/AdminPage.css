@@ -49,12 +49,33 @@
   gap: var(--aa-space-xs);
 }
 
+.aa-admin-tile__metric {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.aa-admin-tile__icon {
+  align-items: center;
+  background: var(--aa-teal-soft);
+  border-radius: var(--aa-radius-sm);
+  color: var(--aa-teal-cta);
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+.aa-admin-tile__icon svg { height: 19px; width: 19px; }
+
 .aa-admin-tile__num {
   font-size: var(--aa-text-2xl);
   font-weight: var(--aa-weight-semibold);
   color: var(--aa-text);
   font-variant-numeric: tabular-nums;
 }
+
+.aa-admin-tile__num--emphasized { font-size: clamp(30px, 4vw, 38px); letter-spacing: -.035em; line-height: 1; }
 
 .aa-admin-tile__num--placeholder {
   color: var(--aa-text-4);

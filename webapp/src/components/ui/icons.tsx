@@ -16,6 +16,19 @@ const base = {
   "aria-hidden": true,
 } as const;
 
+/* Device icons — compact admin evidence markers. */
+export function PhoneIcon(p: IconProps) {
+  return <svg {...base} {...p}><rect x="4.5" y="1.5" width="7" height="13" rx="1.4" stroke="currentColor" strokeWidth="1.4" /><path d="M7 12h2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>;
+}
+
+export function TabletIcon(p: IconProps) {
+  return <svg {...base} {...p}><rect x="3" y="1.5" width="10" height="13" rx="1.4" stroke="currentColor" strokeWidth="1.4" /><circle cx="8" cy="12" r=".7" fill="currentColor" /></svg>;
+}
+
+export function DesktopIcon(p: IconProps) {
+  return <svg {...base} {...p}><rect x="2" y="2.5" width="12" height="8" rx="1" stroke="currentColor" strokeWidth="1.4" /><path d="M6 13.5h4M8 10.5v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>;
+}
+
 /* Search — global retrieval. */
 export function SearchIcon(p: IconProps) {
   return (

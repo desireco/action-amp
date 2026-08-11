@@ -9,5 +9,8 @@ describe("AdminPage device activity contract", () => {
     for (const text of ["Active users by device", "Mobile users", "Tablet users", "Desktop users", "in 30 days", "Unclassified"]) {
       expect(source).toContain(text);
     }
+    for (const icon of ["PhoneIcon", "TabletIcon", "DesktopIcon", "emphasized"]) {
+      expect(source).toContain(icon);
+    }
   });
 });

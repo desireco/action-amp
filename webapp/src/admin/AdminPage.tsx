@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useAuth } from "wasp/client/auth";
 import { useQuery, useAction, getAdminStats, getRecentFeedback, updateFeedbackStatus, deleteFeedback } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { AdminLayout } from "./AdminLayout";
-import { Button, Card, Chip, Table, type TableColumn } from "../components/ui";
+import { Button, Card, Chip, DesktopIcon, PhoneIcon, TabletIcon, Table, type TableColumn } from "../components/ui";
 import type { FeedbackRow } from "./operationsCore";
 import type { FeedbackStatus } from "../feedback/operationsCore";
 import type { FunnelRange } from "../analytics/operationsCore";
@@ -22,13 +22,12 @@ function relativeTime(iso: string | Date): string {
   return `${day}d ago`;
 }
 
-function Tile({ value, label, sub, to }: { value: number | null; label: string; sub?: string; to?: string }) {
+function Tile({ value, label, sub, to, icon, emphasized = false }: { value: number | null; label: string; sub?: string; to?: string; icon?: ReactNode; emphasized?: boolean }) {
   const loading = value === null;
+  const number = <span className={`aa-admin-tile__num ${loading ? "aa-admin-tile__num--placeholder" : ""} ${emphasized ? "aa-admin-tile__num--emphasized" : ""}`}>{loading ? "—" : value!.toLocaleString()}</span>;
   return (
     <Card padding="md" className="aa-admin-tile">
-      <span className={`aa-admin-tile__num ${loading ? "aa-admin-tile__num--placeholder" : ""}`}>
-        {loading ? "—" : value!.toLocaleString()}
-      </span>
+      {icon ? <div className="aa-admin-tile__metric">{number}<span className="aa-admin-tile__icon" aria-hidden="true">{icon}</span></div> : number}
       {to ? <Link className="aa-admin-tile__label" to={to}>{label}</Link> : <span className="aa-admin-tile__label">{label}</span>}
       {sub && <span className="aa-admin-tile__sub">{sub}</span>}
     </Card>
@@ -227,9 +226,9 @@ export function AdminPage() {
         <h3 className="aa-admin-group__title">Active users by device</h3>
         <p className="aa-admin-note">Unique signed-in app opens. A person using more than one device appears in each matching row.</p>
         <div className="aa-admin-tiles">
-          <Tile value={num(u?.deviceActivity.sevenDays.mobile)} label="Mobile users · 7 days" sub={`${num(u?.deviceActivity.thirtyDays.mobile) ?? "—"} in 30 days`} />
-          <Tile value={num(u?.deviceActivity.sevenDays.tablet)} label="Tablet users · 7 days" sub={`${num(u?.deviceActivity.thirtyDays.tablet) ?? "—"} in 30 days`} />
-          <Tile value={num(u?.deviceActivity.sevenDays.desktop)} label="Desktop users · 7 days" sub={`${num(u?.deviceActivity.thirtyDays.desktop) ?? "—"} in 30 days`} />
+          <Tile value={num(u?.deviceActivity.sevenDays.mobile)} label="Mobile users · 7 days" sub={`${num(u?.deviceActivity.thirtyDays.mobile) ?? "—"} in 30 days`} icon={<PhoneIcon />} emphasized />
+          <Tile value={num(u?.deviceActivity.sevenDays.tablet)} label="Tablet users · 7 days" sub={`${num(u?.deviceActivity.thirtyDays.tablet) ?? "—"} in 30 days`} icon={<TabletIcon />} emphasized />
+          <Tile value={num(u?.deviceActivity.sevenDays.desktop)} label="Desktop users · 7 days" sub={`${num(u?.deviceActivity.thirtyDays.desktop) ?? "—"} in 30 days`} icon={<DesktopIcon />} emphasized />
         </div>
         {(u?.deviceActivity.sevenDays.unknown || u?.deviceActivity.thirtyDays.unknown) ? <p className="aa-admin-note">Unclassified: {u.deviceActivity.sevenDays.unknown} in 7 days · {u.deviceActivity.thirtyDays.unknown} in 30 days.</p> : null}
       </div>
