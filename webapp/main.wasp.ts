@@ -125,6 +125,10 @@ import {
   getRecentFeedback,
   updateFeedbackStatus,
   deleteFeedback,
+  getAdminUsers,
+  grantAdminUserAccess,
+  removeAdminUserAccess,
+  deleteAdminUser,
 } from "./src/admin/operations" with { type: "ref" };
 import {
   getAdminFunnel,
@@ -511,6 +515,13 @@ export default app({
       ],
       auth: true,
     }),
+    query(getAdminUsers, {
+      entities: ["User", "LoginEvent", "AnalyticsEvent", "Task", "Project", "Goal"],
+      auth: true,
+    }),
+    action(grantAdminUserAccess, { entities: ["User", "AdminUserAction"], auth: true }),
+    action(removeAdminUserAccess, { entities: ["User", "AdminUserAction"], auth: true }),
+    action(deleteAdminUser, { entities: ["User", "AdminUserAction", "MagicLoginChallenge"], auth: true }),
     query(getAdminFunnel, {
       entities: ["AnalyticsSession", "AnalyticsEvent"],
       auth: true,

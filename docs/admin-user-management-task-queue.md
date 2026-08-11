@@ -1,6 +1,6 @@
 # Admin user management — parked execution queue
 
-> Queue state: **active**. AU01–AU04 are complete; AU05 is next and
+> Queue state: **active**. AU01–AU05 are complete; AU06 is next and
 > dependency-ready. This does not authorize server starts, deployment, external
 > Stripe writes, or production migration.
 >
@@ -255,7 +255,7 @@ aggregates, and requires a caller-provided transaction for local mutations.
 
 ### AU05 — Guarded Wasp operations and registration
 
-**Status:** pending
+**Status:** done
 **Preferred model:** `gpt-5.6-sol` high
 **Acceptable model:** `gpt-5.6-terra` xhigh
 **Depends on:** AU04
@@ -293,6 +293,10 @@ operations with complete entity declarations.
 
 **Stop condition:** operations compile and authorize correctly. Do not modify
 admin navigation/page files.
+
+**Evidence:** focused wrapper checks passed (2 tests), `./scripts/wasp-safe.sh
+compile` passed, and `git diff --check` passed. The test checks wrappers from
+source because Wasp blocks client Vitest from importing server-only modules.
 
 ### AU06 — Users page, navigation, and action UX
 
