@@ -70,14 +70,21 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
 > runtime-validated keys for observations made during an active period and
 > retrospective answers written after it ends. Transitioning a period never
 > replaces its earlier check-in.
+>
+> v10 (planned 2026-08-10): **Typed Lenses and direct checklists.** `Lens.type`
+> separates the existing `LIFE_AREA` behavior from `SIMPLE_LIST`. Existing and
+> seeded Lenses default to `LIFE_AREA`. A `ListItem` belongs to one Simple-list
+> Lens and has checklist lifecycle fields plus optional captured body/source
+> context. It can be created directly or transformed from an InboxItem during
+> triage; it never becomes a Task or enters focus, Review, or Logbook.
 
 ---
 
 ## 1. The entity hierarchy
 
 ```
-  Lens            ← the scoping switch: Work/Me (defaults) + user-defined on Pro
-                   carries a stable kind (PERSONAL/WORK/CUSTOM) + identity color + purpose
+  Lens(type=LIFE_AREA) ← Work/Me (defaults) + user-defined on Pro
+                   carries stable kind (PERSONAL/WORK/CUSTOM) + identity color + purpose
    └─ Goal        ← the organizing layer — replaces PARA's Areas
         └─ Project ← an outcome that needs >1 step  [PARA Project / GTD outcome]
                    (Projects under a Goal sort by `Project.order` then name)
@@ -85,6 +92,9 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
              │    ├─ TaskUpdate   ← append-only notes/activity log (kind = NOTE | COMPLETED)
              │    └─ TaskSession  ← recorded focus session (start/end, planned minutes, completed)
              └─ Resource    ← reference material, not an action  [PARA Resource]
+
+  Lens(type=SIMPLE_LIST)
+   └─ ListItem    ← directly added checklist row (title, order, completedAt)
 
   Tag             ← GTD "@context": #errands, #phone, ~15m, low-energy
                      (focus refinements — Phase 2 nuance; `#`-prefixed at capture per grammar v2)
@@ -109,9 +119,13 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
   outcome-oriented ("Run a 10k", "Ship product v2") rather than passive buckets
   ("Health", "Work"). Projects link to a Goal to express _why_ they matter;
   Tasks do not align directly to Goals.
-- **Lens** = the scoping switch (Work / Me). **Every Goal, Project, and
-  standalone Task belongs to exactly one Lens.** Switching Lens re-scopes the
-  whole UI and the focus engine.
+- **Lens** = the top-level switch. `kind` controls seeded identity and
+  entitlement; `type` controls product behavior. Every Goal, Project,
+  standalone Task, and Resource belongs to a `LIFE_AREA` Lens. Every List Item
+  belongs to a `SIMPLE_LIST` Lens. Switching type changes the inner shell.
+- **ListItem** = one directly managed checklist row. It has a title, stable
+  order, completion timestamp, and ownership through its Lens. It has no Task
+  scheduling, hierarchy, priority, size, focus, triage, or review semantics.
 - **Archive** = where completed/dead items go. (PARA "Archive" / our Logbook.)
 - **Tag** = GTD "@context" — cross-cutting labels for focus refinement.
 - **Review** = one user-owned cadence/period record. `answers` and `snapshot`
@@ -126,22 +140,25 @@ a refinement layer we'll add later, on top of priority + size.
 
 ---
 
-## 2. The universal Inbox
+## 2. The universal Life-area Inbox
 
-- **Exactly one** Inbox. All capture (quick-add, email-in, etc.) lands here.
+- **Exactly one** Inbox across all Lenses. Universal capture lands here;
+  direct Simple-list creation bypasses it.
 - An inbox entry is an **InboxItem**: raw text + parsed metadata — `parsedDate`,
   `parsedPriority`, `parsedSize`, `parsedTags`, `parsedProject` (legacy, unused
   by the server — see v5 below), `parsedLens` (the `[[lens]]` token, or null) —
   - `status: unprocessed`. The InboxItem itself is still **unscoped** (no
     `lensId`); `parsedLens` is a _hint_ that pre-fills the triage Context step,
-    not an assignment. Capture is universal; the lens is confirmed at triage.
+    not an assignment. Capture is universal across eligible Lenses; destination
+    and compatible output type are confirmed at triage.
 - Nothing leaves the Inbox by aging or by being dated — it only leaves through **triage**.
 
 ---
 
 ## 3. Triage — what an InboxItem can _become_
 
-This is the heart of the model. During triage, each InboxItem is transformed into one of:
+During triage, each InboxItem is transformed into one of the following. Lens
+type controls which outcomes are eligible:
 
 | Triage decision                                     | Result                                            | Example                                          |
 | --------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------ |
@@ -150,8 +167,11 @@ This is the heart of the model. During triage, each InboxItem is transformed int
 | **"This is a step in something I'm already doing"** | → **Task** inside an existing **Project**         | "Draft press release" → "Q3 launch" project      |
 | **"This is reference, not an action"**              | → **Resource** filed under a **Project**          | "Competitor pricing PDF" → "Q3 launch" resources |
 | **"This supports a bigger goal"**                   | → **Project** linked to a **Goal**                | "Launch newsletter" → Goal: "Grow audience"      |
+| **"This belongs on a simple checklist"**           | → **ListItem** in a **Simple-list Lens**          | "Buy oat milk" → Shopping                        |
 
-So the InboxItem is **polymorphic at rest, concrete after triage.** One input shape, five possible output shapes.
+So the InboxItem is **polymorphic at rest, concrete after triage.** A Life-area
+destination uses structured outcomes; a Simple-list destination uses only
+ListItem. Direct add remains a second ListItem creation path.
 
 ### Promotion paths (items leveling up)
 
@@ -184,13 +204,15 @@ Once triaged, items live in views defined by their attributes — _not_ by folde
 - **Goals** — all Goals in the active Lens, with their linked Projects rolled up.
 - **Archive / Logbook** — completed/dead items (PARA "Archive").
 
-The Inbox is the _only_ queue. Everything else is a _view_ derived from each item's attributes and relationships.
+The Inbox is the only Life-area intake queue. A Simple-list Lens is an explicit
+exception: its List Items form a directly managed checklist, not a derived view.
 
 ---
 
 ## 5. Implications for the focus engine ("Next")
 
-The matcher only ever considers **Tasks** (never Resources, never bare Projects):
+The matcher only ever considers **Tasks in `LIFE_AREA` Lenses** (never List
+Items, Resources, or bare Projects):
 
 - A **Task** inside a **Project** is a candidate.
 - A **Project** with no Tasks is invisible to focus (it's a container, not an action) — though the UI can show "this Project has no next action" as a nudge.
@@ -205,8 +227,9 @@ The matcher only ever considers **Tasks** (never Resources, never bare Projects)
   (shipped 2026-07-03; was Phase 2): create / rename / recolor / edit-purpose /
   delete at `/app/settings/lenses`. FREE gets the seeded two — Me usable, Work
   visible-but-locked.
-- **Everything is scoped by the active Lens:** the Projects you see, the Goals
-  you see, and — critically — **what the focus engine considers.**
+- In an active `LIFE_AREA` Lens, Projects, Goals, Tasks, Resources, and the
+  focus engine are scoped normally. An active `SIMPLE_LIST` Lens exposes only
+  that Lens's List Items and skips the Life-area queries and shell.
 - Switching Lens is one keystroke — **`⌘L`** (or chip+popover at ≥4 lenses).
   Active-lens state keys on `Lens.id` (not name) since 2026-07-03.
 - **Cross-lens exceptions** (an overdue Work item surfacing while you're in Me)
@@ -221,7 +244,7 @@ The matcher only ever considers **Tasks** (never Resources, never bare Projects)
 
 The "Next" engine, in its simplest form:
 
-1. Candidates = **Tasks** in the **active Lens** that are Today/overdue.
+1. Candidates = **Tasks** in the **active `LIFE_AREA` Lens** that are Today/overdue.
 2. Sort by **priority** (highest first).
 3. Surface the top 1 (max 3). Done.
 

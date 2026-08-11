@@ -24,18 +24,21 @@
 >   visible and reversible.
 > - Triage never auto-clutters Work — the default Task outcome is Upcoming
 >   (the bench); committing to Today is explicit. Demoting to Someday is, too.
+> - Triage accepts both Lens types. `SIMPLE_LIST` is a one-step List Item
+>   destination; direct add inside the list remains available.
 
 ---
 
 ## 1. What triage is
 
-Capture dumps raw thoughts into the Inbox. **Triage is the GTD "clarify" step:**
+Universal Capture dumps raw thoughts into the Inbox. **Triage is the GTD
+"clarify" step:**
 walk the inbox one item at a time and decide what each thing *becomes*. It is
 the only screen in the app that looks list-y, and it's deliberately a temporary
 staging area, not a home.
 
 The model (DATA-MODEL.md §3): every `InboxItem` is **polymorphic at rest,
-concrete after triage.** Triage transforms it into a Task / Project / Resource
+concrete after triage.** Triage transforms it into a Task / Project / Resource / List Item
 and **deletes the original InboxItem** — the transformed entity *is* the record.
 
 > Triage is **co-authoring the spec**, not just dispatching. The card shows the
@@ -94,6 +97,7 @@ What an InboxItem can become (DATA-MODEL.md §3). One input shape, five outputs.
 | step in existing work | **Task** inside an existing **Project** | "Draft press release" → "Q3 launch" |
 | reference, not action | **Resource** (link/note) under a **Project** | "Competitor PDF" → "Q3 launch" |
 | supports a bigger goal | **Project** linked to a **Goal** | "Launch newsletter" → Goal: "Grow audience" |
+| belongs on a flat checklist | **List Item** in a **Simple-list Lens** | "Buy oat milk" → Shopping |
 | captured by mistake | **Delete** — the InboxItem is hard-removed, not recoverable | misheard voice capture, wrong lens, duplicate |
 
 **Delete** (`4` in Classify) hard-removes the InboxItem and is not recoverable.
@@ -140,6 +144,13 @@ The wizard (per item):
 3. **Ready** — commits the spec; gated until the destination is valid and
    (for Task/Resource) a filing target is set.
 
+When Classify selects a `SIMPLE_LIST` Lens, Lens type resolves what the item
+becomes. Classify switches to a compact List Item confirmation with editable
+text and **Add to list**; Spec and Ready are skipped. No task metadata appears.
+Body text and source URL preserve automatically. An image-backed capture cannot
+be represented by a checklist row, so dispatch is rejected without deleting
+the InboxItem.
+
 The spec rows are **inline-expanding**: tap a row → the options expand beneath
 it (no floating popover, no separate sheet — *except* Project/Goal/Parent,
 which open the existing bottom-sheet picker because the list can be long and
@@ -180,10 +191,11 @@ Today** — the user must actively promote a task to Today.
 | Priority | **Normal** | |
 | Project | **General** (= no `projectId`) | scoped per Lens, not global. A `#project` capture token links if a project by that name exists in the chosen Lens; otherwise General (no auto-create). |
 | Goal | none | Tasks do not align directly to goals; projects can support goals. |
-| Lens | the active Lens | every entity requires one |
+| Lens | the active Lens | Life areas expose structured outcomes; Simple-list Lenses expose only List Item |
 
 Parser pre-fills any token the user typed at capture (`tomorrow`, `!3`, `~XL`,
-`#deep-work`, `[[work]]`) — defaults only fill the gaps. `#` is a tag, `@` is
+`#deep-work`, `[[work]]`) — defaults only fill the gaps. A `[[lens]]` token
+resolves only to a Life-area Lens. `#` is a tag, `@` is
 time only, `[[lens]]` is the explicit lens override (§7.5). Project intent is
 resolver-driven from free text — a matched project name carries its lens into
 this step. `[[ ]]` precedence beats project-inferred lens when they disagree.
@@ -194,12 +206,16 @@ this step. `[[ ]]` precedence beats project-inferred lens when they disagree.
 
 Mobile and desktop split by **job**, not by feature-count.
 
-**Mobile = capture-first.** You're on the move; the only job is *get the
+**Mobile in a Life-area Lens = capture-first.** You're on the move; the job is *get the
 thought out of your head*. The bottom sheet (FAB or pull-down) does that in
 tap + type + send. Priority and project assignment are *available* but never
 required, never in the way. **No triage walkthrough, no expanded editor, no
 command state on mobile.** Capture lands in the Inbox; triage happens later,
 on desktop.
+
+In a Simple-list Lens, mobile keeps direct add and checkboxes while also keeping
+Capture and Inbox available. Captured items wait for triage like every other
+Inbox item; assigning one to the active list uses the compact List Item path.
 
 **The capture field grows, never scrolls sideways.** LOCKED 2026-06-22 —
 same element on every platform: starts as one line, wraps to a second on

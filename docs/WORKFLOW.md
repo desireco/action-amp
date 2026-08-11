@@ -14,10 +14,13 @@
 
 ## 1. The mental model
 
-ActionAmp has **three modes** — Work, Planning, Review — plus one pervasive
-feature, **Capture**, that crosses all of them. Everything except Capture lives
-inside a **context** (the Work/Me Lens): items enter a context only through
-triage.
+A Lens has one of two behavioral types:
+
+- **Life area (`LIFE_AREA`)** — the existing Work, Planning, and Review system.
+  Captured items enter its structured work through triage.
+- **Simple list (`SIMPLE_LIST`)** — a direct checklist. It has List Items, but
+  no Goals, Projects, Tasks, Today, focus, or reviews. It shares the universal
+  Capture → Inbox → Triage intake, where its only filing outcome is List Item.
 
 ```
                             ┌──────────────────────────┐
@@ -37,16 +40,21 @@ triage.
 
   Context = a Lens (Work/Me default + user-defined on Pro). Scopes Tasks,
   Projects, Goals, Resources. Capture + Inbox are NOT scoped — universal.
+
+  Simple-list Lens ── direct add ────────────────▶ List Item
+  Universal Inbox ── triage to Simple-list Lens ─▶ List Item ── check off ──▶ completed
 ```
 
-Items only flow **left to right**: capture → inbox → triage → a context. Nothing
-appears in Work/Planning/Review except by coming through triage.
+Life-area items only flow **left to right**: capture → inbox → triage → a Life
+area. Nothing appears in Work/Planning/Review except through triage. Simple-list
+items have two deliberate entry paths: direct add inside the list, or universal
+capture followed by a one-step triage assignment to that list.
 
-## 2. The five areas
+## 2. The areas
 
 ### 2.1 Capture (Inbox) — pervasive
 
-- The **only** area that exists across every context and every mode.
+- The universal area that exists across both Lens types and every normal mode.
 - `⌘K` opens the capture popover from anywhere. **Enter** commits and
   closes (the common case — one thing on your mind, then back to work);
   **⌘Enter** commits and keeps the popover open to add another (rapid-fire).
@@ -54,22 +62,30 @@ appears in Work/Planning/Review except by coming through triage.
 - Destination is the **Inbox**, which is **universal** (not scoped to a lens).
 - Natural-language parsing shows chips before Enter so you see what it
   understood. Grammar (locked 2026-07-04, §5.9): `#` tags · `@` time only ·
-  `!`/`~` priority/size · `[[lens]]` explicit cross-lens override. Projects
+  `!`/`~` priority/size · `[[lens]]` explicit cross-life-area override. Projects
   have no sigil — the resolver matches them from free text (a matched project
   carries its Project + Lens into triage Classify). See `docs/specs/done/capture-grammar.md`.
 - Capture never asks "where does this go?" — that's triage's job. But capture
-  _can_ hint: `[[work]]` / `[[personal]]` / `[[custom]]` preselects the Lens on
-  triage's Classify step, and a matched Project can supply both Project and
-  Lens. Capture is about speed (target: thought → inbox in under 2 seconds).
+  _can_ hint: `[[work]]` / `[[personal]]` / `[[custom]]` preselects any eligible
+  Lens on triage's Classify step. A Simple-list Lens produces a List Item;
+  a matched Project supplies its Life-area Project + Lens destination. Capture
+  is about speed (target: thought → inbox in under 2 seconds).
 
 ### 2.2 Triage — the transfer
+
+Triage drains the universal Inbox across both Lens types.
 
 - Walks the inbox one item at a time. For each item, decide **what it becomes**
   and **where it lands**, through a deliberate **per-item specification wizard**
   (`inbox/TriagePage.tsx`; see `TRIAGE.md` §4 for the canonical pattern).
-- Outcomes: Task / Project / Resource / **Archive** (lossless — the note is
-  kept, not deleted; recoverable from the Logbook).
-- Filing targets are scoped — triaging an item places it in the **Lens selected
+- Outcomes: Task / Project / Resource / List Item / **Archive** (lossless — the
+  note is kept, not deleted; recoverable from the Logbook).
+- A Simple-list destination is intentionally one step: confirm or edit the
+  item text, then **Add to list**. It never asks for When, Size, Priority,
+  Project, Goal, or Resource properties. Captured body and source URL move
+  automatically as supporting context. Image-backed captures remain in Inbox
+  until filed to a compatible Life-area destination; triage never drops them.
+- Filing targets are scoped — triaging an item places it in the **Life-area Lens selected
   or inferred on the wizard's Classify step** (§5.5). If a concrete Project is
   resolved, that Project supplies both the Project and Lens destination and the
   standalone lens picker is skipped by default.
@@ -128,6 +144,8 @@ appears in Work/Planning/Review except by coming through triage.
 
 ### 2.4 Planning Area — organizing
 
+Planning exists only in Life-area Lenses.
+
 - Where **Projects** and **Goals** live, and where you organize tasks across
   time horizons.
 - Projects: multi-step outcomes, always in a context. May sit under a Goal.
@@ -143,6 +161,9 @@ appears in Work/Planning/Review except by coming through triage.
   them; Shift+P / last-picker-row is the one bridge, which navigates here).
 
 ### 2.5 Review / Reporting Area — reflection
+
+Reviews aggregate Life-area records only. List Items never appear in cadence
+reviews or the Logbook.
 
 - **Today, Week, and Month reviews** turn completion history into three distinct
   reflection rhythms: daily closure, weekly alignment, and monthly direction.
@@ -174,19 +195,38 @@ appears in Work/Planning/Review except by coming through triage.
   and Month stay live and need no closing action. See
   `docs/specs/weekly-monthly-review.md`.
 
+### 2.6 Simple-list Area — checking off
+
+- A Simple-list Lens opens one calm checklist plus universal Inbox access,
+  instead of the Life-area planning/focus shell.
+- `N` or the visible add control creates a List Item directly. There is no
+  capture parsing, Inbox record, triage step, scheduling, priority, or size.
+- Checking an item records completion; unchecking restores it. Active items
+  appear before completed items, with stable user-controlled ordering inside
+  each group.
+- Items can be renamed, reordered, and deleted. Completion stays inside this
+  Lens and never feeds Today, focus, Review, or Logbook.
+- `⌘L`, `⌘K`, Inbox, and triage remain available. Life-area planning, focus,
+  review, and structured-creation shortcuts are suppressed.
+
 ## 3. Context (Lens) scoping
 
-- Every Task / Project / Goal / Resource belongs to exactly one **Lens**
-  (a Work/Me default, plus any number of user-defined lenses on Pro). The
-  active lens scopes every Work / Planning view and the Logbook.
-- **Inbox, Capture, Today, and cadence Reviews are NOT scoped** — they're universal. A captured
+- `Lens.type` is the structural discriminator. `LIFE_AREA` is the default for
+  seeded and existing Lenses; `SIMPLE_LIST` selects the checklist behavior.
+  `Lens.kind` remains the independent entitlement/seed identity handle.
+- Every Task / Project / Goal / Resource belongs to exactly one **Life-area
+  Lens**. Every List Item belongs to exactly one **Simple-list Lens**. Server
+  writes reject cross-type combinations; the UI boundary is not the guard.
+- **Inbox and Capture are universal across every Lens type. Today and cadence
+  Reviews are universal across Life-area Lenses only.** A captured
   thought has no lens until triage assigns one (implicitly via the active lens,
   or explicitly if we adopt force-choice — §5). Today is universal so the day's
   commitment can be made across all lenses at once (reversed 2026-07-21, §5.11);
   each Today or Review row carries Lens provenance so it stays visible without
   partitioning the ritual.
-- Switching lenses swaps Work, Planning, and Logbook content. Inbox, Today,
-  and cadence Review content stay the same; Week/Month can filter inside the page.
+- Switching between Life-area Lenses swaps Work, Planning, and Logbook content.
+  Switching to a Simple-list Lens swaps the entire inner shell to its checklist.
+  Returning to a Life area restores its normal Work/Plan/Review destination.
 - **The switcher is adaptive.** At ≤3 lenses the sidebar shows the segmented
   control (today's `<LensSwitch>`); at ≥4 it collapses to a single chip that
   opens a keyboard-navigable popover (`⌘L`, `↑↓`/`↵`/`/`/`esc`). The swap is

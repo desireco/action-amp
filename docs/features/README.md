@@ -8,7 +8,7 @@
 >
 > Owned by Discover. Build reads only.
 >
-> Last code-verified: **2026-08-08**.
+> Last code-verified: **2026-08-10**.
 
 ## How to read this
 
@@ -50,6 +50,7 @@
 - [entitlements](./entitlements.md) (`shipped`) — server-side caps + ProGate paywall.
 - [billing](./billing.md) (`shipped`) — 3 Pro prices + Founding 100 (server-enforced cap).
 - [custom-lenses](./custom-lenses.md) (`shipped`) — user-defined lenses; Pro CRUD; `⌘L` switcher; per-lens identity.
+- [simple-list-lenses](./simple-list-lenses.md) (`shipped`, spec `review`) — Pro direct-checklist Lens type; isolated ListItems; list-only shell; browser persistence acceptance remains.
 - [onboarding](./onboarding.md) (`shipped`) — `/welcome`, server flag, 3 seed tasks.
 - [auth](./auth.md) (`partial`) — **passwordless email live** (magic-link code + link, replaces passwords); Google OAuth code present but disabled.
 - [landing](./landing.md) (`partial`) — signup + Founding-100 CTAs; newsletter capture **missing but intended** (see [newsletter](./newsletter.md)).

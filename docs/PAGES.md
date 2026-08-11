@@ -14,7 +14,7 @@
 
 ---
 
-## 0. The layout chrome (every authenticated page)
+## 0. The layout chrome (authenticated Life-area pages)
 
 Persistent UI that frames every page:
 
@@ -42,7 +42,9 @@ Persistent UI that frames every page:
 └──────────┴──────────────────────────────────────────────┘
 ```
 
-- **Lens switch** at the top of the sidebar — changes scope of _everything_ below it.
+- **Lens switch** at the top of the sidebar — changes scope and, when Lens type
+  changes, the inner shell. A Simple-list Lens keeps the switcher and account
+  chrome but replaces the focus navigation with its checklist.
 - **Focus switch** (Work / Plan / Review) is an expanding-section nav — only one
   section open at a time. Capture (`⌘K`) and Inbox stay pinned outside both.
 - Active page highlighted. Counts (Inbox `(4)`) live-update.
@@ -51,7 +53,8 @@ Persistent UI that frames every page:
 
 ## 1. Primary pages (sidebar nav)
 
-These are the main destinations. All scoped to the active Lens.
+These are the main Life-area destinations. Scoped surfaces use the active
+`LIFE_AREA` Lens; universal surfaces aggregate eligible Life-area Lenses.
 
 ### P1. Next → `/app`
 
@@ -78,6 +81,9 @@ The universal queue. (FEATURES F3.) Shows untriaged InboxItems as a list.
 
 Per-item co-author wizard (DATA-MODEL §3, TRIAGE.md §4). The
 single-card one-key dispatch is **gone**. Three steps per item:
+
+Simple-list Lenses appear as List Item destinations. Selecting one replaces the
+structured Type + Spec flow with an editable one-step **Add to list** confirmation.
 
 - **Classify** — Type chooser (one-line rows w/ leading icon: Task / Project /
   Resource / Archive) + Lens pills. A resolved Project supplies both Project +
@@ -138,7 +144,7 @@ meaningful movement, and Month celebrates Goal progress and chooses direction.
 An unfinished day/week/month presents a check-in; a past or closed period
 presents retrospective reflection. Both answer sets autosave independently.
 Each keeps every completed Task inspectable, recognizes completed Projects and
-Goals, and supports optional saved responses. Reviews span all Lenses;
+Goals, and supports optional saved responses. Reviews span all Life-area Lenses;
 Week/Month can filter inside the page. `/app/review` resolves to the first
 enabled cadence, then Logbook when all are disabled.
 
@@ -149,6 +155,21 @@ Completed + archived items. (PARA "Archive" / FEATURES F18.)
 - Grouped by completion date and discoverable through the sitewide palette.
 - **Completed Goals surface here** since 2026-07-05, with a Reopen affordance.
 - No editing — restore or permanently delete only.
+- List Items are excluded; completion remains inside the Simple-list Lens.
+
+### P10. Simple list → `/app/list`
+
+The primary Lens-scoped surface when the active Lens has `type=SIMPLE_LIST`.
+
+- Direct add creates a List Item in the active Lens; no Capture or Inbox record.
+- Active items precede completed items. Each row supports toggle, rename,
+  reorder, and delete.
+- Universal Inbox, triage, and Capture remain reachable. No Goals, Projects,
+  Tasks, Today, Upcoming, Someday, focus, Review, Logbook, or Life-area
+  navigation is rendered.
+- Opening `/app/list` with a Life-area Lens redirects to `/app`. Opening a
+  Life-area-only route with a Simple-list Lens redirects to `/app/list`;
+  `/app/inbox` and `/app/inbox/review` remain valid universal routes.
 
 ---
 
@@ -222,7 +243,7 @@ Post-auth redirect → `/app` (Next).
 
 - **Account** — email, password, linked social accounts, delete account.
 - **Preferences** — theme (dark default), Today cap (default 5, or off), confirmation sounds, momentum toggle.
-- **Lenses** (`/app/settings/lenses`) — Pro-only CRUD for lenses: add/rename/recolor/edit-purpose/delete; FREE gets `<ProGate>`. Seeded two are renameable/recolorable but never deletable.
+- **Lenses** (`/app/settings/lenses`) — Pro-only CRUD for lenses: add/rename/recolor/edit-purpose/delete. Creation requires a behavioral type: **Life area** or **Simple list**. Type is immutable after creation in the first release. FREE gets `<ProGate>`. Seeded two are Life areas, renameable/recolorable, and never deletable.
 - **Billing** (`/app/settings/billing`) — Stripe-managed subscription surface.
 - **Shortcuts** — view/customize keyboard map.
 
@@ -233,6 +254,7 @@ Post-auth redirect → `/app` (Next).
 ```
 Authenticated app routes (all under /app):
   /app                                    Next (home, the chooser)
+  /app/list                               Active Simple-list Lens checklist
   /app/focus                              Focus (Variant F, single-task)
   /app/inbox                              Inbox
   /app/inbox/review                       Triage walkthrough (Classify → Spec → Complete)

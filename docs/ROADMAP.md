@@ -1,6 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
+<!-- Active product work, 2026-08-10: Simple-list Lenses are implemented locally and in final verification. They add a flat checklist Lens alongside Life areas, with direct entry plus universal Capture -> Inbox -> compact ListItem triage. This is not deployment evidence. -->
 <!-- Last reviewed: 2026-08-03 (CLI/API access is now Pro-only: Free accounts cannot issue or use personal API tokens; existing tokens stop working when an account returns to Free. CLI package publishing is in progress. Resources shipped — project-owned links/notes CRUD on the Project detail page + `actionamp resource list/add/update/delete` CLI + `/api/cli/resource/*` PAT routes, all backed by a pure `resources/operationsCore.ts`. NO `TaskResource` join — references are markdown links in Task Context, per the task-fields reversal; NO delete-with-impact flow, just simple delete. Passwordless magic-link email sign-in shipped (six-digit code OR sign-in link, 10-min TTL, rate-limited, atomic consume; replaces passwords; localhost uses fixed `111111` for QA). Share target extended: structured capture props (`title`/`content`/`sourceUrl` on `InboxItem`) + image attachments (`InboxAttachment`, one image ≤5MB) + CLI `capture` with `--title/--content/--source-url/--file`. Task Outcome (`Task.outcome`) shipped — task-fields now complete. WONT_DO task state shipped — non-destructive decline for post-triage tasks, surfaces in the Logbook with Restore. Earlier 07-26: CLI lens management shipped. Earlier 07-23: Admin dashboard + feedback-triage system. Earlier 07-22: ActionAmp CLI terminal client shipped.) -->
 
 ---
@@ -86,7 +87,8 @@ audience yet**. That distinction changes the whole roadmap.
 - **The wedge is built**: `getTopTask` priority-first matcher, Now/Next state
   machine (`startedAt` persists across navigation), the Next single-task
   home screen, focus-mode overlay.
-- **Test suite green**: 630 Vitest tests pass and `wasp compile` is clean.
+- **Current local test suite green**: 972 Vitest tests pass and `wasp compile`
+  succeeds. This is code verification, not fresh deployment evidence.
   E2E coverage rebuilt around cross-layer invariants (capture, login, inbox,
   triage, projects, today, next, entitlements); run it before public-launch
   changes.
@@ -142,6 +144,17 @@ item; Build pulls `next` (a human promotes `ready → next` to stage work for Bu
 > Specs live at `docs/specs/<slug>.md`. `ready` = Build may pull; `draft` =
 > Discover still owes product decisions. Statuses reflect roadmap state as of
 > 2026-07-04 — see §Queue notes below for known stale/historical sections.
+
+**Active significant product change:** **simple-list-lenses** (`review`, local
+implementation; deployment not claimed) — a second Lens behavior for flat
+checklists such as Shopping. Items can be added directly or arrive through the
+universal Capture → Inbox path, where choosing a Simple-list Lens performs a
+compact ListItem triage without Project, Goal, priority, size, or focus
+machinery. The model keeps `ListItem` separate from `Task`, preserves captured
+body/source context, rejects image filing until lossless attachment transfer
+exists, and retains the existing Pro custom-Lens entitlement. Spec:
+[`docs/specs/simple-list-lenses.md`](specs/simple-list-lenses.md). Verification
+record: [`docs/features/simple-list-lenses.md`](features/simple-list-lenses.md).
 
 1. **doc-reconciliation** (`done` 2026-06-27) — canonical docs reconciled with
    shipped reality: Trash→Archive leftovers fixed in WORKFLOW/TRIAGE/DATA-MODEL;
