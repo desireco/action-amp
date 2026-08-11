@@ -401,6 +401,13 @@ browser server was started; browser verification remains AU07 work.
 **Stop condition:** evidence and feature docs are truthful. No deploy, push,
 or product-acceptance claim.
 
+**Current verification boundary:** focused integration tests passed (80 tests)
+and Wasp compile passed. `npm run test:e2e -- admin-users.spec.ts` was run
+against the already-running local server and failed because its Vite process
+predates this route configuration: `/app/admin/users` did not render for either
+admin or non-admin test. The queue forbids starting or restarting that server,
+so browser verification remains blocked pending a refreshed local runtime.
+
 ## Dependency graph
 
 ```text
