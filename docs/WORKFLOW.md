@@ -249,6 +249,17 @@ reviews or the Logbook.
 - `⌘L`, `⌘K`, Inbox, and triage remain available. Life-area planning, focus,
   review, and structured-creation shortcuts are suppressed.
 
+### 2.7 First-run guidance — learn the loop by doing
+
+- First-run guidance is a short, persistent path: **complete one sample task →
+  capture one real thought → triage that thought**. It is not a checklist or a
+  parallel area.
+- Only the sample is a Task. Capture and triage use their real surfaces and
+  advance server-persisted guidance state after success; they never create fake
+  work users must manually clear.
+- Returning members are not re-onboarded. Once complete, normal empty states
+  and the pervasive Capture control remain the guidance surfaces.
+
 ## 3. Context (Lens) scoping
 
 - `Lens.type` is the structural discriminator. `LIFE_AREA` is the default for

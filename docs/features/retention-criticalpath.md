@@ -14,7 +14,8 @@ events: seed-completed, first-capture, first-triage) and close the known
 dead-ends (onboarding→seed disconnect, post-completion dead-end, empty-Inbox
 affordance).
 
-**Today.** Not built.
+**Today.** Guided first loop and first-party activation events are built. D1/D7
+measurement and any data-gated retention changes remain follow-up work.
 
 **Spec.** `docs/specs/retention-criticalpath.md` (`ready`). **Depends on
 `observability-minimal`.** Data-gated fixes (re-engagement email, etc.) are
