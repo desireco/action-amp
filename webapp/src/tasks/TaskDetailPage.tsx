@@ -12,7 +12,7 @@ import {
   updateTaskStatus,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Breadcrumb, Button, CloseButton, Markdown, PickerSheet, PropertyChips, submitOnModEnter } from "../components/ui";
+import { Breadcrumb, Button, CloseButton, ConfirmDialog, Markdown, PickerSheet, PropertyChips, submitOnModEnter } from "../components/ui";
 import type { BreadcrumbItem } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { captureFeedbackContext } from "../feedback/captureContext";
@@ -70,6 +70,7 @@ export function TaskDetailPage() {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const [wontDoConfirmOpen, setWontDoConfirmOpen] = useState(false);
   const state = location.state as { returnTo?: unknown } | null;
   const returnTo =
     typeof state?.returnTo === "string" && state.returnTo.startsWith("/app")
@@ -532,15 +533,7 @@ export function TaskDetailPage() {
                 className="aa-task-edit__wont-do"
                 label="Mark as won't do"
                 title="Mark as won't do"
-                onClose={() => {
-                  if (
-                    window.confirm(
-                      "Mark this as something you won't do?\n\nIt leaves your lists and surfaces in the Logbook, where you can restore it.",
-                    )
-                  ) {
-                    void markWontDo();
-                  }
-                }}
+                onClose={() => setWontDoConfirmOpen(true)}
               />
             )}
             <div className="aa-task-edit__actions-main">
@@ -582,6 +575,21 @@ export function TaskDetailPage() {
                 if (resource) insertProjectResource(resource);
               }}
               onClose={() => setResourcePickerOpen(false)}
+            />
+          )}
+
+          {wontDoConfirmOpen && (
+            <ConfirmDialog
+              title="Mark as won't do?"
+              message="It leaves your lists and surfaces in the Logbook, where you can restore it."
+              confirmLabel="Mark won't do"
+              cancelLabel="Keep task"
+              danger
+              onConfirm={() => {
+                setWontDoConfirmOpen(false);
+                void markWontDo();
+              }}
+              onClose={() => setWontDoConfirmOpen(false)}
             />
           )}
         </div>
