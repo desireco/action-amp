@@ -12,6 +12,7 @@ import "../styles/roadmap.css";
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
 
 const shipped = [
+  { date: "Aug 3", trunk: "Analytics + observability", summary: "StatCounter now measures the anonymous landing → signup → first app open → checkout path, while a first-party event ledger powers the admin Funnel for acquisition, activation, payment conversion, and D1/D7 retention. Local development traffic is excluded." },
   { date: "Jul 29", trunk: "CLI: resources + shared capture", summary: "The terminal client gained project resource management (list, add, update, delete) and the capture command now accepts a shared page's title, body, source link, and one image attachment — mirroring the Android share target. Resources are full CRUD from the CLI, closing the last deferred CLI spec." },
   { date: "Jul 28", trunk: "Project resources", summary: "The Resource entity is real: links and notes filed under a project, with add, edit, and remove on the project page. Ownership is project-only — the over-engineered 'project or goal' dual-parent was dropped, so the invariant is enforced by the database." },
   { date: "Jul 28", trunk: "Share target: images + structured capture", summary: "The Android share target now separates a shared page's title, body, source link, and image before saving. One image (up to 5 MB) can be attached; the review page shows parsed chips so nothing reaches the inbox until you confirm." },
@@ -129,8 +130,8 @@ const shipped = [
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
               <span>
-                <span class="aa-roadmap-item-name">Yearly Pro workshop</span><br />
-                <span class="aa-roadmap-item-note">Choose yearly Pro and get one goal-setting workshop. Monthly, Free, and Founding memberships stay unchanged.</span>
+                <span class="aa-roadmap-item-name">Member onboarding + workshops</span><br />
+                <span class="aa-roadmap-item-note">Yearly Pro includes a goal-setting workshop. Founding members receive personal onboarding plus a goal-setting workshop.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">
@@ -150,13 +151,6 @@ const shipped = [
             <span class="aa-roadmap-card-tag">First users</span>
           </div>
           <ul class="aa-roadmap-items">
-            <li class="aa-roadmap-item">
-              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
-              <span>
-                <span class="aa-roadmap-item-name">Analytics</span><br />
-                <span class="aa-roadmap-item-note">One privacy-respecting tracker; the one funnel number that matters.</span>
-              </span>
-            </li>
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
               <span>
@@ -188,6 +182,13 @@ const shipped = [
             <span class="aa-roadmap-card-tag">Beyond first users</span>
           </div>
           <ul class="aa-roadmap-items">
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
+              <span>
+                <span class="aa-roadmap-item-name">Habits and recurring activities</span><br />
+                <span class="aa-roadmap-item-note">Daily, weekly, and custom routines that appear when relevant and roll forward after completion — without streaks, guilt, or a pile of duplicate tasks.</span>
+              </span>
+            </li>
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
               <span>

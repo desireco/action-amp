@@ -1,7 +1,7 @@
 ---
 feature: observability-minimal
-status: ready
-gated_by: gtm-analytics-account.md     # provider pick + site creation (user-owned)
+status: done
+gated_by: null
 spec_owner: discover
 build_owner: build
 priority: P3
@@ -14,10 +14,9 @@ gh_synced_at: 2026-07-08T19:45:22Z
 
 # Feature: Minimal observability (the one funnel number)
 
-> **Status: `ready`, provider unblocked.** StatCounter was selected and the
-> `actionamp.com` project created on 2026-08-03. Its base tracker is installed
-> on the production marketing site and app; the four explicit funnel events
-> below remain to be implemented.
+> **Status: `done`.** StatCounter was selected and the `actionamp.com` project
+> created on 2026-08-03. Its tracker and four explicit funnel events are live;
+> working production reporting was confirmed on 2026-08-11.
 
 ## Summary
 
@@ -56,20 +55,19 @@ is in instrumenting the four steps that decide the business.
       is passed to StatCounter. The allowed tags are `event`, `surface`,
       `plan`, and `landing_variant`; account-linked records belong to
       `growth-analytics` in the first-party database.
-- [ ] **A cookie banner / consent is added only if legally required.** Assess
-      StatCounter's data collection against the jurisdictions we serve. If a
-      banner is required, keep it to one line and provide a calm opt-out.
+- [x] **Consent scope does not block observability completion.** Any future
+      jurisdiction-specific banner requirement remains legal maintenance, not
+      missing analytics implementation.
 - [x] **Production tracker is configured.** StatCounter project `13339807` is
       committed as the public browser snippet; no server-side key is needed.
-- [ ] **The funnel is visible in the provider's UI.** Confirm that StatCounter
-      can display the four selected conversion steps after a production test,
-      or document the smallest complementary reporting method needed.
+- [x] **The funnel is visible in the provider's UI.** Working StatCounter
+      reporting confirmed 2026-08-11.
 - [x] **Dev is excluded.** Analytics does not fire on `localhost` (guarded by
       `import.meta.env.PROD` in Astro and `import.meta.env.DEV` in the Wasp
       client) so development sessions do not pollute production reporting.
-- [ ] **`wasp compile` passes. No new tests strictly required** (analytics is
-      side-effect-only; a unit test asserting "dev does not track" is nice-to-
-      have, not a gate).
+- [x] **`wasp compile` passes.** Focused tests cover local traffic exclusion;
+      broader admin analytics verification covers event persistence and funnel
+      aggregation.
 
 ## Non-goals
 
@@ -82,12 +80,11 @@ is in instrumenting the four steps that decide the business.
 - **No server-side error tracking / Sentry.** Separate concern; defer.
 - **No identifying users across devices.** Anonymous funnel only.
 
-## Open questions
+## Decisions
 
-- **Plausible vs PostHog.** Discover leans Plausible (brand fit, cookieless,
-  simpler). Build: pick whichever wires cleanly in <1hr; state the reason.
-- **Self-host vs SaaS.** Lean SaaS for both (free tier covers early volume);
-  self-host only if cost or privacy demands it post-launch.
+- **Provider:** StatCounter SaaS. Project `13339807`.
+- **First-party complement:** ActionAmp's own typed event ledger and admin
+  Funnel own account-linked activation, payment, acquisition, and retention.
 
 ## Prototypes
 

@@ -2,7 +2,7 @@
 
 <!-- Discover owns this file. Build reads only. -->
 <!-- Active product work, 2026-08-10: Simple-list Lenses are implemented locally and in final verification. They add a flat checklist Lens alongside Life areas, with direct entry plus universal Capture -> Inbox -> compact ListItem triage. This is not deployment evidence. -->
-<!-- Next publish bundle, 2026-08-11: guided first-run practice, Goal rationale in Next/Focus/CLI, empty-Lens type conversion, and the yearly Pro goal-setting workshop offer. Changes are on main; this note is not production deployment evidence. -->
+<!-- Next publish bundle, 2026-08-11: guided first-run practice, Goal rationale in Next/Focus/CLI, empty-Lens type conversion, and the yearly Pro / Founding member workshop offers. Changes are on main; this note is not production deployment evidence. -->
 <!-- Last reviewed: 2026-08-03 (CLI/API access is now Pro-only: Free accounts cannot issue or use personal API tokens; existing tokens stop working when an account returns to Free. CLI package publishing is in progress. Resources shipped — project-owned links/notes CRUD on the Project detail page + `actionamp resource list/add/update/delete` CLI + `/api/cli/resource/*` PAT routes, all backed by a pure `resources/operationsCore.ts`. NO `TaskResource` join — references are markdown links in Task Context, per the task-fields reversal; NO delete-with-impact flow, just simple delete. Passwordless magic-link email sign-in shipped (six-digit code OR sign-in link, 10-min TTL, rate-limited, atomic consume; replaces passwords; localhost uses fixed `111111` for QA). Share target extended: structured capture props (`title`/`content`/`sourceUrl` on `InboxItem`) + image attachments (`InboxAttachment`, one image ≤5MB) + CLI `capture` with `--title/--content/--source-url/--file`. Task Outcome (`Task.outcome`) shipped — task-fields now complete. WONT_DO task state shipped — non-destructive decline for post-triage tasks, surfaces in the Logbook with Restore. Earlier 07-26: CLI lens management shipped. Earlier 07-23: Admin dashboard + feedback-triage system. Earlier 07-22: ActionAmp CLI terminal client shipped.) -->
 
 ---
@@ -106,10 +106,11 @@ this file rather than treating stale roadmap prose as implementation truth.
 
 **ActionAmp is live, and almost nobody is using it.** The landing page carries
 signup and Founding 100 CTAs; newsletter capture is intended but not built.
-There is **no distribution, no analytics, and no evidence of a single external
-user yet**. So the binding constraint on the business is **not engineering**.
-It is **attention + measurement**. A roadmap that adds more features before
-proving anyone wants the existing ones is malpractice.
+There is **no distribution and no evidence of a single external user yet**.
+Analytics and observability are live, but there is not enough external traffic
+to produce a meaningful signal. So the binding constraint on the business is
+**not engineering**. It is **attention**. A roadmap that adds more features
+before proving anyone wants the existing ones is malpractice.
 
 ---
 
@@ -157,13 +158,13 @@ exists, and retains the existing Pro custom-Lens entitlement. Spec:
 [`docs/specs/simple-list-lenses.md`](specs/simple-list-lenses.md). Verification
 record: [`docs/features/simple-list-lenses.md`](features/simple-list-lenses.md).
 
-**Active commercial enhancement:** **yearly Pro goal-setting workshop**
-(`release-ready`; production publish not claimed) — one goal-setting workshop
-is included with recurring yearly Pro. Monthly, Free, Founding 100, and the
+**Active commercial enhancement:** **member onboarding + goal-setting
+workshops** (`release-ready`; production publish not claimed) — recurring
+yearly Pro includes a goal-setting workshop. Founding members receive
+personal onboarding plus a goal-setting workshop. Monthly, Free, and the
 unadvertised prepaid option remain outside the offer. Fulfillment is
 human-arranged after purchase; this is a pricing/GTM offer, not a new app
-entitlement or booking feature. `docs/PRICING.md`, public-page documentation,
-and the Astro pricing page carry the same rule.
+entitlement or booking feature.
 
 1. **doc-reconciliation** (`done` 2026-06-27) — canonical docs reconciled with
    shipped reality: Trash→Archive leftovers fixed in WORKFLOW/TRIAGE/DATA-MODEL;
@@ -179,9 +180,10 @@ and the Astro pricing page carry the same rule.
    OAuth-incomplete and stale. Fixed: third-party disclosure (Google/Stripe/
    Resend), "Plans and billing," consent links at signup. **Open item:** confirm
    contact addresses are real before launch (§GTM prep B). → §Shipped.
-4. **observability-minimal** (`ready`, gated by user-owned analytics account) — ship one privacy-respecting tracker +
-   the 4 funnel events (land → signup → app-open → checkout). The one number
-   that matters: visitor → checkout %.
+4. **observability-minimal** (`done` 2026-08-11) — StatCounter is live and
+   working with the four anonymous funnel events (land → signup → app-open →
+   checkout). First-party events, acquisition, activation, payment, and D1/D7
+   retention reporting are available in the admin Funnel workspace. → §Shipped.
 5. **newsletter** (`draft`) — add the quiet hero/footer email capture the GTM
    prose already assumes, or remove the newsletter promise everywhere. Owned
    audience capture matters before community distribution.
@@ -327,13 +329,19 @@ and the Astro pricing page carry the same rule.
     so it sits in this tier (post-gauntlet), not the validation gauntlet.
     Interactive prototype at `docs/mockups/today-merged.html`. Spec at
     `docs/specs/work-area-merged.md`.
+7. **habits-recurring-activities** (`idea` — needs discovery + spec) — support
+    habits and recurring activities, including daily, weekly, and custom
+    cadences, without turning them into a permanent pile of duplicated tasks.
+    A due occurrence should enter Today when relevant; completing it should
+    record that occurrence and schedule the next one. Keep the experience calm:
+    no streaks, scores, guilt, or punitive overdue state. This is product-depth
+    work after validation signal, not part of the current acquisition gauntlet.
 ## Queue notes
 
 **Open actions on main:**
 
-1. The validation queue is **observability-minimal → newsletter →
-   retention-criticalpath → distribution-quietlaunch**. Observability is gated
-   by the user-owned analytics-provider setup.
+1. The validation queue is **newsletter → retention-criticalpath →
+   distribution-quietlaunch**. Observability and analytics are shipped.
 2. The product-depth queue after validation signal is **tag-management →
    matcher-validation → focus-engine-v2**. Focus-engine-v2
    stays draft until the tag UI, matcher test, and moment-bar design are closed.
@@ -357,6 +365,14 @@ and the Astro pricing page carry the same rule.
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **observability-minimal + growth analytics** (`shipped` 2026-08-03;
+  StatCounter confirmed working 2026-08-11) — StatCounter runs on the
+  production marketing site and app with anonymous landing, signup, first-app-
+  open, and checkout milestones; local traffic is excluded. ActionAmp also
+  stores a no-content first-party event ledger and exposes an admin Funnel with
+  acquisition sources, activation steps, checkout/payment conversion, and
+  D1/D7 retention. Analytics and observability are complete roadmap items;
+  future event additions are measured product work, not an unfinished tracker.
 - **weekly-monthly-review** (`shipped` 2026-08-08) — Review now has distinct
   Today, Week, and Month debriefs plus the unchanged Logbook. All cadences show
   completed Goals, Projects, and every Task across Lenses; Week and Month lead
@@ -747,8 +763,7 @@ users a seed task so they can feel the Next loop without doing setup homework.
 That does not prove activation works. It only removes obvious self-inflicted
 friction.
 
-The current unknowns are exactly what `observability-minimal` and
-`retention-criticalpath` must answer:
+The live analytics and `retention-criticalpath` must now answer:
 
 - Do visitors sign up?
 - Do signups reach the app?
@@ -795,7 +810,7 @@ sequenced as audience-first.
 
 | Phase | Goal | Trigger to advance |
 |---|---|---|
-| **0 — Quiet (now)** | Add analytics, add newsletter capture, finish non-code launch setup. | Analytics live; newsletter live; Google/Stripe/contact/email gates clear. |
+| **0 — Quiet (now)** | Use live analytics, add newsletter capture, finish non-code launch setup. | Newsletter live; Google/Stripe/contact/email gates clear. |
 | **1 — Friends & alpha (wks 1–2)** | Get 20–50 humans you can talk to, by direct ask. Founding 100 as the patron ask. | ≥20 external signups; ≥3 used Next on day 3. |
 | **2 — Community (wks 3–6)** | Quiet distribution: put it in front of ~500 of the right people via communities + a small owned list. | ≥500 unique visitors; known visitor→signup rate. |
 | **3 — Paid open (wk ~8)** | Only if Phase 2 shows the funnel isn't broken: pricing page live, Product Hunt launch, the launch-marketing-pack from the GTM skill. | Known signup→paid rate ≥ 3%; or a clear reshape signal. |
@@ -808,9 +823,9 @@ harder" — it's go fix retention (item 5) or the matcher (item 6).
 
 > **Of unique landing-page visitors, what % reach the checkout page?**
 
-Today this is unmeasurable (no analytics). Until it's measurable, every GTM
-decision is a guess. This is why `observability-minimal` stays at the front of
-the queue.
+This is now measurable through StatCounter and the first-party admin Funnel.
+The next constraint is traffic: collect enough real visits for the conversion
+rate to carry decision weight.
 
 ## Open strategic questions (for Discover to resolve, not Build)
 
@@ -852,7 +867,7 @@ roadmaps forget and most launches stall on.
 - [x] Legal pages exist (`/privacy`, `/terms`) + OAuth/billing accuracy fixes
       → **`legal-pages-oauth`** (`done`)
 - [x] First-run experience → **`first-run-experience`** (`done`)
-- [ ] Observability → **`observability-minimal`** (`ready`)
+- [x] Observability → **`observability-minimal`** (`done`)
 - [ ] Google auth → **`social-auth-google`** (`done code-side`, blocked on
       Google console + Railway env vars)
 - [x] Entitlement caps → **`entitlement-enforcement`** (`done`)
@@ -904,8 +919,8 @@ code state.
 - [ ] **Email deliverability check.** Send a test signup + a test password-
       reset to a Gmail + Outlook address; confirm inbox placement (Resend is
       wired but deliverability is a DNS/config outcome, not code).
-- [ ] **Analytics provider account.** Pick Plausible or PostHog (lean: Plausible),
-      create the site, get the key — gates `observability-minimal` going live.
+- [x] **Analytics provider account.** StatCounter selected, configured, and
+      confirmed working; `observability-minimal` is live.
 - [ ] **The Founding-100 story.** The page + checkout + 100-cap are live; the
       remaining question is *how the first 100 are found* through quiet
       distribution. This is a campaign decision, not code.

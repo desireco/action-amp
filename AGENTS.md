@@ -123,6 +123,10 @@ Pick the task; read the doc(s) on the right **before** writing code.
 
 ## Rules that always apply
 
+- **Roadmaps exclude future admin work.** Do not add new admin-only features,
+  admin tooling, or admin implementation updates to `docs/ROADMAP.md` or the
+  public website roadmap. Track that work in its feature spec, feature-catalog
+  entry, and review/handoff docs instead. Existing roadmap history may remain.
 - **Calm over features.** Whitespace is the point. If a section feels crowded,
   remove something. No streaks, badges, or guilt-trip UI — banned entirely.
 - **Two-accent system.** Teal = system/state (completion, selection, CTA);
@@ -140,12 +144,9 @@ Pick the task; read the doc(s) on the right **before** writing code.
   ground against the versioned docs (`webapp/AGENTS.md` §Documentation protocol).
 - **Work on `main`.** Commit directly to `main` unless the user explicitly
   asks for a branch. Do not auto-create feature branches.
-- **Caveman mode.** Prose responses use the `caveman` skill (installed at
-  `~/.agents/skills/caveman/`): terse, drop filler/articles/hedging, technical
-  substance intact. Default intensity **full**. Auto-clarity rules apply — drop
-  caveman for security warnings, irreversible-action confirmations, and anywhere
-  compression risks misread. Code/commits/PRs stay normal. Off: "stop caveman" /
-  "normal mode". Switch: `/caveman lite|full|ultra`.
+- **Be brief.** Keep prose concise and direct, but use normal grammar and complete
+  sentences. Preserve technical substance. Add detail when needed for clarity,
+  security warnings, irreversible-action confirmations, or complex sequences.
 - **Code review = fix loop.** When a code review is requested (explicit or
   implied), load the `code-review` skill, run the review, then **continue
   straight into implementing the fixes** — do not stop and wait for approval

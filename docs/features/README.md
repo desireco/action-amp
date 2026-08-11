@@ -8,7 +8,7 @@
 >
 > Owned by Discover. Build reads only.
 >
-> Last code-verified: **2026-08-10**.
+> Last code-verified: **2026-08-11**.
 
 ## How to read this
 
@@ -60,13 +60,13 @@
 - [task-fields](./task-fields.md) (`shipped`) — **Context** (`Task.content`) + **Outcome** (`Task.outcome`), both optional markdown via the shared `PropertyChips` editor.
 - [cli](./cli.md) (`partial`) — **Phase 0 + 1 shipped** (PAT auth + full command surface incl. `lens` + `resource` + shared-content/image `capture`); Phase 2 (orchestration skills) still `draft`.
 - [command-palette](./command-palette.md) (`shipped`, spec `done`) — safe commands, cross-Lens fuzzy jumps, bounded sitewide text search, calm ProGate, exact destinations, and desktop/touch browser verification.
+- [observability-minimal](./observability-minimal.md) (`shipped`, spec `done`) — working StatCounter tracker + anonymous landing-to-checkout milestones; local traffic excluded.
+- [growth-analytics](./growth-analytics.md) (`shipped`) — first-party sessions/events, source attribution, admin Funnel, payment conversion, and D1/D7 retention.
 
 ### Planned (not in code)
 
 - [breadcrumb-nav](./breadcrumb-nav.md) (`missing`, spec `ready` — route model locked) — crumbs navigate.
 - [focus-engine-v2](./focus-engine-v2.md) (`missing`, spec `draft`) — moment-aware matcher; needs tag-management UI + a mockup + matcher-test gate.
-- [observability-minimal](./observability-minimal.md) (`partial`, spec `ready`) — anonymous acquisition + funnel; StatCounter base tracker is live.
-- [growth-analytics](./growth-analytics.md) (`missing`, spec `ready`) — first-party sessions/events, source attribution, admin Growth dashboard, and cohorts.
 - [retention-criticalpath](./retention-criticalpath.md) (`missing`, spec `ready`, depends on observability) — first-7-days instrumentation.
 - [work-area-merged](./work-area-merged.md) (`missing`, spec `draft`) — merged Work area; one sub-piece (TaskUpdate.kind) shipped as `task-notes-completion-log`.
 - [newsletter](./newsletter.md) (`missing`, spec `draft`) — landing-page email capture (footer + quiet hero).
