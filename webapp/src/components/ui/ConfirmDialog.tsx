@@ -16,7 +16,7 @@ interface ConfirmDialogProps {
   title: string;
   message: ReactNode;
   confirmLabel?: string;
-  cancelLabel?: string;
+  cancelLabel?: string | null;
   /** Use the rose danger style for the confirm button (destructive actions). */
   danger?: boolean;
   confirmDisabled?: boolean;
@@ -54,9 +54,11 @@ export function ConfirmDialog({
         <div className="aa-confirm__body">{message}</div>
 
         <div className="aa-confirm__foot">
-          <Button variant="secondary" size="sm" onClick={onClose}>
-            {cancelLabel}
-          </Button>
+          {cancelLabel !== null && (
+            <Button variant="secondary" size="sm" onClick={onClose}>
+              {cancelLabel}
+            </Button>
+          )}
           <Button
             variant={danger ? "danger" : "primary"}
             size="sm"
