@@ -12,6 +12,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { NextCard, SnoozeSheet, type SnoozePreset } from "../components/ui";
 import { useActiveLens } from "./lensContext";
 import { composeWhy } from "./focusWhy";
+import {
+  resolveGoal,
+  resolveContinuity,
+  continuityStatsRow,
+  type TaskContextInput,
+} from "./taskContext";
 import { formatWhen, sizeLabel } from "./focusTaskView";
 import "./NextPage.css";
 
@@ -141,6 +147,24 @@ export function NextPage() {
   const whyLead = why.lead || why.detail;
   const whyDetail = why.lead ? why.detail : "";
 
+  // Goal rationale + paused-work continuity (focus-goal-context spec). Both are
+  // derived from the owned, hydrated winner (getTopTask now carries
+  // project.goal / goal.description / sessions / NOTE updates). Resolvers
+  // degrade gracefully: a picked Task (getTask path) lacks those relations, so
+  // resolveGoal returns null and continuity has no history — nothing renders,
+  // which is the spec's "missing data creates whitespace, not nags."
+  //
+  // Both blocks are passed ONLY for the `next` candidate state. The home `now`
+  // state keeps live execution context in Focus; a stale summary has no place
+  // on the chooser while work is active.
+  const goalContext = !isNow
+    ? resolveGoal(task as TaskContextInput)
+    : null;
+  const continuity = !isNow
+    ? resolveContinuity(task as TaskContextInput)
+    : null;
+  const continuityStats = continuity ? continuityStatsRow(continuity) : null;
+
   return (
     <>
       <Link to="/app/today" className="aa-wn-today-link">
@@ -154,6 +178,9 @@ export function NextPage() {
           size: sizeLabel(task.size),
           why: whyLead || undefined,
           whyEmphasis: whyDetail || undefined,
+          goalContext,
+          continuityStats,
+          latestNote: !isNow ? continuity?.latestNote ?? null : null,
         }}
         context={
           <>

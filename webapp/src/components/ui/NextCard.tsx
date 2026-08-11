@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Button } from "./Button";
+import type { GoalContext } from "../../app/taskContext";
 import "./NextCard.css";
 
 export interface NextTask {
@@ -15,6 +16,15 @@ export interface NextTask {
   why?: string;
   /** Whether the "why" reason is emphasized (renders strong in amber) */
   whyEmphasis?: string;
+  /** Optional Goal rationale (focus-goal-context). Rendered only in the
+   *  `next` candidate state, after the matcher rationale. Null → no block. */
+  goalContext?: GoalContext | null;
+  /** Optional continuity stats row, e.g. "42 min worked · 2 sessions · 3 notes".
+   *  Rendered only in the `next` state, only when non-null. Null → no row. */
+  continuityStats?: string | null;
+  /** Optional newest NOTE preview (passive plain text, two-line clamp). Rendered
+   *  only in the `next` state under a `Latest note` label, only when non-null. */
+  latestNote?: string | null;
 }
 
 interface NextCardProps {
@@ -77,6 +87,41 @@ export function NextCard({ task, context, onNotNow, onDo, state = "next", onPaus
           {task.why && task.whyEmphasis && " "}
           {task.whyEmphasis && <strong>{task.whyEmphasis}</strong>}
         </p>
+      )}
+
+      {/* Goal rationale + paused-work continuity (focus-goal-context spec).
+          Shown ONLY in the `next` candidate state — the home `now` state keeps
+          live execution context in Focus, not on the chooser card. Both blocks
+          are passive: no card, icon, link, disclosure, editor, or focus target. */}
+      {state === "next" && (task.goalContext || task.continuityStats) && (
+        <section className="aa-wn-card__purpose" aria-label="Goal and previous work">
+          {task.goalContext && (
+            <div className="aa-wn-card__goal" aria-label="Goal context">
+              <p className="aa-wn-card__goal-question">Why does this matter?</p>
+              <p className="aa-wn-card__goal-answer">
+                {task.goalContext.description ??
+                  `Toward ${task.goalContext.name}.`}
+              </p>
+              {task.goalContext.description && (
+                <p className="aa-wn-card__goal-attribution">
+                  Goal · {task.goalContext.name}
+                </p>
+              )}
+            </div>
+          )}
+
+          {task.continuityStats && (
+            <div className="aa-wn-card__continuity" aria-label="Previous work">
+              <p className="aa-wn-card__continuity-stats">{task.continuityStats}</p>
+              {task.latestNote && (
+                <p className="aa-wn-card__latest-note">
+                  <span className="aa-wn-card__latest-note-label">Latest note</span>
+                  <span className="aa-wn-card__latest-note-body">{task.latestNote}</span>
+                </p>
+              )}
+            </div>
+          )}
+        </section>
       )}
 
       <div className="aa-wn-card__actions">

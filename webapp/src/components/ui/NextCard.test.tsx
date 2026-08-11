@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent, within } from "@testing-library/react";
 import { NextCard, type NextTask } from "./NextCard";
 import { renderInContext } from "wasp/client/test";
 
@@ -64,6 +64,172 @@ describe("NextCard", () => {
       const why = container.querySelector(".aa-wn-card__why");
       expect(why).not.toBeNull();
       expect(why!.textContent).toMatch(/Overdue/);
+    });
+  });
+
+  // ---- Goal rationale + paused-work continuity (focus-goal-context spec FG05) ----
+  // Both blocks render ONLY in the `next` candidate state, after the matcher
+  // rationale. Goal uses violet attribution (never amber). Continuity shows a
+  // stats row + optional two-line latest-note preview; zero segments are
+  // suppressed. The `now` state shows neither.
+  describe("goal rationale + continuity (next state)", () => {
+    it("renders the described Goal: question + answer + violet attribution", () => {
+      const { container } = renderInContext(
+        <NextCard
+          task={{
+            ...BASE_TASK,
+            goalContext: { name: "Reach 100 paid", description: "Prove demand." },
+          }}
+        />,
+      );
+      const section = screen.getByRole("region", {
+        name: /goal and previous work/i,
+      });
+      expect(within(section).getByText("Why does this matter?")).toBeInTheDocument();
+      expect(within(section).getByText("Prove demand.")).toBeInTheDocument();
+      expect(
+        within(section).getByText("Goal · Reach 100 paid"),
+      ).toBeInTheDocument();
+      expect(container.querySelector(".aa-wn-card__goal-attribution")).not.toBeNull();
+    });
+
+    it("renders the Toward fallback for a description-less Goal (no attribution)", () => {
+      const { container } = renderInContext(
+        <NextCard
+          task={{
+            ...BASE_TASK,
+            goalContext: { name: "Reach 100 paid", description: null },
+          }}
+        />,
+      );
+      expect(
+        screen.getByText("Toward Reach 100 paid."),
+      ).toBeInTheDocument();
+      expect(container.querySelector(".aa-wn-card__goal-attribution")).toBeNull();
+    });
+
+    it("renders no Goal block when goalContext is null", () => {
+      renderInContext(<NextCard task={BASE_TASK} />);
+      expect(
+        screen.queryByRole("region", { name: /goal and previous work/i }),
+      ).toBeNull();
+    });
+
+    it("renders a combined stats row: worked · sessions · notes", () => {
+      renderInContext(
+        <NextCard
+          task={{
+            ...BASE_TASK,
+            continuityStats: "42 min worked · 2 sessions · 3 notes",
+          }}
+        />,
+      );
+      expect(
+        screen.getByText("42 min worked · 2 sessions · 3 notes"),
+      ).toBeInTheDocument();
+    });
+
+    it("renders time-only continuity (no notes)", () => {
+      renderInContext(
+        <NextCard
+          task={{
+            ...BASE_TASK,
+            continuityStats: "25 min worked · 1 session",
+            latestNote: null,
+          }}
+        />,
+      );
+      expect(screen.getByText("25 min worked · 1 session")).toBeInTheDocument();
+      expect(screen.queryByText(/latest note/i)).toBeNull();
+    });
+
+    it("renders notes-only continuity (no worked time)", () => {
+      renderInContext(
+        <NextCard
+          task={{
+            ...BASE_TASK,
+            continuityStats: "2 notes",
+            latestNote: "Decided on scope.",
+          }}
+        />,
+      );
+      expect(screen.getByText("2 notes")).toBeInTheDocument();
+      expect(screen.getByText("Decided on scope.")).toBeInTheDocument();
+    });
+
+    it("renders the latest note under a 'Latest note' label as passive plain text", () => {
+      renderInContext(
+        <NextCard
+          task={{
+            ...BASE_TASK,
+            continuityStats: "1 note",
+            latestNote: "Switched to the async API.",
+          }}
+        />,
+      );
+      expect(screen.getByText(/latest note/i)).toBeInTheDocument();
+      expect(screen.getByText("Switched to the async API.")).toBeInTheDocument();
+    });
+
+    it("renders no continuity block when continuityStats is null (fresh task)", () => {
+      renderInContext(
+        <NextCard task={{ ...BASE_TASK, continuityStats: null, latestNote: null }} />,
+      );
+      // No purpose section at all when both Goal and continuity are absent.
+      expect(
+        screen.queryByRole("region", { name: /goal and previous work/i }),
+      ).toBeNull();
+    });
+
+    it("suppresses zero segments — empty continuity renders no block", () => {
+      // A null stats row (resolveContinuity found nothing) means no row, no
+      // empty prompt, no zero counts.
+      renderInContext(
+        <NextCard task={{ ...BASE_TASK, continuityStats: null }} />,
+      );
+      expect(screen.queryByText(/0 min/i)).toBeNull();
+      expect(screen.queryByText(/0 sessions/i)).toBeNull();
+      expect(screen.queryByText(/0 notes/i)).toBeNull();
+    });
+
+    it("renders Goal and continuity together when both are present", () => {
+      renderInContext(
+        <NextCard
+          task={{
+            ...BASE_TASK,
+            goalContext: { name: "G", description: "desc" },
+            continuityStats: "10 min worked · 1 note",
+            latestNote: "hi",
+          }}
+        />,
+      );
+      const section = screen.getByRole("region", {
+        name: /goal and previous work/i,
+      });
+      expect(within(section).getByText("desc")).toBeInTheDocument();
+      expect(within(section).getByText("10 min worked · 1 note")).toBeInTheDocument();
+    });
+  });
+
+  describe("now state suppression (focus-goal-context)", () => {
+    it("does NOT render Goal or continuity in the now state", () => {
+      renderInContext(
+        <NextCard
+          task={{
+            ...BASE_TASK,
+            goalContext: { name: "G", description: "desc" },
+            continuityStats: "10 min worked · 1 note",
+            latestNote: "hi",
+          }}
+          state="now"
+        />,
+      );
+      // The purpose section is exclusive to the `next` candidate state.
+      expect(
+        screen.queryByRole("region", { name: /goal and previous work/i }),
+      ).toBeNull();
+      expect(screen.queryByText(/10 min worked/i)).toBeNull();
+      expect(screen.queryByText("Why does this matter?")).toBeNull();
     });
   });
 
