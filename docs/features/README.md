@@ -62,7 +62,7 @@
 - [command-palette](./command-palette.md) (`shipped`, spec `done`) — safe commands, cross-Lens fuzzy jumps, bounded sitewide text search, calm ProGate, exact destinations, and desktop/touch browser verification.
 - [observability-minimal](./observability-minimal.md) (`shipped`, spec `done`) — working StatCounter tracker + anonymous landing-to-checkout milestones; local traffic excluded.
 - [growth-analytics](./growth-analytics.md) (`shipped`) — first-party sessions/events, source attribution, admin Funnel, payment conversion, and D1/D7 retention.
-- [admin-user-management](./admin-user-management.md) (`partial`, spec `draft`) — locally implemented admin-only user directory, activity evidence, manual Pro/Founder/Friend grants, and guarded account deletion; browser runtime verification remains pending.
+- [admin-user-management](./admin-user-management.md) (`shipped`, spec `draft`) — admin-only user directory, activity evidence, manual Pro/Founder/Friend grants, and guarded account deletion.
 
 ### Planned (not in code)
 

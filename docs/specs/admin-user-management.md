@@ -2,7 +2,7 @@
 id: admin-user-management
 kind: spec
 title: "Admin user management and activity directory"
-status: draft
+status: done
 priority: P2
 feature: admin-user-management
 spec_owner: discover

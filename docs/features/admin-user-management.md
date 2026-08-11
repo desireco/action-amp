@@ -2,13 +2,13 @@
 slug: admin-user-management
 title: "Admin user management and activity directory"
 feature_area: foundation
-status: partial
+status: shipped
 spec: admin-user-management.md
 ---
 
 # Admin user management and activity directory
 
-**Implemented locally; browser runtime verification pending.** `/app/admin/users`
+**Code and local browser verified.** `/app/admin/users`
 is an admin-only, cursor-paged directory with signed-up, last-login, and
 last-active timestamps plus rolling login, app-open, creation, and completion
 metrics. Search, access filters, and sort state are URL-backed.

@@ -1,6 +1,6 @@
 # Admin user management — parked execution queue
 
-> Queue state: **active**. AU01–AU06 are complete; AU07 is in progress. This
+> Queue state: **complete**. AU01–AU07 are verified. This
 > does not authorize server starts, deployment, external
 > Stripe writes, or production migration.
 >
@@ -355,7 +355,7 @@ browser server was started; browser verification remains AU07 work.
 
 ### AU07 — Integration, adversarial checks, and code-verified docs
 
-**Status:** in_progress
+**Status:** done
 **Preferred model:** `gpt-5.6-sol` high
 **Acceptable model:** `gpt-5.6-terra` xhigh
 **Depends on:** AU06
@@ -401,12 +401,10 @@ browser server was started; browser verification remains AU07 work.
 **Stop condition:** evidence and feature docs are truthful. No deploy, push,
 or product-acceptance claim.
 
-**Current verification boundary:** focused integration tests passed (80 tests)
-and Wasp compile passed. `npm run test:e2e -- admin-users.spec.ts` was run
-against the already-running local server and failed because its Vite process
-predates this route configuration: `/app/admin/users` did not render for either
-admin or non-admin test. The queue forbids starting or restarting that server,
-so browser verification remains blocked pending a refreshed local runtime.
+**Evidence:** focused integration tests passed (83 tests),
+`./scripts/wasp-safe.sh compile` passed, `git diff --check` passed, and
+`npm run test:e2e -- admin-users.spec.ts` passed (2 Playwright cases: admin
+route URL state and non-admin denial) against the refreshed local server.
 
 ## Dependency graph
 
