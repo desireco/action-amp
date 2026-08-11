@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { getAdminUsersCore, grantAdminUserAccessCore, removeAdminUserAccessCore, AdminUserInputError, AdminUserMutationError } from "./userManagementCore";
+import { getAdminUsersCore, grantAdminUserAccessCore, removeAdminUserAccessCore, deleteAdminUserCore, AdminUserInputError, AdminUserMutationError, AdminUserDeletionBlockedError } from "./userManagementCore";
 import { mockContext } from "../test/mockContext";
 
 function coreEntities() {
@@ -52,5 +52,12 @@ describe("admin user mutations", () => {
     entities.User.findUnique.mockResolvedValueOnce({ id: "actor", isAdmin: false, manualAccessGrant: null });
     await expect(removeAdminUserAccessCore(entities, { actorUserId: "actor", targetUserId: "actor" })).rejects.toBeInstanceOf(AdminUserMutationError);
     expect(entities.User.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects a mismatched deletion confirmation before Stripe or local deletion", async () => {
+    const entities = coreEntities();
+    entities.User.findUnique.mockResolvedValueOnce({ id: "target", isAdmin: false, manualAccessGrant: "FRIEND", stripeCustomerId: null, auth: { identities: [{ providerUserId: "target@example.com" }] } });
+    await expect(deleteAdminUserCore(entities, { actorUserId: "actor", targetUserId: "target", confirmedEmail: "wrong@example.com" })).rejects.toBeInstanceOf(AdminUserDeletionBlockedError);
+    expect(entities.User.delete).not.toHaveBeenCalled();
   });
 });

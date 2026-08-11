@@ -10,6 +10,8 @@ describe("AdminUsersPage contract", () => {
     expect(source).toContain('p.delete("cursor")');
     expect(source).toContain("last_login_desc");
     expect(source).toContain("last_active_desc");
+    expect(source).toContain('aria-label="Joined"');
+    expect(source).toContain('aria-label="Active"');
   });
 
   it("renders the required activity and protected actions", () => {

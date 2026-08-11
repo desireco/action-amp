@@ -1,6 +1,7 @@
 # Admin user management — parked execution queue
 
-> Queue state: **active**. AU01–AU06 are complete; AU07 is in progress. This
+> Queue state: **active**. AU01–AU05 are complete; AU06 corrective work is in
+> progress. AU07 is pending. This
 > does not authorize server starts, deployment, external
 > Stripe writes, or production migration.
 >
@@ -46,7 +47,7 @@ NEXT: next dependency-ready task
 
 ### AU01 — Schema, migration, and test-fixture foundation
 
-**Status:** done
+**Status:** in_progress
 **Preferred model:** `gpt-5.6-sol` high
 **Acceptable model:** `gpt-5.6-terra` xhigh
 **Depends on:** none
@@ -355,7 +356,7 @@ browser server was started; browser verification remains AU07 work.
 
 ### AU07 — Integration, adversarial checks, and code-verified docs
 
-**Status:** in_progress
+**Status:** pending
 **Preferred model:** `gpt-5.6-sol` high
 **Acceptable model:** `gpt-5.6-terra` xhigh
 **Depends on:** AU06

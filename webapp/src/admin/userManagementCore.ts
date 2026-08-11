@@ -123,7 +123,7 @@ export async function removeAdminUserAccessCore(entities: Entities, args: { acto
 }
 
 export async function deleteAdminUserCore(entities: Entities, args: { actorUserId: string; targetUserId: string; confirmedEmail: string }) {
-  const target = await entities.User.findUnique({ where: { id: args.targetUserId }, select: { id: true, isAdmin: true, stripeCustomerId: true, auth: { select: { identities: emailSelect } } } });
+  const target = await entities.User.findUnique({ where: { id: args.targetUserId }, select: { id: true, isAdmin: true, manualAccessGrant: true, stripeCustomerId: true, auth: { select: { identities: emailSelect } } } });
   assertTarget(args.actorUserId, target);
   const email = target.auth?.identities?.[0]?.providerUserId?.trim().toLowerCase();
   if (!email || args.confirmedEmail.trim().toLowerCase() !== email) throw new AdminUserDeletionBlockedError("Type the account email exactly to delete it.");
@@ -137,7 +137,7 @@ export async function deleteAdminUserCore(entities: Entities, args: { actorUserI
   if (!tx) throw new AdminUserMutationError("Admin transaction support is unavailable.");
   return tx(async (db: Entities) => {
     await db.MagicLoginChallenge.deleteMany({ where: { email } });
-    await db.AdminUserAction.create({ data: { actorUserId: args.actorUserId, targetUserId: target.id, action: "DELETE_USER", previousGrant: null, nextGrant: null } });
+    await db.AdminUserAction.create({ data: { actorUserId: args.actorUserId, targetUserId: target.id, action: "DELETE_USER", previousGrant: target.manualAccessGrant, nextGrant: null } });
     await db.User.delete({ where: { id: target.id } });
   });
 }
