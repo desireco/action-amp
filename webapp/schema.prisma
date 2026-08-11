@@ -28,6 +28,9 @@ model User {
   firstName         String
   preferredName     String? // set during onboarding; defaults to firstName when null
   hasSeenOnboarding Boolean @default(false) // true once the user has completed/skipped /welcome (server-side, not localStorage)
+  // First-run guidance progresses separately from real work. Existing members
+  // default to COMPLETE; new members enter SAMPLE_TASK when they finish /welcome.
+  onboardingStage   OnboardingStage @default(COMPLETE)
 
   // Work-tracker entities
   lenses            Lens[]
@@ -325,6 +328,9 @@ model Task {
   createdAt   DateTime  @default(now())
   completedAt DateTime?
   startedAt   DateTime? // non-null = "Now" (in progress); null = "Next" (candidate). Cleared on done/defer/pause.
+  // The single harmless sample task used to introduce focus. Other guidance is
+  // stage-backed so "capture" and "triage" never become fake task debt.
+  isOnboardingSample Boolean @default(false)
 
   // ---- Focus attributes (read by the Next engine) ----
   priority Priority   @default(NORMAL) // primary sort key
@@ -380,6 +386,14 @@ enum TaskStatus {
   UPCOMING
   TODAY
   WONT_DO
+}
+
+// One persistent first-run path, independent from ordinary task state.
+enum OnboardingStage {
+  SAMPLE_TASK
+  CAPTURE
+  TRIAGE
+  COMPLETE
 }
 
 // ============================================================
