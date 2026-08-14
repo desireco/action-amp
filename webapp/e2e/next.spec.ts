@@ -44,7 +44,7 @@ test("'Start' enters focus mode in one action (F13)", async ({ page }) => {
   await expect(page.getByText("Deep work task")).toBeVisible({ timeout: 10_000 });
 
   // Default state is Next — one Start action records Now and enters focus.
-  await expect(page.getByText(/Next ·/)).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText(/Next in/)).toBeVisible({ timeout: 5_000 });
   await page.getByRole("button", { name: /^start$/i }).click();
   await page.waitForURL(/\/do\/focus$/, { timeout: 10_000 });
   await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });

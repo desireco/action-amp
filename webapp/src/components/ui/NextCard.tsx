@@ -30,7 +30,7 @@ export interface NextTask {
 interface NextCardProps {
   /** The task to display */
   task: NextTask;
-  /** Context line above the card (e.g. "Now · Work"). Accepts a node so the
+  /** Context line above the card (e.g. "Now in Work"). Accepts a node so the
    * lens name can carry its identity color separately from the state half. */
   context?: ReactNode;
   /** Called when the user defers ("Not now") */

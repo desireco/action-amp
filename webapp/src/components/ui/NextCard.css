@@ -17,7 +17,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Context line — "Now · Work". The state half (Now/Next) stays neutral; only
+/* Context line — "Now in Work". The state half (Now/Next) stays neutral; only
    the lens name carries the identity color, so the hue reads as context, not
    urgency. Demoted in size; the color is the signal, not loudness. */
 .aa-wn-card__context {

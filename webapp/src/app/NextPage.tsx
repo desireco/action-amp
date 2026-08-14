@@ -231,7 +231,7 @@ export function NextPage() {
         }}
         context={
           <>
-            {isNow ? "Now" : selectedTaskToken ? "Picked" : "Next"} ·{" "}
+            {isNow ? "Now" : selectedTaskToken ? "Picked" : "Next"} in{" "}
             <span className="aa-wn-card__context-lens">{lens.name}</span>
           </>
         }
