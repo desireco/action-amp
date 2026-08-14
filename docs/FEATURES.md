@@ -72,7 +72,7 @@ Goal: move items _out_ of the inbox into a place the focus engine can use. This 
 
 ## 3. Focus — "Next?" (the soul of the app)
 
-The home screen (`/app`). Every other app opens to a list. ActionAmp opens to a _decision_.
+The home screen (`/do`). Every other app opens to a list. ActionAmp opens to a _decision_.
 
 | #       | Feature                           | Status                | Notes                                                                                                                                                                                                                                                                                                                                                                   |
 | ------- | --------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -102,7 +102,7 @@ The home screen (`/app`). Every other app opens to a list. ActionAmp opens to a 
 | ------- | --------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **F16** | Satisfying completion | ✅ Shipped | `CompletionCircle.tsx`. Check animation, optimistic removal, soft confirmation.                                                                                |
 | **F17** | Momentum              | ⛔ Banned  | **Removed by design.** Streaks/badges/guilt-trip counters are banned by `PRODUCT.md` and `DESIGN-SYSTEM.md`. References are historical only.                   |
-| **F18** | Logbook               | ✅ Shipped | `/app/logbook`. Completed items archive here (Things-style). Searchable, not in your face.                                                                     |
+| **F18** | Logbook               | ✅ Shipped | `/do/logbook`. Completed items archive here (Things-style). Searchable, not in your face.                                                                     |
 | **F19** | Review cadences       | ✅ Shipped | Optional Today, Week, and Month check-ins/reviews with separate autosaved responses, stable Today snapshots, preference-aware navigation, and no gamification. |
 
 ---
@@ -143,7 +143,7 @@ The home screen (`/app`). Every other app opens to a list. ActionAmp opens to a 
 | **F23** | Offline-capable          | 🟡 Phase 2 | Capture & complete offline; sync on reconnect (React Query cache helps).                                                                                                          |
 | **F24** | Dark mode + calm default | ✅ Shipped | `[data-theme="dark"]` via Settings → Preferences. See `DESIGN-SYSTEM.md` §3.                                                                                                      |
 | **F25** | Multi-device sync        | 🟡 Phase 2 | Web now; Wasp architecture gets us cross-device later.                                                                                                                            |
-| **F26** | Custom Lenses            | ✅ Shipped | `/app/settings/lenses`. Pro-only CRUD beyond the seeded Work/Me pair. See `specs/custom-lenses.md`.                                                                               |
+| **F26** | Custom Lenses            | ✅ Shipped | `/do/settings/lenses`. Pro-only CRUD beyond the seeded Work/Me pair. See `specs/custom-lenses.md`.                                                                               |
 
 ---
 

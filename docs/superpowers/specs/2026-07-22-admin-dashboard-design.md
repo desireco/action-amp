@@ -12,7 +12,7 @@ Admin tooling today is CLI-only (`admin-cli` feedback triage). There is no in-ap
 view of how the product is doing. The goal is a calm, stats-first landing an
 admin reaches from their settings, plus a JSON feed for CLI/LLM monitoring.
 
-**What this is:** one page (`/app/settings/admin`), a shared stats core, and an
+**What this is:** one page (`/do/settings/admin`), a shared stats core, and an
 `actionamp-admin stats` command.
 
 **What this is not (v1):** no charts (no chart lib in the repo), no per-user
@@ -24,7 +24,7 @@ picker (windows are fixed: today / 7d / 30d).
 - **Activity data:** add `createdAt` + `lastActiveAt` to `User`. Backfill
   `createdAt` from `Auth`/`AuthIdentity`; leave `lastActiveAt` null for existing
   users. Track `lastActiveAt` going forward via throttled global middleware.
-- **Access path:** a new **Settings tab** at `/app/settings/admin`, rendered only
+- **Access path:** a new **Settings tab** at `/do/settings/admin`, rendered only
   when `user.isAdmin`. Reuses `SettingsLayout`. No top-level `/admin` route.
 - **"Suggestions":** the existing **Feedback** feature (the shell feedback button
   → `Feedback` model). The recent-feedback list shows submissions regardless of
@@ -269,7 +269,7 @@ direct URL hit renders a calm message instead of a crash.
 ### 6.2 `SettingsLayout` tab
 
 `SettingsLayout.tsx` gains `const { data: user } = useAuth()`, and the rendered
-tab list conditionally includes `{ label: "Admin", to: "/app/settings/admin",
+tab list conditionally includes `{ label: "Admin", to: "/do/settings/admin",
 exact: false }` when `user?.isAdmin`. Non-admins never see the link.
 
 ### 6.3 Layout (stats-first, calm)

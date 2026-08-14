@@ -138,7 +138,7 @@ commands.
 
 - **Purpose:** you are doing the thing. The card is the world.
 - **Entry:** click **Start** / `Enter` from Normal (task focused). Navigates
-  to the dedicated `/app/focus` route (not an overlay).
+  to the dedicated `/do/focus` route (not an overlay).
 - **Exit:** `Esc` (pauses), **Complete** (was "Done"; opens an inline optional
   completion reflection), **Take a break** (pauses).
 - **Keyset (intentionally tiny):**
@@ -345,8 +345,8 @@ user has committed to a focused flow.
 
 **Used by:**
 
-- **Triage** — the per-item co-author wizard (`/app/inbox/review`)
-- **Focus** — single-task do-only view (`/app/focus`, Variant F)
+- **Triage** — the per-item co-author wizard (`/do/inbox/review`)
+- **Focus** — single-task do-only view (`/do/focus`, Variant F)
 - **Onboarding coach** — walkthrough (`mobile-coach.html`)
 
 **Anatomy:** top row (close button + progress when sequential) · center (the

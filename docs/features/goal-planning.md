@@ -54,9 +54,9 @@ feature makes those links editable and adds lifecycle + ordering.
 - Not AI goal-breakdown (that's the `cli` skill lane, deferred).
 
 ## Where it lives
-- Pages: `/app/goals`, `/app/goals/:permalink`, `/app/projects/:permalink`
+- Pages: `/do/goals`, `/do/goals/:permalink`, `/do/projects/:permalink`
   (all exist; this feature adds controls to them, no new routes).
-- Logbook (`/app/logbook`): gains Goal rows alongside the existing completed-
+- Logbook (`/do/logbook`): gains Goal rows alongside the existing completed-
   task / completed-project / archived rows, each with a Restore action.
 - No new top-level nav, no new modes. Pure Planning-area completion.
 

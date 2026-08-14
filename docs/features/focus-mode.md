@@ -9,7 +9,7 @@ verified: 2026-08-10
 
 # Focus mode
 
-**What.** Dedicated single-task route `/app/focus` (`FocusRoute`,
+**What.** Dedicated single-task route `/do/focus` (`FocusRoute`,
 `main.wasp.ts:108`), entered from Next's one-tap "Start" or from any task row.
 Hides the sidebar; no counts, no list — just the one task. Esc exits.
 
@@ -31,7 +31,7 @@ Hides the sidebar; no counts, no list — just the one task. Esc exits.
   completed focus session never completes the Task. Completed sessions appear
   as a small timer symbol and count inside the ring, scoped to the current Task.
 - **Dedicated route** (replaces the old overlay invocation) — `NextPage`
-  and `ProjectDetailPage` `navigate("/app/focus")` into it.
+  and `ProjectDetailPage` `navigate("/do/focus")` into it.
 
 **Added 2026-08-10 (Goal rationale — focus-goal-context spec).** Focus shows a
 quiet **Goal rationale** block directly below the Task title and above the

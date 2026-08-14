@@ -61,7 +61,7 @@ Three concrete reasons:
       a "Plans and billing" section stating that ActionAmp has a free tier and
       paid plans (Pro, Prepaid, Founding 100), that prices may change with
       notice, and that a user's existing paid entitlement is honored. Reference
-      `https://actionamp.com/app/settings/billing` or a future `/pricing` for
+      `https://actionamp.com/do/settings/billing` or a future `/pricing` for
       current prices. Remove the "if we introduce a paid tier" language.
 - [ ] **`terms.md` adds an age line** if not present: 13+ (or 16+ in the EU/
       UK under GDPR) — the current "13 or older" line is fine; confirm it

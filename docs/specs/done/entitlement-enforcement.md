@@ -35,7 +35,7 @@ client surface is the upgrade trigger. Both are required for every limit.
 takes `{ feature: string; reason: string }` and renders the consistent panel:
 a short line ("`{feature}` is a Pro feature"), a one-sentence `{reason}`
 ("bring your work life in" / "organize more than 3 projects" / etc.), and a
-primary link to `/app/settings/billing` (+ secondary to `/founding-100`).
+primary link to `/do/settings/billing` (+ secondary to `/founding-100`).
 Every limit surfaces through it, so the tone never drifts and there's one
 place to tune the upgrade copy. No modals, no red dots, no urgency tricks.
 

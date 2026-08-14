@@ -88,7 +88,7 @@ reserved for the completion payoff); `--aa-dur-fast` 0.12s, `--aa-dur-base`
 
 ## §5. The calm-focus layer — ActionAmp's differentiator
 
-Things is a list app; ActionAmp **demotes the list.** The home screen (`/app`,
+Things is a list app; ActionAmp **demotes the list.** The home screen (`/do`,
 What Now) is a *chooser* — one task, the next thing that matters — not a list.
 
 - **More whitespace than feels comfortable** at first: the single task is

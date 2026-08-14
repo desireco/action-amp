@@ -9,7 +9,7 @@ verified: 2026-08-10
 
 # Next / What Now
 
-**What.** The home screen (`/app`) is a chooser, not a list. It surfaces **one**
+**What.** The home screen (`/do`) is a chooser, not a list. It surfaces **one**
 task — the next thing that matters — with a "why this?" line. State machine:
 `Next → (Start) → Now → (Done | Defer | Pause) → Next`. The Now state
 (`Task.startedAt`) persists across navigation.

@@ -83,7 +83,7 @@ Therefore list items do not contribute to:
 
 Simple-list items have two first-class entry paths:
 
-- direct add on `/app/list`, which creates a ListItem immediately;
+- direct add on `/do/list`, which creates a ListItem immediately;
 - universal Capture → Inbox → Triage, where selecting a Simple-list Lens
   performs a compact List Item confirmation and skips structured-work fields.
 
@@ -145,7 +145,7 @@ metadata with copy explaining that default Lenses always remain Life areas.
 
 ### Simple-list page
 
-Route: `/app/list`, scoped by active Lens.
+Route: `/do/list`, scoped by active Lens.
 
 ```text
 Shopping
@@ -192,7 +192,7 @@ Shortcuts do not fire while typing, except the add field's own `Enter` action.
 
 When a Simple-list Lens is active:
 
-- selecting it routes to `/app/list`;
+- selecting it routes to `/do/list`;
 - desktop navigation shows universal **Inbox** plus **List**, while hiding
   Today, Do, Plan, and Review groups;
 - the Capture FAB and `⌘K` remain available;
@@ -201,9 +201,9 @@ When a Simple-list Lens is active:
 - commands that require a Life-area Lens are hidden or disabled with clear
   copy.
 
-When switching from a Simple list to a Life area, `/app/list` routes to `/app`.
-If local storage restores a Simple-list Lens while the browser opens `/app`, the
-shell normalizes the route to `/app/list` after Lens data resolves.
+When switching from a Simple list to a Life area, `/do/list` routes to `/do`.
+If local storage restores a Simple-list Lens while the browser opens `/do`, the
+shell normalizes the route to `/do/list` after Lens data resolves.
 
 ## Data model
 
@@ -361,7 +361,7 @@ Task, Project, or Goal.
 **Files:** `webapp/src/simpleLists/SimpleListPage.tsx`, CSS, component tests,
 and `webapp/main.wasp.ts` route registration.
 
-**Work:** add `/app/list`; implement add/check/reopen/rename/delete/clear,
+**Work:** add `/do/list`; implement add/check/reopen/rename/delete/clear,
 sections, keyboard actions, and accessible states.
 
 **Verification:** focused component tests plus keyboard and screen-reader name
@@ -449,7 +449,7 @@ Browser acceptance path:
 
 - Manual drag/reorder. The schema reserves `order`; v1 may use append order.
 - Global search result kind `list-item`, linking to
-  `/app/list?item=<id>` and highlighting the row.
+  `/do/list?item=<id>` and highlighting the row.
 - CLI list-item CRUD.
 - Sharing or collaboration.
 - Multiple lists inside one Lens.

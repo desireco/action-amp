@@ -10,7 +10,7 @@ verified: 2026-07-29
 # PWA notifications
 
 **What.** ActionAmp installs as a standalone PWA. Its app-icon menu offers
-Capture, Next task, and Today. Capture uses `/app?capture=1` to open the same
+Capture, Next task, and Today. Capture uses `/do?capture=1` to open the same
 universal capture popover as `⌘K`.
 
 **Daily Today reminder.** Settings → Preferences can request notification
@@ -49,7 +49,7 @@ review screen before anything is saved to the inbox.
    Nothing reaches the server until the user confirms.
 3. **Add to inbox** calls the normal `createInboxItem` action; it uses the same
    authenticated capture path as `⌘K` and is therefore read by Inbox directly.
-4. After saving, ActionAmp opens `/app/inbox`, where the new item is first in
+4. After saving, ActionAmp opens `/do/inbox`, where the new item is first in
    the universal inbox.
 
 **Wiring:**

@@ -48,9 +48,9 @@ Goal description.
 
 ### Surfaces and states
 
-- Goal rationale appears on a Task in the **Next candidate** state on `/app`.
-- Goal rationale also appears on the active Task at `/app/focus`.
-- Prior-work continuity appears only on `/app` when `NextCard.state === "next"`.
+- Goal rationale appears on a Task in the **Next candidate** state on `/do`.
+- Goal rationale also appears on the active Task at `/do/focus`.
+- Prior-work continuity appears only on `/do` when `NextCard.state === "next"`.
   The home-card `now` state does not show a stale summary while work is active;
   live execution context belongs in Focus.
 - `actionamp now` human and JSON output gain explicit Project, Goal, and why
@@ -366,7 +366,7 @@ session-writing, note-writing, or focus-state behavior.
 
 - `docs/WORKFLOW.md` must distinguish matcher rationale, Goal rationale, and
   paused-work continuity in Work Area semantics.
-- `docs/PAGES.md` must describe both `/app` Next and `/app/focus` behavior.
+- `docs/PAGES.md` must describe both `/do` Next and `/do/focus` behavior.
 - `docs/features/focus-mode.md` and `docs/features/next-what-now.md` update only
   after code verification.
 - `cli/README.md` must document human and JSON `now` contracts; code-verified

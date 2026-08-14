@@ -148,7 +148,7 @@ These are the non-code gates the spec itself defers. Build can't clear them:
    + `https://actionamp.com/terms` (already Google-disclosure-ready via
    `legal-pages-oauth`). *Gates DC 7 + Google verification.*
 5. **Run the e2e suite + a manual Google sign-in** once the client exists, to
-   confirm the callback → `ensureOnboarded` → `/app` (or `/welcome` for a
+   confirm the callback → `ensureOnboarded` → `/do` (or `/welcome` for a
    brand-new Google user, via `first-run-experience`) path end-to-end.
 
 ## Verdict

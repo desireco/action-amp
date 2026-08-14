@@ -7,8 +7,8 @@
 > expanding-section nav (one open at a time), with the **context switch (Lens)**
 > above it and Capture pinned outside both.
 >
-> All authenticated app routes use the `/app` prefix (e.g. `/app`, `/app/inbox`,
-> `/app/tasks/:permalink`). The page-by-page descriptions below stay accurate
+> All authenticated app routes use the `/do` prefix (e.g. `/do`, `/do/inbox`,
+> `/do/tasks/:permalink`). The page-by-page descriptions below stay accurate
 > for each route's contents; the chrome mockup (§0) shows the post-2026-06-23
 > focus-switch sidebar.
 
@@ -56,13 +56,13 @@ Persistent UI that frames every page:
 These are the main Life-area destinations. Scoped surfaces use the active
 `LIFE_AREA` Lens; universal surfaces aggregate eligible Life-area Lenses.
 
-### P1. Next → `/app`
+### P1. Next → `/do`
 
 **The home page. The wedge.** Not a list — a chooser. (FEATURES F8/F10.)
 
 - Shows 1 (max 3) Tasks ranked by priority → size → due.
 - Context line ("Important · due today · S"), Start / Not now / ⋯ actions.
-- **Focus affordance** — `Start` navigates to `/app/focus` (D4) and starts
+- **Focus affordance** — `Start` navigates to `/do/focus` (D4) and starts
   the task (sets `Task.startedAt`).
 - **Three rationale layers, in order, never conflated** (locked 2026-08-10;
   implementation pending — see `specs/focus-goal-context.md`):
@@ -95,7 +95,7 @@ These are the main Life-area destinations. Scoped surfaces use the active
 - Empty state: if no Today items → gentle prompt to triage Inbox or plan Today.
 - If Inbox is untriaged and Today is empty → nudge toward triage.
 
-### P2. Inbox → `/app/inbox`
+### P2. Inbox → `/do/inbox`
 
 The universal queue. (FEATURES F3.) Shows untriaged InboxItems as a list.
 
@@ -105,7 +105,7 @@ The universal queue. (FEATURES F3.) Shows untriaged InboxItems as a list.
 - Queue header: count + "Start triage" button → enters review mode. Empty state
   keeps the same bounded queue surface and points back to universal `⌘K` capture.
 
-### P2b. Inbox Triage → `/app/inbox/review`
+### P2b. Inbox Triage → `/do/inbox/review`
 
 Per-item co-author wizard (DATA-MODEL §3, TRIAGE.md §4). The
 single-card one-key dispatch is **gone**. Three steps per item:
@@ -121,7 +121,7 @@ structured Type + Spec flow with an editable one-step **Add to list** confirmati
 - **Ready** — commits the spec; the InboxItem is transformed and removed.
 - Progress dot: "3 of 7 triaged."
 
-### P3. Today → `/app/today`
+### P3. Today → `/do/today`
 
 **Planning view** of today's commitments — distinct from Next (which is _doing_).
 
@@ -129,9 +129,9 @@ structured Type + Spec flow with an editable one-step **Add to list** confirmati
 - Enforces the **Today cap** (FEATURES F12): adding a 6th requires bumping one out.
 - Drag to reorder priority. Inline size/priority editors.
 - "Done today" section scoped to `status === "TODAY"` only (locked 2026-07-05).
-- Cross-links to `/app/upcoming` from the hero.
+- Cross-links to `/do/upcoming` from the hero.
 
-### P4. Upcoming → `/app/upcoming`
+### P4. Upcoming → `/do/upcoming`
 
 The forward-planning view of `status=UPCOMING` tasks (the bench).
 
@@ -139,9 +139,9 @@ The forward-planning view of `status=UPCOMING` tasks (the bench).
   was dropped the same day in favor of one surface per intent).
 - Date-bucketed (Overdue / This week / Next week / Later / Unscheduled),
   rose-tinted overdue, inline notes, per-row promote-to-Today.
-- Cross-links back to `/app/today` from the hero.
+- Cross-links back to `/do/today` from the hero.
 
-### P5. Someday → `/app/someday`
+### P5. Someday → `/do/someday`
 
 No-date, not-forgotten, not-nagging Tasks. (GTD "Someday/Maybe".) Lives under
 the Plan section of the focus-switch nav.
@@ -149,14 +149,14 @@ the Plan section of the focus-switch nav.
 - Grouped by Goal (or flat). Lighter visual weight.
 - Promote to Today/Upcoming when ready.
 
-### P6. Projects → `/app/projects`
+### P6. Projects → `/do/projects`
 
 All Projects in the active Lens, with Goal alignment shown on each card.
 
 - Each row: name, progress (X/Y tasks done), due date if any, next-action preview.
 - "No next action" badge if a Project has no actionable Task — a GTD health nudge.
 
-### P7. Goals → `/app/goals`
+### P7. Goals → `/do/goals`
 
 All Goals in the active Lens, with project roll-up. Full lifecycle (locked
 2026-07-05): complete / reopen / edit / delete / re-link; `Project.order`
@@ -165,7 +165,7 @@ sequences projects under each goal ("Next: <name>").
 - Each Goal: linked Projects (ordered), aggregate progress, current focus project.
 - Create/edit Goal inline.
 
-### P8. Review cadences → `/app/review/today`, `/app/review/week`, `/app/review/month`
+### P8. Review cadences → `/do/review/today`, `/do/review/week`, `/do/review/month`
 
 Three distinct completion debriefs: Today closes the day, Week recognizes
 meaningful movement, and Month celebrates Goal progress and chooses direction.
@@ -173,10 +173,10 @@ An unfinished day/week/month presents a check-in; a past or closed period
 presents retrospective reflection. Both answer sets autosave independently.
 Each keeps every completed Task inspectable, recognizes completed Projects and
 Goals, and supports optional saved responses. Reviews span all Life-area Lenses;
-Week/Month can filter inside the page. `/app/review` resolves to the first
+Week/Month can filter inside the page. `/do/review` resolves to the first
 enabled cadence, then Logbook when all are disabled.
 
-### P9. Logbook → `/app/logbook`
+### P9. Logbook → `/do/logbook`
 
 Completed + archived items. (PARA "Archive" / FEATURES F18.)
 
@@ -185,7 +185,7 @@ Completed + archived items. (PARA "Archive" / FEATURES F18.)
 - No editing — restore or permanently delete only.
 - List Items are excluded; completion remains inside the Simple-list Lens.
 
-### P10. Simple list → `/app/list`
+### P10. Simple list → `/do/list`
 
 The primary Lens-scoped surface when the active Lens has `type=SIMPLE_LIST`.
 
@@ -195,15 +195,15 @@ The primary Lens-scoped surface when the active Lens has `type=SIMPLE_LIST`.
 - Universal Inbox, triage, and Capture remain reachable. No Goals, Projects,
   Tasks, Today, Upcoming, Someday, focus, Review, Logbook, or Life-area
   navigation is rendered.
-- Opening `/app/list` with a Life-area Lens redirects to `/app`. Opening a
-  Life-area-only route with a Simple-list Lens redirects to `/app/list`;
-  `/app/inbox` and `/app/inbox/review` remain valid universal routes.
+- Opening `/do/list` with a Life-area Lens redirects to `/do`. Opening a
+  Life-area-only route with a Simple-list Lens redirects to `/do/list`;
+  `/do/inbox` and `/do/inbox/review` remain valid universal routes.
 
 ---
 
 ## 2. Detail pages
 
-### D1. Project detail → `/app/projects/:permalink`
+### D1. Project detail → `/do/projects/:permalink`
 
 - Header: name, parent Goal, due date, status. Editable inline (lifecycle
   shipped 2026-07-05: complete / reopen / edit / delete / re-link).
@@ -212,7 +212,7 @@ The primary Lens-scoped surface when the active Lens has `type=SIMPLE_LIST`.
 - Convert Task → Project (XL break-down path). Promote Resource → Task.
 - "Next action" highlighted. **Move-to-Project** affordance on each task row.
 
-### D2. Goal detail → `/app/goals/:permalink`
+### D2. Goal detail → `/do/goals/:permalink`
 
 - Header: name, description ("the why").
 - Linked Projects (ordered by `Project.order`), with progress.
@@ -220,14 +220,14 @@ The primary Lens-scoped surface when the active Lens has `type=SIMPLE_LIST`.
 - Aggregate roll-up: % complete across linked Projects.
 - Lifecycle actions: complete / reopen / edit / delete / re-link.
 
-### D3. Task detail → `/app/tasks/:permalink`
+### D3. Task detail → `/do/tasks/:permalink`
 
 Task permalink page (shipped 2026-07-05). Full-field chip-popover editing via
 the shared `PropertyChips` editor (priority, size, due, project, goal, tags).
 Notes thread rendered as a thread + composer (writes a `TaskUpdate`,
 `kind=NOTE`). Completed task detail becomes feedback-only.
 
-### D4. Focus → `/app/focus`
+### D4. Focus → `/do/focus`
 
 Single-task execution route (FEATURES F13, Variant F). The task, its centered
 countdown ring, explicit Note/Pause/Complete actions, inline composer, and
@@ -275,16 +275,16 @@ These aren't pages but are core surfaces:
 | `/password-reset`     | Reset        | email only                                          |
 | `/email-verification` | Verify email | email only                                          |
 
-Post-auth redirect → `/app` (Next).
+Post-auth redirect → `/do` (Next).
 
 ---
 
-## 5. Settings → `/app/settings`
+## 5. Settings → `/do/settings`
 
 - **Account** — email, password, linked social accounts, delete account.
 - **Preferences** — theme (dark default), Today cap (default 5, or off), confirmation sounds, momentum toggle.
-- **Lenses** (`/app/settings/lenses`) — Pro-only CRUD for lenses: add/rename/recolor/edit-purpose/change-empty-custom-type/delete. Creation requires a behavioral type: **Life area** or **Simple list**. Empty custom Lenses may switch type. Populated Lenses keep their type; selecting the other type opens a modal explaining which content must be moved or removed first. FREE gets `<ProGate>`. Seeded two are Life areas, renameable/recolorable, and never deletable or type-convertible.
-- **Billing** (`/app/settings/billing`) — Stripe-managed subscription surface.
+- **Lenses** (`/do/settings/lenses`) — Pro-only CRUD for lenses: add/rename/recolor/edit-purpose/change-empty-custom-type/delete. Creation requires a behavioral type: **Life area** or **Simple list**. Empty custom Lenses may switch type. Populated Lenses keep their type; selecting the other type opens a modal explaining which content must be moved or removed first. FREE gets `<ProGate>`. Seeded two are Life areas, renameable/recolorable, and never deletable or type-convertible.
+- **Billing** (`/do/settings/billing`) — Stripe-managed subscription surface.
 - **Shortcuts** — view/customize keyboard map.
 
 ---
@@ -292,29 +292,29 @@ Post-auth redirect → `/app` (Next).
 ## 6. Route map (for `main.wasp.ts`)
 
 ```
-Authenticated app routes (all under /app):
-  /app                                    Next (home, the chooser)
-  /app/list                               Active Simple-list Lens checklist
-  /app/focus                              Focus (Variant F, single-task)
-  /app/inbox                              Inbox
-  /app/inbox/review                       Triage walkthrough (Classify → Spec → Complete)
-  /app/today                              Today (planning)
-  /app/today/:permalink                   Next on a selected task
-  /app/upcoming                           Upcoming (top-level Plan nav item)
-  /app/someday                            Someday
-  /app/projects                           Projects list
-  /app/projects/:permalink                Project detail
-  /app/goals                              Goals list
-  /app/goals/:permalink                   Goal detail
-  /app/tasks/:permalink                   Task permalink (full-field editor)
-  /app/review                             Preference-aware Review redirect
-  /app/review/today                       Today review (?for=local date)
-  /app/review/week                        Week review (?for=local date)
-  /app/review/month                       Month review (?for=local date)
-  /app/logbook                            Logbook (completed + archived + completed goals)
-  /app/settings                           Settings
-  /app/settings/billing                   Billing
-  /app/settings/lenses                    Lenses (Pro CRUD)
+Authenticated app routes (all under /do):
+  /do                                    Next (home, the chooser)
+  /do/list                               Active Simple-list Lens checklist
+  /do/focus                              Focus (Variant F, single-task)
+  /do/inbox                              Inbox
+  /do/inbox/review                       Triage walkthrough (Classify → Spec → Complete)
+  /do/today                              Today (planning)
+  /do/today/:permalink                   Next on a selected task
+  /do/upcoming                           Upcoming (top-level Plan nav item)
+  /do/someday                            Someday
+  /do/projects                           Projects list
+  /do/projects/:permalink                Project detail
+  /do/goals                              Goals list
+  /do/goals/:permalink                   Goal detail
+  /do/tasks/:permalink                   Task permalink (full-field editor)
+  /do/review                             Preference-aware Review redirect
+  /do/review/today                       Today review (?for=local date)
+  /do/review/week                        Week review (?for=local date)
+  /do/review/month                       Month review (?for=local date)
+  /do/logbook                            Logbook (completed + archived + completed goals)
+  /do/settings                           Settings
+  /do/settings/billing                   Billing
+  /do/settings/lenses                    Lenses (Pro CRUD)
 
 Onboarding:
   /welcome                                Onboarding (server-flag-gated)
@@ -340,12 +340,12 @@ Auth:
 These were open calls during scaffold; all resolved. Kept as a record of _why_
 the routes are shaped the way they are.
 
-1. **Today vs. Next** → two pages. Next (`/app`) = the chooser (doing); Today
-   (`/app/today`) = the list (planning, cap enforcement). Different moments.
-2. **Triage** → dedicated walkthrough page (`/app/inbox/review`). The GTD
+1. **Today vs. Next** → two pages. Next (`/do`) = the chooser (doing); Today
+   (`/do/today`) = the list (planning, cap enforcement). Different moments.
+2. **Triage** → dedicated walkthrough page (`/do/inbox/review`). The GTD
    "clarify" ritual deserves focus.
 3. **Project/Goal detail** → full pages (shareable URLs, deep-linkable,
    back-button friendly).
-4. **Focus mode** → dedicated route (`/app/focus`), not an overlay. Decided
+4. **Focus mode** → dedicated route (`/do/focus`), not an overlay. Decided
    2026-07-05 with the Variant F redesign.
-5. **Task permalinks** → `/app/tasks/:permalink`. Added 2026-07-05.
+5. **Task permalinks** → `/do/tasks/:permalink`. Added 2026-07-05.

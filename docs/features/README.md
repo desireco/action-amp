@@ -33,7 +33,7 @@
 
 - [next-what-now](./next-what-now.md) (`shipped`) — home = one task; `getTopTask`; "why this?" line.
 - [today](./today.md) (`shipped`) — committed-for-today list, cap 5, Done-today section.
-- [focus-mode](./focus-mode.md) (`shipped`) — dedicated `/app/focus` route; Variant F redesign (margin clock, summoned composer, confirm-on-complete).
+- [focus-mode](./focus-mode.md) (`shipped`) — dedicated `/do/focus` route; Variant F redesign (margin clock, summoned composer, confirm-on-complete).
 - [task-notes-completion-log](./task-notes-completion-log.md) (`shipped`) — `TaskUpdate.kind` (NOTE | COMPLETED) thread + Focus composer.
 - [upcoming-someday](./upcoming-someday.md) (`shipped`) — Upcoming (top-level Plan nav) + Someday.
 

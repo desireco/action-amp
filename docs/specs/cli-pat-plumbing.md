@@ -77,7 +77,7 @@ it), independent of the CLI package's schedule.
       is replaced when cli-package ships). A valid PAT returns the user's top
       task JSON; an invalid token returns 401.
 - [ ] **Settings UI** — a "Personal Access Tokens" section (in `SettingsPage`
-      or a new `/app/settings/pat` route): create (label input → issue → show
+      or a new `/do/settings/pat` route): create (label input → issue → show
       plaintext once with a copy affordance + "won't be shown again" warning),
       list (label + last-used, no hash), revoke (per-row delete).
 - [ ] **End-to-end auth verified:** from the UI, create a token → copy it →
@@ -100,7 +100,7 @@ it), independent of the CLI package's schedule.
 
 ## Open questions
 
-- **Settings UI placement.** New route `/app/settings/pat` vs a section in the
+- **Settings UI placement.** New route `/do/settings/pat` vs a section in the
   existing `SettingsPage`. Lean: section in `SettingsPage` (less nav clutter,
   fewer routes). Build picks; note the choice.
 - **Token entropy / format.** Random opaque string vs a prefixed `aa_`-style

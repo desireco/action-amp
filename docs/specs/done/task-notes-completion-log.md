@@ -257,7 +257,7 @@ Use the existing query-client patterns already present in the app.
 
 ## Non-goals
 
-- No `/app` + `/app/today` route merge.
+- No `/do` + `/do/today` route merge.
 - No removal of completion circles from lists.
 - No Not Doing action.
 - No task archive fields.

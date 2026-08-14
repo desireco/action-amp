@@ -10,10 +10,10 @@ verified: 2026-07-29
 # Projects
 
 **What.** Multi-step outcomes, always in a Lens, may sit under a Goal.
-- **List** (`/app/projects`, `projects/ProjectsPage.tsx`) — grouped by Goal (or
+- **List** (`/do/projects`, `projects/ProjectsPage.tsx`) — grouped by Goal (or
   "Standalone"); each row shows progress bar (done/total), due date, next-action
   preview. Inline create (`CreateInline`).
-- **Detail** (`/app/projects/:id`, `projects/ProjectDetailPage.tsx`) — tasks
+- **Detail** (`/do/projects/:id`, `projects/ProjectDetailPage.tsx`) — tasks
   grouped by horizon (Today/Upcoming/Someday/Done), inline "Add task" (creates
   with the project's `lensId`), horizon move buttons, and a Resources review
   section for project links and notes (open, add, edit, remove).

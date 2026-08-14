@@ -324,8 +324,8 @@ delivery mechanism* for that row; the storage layer (the `ApiKey` table, the
 ### Open question (resolve during build)
 
 - **`onAuthSucceededRedirectTo` interaction.** Wasp's global setting is
-  `/app` (`main.wasp.ts:103`). After a fresh login on `/cli/login`, does Wasp
-  return the user to `/cli/login?callback=…` or send them to `/app`? The
+  `/do` (`main.wasp.ts:103`). After a fresh login on `/cli/login`, does Wasp
+  return the user to `/cli/login?callback=…` or send them to `/do`? The
   `Founding100Route` comment at `main.wasp.ts:161-165` says Wasp returns them
   to the intended page after auth — verify this holds for query-string-bearing
   routes. If not, the page stores `callback`/`state` in `sessionStorage`

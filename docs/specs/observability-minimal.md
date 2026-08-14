@@ -46,7 +46,7 @@ is in instrumenting the four steps that decide the business.
 - [x] **The four anonymous funnel events are emitted** to StatCounter:
       1. `landing_view` — fired on `/` load.
       2. `signup_complete` — fired on successful auth (email or Google).
-      3. `app_first_open` — fired once per user on first `/app` load (guarded
+      3. `app_first_open` — fired once per user on first `/do` load (guarded
          by the `hasSeenOnboarding` flag or a one-time localStorage stamp so
          it's not double-counted).
       4. `checkout_started` — fired when the user opens the Stripe checkout

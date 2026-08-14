@@ -53,7 +53,7 @@ Split into **instrumentation** (shippable now) and **known dead-ends**
 
 - [ ] **A `lastSeenAt` timestamp is recorded server-side** on every authenticated
       app load. New `User.lastSeenAt DateTime?` field + migration; updated by a
-      lightweight query/action on `/app` mount (or via the existing `getAppData`
+      lightweight query/action on `/do` mount (or via the existing `getAppData`
       call — piggyback, no extra round-trip). This is the *only* way to compute
       D1/D7 retention without trusting client analytics.
 - [ ] **The 4 `observability-minimal` events are emitted** (land → signup →
@@ -116,7 +116,7 @@ Do not build these now; they're listed so the queue knows they're coming and
 ## Open questions
 
 - **Where `lastSeenAt` updates.** Lean: piggyback on `getAppData` (already
-  called on every `/app` mount) — have it stamp `lastSeenAt` server-side as a
+  called on every `/do` mount) — have it stamp `lastSeenAt` server-side as a
   side effect, so there's no extra round-trip. Build confirms this doesn't
   bloat that query or cause write-contention; if it does, a dedicated tiny
   action is the fallback.

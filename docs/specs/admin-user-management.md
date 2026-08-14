@@ -33,7 +33,7 @@ the few account-level changes that support launch operations.
 
 ## Decisions locked
 
-1. **Dedicated destination.** Add `/app/admin/users` to `AdminLayout` after
+1. **Dedicated destination.** Add `/do/admin/users` to `AdminLayout` after
    Overview. It is admin-only through client gate, page gate, and every server
    query/action. There is no user-facing route and no admin CLI command in v1.
 2. **Overview drills into Users.** Total signups, selected-range signups, and
@@ -103,10 +103,10 @@ the few account-level changes that support launch operations.
 Routes and query state:
 
 ```text
-/app/admin/users
-/app/admin/users?joined=7d&sort=signup_desc
-/app/admin/users?active=7d&sort=last_active_desc
-/app/admin/users?access=friend&sort=last_login_desc
+/do/admin/users
+/do/admin/users?joined=7d&sort=signup_desc
+/do/admin/users?active=7d&sort=last_active_desc
+/do/admin/users?access=friend&sort=last_login_desc
 ```
 
 Overview links:

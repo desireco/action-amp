@@ -30,8 +30,8 @@ audience yet**. That distinction changes the whole roadmap.
 - **App version + update banner**: git SHA baked into the bundle at build time
   (Settings → About + login footer); restructured service worker + banner
   prompt users to refresh when a new build is deployed.
-- **Admin workspace**: a dedicated admin-only `/app/admin` shell with Overview,
-  Funnel, and Feedback routes; `/app/settings/admin` redirects for old
+- **Admin workspace**: a dedicated admin-only `/do/admin` shell with Overview,
+  Funnel, and Feedback routes; `/do/settings/admin` redirects for old
   bookmarks. Overview retains global user/task/feedback counts, Funnel reads
   the first-party event ledger, and Feedback is the full triage queue. Backed
   by shared aggregate cores. Activity
@@ -315,7 +315,7 @@ entitlement or booking feature.
    goals + Reopen affordance + e2e (full sequence → complete → logbook →
    reopen). Server ops, UI, and tests all landed. → §Shipped. Spec at
    `docs/specs/done/goal-planning.md`; catalog at `docs/features/goal-planning.md`.
-6. **work-area-merged** (`draft`) — collapses `/app` + `/app/today` into one
+6. **work-area-merged** (`draft`) — collapses `/do` + `/do/today` into one
     Lens-scoped page (hero + Today | Done columns), and reshapes how a task is
     worked: **no completion circle anywhere** (complete only from focus mode —
     the list becomes a chooser, not a tick-box), a **timestamped activity log**
@@ -453,7 +453,7 @@ entitlement or booking feature.
   recorded event, not a silent delete. Migration is a single `ALTER TYPE ADD
   VALUE` (no backfill). (No duet spec — small, self-contained.)
 - **admin-dashboard** (`shipped` 2026-07-22) — first in-app admin surface. A
-  stats-first page at `/app/settings/admin` (admin-only tab in SettingsLayout)
+  stats-first page at `/do/settings/admin` (admin-only tab in SettingsLayout)
   showing global counts across today / 7d / 30d windows: users (total, signed
   up, active), tasks (created, completed, total), feedback (by status, total).
   An inline recent-feedback list with a status picker lets the admin triage
@@ -528,7 +528,7 @@ entitlement or booking feature.
   precedence, `composeShareText`) and saves via the existing pure
   `createInboxItemCore` — same core `⌘K` capture and the CLI use. The route
   303-redirects to a full-screen `/share` confirmation page (parsed chips +
-  stored text, auto-dismisses ~3s via `window.close()` with a `/app` fallback)
+  stored text, auto-dismisses ~3s via `window.close()` with a `/do` fallback)
   or a first-class error state (`empty` / `server` / `missing`). Logged-out
   shares are **not** preserved across login — the user re-shares after
   sign-in (deliberate scope cut; the signed-replay design is archived in the
@@ -544,7 +544,7 @@ entitlement or booking feature.
   (`capture --title/--content/--source-url/--file`).
 - **mobile-dock + task-row-action-drawer** (`shipped` ~2026-07-15) — the
   mobile bottom dock reorganized around a Do-first affordance with Today
-  folded in (Next was demoted — the focus chooser lives at the top of /app,
+  folded in (Next was demoted — the focus chooser lives at the top of /do,
   not the dock). Task rows now open an action drawer on tap instead of
   navigating, keeping the user in context. Project mobile rows streamlined.
   Logbook row spacing tightened and title/outcome reflowed inline.
@@ -601,9 +601,9 @@ entitlement or booking feature.
   `docs/reviews/focus-why-transparent.md`.
 - **friction-cleanup** (`done` 2026-07-02) — closed the small honest gaps:
   Someday promote-to-Today, Today "Done today" section (`getDoneToday`), Goal
-  detail view (`/app/goals/:id` + `getGoal`, progress math matched to
+  detail view (`/do/goals/:id` + `getGoal`, progress math matched to
   `getGoals`'s rollup after a review-blocker fix). 210 unit tests + 42/42 e2e
-  (serially). **Two done-conditions settled at sign-off:** `/app/upcoming`
+  (serially). **Two done-conditions settled at sign-off:** `/do/upcoming`
   removal dropped per user instruction; breadcrumb nav spun out as its own
   backlog item (`breadcrumb-nav`) — interaction-design decision, not cleanup.
   Review writeup at `docs/reviews/friction-cleanup.md`.
@@ -634,11 +634,11 @@ entitlement or booking feature.
 - **focus-redesign (Variant F)** (`shipped` 2026-07-05) — the focus screen
   rebuilt around a two-number margin clock (live session + honest total), a
   summoned composer, and confirm-on-complete. Focus segments are now accounted
-  through a `TaskSession` model; a dedicated `/app/focus/:taskId` route
+  through a `TaskSession` model; a dedicated `/do/focus/:taskId` route
   replaced the overlay-style invocation. Spec locked to Variant F at
   `docs/specs/`.
 - **task-page-full-field-editing** (`shipped` 2026-07-05) — task permalinks
-  (`/app/tasks/:id`) + chip-popover editing for every task field, sharing a
+  (`/do/tasks/:id`) + chip-popover editing for every task field, sharing a
   single `PropertyChips` editor across triage and the task page. Completed
   task detail became feedback-only.
 - **task-notes-completion-log** (`shipped` 2026-07-05) — tasks gained a notes

@@ -54,7 +54,7 @@ Two fresh-context reviewers:
    Both reviewers independently flagged the `split(":")` pattern: it silently
    depended on a permalink invariant (no colons), and the encode→decode round-trip
    had no benefit. **Fix:** crumb id IS the destination route (e.g.
-   `/app/goals/grow-audience`). Handler is now a one-liner: `if (dest !== activeRoute) navigate(dest)`.
+   `/do/goals/grow-audience`). Handler is now a one-liner: `if (dest !== activeRoute) navigate(dest)`.
    Eliminates the parsing, the special-case handlers, and the latent bug.
 
 2. **[BLOCKER → fixed] Standalone task lost its back affordance.** A task with no
@@ -62,7 +62,7 @@ Two fresh-context reviewers:
    `← Back` link. **Fix:** gated the breadcrumb on `crumbs > 1` (at least one
    ancestor); standalone tasks keep the `← Back` fallback.
 
-3. **[CONCERN → fixed] Project with no goal lost its way back to /app/projects.**
+3. **[CONCERN → fixed] Project with no goal lost its way back to /do/projects.**
    The old `← Projects` link is gone; a no-goal project had no list-escape.
    **Fix:** added a "Projects" list-root crumb (parity with Goal's "Goals" root).
    All three pages now start with their list root.

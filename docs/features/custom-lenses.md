@@ -12,7 +12,7 @@ verified: 2026-07-05
 **Shipped 2026-07-03–05.** User-defined lenses beyond the seeded Work/Me, with
 per-lens identity color, kind taxonomy, and Pro-tier CRUD.
 
-**Today.** Full CRUD on `/app/settings/lenses` (Pro), seeded kinds +
+**Today.** Full CRUD on `/do/settings/lenses` (Pro), seeded kinds +
 purpose in onboarding + `getAppData`, adaptive switcher (chip+popover at ≥4
 lenses) with `⌘L`, active-lens state keyed by `id` (not name), entitlement
 gated on `LensKind` (Work lens visible-but-locked for FREE). Six curated hue

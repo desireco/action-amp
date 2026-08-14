@@ -28,7 +28,7 @@ npm run build && ./dist/index.js     # built
 | Command                                                                | What it does                                                                                                                 |
 | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `login [--dev]`                                                        | OAuth browser login (default: prod; `--dev` → localhost)                                                                     |
-| `now`                                                                  | Print your top task with Project, Goal, and why context (same one `/app` shows)                                              |
+| `now`                                                                  | Print your top task with Project, Goal, and why context (same one `/do` shows)                                              |
 | `capture "<text>"`                                                     | Quick-capture to inbox (NL parsing: `#project @date !priority`)                                                              |
 | `today [--done]`                                                       | Today's committed tasks (`--done` → completed today)                                                                         |
 | `task show <id>`                                                       | Show a single task                                                                                                           |

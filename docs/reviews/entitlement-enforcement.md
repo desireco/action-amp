@@ -28,7 +28,7 @@ upgrade trigger ("personal-only Lens") now exists.
 - **Client surface (the friendly half):**
   - `src/components/ui/ProGate.tsx` — the shared paywall-moment panel: calm,
     specific (`{feature} is a Pro feature` + one-sentence `{reason}`), links to
-    `/app/settings/billing` + `/founding-100`. Also an `asTrigger` form for the
+    `/do/settings/billing` + `/founding-100`. Also an `asTrigger` form for the
     at-cap create affordance. No modals, no red dots, no urgency copy. Future
     gates (command palette, search) reuse it.
   - `ProjectsPage` / `GoalsPage` — allowance chip ("N of 3 used"), the create

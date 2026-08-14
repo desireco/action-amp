@@ -15,7 +15,7 @@ created: 2026-08-03
 ## Summary
 
 Move administration out of user Settings into a dedicated, admin-only workspace.
-The **Admin** item in the signed-in profile menu opens `/app/admin`, not a
+The **Admin** item in the signed-in profile menu opens `/do/admin`, not a
 Settings tab. The workspace has its own layout and navigation, with funnel
 reporting as a first-class destination instead of a metric buried in a general
 stats page.
@@ -25,7 +25,7 @@ activate, and where does the path to payment stop?*
 
 ## Why
 
-The current `/app/settings/admin` page is a useful internal panel but has the
+The current `/do/settings/admin` page is a useful internal panel but has the
 wrong information architecture. Settings are personal configuration. Admin is
 product operations: growth, feedback, and the health of a live service.
 
@@ -36,11 +36,11 @@ defines the admin experience that makes those events useful day to day.
 
 ## Decisions locked
 
-1. **Dedicated route.** `/app/admin` is the only canonical browser entry point.
-   `/app/settings/admin` redirects to `/app/admin/overview` so existing
+1. **Dedicated route.** `/do/admin` is the only canonical browser entry point.
+   `/do/settings/admin` redirects to `/do/admin/overview` so existing
    bookmarks do not break.
 2. **Profile entry.** The existing admin-only item in the signed-in profile menu
-   reads `Admin` and links to `/app/admin/overview`. It does not appear in the
+   reads `Admin` and links to `/do/admin/overview`. It does not appear in the
    normal Settings tab strip.
 3. **Own shell, shared visual language.** `AdminLayout` is separate from
    `SettingsLayout` and owns its header, navigation, page width, and responsive
@@ -82,7 +82,7 @@ Last refreshed 2 min ago
 - `ActionAmp / Admin` is a compact identity mark, not marketing.
 - Active destination has the existing teal selection treatment. No badges,
   red dots, or attention-seeking counters.
-- The top-right/back affordance returns to `/app`, preserving the current
+- The top-right/back affordance returns to `/do`, preserving the current
   user-facing app context.
 - Mobile renders this navigation as a horizontal, scrollable tab row directly
   under the Admin header. It never becomes a hidden hamburger menu.
@@ -92,11 +92,11 @@ Last refreshed 2 min ago
 Routes:
 
 ```text
-/app/admin                 → redirect /app/admin/overview
-/app/admin/overview
-/app/admin/funnel?range=30d
-/app/admin/feedback
-/app/settings/admin        → redirect /app/admin/overview
+/do/admin                 → redirect /do/admin/overview
+/do/admin/overview
+/do/admin/funnel?range=30d
+/do/admin/feedback
+/do/settings/admin        → redirect /do/admin/overview
 ```
 
 ### 2. Overview
@@ -208,8 +208,8 @@ Admin target and remove the Settings Admin tab.
 ## Done-conditions
 
 - [x] Non-admins cannot see the profile Admin entry and receive a normal access
-  denial for any direct `/app/admin/*` URL or admin API request.
-- [x] Admin profile entry opens `/app/admin/overview`; `/app/settings/admin`
+  denial for any direct `/do/admin/*` URL or admin API request.
+- [x] Admin profile entry opens `/do/admin/overview`; `/do/settings/admin`
   redirects there.
 - [x] `AdminLayout` provides desktop rail and mobile tab-row navigation across
   Overview, Funnel, and Feedback, with correct active route state.

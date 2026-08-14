@@ -4,7 +4,7 @@
 
 - Reference: `/Users/jake/.codex/generated_images/019fdf7f-636b-7ff0-816b-532df6b3f51f/exec-c859e21d-cab2-4acb-a644-18244e50c0fc.png`
 - Reference pixels: 1672 × 941, normalized to 1280 × 720 for comparison.
-- Implementation: `http://localhost:4000/app/focus`
+- Implementation: `http://localhost:4000/do/focus`
 - Final desktop capture: `/Users/jake/.codex/visualizations/2026/08/08/019fdf7f-636b-7ff0-816b-532df6b3f51f/actionamp-focus-redesign/08-cycle-counter-final.jpg`
 - Final mobile capture: `/Users/jake/.codex/visualizations/2026/08/08/019fdf7f-636b-7ff0-816b-532df6b3f51f/actionamp-focus-redesign/05-implementation-mobile.jpg`
 - Final side-by-side comparison: `/Users/jake/.codex/visualizations/2026/08/08/019fdf7f-636b-7ff0-816b-532df6b3f51f/actionamp-focus-redesign/08-cycle-counter-comparison.jpg`

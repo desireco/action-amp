@@ -9,7 +9,7 @@ verified: 2026-07-03
 
 # Work area merged
 
-**Wanted.** Collapse `/app` + `/app/today` into one Lens-scoped page (hero +
+**Wanted.** Collapse `/do` + `/do/today` into one Lens-scoped page (hero +
 Today | Done columns). Three reshaping rules: (1) no completion circle anywhere
 — complete only from focus mode; (2) a timestamped activity log per task
 (`Started/Paused/Completed/Not doing` + user notes via a `kind` enum on

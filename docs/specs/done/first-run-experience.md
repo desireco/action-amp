@@ -23,7 +23,7 @@ The free-tier audit (ROADMAP.md §Free-tier audit B) found three compounding
 churn cliffs at the front door:
 
 1. `hasCompletedOnboarding()` is defined in `OnboardingPage.tsx:342` and
-   **never called**. `onAuthSucceededRedirectTo: "/app"` in `main.wasp.ts:68`
+   **never called**. `onAuthSucceededRedirectTo: "/do"` in `main.wasp.ts:68`
    skips `/welcome` entirely.
 2. The 4 onboarding "lessons" (`OnboardingPage.tsx:24-45`) teach mobile
    gestures (long-press, two-finger zoom, one-finger mode swipe) that the
@@ -40,8 +40,8 @@ retention cliff and the cheapest to fix.
 Each is a checkable predicate. Verify against the running app + the test suite.
 
 - [ ] **New signups are routed to onboarding.** A fresh user (cleared DB /
-      new email) who completes auth lands on `/welcome`, not `/app`. Verified:
-      `main.wasp.ts` `onAuthSucceededRedirectTo` still points to `/app`
+      new email) who completes auth lands on `/welcome`, not `/do`. Verified:
+      `main.wasp.ts` `onAuthSucceededRedirectTo` still points to `/do`
       (default post-onboarding), and the redirect-to-onboarding decision is
       made client-side in `App.tsx` or `AppShell.tsx` based on a user flag.
 - [ ] **Onboarding completion is persisted server-side, not in localStorage.**
@@ -50,7 +50,7 @@ Each is a checkable predicate. Verify against the running app + the test suite.
       add_has_seen_onboarding`, and `hasCompletedOnboarding()` reads it (or is
       replaced by reading `context.user.hasSeenOnboarding`).
 - [ ] **Onboarding is shown only once.** A returning user
-      (`hasSeenOnboarding === true`) goes straight to `/app`. Verified:
+      (`hasSeenOnboarding === true`) goes straight to `/do`. Verified:
       logging out and back in does NOT re-show onboarding.
 - [ ] **The gesture lessons are removed.** `OnboardingPage.tsx` no longer
       references long-press, two-finger swipe, or one-finger mode swipe. The
@@ -67,7 +67,7 @@ Each is a checkable predicate. Verify against the running app + the test suite.
       `size=S`, e.g. complete one task, capture one real thing, then triage it.
       No fake projects/goals beyond the existing "General" project.
 - [ ] **First-paint Next is non-empty for a new user.** Verified: after
-      onboarding, `/app` shows a starter task in the Next card, not the
+      onboarding, `/do` shows a starter task in the Next card, not the
       "Nothing on the table" empty state.
 - [ ] **Existing users are unaffected.** `ensureOnboarded`'s seed branch is
       guarded by "user has zero tasks," so the 0 existing production users who
@@ -83,7 +83,7 @@ Each is a checkable predicate. Verify against the running app + the test suite.
 
 ## Non-goals
 
-- **No multi-step tour / coachmarks inside `/app`.** One-shot onboarding only.
+- **No multi-step tour / coachmarks inside `/do`.** One-shot onboarding only.
   In-app spotlights are a separate, later spec.
 - **No onboarding for the capture/triage *mechanics* beyond the 3 panels.**
   The empty-state copy already instructs; don't build a tutorial.

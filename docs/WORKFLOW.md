@@ -98,7 +98,7 @@ Triage drains the universal Inbox across both Lens types.
 
 ### 2.3 Work Area — doing, right now
 
-- Where **Now / Next** lives. The home screen (`/app`) is a chooser, not a list.
+- Where **Now / Next** lives. The home screen (`/do`) is a chooser, not a list.
 - Two surfaces:
   - **Next** — the single focus task. State machine:
     `Next → (Start) → Now → (Done | Defer | Pause) → Next`. The Now state
@@ -110,15 +110,15 @@ Triage drains the universal Inbox across both Lens types.
     visible without partitioning the list. (Reversed 2026-07-21, §5.11.)
 - **One Upcoming surface.** `UPCOMING` is the Task status for the bench —
   what's not yet committed to Today but still on the radar. It lives on a
-  single page, `/app/upcoming` under Planning (locked 2026-07-05; re-reversed
+  single page, `/do/upcoming` under Planning (locked 2026-07-05; re-reversed
   later that day to drop the same-page swap toggle that briefly coexisted
   with it). Date-bucketed (Overdue / This week / Next week / Later /
   Unscheduled), rose-tinted overdue, inline notes, per-row promote-to-Today.
   Today and Upcoming cross-link to each other from their heroes — Today's
-  hero links to `/app/upcoming` (with the bench count), Upcoming's links
-  back to `/app/today`. No same-page swap; one page per intent.
+  hero links to `/do/upcoming` (with the bench count), Upcoming's links
+  back to `/do/today`. No same-page swap; one page per intent.
 - **Done today is scoped to Today** (locked 2026-07-05). The "Done today"
-  section on `/app/today` only shows tasks whose `status === "TODAY"` — not
+  section on `/do/today` only shows tasks whose `status === "TODAY"` — not
   any task completed since midnight. Completion (from focus mode) leaves
   `status` untouched, so an Upcoming task finished via focus stays
   `status=UPCOMING` and is correctly excluded from Today's Done section.
@@ -129,7 +129,7 @@ Triage drains the universal Inbox across both Lens types.
   `User.lastTodayRolloverAt`. Done tasks are left alone; `startedAt` (the
   Now state) is preserved.
 - This is the only area with a focus mode. Focus is a **dedicated route**
-  (`/app/focus`, `FocusRoute` in `main.wasp.ts`) entered from Next's one-tap "Start"
+  (`/do/focus`, `FocusRoute` in `main.wasp.ts`) entered from Next's one-tap "Start"
   or any task row's focus affordance. The centered-session redesign (locked
   2026-08-07) removes the detached margin clock. One large centered countdown
   ring carries the user's 25- or 45-minute focus-session preference and the
@@ -334,7 +334,7 @@ These were the open structural calls. All resolved:
    Today swap toggle; simplified later 2026-07-05 to **drop the toggle**
    — one surface per intent was clearer than two surfaces rendering the same
    `UPCOMING` data in different shapes.) `UPCOMING` is the Task status — the
-   bench. The `/app/upcoming` page lives under Planning (date-bucketed,
+   bench. The `/do/upcoming` page lives under Planning (date-bucketed,
    rose-tinted overdue, per-row promote-to-Today). Today and Upcoming
    cross-link from their heroes; no same-page swap. Mental model: Upcoming =
    the bench; Today = the court. A bench task with no future due date is also
@@ -379,7 +379,7 @@ Lens` while skipping the standalone lens picker by default. See
    - **Universal nav**: Inbox + Today (always visible, span every lens —
      §3, §5.11). Today moved here from the Work section on 2026-07-21 when
      it went global.
-   - **Do** — flat star-icon link to `/app` (Next, the What-Now chooser).
+   - **Do** — flat star-icon link to `/do` (Next, the What-Now chooser).
    - **Plan** group — Upcoming, Projects, Goals, Someday.
    - **Review** group — enabled Today, Week, and Month cadences, then Logbook.
    - Mobile dock stays as-is (Inbox / Do / Plan / Review / Lens); the
@@ -457,9 +457,9 @@ Lens` while skipping the standalone lens picker by default. See
     2026-07-05; centered-session layout revised 2026-08-07).** Two structural
     calls from the focus redesign + the
     task-notes-completion-log spec:
-    - **`/app/focus` is its own route**, not an overlay. Entered from Next's
+    - **`/do/focus` is its own route**, not an overlay. Entered from Next's
       one-tap "Start" or any task row's focus affordance; `NextPage` and
-      `ProjectDetailPage` `navigate("/app/focus")` into it. The screen carries
+      `ProjectDetailPage` `navigate("/do/focus")` into it. The screen carries
       one centered 25/45-minute countdown ring, explicit Note / Pause / Complete
       actions, and one inline notes-area composer. Choosing Complete reveals a
       brief optional Outcome reflection in that same composer; no modal interrupts
@@ -475,7 +475,7 @@ Lens` while skipping the standalone lens picker by default. See
       out of scope.
 11. **Today is universal, not lens-scoped (locked 2026-07-21).** Today stops
     being scoped to the active lens and becomes global like Inbox and Capture.
-    The `/app/today` list and its Done-today section now span all accessible
+    The `/do/today` list and its Done-today section now span all accessible
     lenses; each row carries a trailing lens pill so provenance stays visible
     without partitioning the list.
     - **Rationale:** Today is a commitment device for _the day_ — lens is
@@ -501,12 +501,12 @@ Lens` while skipping the standalone lens picker by default. See
       from the sidebar. With Today global that was wrong — a universal page
       shouldn't disappear when you change mode. It now sits at the top of the
       sidebar below Inbox, always visible regardless of which section is
-      expanded. `sectionForPath` returns null for `/app/today` so landing on
+      expanded. `sectionForPath` returns null for `/do/today` so landing on
       it no longer forces the Work section open. (Mobile dock unchanged for
       now — it has its own slot constraints; Today stays reachable there via
       the Next page link.)
-    - **What stays lens-scoped:** Next/What Now (`/app`, the focus engine and
-      `getTopTask`), Upcoming (`/app/upcoming`), Someday, Projects, Goals,
+    - **What stays lens-scoped:** Next/What Now (`/do`, the focus engine and
+      `getTopTask`), Upcoming (`/do/upcoming`), Someday, Projects, Goals,
       Logbook. So the Today → Upcoming cross-link still lands in the active
       lens, as before.
     - **Per-lens Today counts are gone from the switcher.** The lens
@@ -531,7 +531,7 @@ The following were updated to match this doc (commit alongside):
   Someday relocated to Planning. (Upcoming's framing flipped 2026-07-05: it
   is a top-level Planning route/nav item, not demoted — see §5.1.)
 - `DATA-MODEL.md` — status note confirms InboxItem stays unscoped; Task status
-  enum keeps `UPCOMING` (used by snooze; surfaced as the `/app/upcoming`
+  enum keeps `UPCOMING` (used by snooze; surfaced as the `/do/upcoming`
   Planning page and the Today swap toggle); the §4 "where things live" list
   aligns with the 5-areas model.
 - `TRIAGE.md` — aligns the step-aware Classify keymap with WORKFLOW.md §2.2
@@ -552,7 +552,7 @@ The following were updated to match this doc (commit alongside):
 - `docs/features/capture.md` + `docs/features/inbox-triage.md` (added
   2026-07-04) — grammar block rewritten; resolver pre-fill behavior noted.
 - `docs/features/upcoming-someday.md` (revised 2026-07-05) — Upcoming framed
-  as a single Planning page (`/app/upcoming`) that cross-links with Today
+  as a single Planning page (`/do/upcoming`) that cross-links with Today
   (no same-page swap toggle). Aligns with §5.1.
 - `PAGES.md` + `DATA-MODEL.md` (revised 2026-07-05) — Upcoming framing flipped
   from demoted to promoted-into-Planning, matching §5.1.

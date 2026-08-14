@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the first in-app admin surface — a stats-first settings tab at `/app/settings/admin` plus an `actionamp-admin stats` CLI command — backed by a shared pure stats core, with the user-activity schema fields needed to make signup/activity numbers queryable.
+**Goal:** Build the first in-app admin surface — a stats-first settings tab at `/do/settings/admin` plus an `actionamp-admin stats` CLI command — backed by a shared pure stats core, with the user-activity schema fields needed to make signup/activity numbers queryable.
 
 **Architecture:** A pure `getAdminStatsCore` (+ `getRecentFeedbackCore`) in `webapp/src/admin/operationsCore.ts` is called by two thin wrappers: a Wasp `query` (browser) and a PAT `/api/cli/admin/*` route (admin-cli). User activity is tracked by piggybacking a throttled write onto the existing `getAppData` load query. The page reuses `SettingsLayout`, `Card`, `Chip`, `Table`. The admin-cli `stats` command mirrors the existing `feedback` command structure.
 
@@ -999,13 +999,13 @@ import { AdminPage } from "./src/admin/AdminPage" with { type: "ref" };
 
 Then find the settings route lines (around line 185-186):
 ```ts
-route("SettingsRoute", "/app/settings", page(SettingsPage)),
-route("PatSettingsRoute", "/app/settings/pat", page(PatSettingsPage)),
+route("SettingsRoute", "/do/settings", page(SettingsPage)),
+route("PatSettingsRoute", "/do/settings/pat", page(PatSettingsPage)),
 ```
 
 Add right after them:
 ```ts
-route("AdminRoute", "/app/settings/admin", page(AdminPage)),
+route("AdminRoute", "/do/settings/admin", page(AdminPage)),
 ```
 
 - [ ] **Step 4: Add the conditional Admin tab to `SettingsLayout`**
@@ -1032,12 +1032,12 @@ export function SettingsLayout({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
 
   const tabs = user?.isAdmin
-    ? [...TABS, { label: "Admin", to: "/app/settings/admin", exact: false }]
+    ? [...TABS, { label: "Admin", to: "/do/settings/admin", exact: false }]
     : TABS;
 
   return (
     <div className="aa-settings-hub">
-      <Link className="aa-settings-back" to="/app">
+      <Link className="aa-settings-back" to="/do">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M10 3l-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -1083,19 +1083,19 @@ Expected: clean compile.
 Start the dev server (`cd webapp && wasp start` in one terminal). In a browser, open:
 `http://localhost:4000/login?devEmail=zeljko%40dakic.com` (the admin account — confirm via `scripts/create-verified-user.mjs --admin` or a DB check that this user has `isAdmin = true`; if not, set it: `UPDATE "User" SET "isAdmin" = true WHERE email = ...`).
 
-Then navigate to `http://localhost:3000/app/settings/admin` (the client port; check `wasp start` output for the exact client port — typically 3000). Expected:
+Then navigate to `http://localhost:3000/do/settings/admin` (the client port; check `wasp start` output for the exact client port — typically 3000). Expected:
 - The Admin tab is visible in the settings nav.
 - Stat tiles render (zeros are fine for a fresh DB; "—" while loading).
 - No console errors.
 - The recent-feedback table renders (empty message if no feedback).
 
-Also verify a non-admin user does NOT see the Admin tab: `/login?devEmail=other@example.com`, go to settings — no Admin tab; visiting `/app/settings/admin` directly shows "You don't have access."
+Also verify a non-admin user does NOT see the Admin tab: `/login?devEmail=other@example.com`, go to settings — no Admin tab; visiting `/do/settings/admin` directly shows "You don't have access."
 
 - [ ] **Step 7: Commit**
 
 ```bash
 git add webapp/src/admin/AdminPage.tsx webapp/src/admin/AdminPage.css webapp/main.wasp.ts webapp/src/app/SettingsLayout.tsx
-git commit -m "feat(admin): add /app/settings/admin stats dashboard page + admin tab"
+git commit -m "feat(admin): add /do/settings/admin stats dashboard page + admin tab"
 ```
 
 ---
@@ -1558,8 +1558,8 @@ Expected: all green.
 - [ ] **Step 3: End-to-end manual check**
 
 1. `cd webapp && wasp start`.
-2. As the admin user (`/login?devEmail=zeljko%40dakic.com`), open `/app/settings/admin`: stats render, Admin tab visible.
-3. As a non-admin, no Admin tab; `/app/settings/admin` shows "no access."
+2. As the admin user (`/login?devEmail=zeljko%40dakic.com`), open `/do/settings/admin`: stats render, Admin tab visible.
+3. As a non-admin, no Admin tab; `/do/settings/admin` shows "no access."
 4. `cd admin-cli && npm run dev -- stats --json` returns valid JSON.
 5. Verify `lastActiveAt` is stamping: load the app as the admin, then check `SELECT "lastActiveAt" FROM "User" WHERE email = 'zeljko@dakic.com'` is non-null.
 

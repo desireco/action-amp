@@ -20,8 +20,8 @@ gh_synced_at: 2026-07-08T19:45:22Z
 
 ## Summary
 
-Collapse the Work Area's two separate routes — `/app` (the Next Now/Next
-chooser) and `/app/today` (the committed list + Done-today) — into **one
+Collapse the Work Area's two separate routes — `/do` (the Next Now/Next
+chooser) and `/do/today` (the committed list + Done-today) — into **one
 page**: a full-width Now/Next card on top, two columns below (Today | Done
 today), all scoped by the Lens switch already in the shell. Two rules reshape
 how a task is worked:
@@ -54,7 +54,7 @@ Three problems, each independently motivating.
 
 1. **The Work Area is split across two routes for no structural reason.**
    `WORKFLOW.md §5.4` locks "Next + Today = two surfaces, no third" — but
-   ships them as *two routes* (`/app`, `/app/today`) with separate headers and
+   ships them as *two routes* (`/do`, `/do/today`) with separate headers and
    empty states. The hero (the wedge) and the committed list (the plan for
    today) are one mental surface: "what am I doing, and what else is on the
    table." Merging them onto one page keeps the chooser as the hero (the list
@@ -89,11 +89,11 @@ Each predicate is independently verifiable. The spec is `done` only when all pas
 ### Structure (the merge)
 
 - [ ] **One page renders both the Now/Next card and the Today list.** The
-      `/app` route shows the full-width Next card (hero) **and**, below it,
+      `/do` route shows the full-width Next card (hero) **and**, below it,
       the committed-for-today list + the collapsed Done-today section — what
-      `/app/today` renders today. The `/app/today` route is removed (or
-      redirects to `/app`); the Today nav entry points at `/app`. Verified by
-      navigating `/app` and seeing both, and `/app/today` not existing as a
+      `/do/today` renders today. The `/do/today` route is removed (or
+      redirects to `/do`); the Today nav entry points at `/do`. Verified by
+      navigating `/do` and seeing both, and `/do/today` not existing as a
       standalone view.
 - [ ] **The Lens switch scopes the whole merged page.** Switching Work↔Me
       (the existing `LensSwitch` in the shell) re-scopes the hero, the Today
@@ -217,7 +217,7 @@ Each predicate is independently verifiable. The spec is `done` only when all pas
   Done). The current `TodayPage` has it as a collapsed section *below* the open
   tasks. Both are defensible; Build may keep the existing collapsed-section
   treatment if it composes more cleanly under the hero. State the choice.
-- **`/app/today` route: remove or redirect?** Lean: redirect to `/app` (no dead
+- **`/do/today` route: remove or redirect?** Lean: redirect to `/do` (no dead
   links), then remove once nothing references it. Build's call.
 
 ## Prototypes

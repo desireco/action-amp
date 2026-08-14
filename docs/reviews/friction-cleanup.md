@@ -14,7 +14,7 @@ and the app. Each item shipped as its own commit (spec: independently shippable)
   (`TodayPage.tsx:200`) with a collapsed section: tasks completed since local
   midnight, grouped by Goal, muted rows. New `getDoneToday` query (lens-scoped,
   `isDone=true`, `completedAt >= start-of-today`).
-- **Goal detail view** — new `/app/goals/:id` route + `GoalDetailPage`,
+- **Goal detail view** — new `/do/goals/:id` route + `GoalDetailPage`,
   mirroring `ProjectDetailPage`: header with aggregate progress (matching
   `getGoals`'s rollup), linked-projects list (each linkable), standalone tasks
   grouped by horizon, inline task create. New `getGoal` query. `createTask`
@@ -66,7 +66,7 @@ Commits:
 
 Each predicate from `docs/specs/done/friction-cleanup.md` → verdict + evidence.
 
-- [ ] **`/app/upcoming` route removed** — **DROPPED per user instruction**
+- [ ] **`/do/upcoming` route removed** — **DROPPED per user instruction**
       ("let's keep upcoming"). The route, `UpcomingPage`, and the
       `getTasks status=UPCOMING` query all remain. This done-condition is
       intentionally not satisfied; recorded here so it's not a surprise.
@@ -80,9 +80,9 @@ Each predicate from `docs/specs/done/friction-cleanup.md` → verdict + evidence
       Goal. Gated on count > 0 so it vanishes when empty. `completedAt` stamped
       by `toggleTaskDone`.
 - [x] **Project detail view exists** — **PASS (already on main)** —
-      `ProjectDetailPage.tsx` + `/app/projects/:id` shipped on the prior merged
+      `ProjectDetailPage.tsx` + `/do/projects/:id` shipped on the prior merged
       branch; not re-done here.
-- [x] **Goal detail view exists** — **PASS (after fix)** — `/app/goals/:id`
+- [x] **Goal detail view exists** — **PASS (after fix)** — `/do/goals/:id`
       route + `GoalDetailPage` + `getGoal` query; mirrors Project detail. The
       aggregate-progress math was wrong on first pass (see Findings #1) — now
       matches `getGoals`'s rollup exactly.
@@ -123,7 +123,7 @@ Each predicate from `docs/specs/done/friction-cleanup.md` → verdict + evidence
   sign-off: scoped as its own backlog item (`breadcrumb-nav`)** rather than
   a friction-cleanup finish. The `crumbs always navigate` requirement from
   BACKLOG.md is preserved there.
-- **`/app/upcoming` removal** — dropped per explicit user instruction
+- **`/do/upcoming` removal** — dropped per explicit user instruction
   ("let's keep upcoming"). Accepted at sign-off.
 - **Goal-card hover-implies-clickable** (Reviewer B nit): the card has a
   `:hover` lift but only the name is a link. Minor discoverability friction;
@@ -149,7 +149,7 @@ All resolved at sign-off (2026-07-02):
    reviewers; a hands-on visual pass can happen on the running dev server at any
    time without blocking this spec.
 3. **Decide the two deferrals** — both accepted: breadcrumb-nav → own backlog
-   item; `/app/upcoming` stays (user instruction).
+   item; `/do/upcoming` stays (user instruction).
 
 ## Verdict
 
@@ -158,5 +158,5 @@ All resolved at sign-off (2026-07-02):
 All shippable done-conditions PASS; the one correctness blocker (progress-math
 divergence) is fixed; `wasp compile` green; **210 unit tests pass**; **42/42
 e2e pass serially**. The two unchecked done-conditions are settled:
-`/app/upcoming` removal (dropped per user instruction) and Breadcrumb nav
+`/do/upcoming` removal (dropped per user instruction) and Breadcrumb nav
 (scoped to its own backlog item — interaction-design decision, not cleanup).

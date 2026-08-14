@@ -23,7 +23,7 @@ ActionAmp appears in the share sheet. Selecting it:
 2. Saves an `InboxItem` only after the user chooses **Add to inbox**.
 3. Acknowledges the saved item and waits for the user's next action.
 4. Sends the user to normal login when the session has expired; after login
-   they land on `/app` and re-share. (We do not attempt to carry the share
+   they land on `/do` and re-share. (We do not attempt to carry the share
    across login — see §Logged-out path.)
 
 ## Non-goals
@@ -52,7 +52,7 @@ ActionAmp appears in the share sheet. Selecting it:
   something we control.
 - **Desktop Chrome / Edge:** `share_target` works (installed PWA only). No
   OS-level "return to source"; the window stays open, so the `/share` page's
-  fallback `navigate("/app")` runs.
+  fallback `navigate("/do")` runs.
 - **iOS / Safari:** no `share_target` support. The manifest block is ignored.
   No degradation needed — the feature simply doesn't surface.
 
@@ -91,7 +91,7 @@ mechanisms.
 | Save text to inbox | `createInboxItemCore` (`webapp/src/inbox/operationsCore.ts:58`) — the pure core the Wasp `createInboxItem` action and the CLI `cliCapture` route both call. |
 | Session-authed server route | The `api("POST", "/api/pat/*", ..., { auth: true })` family (`main.wasp.ts:305-316`). `auth:true` resolves `context.user` from the cookie the share POST carries. |
 | Route handler shape | `cliCapture` (`webapp/src/auth/patRoutes.ts:360-383`) — same idea, different auth source (`context.user` vs `req.patUser`) and response (303 vs JSON). |
-| One-shot URL flag pattern | `/app?capture=1` (`webapp/src/app/AppShell.tsx:304-310`) — same "read query param, act, strip param" idea. |
+| One-shot URL flag pattern | `/do?capture=1` (`webapp/src/app/AppShell.tsx:304-310`) — same "read query param, act, strip param" idea. |
 | Captured-confirmation visual | `.aa-capture__captured*` CSS + `aa-capture-slidein` keyframe (`webapp/src/components/ui/Overlays.css:463-524`); `ParsedCaptureChips` (`CapturePopover.tsx:384`, currently file-private — must add `export`). |
 | Post-capture invalidation | `queryClient.invalidateQueries(["getInboxItems"])` + `["getAppData"]` (mirror of `AppShell.tsx:611-622`). |
 
@@ -170,7 +170,7 @@ layout per AGENTS.md):
 export const shareCapture = async (req, res, context) => {
   // auth:true → context.user is set iff the cookie was present
   if (!context.user) {
-    // Logged out: send to normal login. After auth the user lands on /app
+    // Logged out: send to normal login. After auth the user lands on /do
     // as usual and re-shares. We do not attempt to carry the share payload
     // across the login redirect — the failure mode is "tap share again,"
     // which is acceptable (see §Logged-out path below).
@@ -203,7 +203,7 @@ flagged here so the spec is honest about the dependency.
 
 When the share POST arrives without a session (`context.user` is null), the
 handler does **not** attempt to carry the payload across login. It simply
-`303`-redirects to `/login`. The user signs in, lands on `/app` per Wasp's
+`303`-redirects to `/login`. The user signs in, lands on `/do` per Wasp's
 default `onAuthSucceededRedirectTo`, and re-shares from the source app.
 
 **Why no signed-replay:** an earlier revision of this spec carried the share
@@ -244,7 +244,7 @@ route reachable both authed and during the post-login window.
 - **~3s after mount:** `queryClient.invalidateQueries(["getInboxItems"])` +
   `["getAppData"]` (so the sidebar inbox count updates), then
   `window.close()`. If the window is still open 100ms later (close failed — the
-  common case for OS-opened windows), `navigate("/app")`.
+  common case for OS-opened windows), `navigate("/do")`.
 
 **Error states** — all share the same calm card layout (no checkmark), each
 with its own copy and a recovery link. None auto-dismiss; the user reads and
@@ -253,9 +253,9 @@ dismisses manually. State is selected by the `?error=` query flag (or by
 
 | State | When | Copy | Link |
 |---|---|---|---|
-| `?error=empty` | Share had no title/text/url | "Nothing to capture." | → `/app` ("Back to ActionAmp") |
-| `?error=server` | `createInboxItemCore` threw (parser/DB) | "Capture failed — try again." | → `/app` |
-| `?error=missing` | `?id=` absent, or `getInboxItem` returned null (wrong user / unknown / deleted) | "Couldn't find that capture." | → `/app` |
+| `?error=empty` | Share had no title/text/url | "Nothing to capture." | → `/do` ("Back to ActionAmp") |
+| `?error=server` | `createInboxItemCore` threw (parser/DB) | "Capture failed — try again." | → `/do` |
+| `?error=missing` | `?id=` absent, or `getInboxItem` returned null (wrong user / unknown / deleted) | "Couldn't find that capture." | → `/do` |
 
 No `?error=expired` state exists — there is no token to expire (see §Logged-out
 path). If the page is hit with an unknown `?error=` value, it falls through to
@@ -310,10 +310,10 @@ states). The `?error=` query flag selects which state renders.
 
 | Surface | Redirect | Page state |
 |---|---|---|
-| Empty share (all fields blank) | `303 /share?error=empty` | "Nothing to capture." + link to `/app` |
-| `createInboxItemCore` throws (parser error, DB error) | handler catches, logs `[share] failed:`, `303 /share?error=server` | "Capture failed — try again." + link to `/app` |
+| Empty share (all fields blank) | `303 /share?error=empty` | "Nothing to capture." + link to `/do` |
+| `createInboxItemCore` throws (parser error, DB error) | handler catches, logs `[share] failed:`, `303 /share?error=server` | "Capture failed — try again." + link to `/do` |
 | Share arrives while logged out | `303 /login` | (no `/share` page; user signs in and re-shares) |
-| `getInboxItem` returns null (wrong user / unknown id / deleted) | (no redirect; query resolves null on the page) | Page renders the `error=missing` state: "Couldn't find that capture." + link to `/app` |
+| `getInboxItem` returns null (wrong user / unknown id / deleted) | (no redirect; query resolves null on the page) | Page renders the `error=missing` state: "Couldn't find that capture." + link to `/do` |
 | Network failure mid-POST | The share is lost (same as any failed capture). Browser shows its own network error; no recovery. Documented. |
 
 ## Testing
@@ -327,7 +327,7 @@ states). The `?error=` query flag selects which state renders.
 - **Query — `getInboxItem`:** returns own item; returns null for another user's
   id; returns null for unknown id.
 - **E2E (Playwright):** `GET /share?id=<itemId>` renders parsed chips + stored
-  text, then auto-dismisses (close attempt → navigate to `/app` after 100ms —
+  text, then auto-dismisses (close attempt → navigate to `/do` after 100ms —
   Playwright can't `window.close()`, so the fallback path is what's asserted).
   Each `?error=` state renders its own copy without auto-dismiss. `getInboxItem`
   returning null renders the `?error=missing` state.

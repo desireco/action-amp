@@ -18,7 +18,7 @@ completion event into the same thread.
   `schema.prisma`); default `NOTE`.
 - Server ops in `tasks/operations.ts` write notes and the completion event;
   the existing `Task.completedAt` is preserved for Today/Review reads.
-- Focus mode (`/app/focus`) renders the notes thread + summoned composer, and
+- Focus mode (`/do/focus`) renders the notes thread + summoned composer, and
   asks for an optional completion note on Done (confirm-on-complete).
 - Notes can also be captured during triage and edited from task rows — same
   writer, same model.

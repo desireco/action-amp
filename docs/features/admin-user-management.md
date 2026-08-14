@@ -8,7 +8,7 @@ spec: admin-user-management.md
 
 # Admin user management and activity directory
 
-**Code and local browser verified.** `/app/admin/users`
+**Code and local browser verified.** `/do/admin/users`
 is an admin-only, cursor-paged directory with signed-up, last-login, and
 last-active timestamps plus rolling login, app-open, creation, and completion
 metrics. Search, access filters, and sort state are URL-backed.

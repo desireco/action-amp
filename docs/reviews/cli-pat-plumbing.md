@@ -44,7 +44,7 @@
 - [x] **`GET /api/pat/list`** (session-authed) — returns `[{ id, label, createdAt, lastUsedAt }]`, never the hash. ✅
 - [x] **PAT middleware** — reads `Authorization: Bearer aa_<token>`, hashes (SHA-256), looks up by `hashedToken`, stamps `lastUsedAt`, resolves `User` onto `req.patUser`. Missing/malformed → 401 "Missing or malformed bearer token."; revoked/wrong → 401 "Invalid or revoked token." Modeled on `billing/webhookMiddleware.ts` + `statusMiddleware.ts`. ✅
 - [x] **Stub `/api/cli/now` route** — wired behind PAT middleware; calls the existing top-task ranking (via shared `PRIORITY_RANK`/`SIZE_RANK`); valid PAT returns the user's top task JSON, invalid → 401. **As of the review pass**: uses `activePoolWhere` (snooze guard parity with `getTopTask`) + `lensViolation` (FREE-lens entitlement parity). ✅
-- [x] **Settings UI** — new route `/app/settings/pat` + "Access tokens" tab in `SettingsLayout.TABS`; create (label → issue → plaintext-once reveal with copy + "won't be shown again" warning), list (label + last-used, no hash), revoke (per-row with `ConfirmDialog`). ✅
+- [x] **Settings UI** — new route `/do/settings/pat` + "Access tokens" tab in `SettingsLayout.TABS`; create (label → issue → plaintext-once reveal with copy + "won't be shown again" warning), list (label + last-used, no hash), revoke (per-row with `ConfirmDialog`). ✅
 - [x] **End-to-end auth verified** — see the 10-step curl sequence below. Issue → curl `/api/cli/now` returns the user's actual top task → revoke → same curl returns 401. ✅
 - [x] **`wasp compile` passes; existing suite green** — compile clean; suite green except the 2 pre-existing-WIP failures (proven unrelated). ✅
 - [x] **Cold-context reviewer passes** — 2 reviewer subagents launched (correctness + security); 2 BLOCKERs + 3 CONCERNs found, all addressed in the review pass (see §Review pass). ✅
@@ -100,7 +100,7 @@ re-hash migration (the plaintext is not recoverable).
 
 ### D2. Open Question resolved: Settings UI placement = new route
 
-Spec's open question: new `/app/settings/pat` route vs section in `SettingsPage`.
+Spec's open question: new `/do/settings/pat` route vs section in `SettingsPage`.
 **Chose new route** (per the user's direction): cleaner separation of "access
 tokens" from profile/sign-in, matches the existing per-feature tab pattern
 (Account/Billing/Preferences/Lenses/Access tokens).

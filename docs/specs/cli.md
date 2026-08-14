@@ -30,7 +30,7 @@ database), authenticated via **Personal Access Tokens (PATs)** added to the
 backend. Built as a **typed library + thin binary** so paired agent skills can
 shell out (`actionamp <cmd> --json`) while remaining human-usable. The CLI is
 the *only* API client the skills use. Headline command: `actionamp now` —
-print the next task that matters (the same `getTopTask` that powers `/app`).
+print the next task that matters (the same `getTopTask` that powers `/do`).
 
 ## Where this sits strategically
 

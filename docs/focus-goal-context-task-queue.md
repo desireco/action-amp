@@ -89,7 +89,7 @@ paused-work continuity across Next and Focus.
 
 **Verification:**
 
-- `rg -n "Why does this matter|Goal rationale|worked|Latest note|matcher|/app/focus" docs/WORKFLOW.md docs/PAGES.md`
+- `rg -n "Why does this matter|Goal rationale|worked|Latest note|matcher|/do/focus" docs/WORKFLOW.md docs/PAGES.md`
 - `git diff --check`
 
 **Stop condition:** canonical prose matches contract. No webapp or

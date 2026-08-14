@@ -56,7 +56,7 @@ item; this spec locks it.
       working tree — confirm visual consistency).
 - [ ] **OAuth callback works in dev.** The Google OAuth consent screen has a
       test user; logging in as that user in dev (`localhost:4000`) creates a
-      `User`, runs `ensureOnboarded`, and lands on `/app` (or `/welcome` once
+      `User`, runs `ensureOnboarded`, and lands on `/do` (or `/welcome` once
       `first-run-experience` ships — whichever merges first). Verified
       manually by Build.
 - [ ] **OAuth callback works in prod.** `actionamp.com`'s authorized redirect

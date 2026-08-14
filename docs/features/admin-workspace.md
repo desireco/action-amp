@@ -9,10 +9,10 @@ verified: 2026-08-03
 
 # Dedicated admin workspace
 
-**What.** Admins get a separate `/app/admin` shell with its own rail on
+**What.** Admins get a separate `/do/admin` shell with its own rail on
 desktop and horizontal tab row on mobile. It has Overview, Users, Funnel, and Feedback
 destinations. The profile Admin entry opens Overview; the old
-`/app/settings/admin` route redirects for bookmark compatibility.
+`/do/settings/admin` route redirects for bookmark compatibility.
 
 **Device use.** Overview separates unique signed-in app users by mobile,
 tablet, desktop, and unclassified browser-session evidence for rolling 7- and

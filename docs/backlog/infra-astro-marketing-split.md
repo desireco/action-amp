@@ -82,7 +82,7 @@ Decisions confirmed with user 2026-07-06:
 | `/`, `/about`, `/privacy`, `/terms`, `/roadmap` | **Astro** | Static, SEO-bound |
 | `/blog`, `/guides`, `/help` (future) | **Astro** | Content-native |
 | `/founding-100`, `/founding-100/welcome` | **Wasp** | Auth-gated checkout + webhook + welcome — whole flow stays together |
-| `/app/*`, `/login`, `/signup`, `/auth/*`, `/webhooks/*` | **Wasp** | Transactional |
+| `/do/*`, `/login`, `/signup`, `/auth/*`, `/webhooks/*` | **Wasp** | Transactional |
 
 Astro surfaces Founding 100 scarcity on the landing page via the public count
 endpoint (Phase 4) and links to `app.actionamp.com/founding-100`.
@@ -117,7 +117,7 @@ WORKFLOW.md" rule does not apply.
 ### `docs/PUBLIC-PAGES.md`
 - **§6 handoff diagram (lines 200–208):** rewrite the bare-relative-path diagram
   into cross-subdomain paths. `/login`, `/signup`, `/founding-100`,
-  `/founding-100/welcome`, `/app` live on `app.actionamp.com`; marketing routes
+  `/founding-100/welcome`, `/do` live on `app.actionamp.com`; marketing routes
   on `actionamp.com`.
 - **§6 "Public routes" para (lines 210–213):** reframe — the marketing routes
   are no longer Wasp `authRequired: false` routes; they're Astro pages. Note
@@ -297,7 +297,7 @@ Only after Phase 6 is verified stable in production.
 Routes (and their `page()` imports): `LandingRoute`, `AboutRoute`,
 `PrivacyRoute`, `TermsRoute`, `RoadmapRoute`. **Keep:** `Founding100Route`,
 `Founding100WelcomeRoute`, `LoginRoute`, `SignupRoute`, `AppRoute`, all
-`/app/*` (the entire Founding 100 flow stays in Wasp).
+`/do/*` (the entire Founding 100 flow stays in Wasp).
 
 ### Delete now-orphaned files
 - `webapp/src/landing/` (LandingPage.tsx, LandingPage.css)
@@ -341,5 +341,5 @@ Routes (and their `page()` imports): `LandingRoute`, `AboutRoute`,
 - `docs/WORKFLOW.md` (hosting is outside its cascade).
 - Root `AGENTS.md` + `webapp/AGENTS.md` (routing rows still point at the correct
   docs).
-- The Wasp app's `/app/*`, `/login`, `/signup`, `/auth/*`, `/webhooks/*`,
+- The Wasp app's `/do/*`, `/login`, `/signup`, `/auth/*`, `/webhooks/*`,
   `/founding-100/*`, billing, auth, DB.

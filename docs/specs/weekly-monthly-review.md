@@ -65,12 +65,12 @@ No overdue-review badge, streak, score, nag, or shame state exists.
 
 ### Routes
 
-- `/app/review` — preference-aware redirect to the first enabled cadence, then
+- `/do/review` — preference-aware redirect to the first enabled cadence, then
   Logbook when all three are disabled.
-- `/app/review/today?for=2026-08-08`
-- `/app/review/week?for=2026-08-03`
-- `/app/review/month?for=2026-08-01`
-- `/app/logbook` — unchanged historical record.
+- `/do/review/today?for=2026-08-08`
+- `/do/review/week?for=2026-08-03`
+- `/do/review/month?for=2026-08-01`
+- `/do/logbook` — unchanged historical record.
 
 `for` is a local calendar date. Server range calculation must use the user’s
 IANA time zone and be tested across daylight-saving boundaries.
@@ -89,7 +89,7 @@ show attention counts or “due” dots.
 
 ### Mobile navigation
 
-Mobile dock keeps one **Review** item. It opens `/app/review`, which forwards to
+Mobile dock keeps one **Review** item. It opens `/do/review`, which forwards to
 the first enabled cadence in Today → Week → Month order. If all cadences are
 disabled, it opens Logbook. No intermediate Review home adds an extra tap.
 
@@ -460,7 +460,7 @@ Prototype questions resolved during implementation:
 
 - [x] Added live Reviews controls to Preferences.
 - [x] Adapted desktop Review navigation and mobile fallback.
-- [x] Added preference-aware `/app/review` redirect and route guards.
+- [x] Added preference-aware `/do/review` redirect and route guards.
 - [x] Tested all eight enabled/disabled combinations.
 
 ### Phase 5 — cadence UI

@@ -113,7 +113,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 - To inspect as a different local user, replace the query value:
   `/login?devEmail=name@example.com`. The local-only action creates or verifies
   that email identity, sets a temporary dev password, logs in through Wasp's
-  normal email auth, and redirects to `/app`.
+  normal email auth, and redirects to `/do`.
 - Use this before Playwright/browser QA so you can examine authenticated pages
   yourself. The server-side guard lives in `webapp/src/auth/devAutologin.ts` and
   only allows the bypass when `NODE_ENV === "development"`.
@@ -134,7 +134,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 - **Native, not custom.** System font only. No custom display/web font.
 - **Keyboard-first.** Every action has a shortcut. Modal navigation, not sidebars
   of nouns.
-- **The list is demoted.** The home screen (`/app`) is a chooser (What Now), not
+- **The list is demoted.** The home screen (`/do`) is a chooser (What Now), not
   a list.
 - **Structure changes start in `docs/WORKFLOW.md`.** Update it first, then
   cascade to the docs it governs (its §6 lists the cascade).

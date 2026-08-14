@@ -13,8 +13,8 @@ verified: 2026-08-08
 Today closes the day, Week recognizes meaningful movement, and Month celebrates
 Goal progress and chooses direction. Logbook remains the chronological record.
 
-**Routes.** `/app/review` resolves from the user's enabled cadences;
-`/app/review/today`, `/app/review/week`, and `/app/review/month` accept a local
+**Routes.** `/do/review` resolves from the user's enabled cadences;
+`/do/review/today`, `/do/review/week`, and `/do/review/month` accept a local
 calendar date through `?for=`. Review periods use the browser IANA time zone;
 weeks run Monday–Sunday and month boundaries follow the local calendar.
 

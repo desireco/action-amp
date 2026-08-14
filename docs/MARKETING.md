@@ -133,7 +133,7 @@ split:**
 
 - `actionamp.com` → Astro (marketing: `/`, `/about`, `/privacy`, `/terms`,
   `/roadmap`, future `/blog` `/guides` `/help`)
-- `app.actionamp.com` → Wasp client SPA (`/login`, `/signup`, `/app/*`,
+- `app.actionamp.com` → Wasp client SPA (`/login`, `/signup`, `/do/*`,
   `/founding-100`, `/founding-100/welcome`)
 - `api.actionamp.com` → Wasp server + Postgres (existing)
 

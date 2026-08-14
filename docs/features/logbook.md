@@ -9,7 +9,7 @@ verified: 2026-07-29
 
 # Logbook
 
-**What.** The catch-all record of things no longer active (`/app/logbook`,
+**What.** The catch-all record of things no longer active (`/do/logbook`,
 `logbook/LogbookPage.tsx`). Groups completed tasks + completed projects +
 archived notes by day (Today / Yesterday / weekday / date). Archived rows get an
 "Archived" chip and a **Restore** action that returns the note to the Inbox.

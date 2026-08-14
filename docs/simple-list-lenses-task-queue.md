@@ -377,7 +377,7 @@ Life-area behavior remains covered.
 **Acceptable model:** Terra medium  
 **Depends on:** `SL04`, `SL07`
 
-**Goal:** build complete checklist surface at `/app/list` without shell changes.
+**Goal:** build complete checklist surface at `/do/list` without shell changes.
 
 **Allowed paths:**
 
@@ -421,9 +421,9 @@ dead routes or hidden escape paths.
 
 **Required changes:**
 
-- Simple-list selection routes to `/app/list`.
-- Life-area selection from `/app/list` routes to `/app`.
-- Stored Simple-list Lens normalizes `/app` to `/app/list` after data resolves.
+- Simple-list selection routes to `/do/list`.
+- Life-area selection from `/do/list` routes to `/do`.
+- Stored Simple-list Lens normalizes `/do` to `/do/list` after data resolves.
 - Desktop Simple-list shell shows List plus persistent account/settings/Lens
   controls; hides Inbox, Today, Do, Plan, Review, and Capture FAB.
 - Mobile Simple-list shell shows List and Lens without exposing Life-area routes.
@@ -461,7 +461,7 @@ dead routes or hidden escape paths.
 - Add Lens type to CLI JSON and human output.
 - Do not promise `now / project / goal` commands after switching to Simple list.
 - Produce clear Life-area-required errors for incompatible CLI commands.
-- Command-palette Lens switch opens `/app/list` for Simple lists.
+- Command-palette Lens switch opens `/do/list` for Simple lists.
 - Item-level Simple-list search remains deferred.
 
 **Verification:**
@@ -678,7 +678,7 @@ Simple-list capture hints resolve correctly.
 - Inbox/Triage route guards directly used by shell normalization
 
 **Required changes:** Simple-list desktop shows Inbox+List; mobile shows
-Inbox+List+Lens; Capture FAB and Cmd+K work; `/app/inbox` routes stay valid;
+Inbox+List+Lens; Capture FAB and Cmd+K work; `/do/inbox` routes stay valid;
 `[[simple-list]]` preselects ListItem destination; structured commands remain
 hidden; no route loops.
 

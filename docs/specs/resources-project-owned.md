@@ -175,7 +175,7 @@ features").
 - [ ] **Delete-with-impact flow** (the core of the request): clicking Delete
       opens a confirm `BottomSheet` showing the resource title and **"N tasks
       reference this"** — each task listed with its status (Today / Upcoming /
-      Someday / Done) as a chip and a link to `/app/tasks/:id`. If N = 0, show
+      Someday / Done) as a chip and a link to `/do/tasks/:id`. If N = 0, show
       a calm "No tasks reference this." Confirm → `deleteResource`.
 - [ ] **Edit** → same sheet, prefilled → `updateResource`.
 - [ ] Cache invalidation: invalidate `getProject` / `getProjectResources` /
@@ -253,7 +253,7 @@ Update the canonical doc first, then cascade to the docs it governs.
 - **No Resource→Task promotion / Task→Resource demote.** Those triage-time
   type conversions (`DATA-MODEL.md:105-106`) are separate affordances and stay
   out of this spec.
-- **No standalone `/app/resources` route.** Resources are surfaced in-context:
+- **No standalone `/do/resources` route.** Resources are surfaced in-context:
   on their project and on the tasks that reference them. No top-level resources
   list (keeps "the list is demoted").
 - **No resource search / command-palette integration.** That belongs with

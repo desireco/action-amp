@@ -17,7 +17,7 @@ bookend a task's life:
   markdown body," `schema.prisma`).
   **Status: shipped 2026-07-05.** Full-field chip-popover editing on the task
   page + shared `PropertyChips` editor across triage + task page. Task
-  permalinks (`/app/tasks/:permalink`) and the editor polish shipped the same
+  permalinks (`/do/tasks/:permalink`) and the editor polish shipped the same
   day. Notes thread (NOTE-kind `TaskUpdate`) writes through the same composer —
   see `task-notes-completion-log.md`.
 - **Outcome** — what _happened_. Captured at completion (optional, never

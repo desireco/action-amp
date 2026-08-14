@@ -8,10 +8,10 @@
 > - **`InboxItem` stays unscoped** (no `lensId`) — capture is universal; the
 >   Lens is assigned at triage (inheriting the active lens).
 > - **`Task.status` keeps `UPCOMING`** — used by the snooze flow. It surfaces as
->   the `/app/upcoming` top-level Planning nav item (date-bucketed). (Framing
+>   the `/do/upcoming` top-level Planning nav item (date-bucketed). (Framing
 >   flipped 2026-07-05; the Today bench was dropped — see `WORKFLOW.md` §5.1.)
 > - **Someday moves under the Planning Area** in nav grouping (the `SOMEDAY`
->   status and `/app/someday` route are unchanged).
+>   status and `/do/someday` route are unchanged).
 >
 > The entity hierarchy (§1), triage transformations (§3), and focus ranking (§5–§7)
 > below remain the data-model authority.
@@ -225,7 +225,7 @@ Items, Resources, or bare Projects):
 
 - **Default Lenses: `Work` and `Me`.** **User-defined lenses ship on Pro**
   (shipped 2026-07-03; was Phase 2): create / rename / recolor / edit-purpose /
-  delete at `/app/settings/lenses`. FREE gets the seeded two — Me usable, Work
+  delete at `/do/settings/lenses`. FREE gets the seeded two — Me usable, Work
   visible-but-locked.
 - In an active `LIFE_AREA` Lens, Projects, Goals, Tasks, Resources, and the
   focus engine are scoped normally. An active `SIMPLE_LIST` Lens exposes only

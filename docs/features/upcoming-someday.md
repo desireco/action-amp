@@ -9,7 +9,7 @@ verified: 2026-07-10
 
 # Upcoming + Someday
 
-**Upcoming** (`/app/upcoming`, `lists/UpcomingPage.tsx`) — the single
+**Upcoming** (`/do/upcoming`, `lists/UpcomingPage.tsx`) — the single
 forward-planning view of `status=UPCOMING` tasks. Lives under the **Plan**
 nav section (promoted 2026-07-05; same-page Today swap toggle dropped later
 that day — one surface was clearer than two; see `WORKFLOW.md` §5.1).
@@ -19,11 +19,11 @@ overdue** recovery action. It clears dates only from incomplete Upcoming tasks
 in the active Lens; tasks stay on the bench and land in Unscheduled. Each row
 can move to **Today** or **Someday**; Someday clears its date.
 
-**Cross-links, not a toggle.** Today's hero links to `/app/upcoming`
-(with the bench count); Upcoming's hero links back to `/app/today`. One page
+**Cross-links, not a toggle.** Today's hero links to `/do/upcoming`
+(with the bench count); Upcoming's hero links back to `/do/today`. One page
 per intent — no same-page swap, no duplicated `UPCOMING` data in two shapes.
 
-**Someday** (`/app/someday`, `lists/SomedayPage.tsx`) — muted flat list, also
+**Someday** (`/do/someday`, `lists/SomedayPage.tsx`) — muted flat list, also
 under Plan. Promote-to-Today button **exists** (`handlePromote` →
 `updateTaskStatus`). No promote-to-Upcoming (by design — that's the snooze
 flow's job from Next/Today).

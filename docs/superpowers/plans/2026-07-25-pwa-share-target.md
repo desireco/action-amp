@@ -638,7 +638,7 @@ import "./SharePage.css";
 // Auto-dismiss: ~3s after mount (happy path only), invalidate the inbox queries
 // (so the sidebar count updates if the user lands in the shell), attempt
 // window.close() (works only for script-opened windows), and on failure
-// navigate to /app.
+// navigate to /do.
 //
 // NOTE: this page is registered with authRequired:false so it renders during
 // session resolution. The happy path requires an authed user (the POST already
@@ -675,9 +675,9 @@ export function SharePage() {
       // Try to close (Android share activity / script-opened windows).
       window.close();
 
-      // If still open after a grace period, land on /app.
+      // If still open after a grace period, land on /do.
       setTimeout(() => {
-        if (!window.closed) navigate("/app", { replace: true });
+        if (!window.closed) navigate("/do", { replace: true });
       }, CLOSE_GRACE_MS);
     }, DISMISS_MS);
 
@@ -708,7 +708,7 @@ export function SharePage() {
             <ParsedCaptureChips parsed={parsed} variant="captured" />
           </div>
           <p className="aa-share__text">{item.text}</p>
-          <a className="aa-share__link" href="/app">View in inbox</a>
+          <a className="aa-share__link" href="/do">View in inbox</a>
         </div>
       </main>
     );
@@ -728,7 +728,7 @@ export function SharePage() {
     <main className="aa-share">
       <div className="aa-share__card">
         <h1 className="aa-share__title">{copy}</h1>
-        <a className="aa-share__link" href="/app">Back to ActionAmp</a>
+        <a className="aa-share__link" href="/do">Back to ActionAmp</a>
       </div>
     </main>
   );
@@ -852,7 +852,7 @@ shared content to the inbox.
    - logged out → `/login` (the share is not preserved; re-share after sign-in)
 4. `/share` shows the captured item (parsed chips + text) and auto-dismisses
    in ~3s (closing the window back to the source app on Android, else landing
-   on `/app`).
+   on `/do`).
 
 **Wiring:**
 - `webapp/public/manifest.json` — the `share_target` block (action `/share`,

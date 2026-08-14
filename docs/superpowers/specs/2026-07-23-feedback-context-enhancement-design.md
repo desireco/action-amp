@@ -196,8 +196,8 @@ unified capture helper, with a "verified" date bump.
   search concatenated; `sectionForPath` bucketing.
 - **Unit** (`admin-cli`): `formatFeedbackLine` / `formatFeedbackDetail` render
   the new fields; null fields are omitted (detail) or shown as `—` (line).
-- **Manual**: dev autologin → submit feedback from `/app`, `/app/upcoming`,
-  `/app/logbook`; confirm dashboard Route column + CLI `show` show viewport/tz.
+- **Manual**: dev autologin → submit feedback from `/do`, `/do/upcoming`,
+  `/do/logbook`; confirm dashboard Route column + CLI `show` show viewport/tz.
 
 ## Verification (done when)
 

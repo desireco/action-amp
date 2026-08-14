@@ -187,7 +187,7 @@ Commits (oldest → newest):
       **integration effect untested** — see spawned task).
 
 **Settings UI**
-- [x] Lenses tab in SettingsLayout at /app/settings/lenses — PASS.
+- [x] Lenses tab in SettingsLayout at /do/settings/lenses — PASS.
 - [x] Entire tab Pro-gated; FREE sees ProGate — PASS (code correct;
       **UNTESTED at the page level** — see spawned task).
 - [x] Pro tab lists lenses with dot/name/purpose/counts/kind — PASS.

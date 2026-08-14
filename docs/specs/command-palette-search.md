@@ -93,7 +93,7 @@ preserved. Desktop and touch browser inspection also pass.
 ### B. Empty state and fixed commands
 
 - [x] **Complete typed registry, restrained intent-aware empty state.** Searchable static
-      destinations use current product language: Next (`/app`), Inbox, Triage,
+      destinations use current product language: Next (`/do`), Inbox, Triage,
       Today, Upcoming, Someday, Projects, Goals, Logbook, Review, and Settings.
       Billing and Shortcut help are valid utility destinations. Command's empty
       input shows at most six common destinations/actions plus “Type to find
@@ -125,12 +125,12 @@ preserved. Desktop and touch browser inspection also pass.
       (parent Project, Lens, command synonyms) without hand-rolled edit
       distance. Exact label, prefix, then Fuse score determines order. Type is
       a tiebreaker only; result kind is never used as a hidden search filter.
-- [x] **Destinations preserve identity.** Task → `/app/tasks/:permalink` for
-      every state; Project → `/app/projects/:permalink`; Goal →
-      `/app/goals/:permalink`; Resource → parent Project plus a stable
+- [x] **Destinations preserve identity.** Task → `/do/tasks/:permalink` for
+      every state; Project → `/do/projects/:permalink`; Goal →
+      `/do/goals/:permalink`; Resource → parent Project plus a stable
       `#resource-<id>` anchor on its Resources section; `UNPROCESSED` Inbox →
-      `/app/inbox?item=<id>`; `ARCHIVED` Inbox →
-      `/app/logbook?item=<id>`; Lens → existing active-Lens setter while
+      `/do/inbox?item=<id>`; `ARCHIVED` Inbox →
+      `/do/logbook?item=<id>`; Lens → existing active-Lens setter while
       remaining on the current route, matching today's Lens switcher.
       Destination pages add stable row ids plus scroll/highlight handling.
       Navigation closes the palette before route/Lens change.

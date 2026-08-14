@@ -25,7 +25,7 @@
 - **Webhook is the source of truth** for entitlement. Client-facing actions only
   create sessions; `User.plan` is only ever mutated by verified webhook handlers
   (`webhook.ts` → `webhookMiddleware.ts`). Never trust the client for who-is-pro.
-- **Settings has a Billing section** at `/app/settings/billing`.
+- **Settings has a Billing section** at `/do/settings/billing`.
 
 ---
 
@@ -187,17 +187,17 @@ own page anyway because of Stripe redirects and plan cards; sub-routes keep it
 shareable/bookmarkable and let each page stay focused.
 
 ```
-/app/settings            → Account        (hub: identity + danger zone)
-/app/settings/billing    → Billing        (the Stripe-facing page)
-/app/settings/preferences → Preferences   (app behavior)
+/do/settings            → Account        (hub: identity + danger zone)
+/do/settings/billing    → Billing        (the Stripe-facing page)
+/do/settings/preferences → Preferences   (app behavior)
 ```
 
-The existing `SettingsPage` (`/app/settings`) becomes **Account**. A shared
+The existing `SettingsPage` (`/do/settings`) becomes **Account**. A shared
 `SettingsLayout` renders a sub-nav (Account · Billing · Preferences) above the
 active page's content, inside the AppShell. The account-name link in the
 sidebar opens the Account hub.
 
-### 5.1 Account (`/app/settings`) — mostly exists
+### 5.1 Account (`/do/settings`) — mostly exists
 
 - **Name** (first/last) — editable (today it's read-only; add edit action)
 - **Email** — change via Wasp's email-auth flow
@@ -207,7 +207,7 @@ sidebar opens the Account hub.
   customer deletion via API, or mark sub for cancellation at period end). This
   is a real requirement, not a nicety — otherwise orphan subs keep charging.
 
-### 5.2 Billing (`/app/settings/billing`) — NEW, the centerpiece
+### 5.2 Billing (`/do/settings/billing`) — NEW, the centerpiece
 
 Three view-states, all server-driven off `User.plan`:
 
@@ -249,7 +249,7 @@ scarcity framing — the page embodies the "calm focus" brand.
   screen above. Soft-locked resources (§2) get a one-time banner explaining
   what's read-only until they re-up.
 
-### 5.3 Preferences (`/app/settings/preferences`) — Phase 2-ish
+### 5.3 Preferences (`/do/settings/preferences`) — Phase 2-ish
 
 - Theme (dark default — F24)
 - Today cap (default 5, configurable, off — F12)
@@ -277,7 +277,7 @@ webapp/
     │   ├── stripe.ts            # stripe client init + price-id lookups from env
     │   └── config.ts            # plan/limit constants (single source of truth)
     ├── app/
-    │   ├── BillingPage.tsx      # /app/settings/billing — the plan cards + portal button
+    │   ├── BillingPage.tsx      # /do/settings/billing — the plan cards + portal button
     │   ├── BillingPage.css
     │   └── SettingsLayout.tsx   # shared Account/Billing/Preferences sub-nav + shell
     └── (feature ops import billing/guards)
@@ -311,8 +311,8 @@ hosted Checkout + Portal (it's a redirect). Add `stripe` to
 2. `billing/config.ts` + `billing/guards.ts`: the cap rules + server guards.
    Wire guards into the *current* Task/Project/Goal operations (when they exist)
    so enforcement is real before billing is wired.
-3. Refactor SettingsPage → Account; add SettingsLayout + `/app/settings/billing`
-   - `/app/settings/preferences` routes (billing/preferences as stubs).
+3. Refactor SettingsPage → Account; add SettingsLayout + `/do/settings/billing`
+   - `/do/settings/preferences` routes (billing/preferences as stubs).
 
 **Phase 1 — Checkout (taking money)**
 4. Stripe account setup: create 3 Prices in the Dashboard; grab price IDs into

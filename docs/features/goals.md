@@ -10,9 +10,9 @@ verified: 2026-07-03
 # Goals
 
 **What.** The organizing layer (active outcomes, replaces PARA "Areas").
-- **List** (`/app/goals`, `goals/GoalsPage.tsx`) — card grid; aggregate project
+- **List** (`/do/goals`, `goals/GoalsPage.tsx`) — card grid; aggregate project
   progress, project count, current Focus project. Inline create.
-- **Detail** (`/app/goals/:permalink`, `goals/GoalDetailPage.tsx`) — header
+- **Detail** (`/do/goals/:permalink`, `goals/GoalDetailPage.tsx`) — header
   shows aggregate progress and the current Focus project; lists linked Projects
   (each → project detail). Goals do not create or own Tasks directly.
 

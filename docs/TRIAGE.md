@@ -50,7 +50,7 @@ and **deletes the original InboxItem** — the transformed entity *is* the recor
 ## 2. The loop
 
 ```
-  Entry:  click Inbox count · press I (from Normal) · navigate to /app/inbox/review
+  Entry:  click Inbox count · press I (from Normal) · navigate to /do/inbox/review
           ─────────────────────────────────────────────────────────────
    Per item:
      ┌─────────────────────────────────────────────┐

@@ -216,7 +216,7 @@ gate remain.
 
 ### Focus screen — RESOLVED 2026-07-05 (Variant F locked)
 
-The full-screen focus surface (`/app/focus`, `FocusMode.tsx`) was a
+The full-screen focus surface (`/do/focus`, `FocusMode.tsx`) was a
 detail-panel layout centered with extra margins: title, meta line, notes
 editor, activity thread, composer, two buttons. The take-over was bigger than
 the content — whitespace alone was doing the work of "focus," and the

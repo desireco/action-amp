@@ -38,7 +38,7 @@ focus, selection, responsive layout, result context, and pointer entry.
   fuzzy; long-form matching is case-insensitive substring search in v1.
   Results are always scoped to the authenticated user.
 - **Correct destinations.** Every Task result opens
-  `/app/tasks/:permalink`, including completed tasks. Project and Goal results
+  `/do/tasks/:permalink`, including completed tasks. Project and Goal results
   use their permalink routes. A Resource opens its parent Project's Resources
   section. An Inbox result opens and anchors the record in Inbox or Logbook,
   based on status. A Lens result switches the active Lens without inventing a

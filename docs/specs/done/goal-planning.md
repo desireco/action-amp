@@ -87,9 +87,9 @@ matcher, command-palette).
 
 - [ ] `GoalDetailPage` header has a **Complete goal** action (call
       `setGoalDone`), and after completion the goal is no longer in the
-      `/app/goals` list and appears in `/app/logbook`.
+      `/do/goals` list and appears in `/do/logbook`.
 - [ ] `ProjectDetailPage` header has a **Complete project** action with the
-      same end-to-end behavior (disappears from `/app/projects`, appears in
+      same end-to-end behavior (disappears from `/do/projects`, appears in
       Logbook).
 - [ ] Both headers expose **Reopen** when the entity is already done
       (reachable via Logbook; see §D).
@@ -154,7 +154,7 @@ matcher, command-palette).
       for each id, tenancy-checked. Rejects ids not belonging to this goal.
 - [ ] **"Next project" surfacing:** the first non-done project in the goal's
       sequence is shown as a single line on (a) the goal card on
-      `/app/goals` ("Next: <project name>") and (b) the `GoalDetailPage`
+      `/do/goals` ("Next: <project name>") and (b) the `GoalDetailPage`
       header. When all projects under the goal are done or there are none,
       the line is absent (no fabricated content — the "never lies" rule from
       `focus-why-transparent`).

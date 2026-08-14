@@ -18,7 +18,7 @@ shippable — Build can land them as separate commits.
 ## Why
 
 ROADMAP.md §0 (honest state) and WORKFLOW.md §5.1 flag several decided-but-
-undone items. A first user who opens the app today sees: a dead `/app/upcoming`
+undone items. A first user who opens the app today sees: a dead `/do/upcoming`
 route, Projects/Goals with no detail view (lists only), a Today page whose
 "Done today" section is a literal `TODO` comment (`TodayPage.tsx:200`), and
 Someday rows with no promote action. These aren't blockers, but they're the
@@ -30,7 +30,7 @@ fix — the product stops feeling like a prototype.
 Each bullet is independently verifiable. Build may ship them in any order /
 any number of commits; the spec is `done` only when all pass.
 
-- [ ] **The `/app/upcoming` route is removed.** Per WORKFLOW.md §5.1 (decided
+- [ ] **The `/do/upcoming` route is removed.** Per WORKFLOW.md §5.1 (decided
       2026-06-23, never done): remove the `UpcomingRoute` from `main.wasp.ts`
       and the Upcoming nav entry. **Keep** `getTasks`'s ability to query
       `status=UPCOMING` (the Today "See upcoming" toggle reuses it). The
@@ -47,12 +47,12 @@ any number of commits; the spec is `done` only when all pass.
       bottom (collapsed by default per the mockups). Reuse `GroupedList` +
       `TaskRow` (muted). The stub `doneGroups` memo (currently `[]`) becomes
       a real query.
-- [ ] **Project detail view exists.** A `/app/projects/:id` route (or an
+- [ ] **Project detail view exists.** A `/do/projects/:id` route (or an
       in-place anchor view per WORKFLOW.md) showing the project's task list,
       progress, and next-action — Layout 1 from `docs/mockups/project-anchor-
       layouts.html`. Minimal v1: project header + full open-task list +
       "Add task" (reuses task create). No subtask/timeline depth yet.
-- [ ] **Goal detail view exists.** A `/app/goals/:id` route: goal header,
+- [ ] **Goal detail view exists.** A `/do/goals/:id` route: goal header,
       linked projects, standalone tasks under it, aggregate progress. Minimal
       v1 — same component shape as Project detail, scoped to a Goal.
 - [ ] **Breadcrumbs navigate (not just zoom).** Per BACKLOG.md's BUILD
@@ -80,12 +80,12 @@ any number of commits; the spec is `done` only when all pass.
 - **Project detail as route vs in-place anchor.** WORKFLOW.md / BACKLOG.md
   describe an "Open →" re-anchoring model (the project becomes the view's
   scope) rather than a separate route. Build: the simplest correct thing is a
-  route (`/app/projects/:id`) that reuses the existing list components;
+  route (`/do/projects/:id`) that reuses the existing list components;
   discover's lean is route-first for v1 (URL-addressable, shareable, simpler
   back button), with the zoom/anchor model as a later interaction refinement.
   Pick the simpler one; note it in the review.
   **UPDATE 2026-06-27:** a route-based `ProjectDetailPage` +
-  `/app/projects/:id` already exists on the unmerged `fix/what-now-surfaces-
+  `/do/projects/:id` already exists on the unmerged `fix/what-now-surfaces-
   triaged-tasks` branch, with its own e2e. When that branch merges, this item
   is done — adopt its implementation and drop the open question. The Goal
   detail view is NOT on that branch and still needs building.
@@ -93,7 +93,7 @@ any number of commits; the spec is `done` only when all pass.
 ## Branch overlap (2026-06-27)
 
 The unmerged `fix/what-now-surfaces-triaged-tasks` branch already implements:
-- ✅ **Project detail view** (`ProjectDetailPage.tsx` + `/app/projects/:id`
+- ✅ **Project detail view** (`ProjectDetailPage.tsx` + `/do/projects/:id`
   route + `e2e/project-detail.spec.ts`) — satisfies this spec's 4th done-condition.
 - ❓ **Next surfacing triaged tasks** — reworks `NextPage.tsx`; not in
   this spec but coordinate if this spec's "Done today" change touches the same file.

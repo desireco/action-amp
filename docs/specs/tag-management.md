@@ -53,7 +53,7 @@ usable.
   the ones the matcher reads and the seeder ensures exist*. No new
   `isSystem` flag, no new column.
 - **No tag-manager page.** Tags are managed in place, on Task detail. A
-  standalone `/app/tags` list is a non-goal.
+  standalone `/do/tags` list is a non-goal.
 - **No color editing / merge / rename.** The `Tag.color` field keeps whatever
   it was created with; seeded reserved tags get a neutral default. Editing
   color, merging duplicates, renaming → all non-goals.
@@ -130,7 +130,7 @@ size, due, notes — are explicitly out of scope; the stub's TODO stays.)
 
 ## Non-goals
 
-- **No tag-manager page** (`/app/tags`). In-place editing only.
+- **No tag-manager page** (`/do/tags`). In-place editing only.
 - **No color editing, rename, merge, delete-tag.** `Tag.color` keeps its
   create-time value; orphan tag rows are harmless.
 - **No other Task-detail fields.** Priority/size/due/notes stay as the existing

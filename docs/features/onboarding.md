@@ -14,7 +14,7 @@ Focus. `completeOnboarding` persists `User.hasSeenOnboarding = true` server-side
 + sends a welcome email (best-effort, non-blocking).
 
 **Server flag survives device/browser switch.** `App.tsx` redirects authed users
-with `hasSeenOnboarding === false` on `/app` paths → `/welcome`.
+with `hasSeenOnboarding === false` on `/do` paths → `/welcome`.
 
 **Guided first loop.** `ensureOnboarded` creates default Work + Me lenses, a
 "General" project per lens, and one sample TODAY task in Me. Persisted

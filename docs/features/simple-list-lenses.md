@@ -13,7 +13,7 @@ verified: 2026-08-10
 remains. No deployment is claimed.** ActionAmp
 supports a second behavioral Lens type for direct checklists. Existing and
 seeded Lenses remain Life areas. Pro users can create a Simple-list Lens from
-Settings, switch to its dedicated `/app/list` route, and add, check, reopen,
+Settings, switch to its dedicated `/do/list` route, and add, check, reopen,
 rename, remove, or clear checked items without creating Tasks.
 
 **Boundaries.** `LensType` controls behavior while `LensKind` continues to
@@ -26,7 +26,7 @@ reassignment targets.
 **Interface.** The desktop shell reduces to universal Inbox plus List while
 retaining Lens switching, Settings, account, theme, search, feedback, and
 Capture. Mobile reduces to Inbox, List, and Lens. Switching Lens types normalizes
-between `/app/list` and `/app`; Settings and admin routes remain reachable.
+between `/do/list` and `/do`; Settings and admin routes remain reachable.
 The CLI reports Lens type and rejects structured commands when a Simple-list
 Lens is active. List-item CLI CRUD and global item search remain deferred.
 

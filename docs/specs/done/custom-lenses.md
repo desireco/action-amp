@@ -64,9 +64,9 @@ updated *alongside* this spec — see "Doc cascade" below.
 
 **Settings UI (the "where")**
 - [ ] A **Lenses** tab exists in `SettingsLayout.TABS` (Account · Billing ·
-      Preferences · Lenses) at `/app/settings/lenses`.
+      Preferences · Lenses) at `/do/settings/lenses`.
 - [ ] The entire tab is **Pro-gated**: a FREE user landing on
-      `/app/settings/lenses` sees the shared `<ProGate>` (calm copy, no bright
+      `/do/settings/lenses` sees the shared `<ProGate>` (calm copy, no bright
       badge — per PRODUCT.md), not an editable list. They cannot edit, create,
       rename, recolor, or delete any lens.
 - [ ] For Pro users, the tab lists all lenses; each row shows color dot, name,

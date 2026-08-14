@@ -64,8 +64,8 @@ ancestor-navigation surface.
 ## Decision locked (2026-07-03): the route model
 
 The blocking call is resolved. **Breadcrumb clicks navigate to the ancestor's
-existing route** (Project crumb → `/app/projects/:id`, Goal crumb →
-`/app/goals/:id`). The breadcrumb is derived from the route, so it's always
+existing route** (Project crumb → `/do/projects/:id`, Goal crumb →
+`/do/goals/:id`). The breadcrumb is derived from the route, so it's always
 consistent with the URL and the back button.
 
 **Why route model over WORKFLOW.md's zoom/anchor.** Every other surface in the

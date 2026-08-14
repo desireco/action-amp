@@ -30,7 +30,7 @@ ActionAmp is provided "as is." We work hard to make it reliable and secure, but 
 
 ## Plans and billing
 
-ActionAmp has a free tier and paid plans, including Pro (recurring), Prepaid credit, and a limited Founding 100 lifetime plan. Current prices and what each plan includes live at the [billing page in the app](https://app.actionamp.com/app/settings/billing). Prices may change, but we'll give notice before they do, and any paid entitlement you've already bought is honored for its term. We won't bait-and-switch.
+ActionAmp has a free tier and paid plans, including Pro (recurring), Prepaid credit, and a limited Founding 100 lifetime plan. Current prices and what each plan includes live at the [billing page in the app](https://app.actionamp.com/do/settings/billing). Prices may change, but we'll give notice before they do, and any paid entitlement you've already bought is honored for its term. We won't bait-and-switch.
 
 ## Termination
 

@@ -10,7 +10,7 @@
 | Command | What |
 |---|---|
 | `login [--dev]` | OAuth browser login (gh/stripe pattern — no copy-paste tokens) |
-| `now` | Top task (same one /app shows) |
+| `now` | Top task (same one /do shows) |
 | `capture "<text>"` | Quick-capture with NL parsing |
 | `today [--done]` | Today's committed tasks / completed today |
 | `task show/start/pause/done/snooze/move` | The full task lifecycle |

@@ -198,7 +198,7 @@ surfaces.
   page — a newsletter signup confirms inline (toast / line under the field).
 - **No `/pricing` until a recurring tier exists.** Founding 100 is the only paid
   surface today.
-- **No `/dashboard` or `/app` portal page.** The app's home IS Next (`/app`).
+- **No `/dashboard` or `/do` portal page.** The app's home IS Next (`/do`).
   Auth-required routes are the app; public routes are everything in this doc.
 
 ---
@@ -219,10 +219,10 @@ visitor  → actionamp.com/  (Astro)  → (newsletter capture, inline confirm)
                                                         ↓ Stripe
                                                         ↓ app.actionamp.com/founding-100/welcome
                                                                       ↓
-                                                                   /app
+                                                                   /do
 
-ready    → app.actionamp.com/signup → auth → /welcome (first-run) → coach → /app
-returning→ app.actionamp.com/login  → auth → /app (Next)
+ready    → app.actionamp.com/signup → auth → /welcome (first-run) → coach → /do
+returning→ app.actionamp.com/login  → auth → /do (Next)
 ```
 
 **Astro routes** (static SSG, `actionamp.com`): `/`, `/about`, `/privacy`,
@@ -236,7 +236,7 @@ to surface the live spots-remaining counter on the landing page.
 **Wasp routes** (auth + money stay here, `app.actionamp.com`): `/login`,
 `/signup`, `/founding-100` (whole route: offer + auth + checkout),
 `/founding-100/welcome` (auth-required — a founder must be logged in to have
-paid), `/welcome` (first-run flag), and all app routes — Next (`/app`), Inbox,
+paid), `/welcome` (first-run flag), and all app routes — Next (`/do`), Inbox,
 Triage, Today, Upcoming, Someday, Projects, Goals, Logbook, Settings, Billing,
 Preferences, Task detail.
 
@@ -310,7 +310,7 @@ SSG, Cloudflare Pages) at `actionamp.com`; the Wasp app lives at
 - **This doc §6** — handoff diagram rewritten for cross-subdomain paths; "public
   routes" reframed from Wasp `authRequired: false` routes to Astro static pages,
   with the Wasp-side routes (`/founding-100`, `/login`, `/signup`,
-  `/founding-100/welcome`, `/app/*`) called out explicitly.
+  `/founding-100/welcome`, `/do/*`) called out explicitly.
 
 **What didn't move:** `/founding-100` stays in Wasp entirely (offer + auth +
 checkout + webhook + welcome) — the auth-gated checkout handoff is not ported.

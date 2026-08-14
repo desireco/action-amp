@@ -21,7 +21,7 @@ a cleanup finish.
 
 **Spec.** `docs/specs/breadcrumb-nav.md` — **`ready`** (locked 2026-07-03). The
 blocking decision is resolved: **route model** — crumbs navigate to the
-ancestor's existing route (`/app/projects/:id`, `/app/goals/:id`), uniform with
+ancestor's existing route (`/do/projects/:id`, `/do/goals/:id`), uniform with
 the rest of the app, no new view-state layer. The zoom/anchor layer is deferred
 to hard-focus mode if that ever ships.
 

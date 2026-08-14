@@ -23,7 +23,7 @@ Pro/Founder/Friend grants are entitled without rewriting Stripe plan data.
 
 **Client.** `<ProGate>` (`components/ui/ProGate.tsx`) — inline panel (Work-lens
 gate, post-402 fallback) and `asTrigger` (at-cap create affordance). Links to
-`/app/settings/billing` + `/founding-100`.
+`/do/settings/billing` + `/founding-100`.
 
 **Files.** `billing/entitlements.ts`; `billing/entitlementHttp.ts`;
 `billing/useEntitled.ts`; `components/ui/ProGate.tsx`.

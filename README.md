@@ -134,10 +134,10 @@ A Wasp (`>=0.24`, TypeScript Spec) app: **React 19 + Node + Prisma**.
 | `webapp/src/styles/tokens.css` | Design tokens (teal/amber + neutrals + dark mode). |
 | [`webapp/AGENTS.md`](webapp/AGENTS.md) | **Wasp mechanics** for agents — config format, imports, operations, migrations, troubleshooting. |
 
-**App routes** (from `main.wasp.ts`): `/` (landing) · `/app` (What Now — home) ·
-`/app/inbox` · `/app/inbox/review` (triage) · `/app/today` · `/app/upcoming` ·
-`/app/someday` · `/app/projects` · `/app/goals` · `/app/logbook` · `/app/tasks/:id` ·
-`/app/settings` · `/app/settings/billing` · `/welcome` (onboarding) · `/design-system` ·
+**App routes** (from `main.wasp.ts`): `/` (landing) · `/do` (What Now — home) ·
+`/do/inbox` · `/do/inbox/review` (triage) · `/do/today` · `/do/upcoming` ·
+`/do/someday` · `/do/projects` · `/do/goals` · `/do/logbook` · `/do/tasks/:id` ·
+`/do/settings` · `/do/settings/billing` · `/welcome` (onboarding) · `/design-system` ·
 `/about` · `/founding-100` · `/login` · `/signup` · legal pages.
 
 ---

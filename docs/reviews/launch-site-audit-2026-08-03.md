@@ -77,16 +77,16 @@ verification notes.
       - Evidence: `site/src/pages/index.astro`; `webapp/src/auth/email/SignupPage.tsx`;
         `webapp/src/auth/email/LoginPage.tsx`.
       - Done when: a new visitor can start from every public CTA, create or
-        access an account through one clearly explained flow, and reach `/app`.
+        access an account through one clearly explained flow, and reach `/do`.
       - Resolved 2026-08-03: `/signup` and `/login` now share one passwordless
         email-code component while preserving route-specific framing. Signup
         says “Start free” and contains no password or full-name field. Local
-        browser verification created an account and reached `/app` with no
+        browser verification created an account and reached `/do` with no
         console errors. Seven auth client tests and `wasp compile` passed.
 
 - [x] **F02 — Preserve Founding purchase intent through authentication.** A
       logged-out Founding CTA sends the visitor to `/login`; successful login
-      sends them to `/app`, not back to `/founding-100`.
+      sends them to `/do`, not back to `/founding-100`.
       - Evidence: `webapp/src/public/Founding100Page.tsx` explicitly notes that
         no return-path support is wired.
       - Done when: logged-out visitor selects Founding, authenticates, returns
@@ -94,7 +94,7 @@ verification notes.
       - Resolved 2026-08-03: the Founding CTA now sends a validated local
         `returnTo=/founding-100` through both code entry and emailed magic-link
         login. External and protocol-relative destinations fall back to
-        `/app`. Browser verification with a new local account returned directly
+        `/do`. Browser verification with a new local account returned directly
         to the offer and exposed the authenticated `$99` checkout CTA with no
         console errors. Eighteen auth tests and `wasp compile` passed.
 
@@ -323,7 +323,7 @@ Append one entry per resolved finding:
 
 | Date | Finding | Change | Verification | Commit |
 |---|---|---|---|---|
-| 2026-08-03 | F01 | Shared passwordless flow for `/signup` and `/login`; removed password signup UI | 7 auth tests; local account creation → `/app`; `wasp compile` | Uncommitted |
+| 2026-08-03 | F01 | Shared passwordless flow for `/signup` and `/login`; removed password signup UI | 7 auth tests; local account creation → `/do`; `wasp compile` | Uncommitted |
 | 2026-08-03 | F02 | Validated Founding `returnTo` through code and magic-link authentication | 18 auth tests; logged-out Founding → new account → returned offer; `wasp compile` | Uncommitted |
 | 2026-08-03 | F03 | Public Free / annual Pro / monthly Pro / Founding comparison and homepage annual-price anchor | Astro build; desktop + 390px browser checks | Uncommitted |
 | 2026-08-03 | F04 | Replaced pre-launch and beta copy with live early-access language | Astro build; stale-copy search | Uncommitted |
