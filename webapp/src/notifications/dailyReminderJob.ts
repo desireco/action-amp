@@ -69,7 +69,7 @@ export const sendDailyTodayReminder: SendDailyTodayReminder<DailyReminderArgs, {
       todayTasks.map((t) => t.description),
       todayCount,
     );
-    const payload = JSON.stringify({ title: "ActionAmp", body, url: "/app/today" });
+    const payload = JSON.stringify({ title: "ActionAmp", body, url: "/do/today" });
     const results = await Promise.allSettled(user.pushSubscriptions.map((subscription) =>
       webpush.sendNotification({ endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } }, payload),
     ));

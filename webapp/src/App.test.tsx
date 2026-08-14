@@ -18,7 +18,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
  *
  * Note: we don't use renderInContext here. That helper hardcodes BrowserRouter
  * and a fresh QueryClient; this test needs a MemoryRouter (to set the initial
- * entry to /app and observe the redirect to /login) and a mocked useAuth.
+ * entry to /do and observe the redirect to /login) and a mocked useAuth.
  */
 
 // The shape Wasp's useAuth() returns (a TanStack UseQueryResult<AuthUser|null>).
@@ -47,15 +47,15 @@ function LoginMarker() {
   return <div data-testid="login-marker">login</div>;
 }
 
-/** A minimal child that the shell's Outlet renders for an /app route. */
+/** A minimal child that the shell's Outlet renders for an /do route. */
 function AppChild() {
   return <div data-testid="app-child">app page</div>;
 }
 
 /**
- * Render App as a layout route with a /app/* child, plus a /login route so
+ * Render App as a layout route with a /do/* child, plus a /login route so
  * the gate's <Navigate to="/login" /> has somewhere to land that we can observe.
- * `initialPath` lets a caller start at /app (the path the gate guards).
+ * `initialPath` lets a caller start at /do (the path the gate guards).
  */
 function renderAt(initialPath: string) {
   render(
@@ -63,8 +63,8 @@ function renderAt(initialPath: string) {
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route element={<App />}>
-            <Route path="/app" element={<AppChild />} />
-            <Route path="/app/*" element={<AppChild />} />
+            <Route path="/do" element={<AppChild />} />
+            <Route path="/do/*" element={<AppChild />} />
           </Route>
           <Route path="/login" element={<LoginMarker />} />
         </Routes>
@@ -104,7 +104,7 @@ describe("App auth gate", () => {
       data: { id: "u1", fullName: "Test User", hasSeenOnboarding: true },
       status: "success",
     };
-    renderAt("/app");
+    renderAt("/do");
 
     // Shell chrome (the brand mark) and the child page both render.
     expect(document.querySelector(".aa-app-brand")).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe("App auth gate", () => {
 
   it("redirects to /login when the session resolves but there is no user", () => {
     mockUseAuthReturn = { data: null, status: "success" };
-    renderAt("/app");
+    renderAt("/do");
 
     // No shell chrome, no app child — redirected to login, not marketing root.
     expect(document.querySelector(".aa-app-brand")).not.toBeInTheDocument();
@@ -123,7 +123,7 @@ describe("App auth gate", () => {
 
   it("renders nothing interactive while the session is still loading", () => {
     mockUseAuthReturn = { data: null, status: "loading" };
-    renderAt("/app");
+    renderAt("/do");
 
     // No shell chrome and NOT redirected to /login either — just waiting. (The
     // gate shows the welcome veil during loading; the login route only renders

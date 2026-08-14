@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 
 /**
- * The active Lens, shared from AppShell's LensSwitch to every /app page.
+ * The active Lens, shared from AppShell's LensSwitch to every /do page.
  *
  * Pages consume this to scope their queries (e.g. "today's tasks in the Work
  * lens"). AppShell provides it via <LensProvider value={activeLens}>. When the

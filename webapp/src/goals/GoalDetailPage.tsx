@@ -100,7 +100,7 @@ export function GoalDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     // After completing, leave the detail page — the goal no longer shows in the
     // active list. Reopen stays reachable from the Logbook.
-    if (!goal.isDone) navigate("/app/goals");
+    if (!goal.isDone) navigate("/do/goals");
   };
 
   const startEdit = () => {
@@ -141,7 +141,7 @@ export function GoalDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     setConfirmDelete(false);
-    navigate("/app/goals");
+    navigate("/do/goals");
   };
 
   // Reorder: swap a project with its neighbor and write the full new order.
@@ -168,9 +168,9 @@ export function GoalDetailPage() {
 
   // Breadcrumb: Goals list › this goal (goal has no parent entity).
   // Crumb id IS the destination route.
-  const goalActiveRoute = goal ? `/app/goals/${goal.permalink}` : "";
+  const goalActiveRoute = goal ? `/do/goals/${goal.permalink}` : "";
   const goalCrumbs: BreadcrumbItem[] = [
-    { id: "/app/goals", label: "Goals" },
+    { id: "/do/goals", label: "Goals" },
   ];
   if (goal) goalCrumbs.push({ id: goalActiveRoute, label: goal.name || "Goal" });
 
@@ -187,7 +187,7 @@ export function GoalDetailPage() {
           onSelect={handleCrumbSelect}
         />
       ) : (
-        <Link className="aa-task-back" to="/app/goals">
+        <Link className="aa-task-back" to="/do/goals">
           ← Goals
         </Link>
       )}
@@ -227,7 +227,7 @@ export function GoalDetailPage() {
                   )}
                   {nextProject && (
                     <p className="aa-goal__next">
-                      Focus: <Link to={`/app/projects/${nextProject.permalink}`}>{nextProject.name}</Link>
+                      Focus: <Link to={`/do/projects/${nextProject.permalink}`}>{nextProject.name}</Link>
                     </p>
                   )}
                 </>
@@ -283,7 +283,7 @@ export function GoalDetailPage() {
                           ↓
                         </button>
                       </div>
-                      <Link to={`/app/projects/${p.permalink}`} className="aa-goal__project-link">
+                      <Link to={`/do/projects/${p.permalink}`} className="aa-goal__project-link">
                         <span className="aa-goal__project-name">{p.name}</span>
                         {p.isDone && <Chip variant="muted" small>Done</Chip>}
                         {pTotal > 0 && <span className="aa-goal__project-pct">{pct}%</span>}

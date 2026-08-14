@@ -25,7 +25,7 @@ describe("submitFeedback", () => {
     m.entities.Feedback.create.mockResolvedValue({
       id: "feedback-1",
       message: "This is useful.",
-      route: "/app/today",
+      route: "/do/today",
       section: "work",
       lensName: "Work",
       lensColor: "indigo",
@@ -37,7 +37,7 @@ describe("submitFeedback", () => {
     const result = await submitFeedback(
       {
         message: "  This is useful.  ",
-        route: "/app/today",
+        route: "/do/today",
         section: "work",
         lens: { id: "lens-1", name: "Work", color: "indigo" },
         userAgent: "Vitest",
@@ -51,7 +51,7 @@ describe("submitFeedback", () => {
         message: "This is useful.",
         userId: "user-1",
         userName: "Zeljko Dakic",
-        route: "/app/today",
+        route: "/do/today",
         section: "work",
         lensId: "lens-1",
         lensName: "Work",

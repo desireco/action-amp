@@ -64,7 +64,7 @@ export function NextPage() {
 
   useEffect(() => {
     if (!permalink && queryTaskToken) {
-      navigate(`/app/today/${encodeURIComponent(queryTaskToken)}`, {
+      navigate(`/do/today/${encodeURIComponent(queryTaskToken)}`, {
         replace: true,
       });
     }
@@ -78,7 +78,7 @@ export function NextPage() {
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-    if (selectedTaskToken) navigate("/app/today", { replace: true });
+    if (selectedTaskToken) navigate("/do/today", { replace: true });
   };
 
   // Start / Pause the "Now" state. Started tasks persist as #1 across nav.
@@ -90,7 +90,7 @@ export function NextPage() {
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
     queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-    if (openFocus) navigate("/app/focus");
+    if (openFocus) navigate("/do/focus");
   };
   const handlePause = async () => {
     if (!task) return;
@@ -144,7 +144,7 @@ export function NextPage() {
       <>
         {splashVeil}
         <div className="aa-wn">
-          <Link to="/app/today" className="aa-wn-today-link">
+          <Link to="/do/today" className="aa-wn-today-link">
             See Today →
           </Link>
           <div className="aa-wn-eyebrow">What now</div>
@@ -214,7 +214,7 @@ export function NextPage() {
   return (
     <>
       {splashVeil}
-      <Link to="/app/today" className="aa-wn-today-link">
+      <Link to="/do/today" className="aa-wn-today-link">
         See Today →
       </Link>
       <NextCard
@@ -238,7 +238,7 @@ export function NextPage() {
         state={isNow ? "now" : "next"}
         onDo={() => {
           if (isNow) {
-            navigate("/app/focus");
+            navigate("/do/focus");
             return;
           }
           void handleStart(true);
@@ -274,7 +274,7 @@ function OnboardingGuide({ stage }: { stage: "CAPTURE" | "TRIAGE" }) {
       </p>
       <Link
         className="aa-wn-guide__action"
-        to={capture ? "/app?capture=1" : "/app/inbox/review"}
+        to={capture ? "/do?capture=1" : "/do/inbox/review"}
       >
         {capture ? "Open Capture" : "Triage your thought"} →
       </Link>

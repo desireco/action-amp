@@ -60,12 +60,12 @@ import {
 import "./AppShell.css";
 
 /**
- * Authenticated app shell — the persistent chrome framing every /app page.
+ * Authenticated app shell — the persistent chrome framing every /do page.
  *
  * Sidebar structure (WORKFLOW.md):
  *   - Brand + Lens switch (context — Work/Me, always available)
  *   - Universal nav: Inbox + Today (always visible, span every lens)
- *   - Focus nav: Do (flat link → /app, the Next/What-Now chooser) + two
+ *   - Focus nav: Do (flat link → /do, the Next/What-Now chooser) + two
  *     always-open groups (Plan / Review) labeled with static headings.
  *   - User footer
  *
@@ -74,12 +74,12 @@ import "./AppShell.css";
 
 /** Routes for the Shift-letter navigation chords (useKeyboardShortcuts). */
 const NAV_ROUTE: Record<NavDestination, string> = {
-  inbox: "/app/inbox",
-  next: "/app",
-  today: "/app/today",
-  triage: "/app/inbox/review",
-  planning: "/app/projects",
-  review: "/app/review",
+  inbox: "/do/inbox",
+  next: "/do",
+  today: "/do/today",
+  triage: "/do/inbox/review",
+  planning: "/do/projects",
+  review: "/do/review",
 };
 
 function ListIcon() {
@@ -260,20 +260,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!activeLens) return;
     const isPersistentRoute =
-      location.pathname.startsWith("/app/settings") ||
-      location.pathname.startsWith("/app/admin") ||
-      location.pathname.startsWith("/app/inbox");
+      location.pathname.startsWith("/do/settings") ||
+      location.pathname.startsWith("/do/admin") ||
+      location.pathname.startsWith("/do/inbox");
     if (
       activeLens.type === "SIMPLE_LIST" &&
-      location.pathname !== "/app/list" &&
+      location.pathname !== "/do/list" &&
       !isPersistentRoute
     ) {
-      navigate("/app/list", { replace: true });
+      navigate("/do/list", { replace: true });
     } else if (
       activeLens.type === "LIFE_AREA" &&
-      location.pathname === "/app/list"
+      location.pathname === "/do/list"
     ) {
-      navigate("/app", { replace: true });
+      navigate("/do", { replace: true });
     }
   }, [activeLens?.id, activeLens?.type, location.pathname, navigate]);
 
@@ -327,9 +327,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
     setWorkGated(false);
     setLens(id);
-    if (target?.type === "SIMPLE_LIST" && !location.pathname.startsWith("/app/inbox")) navigate("/app/list");
-    else if (target?.type === "LIFE_AREA" && location.pathname === "/app/list")
-      navigate("/app");
+    if (target?.type === "SIMPLE_LIST" && !location.pathname.startsWith("/do/inbox")) navigate("/do/list");
+    else if (target?.type === "LIFE_AREA" && location.pathname === "/do/list")
+      navigate("/do");
   };
 
   // The value pages consume via useActiveLens() to scope their queries.
@@ -359,19 +359,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [activeLensColor]);
 
   const isActive = (to: string) =>
-    to === "/app"
-      ? location.pathname === "/app"
+    to === "/do"
+      ? location.pathname === "/do"
       : location.pathname.startsWith(to);
 
   // Section-level active state for the mobile dock (Plan/Review dock items
   // each represent a whole section, not one route). Mirrors sectionForPath so
   // the dock highlight agrees with the section label.
   const inPlan = ["upcoming", "projects", "goals", "someday"].some((p) =>
-    location.pathname.startsWith(`/app/${p}`),
+    location.pathname.startsWith(`/do/${p}`),
   );
   const inReview =
-    location.pathname.startsWith("/app/review") ||
-    location.pathname.startsWith("/app/logbook");
+    location.pathname.startsWith("/do/review") ||
+    location.pathname.startsWith("/do/logbook");
 
   // ponytail: 1–2 letter initials from fullName (first + last token). Good enough for an avatar.
   const initials = user
@@ -445,7 +445,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     ? sw.applyUpdate
     : deployed.applyUpdate;
 
-  // Manifest shortcut and notification action: /app?capture=1 opens the same
+  // Manifest shortcut and notification action: /do?capture=1 opens the same
   // universal capture surface as ⌘K, then removes the one-shot URL flag.
   useEffect(() => {
     if (new URLSearchParams(location.search).get("capture") !== "1") return;
@@ -461,9 +461,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }, [location.pathname, location.search, navigate]);
 
-  const inSettings = isActive("/app/settings");
-  const inFocus = location.pathname.startsWith("/app/focus");
-  const inTriage = location.pathname.startsWith("/app/inbox/review");
+  const inSettings = isActive("/do/settings");
+  const inFocus = location.pathname.startsWith("/do/focus");
+  const inTriage = location.pathname.startsWith("/do/inbox/review");
   const paletteBlocked = isPaletteBlocked({
     working: inFocus,
     triage: inTriage,
@@ -483,9 +483,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     onCommandPalette: () => {
       if (!paletteBlocked) openPalette("command");
     },
-    onGoHome: isSimpleListLens ? undefined : () => navigate("/app"),
+    onGoHome: isSimpleListLens ? undefined : () => navigate("/do"),
     onNavigate: (dest) =>
-      navigate(isSimpleListLens ? "/app/list" : NAV_ROUTE[dest]),
+      navigate(isSimpleListLens ? "/do/list" : NAV_ROUTE[dest]),
     onToggleCheatsheet: () => {
       const next = !cheatsheetOpen;
       closeGlobalOverlays();
@@ -535,7 +535,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="aa-app-side">
         <Link
           className="aa-app-brand"
-          to={isSimpleListLens ? "/app/list" : "/app"}
+          to={isSimpleListLens ? "/do/list" : "/do"}
           title={isSimpleListLens ? "List" : "Next"}
         >
           <span className="aa-app-mark" aria-hidden="true">
@@ -586,11 +586,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* Mobile-only avatar → Settings. The sidebar footer that hosts the
               desktop avatar/settings link is display:none at ≤768px, and the
               bottom dock has no settings entry, so without this there is no path
-              to /app/settings (or Log out, which lives on the Account tab) on
+              to /do/settings (or Log out, which lives on the Account tab) on
               mobile. Hidden on desktop (see AppShell.css). */}
           <Link
-            to="/app/settings"
-            className={`aa-app-mobile-avatar ${isActive("/app/settings") ? "active" : ""}`}
+            to="/do/settings"
+            className={`aa-app-mobile-avatar ${isActive("/do/settings") ? "active" : ""}`}
             title="Settings"
             aria-label="Settings"
           >
@@ -607,15 +607,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavItem
               icon={<InboxIcon />}
               label="Inbox"
-              active={isActive("/app/inbox")}
-              to="/app/inbox"
+              active={isActive("/do/inbox")}
+              to="/do/inbox"
               count={counts.inbox || undefined}
             />
             <NavItem
               icon={<ListIcon />}
               label="List"
-              active={isActive("/app/list")}
-              to="/app/list"
+              active={isActive("/do/list")}
+              to="/do/list"
             />
           </nav>
         )}
@@ -625,8 +625,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <NavItem
                 icon={<InboxIcon />}
                 label="Inbox"
-                active={isActive("/app/inbox")}
-                to="/app/inbox"
+                active={isActive("/do/inbox")}
+                to="/do/inbox"
                 count={
                   counts.inbox > 0 ? (
                     counts.inbox
@@ -653,15 +653,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               <NavItem
                 icon={<ClockIcon />}
                 label="Today"
-                active={isActive("/app/today")}
-                to="/app/today"
+                active={isActive("/do/today")}
+                to="/do/today"
                 count={counts.today}
               />
               <NavItem
                 icon={<StarIcon />}
                 label="Do"
-                active={isActive("/app")}
-                to="/app"
+                active={isActive("/do")}
+                to="/do"
               />
             </nav>
 
@@ -679,29 +679,29 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <NavItem
                     icon={<CalendarIcon />}
                     label="Upcoming"
-                    active={isActive("/app/upcoming")}
-                    to="/app/upcoming"
+                    active={isActive("/do/upcoming")}
+                    to="/do/upcoming"
                     count={counts.upcoming}
                   />
                   <NavItem
                     icon={<ProjectsIcon />}
                     label="Projects"
-                    active={isActive("/app/projects")}
-                    to="/app/projects"
+                    active={isActive("/do/projects")}
+                    to="/do/projects"
                     count={counts.projects}
                   />
                   <NavItem
                     icon={<GoalsIcon />}
                     label="Goals"
-                    active={isActive("/app/goals")}
-                    to="/app/goals"
+                    active={isActive("/do/goals")}
+                    to="/do/goals"
                     count={counts.goals}
                   />
                   <NavItem
                     icon={<SomedayIcon />}
                     label="Someday"
-                    active={isActive("/app/someday")}
-                    to="/app/someday"
+                    active={isActive("/do/someday")}
+                    to="/do/someday"
                     count={counts.someday}
                   />
                 </div>
@@ -716,31 +716,31 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <NavItem
                       icon={<ClockIcon />}
                       label="Today"
-                      active={isActive("/app/review/today")}
-                      to="/app/review/today"
+                      active={isActive("/do/review/today")}
+                      to="/do/review/today"
                     />
                   )}
                   {reviewPreferences.week && (
                     <NavItem
                       icon={<CalendarIcon />}
                       label="Week"
-                      active={isActive("/app/review/week")}
-                      to="/app/review/week"
+                      active={isActive("/do/review/week")}
+                      to="/do/review/week"
                     />
                   )}
                   {reviewPreferences.month && (
                     <NavItem
                       icon={<GoalsIcon />}
                       label="Month"
-                      active={isActive("/app/review/month")}
-                      to="/app/review/month"
+                      active={isActive("/do/review/month")}
+                      to="/do/review/month"
                     />
                   )}
                   <NavItem
                     icon={<LogbookIcon />}
                     label="Logbook"
-                    active={isActive("/app/logbook")}
-                    to="/app/logbook"
+                    active={isActive("/do/logbook")}
+                    to="/do/logbook"
                   />
                 </div>
               </div>
@@ -767,7 +767,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onClose={() => setLensPopoverOpen(false)}
                 onNewLens={
                   entitled
-                    ? () => navigate("/app/settings/lenses")
+                    ? () => navigate("/do/settings/lenses")
                     : undefined
                 }
                 newLensProLocked={!entitled}
@@ -775,8 +775,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </div>
           <Link
-            to="/app/settings"
-            className={`aa-app-user-btn ${isActive("/app/settings") ? "active" : ""}`}
+            to="/do/settings"
+            className={`aa-app-user-btn ${isActive("/do/settings") ? "active" : ""}`}
             title="Settings"
           >
             <span className="aa-app-user-avatar" aria-hidden="true">
@@ -788,8 +788,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
           {user?.isAdmin && (
             <Link
-              to="/app/admin/overview"
-              className={`aa-app-admin-link ${isActive("/app/admin") ? "active" : ""}`}
+              to="/do/admin/overview"
+              className={`aa-app-admin-link ${isActive("/do/admin") ? "active" : ""}`}
             >
               Admin
             </Link>
@@ -880,16 +880,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           {isSimpleListLens ? (
             <>
               <Link
-                className={`aa-mobile-dock__item ${isActive("/app/inbox") ? "active" : ""}`}
-                to="/app/inbox"
+                className={`aa-mobile-dock__item ${isActive("/do/inbox") ? "active" : ""}`}
+                to="/do/inbox"
                 aria-label="Inbox"
               >
                 <InboxIcon />
                 <span>Inbox</span>
               </Link>
               <Link
-                className={`aa-mobile-dock__item ${isActive("/app/list") ? "active" : ""}`}
-                to="/app/list"
+                className={`aa-mobile-dock__item ${isActive("/do/list") ? "active" : ""}`}
+                to="/do/list"
                 aria-label="List"
               >
                 <ListIcon />
@@ -913,16 +913,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               the Next page, plus the Today↔Upcoming cross-link). Desktop keeps
               the full Next/Today sidebar split. */}
               <Link
-                className={`aa-mobile-dock__item ${isActive("/app/inbox") ? "active" : ""}`}
-                to="/app/inbox"
+                className={`aa-mobile-dock__item ${isActive("/do/inbox") ? "active" : ""}`}
+                to="/do/inbox"
                 aria-label="Inbox"
               >
                 <InboxIcon />
                 <span>Inbox</span>
               </Link>
               <Link
-                className={`aa-mobile-dock__item ${isActive("/app") ? "active" : ""}`}
-                to="/app"
+                className={`aa-mobile-dock__item ${isActive("/do") ? "active" : ""}`}
+                to="/do"
                 aria-label="Do"
               >
                 <StarIcon />
@@ -930,7 +930,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
               <Link
                 className={`aa-mobile-dock__item ${inPlan ? "active" : ""}`}
-                to="/app/projects"
+                to="/do/projects"
                 aria-label="Plan"
               >
                 <ProjectsIcon />
@@ -938,7 +938,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
               <Link
                 className={`aa-mobile-dock__item ${inReview ? "active" : ""}`}
-                to="/app/review"
+                to="/do/review"
                 aria-label="Review"
               >
                 <LogbookIcon />

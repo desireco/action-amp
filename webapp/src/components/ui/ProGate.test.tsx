@@ -32,7 +32,7 @@ describe("ProGate — inline panel", () => {
     );
     expect(screen.getByRole("link", { name: /see plans/i })).toHaveAttribute(
       "href",
-      "/app/settings/billing",
+      "/do/settings/billing",
     );
     expect(screen.getByRole("link", { name: /founding 100/i })).toHaveAttribute(
       "href",
@@ -58,7 +58,7 @@ describe("ProGate — trigger (at-cap create affordance)", () => {
       </ProGate>,
     );
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", "/app/settings/billing");
+    expect(link).toHaveAttribute("href", "/do/settings/billing");
     expect(link).toHaveClass("aa-progate-trigger");
   });
 });

@@ -81,7 +81,7 @@ self.addEventListener("push", (event) => {
       badge: "/icon-192.png",
       tag: "daily-today",
       renotify: false,
-      data: { url: payload.url || "/app/today" },
+      data: { url: payload.url || "/do/today" },
       actions: [
         { action: "capture", title: "Capture" },
         { action: "next", title: "Next task" },
@@ -94,11 +94,11 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const paths = {
-    capture: "/app?capture=1",
-    next: "/app",
-    today: "/app/today"
+    capture: "/do?capture=1",
+    next: "/do",
+    today: "/do/today"
   };
-  const url = new URL(paths[event.action] || event.notification.data?.url || "/app/today", self.location.origin).href;
+  const url = new URL(paths[event.action] || event.notification.data?.url || "/do/today", self.location.origin).href;
 
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });

@@ -2,7 +2,7 @@
   "name": "ActionAmp",
   "short_name": "ActionAmp",
   "description": "One task at a time.",
-  "start_url": "/app",
+  "start_url": "/do",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0e1419",
@@ -13,19 +13,19 @@
       "name": "Capture",
       "short_name": "Capture",
       "description": "Capture a thought",
-      "url": "/app?capture=1"
+      "url": "/do?capture=1"
     },
     {
       "name": "Next task",
       "short_name": "Next",
       "description": "Open your next task",
-      "url": "/app"
+      "url": "/do"
     },
     {
       "name": "Today",
       "short_name": "Today",
       "description": "Open Today",
-      "url": "/app/today"
+      "url": "/do/today"
     }
   ],
   "icons": [

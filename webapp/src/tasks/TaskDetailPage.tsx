@@ -73,9 +73,9 @@ export function TaskDetailPage() {
   const [wontDoConfirmOpen, setWontDoConfirmOpen] = useState(false);
   const state = location.state as { returnTo?: unknown } | null;
   const returnTo =
-    typeof state?.returnTo === "string" && state.returnTo.startsWith("/app")
+    typeof state?.returnTo === "string" && state.returnTo.startsWith("/do")
       ? state.returnTo
-      : "/app";
+      : "/do";
 
   useEffect(() => {
     if (!task) return;
@@ -217,7 +217,7 @@ export function TaskDetailPage() {
     if (!task?.project) return;
     // Link external sources directly. Notes-only Resources link back to their
     // owning Project so the reference remains navigable without another model.
-    const href = resource.url ?? `/app/projects/${task.project.permalink}#resource-${resource.id}`;
+    const href = resource.url ?? `/do/projects/${task.project.permalink}#resource-${resource.id}`;
     const link = `[${resource.title}](${href})`;
     setContent((current) => current.trim() ? `${current.trimEnd()}\n\n${link}` : link);
     setResourcePickerOpen(false);
@@ -296,10 +296,10 @@ export function TaskDetailPage() {
   // Build the breadcrumb chain from the task's ancestors (skipping nulls).
   // Route model: each crumb's id IS the destination route — the handler just
   // navigates to it. The active crumb (current page) is a no-op on click.
-  const taskActiveRoute = task ? `/app/tasks/${task.permalink}` : "";
+  const taskActiveRoute = task ? `/do/tasks/${task.permalink}` : "";
   const taskCrumbs: BreadcrumbItem[] = [];
-  if (task?.goal) taskCrumbs.push({ id: `/app/goals/${task.goal.permalink}`, label: task.goal.name });
-  if (task?.project) taskCrumbs.push({ id: `/app/projects/${task.project.permalink}`, label: task.project.name });
+  if (task?.goal) taskCrumbs.push({ id: `/do/goals/${task.goal.permalink}`, label: task.goal.name });
+  if (task?.project) taskCrumbs.push({ id: `/do/projects/${task.project.permalink}`, label: task.project.name });
   if (task) taskCrumbs.push({ id: taskActiveRoute, label: task.description || "Task" });
 
   const handleCrumbSelect = (dest: string) => {

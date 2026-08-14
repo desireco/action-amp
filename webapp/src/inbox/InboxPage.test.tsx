@@ -42,7 +42,7 @@ function item(id: string, text: string): InboxItem {
   };
 }
 
-function renderInbox(path = "/app/inbox") {
+function renderInbox(path = "/do/inbox") {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <InboxPage />
@@ -79,11 +79,11 @@ describe("InboxPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /start triage/i })).toHaveAttribute(
       "href",
-      "/app/inbox/review",
+      "/do/inbox/review",
     );
     expect(screen.getByRole("link", { name: /email sarah/i })).toHaveAttribute(
       "href",
-      "/app/inbox/review?i=0",
+      "/do/inbox/review?i=0",
     );
   });
 
@@ -161,7 +161,7 @@ describe("InboxPage", () => {
       isLoading: false,
     };
 
-    renderInbox("/app/inbox?item=target");
+    renderInbox("/do/inbox?item=target");
 
     const row = document.getElementById("inbox-item-target");
     expect(row).toHaveClass("is-search-target");

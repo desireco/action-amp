@@ -205,7 +205,7 @@ export function ProjectsPage() {
             <ProgressCard
               key={p.id}
               className="aa-project-card"
-              to={`/app/projects/${p.permalink}`}
+              to={`/do/projects/${p.permalink}`}
               title={p.name}
               description={p.description}
               progress={pct}

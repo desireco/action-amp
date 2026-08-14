@@ -20,7 +20,7 @@ import { recordAnalyticsEventCore } from "../analytics/operationsCore";
  * `setPreferredName` — persists the onboarding preferred-name choice.
  *
  * `completeOnboarding` — marks onboarding seen server-side (routes returning
- * users straight to /app).
+ * users straight to /do).
  *
  * App-shell bootstrap data (`getAppData`) lives in `src/app/operations.ts` —
  * it runs on every load, not just onboarding.
@@ -214,7 +214,7 @@ export const setPreferredName = (async (args, context) => {
 
 /**
  * Marks onboarding complete server-side. Persists `User.hasSeenOnboarding=true`
- * so the client can route returning users straight to /app and show new users
+ * so the client can route returning users straight to /do and show new users
  * /welcome exactly once. Idempotent: re-calling on an already-complete user is
  * a no-op. Replaces the old localStorage gate (which didn't survive a browser
  * switch or a clear).

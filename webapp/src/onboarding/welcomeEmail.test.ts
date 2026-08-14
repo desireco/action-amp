@@ -19,7 +19,7 @@ describe("buildWelcomeEmail", () => {
       html: expect.stringContaining("Open ActionAmp"),
     });
     expect(email?.text).toContain("Start with one task, not a list.");
-    expect(email?.text).toContain("https://actionamp.com/app");
+    expect(email?.text).toContain("https://actionamp.com/do");
     expect(email?.html).toContain("ActionAmp");
     expect(email?.html).toContain("Your first task is waiting");
   });

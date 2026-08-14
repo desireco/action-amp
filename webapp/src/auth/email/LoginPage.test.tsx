@@ -8,8 +8,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
  * LoginPage redirect regression test.
  *
  * A logged-in user hitting /login (browser back, stale bookmark, the dev
- * autologin just finished) should land on /app, not see the login form.
- * The fix lives in LoginPage.tsx: a `useAuth` check + `<Navigate to="/app">`
+ * autologin just finished) should land on /do, not see the login form.
+ * The fix lives in LoginPage.tsx: a `useAuth` check + `<Navigate to="/do">`
  * after the session resolves. These tests fail the moment someone removes
  * the redirect — the form renders instead of the redirect marker.
  *
@@ -48,7 +48,7 @@ vi.mock("wasp/client/operations", () => ({
 // Importing LoginPage AFTER vi.mock so it picks up the mocked useAuth.
 const { LoginPage } = await import("./LoginPage");
 
-/** A marker rendered at /app so we can assert the redirect target. */
+/** A marker rendered at /do so we can assert the redirect target. */
 function AppMarker() {
   return <div data-testid="app-marker">app page</div>;
 }
@@ -59,7 +59,7 @@ function renderAt(initialPath: string) {
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/app" element={<AppMarker />} />
+          <Route path="/do" element={<AppMarker />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -80,7 +80,7 @@ describe("LoginPage redirect on existing session", () => {
     expect(screen.queryByTestId("app-marker")).not.toBeInTheDocument();
   });
 
-  it("redirects to /app when the session resolves to a logged-in user", () => {
+  it("redirects to /do when the session resolves to a logged-in user", () => {
     mockUseAuthReturn = {
       data: { id: "u1", fullName: "Jake" },
       status: "success",

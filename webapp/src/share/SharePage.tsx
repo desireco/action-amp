@@ -77,7 +77,7 @@ export function SharePage() {
       await clearPendingShare(pending.id);
       void queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-      navigate(`/app/inbox?shared=${encodeURIComponent(created.id)}`, { replace: true });
+      navigate(`/do/inbox?shared=${encodeURIComponent(created.id)}`, { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Could not add this to your inbox.");
     } finally {
@@ -87,7 +87,7 @@ export function SharePage() {
 
   async function discardPending() {
     if (pending) await clearPendingShare(pending.id);
-    navigate("/app", { replace: true });
+    navigate("/do", { replace: true });
   }
 
   if (loadingPending) return renderShell("Preparing capture…");
@@ -173,5 +173,5 @@ function renderShell(label: string) {
 }
 
 function renderError(copy: string) {
-  return <main className="aa-share"><div className="aa-share__card"><h1 className="aa-share__title">{copy}</h1><a className="aa-share__link" href="/app">Back to ActionAmp</a></div></main>;
+  return <main className="aa-share"><div className="aa-share__card"><h1 className="aa-share__title">{copy}</h1><a className="aa-share__link" href="/do">Back to ActionAmp</a></div></main>;
 }

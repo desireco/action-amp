@@ -216,9 +216,9 @@ export function AdminPage() {
       <div className="aa-admin-group">
         <h3 className="aa-admin-group__title">Users</h3>
         <div className="aa-admin-tiles">
-          <Tile value={num(u?.total)} label="Total signups" to="/app/admin/users?sort=signup_desc" />
-          <Tile value={num(u?.selectedSignups)} label={`New signups · ${range}`} to={`/app/admin/users${range === "all" ? "?sort=signup_desc" : `?joined=${range}&sort=signup_desc`}`} />
-          <Tile value={num(u?.selectedActive)} label={`Active users · ${range}`} to={`/app/admin/users${range === "all" ? "?sort=last_active_desc" : `?active=${range}&sort=last_active_desc`}`} />
+          <Tile value={num(u?.total)} label="Total signups" to="/do/admin/users?sort=signup_desc" />
+          <Tile value={num(u?.selectedSignups)} label={`New signups · ${range}`} to={`/do/admin/users${range === "all" ? "?sort=signup_desc" : `?joined=${range}&sort=signup_desc`}`} />
+          <Tile value={num(u?.selectedActive)} label={`Active users · ${range}`} to={`/do/admin/users${range === "all" ? "?sort=last_active_desc" : `?active=${range}&sort=last_active_desc`}`} />
         </div>
       </div>
 
@@ -244,7 +244,7 @@ export function AdminPage() {
       </div>
 
       <div className="aa-admin-group">
-        <div className="aa-admin-section-head"><h3 className="aa-admin-group__title">Product activity</h3><Link to={`/app/admin/funnel?range=${range}`}>View funnel →</Link></div>
+        <div className="aa-admin-section-head"><h3 className="aa-admin-group__title">Product activity</h3><Link to={`/do/admin/funnel?range=${range}`}>View funnel →</Link></div>
         <div className="aa-admin-tiles">
           <Tile value={num(stats?.activity.captures)} label="Captures" />
           <Tile value={num(stats?.activity.triageCompleted)} label="Triage completed" />

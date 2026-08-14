@@ -234,16 +234,16 @@ describe("searchSiteData", () => {
     ).toMatchObject({
       state: "wont-do",
       matchedField: "note",
-      href: "/app/tasks/renew-insurance",
+      href: "/do/tasks/renew-insurance",
     });
     expect(
       response.results.find((result) => result.kind === "resource")?.href,
-    ).toBe("/app/projects/operations#resource-resource-1");
+    ).toBe("/do/projects/operations#resource-resource-1");
     expect(
       response.results.find((result) => result.kind === "inbox"),
     ).toMatchObject({
       state: "archived",
-      href: "/app/logbook?item=inbox-1",
+      href: "/do/logbook?item=inbox-1",
     });
   });
 
@@ -595,15 +595,15 @@ describe("getCommandPaletteIndexData", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "task",
-          href: "/app/tasks/renew-insurance",
+          href: "/do/tasks/renew-insurance",
         }),
         expect.objectContaining({
           kind: "resource",
-          href: "/app/projects/operations#resource-resource-1",
+          href: "/do/projects/operations#resource-resource-1",
         }),
         expect.objectContaining({
           kind: "inbox",
-          href: "/app/inbox?item=inbox-1",
+          href: "/do/inbox?item=inbox-1",
         }),
         expect.objectContaining({ kind: "lens", href: null }),
       ]),

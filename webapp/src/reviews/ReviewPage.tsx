@@ -30,10 +30,10 @@ export function firstReviewRoute(preferences: {
   week: boolean;
   month: boolean;
 }): string {
-  if (preferences.today) return "/app/review/today";
-  if (preferences.week) return "/app/review/week";
-  if (preferences.month) return "/app/review/month";
-  return "/app/logbook";
+  if (preferences.today) return "/do/review/today";
+  if (preferences.week) return "/do/review/week";
+  if (preferences.month) return "/do/review/month";
+  return "/do/logbook";
 }
 
 type ReviewShortcut = "previous" | "next" | "edit" | "record" | "down" | "up";
@@ -526,7 +526,7 @@ function GoalCelebration({
           >
             <BrandMark size={cadence === "MONTHLY" ? "md" : "sm"} />
             <div>
-              <Link to={`/app/goals/${goal.permalink}`}>{goal.name}</Link>
+              <Link to={`/do/goals/${goal.permalink}`}>{goal.name}</Link>
               {goal.description && <p>{goal.description}</p>}
               <span>
                 {goal.lens.name}
@@ -557,7 +557,7 @@ function ProjectCelebration({ projects }: { projects: ReviewProjectItem[] }) {
         {projects.map((project) => (
           <Link
             key={project.id}
-            to={`/app/projects/${project.permalink}`}
+            to={`/do/projects/${project.permalink}`}
             className="aa-review__project-card"
             data-review-stop
           >
@@ -600,7 +600,7 @@ export function TaskEvidence({
                   <BrandMark size="sm" />
                 </span>
                 <div>
-                  <Link to={`/app/tasks/${task.permalink}`} data-review-stop>
+                  <Link to={`/do/tasks/${task.permalink}`} data-review-stop>
                     {task.title}
                   </Link>
                   <div className="aa-review__task-meta">
@@ -688,7 +688,7 @@ export function SignificantActions({
               {task.size === "L" ? "Large" : "Medium"}
             </Chip>
             <div>
-              <Link to={`/app/tasks/${task.permalink}`}>{task.title}</Link>
+              <Link to={`/do/tasks/${task.permalink}`}>{task.title}</Link>
               <span>
                 {task.project?.name ?? task.goal?.name ?? task.lens.name} ·{" "}
                 {formatCompletion(task.completedAt, cadence)}

@@ -17,7 +17,7 @@ import { signupNewUser } from "./helpers";
  */
 
 // Locally, `/` redirects to `/login` (see RedirectToMarketing.tsx — the
-// marketing apex is only used in prod). The gate bounces logged-out /app
+// marketing apex is only used in prod). The gate bounces logged-out /do
 // visitors to `/`, which lands on the login page. Assert that heading.
 const LANDING_H1 = /welcome back/i;
 
@@ -26,8 +26,8 @@ function isCreateInboxItem(url: string): boolean {
   return url.includes("/operations/create-inbox-item");
 }
 
-test.describe("auth gate — stale/absent session must not leave /app interactive", () => {
-  test("bogus localStorage token: /app redirects to /, no capture POST", async ({ page }) => {
+test.describe("auth gate — stale/absent session must not leave /do interactive", () => {
+  test("bogus localStorage token: /do redirects to /, no capture POST", async ({ page }) => {
     // Replicate the real-world desync: a sessionId in localStorage that the
     // server doesn't recognise (post-DB-reset, stale tab, rotated session).
     // addInitScript runs before any app code on every navigation.
@@ -41,14 +41,14 @@ test.describe("auth gate — stale/absent session must not leave /app interactiv
       if (isCreateInboxItem(req.url())) actionRequests.push(req.url());
     });
 
-    await page.goto("/app");
+    await page.goto("/do");
 
     // The gate must redirect to "/" rather than leaving the user on a broken
-    // /app. Generous timeout — the session resolve + redirect takes a moment.
+    // /do. Generous timeout — the session resolve + redirect takes a moment.
     await expect(page.getByRole("heading", { name: LANDING_H1 })).toBeVisible({
       timeout: 10_000,
     });
-    expect(page.url()).not.toMatch(/\/app/);
+    expect(page.url()).not.toMatch(/\/do/);
 
     // Even if a stale-rendered shell briefly existed, capture must not be
     // reachable. Press the chord and confirm no action POST fires.
@@ -57,11 +57,11 @@ test.describe("auth gate — stale/absent session must not leave /app interactiv
     expect(actionRequests).toEqual([]);
   });
 
-  test("after logout, /app redirects to /, no capture POST", async ({ page }) => {
+  test("after logout, /do redirects to /, no capture POST", async ({ page }) => {
     // Real flow: log in, log out (clearing the real session), then navigate
-    // back to /app. The gate must send us to / instead of a broken shell.
+    // back to /do. The gate must send us to / instead of a broken shell.
     await signupNewUser(page);
-    await expect(page).toHaveURL(/\/app/);
+    await expect(page).toHaveURL(/\/do/);
 
     // Log out via the user menu → confirm dialog. Scope the confirm click to
     // the dialog: the trigger button also reads "Log out", so a bare role
@@ -78,13 +78,13 @@ test.describe("auth gate — stale/absent session must not leave /app interactiv
       if (isCreateInboxItem(req.url())) actionRequests.push(req.url());
     });
 
-    // Navigate back to /app as if the user hit the back button or pasted URL.
-    await page.goto("/app");
+    // Navigate back to /do as if the user hit the back button or pasted URL.
+    await page.goto("/do");
 
     await expect(page.getByRole("heading", { name: LANDING_H1 })).toBeVisible({
       timeout: 10_000,
     });
-    expect(page.url()).not.toMatch(/\/app/);
+    expect(page.url()).not.toMatch(/\/do/);
 
     // Capture must not fire an unauthenticated POST.
     await page.keyboard.press("Meta+K");

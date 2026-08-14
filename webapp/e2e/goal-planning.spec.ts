@@ -22,11 +22,11 @@ test("goal → link projects → complete → focus advances → logbook → reo
   // per-test cap isn't enough for the chain.
   test.setTimeout(90_000);
   await signupNewUser(page);
-  // Clear the seeded starter task so /app/goals starts clean.
+  // Clear the seeded starter task so /do/goals starts clean.
   await completeTopTask(page);
 
   // ---- 1. Create a goal from the Goals page ----
-  await page.goto("/app/goals");
+  await page.goto("/do/goals");
   await page.getByRole("button", { name: /^new goal$/i }).click();
   await page.getByPlaceholder(/grow audience/i).fill("Run a 10k");
   // Wait for the create-goal action to settle before asserting (avoids a stale
@@ -44,13 +44,13 @@ test("goal → link projects → complete → focus advances → logbook → reo
 
   // ---- 2. Create two projects via triage (the create path), then link each ----
   // Navigate home first so the app shell is in a known state for openCapture.
-  await page.goto("/app");
+  await page.goto("/do");
   await triageOneItem(page, "Couch to 5k", { type: "project" });
-  await page.goto("/app");
+  await page.goto("/do");
   await triageOneItem(page, "Bridge to 10k", { type: "project" });
 
   // Link "Couch to 5k" to the goal from its detail page.
-  await page.goto("/app/projects");
+  await page.goto("/do/projects");
   await page.getByText("Couch to 5k").click();
   await expect(page.getByRole("heading", { name: "Couch to 5k" })).toBeVisible({
     timeout: 10_000,
@@ -61,7 +61,7 @@ test("goal → link projects → complete → focus advances → logbook → reo
   await expect(page.getByText("Run a 10k").first()).toBeVisible({ timeout: 10_000 });
 
   // Link "Bridge to 10k" likewise.
-  await page.goto("/app/projects");
+  await page.goto("/do/projects");
   await page.getByText("Bridge to 10k").click();
   await expect(page.getByRole("heading", { name: "Bridge to 10k" })).toBeVisible({
     timeout: 10_000,
@@ -70,7 +70,7 @@ test("goal → link projects → complete → focus advances → logbook → reo
   await page.locator(".aa-project__relink-opt").filter({ hasText: "Run a 10k" }).click();
 
   // ---- 3. Open the goal; "Focus:" surfaces the first non-done project ----
-  await page.goto("/app/goals");
+  await page.goto("/do/goals");
   await page.getByRole("link", { name: "Run a 10k" }).click();
   await expect(page.getByRole("heading", { name: "Run a 10k" })).toBeVisible({
     timeout: 10_000,
@@ -88,7 +88,7 @@ test("goal → link projects → complete → focus advances → logbook → reo
   // ---- 4. Complete one project; "Focus:" advances to the other ----
   // Open the focused project, complete it from its header.
   const focusedName = (await page.getByText(/Focus:/).textContent())?.replace(/.*Focus:\s*/, "").trim();
-  await page.goto("/app/projects");
+  await page.goto("/do/projects");
   await page.getByText(focusedName ?? "Couch to 5k").click();
   await expect(page.getByRole("heading", { name: focusedName ?? "Couch to 5k" })).toBeVisible({
     timeout: 10_000,
@@ -96,18 +96,18 @@ test("goal → link projects → complete → focus advances → logbook → reo
   await page.getByRole("button", { name: /^complete$/i }).click();
 
   // Back to the goal — "Focus:" now names the remaining project.
-  await page.goto("/app/goals");
+  await page.goto("/do/goals");
   await page.getByRole("link", { name: "Run a 10k" }).click();
   const otherName = focusedName === "Couch to 5k" ? "Bridge to 10k" : "Couch to 5k";
   await expect(page.getByText(/Focus:/)).toContainText(otherName, { timeout: 10_000 });
 
   // ---- 5. Complete the goal; it leaves the active list ----
   await page.getByRole("button", { name: /^complete$/i }).click();
-  await expect(page).toHaveURL(/\/app\/goals/, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/do\/goals/, { timeout: 10_000 });
   await expect(page.getByRole("link", { name: "Run a 10k" })).toHaveCount(0, { timeout: 10_000 });
 
   // ---- 6. It appears in the Logbook with a Reopen ----
-  await page.goto("/app/logbook");
+  await page.goto("/do/logbook");
   // A linked project's row also shows "Run a 10k" (as its parent-goal chip),
   // so scope to rows carrying the teal "Goal" kind chip to target the goal
   // itself, not the completed project beside it.
@@ -133,6 +133,6 @@ test("goal → link projects → complete → focus advances → logbook → reo
       .filter({ hasText: "Run a 10k" }),
   ).toHaveCount(0, { timeout: 10_000 });
 
-  await page.goto("/app/goals");
+  await page.goto("/do/goals");
   await expect(page.getByRole("link", { name: "Run a 10k" })).toBeVisible({ timeout: 10_000 });
 });

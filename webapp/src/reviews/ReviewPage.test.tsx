@@ -34,14 +34,14 @@ function task(index: number): ReviewTaskItem {
 
 describe("review route preference resolution", () => {
   it.each([
-    [{ today: true, week: true, month: true }, "/app/review/today"],
-    [{ today: true, week: true, month: false }, "/app/review/today"],
-    [{ today: false, week: false, month: true }, "/app/review/month"],
-    [{ today: false, week: false, month: false }, "/app/logbook"],
-    [{ today: true, week: false, month: false }, "/app/review/today"],
-    [{ today: false, week: true, month: false }, "/app/review/week"],
-    [{ today: true, week: false, month: true }, "/app/review/today"],
-    [{ today: false, week: true, month: true }, "/app/review/week"],
+    [{ today: true, week: true, month: true }, "/do/review/today"],
+    [{ today: true, week: true, month: false }, "/do/review/today"],
+    [{ today: false, week: false, month: true }, "/do/review/month"],
+    [{ today: false, week: false, month: false }, "/do/logbook"],
+    [{ today: true, week: false, month: false }, "/do/review/today"],
+    [{ today: false, week: true, month: false }, "/do/review/week"],
+    [{ today: true, week: false, month: true }, "/do/review/today"],
+    [{ today: false, week: true, month: true }, "/do/review/week"],
   ])("routes preferences %#", (preferences, expected) => {
     expect(firstReviewRoute(preferences)).toBe(expected);
   });

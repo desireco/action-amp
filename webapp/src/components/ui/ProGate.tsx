@@ -49,7 +49,7 @@ export function ProGate({
   if (asTrigger) {
     return (
       <Link
-        to="/app/settings/billing"
+        to="/do/settings/billing"
         className={`aa-progate-trigger ${className}`}
         title={`${feature} is a Pro feature`}
       >
@@ -71,7 +71,7 @@ export function ProGate({
       </p>
       <p className="aa-progate__reason">{reason}</p>
       <div className="aa-progate__actions">
-        <Link to="/app/settings/billing" className="aa-progate__primary">
+        <Link to="/do/settings/billing" className="aa-progate__primary">
           See plans
         </Link>
         <Link to="/founding-100" className="aa-progate__secondary">

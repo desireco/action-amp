@@ -154,7 +154,7 @@ export function GoalsPage() {
         {(goals ?? []).map((g: GoalRow) => (
           <ProgressCard
             key={g.id}
-            to={`/app/goals/${g.permalink}`}
+            to={`/do/goals/${g.permalink}`}
             title={g.name}
             description={g.description}
             progress={g.progress}

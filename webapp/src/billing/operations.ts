@@ -112,10 +112,10 @@ export const createCheckoutSession = (async (
   // billing page with a success banner.
   const successUrl = priceKey === "founder"
     ? `${origin}/founding-100/welcome`
-    : `${origin}/app/settings/billing?checkout=success`;
+    : `${origin}/do/settings/billing?checkout=success`;
   const cancelUrl = priceKey === "founder"
     ? `${origin}/founding-100`
-    : `${origin}/app/settings/billing?checkout=cancelled`;
+    : `${origin}/do/settings/billing?checkout=cancelled`;
 
   // line_items: the founder tier charges inline (price_data) — no Price object
   // in the dashboard, the amount lives in code (FOUNDING_100_PRICE_CENTS). The
@@ -166,7 +166,7 @@ export const createCheckoutSession = (async (
   void recordAnalyticsEventCore(context.entities, {
     name: "CHECKOUT_STARTED",
     visitorId: `user_${dbUser.id}`,
-    route: priceKey === "founder" ? "/founding-100" : "/app/settings/billing",
+    route: priceKey === "founder" ? "/founding-100" : "/do/settings/billing",
     metadata: { plan: priceKey },
   }, dbUser.id).catch(() => {});
 
@@ -197,7 +197,7 @@ export const createCustomerPortalSession = (async (_args, context) => {
   const origin = process.env.WASP_WEB_CLIENT_URL ?? "http://localhost:4000";
   const session = await stripe.billingPortal.sessions.create({
     customer: dbUser.stripeCustomerId,
-    return_url: `${origin}/app/settings/billing`,
+    return_url: `${origin}/do/settings/billing`,
   });
 
   return { url: session.url };

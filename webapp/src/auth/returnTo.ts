@@ -1,4 +1,4 @@
-export const DEFAULT_AUTH_RETURN_TO = "/app";
+export const DEFAULT_AUTH_RETURN_TO = "/do";
 
 const RETURN_TO_BASE = "https://actionamp.local";
 

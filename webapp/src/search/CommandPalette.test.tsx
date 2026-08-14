@@ -23,7 +23,7 @@ const RESULT = {
   subtitle: "Operations",
   snippet: "Check renewal terms before Friday",
   matchedField: "title" as const,
-  href: "/app/tasks/renew-insurance",
+  href: "/do/tasks/renew-insurance",
   lens: { id: "lens-1", name: "Work", color: "indigo" },
   state: "upcoming" as const,
 };
@@ -74,7 +74,7 @@ describe("CommandPalette", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "See plans" })).toHaveAttribute(
       "href",
-      "/app/settings/billing",
+      "/do/settings/billing",
     );
     expect(
       screen.getByText(
@@ -92,7 +92,7 @@ describe("CommandPalette", () => {
     );
     fireEvent.keyDown(screen.getByRole("combobox"), { key: "Enter" });
     expect(props.onClose).toHaveBeenCalledTimes(1);
-    expect(props.onNavigate).toHaveBeenCalledWith("/app");
+    expect(props.onNavigate).toHaveBeenCalledWith("/do");
   });
 
   it("moves through commands with arrow keys", () => {
@@ -109,7 +109,7 @@ describe("CommandPalette", () => {
       activeLensType: "SIMPLE_LIST",
     });
     fireEvent.click(screen.getByRole("option", { name: /List.*Open checklist/i }));
-    expect(props.onNavigate).toHaveBeenCalledWith("/app/list");
+    expect(props.onNavigate).toHaveBeenCalledWith("/do/list");
     expect(screen.queryByRole("option", { name: /Next/ })).not.toBeInTheDocument();
     expect(screen.getByRole("option", { name: /Capture a thought/ })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /Inbox/ })).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe("CommandPalette", () => {
       screen.getByText(/Work · Operations · Upcoming/),
     ).toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole("combobox"), { key: "Enter" });
-    expect(props.onNavigate).toHaveBeenCalledWith("/app/tasks/renew-insurance");
+    expect(props.onNavigate).toHaveBeenCalledWith("/do/tasks/renew-insurance");
   });
 
   it("waits for two characters before enabling server search", () => {
@@ -179,7 +179,7 @@ describe("CommandPalette", () => {
                   kind: "project",
                   title: "Launch project",
                   subtitle: "Work",
-                  href: "/app/projects/launch",
+                  href: "/do/projects/launch",
                   aliases: ["project", "plan"],
                 },
               ],
@@ -198,7 +198,7 @@ describe("CommandPalette", () => {
       screen.getByRole("option", { name: /Launch project/ }),
     ).toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole("combobox"), { key: "Enter" });
-    expect(props.onNavigate).toHaveBeenCalledWith("/app/projects/launch");
+    expect(props.onNavigate).toHaveBeenCalledWith("/do/projects/launch");
   });
 
   it("switches a Lens from the compact index by pointer", () => {
@@ -425,7 +425,7 @@ describe("CommandPalette", () => {
                   kind: "project",
                   title: "Project Alpha",
                   subtitle: "Work",
-                  href: "/app/projects/alpha",
+                  href: "/do/projects/alpha",
                   aliases: ["project"],
                 },
                 {
@@ -433,7 +433,7 @@ describe("CommandPalette", () => {
                   kind: "project",
                   title: "Project Beta",
                   subtitle: "Work",
-                  href: "/app/projects/beta",
+                  href: "/do/projects/beta",
                   aliases: ["project"],
                 },
               ],
@@ -472,11 +472,11 @@ describe("CommandPalette", () => {
   });
 
   it.each([
-    ["project", "/app/projects/renewal"],
-    ["goal", "/app/goals/renewal"],
-    ["resource", "/app/projects/renewal#resource-resource-1"],
-    ["inbox", "/app/inbox?item=inbox-1"],
-    ["archived inbox", "/app/logbook?item=inbox-1"],
+    ["project", "/do/projects/renewal"],
+    ["goal", "/do/goals/renewal"],
+    ["resource", "/do/projects/renewal#resource-resource-1"],
+    ["inbox", "/do/inbox?item=inbox-1"],
+    ["archived inbox", "/do/logbook?item=inbox-1"],
   ] as const)("opens the exact %s destination", (label, href) => {
     const archived = label === "archived inbox";
     const kind = label.includes("inbox") ? "inbox" : label;

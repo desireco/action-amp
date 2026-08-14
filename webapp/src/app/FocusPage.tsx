@@ -38,7 +38,7 @@ export function FocusPage() {
   // `getFocusedTask` can be cached as empty after completing a task. Starting
   // the next task invalidates that cache immediately before navigating here;
   // wait for its refetch before deciding there is no focus task. Otherwise the
-  // stale empty result redirects back to /app, forcing a second Start tap.
+  // stale empty result redirects back to /do, forcing a second Start tap.
   if (isLoading || isFetching) {
     return (
       <div className="aa-wn">
@@ -49,7 +49,7 @@ export function FocusPage() {
   }
 
   if (!task) {
-    return <Navigate to="/app" replace />;
+    return <Navigate to="/do" replace />;
   }
 
   return (
@@ -64,7 +64,7 @@ export function FocusPage() {
         // a Next candidate — no ghost timer.
         await pauseTask({ id: task.id });
         refreshTaskState();
-        navigate("/app");
+        navigate("/do");
       }}
       onComplete={async (outcome) => {
         await completeTaskFromFocus(
@@ -73,7 +73,7 @@ export function FocusPage() {
         refreshTaskState();
         // Completing the one sample task advances onboarding to real capture.
         await queryClient.invalidateQueries({ queryKey: ["auth/me"] });
-        navigate("/app");
+        navigate("/do");
       }}
       onCompleteSession={async () => {
         await completeFocusSession({ id: task.id });
@@ -97,7 +97,7 @@ export function FocusPage() {
         // task reappears in Upcoming/Someday when the snooze expires.
         await snoozeTask({ id: task.id, preset });
         refreshTaskState();
-        navigate("/app");
+        navigate("/do");
       }}
     />
   );

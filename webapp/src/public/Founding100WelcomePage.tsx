@@ -104,7 +104,7 @@ function Congratulations({ memberNumber }: { memberNumber: number | undefined })
       </p>
 
       <div className="aa-founding-cta">
-        <Link to="/app">
+        <Link to="/do">
           <Button variant="primary" size="lg">
             See your Next
           </Button>
@@ -145,7 +145,7 @@ function StillConfirming() {
         shortly. No action needed on your part.
       </p>
       <div className="aa-founding-cta">
-        <Link to="/app">
+        <Link to="/do">
           <Button variant="secondary" size="lg">
             Continue to the app
           </Button>

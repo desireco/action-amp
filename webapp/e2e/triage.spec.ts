@@ -23,7 +23,7 @@ async function setupOneItem(page: Page, text: string) {
   await textarea.fill(text);
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
-  await page.goto("/app/inbox/review");
+  await page.goto("/do/inbox/review");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 }
 
@@ -53,7 +53,7 @@ test("a #project capture token preselects the project link (type stays Task)", a
   // match unambiguously to one project.
   const PROJECT = "Briefs";
   await signupNewUser(page);
-  await page.goto("/app/projects");
+  await page.goto("/do/projects");
   await page.getByRole("button", { name: "New project" }).click();
   const nameInput = page.getByPlaceholder(/ship product|project name/i);
   await nameInput.waitFor({ state: "visible", timeout: 5_000 });
@@ -65,13 +65,13 @@ test("a #project capture token preselects the project link (type stays Task)", a
   // a known state for openCapture (which waits on the Next nav link). The
   // #token opens an autocomplete; the first Enter accepts the suggestion
   // (closing the menu), the second submits.
-  await page.goto("/app");
+  await page.goto("/do");
   const textarea = await openCapture(page);
   await textarea.fill(`Draft the brief #${PROJECT.toLowerCase()}`);
   await textarea.press("Enter"); // accept the suggestion
   await textarea.press("Enter"); // submit the capture
   await page.keyboard.press("Escape"); // close the popover
-  await page.goto("/app/inbox/review");
+  await page.goto("/do/inbox/review");
   await expect(page.getByText("Draft the brief")).toBeVisible({ timeout: 10_000 });
 
   // Task is the default type; the project hint pre-fills the destination. Just
@@ -88,7 +88,7 @@ test("a #project capture token preselects the project link (type stays Task)", a
   await expect(page.getByText("Draft the brief")).toHaveCount(0, { timeout: 10_000 });
 
   // Filed under the Briefs project — visible on its detail page.
-  await page.goto("/app/projects");
+  await page.goto("/do/projects");
   await page.getByText(PROJECT).click();
   await expect(page.getByText("Draft the brief")).toBeVisible({ timeout: 10_000 });
 });
@@ -98,9 +98,9 @@ test("becoming a Project uses the item text as the name", async ({ page }) => {
   const text = "Relaunch the podcast";
   await triageOneItem(page, text, { type: "project" });
 
-  await page.goto("/app/projects");
+  await page.goto("/do/projects");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
-  await page.goto("/app/inbox");
+  await page.goto("/do/inbox");
   await expect(page.getByText(/inbox clear/i)).toBeVisible();
 });
 
@@ -129,21 +129,21 @@ test("Archive keeps the note — it leaves the inbox but surfaces in the Logbook
   await triageOneItem(page, text, { type: "archive" });
 
   // Not a task anywhere — it wasn't turned into actionable work.
-  await page.goto("/app/today");
+  await page.goto("/do/today");
   await expect(page.getByText(text)).toHaveCount(0);
-  await page.goto("/app/someday");
+  await page.goto("/do/someday");
   await expect(page.getByText(text)).toHaveCount(0);
   // …and it leaves the inbox.
-  await page.goto("/app/inbox");
+  await page.goto("/do/inbox");
   await expect(page.getByText(/inbox clear/i)).toBeVisible();
 
   // But it's NOT lost — it lands in the Logbook's archived section, with a
   // Restore action (lossless: declining a note never deletes it).
-  await page.goto("/app/logbook");
+  await page.goto("/do/logbook");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: /^restore$/i }).click();
 
   // Restoring returns it to the inbox for re-triage.
-  await page.goto("/app/inbox");
+  await page.goto("/do/inbox");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 });

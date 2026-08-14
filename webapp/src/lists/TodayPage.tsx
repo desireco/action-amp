@@ -98,7 +98,7 @@ export function TodayPage() {
     [doneToday],
   );
 
-  // Demote a Today task to Upcoming (it moves to /app/upcoming, never
+  // Demote a Today task to Upcoming (it moves to /do/upcoming, never
   // "disappears"). Promote happens on the Upcoming page now — Today only
   // links over.
   const handleDemote = async (task: TaskRowTask) => {
@@ -118,12 +118,12 @@ export function TodayPage() {
   const doneCount = doneToday?.length ?? 0;
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
   const editTask = (task: TaskRowTask) => {
-    navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+    navigate(`/do/tasks/${task.permalink ?? task.id}`, {
       state: { returnTo },
     });
   };
   const pickTask = (task: TaskRowTask) => {
-    navigate(`/app/today/${encodeURIComponent(task.permalink ?? task.id)}`);
+    navigate(`/do/today/${encodeURIComponent(task.permalink ?? task.id)}`);
   };
 
   const isEmpty = !isLoading && (tasks?.length ?? 0) === 0;
@@ -166,7 +166,7 @@ export function TodayPage() {
         <CountLinkButton
           label="Upcoming"
           count={appData ? upcomingCount : undefined}
-          to="/app/upcoming"
+          to="/do/upcoming"
         />
       </header>
 
@@ -189,7 +189,7 @@ export function TodayPage() {
             text="Pull one in from Upcoming, or triage something from the Inbox."
             action={
               upcomingCount > 0 ? (
-                <Link to="/app/upcoming">
+                <Link to="/do/upcoming">
                   <Button variant="secondary" size="md">
                     See upcoming {upcomingCount}
                   </Button>

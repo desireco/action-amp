@@ -30,14 +30,14 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible();
 });
 
-test("login with known credentials reaches /app", async ({ page }) => {
+test("login with known credentials reaches /do", async ({ page }) => {
   const email = createVerifiedUser();
   await emailInput(page).fill(email);
   await passwordInput(page).fill(TEST_PASS);
   await page.getByRole("button", { name: /log in/i }).click();
 
-  // onAuthSucceededRedirectTo: "/app"
-  await expect(page).toHaveURL(/\/app/);
+  // onAuthSucceededRedirectTo: "/do"
+  await expect(page).toHaveURL(/\/do/);
 });
 
 test("wrong password stays on the auth flow", async ({ page }) => {
@@ -47,7 +47,7 @@ test("wrong password stays on the auth flow", async ({ page }) => {
   await page.getByRole("button", { name: /log in/i }).click();
 
   // Should NOT reach the app — an error message appears, URL stays auth-side.
-  await expect(page).not.toHaveURL(/\/app/);
+  await expect(page).not.toHaveURL(/\/do/);
   // Wasp LoginForm surfaces the error inline.
   await expect(page.getByText(/invalid|incorrect|wrong/i)).toBeVisible({ timeout: 10000 });
 });

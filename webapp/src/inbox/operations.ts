@@ -51,7 +51,7 @@ export const createInboxItem = (async (args, context) => {
   void recordAnalyticsEventCore(context.entities, {
     name: "CAPTURE_CREATED",
     visitorId: `user_${context.user.id}`,
-    route: "/app/inbox",
+    route: "/do/inbox",
   }, context.user.id).catch(() => {});
   return created;
 }) satisfies CreateInboxItem<
@@ -138,7 +138,7 @@ export const triageInboxItem = (async (args, context) => {
   void recordAnalyticsEventCore(context.entities, {
     name: "TRIAGE_COMPLETED",
     visitorId: `user_${context.user.id}`,
-    route: "/app/inbox/review",
+    route: "/do/inbox/review",
   }, context.user.id).catch(() => {});
   return result;
 }) satisfies TriageInboxItem<{

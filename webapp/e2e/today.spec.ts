@@ -24,7 +24,7 @@ test("F12: Today is capped at 5 — a 6th item is flagged as over-capacity", asy
     await triageOneItem(page, TASK(i), { type: "task", when: "today" });
   }
 
-  await page.goto("/app/today");
+  await page.goto("/do/today");
 
   // F12: the cap is surfaced. The heading reads "6 of 5 committed" (cap is 5
   // and exceeded), an amber "Over capacity" banner appears, and the overflow
@@ -45,7 +45,7 @@ test("'Move to Upcoming' demotes; Upcoming's 'Today' promotes back", async ({ pa
   await triageOneItem(page, "Swap me around", { type: "task", when: "today" });
 
   // On Today, demote it via "Move to Upcoming" → confirm dialog.
-  await page.goto("/app/today");
+  await page.goto("/do/today");
   await expect(page.getByText("Swap me around")).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: /move to upcoming/i }).first().click();
   await page.getByRole("dialog").getByRole("button", { name: /move to upcoming/i }).click();
@@ -54,7 +54,7 @@ test("'Move to Upcoming' demotes; Upcoming's 'Today' promotes back", async ({ pa
   await expect(page.getByText("Swap me around")).toHaveCount(0, { timeout: 10_000 });
 
   // ...and appears on the Upcoming page (its own route now, not an inline bench).
-  await page.goto("/app/upcoming");
+  await page.goto("/do/upcoming");
   await expect(page.getByText("Swap me around")).toBeVisible({ timeout: 10_000 });
 
   // Promote it back via Upcoming's per-row "Today" button.
@@ -63,6 +63,6 @@ test("'Move to Upcoming' demotes; Upcoming's 'Today' promotes back", async ({ pa
   await expect(page.getByText("Swap me around")).toHaveCount(0, { timeout: 10_000 });
 
   // ...and returns to the Today list.
-  await page.goto("/app/today");
+  await page.goto("/do/today");
   await expect(page.getByText("Swap me around")).toBeVisible({ timeout: 10_000 });
 });

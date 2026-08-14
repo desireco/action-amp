@@ -124,7 +124,7 @@ export function UpcomingPage() {
         <CountLinkButton
           label="Today"
           count={appData?.counts.today}
-          to="/app/today"
+          to="/do/today"
         />
       </header>
 
@@ -164,7 +164,7 @@ export function UpcomingPage() {
           title="Nothing upcoming."
           text="Tasks with a future date land here. Add a due date from triage or edit a task to schedule it."
           action={
-            <Button variant="secondary" size="md" onClick={() => navigate("/app/inbox")}>
+            <Button variant="secondary" size="md" onClick={() => navigate("/do/inbox")}>
               Go to Inbox
             </Button>
           }
@@ -217,7 +217,7 @@ export function UpcomingPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() =>
-                  navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+                  navigate(`/do/tasks/${task.permalink ?? task.id}`, {
                     state: { returnTo },
                   })
                 }

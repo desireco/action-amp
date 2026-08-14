@@ -249,7 +249,7 @@ export function OnboardingPage() {
 
   const finish = useCallback(async (skipGuidance = false) => {
     // Persist the flag server-side so onboarding shows exactly once across
-    // devices. If this fails, do NOT navigate to /app — the gate in App.tsx
+    // devices. If this fails, do NOT navigate to /do — the gate in App.tsx
     // reads the same server flag, so a false flag would bounce the user right
     // back to /welcome (a redirect loop). Instead surface an error + retry.
     setCompleting(true);
@@ -271,7 +271,7 @@ export function OnboardingPage() {
           : old,
       );
       setLeaving(true);
-      navigate("/app");
+      navigate("/do");
     } catch {
       setCompleting(false);
       setCompletionError(true);

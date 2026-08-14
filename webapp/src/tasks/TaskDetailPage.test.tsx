@@ -66,20 +66,20 @@ function renderAt(entry: string | { pathname: string; state?: unknown }) {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[entry]}>
         <Routes>
-          <Route path="/app/tasks/:permalink" element={<TaskDetailPage />} />
+          <Route path="/do/tasks/:permalink" element={<TaskDetailPage />} />
           <Route
-            path="/app/goals/:permalink"
+            path="/do/goals/:permalink"
             element={<div data-testid="goal-detail" />}
           />
           <Route
-            path="/app/projects/:permalink"
+            path="/do/projects/:permalink"
             element={<div data-testid="project-detail" />}
           />
           <Route
-            path="/app/upcoming"
+            path="/do/upcoming"
             element={<div data-testid="upcoming" />}
           />
-          <Route path="/app" element={<div data-testid="home" />} />
+          <Route path="/do" element={<div data-testid="home" />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -94,7 +94,7 @@ beforeEach(() => {
 describe("TaskDetailPage — breadcrumb (breadcrumb-nav spec)", () => {
   it("renders Goal › Project › Task crumbs when both ancestors exist", () => {
     taskData.current = makeTask();
-    renderAt("/app/tasks/send-issue-1");
+    renderAt("/do/tasks/send-issue-1");
     const buttons = screen.getAllByRole("button");
     const labels = buttons.map((b) => b.textContent);
     expect(labels).toContain("Grow audience");
@@ -104,7 +104,7 @@ describe("TaskDetailPage — breadcrumb (breadcrumb-nav spec)", () => {
 
   it("navigates to the goal detail route when the goal crumb is clicked", () => {
     taskData.current = makeTask();
-    renderAt("/app/tasks/send-issue-1");
+    renderAt("/do/tasks/send-issue-1");
     // Scope to the breadcrumb nav so we don't match PropertyChips buttons.
     const nav = screen.getByLabelText("Hierarchy");
     fireEvent.click(nav.querySelector("button")!); // first crumb = goal
@@ -113,7 +113,7 @@ describe("TaskDetailPage — breadcrumb (breadcrumb-nav spec)", () => {
 
   it("navigates to the project detail route when the project crumb is clicked", () => {
     taskData.current = makeTask();
-    renderAt("/app/tasks/send-issue-1");
+    renderAt("/do/tasks/send-issue-1");
     const nav = screen.getByLabelText("Hierarchy");
     const buttons = nav.querySelectorAll("button");
     fireEvent.click(buttons[1]!); // second crumb = project
@@ -122,7 +122,7 @@ describe("TaskDetailPage — breadcrumb (breadcrumb-nav spec)", () => {
 
   it("skips the project crumb when the task has a goal but no project", () => {
     taskData.current = makeTask({ project: null });
-    renderAt("/app/tasks/send-issue-1");
+    renderAt("/do/tasks/send-issue-1");
     const buttons = screen.getAllByRole("button");
     const labels = buttons.map((b) => b.textContent);
     expect(labels).toContain("Grow audience");
@@ -132,7 +132,7 @@ describe("TaskDetailPage — breadcrumb (breadcrumb-nav spec)", () => {
 
   it("falls back to ← Back link when the task has no ancestors (standalone)", () => {
     taskData.current = makeTask({ project: null, goal: null });
-    renderAt("/app/tasks/send-issue-1");
+    renderAt("/do/tasks/send-issue-1");
     // A standalone task has no ancestors → only 1 crumb → fallback to Back.
     expect(screen.getByText(/back/i)).toBeInTheDocument();
     // No breadcrumb nav element.
@@ -142,8 +142,8 @@ describe("TaskDetailPage — breadcrumb (breadcrumb-nav spec)", () => {
   it("returns to the route supplied by the task opener", () => {
     taskData.current = makeTask({ project: null, goal: null });
     renderAt({
-      pathname: "/app/tasks/send-issue-1",
-      state: { returnTo: "/app/upcoming" },
+      pathname: "/do/tasks/send-issue-1",
+      state: { returnTo: "/do/upcoming" },
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));

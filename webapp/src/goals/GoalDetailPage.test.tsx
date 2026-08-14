@@ -68,9 +68,9 @@ function renderAt(path: string) {
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[path]}>
           <Routes>
-            <Route path="/app/goals/:permalink" element={<GoalDetailPage />} />
-            <Route path="/app/goals" element={<div data-testid="goals-list" />} />
-            <Route path="/app/projects/:permalink" element={<div data-testid="project-detail" />} />
+            <Route path="/do/goals/:permalink" element={<GoalDetailPage />} />
+            <Route path="/do/goals" element={<div data-testid="goals-list" />} />
+            <Route path="/do/projects/:permalink" element={<div data-testid="project-detail" />} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
@@ -89,14 +89,14 @@ beforeEach(() => {
 describe("GoalDetailPage — header affordances (goal-planning spec §B, §C)", () => {
   it("shows Complete (not Reopen) when the goal is active", () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     expect(screen.getByRole("button", { name: /^complete$/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^reopen$/i })).toBeNull();
   });
 
   it("clicking Complete fires setGoalDone({ isDone: true })", async () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
     await waitFor(() =>
       expect(setGoalDone).toHaveBeenCalledWith({ id: "g1", isDone: true }),
@@ -105,7 +105,7 @@ describe("GoalDetailPage — header affordances (goal-planning spec §B, §C)", 
 
   it("shows Reopen when the goal is already done", () => {
     goalData.current = makeGoal({ isDone: true });
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     expect(screen.getByRole("button", { name: /^reopen$/i })).toBeInTheDocument();
   });
 });
@@ -113,7 +113,7 @@ describe("GoalDetailPage — header affordances (goal-planning spec §B, §C)", 
 describe("GoalDetailPage — inline edit (§C)", () => {
   it("Edit reveals name + description inputs, Save fires updateGoal", async () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
 
     const nameInput = await screen.findByLabelText(/outcome/i);
@@ -137,7 +137,7 @@ describe("GoalDetailPage — inline edit (§C)", () => {
 describe("GoalDetailPage — delete confirm copy (§C)", () => {
   it("the delete dialog states the re-parenting outcome (N children)", () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
     // Goals only own aligned projects. Standalone task creation from goals was
     // removed; tasks live in Inbox or Projects.
@@ -147,7 +147,7 @@ describe("GoalDetailPage — delete confirm copy (§C)", () => {
 
   it("the delete dialog fires deleteGoal on confirm", async () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^delete goal$/i }));
     await waitFor(() => expect(deleteGoal).toHaveBeenCalledWith({ id: "g1" }));
@@ -157,13 +157,13 @@ describe("GoalDetailPage — delete confirm copy (§C)", () => {
 describe("GoalDetailPage — Focus line (spec §E)", () => {
   it("surfaces the first non-done project as 'Focus: <name>' with a link", () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     // p1 is done, p2 (Twitter) is the first non-done → "Focus: Twitter".
     const focusLine = screen.getByText(/Focus:/);
     expect(focusLine.textContent).toMatch(/Twitter/);
     expect(screen.getByRole("link", { name: "Twitter" })).toHaveAttribute(
       "href",
-      "/app/projects/twitter",
+      "/do/projects/twitter",
     );
   });
 
@@ -173,13 +173,13 @@ describe("GoalDetailPage — Focus line (spec §E)", () => {
         { id: "p1", permalink: "done-one", name: "Done one", isDone: true, order: 0, dueDate: null, tasks: [] },
       ],
     });
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     expect(screen.queryByText(/Focus:/)).toBeNull();
   });
 
   it("hides the Focus line when the goal has no projects", () => {
     goalData.current = makeGoal({ projects: [] });
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     expect(screen.queryByText(/Focus:/)).toBeNull();
   });
 });
@@ -187,7 +187,7 @@ describe("GoalDetailPage — Focus line (spec §E)", () => {
 describe("GoalDetailPage — reorder (spec §E)", () => {
   it("the up button on the second project fires reorderGoalProjects with the swapped order", async () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     // Second project (Twitter, index 1) — move up. The aria-label is
     // "Move <name> up".
     fireEvent.click(screen.getByRole("button", { name: /move twitter up/i }));
@@ -202,13 +202,13 @@ describe("GoalDetailPage — reorder (spec §E)", () => {
 
   it("the first project's up button is disabled (boundary)", () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     expect(screen.getByRole("button", { name: /move newsletter up/i })).toBeDisabled();
   });
 
   it("the last project's down button is disabled (boundary)", () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     expect(screen.getByRole("button", { name: /move twitter down/i })).toBeDisabled();
   });
 });
@@ -216,7 +216,7 @@ describe("GoalDetailPage — reorder (spec §E)", () => {
 describe("GoalDetailPage — project alignment only", () => {
   it("does not expose project/task creation controls from the goal page", () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     expect(screen.queryByRole("button", { name: /^add project$/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /^add task$/i })).toBeNull();
   });
@@ -225,17 +225,17 @@ describe("GoalDetailPage — project alignment only", () => {
 describe("GoalDetailPage — breadcrumb navigation (breadcrumb-nav spec)", () => {
   it("renders a breadcrumb with the goal name as the active crumb", () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     // The active crumb has aria-current="location".
     const activeCrumb = screen.getByRole("button", { name: "Grow audience" });
     expect(activeCrumb).toHaveAttribute("aria-current", "location");
   });
 
-  it("renders a Goals-list crumb that navigates to /app/goals on click", () => {
+  it("renders a Goals-list crumb that navigates to /do/goals on click", () => {
     goalData.current = makeGoal();
-    renderAt("/app/goals/g1");
+    renderAt("/do/goals/g1");
     fireEvent.click(screen.getByRole("button", { name: "Goals" }));
-    // The /app/goals route in the test router renders a div with testid
+    // The /do/goals route in the test router renders a div with testid
     // "goals-list" — if we navigated there, it should be present.
     expect(screen.getByTestId("goals-list")).toBeInTheDocument();
   });

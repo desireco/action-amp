@@ -97,7 +97,7 @@ export function InboxPage() {
             <p className="aa-inbox__empty-hint">
               Capture anytime <span className="aa-inbox__kbd">⌘K</span>
             </p>
-            <Link to="/app?capture=1" className="aa-inbox__cta aa-inbox__empty-cta">
+            <Link to="/do?capture=1" className="aa-inbox__cta aa-inbox__empty-cta">
               <span>Capture a thought</span>
               <ArrowRightIcon />
             </Link>
@@ -111,7 +111,7 @@ export function InboxPage() {
                   {countLabel} · newest first
                 </p>
               </div>
-              <Link to="/app/inbox/review" className="aa-inbox__cta">
+              <Link to="/do/inbox/review" className="aa-inbox__cta">
                 <span>Start triage</span>
                 <ArrowRightIcon />
               </Link>
@@ -124,7 +124,7 @@ export function InboxPage() {
                   className={`aa-inbox__item${item.id === targetItemId ? " is-search-target" : ""}`}
                 >
                   <Link
-                    to={`/app/inbox/review?i=${i}`}
+                    to={`/do/inbox/review?i=${i}`}
                     className="aa-inbox__row"
                   >
                     <div className="aa-inbox__row-content">

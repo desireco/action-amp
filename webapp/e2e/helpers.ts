@@ -45,7 +45,7 @@ export function createVerifiedUser(
 }
 
 /**
- * Create a fresh verified user and log in as them via the UI. Lands on /app.
+ * Create a fresh verified user and log in as them via the UI. Lands on /do.
  * Returns the email. Each call = isolated, empty user state.
  */
 export async function signupNewUser(
@@ -54,7 +54,7 @@ export async function signupNewUser(
 ): Promise<string> {
   const email = createVerifiedUser(opts);
   await page.goto(`/login?devEmail=${encodeURIComponent(email)}`);
-  await page.waitForURL(/\/app/, { timeout: 15_000 });
+  await page.waitForURL(/\/do/, { timeout: 15_000 });
   return email;
 }
 
@@ -89,7 +89,7 @@ export async function openCapture(page: Page) {
 
 /**
  * Complete whatever task is currently surfaced as the top item on the home
- * screen (/app), via the focus-mode flow (Start → focus → Complete).
+ * screen (/do), via the focus-mode flow (Start → focus → Complete).
  *
  * Used to clear the seeded "Try it" starter task (now visible on home since the
  * FREE-tier default lens became Me — entitlement-enforcement) so a test starts
@@ -100,7 +100,7 @@ export async function completeTopTask(page: Page) {
   // them so the test starts from a clean slate: loop the focus-mode completion
   // flow until home shows no Start button (empty).
   for (let i = 0; i < 5; i++) {
-    await page.goto("/app");
+    await page.goto("/do");
     const startBtn = page.getByRole("button", { name: /^start$/i });
     // Wait briefly for the home to render a top task. If none appears, home is
     // empty — done.
@@ -136,7 +136,7 @@ export async function triageOneItem(
   await textarea.fill(text);
   await textarea.press("Enter");
   await page.keyboard.press("Escape");
-  await page.goto("/app/inbox/review");
+  await page.goto("/do/inbox/review");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 
   // Step 1 (Classify) — lens radios (pre-selected) + the type chooser render
@@ -185,7 +185,7 @@ export async function triageOneItem(
  * exit animation. The wizard animates the item away the instant the commit is
  * clicked (setExit runs before the server action resolves), so a naive
  * toHaveCount(0) passes while triageInboxItem is still in flight. If the caller
- * then navigates to /app/inbox, the getInboxItems refetch can beat the delete
+ * then navigates to /do/inbox, the getInboxItems refetch can beat the delete
  * and show the item still present — a flaky "inbox zero" failure. Waiting on the
  * action response guarantees the InboxItem is gone (or ARCHIVED) before we return.
  */

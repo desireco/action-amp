@@ -49,7 +49,7 @@ Start with one task, not a list.
 Your first screen is Next. It will show one thing to do first.
 
 Open ActionAmp:
-${appUrl}/app`;
+${appUrl}/do`;
 }
 
 export function WelcomeEmailTemplate({
@@ -62,7 +62,7 @@ export function WelcomeEmailTemplate({
       preview="Start with one task, not a list."
       cta={{
         label: "Open ActionAmp",
-        href: `${appUrl}/app`,
+        href: `${appUrl}/do`,
       }}
     >
       <>

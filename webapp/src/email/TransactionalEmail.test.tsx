@@ -11,7 +11,7 @@ describe("transactional email templates", () => {
     const html = await renderTransactionalEmailHtml({
       title: "Check your email",
       preview: "One quiet account step.",
-      cta: { label: "Open ActionAmp", href: "https://actionamp.com/app" },
+      cta: { label: "Open ActionAmp", href: "https://actionamp.com/do" },
       children: <Text style={transactionalEmailTextStyle}>Body copy.</Text>,
     });
 
@@ -25,7 +25,7 @@ describe("transactional email templates", () => {
     const html = await renderFeedbackEmailHtml({
       id: "feedback-1",
       message: "<script>alert(1)</script>\nSecond line",
-      route: "/app",
+      route: "/do",
       section: "work",
       lensName: "Work",
       lensColor: "indigo",

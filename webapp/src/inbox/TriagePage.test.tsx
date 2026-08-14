@@ -76,7 +76,7 @@ vi.mock("../app/lensContext", () => ({
 
 const { TriagePage } = await import("./TriagePage");
 
-function renderTriagePage(initialEntry = "/app/inbox/review") {
+function renderTriagePage(initialEntry = "/do/inbox/review") {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -85,9 +85,9 @@ function renderTriagePage(initialEntry = "/app/inbox/review") {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
-          <Route path="/app/inbox/review" element={<TriagePage />} />
-          <Route path="/app/inbox" element={<div>Inbox</div>} />
-          <Route path="/app" element={<div>App home</div>} />
+          <Route path="/do/inbox/review" element={<TriagePage />} />
+          <Route path="/do/inbox" element={<div>Inbox</div>} />
+          <Route path="/do" element={<div>App home</div>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -360,7 +360,7 @@ describe("TriagePage", () => {
       { id: "ix-3", text: "Last", createdAt: new Date(), parsedDate: null, parsedLens: null, parsedProject: null, parsedPriority: null, parsedSize: null, parsedTags: [] },
     ];
     triageInboxItem.mockResolvedValue({ id: "task-1" });
-    renderTriagePage("/app/inbox/review?i=1");
+    renderTriagePage("/do/inbox/review?i=1");
 
     async function readyCurrent(expectedCallCount: number) {
       fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));

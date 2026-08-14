@@ -379,7 +379,7 @@ export const startTask = (async (args, context) => {
   void recordAnalyticsEventCore(context.entities, {
     name: "FOCUS_STARTED",
     visitorId: `user_${context.user.id}`,
-    route: "/app/focus",
+    route: "/do/focus",
   }, context.user.id).catch(() => {});
   return result;
 }) satisfies StartTask<{ id: string }, { id: string; startedAt: Date | null }>;
@@ -707,7 +707,7 @@ export const completeTaskFromFocus = (async (args, context) => {
   void recordAnalyticsEventCore(context.entities, {
     name: "TASK_COMPLETED",
     visitorId: `user_${context.user.id}`,
-    route: "/app/focus",
+    route: "/do/focus",
     metadata: task.isOnboardingSample ? { surface: "onboarding_sample" } : undefined,
   }, context.user.id).catch(() => {});
   return { id: updated.id, completedAt: updated.completedAt };

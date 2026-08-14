@@ -97,22 +97,22 @@ function renderAt(path: string) {
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route
-            path="/app/projects/:permalink"
+            path="/do/projects/:permalink"
             element={<ProjectDetailPage />}
           />
           <Route
-            path="/app/projects"
+            path="/do/projects"
             element={<div data-testid="projects-list" />}
           />
           <Route
-            path="/app/goals/:permalink"
+            path="/do/goals/:permalink"
             element={<div data-testid="goal-detail" />}
           />
           <Route
-            path="/app/tasks/:permalink"
+            path="/do/tasks/:permalink"
             element={<div data-testid="task-detail" />}
           />
-          <Route path="/app/focus" element={<div data-testid="focus" />} />
+          <Route path="/do/focus" element={<div data-testid="focus" />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -189,7 +189,7 @@ describe("ProjectDetailPage — search destination", () => {
       ],
     });
 
-    renderAt("/app/projects/ship-product-v2#resource-policy");
+    renderAt("/do/projects/ship-product-v2#resource-policy");
 
     expect(document.getElementById("resource-policy")).toHaveClass(
       "is-search-target",
@@ -202,7 +202,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
   it("a task row exposes a Move button that expands the picker", () => {
     projectData.current = makeProjectMultiToday();
     lensProjectsData.current = [{ id: "p2", name: "Other project" }];
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     // The Move button is present on the open task row.
     openTaskActions("Email Sarah");
@@ -222,7 +222,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
   it("selecting a sibling project fires updateTask with the target projectId", async () => {
     projectData.current = makeProjectMultiToday();
     lensProjectsData.current = [{ id: "p2", name: "Other project" }];
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     openTaskActions("Email Sarah");
     fireEvent.click(
@@ -240,7 +240,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
   it("selecting Standalone fires updateTask with projectId=null (unlink)", async () => {
     projectData.current = makeProjectMultiToday();
     lensProjectsData.current = [{ id: "p2", name: "Other project" }];
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     openTaskActions("Email Sarah");
     fireEvent.click(
@@ -261,7 +261,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
       { id: "p1", name: "Ship product v2" }, // the current project — should NOT appear
       { id: "p2", name: "Other project" },
     ];
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     openTaskActions("Email Sarah");
     fireEvent.click(
@@ -277,7 +277,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
   it("shows an empty-state message when there are no other projects in the Lens", () => {
     projectData.current = makeProjectMultiToday();
     lensProjectsData.current = [{ id: "p1", name: "Ship product v2" }]; // only the current project
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     openTaskActions("Email Sarah");
     fireEvent.click(
@@ -294,7 +294,7 @@ describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
 describe("ProjectDetailPage — Edit affordance on task rows", () => {
   it("each task row has an Edit button that opens the task page", () => {
     projectData.current = makeProjectMultiToday();
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     openTaskActions("Email Sarah");
     const editBtn = screen.getByRole("button", { name: /edit email sarah/i });
@@ -316,7 +316,7 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
         },
       ],
     });
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     // Completion freezes task fields, so the project row has no misleading
     // Edit affordance. The row itself remains the route to task review.
@@ -329,7 +329,7 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
 
   it("opens and closes open-task actions instead of opening task detail", () => {
     projectData.current = makeProjectMultiToday();
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     const row = screen
       .getAllByText("Email Sarah")
@@ -361,7 +361,7 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
         },
       ],
     });
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     expect(screen.getByRole("heading", { name: /^done/i })).toBeInTheDocument();
     expect(screen.getByText("Email Sarah")).toBeInTheDocument();
@@ -374,7 +374,7 @@ describe("ProjectDetailPage — re-link to goal (spec §C)", () => {
   it("the goal picker lists active goals in the project's Lens", () => {
     projectData.current = makeProject();
     lensGoalsData.current = [{ id: "g1", name: "Grow audience" }];
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     // The "Link a goal" affordance — click to open the picker.
     fireEvent.click(screen.getByRole("button", { name: /link a goal/i }));
@@ -384,7 +384,7 @@ describe("ProjectDetailPage — re-link to goal (spec §C)", () => {
   it("selecting a goal fires updateProject with the target goalId", async () => {
     projectData.current = makeProject();
     lensGoalsData.current = [{ id: "g1", name: "Grow audience" }];
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     fireEvent.click(screen.getByRole("button", { name: /link a goal/i }));
     fireEvent.click(screen.getByText("Grow audience"));
@@ -398,10 +398,10 @@ describe("ProjectDetailPage — re-link to goal (spec §C)", () => {
     projectData.current = makeProject({
       goal: { id: "g9", permalink: "grow-audience", name: "Grow audience" },
     });
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     const link = screen.getByRole("link", { name: /grow audience/i });
-    expect(link).toHaveAttribute("href", "/app/goals/grow-audience");
+    expect(link).toHaveAttribute("href", "/do/goals/grow-audience");
   });
 
   it("breaking the link opens the picker from the goal row and offers None (standalone)", () => {
@@ -409,7 +409,7 @@ describe("ProjectDetailPage — re-link to goal (spec §C)", () => {
       goal: { id: "g9", permalink: "grow-audience", name: "Grow audience" },
     });
     lensGoalsData.current = [{ id: "g9", name: "Grow audience" }];
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     // The "Edit goal" control on the WHY line opens the picker.
     fireEvent.click(screen.getByRole("button", { name: /edit goal/i }));
@@ -422,7 +422,7 @@ describe("ProjectDetailPage — re-link to goal (spec §C)", () => {
 describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
   it("renders the hero with Start when there is exactly one Today task", () => {
     projectData.current = makeProject(); // fixture has a single Today task
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     expect(screen.getByText(/next step/i)).toBeInTheDocument();
     expect(
@@ -433,7 +433,7 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
 
   it("renders the first Today task as a startable next step when multiple are scheduled", () => {
     projectData.current = makeProjectMultiToday();
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     expect(screen.getByText(/next step/i)).toBeInTheDocument();
     expect(
@@ -446,7 +446,7 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
 
   it("Start begins the first Today task when multiple are scheduled", async () => {
     projectData.current = makeProjectMultiToday();
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     fireEvent.click(screen.getByRole("button", { name: /start/i }));
 
@@ -455,7 +455,7 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
 
   it("Start starts the task and routes to focus mode", async () => {
     projectData.current = makeProject();
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     fireEvent.click(screen.getByRole("button", { name: /start/i }));
 
@@ -464,7 +464,7 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
 
   it("Not now demotes the next-step task to Upcoming", async () => {
     projectData.current = makeProject();
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     fireEvent.click(screen.getByRole("button", { name: /not now/i }));
 
@@ -489,7 +489,7 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
         },
       ],
     });
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     expect(screen.queryByText(/next step/i)).not.toBeInTheDocument();
   });
@@ -507,7 +507,7 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
         },
       ],
     });
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     expect(screen.getByText(/nothing queued for today/i)).toBeInTheDocument();
     // And the hero is still absent — we don't fabricate one from Upcoming.
@@ -527,7 +527,7 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
         },
       ],
     });
-    renderAt("/app/projects/p1");
+    renderAt("/do/projects/p1");
 
     expect(
       screen.queryByText(/nothing queued for today/i),

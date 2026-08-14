@@ -43,7 +43,7 @@ function renderPage(mode: "login" | "signup", initialPath = `/${mode}`) {
             path={`/${mode}`}
             element={<PasswordlessAuthPage mode={mode} footer={footer} />}
           />
-          <Route path="/app" element={<AppMarker />} />
+          <Route path="/do" element={<AppMarker />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -88,7 +88,7 @@ describe("PasswordlessAuthPage", () => {
     await waitFor(() => {
       expect(requestMagicLogin).toHaveBeenCalledWith({
         email: "new@example.com",
-        returnTo: "/app",
+        returnTo: "/do",
       });
     });
     expect(screen.getByRole("heading", { name: "Enter your code." })).toBeInTheDocument();
@@ -125,7 +125,7 @@ describe("PasswordlessAuthPage", () => {
     await waitFor(() => {
       expect(requestMagicLogin).toHaveBeenCalledWith({
         email: "safe@example.com",
-        returnTo: "/app",
+        returnTo: "/do",
       });
     });
   });

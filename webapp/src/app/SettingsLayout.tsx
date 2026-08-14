@@ -9,11 +9,11 @@ import "./SettingsLayout.css";
  * AppShell. Each settings page renders its content through this layout.
  */
 const TABS = [
-  { label: "Account", to: "/app/settings", exact: true },
-  { label: "Billing", to: "/app/settings/billing", exact: false },
-  { label: "Preferences", to: "/app/settings/preferences", exact: false },
-  { label: "Lenses", to: "/app/settings/lenses", exact: false },
-  { label: "Access tokens", to: "/app/settings/pat", exact: false },
+  { label: "Account", to: "/do/settings", exact: true },
+  { label: "Billing", to: "/do/settings/billing", exact: false },
+  { label: "Preferences", to: "/do/settings/preferences", exact: false },
+  { label: "Lenses", to: "/do/settings/lenses", exact: false },
+  { label: "Access tokens", to: "/do/settings/pat", exact: false },
 ];
 
 export function SettingsLayout({
@@ -35,7 +35,7 @@ export function SettingsLayout({
 
   return (
     <div className={`aa-settings-hub${fullWidth ? " aa-settings-hub--full" : ""}`}>
-      <Link className="aa-settings-back" to="/app">
+      <Link className="aa-settings-back" to="/do">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M10 3l-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

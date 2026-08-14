@@ -5,10 +5,10 @@ import { BrandMark } from "../components/ui";
 import "./AdminLayout.css";
 
 const NAV = [
-  { label: "Overview", to: "/app/admin/overview", end: true },
-  { label: "Users", to: "/app/admin/users", end: false },
-  { label: "Funnel", to: "/app/admin/funnel", end: false },
-  { label: "Feedback", to: "/app/admin/feedback", end: false },
+  { label: "Overview", to: "/do/admin/overview", end: true },
+  { label: "Users", to: "/do/admin/users", end: false },
+  { label: "Funnel", to: "/do/admin/funnel", end: false },
+  { label: "Feedback", to: "/do/admin/feedback", end: false },
 ];
 
 export function AdminLayout({ children }: { children: ReactNode }) {
@@ -22,7 +22,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       <div className="aa-admin-denied">
         <h1>Admin access required.</h1>
         <p>This area is only available to ActionAmp administrators.</p>
-        <Link to="/app">Back to Next</Link>
+        <Link to="/do">Back to Next</Link>
       </div>
     );
   }
@@ -30,7 +30,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="aa-admin-workspace">
       <aside className="aa-admin-rail">
-        <Link className="aa-admin-brand" to="/app" aria-label="Back to ActionAmp">
+        <Link className="aa-admin-brand" to="/do" aria-label="Back to ActionAmp">
           <span className="aa-admin-brand__mark"><BrandMark size="sm" /></span>
           <span>ActionAmp</span>
         </Link>
@@ -54,11 +54,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       </aside>
       <div className="aa-admin-main">
         <header className="aa-admin-mobile-head">
-          <Link className="aa-admin-mobile-brand" to="/app">
+          <Link className="aa-admin-mobile-brand" to="/do">
             <span className="aa-admin-brand__mark"><BrandMark size="sm" /></span>
             <span>Admin</span>
           </Link>
-          <Link className="aa-admin-back" to="/app">Back to Next</Link>
+          <Link className="aa-admin-back" to="/do">Back to Next</Link>
         </header>
         <nav className="aa-admin-mobile-nav" aria-label="Admin">
           {NAV.map((item) => {

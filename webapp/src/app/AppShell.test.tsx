@@ -95,13 +95,13 @@ function LocationMarker() {
   return <div data-testid="location">{location.pathname}</div>;
 }
 
-function renderShell(path = "/app") {
+function renderShell(path = "/do") {
   return render(
     <QueryClientProvider client={new QueryClient()}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route
-            path="/app/*"
+            path="/do/*"
             element={
               <>
                 <AppShell>
@@ -145,20 +145,20 @@ describe("AppShell Lens workflows", () => {
     );
     fireEvent.click(screen.getByRole("option", { name: /Shopping/ }));
     await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent("/app/list"),
+      expect(screen.getByTestId("location")).toHaveTextContent("/do/list"),
     );
   });
 
   it("routes back to home when a Life-area Lens is selected from the list", async () => {
     localStorage.setItem("aa-lens-id", shopping.id);
-    renderShell("/app/list");
+    renderShell("/do/list");
     const sidebar = document.querySelector(".aa-app-side") as HTMLElement;
     fireEvent.click(
       within(sidebar).getByRole("button", { name: "Lens: Shopping" }),
     );
     fireEvent.click(screen.getByRole("option", { name: /Life/ }));
     await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent("/app"),
+      expect(screen.getByTestId("location")).toHaveTextContent("/do"),
     );
   });
 
@@ -166,7 +166,7 @@ describe("AppShell Lens workflows", () => {
     localStorage.setItem("aa-lens-id", shopping.id);
     renderShell();
     await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent("/app/list"),
+      expect(screen.getByTestId("location")).toHaveTextContent("/do/list"),
     );
 
     const sidebar = document.querySelector(".aa-app-side") as HTMLElement;
@@ -198,8 +198,8 @@ describe("AppShell Lens workflows", () => {
 
   it("keeps Inbox routes open and Cmd+K capture available in a Simple-list Lens", async () => {
     localStorage.setItem("aa-lens-id", shopping.id);
-    renderShell("/app/inbox");
-    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/app/inbox"));
+    renderShell("/do/inbox");
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/do/inbox"));
     fireEvent.keyDown(window, { key: "k", metaKey: true });
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
@@ -216,7 +216,7 @@ describe("AppShell Lens workflows", () => {
     expect(
       screen.getByText(/bring your work life into ActionAmp/i),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("location")).toHaveTextContent("/app");
+    expect(screen.getByTestId("location")).toHaveTextContent("/do");
   });
 
   it("routes a command-palette Simple-list switch to the list", async () => {
@@ -230,7 +230,7 @@ describe("AppShell Lens workflows", () => {
     });
     fireEvent.click(option);
     await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent("/app/list"),
+      expect(screen.getByTestId("location")).toHaveTextContent("/do/list"),
     );
   });
 });

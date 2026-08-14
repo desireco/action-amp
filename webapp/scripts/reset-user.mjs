@@ -49,7 +49,7 @@ try {
     data: { providerData: JSON.stringify(data) },
   });
 
-  // Mark onboarding complete so the seeded dev/e2e user lands on /app, not
+  // Mark onboarding complete so the seeded dev/e2e user lands on /do, not
   // /welcome — the first-run gate in App.tsx redirects hasSeenOnboarding=false
   // users. Skipped with --no-verify for parity with the email-verify flag.
   if (verify) {

@@ -2,9 +2,9 @@ import { test, expect } from "@playwright/test";
 import { signupNewUser, triageOneItem } from "./helpers";
 
 /**
- * Project detail page — /app/projects/:id.
+ * Project detail page — /do/projects/:id.
  *
- * Previously the Projects page linked a project to /app/tasks/<projectId> (wrong
+ * Previously the Projects page linked a project to /do/tasks/<projectId> (wrong
  * table → always blank). Now it links to a real detail page that shows the
  * project's tasks and lets you add one or move it between horizons. There is no
  * completion control on the row itself — completing a task happens in focus
@@ -19,7 +19,7 @@ test("opening a project shows its tasks; add + horizon move work", async ({ page
   await triageOneItem(page, projectName, { type: "project" });
 
   // Open the project from the Projects list — this is the link that was broken.
-  await page.goto("/app/projects");
+  await page.goto("/do/projects");
   await page.getByText(projectName).click();
 
   // We're on the detail page: the project name shows as the title.

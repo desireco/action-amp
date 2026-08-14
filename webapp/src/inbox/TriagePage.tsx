@@ -239,7 +239,7 @@ export function TriagePage() {
       title: item?.text ?? "",
       // Default When = Upcoming (decided 2026-06-25). A triaged task is
       // actionable — it lands on the Upcoming bench (reachable from Today's
-      // "See upcoming" and /app/upcoming), not buried in Someday. Today stays
+      // "See upcoming" and /do/upcoming), not buried in Someday. Today stays
       // un-cluttered EXCEPT when the user said so explicitly at capture: an
       // `today`/`tonight` token is intent, not a default, so it pre-fills Today
       // (the "no auto-Today by default" principle still holds for everything else).
@@ -386,7 +386,7 @@ export function TriagePage() {
     pickerOpen: projectPickerOpen || goalPickerOpen || parentProjectPickerOpen,
     canComplete,
     dispatch,
-    navigateToInbox: () => navigate("/app/inbox"),
+    navigateToInbox: () => navigate("/do/inbox"),
     setChipOpen,
     setStep,
     setWorkingType: (type) => {
@@ -444,7 +444,7 @@ export function TriagePage() {
       <TriageProgress
         done={done}
         remaining={remaining}
-        onClose={() => navigate("/app/inbox")}
+        onClose={() => navigate("/do/inbox")}
       />
 
       <div className="aa-triage__title">
@@ -778,8 +778,8 @@ function TriageComplete({ onNavigate }: { onNavigate: NavigateFunction }) {
         Nothing left to decide. Go do something.
       </p>
       <div className="aa-triage-empty__actions">
-        <Button variant="primary" onClick={() => onNavigate("/app")}>Done →</Button>
-        <Button variant="secondary" onClick={() => onNavigate("/app/inbox")}>Back to inbox</Button>
+        <Button variant="primary" onClick={() => onNavigate("/do")}>Done →</Button>
+        <Button variant="secondary" onClick={() => onNavigate("/do/inbox")}>Back to inbox</Button>
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ import { signupNewUser, openCapture } from "./helpers";
 
 test("⌘K opens the capture popover from the home screen (F1)", async ({ page }) => {
   await signupNewUser(page);
-  await expect(page).toHaveURL(/\/app/);
+  await expect(page).toHaveURL(/\/do/);
   // Focus the document so the global key handler receives the event.
   await page.locator("body").click();
 

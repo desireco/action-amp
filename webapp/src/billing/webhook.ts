@@ -258,7 +258,7 @@ async function handleCheckoutCompleted(event: Stripe.Event, context: WaspApiCont
   void recordAnalyticsEventCore(context.entities as unknown as Record<string, unknown>, {
     name: "PAYMENT_CONFIRMED",
     visitorId: `user_${userId}`,
-    route: priceKey === "founder" ? "/founding-100" : "/app/settings/billing",
+    route: priceKey === "founder" ? "/founding-100" : "/do/settings/billing",
     metadata: { plan: priceKey },
   }, userId).catch(() => {});
 
@@ -319,7 +319,7 @@ async function handleInvoicePaid(event: Stripe.Event, context: WaspApiContext) {
   void recordAnalyticsEventCore(context.entities as unknown as Record<string, unknown>, {
     name: "PAYMENT_CONFIRMED",
     visitorId: `user_${userId}`,
-    route: "/app/settings/billing",
+    route: "/do/settings/billing",
     metadata: { plan: priceKey ?? "subscription" },
   }, userId).catch(() => {});
 

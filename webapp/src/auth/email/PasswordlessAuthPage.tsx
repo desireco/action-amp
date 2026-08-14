@@ -142,7 +142,7 @@ export function PasswordlessAuthPage({
   return (
     <>
       {/* Welcome veil while the session is being checked: returning users
-          would otherwise see the form flash before the redirect to /app.
+          would otherwise see the form flash before the redirect to /do.
           Stays mounted so it fades out over the form for everyone else. */}
       <SplashScreen active={authStatus === "loading"} />
       <AuthLayout

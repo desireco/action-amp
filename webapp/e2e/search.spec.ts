@@ -8,7 +8,7 @@ test("active-paid command search reaches a Task permalink", async ({
   const title = `Vendor renewal ${Date.now()}`;
   await triageOneItem(page, title, { type: "task", when: "today" });
 
-  await page.goto("/app");
+  await page.goto("/do");
   await page.locator("body").click();
   await page.keyboard.press("Meta+\\");
   const dialog = page.getByRole("dialog", { name: "Command palette" });
@@ -21,7 +21,7 @@ test("active-paid command search reaches a Task permalink", async ({
   expect((await searchResponse).ok()).toBeTruthy();
   await dialog.getByRole("option", { name: new RegExp(title, "i") }).click();
 
-  await expect(page).toHaveURL(/\/app\/tasks\//);
+  await expect(page).toHaveURL(/\/do\/tasks\//);
   await expect(page.getByText(title, { exact: true })).toBeVisible();
 });
 
@@ -34,7 +34,7 @@ test("active-paid slash search reaches the exact Inbox item", async ({
   await capture.fill(title);
   await capture.press("Enter");
   await page.keyboard.press("Escape");
-  await page.goto("/app/inbox");
+  await page.goto("/do/inbox");
   await expect(page.getByText(title, { exact: true })).toBeVisible();
 
   await page.locator("body").click();
@@ -49,7 +49,7 @@ test("active-paid slash search reaches the exact Inbox item", async ({
   expect((await searchResponse).ok()).toBeTruthy();
   await dialog.getByRole("option", { name: new RegExp(title, "i") }).click();
 
-  await expect(page).toHaveURL(/\/app\/inbox\?item=/);
+  await expect(page).toHaveURL(/\/do\/inbox\?item=/);
   await expect(
     page.locator(".aa-inbox__item.is-search-target", { hasText: title }),
   ).toBeVisible();
@@ -75,7 +75,7 @@ test("Command stays suppressed while Working and Capture keeps Cmd+K", async ({
   await signupNewUser(page, { admin: true });
   const title = `Focused search guard ${Date.now()}`;
   await triageOneItem(page, title, { type: "task", when: "today" });
-  await page.goto("/app");
+  await page.goto("/do");
   await page.getByRole("button", { name: /^start$/i }).click();
   await expect(page.getByLabel(/focus:/i)).toBeVisible();
 

@@ -5,7 +5,7 @@ export default function FeedbackEmailPreview() {
     <FeedbackEmail
       id="feedback-1"
       message={"The move button feels buried.\nMaybe surface it beside snooze."}
-      route="/app/projects/general"
+      route="/do/projects/general"
       section="work"
       lensName="Work"
       lensColor="indigo"

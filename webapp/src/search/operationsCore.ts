@@ -398,7 +398,7 @@ export async function searchSiteData(
           ? makeSnippet(row.content, tokens)
           : makeSnippet(matched.value, tokens),
       matchedField: matched.field,
-      href: `/app/tasks/${encodeURIComponent(row.permalink)}`,
+      href: `/do/tasks/${encodeURIComponent(row.permalink)}`,
       lens: row.lens,
       state,
       score: titleScore(row.description, query.toLocaleLowerCase(), tokens),
@@ -418,7 +418,7 @@ export async function searchSiteData(
       snippet:
         matched.field === "title" ? null : makeSnippet(matched.value, tokens),
       matchedField: matched.field,
-      href: `/app/projects/${encodeURIComponent(row.permalink)}`,
+      href: `/do/projects/${encodeURIComponent(row.permalink)}`,
       lens: row.lens,
       state: row.isDone ? "done" : "active",
       score: titleScore(row.name, query.toLocaleLowerCase(), tokens),
@@ -438,7 +438,7 @@ export async function searchSiteData(
       snippet:
         matched.field === "title" ? null : makeSnippet(matched.value, tokens),
       matchedField: matched.field,
-      href: `/app/goals/${encodeURIComponent(row.permalink)}`,
+      href: `/do/goals/${encodeURIComponent(row.permalink)}`,
       lens: row.lens,
       state: row.isDone ? "done" : "active",
       score: titleScore(row.name, query.toLocaleLowerCase(), tokens),
@@ -464,7 +464,7 @@ export async function searchSiteData(
       snippet:
         matched.field === "title" ? null : makeSnippet(matched.value, tokens),
       matchedField: matched.field,
-      href: `/app/projects/${encodeURIComponent(row.project.permalink)}#resource-${encodeURIComponent(row.id)}`,
+      href: `/do/projects/${encodeURIComponent(row.project.permalink)}#resource-${encodeURIComponent(row.id)}`,
       lens: row.project.lens,
       state: row.project.isDone ? "done" : "active",
       score: titleScore(row.title, query.toLocaleLowerCase(), tokens),
@@ -496,8 +496,8 @@ export async function searchSiteData(
           : makeSnippet(matched.value, tokens),
       matchedField: matched.field,
       href: archived
-        ? `/app/logbook?item=${encodeURIComponent(row.id)}`
-        : `/app/inbox?item=${encodeURIComponent(row.id)}`,
+        ? `/do/logbook?item=${encodeURIComponent(row.id)}`
+        : `/do/inbox?item=${encodeURIComponent(row.id)}`,
       lens: null,
       state: archived ? "archived" : "inbox",
       score: titleScore(title, query.toLocaleLowerCase(), tokens),
@@ -612,7 +612,7 @@ export async function getCommandPaletteIndexData(
         kind: "task" as const,
         title: row.description,
         subtitle: row.project?.name ?? row.lens.name,
-        href: `/app/tasks/${encodeURIComponent(row.permalink)}`,
+        href: `/do/tasks/${encodeURIComponent(row.permalink)}`,
         aliases: [
           row.status.toLocaleLowerCase(),
           row.isDone ? "done" : "task",
@@ -626,7 +626,7 @@ export async function getCommandPaletteIndexData(
         kind: "project" as const,
         title: row.name,
         subtitle: row.lens.name,
-        href: `/app/projects/${encodeURIComponent(row.permalink)}`,
+        href: `/do/projects/${encodeURIComponent(row.permalink)}`,
         aliases: [row.isDone ? "done" : "active", "project", row.lens.name],
         lensColor: row.lens.color,
       })),
@@ -635,7 +635,7 @@ export async function getCommandPaletteIndexData(
         kind: "goal" as const,
         title: row.name,
         subtitle: row.lens.name,
-        href: `/app/goals/${encodeURIComponent(row.permalink)}`,
+        href: `/do/goals/${encodeURIComponent(row.permalink)}`,
         aliases: [row.isDone ? "done" : "active", "goal", row.lens.name],
         lensColor: row.lens.color,
       })),
@@ -644,7 +644,7 @@ export async function getCommandPaletteIndexData(
         kind: "resource" as const,
         title: row.title,
         subtitle: row.project.name,
-        href: `/app/projects/${encodeURIComponent(row.project.permalink)}#resource-${encodeURIComponent(row.id)}`,
+        href: `/do/projects/${encodeURIComponent(row.project.permalink)}#resource-${encodeURIComponent(row.id)}`,
         aliases: [
           "resource",
           "reference",
@@ -661,8 +661,8 @@ export async function getCommandPaletteIndexData(
           title: displayTitle(row.title?.trim() || row.text),
           subtitle: archived ? "Logbook" : "Inbox",
           href: archived
-            ? `/app/logbook?item=${encodeURIComponent(row.id)}`
-            : `/app/inbox?item=${encodeURIComponent(row.id)}`,
+            ? `/do/logbook?item=${encodeURIComponent(row.id)}`
+            : `/do/inbox?item=${encodeURIComponent(row.id)}`,
           aliases: [archived ? "archived" : "inbox", "note"],
           occurredAt: archived ? row.archivedAt : row.createdAt,
         };

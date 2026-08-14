@@ -34,14 +34,14 @@ export type FeedbackCaptureContext = {
  */
 export function sectionForPath(pathname: string): FeedbackSection {
   if (
-    pathname.startsWith("/app/upcoming") ||
-    pathname.startsWith("/app/projects") ||
-    pathname.startsWith("/app/goals") ||
-    pathname.startsWith("/app/someday")
+    pathname.startsWith("/do/upcoming") ||
+    pathname.startsWith("/do/projects") ||
+    pathname.startsWith("/do/goals") ||
+    pathname.startsWith("/do/someday")
   ) {
     return "plan";
   }
-  if (pathname.startsWith("/app/logbook") || pathname.startsWith("/app/review")) return "review";
+  if (pathname.startsWith("/do/logbook") || pathname.startsWith("/do/review")) return "review";
   // Do/Next, Today, Inbox, and unknown paths all default to "work" — the
   // focus-area label for feedback context.
   return "work";

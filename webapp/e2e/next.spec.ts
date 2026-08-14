@@ -28,7 +28,7 @@ test("an Upcoming task (no due date) also surfaces on home", async ({ page }) =>
   // hidden behind the Today toggle (WORKFLOW.md §5.2).
   await triageOneItem(page, "Bench task", { type: "task" });
 
-  await page.goto("/app");
+  await page.goto("/do");
   await expect(page.getByText("Bench task")).toBeVisible({ timeout: 10_000 });
 });
 
@@ -39,14 +39,14 @@ test("'Start' enters focus mode in one action (F13)", async ({ page }) => {
   await completeTopTask(page);
 
   await triageOneItem(page, "Deep work task", { type: "task", when: "today" });
-  await page.goto("/app");
+  await page.goto("/do");
 
   await expect(page.getByText("Deep work task")).toBeVisible({ timeout: 10_000 });
 
   // Default state is Next — one Start action records Now and enters focus.
   await expect(page.getByText(/Next ·/)).toBeVisible({ timeout: 5_000 });
   await page.getByRole("button", { name: /^start$/i }).click();
-  await page.waitForURL(/\/app\/focus$/, { timeout: 10_000 });
+  await page.waitForURL(/\/do\/focus$/, { timeout: 10_000 });
   await expect(page.getByLabel(/focus:/i)).toBeVisible({ timeout: 10_000 });
 });
 
@@ -57,7 +57,7 @@ test("completing a task in focus mode removes it from Next (F16)", async ({ page
   await completeTopTask(page);
 
   await triageOneItem(page, "Finish this now", { type: "task", when: "today" });
-  await page.goto("/app");
+  await page.goto("/do");
 
   await expect(page.getByText("Finish this now")).toBeVisible({ timeout: 10_000 });
   // F16: completion happens in focus mode, not via a list-row checkbox.

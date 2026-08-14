@@ -249,7 +249,7 @@ export function ProjectDetailPage() {
 
   // Do-this on the Next-step region: start the task and drop into focus mode.
   // Mirrors NextPage.handleStart (webapp/src/app/NextPage.tsx) — same ops, same
-  // invalidations, same /app/focus navigation — so the project page's Do-this
+  // invalidations, same /do/focus navigation — so the project page's Do-this
   // is the same loop as the home screen's.
   const handleStart = async (task: ProjectTask) => {
     await startTask({ id: task.id });
@@ -258,7 +258,7 @@ export function ProjectDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
     queryClient.invalidateQueries({ queryKey: ["getProject"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-    navigate("/app/focus");
+    navigate("/do/focus");
   };
 
   const handleCreate = async (description: string) => {
@@ -290,7 +290,7 @@ export function ProjectDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     // After completing, leave the detail page — the project leaves the active
     // list. Reopen reachable from the Logbook.
-    if (!project.isDone) navigate("/app/projects");
+    if (!project.isDone) navigate("/do/projects");
   };
 
   const startEdit = () => {
@@ -369,7 +369,7 @@ export function ProjectDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     setConfirmDelete(false);
-    navigate("/app/projects");
+    navigate("/do/projects");
   };
 
   const openResourceEditor = (resource: ProjectResource | "new") => {
@@ -419,17 +419,17 @@ export function ProjectDetailPage() {
   };
 
   // Breadcrumb chain: Goal › Project. A "Projects" list root is always present
-  // so there's always a way back to /app/projects even when the project has no
+  // so there's always a way back to /do/projects even when the project has no
   // goal ancestor. Crumb id IS the destination route.
   const projectActiveRoute = project
-    ? `/app/projects/${project.permalink}`
+    ? `/do/projects/${project.permalink}`
     : "";
   const projectCrumbs: BreadcrumbItem[] = [
-    { id: "/app/projects", label: "Projects" },
+    { id: "/do/projects", label: "Projects" },
   ];
   if (project?.goal)
     projectCrumbs.push({
-      id: `/app/goals/${project.goal.permalink}`,
+      id: `/do/goals/${project.goal.permalink}`,
       label: project.goal.name,
     });
   if (project)
@@ -451,7 +451,7 @@ export function ProjectDetailPage() {
           onSelect={handleCrumbSelect}
         />
       ) : (
-        <Link className="aa-task-back" to="/app/projects">
+        <Link className="aa-task-back" to="/do/projects">
           ← Projects
         </Link>
       )}
@@ -534,7 +534,7 @@ export function ProjectDetailPage() {
                   ) : project.goal ? (
                     <div className="aa-project__why-value">
                       <Link
-                        to={`/app/goals/${project.goal.permalink}`}
+                        to={`/do/goals/${project.goal.permalink}`}
                         className="aa-project__why-link"
                       >
                         {project.goal.name}
@@ -587,7 +587,7 @@ export function ProjectDetailPage() {
 
                 {/* NEXT STEP — whenever the project has a Today task. The page
                     always provides an immediate way to begin, using the same
-                    loop as the home screen (startTask → /app/focus). Other
+                    loop as the home screen (startTask → /do/focus). Other
                     Today tasks remain available in the group below. */}
                 {nextStep && (
                   <div className="aa-project__next">
@@ -799,7 +799,7 @@ export function ProjectDetailPage() {
                           onOpen={() => {
                             if (task.isDone) {
                               navigate(
-                                `/app/tasks/${task.permalink ?? task.id}`,
+                                `/do/tasks/${task.permalink ?? task.id}`,
                                 {
                                   state: { returnTo },
                                 },
@@ -870,7 +870,7 @@ export function ProjectDetailPage() {
                                 className="aa-project__row-ctrl"
                                 onClick={() =>
                                   navigate(
-                                    `/app/tasks/${task.permalink ?? task.id}`,
+                                    `/do/tasks/${task.permalink ?? task.id}`,
                                     {
                                       state: { returnTo },
                                     },

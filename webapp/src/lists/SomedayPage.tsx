@@ -102,7 +102,7 @@ export function SomedayPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() =>
-                    navigate(`/app/tasks/${task.permalink ?? task.id}`, {
+                    navigate(`/do/tasks/${task.permalink ?? task.id}`, {
                       state: { returnTo },
                     })
                   }
