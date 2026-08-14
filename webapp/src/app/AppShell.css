@@ -358,6 +358,23 @@
 }
 
 /* ============================================================
+   RESPONSIVE — narrow desktop / large tablet first, then mobile
+   ============================================================ */
+/* Between 769px and 1100px the desktop chrome (220px sidebar + 4xl gutters)
+   crushed page content to roughly half the window — task lists read as a
+   narrow column with dead space either side. Tighten the gutters and trim
+   the sidebar instead of jumping straight to the mobile layout at these
+   widths; lists keep a readable, near-full width. */
+@media (max-width: 1100px) {
+  .aa-app {
+    grid-template-columns: 180px 1fr;
+  }
+  .aa-app-main {
+    padding: var(--aa-space-2xl) var(--aa-space-lg);
+  }
+}
+
+/* ============================================================
    RESPONSIVE — mobile top brand + thumb-zone bottom nav
    ============================================================ */
 @media (max-width: 768px) {
