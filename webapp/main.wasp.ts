@@ -1,6 +1,7 @@
 import { action, api, app, job, page, query, route } from "@wasp.sh/spec";
 import { App } from "./src/App" with { type: "ref" };
 import { NextPage } from "./src/app/NextPage" with { type: "ref" };
+import { LegacyAppRedirectPage } from "./src/app/LegacyAppRedirectPage" with { type: "ref" };
 import { FocusPage } from "./src/app/FocusPage" with { type: "ref" };
 import { InboxPage } from "./src/inbox/InboxPage" with { type: "ref" };
 import { TriagePage } from "./src/inbox/TriagePage" with { type: "ref" };
@@ -329,6 +330,9 @@ export default app({
     route("AdminFeedbackRoute", "/do/admin/feedback", page(AdminFeedbackPage)),
     route("LegacyAdminRoute", "/do/settings/admin", page(AdminRedirectPage)),
     route("TaskDetailRoute", "/do/tasks/:permalink", page(TaskDetailPage)),
+    // Legacy /app prefix (pre-rename) — forward everything under /do.
+    route("LegacyAppRoute", "/app", page(LegacyAppRedirectPage)),
+    route("LegacyAppSplatRoute", "/app/*", page(LegacyAppRedirectPage)),
     route(
       "ProjectDetailRoute",
       "/do/projects/:permalink",
