@@ -60,6 +60,20 @@
   line-height: 1.2;
   letter-spacing: -0.01em;
   color: var(--aa-text);
+  /* The greeting fades up after the mark settles — one deliberate welcome,
+   * not an instant flash. */
+  animation: aa-splash-fade-in 0.6s var(--aa-ease-out-quart) 0.15s both;
+}
+
+@keyframes aa-splash-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* One teal pulse dot — the loading hint. Same cadence as the inbox skeleton. */
@@ -87,6 +101,9 @@
   }
   .aa-splash__mark,
   .aa-splash__pulse {
+    animation: none;
+  }
+  .aa-splash__label {
     animation: none;
   }
 }

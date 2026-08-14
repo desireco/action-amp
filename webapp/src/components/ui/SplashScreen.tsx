@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import "./SplashScreen.css";
 
-/** Minimum time the veil stays up once shown — protects against a blink
- * when the session and first data resolve almost instantly. */
-const MIN_ACTIVE_MS = 450;
+/** Minimum time the veil stays up once shown — the welcome needs a beat to
+ * land (text fades in, holds ~1s) before the veil fades over the app. */
+const MIN_ACTIVE_MS = 1000;
 /** Fade-out duration; keep in sync with the transition in SplashScreen.css. */
 const EXIT_MS = 400;
 

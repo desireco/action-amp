@@ -35,11 +35,11 @@ describe("SplashScreen", () => {
     const { rerender } = render(<SplashScreen />);
     rerender(<SplashScreen active={false} />);
 
-    // Still fully visible right after deactivation (blink protection).
+    // Still fully visible right after deactivation (the welcome holds a beat).
     expect(document.querySelector(".aa-splash")).not.toHaveClass("aa-splash--leaving");
 
     act(() => {
-      vi.advanceTimersByTime(450);
+      vi.advanceTimersByTime(1000);
     });
     expect(document.querySelector(".aa-splash")).toHaveClass("aa-splash--leaving");
   });
@@ -51,7 +51,7 @@ describe("SplashScreen", () => {
     // Hold, fade, gone — stepped so each phase's timer is scheduled by the
     // previous one (the exit timer only exists once "leaving" renders).
     act(() => {
-      vi.advanceTimersByTime(450);
+      vi.advanceTimersByTime(1000);
     });
     act(() => {
       vi.advanceTimersByTime(400);
