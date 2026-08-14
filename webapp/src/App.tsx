@@ -2,6 +2,7 @@ import { Outlet, useLocation, Navigate, ScrollRestoration } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "wasp/client/auth";
 import { AppShell } from "./app/AppShell";
+import { SplashScreen } from "./components/ui";
 import { StatCounter, trackStatCounterEvent } from "./analytics/StatCounter";
 import { trackAnalyticsEvent } from "./analytics/tracking";
 import "./App.css";
@@ -47,8 +48,11 @@ export function App() {
   // to resolve, and send a resolved-but-null user to "/login" rather than a broken
   // /app. Mirrors the per-page gate's behavior (same `status` field) but one
   // level up, where the chrome lives. Scoped to /app* — public pages stay bare.
+  // While the session resolves, the welcome veil covers the blank layout; when
+  // it resolves, this commit also mounts the page, whose own veil (NextPage)
+  // is opaque from frame one — the swap is invisible.
   if (isApp) {
-    if (status === "loading") return null;
+    if (status === "loading") return <SplashScreen />;
     if (!user) return <Navigate to="/login" replace />;
   }
 

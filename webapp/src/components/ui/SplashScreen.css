@@ -1,0 +1,92 @@
+@import "../../styles/tokens.css";
+
+/*
+ * SplashScreen — the welcome veil between a recognized login and the app.
+ * Opaque from the first frame (no container fade-in) so the seams that mount
+ * it hand off without flashing the page beneath; only the exit fades. Calm by
+ * rule: one mark, one line, one pulse. No spinner, no progress bar.
+ */
+
+.aa-splash {
+  position: fixed;
+  inset: 0;
+  /* Below onboarding (z-index 200) so the first-run flow stays on top. */
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--aa-bg);
+  opacity: 1;
+  transition: opacity var(--aa-dur-slow) var(--aa-ease-out);
+  /* Blocks interaction while active; the leaving rule reopens clicks. */
+  pointer-events: auto;
+}
+
+.aa-splash--leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Same 36px teal-gradient mark as the auth card (AuthLayout.css). */
+.aa-splash__mark {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--aa-radius-md);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px var(--aa-teal-tint-shadow);
+  animation: aa-splash-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes aa-splash-breathe {
+  from {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.aa-splash__label {
+  margin: var(--aa-space-lg) 0 0;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--aa-text);
+}
+
+/* One teal pulse dot — the loading hint. Same cadence as the inbox skeleton. */
+.aa-splash__pulse {
+  width: 6px;
+  height: 6px;
+  margin-top: var(--aa-space-xl);
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  animation: aa-splash-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes aa-splash-pulse {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-splash {
+    transition: none;
+  }
+  .aa-splash__mark,
+  .aa-splash__pulse {
+    animation: none;
+  }
+}

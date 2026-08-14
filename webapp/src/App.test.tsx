@@ -125,11 +125,13 @@ describe("App auth gate", () => {
     mockUseAuthReturn = { data: null, status: "loading" };
     renderAt("/app");
 
-    // No shell chrome and NOT redirected to /login either — just waiting. (The gate
-    // returns null during loading; the login route only renders after a
-    // successful resolve-to-null.)
+    // No shell chrome and NOT redirected to /login either — just waiting. (The
+    // gate shows the welcome veil during loading; the login route only renders
+    // after a successful resolve-to-null.)
     expect(document.querySelector(".aa-app-brand")).not.toBeInTheDocument();
     expect(screen.queryByTestId("app-child")).not.toBeInTheDocument();
     expect(screen.queryByTestId("login-marker")).not.toBeInTheDocument();
+    // The veil covers the blank layout while the session resolves.
+    expect(document.querySelector(".aa-splash")).toBeInTheDocument();
   });
 });

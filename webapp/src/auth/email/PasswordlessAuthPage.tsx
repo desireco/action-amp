@@ -7,7 +7,7 @@ import {
   requestMagicLogin,
   verifyMagicLogin,
 } from "wasp/client/operations";
-import { AuthLayout } from "../../components/ui";
+import { AuthLayout, SplashScreen } from "../../components/ui";
 import { safeAuthReturnTo } from "../returnTo";
 import { trackAnalyticsEvent } from "../../analytics/tracking";
 import { trackStatCounterEvent } from "../../analytics/StatCounter";
@@ -140,13 +140,18 @@ export function PasswordlessAuthPage({
     : "We’ll email a code. No password needed.";
 
   return (
-    <AuthLayout
-      title={codeSent ? "Enter your code." : initialTitle}
-      subtitle={codeSent
-        ? `We sent a six-digit code and a sign-in link to ${email}. Enter the code here, or use the link to continue.`
-        : initialSubtitle}
-      footer={footer}
-    >
+    <>
+      {/* Welcome veil while the session is being checked: returning users
+          would otherwise see the form flash before the redirect to /app.
+          Stays mounted so it fades out over the form for everyone else. */}
+      <SplashScreen active={authStatus === "loading"} />
+      <AuthLayout
+        title={codeSent ? "Enter your code." : initialTitle}
+        subtitle={codeSent
+          ? `We sent a six-digit code and a sign-in link to ${email}. Enter the code here, or use the link to continue.`
+          : initialSubtitle}
+        footer={footer}
+      >
       <form className="aa-auth-form" onSubmit={codeSent ? submitCode : requestCode}>
         {codeSent ? (
           <>
@@ -205,6 +210,7 @@ export function PasswordlessAuthPage({
           <p className="aa-auth-dev__hint">Use <code>/login?devEmail=name@example.com</code> for any local user.</p>
         </div>
       )}
-    </AuthLayout>
+      </AuthLayout>
+    </>
   );
 }

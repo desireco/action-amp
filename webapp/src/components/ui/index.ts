@@ -39,6 +39,7 @@ export type { GroupDef } from "./GroupedList";
 export { ShortcutCheatsheet } from "./ShortcutCheatsheet";
 export { SnoozeSheet } from "./SnoozeSheet";
 export type { SnoozePreset } from "./SnoozeSheet";
+export { SplashScreen } from "./SplashScreen";
 export { SpecRow } from "./SpecRow";
 export type { SpecOption } from "./SpecRow";
 export { PropertyChips } from "./PropertyChips";

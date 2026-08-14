@@ -10,7 +10,7 @@ import {
   pauseTask,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { NextCard, SnoozeSheet, type SnoozePreset } from "../components/ui";
+import { NextCard, SnoozeSheet, SplashScreen, type SnoozePreset } from "../components/ui";
 import { useActiveLens } from "./lensContext";
 import { composeWhy } from "./focusWhy";
 import {
@@ -49,6 +49,18 @@ export function NextPage() {
   );
   const [snoozeOpen, setSnoozeOpen] = useState(false);
   const task = selectedTaskToken ? selectedTask : topTask;
+
+  // Splash latch: the welcome veil (see the render section) covers only the
+  // *first* data load. `entered` latches once content has rendered, so later
+  // loads (lens switch, refetch after actions) fall back to the placeholder
+  // instead of replaying the welcome.
+  const [entered, setEntered] = useState(false);
+  const appLoading = Boolean(
+    !lens || isLoading || (selectedTaskToken && isSelectedTaskLoading),
+  );
+  useEffect(() => {
+    if (!appLoading) setEntered(true);
+  }, [appLoading]);
 
   useEffect(() => {
     if (!permalink && queryTaskToken) {
@@ -89,50 +101,74 @@ export function NextPage() {
   };
 
   // ---- Empty / loading states ----
-  if (!lens || isLoading || (selectedTaskToken && isSelectedTaskLoading)) {
-    return (
+  // The welcome veil covers the first data load, then self-fades over the
+  // content beneath. It stays mounted through that fade, so it rides along
+  // every content branch below (splashVeil is null once it has exited).
+  const splashVeil = <SplashScreen active={!entered && appLoading} />;
+
+  if (appLoading) {
+    return entered ? (
       <div className="aa-wn">
         <div className="aa-wn-eyebrow">What now</div>
         <h1 className="aa-wn-empty">…</h1>
       </div>
+    ) : (
+      splashVeil
     );
   }
 
+  // Unreachable once appLoading is false (it includes !lens) — restores the
+  // type narrowing the extracted appLoading const lost.
+  if (!lens) return null;
+
   if (!selectedTaskToken && user?.onboardingStage === "CAPTURE") {
-    return <OnboardingGuide stage="CAPTURE" />;
+    return (
+      <>
+        {splashVeil}
+        <OnboardingGuide stage="CAPTURE" />
+      </>
+    );
   }
 
   if (!selectedTaskToken && user?.onboardingStage === "TRIAGE") {
-    return <OnboardingGuide stage="TRIAGE" />;
+    return (
+      <>
+        {splashVeil}
+        <OnboardingGuide stage="TRIAGE" />
+      </>
+    );
   }
 
   if (!task) {
     return (
-      <div className="aa-wn">
-        <Link to="/app/today" className="aa-wn-today-link">
-          See Today →
-        </Link>
-        <div className="aa-wn-eyebrow">What now</div>
-        <h1 className="aa-wn-empty">
-          {selectedTaskToken
-            ? "That task isn't available."
-            : "Nothing on the table."}
-        </h1>
-        <p className="aa-wn-empty-sub">
-          {selectedTaskToken ? (
-            <>
-              It may have moved or been completed. Go back to Today, or clear
-              the selected task.
-            </>
-          ) : (
-            <>
-              You're all caught up. Capture something with{" "}
-              <span className="aa-wn-kbd">⌘K</span>, then triage it to Today to
-              put it on the table.
-            </>
-          )}
-        </p>
-      </div>
+      <>
+        {splashVeil}
+        <div className="aa-wn">
+          <Link to="/app/today" className="aa-wn-today-link">
+            See Today →
+          </Link>
+          <div className="aa-wn-eyebrow">What now</div>
+          <h1 className="aa-wn-empty">
+            {selectedTaskToken
+              ? "That task isn't available."
+              : "Nothing on the table."}
+          </h1>
+          <p className="aa-wn-empty-sub">
+            {selectedTaskToken ? (
+              <>
+                It may have moved or been completed. Go back to Today, or clear
+                the selected task.
+              </>
+            ) : (
+              <>
+                You're all caught up. Capture something with{" "}
+                <span className="aa-wn-kbd">⌘K</span>, then triage it to Today
+                to put it on the table.
+              </>
+            )}
+          </p>
+        </div>
+      </>
     );
   }
 
@@ -177,6 +213,7 @@ export function NextPage() {
 
   return (
     <>
+      {splashVeil}
       <Link to="/app/today" className="aa-wn-today-link">
         See Today →
       </Link>
