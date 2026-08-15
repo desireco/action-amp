@@ -14,6 +14,7 @@ import {
   getTask,
   getTasks,
   getTodayTasks,
+  getWeekTasks,
   getDoneToday,
   getTopTask,
   getFocusedTask,
@@ -70,6 +71,7 @@ import {
   getProjectsForResolver,
 } from "./src/inbox/operations" with { type: "ref" };
 import { TodayPage } from "./src/lists/TodayPage" with { type: "ref" };
+import { WeekPage } from "./src/lists/WeekPage" with { type: "ref" };
 import { UpcomingPage } from "./src/lists/UpcomingPage" with { type: "ref" };
 import { SomedayPage } from "./src/lists/SomedayPage" with { type: "ref" };
 import { ProjectsPage } from "./src/projects/ProjectsPage" with { type: "ref" };
@@ -303,6 +305,7 @@ export default app({
     route("InboxRoute", "/do/inbox", page(InboxPage)),
     route("InboxTriageRoute", "/do/inbox/review", page(TriagePage)),
     route("TodayRoute", "/do/today", page(TodayPage)),
+    route("WeekRoute", "/do/week", page(WeekPage)),
     route("TodayTaskRoute", "/do/today/:permalink", page(NextPage)),
     route("UpcomingRoute", "/do/upcoming", page(UpcomingPage)),
     route("SomedayRoute", "/do/someday", page(SomedayPage)),
@@ -397,6 +400,7 @@ export default app({
     query(getTask, { entities: ["Task"], auth: true }),
     query(getTasks, { entities: ["Task", "Lens"], auth: true }),
     query(getTodayTasks, { entities: ["Task", "Lens"], auth: true }),
+    query(getWeekTasks, { entities: ["Task", "Lens"], auth: true }),
     query(getDoneToday, { entities: ["Task", "Lens"], auth: true }),
     query(getTopTask, { entities: ["Task", "Lens"], auth: true }),
     query(getFocusedTask, {

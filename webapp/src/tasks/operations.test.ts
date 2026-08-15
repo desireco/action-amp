@@ -15,6 +15,7 @@ import {
   getTask,
   getTasks,
   getTodayTasks,
+  getWeekTasks,
   getDoneToday,
   toggleTaskDone,
   updateTaskStatus,
@@ -326,6 +327,46 @@ describe("getTodayTasks", () => {
 
     expect(result).toEqual([]);
     expect(m.entities.Task.findMany).not.toHaveBeenCalled();
+  });
+});
+
+// ----------------------------------------------------------------
+// getWeekTasks — global Monday–Sunday scheduling horizon
+// ----------------------------------------------------------------
+describe("getWeekTasks", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(getWeekTasks({} as never, m.context)).rejects.toThrow(
+      /Not authenticated/,
+    );
+  });
+
+  it("reads dated Today and Upcoming tasks across accessible lenses for this Monday–Sunday week", async () => {
+    const m = mockContext();
+    m.entities.Lens.findMany.mockResolvedValue([
+      { id: "lens-personal", name: "Me", color: "emerald", kind: "PERSONAL" },
+    ]);
+    m.entities.Task.findMany.mockResolvedValue([]);
+
+    await getWeekTasks({} as never, m.context);
+
+    const call = m.entities.Task.findMany.mock.calls[0][0];
+    expect(call.where).toMatchObject({
+      userId: "user-1",
+      lensId: { in: ["lens-personal"] },
+      status: { in: ["TODAY", "UPCOMING"] },
+      isDone: false,
+    });
+    expect(call.where.dueDate.gte).toBeInstanceOf(Date);
+    expect(call.where.dueDate.lt).toBeInstanceOf(Date);
+    expect(call.where.dueDate.gte.getDay()).toBe(1);
+    expect(call.where.dueDate.lt.getDay()).toBe(1);
+    const nextMonday = new Date(call.where.dueDate.gte);
+    nextMonday.setDate(nextMonday.getDate() + 7);
+    expect(call.where.dueDate.lt).toEqual(nextMonday);
+    expect(call.include).toMatchObject({
+      lens: { select: { id: true, name: true, color: true } },
+    });
   });
 });
 

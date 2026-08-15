@@ -2,6 +2,7 @@ import type {
   GetTask,
   GetTasks,
   GetTodayTasks,
+  GetWeekTasks,
   GetDoneToday,
   GetTopTask,
   GetFocusedTask,
@@ -27,6 +28,7 @@ import {
   getTaskData,
   getTasksData,
   getTodayTasksData,
+  getWeekTasksData,
   getDoneTodayData,
   getTopTaskData,
   hydrateTopTaskData,
@@ -131,6 +133,19 @@ export const getTodayTasks = (async (_args, context) => {
     userId: context.user.id,
   });
 }) satisfies GetTodayTasks<never>;
+
+// ----------------------------------------------------------------
+// Read: global Week schedule (Monday–Sunday, across accessible lenses)
+// ----------------------------------------------------------------
+export const getWeekTasks = (async (_args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  return await getWeekTasksData(context.entities, {
+    user: context.user,
+    userId: context.user.id,
+  });
+}) satisfies GetWeekTasks<never>;
 
 // ----------------------------------------------------------------
 // Read: tasks completed today (for the Today "Done today" section)

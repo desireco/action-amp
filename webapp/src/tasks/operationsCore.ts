@@ -142,6 +142,53 @@ export async function getTodayTasksData(
 }
 
 // ----------------------------------------------------------------
+// Read: global Week schedule (Monday–Sunday, across accessible lenses)
+// ----------------------------------------------------------------
+// Week is a scheduling horizon, not another status. It intentionally includes
+// both bench tasks and tasks already committed to Today so promoting a
+// scheduled task does not make it disappear from its weekday.
+export async function getWeekTasksData(
+  entities: Entities,
+  {
+    user,
+    userId,
+    now = new Date(),
+  }: {
+    user: Parameters<typeof resolveAccessibleLenses>[1];
+    userId: string;
+    now?: Date;
+  },
+) {
+  const accessible = await resolveAccessibleLenses(entities, user, userId);
+  const lensIds = accessible.map((lens) => lens.id);
+  if (lensIds.length === 0) return [];
+
+  const weekStart = new Date(now);
+  weekStart.setHours(0, 0, 0, 0);
+  // JavaScript Sunday=0; ActionAmp weeks are Monday–Sunday.
+  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+  const nextWeekStart = new Date(weekStart);
+  nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+
+  return await entities.Task.findMany({
+    where: {
+      userId,
+      lensId: { in: lensIds },
+      status: { in: ["TODAY", "UPCOMING"] },
+      isDone: false,
+      dueDate: { gte: weekStart, lt: nextWeekStart },
+    },
+    orderBy: [{ dueDate: "asc" }, { order: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
+    include: {
+      tags: true,
+      project: { select: { id: true, name: true } },
+      goal: { select: { id: true, name: true } },
+      lens: { select: { id: true, name: true, color: true } },
+    },
+  });
+}
+
+// ----------------------------------------------------------------
 // Read: tasks completed today (for the Today "Done today" section)
 // ----------------------------------------------------------------
 // Separate from getTasksData (which has no date filter and returns full
