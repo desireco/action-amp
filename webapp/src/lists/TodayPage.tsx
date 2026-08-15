@@ -4,6 +4,7 @@ import { useQuery } from "wasp/client/operations";
 import type { Task } from "@prisma/client";
 import {
   getTodayTasks,
+  getWeekTasks,
   getDoneToday,
   getAppData,
   updateTaskStatus,
@@ -68,6 +69,7 @@ export function TodayPage() {
   // and a Pro user sees all of them. `lens` is still read for the feedback
   // dialog's context only.
   const { data: tasks, isLoading } = useQuery(getTodayTasks);
+  const { data: weekTasks } = useQuery(getWeekTasks);
   // App data carries the user's todayCap + the lens list (for the pill gate)
   // + the lens-scoped Upcoming count for the hero cross-link (Upcoming stays
   // lens-scoped — the link still lands in the active lens, per design).
@@ -115,6 +117,7 @@ export function TodayPage() {
   const overflow = useMemo(() => (tasks ?? []).slice(todayCap), [tasks, todayCap]);
   const committedCount = Math.min(tasks?.length ?? 0, todayCap);
   const upcomingCount = appData?.counts.upcoming ?? 0;
+  const weekCount = weekTasks?.length;
   const doneCount = doneToday?.length ?? 0;
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
   const editTask = (task: TaskRowTask) => {
@@ -160,14 +163,16 @@ export function TodayPage() {
             ))}
           </div>
         </div>
-        {/* Cross-link to the Upcoming page — the only way over. Upcoming count
-            rides the shared getAppData query (same one feeding the Plan nav
-            chip), so it stays accurate without a second status=UPCOMING fetch. */}
-        <CountLinkButton
-          label="Upcoming"
-          count={appData ? upcomingCount : undefined}
-          to="/do/upcoming"
-        />
+        <div className="aa-today__hero-links">
+          <CountLinkButton label="This week" count={weekCount} to="/do/week" />
+          {/* Upcoming count rides the shared getAppData query (same one feeding
+              the Plan nav chip), so it stays accurate without a second fetch. */}
+          <CountLinkButton
+            label="Upcoming"
+            count={appData ? upcomingCount : undefined}
+            to="/do/upcoming"
+          />
+        </div>
       </header>
 
       <div id="aa-today-body">

@@ -362,6 +362,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     to === "/do"
       ? location.pathname === "/do"
       : location.pathname.startsWith(to);
+  const isWeekPlanning = location.pathname === "/do/week";
 
   // Section-level active state for the mobile dock (Plan/Review dock items
   // each represent a whole section, not one route). Mirrors sectionForPath so
@@ -652,9 +653,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               />
               <NavItem
                 icon={<ClockIcon />}
-                label="Today"
-                active={isActive("/do/today")}
-                to="/do/today"
+                label={isWeekPlanning ? "Week" : "Today"}
+                active={isWeekPlanning || isActive("/do/today")}
+                to={isWeekPlanning ? "/do/week" : "/do/today"}
                 count={counts.today}
               />
               <NavItem
