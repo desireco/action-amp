@@ -205,6 +205,9 @@ export function TaskDetailPage() {
   const handlePick = (fieldKey: string, value: string): void => {
     const patch = chipPickToTaskPatch(fieldKey, value);
     if (Object.keys(patch).length === 0) return;
+    if (fieldKey === "due" && patch.dueDate && task?.status === "SOMEDAY") {
+      patch.status = "UPCOMING";
+    }
     void writeTaskPatch(patch as TaskPatch);
   };
   // Bottom-sheet pick — Project/Goal. value is an id, or null for "None".

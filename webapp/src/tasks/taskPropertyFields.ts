@@ -55,20 +55,26 @@ const SIZE_OPTS: PropertyOption[] = [
   { value: "XL", label: "XL", hint: "2 hr+" },
 ];
 
-/** Coarse due-presets → Date. Mirrors triage's DUE_OPTS semantics. */
-function presetToDate(preset: string): Date | null {
+/** Scheduling presets resolve to a concrete local calendar day. */
+export function presetToDate(preset: string, now = new Date()): Date | null {
   if (preset === "none") return null;
-  const d = new Date();
+  const d = new Date(now);
   d.setHours(0, 0, 0, 0);
-  if (preset === "this-week") {
-    const day = d.getDay();
-    const daysToSunday = (7 - day) % 7;
-    d.setDate(d.getDate() + daysToSunday);
+  if (preset === "today") return d;
+  if (preset === "tomorrow") {
+    d.setDate(d.getDate() + 1);
     return d;
   }
+
+  const weekday = Number(preset.replace("weekday-", ""));
+  if (Number.isInteger(weekday) && weekday >= 0 && weekday <= 6) {
+    const daysAhead = (weekday - d.getDay() + 7) % 7;
+    d.setDate(d.getDate() + daysAhead);
+    return d;
+  }
+
   if (preset === "next-week") {
-    const day = d.getDay();
-    d.setDate(d.getDate() + 7 - day + 1);
+    d.setDate(d.getDate() + 7 - ((d.getDay() + 6) % 7));
     return d;
   }
   if (preset === "next-month") {
@@ -80,8 +86,16 @@ function presetToDate(preset: string): Date | null {
 
 const DUE_OPTS: PropertyOption[] = [
   { value: "none", label: "No due date" },
-  { value: "this-week", label: "This week" },
-  { value: "next-week", label: "Next week" },
+  { value: "today", label: "Today" },
+  { value: "tomorrow", label: "Tomorrow" },
+  { value: "weekday-1", label: "Monday" },
+  { value: "weekday-2", label: "Tuesday" },
+  { value: "weekday-3", label: "Wednesday" },
+  { value: "weekday-4", label: "Thursday" },
+  { value: "weekday-5", label: "Friday" },
+  { value: "weekday-6", label: "Saturday" },
+  { value: "weekday-0", label: "Sunday" },
+  { value: "next-week", label: "Next Monday" },
   { value: "next-month", label: "Next month" },
 ];
 
@@ -110,8 +124,10 @@ function duePreset(dueDate: Date | string | null): string {
   const target = new Date(d);
   target.setHours(0, 0, 0, 0);
   const diffDays = Math.round((target.getTime() - now.getTime()) / 86_400_000);
-  if (diffDays <= 7) return "this-week";
-  if (diffDays <= 14) return "next-week";
+  if (diffDays === 0) return "today";
+  if (diffDays === 1) return "tomorrow";
+  if (diffDays >= 0 && diffDays <= 6) return `weekday-${target.getDay()}`;
+  if (diffDays >= 7 && diffDays <= 13) return "next-week";
   return "next-month";
 }
 
@@ -234,7 +250,8 @@ export function taskPropertyFields({
 /**
  * Translate a PropertyChips onPick field+value into an updateTaskDetails patch.
  * The chip editor speaks string values; this maps them back to the task enums
- * / Date the op expects.
+ * / Date the op expects. TaskDetailPage promotes a Someday task to Upcoming
+ * when it applies a concrete schedule.
  */
 export function chipPickToTaskPatch(
   fieldKey: string,
