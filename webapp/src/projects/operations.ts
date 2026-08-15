@@ -5,6 +5,7 @@ import type {
   CreateTask,
   SetProjectDone,
   ArchiveProject,
+  MoveProject,
   UpdateProject,
   DeleteProject,
   UpdateTask,
@@ -43,8 +44,13 @@ export const getProjects = (async (args, context) => {
     userId: context.user.id,
     lensId: args.lensId,
     includeCompleted: args.includeCompleted,
+    includeArchived: args.includeArchived,
   });
-}) satisfies GetProjects<{ lensId: string; includeCompleted?: boolean }>;
+}) satisfies GetProjects<{
+  lensId: string;
+  includeCompleted?: boolean;
+  includeArchived?: boolean;
+}>;
 
 // ----------------------------------------------------------------
 // Create a project (triage-to-project + a create UI)
@@ -210,6 +216,42 @@ export const archiveProject = (async (args, context) => {
     select: { id: true },
   });
 }) satisfies ArchiveProject<{ id: string }, { id: string }>;
+
+// ----------------------------------------------------------------
+// Move: keep a project (and its work/history) together while changing its
+// Life-area Lens. A project cannot retain a goal from its previous Lens.
+// ----------------------------------------------------------------
+export const moveProject = (async (args, context) => {
+  if (!context.user) throw new Error("Not authenticated.");
+  const existing = await context.entities.Project.findFirst({
+    where: { id: args.id, userId: context.user.id },
+    select: { id: true, lensId: true },
+  });
+  if (!existing) throwHttpStatus(404, "Project not found.");
+  if (existing.lensId === args.targetLensId) return { id: existing.id, movedTaskCount: 0 };
+
+  const target = await context.entities.Lens.findFirst({
+    where: { id: args.targetLensId, userId: context.user.id },
+    select: { id: true, type: true },
+  });
+  if (!target) throwHttpStatus(404, "Destination Lens not found.");
+  await assertLensAllowed(context, existing.lensId);
+  await assertLensAllowed(context, target.id);
+  await assertLifeAreaLens(context, target.id);
+
+  // Goals are Lens-scoped, so detach this project from any source-Lens goal.
+  // Every child task moves with the project and becomes project-owned only.
+  const movedTasks = await context.entities.Task.updateMany({
+    where: { projectId: existing.id, userId: context.user.id },
+    data: { lensId: target.id, goalId: null },
+  });
+  await context.entities.Project.update({
+    where: { id: existing.id },
+    data: { lensId: target.id, goalId: null },
+    select: { id: true },
+  });
+  return { id: existing.id, movedTaskCount: movedTasks.count };
+}) satisfies MoveProject<{ id: string; targetLensId: string }, { id: string; movedTaskCount: number }>;
 
 // ----------------------------------------------------------------
 // Edit: rename + description + re-link to goal (spec §C)

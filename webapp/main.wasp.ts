@@ -40,6 +40,7 @@ import {
 import {
   setProjectDone,
   archiveProject,
+  moveProject,
   updateProject,
   deleteProject,
   updateTask,
@@ -444,6 +445,7 @@ export default app({
     }),
     action(setProjectDone, { entities: ["Project", "Lens"], auth: true }),
     action(archiveProject, { entities: ["Project", "Lens"], auth: true }),
+    action(moveProject, { entities: ["Project", "Task", "Lens"], auth: true }),
     action(updateProject, { entities: ["Project", "Goal"], auth: true }),
     action(deleteProject, {
       entities: ["Project", "Task", "Resource", "InboxItem"],

@@ -22,6 +22,7 @@ import {
   getProject,
   createTask,
   setProjectDone,
+  moveProject,
   updateProject,
   deleteProject,
   updateTask,
@@ -457,6 +458,38 @@ describe("setProjectDone — happy path", () => {
     });
 
     await setProjectDone({ id: "p1", isDone: true }, m.context);
+    expect(m.entities.Project.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("moveProject", () => {
+  it("moves the project and all of its actions to an owned Life-area Lens", async () => {
+    const m = mockContext();
+    m.entities.Project.findFirst.mockResolvedValue({ id: "p1", lensId: "source" });
+    m.entities.Lens.findFirst.mockResolvedValue({ id: "target", type: "LIFE_AREA" });
+    m.entities.Task.updateMany.mockResolvedValue({ count: 2 });
+    m.entities.Project.update.mockResolvedValue({ id: "p1" });
+
+    await expect(moveProject({ id: "p1", targetLensId: "target" }, m.context)).resolves.toEqual({
+      id: "p1",
+      movedTaskCount: 2,
+    });
+    expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
+      where: { projectId: "p1", userId: "user-1" },
+      data: { lensId: "target", goalId: null },
+    });
+    expect(m.entities.Project.update).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { lensId: "target", goalId: null },
+      select: { id: true },
+    });
+  });
+
+  it("does not move a project into a Lens that is not owned by the user", async () => {
+    const m = mockContext();
+    m.entities.Project.findFirst.mockResolvedValue({ id: "p1", lensId: "source" });
+    m.entities.Lens.findFirst.mockResolvedValue(null);
+    await expect(moveProject({ id: "p1", targetLensId: "other-user-lens" }, m.context)).rejects.toThrow(/Destination Lens not found/);
     expect(m.entities.Project.update).not.toHaveBeenCalled();
   });
 });
