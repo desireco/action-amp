@@ -2,7 +2,7 @@
 id: gtm-analytics-account
 kind: backlog
 title: "Pick analytics provider + create site (gates observability-minimal)"
-status: ready
+status: Done
 priority: P0          # the single highest-leverage non-code action
 spec_owner: user
 build_owner: user
@@ -11,7 +11,7 @@ created: 2026-07-03
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsg5      # sync-managed (write-once)
-gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
+gh_synced_at: 2026-08-15T08:08:15Z
 ---
 
 # Analytics provider account
