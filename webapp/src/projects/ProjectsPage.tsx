@@ -29,6 +29,7 @@ interface ProjectRow {
   dueDate: Date | string | null;
   isDone: boolean;
   completedAt: Date | string | null;
+  archivedAt: Date | string | null;
   goal: { id: string; name: string } | null;
   openCount: number;
   doneCount: number;
@@ -46,6 +47,8 @@ export function ProjectsPage() {
   const [creating, setCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [gate, setGate] = useState<EntitlementMessage | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   // Entitlement: FREE users capped at FREE_LIMITS.projects per lens. The count
   // comes from getAppData (lens-scoped, non-done) — already fetched by the shell
@@ -79,11 +82,20 @@ export function ProjectsPage() {
   }, []);
   const { data: projects, isLoading } = useQuery(
     getProjects,
-    lens ? { lensId: lens.id, includeCompleted: true } : undefined,
+    lens
+      ? { lensId: lens.id, includeCompleted: true, includeArchived: true }
+      : undefined,
     { enabled: !!lens },
   );
-  const activeProjects = (projects ?? []).filter((project: ProjectRow) => !project.isDone);
-  const completedProjects = (projects ?? []).filter((project: ProjectRow) => project.isDone);
+  const activeProjects = (projects ?? []).filter(
+    (project: ProjectRow) => !project.isDone && !project.archivedAt,
+  );
+  const completedProjects = (projects ?? []).filter(
+    (project: ProjectRow) => project.isDone && !project.archivedAt,
+  );
+  const archivedProjects = (projects ?? []).filter(
+    (project: ProjectRow) => !!project.archivedAt,
+  );
 
   const handleCreate = async (name: string, description?: string) => {
     if (!lens) return;
@@ -235,11 +247,16 @@ export function ProjectsPage() {
       )}
       {completedProjects.length > 0 && (
         <section className="aa-projects__completed" aria-labelledby="completed-projects-heading">
-          <div className="aa-projects__section-head">
-            <h2 id="completed-projects-heading">Completed</h2>
-            <span>{completedProjects.length}</span>
-          </div>
-          <RecordCardGrid>
+          <button
+            type="button"
+            className="aa-projects__section-toggle"
+            id="completed-projects-heading"
+            aria-expanded={showCompleted}
+            onClick={() => setShowCompleted((visible) => !visible)}
+          >
+            {showCompleted ? "Hide" : "Show"} completed ({completedProjects.length})
+          </button>
+          {showCompleted && <RecordCardGrid>
             {completedProjects.map((p: ProjectRow) => {
               const total = p.openCount + p.doneCount;
               const pct = total === 0 ? 0 : Math.round((p.doneCount / total) * 100);
@@ -259,7 +276,41 @@ export function ProjectsPage() {
                 />
               );
             })}
-          </RecordCardGrid>
+          </RecordCardGrid>}
+        </section>
+      )}
+      {archivedProjects.length > 0 && (
+        <section className="aa-projects__completed" aria-labelledby="archived-projects-heading">
+          <button
+            type="button"
+            className="aa-projects__section-toggle"
+            id="archived-projects-heading"
+            aria-expanded={showArchived}
+            onClick={() => setShowArchived((visible) => !visible)}
+          >
+            {showArchived ? "Hide" : "Show"} archived ({archivedProjects.length})
+          </button>
+          {showArchived && <RecordCardGrid>
+            {archivedProjects.map((p: ProjectRow) => {
+              const total = p.openCount + p.doneCount;
+              const pct = total === 0 ? 0 : Math.round((p.doneCount / total) * 100);
+              return (
+                <ProgressCard
+                  key={p.id}
+                  className="aa-project-card aa-project-card--completed"
+                  to={`/do/projects/${p.permalink}`}
+                  title={p.name}
+                  description={p.description}
+                  progress={pct}
+                  progressLabel={`${p.doneCount}/${total} done`}
+                  meta={<><span>{p.goal?.name ?? "Standalone"}</span><span className="aa-projects__dot" aria-hidden="true">·</span><span>Archived</span></>}
+                  focusLabel="Status"
+                  focusValue="Archived"
+                  focusTone="muted"
+                />
+              );
+            })}
+          </RecordCardGrid>}
         </section>
       )}
     </div>

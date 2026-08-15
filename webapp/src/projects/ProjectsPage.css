@@ -37,22 +37,23 @@
   border-top: 1px solid var(--aa-border);
 }
 
-.aa-projects__section-head {
+.aa-projects__section-toggle {
   display: flex;
   align-items: baseline;
   gap: var(--aa-space-sm);
   margin-bottom: var(--aa-space-lg);
-}
-
-.aa-projects__section-head h2 {
-  margin: 0;
-  font-size: var(--aa-text-lg);
-  font-weight: var(--aa-weight-semibold);
-}
-
-.aa-projects__section-head span {
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--aa-text-3);
   font-size: var(--aa-text-sm);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.aa-projects__section-toggle:hover {
+  color: var(--aa-text);
+  text-decoration: underline;
 }
 
 .aa-project-card--completed {
