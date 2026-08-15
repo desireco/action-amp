@@ -23,6 +23,12 @@ can move to **Today** or **Someday**; Someday clears its date.
 (with the bench count); Upcoming's hero links back to `/do/today`. One page
 per intent — no same-page swap, no duplicated `UPCOMING` data in two shapes.
 
+**This week** (`/do/week`, `lists/WeekPage.tsx`) is a separate global
+Monday–Sunday schedule reached from Today's hero. It uses dated `UPCOMING` and
+`TODAY` tasks across accessible Lenses, grouped by weekday, so a task remains
+visible after it is promoted onto Today. It is not the Week review and does
+not introduce another task status.
+
 **Someday** (`/do/someday`, `lists/SomedayPage.tsx`) — muted flat list, also
 under Plan. Promote-to-Today button **exists** (`handlePromote` →
 `updateTaskStatus`). No promote-to-Upcoming (by design — that's the snooze

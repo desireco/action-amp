@@ -141,6 +141,15 @@ The forward-planning view of `status=UPCOMING` tasks (the bench).
   rose-tinted overdue, inline notes, per-row promote-to-Today.
 - Cross-links back to `/do/today` from the hero.
 
+### P4a. This week → `/do/week`
+
+The global Monday–Sunday schedule, linked from Today's hero.
+
+- Groups incomplete dated `TODAY` and `UPCOMING` tasks by weekday across
+  accessible Lenses; rows retain Lens provenance.
+- A planning surface only: it never replaces Today's cap or the Week review.
+- Empty state directs the user to schedule a task from its detail page.
+
 ### P5. Someday → `/do/someday`
 
 No-date, not-forgotten, not-nagging Tasks. (GTD "Someday/Maybe".) Lives under
@@ -300,6 +309,7 @@ Authenticated app routes (all under /do):
   /do/inbox/review                       Triage walkthrough (Classify → Spec → Complete)
   /do/today                              Today (planning)
   /do/today/:permalink                   Next on a selected task
+  /do/week                               This week (scheduling)
   /do/upcoming                           Upcoming (top-level Plan nav item)
   /do/someday                            Someday
   /do/projects                           Projects list

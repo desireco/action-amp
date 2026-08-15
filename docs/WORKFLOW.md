@@ -117,6 +117,12 @@ Triage drains the universal Inbox across both Lens types.
   Today and Upcoming cross-link to each other from their heroes — Today's
   hero links to `/do/upcoming` (with the bench count), Upcoming's links
   back to `/do/today`. No same-page swap; one page per intent.
+- **This week** (`/do/week`) is the global Monday–Sunday scheduling horizon,
+  linked from Today. It groups incomplete dated `TODAY` and `UPCOMING` tasks
+  from all accessible lenses by weekday. It does not add a new Task status:
+  scheduling means an Upcoming task with a specific `dueDate`; Today remains
+  the smaller, explicit commitment list. Week is planning, distinct from the
+  `/do/review/week` reflection.
 - **Done today is scoped to Today** (locked 2026-07-05). The "Done today"
   section on `/do/today` only shows tasks whose `status === "TODAY"` — not
   any task completed since midnight. Completion (from focus mode) leaves
