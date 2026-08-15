@@ -41,6 +41,7 @@ type LensRow = {
   color: string | null;
   purpose: string | null;
   hasAnyContent: boolean;
+  blockingProjects: { id: string; name: string }[];
   counts: {
     goals: number;
     projects: number;
@@ -485,10 +486,20 @@ function TypeChangeBlockedMessage({ lens }: { lens: LensRow }) {
     ? parts.join(", ")
     : "completed work or history";
   return (
-    <p>
-      {lens.name} contains {contentDescription}.
-      Move or remove this work before changing this Lens to a Simple list.
-    </p>
+    <div>
+      <p>
+        {lens.name} contains {contentDescription}. Move or remove this work before changing this Lens to a
+        Simple list.
+      </p>
+      {lens.blockingProjects.length > 0 && (
+        <>
+          <p>Blocking projects:</p>
+          <ul>
+            {lens.blockingProjects.map((project) => <li key={project.id}>{project.name}</li>)}
+          </ul>
+        </>
+      )}
+    </div>
   );
 }
 

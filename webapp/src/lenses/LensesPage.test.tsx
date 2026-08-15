@@ -49,6 +49,10 @@ const lifeArea = {
   color: "coral",
   purpose: "Products",
   hasAnyContent: true,
+  blockingProjects: [
+    { id: "project-1", name: "Launch ActionAmp" },
+    { id: "project-2", name: "Archive past experiments" },
+  ],
   counts: { goals: 1, projects: 2, tasks: 3, openItems: 0, checkedItems: 0 },
 };
 const shopping = {
@@ -59,6 +63,7 @@ const shopping = {
   color: "cyan",
   purpose: "Groceries",
   hasAnyContent: true,
+  blockingProjects: [],
   counts: { goals: 0, projects: 0, tasks: 0, openItems: 8, checkedItems: 3 },
 };
 const packing = {
@@ -136,6 +141,9 @@ describe("LensesPage Lens types", () => {
     const dialog = screen.getByRole("dialog", { name: "Can't change lens type yet" });
     expect(within(dialog).getByText(/1 goal, 2 projects, 3 tasks/i)).toBeInTheDocument();
     expect(within(dialog).getByText(/move or remove this work/i)).toBeInTheDocument();
+    expect(within(dialog).getByText("Blocking projects:")).toBeInTheDocument();
+    expect(within(dialog).getByText("Launch ActionAmp")).toBeInTheDocument();
+    expect(within(dialog).getByText("Archive past experiments")).toBeInTheDocument();
     expect(lifeAreaOption).toBeChecked();
   });
 
