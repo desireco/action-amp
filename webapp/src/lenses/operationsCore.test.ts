@@ -36,7 +36,7 @@ const WORK = {
   createdAt: "2026-07-02T00:00:00.000Z",
   _count: { goals: 1, projects: 3, tasks: 12 },
   goals: [{ id: "g1" }],
-  projects: [{ id: "p1" }],
+  projects: [{ id: "p1", name: "Launch" }],
   tasks: [{ id: "t1" }],
   listItems: [],
 };
@@ -50,7 +50,7 @@ const STUDIO = {
   createdAt: "2026-07-03T00:00:00.000Z",
   _count: { goals: 0, projects: 1, tasks: 4 },
   goals: [],
-  projects: [{ id: "p1" }],
+  projects: [{ id: "p1", name: "Studio build" }],
   tasks: [{ id: "t1" }],
   listItems: [],
 };
@@ -86,7 +86,7 @@ describe("getLensesCore", () => {
           },
         },
         goals: { select: { id: true }, take: 1 },
-        projects: { select: { id: true }, take: 1 },
+        projects: { select: { id: true, name: true }, orderBy: { createdAt: "asc" } },
         tasks: { select: { id: true }, take: 1 },
         listItems: { select: { isDone: true } },
       },
@@ -106,6 +106,7 @@ describe("getLensesCore", () => {
         color: "indigo",
         purpose: "Day job",
         hasAnyContent: true,
+        blockingProjects: [{ id: "p1", name: "Launch" }],
         counts: { goals: 1, projects: 3, tasks: 12, openItems: 0, checkedItems: 0 },
       },
     ]);
@@ -155,7 +156,7 @@ describe("getLensCore", () => {
           },
         },
         goals: { select: { id: true }, take: 1 },
-        projects: { select: { id: true }, take: 1 },
+        projects: { select: { id: true, name: true }, orderBy: { createdAt: "asc" } },
         tasks: { select: { id: true }, take: 1 },
         listItems: { select: { isDone: true } },
       },

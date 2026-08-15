@@ -38,6 +38,7 @@ export type LensSummary = {
   color: string | null;
   purpose: string | null;
   hasAnyContent: boolean;
+  blockingProjects: { id: string; name: string }[];
   counts: {
     goals: number;
     projects: number;
@@ -74,7 +75,7 @@ export async function getLensesCore(
         },
       },
       goals: { select: { id: true }, take: 1 },
-      projects: { select: { id: true }, take: 1 },
+      projects: { select: { id: true, name: true }, orderBy: { createdAt: "asc" } },
       tasks: { select: { id: true }, take: 1 },
       listItems: { select: { isDone: true } },
     },
@@ -100,7 +101,7 @@ export async function getLensesCore(
       createdAt: string;
       _count: { goals: number; projects: number; tasks: number };
       goals: { id: string }[];
-      projects: { id: string }[];
+      projects: { id: string; name: string }[];
       tasks: { id: string }[];
       listItems: { isDone: boolean }[];
     }): LensSummary => ({
@@ -115,6 +116,7 @@ export async function getLensesCore(
         l.projects.length > 0 ||
         l.tasks.length > 0 ||
         l.listItems.length > 0,
+      blockingProjects: l.projects,
       counts: {
         goals: l._count.goals,
         projects: l._count.projects,
@@ -152,7 +154,7 @@ export async function getLensCore(
         },
       },
       goals: { select: { id: true }, take: 1 },
-      projects: { select: { id: true }, take: 1 },
+      projects: { select: { id: true, name: true }, orderBy: { createdAt: "asc" } },
       tasks: { select: { id: true }, take: 1 },
       listItems: { select: { isDone: true } },
     },
@@ -170,6 +172,7 @@ export async function getLensCore(
       lens.projects.length > 0 ||
       lens.tasks.length > 0 ||
       lens.listItems.length > 0,
+    blockingProjects: lens.projects,
     createdAt: lens.createdAt,
     counts: {
       goals: lens._count.goals,

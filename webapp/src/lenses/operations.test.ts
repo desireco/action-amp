@@ -373,18 +373,18 @@ describe("getLenses", () => {
     m.entities.Lens.findMany.mockResolvedValue([
       {
         id: "l-studio", name: "Studio", kind: "CUSTOM", type: "LIFE_AREA", color: "coral", purpose: "side",
-        _count: { goals: 0, projects: 1, tasks: 4 }, goals: [], projects: [{ id: "p" }], tasks: [{ id: "t" }], listItems: [],
+        _count: { goals: 0, projects: 1, tasks: 4 }, goals: [], projects: [{ id: "p", name: "Studio build" }], tasks: [{ id: "t" }], listItems: [],
       },
       {
         id: "l-me", name: "Me", kind: "PERSONAL", type: "LIFE_AREA", color: "emerald", purpose: null,
-        _count: { goals: 1, projects: 2, tasks: 3 }, goals: [{ id: "g" }], projects: [{ id: "p" }], tasks: [{ id: "t" }], listItems: [],
+        _count: { goals: 1, projects: 2, tasks: 3 }, goals: [{ id: "g" }], projects: [{ id: "p", name: "Personal project" }], tasks: [{ id: "t" }], listItems: [],
       },
     ]);
     const out = await getLenses({}, m.context);
     // Seeded-first: PERSONAL before CUSTOM, despite the input order.
     expect(out.map((l) => l.kind)).toEqual(["PERSONAL", "CUSTOM"]);
-    expect(out[0]).toEqual({ id: "l-me", name: "Me", kind: "PERSONAL", type: "LIFE_AREA", color: "emerald", purpose: null, hasAnyContent: true, counts: { goals: 1, projects: 2, tasks: 3, openItems: 0, checkedItems: 0 } });
-    expect(out[1]).toEqual({ id: "l-studio", name: "Studio", kind: "CUSTOM", type: "LIFE_AREA", color: "coral", purpose: "side", hasAnyContent: true, counts: { goals: 0, projects: 1, tasks: 4, openItems: 0, checkedItems: 0 } });
+    expect(out[0]).toEqual({ id: "l-me", name: "Me", kind: "PERSONAL", type: "LIFE_AREA", color: "emerald", purpose: null, hasAnyContent: true, blockingProjects: [{ id: "p", name: "Personal project" }], counts: { goals: 1, projects: 2, tasks: 3, openItems: 0, checkedItems: 0 } });
+    expect(out[1]).toEqual({ id: "l-studio", name: "Studio", kind: "CUSTOM", type: "LIFE_AREA", color: "coral", purpose: "side", hasAnyContent: true, blockingProjects: [{ id: "p", name: "Studio build" }], counts: { goals: 0, projects: 1, tasks: 4, openItems: 0, checkedItems: 0 } });
     // Prisma query is scoped by user + ordered by createdAt (the JS sort handles kind).
     expect(m.entities.Lens.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { userId: "user-1" },
