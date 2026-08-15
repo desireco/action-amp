@@ -177,7 +177,7 @@ export function TriagePage() {
   // so a typo never spawns a stray project. (Declared after `item`/`projects`.)
   const resolvedProjectId = useMemo(() => {
     if (item?.parsedProjectId) {
-      return (projects ?? []).some((project) => project.id === item.parsedProjectId)
+      return (projects ?? []).some((project: Project) => project.id === item.parsedProjectId)
         ? item.parsedProjectId
         : null;
     }
