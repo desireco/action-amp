@@ -14,15 +14,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const projectData: { current: unknown } = { current: null };
 const lensProjectsData: { current: unknown[] } = { current: [] };
 const lensGoalsData: { current: unknown[] } = { current: [] };
+const lensesData: { current: unknown[] } = { current: [] };
 
 const getProject = vi.fn();
 const getGoals = vi.fn();
 const getProjects = vi.fn();
+const getLenses = vi.fn();
 const createTask = vi.fn();
 const updateTaskStatus = vi.fn();
 const startTask = vi.fn();
 const setProjectDone = vi.fn();
 const archiveProject = vi.fn();
+const moveProject = vi.fn();
 const updateProject = vi.fn();
 const deleteProject = vi.fn();
 const updateTask = vi.fn();
@@ -42,6 +45,9 @@ vi.mock("wasp/client/operations", () => ({
     if (fn === getGoals) {
       return { data: lensGoalsData.current, isLoading: false, error: null };
     }
+    if (fn === getLenses) {
+      return { data: lensesData.current, isLoading: false, error: null };
+    }
     return { data: undefined, isLoading: false, error: null };
   },
   getProject,
@@ -52,6 +58,7 @@ vi.mock("wasp/client/operations", () => ({
   startTask,
   setProjectDone,
   archiveProject,
+  moveProject,
   updateProject,
   deleteProject,
   updateTask,
@@ -59,6 +66,7 @@ vi.mock("wasp/client/operations", () => ({
   createResource,
   updateResource,
   deleteResource,
+  getLenses,
 }));
 
 const { ProjectDetailPage } = await import("./ProjectDetailPage");
@@ -72,6 +80,7 @@ function makeProject(overrides: Record<string, unknown> = {}) {
     description: "Next milestone",
     dueDate: null,
     isDone: false,
+    archivedAt: null,
     order: 0,
     lensId: "lens-1",
     goal: null,
@@ -132,11 +141,13 @@ beforeEach(() => {
   });
   setProjectDone.mockResolvedValue({ id: "p1" });
   archiveProject.mockResolvedValue({ id: "p1" });
+  moveProject.mockResolvedValue({ id: "p1", movedTaskCount: 1 });
   deleteProject.mockResolvedValue({ id: "p1", reparentedCount: 0 });
   createTask.mockResolvedValue({ id: "new-task" });
   startTask.mockResolvedValue({ id: "t1" });
   updateTaskStatus.mockResolvedValue({ id: "t1" });
   updateTaskContent.mockResolvedValue({ id: "t1" });
+  lensesData.current = [];
 });
 
 /** Two Today tasks to cover the multiple-task start affordance. */
@@ -433,15 +444,22 @@ describe("ProjectDetailPage — lifecycle management", () => {
     expect(setProjectDone).not.toHaveBeenCalled();
   });
 
-  it("uses Manage for project editing and offers Archive for an active project", () => {
+  it("uses Manage for project editing and exposes Archive for an active project", () => {
     projectData.current = makeProject();
     renderAt("/do/projects/p1");
 
     expect(screen.getByRole("button", { name: /^manage$/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /more actions/i }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /archive project/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^archive$/i }));
 
     expect(screen.getByRole("dialog", { name: /archive this project/i })).toBeInTheDocument();
+  });
+
+  it("does not offer Archive or Reopen for an already archived project", () => {
+    projectData.current = makeProject({ isDone: true, archivedAt: "2026-08-15T08:00:00.000Z" });
+    renderAt("/do/projects/p1");
+
+    expect(screen.queryByRole("button", { name: /^archive$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^reopen$/i })).not.toBeInTheDocument();
   });
 
   it("offers all three action dispositions when deleting a project with actions", () => {
@@ -449,8 +467,7 @@ describe("ProjectDetailPage — lifecycle management", () => {
     lensProjectsData.current = [{ id: "p2", name: "Other project" }];
     renderAt("/do/projects/p1");
 
-    fireEvent.click(screen.getByRole("button", { name: /more actions/i }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /delete project/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
 
     expect(screen.getByRole("button", { name: /^remove actions and delete project$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^move actions and delete project$/i })).toBeInTheDocument();
@@ -571,5 +588,19 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
     expect(
       screen.queryByText(/nothing queued for today/i),
     ).not.toBeInTheDocument();
+  });
+
+  it("moves the project to a selected Life-area Lens", async () => {
+    projectData.current = makeProject({ lensId: "studio" });
+    lensesData.current = [
+      { id: "studio", name: "Studio", color: "coral", type: "LIFE_AREA" },
+      { id: "work", name: "Work", color: "indigo", type: "LIFE_AREA" },
+    ];
+    renderAt("/do/projects/p1");
+
+    fireEvent.click(screen.getByRole("button", { name: "Move" }));
+    fireEvent.click(screen.getByRole("button", { name: /Work.*Life area/i }));
+
+    await waitFor(() => expect(moveProject).toHaveBeenCalledWith({ id: "p1", targetLensId: "work" }));
   });
 });

@@ -10,6 +10,7 @@ import {
   startTask,
   setProjectDone,
   archiveProject,
+  moveProject,
   updateProject,
   deleteProject,
   updateTask,
@@ -26,7 +27,7 @@ import {
   TaskRow,
   CompletionCircle,
   ConfirmDialog,
-  BottomSheet,
+  BottomSheet, PickerSheet,
   InlineEntityEditForm,
   PlusIcon,
   ArrowRightIcon,
@@ -35,6 +36,7 @@ import {
 import { CreateInline } from "../lists/CreateInline";
 import type { GroupDef } from "../components/ui";
 import { formatRelativeDue } from "../shared/dateFormat";
+import { getLenses } from "wasp/client/operations";
 import "./ProjectDetailPage.css";
 
 type ProjectTask = TaskRowTask & {
@@ -57,6 +59,7 @@ type ProjectData = {
   description: string | null;
   dueDate: Date | string | null;
   isDone: boolean;
+  archivedAt: Date | string | null;
   order: number;
   lensId: string;
   goal: { id: string; permalink: string; name: string } | null;
@@ -74,6 +77,7 @@ type ProjectResource = {
 
 type GoalOption = { id: string; permalink: string; name: string };
 type ProjectOption = { id: string; permalink: string; name: string };
+type LensOption = { id: string; name: string; color: string | null; type: "LIFE_AREA" | "SIMPLE_LIST" };
 
 /**
  * Project detail — the dedicated URL for working on a single Project. Shows its
@@ -111,6 +115,8 @@ export function ProjectDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmComplete, setConfirmComplete] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [movingProject, setMovingProject] = useState(false);
+  const [moveProjectError, setMoveProjectError] = useState<string | null>(null);
   const [deleteTargetProjectId, setDeleteTargetProjectId] = useState("");
   const [relinkError, setRelinkError] = useState<string | null>(null);
   const [resourceEditor, setResourceEditor] = useState<
@@ -163,13 +169,14 @@ export function ProjectDetailPage() {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
 
-  // Header overflow menu (Edit/Complete/Add are surfaced; Delete is destructive
-  // and lives behind ⋯ so it can't be tapped by accident).
-  const [overflowOpen, setOverflowOpen] = useState(false);
   const { data: lensProjects } = useQuery(
     getProjects,
     project ? { lensId: project.lensId } : undefined,
     { enabled: !!project && (movingTaskId !== null || confirmDelete) },
+  );
+  const { data: allLenses } = useQuery(getLenses, undefined, { enabled: movingProject });
+  const projectMoveTargets: LensOption[] = (allLenses ?? []).filter(
+    (lens: LensOption) => lens.type === "LIFE_AREA" && lens.id !== project?.lensId,
   );
   // Siblings only — a task can't move to the project it's already in.
   const moveTargets: ProjectOption[] = (lensProjects ?? []).filter(
@@ -392,6 +399,23 @@ export function ProjectDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     setConfirmArchive(false);
     navigate("/do/projects");
+  };
+
+  const handleMoveProject = async (targetLensId: string) => {
+    if (!project) return;
+    setMoveProjectError(null);
+    try {
+      await moveProject({ id: project.id, targetLensId });
+      queryClient.invalidateQueries({ queryKey: ["getProject"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["getGoals"] });
+      queryClient.invalidateQueries({ queryKey: ["getLenses"] });
+      queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+      setMovingProject(false);
+    } catch (e) {
+      setMoveProjectError(e instanceof Error ? e.message : "Couldn't move the project.");
+    }
   };
 
   const openResourceEditor = (resource: ProjectResource | "new") => {
@@ -665,9 +689,8 @@ export function ProjectDetailPage() {
                   </p>
                 )}
 
-                {/* Action row — borderless. Teal + Add step leads; Edit / Complete
-                    are calm; Delete is destructive and lives behind ⋯ so it can't
-                    be tapped by accident. */}
+                {/* Action row — borderless. Teal + Add step leads; lifecycle
+                    actions stay visible. Only Delete is tucked behind ⋯. */}
                 <div className="aa-project__actions">
                   {!project.isDone && (
                     <Button
@@ -692,55 +715,45 @@ export function ProjectDetailPage() {
                     variant="ghost"
                     size="sm"
                     className="aa-project__calm"
-                    onClick={() => {
-                      if (project.isDone) void handleComplete();
-                      else setConfirmComplete(true);
-                    }}
-                    title={
-                      project.isDone
-                        ? "Return to active projects"
-                        : "Mark this project done"
-                    }
+                    onClick={() => setMovingProject(true)}
                   >
-                    {project.isDone ? "Reopen" : "Complete"}
+                    Move
                   </Button>
-                  <div className="aa-project__overflow-wrap">
-                    <button
-                      type="button"
-                      className="aa-project__overflow"
-                      aria-label="More actions"
-                      aria-expanded={overflowOpen}
-                      onClick={() => setOverflowOpen((v) => !v)}
-                    >
-                      ⋯
-                    </button>
-                    {overflowOpen && (
-                      <div className="aa-project__overflow-menu" role="menu">
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className="aa-project__overflow-item"
-                          onClick={() => {
-                            setOverflowOpen(false);
-                            setConfirmArchive(true);
-                          }}
-                        >
-                          Archive project
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className="aa-project__overflow-item aa-project__overflow-item--danger"
-                          onClick={() => {
-                            setOverflowOpen(false);
-                            setConfirmDelete(true);
-                          }}
-                        >
-                          Delete project
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  {!project.archivedAt && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="aa-project__calm"
+                        onClick={() => {
+                          if (project.isDone) void handleComplete();
+                          else setConfirmComplete(true);
+                        }}
+                        title={
+                          project.isDone
+                            ? "Return to active projects"
+                            : "Mark this project done"
+                        }
+                      >
+                        {project.isDone ? "Reopen" : "Complete"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="aa-project__calm"
+                        onClick={() => setConfirmArchive(true)}
+                      >
+                        Archive
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    Delete
+                  </Button>
                 </div>
               </>
             )}
@@ -1083,6 +1096,31 @@ export function ProjectDetailPage() {
           confirmLabel="Archive project"
           onConfirm={() => void handleArchive()}
           onClose={() => setConfirmArchive(false)}
+        />
+      )}
+
+      {movingProject && project && (
+        <PickerSheet
+          title="Move project to another Lens"
+          items={projectMoveTargets.map((lens) => ({
+            id: lens.id,
+            label: lens.name,
+            meta: "Life area",
+            chip: { label: lens.name, color: lens.color },
+          }))}
+          emptyMessage="There are no other Life-area Lenses to move this project to."
+          onPick={(lensId) => void handleMoveProject(lensId)}
+          onClose={() => setMovingProject(false)}
+        />
+      )}
+      {moveProjectError && (
+        <ConfirmDialog
+          title="Couldn't move project"
+          message={moveProjectError}
+          confirmLabel="Got it"
+          cancelLabel={null}
+          onConfirm={() => setMoveProjectError(null)}
+          onClose={() => setMoveProjectError(null)}
         />
       )}
 
