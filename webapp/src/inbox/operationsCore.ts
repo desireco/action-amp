@@ -82,7 +82,7 @@ export async function createInboxItemCore(
   // custom names are user-defined and must be supplied per-call. (Grammar v2:
   // unknown [[ ]] tokens stay literal — see parseCapture.ts.)
   const customLenses = await entities.Lens.findMany({
-    where: { userId, kind: "CUSTOM" },
+    where: { userId },
     select: { name: true },
   });
   const parsed = parseCapture(

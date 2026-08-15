@@ -24,16 +24,14 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Entities = Record<string, any>;
 
-// Seeded-first display order: PERSONAL, then WORK, then CUSTOM by createdAt.
-// Mirrors the sort in `getLenses` (operations.ts) — Prisma can't express
-// "seeded first" cleanly (kind is an enum, alphabetical order is
-// CUSTOM < PERSONAL < WORK — the opposite of what we want), so sort in JS.
-const KIND_ORDER: Record<string, number> = { PERSONAL: 0, WORK: 1, CUSTOM: 2 };
 
 export type LensSummary = {
   id: string;
   name: string;
-  kind: "PERSONAL" | "WORK" | "CUSTOM";
+  isDefault: boolean;
+  isIncluded: boolean;
+  /** @deprecated Compatibility only for pre-migration test fixtures. */
+  kind?: string;
   type: "LIFE_AREA" | "SIMPLE_LIST";
   color: string | null;
   purpose: string | null;
@@ -82,11 +80,11 @@ export async function getLensesCore(
   });
   lenses.sort(
     (
-      a: { kind: string; createdAt: string },
-      b: { kind: string; createdAt: string },
+      a: { isIncluded: boolean; isDefault: boolean; createdAt: string },
+      b: { isIncluded: boolean; isDefault: boolean; createdAt: string },
     ) => {
-      const byKind = (KIND_ORDER[a.kind] ?? 9) - (KIND_ORDER[b.kind] ?? 9);
-      if (byKind !== 0) return byKind;
+      if (a.isIncluded !== b.isIncluded) return a.isIncluded ? -1 : 1;
+      if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
       return a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
     },
   );
@@ -94,7 +92,8 @@ export async function getLensesCore(
     (l: {
       id: string;
       name: string;
-      kind: "PERSONAL" | "WORK" | "CUSTOM";
+      isDefault: boolean;
+      isIncluded: boolean;
       type: "LIFE_AREA" | "SIMPLE_LIST";
       color: string | null;
       purpose: string | null;
@@ -107,7 +106,8 @@ export async function getLensesCore(
     }): LensSummary => ({
       id: l.id,
       name: l.name,
-      kind: l.kind,
+      isDefault: l.isDefault,
+      isIncluded: l.isIncluded,
       type: l.type,
       color: l.color,
       purpose: l.purpose,
@@ -163,7 +163,8 @@ export async function getLensCore(
   return {
     id: lens.id,
     name: lens.name,
-    kind: lens.kind,
+    isDefault: lens.isDefault,
+    isIncluded: lens.isIncluded,
     type: lens.type,
     color: lens.color,
     purpose: lens.purpose,

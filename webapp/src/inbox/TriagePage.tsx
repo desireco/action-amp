@@ -188,7 +188,7 @@ export function TriagePage() {
   }, [item?.parsedProject, item?.parsedProjectId, item?.text, projects]);
 
   // ---- Lens inference: [[ ]] token → real lens (explicit path) ----
-  // Seeded tokens (work/personal/me) resolve on `kind`; custom on exact name.
+  // Lens tokens resolve on the Lens's user-facing name.
   // `[[ ]]` overrides the active-lens default AND the project-bridge inference
   // (explicit beats inferred). Null when absent or unrecognized (the parser
   // already drops unknown tokens, so any parsedLens value is a real candidate).
@@ -199,8 +199,6 @@ export function TriagePage() {
     const token = item?.parsedLens;
     if (!token) return null;
     return (lenses ?? []).find((l) => {
-      if (token === "work") return l.kind === "WORK";
-      if (token === "personal" || token === "me") return l.kind === "PERSONAL";
       return l.name.toLowerCase() === token;
     }) ?? null;
   }, [item?.parsedLens, item?.parsedLensId, lenses]);

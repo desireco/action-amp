@@ -27,17 +27,15 @@ import { recordAnalyticsEventCore } from "../analytics/operationsCore";
  */
 
 // Each default lens carries an identity color key (see styles/tokens.css
-// `--aa-lens-*` palette) and a stable LensKind handle. Work = indigo/WORK,
-// Me = emerald/PERSONAL. The color signals which context is active; the kind
-// is what the entitlement guard branches on (rename-safe — the user-facing
-// name can be anything). It's identity, never system/state (that's teal's job).
+// `--aa-lens-*` palette). Work and Me are ordinary Lens names. `isIncluded`
+// is the Free-plan entitlement, not a Personal/Work category.
 const DEFAULT_LENSES = [
-  { name: "Work", kind: "WORK", color: "indigo" },
-  { name: "Me", kind: "PERSONAL", color: "emerald" },
+  { name: "Work", color: "indigo", isIncluded: false },
+  { name: "Me", color: "emerald", isIncluded: true },
 ] as const satisfies readonly {
   name: string;
-  kind: "WORK" | "PERSONAL";
   color: string;
+  isIncluded: boolean;
 }[];
 const STARTER_TASK = "Practice: complete this task";
 
@@ -94,17 +92,14 @@ export const ensureOnboarded = (async (_args, context) => {
   const created: { name: string; id: string }[] = [];
 
   for (const lens of DEFAULT_LENSES) {
-    // findOrCreate per lens, keyed on KIND (not name) — rename-safe. The user
-    // can rename a seeded lens (e.g. "Me" → "Life"); looking up by kind means
-    // we find it regardless of its current name, so we never re-seed a second
-    // PERSONAL/WORK lens alongside a renamed one. Idempotent across logins.
+    // Defaults are identified by their entitlement/default flags, not names.
     const existing = await context.entities.Lens.findFirst({
-      where: { userId, kind: lens.kind },
-      select: { id: true, name: true, color: true, kind: true },
+      where: { userId, isDefault: true, isIncluded: lens.isIncluded },
+      select: { id: true, name: true, color: true },
     });
     if (!existing) {
       const row = await context.entities.Lens.create({
-        data: { name: lens.name, kind: lens.kind, color: lens.color, userId },
+        data: { name: lens.name, isDefault: true, isIncluded: lens.isIncluded, color: lens.color, userId },
         select: { id: true, name: true },
       });
       created.push(row);
@@ -127,11 +122,11 @@ export const ensureOnboarded = (async (_args, context) => {
   let meLensId: string | null = null;
   for (const lens of DEFAULT_LENSES) {
     const existingLens = await context.entities.Lens.findFirst({
-      where: { userId, kind: lens.kind },
+      where: { userId, isDefault: true, isIncluded: lens.isIncluded },
       select: { id: true },
     });
     if (!existingLens) continue;
-    if (lens.kind === "PERSONAL") meLensId = existingLens.id;
+    if (lens.isIncluded) meLensId = existingLens.id;
     const existingProject = await context.entities.Project.findFirst({
       where: { userId, lensId: existingLens.id, name: "General" },
       select: { id: true },

@@ -59,11 +59,11 @@ function addListItemEntity(m: ReturnType<typeof mockContext>, count = 0) {
 }
 
 describe("createLens", () => {
-  it("calls assertLensConfigAllowed + assertUnderCap with the lens cap, then creates with kind CUSTOM", async () => {
+  it("creates an ordinary non-default Lens", async () => {
     resetSpies();
     const m = mockContext(PRO_USER);
     m.entities.Lens.count.mockResolvedValue(2);
-    m.entities.Lens.create.mockResolvedValue({ id: "l", name: "Studio", kind: "CUSTOM", color: "coral", purpose: "side projects" });
+    m.entities.Lens.create.mockResolvedValue({ id: "l", name: "Studio", isDefault: false, isIncluded: false, color: "coral", purpose: "side projects" });
 
     const out = await createLens({ name: "Studio", color: "coral", purpose: "side projects" }, m.context);
 
@@ -76,10 +76,10 @@ describe("createLens", () => {
       { feature: `a ${PRO_LIMITS.lenses + 1}th lens`, reason: "more life contexts unlock with Pro" },
     );
     expect(m.entities.Lens.create).toHaveBeenCalledWith({
-      data: { name: "Studio", kind: "CUSTOM", type: "LIFE_AREA", color: "coral", purpose: "side projects", userId: "user-1" },
-      select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
+      data: { name: "Studio", isDefault: false, isIncluded: false, type: "LIFE_AREA", color: "coral", purpose: "side projects", userId: "user-1" },
+      select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
     });
-    expect(out).toEqual({ id: "l", name: "Studio", kind: "CUSTOM", color: "coral", purpose: "side projects" });
+    expect(out).toEqual({ id: "l", name: "Studio", isDefault: false, isIncluded: false, color: "coral", purpose: "side projects" });
   });
 
   it("rejects an unknown color key (400)", async () => {
@@ -96,7 +96,7 @@ describe("createLens", () => {
     m.entities.Lens.create.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST" });
     await createLens({ name: "Shopping", type: "SIMPLE_LIST" }, m.context);
     expect(m.entities.Lens.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ kind: "CUSTOM", type: "SIMPLE_LIST" }),
+      data: expect.objectContaining({ isDefault: false, isIncluded: false, type: "SIMPLE_LIST" }),
     }));
   });
 
@@ -113,12 +113,12 @@ describe("createLens", () => {
     resetSpies();
     const m = mockContext(PRO_USER);
     m.entities.Lens.count.mockResolvedValue(0);
-    m.entities.Lens.create.mockResolvedValue({ id: "l", name: "Studio", kind: "CUSTOM", color: null, purpose: null });
+    m.entities.Lens.create.mockResolvedValue({ id: "l", name: "Studio", isDefault: false, isIncluded: false, color: null, purpose: null });
 
     await createLens({ name: "  Studio  ", purpose: "   " }, m.context);
     expect(m.entities.Lens.create).toHaveBeenCalledWith({
-      data: { name: "Studio", kind: "CUSTOM", type: "LIFE_AREA", color: null, purpose: null, userId: "user-1" },
-      select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
+      data: { name: "Studio", isDefault: false, isIncluded: false, type: "LIFE_AREA", color: null, purpose: null, userId: "user-1" },
+      select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
     });
   });
 });
@@ -127,7 +127,7 @@ describe("updateLens", () => {
   it("changes type for an empty custom Lens", async () => {
     resetSpies();
     const m = mockContext(PRO_USER);
-    m.entities.Lens.findFirst.mockResolvedValue({ id: "l", name: "Errands", kind: "CUSTOM", type: "LIFE_AREA" });
+    m.entities.Lens.findFirst.mockResolvedValue({ id: "l", name: "Errands", isDefault: false, type: "LIFE_AREA" });
     m.entities.Goal.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Task.count.mockResolvedValue(0);
@@ -139,7 +139,7 @@ describe("updateLens", () => {
     expect(m.entities.Lens.update).toHaveBeenCalledWith({
       where: { id: "l" },
       data: { type: "SIMPLE_LIST" },
-      select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
+      select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
     });
   });
 
@@ -159,7 +159,7 @@ describe("updateLens", () => {
   it("keeps seeded Lens types fixed", async () => {
     resetSpies();
     const m = mockContext(PRO_USER);
-    m.entities.Lens.findFirst.mockResolvedValue({ id: "work", name: "Work", kind: "WORK", type: "LIFE_AREA" });
+    m.entities.Lens.findFirst.mockResolvedValue({ id: "work", name: "Work", isDefault: true, type: "LIFE_AREA" });
 
     await expect(updateLens({ id: "work", type: "SIMPLE_LIST" }, m.context)).rejects.toThrow(/always remain Life areas/i);
     expect(m.entities.Goal.count).not.toHaveBeenCalled();
@@ -173,25 +173,25 @@ describe("updateLens", () => {
     m.entities.Lens.update.mockResolvedValue({ id: "l", name: "Atelier", kind: "CUSTOM", color: "coral", purpose: "x" });
 
     await updateLens({ id: "l", name: "Atelier", purpose: "x", color: "coral" }, m.context);
-    expect(m.entities.Lens.findFirst).toHaveBeenCalledWith({ where: { id: "l", userId: "user-1" }, select: { id: true, name: true, kind: true, type: true } });
+    expect(m.entities.Lens.findFirst).toHaveBeenCalledWith({ where: { id: "l", userId: "user-1" }, select: { id: true, name: true, isDefault: true, type: true } });
     expect(m.entities.Lens.update).toHaveBeenCalledWith({
       where: { id: "l" },
       data: { name: "Atelier", purpose: "x", color: "coral" },
-      select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
+      select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
     });
   });
 
   it("allows editing a SEEDED lens (kind WORK) — rename yes, delete no", async () => {
     resetSpies();
     const m = mockContext(PRO_USER);
-    m.entities.Lens.findFirst.mockResolvedValue({ id: "l-work", name: "Work", kind: "WORK" });
+    m.entities.Lens.findFirst.mockResolvedValue({ id: "l-work", name: "Work", isDefault: true });
     m.entities.Lens.update.mockResolvedValue({ id: "l-work", name: "Studio", kind: "WORK", color: "indigo", purpose: null });
 
     await updateLens({ id: "l-work", name: "Studio" }, m.context);
     expect(m.entities.Lens.update).toHaveBeenCalledWith({
       where: { id: "l-work" },
       data: { name: "Studio" },
-      select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
+      select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
     });
   });
 
@@ -217,7 +217,7 @@ describe("deleteLens", () => {
   it("refuses to delete a seeded lens (kind !== CUSTOM) → 409", async () => {
     resetSpies();
     const m = mockContext(PRO_USER);
-    m.entities.Lens.findFirst.mockResolvedValue({ id: "l-work", name: "Work", kind: "WORK" });
+    m.entities.Lens.findFirst.mockResolvedValue({ id: "l-work", name: "Work", isDefault: true });
 
     await expect(deleteLens({ id: "l-work", mode: "delete" }, m.context)).rejects.toThrow(/can't be deleted/);
     expect(m.entities.Lens.delete).not.toHaveBeenCalled();
@@ -365,26 +365,25 @@ describe("getLenses", () => {
     await expect(getLenses({}, m.context)).rejects.toThrow(/Not authenticated/);
   });
 
-  it("returns lenses with per-lens counts, seeded-first sorted (PERSONAL, WORK, then CUSTOM)", async () => {
+  it("returns lenses with included and default Lenses first", async () => {
     const m = mockContext(PRO_USER);
     // findMany returns rows in arbitrary order (Prisma orderBy is createdAt
     // only); the op re-sorts in JS to seeded-first. Feed an out-of-order list
     // (CUSTOM first) and assert the output is PERSONAL → CUSTOM.
     m.entities.Lens.findMany.mockResolvedValue([
       {
-        id: "l-studio", name: "Studio", kind: "CUSTOM", type: "LIFE_AREA", color: "coral", purpose: "side",
+        id: "l-studio", name: "Studio", isDefault: false, isIncluded: false, type: "LIFE_AREA", color: "coral", purpose: "side",
         _count: { goals: 0, projects: 1, tasks: 4 }, goals: [], projects: [{ id: "p", name: "Studio build" }], tasks: [{ id: "t" }], listItems: [],
       },
       {
-        id: "l-me", name: "Me", kind: "PERSONAL", type: "LIFE_AREA", color: "emerald", purpose: null,
+        id: "l-me", name: "Me", isDefault: true, isIncluded: true, type: "LIFE_AREA", color: "emerald", purpose: null,
         _count: { goals: 1, projects: 2, tasks: 3 }, goals: [{ id: "g" }], projects: [{ id: "p", name: "Personal project" }], tasks: [{ id: "t" }], listItems: [],
       },
     ]);
     const out = await getLenses({}, m.context);
-    // Seeded-first: PERSONAL before CUSTOM, despite the input order.
-    expect(out.map((l) => l.kind)).toEqual(["PERSONAL", "CUSTOM"]);
-    expect(out[0]).toEqual({ id: "l-me", name: "Me", kind: "PERSONAL", type: "LIFE_AREA", color: "emerald", purpose: null, hasAnyContent: true, blockingProjects: [{ id: "p", name: "Personal project" }], counts: { goals: 1, projects: 2, tasks: 3, openItems: 0, checkedItems: 0 } });
-    expect(out[1]).toEqual({ id: "l-studio", name: "Studio", kind: "CUSTOM", type: "LIFE_AREA", color: "coral", purpose: "side", hasAnyContent: true, blockingProjects: [{ id: "p", name: "Studio build" }], counts: { goals: 0, projects: 1, tasks: 4, openItems: 0, checkedItems: 0 } });
+    expect(out.map((l) => l.id)).toEqual(["l-me", "l-studio"]);
+    expect(out[0]).toMatchObject({ id: "l-me", isDefault: true, isIncluded: true });
+    expect(out[1]).toMatchObject({ id: "l-studio", isDefault: false, isIncluded: false });
     // Prisma query is scoped by user + ordered by createdAt (the JS sort handles kind).
     expect(m.entities.Lens.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { userId: "user-1" },

@@ -24,9 +24,8 @@ const prisma = new PrismaClient();
  * whole surface to Pro (FREE configures nothing — they get the seeded two and
  * that's it), and `assertUnderCap` soft-caps Pro at `PRO_LIMITS.lenses`.
  *
- * The seeded lenses (kind WORK / PERSONAL) are renameable + recolorable (the
- * kind, not the name, carries the entitlement) but NOT deletable — they're the
- * stable handles. Only CUSTOM lenses can be deleted.
+ * Default lenses are renameable + recolorable but NOT deletable or
+ * type-convertible. Their names are ordinary user-facing names.
  *
  * HTTP errors (404/409/400) go through `throwHttpStatus` from entitlementHttp
  * (the one src/ file licensed to import wasp/server), so this file never
@@ -103,11 +102,11 @@ function assertValidLensType(type: unknown): asserts type is LensType | undefine
 
 async function assertLensTypeChangeAllowed(
   entities: LensContentEntities,
-  existing: { id: string; kind: string; type: string },
+  existing: { id: string; isDefault: boolean; type: string },
   nextType: LensType | undefined,
 ): Promise<void> {
   if (nextType === undefined || nextType === existing.type) return;
-  if (existing.kind !== "CUSTOM") {
+  if (existing.isDefault) {
     throwHttpStatus(409, "Default lenses always remain Life areas.");
   }
   if (await lensHasContent(entities, existing.id)) {
@@ -168,13 +167,14 @@ export const createLens = (async (args, context) => {
     return await context.entities.Lens.create({
       data: {
         name,
-        kind: "CUSTOM",
+        isDefault: false,
+        isIncluded: false,
         type,
         color: args.color ?? null,
         purpose,
         userId: context.user.id,
       },
-      select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
+      select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
     });
   } catch (e) {
     // Prisma P2002 = unique constraint violation on [userId, name].
@@ -185,7 +185,7 @@ export const createLens = (async (args, context) => {
   }
 }) satisfies CreateLens<
   { name: string; type?: "LIFE_AREA" | "SIMPLE_LIST"; color?: string | null; purpose?: string },
-  { id: string; name: string; kind: string; type: string; color: string | null; purpose: string | null }
+  { id: string; name: string; isDefault: boolean; isIncluded: boolean; type: string; color: string | null; purpose: string | null }
 >;
 
 export const updateLens = (async (args, context) => {
@@ -198,7 +198,7 @@ export const updateLens = (async (args, context) => {
   // Tenancy-scoped lookup (Lens has no compound id+userId index → findFirst).
   const existing = await context.entities.Lens.findFirst({
     where: { id: args.id, userId: context.user.id },
-    select: { id: true, name: true, kind: true, type: true },
+    select: { id: true, name: true, isDefault: true, type: true },
   });
   if (!existing) {
     throwHttpStatus(404, "Lens not found.");
@@ -214,7 +214,7 @@ export const updateLens = (async (args, context) => {
       return await context.entities.Lens.update({
         where: { id: existing.id },
         data,
-        select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
+        select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
       });
     } catch (e) {
       if (e && typeof e === "object" && "code" in e && e.code === "P2002") {
@@ -227,11 +227,11 @@ export const updateLens = (async (args, context) => {
   return await context.entities.Lens.update({
     where: { id: existing.id },
     data,
-    select: { id: true, name: true, kind: true, type: true, color: true, purpose: true },
+    select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
   });
 }) satisfies UpdateLens<
   LensUpdateArgs,
-  { id: string; name: string; kind: string; type: string; color: string | null; purpose: string | null }
+  { id: string; name: string; isDefault: boolean; isIncluded: boolean; type: string; color: string | null; purpose: string | null }
 >;
 
 export const deleteLens = (async (args, context) => {
@@ -242,13 +242,13 @@ export const deleteLens = (async (args, context) => {
 
   const existing = await context.entities.Lens.findFirst({
     where: { id: args.id, userId: context.user.id },
-    select: { id: true, kind: true, type: true, name: true },
+    select: { id: true, isDefault: true, type: true, name: true },
   });
   if (!existing) {
     throwHttpStatus(404, "Lens not found.");
   }
   // The seeded lenses are the stable handles — never deletable.
-  if (existing.kind !== "CUSTOM") {
+  if (existing.isDefault) {
     throwHttpStatus(
       409,
       `The "${existing.name}" lens can't be deleted — it's one of your defaults.`,

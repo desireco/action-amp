@@ -15,7 +15,8 @@ import { mockContext } from "../test/mockContext";
 const ME = {
   id: "l1",
   name: "Me",
-  kind: "PERSONAL",
+  isDefault: true,
+  isIncluded: true,
   type: "LIFE_AREA",
   color: null,
   purpose: null,
@@ -29,7 +30,8 @@ const ME = {
 const WORK = {
   id: "l2",
   name: "Work",
-  kind: "WORK",
+  isDefault: true,
+  isIncluded: false,
   type: "LIFE_AREA",
   color: "indigo",
   purpose: "Day job",
@@ -43,7 +45,8 @@ const WORK = {
 const STUDIO = {
   id: "l3",
   name: "Studio",
-  kind: "CUSTOM",
+  isDefault: false,
+  isIncluded: false,
   type: "LIFE_AREA",
   color: "coral",
   purpose: "Side projects",
@@ -57,7 +60,8 @@ const STUDIO = {
 const SHOPPING = {
   id: "l4",
   name: "Shopping",
-  kind: "CUSTOM",
+  isDefault: false,
+  isIncluded: false,
   type: "SIMPLE_LIST",
   color: "cyan",
   purpose: "Groceries",
@@ -93,7 +97,7 @@ describe("getLensesCore", () => {
     });
   });
 
-  it("maps rows to the { id, name, kind, color, purpose, counts } shape", async () => {
+  it("maps rows to the neutral Lens summary shape", async () => {
     const m = mockContext("user-1");
     m.entities.Lens.findMany.mockResolvedValue([WORK]);
     const out = await getLensesCore(m.entities, { userId: "user-1" });
@@ -101,7 +105,8 @@ describe("getLensesCore", () => {
       {
         id: "l2",
         name: "Work",
-        kind: "WORK",
+        isDefault: true,
+        isIncluded: false,
         type: "LIFE_AREA",
         color: "indigo",
         purpose: "Day job",
@@ -122,13 +127,13 @@ describe("getLensesCore", () => {
     });
   });
 
-  it("sorts seeded-first (PERSONAL, WORK) then CUSTOM by createdAt", async () => {
+  it("sorts included then default Lenses before later Lenses", async () => {
     const m = mockContext("user-1");
     // Returned by Prisma in createdAt asc order — CUSTOM before WORK before
     // PERSONAL alphabetically is wrong; the core re-sorts to seeded-first.
     m.entities.Lens.findMany.mockResolvedValue([STUDIO, WORK, ME]);
     const out = await getLensesCore(m.entities, { userId: "user-1" });
-    expect(out.map((l) => l.kind)).toEqual(["PERSONAL", "WORK", "CUSTOM"]);
+    expect(out.map((l) => l.id)).toEqual(["l1", "l2", "l3"]);
     expect(out.map((l) => l.id)).toEqual(["l1", "l2", "l3"]);
   });
 

@@ -163,7 +163,7 @@ type LensGateResult =
   | { status: "incompatible" }
   | {
       status: "ok";
-      lens: { name: string; kind: "PERSONAL" | "WORK" | "CUSTOM" };
+      lens: { name: string; isIncluded?: boolean };
       lensType: "LIFE_AREA" | "SIMPLE_LIST";
     };
 

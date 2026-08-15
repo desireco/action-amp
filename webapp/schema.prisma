@@ -242,13 +242,14 @@ model AdminUserAction {
 // Lens — the top-level scoping switch (Work / Me by default + user-defined on Pro)
 // ============================================================
 // Defaults seeded for every user: Work + Me. See src/onboarding/operations.ts.
-// `kind` is the stable handle that survives renames — the user-facing "Work"/"Me"
-// can be anything, but the entitlement keys on LensKind, not the name.
+// A Lens is either a structured life area or a direct checklist. Default and
+// included are product/entitlement facts, never user-facing lens categories.
 // `purpose` is one short line: "what this lens is for."
 model Lens {
   id        String   @id @default(uuid())
   name      String // user-facing label (default "Work"/"Me"; user-defined on Pro)
-  kind      LensKind @default(CUSTOM) // stable handle — WORK/PERSONAL for seeded, CUSTOM for user-defined
+  isDefault Boolean  @default(false) // seeded lenses cannot be deleted or type-converted
+  isIncluded Boolean @default(false) // the one Lens available on the Free plan
   type      LensType @default(LIFE_AREA) // behavioral boundary: structured work or direct checklist
   color     String? // identity color key ("indigo", "emerald", …) from the lens palette in tokens.css
   purpose   String? // one short line: what this lens is for
@@ -263,16 +264,6 @@ model Lens {
   listItems ListItem[]
 
   @@unique([userId, name]) // one user can't have two lenses with the same name
-}
-
-// Stable handle on a Lens, decoupled from the user-facing name. The two seeded
-// lenses are tagged WORK / PERSONAL at onboarding (and backfilled by name in
-// migration lens_kind_and_purpose); everything else is CUSTOM. The entitlement
-// guard branches on kind, so renaming "Work" → "Studio" can't escape FREE gating.
-enum LensKind {
-  PERSONAL // the seeded "Me" lens
-  WORK // the seeded "Work" lens
-  CUSTOM // user-defined (Pro only)
 }
 
 enum LensType {

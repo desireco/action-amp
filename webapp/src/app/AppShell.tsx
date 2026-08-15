@@ -211,9 +211,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
   // Lens names for the [[ ]] parser — seeded (work/personal/me) are always
   // known to the parser; custom names must be supplied.
-  const customLensNames = lenses
-    .filter((l) => l.kind === "CUSTOM")
-    .map((l) => l.name);
+  const customLensNames = lenses.map((l) => l.name);
 
   // One-shot migration: resolve a `name:X` sentinel to a real lens id once the
   // lenses load, persist under the new key, and delete the old name key. After
@@ -239,8 +237,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const resolvedLens =
     (rawId ? lenses.find((l) => l.id === rawId) : undefined) ?? lenses[0];
   const activeLens =
-    !entitled && resolvedLens && resolvedLens.kind !== "PERSONAL"
-      ? (lenses.find((l) => l.kind === "PERSONAL") ?? resolvedLens)
+    !entitled && resolvedLens && !resolvedLens.isIncluded
+      ? (lenses.find((l) => l.isIncluded) ?? resolvedLens)
       : resolvedLens;
   const activeLensName = activeLens?.name ?? "Me";
   const isSimpleListLens = activeLens?.type === "SIMPLE_LIST";
@@ -291,7 +289,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           purpose: l.purpose ?? undefined,
           type: l.type,
           // FREE: only PERSONAL is usable; WORK + CUSTOM are gated.
-          proLocked: workLocked && l.kind !== "PERSONAL",
+          proLocked: workLocked && !l.isIncluded,
         }))
       : [
           {
@@ -321,7 +319,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // the gate stays valid. Branches on KIND, not name — rename-safe.
   const selectLens = (id: string) => {
     const target = lenses.find((l) => l.id === id);
-    if (!entitled && target && target.kind !== "PERSONAL") {
+    if (!entitled && target && !target.isIncluded) {
       setWorkGated(true);
       return;
     }
@@ -338,7 +336,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         id: activeLens.id,
         name: activeLens.name,
         color: activeLens.color ?? null,
-        kind: activeLens.kind,
+        isIncluded: activeLens.isIncluded,
         type: activeLens.type,
         purpose: activeLens.purpose,
       }

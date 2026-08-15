@@ -99,7 +99,7 @@ export const getAppData = (async (args, context) => {
   const lenses = await context.entities.Lens.findMany({
     where: { userId },
     orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, color: true, kind: true, type: true, purpose: true },
+    select: { id: true, name: true, color: true, isIncluded: true, type: true, purpose: true },
   });
   // Resolve the requested lens id to a real lens; fall back to the first so
   // counts are never empty just because the stored id was stale/deleted/missing.
@@ -125,7 +125,7 @@ export const getAppData = (async (args, context) => {
         context.user?.manualAccessGrant,
       )
         ? true
-        : l.kind === "PERSONAL",
+        : l.isIncluded,
     )
     .map((l) => l.id);
 
@@ -197,7 +197,7 @@ export const getAppData = (async (args, context) => {
       id: string;
       name: string;
       color: string | null;
-      kind: string;
+      isIncluded: boolean;
       type: "LIFE_AREA" | "SIMPLE_LIST";
       purpose: string | null;
     }[];

@@ -36,7 +36,8 @@ const PALETTE = [
 type LensRow = {
   id: string;
   name: string;
-  kind: string;
+  isDefault: boolean;
+  isIncluded: boolean;
   type: "LIFE_AREA" | "SIMPLE_LIST";
   color: string | null;
   purpose: string | null;
@@ -169,11 +170,6 @@ function LensList({
   );
 }
 
-const KIND_LABEL: Record<string, string> = {
-  PERSONAL: "Personal",
-  WORK: "Work",
-  CUSTOM: "Custom",
-};
 
 function LensRowItem({
   lens,
@@ -187,7 +183,7 @@ function LensRowItem({
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [typeBlocked, setTypeBlocked] = useState(false);
-  const isSeeded = lens.kind !== "CUSTOM";
+  const isSeeded = lens.isDefault;
   const hasContent = lens.hasAnyContent;
 
   if (editing) {
@@ -250,7 +246,7 @@ function LensRowItem({
           <div className="aa-lenses-row__name">
             {lens.name}
             <span className="aa-lenses-row__kind">
-              {lens.type === "SIMPLE_LIST" ? "Simple list" : KIND_LABEL[lens.kind] ?? lens.kind}
+              {lens.type === "SIMPLE_LIST" ? "Simple list" : "Life area"}
             </span>
           </div>
           {lens.purpose && <div className="aa-lenses-row__purpose">{lens.purpose}</div>}

@@ -18,17 +18,12 @@ import { readConfig, setActiveLens } from "../config.js";
 import { emit, fail, type OutputCtx } from "../output.js";
 import type { Lens } from "../types.js";
 
-/** Human label for the active-lens marker in `lens list`. */
-function kindLabel(kind: Lens["kind"]): string {
-  return kind === "PERSONAL" ? "personal" : kind === "WORK" ? "work" : "custom";
-}
-
 function typeLabel(type: Lens["type"]): string {
   return type === "SIMPLE_LIST" ? "simple list" : "life area";
 }
 
 function lensLabel(lens: Lens): string {
-  return `(${kindLabel(lens.kind)} · ${typeLabel(lens.type)})`;
+  return `(${typeLabel(lens.type)})`;
 }
 
 export function makeLensCommand(): Command {

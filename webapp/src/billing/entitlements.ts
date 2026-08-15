@@ -1,5 +1,4 @@
 import { FREE_LIMITS, PRO_LIMITS, isPlanActive } from "./config";
-import type { LensKind } from "@prisma/client";
 export type { EntitlementMessage } from "./entitlement-types";
 import type { EntitlementMessage } from "./entitlement-types";
 
@@ -153,7 +152,9 @@ export function capViolation(
 /** The subset of a Lens the lens-scope decision reads. */
 export interface EntitlementLens {
   name: string;
-  kind: LensKind;
+  isIncluded?: boolean;
+  /** @deprecated Compatibility only for pre-migration test fixtures. */
+  kind?: string;
 }
 
 /**
@@ -172,7 +173,7 @@ export function lensViolation(
 ): EntitlementMessage | null {
   if (resolveEffectiveAccess(user).isEntitled)
     return null; // paid → all lenses
-  if (lens && lens.kind !== "PERSONAL") {
+  if (lens && !lens.isIncluded) {
     return msg ?? WORK_LENS_MESSAGE;
   }
   return null;
@@ -225,7 +226,7 @@ export async function resolveLens(
     }
   ).Lens.findFirst({
     where: { id: lensId, userId },
-    select: { name: true, kind: true },
+    select: { name: true, isIncluded: true },
   });
   return lens ?? null;
 }
@@ -269,18 +270,18 @@ export async function resolveAccessibleLenses(
   user: EntitlementUser | null,
   userId: string,
 ): Promise<
-  { id: string; name: string; color: string | null; kind: LensKind }[]
+  { id: string; name: string; color: string | null; isIncluded: boolean }[]
 > {
   const where = resolveEffectiveAccess(user).isEntitled
     ? { userId }
-    : { userId, kind: "PERSONAL" as const };
+    : { userId, isIncluded: true };
   return await (
     entities as {
       Lens: {
         findMany: (
           a: unknown,
         ) => Promise<
-          { id: string; name: string; color: string | null; kind: LensKind }[]
+          { id: string; name: string; color: string | null; isIncluded: boolean }[]
         >;
       };
     }
@@ -292,8 +293,8 @@ export async function resolveAccessibleLenses(
 
 /** Default ProGate copy for the Work-lens gate (shared by client + server). */
 export const WORK_LENS_MESSAGE: EntitlementMessage = {
-  feature: "the Work lens",
-  reason: "bring your work life into ActionAmp",
+  feature: "another Lens",
+  reason: "organize more areas of your life with Pro",
 };
 
 /** Default ProGate copy for the custom-lenses gate (lens configuration). */

@@ -80,7 +80,8 @@ export type Goal = {
 export type Lens = {
   id: string;
   name: string;
-  kind: "PERSONAL" | "WORK" | "CUSTOM";
+  isDefault: boolean;
+  isIncluded: boolean;
   type: "LIFE_AREA" | "SIMPLE_LIST";
   color?: string | null;
   purpose?: string | null;

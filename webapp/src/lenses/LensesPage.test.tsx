@@ -44,7 +44,8 @@ const { LensesPage } = await import("./LensesPage");
 const lifeArea = {
   id: "life",
   name: "Studio",
-  kind: "CUSTOM",
+  isDefault: false,
+  isIncluded: false,
   type: "LIFE_AREA",
   color: "coral",
   purpose: "Products",
@@ -58,7 +59,8 @@ const lifeArea = {
 const shopping = {
   id: "shopping",
   name: "Shopping",
-  kind: "CUSTOM",
+  isDefault: false,
+  isIncluded: false,
   type: "SIMPLE_LIST",
   color: "cyan",
   purpose: "Groceries",

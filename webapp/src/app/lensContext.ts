@@ -20,12 +20,8 @@ export interface ActiveLens {
    * locally (see LensSwitch, TriagePage context radio).
    */
   color: string | null;
-  /**
-   * Stable kind handle (PERSONAL / WORK / CUSTOM). The entitlement guard
-   * branches on this, not the name, so renaming a seeded lens can't escape
-   * FREE gating. See docs/specs/custom-lenses.md §"Stable handle".
-   */
-  kind: string;
+  /** Whether this is the Lens included with the Free plan. */
+  isIncluded?: boolean;
   /** Behavioral boundary for the structured workspace or direct checklist. */
   type: "LIFE_AREA" | "SIMPLE_LIST";
   /** One short line: what this lens is for. */
