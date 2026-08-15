@@ -49,7 +49,7 @@
   display: flex;
   align-items: center;
   gap: var(--aa-space-sm);
-  min-height: 56px;
+  min-height: 64px;
   padding: 0 var(--aa-space-md);
   border-bottom: 1px solid var(--aa-border-strong);
   transition: background var(--aa-dur-fast) var(--aa-ease-out);
@@ -61,12 +61,12 @@
 }
 .aa-simple-list__section input[type="checkbox"] {
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   margin: 0;
-  flex: 0 0 20px;
-  border: 1px solid var(--aa-border-strong);
-  border-radius: var(--aa-radius-xs);
+  flex: 0 0 28px;
+  border: 2px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
   background: var(--aa-surface-muted);
   cursor: pointer;
   transition:
