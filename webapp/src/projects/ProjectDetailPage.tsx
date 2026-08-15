@@ -9,6 +9,7 @@ import {
   updateTaskStatus,
   startTask,
   setProjectDone,
+  archiveProject,
   updateProject,
   deleteProject,
   updateTask,
@@ -108,6 +109,9 @@ export function ProjectDetailPage() {
   const [editDesc, setEditDesc] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmComplete, setConfirmComplete] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
+  const [deleteTargetProjectId, setDeleteTargetProjectId] = useState("");
   const [relinkError, setRelinkError] = useState<string | null>(null);
   const [resourceEditor, setResourceEditor] = useState<
     ProjectResource | "new" | null
@@ -165,7 +169,7 @@ export function ProjectDetailPage() {
   const { data: lensProjects } = useQuery(
     getProjects,
     project ? { lensId: project.lensId } : undefined,
-    { enabled: !!project && movingTaskId !== null },
+    { enabled: !!project && (movingTaskId !== null || confirmDelete) },
   );
   // Siblings only — a task can't move to the project it's already in.
   const moveTargets: ProjectOption[] = (lensProjects ?? []).filter(
@@ -360,15 +364,33 @@ export function ProjectDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (
+    taskDisposition: "delete" | "reassign" | "triage" = "delete",
+  ) => {
     if (!project) return;
-    await deleteProject({ id: project.id });
+    await deleteProject({
+      id: project.id,
+      taskDisposition,
+      ...(taskDisposition === "reassign"
+        ? { targetProjectId: deleteTargetProjectId }
+        : {}),
+    });
     queryClient.invalidateQueries({ queryKey: ["getProjects"] });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
     queryClient.invalidateQueries({ queryKey: ["getGoals"] });
     queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     setConfirmDelete(false);
+    navigate("/do/projects");
+  };
+
+  const handleArchive = async () => {
+    if (!project) return;
+    await archiveProject({ id: project.id });
+    queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+    queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
+    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+    setConfirmArchive(false);
     navigate("/do/projects");
   };
 
@@ -589,7 +611,7 @@ export function ProjectDetailPage() {
                     always provides an immediate way to begin, using the same
                     loop as the home screen (startTask → /do/focus). Other
                     Today tasks remain available in the group below. */}
-                {nextStep && (
+                {!project.isDone && nextStep && (
                   <div className="aa-project__next">
                     <div className="aa-project__next-eyebrow">Next step</div>
                     <h2 className="aa-project__next-title">
@@ -637,7 +659,7 @@ export function ProjectDetailPage() {
                     don't fabricate a hero from an Upcoming task (Today is a
                     commitment). The cue names the situation; the horizon
                     controls on each Upcoming row below do the promoting. */}
-                {showNoTodayCue && (
+                {!project.isDone && showNoTodayCue && (
                   <p className="aa-project__cue">
                     Nothing queued for today. Promote one from Upcoming below.
                   </p>
@@ -647,28 +669,33 @@ export function ProjectDetailPage() {
                     are calm; Delete is destructive and lives behind ⋯ so it can't
                     be tapped by accident. */}
                 <div className="aa-project__actions">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="aa-project__add"
-                    icon={<PlusIcon />}
-                    onClick={() => setCreating((v) => !v)}
-                  >
-                    {creating ? "Cancel" : "Add step"}
-                  </Button>
+                  {!project.isDone && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="aa-project__add"
+                      icon={<PlusIcon />}
+                      onClick={() => setCreating((v) => !v)}
+                    >
+                      {creating ? "Cancel" : "Add step"}
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
                     className="aa-project__calm"
                     onClick={startEdit}
                   >
-                    Edit
+                    Manage
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="aa-project__calm"
-                    onClick={handleComplete}
+                    onClick={() => {
+                      if (project.isDone) void handleComplete();
+                      else setConfirmComplete(true);
+                    }}
                     title={
                       project.isDone
                         ? "Return to active projects"
@@ -692,6 +719,17 @@ export function ProjectDetailPage() {
                         <button
                           type="button"
                           role="menuitem"
+                          className="aa-project__overflow-item"
+                          onClick={() => {
+                            setOverflowOpen(false);
+                            setConfirmArchive(true);
+                          }}
+                        >
+                          Archive project
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
                           className="aa-project__overflow-item aa-project__overflow-item--danger"
                           onClick={() => {
                             setOverflowOpen(false);
@@ -708,7 +746,7 @@ export function ProjectDetailPage() {
             )}
           </header>
 
-          {creating && (
+          {creating && !project.isDone && (
             <CreateInline
               placeholder="What needs doing?"
               onCreate={handleCreate}
@@ -1025,19 +1063,65 @@ export function ProjectDetailPage() {
         </p>
       )}
 
-      {confirmDelete && project && (
+      {confirmComplete && project && (
+        <ConfirmDialog
+          title="Complete this project?"
+          message="It will stay in your completed projects list, where you can manage, archive, or delete it. Its actions will not change."
+          confirmLabel="Complete project"
+          onConfirm={() => {
+            setConfirmComplete(false);
+            void handleComplete();
+          }}
+          onClose={() => setConfirmComplete(false)}
+        />
+      )}
+
+      {confirmArchive && project && (
+        <ConfirmDialog
+          title="Archive this project?"
+          message="This will complete the project and hide it from your Projects and Logbook. Its action history will be kept."
+          confirmLabel="Archive project"
+          onConfirm={() => void handleArchive()}
+          onClose={() => setConfirmArchive(false)}
+        />
+      )}
+
+      {confirmDelete && project && total === 0 && (
         <ConfirmDialog
           title="Delete this project?"
-          message={
-            total > 0
-              ? `${total} ${total === 1 ? "task will move" : "tasks will move"} to standalone in this Lens (keeping any goal link). The project itself will be removed.`
-              : "This project will be removed. No tasks are in it."
-          }
+          message="This project will be removed. No actions are in it."
           confirmLabel="Delete project"
           danger
-          onConfirm={handleDelete}
+          onConfirm={() => void handleDelete()}
           onClose={() => setConfirmDelete(false)}
         />
+      )}
+
+      {confirmDelete && project && total > 0 && (
+        <BottomSheet
+          title="What should happen to these actions?"
+          onClose={() => setConfirmDelete(false)}
+        >
+          <div className="aa-project__delete-options">
+            <p>{total} {total === 1 ? "action is" : "actions are"} still in “{project.name}”.</p>
+            <Button variant="danger" size="sm" onClick={() => void handleDelete("delete")}>Remove actions and delete project</Button>
+            <div className="aa-project__delete-reassign">
+              <label htmlFor="project-delete-target">Move actions to</label>
+              <select
+                id="project-delete-target"
+                value={deleteTargetProjectId}
+                onChange={(event) => setDeleteTargetProjectId(event.target.value)}
+              >
+                <option value="">Choose a project</option>
+                {moveTargets.map((target) => (
+                  <option key={target.id} value={target.id}>{target.name}</option>
+                ))}
+              </select>
+              <Button variant="secondary" size="sm" disabled={!deleteTargetProjectId} onClick={() => void handleDelete("reassign")}>Move actions and delete project</Button>
+            </div>
+            <Button variant="secondary" size="sm" onClick={() => void handleDelete("triage")}>Send actions to Triage and delete project</Button>
+          </div>
+        </BottomSheet>
       )}
 
       {resourceEditor && (

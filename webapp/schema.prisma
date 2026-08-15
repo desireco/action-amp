@@ -363,6 +363,7 @@ model Project {
   order       Int       @default(0)
   createdAt   DateTime  @default(now())
   completedAt DateTime?
+  archivedAt  DateTime?
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
@@ -378,6 +379,7 @@ model Project {
 
   @@unique([userId, permalink])
   @@index([userId, createdAt])
+  @@index([userId, archivedAt])
 }
 
 // ============================================================

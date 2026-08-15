@@ -22,6 +22,7 @@ const createTask = vi.fn();
 const updateTaskStatus = vi.fn();
 const startTask = vi.fn();
 const setProjectDone = vi.fn();
+const archiveProject = vi.fn();
 const updateProject = vi.fn();
 const deleteProject = vi.fn();
 const updateTask = vi.fn();
@@ -50,6 +51,7 @@ vi.mock("wasp/client/operations", () => ({
   updateTaskStatus,
   startTask,
   setProjectDone,
+  archiveProject,
   updateProject,
   deleteProject,
   updateTask,
@@ -129,6 +131,7 @@ beforeEach(() => {
     goalId: "g1",
   });
   setProjectDone.mockResolvedValue({ id: "p1" });
+  archiveProject.mockResolvedValue({ id: "p1" });
   deleteProject.mockResolvedValue({ id: "p1", reparentedCount: 0 });
   createTask.mockResolvedValue({ id: "new-task" });
   startTask.mockResolvedValue({ id: "t1" });
@@ -416,6 +419,42 @@ describe("ProjectDetailPage — re-link to goal (spec §C)", () => {
     expect(
       screen.getByRole("button", { name: /none \(standalone\)/i }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("ProjectDetailPage — lifecycle management", () => {
+  it("asks for confirmation before completing a project", () => {
+    projectData.current = makeProject();
+    renderAt("/do/projects/p1");
+
+    fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+
+    expect(screen.getByRole("dialog", { name: /complete this project/i })).toBeInTheDocument();
+    expect(setProjectDone).not.toHaveBeenCalled();
+  });
+
+  it("uses Manage for project editing and offers Archive for an active project", () => {
+    projectData.current = makeProject();
+    renderAt("/do/projects/p1");
+
+    expect(screen.getByRole("button", { name: /^manage$/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /more actions/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /archive project/i }));
+
+    expect(screen.getByRole("dialog", { name: /archive this project/i })).toBeInTheDocument();
+  });
+
+  it("offers all three action dispositions when deleting a project with actions", () => {
+    projectData.current = makeProject();
+    lensProjectsData.current = [{ id: "p2", name: "Other project" }];
+    renderAt("/do/projects/p1");
+
+    fireEvent.click(screen.getByRole("button", { name: /more actions/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /delete project/i }));
+
+    expect(screen.getByRole("button", { name: /^remove actions and delete project$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^move actions and delete project$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^send actions to triage and delete project$/i })).toBeInTheDocument();
   });
 });
 

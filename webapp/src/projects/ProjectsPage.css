@@ -30,3 +30,31 @@
 .aa-projects__dot {
   opacity: 0.6;
 }
+
+.aa-projects__completed {
+  margin-top: var(--aa-space-3xl);
+  padding-top: var(--aa-space-xl);
+  border-top: 1px solid var(--aa-border);
+}
+
+.aa-projects__section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+  margin-bottom: var(--aa-space-lg);
+}
+
+.aa-projects__section-head h2 {
+  margin: 0;
+  font-size: var(--aa-text-lg);
+  font-weight: var(--aa-weight-semibold);
+}
+
+.aa-projects__section-head span {
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+}
+
+.aa-project-card--completed {
+  opacity: 0.82;
+}

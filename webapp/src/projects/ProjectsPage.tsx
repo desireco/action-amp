@@ -27,6 +27,8 @@ interface ProjectRow {
   name: string;
   description: string | null;
   dueDate: Date | string | null;
+  isDone: boolean;
+  completedAt: Date | string | null;
   goal: { id: string; name: string } | null;
   openCount: number;
   doneCount: number;
@@ -77,9 +79,11 @@ export function ProjectsPage() {
   }, []);
   const { data: projects, isLoading } = useQuery(
     getProjects,
-    lens ? { lensId: lens.id } : undefined,
+    lens ? { lensId: lens.id, includeCompleted: true } : undefined,
     { enabled: !!lens },
   );
+  const activeProjects = (projects ?? []).filter((project: ProjectRow) => !project.isDone);
+  const completedProjects = (projects ?? []).filter((project: ProjectRow) => project.isDone);
 
   const handleCreate = async (name: string, description?: string) => {
     if (!lens) return;
@@ -173,7 +177,7 @@ export function ProjectsPage() {
           <div className="aa-list-header__eyebrow">Planning</div>
           <h1 className="aa-list-header__title">Projects</h1>
           <p className="aa-list-header__description">
-            {isLoading ? "Loading active projects…" : `${projects?.length ?? 0} active · Outcomes that need more than one step.`}
+            {isLoading ? "Loading projects…" : `${activeProjects.length} active · Outcomes that need more than one step.`}
           </p>
           <div className="aa-list-header__meta">
             <AllowanceChip
@@ -197,8 +201,9 @@ export function ProjectsPage() {
       </header>
       {gatePanel}
       {composer}
-      <RecordCardGrid>
-        {(projects ?? []).map((p: ProjectRow) => {
+      {activeProjects.length > 0 && (
+        <RecordCardGrid>
+        {activeProjects.map((p: ProjectRow) => {
           const total = p.openCount + p.doneCount;
           const pct = total === 0 ? 0 : Math.round((p.doneCount / total) * 100);
           return (
@@ -226,7 +231,37 @@ export function ProjectsPage() {
             />
           );
         })}
-      </RecordCardGrid>
+        </RecordCardGrid>
+      )}
+      {completedProjects.length > 0 && (
+        <section className="aa-projects__completed" aria-labelledby="completed-projects-heading">
+          <div className="aa-projects__section-head">
+            <h2 id="completed-projects-heading">Completed</h2>
+            <span>{completedProjects.length}</span>
+          </div>
+          <RecordCardGrid>
+            {completedProjects.map((p: ProjectRow) => {
+              const total = p.openCount + p.doneCount;
+              const pct = total === 0 ? 0 : Math.round((p.doneCount / total) * 100);
+              return (
+                <ProgressCard
+                  key={p.id}
+                  className="aa-project-card aa-project-card--completed"
+                  to={`/do/projects/${p.permalink}`}
+                  title={p.name}
+                  description={p.description}
+                  progress={pct}
+                  progressLabel={`${p.doneCount}/${total} done`}
+                  meta={<><span>{p.goal?.name ?? "Standalone"}</span><span className="aa-projects__dot" aria-hidden="true">·</span><span>Completed</span></>}
+                  focusLabel="Status"
+                  focusValue="Manage, archive, or delete"
+                  focusTone="muted"
+                />
+              );
+            })}
+          </RecordCardGrid>
+        </section>
+      )}
     </div>
   );
 }

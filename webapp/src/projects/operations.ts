@@ -4,6 +4,7 @@ import type {
   GetProject,
   CreateTask,
   SetProjectDone,
+  ArchiveProject,
   UpdateProject,
   DeleteProject,
   UpdateTask,
@@ -41,8 +42,9 @@ export const getProjects = (async (args, context) => {
   return await getProjectsData(context.entities, {
     userId: context.user.id,
     lensId: args.lensId,
+    includeCompleted: args.includeCompleted,
   });
-}) satisfies GetProjects<{ lensId: string }>;
+}) satisfies GetProjects<{ lensId: string; includeCompleted?: boolean }>;
 
 // ----------------------------------------------------------------
 // Create a project (triage-to-project + a create UI)
@@ -187,6 +189,28 @@ export const setProjectDone = (async (args, context) => {
   });
 }) satisfies SetProjectDone<{ id: string; isDone: boolean }, { id: string }>;
 
+export const archiveProject = (async (args, context) => {
+  if (!context.user) throw new Error("Not authenticated.");
+  const project = await context.entities.Project.findUnique({
+    where: { id: args.id },
+    select: { id: true, userId: true, lensId: true, completedAt: true, archivedAt: true },
+  });
+  if (!project || project.userId !== context.user.id) {
+    throw new Error("Project not found.");
+  }
+  await assertLensAllowed(context, project.lensId);
+  if (project.archivedAt) return { id: project.id };
+  return await context.entities.Project.update({
+    where: { id: project.id },
+    data: {
+      archivedAt: new Date(),
+      isDone: true,
+      completedAt: project.completedAt ?? new Date(),
+    },
+    select: { id: true },
+  });
+}) satisfies ArchiveProject<{ id: string }, { id: string }>;
+
 // ----------------------------------------------------------------
 // Edit: rename + description + re-link to goal (spec §C)
 // ----------------------------------------------------------------
@@ -271,31 +295,49 @@ export const updateProject = (async (args, context) => {
 >;
 
 // ----------------------------------------------------------------
-// Delete: lossless default (spec §C)
+// Delete: an explicit action disposition prevents surprise data movement.
 // ----------------------------------------------------------------
-// Re-parents child Tasks to projectId=null (same Lens, retaining their goalId
-// if any), then deletes the Project. Does NOT destroy Tasks or Resources —
-// the spec's "no surprise data movement" rule. The confirm copy lives in UI.
 export const deleteProject = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
   const existing = await context.entities.Project.findUnique({
     where: { id: args.id, userId: context.user.id },
-    select: { id: true },
+    select: { id: true, lensId: true },
   });
   if (!existing) {
     throwHttpStatus(404, "Project not found.");
   }
-  const taskCount = await context.entities.Task.count({
+  const tasks = await context.entities.Task.findMany({
     where: { projectId: existing.id, userId: context.user.id },
+    select: { id: true, description: true, content: true },
   });
-  // Re-parent tasks to standalone (projectId=null) but retain their goalId if
-  // any — the task keeps its "why" when its "how" (the project) goes away.
-  await context.entities.Task.updateMany({
-    where: { projectId: existing.id, userId: context.user.id },
-    data: { projectId: null },
-  });
+  const taskDisposition = args.taskDisposition ?? "delete";
+  if (tasks.length > 0 && taskDisposition === "reassign") {
+    if (!args.targetProjectId) throwHttpStatus(400, "Choose a project for these actions.");
+    const target = await context.entities.Project.findFirst({
+      where: { id: args.targetProjectId, userId: context.user.id, lensId: existing.lensId, isDone: false, archivedAt: null },
+      select: { id: true },
+    });
+    if (!target) throwHttpStatus(404, "Destination project not found.");
+    await context.entities.Task.updateMany({
+      where: { id: { in: tasks.map((task: { id: string }) => task.id) } },
+      data: { projectId: target.id, goalId: null },
+    });
+  } else if (tasks.length > 0 && taskDisposition === "triage") {
+    for (const task of tasks) {
+      await context.entities.InboxItem.create({
+        data: { text: task.description, content: task.content, userId: context.user.id, parsedTags: [] },
+      });
+    }
+    await context.entities.Task.deleteMany({
+      where: { id: { in: tasks.map((task: { id: string }) => task.id) } },
+    });
+  } else if (tasks.length > 0) {
+    await context.entities.Task.deleteMany({
+      where: { id: { in: tasks.map((task: { id: string }) => task.id) } },
+    });
+  }
   // Resources are project-owned, so they leave with the deleted project.
   await context.entities.Resource.deleteMany({
     where: { projectId: existing.id, userId: context.user.id },
@@ -304,10 +346,10 @@ export const deleteProject = (async (args, context) => {
     where: { id: existing.id },
     select: { id: true },
   });
-  return { id: existing.id, reparentedCount: taskCount };
+  return { id: existing.id, affectedTaskCount: tasks.length };
 }) satisfies DeleteProject<
-  { id: string },
-  { id: string; reparentedCount: number }
+  { id: string; taskDisposition?: "delete" | "reassign" | "triage"; targetProjectId?: string },
+  { id: string; affectedTaskCount: number }
 >;
 
 // ----------------------------------------------------------------

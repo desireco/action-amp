@@ -373,6 +373,38 @@
   color: var(--aa-rose-text);
 }
 
+.aa-project__delete-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-md);
+}
+.aa-project__delete-options p {
+  margin: 0;
+  color: var(--aa-text-2);
+  line-height: var(--aa-leading-normal);
+}
+.aa-project__delete-reassign {
+  display: grid;
+  gap: var(--aa-space-sm);
+  padding: var(--aa-space-md);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+}
+.aa-project__delete-reassign label {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-2);
+}
+.aa-project__delete-reassign select {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  font: inherit;
+  padding: 0 var(--aa-space-sm);
+}
+
 /* ---- Task rows ----
    A task row + its horizon control, side by side. Mirrors Today's swap-row.
    The move-picker (when expanded) wraps below via flex-wrap + width:100%. */

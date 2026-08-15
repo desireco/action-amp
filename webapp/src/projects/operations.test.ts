@@ -588,7 +588,7 @@ describe("updateProject — happy path", () => {
 });
 
 // ----------------------------------------------------------------
-// deleteProject — lossless default
+// deleteProject — explicit action disposition
 // ----------------------------------------------------------------
 describe("deleteProject — guards", () => {
   it("throws 404 when the project doesn't exist or isn't the user's", async () => {
@@ -600,20 +600,20 @@ describe("deleteProject — guards", () => {
   });
 });
 
-describe("deleteProject — lossless re-parenting", () => {
-  it("re-parents child tasks to projectId=null (retaining goalId), then deletes the project", async () => {
+describe("deleteProject — action disposition", () => {
+  it("deletes child actions when requested, then deletes the project", async () => {
     const m = mockContext();
-    m.entities.Project.findUnique.mockResolvedValue({ id: "p1" });
-    m.entities.Task.count.mockResolvedValue(4);
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", lensId: "lens-1" });
+    m.entities.Task.findMany.mockResolvedValue([
+      { id: "t1", description: "Email Sarah", content: null },
+      { id: "t2", description: "Draft spec", content: "Context" },
+    ]);
 
-    const result = await deleteProject({ id: "p1" }, m.context);
+    const result = await deleteProject({ id: "p1", taskDisposition: "delete" }, m.context);
 
-    expect(result).toEqual({ id: "p1", reparentedCount: 4 });
-    // Re-parent tasks — projectId cleared, goalId untouched (the update only
-    // sets projectId=null, retaining goalId on the same row).
-    expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
-      where: { projectId: "p1", userId: "user-1" },
-      data: { projectId: null },
+    expect(result).toEqual({ id: "p1", affectedTaskCount: 2 });
+    expect(m.entities.Task.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["t1", "t2"] } },
     });
     expect(m.entities.Project.delete).toHaveBeenCalledWith({
       where: { id: "p1" },
@@ -621,14 +621,19 @@ describe("deleteProject — lossless re-parenting", () => {
     });
   });
 
-  it("does not destroy child tasks — only the project is deleted", async () => {
+  it("sends child actions back to Triage with their notes", async () => {
     const m = mockContext();
-    m.entities.Project.findUnique.mockResolvedValue({ id: "p1" });
-    m.entities.Task.count.mockResolvedValue(0);
+    m.entities.Project.findUnique.mockResolvedValue({ id: "p1", lensId: "lens-1" });
+    m.entities.Task.findMany.mockResolvedValue([
+      { id: "t1", description: "Email Sarah", content: "Send the outline" },
+    ]);
 
-    await deleteProject({ id: "p1" }, m.context);
+    await deleteProject({ id: "p1", taskDisposition: "triage" }, m.context);
 
-    expect(m.entities.Task.deleteMany).not.toHaveBeenCalled();
+    expect(m.entities.InboxItem.create).toHaveBeenCalledWith({
+      data: { text: "Email Sarah", content: "Send the outline", userId: "user-1", parsedTags: [] },
+    });
+    expect(m.entities.Task.deleteMany).toHaveBeenCalled();
   });
 });
 

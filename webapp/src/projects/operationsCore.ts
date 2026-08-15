@@ -37,13 +37,14 @@ type Entities = Record<string, any>;
 // then a done-totals rollup merged into a per-project progress fraction.
 export async function getProjectsData(
   entities: Entities,
-  { userId, lensId }: { userId: string; lensId: string },
+  { userId, lensId, includeCompleted = false }: { userId: string; lensId: string; includeCompleted?: boolean },
 ) {
   const projects = await entities.Project.findMany({
     where: {
       userId,
       lensId,
-      isDone: false,
+      archivedAt: null,
+      ...(includeCompleted ? {} : { isDone: false }),
     },
     orderBy: [{ name: "asc" }],
     include: {
@@ -75,7 +76,8 @@ export async function getProjectsData(
     where: {
       userId,
       lensId,
-      isDone: false,
+      archivedAt: null,
+      ...(includeCompleted ? {} : { isDone: false }),
     },
     select: {
       id: true,
@@ -90,6 +92,8 @@ export async function getProjectsData(
     name: string;
     description: string | null;
     dueDate: Date | null;
+    isDone: boolean;
+    completedAt: Date | null;
     goal: { id: string; name: string } | null;
     tasks: unknown[];
     resources: { id: string; title: string; url: string | null; notes: string | null; createdAt: Date }[];
@@ -100,6 +104,8 @@ export async function getProjectsData(
     name: p.name,
     description: p.description,
     dueDate: p.dueDate,
+    isDone: p.isDone,
+    completedAt: p.completedAt,
     goal: p.goal,
     openCount: p._count.tasks, // open (non-done) tasks
     doneCount: doneCount.get(p.id) ?? 0,

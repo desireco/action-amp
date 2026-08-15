@@ -197,8 +197,12 @@ Planning exists only in Life-area Lenses.
 - Where **Projects** and **Goals** live, and where you organize tasks across
   time horizons.
 - Projects: multi-step outcomes, always in a context. May sit under a Goal.
-  **Lifecycle is fully editable** (locked 2026-07-05): complete / reopen /
-  edit / delete / re-link, with explicit ordering under a Goal
+  **Lifecycle is fully editable** (locked 2026-07-05): complete (with
+  confirmation) / reopen / manage / archive (completes the project, with
+  confirmation) / delete / re-link. Completed projects remain visible in
+  Projects until archived or deleted; deleting a project with actions explicitly
+  removes them, reassigns them, or returns them to Triage. Projects retain
+  explicit ordering under a Goal
   (`Project.order`) — the first non-done project surfaces as "Next: <name>".
 - Goals: the organizing layer (active outcomes, e.g. "Run a 10k"), always in a
   context. **Same lifecycle as Projects** — complete / reopen / edit / delete /

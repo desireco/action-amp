@@ -39,6 +39,7 @@ import {
 } from "./src/projects/operations" with { type: "ref" };
 import {
   setProjectDone,
+  archiveProject,
   updateProject,
   deleteProject,
   updateTask,
@@ -442,9 +443,10 @@ export default app({
       auth: true,
     }),
     action(setProjectDone, { entities: ["Project", "Lens"], auth: true }),
+    action(archiveProject, { entities: ["Project", "Lens"], auth: true }),
     action(updateProject, { entities: ["Project", "Goal"], auth: true }),
     action(deleteProject, {
-      entities: ["Project", "Task", "Resource"],
+      entities: ["Project", "Task", "Resource", "InboxItem"],
       auth: true,
     }),
     action(updateTask, { entities: ["Task", "Project", "Goal"], auth: true }),
