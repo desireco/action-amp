@@ -51,7 +51,7 @@ actionamp task pause <id>                     # pause the focused task
 actionamp task snooze <id> [--preset <p>]     # snooze (1h|3h|tomorrow|weekend|someday)
 actionamp task move <id> --to <list>          # move (today|upcoming|someday)
 actionamp capture "<text>"                    # quick-capture to inbox
-actionamp capture "<text>" --source-url <url> --file <image...>
+actionamp capture "<text>" --source-url <url> --file <image> [--file <image> ...]
                                                 # capture shared reference/images
 actionamp capture "<text>" --list-id <id>       # save directly to a Simple list
 actionamp inbox triage <id> --decision <d>    # triage an inbox item
@@ -86,7 +86,7 @@ goal show    → { goal: {...} | null }
 logbook      → { tasks: [...], projects: [...], goals: [...], archived: [...] }
 review week/month → { report: { state, period, totals, actionsByLens, highlights, tasks, projects, goals, weeklySlices, checkIn, reflection, emphasisGoal } }
 whoami       → { user: { id, email, fullName, plan } }
-capture      → { ok: true, id, text, createdAt }
+capture      → { ok: true, kind: "inbox-item" | "list-item", id, text, createdAt }
 \`\`\`
 
 Errors: \`{ error: "<message>" }\` to stdout, exit code 1.

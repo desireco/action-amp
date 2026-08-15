@@ -63,7 +63,7 @@ npm run build && ./dist/index.js     # built
 Every command supports `--json` for scripting / agent orchestration.
 
 `capture` also accepts shared-content fields: `--title`, `--content`,
-`--source-url`, `--project-id`, `--list-id`, and `--file <image...>`. Up to four
+`--source-url`, `--project-id`, `--list-id`, and repeated `--file <image>`. Up to four
 JPEG, PNG, GIF, WebP, HEIC, or HEIF images (5 MB each) may be attached.
 `--project-id` preselects a Project for inbox triage; `--list-id` saves directly
 to that Simple list. Project resources remain links + notes; they do not upload files.
@@ -79,7 +79,7 @@ now          → { task: {...} | null, context: NowContext | null, reason?: "no-
                #   goal:        { id, name, permalink?, description } | null
                #   whyNow:      string | null   (truthful matcher reason)
                #   whyItMatters: string | null   (Goal description or "Toward <name>." fallback) }
-capture      → { ok: true, id, text, createdAt }
+capture      → { ok: true, kind: "inbox-item" | "list-item", id, text, createdAt }
 today        → { tasks: [...] }
 task done    → { id, isDone, completedAt, ... }
 task snooze  → { id, status, dueDate }

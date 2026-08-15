@@ -16,7 +16,7 @@ export function makeCaptureCommand(): Command {
     .option("--source-url <url>", "source link")
     .option("--project-id <id>", "preselect a project for triage")
     .option("--list-id <id>", "save directly to a Simple list")
-    .option("--file <paths...>", "image attachments (up to four, 5 MB each)")
+    .option("--file <path>", "image attachment (repeat up to four times, 5 MB each)", (path, files: string[] = []) => [...files, path], [])
     .option("--json", "emit JSON output")
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .action(async (textParts: any, opts: { title?: string; content?: string; sourceUrl?: string; projectId?: string; listId?: string; file?: string[]; json?: boolean }) => {
