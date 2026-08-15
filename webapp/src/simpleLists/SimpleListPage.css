@@ -51,7 +51,7 @@
   gap: var(--aa-space-sm);
   min-height: 56px;
   padding: 0 var(--aa-space-md);
-  border-bottom: 1px solid var(--aa-border);
+  border-bottom: 1px solid var(--aa-border-strong);
   transition: background var(--aa-dur-fast) var(--aa-ease-out);
 }
 .aa-simple-list__section li:last-child { border-bottom: 0; }
