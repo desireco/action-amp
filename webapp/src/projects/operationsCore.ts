@@ -37,13 +37,23 @@ type Entities = Record<string, any>;
 // then a done-totals rollup merged into a per-project progress fraction.
 export async function getProjectsData(
   entities: Entities,
-  { userId, lensId, includeCompleted = false }: { userId: string; lensId: string; includeCompleted?: boolean },
+  {
+    userId,
+    lensId,
+    includeCompleted = false,
+    includeArchived = false,
+  }: {
+    userId: string;
+    lensId: string;
+    includeCompleted?: boolean;
+    includeArchived?: boolean;
+  },
 ) {
   const projects = await entities.Project.findMany({
     where: {
       userId,
       lensId,
-      archivedAt: null,
+      ...(includeArchived ? {} : { archivedAt: null }),
       ...(includeCompleted ? {} : { isDone: false }),
     },
     orderBy: [{ name: "asc" }],
@@ -76,7 +86,7 @@ export async function getProjectsData(
     where: {
       userId,
       lensId,
-      archivedAt: null,
+      ...(includeArchived ? {} : { archivedAt: null }),
       ...(includeCompleted ? {} : { isDone: false }),
     },
     select: {
@@ -94,6 +104,7 @@ export async function getProjectsData(
     dueDate: Date | null;
     isDone: boolean;
     completedAt: Date | null;
+    archivedAt: Date | null;
     goal: { id: string; name: string } | null;
     tasks: unknown[];
     resources: { id: string; title: string; url: string | null; notes: string | null; createdAt: Date }[];
@@ -106,6 +117,7 @@ export async function getProjectsData(
     dueDate: p.dueDate,
     isDone: p.isDone,
     completedAt: p.completedAt,
+    archivedAt: p.archivedAt,
     goal: p.goal,
     openCount: p._count.tasks, // open (non-done) tasks
     doneCount: doneCount.get(p.id) ?? 0,
@@ -169,6 +181,7 @@ export async function getProjectData(
     description: project.description,
     dueDate: project.dueDate,
     isDone: project.isDone,
+    archivedAt: project.archivedAt,
     order: project.order,
     lensId: project.lensId,
     goal: project.goal,
