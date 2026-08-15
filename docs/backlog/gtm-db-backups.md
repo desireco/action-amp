@@ -2,7 +2,7 @@
 id: gtm-db-backups
 kind: backlog
 title: "Railway Postgres backup + restore policy"
-status: Next
+status: Ready
 priority: P2
 spec_owner: user
 build_owner: user
@@ -11,7 +11,7 @@ created: 2026-07-03
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4Mgsii      # sync-managed (write-once)
-gh_synced_at: 2026-07-08T19:45:22Z
+gh_synced_at: 2026-08-15T08:08:15Z
 ---
 
 # Railway Postgres backups
