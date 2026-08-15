@@ -176,11 +176,16 @@ export function TriagePage() {
   // Link-only: no match → lands in General, user picks manually. No auto-create,
   // so a typo never spawns a stray project. (Declared after `item`/`projects`.)
   const resolvedProjectId = useMemo(() => {
+    if (item?.parsedProjectId) {
+      return (projects ?? []).some((project) => project.id === item.parsedProjectId)
+        ? item.parsedProjectId
+        : null;
+    }
     return resolveProjectCandidate(projects ?? [], {
       parsedProject: item?.parsedProject,
       text: item?.text,
     })?.id ?? null;
-  }, [item?.parsedProject, item?.text, projects]);
+  }, [item?.parsedProject, item?.parsedProjectId, item?.text, projects]);
 
   // ---- Lens inference: [[ ]] token → real lens (explicit path) ----
   // Seeded tokens (work/personal/me) resolve on `kind`; custom on exact name.
@@ -188,6 +193,9 @@ export function TriagePage() {
   // (explicit beats inferred). Null when absent or unrecognized (the parser
   // already drops unknown tokens, so any parsedLens value is a real candidate).
   const inferredLensFromToken = useMemo(() => {
+    if (item?.parsedLensId) {
+      return (lenses ?? []).find((lens) => lens.id === item.parsedLensId) ?? null;
+    }
     const token = item?.parsedLens;
     if (!token) return null;
     return (lenses ?? []).find((l) => {
@@ -195,7 +203,7 @@ export function TriagePage() {
       if (token === "personal" || token === "me") return l.kind === "PERSONAL";
       return l.name.toLowerCase() === token;
     }) ?? null;
-  }, [item?.parsedLens, lenses]);
+  }, [item?.parsedLens, item?.parsedLensId, lenses]);
 
   // ---- Project-bridged lens inference (inferred path) ----
   // The resolver source: lightweight project tuples across all entitled lenses.
@@ -208,12 +216,18 @@ export function TriagePage() {
   const projectBridge = useMemo<{ projectId: string; lensId: string; projectName: string } | null>(() => {
     const all = resolverProjects ?? [];
     if (all.length === 0) return null;
+    const directlySelected = item?.parsedProjectId
+      ? all.find((project) => project.id === item.parsedProjectId)
+      : null;
+    if (directlySelected) {
+      return { projectId: directlySelected.id, lensId: directlySelected.lensId, projectName: directlySelected.name };
+    }
     const match = resolveProjectCandidate(all, {
       parsedProject: item?.parsedProject,
       text: item?.text,
     });
     return match ? { projectId: match.id, lensId: match.lensId, projectName: match.name } : null;
-  }, [resolverProjects, item?.parsedProject, item?.text]);
+  }, [resolverProjects, item?.parsedProject, item?.parsedProjectId, item?.text]);
 
   // An explicit [[lens]] token wins over inferred project context. This is
   // essential for [[simple-list]] capture: project-like text must not divert
@@ -221,10 +235,17 @@ export function TriagePage() {
   const projectDestinationLens = projectBridge
     ? (lenses ?? []).find((l) => l.id === projectBridge.lensId) ?? null
     : null;
-  const inferredLens = inferredLensFromToken ?? projectDestinationLens ?? null;
-  const hasProjectDestination = !inferredLensFromToken && !!projectBridge && !!projectDestinationLens;
+  const hasExplicitProjectDestination = !!item?.parsedProjectId && !!projectBridge && !!projectDestinationLens;
+  const inferredLens = hasExplicitProjectDestination
+    ? projectDestinationLens
+    : inferredLensFromToken ?? projectDestinationLens ?? null;
+  const hasProjectDestination = hasExplicitProjectDestination || (!inferredLensFromToken && !!projectBridge && !!projectDestinationLens);
   // Drives the hint label: "from project MVP" vs "from [[work]]".
-  const lensInferenceLabel = inferredLensFromToken
+  const lensInferenceLabel = hasExplicitProjectDestination
+      ? `selected project ${projectBridge?.projectName}`
+      : item?.parsedLensId && inferredLensFromToken
+        ? `selected ${inferredLensFromToken.name}`
+      : inferredLensFromToken
       ? `from [[${item?.parsedLens}]] in your capture`
       : projectBridge && inferredLens
         ? `from project ${projectBridge.projectName}`
@@ -658,9 +679,9 @@ function ClassifyStep({
           ))}
       </div>
       {selectedLensType === "SIMPLE_LIST" && (
-        <p className={`aa-triage-list-note${hasAttachments ? " is-error" : ""}`}>
+        <p className="aa-triage-list-note">
           {hasAttachments
-            ? "This capture includes an image. Choose a Life area to keep it attached."
+            ? `Its image attachments will move with it to ${selectedLensName}.`
             : `No dates, priority, projects, or other setup. This becomes one item in ${selectedLensName}.`}
         </p>
       )}
@@ -668,7 +689,7 @@ function ClassifyStep({
         variant="primary"
         className="aa-triage-step__continue"
         onClick={onContinue}
-        disabled={!chosenLensId || !working.title.trim() || (working.type === "list-item" && hasAttachments)}
+        disabled={!chosenLensId || !working.title.trim()}
       >
         {working.type === "delete"
           ? "Delete"

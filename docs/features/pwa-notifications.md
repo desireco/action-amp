@@ -35,22 +35,26 @@ still route to the right screen where Web Push is supported.
 
 The installed PWA is a share target. Sharing from another app (browser,
 Twitter, notes) surfaces ActionAmp in the share sheet; selecting it opens a
-review screen before anything is saved to the inbox.
+review screen before anything is saved.
 
 **Flow:**
 
-1. User shares text, a link, or one image from another app → Android POSTs the form to same-origin
+1. User shares text, a link, or up to four images from another app → Android POSTs the form to same-origin
    `/share`. The installed service worker writes the text fields to a
    short-lived, same-origin IndexedDB record and redirects to `/share?pending=`.
 2. `/share` separates a shared page's title, body, source link, and image before
-   showing **Add to inbox** and **Not now**. The source link is saved as an
-   attached-reference property; an image is previewed then saved as an Inbox
-   attachment (one image, up to 5 MB). Android's duplicated page titles are removed.
-   Nothing reaches the server until the user confirms.
-3. **Add to inbox** calls the normal `createInboxItem` action; it uses the same
-   authenticated capture path as `⌘K` and is therefore read by Inbox directly.
-4. After saving, ActionAmp opens `/do/inbox`, where the new item is first in
-   the universal inbox.
+   showing the save action and **Not now**. The source link is saved as an
+   attached-reference property; images are previewed then saved as attachments
+   (up to four images, 5 MB each). The user can optionally edit its title and
+   description, then select a Project (as a triage destination) or Simple list
+   (which saves directly to that list, skipping triage). Android's duplicated page
+   titles are removed. Nothing reaches the server until the user confirms.
+3. With Inbox or a Project selected, saving calls the normal `createInboxItem`
+   action; a Project is preselected for triage. With a Simple list selected,
+   saving calls `createListItem` directly and opens that list, carrying its image
+   attachments with it.
+4. Inbox saves open `/do/inbox`, where the new item is first in the universal
+   inbox; direct Simple-list saves open `/do/list`.
 
 **Wiring:**
 
@@ -73,7 +77,7 @@ iOS requires a native Share Extension (a post-PMF native-shell concern; see
 + `docs/superpowers/plans/2026-07-25-pwa-share-target.md`.
 
 **CLI mirror (2026-07-29).** `actionamp capture` accepts the same structured
-fields and one image: `--title`, `--content`, `--source-url`, and `--file
+fields and up to four images: `--title`, `--content`, `--source-url`, and `--file
 <path>` (read, size-checked ≤5MB, base64-encoded; JPEG/PNG/GIF/WebP/HEIC/HEIF).
 The `/api/cli/capture` route forwards them to the same `createInboxItemCore`,
 so a CLI capture and a PWA share produce identical InboxItem rows.

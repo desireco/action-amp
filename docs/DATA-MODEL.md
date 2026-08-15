@@ -74,7 +74,8 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
 > v10 (planned 2026-08-10): **Typed Lenses and direct checklists.** `Lens.type`
 > separates the existing `LIFE_AREA` behavior from `SIMPLE_LIST`. Existing and
 > seeded Lenses default to `LIFE_AREA`. A `ListItem` belongs to one Simple-list
-> Lens and has checklist lifecycle fields plus optional captured body/source
+> Lens and has checklist lifecycle fields plus optional captured body/source and
+> image attachments
 > context. It can be created directly or transformed from an InboxItem during
 > triage; it never becomes a Task or enters focus, Review, or Logbook.
 
@@ -124,7 +125,8 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
   standalone Task, and Resource belongs to a `LIFE_AREA` Lens. Every List Item
   belongs to a `SIMPLE_LIST` Lens. Switching type changes the inner shell.
 - **ListItem** = one directly managed checklist row. It has a title, stable
-  order, completion timestamp, and ownership through its Lens. It has no Task
+  order, completion timestamp, ownership through its Lens, and optional image
+  attachments. It has no Task
   scheduling, hierarchy, priority, size, focus, triage, or review semantics.
 - **Archive** = where completed/dead items go. (PARA "Archive" / our Logbook.)
 - **Tag** = GTD "@context" — cross-cutting labels for focus refinement.
@@ -146,7 +148,9 @@ a refinement layer we'll add later, on top of priority + size.
   direct Simple-list creation bypasses it.
 - An inbox entry is an **InboxItem**: raw text + parsed metadata — `parsedDate`,
   `parsedPriority`, `parsedSize`, `parsedTags`, `parsedProject` (legacy, unused
-  by the server — see v5 below), `parsedLens` (the `[[lens]]` token, or null) —
+  by the server — see v5 below), `parsedLens` (the `[[lens]]` token, or null),
+  and optional explicit `parsedProjectId` / `parsedLensId` pre-triage destination
+  hints —
   - `status: unprocessed`. The InboxItem itself is still **unscoped** (no
     `lensId`); `parsedLens` is a _hint_ that pre-fills the triage Context step,
     not an assignment. Capture is universal across eligible Lenses; destination

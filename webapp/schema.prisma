@@ -299,7 +299,21 @@ model ListItem {
   lens   Lens   @relation(fields: [lensId], references: [id], onDelete: Cascade)
   lensId String
 
+  attachments ListItemAttachment[]
+
   @@index([lensId, isDone, order])
+}
+
+model ListItemAttachment {
+  id        String   @id @default(uuid())
+  filename  String
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  listItem   ListItem @relation(fields: [listItemId], references: [id], onDelete: Cascade)
+  listItemId String
 }
 
 // ============================================================
@@ -719,6 +733,10 @@ model InboxItem {
   parsedTags     String[] // raw tag strings: ["#work"] — grammar v2: @ is time-only, extra # mentions are tags
   parsedProject  String? // first # mention / explicit autocomplete pick (resolved to projectId at triage)
   parsedLens     String? // lens token from `[[name]]` (lowercased); resolved against the user's lenses at triage
+  // Explicit optional pre-triage destination, selected by a capture surface.
+  // IDs keep same-named projects and lists unambiguous.
+  parsedProjectId String?
+  parsedLensId    String?
   attachments    InboxAttachment[]
 }
 

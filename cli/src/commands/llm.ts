@@ -51,8 +51,9 @@ actionamp task pause <id>                     # pause the focused task
 actionamp task snooze <id> [--preset <p>]     # snooze (1h|3h|tomorrow|weekend|someday)
 actionamp task move <id> --to <list>          # move (today|upcoming|someday)
 actionamp capture "<text>"                    # quick-capture to inbox
-actionamp capture "<text>" --source-url <url> --file <image>
-                                                # capture shared reference/image
+actionamp capture "<text>" --source-url <url> --file <image...>
+                                                # capture shared reference/images
+actionamp capture "<text>" --list-id <id>       # save directly to a Simple list
 actionamp inbox triage <id> --decision <d>    # triage an inbox item
 actionamp project create <name> --lens-id <id>           # create a project
 actionamp project add-task "<desc>" --lens-id <id>       # add a task to a project
@@ -103,9 +104,10 @@ project { id, name }, goal { id, name }
 
 ## Shared captures and resources
 
-- \`capture\` accepts optional \`--title\`, \`--content\`, and \`--source-url\`.
-- \`--file <path>\` attaches one JPEG, PNG, GIF, WebP, HEIC, or HEIF image up
-  to 5 MB. Inbox list returns attachment metadata, not binary image data.
+- \`capture\` accepts optional \`--title\`, \`--content\`, \`--source-url\`,
+  \`--project-id\`, and \`--list-id\` (the last saves directly to a Simple list).
+- \`--file <path...>\` attaches up to four JPEG, PNG, GIF, WebP, HEIC, or HEIF
+  images, up to 5 MB each. Inbox list returns attachment metadata, not binary image data.
 - Resources are project-owned links and notes, never file uploads. Use
   \`resource list\` before changing or deleting one. A resource's \`--project\`
   value is its project ID; \`resource list\` also accepts a project permalink.

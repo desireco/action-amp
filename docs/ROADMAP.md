@@ -54,8 +54,8 @@ audience yet**. That distinction changes the whole roadmap.
   code delivery. Localhost uses a fixed `111111` for manual QA.
 - **Share-to-inbox with images + structured capture**: the Android/Chrome
   `share_target` now carries structured fields (`title` / `content` /
-  `sourceUrl` on `InboxItem`) and one image attachment (`InboxAttachment`,
-  ≤5MB, image MIME-only). The `/share` review page shows parsed chips before
+  `sourceUrl` on `InboxItem`) and up to four image attachments (`InboxAttachment`,
+  ≤5MB each, image MIME-only). The `/share` review page shows parsed chips before
   anything is saved; the CLI mirrors it (`capture --title/--content/
   --source-url/--file`). Inbox rows badge "Link attached" / "Image attached."
 - **Project-owned Resources**: links + notes filed under a Project, full CRUD
@@ -427,7 +427,7 @@ entitlement or booking feature.
   Android/Chrome `share_target` outgrew plain-text capture. `InboxItem` gained
   `title` / `content` / `sourceUrl` (structured fields from an Android page
   share; normal capture leaves them null) and an `InboxAttachment` child model
-  (one image, ≤5MB, image MIME-only, binary capped in the capture op). The
+  (up to four images, ≤5MB each, image MIME-only, binary capped in the capture op). The
   `/share` review page separates a shared page's title/body/source/image and
   shows parsed chips before save; Android's duplicated page titles are
   de-duped. The CLI mirrors it: `capture --title/--content/--source-url/--file`
@@ -539,7 +539,7 @@ entitlement or booking feature.
   `docs/superpowers/plans/2026-07-25-pwa-share-target.md`.
   **Extended 2026-07-28/29** — see the `share-target-images-and-structured-capture`
   entry at the top of §Shipped: `InboxItem` gained structured `title`/`content`/
-  `sourceUrl` + an `InboxAttachment` image model (one image, ≤5MB), the `/share`
+  `sourceUrl` + an `InboxAttachment` image model (up to four images, ≤5MB each), the `/share`
   review page separates a shared page's fields, and the CLI mirrors it
   (`capture --title/--content/--source-url/--file`).
 - **mobile-dock + task-row-action-drawer** (`shipped` ~2026-07-15) — the

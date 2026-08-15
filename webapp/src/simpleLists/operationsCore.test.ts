@@ -43,6 +43,7 @@ describe("getSimpleListCore", () => {
     expect(db.ListItem.findMany).toHaveBeenCalledWith({
       where: { userId: "user-1", lensId: "list-1" },
       orderBy: [{ isDone: "asc" }, { order: "asc" }, { createdAt: "asc" }],
+      include: { attachments: { select: { id: true, filename: true, mimeType: true } } },
     });
   });
 
@@ -89,6 +90,33 @@ describe("createListItemCore", () => {
         text: "Read later",
         content: "Useful checklist notes",
         sourceUrl: "https://example.com/list",
+      }),
+    });
+  });
+
+  it("stores multiple image attachments with the list item", async () => {
+    const db = entities();
+    db.Lens.findFirst.mockResolvedValue(simpleLens);
+    db.ListItem.findFirst.mockResolvedValue(null);
+
+    await createListItemCore(db, {
+      userId: "user-1",
+      lensId: "list-1",
+      text: "Reference photos",
+      attachments: [
+        { filename: "first.jpg", mimeType: "image/jpeg", dataBase64: Buffer.from("first").toString("base64") },
+        { filename: "second.png", mimeType: "image/png", dataBase64: Buffer.from("second").toString("base64") },
+      ],
+    });
+
+    expect(db.ListItem.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        attachments: {
+          create: [
+            expect.objectContaining({ filename: "first.jpg", mimeType: "image/jpeg" }),
+            expect.objectContaining({ filename: "second.png", mimeType: "image/png" }),
+          ],
+        },
       }),
     });
   });

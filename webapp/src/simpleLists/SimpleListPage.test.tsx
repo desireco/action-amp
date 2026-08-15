@@ -55,6 +55,7 @@ function item(id: string, text: string, isDone = false) {
     updatedAt: new Date(),
     userId: "user-1",
     lensId: "shopping",
+    attachments: [],
   };
 }
 

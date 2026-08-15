@@ -42,13 +42,15 @@ A Lens has one of two behavioral types:
   Projects, Goals, Resources. Capture + Inbox are NOT scoped — universal.
 
   Simple-list Lens ── direct add ────────────────▶ List Item
+  Share + selected Simple list ──────────────────▶ List Item
   Universal Inbox ── triage to Simple-list Lens ─▶ List Item ── check off ──▶ completed
 ```
 
 Life-area items only flow **left to right**: capture → inbox → triage → a Life
 area. Nothing appears in Work/Planning/Review except through triage. Simple-list
-items have two deliberate entry paths: direct add inside the list, or universal
-capture followed by a one-step triage assignment to that list.
+items have three deliberate entry paths: direct add inside the list, a share
+explicitly sent to that list, or universal capture followed by a one-step triage
+assignment to that list.
 
 ## 2. The areas
 
@@ -83,8 +85,8 @@ Triage drains the universal Inbox across both Lens types.
 - A Simple-list destination is intentionally one step: confirm or edit the
   item text, then **Add to list**. It never asks for When, Size, Priority,
   Project, Goal, or Resource properties. Captured body and source URL move
-  automatically as supporting context. Image-backed captures remain in Inbox
-  until filed to a compatible Life-area destination; triage never drops them.
+  automatically as supporting context. Image attachments move with the item;
+  triage never drops them.
 - Filing targets are scoped — triaging an item places it in the **Life-area Lens selected
   or inferred on the wizard's Classify step** (§5.5). If a concrete Project is
   resolved, that Project supplies both the Project and Lens destination and the
@@ -247,6 +249,9 @@ reviews or the Logbook.
   instead of the Life-area planning/focus shell.
 - `N` or the visible add control creates a List Item directly. There is no
   capture parsing, Inbox record, triage step, scheduling, priority, or size.
+- A shared item sent to a selected Simple list also creates a List Item directly,
+  preserving its editable description, source URL, and image attachments. It opens that list rather
+  than creating an Inbox item or entering triage.
 - Checking an item records completion; unchecking restores it. Active items
   appear before completed items, with stable user-controlled ordering inside
   each group.

@@ -63,9 +63,10 @@ npm run build && ./dist/index.js     # built
 Every command supports `--json` for scripting / agent orchestration.
 
 `capture` also accepts shared-content fields: `--title`, `--content`,
-`--source-url`, and `--file <image>`. One JPEG, PNG, GIF, WebP, HEIC, or HEIF
-image up to 5 MB may be attached. Project resources remain links + notes; they
-do not upload files.
+`--source-url`, `--project-id`, `--list-id`, and `--file <image...>`. Up to four
+JPEG, PNG, GIF, WebP, HEIC, or HEIF images (5 MB each) may be attached.
+`--project-id` preselects a Project for inbox triage; `--list-id` saves directly
+to that Simple list. Project resources remain links + notes; they do not upload files.
 
 ## `--json` output shapes
 

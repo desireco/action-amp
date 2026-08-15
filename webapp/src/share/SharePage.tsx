@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { createInboxItem } from "wasp/client/operations";
+import { createInboxItem, createListItem, getLenses, getProjectsForResolver, useQuery } from "wasp/client/operations";
 import { BrandMark } from "../components/ui/BrandMark";
 import { ArrowRightIcon, InboxIcon } from "../components/ui/icons";
-import { composeShareCapture, type ShareFields } from "./composeShareText";
+import { composeShareCapture, composeShareText, type ShareFields } from "./composeShareText";
 import { clearPendingShare, getPendingShare, type PendingShareImage } from "./pendingShare";
 import "./SharePage.css";
 
@@ -15,6 +15,7 @@ const ERROR_COPY: Record<string, string> = {
 };
 
 type PendingState = { id: string; fields: ShareFields; files: PendingShareImage[] } | null;
+type Destination = "" | `project:${string}` | `list:${string}`;
 
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -35,6 +36,11 @@ export function SharePage() {
   const [loadingPending, setLoadingPending] = useState(!!pendingId);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [destination, setDestination] = useState<Destination>("");
+  const { data: lenses } = useQuery(getLenses, {});
+  const { data: projects } = useQuery(getProjectsForResolver, undefined);
 
   useEffect(() => {
     if (!pendingId) return;
@@ -52,26 +58,52 @@ export function SharePage() {
     return () => { mounted = false; };
   }, [pendingId]);
 
+  useEffect(() => {
+    if (!pending) return;
+    const capture = composeShareCapture(pending.fields);
+    setTitle(capture.title);
+    setDescription(capture.content);
+  }, [pending?.id]);
+
   async function confirmPending() {
     if (!pending) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
       const capture = composeShareCapture(pending.fields);
-      if (!capture.text && pending.files.length === 0) throw new Error("Nothing to capture.");
+      const text = composeShareText({ ...pending.fields, title });
+      if (!text && pending.files.length === 0) throw new Error("Nothing to capture.");
       const attachments = await Promise.all(pending.files.map(async (file) => ({
         filename: file.filename,
         mimeType: file.mimeType,
         dataBase64: await blobToBase64(file.blob),
       })));
+      const [destinationType, destinationId] = destination.split(":", 2);
+      if (destinationType === "list" && destinationId) {
+        await createListItem({
+          lensId: destinationId,
+          text: text || pending.files[0]?.filename || "Shared image",
+          content: description.trim() || undefined,
+          sourceUrl: capture.url || undefined,
+          attachments: attachments.length ? attachments : undefined,
+        });
+        await clearPendingShare(pending.id);
+        localStorage.setItem("aa-lens-id", destinationId);
+        void queryClient.invalidateQueries({ queryKey: ["getSimpleList"] });
+        void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+        navigate("/do/list", { replace: true });
+        return;
+      }
       // Use the normal Wasp capture action, not the cross-origin share API.
       // Inbox reads through the same authenticated operation, so a confirmed
       // item cannot be written under a different stale cookie session.
       const created = await createInboxItem({
-        text: capture.text || pending.files[0]?.filename || "Shared image",
-        title: capture.title || undefined,
-        content: capture.content || undefined,
+        text: text || pending.files[0]?.filename || "Shared image",
+        title: title.trim() || undefined,
+        content: description.trim() || undefined,
         sourceUrl: capture.url || undefined,
+        projectId: destinationType === "project" ? destinationId : undefined,
+        lensId: destinationType === "list" ? destinationId : undefined,
         attachments: attachments.length ? attachments : undefined,
       });
       await clearPendingShare(pending.id);
@@ -95,13 +127,16 @@ export function SharePage() {
   if (pendingId && pending) {
     const capture = composeShareCapture(pending.fields);
     if (!capture.text && pending.files.length === 0) return renderError(ERROR_COPY.empty);
+    const selectedList = destination.startsWith("list:")
+      ? (lenses ?? []).find((lens) => lens.id === destination.slice("list:".length))
+      : null;
     return (
       <main className="aa-share">
         <div className="aa-share__card aa-share__card--review">
           <header className="aa-share__header">
             <span className="aa-share__brand"><BrandMark size="sm" /></span>
             <span className="aa-share__brand-name">ActionAmp</span>
-            <span className="aa-share__destination"><InboxIcon /> Inbox</span>
+            <span className="aa-share__destination"><InboxIcon /> {selectedList?.name ?? "Inbox"}</span>
           </header>
 
           <div className="aa-share__intro">
@@ -115,23 +150,68 @@ export function SharePage() {
               <span className="aa-share__preview-dot" aria-hidden="true" />
               Ready to capture
             </div>
-            {capture.title && <h2 className="aa-share__capture-title">{capture.title}</h2>}
-            {capture.content && <p className="aa-share__text aa-share__text--review">{capture.content}</p>}
             {capture.url && <SharedLink url={capture.url} />}
             {pending.files.map((file) => <ImagePreview key={`${file.filename}-${file.size}`} file={file} />)}
+          </section>
+          <section className="aa-share__details" aria-label="Optional capture details">
+            <label className="aa-share__field">
+              <span>Title <em>optional</em></span>
+              <input
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Give this a clear title"
+              />
+            </label>
+            <label className="aa-share__field">
+              <span>Description <em>optional</em></span>
+              <textarea
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Describe why you saved this, or what to do with it"
+                rows={3}
+              />
+            </label>
+            <label className="aa-share__field">
+              <span>Where should this go? <em>optional</em></span>
+              <select value={destination} onChange={(event) => setDestination(event.target.value as Destination)}>
+                <option value="">Inbox — decide later</option>
+                {(projects?.length ?? 0) > 0 && (
+                  <optgroup label="Projects">
+                    {projects?.map((project) => (
+                      <option key={project.id} value={`project:${project.id}`}>
+                        {project.name}{project.lensName ? ` · ${project.lensName}` : ""}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {(lenses ?? []).some((lens) => lens.type === "SIMPLE_LIST") && (
+                  <optgroup label="Simple lists">
+                    {(lenses ?? []).filter((lens) => lens.type === "SIMPLE_LIST").map((lens) => (
+                      <option key={lens.id} value={`list:${lens.id}`}>{lens.name}</option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </label>
           </section>
           {submitError && <p className="aa-share__error" role="alert">{submitError}</p>}
           <div className="aa-share__actions">
             <button className="aa-share__button" type="button" onClick={() => void confirmPending()} disabled={submitting}>
               <InboxIcon />
-              {submitting ? "Adding…" : "Add to Inbox"}
+              {submitting ? "Adding…" : selectedList ? "Add to list" : "Add to Inbox"}
               {!submitting && <ArrowRightIcon />}
             </button>
             <button className="aa-share__link aa-share__link--button" type="button" onClick={() => void discardPending()}>
               Not now
             </button>
           </div>
-          <p className="aa-share__reassurance">Nothing is organized or scheduled yet.</p>
+          <p className="aa-share__reassurance">
+            {destination.startsWith("list:")
+              ? "It will be added directly to this list."
+              : destination
+                ? "It still goes through triage before anything is filed."
+                : "Nothing is organized or scheduled yet."}
+          </p>
         </div>
       </main>
     );

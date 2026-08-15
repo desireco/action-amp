@@ -33,7 +33,13 @@ const BASE_ITEM = {
   parsedProject: null as string | null,
   content: null as string | null,
   sourceUrl: null as string | null,
-  attachments: [] as { id: string }[],
+  attachments: [] as {
+    id: string;
+    filename: string;
+    mimeType: string;
+    size: number;
+    data: Buffer;
+  }[],
 };
 
 /** Arrange the common precondition: the inbox item exists and is ours. */
@@ -83,19 +89,23 @@ describe("triageInboxItem — Simple-list decisions", () => {
     });
   });
 
-  it("keeps an attachment-backed InboxItem untouched", async () => {
-    const m = arrange({ attachments: [{ id: "image-1" }] });
+  it("moves an attachment-backed InboxItem into a Simple list", async () => {
+    const m = arrange({ attachments: [{ id: "attachment-1", filename: "image.jpg", mimeType: "image/jpeg", size: 5, data: Buffer.from("hello") }] });
     m.entities.Lens.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST" });
+    m.entities.ListItem.findFirst.mockResolvedValue(null);
+    m.entities.ListItem.create.mockResolvedValue({ id: "list-item-1" });
 
-    await expect(
-      triageInboxItem(
-        { inboxItemId: "ix-1", decision: "list-item", lensId: "shopping" },
-        m.context,
-      ),
-    ).rejects.toThrow(/image attachments cannot be filed/i);
+    await triageInboxItem(
+      { inboxItemId: "ix-1", decision: "list-item", lensId: "shopping" },
+      m.context,
+    );
 
-    expect(m.entities.ListItem.create).not.toHaveBeenCalled();
-    expect(m.entities.InboxItem.delete).not.toHaveBeenCalled();
+    expect(m.entities.ListItem.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        attachments: { create: [expect.objectContaining({ filename: "image.jpg" })] },
+      }),
+    }));
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({ where: { id: "ix-1" } });
   });
 
   it("rejects decision and Lens-type mismatches before creating output", async () => {

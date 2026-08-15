@@ -1,4 +1,9 @@
 /** Pure, tenant-scoped data operations for Simple-list Lenses. */
+import {
+  prepareImageAttachments,
+  type ImageAttachmentInput,
+  type PreparedImageAttachment,
+} from "../shared/imageAttachments";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Entities = Record<string, any>;
@@ -52,6 +57,7 @@ export async function getSimpleListCore(
   return entities.ListItem.findMany({
     where: { userId, lensId },
     orderBy: [{ isDone: "asc" }, { order: "asc" }, { createdAt: "asc" }],
+    include: { attachments: { select: { id: true, filename: true, mimeType: true } } },
   });
 }
 
@@ -63,15 +69,20 @@ export async function createListItemCore(
     text,
     content,
     sourceUrl,
+    attachments,
+    preparedAttachments,
   }: {
     userId: string;
     lensId: string;
     text: string;
     content?: string | null;
     sourceUrl?: string | null;
+    attachments?: ImageAttachmentInput[];
+    preparedAttachments?: PreparedImageAttachment[];
   },
 ) {
   await requireSimpleListLens(entities, { userId, lensId });
+  const imageAttachments = preparedAttachments ?? prepareImageAttachments(attachments);
   const previous = await entities.ListItem.findFirst({
     where: { userId, lensId },
     orderBy: { order: "desc" },
@@ -84,6 +95,7 @@ export async function createListItemCore(
       text: normalizedText(text),
       content: content?.trim() || null,
       sourceUrl: sourceUrl?.trim() || null,
+      ...(imageAttachments ? { attachments: { create: imageAttachments } } : {}),
       order: (previous?.order ?? -1) + 1,
     },
   });

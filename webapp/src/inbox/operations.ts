@@ -39,6 +39,8 @@ export const createInboxItem = (async (args, context) => {
     userId: context.user.id,
     text: args.text,
     projectName: args.projectName,
+    projectId: args.projectId,
+    lensId: args.lensId,
     title: args.title,
     content: args.content,
     sourceUrl: args.sourceUrl,
@@ -55,7 +57,7 @@ export const createInboxItem = (async (args, context) => {
   }, context.user.id).catch(() => {});
   return created;
 }) satisfies CreateInboxItem<
-  { text: string; projectName?: string; title?: string; content?: string; sourceUrl?: string; attachments?: { filename: string; mimeType: string; dataBase64: string }[] },
+  { text: string; projectName?: string; projectId?: string; lensId?: string; title?: string; content?: string; sourceUrl?: string; attachments?: { filename: string; mimeType: string; dataBase64: string }[] },
   { id: string; text: string; createdAt: Date }
 >;
 

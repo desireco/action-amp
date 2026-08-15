@@ -44,10 +44,10 @@ export const globalMiddlewareConfigFn: MiddlewareConfigFn = (
   middlewareConfig,
 ) => {
   // Android image shares travel through the normal Wasp action as base64.
-  // Keep the limit bounded: client code accepts one image up to 5 MB, which
-  // expands to roughly 6.7 MB in JSON.
+  // Up to four 5 MB images are accepted; base64 expands that payload to about
+  // 27 MB. Keep a small margin for the rest of the capture body.
   middlewareConfig.delete("express.json");
-  middlewareConfig.set("express.json", express.json({ limit: "8mb" }));
+  middlewareConfig.set("express.json", express.json({ limit: "32mb" }));
 
   // Replace the default cors with a credentials-aware variant (same origin
   // allowlist, adds credentials true). See the file header for why this is

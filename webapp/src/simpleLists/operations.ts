@@ -51,9 +51,12 @@ export const createListItem = (async (args, context) => {
     userId: userId(context),
     lensId: args.lensId,
     text: args.text,
+    content: args.content,
+    sourceUrl: args.sourceUrl,
+    attachments: args.attachments,
   });
 }) satisfies CreateListItem<
-  { lensId: string; text: string },
+  { lensId: string; text: string; content?: string; sourceUrl?: string; attachments?: { filename: string; mimeType: string; dataBase64: string }[] },
   Awaited<ReturnType<typeof createListItemCore>>
 >;
 

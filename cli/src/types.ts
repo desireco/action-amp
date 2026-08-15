@@ -159,6 +159,7 @@ export type NowResult = {
 
 export type CaptureResult = {
   ok: true;
+  kind?: "inbox-item" | "list-item";
   id: string;
   text: string;
   createdAt: string;

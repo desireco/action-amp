@@ -49,7 +49,7 @@ export function SimpleListPage() {
     { enabled: lens?.type === "SIMPLE_LIST" },
   );
 
-  const items = (data ?? []) as ListItem[];
+  const items = (data ?? []) as ListItemWithAttachments[];
   const open = useMemo(() => items.filter((item) => !item.isDone), [items]);
   const checked = useMemo(() => items.filter((item) => item.isDone), [items]);
   const ordered = useMemo(() => [...open, ...checked], [open, checked]);
@@ -245,20 +245,24 @@ export function SimpleListPage() {
   );
 }
 
+type ListItemWithAttachments = ListItem & {
+  attachments: { id: string; filename: string; mimeType: string }[];
+};
+
 type ListSectionProps = {
   label: string;
-  items: ListItem[];
+  items: ListItemWithAttachments[];
   selectedId: string | null;
   editingId: string | null;
   editText: string;
   saving: string | null;
   onSelect: (id: string) => void;
-  onToggle: (item: ListItem) => void;
-  onBeginEdit: (item: ListItem) => void;
+  onToggle: (item: ListItemWithAttachments) => void;
+  onBeginEdit: (item: ListItemWithAttachments) => void;
   onEditText: (value: string) => void;
-  onFinishEdit: (item: ListItem) => void;
+  onFinishEdit: (item: ListItemWithAttachments) => void;
   onCancelEdit: () => void;
-  onDelete: (item: ListItem) => void;
+  onDelete: (item: ListItemWithAttachments) => void;
 };
 
 function ListSection(props: ListSectionProps) {
@@ -299,7 +303,7 @@ function ListSection(props: ListSectionProps) {
                 <button className="aa-simple-list__title" type="button" onClick={() => props.onBeginEdit(item)}>
                   {item.text}
                 </button>
-                {(item.content || sourceUrl) && (
+                {(item.content || sourceUrl || item.attachments.length > 0) && (
                   <div className="aa-simple-list__context">
                     {item.content && <p>{item.content}</p>}
                     {sourceUrl && (
@@ -311,6 +315,9 @@ function ListSection(props: ListSectionProps) {
                       >
                         Open source
                       </a>
+                    )}
+                    {item.attachments.length > 0 && (
+                      <span>{item.attachments.length} image{item.attachments.length === 1 ? "" : "s"} attached</span>
                     )}
                   </div>
                 )}

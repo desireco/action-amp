@@ -177,15 +177,15 @@ describe("TriagePage", () => {
     expect(screen.getByRole("button", { name: "Add to Shopping" })).toBeInTheDocument();
   });
 
-  it("keeps image-backed captures in Inbox instead of dropping attachments", async () => {
+  it("allows image-backed captures to move into a Simple list", async () => {
     appData.current = {
       lenses: [{ id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" }],
     };
     activeLens.current = { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" };
     inboxItems.current[0] = { ...inboxItems.current[0], attachments: [{ id: "image-1" }] };
     renderTriagePage();
-    expect(await screen.findByText(/choose a Life area to keep it attached/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add to Shopping" })).toBeDisabled();
+    expect(await screen.findByText(/attachments will move with it to Shopping/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add to Shopping" })).toBeEnabled();
   });
 
   it("starts on Classify and advances straight to Spec with one Continue", async () => {

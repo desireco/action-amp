@@ -65,6 +65,7 @@ import {
   triageInboxItemCore,
   type TriageDecision,
 } from "../inbox/operationsCore";
+import { createListItemCore } from "../simpleLists/operationsCore";
 import {
   getProjectsData,
   getProjectData,
@@ -480,6 +481,11 @@ export const cliCapture = async (
     return res.status(400).json({ error: "Capture text is required." });
   }
   const projectName = bodyString(req.body, "projectName");
+  const projectId = bodyString(req.body, "projectId");
+  const listId = bodyString(req.body, "listId");
+  if (projectId && listId) {
+    return res.status(400).json({ error: "Choose either projectId or listId, not both." });
+  }
   const attachments = Array.isArray(req.body?.attachments)
     ? req.body.attachments.filter(
         (
@@ -511,16 +517,34 @@ export const cliCapture = async (
   }
 
   try {
+    if (listId) {
+      const gate = await gateLens(toEntUser(user), user.id, listId, WORK_LENS_MESSAGE, "ANY");
+      if (gate.status === "not-found") return res.status(404).json({ error: "No such list for this account." });
+      if (gate.status === "denied") return sendViolation(res, gate.msg);
+      if (gate.status === "incompatible" || gate.lensType !== "SIMPLE_LIST") {
+        return res.status(400).json({ error: "listId must identify a Simple list." });
+      }
+      const created = await createListItemCore(authEntities, {
+        userId: user.id,
+        lensId: listId,
+        text,
+        content: bodyString(req.body, "content"),
+        sourceUrl: bodyString(req.body, "sourceUrl"),
+        attachments,
+      });
+      return res.status(201).json({ ok: true, kind: "list-item", ...created });
+    }
     const created = await createInboxItemCore(authEntities, {
       userId: user.id,
       text,
       projectName,
+      projectId,
       title: bodyString(req.body, "title"),
       content: bodyString(req.body, "content"),
       sourceUrl: bodyString(req.body, "sourceUrl"),
       attachments,
     });
-    return res.status(201).json({ ok: true, ...created });
+    return res.status(201).json({ ok: true, kind: "inbox-item", ...created });
   } catch (err) {
     console.error("[cli/capture] failed:", err);
     return res

@@ -31,6 +31,7 @@ import {
 } from "./parseCapture";
 import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
 import { createListItemCore } from "../simpleLists/operationsCore";
+import { prepareImageAttachments, type ImageAttachmentInput } from "../shared/imageAttachments";
 
 /**
  * The entities slice these cores read. Loosely typed (same approach as
@@ -39,27 +40,6 @@ import { createListItemCore } from "../simpleLists/operationsCore";
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Entities = Record<string, any>;
-
-const MAX_SHARE_IMAGE_BYTES = 5 * 1024 * 1024;
-type InboxAttachmentInput = { filename: string; mimeType: string; dataBase64: string };
-
-function prepareAttachments(attachments: InboxAttachmentInput[] | undefined) {
-  if (!attachments?.length) return undefined;
-  if (attachments.length > 1) throw new Error("Share one image at a time.");
-  return attachments.map((attachment) => {
-    if (!attachment.mimeType.startsWith("image/")) throw new Error("Only images can be attached.");
-    const data = Buffer.from(attachment.dataBase64, "base64");
-    if (!data.length || data.length > MAX_SHARE_IMAGE_BYTES) {
-      throw new Error("Images must be 5 MB or smaller.");
-    }
-    return {
-      filename: attachment.filename.trim().slice(0, 255) || "Shared image",
-      mimeType: attachment.mimeType,
-      size: data.length,
-      data,
-    };
-  });
-}
 
 /** The triage decisions (DATA-MODEL.md §3). */
 export type TriageDecision =
@@ -85,11 +65,13 @@ export async function createInboxItemCore(
     userId,
     text,
     projectName,
+    projectId,
+    lensId,
     title,
     content,
     sourceUrl,
     attachments,
-  }: { userId: string; text: string; projectName?: string; title?: string; content?: string; sourceUrl?: string; attachments?: InboxAttachmentInput[] },
+  }: { userId: string; text: string; projectName?: string; projectId?: string; lensId?: string; title?: string; content?: string; sourceUrl?: string; attachments?: ImageAttachmentInput[] },
 ) {
   const raw = text?.trim();
   if (!raw) {
@@ -108,7 +90,27 @@ export async function createInboxItemCore(
     new Date(),
     customLenses.map((l: { name: string }) => l.name),
   );
-  const preparedAttachments = prepareAttachments(attachments);
+  const preparedAttachments = prepareImageAttachments(attachments);
+  const selectedProject = projectId
+    ? await entities.Project.findFirst({
+      where: { id: projectId, userId },
+      select: { id: true, lensId: true },
+    })
+    : null;
+  if (projectId && !selectedProject) throw new Error("Project not found.");
+
+  const selectedLensId = selectedProject?.lensId ?? lensId;
+  const selectedLens = selectedLensId
+    ? await entities.Lens.findFirst({
+      where: { id: selectedLensId, userId },
+      select: { id: true },
+    })
+    : null;
+  if (selectedLensId && !selectedLens) throw new Error("List or area not found.");
+  if (projectId && lensId && selectedProject?.lensId !== lensId) {
+    throw new Error("Project and list must belong to the same area.");
+  }
+
   return await entities.InboxItem.create({
     data: {
       text: parsed.cleanText,
@@ -127,6 +129,8 @@ export async function createInboxItemCore(
       parsedProject:
         projectName?.trim().toLowerCase() || parsed.parsedProject,
       parsedLens: parsed.parsedLens,
+      parsedProjectId: selectedProject?.id ?? null,
+      parsedLensId: selectedLens?.id ?? null,
     },
     select: { id: true, text: true, createdAt: true },
   });
@@ -156,6 +160,8 @@ export async function getInboxItemsCore(
       parsedTags: true,
       parsedProject: true,
       parsedLens: true,
+      parsedProjectId: true,
+      parsedLensId: true,
     },
   });
 }
@@ -356,7 +362,7 @@ export async function triageInboxItemCore(
 ) {
   const item = await entities.InboxItem.findUnique({
     where: { id: inboxItemId },
-    include: { attachments: { select: { id: true } } },
+    include: { attachments: { select: { filename: true, mimeType: true, size: true, data: true } } },
   });
   if (!item || item.userId !== userId) {
     throw new Error("Inbox item not found.");
@@ -453,15 +459,13 @@ export async function triageInboxItemCore(
       break;
     }
     case "list-item": {
-      if (item.attachments?.length) {
-        throw new Error("Image attachments cannot be filed to a Simple list. Choose a Life area so the image stays attached.");
-      }
       const listItem = await createListItemCore(entities, {
         userId,
         lensId,
         text: title,
         content: resolvedContent ?? item.content,
         sourceUrl: item.sourceUrl,
+        preparedAttachments: item.attachments,
       });
       result = { kind: "list-item", id: listItem.id };
       break;

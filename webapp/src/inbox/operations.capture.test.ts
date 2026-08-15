@@ -110,6 +110,25 @@ describe("createInboxItem — happy path", () => {
     expect(call.data.parsedProject).toBe("mvp");
   });
 
+  it("persists an explicit pre-triage destination by ID", async () => {
+    const m = mockContext();
+    m.entities.InboxItem.create.mockResolvedValue({ id: "ix-destination", text: "Read", createdAt: new Date() });
+    m.entities.Lens.findMany.mockResolvedValue([]);
+    m.entities.Project.findFirst.mockResolvedValue({ id: "project-1", lensId: "lens-work" });
+    m.entities.Lens.findFirst.mockResolvedValue({ id: "lens-work" });
+
+    await createInboxItem({ text: "Read this", projectId: "project-1" }, m.context);
+
+    expect(m.entities.InboxItem.create.mock.calls[0][0].data).toMatchObject({
+      parsedProjectId: "project-1",
+      parsedLensId: "lens-work",
+    });
+    expect(m.entities.Project.findFirst).toHaveBeenCalledWith({
+      where: { id: "project-1", userId: "user-1" },
+      select: { id: true, lensId: true },
+    });
+  });
+
   it("stores structured share fields alongside the capture text", async () => {
     const m = mockContext();
     m.entities.InboxItem.create.mockResolvedValue({ id: "ix-4", text: "Article", createdAt: new Date() });
@@ -183,6 +202,8 @@ describe("getInboxItems — scoping", () => {
         parsedTags: true,
         parsedProject: true,
         parsedLens: true,
+        parsedProjectId: true,
+        parsedLensId: true,
       },
     });
   });

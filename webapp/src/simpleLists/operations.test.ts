@@ -7,7 +7,7 @@ const { assertLensAllowed } = vi.hoisted(() => ({
 
 vi.mock("../billing/entitlementHttp", () => ({ assertLensAllowed }));
 
-import { getSimpleList, renameListItem } from "./operations";
+import { createListItem, getSimpleList, renameListItem } from "./operations";
 
 function context() {
   return {
@@ -17,6 +17,7 @@ function context() {
       ListItem: {
         findFirst: vi.fn(),
         findMany: vi.fn().mockResolvedValue([]),
+        create: vi.fn().mockResolvedValue({ id: "item-2" }),
         update: vi.fn().mockResolvedValue({ id: "item-1" }),
       },
     },
@@ -28,6 +29,29 @@ describe("Simple-list operation entitlement boundary", () => {
     const ctx = context();
     await getSimpleList({ lensId: "list-1" }, ctx as never);
     expect(assertLensAllowed).toHaveBeenCalledWith(ctx, "list-1");
+  });
+
+  it("passes shared context through a direct list creation", async () => {
+    const ctx = context();
+    ctx.entities.ListItem.findFirst.mockResolvedValue({ order: 0 });
+
+    await createListItem({
+      lensId: "list-1",
+      text: "Read this",
+      content: "Useful details",
+      sourceUrl: "https://example.com",
+    }, ctx as never);
+
+    expect(ctx.entities.ListItem.create).toHaveBeenCalledWith({
+      data: {
+        userId: "user-1",
+        lensId: "list-1",
+        text: "Read this",
+        content: "Useful details",
+        sourceUrl: "https://example.com",
+        order: 1,
+      },
+    });
   });
 
   it("resolves an item's Lens and checks entitlement before mutation", async () => {
