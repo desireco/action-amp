@@ -27,10 +27,10 @@
 > Naming: the Work/Me switch is called **Lens** (not "Context") to avoid
 > colliding with GTD's "@context" (errands/phone — which we use Tags for).
 >
-> v4 (2026-07-03): **Lenses are user-defined on Pro.** A `LensKind` enum tags
-> each lens — `PERSONAL`/`WORK` for the seeded two, `CUSTOM` for user-defined.
-> The kind (not the name) is the stable handle the entitlement guard branches
-> on, so renaming a seeded lens can't escape FREE gating. `Lens.purpose` adds
+> **Lenses are user-defined on Pro.** A Lens name expresses its meaning; there
+> is no Personal/Work/Custom category layered above its behavioral type.
+> Neutral default/included flags protect seeded and Free-plan behavior.
+> `Lens.purpose` adds
 > one short line ("what this lens is for"). Lens configuration (create/rename/
 > recolor/edit-purpose/delete) is Pro-only; FREE gets the seeded two (Me usable,
 > Work visible-but-locked). See `docs/specs/done/custom-lenses.md`.

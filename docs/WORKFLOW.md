@@ -285,7 +285,8 @@ reviews or the Logbook.
 
 - `Lens.type` is the structural discriminator. `LIFE_AREA` is the default for
   seeded and existing Lenses; `SIMPLE_LIST` selects the checklist behavior.
-  `Lens.kind` remains the independent entitlement/seed identity handle.
+  Lens names carry their human meaning (for example, Me or Work); there is no
+  Personal/Work/Custom category layered above the type.
 - Every Task / Project / Goal / Resource belongs to exactly one **Life-area
   Lens**. Every List Item belongs to exactly one **Simple-list Lens**. Server
   writes reject cross-type combinations; the UI boundary is not the guard.
@@ -303,10 +304,9 @@ reviews or the Logbook.
   control (today's `<LensSwitch>`); at ≥4 it collapses to a single chip that
   opens a keyboard-navigable popover (`⌘L`, `↑↓`/`↵`/`/`/`esc`). The swap is
   pure presentational state on lens count — no routing change.
-- **Lenses carry a stable `kind` handle** (`PERSONAL` / `WORK` for the seeded
-  two, `CUSTOM` for user-defined). The entitlement guard branches on kind, not
-  the user-facing name, so renaming "Work" → "Studio" can't escape FREE gating.
-  Active-lens client state is keyed by lens id (not name) for the same reason.
+- **Default and included are neutral Lens facts.** They protect the seeded
+  defaults and identify the Lens included with Free without assigning a
+  Personal, Work, or Custom category. Active-lens client state is keyed by id.
 - **Each Lens carries an identity color** (stored on `Lens.color` as a palette
   key: Work = `indigo`, Me = `emerald`, plus 6 curated hues for user-defined
   lenses — see `styles/tokens.css`). The active lens's hue is mirrored onto
