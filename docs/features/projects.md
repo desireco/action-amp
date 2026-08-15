@@ -20,6 +20,8 @@ verified: 2026-07-29
   section for project links and notes (open, add, edit, remove). Complete and
   archive require confirmation; archive also completes the project. Deleting a project with actions lets the user
   remove them, move them to another active project, or send them to Triage.
+  Projects can also move to another Life-area Lens; their actions and history
+  move with them and their prior Goal link is cleared.
 
 **Files.** `projects/ProjectsPage.tsx`; `projects/ProjectDetailPage.tsx`.
 

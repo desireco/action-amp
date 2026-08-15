@@ -52,6 +52,10 @@ items have three deliberate entry paths: direct add inside the list, a share
 explicitly sent to that list, or universal capture followed by a one-step triage
 assignment to that list.
 
+A Project may later move to another Life-area Lens. Its actions and history move
+with it; because Goals are Lens-scoped, the Project is unlinked from any goal in
+the previous Lens. Projects never move into a Simple-list Lens.
+
 ## 2. The areas
 
 ### 2.1 Capture (Inbox) — pervasive
