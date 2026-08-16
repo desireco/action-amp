@@ -285,11 +285,12 @@ describe("checkout.session.completed", () => {
 describe("invoice.paid", () => {
   it("reads plan + userId from the subscription metadata", async () => {
     const m = mockContext();
-    // SAFETY: fixture provides only `metadata` — resolveInvoiceSubscriptionMeta
-    // is the sole caller and reads nothing else off the subscription.
-    vi.mocked(stripe.subscriptions.retrieve).mockResolvedValue({
+    // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
+    // Fixture provides only `metadata`; resolveInvoiceSubscriptionMeta is the
+    // sole caller and reads nothing else off the subscription.
+    (stripe.subscriptions.retrieve as any).mockResolvedValue({
       metadata: { priceKey: "pro_yearly", userId: "user-1" },
-    } as Stripe.Subscription);
+    });
 
     await dispatch(
       event("invoice.paid", "evt_i", {
@@ -324,10 +325,9 @@ describe("invoice.paid", () => {
   it("skips an already-processed invoice (idempotency)", async () => {
     const m = mockContext();
     m.entities.Payment.findFirst.mockResolvedValue({ id: "pay_old" });
-    // SAFETY: empty metadata fixture — the handler reads only metadata off the subscription.
-    vi.mocked(stripe.subscriptions.retrieve).mockResolvedValue({
-      metadata: {},
-    } as Stripe.Subscription);
+    // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
+    // Empty metadata: the handler reads only metadata off the subscription.
+    (stripe.subscriptions.retrieve as any).mockResolvedValue({ metadata: {} });
 
     await dispatch(
       event("invoice.paid", "evt_i", {
@@ -345,10 +345,9 @@ describe("invoice.paid", () => {
 
   it("falls back to customerId when the subscription has no userId", async () => {
     const m = mockContext();
-    // SAFETY: empty metadata fixture — the handler reads only metadata off the subscription.
-    vi.mocked(stripe.subscriptions.retrieve).mockResolvedValue({
-      metadata: {},
-    } as Stripe.Subscription);
+    // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
+    // Empty metadata: the handler reads only metadata off the subscription.
+    (stripe.subscriptions.retrieve as any).mockResolvedValue({ metadata: {} });
     m.entities.User.findFirst.mockResolvedValue({ id: "user-2", plan: "FREE" });
 
     await dispatch(
@@ -378,10 +377,9 @@ describe("invoice.paid", () => {
 
   it("skips when no userId can be determined", async () => {
     const m = mockContext();
-    // SAFETY: empty metadata fixture — the handler reads only metadata off the subscription.
-    vi.mocked(stripe.subscriptions.retrieve).mockResolvedValue({
-      metadata: {},
-    } as Stripe.Subscription);
+    // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
+    // Empty metadata: the handler reads only metadata off the subscription.
+    (stripe.subscriptions.retrieve as any).mockResolvedValue({ metadata: {} });
     await dispatch(
       event("invoice.paid", "evt_i", {
         id: "in_3",

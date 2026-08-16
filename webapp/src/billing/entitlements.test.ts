@@ -82,13 +82,25 @@ describe("isEntitled", () => {
 
   it("resolves access source and falls back to the billed plan when a grant is removed", () => {
     expect(
-      resolveEffectiveAccess({ plan: "FREE", planRenewsAt: null, manualAccessGrant: "FRIEND" }),
+      resolveEffectiveAccess({
+        plan: "FREE",
+        planRenewsAt: null,
+        manualAccessGrant: "FRIEND",
+      }),
     ).toEqual({ access: "FRIEND", source: "manual", isEntitled: true });
     expect(
-      resolveEffectiveAccess({ plan: "PRO", planRenewsAt: PAST, manualAccessGrant: null }),
+      resolveEffectiveAccess({
+        plan: "PRO",
+        planRenewsAt: PAST,
+        manualAccessGrant: null,
+      }),
     ).toEqual({ access: "FREE", source: "none", isEntitled: false });
     expect(
-      resolveEffectiveAccess({ plan: "PRO", planRenewsAt: FUTURE, manualAccessGrant: null }),
+      resolveEffectiveAccess({
+        plan: "PRO",
+        planRenewsAt: FUTURE,
+        manualAccessGrant: null,
+      }),
     ).toEqual({ access: "PRO", source: "stripe", isEntitled: true });
   });
 });
@@ -109,7 +121,11 @@ describe("cliAccessViolation", () => {
   it("allows every manual grant", () => {
     for (const manualAccessGrant of ["PRO", "FOUNDER", "FRIEND"] as const) {
       expect(
-        cliAccessViolation({ plan: "FREE", planRenewsAt: null, manualAccessGrant }),
+        cliAccessViolation({
+          plan: "FREE",
+          planRenewsAt: null,
+          manualAccessGrant,
+        }),
       ).toBeNull();
     }
   });
@@ -364,8 +380,15 @@ describe("PRO_LIMITS", () => {
 describe("resolveLens", () => {
   it("returns {name, isIncluded} from a tenancy-safe lookup", async () => {
     const m = mockContext("user-1");
-    m.entities.Lens.findFirst.mockResolvedValue({ name: "Work", isIncluded: false });
-    const lens = await resolveLens(m.entities, "user-1", "lens-1");
+    m.entities.Lens.findFirst.mockResolvedValue({
+      name: "Work",
+      isIncluded: false,
+    });
+    // SAFETY: EntitySpy's vi.fn() satisfies the Lens delegate slice at runtime.
+    const lensEntities = { Lens: m.entities.Lens } as Parameters<
+      typeof resolveLens
+    >[0];
+    const lens = await resolveLens(lensEntities, "user-1", "lens-1");
     expect(lens).toEqual({ name: "Work", isIncluded: false });
     expect(m.entities.Lens.findFirst).toHaveBeenCalledWith({
       where: { id: "lens-1", userId: "user-1" },
@@ -375,7 +398,11 @@ describe("resolveLens", () => {
 
   it("returns null for a missing lensId", async () => {
     const m = mockContext("user-1");
-    const lens = await resolveLens(m.entities, "user-1", null);
+    // SAFETY: EntitySpy's vi.fn() satisfies the Lens delegate slice at runtime.
+    const lensEntities = { Lens: m.entities.Lens } as Parameters<
+      typeof resolveLens
+    >[0];
+    const lens = await resolveLens(lensEntities, "user-1", null);
     expect(lens).toBeNull();
     expect(m.entities.Lens.findFirst).not.toHaveBeenCalled();
   });
@@ -383,7 +410,11 @@ describe("resolveLens", () => {
   it("returns null for an unknown lens (no row)", async () => {
     const m = mockContext("user-1");
     m.entities.Lens.findFirst.mockResolvedValue(null);
-    const lens = await resolveLens(m.entities, "user-1", "nope");
+    // SAFETY: EntitySpy's vi.fn() satisfies the Lens delegate slice at runtime.
+    const lensEntities = { Lens: m.entities.Lens } as Parameters<
+      typeof resolveLens
+    >[0];
+    const lens = await resolveLens(lensEntities, "user-1", "nope");
     expect(lens).toBeNull();
   });
 });
@@ -392,7 +423,13 @@ describe("resolveLensType", () => {
   it("returns type from a tenancy-safe lookup", async () => {
     const m = mockContext("user-1");
     m.entities.Lens.findFirst.mockResolvedValue({ type: "SIMPLE_LIST" });
-    await expect(resolveLensType(m.entities, "user-1", "shopping")).resolves.toBe("SIMPLE_LIST");
+    // SAFETY: EntitySpy's vi.fn() satisfies the Lens delegate slice at runtime.
+    const lensEntities = { Lens: m.entities.Lens } as Parameters<
+      typeof resolveLensType
+    >[0];
+    await expect(
+      resolveLensType(lensEntities, "user-1", "shopping"),
+    ).resolves.toBe("SIMPLE_LIST");
     expect(m.entities.Lens.findFirst).toHaveBeenCalledWith({
       where: { id: "shopping", userId: "user-1" },
       select: { type: true },
@@ -402,6 +439,12 @@ describe("resolveLensType", () => {
   it("returns null for a missing or cross-tenant Lens", async () => {
     const m = mockContext("user-1");
     m.entities.Lens.findFirst.mockResolvedValue(null);
-    await expect(resolveLensType(m.entities, "user-1", "other")).resolves.toBeNull();
+    // SAFETY: EntitySpy's vi.fn() satisfies the Lens delegate slice at runtime.
+    const lensEntities = { Lens: m.entities.Lens } as Parameters<
+      typeof resolveLensType
+    >[0];
+    await expect(
+      resolveLensType(lensEntities, "user-1", "other"),
+    ).resolves.toBeNull();
   });
 });

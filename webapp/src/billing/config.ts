@@ -28,8 +28,13 @@ export const PRO_LIMITS = {
   lenses: 8, // soft cap — matches the existing soft-cap pattern (projects=3, goals=1)
 } as const;
 
-/** All paid-up plans — i.e. the user has full feature access right now. */
-export function isPaidPlan(plan: Plan | undefined | null): plan is "PRO" | "FOUNDER" {
+/** All paid-up plans — i.e. the user has full feature access right now.
+ *  Accepts the plan as a plain string (Wasp AuthUser and EntitlementUser type
+ *  it more loosely than Prisma's Plan enum; the literal comparison is the
+ *  contract either way). */
+export function isPaidPlan(
+  plan: string | undefined | null,
+): plan is "PRO" | "FOUNDER" {
   return plan === "PRO" || plan === "FOUNDER";
 }
 
@@ -39,7 +44,10 @@ export function isPaidPlan(plan: Plan | undefined | null): plan is "PRO" | "FOUN
  * - PRO → yes while planRenewsAt is in the future
  * - FOUNDER → always yes (lifetime; planRenewsAt is null)
  */
-export function isPlanActive(plan: Plan | undefined | null, planRenewsAt: Date | null): boolean {
+export function isPlanActive(
+  plan: string | undefined | null,
+  planRenewsAt: Date | null,
+): boolean {
   if (!isPaidPlan(plan)) return false;
   if (plan === "FOUNDER") return true; // lifetime — never expires
   if (!planRenewsAt) return false;
@@ -47,11 +55,11 @@ export function isPlanActive(plan: Plan | undefined | null, planRenewsAt: Date |
 }
 
 /** Human-readable plan label for the UI. */
-export const PLAN_LABEL: Record<Plan, string> = {
+export const PLAN_LABEL = {
   FREE: "Free",
   PRO: "Pro",
   FOUNDER: "Founding Member",
-};
+} as const satisfies Record<Plan, string>;
 
 /**
  * The Founding 100 — a one-time $99 lifetime Pro tier, capped at exactly 100
@@ -61,14 +69,12 @@ export const PLAN_LABEL: Record<Plan, string> = {
  */
 export const FOUNDING_100_CAP = 100;
 export const FOUNDING_100_LAUNCH_PARTNER_RESERVE = 2;
-export const FOUNDING_100_PUBLIC_CAP = FOUNDING_100_CAP - FOUNDING_100_LAUNCH_PARTNER_RESERVE;
+export const FOUNDING_100_PUBLIC_CAP =
+  FOUNDING_100_CAP - FOUNDING_100_LAUNCH_PARTNER_RESERVE;
 
 /** Billed and manual Founders claim Founding-100; Friends deliberately do not. */
 export const FOUNDER_MEMBERSHIP_WHERE = {
-  OR: [
-    { plan: "FOUNDER" },
-    { manualAccessGrant: "FOUNDER" },
-  ],
+  OR: [{ plan: "FOUNDER" }, { manualAccessGrant: "FOUNDER" }],
 } satisfies Prisma.UserWhereInput;
 
 /**

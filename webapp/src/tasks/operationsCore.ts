@@ -116,9 +116,16 @@ export async function getTasksData(
 // provenance pill.
 export async function getTodayTasksData(
   entities: Entities,
-  { user, userId }: { user: Parameters<typeof resolveAccessibleLenses>[1]; userId: string },
+  {
+    user,
+    userId,
+  }: { user: Parameters<typeof resolveAccessibleLenses>[1]; userId: string },
 ) {
-  const accessible = await resolveAccessibleLenses(entities, user, userId);
+  const accessible = await resolveAccessibleLenses(
+    { Lens: entities.Lens },
+    user,
+    userId,
+  );
   const lensIds = accessible.map((l) => l.id);
   // No accessible lenses (a brand-new account mid-onboarding) → empty list
   // rather than relying on Prisma's `in: []` semantics.
@@ -159,7 +166,11 @@ export async function getWeekTasksData(
     now?: Date;
   },
 ) {
-  const accessible = await resolveAccessibleLenses(entities, user, userId);
+  const accessible = await resolveAccessibleLenses(
+    { Lens: entities.Lens },
+    user,
+    userId,
+  );
   const lensIds = accessible.map((lens) => lens.id);
   if (lensIds.length === 0) return [];
 
@@ -178,7 +189,12 @@ export async function getWeekTasksData(
       isDone: false,
       dueDate: { gte: weekStart, lt: nextWeekStart },
     },
-    orderBy: [{ dueDate: "asc" }, { order: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
+    orderBy: [
+      { dueDate: "asc" },
+      { order: "asc" },
+      { priority: "desc" },
+      { createdAt: "asc" },
+    ],
     include: {
       tags: true,
       project: { select: { id: true, name: true } },
@@ -274,7 +290,9 @@ export async function getTaskAlternativesData(
 ) {
   const ranked = await fetchRankedActiveTasks(entities, { userId, lensId });
   const skip = new Set(excludeIds ?? []);
-  return ranked.filter((task: { id: string }) => !skip.has(task.id)).slice(0, limit);
+  return ranked
+    .filter((task: { id: string }) => !skip.has(task.id))
+    .slice(0, limit);
 }
 
 // Shared candidate fetch + sort behind getTopTaskData and
@@ -393,11 +411,7 @@ function rankTopTask<
 // is normalised to null so "cleared" reads as absent downstream.
 export async function toggleTaskDoneCore(
   entities: Entities,
-  {
-    userId,
-    id,
-    outcome,
-  }: { userId: string; id: string; outcome?: string },
+  { userId, id, outcome }: { userId: string; id: string; outcome?: string },
 ) {
   const task = await entities.Task.findUnique({
     where: { id },

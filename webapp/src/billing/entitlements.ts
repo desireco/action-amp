@@ -1,4 +1,5 @@
-import { FREE_LIMITS, PRO_LIMITS, isPlanActive } from "./config";
+import { isPlanActive } from "./config";
+import type { Prisma } from "@prisma/client";
 export type { EntitlementMessage } from "./entitlement-types";
 import type { EntitlementMessage } from "./entitlement-types";
 
@@ -73,7 +74,7 @@ export function resolveEffectiveAccess(
     };
   }
 
-  if (isPlanActive(user?.plan as never, user?.planRenewsAt ?? null)) {
+  if (isPlanActive(user?.plan, user?.planRenewsAt ?? null)) {
     return {
       access: user?.plan === "FOUNDER" ? "FOUNDER" : "PRO",
       source: "stripe",
@@ -119,9 +120,7 @@ export function isEntitled(
 export function cliAccessViolation(
   user: EntitlementUser | null,
 ): EntitlementMessage | null {
-  return resolveEffectiveAccess(user).isEntitled
-    ? null
-    : CLI_ACCESS_MESSAGE;
+  return resolveEffectiveAccess(user).isEntitled ? null : CLI_ACCESS_MESSAGE;
 }
 
 /** Return the Pro message unless this account can use sitewide search. */
@@ -143,8 +142,7 @@ export function capViolation(
   cap: number,
   msg: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (resolveEffectiveAccess(user).isEntitled)
-    return null; // paid → unlimited
+  if (resolveEffectiveAccess(user).isEntitled) return null; // paid → unlimited
   if (currentCount >= cap) return msg;
   return null;
 }
@@ -170,8 +168,7 @@ export function lensViolation(
   lens: EntitlementLens | null,
   msg?: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (resolveEffectiveAccess(user).isEntitled)
-    return null; // paid → all lenses
+  if (resolveEffectiveAccess(user).isEntitled) return null; // paid → all lenses
   if (lens && !lens.isIncluded) {
     return msg ?? WORK_LENS_MESSAGE;
   }
@@ -190,9 +187,46 @@ export function lensConfigViolation(
   user: EntitlementUser | null,
   msg?: EntitlementMessage,
 ): EntitlementMessage | null {
-  if (resolveEffectiveAccess(user).isEntitled)
-    return null; // paid → may configure
+  if (resolveEffectiveAccess(user).isEntitled) return null; // paid → may configure
   return msg ?? CUSTOM_LENSES_MESSAGE;
+}
+
+/** The Lens row fields `resolveAccessibleLenses` returns. */
+export interface AccessibleLensRow {
+  id: string;
+  name: string;
+  color: string | null;
+  isIncluded: boolean;
+}
+
+/**
+ * The Lens Prisma-delegate slices these resolvers call, typed with
+ * Prisma-generated arg types (named, not loose dictionaries): callers pass
+ * Wasp's per-op delegate, the PAT route's shared Prisma client, or a test
+ * mock — all compatible with this slice. `PromiseLike` matches Prisma's
+ * thenable client objects; each resolver awaits and narrows to the rows it
+ * selected.
+ */
+interface LensNameLookup {
+  Lens: {
+    findFirst(
+      args: Prisma.LensFindFirstArgs,
+    ): PromiseLike<EntitlementLens | null>;
+  };
+}
+
+interface LensTypeLookup {
+  Lens: {
+    findFirst(
+      args: Prisma.LensFindFirstArgs,
+    ): PromiseLike<{ type: "LIFE_AREA" | "SIMPLE_LIST" } | null>;
+  };
+}
+
+interface LensListLookup {
+  Lens: {
+    findMany(args: Prisma.LensFindManyArgs): PromiseLike<AccessibleLensRow[]>;
+  };
 }
 
 /**
@@ -204,28 +238,14 @@ export function lensConfigViolation(
  * `findFirst` (not `findUnique`): the Lens unique is on `[userId, name]`, so
  * there's no compound `id+userId` index; `findFirst` on both filters is the
  * tenancy-safe lookup. One read per request.
- *
- * The entities param is typed loosely (the Prisma delegate's findFirst returns
- * the full Lens model type, and matching it exactly across Wasp's generated
- * generics isn't worth it for this one-shot helper). We read `.name` +
- * `.isIncluded`.
  */
 export async function resolveLens(
-  // Broadly typed: callers pass Wasp's Prisma delegate (per-op entity set) or a
-  // test mock; we only read Lens.findFirst(). Matching the exact generic
-  // delegate across ops isn't worth it for this one-shot helper.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  entities:
-    { Lens: { findFirst: (a: any) => Promise<any> } } | Record<string, unknown>,
+  entities: LensNameLookup,
   userId: string,
   lensId: string | undefined | null,
 ): Promise<EntitlementLens | null> {
   if (!lensId) return null;
-  const lens = await (
-    entities as {
-      Lens: { findFirst: (a: unknown) => Promise<EntitlementLens | null> };
-    }
-  ).Lens.findFirst({
+  const lens = await entities.Lens.findFirst({
     where: { id: lensId, userId },
     select: { name: true, isIncluded: true },
   });
@@ -236,18 +256,15 @@ export async function resolveLens(
  * entitlement resolution because type eligibility is a product boundary, not
  * a paid-plan decision. */
 export async function resolveLensType(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  entities: { Lens: { findFirst: (a: any) => Promise<any> } } | Record<string, unknown>,
+  entities: LensTypeLookup,
   userId: string,
   lensId: string,
 ): Promise<"LIFE_AREA" | "SIMPLE_LIST" | null> {
-  const lens = await (
-    entities as { Lens: { findFirst: (a: unknown) => Promise<{ type: "LIFE_AREA" | "SIMPLE_LIST" } | null> } }
-  ).Lens.findFirst({
+  const lens = await entities.Lens.findFirst({
     where: { id: lensId, userId },
     select: { type: true },
   });
-  return lens?.type ?? null;
+  return lens ? lens.type : null;
 }
 
 /**
@@ -265,28 +282,14 @@ export async function resolveLensType(
  * doesn't need a second lookup; callers that only want ids map to `.id`.
  */
 export async function resolveAccessibleLenses(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  entities:
-    { Lens: { findMany: (a: any) => Promise<any> } } | Record<string, unknown>,
+  entities: LensListLookup,
   user: EntitlementUser | null,
   userId: string,
-): Promise<
-  { id: string; name: string; color: string | null; isIncluded: boolean }[]
-> {
+): Promise<AccessibleLensRow[]> {
   const where = resolveEffectiveAccess(user).isEntitled
     ? { userId }
     : { userId, isIncluded: true };
-  return await (
-    entities as {
-      Lens: {
-        findMany: (
-          a: unknown,
-        ) => Promise<
-          { id: string; name: string; color: string | null; isIncluded: boolean }[]
-        >;
-      };
-    }
-  ).Lens.findMany({
+  return entities.Lens.findMany({
     where,
     select: { id: true, name: true, color: true, isIncluded: true },
   });
