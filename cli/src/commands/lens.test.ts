@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import type { Command } from "commander";
 
 const { TMP_HOME } = vi.hoisted(() => {
   const { tmpdir } = require("node:os") as typeof import("node:os");
@@ -22,7 +23,7 @@ vi.mock("../api.js", () => ({
   ApiError: class ApiError extends Error {
     constructor(
       public status: number,
-      public body: Record<string, unknown>,
+      public body: { error?: string } & Record<string, unknown>,
     ) {
       super(body.error ?? "error");
     }
@@ -53,10 +54,7 @@ afterEach(() => {
 const { writeConfig, readConfig, getConfigPath } = await import("../config.js");
 const { makeLensCommand } = await import("./lens.js");
 
-async function run(
-  cmd: { parseAsync: (a: string[], o: unknown) => Promise<void> },
-  args: string[],
-) {
+async function run(cmd: Command, args: string[]) {
   try {
     await cmd.parseAsync(args, { from: "user" });
   } catch {
