@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import {
   ANALYTICS_EVENTS,
   recordAnalyticsEventCore,
+  type AnalyticsEventEntities,
   type AnalyticsEventInput,
   type AnalyticsEventName,
 } from "./operationsCore";
@@ -11,56 +12,6 @@ import {
   isJsonString,
   type JsonValue,
 } from "../shared/jsonValue";
-
-/** The analytics-delegate slice recordAnalyticsEventCore touches (mirrors the
- *  calls in operationsCore.ts; Wasp injects exactly these two entities). */
-type AnalyticsEventEntities = {
-  AnalyticsSession: {
-    findFirst(args: {
-      where: { userId: string };
-      orderBy: { lastSeenAt: "desc" };
-      select: { id: true; userId: true };
-    }): Promise<{ id: string; userId: string | null } | null>;
-    update(args: {
-      where: { id: string };
-      data: { lastSeenAt: Date };
-    }): Promise<{ id: string }>;
-    upsert(args: {
-      where: { visitorId: string };
-      create: {
-        visitorId: string;
-        userId: string | null;
-        referrerHost: string | null;
-        utmSource: string | null;
-        utmMedium: string | null;
-        utmCampaign: string | null;
-        utmContent: string | null;
-        utmTerm: string | null;
-        initialPath: string | null;
-        deviceClass: string | null;
-      };
-      update: { lastSeenAt: Date; userId?: string };
-      select: { id: true; userId: true };
-    }): Promise<{ id: string; userId: string | null }>;
-  };
-  AnalyticsEvent: {
-    findFirst(args: {
-      where: { userId: string; name: string };
-      select: { id: true };
-    }): Promise<{ id: string } | null>;
-    create(args: {
-      data: {
-        name: string;
-        route: string | null;
-        appVersion: string | null;
-        metadata: Record<string, string | number | boolean | null> | null;
-        sessionId: string;
-        userId: string | null;
-      };
-      select: { id: true };
-    }): Promise<{ id: string }>;
-  };
-};
 
 type ApiContext = {
   user?: { id: string } | null;

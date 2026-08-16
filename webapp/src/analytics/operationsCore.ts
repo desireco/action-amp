@@ -2,9 +2,38 @@
  * First-party analytics cores. No Wasp imports: browser operations, the public
  * API handler, and admin reporting all share these validation rules.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-import type { Prisma } from "@prisma/client";
-type Entities = Record<string, any>;
+import type {
+  AnalyticsEvent as AnalyticsEventRow,
+  AnalyticsSession,
+  Prisma,
+} from "@prisma/client";
+
+/**
+ * The analytics delegate slice these cores call (named, not a loose map).
+ * Generic-arg methods return FULL rows; callers passing a `select` may only
+ * read the fields their select carried. Wasp ops, the webhook, the public
+ * event API, and the admin stats core all satisfy this slice.
+ */
+interface AnalyticsEventEntities {
+  AnalyticsSession: {
+    findFirst(
+      args: Prisma.AnalyticsSessionFindFirstArgs,
+    ): Promise<AnalyticsSession | null>;
+    update(args: Prisma.AnalyticsSessionUpdateArgs): Promise<AnalyticsSession>;
+    upsert(args: Prisma.AnalyticsSessionUpsertArgs): Promise<AnalyticsSession>;
+    findMany(
+      args: Prisma.AnalyticsSessionFindManyArgs,
+    ): Promise<AnalyticsSession[]>;
+  };
+  AnalyticsEvent: {
+    findFirst(
+      args: Prisma.AnalyticsEventFindFirstArgs,
+    ): Promise<AnalyticsEventRow | null>;
+    create(args: Prisma.AnalyticsEventCreateArgs): Promise<AnalyticsEventRow>;
+  };
+}
+
+type Entities = AnalyticsEventEntities;
 
 export const ANALYTICS_EVENTS = [
   "LANDING_VIEW",
@@ -47,10 +76,18 @@ export type AnalyticsEventInput = {
   deviceClass?: string | null;
 };
 
-function clean(value: unknown, max: number): string | null {
-  if (typeof value !== "string") return null;
+function clean(value: string | null | undefined, max: number): string | null {
+  // Runtime defense for op-layer input: constructor identity is exact for
+  // JSON-decoded primitives.
+  if (value?.constructor !== String) return null;
   const v = value.trim();
   return v ? v.slice(0, max) : null;
+}
+
+/** Primitive-text test for metadata values (constructor identity — exact for
+ *  JSON-decoded primitives, narrows without typeof). */
+function isText(value: string | number | boolean | null): value is string {
+  return value?.constructor === String;
 }
 
 function validateMetadata(
@@ -63,11 +100,11 @@ function validateMetadata(
     if (!allowed.has(key)) continue;
     if (
       value === null ||
-      typeof value === "string" ||
-      typeof value === "number" ||
-      typeof value === "boolean"
+      isText(value) ||
+      value?.constructor === Number ||
+      value?.constructor === Boolean
     ) {
-      out[key] = typeof value === "string" ? value.slice(0, 120) : value;
+      out[key] = isText(value) ? value.slice(0, 120) : value;
     }
   }
   return Object.keys(out).length ? out : null;
