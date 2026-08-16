@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Active product work, 2026-08-15: the next release bundle is implemented on main: guided first-run practice, Goal rationale in Next/Focus/CLI, simple-list Lenses, reviews/focus improvements, This Week planning, project lifecycle controls, and smarter shared capture. This is not production deployment evidence. -->
+<!-- Active product work, 2026-08-16: a large release bundle is complete on main and most items are shipped: guided first-run practice, Goal rationale in Next/Focus/CLI, command palette + search, weekly/monthly review rhythms (check-in/review separation), focus session recording, this Week planning, project lifecycle controls (completed/archived/move between Lenses), admin user management, welcome experience, route rename /app→/do, capture image intake (paste/drop, inbox media covers, triage gallery, lightbox, CLI download), share target polish, and Pro CLI gating. Simple-list Lenses are implemented but remain in local verification (browser acceptance not run). This is not production deployment evidence. -->
 <!-- Last reviewed: 2026-08-03 (CLI/API access is now Pro-only: Free accounts cannot issue or use personal API tokens; existing tokens stop working when an account returns to Free. CLI package publishing is in progress. Resources shipped — project-owned links/notes CRUD on the Project detail page + `actionamp resource list/add/update/delete` CLI + `/api/cli/resource/*` PAT routes, all backed by a pure `resources/operationsCore.ts`. NO `TaskResource` join — references are markdown links in Task Context, per the task-fields reversal; NO delete-with-impact flow, just simple delete. Passwordless magic-link email sign-in shipped (six-digit code OR sign-in link, 10-min TTL, rate-limited, atomic consume; replaces passwords; localhost uses fixed `111111` for QA). Share target extended: structured capture props (`title`/`content`/`sourceUrl` on `InboxItem`) + up to four image attachments (≤5MB each) + CLI `capture` with `--title/--content/--source-url/--file`. Task Outcome (`Task.outcome`) shipped — task-fields now complete. WONT_DO task state shipped — non-destructive decline for post-triage tasks, surfaces in the Logbook with Restore. Earlier 07-26: CLI lens management shipped. Earlier 07-23: Admin dashboard + feedback-triage system. Earlier 07-22: ActionAmp CLI terminal client shipped.) -->
 
 ---
@@ -49,7 +49,7 @@ audience yet**. That distinction changes the whole roadmap.
   `MagicLoginChallenge` flow owns the challenge: 10-min TTL, 1-min resend
   throttle, 5-attempt cap, atomic consume (no double-session races), delivery
   failures logged + the credential deleted so nothing usable leaks. Passwords
-  + password reset are gone; the email provider stays on for identity + the
+  - password reset are gone; the email provider stays on for identity + the
   code delivery. Localhost uses a fixed `111111` for manual QA.
 - **Share-to-inbox with images + structured capture**: the Android/Chrome
   `share_target` now carries structured fields (`title` / `content` /
@@ -292,7 +292,7 @@ normal release verification and publish path.
 4. **public-launch-readiness** (`draft` — needs spec) — Product Hunt, the launch
     marketing pack, the real pricing page. Only worth doing once items 7–11
     prove someone stays and pays.
-4. **cli** (`effort split into 3 specs 2026-07-03`, **developer surface — not
+5. **cli** (`effort split into 3 specs 2026-07-03`, **developer surface — not
     validation-critical**) — a top-level `cli/` package (typed library + thin
     binary) that talks to the HTTP API via **Personal Access Tokens** added to
     the backend, plus four paired orchestration skills (inbox-triage,
@@ -321,13 +321,13 @@ normal release verification and publish path.
    use `/api/cli/*`; active Pro and Founding members can. **CLI package
    publishing is in progress**; do not publish customer install guidance until
    that release path is ready.
-5. **goal-planning** (`done` 2026-07-05, was `ready`) — **shipped**: full
+6. **goal-planning** (`done` 2026-07-05, was `ready`) — **shipped**: full
    Goal/Project lifecycle (complete, reopen, edit, delete, re-link) + explicit
    `Project.order` sequencing under a Goal + Logbook surfacing of completed
    goals + Reopen affordance + e2e (full sequence → complete → logbook →
    reopen). Server ops, UI, and tests all landed. → §Shipped. Spec at
    `docs/specs/done/goal-planning.md`; catalog at `docs/features/goal-planning.md`.
-6. **work-area-merged** (`draft`) — collapses `/do` + `/do/today` into one
+7. **work-area-merged** (`draft`) — collapses `/do` + `/do/today` into one
     Lens-scoped page (hero + Today | Done columns), and reshapes how a task is
     worked: **no completion circle anywhere** (complete only from focus mode —
     the list becomes a chooser, not a tick-box), a **timestamped activity log**
@@ -341,13 +341,14 @@ normal release verification and publish path.
     so it sits in this tier (post-gauntlet), not the validation gauntlet.
     Interactive prototype at `docs/mockups/today-merged.html`. Spec at
     `docs/specs/work-area-merged.md`.
-7. **habits-recurring-activities** (`idea` — needs discovery + spec) — support
+8. **habits-recurring-activities** (`idea` — needs discovery + spec) — support
     habits and recurring activities, including daily, weekly, and custom
     cadences, without turning them into a permanent pile of duplicated tasks.
     A due occurrence should enter Today when relevant; completing it should
     record that occurrence and schedule the next one. Keep the experience calm:
     no streaks, scores, guilt, or punitive overdue state. This is product-depth
     work after validation signal, not part of the current acquisition gauntlet.
+
 ## Queue notes
 
 **Open actions on main:**
@@ -377,17 +378,65 @@ normal release verification and publish path.
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
-- **capture-image-intake** (`shipped` 2026-08-16) — `⌘K` capture accepts
-  images: paste (`⌘V`) into the input, or drop a file on the open popover
-  (the whole overlay is the target) or on the Capture FAB, which opens the
-  popover with the files preloaded. Client-side mirror of
-  `prepareImageAttachments` (four images, ≤5 MB each, `image/*` only, same
-  error copy) rejects bad files before submit; the op re-validates. Saves
-  through `createInboxItem`'s `attachments` — the identical InboxItem path
-  the Android share target and `actionamp capture --file` use; image-only
-  captures fall back to the first filename as display text. Extends
-  `share-target-images-and-structured-capture`; no server changes. (No spec —
-  client glue over an existing pipeline.)
+- **capture-media-pipeline** (`shipped` 2026-08-16) — the full image
+  experience around capture and inbox. `⌘K` capture accepts images via
+  paste (`⌘V`) or drop (on the open popover or the Capture FAB). Inbox rows
+  lead with a square media cover (96px, first image, `+N` badge for more);
+ the triage card shows media large (~2–3×, `object-fit: contain`, scroll-snap
+  carousel for multi-image items); clicking any image opens a lightbox (~70%
+  modal, Esc/backdrop dismiss, ←/→ cycling). Bytes served by
+  `GET /api/attachments/:id` (session-cookie auth for `<img>` loads). CLI
+  `inbox download` pulls captured images to disk. Share target review page
+  polished (calmer form, tighter spacing). All validated client-side with the
+  same caps as `prepareImageAttachments` (four images, ≤5MB, `image/*` only).
+  Extends `share-target-images-and-structured-capture`; no schema changes.
+- **admin-user-management** (`shipped` 2026-08-11) — admin gained a user
+  directory at `/do/settings/admin/users` with device-type tiles, active user
+  counts, filters (all / active / inactive / pro / free), and guarded user
+  operations (view, manual Pro grant, delete with safeguards). Auth records
+  successful logins; admin can stream clean disposable test users. Backed by
+  pure user-management cores shared between the Wasp ops and admin CLI.
+- **guided-first-run-loop** (`shipped` 2026-08-11) — onboarding rebuilt as a
+  staged loop: Capture intro → triage practice → Next reveal → Focus
+  practice → completion + reflection. New `OnboardingStage` enum drives the
+  progression; a practice task is seeded with `isOnboardingSample`. Users can
+  skip the guided flow. Replaces the dead-code onboarding that was fixed in
+  the earlier `first-run-experience` trunk.
+- **focus-goal-context** (`shipped` 2026-08-11) — the Next card and Focus mode
+  now render the winner task's Goal rationale (why this task, and what Goal
+  it serves) via a `hydrateTopTaskData` core. The CLI `now` command also
+  prints Project, Goal, and why context. Extends `focus-why-transparent`
+  (which showed the ranking reason) to include the Goal layer.
+- **focus-session-recording** (`shipped` 2026-08-08) — focus sessions are now
+  recorded through `TaskSession` with a configurable timer. The active task
+  experience was redesigned around a margin clock (live session + honest
+  total) with a summoned composer and confirm-on-complete. Replaces the
+  earlier Variant F focus redesign with session persistence.
+- **this-week-planning** (`shipped` 2026-08-15) — a Monday–Sunday Week view
+  (`/do/week`) wired into the Today hero and nav. Tasks gained weekday-
+  aware scheduling presets; Someday items auto-promote on their scheduled
+  weekday. The Week page shows tasks across Lenses with completion counts.
+- **project-lifecycle-controls** (`shipped` 2026-08-15) — projects gained
+  completed/archived collapsible sections on the list view, a Move action
+  to transfer projects between Lenses (with Lens-aware guards), and an
+  overflow menu on the detail page for lifecycle actions. Lens edit form
+  redesigned as a card with header and two-column fields; empty custom Lenses
+  can convert between Life area and Simple-list types.
+- **welcome-veil** (`shipped` 2026-08-14) — a calm fade-in veil between login
+  and the app (1s hold), with a greeting. All routes renamed `/app → /do`
+  with legacy redirects preserved. Context line reads "Next in <lens>".
+- **command-palette-search** (see existing shipped entry — shipped 2026-08-08)
+- **weekly-monthly-review** (see existing shipped entry — shipped 2026-08-08;
+  extended with check-in/review separation, per-Lens counts, and CLI review)
+- **pro-cli-gating** (`shipped` 2026-08-03) — CLI and API access restricted
+  to Pro accounts. Free accounts cannot issue PAT tokens or call any
+  `/api/cli/*` route; existing tokens stop working when an account returns to
+  Free. Staff retain internal entitlement bypass.
+- **marketing-site-polish** (`shipped` 2026-08-03) — the Astro marketing site
+  gained a focused guide library with decision-first content, a public
+  pricing comparison page, founding-member value improvements (launch partner
+  memberships), share image and search schema, canonical sitemap, and dozens
+  of mobile touch-target and accessibility fixes.
 - **observability-minimal + growth analytics** (`shipped` 2026-08-03;
   StatCounter confirmed working 2026-08-11) — StatCounter runs on the
   production marketing site and app with anonymous landing, signup, first-app-
@@ -535,7 +584,7 @@ normal release verification and publish path.
   reminder**: VAPID-keyed, per-device `PushSubscription` rows, a per-minute
   PgBoss job that fires at most once per user/calendar day at their chosen
   local time, Preferences UI for permission + time. **(4) Manifest MIME fix
-  + version display + update banner**: manifest renamed `.webmanifest → .json`
+  - version display + update banner**: manifest renamed `.webmanifest → .json`
   after discovering Hikari's static MIME table doesn't know the spec extension
   (and that the file is served from the *client* service, so server-side
   middleware can't fix it). App version (git SHA) injected at build time via

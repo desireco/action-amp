@@ -12,6 +12,13 @@ import "../styles/roadmap.css";
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
 
 const shipped = [
+  { date: "Aug 16", trunk: "Capture image intake", summary: "Paste or drop images into the capture popover (⌘V or drag-and-drop). Inbox rows show a media cover for captured images. The triage card displays images large with a swipe carousel, and clicking opens a lightbox. The CLI can download inbox images to disk." },
+  { date: "Aug 15", trunk: "This Week + project lifecycle", summary: "A Monday–Sunday Week view with weekday scheduling and Someday auto-promote. Projects gained completed and archived collapsible sections, a move-between-Lenses action, and an overflow menu for lifecycle controls. Shared captures can route directly to projects and lists." },
+  { date: "Aug 14", trunk: "Welcome experience", summary: "A calm fade-in veil between login and the app. All routes moved from /app to /do, with legacy redirects preserved. The context line now reads 'Next in <lens>'." },
+  { date: "Aug 11", trunk: "Guided first-run + Goal rationale + admin tools", summary: "New users get a staged onboarding loop with a practice task and a skip option. The Next card and Focus mode now explain why a task was chosen — including its Goal context. Admin gained a user directory with device tiles and deletion safeguards. Yearly Pro now includes a goal-setting workshop." },
+  { date: "Aug 10", trunk: "Simple-list Lenses", summary: "A second Lens behavior for flat checklists like shopping lists. Items can be added directly or arrive through capture and inbox triage, without the full project/goal machinery. Pro-only custom creation; empty Lenses can convert between types." },
+  { date: "Aug 8", trunk: "Command palette + Review rhythms + Focus sessions", summary: "A sitewide search (/) and command palette (⌘\\) for quick navigation and actions. Review gained distinct Today, Week, and Month cadences with check-in prompts and per-Lens completion counts. Focus sessions are now recorded with a configurable timer and margin clock." },
+  { date: "Aug 3", trunk: "Pro CLI + marketing site polish", summary: "CLI and API access restricted to Pro accounts. The marketing site gained a guide library, share images, a sitemap, pricing comparison, founding-member improvements, and dozens of mobile and accessibility fixes." },
   { date: "Aug 3", trunk: "Analytics + observability", summary: "StatCounter now measures the anonymous landing → signup → first app open → checkout path, while a first-party event ledger powers the admin Funnel for acquisition, activation, payment conversion, and D1/D7 retention. Local development traffic is excluded." },
   { date: "Jul 29", trunk: "CLI: resources + shared capture", summary: "The terminal client gained project resource management (list, add, update, delete) and the capture command now accepts a shared page's title, body, source link, and one image attachment — mirroring the Android share target. Resources are full CRUD from the CLI, closing the last deferred CLI spec." },
   { date: "Jul 28", trunk: "Project resources", summary: "The Resource entity is real: links and notes filed under a project, with add, edit, and remove on the project page. Ownership is project-only — the over-engineered 'project or goal' dual-parent was dropped, so the invariant is enforced by the database." },
@@ -61,8 +68,8 @@ const shipped = [
         growing up.
       </p>
       <div class="aa-roadmap-stats">
-        <span class="aa-roadmap-stat"><strong>23</strong> features shipped</span>
-        <span class="aa-roadmap-stat"><strong>642</strong> commits</span>
+        <span class="aa-roadmap-stat"><strong>37</strong> features shipped</span>
+        <span class="aa-roadmap-stat"><strong>804</strong> commits</span>
         <span class="aa-roadmap-stat">Jun 16 → today</span>
       </div>
     </header>
@@ -116,22 +123,8 @@ const shipped = [
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
               <span>
-                <span class="aa-roadmap-item-name">Next web release</span><br />
-                <span class="aa-roadmap-item-note">Guided first-run practice, clearer Goal context while choosing and doing work, recorded focus sessions, and calmer Week and Month reviews are prepared for the next publish.</span>
-              </span>
-            </li>
-            <li class="aa-roadmap-item">
-              <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
-              <span>
                 <span class="aa-roadmap-item-name">Simple-list Lenses</span><br />
-                <span class="aa-roadmap-item-note">Flat checklists can take direct entries or captured Inbox items through one-step triage, without turning them into projects or focus work. In final verification; not yet claimed live.</span>
-              </span>
-            </li>
-            <li class="aa-roadmap-item">
-              <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
-              <span>
-                <span class="aa-roadmap-item-name">Planning and project flow</span><br />
-                <span class="aa-roadmap-item-note">A Monday–Sunday Week view, weekday scheduling, completed and archived projects, moving projects between Lenses, and smarter shared capture are prepared for the next publish.</span>
+                <span class="aa-roadmap-item-note">Flat checklists that take direct entries or captured Inbox items through one-step triage, without the full project/goal machinery. In verification.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">
@@ -139,6 +132,34 @@ const shipped = [
               <span>
                 <span class="aa-roadmap-item-name">Member onboarding + workshops</span><br />
                 <span class="aa-roadmap-item-note">Yearly Pro includes a goal-setting workshop. Founding members receive personal onboarding plus a goal-setting workshop.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--done" />
+              <span>
+                <span class="aa-roadmap-item-name">Capture media pipeline</span><br />
+                <span class="aa-roadmap-item-note">Image paste/drop into capture, inbox media covers, triage gallery with carousel, and lightbox — all shipped.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--done" />
+              <span>
+                <span class="aa-roadmap-item-name">Guided first-run + Goal context</span><br />
+                <span class="aa-roadmap-item-note">Staged onboarding with a practice task. Next and Focus now explain why a task was chosen, including its Goal.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--done" />
+              <span>
+                <span class="aa-roadmap-item-name">This Week, review rhythms, admin tools</span><br />
+                <span class="aa-roadmap-item-note">Monday–Sunday Week view, check-in/review cadences, recorded focus sessions, and an admin user directory.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--done" />
+              <span>
+                <span class="aa-roadmap-item-name">Command palette + search</span><br />
+                <span class="aa-roadmap-item-note">Sitewide search and keyboard-driven command palette for every action and entity.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">
