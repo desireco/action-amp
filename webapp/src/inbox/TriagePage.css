@@ -286,9 +286,10 @@
 .aa-triage-lens-pill {
   display: inline-flex;
   align-items: center;
-  gap: var(--aa-space-sm);
-  /* ~2× a regular chip: chips are 5px 11px / text-sm; these are 12px 22px / text-md. */
-  padding: 12px 22px;
+  gap: 6px;
+  /* Still well above a regular chip (5px 11px / text-sm), but trimmed from
+     the original 12px 22px — long lens lists were wrapping to two lines. */
+  padding: 9px 15px;
   border-radius: var(--aa-radius-full);
   border: 1.5px solid var(--aa-border-strong);
   background: var(--aa-surface);
@@ -361,8 +362,8 @@
 }
 
 .aa-triage-lens-pill__dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: var(--aa-radius-full);
   border: 2px solid var(--aa-text-4);
   background: transparent;
@@ -376,7 +377,7 @@
 .aa-triage-lens-pill.active .aa-triage-lens-pill__dot {
   border-color: var(--aa-active-lens);
   background: var(--aa-active-lens);
-  box-shadow: inset 0 0 0 2.5px var(--aa-surface);
+  box-shadow: inset 0 0 0 2px var(--aa-surface);
 }
 
 @media (prefers-reduced-motion: reduce) {
