@@ -23,8 +23,8 @@ function ensureLocalDev() {
   }
 }
 
-function normalizeEmail(value: unknown) {
-  if (typeof value !== "string") {
+function normalizeEmail(value: string | undefined) {
+  if (!value) {
     throw new HttpError(400, "Email is required.");
   }
 

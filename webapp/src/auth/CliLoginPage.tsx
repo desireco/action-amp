@@ -42,7 +42,8 @@ function readParams(): { callback: URL; state: string } | null {
     // Only allow http://localhost:<port> callbacks. The CLI listens on
     // localhost; rejecting anything else closes the "exfiltrate to a remote
     // server via a crafted callback=" link.
-    if (callback.protocol !== "http:" || callback.hostname !== "localhost") return null;
+    if (callback.protocol !== "http:" || callback.hostname !== "localhost")
+      return null;
     return { callback, state };
   } catch {
     return null;
@@ -55,6 +56,8 @@ function readParams(): { callback: URL; state: string } | null {
  * human-facing only (shown in Settings → Access tokens); it's never parsed.
  */
 function autoLabel(): string {
+  // SAFETY: userAgentData (Chromium's structured UA) is not in the DOM lib
+  // types yet; the optional chain degrades to the default elsewhere.
   const ua = navigator as Navigator & { userAgentData?: { platform?: string } };
   return `CLI on ${ua.userAgentData?.platform ?? "this device"}`;
 }
@@ -63,7 +66,9 @@ export function CliLoginPage() {
   const { data: user } = useAuth();
   const entitled = useEntitled();
   const params = readParams();
-  const [status, setStatus] = useState<"idle" | "working" | "done" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "working" | "done" | "error">(
+    "idle",
+  );
   const [error, setError] = useState<string | null>(null);
 
   async function authorize() {
@@ -85,7 +90,9 @@ export function CliLoginPage() {
       window.location.href = target.toString();
     } catch (err) {
       setStatus("error");
-      setError(err instanceof Error ? err.message : "Could not authorize. Try again.");
+      setError(
+        err instanceof Error ? err.message : "Could not authorize. Try again.",
+      );
     }
   }
 
@@ -97,8 +104,8 @@ export function CliLoginPage() {
         <div className="aa-cli-login">
           <h1>Authorize ActionAmp CLI</h1>
           <p className="aa-cli-login__error">
-            This link is missing required parameters. Run <code>actionamp login</code> from
-            your terminal to start again.
+            This link is missing required parameters. Run{" "}
+            <code>actionamp login</code> from your terminal to start again.
           </p>
         </div>
       </PublicLayout>
@@ -123,22 +130,26 @@ export function CliLoginPage() {
       <div className="aa-cli-login">
         <h1>Authorize ActionAmp CLI</h1>
         <p>
-          An application on <strong>{autoLabel()}</strong> is requesting access to your
-          ActionAmp account.
+          An application on <strong>{autoLabel()}</strong> is requesting access
+          to your ActionAmp account.
         </p>
         <p className="aa-cli-login__muted">
-          Signed in as <strong>{user.identities?.email?.id ?? user.fullName}</strong>.
-          Authorizing creates a personal access token the CLI will use to read your tasks
-          and capture to your inbox. You can revoke it any time from
+          Signed in as{" "}
+          <strong>{user.identities?.email?.id ?? user.fullName}</strong>.
+          Authorizing creates a personal access token the CLI will use to read
+          your tasks and capture to your inbox. You can revoke it any time from
           Settings → Access tokens.
         </p>
 
         {!entitled ? (
           <p className="aa-cli-login__error">
-            CLI and API access are included with Pro. Upgrade from Settings → Billing, then run this command again.
+            CLI and API access are included with Pro. Upgrade from Settings →
+            Billing, then run this command again.
           </p>
         ) : status === "done" ? (
-          <p className="aa-cli-login__success">Authorized. You can close this tab.</p>
+          <p className="aa-cli-login__success">
+            Authorized. You can close this tab.
+          </p>
         ) : (
           <Button
             variant="primary"

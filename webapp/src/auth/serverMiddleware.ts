@@ -58,9 +58,11 @@ export const globalMiddlewareConfigFn: MiddlewareConfigFn = (
     "cors",
     cors({
       origin: (origin, callback) => {
-        const configured = !!origin && configuredOrigins.some((entry) =>
-          typeof entry === "string" ? entry === origin : entry.test(origin),
-        );
+        const configured =
+          !!origin &&
+          configuredOrigins.some((entry) =>
+            entry instanceof RegExp ? entry.test(origin) : entry === origin,
+          );
         // The Astro marketing site posts anonymous funnel events to this API.
         // Keep it explicit; no wildcard credentials.
         callback(null, configured || origin === "https://actionamp.com");

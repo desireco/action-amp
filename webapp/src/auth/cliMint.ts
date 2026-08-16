@@ -24,7 +24,9 @@ export const mintCliToken = (async (args, context) => {
   }
   assertCliAccess(context);
   const label =
-    typeof args?.label === "string" ? args.label.trim().slice(0, 80) : "CLI";
+    args?.label?.constructor === String
+      ? args.label.trim().slice(0, 80)
+      : "CLI";
   const plaintext = generateToken();
   const hashedToken = hashToken(plaintext);
   await context.entities.ApiKey.create({

@@ -21,7 +21,11 @@ describe("login activity", () => {
       data: { lastLoginAt: expect.any(Date) },
     });
     expect(db.LoginEvent.create).toHaveBeenCalledWith({
-      data: { userId: "user-1", provider: "email", createdAt: expect.any(Date) },
+      data: {
+        userId: "user-1",
+        provider: "email",
+        createdAt: expect.any(Date),
+      },
     });
   });
 
@@ -33,6 +37,8 @@ describe("login activity", () => {
   it("swallows recorder failures after authentication succeeds", async () => {
     const db = entities();
     db.User.update.mockRejectedValueOnce(new Error("database unavailable"));
-    await expect(recordLoginActivitySafely(db, "user-1", "magic")).resolves.toBeUndefined();
+    await expect(
+      recordLoginActivitySafely(db, "user-1", "magic"),
+    ).resolves.toBeUndefined();
   });
 });

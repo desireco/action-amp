@@ -21,6 +21,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // The test harness doesn't inject it (same gap App.test.tsx works around by
 // not rendering AppShell chrome). Stub it globally before the page mounts.
 beforeAll(() => {
+  // SAFETY: __APP_VERSION__ is a Vite build-time global the test harness
+  // doesn't inject; casting globalThis once to stub it.
   (globalThis as { __APP_VERSION__?: string }).__APP_VERSION__ = "test";
 });
 

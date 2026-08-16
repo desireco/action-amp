@@ -58,7 +58,9 @@ export function cookieDomainAttribute(
 }
 
 export function syncSessionCookie(): void {
-  if (typeof document === "undefined") return;
+  // SSR/node guard: probing globalThis (not the bare `document` binding,
+  // which would throw a ReferenceError where it does not exist).
+  if (!("document" in globalThis)) return;
   try {
     const token = getSessionId();
     // The Domain attribute must be identical on set and clear, or the clear
@@ -68,8 +70,7 @@ export function syncSessionCookie(): void {
       import.meta.env.REACT_APP_API_URL ?? "",
     );
     if (token) {
-      document.cookie =
-        `${SESSION_COOKIE_NAME}=${token}; path=/; max-age=${SESSION_MAX_AGE_SECONDS}; SameSite=Lax${domain}`;
+      document.cookie = `${SESSION_COOKIE_NAME}=${token}; path=/; max-age=${SESSION_MAX_AGE_SECONDS}; SameSite=Lax${domain}`;
     } else {
       document.cookie = `${SESSION_COOKIE_NAME}=; path=/; max-age=0${domain}`;
     }

@@ -34,7 +34,8 @@ function AppMarker() {
 }
 
 function renderPage(mode: "login" | "signup", initialPath = `/${mode}`) {
-  const footer = mode === "signup" ? <span>Signup footer</span> : <span>Login footer</span>;
+  const footer =
+    mode === "signup" ? <span>Signup footer</span> : <span>Login footer</span>;
   render(
     <QueryClientProvider client={new QueryClient()}>
       <MemoryRouter initialEntries={[initialPath]}>
@@ -60,10 +61,14 @@ describe("PasswordlessAuthPage", () => {
   it("frames signup as account creation without password or name fields", () => {
     renderPage("signup");
 
-    expect(screen.getByRole("heading", { name: "Start free." })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Start free." }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/create your account/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toHaveAttribute("type", "email");
-    expect(screen.getByRole("button", { name: "Continue with email" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Continue with email" }),
+    ).toBeInTheDocument();
     expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/full name/i)).not.toBeInTheDocument();
   });
@@ -71,9 +76,15 @@ describe("PasswordlessAuthPage", () => {
   it("keeps login framing on the same passwordless flow", () => {
     renderPage("login");
 
-    expect(screen.getByRole("heading", { name: "Welcome back." })).toBeInTheDocument();
-    expect(screen.getByText("We’ll email a code. No password needed.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Email me a code" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Welcome back." }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("We’ll email a code. No password needed."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Email me a code" }),
+    ).toBeInTheDocument();
   });
 
   it("requests a code and advances signup to the shared verification step", async () => {
@@ -83,7 +94,9 @@ describe("PasswordlessAuthPage", () => {
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "new@example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Continue with email" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Continue with email" }),
+    );
 
     await waitFor(() => {
       expect(requestMagicLogin).toHaveBeenCalledWith({
@@ -91,9 +104,16 @@ describe("PasswordlessAuthPage", () => {
         returnTo: "/do",
       });
     });
-    expect(screen.getByRole("heading", { name: "Enter your code." })).toBeInTheDocument();
-    expect(screen.getByLabelText("Six-digit code")).toHaveAttribute("autocomplete", "one-time-code");
-    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Enter your code." }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Six-digit code")).toHaveAttribute(
+      "autocomplete",
+      "one-time-code",
+    );
+    expect(
+      screen.getByRole("button", { name: "Continue" }),
+    ).toBeInTheDocument();
   });
 
   it("preserves a safe purchase return path when requesting a code", async () => {

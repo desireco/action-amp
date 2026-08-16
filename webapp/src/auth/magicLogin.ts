@@ -2,9 +2,16 @@ import { createHash, randomBytes, randomInt, randomUUID } from "node:crypto";
 import { hashPassword } from "@wasp.sh/lib-auth/node";
 import { HttpError } from "wasp/server";
 import { emailSender } from "wasp/server/email";
-import type { RequestMagicLogin, VerifyMagicLogin } from "wasp/server/operations";
+import type {
+  RequestMagicLogin,
+  VerifyMagicLogin,
+} from "wasp/server/operations";
 import { createSession } from "wasp/auth/session";
-import { createProviderId, createUser, findAuthIdentity } from "wasp/server/auth";
+import {
+  createProviderId,
+  createUser,
+  findAuthIdentity,
+} from "wasp/server/auth";
 import { renderMagicLoginEmailHtml } from "./magicLoginEmail";
 import { buildMagicLoginUrl, safeAuthReturnTo } from "./returnTo";
 import { recordLoginActivitySafely } from "./loginActivity";
@@ -16,8 +23,8 @@ const MAX_ATTEMPTS = 5;
 type MagicLoginInput = { email: string; returnTo?: string };
 type VerifyMagicLoginInput = { email?: string; code?: string; token?: string };
 
-function normalizeEmail(value: unknown): string {
-  if (typeof value !== "string") throw new HttpError(400, "Enter a valid email.");
+function normalizeEmail(value: string | undefined): string {
+  if (!value) throw new HttpError(400, "Enter a valid email.");
   const email = value.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new HttpError(400, "Enter a valid email.");
@@ -31,7 +38,10 @@ function hash(value: string): string {
 
 function isLocalhost(): boolean {
   try {
-    return new URL(process.env.WASP_WEB_CLIENT_URL ?? "http://localhost:4000").hostname === "localhost";
+    return (
+      new URL(process.env.WASP_WEB_CLIENT_URL ?? "http://localhost:4000")
+        .hostname === "localhost"
+    );
   } catch {
     return process.env.NODE_ENV === "development";
   }
@@ -44,13 +54,20 @@ function createCode(): string {
   return String(randomInt(100000, 1000000));
 }
 
-function displayNameFromEmail(email: string): { fullName: string; firstName: string } {
+/** The display-name pair derived from an email's local part. */
+interface EmailDisplayName {
+  fullName: string;
+  firstName: string;
+}
+
+function displayNameFromEmail(email: string): EmailDisplayName {
   const localPart = email.split("@")[0] ?? "there";
-  const fullName = localPart
-    .split(/[._+-]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ") || "There";
+  const fullName =
+    localPart
+      .split(/[._+-]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ") || "There";
   return { fullName, firstName: fullName.split(/\s+/)[0] ?? "There" };
 }
 
@@ -120,7 +137,9 @@ export const requestMagicLogin = (async (args: MagicLoginInput, context) => {
         message: error instanceof Error ? error.message : String(error),
       });
       // Never leave a usable credential behind if delivery failed.
-      await context.entities.MagicLoginChallenge.delete({ where: { id } }).catch(() => undefined);
+      await context.entities.MagicLoginChallenge.delete({
+        where: { id },
+      }).catch(() => undefined);
       throw new HttpError(503, "Could not send email. Try again shortly.");
     }
   }
@@ -129,17 +148,27 @@ export const requestMagicLogin = (async (args: MagicLoginInput, context) => {
 
 async function resolveChallenge(args: VerifyMagicLoginInput, entities: any) {
   const now = new Date();
-  if (typeof args.token === "string" && args.token.length > 0) {
+  if (args.token) {
     return entities.MagicLoginChallenge.findFirst({
-      where: { tokenHash: hash(args.token), consumedAt: null, expiresAt: { gt: now } },
+      where: {
+        tokenHash: hash(args.token),
+        consumedAt: null,
+        expiresAt: { gt: now },
+      },
     });
   }
 
   const email = normalizeEmail(args.email);
-  const code = typeof args.code === "string" ? args.code.trim() : "";
-  if (!/^\d{6}$/.test(code)) throw new HttpError(400, "Enter the six-digit code.");
+  const code = args.code?.trim() ?? "";
+  if (!/^\d{6}$/.test(code))
+    throw new HttpError(400, "Enter the six-digit code.");
   const challenge = await entities.MagicLoginChallenge.findFirst({
-    where: { email, consumedAt: null, expiresAt: { gt: now }, attempts: { lt: MAX_ATTEMPTS } },
+    where: {
+      email,
+      consumedAt: null,
+      expiresAt: { gt: now },
+      attempts: { lt: MAX_ATTEMPTS },
+    },
     orderBy: { createdAt: "desc" },
   });
   if (!challenge || challenge.codeHash !== hash(`${challenge.id}:${code}`)) {
@@ -149,14 +178,24 @@ async function resolveChallenge(args: VerifyMagicLoginInput, entities: any) {
         data: { attempts: { increment: 1 } },
       });
     }
-    throw new HttpError(400, "That code is not valid. Try again or request a new one.");
+    throw new HttpError(
+      400,
+      "That code is not valid. Try again or request a new one.",
+    );
   }
   return challenge;
 }
 
-export const verifyMagicLogin = (async (args: VerifyMagicLoginInput, context) => {
+export const verifyMagicLogin = (async (
+  args: VerifyMagicLoginInput,
+  context,
+) => {
   const challenge = await resolveChallenge(args, context.entities);
-  if (!challenge) throw new HttpError(400, "That sign-in link is no longer valid. Request a new one.");
+  if (!challenge)
+    throw new HttpError(
+      400,
+      "That sign-in link is no longer valid. Request a new one.",
+    );
 
   // Atomic consume prevents concurrent code/link submissions from creating two
   // sessions. The selected row must still be unused at write time.
@@ -164,7 +203,8 @@ export const verifyMagicLogin = (async (args: VerifyMagicLoginInput, context) =>
     where: { id: challenge.id, consumedAt: null },
     data: { consumedAt: new Date() },
   });
-  if (consumed.count !== 1) throw new HttpError(400, "That sign-in link was already used.");
+  if (consumed.count !== 1)
+    throw new HttpError(400, "That sign-in link was already used.");
 
   const providerId = createProviderId("email", challenge.email);
   const identity = await findAuthIdentity(providerId);
@@ -175,7 +215,9 @@ export const verifyMagicLogin = (async (args: VerifyMagicLoginInput, context) =>
     const user = await createUser(
       providerId,
       JSON.stringify({
-        hashedPassword: await hashPassword(randomBytes(32).toString("base64url")),
+        hashedPassword: await hashPassword(
+          randomBytes(32).toString("base64url"),
+        ),
         isEmailVerified: true,
         emailVerificationSentAt: null,
         passwordResetSentAt: null,
@@ -189,13 +231,18 @@ export const verifyMagicLogin = (async (args: VerifyMagicLoginInput, context) =>
 
   const session = await createSession(authId);
   if (!userId) {
-    const user = await context.entities.User.findFirst({ where: { auth: { id: authId } } });
+    const user = await context.entities.User.findFirst({
+      where: { auth: { id: authId } },
+    });
     userId = user?.id;
   }
   if (userId) {
     await recordLoginActivitySafely(context.entities, userId, "magic");
   } else {
-    console.error("Login activity recording skipped", { authId, provider: "magic" });
+    console.error("Login activity recording skipped", {
+      authId,
+      provider: "magic",
+    });
   }
   return { sessionId: session.id };
 }) satisfies VerifyMagicLogin<VerifyMagicLoginInput, { sessionId: string }>;

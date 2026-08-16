@@ -23,7 +23,11 @@
  * URL and the server returns the error. That's the honest behavior; we don't
  * fake a disabled state.
  */
-export function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
+export function GoogleButton({
+  label = "Continue with Google",
+}: {
+  label?: string;
+}) {
   // ponytail: disabled — see file-top note.
   void label;
   return null;

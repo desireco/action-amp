@@ -39,6 +39,26 @@
  */
 import type { Request, Response, NextFunction } from "express";
 
+// Wasp's auth middleware assigns the Lucia session id at runtime; this
+// augmentation makes the read below cast-free.
+declare module "express-serve-static-core" {
+  interface Request {
+    sessionId?: string;
+  }
+}
+
+/** A JSON value as JSON.parse produces it (concrete arms only). */
+type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+
+/** Pull `{ sessionId }` out of a parsed login response body. */
+function sessionIdFromBody(body: Json): string | undefined {
+  if (!(body instanceof Object) || Array.isArray(body)) return undefined;
+  const id = body.sessionId;
+  // JSON.parse only produces primitive strings, so constructor identity is
+  // an exact string test here.
+  return id?.constructor === String ? id : undefined;
+}
+
 // Keep this in sync with Lucia's default sessionExpiresIn (30d). The cookie
 // and the DB row should expire together — if you change one, change both.
 const SESSION_COOKIE_NAME = "wasp_session";
@@ -86,10 +106,12 @@ export function attachSessionFromCookie(
 }
 
 function readSessionCookie(req: Request): string | undefined {
+  // cookie-parser types its values as strings; absent/empty falls through to
+  // the raw-header parse below.
   const parsed = req.cookies?.[SESSION_COOKIE_NAME];
-  if (typeof parsed === "string" && parsed.length > 0) return parsed;
+  if (parsed && parsed.length > 0) return parsed;
   const header = req.headers.cookie;
-  if (typeof header !== "string") return undefined;
+  if (!header) return undefined;
   for (const part of header.split(";")) {
     const eq = part.indexOf("=");
     if (eq === -1) continue;
@@ -131,14 +153,14 @@ export function sessionCookieWriteMiddleware(
 ): void {
   // Pass-through end(): keep the original overloads opaque so chunk/callback
   // forms all survive untouched.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const originalEnd = res.end.bind(res) as (...args: unknown[]) => unknown;
+  // SAFETY: res.end's overloaded signature is opaque to a wrapper — bind and
+  // forward args verbatim; every call shape reaches the original untouched.
+  const originalEnd = res.end.bind(res) as (...args: never[]) => void;
   let cookieHandled = false;
 
-  res.end = ((
-    ...args: unknown[]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ) => {
+  // SAFETY: same overload-opacity reason as originalEnd — the replacement
+  // forwards everything it receives to the bound original.
+  res.end = ((...args: never[]) => {
     if (!cookieHandled) {
       cookieHandled = true;
       try {
@@ -149,16 +171,18 @@ export function sessionCookieWriteMiddleware(
       }
     }
     return originalEnd(...args);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }) as any as typeof res.end;
+  }) as typeof res.end;
 
   next();
 }
 
-function stampSessionCookie(req: Request, res: Response, chunk: unknown): void {
-  // Wasp's auth middleware assigns this at runtime, but its Express Request
-  // augmentation is not visible in the generated server's TypeScript build.
-  const sessionId = (req as Request & { sessionId?: unknown }).sessionId;
+function stampSessionCookie(
+  req: Request,
+  res: Response,
+  chunk: string | Buffer | undefined,
+): void {
+  // Assigned by Wasp's auth middleware (see the Request augmentation above).
+  const sessionId = req.sessionId;
   // This middleware also runs inside mounted routers ("/auth", "/operations"),
   // where Express strips the mount prefix — match by suffix so both the full
   // ("/auth/email/login") and stripped ("/email/login") forms are covered.
@@ -179,25 +203,25 @@ function stampSessionCookie(req: Request, res: Response, chunk: unknown): void {
   if (isLogin) {
     // Wasp's login handlers return { sessionId } as JSON. `chunk` is the
     // serialized body on the first end() call.
-    let loginSessionId: unknown;
-    if (typeof chunk === "string" || Buffer.isBuffer(chunk)) {
+    let loginSessionId: string | undefined;
+    if (chunk !== undefined) {
       try {
         const body = JSON.parse(
-          typeof chunk === "string" ? chunk : chunk.toString("utf8"),
+          Buffer.isBuffer(chunk) ? chunk.toString("utf8") : chunk,
         );
-        loginSessionId = (body as { sessionId?: unknown })?.sessionId;
+        loginSessionId = sessionIdFromBody(body);
       } catch {
         // Non-JSON body (e.g. a redirect) — nothing to stamp.
       }
     }
-    if (typeof loginSessionId === "string" && loginSessionId.length > 0) {
+    if (loginSessionId) {
       res.cookie(SESSION_COOKIE_NAME, loginSessionId, cookieOptions());
     }
     return;
   }
 
   // Sliding refresh on every other authenticated request.
-  if (typeof sessionId === "string" && sessionId.length > 0) {
+  if (sessionId) {
     res.cookie(SESSION_COOKIE_NAME, sessionId, cookieOptions());
   }
 }

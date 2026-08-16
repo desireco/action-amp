@@ -57,8 +57,8 @@ declare module "express-serve-static-core" {
  * Extract the Bearer token from the Authorization header, or null if absent /
  * malformed. Does NOT validate the token — just parses the header shape.
  */
-function readBearerToken(authHeader: unknown): string | null {
-  if (typeof authHeader !== "string") return null;
+function readBearerToken(authHeader: string | undefined): string | null {
+  if (!authHeader) return null;
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
   return match ? match[1].trim() : null;
 }
@@ -168,7 +168,10 @@ async function patAuthMiddleware(
       data: { lastUsedAt: new Date() },
     })
     .catch((err) => {
-      console.error(`[pat] failed to stamp lastUsedAt for key ${apiKey!.id}:`, err);
+      console.error(
+        `[pat] failed to stamp lastUsedAt for key ${apiKey!.id}:`,
+        err,
+      );
     });
 
   req.patUser = user;

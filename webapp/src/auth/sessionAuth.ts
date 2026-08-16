@@ -27,17 +27,22 @@ export interface SessionAuth {
   userId: string;
 }
 
-/** The user a sessionAuthMiddleware-equipped route authenticated, if any. */
-export function getSessionAuth(req: Request): SessionAuth | undefined {
-  return (req as Request & { sessionAuth?: SessionAuth }).sessionAuth;
+// Attach the middleware's resolved user to Express's Request so reads and
+// writes are cast-free (same pattern as patMiddleware's patUser).
+declare module "express-serve-static-core" {
+  interface Request {
+    sessionAuth?: SessionAuth;
+  }
 }
 
-async function resolveSessionAuth(
-  req: Request,
-): Promise<SessionAuth | null> {
+/** The user a sessionAuthMiddleware-equipped route authenticated, if any. */
+export function getSessionAuth(req: Request): SessionAuth | undefined {
+  return req.sessionAuth;
+}
+
+async function resolveSessionAuth(req: Request): Promise<SessionAuth | null> {
   const header = req.headers.authorization;
-  const token =
-    typeof header === "string" ? header.match(/^Bearer\s+(.+)$/i)?.[1] : null;
+  const token = header?.match(/^Bearer\s+(.+)$/i)?.[1] ?? null;
   if (!token) return null;
   const session = await prisma.session.findUnique({
     where: { id: token },
@@ -70,9 +75,7 @@ export function sessionAuthMiddleware(
       if (!auth) {
         return res.status(401).json({ error: "Not authenticated." });
       }
-      // Express's Request type doesn't know about our property; attach it
-      // through the same cast getSessionAuth reads it with.
-      (req as Request & { sessionAuth?: SessionAuth }).sessionAuth = auth;
+      req.sessionAuth = auth;
       next();
     })
     .catch((err) => {

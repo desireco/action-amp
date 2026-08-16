@@ -14,11 +14,15 @@ describe("cookieDomainAttribute", () => {
   });
 
   it("stays host-only on localhost (dev shares one host)", () => {
-    expect(cookieDomainAttribute("localhost", "http://localhost:3001")).toBe("");
+    expect(cookieDomainAttribute("localhost", "http://localhost:3001")).toBe(
+      "",
+    );
   });
 
   it("stays host-only when client and API hosts are unrelated", () => {
-    expect(cookieDomainAttribute("app.actionamp.com", "https://api.example.com")).toBe("");
+    expect(
+      cookieDomainAttribute("app.actionamp.com", "https://api.example.com"),
+    ).toBe("");
   });
 
   it("stays host-only when client and API are the same host", () => {

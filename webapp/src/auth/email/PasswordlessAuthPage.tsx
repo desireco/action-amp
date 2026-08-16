@@ -48,7 +48,11 @@ export function PasswordlessAuthPage({
   async function finishLogin(sessionId: string) {
     setSessionId(sessionId);
     if (mode === "signup") {
-      trackAnalyticsEvent({ name: "SIGNUP_COMPLETED", route: "/signup", metadata: { surface: "signup" } });
+      trackAnalyticsEvent({
+        name: "SIGNUP_COMPLETED",
+        route: "/signup",
+        metadata: { surface: "signup" },
+      });
       trackStatCounterEvent("signup_complete", "signup");
     }
     window.location.assign(returnTo);
@@ -93,7 +97,11 @@ export function PasswordlessAuthPage({
           `${window.location.pathname}${cleanQuery ? `?${cleanQuery}` : ""}`,
         );
         setStatus(null);
-        setError(err instanceof Error ? err.message : "That sign-in link is no longer valid.");
+        setError(
+          err instanceof Error
+            ? err.message
+            : "That sign-in link is no longer valid.",
+        );
         setIsSubmitting(false);
       });
   }, [searchParams]);
@@ -106,13 +114,17 @@ export function PasswordlessAuthPage({
     try {
       await requestMagicLogin({ email, returnTo });
       setCodeSent(true);
-      setStatus(import.meta.env.DEV
-        ? "Local code: 111111"
-        : "Check your email for a code or sign-in link.");
+      setStatus(
+        import.meta.env.DEV
+          ? "Local code: 111111"
+          : "Check your email for a code or sign-in link.",
+      );
       setIsSubmitting(false);
     } catch (err) {
       setStatus(null);
-      setError(err instanceof Error ? err.message : "Could not send email. Try again.");
+      setError(
+        err instanceof Error ? err.message : "Could not send email. Try again.",
+      );
       setIsSubmitting(false);
     }
   }
@@ -132,12 +144,14 @@ export function PasswordlessAuthPage({
     }
   }
 
-  if (authStatus !== "loading" && user) return <Navigate to={returnTo} replace />;
+  if (authStatus !== "loading" && user)
+    return <Navigate to={returnTo} replace />;
 
   const initialTitle = mode === "signup" ? "Start free." : "Welcome back.";
-  const initialSubtitle = mode === "signup"
-    ? "We’ll email a code to create your account. No password needed."
-    : "We’ll email a code. No password needed.";
+  const initialSubtitle =
+    mode === "signup"
+      ? "We’ll email a code to create your account. No password needed."
+      : "We’ll email a code. No password needed.";
 
   return (
     <>
@@ -147,69 +161,87 @@ export function PasswordlessAuthPage({
       <SplashScreen active={authStatus === "loading"} />
       <AuthLayout
         title={codeSent ? "Enter your code." : initialTitle}
-        subtitle={codeSent
-          ? `We sent a six-digit code and a sign-in link to ${email}. Enter the code here, or use the link to continue.`
-          : initialSubtitle}
+        subtitle={
+          codeSent
+            ? `We sent a six-digit code and a sign-in link to ${email}. Enter the code here, or use the link to continue.`
+            : initialSubtitle
+        }
         footer={footer}
       >
-      <form className="aa-auth-form" onSubmit={codeSent ? submitCode : requestCode}>
-        {codeSent ? (
-          <>
-            <label className="aa-auth-label" htmlFor="magic-code">Six-digit code</label>
-            <input
-              className="aa-auth-input"
-              id="magic-code"
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6}"
-              maxLength={6}
-              value={code}
-              onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-              disabled={isSubmitting}
-              required
-              autoFocus
-            />
-          </>
-        ) : (
-          <>
-            <label className="aa-auth-label" htmlFor="magic-email">Email</label>
-            <input
-              className="aa-auth-input"
-              id="magic-email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={isSubmitting}
-              required
-            />
-          </>
-        )}
-        <button className="aa-auth-submit" type="submit" disabled={isSubmitting}>
-          {codeSent
-            ? "Continue"
-            : mode === "signup"
-              ? "Continue with email"
-              : "Email me a code"}
-        </button>
-      </form>
-      {status && <p className="aa-auth-status">{status}</p>}
-      {error && <p className="aa-auth-error">{error}</p>}
-      {canDevAutologin && (
-        <div className="aa-auth-dev">
-          <div className="aa-auth-dev__label">Local dev</div>
+        <form
+          className="aa-auth-form"
+          onSubmit={codeSent ? submitCode : requestCode}
+        >
+          {codeSent ? (
+            <>
+              <label className="aa-auth-label" htmlFor="magic-code">
+                Six-digit code
+              </label>
+              <input
+                className="aa-auth-input"
+                id="magic-code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                value={code}
+                onChange={(event) =>
+                  setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                disabled={isSubmitting}
+                required
+                autoFocus
+              />
+            </>
+          ) : (
+            <>
+              <label className="aa-auth-label" htmlFor="magic-email">
+                Email
+              </label>
+              <input
+                className="aa-auth-input"
+                id="magic-email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                disabled={isSubmitting}
+                required
+              />
+            </>
+          )}
           <button
-            type="button"
-            className="aa-auth-dev__button"
+            className="aa-auth-submit"
+            type="submit"
             disabled={isSubmitting}
-            onClick={() => void devAutologin(DEFAULT_DEV_EMAIL)}
           >
-            Autologin {DEFAULT_DEV_EMAIL}
+            {codeSent
+              ? "Continue"
+              : mode === "signup"
+                ? "Continue with email"
+                : "Email me a code"}
           </button>
-          <p className="aa-auth-dev__hint">Use <code>/login?devEmail=name@example.com</code> for any local user.</p>
-        </div>
-      )}
+        </form>
+        {status && <p className="aa-auth-status">{status}</p>}
+        {error && <p className="aa-auth-error">{error}</p>}
+        {canDevAutologin && (
+          <div className="aa-auth-dev">
+            <div className="aa-auth-dev__label">Local dev</div>
+            <button
+              type="button"
+              className="aa-auth-dev__button"
+              disabled={isSubmitting}
+              onClick={() => void devAutologin(DEFAULT_DEV_EMAIL)}
+            >
+              Autologin {DEFAULT_DEV_EMAIL}
+            </button>
+            <p className="aa-auth-dev__hint">
+              Use <code>/login?devEmail=name@example.com</code> for any local
+              user.
+            </p>
+          </div>
+        )}
       </AuthLayout>
     </>
   );
