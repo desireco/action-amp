@@ -109,7 +109,9 @@ export function SharePage() {
       await clearPendingShare(pending.id);
       void queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-      navigate(`/do/inbox?shared=${encodeURIComponent(created.id)}`, { replace: true });
+      // `?item=` is InboxPage's scroll/highlight contract — `?shared=` was
+      // never read there, so the just-captured item never got highlighted.
+      navigate(`/do/inbox?item=${encodeURIComponent(created.id)}`, { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Could not add this to your inbox.");
     } finally {

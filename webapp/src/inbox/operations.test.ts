@@ -38,7 +38,6 @@ const BASE_ITEM = {
     filename: string;
     mimeType: string;
     size: number;
-    data: Buffer;
   }[],
 };
 
@@ -90,16 +89,24 @@ describe("triageInboxItem — Simple-list decisions", () => {
   });
 
   it("moves an attachment-backed InboxItem into a Simple list", async () => {
-    const m = arrange({ attachments: [{ id: "attachment-1", filename: "image.jpg", mimeType: "image/jpeg", size: 5, data: Buffer.from("hello") }] });
+    // The main read selects attachment metadata; the blobs are fetched in the
+    // list-item branch (the only decision that moves the images).
+    const m = arrange({ attachments: [{ id: "attachment-1", filename: "image.jpg", mimeType: "image/jpeg", size: 5 }] });
     m.entities.Lens.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST" });
     m.entities.ListItem.findFirst.mockResolvedValue(null);
     m.entities.ListItem.create.mockResolvedValue({ id: "list-item-1" });
+    m.entities.InboxAttachment.findMany.mockResolvedValue([
+      { filename: "image.jpg", mimeType: "image/jpeg", size: 5, data: Buffer.from("hello") },
+    ]);
 
     await triageInboxItem(
       { inboxItemId: "ix-1", decision: "list-item", lensId: "shopping" },
       m.context,
     );
 
+    expect(m.entities.InboxAttachment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { inboxItemId: "ix-1" } }),
+    );
     expect(m.entities.ListItem.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         attachments: { create: [expect.objectContaining({ filename: "image.jpg" })] },

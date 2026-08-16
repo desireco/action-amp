@@ -362,7 +362,10 @@ export async function triageInboxItemCore(
 ) {
   const item = await entities.InboxItem.findUnique({
     where: { id: inboxItemId },
-    include: { attachments: { select: { filename: true, mimeType: true, size: true, data: true } } },
+    // Metadata only — the blobs are fetched solely in the list-item branch
+    // (the one decision that moves attachments). Loading `data` here would
+    // pull up to 20 MB of images into memory on every triage click.
+    include: { attachments: { select: { filename: true, mimeType: true, size: true } } },
   });
   if (!item || item.userId !== userId) {
     throw new Error("Inbox item not found.");
@@ -459,13 +462,19 @@ export async function triageInboxItemCore(
       break;
     }
     case "list-item": {
+      // The only decision that keeps the images — fetch the blobs now (the
+      // main read selects metadata only).
+      const attachments = await entities.InboxAttachment.findMany({
+        where: { inboxItemId: item.id },
+        select: { filename: true, mimeType: true, size: true, data: true },
+      });
       const listItem = await createListItemCore(entities, {
         userId,
         lensId,
         text: title,
         content: resolvedContent ?? item.content,
         sourceUrl: item.sourceUrl,
-        preparedAttachments: item.attachments,
+        preparedAttachments: attachments,
       });
       result = { kind: "list-item", id: listItem.id };
       break;
