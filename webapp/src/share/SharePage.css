@@ -43,7 +43,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: var(--aa-space-3xl);
+  margin-bottom: var(--aa-space-lg);
   color: var(--aa-text-3);
   font-size: var(--aa-text-sm);
   font-weight: var(--aa-weight-semibold);
@@ -418,6 +418,6 @@
   }
 
   .aa-share__header {
-    margin-bottom: var(--aa-space-xl);
+    margin-bottom: var(--aa-space-md);
   }
 }
