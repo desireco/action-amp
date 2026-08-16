@@ -15,7 +15,7 @@ function context() {
     user: {
       id: "user-1",
       plan: "PRO",
-      planRenewsAt: FUTURE,
+      planRenewsAt: FUTURE as Date | null,
       isAdmin: false,
     },
     entities: {

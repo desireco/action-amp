@@ -15,6 +15,51 @@ import { getLensesCore, type LensSummary } from "./operationsCore";
 
 const prisma = new PrismaClient();
 
+/** The tx-client slice the lens reassignment transaction uses. */
+interface LensTxClient {
+  listItem: {
+    updateMany(args: {
+      where: { lensId: string };
+      data: { lensId: string };
+    }): Promise<unknown>;
+  };
+  goal: {
+    updateMany(args: {
+      where: { lensId: string };
+      data: { lensId: string };
+    }): Promise<unknown>;
+  };
+  task: {
+    updateMany(args: {
+      where: { lensId: string };
+      data: { lensId: string };
+    }): Promise<unknown>;
+  };
+  project: {
+    updateMany(args: {
+      where: { lensId: string };
+      data: { lensId: string };
+    }): Promise<unknown>;
+  };
+  lens: {
+    delete(args: {
+      where: { id: string };
+      select: { id: true };
+    }): Promise<{ id: string }>;
+  };
+}
+
+/**
+ * Injectable transaction runner — the seam for the ONE place this module
+ * needs its direct Prisma client (the cross-entity lens reassignment needs a
+ * real $transaction, which Wasp's per-op entities can't provide). Tests swap
+ * the property (see operations.test.ts); production always uses the client.
+ */
+export const lensDb = {
+  transaction: <T>(fn: (tx: LensTxClient) => Promise<T>): Promise<T> =>
+    prisma.$transaction(fn),
+};
+
 /**
  * Lens CRUD + list — user-defined life contexts (Pro only).
  *
@@ -60,7 +105,9 @@ type LensColor = (typeof LENS_COLORS)[number];
 
 function isLensColor(s: unknown): s is LensColor {
   // SAFETY: narrowing readonly string array for .includes() call.
-  return typeof s === "string" && (LENS_COLORS as readonly string[]).includes(s);
+  return (
+    typeof s === "string" && (LENS_COLORS as readonly string[]).includes(s)
+  );
 }
 
 type LensContentEntities = {
@@ -85,7 +132,10 @@ type LensUpdateData = {
   type?: LensType;
 };
 
-async function lensHasContent(entities: LensContentEntities, lensId: string): Promise<boolean> {
+async function lensHasContent(
+  entities: LensContentEntities,
+  lensId: string,
+): Promise<boolean> {
   const counts = await Promise.all([
     entities.Goal.count({ where: { lensId } }),
     entities.Project.count({ where: { lensId } }),
@@ -95,7 +145,9 @@ async function lensHasContent(entities: LensContentEntities, lensId: string): Pr
   return counts.some((count) => count > 0);
 }
 
-function assertValidLensType(type: unknown): asserts type is LensType | undefined {
+function assertValidLensType(
+  type: unknown,
+): asserts type is LensType | undefined {
   if (type !== undefined && type !== "LIFE_AREA" && type !== "SIMPLE_LIST") {
     throwHttpStatus(400, "Unknown lens type.");
   }
@@ -144,7 +196,11 @@ export const createLens = (async (args, context) => {
   if (!name) {
     throw new Error("Lens name is required.");
   }
-  if (args.color !== undefined && args.color !== null && !isLensColor(args.color)) {
+  if (
+    args.color !== undefined &&
+    args.color !== null &&
+    !isLensColor(args.color)
+  ) {
     throwHttpStatus(400, "Unknown lens color.");
   }
   const purpose = args.purpose?.trim() || null;
@@ -175,7 +231,15 @@ export const createLens = (async (args, context) => {
         purpose,
         userId: context.user.id,
       },
-      select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
+      select: {
+        id: true,
+        name: true,
+        isDefault: true,
+        isIncluded: true,
+        type: true,
+        color: true,
+        purpose: true,
+      },
     });
   } catch (e) {
     // Prisma P2002 = unique constraint violation on [userId, name].
@@ -185,8 +249,21 @@ export const createLens = (async (args, context) => {
     throw e;
   }
 }) satisfies CreateLens<
-  { name: string; type?: "LIFE_AREA" | "SIMPLE_LIST"; color?: string | null; purpose?: string },
-  { id: string; name: string; isDefault: boolean; isIncluded: boolean; type: string; color: string | null; purpose: string | null }
+  {
+    name: string;
+    type?: "LIFE_AREA" | "SIMPLE_LIST";
+    color?: string | null;
+    purpose?: string;
+  },
+  {
+    id: string;
+    name: string;
+    isDefault: boolean;
+    isIncluded: boolean;
+    type: string;
+    color: string | null;
+    purpose: string | null;
+  }
 >;
 
 export const updateLens = (async (args, context) => {
@@ -215,7 +292,15 @@ export const updateLens = (async (args, context) => {
       return await context.entities.Lens.update({
         where: { id: existing.id },
         data,
-        select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
+        select: {
+          id: true,
+          name: true,
+          isDefault: true,
+          isIncluded: true,
+          type: true,
+          color: true,
+          purpose: true,
+        },
       });
     } catch (e) {
       if (e && typeof e === "object" && "code" in e && e.code === "P2002") {
@@ -228,11 +313,27 @@ export const updateLens = (async (args, context) => {
   return await context.entities.Lens.update({
     where: { id: existing.id },
     data,
-    select: { id: true, name: true, isDefault: true, isIncluded: true, type: true, color: true, purpose: true },
+    select: {
+      id: true,
+      name: true,
+      isDefault: true,
+      isIncluded: true,
+      type: true,
+      color: true,
+      purpose: true,
+    },
   });
 }) satisfies UpdateLens<
   LensUpdateArgs,
-  { id: string; name: string; isDefault: boolean; isIncluded: boolean; type: string; color: string | null; purpose: string | null }
+  {
+    id: string;
+    name: string;
+    isDefault: boolean;
+    isIncluded: boolean;
+    type: string;
+    color: string | null;
+    purpose: string | null;
+  }
 >;
 
 export const deleteLens = (async (args, context) => {
@@ -279,7 +380,7 @@ export const deleteLens = (async (args, context) => {
     const moveWhere = { lensId: existing.id };
     const moveData = { lensId: args.targetLensId };
     try {
-      return await prisma.$transaction(async (tx) => {
+      return await lensDb.transaction(async (tx) => {
         if (existing.type === "SIMPLE_LIST") {
           await tx.listItem.updateMany({ where: moveWhere, data: moveData });
         } else {
