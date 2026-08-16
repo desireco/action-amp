@@ -4,7 +4,7 @@ title: "Next / What Now (the home screen + the wedge matcher)"
 feature_area: focus
 status: shipped
 spec: focus-why-transparent.md   # done — the "why this?" line
-verified: 2026-08-10
+verified: 2026-08-16
 ---
 
 # Next / What Now
@@ -50,9 +50,28 @@ execution context belongs in Focus. History relations attach only to the ranked
 winner (not every candidate) via a shared owned hydration core
 (`hydrateTopTaskData`); normalization lives in the pure `app/taskContext.ts`.
 
-**Files.** `app/NextPage.tsx`; `components/ui/NextCard.tsx`; `tasks/operations.ts`
-(`getTopTask` → rank → `hydrateTopTaskData`); `tasks/operationsCore.ts`
-(`getTopTaskData`, `hydrateTopTaskData`); `app/focusWhy.ts`; `app/taskContext.ts`.
+**Added 2026-08-16 — the alternatives rail** (WORKFLOW.md §5.12). Below the
+card, while deciding (`next` candidate state, picked task included), the next
+ranked candidates (up to 3) render under "Or choose another task in \<Lens\>"
+with the hint "The recommendation stays available." Sourced from
+`getTaskAlternatives` (`tasks/operations.ts`) → `getTaskAlternativesData`
+(`tasks/operationsCore.ts`): the same `activePoolWhere` pool and comparator as
+`getTopTask`, minus the on-stage task's id (`excludeIds`), rows light (project
+name only, no history hydration). Choosing a row navigates to
+`/do/today/:permalink` (the existing picked-task path) — nothing is snoozed,
+started, or demoted; the recommendation re-enters the list flagged "Suggested".
+The rail is hidden when the on-stage task is Now (`startedAt`) or the pool
+holds nothing else. Verified 2026-08-16 by `tasks/operationsCore.test.ts` +
+`tasks/operations.test.ts` (alternatives core + op: same pool/comparator,
+excludeIds, limit) and `components/ui/NextAlternatives.test.tsx` (rows,
+kicker, onChoose, empty suppression).
+
+**Files.** `app/NextPage.tsx`; `components/ui/NextCard.tsx`;
+`components/ui/NextAlternatives.tsx`; `tasks/operations.ts`
+(`getTopTask` → rank → `hydrateTopTaskData`; `getTaskAlternatives`);
+`tasks/operationsCore.ts` (`getTopTaskData`, `getTaskAlternativesData`,
+`TASK_ALTERNATIVES_LIMIT`, `hydrateTopTaskData`); `app/focusWhy.ts`;
+`app/taskContext.ts`.
 
 **Verified 2026-08-10.** `tasks/operationsCore.test.ts` + `tasks/operations.test.ts`
 (ranking unchanged + winner hydration), `app/taskContext.test.ts` (Goal

@@ -112,6 +112,14 @@ Triage drains the universal Inbox across both Lens types.
   - **Next** — the single focus task. State machine:
     `Next → (Start) → Now → (Done | Defer | Pause) → Next`. The Now state
     (`Task.startedAt`) persists across navigation.
+    - **Alternatives rail** (added 2026-08-16, §5.12): while deciding — the
+      `next` candidate state, a picked task included — the next ranked
+      candidates (same pool, same comparator, up to 3) wait below the card
+      under "Or choose another task in \<Lens\>". Choosing one routes through
+      the picked-task path (`/do/today/:permalink`): nothing is snoozed,
+      started, or demoted; the recommendation re-enters the list (flagged
+      "Suggested") and stays available. Hidden when a task is Now or the
+      pool holds nothing else.
   - **Today** — the global committed-for-today list (across all lenses), capped
     at the user's `todayCap` (default 5, range 3–12, set in Preferences). The
     cap is a feature, not a limit — it forces the "what actually matters today"
@@ -541,6 +549,16 @@ Lens` while skipping the standalone lens picker by default. See
     - **Rollover is unaffected.** The daily `TODAY → UPCOMING` rollover
       (§5.7) was already global (`where: { userId, status: "TODAY" }` — no
       lens filter), so no change there.
+
+12. **Choosing another task from Next is navigation, not mutation (locked
+    2026-08-16).** The alternatives rail under the Next card ("Or choose
+    another task in \<Lens\>") draws from the same ranked pool and comparator
+    as `getTopTask`, minus whatever is on stage, capped at 3. Picking a row
+    routes through the existing picked-task path (`/do/today/:permalink`) —
+    the recommendation is never snoozed or demoted to make room; it re-enters
+    the list (flagged "Suggested") and stays one tap away. The rail renders
+    only while deciding (the `next` candidate state, picked task included);
+    a started task keeps the stage to itself.
 
 ## 6. Document cascade
 
