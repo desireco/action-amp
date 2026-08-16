@@ -20,17 +20,38 @@
  * imports them from there.
  */
 
+import type { Prisma, Priority, Size, Task, TaskSession } from "@prisma/client";
 import { resolveAccessibleLenses } from "../billing/entitlements";
 import { activePoolWhere } from "./activePool";
 
 /**
- * The entities slice these cores read. Loosely typed (same approach as
- * `entitlements.ts`): callers pass Wasp's Prisma delegate, a test mock, or a
- * PAT route's Prisma client. We only invoke a handful of methods per call;
- * matching the full generated delegate generic across every op isn't worth it.
+ * The entities slice these cores touch, typed with Prisma-generated arg types
+ * (named, not a loose map). Generic-arg methods return FULL rows; callers
+ * that pass a `select` may only read the fields their select carried.
+ * Callers pass Wasp's per-op delegates, the PAT route's shared client, or a
+ * Vitest mock — all satisfy this slice structurally.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Entities = Record<string, any>;
+interface TaskEntities {
+  Task: {
+    findUnique(args: Prisma.TaskFindUniqueArgs): Promise<Task | null>;
+    findFirst(args: Prisma.TaskFindFirstArgs): Promise<Task | null>;
+    findMany(args: Prisma.TaskFindManyArgs): Promise<Task[]>;
+    update(args: Prisma.TaskUpdateArgs): Promise<Task>;
+    updateMany(args: Prisma.TaskUpdateManyArgs): Promise<Prisma.BatchPayload>;
+  };
+  TaskSession: {
+    findFirst(
+      args: Prisma.TaskSessionFindFirstArgs,
+    ): Promise<TaskSession | null>;
+    create(args: Prisma.TaskSessionCreateArgs): Promise<TaskSession>;
+    update(args: Prisma.TaskSessionUpdateArgs): Promise<TaskSession>;
+    updateMany(
+      args: Prisma.TaskSessionUpdateManyArgs,
+    ): Promise<Prisma.BatchPayload>;
+  };
+}
+
+type Entities = TaskEntities;
 
 // ----------------------------------------------------------------
 // Rank maps (re-exported from operations.ts for back-compat)
@@ -38,12 +59,12 @@ type Entities = Record<string, any>;
 // Exported so the CLI `/api/cli/now` stub (auth/patRoutes.ts) ranks candidates
 // identically without re-implementing the maps — drift here would mean the
 // CLI surfaces a different "top" than the home screen.
-export const PRIORITY_RANK: Record<string, number> = {
+export const PRIORITY_RANK = {
   IMPORTANT: 0,
   NORMAL: 1,
   LOW: 2,
-};
-export const SIZE_RANK: Record<string, number> = { S: 0, M: 1, L: 2, XL: 3 };
+} as const satisfies Record<Priority, number>;
+export const SIZE_RANK = { S: 0, M: 1, L: 2, XL: 3 } as const satisfies Record<Size, number>;
 
 // ----------------------------------------------------------------
 // Read: single task (the detail page lookup)
@@ -88,7 +109,7 @@ export async function getTasksData(
     isDone?: boolean;
   },
 ) {
-  const where: Record<string, unknown> = {
+  const where: Prisma.TaskWhereInput = {
     userId,
     lensId,
   };
@@ -373,8 +394,8 @@ function rankTopTask<
   T extends {
     startedAt: Date | null;
     status: string;
-    priority: string;
-    size: string;
+    priority: Priority;
+    size: Size;
     createdAt: Date;
   },
 >(candidates: T[]): void {
@@ -421,7 +442,7 @@ export async function toggleTaskDoneCore(
     throw new Error("Task not found.");
   }
   const next = !task.isDone;
-  const data: Record<string, unknown> = {
+  const data: Prisma.TaskUpdateInput = {
     isDone: next,
     completedAt: next ? new Date() : null,
     startedAt: null,
@@ -445,10 +466,10 @@ export async function toggleTaskDoneCore(
 //          someday                                   → Task(status=SOMEDAY, dueDate=null)
 // The task leaves the focus queue until the snooze expires (then it's a
 // candidate again via Upcoming/Today rollover).
-const SNOOZE_OFFSETS: Record<string, number> = {
+const SNOOZE_OFFSETS = {
   "1h": 3600_000,
   "3h": 3 * 3600_000,
-};
+} as const satisfies Record<"1h" | "3h", number>;
 
 /**
  * Pure snooze math — given a preset and a `now`, return the resulting
@@ -456,10 +477,16 @@ const SNOOZE_OFFSETS: Record<string, number> = {
  * is unit-testable and deterministic. Extracted from `snoozeTaskCore` so the
  * pure decision can be pinned without a mock.
  */
+/** The Task patch a snooze preset resolves to. */
+export interface SnoozeTarget {
+  status: "UPCOMING" | "SOMEDAY";
+  dueDate: Date | null;
+}
+
 export function snoozeTarget(
   preset: "1h" | "3h" | "tomorrow" | "weekend" | "someday",
   now: Date,
-): { status: "UPCOMING" | "SOMEDAY"; dueDate: Date | null } {
+): SnoozeTarget {
   let status: "UPCOMING" | "SOMEDAY" = "UPCOMING";
   let dueDate: Date | null = new Date(now.getTime());
   switch (preset) {
