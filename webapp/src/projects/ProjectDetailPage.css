@@ -288,7 +288,7 @@
   line-height: var(--aa-leading-normal);
 }
 
-/* ---- Action row — borderless. Teal + Add step leads. ---- */
+/* ---- Action row — borderless. Teal + Add task leads. ---- */
 .aa-project__actions {
   display: flex;
   align-items: center;
@@ -296,8 +296,9 @@
   margin-top: var(--aa-space-sm);
 }
 .aa-project__add.aa-btn {
-  /* Slightly heavier than a plain ghost, lighter than a full CTA — it's the
-     primary constructive action on the page but shouldn't out-shout Do-this. */
+  /* Slightly heavier than a plain ghost, lighter than a full CTA — the two
+     Add buttons (task, resource) are the page's constructive actions but
+     shouldn't out-shout Do-this. */
   box-shadow: 0 1px 2px var(--aa-teal-tint-shadow);
 }
 .aa-project__calm.aa-btn {
@@ -306,71 +307,6 @@
 .aa-project__calm.aa-btn:hover:not(:disabled) {
   color: var(--aa-text);
   background: var(--aa-surface-muted);
-}
-
-/* Overflow (⋯) — holds Delete so it can't be hit by accident. */
-.aa-project__overflow-wrap {
-  position: relative;
-  margin-left: auto;
-}
-.aa-project__overflow {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--aa-radius-sm);
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--aa-text-3);
-  cursor: pointer;
-  font-size: 18px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    background var(--aa-dur-base) var(--aa-ease-out),
-    color var(--aa-dur-base) var(--aa-ease-out);
-}
-.aa-project__overflow:hover {
-  background: var(--aa-surface-muted);
-  color: var(--aa-text);
-}
-.aa-project__overflow-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  min-width: 180px;
-  background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-md);
-  box-shadow: var(--aa-shadow-md);
-  padding: 4px;
-  z-index: 10;
-}
-.aa-project__overflow-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: transparent;
-  border: none;
-  border-radius: var(--aa-radius-sm);
-  padding: 8px 10px;
-  font-family: inherit;
-  font-size: var(--aa-text-sm);
-  color: var(--aa-text-2);
-  cursor: pointer;
-  transition:
-    background var(--aa-dur-base) var(--aa-ease-out),
-    color var(--aa-dur-base) var(--aa-ease-out);
-}
-.aa-project__overflow-item:hover {
-  background: var(--aa-surface-muted);
-}
-.aa-project__overflow-item--danger {
-  color: var(--aa-rose-text);
-}
-.aa-project__overflow-item--danger:hover {
-  background: var(--aa-rose-soft);
-  color: var(--aa-rose-text);
 }
 
 .aa-project__delete-options {
@@ -475,11 +411,13 @@
   padding-top: var(--aa-space-xl);
   border-top: 1px solid var(--aa-border);
 }
+/* Title row — Add resource leads on the left, matching Add task above;
+   the copy wraps onto its own line. */
 .aa-project__resources-head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--aa-space-md);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aa-space-sm);
 }
 .aa-project__resources-title {
   margin: 0;
@@ -492,6 +430,9 @@
   margin: 4px 0 0;
   font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
+}
+.aa-project__resources-copy {
+  flex-basis: 100%;
 }
 .aa-project__resources-list {
   margin: var(--aa-space-md) 0 0;
@@ -651,15 +592,9 @@
     padding-top: var(--aa-space-md);
   }
 
-  .aa-project__resources-head,
   .aa-project__resource {
+    flex-direction: column;
     align-items: flex-start;
-  }
-  .aa-project__resources-head {
-    flex-direction: column;
-  }
-  .aa-project__resource {
-    flex-direction: column;
   }
   .aa-project__resource-actions {
     margin-left: -6px;

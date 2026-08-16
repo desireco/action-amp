@@ -333,3 +333,14 @@ export function ChevronIcon(p: IconProps) {
     </svg>
   );
 }
+
+/* Overflow — vertical ellipsis for ⋯ menus */
+export function MoreIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <circle cx="8" cy="3.5" r="1.3" fill="currentColor" />
+      <circle cx="8" cy="8" r="1.3" fill="currentColor" />
+      <circle cx="8" cy="12.5" r="1.3" fill="currentColor" />
+    </svg>
+  );
+}

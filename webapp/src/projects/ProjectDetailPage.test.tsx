@@ -434,22 +434,29 @@ describe("ProjectDetailPage — re-link to goal (spec §C)", () => {
 });
 
 describe("ProjectDetailPage — lifecycle management", () => {
+  // jsdom has no matchMedia; useMediaQuery falls back to desktop, where the
+  // lifecycle actions live behind the ⋯ popover.
+  const openOverflow = () =>
+    fireEvent.click(screen.getByRole("button", { name: "Project actions" }));
+
   it("asks for confirmation before completing a project", () => {
     projectData.current = makeProject();
     renderAt("/do/projects/p1");
 
-    fireEvent.click(screen.getByRole("button", { name: /^complete$/i }));
+    openOverflow();
+    fireEvent.click(screen.getByRole("menuitem", { name: /^complete$/i }));
 
     expect(screen.getByRole("dialog", { name: /complete this project/i })).toBeInTheDocument();
     expect(setProjectDone).not.toHaveBeenCalled();
   });
 
-  it("uses Manage for project editing and exposes Archive for an active project", () => {
+  it("keeps Edit beside Add task and offers Archive behind the overflow menu", () => {
     projectData.current = makeProject();
     renderAt("/do/projects/p1");
 
-    expect(screen.getByRole("button", { name: /^manage$/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /^archive$/i }));
+    expect(screen.getByRole("button", { name: /^edit$/i })).toBeInTheDocument();
+    openOverflow();
+    fireEvent.click(screen.getByRole("menuitem", { name: /^archive$/i }));
 
     expect(screen.getByRole("dialog", { name: /archive this project/i })).toBeInTheDocument();
   });
@@ -458,20 +465,22 @@ describe("ProjectDetailPage — lifecycle management", () => {
     projectData.current = makeProject({ isDone: true, archivedAt: "2026-08-15T08:00:00.000Z" });
     renderAt("/do/projects/p1");
 
+    openOverflow();
     expect(screen.queryByRole("button", { name: /^archive$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^reopen$/i })).not.toBeInTheDocument();
   });
 
-  it("offers all three action dispositions when deleting a project with actions", () => {
+  it("offers all three task dispositions when deleting a project with tasks", () => {
     projectData.current = makeProject();
     lensProjectsData.current = [{ id: "p2", name: "Other project" }];
     renderAt("/do/projects/p1");
 
-    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
+    openOverflow();
+    fireEvent.click(screen.getByRole("menuitem", { name: /^delete$/i }));
 
-    expect(screen.getByRole("button", { name: /^remove actions and delete project$/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^move actions and delete project$/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^send actions to triage and delete project$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^remove tasks and delete project$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^move tasks and delete project$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^send tasks to triage and delete project$/i })).toBeInTheDocument();
   });
 });
 
@@ -598,7 +607,8 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
     ];
     renderAt("/do/projects/p1");
 
-    fireEvent.click(screen.getByRole("button", { name: "Move" }));
+    fireEvent.click(screen.getByRole("button", { name: "Project actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /^move$/i }));
     fireEvent.click(screen.getByRole("button", { name: /Work.*Life area/i }));
 
     await waitFor(() => expect(moveProject).toHaveBeenCalledWith({ id: "p1", targetLensId: "work" }));

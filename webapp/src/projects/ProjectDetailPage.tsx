@@ -29,6 +29,8 @@ import {
   ConfirmDialog,
   BottomSheet, PickerSheet,
   InlineEntityEditForm,
+  OverflowMenu,
+  useMediaQuery,
   PlusIcon,
   ArrowRightIcon,
   type TaskRowTask,
@@ -106,6 +108,10 @@ export function ProjectDetailPage() {
   } = useQuery(getProject, { id: permalink! });
   const [creating, setCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Action-bar density: mobile tucks Edit into the ⋯ sheet along with the
+  // rest of the lifecycle; desktop keeps Edit visible next to Add task.
+  const isMobile = useMediaQuery("(max-width: 720px)");
 
   // Header affordances: edit, re-link picker, confirm-delete.
   const [editing, setEditing] = useState(false);
@@ -689,8 +695,10 @@ export function ProjectDetailPage() {
                   </p>
                 )}
 
-                {/* Action row — borderless. Teal + Add step leads; lifecycle
-                    actions stay visible. Only Delete is tucked behind ⋯. */}
+                {/* Action row — borderless. Teal + Add task leads, with Edit
+                    beside it on desktop (Edit joins the menu on mobile). The
+                    remaining lifecycle actions tuck behind ⋯ — popover on
+                    desktop, bottom sheet on mobile — with Delete last. */}
                 <div className="aa-project__actions">
                   {!project.isDone && (
                     <Button
@@ -700,60 +708,50 @@ export function ProjectDetailPage() {
                       icon={<PlusIcon />}
                       onClick={() => setCreating((v) => !v)}
                     >
-                      {creating ? "Cancel" : "Add step"}
+                      {creating ? "Cancel" : "Add task"}
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="aa-project__calm"
-                    onClick={startEdit}
-                  >
-                    Manage
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="aa-project__calm"
-                    onClick={() => setMovingProject(true)}
-                  >
-                    Move
-                  </Button>
-                  {!project.archivedAt && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="aa-project__calm"
-                        onClick={() => {
-                          if (project.isDone) void handleComplete();
-                          else setConfirmComplete(true);
-                        }}
-                        title={
-                          project.isDone
-                            ? "Return to active projects"
-                            : "Mark this project done"
-                        }
-                      >
-                        {project.isDone ? "Reopen" : "Complete"}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="aa-project__calm"
-                        onClick={() => setConfirmArchive(true)}
-                      >
-                        Archive
-                      </Button>
-                    </>
+                  {!isMobile && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="aa-project__calm"
+                      onClick={startEdit}
+                    >
+                      Edit
+                    </Button>
                   )}
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => setConfirmDelete(true)}
-                  >
-                    Delete
-                  </Button>
+                  <OverflowMenu
+                    label="Project actions"
+                    items={[
+                      ...(isMobile
+                        ? [{ label: "Edit", onPick: startEdit }]
+                        : []),
+                      { label: "Move", onPick: () => setMovingProject(true) },
+                      // Archived projects hide Complete/Reopen and Archive —
+                      // their lifecycle is settled until unarchived elsewhere.
+                      ...(!project.archivedAt
+                        ? [
+                            {
+                              label: project.isDone ? "Reopen" : "Complete",
+                              onPick: () => {
+                                if (project.isDone) void handleComplete();
+                                else setConfirmComplete(true);
+                              },
+                              title: project.isDone
+                                ? "Return to active projects"
+                                : "Mark this project done",
+                            },
+                            { label: "Archive", onPick: () => setConfirmArchive(true) },
+                          ]
+                        : []),
+                      {
+                        label: "Delete",
+                        onPick: () => setConfirmDelete(true),
+                        danger: true,
+                      },
+                    ]}
+                  />
                 </div>
               </>
             )}
@@ -993,25 +991,24 @@ export function ProjectDetailPage() {
             aria-labelledby="project-resources-heading"
           >
             <div className="aa-project__resources-head">
-              <div>
-                <h2
-                  id="project-resources-heading"
-                  className="aa-project__resources-title"
-                >
-                  Resources
-                </h2>
-                <p className="aa-project__resources-copy">
-                  Links, notes, and reference material for this project.
-                </p>
-              </div>
+              <h2
+                id="project-resources-heading"
+                className="aa-project__resources-title"
+              >
+                Resources
+              </h2>
               <Button
-                variant="secondary"
+                variant="primary"
                 size="sm"
+                className="aa-project__add"
                 icon={<PlusIcon />}
                 onClick={() => openResourceEditor("new")}
               >
                 Add resource
               </Button>
+              <p className="aa-project__resources-copy">
+                Links, notes, and reference material for this project.
+              </p>
             </div>
             {project.resources.length === 0 ? (
               <p className="aa-project__resources-empty">
@@ -1079,7 +1076,7 @@ export function ProjectDetailPage() {
       {confirmComplete && project && (
         <ConfirmDialog
           title="Complete this project?"
-          message="It will stay in your completed projects list, where you can manage, archive, or delete it. Its actions will not change."
+          message="It will stay in your completed projects list, where you can edit, archive, or delete it. Its tasks will not change."
           confirmLabel="Complete project"
           onConfirm={() => {
             setConfirmComplete(false);
@@ -1092,7 +1089,7 @@ export function ProjectDetailPage() {
       {confirmArchive && project && (
         <ConfirmDialog
           title="Archive this project?"
-          message="This will complete the project and hide it from your Projects and Logbook. Its action history will be kept."
+          message="This will complete the project and hide it from your Projects and Logbook. Its task history will be kept."
           confirmLabel="Archive project"
           onConfirm={() => void handleArchive()}
           onClose={() => setConfirmArchive(false)}
@@ -1127,7 +1124,7 @@ export function ProjectDetailPage() {
       {confirmDelete && project && total === 0 && (
         <ConfirmDialog
           title="Delete this project?"
-          message="This project will be removed. No actions are in it."
+          message="This project will be removed. No tasks are in it."
           confirmLabel="Delete project"
           danger
           onConfirm={() => void handleDelete()}
@@ -1137,14 +1134,14 @@ export function ProjectDetailPage() {
 
       {confirmDelete && project && total > 0 && (
         <BottomSheet
-          title="What should happen to these actions?"
+          title="What should happen to these tasks?"
           onClose={() => setConfirmDelete(false)}
         >
           <div className="aa-project__delete-options">
-            <p>{total} {total === 1 ? "action is" : "actions are"} still in “{project.name}”.</p>
-            <Button variant="danger" size="sm" onClick={() => void handleDelete("delete")}>Remove actions and delete project</Button>
+            <p>{total} {total === 1 ? "task is" : "tasks are"} still in “{project.name}”.</p>
+            <Button variant="danger" size="sm" onClick={() => void handleDelete("delete")}>Remove tasks and delete project</Button>
             <div className="aa-project__delete-reassign">
-              <label htmlFor="project-delete-target">Move actions to</label>
+              <label htmlFor="project-delete-target">Move tasks to</label>
               <select
                 id="project-delete-target"
                 value={deleteTargetProjectId}
@@ -1155,9 +1152,9 @@ export function ProjectDetailPage() {
                   <option key={target.id} value={target.id}>{target.name}</option>
                 ))}
               </select>
-              <Button variant="secondary" size="sm" disabled={!deleteTargetProjectId} onClick={() => void handleDelete("reassign")}>Move actions and delete project</Button>
+              <Button variant="secondary" size="sm" disabled={!deleteTargetProjectId} onClick={() => void handleDelete("reassign")}>Move tasks and delete project</Button>
             </div>
-            <Button variant="secondary" size="sm" onClick={() => void handleDelete("triage")}>Send actions to Triage and delete project</Button>
+            <Button variant="secondary" size="sm" onClick={() => void handleDelete("triage")}>Send tasks to Triage and delete project</Button>
           </div>
         </BottomSheet>
       )}

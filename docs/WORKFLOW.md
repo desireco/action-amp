@@ -202,9 +202,9 @@ Planning exists only in Life-area Lenses.
   time horizons.
 - Projects: multi-step outcomes, always in a context. May sit under a Goal.
   **Lifecycle is fully editable** (locked 2026-07-05): complete (with
-  confirmation) / reopen / manage / archive (completes the project, with
+  confirmation) / reopen / edit / archive (completes the project, with
   confirmation) / delete / re-link. Completed projects remain visible in
-  Projects until archived or deleted; deleting a project with actions explicitly
+  Projects until archived or deleted; deleting a project with tasks explicitly
   removes them, reassigns them, or returns them to Triage. Projects retain
   explicit ordering under a Goal
   (`Project.order`) — the first non-done project surfaces as "Next: <name>".
