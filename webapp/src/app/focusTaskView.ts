@@ -38,6 +38,7 @@ export function toFocusTask(task: {
   goal?: GoalRef | null;
   user?: { focusSessionMinutes?: number | null } | null;
   updates?: { id: string; body: string; createdAt: Date; kind: string }[];
+  attachments?: { id: string; filename: string; mimeType: string }[];
   sessions?: {
     startedAt: Date | string;
     endedAt?: Date | string | null;
@@ -104,5 +105,6 @@ export function toFocusTask(task: {
         // SAFETY: type assertion is safe — value is validated or from a trusted source.
         kind: u.kind as "NOTE" | "COMPLETED",
       })) ?? [],
+    attachments: task.attachments ?? [],
   };
 }

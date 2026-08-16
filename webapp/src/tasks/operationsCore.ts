@@ -528,6 +528,7 @@ export interface HydratedTask extends Task {
   } | null;
   sessions: { startedAt: Date; endedAt: Date | null }[];
   updates: { body: string; createdAt: Date }[];
+  attachments: { id: string; filename: string; mimeType: string }[];
 }
 
 export async function hydrateTopTaskData(
@@ -564,6 +565,8 @@ export async function hydrateTopTaskData(
         orderBy: { createdAt: "desc" },
         select: { body: true, createdAt: true },
       },
+      // Captured images (What Now renders a calm count chip in the meta row).
+      attachments: { select: { id: true, filename: true, mimeType: true } },
     },
   })) as HydratedTask | null;
 }

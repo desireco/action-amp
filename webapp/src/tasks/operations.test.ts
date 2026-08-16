@@ -161,6 +161,7 @@ describe("getFocusedTask", () => {
         updates: { orderBy: { createdAt: "asc" } },
         sessions: { orderBy: { startedAt: "asc" } },
         user: { select: { focusSessionMinutes: true } },
+        attachments: { select: { id: true, filename: true, mimeType: true } },
         // focus-goal-context: Project carries nested Goal (id/name/description)
         // and direct Goal gains description, so the pure resolver can apply
         // Project-Goal precedence and render Goal rationale on Focus.
@@ -716,6 +717,7 @@ describe("getTopTask", () => {
           orderBy: { createdAt: "desc" },
           select: { body: true, createdAt: true },
         },
+        attachments: { select: { id: true, filename: true, mimeType: true } },
       },
     });
   });

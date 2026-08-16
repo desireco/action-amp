@@ -30,6 +30,18 @@ describe("NextCard", () => {
       expect(screen.getByText("15 min")).toBeInTheDocument();
     });
 
+    it("shows a calm image-count chip when the task carries captured images", () => {
+      renderInContext(
+        <NextCard task={{ ...BASE_TASK, imageCount: 2 }} />,
+      );
+      expect(screen.getByText("2 images")).toBeInTheDocument();
+    });
+
+    it("renders no image chip when the task has none", () => {
+      renderInContext(<NextCard task={BASE_TASK} />);
+      expect(screen.queryByText(/image/i)).toBeNull();
+    });
+
     it("shows the context line when provided", () => {
       renderInContext(
         <NextCard task={BASE_TASK} context="Right now · 30 min available" />,

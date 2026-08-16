@@ -14,7 +14,6 @@ import {
   pauseTaskCore,
   completeFocusSessionCore,
 } from "./operationsCore";
-import type { RankedPoolRow } from "./operationsCore";
 import { mockContext, type MockContext } from "../test/mockContext";
 
 function asPool(m: MockContext) {
@@ -388,6 +387,7 @@ describe("hydrateTopTaskData", () => {
           orderBy: { createdAt: "desc" },
           select: { body: true, createdAt: true },
         },
+        attachments: { select: { id: true, filename: true, mimeType: true } },
       },
     });
   });

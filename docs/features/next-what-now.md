@@ -15,6 +15,7 @@ task — the next thing that matters — with a "why this?" line. State machine:
 (`Task.startedAt`) persists across navigation.
 
 **`getTopTask` ranking** (`tasks/operations.ts`), in order:
+
 1. `startedAt` non-null (in-progress = #1).
 2. Status: TODAY > UPCOMING.
 3. Priority: IMPORTANT > NORMAL > LOW.
@@ -27,6 +28,11 @@ active lens, not done. **No moment/time-of-day/energy factor yet** — that is
 
 **"Why this?" line** (`app/focusWhy.ts`, `composeWhy`). Composed from the actual
 ranking factors, never fabricated; omitted entirely when nothing truthful applies.
+
+**Captured images** (2026-08-16). A candidate carrying images from triage
+(`TaskAttachment`) shows a calm text chip in the meta row — "1 image" /
+"N images" — nothing more. The chooser stays media-free; the images
+themselves render in Focus and on the task detail page.
 
 **Added 2026-08-10 — three rationale layers, never conflated**
 (focus-goal-context spec). Next candidate (`state="next"`) shows, in order:

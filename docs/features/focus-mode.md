@@ -37,6 +37,13 @@ Hides the sidebar; no counts, no list — just the one task. Esc exits.
 - **Dedicated route** (replaces the old overlay invocation) — `NextPage`
   and `ProjectDetailPage` `navigate("/do/focus")` into it.
 
+**Added 2026-08-16 (captured images).** Images carried onto the task by
+triage (`TaskAttachment`) render as display-only thumbs under the task
+details (`AttachmentThumbs`, shared lightbox) — the screenshot of the exact
+error/detail you're here to handle is working material. Hidden while the
+details editor is open so the composer keeps its slot. Bytes served by the
+owner-gated `/api/attachments/:id`.
+
 **Added 2026-08-10 (Goal rationale — focus-goal-context spec).** Focus shows a
 quiet **Goal rationale** block directly below the Task title and above the
 editable Task details, in the existing centered column. Resolution:

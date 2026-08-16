@@ -8,6 +8,7 @@ import { Button } from "./Button";
 import { CloseButton } from "./CloseButton";
 import { Kbd, submitOnModEnter } from "./keyboard";
 import { Markdown } from "./Markdown";
+import { AttachmentThumbs } from "./AttachmentThumbs";
 import { SnoozeSheet, type SnoozePreset } from "./SnoozeSheet";
 import { formatDuration } from "../../shared/timeFormat";
 import type { GoalContext } from "../../app/taskContext";
@@ -43,6 +44,9 @@ export interface FocusTask {
   sessionComplete?: boolean;
   /** Completed countdowns recorded against this Task. */
   completedFocusSessions?: number;
+  /** Captured images carried onto the task by triage — display-only
+   *  working material rendered under the task details. */
+  attachments?: { id: string; filename: string }[];
   updates: TaskUpdateEntry[];
 }
 
@@ -550,6 +554,13 @@ export function FocusMode({
                 Add task details to clarify what done looks like.
               </button>
             )
+          )}
+          {/* Captured images (TaskAttachment) — working material for Focus:
+              the screenshot of the exact error/detail you're here to handle.
+              Display-only; hidden while the details editor is open so the
+              composer keeps its slot. */}
+          {!editingContent && (task.attachments?.length ?? 0) > 0 && (
+            <AttachmentThumbs attachments={task.attachments ?? []} size="md" />
           )}
         </section>
 

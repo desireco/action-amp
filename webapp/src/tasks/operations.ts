@@ -383,6 +383,9 @@ export const getFocusedTask = (async (_args, context) => {
       updates: { orderBy: { createdAt: "asc" } },
       sessions: { orderBy: { startedAt: "asc" } },
       user: { select: { focusSessionMinutes: true } },
+      // Captured images carried onto the task by triage — working material
+      // for Focus (metadata only; bytes via /api/attachments/:id).
+      attachments: { select: { id: true, filename: true, mimeType: true } },
       // focus-goal-context spec: Goal rationale needs the Project's nested Goal
       // (id/name/description) and the legacy direct Goal's description. Project
       // Goal wins over a conflicting legacy direct Goal; both are selected so
@@ -622,7 +625,6 @@ export const updateTaskDetails = (async (args, context) => {
   // post-write state, not just the delta.
   const nextProjectId =
     args.projectId === undefined ? task.projectId : args.projectId;
-  const nextGoalId = args.goalId === undefined ? task.goalId : args.goalId;
 
   if (args.projectId !== undefined) {
     if (args.projectId === null) {

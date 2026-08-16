@@ -56,6 +56,28 @@ describe("FocusMode", () => {
       ).toBeInTheDocument();
     });
 
+    it("renders captured images as display-only thumbs under the details", () => {
+      renderInContext(
+        <FocusMode
+          task={{
+            ...BASE_TASK,
+            attachments: [
+              { id: "att-1", filename: "error-shot.png" },
+              { id: "att-2", filename: "trace.jpg" },
+            ],
+          }}
+          onClose={() => {}}
+        />,
+      );
+      expect(screen.getByAltText("error-shot.png")).toBeInTheDocument();
+      expect(screen.getByAltText("trace.jpg")).toBeInTheDocument();
+    });
+
+    it("renders no thumbs when the task carries no images", () => {
+      renderInContext(<FocusMode task={BASE_TASK} onClose={() => {}} />);
+      expect(screen.queryByAltText(/\.(png|jpe?g)$/i)).toBeNull();
+    });
+
     it("renders the centered countdown with configured duration", () => {
       const freshStartedAt = new Date(Date.now() - 18 * 60 * 1000);
       renderInContext(

@@ -25,6 +25,9 @@ export interface NextTask {
   /** Optional newest NOTE preview (passive plain text, two-line clamp). Rendered
    *  only in the `next` state under a `Latest note` label, only when non-null. */
   latestNote?: string | null;
+  /** Captured image count — calm text chip in the meta row. The chooser stays
+   *  media-free; the images themselves live in Focus and the task detail. */
+  imageCount?: number;
 }
 
 interface NextCardProps {
@@ -71,13 +74,21 @@ export function NextCard({ task, context, onNotNow, onDo, state = "next", onPaus
 
       <h2 className="aa-wn-card__title">{task.title}</h2>
 
-      {(task.project || task.due || task.size) && (
+      {(task.project || task.due || task.size || (task.imageCount ?? 0) > 0) && (
         <div className="aa-wn-card__meta">
           {task.project && <span className="aa-wn-card__meta-item">{task.project}</span>}
           {task.project && task.due && <span className="aa-wn-card__sep" aria-hidden="true">·</span>}
           {task.due && <span className="aa-wn-card__meta-item">{task.due}</span>}
           {task.due && task.size && <span className="aa-wn-card__sep" aria-hidden="true">·</span>}
           {task.size && <span className="aa-wn-card__meta-item">{task.size}</span>}
+          {(task.due || task.size) && (task.imageCount ?? 0) > 0 && (
+            <span className="aa-wn-card__sep" aria-hidden="true">·</span>
+          )}
+          {(task.imageCount ?? 0) > 0 && (
+            <span className="aa-wn-card__meta-item">
+              {task.imageCount === 1 ? "1 image" : `${task.imageCount} images`}
+            </span>
+          )}
         </div>
       )}
 
