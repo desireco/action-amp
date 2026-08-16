@@ -173,6 +173,18 @@ type RuntimeInvoice = Stripe.Invoice & LegacyInvoiceFields;
 type WaspApiContext = { entities: BillingEntities };
 
 /**
+ * Injectable Stripe calls — the explicit seam for the one network call this
+ * module makes. Production resolves through requireStripe(); tests swap the
+ * property with a fake (no module mocking needed).
+ */
+export const stripeCalls = {
+  retrieveSubscription: (
+    subscriptionId: string,
+  ): Promise<Stripe.Subscription> =>
+    requireStripe().subscriptions.retrieve(subscriptionId),
+};
+
+/**
  * Maps price metadata keys (from setup-stripe.mjs) → our Plan + renewal duration.
  */
 const PRICING_ENTITLEMENT = {
@@ -309,7 +321,8 @@ async function alreadyProcessed(
   entities: BillingEntities,
   where: PaymentStripeIdLookup,
 ): Promise<boolean> {
-  return !!(await entities.Payment.findFirst({ where }));
+  const existing = await entities.Payment.findFirst({ where });
+  return existing !== null && existing !== undefined;
 }
 
 /** Pull priceKey + userId from the invoice's subscription (one Stripe call). */
@@ -319,7 +332,7 @@ async function resolveInvoiceSubscriptionMeta(
   const subscriptionId = subscriptionIdOf(invoice);
   if (!subscriptionId) return {};
   try {
-    const sub = await requireStripe().subscriptions.retrieve(subscriptionId);
+    const sub = await stripeCalls.retrieveSubscription(subscriptionId);
     return {
       priceKey: sub.metadata?.priceKey,
       userId: sub.metadata?.userId,

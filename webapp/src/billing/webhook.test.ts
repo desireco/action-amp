@@ -2,33 +2,29 @@
 // Webhook tests run in node: the handler imports the server-only `stripe`
 // singleton and reads process.env.STRIPE_WEBHOOK_SECRET. No DOM APIs here.
 //
-// Synthetic Stripe events + Express req/res are built as plain objects cast to
-// the SDK/router types — `any` is intentional and matches the project's test
-// convention (see src/test/mockContext.ts).
+// No module mocking: synthetic Stripe events are delivered through the REAL
+// stripe.webhooks.constructEvent with genuine HMAC-SHA256 signatures (computed
+// with node:crypto — constructEvent verifies them, which is the money-path
+// check this suite should exercise anyway). The one network call the handler
+// makes (subscription retrieval) goes through the explicit `stripeCalls` seam
+// exported from webhook.ts.
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { createHmac } from "node:crypto";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// Mock the Stripe singleton so we control event construction (bypass real
-// signature crypto) and subscription retrieval, without touching the network.
-// requireStripe() hands back the same mocked client (webhook.ts uses it for
-// the subscription lookup).
-const mockStripe = vi.hoisted(() => ({
-  webhooks: { constructEvent: vi.fn() },
-  subscriptions: { retrieve: vi.fn() },
-}));
-vi.mock("./stripe", () => ({
-  stripe: mockStripe,
-  requireStripe: () => mockStripe,
-}));
+// The ./stripe singleton reads STRIPE_SECRET_KEY at module load and constructs
+// a real client with it (offline-safe: no call is made until invoked). Set it
+// before the imports below evaluate.
+vi.hoisted(() => {
+  process.env.STRIPE_SECRET_KEY ??= "sk_test_harness_only";
+});
 
-import type Stripe from "stripe";
-import { stripeWebhook } from "./webhook";
-import { stripe } from "./stripe";
+import { stripeWebhook, stripeCalls } from "./webhook";
 import { mockContext, type MockContext } from "../test/mockContext";
 
-// SAFETY: ./stripe is vi.mock'd below, so the client is always the mock
-// object — never the null the unconfigured singleton would produce.
-const mockedStripe = stripe as Stripe;
+/** Test seam for the handler's one network call (swapped in beforeEach). */
+const retrieveSubscription = vi.fn();
+const realRetrieveSubscription = stripeCalls.retrieveSubscription;
 
 /**
  * Stripe webhook — the ONLY place User.plan changes. Money-path: the suite
@@ -45,8 +41,9 @@ const SECRET = "whsec_test";
 /** Minimal Express req: a Buffer body (express.raw) + overridable headers. */
 function fakeReq(
   headers: Record<string, string> = { "stripe-signature": "t=1,v1=fake" },
+  body: Buffer = Buffer.from(JSON.stringify({})),
 ): any {
-  return { body: Buffer.from(JSON.stringify({})), headers };
+  return { body, headers };
 }
 
 /** Minimal Express res: record status/send/json calls. */
@@ -79,17 +76,37 @@ function event(type: string, id: string, object: StripeFixture): any {
   return { id, type, data: { object } };
 }
 
-/** Wire constructEvent to return the given event, then run the handler. */
+/** Real Stripe signature: t=<unix>,v1=hex(hmac_sha256(secret, `${t}.${payload}`)). */
+function signPayload(payload: string, secret: string): string {
+  const t = Math.floor(Date.now() / 1000);
+  const v1 = createHmac("sha256", secret)
+    .update(`${t}.${payload}`)
+    .digest("hex");
+  return `t=${t},v1=${v1}`;
+}
+
+/** Serialize + sign a synthetic event, then run the handler with it. */
 async function dispatch(ev: any, m: MockContext) {
-  vi.mocked(mockedStripe.webhooks.constructEvent).mockReturnValue(ev);
+  const payload = JSON.stringify(ev);
   const res = fakeRes();
-  await stripeWebhook(fakeReq(), res, m.context);
+  const req = fakeReq(
+    {
+      "stripe-signature": signPayload(payload, SECRET),
+    },
+    Buffer.from(payload),
+  );
+  await stripeWebhook(req, res, m.context);
   return res;
 }
 
 beforeEach(() => {
   vi.resetAllMocks();
   process.env.STRIPE_WEBHOOK_SECRET = SECRET;
+  stripeCalls.retrieveSubscription = retrieveSubscription;
+});
+
+afterEach(() => {
+  stripeCalls.retrieveSubscription = realRetrieveSubscription;
 });
 
 // ── Guard rail: signature / config / routing ───────────────────────────────
@@ -108,16 +125,16 @@ describe("stripeWebhook — guard rail", () => {
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
-  it("400s when signature verification throws", async () => {
-    vi.mocked(mockedStripe.webhooks.constructEvent).mockImplementation(() => {
-      throw new Error("bad signature");
-    });
+  it("400s when the signature does not verify (signed with the wrong secret)", async () => {
+    const payload = JSON.stringify(event("product.created", "evt_bad", {}));
     const res = fakeRes();
-    await stripeWebhook(fakeReq(), res, mockContext().context);
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.send).toHaveBeenCalledWith(
-      expect.stringMatching(/bad signature/),
+    const req = fakeReq(
+      { "stripe-signature": signPayload(payload, "whsec_wrong") },
+      Buffer.from(payload),
     );
+    await stripeWebhook(req, res, mockContext().context);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.send).toHaveBeenCalledWith(expect.stringMatching(/signature/i));
   });
 
   it("200s on unhandled event types without mutating anything", async () => {
@@ -293,10 +310,7 @@ describe("checkout.session.completed", () => {
 describe("invoice.paid", () => {
   it("reads plan + userId from the subscription metadata", async () => {
     const m = mockContext();
-    // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
-    // Fixture provides only `metadata`; resolveInvoiceSubscriptionMeta is the
-    // sole caller and reads nothing else off the subscription.
-    (mockedStripe.subscriptions.retrieve as any).mockResolvedValue({
+    retrieveSubscription.mockResolvedValue({
       metadata: { priceKey: "pro_yearly", userId: "user-1" },
     });
 
@@ -310,7 +324,7 @@ describe("invoice.paid", () => {
       m,
     );
 
-    expect(mockedStripe.subscriptions.retrieve).toHaveBeenCalledWith("sub_1");
+    expect(retrieveSubscription).toHaveBeenCalledWith("sub_1");
     expect(m.entities.User.update).toHaveBeenCalledWith({
       where: { id: "user-1" },
       data: { plan: "PRO", planRenewsAt: expect.any(Date) },
@@ -333,11 +347,7 @@ describe("invoice.paid", () => {
   it("skips an already-processed invoice (idempotency)", async () => {
     const m = mockContext();
     m.entities.Payment.findFirst.mockResolvedValue({ id: "pay_old" });
-    // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
-    // Empty metadata: the handler reads only metadata off the subscription.
-    (mockedStripe.subscriptions.retrieve as any).mockResolvedValue({
-      metadata: {},
-    });
+    retrieveSubscription.mockResolvedValue({ metadata: {} });
 
     await dispatch(
       event("invoice.paid", "evt_i", {
@@ -355,11 +365,7 @@ describe("invoice.paid", () => {
 
   it("falls back to customerId when the subscription has no userId", async () => {
     const m = mockContext();
-    // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
-    // Empty metadata: the handler reads only metadata off the subscription.
-    (mockedStripe.subscriptions.retrieve as any).mockResolvedValue({
-      metadata: {},
-    });
+    retrieveSubscription.mockResolvedValue({ metadata: {} });
     m.entities.User.findFirst.mockResolvedValue({ id: "user-2", plan: "FREE" });
 
     await dispatch(
@@ -389,11 +395,7 @@ describe("invoice.paid", () => {
 
   it("skips when no userId can be determined", async () => {
     const m = mockContext();
-    // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
-    // Empty metadata: the handler reads only metadata off the subscription.
-    (mockedStripe.subscriptions.retrieve as any).mockResolvedValue({
-      metadata: {},
-    });
+    retrieveSubscription.mockResolvedValue({ metadata: {} });
     await dispatch(
       event("invoice.paid", "evt_i", {
         id: "in_3",
