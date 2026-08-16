@@ -21,6 +21,10 @@ export function makeResourceCommand(): Command {
         result.resources.forEach((item, index) => {
           process.stdout.write(`  ${chalk.gray(`${index + 1}.`)} ${item.title}${item.url ? chalk.gray(` — ${item.url}`) : ""}\n`);
           if (item.notes) process.stdout.write(`     ${chalk.gray(item.notes)}\n`);
+          // The ids make `attachment download <id>` usable from text output.
+          item.attachments?.forEach((a) => {
+            process.stdout.write(`     ${chalk.gray(`image ${a.filename} — ${a.id}`)}\n`);
+          });
         });
       }, ctx);
     });

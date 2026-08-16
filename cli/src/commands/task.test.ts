@@ -25,7 +25,10 @@ const requestMock = vi.fn();
 vi.mock("../api.js", () => ({
   request: (path: string, init?: unknown) => requestMock(path, init),
   ApiError: class ApiError extends Error {
-    constructor(public status: number, public body: Record<string, unknown>) {
+    constructor(
+      public status: number,
+      public body: { error?: string } & Record<string, unknown>,
+    ) {
       super(body.error ?? "error");
     }
   },
@@ -102,6 +105,23 @@ describe("task commands", () => {
       const { stdout } = await runCommand(["show", "task-1"]);
       expect(stdout).toContain("Ship the auth refactor");
       expect(stdout).toContain("ProjectX");
+    });
+
+    it("human output includes attachment ids so agents can download them", async () => {
+      requestMock.mockResolvedValue({
+        task: {
+          ...TASK,
+          attachments: [
+            { id: "att-3", filename: "error-shot.png", mimeType: "image/png" },
+            { id: "att-4", filename: "trace.jpg", mimeType: "image/jpeg" },
+          ],
+        },
+      });
+      const { stdout } = await runCommand(["show", "task-1"]);
+      expect(stdout).toContain("error-shot.png");
+      expect(stdout).toContain("att-3");
+      expect(stdout).toContain("trace.jpg");
+      expect(stdout).toContain("att-4");
     });
 
     it("null task → 'No such task.'", async () => {

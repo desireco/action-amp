@@ -39,7 +39,7 @@ export function makeProjectCommand(): Command {
           }
           result.projects.forEach((p, i) => {
             const done = p.isDone ? chalk.gray(" (done)") : "";
-            const count = p.taskCount != null ? chalk.gray(` (${p.taskCount})`) : "";
+            const count = p.taskCount == null ? "" : chalk.gray(` (${p.taskCount})`);
             process.stdout.write(`  ${chalk.gray(`${i + 1}.`)} ${p.name}${count}${done}\n`);
             p.resources?.forEach((resource) => {
               process.stdout.write(`     ${chalk.gray("↳")} ${resource.title}${resource.url ? chalk.gray(` — ${resource.url}`) : ""}\n`);
@@ -67,10 +67,18 @@ export function makeProjectCommand(): Command {
             if (result.project.description) {
               process.stdout.write(`  ${chalk.gray(result.project.description)}\n`);
             }
+            // The ids make `attachment download <id>` usable from text
+            // output (same precedent as `inbox list`).
+            result.project.attachments?.forEach((a) => {
+              process.stdout.write(`  ${chalk.gray(`image ${a.filename} — ${a.id}`)}\n`);
+            });
             if (result.project.resources?.length) {
               process.stdout.write("  Resources:\n");
               result.project.resources.forEach((resource) => {
                 process.stdout.write(`    - ${resource.title}${resource.url ? chalk.gray(` — ${resource.url}`) : ""}\n`);
+                resource.attachments?.forEach((a) => {
+                  process.stdout.write(`      ${chalk.gray(`image ${a.filename} — ${a.id}`)}\n`);
+                });
               });
             }
           } else {

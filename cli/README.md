@@ -39,7 +39,8 @@ npm run build && ./dist/index.js     # built
 | `task move <id> --to <list>`                                           | Move (today, upcoming, someday)                                                                                              |
 | `inbox list`                                                           | Show unprocessed inbox items                                                                                                 |
 | `inbox triage <id> --decision <d>`                                     | Triage an inbox item                                                                                                         |
-| `inbox download <attachmentId> [path]`                                 | Download a captured image by attachment id (ids shown by `inbox list`; default path = the stored filename)                   |
+| `inbox download <attachmentId> [path]`                                 | Download a captured image by attachment id (alias of `attachment download`)                                                  |
+| `attachment download <attachmentId> [path]`                            | Download any captured image — inbox, task, project, resource, or list — by id (ids appear in `task show` / `project show` / `resource list` / `inbox list` output; default path = the stored filename) |
 | `lens list`                                                            | List your lenses (active one marked)                                                                                         |
 | `lens show <id\|name>`                                                 | Show a single lens (by id or name)                                                                                           |
 | `lens switch <id\|name>`                                               | Set the active lens — `now` / `project list` / `goal list` / `logbook` / `inbox triage` then scope to it without `--lens-id` |

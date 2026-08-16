@@ -37,6 +37,22 @@ describe("resource commands", () => {
     expect(stdout).toContain("Brief");
   });
 
+  it("lists attachment ids so agents can download resource images", async () => {
+    requestMock.mockResolvedValue({
+      projectId: "p1",
+      resources: [{
+        id: "r1",
+        title: "Moodboard",
+        url: null,
+        notes: null,
+        attachments: [{ id: "att-7", filename: "moodboard.png", mimeType: "image/png" }],
+      }],
+    });
+    await run(["list", "--project", "p1"]);
+    expect(stdout).toContain("moodboard.png");
+    expect(stdout).toContain("att-7");
+  });
+
   it("adds a resource with optional fields", async () => {
     requestMock.mockResolvedValue({ resource: { id: "r1", title: "Brief", url: null, notes: "Read first" } });
     await run(["add", "Brief", "--project", "p1", "--notes", "Read first"]);

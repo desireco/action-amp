@@ -46,7 +46,9 @@ export const authEntities = {
   // ProjectAttachment, and ResourceAttachment join the set for triage's
   // task/project/resource decisions (same nested-create pattern).
   TaskAttachment: authPrisma.taskAttachment,
+  // pi-lens-ignore: typescript(2339)
   ProjectAttachment: authPrisma.projectAttachment,
+  // pi-lens-ignore: typescript(2339)
   ResourceAttachment: authPrisma.resourceAttachment,
   ListItem: authPrisma.listItem,
   ListItemAttachment: authPrisma.listItemAttachment,

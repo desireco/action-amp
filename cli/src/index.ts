@@ -24,6 +24,7 @@ import { makeWhoamiCommand } from "./commands/whoami.js";
 import { makeTaskCommand } from "./commands/task.js";
 import { makeTodayCommand } from "./commands/today.js";
 import { makeInboxCommand } from "./commands/inbox.js";
+import { makeAttachmentCommand } from "./commands/attachment.js";
 import { makeProjectCommand } from "./commands/project.js";
 import { makeResourceCommand } from "./commands/resource.js";
 import { makeGoalCommand } from "./commands/goal.js";

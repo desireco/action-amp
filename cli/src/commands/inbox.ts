@@ -11,21 +11,13 @@
  * overall: an explicit flag wins, else fall back to the active lens in config
  * (set by `lens switch`).
  */
-import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { Command } from "commander";
 import chalk from "chalk";
-import { request, download } from "../api.js";
+import { request } from "../api.js";
 import { readConfig } from "../config.js";
 import { emit, type OutputCtx } from "../output.js";
+import { runAttachmentDownload } from "./attachment.js";
 import type { InboxItem } from "../types.js";
-
-const MIME_EXTENSION: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/webp": "webp",
-  "image/gif": "gif",
-};
 
 export function makeInboxCommand(): Command {
   const inbox = new Command("inbox");
@@ -93,22 +85,12 @@ export function makeInboxCommand(): Command {
 
   inbox
     .command("download <attachmentId> [outPath]")
-    .description("download a captured image by attachment id (see `inbox list`)")
+    .description("download a captured image by attachment id (alias of `attachment download`)")
     .option("--json", "emit JSON output")
     .action(async (attachmentId: string, outPath: string | undefined, opts: { json?: boolean }) => {
-      const ctx: OutputCtx = { json: opts.json ?? false };
-      const result = await download(`/api/cli/attachment/${encodeURIComponent(attachmentId)}`);
-      // Target: explicit path > server filename > <id>.<ext from mime>.
-      const fallbackExt = MIME_EXTENSION[result.mimeType] ?? "img";
-      const target = resolve(outPath ?? result.filename ?? `${attachmentId}.${fallbackExt}`);
-      writeFileSync(target, result.buffer);
-      emit(
-        { ok: true as const, path: target, bytes: result.buffer.length, mimeType: result.mimeType, filename: result.filename },
-        () => {
-          process.stdout.write(`Saved ${result.buffer.length} bytes to ${target}\n`);
-        },
-        ctx,
-      );
+      await runAttachmentDownload(attachmentId, outPath, {
+        json: opts.json ?? false,
+      });
     });
 
   return inbox;

@@ -5,6 +5,7 @@
  * marks the top task complete and (in a future slice) prints the next one.
  */
 import { Command } from "commander";
+import chalk from "chalk";
 import { request } from "../api.js";
 import { emit, formatTask, type OutputCtx } from "../output.js";
 import type { Task, TaskMutationResult } from "../types.js";
@@ -27,6 +28,11 @@ export function makeTaskCommand(): Command {
         () => {
           if (result.task) {
             process.stdout.write(formatTask(result.task) + "\n");
+            // The ids make `attachment download <id>` usable from text output
+            // without a --json round-trip (same precedent as `inbox list`).
+            result.task.attachments?.forEach((a) => {
+              process.stdout.write(`  ${chalk.gray(`image ${a.filename} — ${a.id}`)}\n`);
+            });
           } else {
             process.stdout.write("No such task.\n");
           }

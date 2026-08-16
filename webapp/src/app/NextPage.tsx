@@ -280,6 +280,7 @@ export function NextPage() {
           goalContext,
           continuityStats,
           latestNote: !isNow ? continuity?.latestNote ?? null : null,
+          // pi-lens-ignore: typescript(2339)
           imageCount: task.attachments?.length,
         }}
         context={

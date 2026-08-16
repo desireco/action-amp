@@ -26,6 +26,7 @@ export type Task = {
   lensId?: string;
   project?: { id: string; name: string; permalink?: string } | null;
   goal?: { id: string; name: string; permalink?: string } | null;
+  attachments?: { id: string; filename: string; mimeType: string }[];
 };
 
 export type InboxItem = {
