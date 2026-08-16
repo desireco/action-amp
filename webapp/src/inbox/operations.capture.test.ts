@@ -169,6 +169,7 @@ describe("createInboxItem — happy path", () => {
 describe("getInboxItems — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     await expect(getInboxItems({} as never, m.context)).rejects.toThrow(/Not authenticated/);
   });
 });
@@ -182,6 +183,7 @@ describe("getInboxItems — scoping", () => {
     ];
     m.entities.InboxItem.findMany.mockResolvedValue(items);
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     const result = await getInboxItems({} as never, m.context);
 
     expect(result).toEqual(items);
@@ -256,6 +258,7 @@ describe("getInboxItem — guards + ownership", () => {
 describe("getProjectsForResolver — lens-agnostic source for capture + triage", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     await expect(getProjectsForResolver({} as never, m.context)).rejects.toThrow(
       /Not authenticated/,
     );
@@ -275,6 +278,7 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
       { id: "p-2", name: "Groceries", lensId: "lens-me" },
     ]);
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     const result = await getProjectsForResolver({} as never, m.context);
 
     expect(result).toEqual([
@@ -305,6 +309,7 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
       { id: "p-2", name: "Studio work", lensId: "lens-studio" },
     ]);
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     const result = await getProjectsForResolver({} as never, m.context);
 
     // All eligible Life-area lenses remain visible regardless of entitlement.

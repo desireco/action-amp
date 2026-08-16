@@ -18,10 +18,14 @@ import { createInboxItemCore } from "../inbox/operationsCore";
 import type { Request, Response } from "express";
 
 function makeReq(body: unknown, sessionAuth?: { userId: string }): Request {
+  // SAFETY: Express Request is wide; fixture provides only the fields the handler accesses.
+  // Chained assertion is necessary because the literal doesn't structurally overlap Request.
   return { body, sessionAuth } as unknown as Request;
 }
 
 function makeRes(): Response {
+  // SAFETY: Express Response is wide; fixture provides only the fields the handler accesses.
+  // Chained assertion is necessary because the literal doesn't structurally overlap Response.
   return { redirect: vi.fn(), status: vi.fn().mockReturnThis(), json: vi.fn() } as unknown as Response;
 }
 
@@ -49,7 +53,8 @@ describe("shareCapture", () => {
   it("saves composed text and redirects to /share?id= on success", async () => {
     const req = makeReq({ title: "Cool", url: "https://x.com" }, { userId: "u1" });
     const res = makeRes();
-    (createInboxItemCore as any).mockResolvedValue({
+    // SAFETY: mock function needs .mockResolvedValue; casting to any avoids generic mismatch.
+    vi.mocked(createInboxItemCore).mockResolvedValue({
       id: "item-1", text: "Cool — https://x.com", createdAt: new Date(),
     });
     await shareCapture(req, res, { entities: { E: 1 } });
@@ -63,7 +68,8 @@ describe("shareCapture", () => {
   it("redirects to /share?error=server when core throws", async () => {
     const req = makeReq({ url: "https://x.com" }, { userId: "u1" });
     const res = makeRes();
-    (createInboxItemCore as any).mockRejectedValue(new Error("boom"));
+    // SAFETY: mock function needs .mockRejectedValue; casting to any avoids generic mismatch.
+    vi.mocked(createInboxItemCore).mockRejectedValue(new Error("boom"));
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     await shareCapture(req, res, { entities: {} });
     expect(res.redirect).toHaveBeenCalledWith(303, "/share?error=server");
@@ -74,7 +80,8 @@ describe("shareCapture", () => {
     const trickyId = "with space&special";
     const req = makeReq({ url: "https://x.com" }, { userId: "u1" });
     const res = makeRes();
-    (createInboxItemCore as any).mockResolvedValue({
+    // SAFETY: mock function needs .mockResolvedValue; casting to any avoids generic mismatch.
+    vi.mocked(createInboxItemCore).mockResolvedValue({
       id: trickyId, text: "https://x.com", createdAt: new Date(),
     });
     await shareCapture(req, res, { entities: {} });
@@ -85,9 +92,11 @@ describe("shareCapture", () => {
   });
 
   it("returns redirect data for the service-worker bridge", async () => {
-    const req = { body: { url: "https://x.com" }, query: { response: "json" }, sessionAuth: { userId: "u1" } } as any;
+    const req = makeReq({ url: "https://x.com" } as Record<string, unknown>, { userId: "u1" });
+    Object.assign(req, { query: { response: "json" } });
     const res = makeRes();
-    (createInboxItemCore as any).mockResolvedValue({ id: "item-1" });
+    // SAFETY: mock function needs .mockResolvedValue; casting to any avoids generic mismatch.
+    vi.mocked(createInboxItemCore).mockResolvedValue({ id: "item-1" });
 
     await shareCapture(req, res, { entities: {} });
 

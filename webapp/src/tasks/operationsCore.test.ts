@@ -31,6 +31,7 @@ import { mockContext } from "../test/mockContext";
 // ----------------------------------------------------------------
 const NOW = new Date("2026-06-20T10:00:00Z");
 
+// SAFETY: fixture uses widened string types to match Prisma's runtime enum representation.
 const BASE_TASK = {
   id: "task-1",
   permalink: "email-sarah",

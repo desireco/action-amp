@@ -22,6 +22,7 @@ import { mockContext } from "../test/mockContext";
  * Prisma method fired with the right payload + that the seed was deleted.
  */
 
+// SAFETY: fixture widens literal types to match Prisma's runtime string-based enum representation.
 const BASE_ITEM = {
   id: "ix-1",
   userId: "user-1",
@@ -264,6 +265,7 @@ describe("triageInboxItem — task decisions", () => {
     );
 
     expect(m.entities.Tag.upsert).not.toHaveBeenCalled();
+    // SAFETY: mock .calls array is untyped; cast to ReturnType<typeof vi.fn> for .mock access.
     const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
       .calls[0][0];
     expect(call.data.tags).toBeUndefined();
@@ -344,6 +346,7 @@ describe("triageInboxItem — task decisions", () => {
       m,
     );
 
+    // SAFETY: mock .calls array is untyped; cast to ReturnType<typeof vi.fn> for .mock access.
     const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
       .calls[0][0];
     expect(call.data.goalId).toBeUndefined();

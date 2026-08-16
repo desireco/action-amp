@@ -40,6 +40,7 @@ describe("ensureOnboarded — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
     await expect(
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
       ensureOnboarded(undefined as never, m.context),
     ).rejects.toThrow(/Not authenticated/);
   });
@@ -63,6 +64,7 @@ describe("ensureOnboarded — idempotency", () => {
     // Existing user already has tasks → seed guard skips.
     m.entities.Task.count.mockResolvedValue(3);
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     const result = await ensureOnboarded(undefined as never, m.context);
 
     expect(result.createdLenses).toEqual([
@@ -111,6 +113,7 @@ describe("ensureOnboarded — idempotency", () => {
     m.entities.Project.create.mockResolvedValueOnce({ id: "gen-me" });
     m.entities.Task.count.mockResolvedValue(1);
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     const result = await ensureOnboarded(undefined as never, m.context);
 
     expect(result.createdLenses).toEqual([{ id: "lens-me", name: "Me" }]);
@@ -132,6 +135,7 @@ describe("ensureOnboarded — idempotency", () => {
       .mockResolvedValueOnce({ id: "gen-me" });
     m.entities.Task.count.mockResolvedValue(5);
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     const result = await ensureOnboarded(undefined as never, m.context);
 
     expect(result.createdLenses).toEqual([]);
@@ -159,6 +163,7 @@ describe("ensureOnboarded — idempotency", () => {
       .mockResolvedValueOnce({ id: "gen-me" });
     m.entities.Task.count.mockResolvedValue(5);
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     await ensureOnboarded(undefined as never, m.context);
 
     // No new lenses created; both patched to their default color. The seed
@@ -190,6 +195,7 @@ describe("ensureOnboarded — idempotency", () => {
     m.entities.Project.findFirst.mockResolvedValue({ id: "gen" });
     m.entities.Task.count.mockResolvedValue(5);
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     await ensureOnboarded(undefined as never, m.context);
 
     // Colors already match → no updates. Critically: no new lens created (the
@@ -216,6 +222,7 @@ describe("ensureOnboarded — first-run seed", () => {
     m.entities.Task.count.mockResolvedValue(0); // ← zero-task guard triggers
     m.entities.Task.create.mockResolvedValue({ id: "seed-task" });
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     await ensureOnboarded(undefined as never, m.context);
 
     // One harmless Task teaches focus. Capture + triage are real stage-backed
@@ -246,6 +253,7 @@ describe("ensureOnboarded — first-run seed", () => {
     m.entities.User.findUnique.mockResolvedValue({ onboardingStage: "COMPLETE" });
     m.entities.Task.count.mockResolvedValue(0);
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     await ensureOnboarded(undefined as never, m.context);
 
     expect(m.entities.Task.create).not.toHaveBeenCalled();
@@ -263,6 +271,7 @@ describe("ensureOnboarded — first-run seed", () => {
       .mockResolvedValueOnce({ id: "gen-me" });
     m.entities.Task.count.mockResolvedValue(2); // ← non-zero → no seed
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     await ensureOnboarded(undefined as never, m.context);
 
     expect(m.entities.Task.create).not.toHaveBeenCalled();
@@ -279,6 +288,7 @@ describe("ensureOnboarded — first-run seed", () => {
     m.entities.Project.findFirst.mockResolvedValue({ id: "gen-work" });
     m.entities.Task.count.mockResolvedValue(0);
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     await ensureOnboarded(undefined as never, m.context);
 
     // meLensId stays null → seed skipped, even though taskCount is 0.
@@ -290,6 +300,7 @@ describe("completeOnboarding — guards + behavior", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
     await expect(
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
       completeOnboarding(undefined as never, m.context),
     ).rejects.toThrow(/Not authenticated/);
   });
@@ -304,6 +315,7 @@ describe("completeOnboarding — guards + behavior", () => {
     };
     m.entities.User.update.mockResolvedValue({});
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     const result = await completeOnboarding(undefined as never, m.context);
 
     expect(result).toEqual({ hasSeenOnboarding: true });
@@ -345,6 +357,7 @@ describe("completeOnboarding — guards + behavior", () => {
       hasSeenOnboarding: true,
     };
 
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     const result = await completeOnboarding(undefined as never, m.context);
 
     expect(result).toEqual({ hasSeenOnboarding: true });

@@ -48,6 +48,7 @@ import { mockContext } from "../test/mockContext";
 // Fixtures
 // ----------------------------------------------------------------
 
+// SAFETY: fixture uses widened string types to match Prisma's runtime enum representation.
 const BASE_TASK = {
   id: "task-1",
   permalink: "email-sarah",
@@ -197,6 +198,7 @@ describe("getTasks", () => {
     const m = mockContext();
     m.entities.Task.findMany.mockResolvedValue([]);
 
+    // SAFETY: each-table values conform to the op's actual input type.
     await getTasks(args as Parameters<typeof getTasks>[0], m.context);
 
     expect(m.entities.Task.findMany).toHaveBeenCalledWith({
@@ -259,6 +261,7 @@ describe("getDoneToday", () => {
 describe("getTodayTasks", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
+    // SAFETY: op takes no input; Wasp passes empty object at call site.
     await expect(getTodayTasks({} as never, m.context)).rejects.toThrow(
       /Not authenticated/,
     );
@@ -273,6 +276,7 @@ describe("getTodayTasks", () => {
     ]);
     m.entities.Task.findMany.mockResolvedValue([]);
 
+    // SAFETY: op takes no input; Wasp passes empty object at call site.
     await getTodayTasks({} as never, m.context);
 
     const call = m.entities.Task.findMany.mock.calls[0][0];
@@ -294,6 +298,7 @@ describe("getTodayTasks", () => {
     ]);
     m.entities.Task.findMany.mockResolvedValue([]);
 
+    // SAFETY: op takes no input; Wasp passes empty object at call site.
     await getTodayTasks({} as never, m.context);
 
     // resolveAccessibleLenses branches on isEntitled; FREE → included only.
@@ -312,6 +317,7 @@ describe("getTodayTasks", () => {
     ]);
     m.entities.Task.findMany.mockResolvedValue([]);
 
+    // SAFETY: op takes no input; Wasp passes empty object at call site.
     await getTodayTasks({} as never, m.context);
 
     const lensCall = m.entities.Lens.findMany.mock.calls[0][0];
@@ -324,6 +330,7 @@ describe("getTodayTasks", () => {
     const m = mockContext();
     m.entities.Lens.findMany.mockResolvedValue([]);
 
+    // SAFETY: op takes no input; Wasp passes empty object at call site.
     const result = await getTodayTasks({} as never, m.context);
 
     expect(result).toEqual([]);
@@ -337,6 +344,7 @@ describe("getTodayTasks", () => {
 describe("getWeekTasks", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
+    // SAFETY: op takes no input; Wasp passes empty object at call site.
     await expect(getWeekTasks({} as never, m.context)).rejects.toThrow(
       /Not authenticated/,
     );
@@ -349,6 +357,7 @@ describe("getWeekTasks", () => {
     ]);
     m.entities.Task.findMany.mockResolvedValue([]);
 
+    // SAFETY: op takes no input; Wasp passes empty object at call site.
     await getWeekTasks({} as never, m.context);
 
     const call = m.entities.Task.findMany.mock.calls[0][0];

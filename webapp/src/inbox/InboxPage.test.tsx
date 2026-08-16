@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getInboxItems = vi.fn();
 const queryState = {
+  // SAFETY: test fixture; empty array narrowed to InboxItem[] for type compatibility.
   current: { data: [] as InboxItem[], isLoading: false },
 };
 

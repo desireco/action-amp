@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const inboxItems = {
+  // SAFETY: test fixture; mock data cast to any[] for useQuery compatibility.
   current: [
     {
       id: "ix-1",
@@ -16,7 +17,7 @@ const inboxItems = {
       parsedSize: null,
       parsedTags: [],
     },
-  ] as any[],
+  ] as Array<Record<string, unknown>>,
 };
 
 const appData = {
@@ -30,6 +31,7 @@ const activeLens = {
 };
 
 const projects = {
+  // SAFETY: test fixture; empty array narrowed to typed Array for query compatibility.
   current: [] as Array<{
     id: string;
     name: string;
@@ -39,6 +41,7 @@ const projects = {
 };
 
 const resolverProjects = {
+  // SAFETY: test fixture; empty array narrowed to typed Array for query compatibility.
   current: [] as Array<{
     id: string;
     name: string;

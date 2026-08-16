@@ -63,6 +63,8 @@ describe("activePoolWhere — what's OUT of the pool (not actionable)", () => {
     // FUTURE is strictly after NOW; the OR only admits null or <= NOW, so a
     // snoozed-to-tomorrow task is kept off Next until its time arrives.
     expect(FUTURE.getTime()).toBeGreaterThan(NOW.getTime());
+    // SAFETY: activePoolWhere returns a Prisma WhereInput; OR is typed as a nested
+    // conditional union, but in practice it's always an array here.
     const or = activePoolWhere({ userId: "u1", now: NOW }).OR as unknown[];
     expect(or).toEqual([{ dueDate: null }, { dueDate: { lte: NOW } }]);
   });
