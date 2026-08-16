@@ -14,7 +14,8 @@
     "email:dev": "email dev --dir src/email/previews",
     "test:e2e": "playwright test",
     "test:e2e:isolated": "E2E_WORKTREE=1 playwright test",
-    "test:e2e:install": "playwright install --with-deps chromium"
+    "test:e2e:install": "playwright install --with-deps chromium",
+    "lint": "oxlint"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
+    "@oxlint/plugins": "^1.77.0",
     "@playwright/test": "^1.61.1",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.0.0",
@@ -47,6 +49,7 @@
     "eslint-plugin-react": "^7.37.5",
     "fallow": "^3.7.1",
     "globals": "^16.1.0",
+    "oxlint": "^1.77.0",
     "prettier": "^3.9.6",
     "prisma": "5.19.1",
     "tidewave": "^0.8.2",
