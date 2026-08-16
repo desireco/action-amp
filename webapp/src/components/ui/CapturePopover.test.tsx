@@ -313,13 +313,19 @@ describe("CapturePopover", () => {
       return container.querySelectorAll(".aa-capture__attachment");
     }
 
-    it("pasting an image attaches it as a removable thumbnail", () => {
+    // Previews are data: URLs built asynchronously (FileReader) — wait for
+    // the thumbnail before asserting on attachment state.
+    async function attached(container: HTMLElement, alt: string) {
+      await screen.findByAltText(alt);
+      return thumbs(container).length;
+    }
+
+    it("pasting an image attaches it as a removable thumbnail", async () => {
       const { container } = renderInContext(
         <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       firePaste(screen.getByLabelText("Capture"), [imageFile()]);
-      expect(screen.getByAltText("shot.png")).toBeInTheDocument();
-      expect(thumbs(container)).toHaveLength(1);
+      expect(await attached(container, "shot.png")).toBe(1);
     });
 
     it("a plain-text paste (no files) attaches nothing", () => {
@@ -330,13 +336,13 @@ describe("CapturePopover", () => {
       expect(container.querySelector(".aa-capture__attachments")).toBeNull();
     });
 
-    it("dropping an image anywhere on the overlay attaches it", () => {
+    it("dropping an image anywhere on the overlay attaches it", async () => {
       const { container } = renderInContext(
         <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       // Drop on the backdrop (outside the card) — the whole overlay is a target.
       fireDrop(overlayEl(container), [imageFile("dropped.png")]);
-      expect(screen.getByAltText("dropped.png")).toBeInTheDocument();
+      expect(await attached(container, "dropped.png")).toBe(1);
     });
 
     it("a file drag highlights the card; leaving clears it", () => {
@@ -362,13 +368,13 @@ describe("CapturePopover", () => {
       expect(thumbs(container)).toHaveLength(0);
     });
 
-    it("caps at four images and reports the limit", () => {
+    it("caps at four images and reports the limit", async () => {
       const { container } = renderInContext(
         <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       const five = [1, 2, 3, 4, 5].map((i) => imageFile(`shot-${i}.png`));
       fireDrop(overlayEl(container), five);
-      expect(thumbs(container)).toHaveLength(4);
+      expect(await attached(container, "shot-4.png")).toBe(4);
       expect(screen.getByText(/attach up to 4 images/i)).toBeInTheDocument();
     });
 
@@ -382,11 +388,12 @@ describe("CapturePopover", () => {
       expect(container.querySelector(".aa-capture__attachments")).toBeNull();
     });
 
-    it("the remove button detaches an image", () => {
+    it("the remove button detaches an image", async () => {
       const { container } = renderInContext(
         <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       firePaste(screen.getByLabelText("Capture"), [imageFile()]);
+      await attached(container, "shot.png");
       fireEvent.click(screen.getByLabelText(/remove shot.png/i));
       expect(container.querySelector(".aa-capture__attachments")).toBeNull();
       // Back to text-only: image-less, empty input can't submit.
@@ -397,10 +404,11 @@ describe("CapturePopover", () => {
       const file = imageFile();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const onClose = vi.fn();
-      renderInContext(
+      const { container } = renderInContext(
         <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       firePaste(screen.getByLabelText("Capture"), [file]);
+      await attached(container, "shot.png");
       fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
       expect(onSubmit).toHaveBeenCalledWith("", [file]);
       await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -410,11 +418,12 @@ describe("CapturePopover", () => {
       const file = imageFile();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
       const onClose = vi.fn();
-      renderInContext(
+      const { container } = renderInContext(
         <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
       const input = typeIntoInput("bug screenshot");
       firePaste(input, [file]);
+      await attached(container, "shot.png");
       fireEvent.keyDown(input, { key: "Enter" });
       expect(onSubmit).toHaveBeenCalledWith("bug screenshot", [file]);
       await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -427,14 +436,15 @@ describe("CapturePopover", () => {
       );
       const input = typeIntoInput("first with image");
       firePaste(input, [imageFile()]);
+      await attached(container, "shot.png");
       fireEvent.keyDown(input, { key: "Enter", metaKey: true });
       await waitFor(() => expect(input.value).toBe(""));
       expect(container.querySelector(".aa-capture__attachments")).toBeNull();
       expect(screen.getByText("1 image")).toBeInTheDocument();
     });
 
-    it("initialFiles (dropped on the FAB) attach on open", () => {
-      renderInContext(
+    it("initialFiles (dropped on the FAB) attach on open", async () => {
+      const { container } = renderInContext(
         <CapturePopover
           onClose={() => {}}
           onSubmit={() => {}}
@@ -444,14 +454,14 @@ describe("CapturePopover", () => {
           initialFiles={[imageFile("fab-drop.png")]}
         />,
       );
-      expect(screen.getByAltText("fab-drop.png")).toBeInTheDocument();
+      expect(await attached(container, "fab-drop.png")).toBe(1);
     });
 
     // Regression (2026-08-16): a FAB drop double-attached in dev — StrictMode
     // fires mount effects twice, so the initialFiles preload ran twice. The
     // effect is now ref-guarded and addFiles dedupes by file identity; these
     // tests pin the dedupe (the part drivable without StrictMode).
-    it("the same file added twice attaches only once (double-paste)", () => {
+    it("the same file added twice attaches only once (double-paste)", async () => {
       const { container } = renderInContext(
         <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
       );
@@ -459,10 +469,12 @@ describe("CapturePopover", () => {
       const ta = screen.getByLabelText("Capture");
       firePaste(ta, [file]);
       firePaste(ta, [file]);
-      expect(thumbs(container)).toHaveLength(1);
+      // Both pastes race the async preview builds; the updater-level dedupe
+      // must still land exactly one thumbnail.
+      await waitFor(() => expect(thumbs(container)).toHaveLength(1));
     });
 
-    it("a re-add of an initialFile after open is a silent no-op", () => {
+    it("a re-add of an initialFile after open is a silent no-op", async () => {
       const file = imageFile("fab-drop.png");
       const { container } = renderInContext(
         <CapturePopover
@@ -474,8 +486,9 @@ describe("CapturePopover", () => {
           initialFiles={[file]}
         />,
       );
+      await attached(container, "fab-drop.png");
       fireDrop(overlayEl(container), [file]);
-      expect(thumbs(container)).toHaveLength(1);
+      await waitFor(() => expect(thumbs(container)).toHaveLength(1));
       // A duplicate no-op must not raise the "only images" error either.
       expect(screen.queryByText(/only images/i)).not.toBeInTheDocument();
     });

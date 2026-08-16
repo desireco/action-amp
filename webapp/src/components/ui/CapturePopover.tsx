@@ -10,6 +10,7 @@ import {
   MAX_IMAGE_ATTACHMENT_BYTES,
 } from "../../shared/imageAttachments";
 import {
+  fileToDataUrl,
   imageFilesFromDataTransfer,
   rawFilesFromDataTransfer,
 } from "../../shared/imageFiles";
@@ -45,7 +46,7 @@ interface Mention {
   lensName?: string | null;
 }
 
-/** A not-yet-saved image: the File plus its local preview object URL. */
+/** A not-yet-saved image: the File plus its data: URL preview (CSP-safe). */
 interface PendingImage {
   file: File;
   url: string;
@@ -84,8 +85,6 @@ export function CapturePopover({
   // dragenter/dragleave fire per child element — count depth so the
   // highlight stays stable while the drag moves across the card.
   const dragDepth = useRef(0);
-  // Latest attachments for the unmount cleanup — state itself is stale there.
-  const pendingFilesRef = useRef<PendingImage[]>([]);
 
   const parsed = text.trim()
     ? parseCapture(text, new Date(), customLensNames)
@@ -149,18 +148,6 @@ export function CapturePopover({
     grow();
   }, []);
 
-  useEffect(() => {
-    pendingFilesRef.current = pendingFiles;
-  });
-
-  // Revoke any leftover preview URLs on close (Esc / backdrop / × with
-  // images still pending — the submit paths revoke via clearFiles()).
-  useEffect(() => {
-    return () => {
-      for (const p of pendingFilesRef.current) URL.revokeObjectURL(p.url);
-    };
-  }, []);
-
   // Files dropped on the FAB before open — validated like any other add.
   // Ref-guarded: StrictMode double-fires mount effects in dev, which attached
   // the preload twice (the FAB-drop duplicate-attachment bug). addFiles also
@@ -169,16 +156,17 @@ export function CapturePopover({
   useEffect(() => {
     if (initialFilesConsumed.current) return;
     initialFilesConsumed.current = true;
-    if (initialFiles?.length) addFiles(initialFiles);
+    if (initialFiles?.length) void addFiles(initialFiles);
   }, []);
 
   /**
    * Validate + queue images. Client-side mirror of prepareImageAttachments
    * (same caps, same error copy) so bad files are rejected before submit;
    * the server still re-validates. A file already in the pending list is a
-   * silent no-op — re-adding identical bytes is never the intent.
+   * silent no-op — re-adding identical bytes is never the intent. Previews
+   * are data: URLs, so there is nothing to revoke on remove/clear.
    */
-  function addFiles(incoming: File[]) {
+  async function addFiles(incoming: File[]) {
     setError(null);
     const images = incoming.filter((f) => f.type.startsWith("image/"));
     if (images.length === 0) {
@@ -198,21 +186,26 @@ export function CapturePopover({
       nextError = `Attach up to ${MAX_IMAGE_ATTACHMENTS} images at a time.`;
     }
     if (accepted.length > 0) {
+      const previews = await Promise.all(
+        accepted.map(async (file) => ({ file, url: await fileToDataUrl(file) })),
+      );
+      // Dedupe + cap again inside the updater: the await above leaves a
+      // window where a second addFiles sees stale state.
       setPendingFiles((prev) => [
         ...prev,
-        ...accepted.map((file) => ({ file, url: URL.createObjectURL(file) })),
+        ...previews
+          .filter((p) => !prev.some((q) => q.file === p.file))
+          .slice(0, Math.max(0, MAX_IMAGE_ATTACHMENTS - prev.length)),
       ]);
     }
     setError(nextError);
   }
 
   function removeFile(target: PendingImage) {
-    URL.revokeObjectURL(target.url);
     setPendingFiles((prev) => prev.filter((p) => p.url !== target.url));
   }
 
   function clearFiles() {
-    for (const p of pendingFiles) URL.revokeObjectURL(p.url);
     setPendingFiles([]);
   }
 

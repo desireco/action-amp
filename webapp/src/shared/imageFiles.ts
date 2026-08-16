@@ -18,6 +18,21 @@ export function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
+/**
+ * Read a Blob/File as a data: URL for <img> previews. The deploy host's CSP
+ * allows data: but not blob: image sources — object URLs render as broken
+ * images in production (dev serves no CSP, so only prod shows it). Data URLs
+ * need no revoke; dropping the last reference frees them.
+ */
+export function fileToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
 /** Encode a picked File into the op wire shape ({filename, mimeType, dataBase64}). */
 export async function fileToImageAttachmentInput(
   file: File,

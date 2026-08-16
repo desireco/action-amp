@@ -6,7 +6,7 @@ import { BrandMark } from "../components/ui/BrandMark";
 import { ArrowRightIcon, InboxIcon } from "../components/ui/icons";
 import { composeShareCapture, composeShareText, type ShareFields } from "./composeShareText";
 import { clearPendingShare, getPendingShare, type PendingShareImage } from "./pendingShare";
-import { blobToBase64 } from "../shared/imageFiles";
+import { blobToBase64, fileToDataUrl } from "../shared/imageFiles";
 import "./SharePage.css";
 
 const ERROR_COPY: Record<string, string> = {
@@ -211,11 +211,21 @@ export function SharePage() {
 }
 
 function ImagePreview({ file }: { file: PendingShareImage }) {
+  // data: URL, not an object URL — the deploy host's CSP allows data: image
+  // sources but not blob:, so object URLs render broken in production.
   const [url, setUrl] = useState("");
   useEffect(() => {
-    const objectUrl = URL.createObjectURL(file.blob);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
+    let cancelled = false;
+    fileToDataUrl(file.blob)
+      .then((dataUrl) => {
+        if (!cancelled) setUrl(dataUrl);
+      })
+      .catch(() => {
+        // A unreadable blob shows the fallback (no preview) — same as before.
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [file.blob]);
   return url ? <img className="aa-share__image" src={url} alt="Shared image preview" /> : null;
 }
