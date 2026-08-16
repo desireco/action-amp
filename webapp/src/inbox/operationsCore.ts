@@ -239,9 +239,9 @@ async function resolveEffectiveProject(
 
 /** Fetch the seed item's attachment blobs for a branch that moves them.
  *  The orchestrator's main read selects metadata only, so branches that carry
- *  images onto the created entity (task / project / list-item) pull the bytes
- *  lazily here. Returns undefined when the item has none, so callers skip
- *  the attachments key entirely — no `create: []` writes. */
+ *  images onto the created entity (task / project / resource / list-item)
+ *  pull the bytes lazily here. Returns undefined when the item has none, so
+ *  callers skip the attachments key entirely — no `create: []` writes. */
 async function fetchSeedAttachmentBlobs(
   entities: Entities,
   item: { id: string; attachments: unknown[] },

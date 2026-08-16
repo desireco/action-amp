@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import { request } from "../api.js";
-import { emit, type OutputCtx } from "../output.js";
+import { emit, formatAttachmentLine, type OutputCtx } from "../output.js";
 import type { Resource } from "../types.js";
 
 export function makeResourceCommand(): Command {
@@ -23,7 +23,7 @@ export function makeResourceCommand(): Command {
           if (item.notes) process.stdout.write(`     ${chalk.gray(item.notes)}\n`);
           // The ids make `attachment download <id>` usable from text output.
           item.attachments?.forEach((a) => {
-            process.stdout.write(`     ${chalk.gray(`image ${a.filename} — ${a.id}`)}\n`);
+            process.stdout.write(`     ${formatAttachmentLine(a)}\n`);
           });
         });
       }, ctx);

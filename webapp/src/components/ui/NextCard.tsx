@@ -81,7 +81,10 @@ export function NextCard({ task, context, onNotNow, onDo, state = "next", onPaus
           {task.due && <span className="aa-wn-card__meta-item">{task.due}</span>}
           {task.due && task.size && <span className="aa-wn-card__sep" aria-hidden="true">·</span>}
           {task.size && <span className="aa-wn-card__meta-item">{task.size}</span>}
-          {(task.due || task.size) && (task.imageCount ?? 0) > 0 && (
+          {/* Separator before the image chip whenever ANY earlier meta item
+              rendered (project, due, or size) — a project-only row still gets
+              its "·" (R1 review fix). */}
+          {(task.project || task.due || task.size) && (task.imageCount ?? 0) > 0 && (
             <span className="aa-wn-card__sep" aria-hidden="true">·</span>
           )}
           {(task.imageCount ?? 0) > 0 && (

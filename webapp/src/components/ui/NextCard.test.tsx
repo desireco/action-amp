@@ -37,6 +37,18 @@ describe("NextCard", () => {
       expect(screen.getByText("2 images")).toBeInTheDocument();
     });
 
+    it("separates the image chip from a project-only meta row (R1 review fix)", () => {
+      // No due/size — project and the image chip are the only meta items, so
+      // the "·" separator must still render between them.
+      renderInContext(
+        <NextCard
+          task={{ ...BASE_TASK, due: undefined, size: undefined, imageCount: 1 }}
+        />,
+      );
+      const meta = screen.getByText("Ship v2").closest(".aa-wn-card__meta");
+      expect(meta?.textContent).toBe("Ship v2·1 image");
+    });
+
     it("renders no image chip when the task has none", () => {
       renderInContext(<NextCard task={BASE_TASK} />);
       expect(screen.queryByText(/image/i)).toBeNull();

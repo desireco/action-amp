@@ -15,7 +15,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { request } from "../api.js";
 import { readConfig } from "../config.js";
-import { emit, type OutputCtx } from "../output.js";
+import { emit, formatAttachmentLine, type OutputCtx } from "../output.js";
 import { runAttachmentDownload } from "./attachment.js";
 import type { InboxItem } from "../types.js";
 
@@ -47,7 +47,7 @@ export function makeInboxCommand(): Command {
             // The ids make `inbox download <id>` usable from text output
             // without a --json round-trip.
             item.attachments?.forEach((a) => {
-              process.stdout.write(`     ${chalk.gray(`image ${a.filename} — ${a.id}`)}\n`);
+              process.stdout.write(`     ${formatAttachmentLine(a)}\n`);
             });
           });
         },

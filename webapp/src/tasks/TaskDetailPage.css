@@ -314,52 +314,11 @@
   color: var(--aa-rose-text);
 }
 
-/* Legacy task-detail classes still used by Goal/Project detail pages. */
+/* Legacy task-detail classes still used by Task/Goal detail pages
+   (verified 2026-08-16: only .aa-task and .aa-task-err above have consumers —
+   aa-task-check/-meta/-field/-actions were deleted as dead). */
 .aa-task {
   max-width: 620px;
-}
-
-.aa-task-check {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  margin-bottom: var(--aa-space-md);
-  border: 2px solid var(--aa-border-strong);
-  border-radius: var(--aa-radius-full);
-}
-
-.aa-task-check.done {
-  background: var(--aa-teal);
-  border-color: var(--aa-teal);
-}
-
-.aa-task-check svg {
-  opacity: 0;
-}
-
-.aa-task-check.done svg {
-  opacity: 1;
-}
-
-.aa-task-meta {
-  margin: 0 0 var(--aa-space-lg);
-  color: var(--aa-text-3);
-  font-size: var(--aa-text-base);
-}
-
-.aa-task-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--aa-space-xs);
-  margin-bottom: var(--aa-space-md);
-}
-
-.aa-task-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--aa-space-lg);
 }
 
 @media (max-width: 720px) {

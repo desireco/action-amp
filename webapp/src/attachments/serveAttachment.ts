@@ -29,7 +29,7 @@ export type ServedAttachment = {
   size: number;
 };
 
-/** The attachment-delegate pair both serve routes run against. */
+/** The attachment delegates both serve routes run against (one per table). */
 export type AttachmentEntities = {
   InboxAttachment: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,79 +58,43 @@ export function isAttachmentId(id: unknown): id is string {
   return typeof id === "string" && UUID_RE.test(id);
 }
 
+/** The attachment tables and their owner-parent relations, in lookup order
+ *  (inbox seeds first, dispatched entities after). Adding the next table is
+ *  one line here — the walk below needs no other change. */
+const ATTACHMENT_TABLES = [
+  { table: "InboxAttachment", parent: "inboxItem" },
+  { table: "ListItemAttachment", parent: "listItem" },
+  { table: "TaskAttachment", parent: "task" },
+  { table: "ProjectAttachment", parent: "project" },
+  { table: "ResourceAttachment", parent: "resource" },
+] as const;
+
 /**
  * Owner-gated lookup across the attachment tables. Returns null for unknown
- * ids AND foreign ids (no existence leak). Short-circuits: a matching
- * InboxAttachment never consults the other tables.
+ * ids AND foreign ids (no existence leak). Short-circuits: a matching row
+ * returns before the remaining tables are consulted.
  */
 export async function findOwnedAttachment(
   entities: AttachmentEntities,
   { id, userId }: { id: string; userId: string },
 ): Promise<ServedAttachment | null> {
-  const inboxAttachment = await entities.InboxAttachment.findUnique({
-    where: { id },
-    select: {
-      data: true,
-      filename: true,
-      mimeType: true,
-      size: true,
-      inboxItem: { select: { userId: true } },
-    },
-  });
-  if (inboxAttachment?.inboxItem.userId === userId) {
-    return inboxAttachment;
-  }
-  const listAttachment = await entities.ListItemAttachment.findUnique({
-    where: { id },
-    select: {
-      data: true,
-      filename: true,
-      mimeType: true,
-      size: true,
-      listItem: { select: { userId: true } },
-    },
-  });
-  if (listAttachment?.listItem.userId === userId) {
-    return listAttachment;
-  }
-  const taskAttachment = await entities.TaskAttachment.findUnique({
-    where: { id },
-    select: {
-      data: true,
-      filename: true,
-      mimeType: true,
-      size: true,
-      task: { select: { userId: true } },
-    },
-  });
-  if (taskAttachment?.task.userId === userId) {
-    return taskAttachment;
-  }
-  const projectAttachment = await entities.ProjectAttachment.findUnique({
-    where: { id },
-    select: {
-      data: true,
-      filename: true,
-      mimeType: true,
-      size: true,
-      project: { select: { userId: true } },
-    },
-  });
-  if (projectAttachment?.project.userId === userId) {
-    return projectAttachment;
-  }
-  const resourceAttachment = await entities.ResourceAttachment.findUnique({
-    where: { id },
-    select: {
-      data: true,
-      filename: true,
-      mimeType: true,
-      size: true,
-      resource: { select: { userId: true } },
-    },
-  });
-  if (resourceAttachment?.resource.userId === userId) {
-    return resourceAttachment;
+  for (const { table, parent } of ATTACHMENT_TABLES) {
+    // SAFETY: delegates are loosely typed (see AttachmentEntities); the row
+    // shape is pinned by this select and by the route's tests.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const row: any = await entities[table].findUnique({
+      where: { id },
+      select: {
+        data: true,
+        filename: true,
+        mimeType: true,
+        size: true,
+        [parent]: { select: { userId: true } },
+      },
+    });
+    if (row?.[parent]?.userId === userId) {
+      return row as ServedAttachment;
+    }
   }
   return null;
 }

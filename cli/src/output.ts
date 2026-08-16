@@ -44,6 +44,18 @@ export function formatTask(t: {
   return `${t.description}${ctx}`;
 }
 
+/**
+ * One captured-image metadata line for human output — the trailing id makes
+ * `attachment download <id>` usable from text output without a --json
+ * round-trip. Shared by the task/project/resource/inbox listings.
+ */
+export function formatAttachmentLine(a: {
+  filename: string;
+  id: string;
+}): string {
+  return chalk.gray(`image ${a.filename} — ${a.id}`);
+}
+
 /** Format a relative-time string ("Used 3 min ago") or "Never used". */
 export function formatLastUsed(iso: string | null): string {
   if (!iso) return "Never used";

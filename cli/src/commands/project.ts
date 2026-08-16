@@ -9,7 +9,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { request } from "../api.js";
 import { readConfig } from "../config.js";
-import { emit, fail, type OutputCtx } from "../output.js";
+import { emit, fail, formatAttachmentLine, type OutputCtx } from "../output.js";
 import type { Project } from "../types.js";
 
 export function makeProjectCommand(): Command {
@@ -70,14 +70,14 @@ export function makeProjectCommand(): Command {
             // The ids make `attachment download <id>` usable from text
             // output (same precedent as `inbox list`).
             result.project.attachments?.forEach((a) => {
-              process.stdout.write(`  ${chalk.gray(`image ${a.filename} — ${a.id}`)}\n`);
+              process.stdout.write(`  ${formatAttachmentLine(a)}\n`);
             });
             if (result.project.resources?.length) {
               process.stdout.write("  Resources:\n");
               result.project.resources.forEach((resource) => {
                 process.stdout.write(`    - ${resource.title}${resource.url ? chalk.gray(` — ${resource.url}`) : ""}\n`);
                 resource.attachments?.forEach((a) => {
-                  process.stdout.write(`      ${chalk.gray(`image ${a.filename} — ${a.id}`)}\n`);
+                  process.stdout.write(`      ${formatAttachmentLine(a)}\n`);
                 });
               });
             }
