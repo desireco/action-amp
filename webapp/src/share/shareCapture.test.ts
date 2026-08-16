@@ -3,14 +3,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock createInboxItemCore so no DB is touched. The handler's own logic +
-// composeShareText (real) is what we exercise.
+// composeShareText (real) is what we exercise. getSessionAuth is mocked for
+// the same reason — the real module pulls `wasp/server` (prisma), which the
+// client-side import detector blocks in tests.
 vi.mock("../inbox/operationsCore", () => ({
   createInboxItemCore: vi.fn(),
+}));
+vi.mock("../auth/sessionAuth", () => ({
+  getSessionAuth: (req: { sessionAuth?: { userId: string } }) => req.sessionAuth,
 }));
 
 import { shareCapture } from "./shareCapture";
 import { createInboxItemCore } from "../inbox/operationsCore";
-import type { Response } from "express";
+import type { Request, Response } from "express";
+
+function makeReq(body: unknown, sessionAuth?: { userId: string }): Request {
+  return { body, sessionAuth } as unknown as Request;
+}
 
 function makeRes(): Response {
   return { redirect: vi.fn(), status: vi.fn().mockReturnThis(), json: vi.fn() } as unknown as Response;
@@ -21,29 +30,29 @@ beforeEach(() => {
 });
 
 describe("shareCapture", () => {
-  it("redirects to /login when context.user is null", async () => {
-    const req = { body: { title: "X", url: "https://x.com" } } as any;
+  it("redirects to /login when no session authenticated", async () => {
+    const req = makeReq({ title: "X", url: "https://x.com" });
     const res = makeRes();
-    await shareCapture(req, res, { user: undefined, entities: {} });
+    await shareCapture(req, res, { entities: {} });
     expect(res.redirect).toHaveBeenCalledWith(303, "/login");
     expect(createInboxItemCore).not.toHaveBeenCalled();
   });
 
   it("redirects to /share?error=empty when all fields blank", async () => {
-    const req = { body: { title: "   " } } as any;
+    const req = makeReq({ title: "   " }, { userId: "u1" });
     const res = makeRes();
-    await shareCapture(req, res, { user: { id: "u1" }, entities: {} });
+    await shareCapture(req, res, { entities: {} });
     expect(res.redirect).toHaveBeenCalledWith(303, "/share?error=empty");
     expect(createInboxItemCore).not.toHaveBeenCalled();
   });
 
   it("saves composed text and redirects to /share?id= on success", async () => {
-    const req = { body: { title: "Cool", url: "https://x.com" } } as any;
+    const req = makeReq({ title: "Cool", url: "https://x.com" }, { userId: "u1" });
     const res = makeRes();
     (createInboxItemCore as any).mockResolvedValue({
       id: "item-1", text: "Cool — https://x.com", createdAt: new Date(),
     });
-    await shareCapture(req, res, { user: { id: "u1" }, entities: { E: 1 } });
+    await shareCapture(req, res, { entities: { E: 1 } });
     expect(createInboxItemCore).toHaveBeenCalledWith({ E: 1 }, {
       userId: "u1",
       text: "Cool — https://x.com",
@@ -52,23 +61,23 @@ describe("shareCapture", () => {
   });
 
   it("redirects to /share?error=server when core throws", async () => {
-    const req = { body: { url: "https://x.com" } } as any;
+    const req = makeReq({ url: "https://x.com" }, { userId: "u1" });
     const res = makeRes();
     (createInboxItemCore as any).mockRejectedValue(new Error("boom"));
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    await shareCapture(req, res, { user: { id: "u1" }, entities: {} });
+    await shareCapture(req, res, { entities: {} });
     expect(res.redirect).toHaveBeenCalledWith(303, "/share?error=server");
     errSpy.mockRestore();
   });
 
   it("encodes the item id in the redirect URL", async () => {
     const trickyId = "with space&special";
-    const req = { body: { url: "https://x.com" } } as any;
+    const req = makeReq({ url: "https://x.com" }, { userId: "u1" });
     const res = makeRes();
     (createInboxItemCore as any).mockResolvedValue({
       id: trickyId, text: "https://x.com", createdAt: new Date(),
     });
-    await shareCapture(req, res, { user: { id: "u1" }, entities: {} });
+    await shareCapture(req, res, { entities: {} });
     expect(res.redirect).toHaveBeenCalledWith(
       303,
       `/share?id=${encodeURIComponent(trickyId)}`,
@@ -76,11 +85,11 @@ describe("shareCapture", () => {
   });
 
   it("returns redirect data for the service-worker bridge", async () => {
-    const req = { body: { url: "https://x.com" }, query: { response: "json" } } as any;
+    const req = { body: { url: "https://x.com" }, query: { response: "json" }, sessionAuth: { userId: "u1" } } as any;
     const res = makeRes();
     (createInboxItemCore as any).mockResolvedValue({ id: "item-1" });
 
-    await shareCapture(req, res, { user: { id: "u1" }, entities: {} });
+    await shareCapture(req, res, { entities: {} });
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ redirect: "/share?id=item-1" });

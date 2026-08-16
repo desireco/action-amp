@@ -639,11 +639,14 @@ export default app({
       auth: true,
     }),
     // PWA share_target — form-urlencoded POST from the installed PWA's share
-    // sheet (Android/Chrome). auth:true resolves context.user from the
-    // wasp_session cookie. See docs/superpowers/specs/2026-07-25-pwa-share-target-design.md.
+    // sheet (Android/Chrome). auth:false + shareRouteMiddleware's session-
+    // cookie check: the top-level form POST carries the wasp_session cookie
+    // and no Bearer header, and Wasp's auth:true handler runs before route
+    // middleware on /api/* (it would never see the cookie lift). See
+    // src/auth/sessionAuth.ts + docs/superpowers/specs/2026-07-25-pwa-share-target-design.md.
     api("POST", "/api/share", shareCapture, {
       entities: ["InboxItem", "Lens"],
-      auth: true,
+      auth: false,
       middlewareConfigFn: shareRouteMiddleware,
     }),
     // Captured-image serving — the only reader of the attachment `data`

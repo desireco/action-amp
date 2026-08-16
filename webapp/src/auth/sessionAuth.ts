@@ -20,6 +20,9 @@ import type { MiddlewareConfigFn } from "wasp/server";
 import { prisma } from "wasp/server";
 import { attachSessionFromCookie } from "./sessionCookie";
 
+// Re-exported for route middleware composers (shareRouteMiddleware).
+export { attachSessionFromCookie };
+
 export interface SessionAuth {
   userId: string;
 }

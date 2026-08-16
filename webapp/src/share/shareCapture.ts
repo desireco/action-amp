@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { createInboxItemCore } from "../inbox/operationsCore";
+import { getSessionAuth } from "../auth/sessionAuth";
 import { composeShareText, type ShareFields } from "./composeShareText";
 
 // POST /api/share — the manifest.json share_target action. Receives a
@@ -13,11 +14,15 @@ import { composeShareText, type ShareFields } from "./composeShareText";
 //   logged in, save throws       → log + 303 /share?error=server
 //   logged out                   → 303 /login  (user re-shares after sign-in)
 //
-// `auth: true` on the route resolves context.user from the wasp_session cookie
-// the share POST carries (SameSite=lax permits top-level form navigations).
+// Auth: `auth: false` + shareRouteMiddleware's session-cookie check. The share
+// POST is a top-level form navigation from the installed PWA — it carries the
+// wasp_session cookie (SameSite=lax permits top-level navigations) and no
+// Authorization header, and Wasp's `auth: true` handler runs before any
+// route middleware on /api/* (it can't see the cookie lift) — so the route
+// owns the check. See auth/sessionAuth.ts.
 //
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type WaspApiContext = { user?: { id: string }; entities: any };
+type WaspApiContext = { entities: any };
 
 function respondWithRedirect(res: Response, redirect: string, json: boolean) {
   return json ? res.status(200).json({ redirect }) : res.redirect(303, redirect);
@@ -36,15 +41,15 @@ function extractFields(body: unknown): ShareFields {
 export const shareCapture = async (
   req: Request,
   res: Response,
-  context: WaspApiContext,
+  _context: WaspApiContext,
 ) => {
   // The installed PWA's same-origin service worker forwards share forms here.
   // It requests JSON so it can redirect the Android share activity back to the
   // app origin; direct POSTs retain the normal 303 behavior.
   const wantsJson = req.query?.response === "json";
 
-  // auth:true → context.user is set iff the cookie was present.
-  if (!context.user) {
+  const auth = getSessionAuth(req);
+  if (!auth) {
     return respondWithRedirect(res, "/login", wantsJson);
   }
 
@@ -52,8 +57,8 @@ export const shareCapture = async (
   if (!text) return respondWithRedirect(res, "/share?error=empty", wantsJson);
 
   try {
-    const created = await createInboxItemCore(context.entities, {
-      userId: context.user.id,
+    const created = await createInboxItemCore(_context.entities, {
+      userId: auth.userId,
       text,
     });
     return respondWithRedirect(res, `/share?id=${encodeURIComponent(created.id)}`, wantsJson);
