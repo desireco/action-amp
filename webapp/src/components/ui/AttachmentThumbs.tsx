@@ -67,6 +67,136 @@ export function AttachmentThumbs({
 }
 
 /**
+ * AttachmentGallery — the large in-card media surface for triage.
+ *
+ * The first image shows big (≈2–3× the old thumbnail, responsive height) so
+ * the item can be judged by what was actually shared. Multiple images become
+ * a scroll-snap carousel: swipe/trackpad slides natively, arrows and dots
+ * work for pointer/keyboard users. Clicking any image opens the
+ * AttachmentLightbox for the full-size view (←/→ there page through the set).
+ *
+ * Native horizontal scroll (not transform tricks) so touch and trackpad
+ * behave like every other carousel on the platform; the card's exit
+ * animation is decision-driven, not a swipe gesture, so the scroll area
+ * doesn't compete with it.
+ */
+export function AttachmentGallery({
+  attachments,
+}: {
+  attachments: AttachmentThumb[];
+}) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [active, setActive] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const many = attachments.length > 1;
+  if (attachments.length === 0) return null;
+
+  const go = (target: number) => {
+    const next = (target + attachments.length) % attachments.length;
+    setActive(next);
+    const track = trackRef.current;
+    if (!track) return;
+    const left = next * track.clientWidth;
+    if (typeof track.scrollTo === "function") {
+      track.scrollTo({ left, behavior: "smooth" });
+    } else {
+      track.scrollLeft = left;
+    }
+  };
+
+  const onScroll = () => {
+    const track = trackRef.current;
+    if (!track) return;
+    const width = Math.max(1, track.clientWidth);
+    const next = Math.round(track.scrollLeft / width);
+    setActive((prev) => (prev === next ? prev : (next + attachments.length) % attachments.length));
+  };
+
+  return (
+    <div className="aa-attach-gallery">
+      <div
+        ref={trackRef}
+        className="aa-attach-gallery__track"
+        onScroll={onScroll}
+      >
+        {attachments.map((attachment, i) => (
+          <button
+            key={attachment.id}
+            type="button"
+            className="aa-attach-gallery__slide"
+            onClick={() => setOpenIndex(i)}
+            aria-label={`Open image ${attachment.filename}`}
+            aria-haspopup="dialog"
+          >
+            <img
+              className="aa-attach-gallery__img"
+              src={attachmentSrc(attachment.id)}
+              alt={attachment.filename}
+              draggable={false}
+            />
+          </button>
+        ))}
+      </div>
+      {many && (
+        <>
+          <button
+            type="button"
+            className="aa-attach-gallery__nav aa-attach-gallery__nav--prev"
+            aria-label="Previous image"
+            onClick={() => go(active - 1)}
+          >
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M10 3.5L5.5 8l4.5 4.5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="aa-attach-gallery__nav aa-attach-gallery__nav--next"
+            aria-label="Next image"
+            onClick={() => go(active + 1)}
+          >
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M6 3.5L10.5 8l-4.5 4.5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <div className="aa-attach-gallery__dots" role="tablist" aria-label="Images">
+            {attachments.map((attachment, i) => (
+              <button
+                key={attachment.id}
+                type="button"
+                className={`aa-attach-gallery__dot ${i === active ? "is-active" : ""}`}
+                aria-label={`Show image ${i + 1} of ${attachments.length}`}
+                aria-current={i === active || undefined}
+                onClick={() => go(i)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+      {openIndex !== null && (
+        <AttachmentLightbox
+          attachments={attachments}
+          index={openIndex}
+          onClose={() => setOpenIndex(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
  * AttachmentLightbox — the full-size image viewer behind a thumbnail.
  *
  * Popover-family overlay shell (INTERACTION.md §9.2/§9.5): dimmed backdrop,

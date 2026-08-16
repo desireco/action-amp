@@ -43,6 +43,119 @@
 }
 
 /* ============================================================
+   AttachmentGallery — the triage card's media surface. First image
+   large (2–3× the old thumbs, responsive), scroll-snap carousel
+   through the rest. Click any image → lightbox.
+   ============================================================ */
+.aa-attach-gallery {
+  position: relative;
+}
+
+.aa-attach-gallery__track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* dots + arrows are the visible affordance */
+}
+
+.aa-attach-gallery__track::-webkit-scrollbar {
+  display: none;
+}
+
+.aa-attach-gallery__slide {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  height: clamp(144px, 26vh, 224px); /* 2–3× the old 72px thumbs */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface-muted);
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.aa-attach-gallery__slide:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-attach-gallery__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* show the whole screenshot — never crop evidence */
+}
+
+/* Prev/next — same scrim-circle language as the lightbox nav. */
+.aa-attach-gallery__nav {
+  position: absolute;
+  top: calc(clamp(144px, 26vh, 224px) / 2 - 22px);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--aa-radius-full);
+  color: #fff;
+  background: oklch(0.2 0.02 230 / 0.7);
+  cursor: pointer;
+  transition: background 0.15s var(--aa-ease-out);
+}
+
+.aa-attach-gallery__nav:hover {
+  background: oklch(0.2 0.02 230 / 0.9);
+}
+
+.aa-attach-gallery__nav:focus-visible {
+  outline: 2px solid var(--aa-teal-bright);
+  outline-offset: 2px;
+}
+
+.aa-attach-gallery__nav svg {
+  width: 20px;
+  height: 20px;
+}
+
+.aa-attach-gallery__nav--prev {
+  left: 10px;
+}
+
+.aa-attach-gallery__nav--next {
+  right: 10px;
+}
+
+/* Position dots under the track, centered. */
+.aa-attach-gallery__dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: var(--aa-space-sm);
+}
+
+.aa-attach-gallery__dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-border-strong);
+  cursor: pointer;
+  transition: background 0.15s var(--aa-ease-out);
+}
+
+.aa-attach-gallery__dot.is-active {
+  background: var(--aa-teal); /* system/state — where you are */
+}
+
+.aa-attach-gallery__dot:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+/* ============================================================
    AttachmentLightbox — full-size viewer over a dimmed backdrop.
    Popover-family shell (INTERACTION.md §9.2/§9.5): fade-in backdrop,
    Esc + backdrop-click dismissal, ~70% stage.

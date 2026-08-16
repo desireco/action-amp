@@ -54,7 +54,7 @@ export type {
 } from "./PropertyChips";
 export { Table } from "./Table";
 export type { TableColumn } from "./Table";
-export { AttachmentThumbs, attachmentSrc } from "./AttachmentThumbs";
+export { AttachmentThumbs, AttachmentGallery, attachmentSrc } from "./AttachmentThumbs";
 export type { AttachmentThumb } from "./AttachmentThumbs";
 export { TaskRow } from "./TaskRow";
 export type { TaskRowTask } from "./TaskRow";

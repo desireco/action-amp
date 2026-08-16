@@ -106,9 +106,9 @@
   margin: 0 0 var(--aa-space-md);
 }
 
+/* Full-width block: the AttachmentGallery (first image large + carousel)
+   spans the card so the media reads at the same width as the text. */
 .aa-triage-card__media {
-  display: flex;
-  justify-content: center;
   margin: 0 0 var(--aa-space-md);
 }
 

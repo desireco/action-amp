@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Chip } from "./Chip";
-import { AttachmentThumbs, type AttachmentThumb } from "./AttachmentThumbs";
+import { AttachmentGallery, type AttachmentThumb } from "./AttachmentThumbs";
 import "./TriageCard.css";
 
 export type TriageChipTone = "date" | "priority" | "tag";
@@ -21,8 +21,9 @@ interface TriageCardProps {
   meta?: string;
   /** Parsed-token chips */
   chips?: TriageChip[];
-  /** Captured images — shown while the item is being decided so it can be
-      judged by what was shared, not just its text. */
+  /** Captured images — shown large while the item is being decided so it
+      can be judged by what was shared, not just its text. Multiple images
+      carousel; click opens the full-size lightbox. */
   media?: AttachmentThumb[];
   /** Exit animation direction; null = at rest */
   exit?: TriageExit;
@@ -95,7 +96,7 @@ export function TriageCard({
       )}
       {media && media.length > 0 && (
         <div className="aa-triage-card__media">
-          <AttachmentThumbs attachments={media} size="md" />
+          <AttachmentGallery attachments={media} />
         </div>
       )}
       {children}

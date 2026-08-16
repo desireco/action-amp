@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { AttachmentThumbs } from "./AttachmentThumbs";
+import { AttachmentThumbs, AttachmentGallery } from "./AttachmentThumbs";
 import { renderInContext } from "wasp/client/test";
 
 // AttachmentThumbs — thumbnails open the in-app lightbox (not a new tab).
@@ -95,5 +95,54 @@ describe("AttachmentThumbs", () => {
     fireEvent.keyDown(window, { key: "Escape" });
     expect(pageShortcut).not.toHaveBeenCalled();
     window.removeEventListener("keydown", pageShortcut);
+  });
+});
+
+describe("AttachmentGallery (triage media surface)", () => {
+  function thumbs(n: number) {
+    return Array.from({ length: n }, (_, i) => ({
+      id: `00000000-0000-0000-0000-00000000000${i}`,
+      filename: `shot-${i + 1}.png`,
+    }));
+  }
+
+  it("renders one large slide per image, first visible", () => {
+    const { container } = renderInContext(<AttachmentGallery attachments={thumbs(3)} />);
+    const slides = container.querySelectorAll(".aa-attach-gallery__slide");
+    expect(slides).toHaveLength(3);
+    expect(screen.getByAltText("shot-1.png")).toBeInTheDocument();
+  });
+
+  it("single image: no arrows or dots", () => {
+    const { container } = renderInContext(<AttachmentGallery attachments={thumbs(1)} />);
+    expect(screen.queryByLabelText("Previous image")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Next image")).not.toBeInTheDocument();
+    expect(container.querySelectorAll(".aa-attach-gallery__dot")).toHaveLength(0);
+  });
+
+  it("next/prev arrows and dots move the active slide", () => {
+    renderInContext(<AttachmentGallery attachments={thumbs(3)} />);
+    const dots = () => document.querySelectorAll(".aa-attach-gallery__dot");
+    expect(dots()[0].className).toContain("is-active");
+
+    fireEvent.click(screen.getByLabelText("Next image"));
+    expect(dots()[1].className).toContain("is-active");
+
+    fireEvent.click(screen.getByLabelText("Previous image"));
+    expect(dots()[0].className).toContain("is-active");
+
+    // Dots jump directly; arrows wrap around.
+    fireEvent.click(dots()[2]);
+    expect(dots()[2].className).toContain("is-active");
+    fireEvent.click(screen.getByLabelText("Next image"));
+    expect(dots()[0].className).toContain("is-active");
+  });
+
+  it("clicking a slide opens the lightbox for that image", () => {
+    renderInContext(<AttachmentGallery attachments={thumbs(2)} />);
+    fireEvent.click(screen.getByAltText("shot-2.png"));
+    const dialog = screen.getByRole("dialog", { name: "Attached image" });
+    expect(dialog.querySelector("img")!.getAttribute("alt")).toBe("shot-2.png");
+    expect(screen.getByText("2 / 2")).toBeInTheDocument();
   });
 });
