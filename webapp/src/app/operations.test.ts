@@ -20,6 +20,7 @@ import { mockContext } from "../test/mockContext";
 describe("getAppData — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
+    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     await expect(getAppData(undefined as never, m.context)).rejects.toThrow(
       /Not authenticated/,
     );
@@ -546,6 +547,7 @@ describe("saveFocusSessionMinutes", () => {
 
     const m = mockContext();
     await expect(
+    // SAFETY: intentionally invalid minutes value to test rejection path.
       saveFocusSessionMinutes({ minutes: 30 as 25 }, m.context),
     ).rejects.toThrow(/25 or 45/);
     expect(m.entities.User.update).not.toHaveBeenCalled();
@@ -575,7 +577,8 @@ describe("saveReviewPreferences", () => {
     const m = mockContext();
     await expect(
       saveReviewPreferences(
-        { today: true, week: "yes" as never, month: false },
+        // SAFETY: intentionally invalid week value to test rejection path.
+      { today: true, week: "yes" as never, month: false },
         m.context,
       ),
     ).rejects.toThrow(/true or false/);

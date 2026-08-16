@@ -480,9 +480,9 @@ describe("CommandPalette", () => {
   ] as const)("opens the exact %s destination", (label, href) => {
     const archived = label === "archived inbox";
     const kind = label.includes("inbox") ? "inbox" : label;
+    // SAFETY: spread result narrowed to SearchSiteResult for renderPalette compatibility.
     const result = {
       ...RESULT,
-      // SAFETY: spread result narrowed to SearchSiteResult for renderPalette compatibility.
       id: `${kind}-1`,
       kind,
       title: `Record ${label}`,

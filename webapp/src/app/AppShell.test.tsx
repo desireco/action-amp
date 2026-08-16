@@ -139,6 +139,7 @@ describe("AppShell Lens workflows", () => {
   it("routes to the list when a Simple-list Lens is selected", async () => {
     localStorage.setItem("aa-lens-id", life.id);
     renderShell();
+    // SAFETY: querySelector returns Element; cast to HTMLElement for within() interaction.
     const sidebar = document.querySelector(".aa-app-side") as HTMLElement;
     fireEvent.click(
       within(sidebar).getByRole("button", { name: "Lens: Life" }),
@@ -152,6 +153,7 @@ describe("AppShell Lens workflows", () => {
   it("routes back to home when a Life-area Lens is selected from the list", async () => {
     localStorage.setItem("aa-lens-id", shopping.id);
     renderShell("/do/list");
+    // SAFETY: querySelector returns Element; cast to HTMLElement for within() interaction.
     const sidebar = document.querySelector(".aa-app-side") as HTMLElement;
     fireEvent.click(
       within(sidebar).getByRole("button", { name: "Lens: Shopping" }),
@@ -169,6 +171,7 @@ describe("AppShell Lens workflows", () => {
       expect(screen.getByTestId("location")).toHaveTextContent("/do/list"),
     );
 
+    // SAFETY: querySelector returns Element; cast to HTMLElement for within() interaction.
     const sidebar = document.querySelector(".aa-app-side") as HTMLElement;
     expect(
       within(sidebar).getByRole("link", { name: "List" }),

@@ -52,6 +52,9 @@ let handlers: Required<ShortcutHandlers>;
 beforeEach(() => {
   // vi.fn()'s Mock type isn't directly assignable to () => void (Vitest
   // typing quirk), so one localized cast here keeps the rest of the file clean.
+  // SAFETY: vi.fn() mock type isn't assignable to () => void (Vitest typing quirk);
+  // as unknown as Required<ShortcutHandlers> bridges the gap. Chained assertion necessary
+  // because Mock doesn't structurally overlap the handler interface.
   handlers = {
     onCapture: vi.fn(),
     onSearch: vi.fn(),

@@ -8,8 +8,14 @@ function coreEntities() {
   entities.User.count.mockResolvedValue(1);
   entities.User.findMany.mockResolvedValue([]);
   entities.User.findUnique.mockResolvedValue({ id: "target", isAdmin: false, manualAccessGrant: null });
+  // SAFETY: mock entities extend beyond the typed shape; as any adds mock-only properties.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entities.MagicLoginChallenge = { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) } as any;
+  // SAFETY: $transaction is not on the typed entities mock; as any adds it.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (entities as any).$transaction = async (fn: any) => fn(entities);
+  // SAFETY: return widened to any so callers can use mock-only properties.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return entities as any;
 }
 
