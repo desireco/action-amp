@@ -1,24 +1,42 @@
 // @vitest-environment node
-// Server-op tests run in node (not jsdom): the ops import entitlement guards
-// that pull `wasp/server` (HttpError), which Wasp's detectServerImports plugin
-// blocks in the client/jsdom env. These tests call ops as plain functions with
-// a mock context — no DOM APIs — so node is the correct environment.
+// Server project (see vitest.config.ts): the REAL entitlement guards run —
+// genuine HttpError 402/404/409s, no module mocking. Guard-gated ops need an
+// entitled user AND a lens the guards can resolve, so every non-anonymous
+// fixture goes through guarded().
 import { describe, it, expect, vi } from "vitest";
 
-// Stub the server-only HttpError layer so the op test never loads
-// `wasp/server` (blocked by detectServerImports under src/). These tests cover
-// the getGoals aggregation + create guard-rails; the entitlement *throw* path
-// (402 status + ProGate body) is verified end-to-end, not here.
-vi.mock("../billing/entitlementHttp", () => ({
-  assertLensAllowed: vi.fn().mockResolvedValue(undefined),
-  assertLifeAreaLens: vi.fn().mockResolvedValue(undefined),
-  assertUnderCap: vi.fn().mockResolvedValue(undefined),
-  throwHttpStatus: vi.fn((status: number, message: string) => {
-    throw new Error(`[${status}] ${message}`);
-  }),
-}));
-import { getGoals, createGoal, setGoalDone, updateGoal, deleteGoal, reorderGoalProjects } from "./operations";
-import { mockContext } from "../test/mockContext";
+import {
+  getGoals,
+  createGoal,
+  setGoalDone,
+  updateGoal,
+  deleteGoal,
+  reorderGoalProjects,
+} from "./operations";
+import { mockContext, type MockContext } from "../test/mockContext";
+
+// planRenewsAt is load-bearing: isPlanActive treats PRO with a null/past
+// renewal as FREE (the old mocked guards hid this).
+const FUTURE = new Date(Date.now() + 60_000);
+
+/** An entitled context the REAL guards admit: active PRO user + a Lens the
+ *  guards resolve as included and LIFE_AREA (what assertLifeAreaLens wants). */
+function guarded(): MockContext {
+  const m = mockContext({
+    id: "user-1",
+    plan: "PRO",
+    planRenewsAt: FUTURE,
+  });
+  m.entities.Lens.findFirst.mockResolvedValue({
+    id: "lens-1",
+    name: "Me",
+    isIncluded: true,
+    type: "LIFE_AREA",
+  });
+  m.entities.Goal.count.mockResolvedValue(0);
+  m.entities.Project.count.mockResolvedValue(0);
+  return m;
+}
 
 /**
  * Goals operations — getGoals (aggregation with progress calc) + createGoal.
@@ -33,8 +51,20 @@ const GOAL_ROW = {
   name: "Grow audience",
   description: "Reach 10k followers" as string | null,
   projects: [
-    { id: "p1", permalink: "newsletter", name: "Newsletter", isDone: true, order: 0 },
-    { id: "p2", permalink: "twitter", name: "Twitter", isDone: false, order: 1 },
+    {
+      id: "p1",
+      permalink: "newsletter",
+      name: "Newsletter",
+      isDone: true,
+      order: 0,
+    },
+    {
+      id: "p2",
+      permalink: "twitter",
+      name: "Twitter",
+      isDone: false,
+      order: 1,
+    },
   ],
 };
 
@@ -49,14 +79,18 @@ describe("getGoals — guards", () => {
 
 describe("getGoals — happy path", () => {
   it("scopes by lens, computes aggregate progress across projects", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findMany.mockResolvedValue([GOAL_ROW]);
 
     const result = await getGoals({ lensId: "lens-1" }, m.context);
 
     expect(m.entities.Goal.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ lensId: "lens-1", userId: "user-1", isDone: false }),
+        where: expect.objectContaining({
+          lensId: "lens-1",
+          userId: "user-1",
+          isDone: false,
+        }),
         orderBy: [{ name: "asc" }],
       }),
     );
@@ -77,10 +111,8 @@ describe("getGoals — happy path", () => {
   });
 
   it("returns progress 0 + nextProject null for a goal with no projects", async () => {
-    const m = mockContext();
-    m.entities.Goal.findMany.mockResolvedValue([
-      { ...GOAL_ROW, projects: [] },
-    ]);
+    const m = guarded();
+    m.entities.Goal.findMany.mockResolvedValue([{ ...GOAL_ROW, projects: [] }]);
 
     const result = await getGoals({ lensId: "lens-1" }, m.context);
     expect(result[0].progress).toBe(0);
@@ -89,7 +121,7 @@ describe("getGoals — happy path", () => {
   });
 
   it("rounds progress to nearest integer", async () => {
-    const m = mockContext();
+    const m = guarded();
     // 1 done out of 3 total → 33.33% → rounds to 33
     m.entities.Goal.findMany.mockResolvedValue([
       {
@@ -107,11 +139,19 @@ describe("getGoals — happy path", () => {
   });
 
   it("nextProject is null when every project under the goal is done", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findMany.mockResolvedValue([
       {
         ...GOAL_ROW,
-        projects: [{ id: "p1", permalink: "done-one", name: "Done one", isDone: true, order: 0 }],
+        projects: [
+          {
+            id: "p1",
+            permalink: "done-one",
+            name: "Done one",
+            isDone: true,
+            order: 0,
+          },
+        ],
       },
     ]);
     const result = await getGoals({ lensId: "lens-1" }, m.context);
@@ -122,13 +162,13 @@ describe("getGoals — happy path", () => {
 describe("createGoal — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
-    await expect(createGoal({ name: "X", lensId: "l" }, m.context)).rejects.toThrow(
-      /Not authenticated/,
-    );
+    await expect(
+      createGoal({ name: "X", lensId: "l" }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
   });
 
   it("throws on empty name", async () => {
-    const m = mockContext();
+    const m = guarded();
     await expect(
       createGoal({ name: "", lensId: "l" }, m.context),
     ).rejects.toThrow(/Goal name is required/);
@@ -137,15 +177,23 @@ describe("createGoal — guards", () => {
 
 describe("createGoal — happy path", () => {
   it("creates with trimmed name, returns id + name", async () => {
-    const m = mockContext();
-    m.entities.Goal.create.mockResolvedValue({ id: "goal-9", permalink: "new-goal", name: "New goal" });
+    const m = guarded();
+    m.entities.Goal.create.mockResolvedValue({
+      id: "goal-9",
+      permalink: "new-goal",
+      name: "New goal",
+    });
 
     const result = await createGoal(
       { name: "  New goal  ", lensId: "lens-1", description: "some desc" },
       m.context,
     );
 
-    expect(result).toEqual({ id: "goal-9", permalink: "new-goal", name: "New goal" });
+    expect(result).toEqual({
+      id: "goal-9",
+      permalink: "new-goal",
+      name: "New goal",
+    });
     expect(m.entities.Goal.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         name: "New goal",
@@ -159,13 +207,20 @@ describe("createGoal — happy path", () => {
   });
 
   it("works without optional description", async () => {
-    const m = mockContext();
-    m.entities.Goal.create.mockResolvedValue({ id: "g", permalink: "bare", name: "Bare" });
+    const m = guarded();
+    m.entities.Goal.create.mockResolvedValue({
+      id: "g",
+      permalink: "bare",
+      name: "Bare",
+    });
 
     await createGoal({ name: "Bare", lensId: "l" }, m.context);
 
     expect(m.entities.Goal.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ permalink: "bare", description: undefined }),
+      data: expect.objectContaining({
+        permalink: "bare",
+        description: undefined,
+      }),
       select: { id: true, permalink: true, name: true },
     });
   });
@@ -177,37 +232,37 @@ describe("createGoal — happy path", () => {
 describe("setGoalDone — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
-    await expect(setGoalDone({ id: "g1", isDone: true }, m.context)).rejects.toThrow(
-      /Not authenticated/,
-    );
+    await expect(
+      setGoalDone({ id: "g1", isDone: true }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
   });
 
   it("throws on unknown id (tenancy — wrong user looks like not-found)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue(null);
-    await expect(setGoalDone({ id: "g1", isDone: true }, m.context)).rejects.toThrow(
-      /Goal not found/,
-    );
+    await expect(
+      setGoalDone({ id: "g1", isDone: true }, m.context),
+    ).rejects.toThrow(/Goal not found/);
   });
 
   it("throws when the goal belongs to a different user", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({
       id: "g1",
       isDone: false,
       userId: "other-user",
       lensId: "lens-1",
     });
-    await expect(setGoalDone({ id: "g1", isDone: true }, m.context)).rejects.toThrow(
-      /Goal not found/,
-    );
+    await expect(
+      setGoalDone({ id: "g1", isDone: true }, m.context),
+    ).rejects.toThrow(/Goal not found/);
     expect(m.entities.Goal.update).not.toHaveBeenCalled();
   });
 });
 
 describe("setGoalDone — happy path", () => {
   it("stamps isDone + completedAt when marking done", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({
       id: "g1",
       isDone: false,
@@ -227,7 +282,7 @@ describe("setGoalDone — happy path", () => {
   });
 
   it("clears isDone + completedAt when reopening", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({
       id: "g1",
       isDone: true,
@@ -246,7 +301,7 @@ describe("setGoalDone — happy path", () => {
   });
 
   it("is idempotent — no update when already in the requested state", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({
       id: "g1",
       isDone: true,
@@ -266,33 +321,37 @@ describe("setGoalDone — happy path", () => {
 describe("updateGoal — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
-    await expect(updateGoal({ id: "g1", name: "X" }, m.context)).rejects.toThrow(
-      /Not authenticated/,
-    );
+    await expect(
+      updateGoal({ id: "g1", name: "X" }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
   });
 
   it("throws 404 when the goal doesn't exist or isn't the user's", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue(null);
-    await expect(updateGoal({ id: "g1", name: "X" }, m.context)).rejects.toThrow(
-      /\[404\] Goal not found/,
-    );
+    await expect(
+      updateGoal({ id: "g1", name: "X" }, m.context),
+    ).rejects.toMatchObject({ statusCode: 404, message: "Goal not found." });
   });
 
   it("throws on empty name", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({ id: "g1", name: "Old" });
-    await expect(updateGoal({ id: "g1", name: "   " }, m.context)).rejects.toThrow(
-      /cannot be empty/,
-    );
+    await expect(
+      updateGoal({ id: "g1", name: "   " }, m.context),
+    ).rejects.toThrow(/cannot be empty/);
   });
 });
 
 describe("updateGoal — happy path", () => {
   it("renames with a trimmed name", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({ id: "g1", name: "Old" });
-    m.entities.Goal.update.mockResolvedValue({ id: "g1", name: "New", description: null });
+    m.entities.Goal.update.mockResolvedValue({
+      id: "g1",
+      name: "New",
+      description: null,
+    });
 
     const result = await updateGoal({ id: "g1", name: "  New  " }, m.context);
 
@@ -305,9 +364,13 @@ describe("updateGoal — happy path", () => {
   });
 
   it("sets description (trimmed, empty → null)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({ id: "g1", name: "X" });
-    m.entities.Goal.update.mockResolvedValue({ id: "g1", name: "X", description: null });
+    m.entities.Goal.update.mockResolvedValue({
+      id: "g1",
+      name: "X",
+      description: null,
+    });
 
     await updateGoal({ id: "g1", description: "   " }, m.context);
 
@@ -319,16 +382,19 @@ describe("updateGoal — happy path", () => {
   });
 
   it("rewrites a Prisma P2002 (name duplicate) into a 409", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({ id: "g1", name: "Old" });
     const prismaError = Object.assign(new Error("Unique constraint failed"), {
       code: "P2002",
     });
     m.entities.Goal.update.mockRejectedValue(prismaError);
 
-    await expect(updateGoal({ id: "g1", name: "Duplicate" }, m.context)).rejects.toThrow(
-      /\[409\].*Duplicate/,
-    );
+    await expect(
+      updateGoal({ id: "g1", name: "Duplicate" }, m.context),
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message: expect.stringMatching(/Duplicate/),
+    });
   });
 });
 
@@ -344,15 +410,17 @@ describe("deleteGoal — guards", () => {
   });
 
   it("throws 404 when the goal doesn't exist or isn't the user's", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue(null);
-    await expect(deleteGoal({ id: "g1" }, m.context)).rejects.toThrow(/\[404\]/);
+    await expect(deleteGoal({ id: "g1" }, m.context)).rejects.toMatchObject({
+      statusCode: 404,
+    });
   });
 });
 
 describe("deleteGoal — lossless re-parenting", () => {
   it("re-parents child projects + tasks to goalId=null, then deletes the goal", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({ id: "g1" });
     m.entities.Project.count.mockResolvedValue(2);
     m.entities.Task.count.mockResolvedValue(3);
@@ -375,7 +443,7 @@ describe("deleteGoal — lossless re-parenting", () => {
   });
 
   it("does not destroy child tasks — only the goal is deleted", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({ id: "g1" });
     m.entities.Project.count.mockResolvedValue(0);
     m.entities.Task.count.mockResolvedValue(0);
@@ -399,36 +467,45 @@ describe("reorderGoalProjects — guards", () => {
   });
 
   it("throws 404 when the goal doesn't exist or isn't the user's", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue(null);
     await expect(
       reorderGoalProjects({ goalId: "g1", orderedIds: ["p1"] }, m.context),
-    ).rejects.toThrow(/\[404\]/);
+    ).rejects.toMatchObject({ statusCode: 404 });
   });
 
   it("rejects ids that do not belong to this goal (foreign ids)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({ id: "g1" });
     // Only 1 of the 2 passed ids belongs to this goal.
     m.entities.Project.count.mockResolvedValue(1);
 
     await expect(
-      reorderGoalProjects({ goalId: "g1", orderedIds: ["p1", "p2"] }, m.context),
-    ).rejects.toThrow(/\[400\].*must belong/);
+      reorderGoalProjects(
+        { goalId: "g1", orderedIds: ["p1", "p2"] },
+        m.context,
+      ),
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      message: expect.stringMatching(/must belong/),
+    });
     expect(m.entities.Project.update).not.toHaveBeenCalled();
   });
 });
 
 describe("reorderGoalProjects — happy path", () => {
   it("writes order = index for each id, tenancy-checked", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Goal.findUnique.mockResolvedValue({ id: "g1" });
     m.entities.Project.count.mockResolvedValue(3);
 
-    await reorderGoalProjects({
-      goalId: "g1",
-      orderedIds: ["p3", "p1", "p2"],
-    }, m.context);
+    await reorderGoalProjects(
+      {
+        goalId: "g1",
+        orderedIds: ["p3", "p1", "p2"],
+      },
+      m.context,
+    );
 
     // One update per id, with the index as `order`.
     expect(m.entities.Project.update).toHaveBeenCalledTimes(3);
