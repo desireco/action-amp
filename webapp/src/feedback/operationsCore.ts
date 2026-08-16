@@ -156,13 +156,15 @@ export async function listFeedbackCore(
   entities: Entities,
   { status, limit }: { status?: FeedbackStatus; limit?: number },
 ) {
-  return await entities.Feedback.findMany({
-    // Soft-deleted rows are hidden from every triage surface.
-    where: { deletedAt: null, ...(status ? { status } : {}) },
+  const where: Prisma.FeedbackWhereInput = { deletedAt: null };
+  if (status) where.status = status;
+  const queryOpts: Prisma.FeedbackFindManyArgs = {
+    where,
     orderBy: { createdAt: "desc" },
-    ...(limit ? { take: limit } : {}),
     select: FEEDBACK_SELECT,
-  });
+  };
+  if (limit) queryOpts.take = limit;
+  return await entities.Feedback.findMany(queryOpts);
 }
 
 /**

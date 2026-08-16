@@ -386,13 +386,9 @@ export function ProjectDetailPage() {
     taskDisposition: "delete" | "reassign" | "triage" = "delete",
   ) => {
     if (!project) return;
-    await deleteProject({
-      id: project.id,
-      taskDisposition,
-      ...(taskDisposition === "reassign"
-        ? { targetProjectId: deleteTargetProjectId }
-        : {}),
-    });
+    const input = { id: project.id, taskDisposition };
+    if (taskDisposition === "reassign") input.targetProjectId = deleteTargetProjectId;
+    await deleteProject(input);
     queryClient.invalidateQueries({ queryKey: ["getProjects"] });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
     queryClient.invalidateQueries({ queryKey: ["getGoals"] });

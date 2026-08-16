@@ -49,13 +49,11 @@ export async function getProjectsData(
     includeArchived?: boolean;
   },
 ) {
+  const where: Prisma.ProjectWhereInput = { userId, lensId };
+  if (!includeArchived) where.archivedAt = null;
+  if (!includeCompleted) where.isDone = false;
   const projects = await entities.Project.findMany({
-    where: {
-      userId,
-      lensId,
-      ...(includeArchived ? {} : { archivedAt: null }),
-      ...(includeCompleted ? {} : { isDone: false }),
-    },
+    where,
     orderBy: [{ name: "asc" }],
     include: {
       goal: { select: { id: true, name: true } },
@@ -85,13 +83,11 @@ export async function getProjectsData(
   });
 
   // Total task count (done + open) for the progress fraction.
+  const where2: Prisma.ProjectWhereInput = { userId, lensId };
+  if (!includeArchived) where2.archivedAt = null;
+  if (!includeCompleted) where2.isDone = false;
   const totals = await entities.Project.findMany({
-    where: {
-      userId,
-      lensId,
-      ...(includeArchived ? {} : { archivedAt: null }),
-      ...(includeCompleted ? {} : { isDone: false }),
-    },
+    where: where2,
     select: {
       id: true,
       _count: { select: { tasks: { where: { isDone: true } } } },

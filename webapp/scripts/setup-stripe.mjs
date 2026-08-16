@@ -130,9 +130,9 @@ try {
           product: product.id,
           currency: CURRENCY,
           unit_amount: p.amount,
-          ...(p.recurring ? { recurring: { interval: p.recurring.interval } } : {}),
           metadata: p.metadata,
         });
+        if (p.recurring) await stripe.prices.update(price.id, { recurring: { interval: p.recurring.interval } });
         const kind = p.recurring ? p.recurring.interval : "one-time";
         console.log(`create price   ${planKey}  ${money(p.amount)} (${kind})  →  ${price.id}`);
       }

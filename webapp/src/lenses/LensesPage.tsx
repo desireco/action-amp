@@ -329,7 +329,9 @@ function LensForm({
     setSaving(true);
     setError(null);
     try {
-      await submit({ name, purpose, color, ...(allowType ? { type } : {}) });
+      const input = { name, purpose, color };
+      if (allowType) input.type = type;
+      await submit(input);
       await onDone();
     } catch (e) {
       setError(operationErrorMessage(e, errorPreamble));

@@ -194,22 +194,22 @@ export async function getAdminStatsCore(
     entities.Task.count({ where: { createdAt: { gte: d7 } } }),
     entities.Task.count({ where: { isDone: true, completedAt: { gte: d7 } } }),
     entities.Task.count(),
-    entities.User.count({ where: selectedSince ? { createdAt: selectedSince } : undefined }),
-    entities.User.count({ where: selectedSince ? { lastActiveAt: selectedSince } : undefined }),
+    entities.User.count({ where: { createdAt: selectedSince ?? undefined } }),
+    entities.User.count({ where: { lastActiveAt: selectedSince ?? undefined } }),
     entities.Payment?.count
-      ? entities.Payment.count({ where: { status: "SUCCEEDED", ...(selectedSince ? { paidAt: selectedSince } : {}) } })
+      ? entities.Payment.count({ where: { status: "SUCCEEDED", paidAt: selectedSince } })
       : Promise.resolve(0),
     entities.Payment?.count
       ? entities.Payment.count({ where: { status: "SUCCEEDED" } })
       : Promise.resolve(0),
     entities.AnalyticsEvent?.count
-      ? entities.AnalyticsEvent.count({ where: { name: "CAPTURE_CREATED", ...(selectedSince ? { occurredAt: selectedSince } : {}) } })
+      ? entities.AnalyticsEvent.count({ where: { name: "CAPTURE_CREATED", occurredAt: selectedSince } })
       : Promise.resolve(0),
     entities.AnalyticsEvent?.count
-      ? entities.AnalyticsEvent.count({ where: { name: "TRIAGE_COMPLETED", ...(selectedSince ? { occurredAt: selectedSince } : {}) } })
+      ? entities.AnalyticsEvent.count({ where: { name: "TRIAGE_COMPLETED", occurredAt: selectedSince } })
       : Promise.resolve(0),
-    entities.Task.count({ where: selectedSince ? { createdAt: selectedSince } : undefined }),
-    entities.Task.count({ where: { isDone: true, ...(selectedSince ? { completedAt: selectedSince } : {}) } }),
+    entities.Task.count({ where: { createdAt: selectedSince } }),
+    entities.Task.count({ where: { isDone: true, completedAt: selectedSince } }),
     // Soft-deleted feedback is excluded from both the total + the byStatus
     // breakdown — those are triage signals, and a deleted row isn't being
     // triaged anymore.
@@ -294,17 +294,19 @@ export async function getRecentFeedbackCore(
 ): Promise<{ items: FeedbackRow[]; hasNext: boolean }> {
   const fetchLimit = limit + 1;
   // SAFETY: type assertion is safe — value is validated or from a trusted source.
-  const rows = (await entities.Feedback.findMany({
-    where: { deletedAt: null, ...(statuses?.length ? { status: { in: statuses } } : {}) },
-    ...(afterId
-      ? {
-          skip: 1,
-          cursor: { id: afterId },
-        }
-      : {}),
+  const where: Prisma.FeedbackWhereInput = { deletedAt: null };
+  if (statuses?.length) where.status = { in: statuses };
+  const queryOpts: Prisma.FeedbackFindManyArgs = {
+    where,
     take: fetchLimit,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     select: FEEDBACK_SELECT,
+  };
+  if (afterId) {
+    queryOpts.skip = 1;
+    queryOpts.cursor = { id: afterId };
+  }
+  const rows = (await entities.Feedback.findMany(queryOpts)
   })) as FeedbackRow[];
 
   const hasNext = rows.length > limit;

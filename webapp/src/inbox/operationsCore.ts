@@ -266,13 +266,16 @@ async function createTaskFromTriage(
       size: opts.size,
       dueDate: opts.dueDate,
       projectId: opts.projectId,
-      // Tags carry onto tasks only (projects/goals drop them).
-      ...(opts.tagRecords.length > 0
-        ? { tags: { connect: opts.tagRecords.map((t) => ({ id: t.id })) } }
-        : {}),
     },
     select: { id: true },
   });
+  // Tags carry onto tasks only (projects/goals drop them).
+  if (opts.tagRecords.length > 0) {
+    await entities.Task.update({
+      where: { id: task.id },
+      data: { tags: { connect: opts.tagRecords.map((t) => ({ id: t.id })) } },
+    });
+  }
   return { kind: "task", id: task.id };
 }
 

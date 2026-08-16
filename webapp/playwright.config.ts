@@ -55,15 +55,13 @@ export default defineConfig({
   // CI-only: Playwright owns the server lifecycle via scripts/e2e-run.mjs
   // (spawn + SIGTERM teardown). Locally, start `wasp start` manually — see
   // the header comment for why (Playwright bug #11907).
-  ...(ISOLATED && process.env.CI
-    ? {
-        webServer: {
-          command: "node scripts/e2e-run.mjs",
-          url: BASE,
-          reuseExistingServer: false,
-          timeout: 240_000,
-          gracefulShutdown: { signal: "SIGTERM", timeout: 1_000 },
-        },
-      }
-    : {}),
 });
+if (ISOLATED && process.env.CI) {
+  config.webServer = {
+    command: "node scripts/e2e-run.mjs",
+    url: BASE,
+    reuseExistingServer: false,
+    timeout: 240_000,
+    gracefulShutdown: { signal: "SIGTERM", timeout: 1_000 },
+  };
+}

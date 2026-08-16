@@ -88,17 +88,16 @@ export async function createListItemCore(
     orderBy: { order: "desc" },
     select: { order: true },
   });
-  return entities.ListItem.create({
-    data: {
-      userId,
-      lensId,
-      text: normalizedText(text),
-      content: content?.trim() || null,
-      sourceUrl: sourceUrl?.trim() || null,
-      ...(imageAttachments ? { attachments: { create: imageAttachments } } : {}),
-      order: (previous?.order ?? -1) + 1,
-    },
-  });
+  const data: Prisma.ListItemCreateInput = {
+    userId,
+    lensId,
+    text: normalizedText(text),
+    content: content?.trim() || null,
+    sourceUrl: sourceUrl?.trim() || null,
+    order: (previous?.order ?? -1) + 1,
+  };
+  if (imageAttachments) data.attachments = { create: imageAttachments };
+  return entities.ListItem.create({ data });
 }
 
 export async function renameListItemCore(

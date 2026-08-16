@@ -41,7 +41,8 @@ try {
     process.exit(2);
   }
 
-  const where = { userId: user.id, ...(includeDone ? {} : { isDone: false }) };
+  const where = { userId: user.id };
+  if (!includeDone) where.isDone = false;
   const tasks = await db.task.findMany({ where, select: { id: true, description: true, priority: true, size: true, dueDate: true } });
   console.log(`Found ${tasks.length} task(s) for ${email}${dryRun ? " (dry run)" : ""}.`);
 

@@ -56,8 +56,9 @@ try {
     // --admin flips isAdmin (the entitlement bypass) if requested.
     await db.user.update({
       where: { id: existing.auth.userId },
-      data: { hasSeenOnboarding: true, ...(admin ? { isAdmin: true } : {}) },
+      data: { hasSeenOnboarding: true },
     });
+    if (admin) await db.user.update({ where: { id: existing.auth.userId }, data: { isAdmin: true } });
     console.log(email);
     process.exit(0);
   }
@@ -77,7 +78,6 @@ try {
       fullName,
       firstName,
       hasSeenOnboarding: true,
-      ...(admin ? { isAdmin: true } : {}),
       auth: {
         create: {
           identities: {

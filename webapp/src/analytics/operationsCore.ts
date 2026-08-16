@@ -89,10 +89,10 @@ export async function recordAnalyticsEventCore(
         initialPath: clean(input.initialPath, 300),
         deviceClass: clean(input.deviceClass, 40),
       },
+      // SAFETY: Prisma upsert update shape matches AppSessionUpdateInput.
       update: {
         lastSeenAt: new Date(),
-        ...(userId ? { userId } : {}),
-      },
+      } as Prisma.AppSessionUpdateInput,
       select: { id: true, userId: true },
     });
   }
