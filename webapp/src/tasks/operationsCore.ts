@@ -20,8 +20,19 @@
  * imports them from there.
  */
 
-import type { Prisma, Priority, Size, Task, TaskSession } from "@prisma/client";
-import { resolveAccessibleLenses } from "../billing/entitlements";
+import type {
+  Lens,
+  Prisma,
+  Priority,
+  Size,
+  Tag,
+  Task,
+  TaskSession,
+} from "@prisma/client";
+import {
+  resolveAccessibleLenses,
+  type LensListLookup,
+} from "../billing/entitlements";
 import { activePoolWhere } from "./activePool";
 
 /**
@@ -31,6 +42,144 @@ import { activePoolWhere } from "./activePool";
  * Callers pass Wasp's per-op delegates, the PAT route's shared client, or a
  * Vitest mock — all satisfy this slice structurally.
  */
+/** A list row: base task + tags + the light project/goal refs list pages render. */
+export interface TaskListRow extends Task {
+  tags: Tag[];
+  project: { id: string; name: string } | null;
+  goal: { id: string; name: string } | null;
+}
+
+/** Payload-friendly mapped forms of the row types (Wasp op outputs must be
+ *  index-signature-assignable; Prisma-extending interfaces are not, mapped
+ *  types are). */
+export type TaskDetailResult =
+  | {
+      [
+        K in keyof (TaskDetailRow & {
+          tags: Tag[];
+          updates: Array<{
+            id: string;
+            body: string;
+            kind: string;
+            createdAt: Date;
+          }>;
+        })
+      ]: (TaskDetailRow & {
+        tags: Tag[];
+        updates: Array<{
+          id: string;
+          body: string;
+          kind: string;
+          createdAt: Date;
+        }>;
+      })[K];
+    }
+  | null;
+export type TaskListResult = { [K in keyof TaskListRow]: TaskListRow[K] }[];
+export type TaskLensListResult = {
+  [K in keyof TaskLensListRow]: TaskLensListRow[K];
+}[];
+export type DoneTodayResult = { [K in keyof DoneTodayRow]: DoneTodayRow[K] }[];
+export type HydratedTaskResult =
+  { [K in keyof HydratedTask]: HydratedTask[K] } | null;
+export type RankedPoolResult =
+  { [K in keyof RankedPoolRow]: RankedPoolRow[K] } | null;
+
+/** A ranked-pool candidate: base task + the project/goal refs rankTopTask ties
+ *  break on and the Next/Focus surfaces display. */
+export interface RankedPoolRow extends Task {
+  project: { id: string; name: string } | null;
+  goal: { id: string; name: string } | null;
+}
+
+/** A list row that also carries its lens (grouped/global views). */
+export interface TaskLensListRow extends TaskListRow {
+  lens: { id: string; name: string; color: string | null } | null;
+}
+
+/** A detail row: base task + permalink-carrying project/goal refs. */
+export interface TaskDetailRow extends Task {
+  project: { id: string; permalink: string; name: string } | null;
+  goal: { id: string; permalink: string; name: string } | null;
+}
+
+/** The delegate slices for include-carrying reads — literal-arg methods so
+ *  the typed rows match exactly what each include selects (per-function slices
+ *  rather than overloads, which Prisma's branded arg types reject). */
+interface TaskListEntities {
+  Task: {
+    findMany(args: {
+      where: Prisma.TaskWhereInput;
+      orderBy?: Prisma.TaskOrderByWithRelationInput[];
+      include: {
+        tags: true;
+        project: { select: { id: true; name: true } };
+        goal: { select: { id: true; name: true } };
+      };
+    }): Promise<TaskListRow[]>;
+  };
+}
+
+interface TaskLensListEntities {
+  Task: {
+    findMany(args: {
+      where: Prisma.TaskWhereInput;
+      orderBy?: Prisma.TaskOrderByWithRelationInput[];
+      include: {
+        tags: true;
+        project: { select: { id: true; name: true } };
+        goal: { select: { id: true; name: true } };
+        lens: { select: { id: true; name: true; color: true } };
+      };
+    }): Promise<TaskLensListRow[]>;
+  };
+}
+
+interface TaskDetailEntities {
+  Task: {
+    findFirst(args: {
+      where: Prisma.TaskWhereInput;
+      include: {
+        tags: true;
+        updates: { orderBy: { createdAt: "asc" } };
+        project: { select: { id: true; permalink: true; name: true } };
+        goal: { select: { id: true; permalink: true; name: true } };
+      };
+    }): Promise<
+      | (TaskDetailRow & {
+          tags: Tag[];
+          updates: Array<{
+            id: string;
+            body: string;
+            kind: string;
+            createdAt: Date;
+          }>;
+        })
+      | null
+    >;
+  };
+}
+
+/** Done-today rows: list row + lens + tags. */
+export interface DoneTodayRow extends TaskLensListRow {
+  tags: Tag[];
+}
+
+interface DoneTodayEntities {
+  Task: {
+    findMany(args: {
+      where: Prisma.TaskWhereInput;
+      orderBy: { completedAt: "desc" };
+      include: {
+        tags: true;
+        project: { select: { id: true; name: true } };
+        goal: { select: { id: true; name: true } };
+        lens: { select: { id: true; name: true; color: true } };
+      };
+    }): Promise<DoneTodayRow[]>;
+  };
+}
+
 interface TaskEntities {
   Task: {
     findUnique(args: Prisma.TaskFindUniqueArgs): Promise<Task | null>;
@@ -64,7 +213,10 @@ export const PRIORITY_RANK = {
   NORMAL: 1,
   LOW: 2,
 } as const satisfies Record<Priority, number>;
-export const SIZE_RANK = { S: 0, M: 1, L: 2, XL: 3 } as const satisfies Record<Size, number>;
+export const SIZE_RANK = { S: 0, M: 1, L: 2, XL: 3 } as const satisfies Record<
+  Size,
+  number
+>;
 
 // ----------------------------------------------------------------
 // Read: single task (the detail page lookup)
@@ -73,9 +225,9 @@ export const SIZE_RANK = { S: 0, M: 1, L: 2, XL: 3 } as const satisfies Record<S
 // activity thread by default (focus mode, task detail). task-notes-
 // completion-log spec.
 export async function getTaskData(
-  entities: Entities,
+  entities: TaskDetailEntities,
   { userId, id }: { userId: string; id: string },
-) {
+): Promise<TaskDetailResult> {
   return await entities.Task.findFirst({
     where: {
       userId,
@@ -96,7 +248,7 @@ export async function getTaskData(
 // Used by Today (status=TODAY, not done), Upcoming (status=UPCOMING or dueDate
 // in the future), Someday (status=SOMEDAY), Logbook (isDone=true).
 export async function getTasksData(
-  entities: Entities,
+  entities: TaskListEntities & LensListLookup,
   {
     userId,
     lensId,
@@ -108,7 +260,7 @@ export async function getTasksData(
     status?: "TODAY" | "UPCOMING" | "SOMEDAY";
     isDone?: boolean;
   },
-) {
+): Promise<TaskListResult> {
   const where: Prisma.TaskWhereInput = {
     userId,
     lensId,
@@ -136,12 +288,12 @@ export async function getTasksData(
 // assertLensAllowed. `lens` is included per row so the page can render a
 // provenance pill.
 export async function getTodayTasksData(
-  entities: Entities,
+  entities: TaskLensListEntities & LensListLookup,
   {
     user,
     userId,
   }: { user: Parameters<typeof resolveAccessibleLenses>[1]; userId: string },
-) {
+): Promise<TaskLensListResult> {
   const accessible = await resolveAccessibleLenses(
     { Lens: entities.Lens },
     user,
@@ -176,7 +328,7 @@ export async function getTodayTasksData(
 // both bench tasks and tasks already committed to Today so promoting a
 // scheduled task does not make it disappear from its weekday.
 export async function getWeekTasksData(
-  entities: Entities,
+  entities: TaskLensListEntities & LensListLookup,
   {
     user,
     userId,
@@ -186,7 +338,7 @@ export async function getWeekTasksData(
     userId: string;
     now?: Date;
   },
-) {
+): Promise<TaskLensListResult> {
   const accessible = await resolveAccessibleLenses(
     { Lens: entities.Lens },
     user,
@@ -236,9 +388,9 @@ export async function getWeekTasksData(
 // scoped path) OR the accessible set (global path). The local-midnight boundary
 // (startOfToday) computation stays in this core so both paths share it.
 export async function getDoneTodayData(
-  entities: Entities,
+  entities: DoneTodayEntities,
   { userId, lensIds }: { userId: string; lensIds: string[] },
-) {
+): Promise<DoneTodayResult> {
   // Local-midnight boundary: completedAt is stamped server-side on toggle; we
   // compare against the start of "today" in the server's locale. Day-granular
   // is the right resolution for a "done today" section.
@@ -280,9 +432,9 @@ export async function getDoneTodayData(
 // (IMPORTANT > NORMAL > LOW), then size (smaller = quick win), then oldest.
 // Returns the top 1, or null when nothing's on the table.
 export async function getTopTaskData(
-  entities: Entities,
+  entities: RankedPoolEntities,
   { userId, lensId }: { userId: string; lensId: string },
-) {
+): Promise<RankedPoolResult> {
   const ranked = await fetchRankedActiveTasks(entities, { userId, lensId });
   return ranked[0] ?? null;
 }
@@ -296,7 +448,7 @@ export const TASK_ALTERNATIVES_LIMIT = 2;
 // inspecting one (so the recommendation itself re-enters the list and stays
 // available). Rows stay light: project/goal names only, no history hydration.
 export async function getTaskAlternativesData(
-  entities: Entities,
+  entities: RankedPoolEntities,
   {
     userId,
     lensId,
@@ -308,7 +460,7 @@ export async function getTaskAlternativesData(
     excludeIds?: string[];
     limit?: number;
   },
-) {
+): Promise<{ [K in keyof RankedPoolRow]: RankedPoolRow[K] }[]> {
   const ranked = await fetchRankedActiveTasks(entities, { userId, lensId });
   const skip = new Set(excludeIds ?? []);
   return ranked
@@ -319,8 +471,20 @@ export async function getTaskAlternativesData(
 // Shared candidate fetch + sort behind getTopTaskData and
 // getTaskAlternativesData — both surfaces must rank identically or the
 // "alternative" order would contradict the recommendation above it.
+interface RankedPoolEntities {
+  Task: {
+    findMany(args: {
+      where: Prisma.TaskWhereInput;
+      include: {
+        project: { select: { id: true; name: true } };
+        goal: { select: { id: true; name: true } };
+      };
+    }): Promise<RankedPoolRow[]>;
+  };
+}
+
 async function fetchRankedActiveTasks(
-  entities: Entities,
+  entities: RankedPoolEntities,
   { userId, lensId }: { userId: string; lensId: string },
 ) {
   const candidates = await entities.Task.findMany({
@@ -347,11 +511,32 @@ async function fetchRankedActiveTasks(
 // Scoped by both `userId` and `id`: no caller can hydrate another user's Task.
 // If the ranked row vanishes between ranking and hydration (deleted, triaged
 // away, done), return `null` — never stale data.
+/** A winner row hydrated with its Project→Goal chain, sessions, NOTEs —
+ *  the include payload hydrateTopTaskData attaches. */
+export interface HydratedTask extends Task {
+  project: {
+    id: string;
+    permalink: string;
+    name: string;
+    goal: { id: string; name: string; description: string } | null;
+  } | null;
+  goal: {
+    id: string;
+    permalink: string;
+    name: string;
+    description: string;
+  } | null;
+  sessions: { startedAt: Date; endedAt: Date | null }[];
+  updates: { body: string; createdAt: Date }[];
+}
+
 export async function hydrateTopTaskData(
-  entities: Entities,
+  entities: Pick<TaskEntities, "Task">,
   { userId, id }: { userId: string; id: string },
-) {
-  return await entities.Task.findFirst({
+): Promise<HydratedTaskResult> {
+  // SAFETY: the include below attaches project/goal/sessions/updates, which
+  // the delegate's un-narrowed Task return cannot express.
+  return (await entities.Task.findFirst({
     where: { id, userId },
     include: {
       project: {
@@ -380,7 +565,7 @@ export async function hydrateTopTaskData(
         select: { body: true, createdAt: true },
       },
     },
-  });
+  })) as HydratedTask | null;
 }
 
 /**
@@ -431,7 +616,7 @@ function rankTopTask<
 // outcome (toggling open shouldn't blow away a captured note). Empty/whitespace
 // is normalised to null so "cleared" reads as absent downstream.
 export async function toggleTaskDoneCore(
-  entities: Entities,
+  entities: Pick<TaskEntities, "Task">,
   { userId, id, outcome }: { userId: string; id: string; outcome?: string },
 ) {
   const task = await entities.Task.findUnique({
@@ -518,7 +703,7 @@ export function snoozeTarget(
 }
 
 export async function snoozeTaskCore(
-  entities: Entities,
+  entities: Pick<TaskEntities, "Task">,
   {
     userId,
     id,
@@ -552,7 +737,7 @@ export async function snoozeTaskCore(
 // The "Not now" flow and promote/demote actions call this. (Today-cap
 // enforcement happens client-side — see TodayPage.)
 export async function updateTaskStatusCore(
-  entities: Entities,
+  entities: Pick<TaskEntities, "Task">,
   {
     userId,
     id,
@@ -586,7 +771,7 @@ export async function updateTaskStatusCore(
 // to Next (startedAt = null); the task remains a candidate but no longer holds
 // the focus slot.
 export async function startTaskCore(
-  entities: Entities,
+  entities: Pick<TaskEntities, "Task" | "TaskSession">,
   {
     userId,
     id,
@@ -634,7 +819,7 @@ export async function startTaskCore(
  * successful Pomodoro; Task completion remains explicit and separate.
  */
 export async function completeFocusSessionCore(
-  entities: Entities,
+  entities: Pick<TaskEntities, "Task" | "TaskSession">,
   { userId, id }: { userId: string; id: string },
 ) {
   const task = await entities.Task.findUnique({
@@ -669,7 +854,7 @@ export async function completeFocusSessionCore(
 }
 
 export async function pauseTaskCore(
-  entities: Entities,
+  entities: Pick<TaskEntities, "Task" | "TaskSession">,
   { userId, id }: { userId: string; id: string },
 ) {
   const task = await entities.Task.findUnique({

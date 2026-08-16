@@ -14,8 +14,27 @@ import {
   pauseTaskCore,
   completeFocusSessionCore,
 } from "./operationsCore";
+import type { RankedPoolRow } from "./operationsCore";
+import { mockContext, type MockContext } from "../test/mockContext";
+
+function asPool(m: MockContext) {
+  const spies = { Task: m.entities.Task };
+  // SAFETY: EntitySpy vi.fn()s satisfy the delegate slice at runtime.
+  return spies as Parameters<typeof getTopTaskData>[0];
+}
+
+function asTaskWrites(m: MockContext) {
+  const spies = { Task: m.entities.Task };
+  // SAFETY: EntitySpy vi.fn()s satisfy the delegate slice at runtime.
+  return spies as Parameters<typeof toggleTaskDoneCore>[0];
+}
+
+function asTaskSession(m: MockContext) {
+  const spies = { Task: m.entities.Task, TaskSession: m.entities.TaskSession };
+  // SAFETY: EntitySpy vi.fn()s satisfy the delegate slice at runtime.
+  return spies as Parameters<typeof pauseTaskCore>[0];
+}
 import { activePoolWhere } from "./activePool";
-import { mockContext } from "../test/mockContext";
 
 /**
  * Pure cores — the shared DB layer for Wasp ops + future /api/cli/* routes.
@@ -106,7 +125,7 @@ describe("getTopTaskData", () => {
     const m = mockContext();
     m.entities.Task.findMany.mockResolvedValue([]);
 
-    const result = await getTopTaskData(m.entities, {
+    const result = await getTopTaskData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
     });
@@ -118,7 +137,7 @@ describe("getTopTaskData", () => {
     const m = mockContext();
     m.entities.Task.findMany.mockResolvedValue([]);
 
-    await getTopTaskData(m.entities, { userId: "user-1", lensId: "lens-1" });
+    await getTopTaskData(asPool(m), { userId: "user-1", lensId: "lens-1" });
 
     const call = m.entities.Task.findMany.mock.calls[0][0];
     expect(call.where).toMatchObject({
@@ -143,7 +162,7 @@ describe("getTopTaskData", () => {
       candidate({ id: "important", priority: "IMPORTANT", startedAt: null }),
     ]);
 
-    const result = await getTopTaskData(m.entities, {
+    const result = await getTopTaskData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
     });
@@ -158,7 +177,7 @@ describe("getTopTaskData", () => {
       candidate({ id: "court", status: "TODAY" }),
     ]);
 
-    const result = await getTopTaskData(m.entities, {
+    const result = await getTopTaskData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
     });
@@ -173,7 +192,7 @@ describe("getTopTaskData", () => {
       candidate({ id: "top", priority: "IMPORTANT" }),
     ]);
 
-    const result = await getTopTaskData(m.entities, {
+    const result = await getTopTaskData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
     });
@@ -188,7 +207,7 @@ describe("getTopTaskData", () => {
       candidate({ id: "quick", priority: "NORMAL", size: "S" }),
     ]);
 
-    const result = await getTopTaskData(m.entities, {
+    const result = await getTopTaskData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
     });
@@ -203,7 +222,7 @@ describe("getTopTaskData", () => {
       candidate({ id: "older", createdAt: new Date("2026-06-19T10:00:00Z") }),
     ]);
 
-    const result = await getTopTaskData(m.entities, {
+    const result = await getTopTaskData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
     });
@@ -221,7 +240,7 @@ describe("getTaskAlternativesData", () => {
     const m = mockContext();
     m.entities.Task.findMany.mockResolvedValue([]);
 
-    const result = await getTaskAlternativesData(m.entities, {
+    const result = await getTaskAlternativesData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
     });
@@ -254,7 +273,7 @@ describe("getTaskAlternativesData", () => {
       }),
     ]);
 
-    const result = await getTaskAlternativesData(m.entities, {
+    const result = await getTaskAlternativesData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
       // Explicit limit so this test pins ordering, not the default cap
@@ -277,14 +296,17 @@ describe("getTaskAlternativesData", () => {
       candidate({ id: "third", createdAt: new Date("2026-06-17T10:00:00Z") }),
     ]);
 
-    const result = await getTaskAlternativesData(m.entities, {
+    const result = await getTaskAlternativesData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
       excludeIds: ["picked"],
     });
 
     // The recommendation re-enters the list while a picked task is on stage.
-    expect(result.map((t: { id: string }) => t.id)).toEqual(["recommendation", "third"]);
+    expect(result.map((t: { id: string }) => t.id)).toEqual([
+      "recommendation",
+      "third",
+    ]);
   });
 
   it("caps the rail at TASK_ALTERNATIVES_LIMIT", async () => {
@@ -297,7 +319,7 @@ describe("getTaskAlternativesData", () => {
       candidate({ id: "d", createdAt: new Date("2026-06-19T10:00:00Z") }),
     ]);
 
-    const result = await getTaskAlternativesData(m.entities, {
+    const result = await getTaskAlternativesData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
       excludeIds: ["on-stage"],
@@ -311,7 +333,7 @@ describe("getTaskAlternativesData", () => {
     const m = mockContext();
     m.entities.Task.findMany.mockResolvedValue([]);
 
-    await getTaskAlternativesData(m.entities, {
+    await getTaskAlternativesData(asPool(m), {
       userId: "user-1",
       lensId: "lens-1",
     });
@@ -338,7 +360,7 @@ describe("hydrateTopTaskData", () => {
     const m = mockContext();
     m.entities.Task.findFirst.mockResolvedValue(null);
 
-    await hydrateTopTaskData(m.entities, {
+    await hydrateTopTaskData(asTaskWrites(m), {
       userId: "user-1",
       id: "task-1",
     });
@@ -374,7 +396,7 @@ describe("hydrateTopTaskData", () => {
     const m = mockContext();
     m.entities.Task.findFirst.mockResolvedValue(null);
 
-    const result = await hydrateTopTaskData(m.entities, {
+    const result = await hydrateTopTaskData(asTaskWrites(m), {
       userId: "user-1",
       id: "gone",
     });
@@ -390,7 +412,11 @@ describe("hydrateTopTaskData", () => {
         id: "p1",
         permalink: "launch",
         name: "Launch v2",
-        goal: { id: "g1", name: "Reach 100 paid", description: "Prove demand." },
+        goal: {
+          id: "g1",
+          name: "Reach 100 paid",
+          description: "Prove demand.",
+        },
       },
       goal: {
         id: "g-direct",
@@ -403,7 +429,7 @@ describe("hydrateTopTaskData", () => {
     };
     m.entities.Task.findFirst.mockResolvedValue(hydrated);
 
-    const result = await hydrateTopTaskData(m.entities, {
+    const result = await hydrateTopTaskData(asTaskWrites(m), {
       userId: "user-1",
       id: "task-1",
     });
@@ -415,7 +441,10 @@ describe("hydrateTopTaskData", () => {
     const m = mockContext();
     m.entities.Task.findFirst.mockResolvedValue(null);
 
-    await hydrateTopTaskData(m.entities, { userId: "user-1", id: "task-1" });
+    await hydrateTopTaskData(asTaskWrites(m), {
+      userId: "user-1",
+      id: "task-1",
+    });
 
     const call = m.entities.Task.findFirst.mock.calls[0][0];
     expect(call.include.updates.where).toEqual({ kind: "NOTE" });
@@ -434,7 +463,7 @@ describe("toggleTaskDoneCore", () => {
       userId: "someone-else",
     });
     await expect(
-      toggleTaskDoneCore(m.entities, { userId: "user-1", id: "task-1" }),
+      toggleTaskDoneCore(asTaskWrites(m), { userId: "user-1", id: "task-1" }),
     ).rejects.toThrow(/not found/i);
   });
 
@@ -442,7 +471,7 @@ describe("toggleTaskDoneCore", () => {
     const m = mockContext();
     m.entities.Task.findUnique.mockResolvedValue(null);
     await expect(
-      toggleTaskDoneCore(m.entities, { userId: "user-1", id: "task-1" }),
+      toggleTaskDoneCore(asTaskWrites(m), { userId: "user-1", id: "task-1" }),
     ).rejects.toThrow(/not found/i);
   });
 
@@ -454,7 +483,10 @@ describe("toggleTaskDoneCore", () => {
     });
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, isDone: true });
 
-    await toggleTaskDoneCore(m.entities, { userId: "user-1", id: "task-1" });
+    await toggleTaskDoneCore(asTaskWrites(m), {
+      userId: "user-1",
+      id: "task-1",
+    });
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
@@ -474,7 +506,7 @@ describe("toggleTaskDoneCore", () => {
     });
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, isDone: false });
 
-    await toggleTaskDoneCore(m.entities, {
+    await toggleTaskDoneCore(asTaskWrites(m), {
       userId: "user-1",
       id: "task-1",
       // outcome passed on un-complete must be IGNORED (only writes on done).
@@ -496,7 +528,7 @@ describe("toggleTaskDoneCore", () => {
     });
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, isDone: true });
 
-    await toggleTaskDoneCore(m.entities, {
+    await toggleTaskDoneCore(asTaskWrites(m), {
       userId: "user-1",
       id: "task-1",
       outcome: "  shipped  ",
@@ -521,7 +553,7 @@ describe("toggleTaskDoneCore", () => {
     });
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, isDone: true });
 
-    await toggleTaskDoneCore(m.entities, {
+    await toggleTaskDoneCore(asTaskWrites(m), {
       userId: "user-1",
       id: "task-1",
       outcome: "   ",
@@ -547,7 +579,7 @@ describe("pauseTaskCore", () => {
     const m = mockContext();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
     await expect(
-      pauseTaskCore(m.entities, { userId: "user-1", id: "task-1" }),
+      pauseTaskCore(asTaskSession(m), { userId: "user-1", id: "task-1" }),
     ).rejects.toThrow(/not found/i);
   });
 
@@ -555,7 +587,7 @@ describe("pauseTaskCore", () => {
     const m = mockContext();
     m.entities.Task.findUnique.mockResolvedValue(null);
     await expect(
-      pauseTaskCore(m.entities, { userId: "user-1", id: "task-1" }),
+      pauseTaskCore(asTaskSession(m), { userId: "user-1", id: "task-1" }),
     ).rejects.toThrow(/not found/i);
   });
 
@@ -564,7 +596,7 @@ describe("pauseTaskCore", () => {
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({ id: "task-1", startedAt: null });
 
-    const result = await pauseTaskCore(m.entities, {
+    const result = await pauseTaskCore(asTaskSession(m), {
       userId: "user-1",
       id: "task-1",
     });
@@ -587,7 +619,7 @@ describe("pauseTaskCore", () => {
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({ id: "task-1", startedAt: null });
 
-    await pauseTaskCore(m.entities, { userId: "user-1", id: "task-1" });
+    await pauseTaskCore(asTaskSession(m), { userId: "user-1", id: "task-1" });
 
     expect(m.entities.Task.findUnique).toHaveBeenCalledWith({
       where: { id: "task-1" },
@@ -607,7 +639,7 @@ describe("completeFocusSessionCore", () => {
     });
 
     await expect(
-      completeFocusSessionCore(m.entities, {
+      completeFocusSessionCore(asTaskSession(m), {
         userId: "user-1",
         id: "task-1",
       }),
@@ -620,7 +652,7 @@ describe("completeFocusSessionCore", () => {
     m.entities.TaskSession.findFirst.mockResolvedValue(null);
 
     await expect(
-      completeFocusSessionCore(m.entities, {
+      completeFocusSessionCore(asTaskSession(m), {
         userId: "user-1",
         id: "task-1",
       }),

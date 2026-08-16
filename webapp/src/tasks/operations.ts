@@ -20,7 +20,10 @@ import type {
   SetTaskOutcome,
   CompleteTaskFromFocus,
 } from "wasp/server/operations";
-import { assertLensAllowed, assertLifeAreaLens } from "../billing/entitlementHttp";
+import {
+  assertLensAllowed,
+  assertLifeAreaLens,
+} from "../billing/entitlementHttp";
 import { resolveAccessibleLenses } from "../billing/entitlements";
 import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 // Pure cores shared with /api/cli/* routes — auth + entitlement guards stay
@@ -42,7 +45,24 @@ import {
   completeFocusSessionCore,
   PRIORITY_RANK,
   SIZE_RANK,
+  type HydratedTask,
+  type RankedPoolRow,
+  type TaskDetailRow,
+  type TaskListRow,
+  type TaskLensListRow,
+  type DoneTodayRow,
 } from "./operationsCore";
+
+/** Wasp op outputs must be index-signature-assignable (Payload). Prisma model
+ *  interfaces are not; homomorphic mapped types are — one per row shape. */
+type TaskDetailPayload = { [K in keyof TaskDetailRow]: TaskDetailRow[K] };
+type TaskListPayload = { [K in keyof TaskListRow]: TaskListRow[K] }[];
+type TaskLensListPayload = {
+  [K in keyof TaskLensListRow]: TaskLensListRow[K];
+}[];
+type DoneTodayPayload = { [K in keyof DoneTodayRow]: DoneTodayRow[K] }[];
+type HydratedTaskPayload =
+  { [K in keyof HydratedTask]: HydratedTask[K] } | null;
 // Re-export the ranks + cores for back-compat: patRoutes.ts imports
 // PRIORITY_RANK/SIZE_RANK from this module, and other callers may reach the
 // cores through the familiar path.
@@ -81,7 +101,7 @@ export const getTask = (async (args, context) => {
     userId: context.user.id,
     id: args.id,
   });
-}) satisfies GetTask<{ id: string }>;
+}) satisfies GetTask<{ id: string }, TaskDetailPayload | null>;
 
 // ----------------------------------------------------------------
 // Read: list tasks in a lens, optionally filtered by status
@@ -105,11 +125,14 @@ export const getTasks = (async (args, context) => {
     status: args.status,
     isDone: args.isDone,
   });
-}) satisfies GetTasks<{
-  lensId: string;
-  status?: "TODAY" | "UPCOMING" | "SOMEDAY";
-  isDone?: boolean;
-}>;
+}) satisfies GetTasks<
+  {
+    lensId: string;
+    status?: "TODAY" | "UPCOMING" | "SOMEDAY";
+    isDone?: boolean;
+  },
+  TaskListPayload
+>;
 
 // ----------------------------------------------------------------
 // Read: global Today list (across all accessible lenses)
@@ -134,7 +157,7 @@ export const getTodayTasks = (async (_args, context) => {
     user: context.user,
     userId: context.user.id,
   });
-}) satisfies GetTodayTasks<never>;
+}) satisfies GetTodayTasks<never, TaskLensListPayload>;
 
 // ----------------------------------------------------------------
 // Read: global Week schedule (Monday–Sunday, across accessible lenses)
@@ -147,7 +170,7 @@ export const getWeekTasks = (async (_args, context) => {
     user: context.user,
     userId: context.user.id,
   });
-}) satisfies GetWeekTasks<never>;
+}) satisfies GetWeekTasks<never, TaskLensListPayload>;
 
 // ----------------------------------------------------------------
 // Read: tasks completed today (for the Today "Done today" section)
@@ -185,7 +208,7 @@ export const getDoneToday = (async (args, context) => {
     userId: context.user.id,
     lensIds,
   });
-}) satisfies GetDoneToday<{ lensId?: string }>;
+}) satisfies GetDoneToday<{ lensId?: string }, DoneTodayPayload>;
 
 // ----------------------------------------------------------------
 // Write: toggle a task's done state
@@ -307,7 +330,7 @@ export const getTopTask = (async (args, context) => {
       id: ranked.id,
     })) ?? null
   );
-}) satisfies GetTopTask<{ lensId: string }>;
+}) satisfies GetTopTask<{ lensId: string }, HydratedTaskPayload>;
 
 // ----------------------------------------------------------------
 // Read: the Next screen's alternative tasks (next-alternatives)
@@ -331,10 +354,13 @@ export const getTaskAlternatives = (async (args, context) => {
     lensId: args.lensId,
     excludeIds: args.excludeIds,
   });
-}) satisfies GetTaskAlternatives<{
-  lensId: string;
-  excludeIds?: string[];
-}>;
+}) satisfies GetTaskAlternatives<
+  {
+    lensId: string;
+    excludeIds?: string[];
+  },
+  { [K in keyof RankedPoolRow]: RankedPoolRow[K] }[]
+>;
 
 // ----------------------------------------------------------------
 // Read: the single task currently in focus
@@ -420,11 +446,15 @@ export const startTask = (async (args, context) => {
     id: args.id,
     focusSessionMinutes: user?.focusSessionMinutes === 45 ? 45 : 25,
   });
-  void recordAnalyticsEventCore(context.entities, {
-    name: "FOCUS_STARTED",
-    visitorId: `user_${context.user.id}`,
-    route: "/do/focus",
-  }, context.user.id).catch(() => {});
+  void recordAnalyticsEventCore(
+    context.entities,
+    {
+      name: "FOCUS_STARTED",
+      visitorId: `user_${context.user.id}`,
+      route: "/do/focus",
+    },
+    context.user.id,
+  ).catch(() => {});
   return result;
 }) satisfies StartTask<{ id: string }, { id: string; startedAt: Date | null }>;
 
@@ -748,12 +778,18 @@ export const completeTaskFromFocus = (async (args, context) => {
       data: { onboardingStage: "CAPTURE" },
     });
   }
-  void recordAnalyticsEventCore(context.entities, {
-    name: "TASK_COMPLETED",
-    visitorId: `user_${context.user.id}`,
-    route: "/do/focus",
-    metadata: task.isOnboardingSample ? { surface: "onboarding_sample" } : undefined,
-  }, context.user.id).catch(() => {});
+  void recordAnalyticsEventCore(
+    context.entities,
+    {
+      name: "TASK_COMPLETED",
+      visitorId: `user_${context.user.id}`,
+      route: "/do/focus",
+      metadata: task.isOnboardingSample
+        ? { surface: "onboarding_sample" }
+        : undefined,
+    },
+    context.user.id,
+  ).catch(() => {});
   return { id: updated.id, completedAt: updated.completedAt };
 }) satisfies CompleteTaskFromFocus<
   { taskId: string; outcome?: string },

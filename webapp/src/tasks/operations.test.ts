@@ -310,7 +310,11 @@ describe("getTodayTasks", () => {
   });
 
   it("an entitled user sees all their lenses", async () => {
-    const m = mockContext({ id: "user-1", plan: "PRO", planRenewsAt: new Date(Date.now() + 86_400_000) });
+    const m = mockContext({
+      id: "user-1",
+      plan: "PRO",
+      planRenewsAt: new Date(Date.now() + 86_400_000),
+    });
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-work", name: "Work", color: "indigo", isIncluded: false },
       { id: "lens-me", name: "Me", color: "emerald", isIncluded: true },
@@ -474,7 +478,10 @@ describe("toggleTaskDone", () => {
     });
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, isDone: true });
 
-    await toggleTaskDone({ id: "task-1", outcome: "Done — shipped." }, m.context);
+    await toggleTaskDone(
+      { id: "task-1", outcome: "Done — shipped." },
+      m.context,
+    );
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
@@ -596,14 +603,16 @@ function candidate(overrides: Partial<typeof BASE_TASK> = {}) {
 // hydration lookup to echo back the ranked id, so ranking tests can still
 // assert on the winner's id through the full rank → hydrate → return chain.
 function mockHydrationEcho(m: ReturnType<typeof mockContext>) {
-  m.entities.Task.findFirst.mockImplementation(async (args: { where: { id: string } }) => ({
-    ...BASE_TASK,
-    id: args.where.id,
-    project: null,
-    goal: null,
-    sessions: [],
-    updates: [],
-  }));
+  m.entities.Task.findFirst.mockImplementation(
+    async (args: { where: { id: string } }) => ({
+      ...BASE_TASK,
+      id: args.where.id,
+      project: null,
+      goal: null,
+      sessions: [],
+      updates: [],
+    }),
+  );
 }
 
 describe("getTopTask", () => {
@@ -787,9 +796,41 @@ describe("getTaskAlternatives", () => {
     expect(result.map((t: { id: string }) => t.id)).toEqual(["alt-1", "alt-2"]);
     // Same single-source predicate as getTopTask — alternatives and the
     // recommendation must never disagree about what's on the table.
+    // (A 1ms Date.now() tick between the core's predicate and this one made
+    // exact equality intermittently fail — compare the ticking date within a
+    // 1s window, everything else exactly.)
     const expected = activePoolWhere({ userId: "user-1", lensId: "lens-1" });
     const call = m.entities.Task.findMany.mock.calls[0][0];
-    expect(call.where).toMatchObject(expected);
+    // activePoolWhere emits OR: [{dueDate: null}, {dueDate: {lte: now}}] —
+    // compare the ticking `lte` within a 1s window, the rest exactly.
+    const lteOf = (where: {
+      OR: Array<{ dueDate?: { lte?: Date } | null }>;
+    }) =>
+      where.OR[1]?.dueDate && !(where.OR[1].dueDate instanceof Date)
+        ? where.OR[1].dueDate.lte
+        : undefined;
+    const expectedLte = lteOf(expected as Parameters<typeof lteOf>[0]);
+    const actualLte = lteOf(call.where as Parameters<typeof lteOf>[0]);
+    expect(actualLte).toBeInstanceOf(Date);
+    if (expectedLte && actualLte) {
+      expect(
+        Math.abs(actualLte.getTime() - expectedLte.getTime()),
+      ).toBeLessThan(1000);
+    }
+    const stripTicking = (
+      where: Parameters<typeof lteOf>[0] & { OR: unknown[] },
+    ) => {
+      const rest = {
+        ...where,
+        OR: where.OR.map((branch, i) =>
+          i === 1 ? { ...branch, dueDate: "ticking" } : branch,
+        ),
+      };
+      return rest;
+    };
+    expect(
+      stripTicking(call.where as Parameters<typeof stripTicking>[0]),
+    ).toEqual(stripTicking(expected as Parameters<typeof stripTicking>[0]));
   });
 
   it("treats a missing excludeIds as no exclusion (recommendation on stage)", async () => {
@@ -818,7 +859,10 @@ describe("unscheduleOverdueTasks", () => {
     const m = mockContext();
     m.entities.Task.updateMany.mockResolvedValue({ count: 3 });
 
-    const result = await unscheduleOverdueTasks({ lensId: "lens-1" }, m.context);
+    const result = await unscheduleOverdueTasks(
+      { lensId: "lens-1" },
+      m.context,
+    );
 
     expect(result).toEqual({ count: 3 });
     expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
@@ -950,7 +994,10 @@ describe("startTask", () => {
     m.entities.User.findUnique.mockResolvedValue({ focusSessionMinutes: 45 });
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.updateMany.mockResolvedValue({ count: 0 });
-    m.entities.Task.update.mockResolvedValue({ id: "task-1", startedAt: new Date() });
+    m.entities.Task.update.mockResolvedValue({
+      id: "task-1",
+      startedAt: new Date(),
+    });
 
     await startTask({ id: "task-1" }, m.context);
 
@@ -1323,7 +1370,10 @@ describe("updateTaskDetails", () => {
   it("writes priority alone when only priority is passed", async () => {
     const m = mockContext();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
-    m.entities.Task.update.mockResolvedValue({ id: "task-1", priority: "IMPORTANT" });
+    m.entities.Task.update.mockResolvedValue({
+      id: "task-1",
+      priority: "IMPORTANT",
+    });
     await updateTaskDetails(
       { taskId: "task-1", priority: "IMPORTANT" },
       m.context,
@@ -1345,10 +1395,7 @@ describe("updateTaskDetails", () => {
   it("writes status alone when only status is passed", async () => {
     const m = mockContext();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
-    await updateTaskDetails(
-      { taskId: "task-1", status: "TODAY" },
-      m.context,
-    );
+    await updateTaskDetails({ taskId: "task-1", status: "TODAY" }, m.context);
     expect(m.entities.Task.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { status: "TODAY" } }),
     );
@@ -1357,10 +1404,7 @@ describe("updateTaskDetails", () => {
   it("writes dueDate alone (null clears it)", async () => {
     const m = mockContext();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
-    await updateTaskDetails(
-      { taskId: "task-1", dueDate: null },
-      m.context,
-    );
+    await updateTaskDetails({ taskId: "task-1", dueDate: null }, m.context);
     expect(m.entities.Task.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { dueDate: null } }),
     );
@@ -1398,10 +1442,7 @@ describe("updateTaskDetails", () => {
       userId: "user-1",
       lensId: "lens-a",
     });
-    await updateTaskDetails(
-      { taskId: "task-1", projectId: "p1" },
-      m.context,
-    );
+    await updateTaskDetails({ taskId: "task-1", projectId: "p1" }, m.context);
     expect(m.entities.Task.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ projectId: "p1", goalId: null }),
@@ -1430,10 +1471,7 @@ describe("updateTaskDetails", () => {
     // A structural-only edit (no description) must not throw on title.
     const m = mockContext();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
-    await updateTaskDetails(
-      { taskId: "task-1", priority: "LOW" },
-      m.context,
-    );
+    await updateTaskDetails({ taskId: "task-1", priority: "LOW" }, m.context);
     expect(m.entities.Task.update).toHaveBeenCalled();
   });
 });
@@ -1524,7 +1562,10 @@ describe("completeTaskFromFocus", () => {
       userId: "user-1",
       isOnboardingSample: true,
     });
-    m.entities.Task.update.mockResolvedValue({ id: "task-1", completedAt: new Date() });
+    m.entities.Task.update.mockResolvedValue({
+      id: "task-1",
+      completedAt: new Date(),
+    });
 
     await completeTaskFromFocus({ taskId: "task-1" }, m.context);
 

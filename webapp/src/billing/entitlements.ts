@@ -223,7 +223,7 @@ interface LensTypeLookup {
   };
 }
 
-interface LensListLookup {
+export interface LensListLookup {
   Lens: {
     findMany(args: Prisma.LensFindManyArgs): PromiseLike<AccessibleLensRow[]>;
   };
