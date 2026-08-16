@@ -153,6 +153,36 @@ blockers, both requiring src changes in files L4/L5 owned at the time:
 
 Run B9's tail **after L4/L5 land**, directory by directory.
 
+#### B9 run (2026-08-17, night) — server half done, page half patterned
+
+**16 of 38 findings cleared** (7 commits, `188a70a`..`fa1658d`), total repo
+count 184 → **172**. Full suite 1168/1168, tsc 0.
+
+The wasp/server blocker dissolved: vitest now runs **two projects** from one
+config — `client` (jsdom + Wasp's plugin, unchanged) and `server` (node, NO
+plugin, `src/test/serverSetup.ts` pre-sets the env vars wasp/server validates
+at import). Server-op tests import the real `entitlementHttp` with genuine
+HttpError 402s. Consequences worth keeping:
+
+- Fixture rot the mocks hid surfaced and was fixed: `planRenewsAt: null` PRO
+  users are NOT entitled (`isPlanActive`), `mockContext()` defaults are
+  FREE — every guard-passing fixture now states an active plan.
+- Cap-guard tests now throw REAL 402s on violating counts.
+- Module-owned Prisma singletons got injectable seams instead of
+  `vi.mock("@prisma/client")`: `lensDb.transaction` (lenses reassign),
+  `onboardingDb.findAuthByUser` (welcome email), `shareDeps.createInboxItem`
+  (share capture).
+
+**Remaining 22 findings / 11 files** — all client-side page tests mocking
+`wasp/client/operations` (+ local hooks): LensesPage (4), AppShell (4),
+SimpleListPage (3), UpcomingPage (3), SomedayPage (3), TriagePage (2), and
+InboxPage / TaskDetailPage / ProjectDetailPage / GoalDetailPage / App.test
+(1 each). Fix shape is now proven end-to-end in
+`src/search/CommandPalette.tsx`: an optional `deps` prop typed after the
+module's real ops, defaults = the real hooks, tests inject vi.fn() fakes.
+Components that also mock `lensContext`/`useTaskListActions`/
+`useEntitled` add those to the same deps object.
+
 #### Escalated-files lane (2026-08-17, later that day)
 
 The footnote-1/2 escalated files are **done — 35/35 findings cleared** in three
