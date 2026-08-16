@@ -729,12 +729,18 @@ export default app({
       middlewareConfigFn: shareRouteMiddleware,
     }),
     // Captured-image serving — the only reader of the attachment `data`
-    // blobs (InboxAttachment + ListItemAttachment). auth:false + the session
+    // blobs (all five attachment tables). auth:false + the session
     // middleware: <img> tags authenticate via the wasp_session cookie (they
     // cannot send an Authorization header). See src/attachments/serveAttachment.ts
     // for the storage-seam contract and src/auth/sessionAuth.ts for the auth.
     api("GET", "/api/attachments/:id", serveAttachment, {
-      entities: ["InboxAttachment", "ListItemAttachment"],
+      entities: [
+        "InboxAttachment",
+        "ListItemAttachment",
+        "TaskAttachment",
+        "ProjectAttachment",
+        "ResourceAttachment",
+      ],
       auth: false,
       middlewareConfigFn: sessionRouteAuthMiddleware,
     }),

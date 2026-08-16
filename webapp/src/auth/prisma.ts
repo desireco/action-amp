@@ -42,12 +42,12 @@ export const authEntities = {
   InboxAttachment: authPrisma.inboxAttachment,
   // createListItemCore (CLI triage's list-item decision + the share-page
   // direct-to-list path) creates ListItems; without this delegate the CLI
-  // route would crash on `undefined.create` at runtime. TaskAttachment and
-  // ProjectAttachment join the set for triage's task/project decisions
-  // (same nested-create pattern).
+  // route would crash on `undefined.create` at runtime. TaskAttachment,
+  // ProjectAttachment, and ResourceAttachment join the set for triage's
+  // task/project/resource decisions (same nested-create pattern).
   TaskAttachment: authPrisma.taskAttachment,
-  // pi-lens-ignore: typescript(2339)
   ProjectAttachment: authPrisma.projectAttachment,
+  ResourceAttachment: authPrisma.resourceAttachment,
   ListItem: authPrisma.listItem,
   ListItemAttachment: authPrisma.listItemAttachment,
   Project: authPrisma.project,

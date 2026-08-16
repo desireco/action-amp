@@ -194,6 +194,7 @@ export async function getProjectData(
           url: true,
           notes: true,
           createdAt: true,
+          attachments: { select: { id: true, filename: true, mimeType: true } },
         },
       },
       attachments: { select: { id: true, filename: true, mimeType: true } },

@@ -696,4 +696,24 @@ describe("ProjectDetailPage — captured attachments", () => {
 
     expect(screen.queryByAltText(/\.(png|jpe?g|gif|webp)$/i)).toBeNull();
   });
+
+  it("shows row thumbs on resources carrying images from triage", () => {
+    projectData.current = makeProject({
+      resources: [
+        {
+          id: "r1",
+          title: "Design reference",
+          url: null,
+          notes: null,
+          createdAt: "2026-08-16T00:00:00.000Z",
+          attachments: [
+            { id: "att-9", filename: "moodboard.png", mimeType: "image/png" },
+          ],
+        },
+      ],
+    });
+    renderAt("/do/projects/p1");
+
+    expect(screen.getByAltText("moodboard.png")).toBeInTheDocument();
+  });
 });

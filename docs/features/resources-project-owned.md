@@ -18,6 +18,14 @@ Wasp action, the CLI routes, and the triage resource branch. The dual-parent
 "Project or Goal" was dropped: `Resource.projectId` is required + NOT NULL
 (DB-enforced invariant; cascade on project delete).
 
+**Image attachments survive resource filing** (2026-08-16). An InboxItem
+captured with images and triaged as a resource carries its blobs onto
+`ResourceAttachment` rows — same shape/atomic-write convention as the other
+attachment tables. The project page's Resources section renders them as
+display-only row thumbs (shared thumbs + lightbox), bytes served by the
+owner-gated `/api/attachments/:id`; `resource list --json` (CLI) includes the
+attachment metadata for agents.
+
 **Two scope cuts vs. the `ready` spec** (recorded in ROADMAP §Shipped):
 
 - **No `TaskResource` join.** Tasks reference project material as **markdown

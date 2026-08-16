@@ -732,6 +732,24 @@ model Resource {
 
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String
+
+  attachments ResourceAttachment[]
+}
+
+// Image attachments carried onto a Resource by triage (mirrors the other
+// four attachment tables — same shape, one row per image, bytes in `data`).
+// The last triage decision that was silently dropping captured images: a
+// screenshot filed as project reference material now survives.
+model ResourceAttachment {
+  id        String   @id @default(uuid())
+  filename  String
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  resourceId String
 }
 
 // ============================================================

@@ -79,13 +79,14 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
 > context. It can be created directly or transformed from an InboxItem during
 > triage; it never becomes a Task or enters focus, Review, or Logbook.
 >
-> v11 (2026-08-16): **Task attachments.** `TaskAttachment` (same shape as
-> `InboxAttachment`/`ListItemAttachment`) holds captured images that triage
-> moves onto the created Task — the seed `InboxItem` delete no longer cascades
-> the blobs away. Served by the same owner-gated `/api/attachments/:id` (and
-> the CLI twin), and displayed on the task detail page. `ProjectAttachment`
-> (same day) extends the carry to the project decision. The resource decision
-> still drops images (known gap, tracked for follow-up).
+> v11 (2026-08-16): **Attachment carry across triage.** `TaskAttachment`,
+> `ProjectAttachment`, and `ResourceAttachment` (all the same shape as
+> `InboxAttachment`/`ListItemAttachment`) hold captured images that triage
+> moves onto the created entity — the seed `InboxItem` delete no longer
+> cascades the blobs away on any dispatch decision (task today/upcoming/
+> someday, project, resource, or list-item). Served by the same owner-gated
+> `/api/attachments/:id` (and the CLI twin), and displayed on the task detail
+> page, the project detail header, and resource rows.
 
 ---
 
@@ -103,6 +104,7 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
              │    ├─ TaskSession  ← recorded focus session (start/end, planned minutes, completed)
              │    └─ TaskAttachment ← captured image carried onto the task by triage
              └─ Resource    ← reference material, not an action  [PARA Resource]
+                  └─ ResourceAttachment ← captured image carried onto the resource by triage
 
   Lens(type=SIMPLE_LIST)
    └─ ListItem    ← directly added checklist row (title, order, completedAt)

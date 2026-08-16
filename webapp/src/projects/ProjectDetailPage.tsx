@@ -62,6 +62,7 @@ type ProjectResource = {
   url: string | null;
   notes: string | null;
   createdAt: Date | string;
+  attachments?: { id: string; filename: string; mimeType: string }[];
 };
 
 type GoalOption = { id: string; permalink: string; name: string };
@@ -1053,6 +1054,11 @@ export function ProjectDetailPage() {
                         <p className="aa-project__resource-notes">
                           {resource.notes}
                         </p>
+                      )}
+                      {/* Images carried onto the resource by triage —
+                          display-only row thumbs (sm), same lightbox. */}
+                      {(resource.attachments?.length ?? 0) > 0 && (
+                        <AttachmentThumbs attachments={resource.attachments ?? []} />
                       )}
                     </div>
                     <div className="aa-project__resource-actions">

@@ -56,17 +56,19 @@ files — the user still hits Continue:
   project pre-fills both the Project row and that project's lens on the Context
   step. `[[ ]]` precedence wins on disagreement.
 
-**Image attachments survive task + project dispatch** (2026-08-16). Items
+**Image attachments survive every dispatch decision** (2026-08-16). Items
 captured with images and triaged to a task (Today/Upcoming/Someday) carry
 their blobs onto `TaskAttachment` rows — created in the same atomic write as
 the Task, then the seed `InboxItem` delete cascades only the originals. The
 **project decision carries too** (`ProjectAttachment`): a captured mockup
 triaged into "Website redesign" becomes the project's own media, shown as
-display-only thumbs under the project detail header. (Simple lists already
-did this via `ListItemAttachment`; the resource decision still drops images —
-known gap.) The task/project detail pages render the same thumbs + lightbox,
-and `task show --json` / `project show --json` (CLI) include the attachment
-metadata.
+display-only thumbs under the project detail header. The **resource decision
+carries as well** (`ResourceAttachment`): a screenshot filed as project
+reference material renders as row thumbs in the project's Resources section.
+(Simple lists already did this via `ListItemAttachment` — every dispatch
+decision now preserves media.) The task/project detail pages render the same
+thumbs + lightbox, and `task show --json` / `project show --json` /
+`resource list --json` (CLI) include the attachment metadata.
 
 **Files.** `inbox/InboxPage.tsx`; `inbox/TriagePage.tsx`; `inbox/operations.ts`
 (`triageInboxItem`).

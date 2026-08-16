@@ -27,7 +27,14 @@ export async function getProjectResourcesData(
       id: true,
       resources: {
         orderBy: { createdAt: "desc" },
-        select: { id: true, title: true, url: true, notes: true, createdAt: true },
+        select: {
+          id: true,
+          title: true,
+          url: true,
+          notes: true,
+          createdAt: true,
+          attachments: { select: { id: true, filename: true, mimeType: true } },
+        },
       },
     },
   });

@@ -440,8 +440,9 @@ export async function triageInboxItemCore(
   const item = await entities.InboxItem.findUnique({
     where: { id: inboxItemId },
     // Metadata only — the blobs are fetched solely in the branches that
-    // move attachments (task + project + list-item). Loading `data` here
-    // would pull up to 20 MB of images into memory on every triage click.
+    // move attachments (task + project + resource + list-item). Loading
+    // `data` here would pull up to 20 MB of images into memory on every
+    // triage click.
     include: {
       attachments: { select: { id: true, filename: true, mimeType: true, size: true } },
     },
@@ -548,14 +549,30 @@ export async function triageInboxItemCore(
       if (!projectId) {
         throw new Error("Resources must be filed under a project.");
       }
+      // Images move with the item here too — a screenshot filed as project
+      // reference material stays attached to the resource.
+      const preparedAttachments = await fetchSeedAttachmentBlobs(entities, item);
+      // Built then conditionally extended (B5 convention — same as the
+      // Task/Project creates) so images ride on the single atomic write.
+      const resourceData: {
+        title: string;
+        url: string | null;
+        notes: string | null;
+        userId: string;
+        projectId: string;
+        attachments?: { create: PreparedImageAttachment[] };
+      } = {
+        title,
+        url: item.sourceUrl,
+        notes: resolvedContent ?? item.content,
+        userId,
+        projectId,
+      };
+      if (preparedAttachments?.length) {
+        resourceData.attachments = { create: preparedAttachments };
+      }
       const resource = await entities.Resource.create({
-        data: {
-          title,
-          url: item.sourceUrl,
-          notes: resolvedContent ?? item.content,
-          userId,
-          projectId,
-        },
+        data: resourceData,
         select: { id: true },
       });
       result = { kind: "project", id: resource.id }; // reuse for now

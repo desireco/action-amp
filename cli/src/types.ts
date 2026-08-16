@@ -52,6 +52,7 @@ export type Resource = {
   notes: string | null;
   projectId?: string;
   createdAt?: string;
+  attachments?: { id: string; filename: string; mimeType: string }[];
 };
 
 export type Project = {

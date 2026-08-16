@@ -575,6 +575,57 @@ describe("triageInboxItem — project / resource / archive", () => {
     ).rejects.toThrow(/filed under a project/i);
   });
 
+  it("moves an attachment-backed InboxItem onto the created Resource", async () => {
+    // A screenshot filed as project reference material stays attached to
+    // the resource — blobs nested-created in the same atomic write.
+    const m = arrange({
+      attachments: [{ id: "attachment-1", filename: "receipt.png", mimeType: "image/png", size: 7 }],
+    });
+    m.entities.Resource.create.mockResolvedValue({ id: "res-1" });
+    m.entities.InboxAttachment.findMany.mockResolvedValue([
+      { filename: "receipt.png", mimeType: "image/png", size: 7, data: Buffer.from("png") },
+    ]);
+
+    await triageInboxItem(
+      { inboxItemId: "ix-1", decision: "resource", lensId: "lens-1", projectId: "p-1" },
+      m.context,
+    );
+
+    expect(m.entities.InboxAttachment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { inboxItemId: "ix-1" } }),
+    );
+    expect(m.entities.Resource.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        projectId: "p-1",
+        attachments: {
+          create: [
+            { filename: "receipt.png", mimeType: "image/png", size: 7, data: Buffer.from("png") },
+          ],
+        },
+      }),
+      select: { id: true },
+    });
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+    });
+  });
+
+  it("does NOT fetch blobs or add an attachments key on a resource without images", async () => {
+    const m = arrange();
+    m.entities.Resource.create.mockResolvedValue({ id: "res-1" });
+
+    await triageInboxItem(
+      { inboxItemId: "ix-1", decision: "resource", lensId: "lens-1", projectId: "p-1" },
+      m.context,
+    );
+
+    expect(m.entities.InboxAttachment.findMany).not.toHaveBeenCalled();
+    // SAFETY: mock .calls array is untyped; cast to ReturnType<typeof vi.fn> for .mock access.
+    const call = (m.entities.Resource.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(call.data.attachments).toBeUndefined();
+  });
+
   it("archive marks the item ARCHIVED (kept) and creates nothing", async () => {
     const m = arrange();
     const result = await triageInboxItem(

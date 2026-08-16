@@ -3,8 +3,8 @@ import type { Request, Response } from "express";
 // GET /api/attachments/:id — serve a captured image's bytes to its owner.
 //
 // This route is the ONLY reader of the `data` column on InboxAttachment,
-// ListItemAttachment, TaskAttachment, and ProjectAttachment. List queries
-// select metadata only; the bytes leave the
+// ListItemAttachment, TaskAttachment, ProjectAttachment, and
+// ResourceAttachment. List queries select metadata only; the bytes leave the
 // database exclusively through here (and the CLI twin route
 // /api/cli/attachment/:id, which shares the helpers below), gated to the
 // requesting user via the parent item's userId. That makes this the storage
@@ -44,6 +44,10 @@ export type AttachmentEntities = {
     findUnique: (args: any) => Promise<any>;
   };
   ProjectAttachment: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    findUnique: (args: any) => Promise<any>;
+  };
+  ResourceAttachment: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     findUnique: (args: any) => Promise<any>;
   };
@@ -114,6 +118,19 @@ export async function findOwnedAttachment(
   });
   if (projectAttachment?.project.userId === userId) {
     return projectAttachment;
+  }
+  const resourceAttachment = await entities.ResourceAttachment.findUnique({
+    where: { id },
+    select: {
+      data: true,
+      filename: true,
+      mimeType: true,
+      size: true,
+      resource: { select: { userId: true } },
+    },
+  });
+  if (resourceAttachment?.resource.userId === userId) {
+    return resourceAttachment;
   }
   return null;
 }
