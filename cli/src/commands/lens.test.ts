@@ -116,9 +116,11 @@ describe("lens list", () => {
     requestMock.mockResolvedValue({ lenses: [LENS_ME, LENS_WORK] });
     const { stdout } = await run(makeLensCommand(), ["list"]);
     expect(stdout).toContain("Me");
-    expect(stdout).toContain("(personal · life area)");
+    // Lens identity kinds (personal/work) were removed 2026-08-15 — the
+    // label is now just the type.
+    expect(stdout).toContain("Me (life area)");
     expect(stdout).toContain("Work");
-    expect(stdout).toContain("(work · life area)");
+    expect(stdout).toContain("Work (life area)");
     expect(stdout).toContain("Day job");
     expect(stdout).toContain("life area");
   });
@@ -177,7 +179,8 @@ describe("lens show", () => {
     requestMock.mockResolvedValue({ lens: LENS_WORK });
     const { stdout } = await run(makeLensCommand(), ["show", "Work"]);
     expect(stdout).toContain("Work");
-    expect(stdout).toContain("(work · life area)");
+    // Identity kind dropped 2026-08-15 — label is the type only.
+    expect(stdout).toContain("Work (life area)");
     expect(stdout).toContain("Day job");
     expect(stdout).toContain("12 tasks");
     expect(stdout).toContain("3 projects");
