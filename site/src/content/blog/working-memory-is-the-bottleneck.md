@@ -68,4 +68,4 @@ The list is still there. It has to be; you need somewhere to store the ninety-th
 
 This is also why a single-task surface can't be faked with willpower. You cannot, by effort, hold more slots. You can only protect the ones you have. Tools that ask you to protect them yourself (by resisting the list, ignoring the badges, not switching) are outsourcing the accommodation to the user. Tools that do the subtraction for you are returning the slots.
 
-If a focus app doesn't reduce what's competing for your working memory, it isn't helping you focus. It's just a prettier list, and the list was never the point. The bottleneck was always underneath.
+If a focus app doesn't reduce what's competing for your working memory, it isn't helping you focus. It's a prettier list.

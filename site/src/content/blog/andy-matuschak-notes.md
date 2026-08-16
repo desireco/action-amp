@@ -19,4 +19,4 @@ Matuschak's approach is the opposite. The structure emerges from use. Notes link
 
 The lesson isn't "use backlinks." It's that the right structure for your work is usually something you discover by doing the work, not something you can specify before it. Any tool that forces you to commit to a taxonomy up front is asking you to predict the shape of your own thinking. You won't.
 
-This is the same reason ActionAmp doesn't ask you to design your project tree before you start. Capture first. Let the structure reveal itself. Triage what emerges. The taxonomy is the output, not the input.
+This is the same reason ActionAmp doesn't ask you to design your project tree before you start. Capture first. Let the structure reveal itself. Triage what emerges. The taxonomy comes last.

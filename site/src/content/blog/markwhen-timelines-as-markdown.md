@@ -9,7 +9,7 @@ link: https://markwhen.com
 source: markwhen.com
 ---
 
-Markwhen is a small, well-considered tool: you write a timeline as markdown, and it renders a Gantt-style view. That's it. The appeal is that the timeline stays text (diffable, greppable, version-controlled) while giving you the one thing a list of tasks with dates never can: the visual dependency chain.
+Markwhen is a small, well-considered tool: you write a timeline as markdown, and it renders a Gantt-style view. The appeal is that the timeline stays text (diffable, greppable, version-controlled) while giving you the one thing a list of tasks with dates never can: the visual dependency chain.
 
 The reason this matters for project sequencing is that most task apps show you *what's due* but not *what's blocking*. A task dated Thursday looks like any other Thursday task. But if it's the thing three other tasks are waiting on, its weight is entirely different, and no flat list will show you that. You need the chain, and you need it cheap enough that you'll draw it.
 

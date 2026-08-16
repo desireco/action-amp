@@ -22,7 +22,7 @@ For a practical starting sequence, use [A calm GTD setup in 15 minutes](/guides/
 4. **One project.** The current chunk of work toward that goal. Something with a clear done state. If you can't say what done looks like in one sentence, it's not a project yet, it's an intention.
 5. **One task.** The next concrete action on that project. Small enough to start. Verbable. Not "do taxes" but "open last year's return and find the carryover."
 
-That's it. Inbox, triage, goal, project, task. You can build this on paper. The elaborate five-phase flowchart is a description of how this works at scale, not a requirement to start.
+Inbox, triage, goal, project, task. You can build this on paper. The elaborate five-phase flowchart is a description of how this works at scale, not a requirement to start.
 
 ## Why this is enough
 
@@ -42,4 +42,4 @@ From these five things, the full methodology opens up if you need it. Someday li
 
 But none of that is required to start, and most of it is wrong to build before you need it. The fifteen-minute system is not a stepping stone to the real thing. For a lot of people, it *is* the real thing, and the elaboration is what sinks them.
 
-Start small. Triage weekly. Let the structure earn each new piece.
+Start small, triage weekly, and let the structure earn each new piece.

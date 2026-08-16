@@ -72,5 +72,3 @@ This is what a calm triage loop looks like, and it doesn't need an app to enforc
 4. **Delete ruthlessly.** The someday list can acknowledge what's never going to happen. "Maybe" is a valid bucket. "Pretending I'll do this" is not.
 
 The reward isn't a perfect list. It's a list you trust, which means a list you can stop thinking about, which means a head that's quiet enough to do the one thing in front of you.
-
-Capture is free. That's exactly why it's not the part that matters.

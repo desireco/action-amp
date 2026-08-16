@@ -17,4 +17,4 @@ If you fall to the level of your systems, then the system is the thing worth exa
 
 For getting-things-done, this reframes the whole exercise. The question isn't "what's on my list." It's "what practice do I have, and does it survive a bad week?" A list you curate once and never triage isn't a system; it's an artifact. A weekly triage habit you keep even when nothing's due is a system, and it's the thing doing the work.
 
-This is also why a focus app's job isn't to store tasks. Storage is solved. The job is to make the *practice* the path of least resistance: capture in two seconds, triage on a cadence, decide what's next without replaying the comparison every time. The app that makes the system easier than avoiding it has done the real work. Goals are downstream of that.
+This is also why a focus app's job isn't to store tasks. Storage is solved. The job is to make the *practice* the path of least resistance: capture in two seconds, triage on a cadence, decide what's next without replaying the comparison every time. The app that makes the system easier than avoiding it has done the real work.
