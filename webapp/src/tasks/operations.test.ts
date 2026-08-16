@@ -268,7 +268,7 @@ describe("getTodayTasks", () => {
     // resolveAccessibleLenses reads Lens.findMany. A FREE user (no plan on
     // the default mockContext) → only PERSONAL lenses; one is enough here.
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-personal", name: "Me", color: "emerald", kind: "PERSONAL" },
+      { id: "lens-personal", name: "Me", color: "emerald", isIncluded: true },
     ]);
     m.entities.Task.findMany.mockResolvedValue([]);
 
@@ -286,35 +286,35 @@ describe("getTodayTasks", () => {
     });
   });
 
-  it("a FREE user only sees PERSONAL lenses (entitlement filter)", async () => {
+  it("a FREE user only sees included lenses (entitlement filter)", async () => {
     const m = mockContext();
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-personal", name: "Me", color: "emerald", kind: "PERSONAL" },
+      { id: "lens-personal", name: "Me", color: "emerald", isIncluded: true },
     ]);
     m.entities.Task.findMany.mockResolvedValue([]);
 
     await getTodayTasks({} as never, m.context);
 
-    // resolveAccessibleLenses branches on isEntitled; FREE → PERSONAL only.
+    // resolveAccessibleLenses branches on isEntitled; FREE → included only.
     const lensCall = m.entities.Lens.findMany.mock.calls[0][0];
     expect(lensCall.where).toMatchObject({
       userId: "user-1",
-      kind: "PERSONAL",
+      isIncluded: true,
     });
   });
 
   it("an entitled user sees all their lenses", async () => {
     const m = mockContext({ id: "user-1", plan: "PRO", planRenewsAt: new Date(Date.now() + 86_400_000) });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK" },
-      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL" },
+      { id: "lens-work", name: "Work", color: "indigo", isIncluded: false },
+      { id: "lens-me", name: "Me", color: "emerald", isIncluded: true },
     ]);
     m.entities.Task.findMany.mockResolvedValue([]);
 
     await getTodayTasks({} as never, m.context);
 
     const lensCall = m.entities.Lens.findMany.mock.calls[0][0];
-    expect(lensCall.where).toEqual({ userId: "user-1" }); // no kind filter
+    expect(lensCall.where).toEqual({ userId: "user-1" }); // no entitlement filter
     const taskCall = m.entities.Task.findMany.mock.calls[0][0];
     expect(taskCall.where.lensId).toEqual({ in: ["lens-work", "lens-me"] });
   });
@@ -344,7 +344,7 @@ describe("getWeekTasks", () => {
   it("reads dated Today and Upcoming tasks across accessible lenses for this Monday–Sunday week", async () => {
     const m = mockContext();
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-personal", name: "Me", color: "emerald", kind: "PERSONAL" },
+      { id: "lens-personal", name: "Me", color: "emerald", isIncluded: true },
     ]);
     m.entities.Task.findMany.mockResolvedValue([]);
 

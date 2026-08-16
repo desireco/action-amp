@@ -71,7 +71,7 @@ describe("createInboxItem — happy path", () => {
     });
   });
 
-  it("recognizes a custom [[lens]] token via the user's CUSTOM lenses", async () => {
+  it("recognizes a custom [[lens]] token via the user's lens names", async () => {
     const m = mockContext();
     m.entities.InboxItem.create.mockResolvedValue({ id: "ix-2", text: "ship", createdAt: new Date() });
     m.entities.Lens.findMany.mockResolvedValue([{ name: "Studio" }]);
@@ -82,7 +82,7 @@ describe("createInboxItem — happy path", () => {
     expect(call.data.parsedLens).toBe("studio");
     expect(call.data.text).toBe("ship");
     expect(m.entities.Lens.findMany).toHaveBeenCalledWith({
-      where: { userId: "user-1", kind: "CUSTOM" },
+      where: { userId: "user-1" },
       select: { name: true },
     });
   });
@@ -267,8 +267,8 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
     // still gates filing at commit time).
     const m = mockContext();
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-me", name: "Me", kind: "PERSONAL" },
-      { id: "lens-work", name: "Work", kind: "WORK" },
+      { id: "lens-me", name: "Me", isIncluded: true },
+      { id: "lens-work", name: "Work", isIncluded: false },
     ]);
     m.entities.Project.findMany.mockResolvedValue([
       { id: "p-1", name: "MVP", lensId: "lens-work" },

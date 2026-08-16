@@ -13,9 +13,9 @@ import type { EntitlementMessage } from "./entitlement-types";
  *    `FREE_LIMITS.projects`/`goals` per lens. Counted on non-done entities so
  *    finishing work always frees a slot. Pro is unlimited on these counts.
  * 2. **Lens-scope decision** (`lensViolation`) — FREE users may only read the
- *    PERSONAL lens. Branches on `LensKind` (NOT the lens name), so renaming
- *    the seeded "Work" lens → "Studio" cannot escape FREE gating: the kind is
- *    the stable handle, the name is just a label.
+ *    included lens (seeded "Me"). Branches on `isIncluded` (NOT the lens
+ *    name), so renaming the seeded "Work" lens → "Studio" cannot escape FREE
+ *    gating: the flag is the stable handle, the name is just a label.
  * 3. **Lens-config decision** (`lensConfigViolation`) — creating/editing any
  *    lens is Pro-only. FREE sees the seeded two (Me usable, Work locked) and
  *    can configure nothing. Pro is capped at `PRO_LIMITS.lenses` (soft cap).
@@ -153,18 +153,17 @@ export function capViolation(
 export interface EntitlementLens {
   name: string;
   isIncluded?: boolean;
-  /** @deprecated Compatibility only for pre-migration test fixtures. */
-  kind?: string;
 }
 
 /**
- * Returns the lens-violation message if a FREE user is reading a non-PERSONAL
- * lens, else null. Paid users may read any lens.
+ * Returns the lens-violation message if a FREE user is reading a lens that is
+ * not included in the Free plan, else null. Paid users may read any lens.
  *
- * Branches on `LensKind`, NOT the lens name — this is the rename-safety fix.
- * The seeded "Work"/"Me" names are user-editable on Pro, so keying on the name
- * string would let a rename break FREE gating. `kind` is the stable handle:
- * `PERSONAL` is allowed for FREE; `WORK` and `CUSTOM` are restricted.
+ * Branches on `isIncluded`, NOT the lens name — this is the rename-safety
+ * fix. The seeded "Work"/"Me" names are user-editable on Pro, so keying on
+ * the name string would let a rename break FREE gating. `isIncluded` is the
+ * stable handle: the included lens (seeded "Me") is allowed for FREE; every
+ * other lens is restricted.
  */
 export function lensViolation(
   user: EntitlementUser | null,
@@ -197,9 +196,10 @@ export function lensConfigViolation(
 }
 
 /**
- * Resolve a lensId → `{ name, kind }`, tenancy-safe (scoped to the user).
- * Returns null for an unknown/missing lens. Used by lens-scoped reads to feed
- * `lensViolation` — they receive a lensId, but the decision keys on kind.
+ * Resolve a lensId → `{ name, isIncluded }`, tenancy-safe (scoped to the
+ * user). Returns null for an unknown/missing lens. Used by lens-scoped reads
+ * to feed `lensViolation` — they receive a lensId, but the decision keys on
+ * isIncluded.
  *
  * `findFirst` (not `findUnique`): the Lens unique is on `[userId, name]`, so
  * there's no compound `id+userId` index; `findFirst` on both filters is the
@@ -207,7 +207,8 @@ export function lensConfigViolation(
  *
  * The entities param is typed loosely (the Prisma delegate's findFirst returns
  * the full Lens model type, and matching it exactly across Wasp's generated
- * generics isn't worth it for this one-shot helper). We read `.name` + `.kind`.
+ * generics isn't worth it for this one-shot helper). We read `.name` +
+ * `.isIncluded`.
  */
 export async function resolveLens(
   // Broadly typed: callers pass Wasp's Prisma delegate (per-op entity set) or a

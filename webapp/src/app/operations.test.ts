@@ -50,8 +50,8 @@ describe("getAppData — happy path", () => {
       lastActiveAt: new Date(),
     });
     const lenses = [
-      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", type: "LIFE_AREA", purpose: null },
-      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", type: "LIFE_AREA", purpose: null },
+      { id: "lens-work", name: "Work", color: "indigo", isIncluded: false, type: "LIFE_AREA", purpose: null },
+      { id: "lens-me", name: "Me", color: "emerald", isIncluded: true, type: "LIFE_AREA", purpose: null },
     ];
 
     m.entities.Lens.findMany.mockResolvedValue(lenses);
@@ -130,10 +130,10 @@ describe("getAppData — happy path", () => {
         where: expect.objectContaining({ lensId: "lens-work", isDone: false }),
       }),
     );
-    // Lenses carry their identity color + stable kind handle + purpose.
+    // Lenses carry their identity color + isIncluded entitlement flag + purpose.
     expect(m.entities.Lens.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        select: { id: true, name: true, color: true, kind: true, type: true, purpose: true },
+        select: { id: true, name: true, color: true, isIncluded: true, type: true, purpose: true },
       }),
     );
   });
@@ -149,7 +149,7 @@ describe("getAppData — happy path", () => {
       lastActiveAt: new Date(),
     });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", type: "LIFE_AREA", purpose: null },
+      { id: "lens-me", name: "Me", color: "emerald", isIncluded: true, type: "LIFE_AREA", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);
@@ -369,7 +369,7 @@ describe("getAppData — planning counter consistency", () => {
       lastActiveAt: new Date(),
     });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", type: "LIFE_AREA", purpose: null },
+      { id: "lens-work", name: "Work", color: "indigo", isIncluded: false, type: "LIFE_AREA", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);
@@ -392,9 +392,10 @@ describe("getAppData — planning counter consistency", () => {
     expect(result.counts).not.toHaveProperty("open");
   });
 
-  it("global Today count respects the accessible-lens filter (FREE → PERSONAL only)", async () => {
-    // A FREE user with a WORK + PERSONAL lens: the global Today count must
-    // only see the PERSONAL lens, even though both exist. This is the badge-
+  it("global Today count respects the accessible-lens filter (FREE → included lens only)", async () => {
+    // A FREE user with a Work (excluded) + Me (included) lens: the global
+    // Today count must only see the included lens, even though both exist.
+    // This is the badge-
     // level mirror of getTodayTasks' entitlement filter.
     const m = mockContext(); // FREE (no plan on the default mock)
     m.entities.User.findUnique.mockResolvedValue({
@@ -402,8 +403,8 @@ describe("getAppData — planning counter consistency", () => {
       lastActiveAt: new Date(),
     });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", type: "LIFE_AREA", purpose: null },
-      { id: "lens-me", name: "Me", color: "emerald", kind: "PERSONAL", type: "LIFE_AREA", purpose: null },
+      { id: "lens-work", name: "Work", color: "indigo", isIncluded: false, type: "LIFE_AREA", purpose: null },
+      { id: "lens-me", name: "Me", color: "emerald", isIncluded: true, type: "LIFE_AREA", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);
@@ -417,7 +418,7 @@ describe("getAppData — planning counter consistency", () => {
       expect.objectContaining({
         where: expect.objectContaining({
           userId: "user-1",
-          // Only the PERSONAL lens is accessible to FREE; WORK is excluded.
+          // Only the included lens is accessible to FREE; Work is excluded.
           lensId: { in: ["lens-me"] },
           status: "TODAY",
           isDone: false,
@@ -427,7 +428,7 @@ describe("getAppData — planning counter consistency", () => {
   });
 
   it("global Today count is 0 when the user has no accessible lenses", async () => {
-    // Edge case: a FREE user whose only lens is WORK (non-PERSONAL). The
+    // Edge case: a FREE user whose only lens is Work (not included). The
     // accessible set is empty → today must short-circuit to 0 rather than fire
     // a Prisma `in: []` query that could surprise.
     const m = mockContext();
@@ -436,7 +437,7 @@ describe("getAppData — planning counter consistency", () => {
       lastActiveAt: new Date(),
     });
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-work", name: "Work", color: "indigo", kind: "WORK", type: "LIFE_AREA", purpose: null },
+      { id: "lens-work", name: "Work", color: "indigo", isIncluded: false, type: "LIFE_AREA", purpose: null },
     ]);
     m.entities.InboxItem.count.mockResolvedValue(0);
     m.entities.Project.count.mockResolvedValue(0);

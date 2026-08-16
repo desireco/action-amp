@@ -68,11 +68,13 @@ describe("TriageCard", () => {
   describe("media", () => {
     const media = [{ id: "att-1", filename: "Screenshot.png" }];
 
-    it("renders thumbnails linking to the serve route when provided", () => {
+    it("renders the media gallery wired to the serve route when provided", () => {
       renderInContext(<TriageCard body="X" media={media} />);
-      const link = screen.getByRole("link", { name: /Screenshot\.png/i });
-      expect(link).toHaveAttribute("href", expect.stringContaining("/api/attachments/att-1"));
-      expect(screen.getByAltText("Screenshot.png")).toBeInTheDocument();
+      // AttachmentGallery: a button per image (opens the lightbox), with the
+      // img itself pointed at the owner-gated serve route.
+      screen.getByRole("button", { name: /open image screenshot\.png/i });
+      const img = screen.getByAltText("Screenshot.png");
+      expect(img).toHaveAttribute("src", expect.stringContaining("/api/attachments/att-1"));
     });
 
     it("renders no media section when media is empty or undefined", () => {

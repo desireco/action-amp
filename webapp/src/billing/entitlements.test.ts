@@ -30,8 +30,9 @@ import { mockContext } from "../test/mockContext";
  *   PRO expired  — plan "PRO", planRenewsAt in the past → treated as FREE.
  *   FOUNDER      — plan "FOUNDER", planRenewsAt null → unlimited (lifetime).
  *
- * Lens decisions key on LensKind (NOT name) — the rename-safety fix. A renamed
- * Work lens (kind=WORK, name="Studio") still gates FREE; only PERSONAL is free.
+ * Lens decisions key on isIncluded (NOT name) — the rename-safety fix. A
+ * renamed Work lens (isIncluded=false, name="Studio") still gates FREE; only
+ * the included lens (seeded "Me") is free.
  */
 
 const FUTURE = new Date(Date.now() + 86_400_000);
@@ -223,7 +224,7 @@ describe("lensViolation", () => {
     expect(
       lensViolation(
         { plan: "FREE", planRenewsAt: null },
-        { name: "Work", kind: "WORK" },
+        { name: "Work", isIncluded: false },
       ),
     ).toEqual(WORK_LENS_MESSAGE);
   });
@@ -232,7 +233,7 @@ describe("lensViolation", () => {
     expect(
       lensViolation(
         { plan: "FREE", planRenewsAt: null },
-        { name: "Me", kind: "PERSONAL" },
+        { name: "Me", isIncluded: true },
       ),
     ).toBeNull();
   });
@@ -241,7 +242,7 @@ describe("lensViolation", () => {
     expect(
       lensViolation(
         { plan: "FREE", planRenewsAt: null },
-        { name: "Studio", kind: "CUSTOM" },
+        { name: "Studio", isIncluded: false },
       ),
     ).toEqual(WORK_LENS_MESSAGE);
   });
@@ -250,7 +251,7 @@ describe("lensViolation", () => {
     expect(
       lensViolation(
         { plan: "PRO", planRenewsAt: FUTURE },
-        { name: "Work", kind: "WORK" },
+        { name: "Work", isIncluded: false },
       ),
     ).toBeNull();
   });
@@ -259,13 +260,13 @@ describe("lensViolation", () => {
     expect(
       lensViolation(
         { plan: "FREE", planRenewsAt: null, isAdmin: true },
-        { name: "Work", kind: "WORK" },
+        { name: "Work", isIncluded: false },
       ),
     ).toBeNull();
     expect(
       lensViolation(
         { plan: "FREE", planRenewsAt: null, isAdmin: true },
-        { name: "Studio", kind: "CUSTOM" },
+        { name: "Studio", isIncluded: false },
       ),
     ).toBeNull();
   });
@@ -274,20 +275,20 @@ describe("lensViolation", () => {
     expect(
       lensViolation(
         { plan: "PRO", planRenewsAt: PAST },
-        { name: "Work", kind: "WORK" },
+        { name: "Work", isIncluded: false },
       ),
     ).toEqual(WORK_LENS_MESSAGE);
   });
 
   // The load-bearing rename-safety test. The seeded "Work" lens is renameable
-  // on Pro; the kind (WORK) is the stable handle that must keep gating FREE
+  // on Pro; isIncluded=false is the stable handle that must keep gating FREE
   // even when the name is no longer "Work". This is the whole point of the
-  // LensKind enum — without it, a rename breaks FREE gating.
+  // flag — without it, a rename breaks FREE gating.
   it("rename-safe: FREE + WORK lens renamed to 'Studio' → still gated", () => {
     expect(
       lensViolation(
         { plan: "FREE", planRenewsAt: null },
-        { name: "Studio", kind: "WORK" },
+        { name: "Studio", isIncluded: false },
       ),
     ).toEqual(WORK_LENS_MESSAGE);
   });
@@ -296,7 +297,7 @@ describe("lensViolation", () => {
     expect(
       lensViolation(
         { plan: "FREE", planRenewsAt: null },
-        { name: "Life", kind: "PERSONAL" },
+        { name: "Life", isIncluded: true },
       ),
     ).toBeNull();
   });
@@ -305,7 +306,7 @@ describe("lensViolation", () => {
     expect(
       lensViolation(
         { plan: "FREE", planRenewsAt: null },
-        { name: "Work", kind: "WORK" },
+        { name: "Work", isIncluded: false },
         MSG,
       ),
     ).toEqual(MSG);
@@ -361,14 +362,14 @@ describe("PRO_LIMITS", () => {
 });
 
 describe("resolveLens", () => {
-  it("returns {name, kind} from a tenancy-safe lookup", async () => {
+  it("returns {name, isIncluded} from a tenancy-safe lookup", async () => {
     const m = mockContext("user-1");
-    m.entities.Lens.findFirst.mockResolvedValue({ name: "Work", kind: "WORK" });
+    m.entities.Lens.findFirst.mockResolvedValue({ name: "Work", isIncluded: false });
     const lens = await resolveLens(m.entities, "user-1", "lens-1");
-    expect(lens).toEqual({ name: "Work", kind: "WORK" });
+    expect(lens).toEqual({ name: "Work", isIncluded: false });
     expect(m.entities.Lens.findFirst).toHaveBeenCalledWith({
       where: { id: "lens-1", userId: "user-1" },
-      select: { name: true, kind: true },
+      select: { name: true, isIncluded: true },
     });
   });
 
