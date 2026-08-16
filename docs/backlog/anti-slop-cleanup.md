@@ -174,6 +174,19 @@ Repo total after: **203** (from 690 at first scan). Remaining: the 38-finding
 B9 tail (blocked on L4/L5 seams) + whatever the in-flight L4/L5 lane still
 holds.
 
+#### Open-season pass (2026-08-17, evening)
+
+Reviews (11), admin (3+syntax repair), tasks (9), analytics (7) cores typed
+with named delegate slices — total **184**. The typing pass caught four real
+bugs, all fixed: B5 had committed a syntax error in admin/operationsCore plus
+missing `Prisma` imports in four cores (project tsc red since 6cb2110, hidden
+because vitest doesn't typecheck); the CLI review route crashed on a missing
+Review delegate; and — biggest — 10 Wasp ops fired analytics events without
+the analytics entities injected, so every app-side funnel event past signup
+silently failed (`d2d72df`). Also: `tsc --force` without `--build` exits
+silently — never trust it as a gate. Remaining: 38 B9 tail + L4/L5 page-test
+findings (~146).
+
 ⁴ Turbo escalation rule: if a fix needs a *new named contract or parsing
 layer* rather than `satisfies` / `as const` / narrowing / Prisma-generated
 types — skip that finding, list it in the handoff for a 5.3 follow-up. Do not
