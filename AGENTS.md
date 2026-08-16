@@ -121,6 +121,22 @@ Pick the task; read the doc(s) on the right **before** writing code.
   server port, not 4000: `http://localhost:<server_port>/login?devEmail=…`.
   Run `bash webapp/scripts/dev-worktree.sh --list` to see each worktree's ports.
 
+## Agent database access
+
+- Local PostgreSQL 18 (Homebrew `postgresql@18`, brew service) listens on
+  `localhost:5432`; connect as user `jake`, no password (`psql -h localhost`).
+- Plain `psql` may not resolve on the agent's inherited PATH (a stale
+  `postgresql@15` entry lingers from the Aug 2026 upgrade). Invoke it by
+  absolute path: `/opt/homebrew/opt/postgresql@18/bin/psql`.
+- Databases: `actionamp_dev` is the dev DB (`webapp/.env.server`
+  `DATABASE_URL`), `actionamp_e2e` for e2e runs. The same server also hosts
+  unrelated projects' databases — leave those alone.
+- Dev worktrees get their own databases (see `docs/DEV-WORKTREES.md`); run
+  `bash webapp/scripts/dev-worktree.sh --list` to find them.
+- Use psql for inspection and ad-hoc queries; schema changes go through
+  `wasp db migrate-dev` (see "Rules that always apply"), never hand-written DDL
+  against `actionamp_dev`.
+
 ## Rules that always apply
 
 - **Roadmaps exclude future admin work.** Do not add new admin-only features,
