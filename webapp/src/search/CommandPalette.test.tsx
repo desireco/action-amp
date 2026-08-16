@@ -482,6 +482,7 @@ describe("CommandPalette", () => {
     const kind = label.includes("inbox") ? "inbox" : label;
     const result = {
       ...RESULT,
+      // SAFETY: spread result narrowed to SearchSiteResult for renderPalette compatibility.
       id: `${kind}-1`,
       kind,
       title: `Record ${label}`,

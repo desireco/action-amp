@@ -27,6 +27,7 @@ function context() {
 describe("Simple-list operation entitlement boundary", () => {
   it("checks Lens entitlement before reading a list", async () => {
     const ctx = context();
+    // SAFETY: mock context bypasses Wasp context type; only tested fields matter.
     await getSimpleList({ lensId: "list-1" }, ctx as never);
     expect(assertLensAllowed).toHaveBeenCalledWith(ctx, "list-1");
   });
@@ -40,7 +41,9 @@ describe("Simple-list operation entitlement boundary", () => {
       text: "Read this",
       content: "Useful details",
       sourceUrl: "https://example.com",
-    }, ctx as never);
+    },
+    // SAFETY: mock context bypasses Wasp context type; only tested fields matter.
+    ctx as never);
 
     expect(ctx.entities.ListItem.create).toHaveBeenCalledWith({
       data: {
@@ -60,7 +63,9 @@ describe("Simple-list operation entitlement boundary", () => {
       .mockResolvedValueOnce({ lensId: "list-1" })
       .mockResolvedValueOnce({ id: "item-1", lens: { type: "SIMPLE_LIST" } });
 
-    await renameListItem({ id: "item-1", text: "Milk" }, ctx as never);
+    await renameListItem({ id: "item-1", text: "Milk" },
+    // SAFETY: mock context bypasses Wasp context type; only tested fields matter.
+    ctx as never);
 
     expect(assertLensAllowed).toHaveBeenCalledWith(ctx, "list-1");
     expect(ctx.entities.ListItem.update).toHaveBeenCalled();
@@ -70,7 +75,9 @@ describe("Simple-list operation entitlement boundary", () => {
     const ctx = context();
     assertLensAllowed.mockRejectedValueOnce(new Error("Pro feature"));
 
-    await expect(getSimpleList({ lensId: "list-1" }, ctx as never)).rejects.toThrow(
+    await expect(getSimpleList({ lensId: "list-1" },
+    // SAFETY: mock context bypasses Wasp context type; only tested fields matter.
+    ctx as never)).rejects.toThrow(
       /Pro feature/,
     );
     expect(ctx.entities.ListItem.findMany).not.toHaveBeenCalled();

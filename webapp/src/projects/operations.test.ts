@@ -40,7 +40,7 @@ beforeEach(() => {
  * (first for the list with includes, second for done-task totals) then merges
  * them into a progress-fraction return shape. We mock both and assert the merge.
  */
-
+// SAFETY: fixture widens null to match Prisma's Date | null runtime type.
 const PROJECT_ROW = {
   id: "proj-1",
   permalink: "ship-product-v2",
@@ -232,7 +232,7 @@ describe("createProject — happy path", () => {
     );
   });
 });
-
+// SAFETY: fixture widens null to match Prisma's Date | null runtime type.
 const PROJECT_DETAIL_ROW = {
   id: "proj-1",
   permalink: "ship-product-v2",

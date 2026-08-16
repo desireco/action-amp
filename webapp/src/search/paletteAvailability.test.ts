@@ -15,6 +15,7 @@ const clear: PaletteBlockers = {
 describe("palette overlay precedence", () => {
   it("opens only when no blocking mode or overlay is active", () => {
     expect(isPaletteBlocked(clear)).toBe(false);
+    // SAFETY: Object.keys returns string[]; cast to typed key array for iteration.
     for (const key of Object.keys(clear) as Array<keyof PaletteBlockers>) {
       expect(isPaletteBlocked({ ...clear, [key]: true }), key).toBe(true);
     }

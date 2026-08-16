@@ -253,6 +253,7 @@ describe("updateFeedbackStatusCore", () => {
   it("throws on an invalid status (defense-in-depth)", async () => {
     const { entities } = mockContext();
     // Bypass TS for the bad-value test.
+    // SAFETY: status "BOGUS" is intentionally invalid; never bypasses the union type.
     await expect(
       updateFeedbackStatusCore(entities, { id: "fb-1", status: "BOGUS" as never }),
     ).rejects.toThrow(/Invalid status/);

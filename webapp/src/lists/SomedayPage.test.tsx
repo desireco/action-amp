@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getTasks = vi.fn();
 const queryState = {
+  // SAFETY: test fixture; empty array narrowed to SomedayTask[] for type compatibility.
   current: { data: [] as SomedayTask[], isLoading: false },
 };
 

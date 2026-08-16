@@ -9,6 +9,7 @@ const unscheduleOverdueTasks = vi.fn();
 const promoteToToday = vi.fn();
 const moveToSomeday = vi.fn();
 const queryState = {
+  // SAFETY: test fixture; empty array narrowed to UpcomingTask[] for type compatibility.
   current: { data: [] as UpcomingTask[], isLoading: false },
   appData: { counts: { today: 3 } },
 };

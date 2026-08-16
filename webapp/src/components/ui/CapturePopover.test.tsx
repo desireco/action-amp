@@ -12,6 +12,7 @@ import { renderInContext } from "wasp/client/test";
 
 /** Type text into the capture textarea via the DOM input event (React-controlled). */
 function typeIntoInput(text: string) {
+  // SAFETY: getByLabelText returns Element; cast to HTMLTextAreaElement for value access.
   const ta = screen.getByLabelText("Capture") as HTMLTextAreaElement;
   fireEvent.change(ta, { target: { value: text } });
   return ta;

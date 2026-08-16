@@ -39,6 +39,7 @@ describe("usePropertyKeys — size ([ / ])", () => {
       size: "M",
     });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get, set: set as never }),
     );
     fireKey("]");
@@ -52,6 +53,7 @@ describe("usePropertyKeys — size ([ / ])", () => {
       size: "M",
     });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get, set: set as never }),
     );
     fireKey("[");
@@ -61,6 +63,7 @@ describe("usePropertyKeys — size ([ / ])", () => {
   it("wraps at the ends (XL → S on ], S → XL on [)", () => {
     const up = setup({ status: "TODAY", priority: "NORMAL", size: "XL" });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get: up.get, set: up.set as never }),
     );
     fireKey("]");
@@ -68,6 +71,7 @@ describe("usePropertyKeys — size ([ / ])", () => {
 
     const down = setup({ status: "TODAY", priority: "NORMAL", size: "S" });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get: down.get, set: down.set as never }),
     );
     fireKey("[");
@@ -83,6 +87,7 @@ describe("usePropertyKeys — priority (- / =)", () => {
       size: "M",
     });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get, set: set as never }),
     );
     fireKey("=");
@@ -96,6 +101,7 @@ describe("usePropertyKeys — priority (- / =)", () => {
       size: "M",
     });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get, set: set as never }),
     );
     fireKey("-");
@@ -111,6 +117,7 @@ describe("usePropertyKeys — when (H)", () => {
       size: "M",
     });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get, set: set as never }),
     );
     fireKey("h");
@@ -124,6 +131,7 @@ describe("usePropertyKeys — when (H)", () => {
       size: "M",
     });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get, set: set as never }),
     );
     fireKey("H");
@@ -139,6 +147,7 @@ describe("usePropertyKeys — guards", () => {
       size: "M",
     });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: false, get, set: set as never }),
     );
     fireKey("]");
@@ -152,6 +161,7 @@ describe("usePropertyKeys — guards", () => {
       size: "M",
     });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get, set: set as never }),
     );
     fireKey("]", { target: fakeInput() });
@@ -165,6 +175,7 @@ describe("usePropertyKeys — guards", () => {
       size: "M",
     });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get, set: set as never }),
     );
     const event = new KeyboardEvent("keydown", {
@@ -183,6 +194,7 @@ describe("usePropertyKeys — guards", () => {
       size: "M",
     });
     renderHook(() =>
+    // SAFETY: set param unused in this test case; never bypasses type check.
       usePropertyKeys({ enabled: true, get, set: set as never }),
     );
     fireKey("x");

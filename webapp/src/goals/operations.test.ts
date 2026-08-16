@@ -26,7 +26,7 @@ import { mockContext } from "../test/mockContext";
  * getGoals is interesting because it computes an aggregate progress percentage
  * across projects. Tasks do not align directly to goals.
  */
-
+// SAFETY: fixture widens literal to match Prisma's runtime string representation.
 const GOAL_ROW = {
   id: "goal-1",
   permalink: "grow-audience",
