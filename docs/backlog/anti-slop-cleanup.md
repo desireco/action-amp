@@ -153,6 +153,27 @@ blockers, both requiring src changes in files L4/L5 owned at the time:
 
 Run B9's tail **after L4/L5 land**, directory by directory.
 
+#### Escalated-files lane (2026-08-17, later that day)
+
+The footnote-1/2 escalated files are **done — 35/35 findings cleared** in three
+commits (`47aa57f`, `8057bfc`, `29a3722`):
+
+- `shared/dateFormat.ts` — one `instanceof`-based `toDate()` parse; `DueChip`
+  owner type.
+- `tasks/taskPropertyFields.ts` — label maps via `as const satisfies`;
+  `TaskChipPatch` + boundary predicates in `chipPickToTaskPatch`.
+- `inbox/triageFlow.ts` — `OUTCOME_EXIT` via `satisfies`; exported
+  `DispatchPayload` contract.
+- `analytics/eventApi.ts` — field-by-field decode through the new
+  `shared/jsonValue.ts` contract (`JsonValue` + constructor-identity
+  primitive tests, shared with `share/shareCapture.ts`);
+  `AnalyticsEventEntities` named delegate slice.
+- `share/shareCapture.ts` — `ShareFormBody` contract + `isJsonString` reads.
+
+Repo total after: **203** (from 690 at first scan). Remaining: the 38-finding
+B9 tail (blocked on L4/L5 seams) + whatever the in-flight L4/L5 lane still
+holds.
+
 ⁴ Turbo escalation rule: if a fix needs a *new named contract or parsing
 layer* rather than `satisfies` / `as const` / narrowing / Prisma-generated
 types — skip that finding, list it in the handoff for a 5.3 follow-up. Do not
