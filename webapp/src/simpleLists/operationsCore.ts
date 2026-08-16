@@ -1,4 +1,5 @@
 /** Pure, tenant-scoped data operations for Simple-list Lenses. */
+import type { Prisma } from "@prisma/client";
 import {
   prepareImageAttachments,
   type ImageAttachmentInput,
@@ -14,7 +15,9 @@ function normalizedText(text: string): string {
   const value = text.trim();
   if (!value) throw new Error("List item text is required.");
   if (value.length > MAX_LIST_ITEM_TEXT_LENGTH) {
-    throw new Error(`List item text must be ${MAX_LIST_ITEM_TEXT_LENGTH} characters or fewer.`);
+    throw new Error(
+      `List item text must be ${MAX_LIST_ITEM_TEXT_LENGTH} characters or fewer.`,
+    );
   }
   return value;
 }
@@ -57,7 +60,9 @@ export async function getSimpleListCore(
   return entities.ListItem.findMany({
     where: { userId, lensId },
     orderBy: [{ isDone: "asc" }, { order: "asc" }, { createdAt: "asc" }],
-    include: { attachments: { select: { id: true, filename: true, mimeType: true } } },
+    include: {
+      attachments: { select: { id: true, filename: true, mimeType: true } },
+    },
   });
 }
 
@@ -82,13 +87,14 @@ export async function createListItemCore(
   },
 ) {
   await requireSimpleListLens(entities, { userId, lensId });
-  const imageAttachments = preparedAttachments ?? prepareImageAttachments(attachments);
+  const imageAttachments =
+    preparedAttachments ?? prepareImageAttachments(attachments);
   const previous = await entities.ListItem.findFirst({
     where: { userId, lensId },
     orderBy: { order: "desc" },
     select: { order: true },
   });
-  const data: Prisma.ListItemCreateInput = {
+  const data: Prisma.ListItemUncheckedCreateInput = {
     userId,
     lensId,
     text: normalizedText(text),
@@ -135,5 +141,7 @@ export async function clearCompletedListItemsCore(
   { userId, lensId }: { userId: string; lensId: string },
 ) {
   await requireSimpleListLens(entities, { userId, lensId });
-  return entities.ListItem.deleteMany({ where: { userId, lensId, isDone: true } });
+  return entities.ListItem.deleteMany({
+    where: { userId, lensId, isDone: true },
+  });
 }

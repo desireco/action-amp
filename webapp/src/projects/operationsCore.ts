@@ -21,6 +21,7 @@
  */
 
 import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
+import type { Prisma } from "@prisma/client";
 
 /**
  * The entities slice these cores read. Loosely typed (same approach as
@@ -74,11 +75,21 @@ export async function getProjectsData(
       },
       resources: {
         orderBy: [{ createdAt: "desc" }],
-        select: { id: true, title: true, url: true, notes: true, createdAt: true },
+        select: {
+          id: true,
+          title: true,
+          url: true,
+          notes: true,
+          createdAt: true,
+        },
       },
       // Open count excludes declined tasks — they live in the Logbook, not in
       // the project's momentum.
-      _count: { select: { tasks: { where: { isDone: false, status: { not: "WONT_DO" } } } } },
+      _count: {
+        select: {
+          tasks: { where: { isDone: false, status: { not: "WONT_DO" } } },
+        },
+      },
     },
   });
 
@@ -93,36 +104,49 @@ export async function getProjectsData(
       _count: { select: { tasks: { where: { isDone: true } } } },
     },
   });
-  const doneCount = new Map(totals.map((p: { id: string; _count: { tasks: number } }) => [p.id, p._count.tasks]));
+  const doneCount = new Map(
+    totals.map((p: { id: string; _count: { tasks: number } }) => [
+      p.id,
+      p._count.tasks,
+    ]),
+  );
 
-  return projects.map((p: {
-    id: string;
-    permalink: string;
-    name: string;
-    description: string | null;
-    dueDate: Date | null;
-    isDone: boolean;
-    completedAt: Date | null;
-    archivedAt: Date | null;
-    goal: { id: string; name: string } | null;
-    tasks: unknown[];
-    resources: { id: string; title: string; url: string | null; notes: string | null; createdAt: Date }[];
-    _count: { tasks: number };
-  }) => ({
-    id: p.id,
-    permalink: p.permalink,
-    name: p.name,
-    description: p.description,
-    dueDate: p.dueDate,
-    isDone: p.isDone,
-    completedAt: p.completedAt,
-    archivedAt: p.archivedAt,
-    goal: p.goal,
-    openCount: p._count.tasks, // open (non-done) tasks
-    doneCount: doneCount.get(p.id) ?? 0,
-    nextAction: p.tasks[0] ?? null, // top-priority open task
-    resources: p.resources,
-  }));
+  return projects.map(
+    (p: {
+      id: string;
+      permalink: string;
+      name: string;
+      description: string | null;
+      dueDate: Date | null;
+      isDone: boolean;
+      completedAt: Date | null;
+      archivedAt: Date | null;
+      goal: { id: string; name: string } | null;
+      tasks: unknown[];
+      resources: {
+        id: string;
+        title: string;
+        url: string | null;
+        notes: string | null;
+        createdAt: Date;
+      }[];
+      _count: { tasks: number };
+    }) => ({
+      id: p.id,
+      permalink: p.permalink,
+      name: p.name,
+      description: p.description,
+      dueDate: p.dueDate,
+      isDone: p.isDone,
+      completedAt: p.completedAt,
+      archivedAt: p.archivedAt,
+      goal: p.goal,
+      openCount: p._count.tasks, // open (non-done) tasks
+      doneCount: doneCount.get(p.id) ?? 0,
+      nextAction: p.tasks[0] ?? null, // top-priority open task
+      resources: p.resources,
+    }),
+  );
 }
 
 // ----------------------------------------------------------------
@@ -164,7 +188,13 @@ export async function getProjectData(
       },
       resources: {
         orderBy: [{ createdAt: "desc" }],
-        select: { id: true, title: true, url: true, notes: true, createdAt: true },
+        select: {
+          id: true,
+          title: true,
+          url: true,
+          notes: true,
+          createdAt: true,
+        },
       },
     },
   });

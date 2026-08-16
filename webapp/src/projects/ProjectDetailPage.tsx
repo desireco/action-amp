@@ -27,7 +27,8 @@ import {
   TaskRow,
   CompletionCircle,
   ConfirmDialog,
-  BottomSheet, PickerSheet,
+  BottomSheet,
+  PickerSheet,
   InlineEntityEditForm,
   OverflowMenu,
   useMediaQuery,
@@ -79,7 +80,12 @@ type ProjectResource = {
 
 type GoalOption = { id: string; permalink: string; name: string };
 type ProjectOption = { id: string; permalink: string; name: string };
-type LensOption = { id: string; name: string; color: string | null; type: "LIFE_AREA" | "SIMPLE_LIST" };
+type LensOption = {
+  id: string;
+  name: string;
+  color: string | null;
+  type: "LIFE_AREA" | "SIMPLE_LIST";
+};
 
 /**
  * Project detail — the dedicated URL for working on a single Project. Shows its
@@ -180,9 +186,12 @@ export function ProjectDetailPage() {
     project ? { lensId: project.lensId } : undefined,
     { enabled: !!project && (movingTaskId !== null || confirmDelete) },
   );
-  const { data: allLenses } = useQuery(getLenses, undefined, { enabled: movingProject });
+  const { data: allLenses } = useQuery(getLenses, undefined, {
+    enabled: movingProject,
+  });
   const projectMoveTargets: LensOption[] = (allLenses ?? []).filter(
-    (lens: LensOption) => lens.type === "LIFE_AREA" && lens.id !== project?.lensId,
+    (lens: LensOption) =>
+      lens.type === "LIFE_AREA" && lens.id !== project?.lensId,
   );
   // Siblings only — a task can't move to the project it's already in.
   const moveTargets: ProjectOption[] = (lensProjects ?? []).filter(
@@ -386,8 +395,13 @@ export function ProjectDetailPage() {
     taskDisposition: "delete" | "reassign" | "triage" = "delete",
   ) => {
     if (!project) return;
-    const input = { id: project.id, taskDisposition };
-    if (taskDisposition === "reassign") input.targetProjectId = deleteTargetProjectId;
+    const input: {
+      id: string;
+      taskDisposition: "delete" | "reassign" | "triage";
+      targetProjectId?: string;
+    } = { id: project.id, taskDisposition };
+    if (taskDisposition === "reassign")
+      input.targetProjectId = deleteTargetProjectId;
     await deleteProject(input);
     queryClient.invalidateQueries({ queryKey: ["getProjects"] });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
@@ -421,7 +435,9 @@ export function ProjectDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
       setMovingProject(false);
     } catch (e) {
-      setMoveProjectError(e instanceof Error ? e.message : "Couldn't move the project.");
+      setMoveProjectError(
+        e instanceof Error ? e.message : "Couldn't move the project.",
+      );
     }
   };
 
@@ -474,9 +490,7 @@ export function ProjectDetailPage() {
   // Breadcrumb chain: Goal › Project. A "Projects" list root is always present
   // so there's always a way back to /do/projects even when the project has no
   // goal ancestor. Crumb id IS the destination route.
-  const projectActiveRoute = project
-    ? `/do/projects/${project.permalink}`
-    : "";
+  const projectActiveRoute = project ? `/do/projects/${project.permalink}` : "";
   const projectCrumbs: BreadcrumbItem[] = [
     { id: "/do/projects", label: "Projects" },
   ];
@@ -743,7 +757,10 @@ export function ProjectDetailPage() {
                                 ? "Return to active projects"
                                 : "Mark this project done",
                             },
-                            { label: "Archive", onPick: () => setConfirmArchive(true) },
+                            {
+                              label: "Archive",
+                              onPick: () => setConfirmArchive(true),
+                            },
                           ]
                         : []),
                       {
@@ -1139,23 +1156,49 @@ export function ProjectDetailPage() {
           onClose={() => setConfirmDelete(false)}
         >
           <div className="aa-project__delete-options">
-            <p>{total} {total === 1 ? "task is" : "tasks are"} still in “{project.name}”.</p>
-            <Button variant="danger" size="sm" onClick={() => void handleDelete("delete")}>Remove tasks and delete project</Button>
+            <p>
+              {total} {total === 1 ? "task is" : "tasks are"} still in “
+              {project.name}”.
+            </p>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => void handleDelete("delete")}
+            >
+              Remove tasks and delete project
+            </Button>
             <div className="aa-project__delete-reassign">
               <label htmlFor="project-delete-target">Move tasks to</label>
               <select
                 id="project-delete-target"
                 value={deleteTargetProjectId}
-                onChange={(event) => setDeleteTargetProjectId(event.target.value)}
+                onChange={(event) =>
+                  setDeleteTargetProjectId(event.target.value)
+                }
               >
                 <option value="">Choose a project</option>
                 {moveTargets.map((target) => (
-                  <option key={target.id} value={target.id}>{target.name}</option>
+                  <option key={target.id} value={target.id}>
+                    {target.name}
+                  </option>
                 ))}
               </select>
-              <Button variant="secondary" size="sm" disabled={!deleteTargetProjectId} onClick={() => void handleDelete("reassign")}>Move tasks and delete project</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!deleteTargetProjectId}
+                onClick={() => void handleDelete("reassign")}
+              >
+                Move tasks and delete project
+              </Button>
             </div>
-            <Button variant="secondary" size="sm" onClick={() => void handleDelete("triage")}>Send tasks to Triage and delete project</Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void handleDelete("triage")}
+            >
+              Send tasks to Triage and delete project
+            </Button>
           </div>
         </BottomSheet>
       )}

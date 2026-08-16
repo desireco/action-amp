@@ -82,7 +82,11 @@ export function LensesPage() {
 
   return (
     <SettingsLayout>
-      <LensList lenses={lenses ?? []} isLoading={isLoading} queryClient={queryClient} />
+      <LensList
+        lenses={lenses ?? []}
+        isLoading={isLoading}
+        queryClient={queryClient}
+      />
     </SettingsLayout>
   );
 }
@@ -111,9 +115,9 @@ function LensList({
     <>
       <section className="aa-settings-section">
         <p className="aa-settings-note">
-          A lens is one life context — one identity and one focused surface. The two
-          defaults can be renamed and recolored but not deleted. Add more on Pro
-          (soft cap {PRO_LIMITS.lenses}).
+          A lens is one life context — one identity and one focused surface. The
+          two defaults can be renamed and recolored but not deleted. Add more on
+          Pro (soft cap {PRO_LIMITS.lenses}).
         </p>
       </section>
 
@@ -127,14 +131,24 @@ function LensList({
         ) : (
           <div className="aa-lenses-list">
             {lenses.map((lens) => (
-              <LensRowItem key={lens.id} lens={lens} allLenses={lenses} onSaved={refresh} />
+              <LensRowItem
+                key={lens.id}
+                lens={lens}
+                allLenses={lenses}
+                onSaved={refresh}
+              />
             ))}
           </div>
         )}
 
         {creating ? (
           <LensForm
-            initial={{ name: "", purpose: "", color: "coral", type: "LIFE_AREA" }}
+            initial={{
+              name: "",
+              purpose: "",
+              color: "coral",
+              type: "LIFE_AREA",
+            }}
             allowType
             submit={async (vals) => {
               await createLens(vals);
@@ -156,21 +170,25 @@ function LensList({
             className="aa-lenses-add"
             onClick={() => setCreating(true)}
             disabled={atCap}
-            title={atCap ? `Soft cap of ${PRO_LIMITS.lenses} lenses reached` : undefined}
+            title={
+              atCap
+                ? `Soft cap of ${PRO_LIMITS.lenses} lenses reached`
+                : undefined
+            }
           >
             + New lens
           </button>
         )}
         {atCap && !creating && (
           <p className="aa-lenses-cap-note">
-            You've reached the soft cap of {PRO_LIMITS.lenses} lenses. Delete one to add another.
+            You've reached the soft cap of {PRO_LIMITS.lenses} lenses. Delete
+            one to add another.
           </p>
         )}
       </section>
     </>
   );
 }
-
 
 function LensRowItem({
   lens,
@@ -198,12 +216,16 @@ function LensRowItem({
             type: lens.type,
           }}
           allowType={!isSeeded}
-          fixedTypeReason={isSeeded ? "Default lenses always remain Life areas." : undefined}
-          onBlockedTypeChange={hasContent ? () => setTypeBlocked(true) : undefined}
+          fixedTypeReason={
+            isSeeded ? "Default lenses always remain Life areas." : undefined
+          }
+          onBlockedTypeChange={
+            hasContent ? () => setTypeBlocked(true) : undefined
+          }
           submit={async (vals) => {
             await updateLens({ id: lens.id, ...vals });
           }}
-            submitLabel="Save changes"
+          submitLabel="Save changes"
           submittingLabel="Saving…"
           errorPreamble="Couldn't save. Try again."
           onCancel={() => setEditing(false)}
@@ -250,7 +272,9 @@ function LensRowItem({
               {lens.type === "SIMPLE_LIST" ? "Simple list" : "Life area"}
             </span>
           </div>
-          {lens.purpose && <div className="aa-lenses-row__purpose">{lens.purpose}</div>}
+          {lens.purpose && (
+            <div className="aa-lenses-row__purpose">{lens.purpose}</div>
+          )}
           {lens.type === "SIMPLE_LIST" ? (
             <div className="aa-lenses-row__meta">
               <span>{lens.counts.openItems} open</span>
@@ -265,7 +289,11 @@ function LensRowItem({
           )}
         </div>
         <div className="aa-lenses-row__acts">
-          <button type="button" className="aa-lenses-act" onClick={() => setEditing(true)}>
+          <button
+            type="button"
+            className="aa-lenses-act"
+            onClick={() => setEditing(true)}
+          >
             Edit
           </button>
         </div>
@@ -301,11 +329,21 @@ function LensForm({
   onDelete,
   onDone,
 }: {
-  initial: { name: string; purpose: string; color: string; type: "LIFE_AREA" | "SIMPLE_LIST" };
+  initial: {
+    name: string;
+    purpose: string;
+    color: string;
+    type: "LIFE_AREA" | "SIMPLE_LIST";
+  };
   allowType?: boolean;
   fixedTypeReason?: string;
   onBlockedTypeChange?: () => void;
-  submit: (vals: { name: string; purpose: string; color: string; type?: "LIFE_AREA" | "SIMPLE_LIST" }) => Promise<void>;
+  submit: (vals: {
+    name: string;
+    purpose: string;
+    color: string;
+    type?: "LIFE_AREA" | "SIMPLE_LIST";
+  }) => Promise<void>;
   submitLabel: string;
   submittingLabel: string;
   errorPreamble: string;
@@ -321,15 +359,30 @@ function LensForm({
   const [type, setType] = useState(initial.type);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const saveCue = initial.name
-    ? <>Changes save only when you select <strong>{submitLabel}</strong>.</>
-    : <>Your lens is created only when you select <strong>{submitLabel}</strong>.</>;
+  const saveCue = initial.name ? (
+    <>
+      Changes save only when you select <strong>{submitLabel}</strong>.
+    </>
+  ) : (
+    <>
+      Your lens is created only when you select <strong>{submitLabel}</strong>.
+    </>
+  );
 
   async function save() {
     setSaving(true);
     setError(null);
     try {
-      const input = { name, purpose, color };
+      const input: {
+        name: string;
+        purpose: string;
+        color: string;
+        type?: "LIFE_AREA" | "SIMPLE_LIST";
+      } = {
+        name,
+        purpose,
+        color,
+      };
       if (allowType) input.type = type;
       await submit(input);
       await onDone();
@@ -355,10 +408,16 @@ function LensForm({
   }
 
   return (
-    <form className="aa-lenses-edit" data-lens-color={color || undefined} onSubmit={handleSubmit}>
+    <form
+      className="aa-lenses-edit"
+      data-lens-color={color || undefined}
+      onSubmit={handleSubmit}
+    >
       <header className="aa-lenses-edit__head">
         <div>
-          <p className="aa-lenses-edit__eyebrow">{initial.name ? "Editing lens" : "New lens"}</p>
+          <p className="aa-lenses-edit__eyebrow">
+            {initial.name ? "Editing lens" : "New lens"}
+          </p>
           <h3>{initial.name || "Create a new life context"}</h3>
         </div>
         <p>{saveCue}</p>
@@ -376,7 +435,9 @@ function LensForm({
           />
         </div>
         <div className="aa-lenses-edit__row">
-          <label className="aa-lenses-edit__label">Purpose <span>Optional</span></label>
+          <label className="aa-lenses-edit__label">
+            Purpose <span>Optional</span>
+          </label>
           <input
             className="aa-lenses-edit__input"
             value={purpose}
@@ -390,7 +451,9 @@ function LensForm({
         <legend className="aa-lenses-edit__label">Lens type</legend>
         {allowType ? (
           <div className="aa-lenses-type__options">
-            <label className={`aa-lenses-type__option ${type === "LIFE_AREA" ? "selected" : ""}`}>
+            <label
+              className={`aa-lenses-type__option ${type === "LIFE_AREA" ? "selected" : ""}`}
+            >
               <input
                 type="radio"
                 name="lens-type"
@@ -399,9 +462,14 @@ function LensForm({
                 onChange={() => chooseType("LIFE_AREA")}
                 disabled={saving}
               />
-              <span><strong>Life area</strong><small>Tasks, projects, goals, planning, and review.</small></span>
+              <span>
+                <strong>Life area</strong>
+                <small>Tasks, projects, goals, planning, and review.</small>
+              </span>
             </label>
-            <label className={`aa-lenses-type__option ${type === "SIMPLE_LIST" ? "selected" : ""}`}>
+            <label
+              className={`aa-lenses-type__option ${type === "SIMPLE_LIST" ? "selected" : ""}`}
+            >
               <input
                 type="radio"
                 name="lens-type"
@@ -410,7 +478,10 @@ function LensForm({
                 onChange={() => chooseType("SIMPLE_LIST")}
                 disabled={saving}
               />
-              <span><strong>Simple list</strong><small>Add items directly and check them off.</small></span>
+              <span>
+                <strong>Simple list</strong>
+                <small>Add items directly and check them off.</small>
+              </span>
             </label>
           </div>
         ) : (
@@ -442,13 +513,23 @@ function LensForm({
       <footer className="aa-lenses-edit__acts">
         <div>
           {onDelete && (
-            <button type="button" className="aa-lenses-act aa-lenses-act--danger" onClick={onDelete} disabled={saving}>
+            <button
+              type="button"
+              className="aa-lenses-act aa-lenses-act--danger"
+              onClick={onDelete}
+              disabled={saving}
+            >
               Delete lens
             </button>
           )}
         </div>
         <div className="aa-lenses-edit__save-actions">
-          <button type="button" className="aa-lenses-act" onClick={onCancel} disabled={saving}>
+          <button
+            type="button"
+            className="aa-lenses-act"
+            onClick={onCancel}
+            disabled={saving}
+          >
             Cancel
           </button>
           <button
@@ -470,31 +551,35 @@ function TypeChangeBlockedMessage({ lens }: { lens: LensRow }) {
     return (
       <p>
         {lens.name} contains {total} checklist {total === 1 ? "item" : "items"}.
-        Move or remove {total === 1 ? "it" : "them"} before changing this Lens to a Life area.
+        Move or remove {total === 1 ? "it" : "them"} before changing this Lens
+        to a Life area.
       </p>
     );
   }
-  const parts = ([
-    [lens.counts.goals, "goal"],
-    [lens.counts.projects, "project"],
-    [lens.counts.tasks, "task"],
-  ] as const)
+  const parts = (
+    [
+      [lens.counts.goals, "goal"],
+      [lens.counts.projects, "project"],
+      [lens.counts.tasks, "task"],
+    ] as const
+  )
     .filter(([count]) => count > 0)
     .map(([count, label]) => `${count} ${label}${count === 1 ? "" : "s"}`);
-  const contentDescription = parts.length > 0
-    ? parts.join(", ")
-    : "completed work or history";
+  const contentDescription =
+    parts.length > 0 ? parts.join(", ") : "completed work or history";
   return (
     <div>
       <p>
-        {lens.name} contains {contentDescription}. Move or remove this work before changing this Lens to a
-        Simple list.
+        {lens.name} contains {contentDescription}. Move or remove this work
+        before changing this Lens to a Simple list.
       </p>
       {lens.blockingProjects.length > 0 && (
         <>
           <p>Blocking projects:</p>
           <ul>
-            {lens.blockingProjects.map((project) => <li key={project.id}>{project.name}</li>)}
+            {lens.blockingProjects.map((project) => (
+              <li key={project.id}>{project.name}</li>
+            ))}
           </ul>
         </>
       )}
@@ -521,17 +606,21 @@ function DeleteLensDialog({
     (candidate) => candidate.id !== lens.id && candidate.type === lens.type,
   );
   const hasContent = lens.hasAnyContent;
-  const [mode, setMode] = useState<"reassign" | "delete">(hasContent ? "reassign" : "delete");
+  const [mode, setMode] = useState<"reassign" | "delete">(
+    hasContent ? "reassign" : "delete",
+  );
   const [targetId, setTargetId] = useState(targets[0]?.id ?? "");
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const visibleStructuredCount = lens.counts.goals + lens.counts.projects + lens.counts.tasks;
-  const contentSummary = lens.type === "SIMPLE_LIST"
-    ? `${lens.counts.openItems} open items, ${lens.counts.checkedItems} checked items`
-    : visibleStructuredCount > 0
-      ? `${lens.counts.goals} goals, ${lens.counts.projects} projects, ${lens.counts.tasks} tasks`
-      : "completed work or history";
+  const visibleStructuredCount =
+    lens.counts.goals + lens.counts.projects + lens.counts.tasks;
+  const contentSummary =
+    lens.type === "SIMPLE_LIST"
+      ? `${lens.counts.openItems} open items, ${lens.counts.checkedItems} checked items`
+      : visibleStructuredCount > 0
+        ? `${lens.counts.goals} goals, ${lens.counts.projects} projects, ${lens.counts.tasks} tasks`
+        : "completed work or history";
   const cannotReassign = mode === "reassign" && !targetId;
 
   useEffect(() => {
@@ -567,7 +656,10 @@ function DeleteLensDialog({
         <div className="aa-lenses-delete">
           {hasContent ? (
             <>
-              <p>This lens has <strong>{contentSummary}</strong>. Choose what happens to them:</p>
+              <p>
+                This lens has <strong>{contentSummary}</strong>. Choose what
+                happens to them:
+              </p>
               <label className="aa-lenses-delete__opt">
                 <input
                   type="radio"
@@ -582,18 +674,23 @@ function DeleteLensDialog({
                     className="aa-lenses-delete__select"
                     value={targetId}
                     onChange={(e) => setTargetId(e.target.value)}
-                    disabled={deleting || mode !== "reassign" || targets.length === 0}
+                    disabled={
+                      deleting || mode !== "reassign" || targets.length === 0
+                    }
                   >
                     {targets.map((t) => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
                     ))}
                   </select>
                 </span>
               </label>
               {targets.length === 0 && (
                 <p>
-                  Create another {lens.type === "SIMPLE_LIST" ? "Simple list" : "Life area"}
-                  {" "}first, or empty this lens before deleting it.
+                  Create another{" "}
+                  {lens.type === "SIMPLE_LIST" ? "Simple list" : "Life area"}{" "}
+                  first, or empty this lens before deleting it.
                 </p>
               )}
             </>

@@ -29,6 +29,7 @@
 type Entities = Record<string, any>;
 
 import { uniqueShortId } from "../shared/shortId";
+import type { Prisma } from "@prisma/client";
 
 export const FEEDBACK_STATUSES = [
   "OPEN",
@@ -40,11 +41,17 @@ export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
 
 export function isFeedbackStatus(value: unknown): value is FeedbackStatus {
   // SAFETY: narrowing readonly string array for .includes() call.
-  return typeof value === "string" && (FEEDBACK_STATUSES as readonly string[]).includes(value);
+  return (
+    typeof value === "string" &&
+    (FEEDBACK_STATUSES as readonly string[]).includes(value)
+  );
 }
 
 /** Clamp + trim an optional string field to a max length, returning null if empty. */
-function cleanOptional(value: string | null | undefined, max = 500): string | null {
+function cleanOptional(
+  value: string | null | undefined,
+  max = 500,
+): string | null {
   const trimmed = value?.trim();
   return trimmed ? trimmed.slice(0, max) : null;
 }
@@ -98,7 +105,11 @@ export async function submitFeedbackCore(
     message: string;
     route?: string | null;
     section?: string | null;
-    lens?: { id?: string | null; name?: string | null; color?: string | null } | null;
+    lens?: {
+      id?: string | null;
+      name?: string | null;
+      color?: string | null;
+    } | null;
     userAgent?: string | null;
     viewport?: string | null;
     timezone?: string | null;
@@ -193,14 +204,24 @@ async function findFeedbackByRef(
   // any dash the user typed, upper-case, map ambiguous chars (0↔O, 1↔I/L per
   // Crockford), then re-insert the dash once the prefix crosses 4 chars. So
   // "cfv" → "CFV", "cfvs" → "CFVS", "cfvsj" → "CFVS-J", "cfvs-j9aq" → "CFVS-J9AQ".
-  const dashless = trimmed.toUpperCase().replace(/-/g, "").replace(/O/g, "0").replace(/[IL]/g, "1").replace(/U/g, "V");
+  const dashless = trimmed
+    .toUpperCase()
+    .replace(/-/g, "")
+    .replace(/O/g, "0")
+    .replace(/[IL]/g, "1")
+    .replace(/U/g, "V");
   const shortPrefix =
-    dashless.length <= 4 ? dashless : `${dashless.slice(0, 4)}-${dashless.slice(4, 8)}`;
+    dashless.length <= 4
+      ? dashless
+      : `${dashless.slice(0, 4)}-${dashless.slice(4, 8)}`;
 
   return await entities.Feedback.findFirst({
     where: {
       deletedAt: null,
-      OR: [{ shortId: { startsWith: shortPrefix } }, { id: { startsWith: trimmed } }],
+      OR: [
+        { shortId: { startsWith: shortPrefix } },
+        { id: { startsWith: trimmed } },
+      ],
     },
     orderBy: { createdAt: "desc" },
     select,
@@ -210,7 +231,10 @@ async function findFeedbackByRef(
 // ----------------------------------------------------------------
 // Read: single feedback (admin triage surface)
 // ----------------------------------------------------------------
-export async function showFeedbackCore(entities: Entities, { id }: { id: string }) {
+export async function showFeedbackCore(
+  entities: Entities,
+  { id }: { id: string },
+) {
   return await findFeedbackByRef(entities, id, FEEDBACK_SELECT);
 }
 
