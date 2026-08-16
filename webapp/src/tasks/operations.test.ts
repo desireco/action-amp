@@ -1,16 +1,9 @@
 // @vitest-environment node
-// Server-op tests run in node: ops import entitlement guards that pull
-// `wasp/server` (HttpError), blocked by detectServerImports in jsdom. No DOM
-// APIs here — node is correct.
+// Server project (see vitest.config.ts): the REAL entitlement guards run —
+// no module mocking. Guard-gated task ops need an entitled user and a lens
+// the guards resolve, so every non-anonymous fixture goes through guarded().
 import { describe, it, expect, vi } from "vitest";
 
-// Stub the server-only HttpError layer so this test never loads `wasp/server`.
-vi.mock("../billing/entitlementHttp", () => ({
-  assertLensAllowed: vi.fn().mockResolvedValue(undefined),
-  assertLifeAreaLens: vi.fn().mockResolvedValue(undefined),
-  assertUnderCap: vi.fn().mockResolvedValue(undefined),
-}));
-import { assertLifeAreaLens } from "../billing/entitlementHttp";
 import {
   getTask,
   getTasks,
@@ -34,7 +27,28 @@ import {
   completeTaskFromFocus,
 } from "./operations";
 import { activePoolWhere } from "./activePool";
-import { mockContext } from "../test/mockContext";
+import { mockContext, type MockContext } from "../test/mockContext";
+
+// planRenewsAt is load-bearing: isPlanActive treats PRO with a null/past
+// renewal as FREE (the old mocked guards hid this).
+const FUTURE = new Date(Date.now() + 60_000);
+
+/** An entitled context the REAL guards admit: active PRO user + a Lens the
+ *  guards resolve as included and LIFE_AREA. */
+function guarded(): MockContext {
+  const m = mockContext({
+    id: "user-1",
+    plan: "PRO",
+    planRenewsAt: FUTURE,
+  });
+  m.entities.Lens.findFirst.mockResolvedValue({
+    id: "lens-1",
+    name: "Me",
+    isIncluded: true,
+    type: "LIFE_AREA",
+  });
+  return m;
+}
 
 /**
  * Task operations — the Phase 4 list views + focus engine.
@@ -77,7 +91,7 @@ describe("getTask", () => {
   });
 
   it("returns the task with tags and updates included", async () => {
-    const m = mockContext();
+    const m = guarded();
     const found = {
       ...BASE_TASK,
       tags: [],
@@ -118,7 +132,7 @@ describe("getFocusedTask", () => {
   });
 
   it("returns the user's one started task with its thread", async () => {
-    const m = mockContext();
+    const m = guarded();
     const found = {
       ...BASE_TASK,
       startedAt: new Date("2026-07-04T10:00:00Z"),
@@ -195,7 +209,7 @@ describe("getTasks", () => {
       { userId: "user-1", lensId: "lens-1", status: "SOMEDAY", isDone: false },
     ],
   ])("builds correct where clause: %s", async (_label, args, expectedWhere) => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([]);
 
     // SAFETY: each-table values conform to the op's actual input type.
@@ -230,12 +244,15 @@ describe("getDoneToday", () => {
     // Upcoming task finished from focus stays status=UPCOMING. The Done-today
     // section is "what I finished from today's committed list" — Upcoming
     // completions don't belong here.
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([]);
 
     await getDoneToday({ lensId: "lens-1" }, m.context);
 
-    expect(assertLifeAreaLens).toHaveBeenCalledWith(m.context, "lens-1");
+    // The real guard resolved the lens tenancy-safely before the read.
+    expect(m.entities.Lens.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "lens-1", userId: "user-1" } }),
+    );
 
     const call = m.entities.Task.findMany.mock.calls[0][0];
     expect(call.where).toMatchObject({
@@ -268,7 +285,7 @@ describe("getTodayTasks", () => {
   });
 
   it("returns tasks across accessible lenses, including the lens relation for the pill", async () => {
-    const m = mockContext();
+    const m = guarded();
     // resolveAccessibleLenses reads Lens.findMany. A FREE user (no plan on
     // the default mockContext) → only PERSONAL lenses; one is enough here.
     m.entities.Lens.findMany.mockResolvedValue([
@@ -292,7 +309,8 @@ describe("getTodayTasks", () => {
   });
 
   it("a FREE user only sees included lenses (entitlement filter)", async () => {
-    const m = mockContext();
+    // Deliberately FREE (entitled PRO would skip the filter below).
+    const m = mockContext({ id: "user-1", plan: "FREE", planRenewsAt: null });
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-personal", name: "Me", color: "emerald", isIncluded: true },
     ]);
@@ -331,7 +349,7 @@ describe("getTodayTasks", () => {
   });
 
   it("returns [] when the user has no accessible lenses yet", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Lens.findMany.mockResolvedValue([]);
 
     // SAFETY: op takes no input; Wasp passes empty object at call site.
@@ -355,7 +373,7 @@ describe("getWeekTasks", () => {
   });
 
   it("reads dated Today and Upcoming tasks across accessible lenses for this Monday–Sunday week", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-personal", name: "Me", color: "emerald", isIncluded: true },
     ]);
@@ -397,7 +415,7 @@ describe("toggleTaskDone", () => {
   });
 
   it("throws if the task belongs to another user", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: false,
       userId: "someone-else",
@@ -408,7 +426,7 @@ describe("toggleTaskDone", () => {
   });
 
   it("throws if the task doesn't exist", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue(null);
     await expect(toggleTaskDone({ id: "task-1" }, m.context)).rejects.toThrow(
       /not found/i,
@@ -416,7 +434,7 @@ describe("toggleTaskDone", () => {
   });
 
   it("marks an open task done and sets completedAt", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: false,
       userId: "user-1",
@@ -432,7 +450,7 @@ describe("toggleTaskDone", () => {
   });
 
   it("advances onboarding when the sample is completed outside Focus", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: false,
       userId: "user-1",
@@ -453,7 +471,7 @@ describe("toggleTaskDone", () => {
   });
 
   it("marks a done task open and clears completedAt", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: true,
       userId: "user-1",
@@ -471,7 +489,7 @@ describe("toggleTaskDone", () => {
   // Outcome (task-fields §C): written only when marking done, normalised to
   // null when empty, and never touched on un-completion.
   it("writes the outcome when marking done", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: false,
       userId: "user-1",
@@ -495,7 +513,7 @@ describe("toggleTaskDone", () => {
   });
 
   it("normalises a whitespace outcome to null when marking done", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: false,
       userId: "user-1",
@@ -516,7 +534,7 @@ describe("toggleTaskDone", () => {
   });
 
   it("does not touch outcome when un-completing a task", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: true,
       userId: "user-1",
@@ -548,7 +566,7 @@ describe("updateTaskStatus", () => {
   });
 
   it("throws if the task belongs to another user", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
     await expect(
       updateTaskStatus({ id: "task-1", status: "SOMEDAY" }, m.context),
@@ -560,7 +578,7 @@ describe("updateTaskStatus", () => {
     ["UPCOMING", "UPCOMING"],
     ["SOMEDAY", "SOMEDAY"],
   ] as const)("sets status to %s without a dueDate", async (_label, status) => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, status });
 
@@ -573,7 +591,7 @@ describe("updateTaskStatus", () => {
   });
 
   it("passes through a provided dueDate", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     const due = new Date("2026-06-25T09:00:00Z");
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, dueDate: due });
@@ -624,13 +642,16 @@ describe("getTopTask", () => {
   });
 
   it("returns null when there are no candidates", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([]);
 
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
     expect(result).toBeNull();
-    expect(assertLifeAreaLens).toHaveBeenCalledWith(m.context, "lens-1");
+    // The real guard resolved the lens tenancy-safely before the read.
+    expect(m.entities.Lens.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "lens-1", userId: "user-1" } }),
+    );
     expect(m.entities.Task.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",
@@ -650,7 +671,7 @@ describe("getTopTask", () => {
     // Single-source lock: getTopTask's where-clause must equal activePoolWhere
     // (the same predicate getAppData's Today badge + lens pills count). If this
     // drifts, Next and the counts disagree — the exact bug this change fixed.
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([]);
 
     await getTopTask({ lensId: "lens-1" }, m.context);
@@ -665,7 +686,7 @@ describe("getTopTask", () => {
     // authenticated userId. The hydration query must scope by BOTH so no caller
     // can hydrate another user's task. History relations attach only here, not
     // to every candidate.
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([candidate({ id: "top" })]);
     mockHydrationEcho(m);
 
@@ -699,7 +720,7 @@ describe("getTopTask", () => {
   });
 
   it("returns null when the ranked winner vanishes before hydration", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([candidate({ id: "top" })]);
     // Hydration finds nothing — the row was deleted/done between ranking and
     // hydration. The op must return null, not stale ranked data.
@@ -711,7 +732,7 @@ describe("getTopTask", () => {
   });
 
   it("ranks by priority first (IMPORTANT beats NORMAL)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([
       candidate({ id: "low", priority: "NORMAL" }),
       candidate({ id: "top", priority: "IMPORTANT" }),
@@ -724,7 +745,7 @@ describe("getTopTask", () => {
   });
 
   it("breaks priority ties by size (S beats M)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([
       candidate({ id: "big", priority: "NORMAL", size: "M" }),
       candidate({ id: "quick", priority: "NORMAL", size: "S" }),
@@ -737,7 +758,7 @@ describe("getTopTask", () => {
   });
 
   it("breaks size ties by createdAt (oldest first)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([
       candidate({ id: "newer", createdAt: new Date("2026-06-21T10:00:00Z") }),
       candidate({ id: "older", createdAt: new Date("2026-06-19T10:00:00Z") }),
@@ -750,7 +771,7 @@ describe("getTopTask", () => {
   });
 
   it("ranks a TODAY task above an equal UPCOMING task (court beats bench)", async () => {
-    const m = mockContext();
+    const m = guarded();
     // Two NORMAL/M tasks; only the status differs. The committed-Today one
     // wins — a bench task mustn't steal the slot of something on the court.
     m.entities.Task.findMany.mockResolvedValue([
@@ -778,7 +799,7 @@ describe("getTaskAlternatives", () => {
   });
 
   it("guards the lens, then draws from the shared pool minus excludeIds", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([
       candidate({ id: "top", priority: "IMPORTANT" }),
       // alt-1 older than alt-2's default createdAt → oldest-first tie-break
@@ -792,7 +813,10 @@ describe("getTaskAlternatives", () => {
       m.context,
     );
 
-    expect(assertLifeAreaLens).toHaveBeenCalledWith(m.context, "lens-1");
+    // The real guard resolved the lens tenancy-safely before the read.
+    expect(m.entities.Lens.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "lens-1", userId: "user-1" } }),
+    );
     expect(result.map((t: { id: string }) => t.id)).toEqual(["alt-1", "alt-2"]);
     // Same single-source predicate as getTopTask — alternatives and the
     // recommendation must never disagree about what's on the table.
@@ -809,8 +833,14 @@ describe("getTaskAlternatives", () => {
       where.OR[1]?.dueDate && !(where.OR[1].dueDate instanceof Date)
         ? where.OR[1].dueDate.lte
         : undefined;
-    const expectedLte = lteOf(expected as Parameters<typeof lteOf>[0]);
-    const actualLte = lteOf(call.where as Parameters<typeof lteOf>[0]);
+    type WhereView = Parameters<typeof lteOf>[0] &
+      Parameters<typeof stripTicking>[0];
+    // SAFETY: expected carries the OR-array shape lteOf/stripTicking walk.
+    const expectedView = expected as WhereView;
+    // SAFETY: same shape, recorded side.
+    const actualView = call.where as WhereView;
+    const expectedLte = lteOf(expectedView);
+    const actualLte = lteOf(actualView);
     expect(actualLte).toBeInstanceOf(Date);
     if (expectedLte && actualLte) {
       expect(
@@ -828,13 +858,11 @@ describe("getTaskAlternatives", () => {
       };
       return rest;
     };
-    expect(
-      stripTicking(call.where as Parameters<typeof stripTicking>[0]),
-    ).toEqual(stripTicking(expected as Parameters<typeof stripTicking>[0]));
+    expect(stripTicking(actualView)).toEqual(stripTicking(expectedView));
   });
 
   it("treats a missing excludeIds as no exclusion (recommendation on stage)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([candidate({ id: "top" })]);
 
     const result = await getTaskAlternatives({ lensId: "lens-1" }, m.context);
@@ -856,7 +884,7 @@ describe("unscheduleOverdueTasks", () => {
   });
 
   it("clears only past dates from incomplete Upcoming tasks in this lens", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.updateMany.mockResolvedValue({ count: 3 });
 
     const result = await unscheduleOverdueTasks(
@@ -895,7 +923,7 @@ describe("snoozeTask", () => {
   });
 
   it("throws if the task belongs to another user", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
     await expect(
       snoozeTask({ id: "task-1", preset: "1h" }, m.context),
@@ -910,7 +938,7 @@ describe("snoozeTask", () => {
   ] as const)(
     "preset %s sets status %s with a future dueDate",
     async (preset, status) => {
-      const m = mockContext();
+      const m = guarded();
       m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
       m.entities.Task.update.mockResolvedValue({
         id: "task-1",
@@ -929,7 +957,7 @@ describe("snoozeTask", () => {
   );
 
   it("preset someday sets status SOMEDAY and clears dueDate", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({
       id: "task-1",
@@ -959,7 +987,7 @@ describe("startTask", () => {
   });
 
   it("rejects a task that belongs to another user", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
     await expect(startTask({ id: "task-1" }, m.context)).rejects.toThrow(
       /not found/i,
@@ -967,7 +995,7 @@ describe("startTask", () => {
   });
 
   it("clears any prior focus and sets startedAt to now", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.updateMany.mockResolvedValue({ count: 1 });
     m.entities.Task.update.mockResolvedValue({
@@ -990,7 +1018,7 @@ describe("startTask", () => {
   });
 
   it("opens a TaskSession for the task and closes any prior open sessions", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.User.findUnique.mockResolvedValue({ focusSessionMinutes: 45 });
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.updateMany.mockResolvedValue({ count: 0 });
@@ -1022,7 +1050,7 @@ describe("startTask", () => {
 
 describe("completeFocusSession", () => {
   it("records the finished countdown without clearing task focus", async () => {
-    const m = mockContext();
+    const m = guarded();
     const startedAt = new Date(Date.now() - 25 * 60_000);
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.TaskSession.findFirst.mockResolvedValue({
@@ -1057,7 +1085,7 @@ describe("pauseTask", () => {
   });
 
   it("clears startedAt (back to Next)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({ id: "task-1", startedAt: null });
 
@@ -1072,7 +1100,7 @@ describe("pauseTask", () => {
   });
 
   it("closes the task's open TaskSession (idempotent if none)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({ id: "task-1", startedAt: null });
 
@@ -1092,7 +1120,7 @@ describe("pauseTask", () => {
 // ----------------------------------------------------------------
 describe("getTopTask — Now state ordering", () => {
   it("surfaces an in-progress task above higher-priority candidates", async () => {
-    const m = mockContext();
+    const m = guarded();
     // A LOW-priority in-progress task + an IMPORTANT not-started one.
     // Normal priority ranking would put IMPORTANT first; the in-progress
     // override must win.
@@ -1108,7 +1136,7 @@ describe("getTopTask — Now state ordering", () => {
   });
 
   it("falls back to priority ranking when nothing is in progress", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findMany.mockResolvedValue([
       candidate({ id: "normal", priority: "NORMAL", startedAt: null }),
       candidate({ id: "important", priority: "IMPORTANT", startedAt: null }),
@@ -1136,7 +1164,7 @@ describe("addTaskUpdate", () => {
   });
 
   it("rejects a task that belongs to another user", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
     await expect(
       addTaskUpdate({ taskId: "task-1", body: "hello" }, m.context),
@@ -1144,7 +1172,7 @@ describe("addTaskUpdate", () => {
   });
 
   it("rejects a whitespace-only body", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     await expect(
       addTaskUpdate({ taskId: "task-1", body: "   \n  " }, m.context),
@@ -1153,7 +1181,7 @@ describe("addTaskUpdate", () => {
   });
 
   it("creates a NOTE row, trimming the body, without mutating task fields", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.TaskUpdate.create.mockResolvedValue({ id: "tu-1" });
 
@@ -1188,7 +1216,7 @@ describe("updateTaskContent", () => {
   });
 
   it("rejects a task that belongs to another user", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
     await expect(
       updateTaskContent({ taskId: "task-1", content: "hello" }, m.context),
@@ -1196,7 +1224,7 @@ describe("updateTaskContent", () => {
   });
 
   it("trims and saves durable task content", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({
       id: "task-1",
@@ -1217,7 +1245,7 @@ describe("updateTaskContent", () => {
   });
 
   it("clears durable task content when saved as whitespace", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({ id: "task-1", content: null });
 
@@ -1246,7 +1274,7 @@ describe("setTaskOutcome", () => {
   });
 
   it("rejects a task that belongs to another user", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
     await expect(
       setTaskOutcome({ taskId: "task-1", outcome: "Shipped." }, m.context),
@@ -1254,7 +1282,7 @@ describe("setTaskOutcome", () => {
   });
 
   it("trims and saves the outcome", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({
       id: "task-1",
@@ -1275,7 +1303,7 @@ describe("setTaskOutcome", () => {
   });
 
   it("clears the outcome when saved as whitespace", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({ id: "task-1", outcome: null });
 
@@ -1304,7 +1332,7 @@ describe("updateTaskDetails", () => {
   });
 
   it("rejects a task that belongs to another user", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
     await expect(
       updateTaskDetails(
@@ -1315,7 +1343,7 @@ describe("updateTaskDetails", () => {
   });
 
   it("requires a non-empty task title", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     await expect(
       updateTaskDetails(
@@ -1326,7 +1354,7 @@ describe("updateTaskDetails", () => {
   });
 
   it("trims and saves title plus durable task content", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({
       id: "task-1",
@@ -1368,7 +1396,7 @@ describe("updateTaskDetails", () => {
   // ---- Structural-field live edits (from the chip popovers) ----
 
   it("writes priority alone when only priority is passed", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({
       id: "task-1",
@@ -1384,7 +1412,7 @@ describe("updateTaskDetails", () => {
   });
 
   it("writes size alone when only size is passed", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     await updateTaskDetails({ taskId: "task-1", size: "XL" }, m.context);
     expect(m.entities.Task.update).toHaveBeenCalledWith(
@@ -1393,7 +1421,7 @@ describe("updateTaskDetails", () => {
   });
 
   it("writes status alone when only status is passed", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     await updateTaskDetails({ taskId: "task-1", status: "TODAY" }, m.context);
     expect(m.entities.Task.update).toHaveBeenCalledWith(
@@ -1402,7 +1430,7 @@ describe("updateTaskDetails", () => {
   });
 
   it("writes dueDate alone (null clears it)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     await updateTaskDetails({ taskId: "task-1", dueDate: null }, m.context);
     expect(m.entities.Task.update).toHaveBeenCalledWith(
@@ -1411,7 +1439,7 @@ describe("updateTaskDetails", () => {
   });
 
   it("rejects a project in a different Lens", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       userId: "user-1",
       lensId: "lens-a",
@@ -1431,7 +1459,7 @@ describe("updateTaskDetails", () => {
   });
 
   it("assigning a project clears the direct goal link (one-parent rule)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       userId: "user-1",
       lensId: "lens-a",
@@ -1451,7 +1479,7 @@ describe("updateTaskDetails", () => {
   });
 
   it("rejects a goal on a task that already has a project", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       userId: "user-1",
       lensId: "lens-a",
@@ -1469,7 +1497,7 @@ describe("updateTaskDetails", () => {
 
   it("does NOT enforce title-required when description is omitted", async () => {
     // A structural-only edit (no description) must not throw on title.
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     await updateTaskDetails({ taskId: "task-1", priority: "LOW" }, m.context);
     expect(m.entities.Task.update).toHaveBeenCalled();
@@ -1489,7 +1517,7 @@ describe("completeTaskFromFocus", () => {
   });
 
   it("rejects a task that belongs to another user", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "someone-else" });
     await expect(
       completeTaskFromFocus({ taskId: "task-1" }, m.context),
@@ -1497,7 +1525,7 @@ describe("completeTaskFromFocus", () => {
   });
 
   it("rejects an unstarted task (must Start before Complete)", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: false,
       completedAt: null,
@@ -1512,7 +1540,7 @@ describe("completeTaskFromFocus", () => {
   });
 
   it("writes completion fields + exactly one COMPLETED row", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: false,
       completedAt: null,
@@ -1554,7 +1582,7 @@ describe("completeTaskFromFocus", () => {
   });
 
   it("advances a completed sample task to real capture", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: false,
       completedAt: null,
@@ -1576,7 +1604,7 @@ describe("completeTaskFromFocus", () => {
   });
 
   it("is idempotent: an already-done task returns its completion without a second event", async () => {
-    const m = mockContext();
+    const m = guarded();
     const doneAt = new Date("2026-07-04T09:41:00Z");
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: true,
@@ -1595,7 +1623,7 @@ describe("completeTaskFromFocus", () => {
   // Outcome (task-fields §C/§F): an optional outcome can ride on the same
   // completion transaction — the capture-at-completion moment.
   it("writes an optional outcome alongside the completion", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: false,
       completedAt: null,
@@ -1625,7 +1653,7 @@ describe("completeTaskFromFocus", () => {
   });
 
   it("normalises a whitespace outcome to null on completion", async () => {
-    const m = mockContext();
+    const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({
       isDone: false,
       completedAt: null,
