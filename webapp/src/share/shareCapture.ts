@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { isJsonString } from "../shared/jsonValue";
 import { createInboxItemCore } from "../inbox/operationsCore";
 import { getSessionAuth } from "../auth/sessionAuth";
 import { composeShareText, type ShareFields } from "./composeShareText";
@@ -25,17 +26,21 @@ import { composeShareText, type ShareFields } from "./composeShareText";
 type WaspApiContext = { entities: any };
 
 function respondWithRedirect(res: Response, redirect: string, json: boolean) {
-  return json ? res.status(200).json({ redirect }) : res.redirect(303, redirect);
+  return json
+    ? res.status(200).json({ redirect })
+    : res.redirect(303, redirect);
 }
 
-function extractFields(body: unknown): ShareFields {
-  if (!body || typeof body !== "object") return {};
-  // SAFETY: widening to Record for generic field access.
-  const b = body as Record<string, unknown>;
+/** The share_target form body: urlencoded strings (repeated keys can arrive
+ *  as string arrays — those drop, same as the old non-string branch). */
+type ShareFormBody = Record<string, string | string[]>;
+
+function extractFields(body: ShareFormBody | undefined): ShareFields {
+  if (!body) return {};
   return {
-    title: typeof b.title === "string" ? b.title : undefined,
-    text: typeof b.text === "string" ? b.text : undefined,
-    url: typeof b.url === "string" ? b.url : undefined,
+    title: isJsonString(body.title) ? body.title : undefined,
+    text: isJsonString(body.text) ? body.text : undefined,
+    url: isJsonString(body.url) ? body.url : undefined,
   };
 }
 
@@ -62,7 +67,11 @@ export const shareCapture = async (
       userId: auth.userId,
       text,
     });
-    return respondWithRedirect(res, `/share?id=${encodeURIComponent(created.id)}`, wantsJson);
+    return respondWithRedirect(
+      res,
+      `/share?id=${encodeURIComponent(created.id)}`,
+      wantsJson,
+    );
   } catch (err) {
     console.error("[share] capture failed:", err);
     return respondWithRedirect(res, "/share?error=server", wantsJson);
