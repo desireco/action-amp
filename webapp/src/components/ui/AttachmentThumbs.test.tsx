@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { AttachmentThumbs, AttachmentGallery } from "./AttachmentThumbs";
+import { AttachmentThumbs, AttachmentGallery, AttachmentCover } from "./AttachmentThumbs";
 import { renderInContext } from "wasp/client/test";
 
 // AttachmentThumbs — thumbnails open the in-app lightbox (not a new tab).
@@ -144,5 +144,33 @@ describe("AttachmentGallery (triage media surface)", () => {
     const dialog = screen.getByRole("dialog", { name: "Attached image" });
     expect(dialog.querySelector("img")!.getAttribute("alt")).toBe("shot-2.png");
     expect(screen.getByText("2 / 2")).toBeInTheDocument();
+  });
+});
+
+describe("AttachmentCover (inbox row preview)", () => {
+  function thumbs(n: number) {
+    return Array.from({ length: n }, (_, i) => ({
+      id: `00000000-0000-0000-0000-00000000000${i}`,
+      filename: `shot-${i + 1}.png`,
+    }));
+  }
+
+  it("shows the first image as the cover; no badge for a single image", () => {
+    const { container } = renderInContext(<AttachmentCover attachments={thumbs(1)} />);
+    expect(screen.getByAltText("shot-1.png")).toBeInTheDocument();
+    expect(container.querySelector(".aa-attach-cover__count")).toBeNull();
+  });
+
+  it("badges extra images with +N", () => {
+    renderInContext(<AttachmentCover attachments={thumbs(3)} />);
+    expect(screen.getByText("+2")).toBeInTheDocument();
+  });
+
+  it("click opens the lightbox at the first image", () => {
+    renderInContext(<AttachmentCover attachments={thumbs(3)} />);
+    fireEvent.click(screen.getByLabelText("Open image shot-1.png"));
+    const dialog = screen.getByRole("dialog", { name: "Attached image" });
+    expect(dialog.querySelector("img")!.getAttribute("alt")).toBe("shot-1.png");
+    expect(screen.getByText("1 / 3")).toBeInTheDocument();
   });
 });

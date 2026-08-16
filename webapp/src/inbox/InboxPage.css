@@ -152,8 +152,14 @@
   background: var(--aa-surface-muted);
 }
 
-.aa-inbox__row .aa-attach-thumbs {
-  margin-top: var(--aa-space-sm);
+/* Image rows: media cover on the left, the triage link (text + chips +
+   arrow) on the right — the image gets real space and still shares the row
+   with its details. */
+.aa-inbox__row--media {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--aa-space-md);
+  align-items: center;
 }
 
 .aa-inbox__row-content {

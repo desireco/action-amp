@@ -4,7 +4,7 @@ import { useQuery } from "wasp/client/operations";
 import { getInboxItems } from "wasp/client/operations";
 import type { InboxItem } from "@prisma/client";
 import {
-  AttachmentThumbs,
+  AttachmentCover,
   Chip,
   ArrowRightIcon,
   CalendarIcon,
@@ -21,8 +21,10 @@ type InboxItemWithAttachments = InboxItem & {
 /**
  * Inbox — the capture destination. Untriaged items, newest first.
  *
- * Each row shows the captured text + parsed-token chips (date/tag/priority).
- * The "Triage" button opens the Tinder-style review walkthrough.
+ * Each row shows the captured text + parsed-token chips (date/tag/priority)
+ * and, for shares, the source hostname. Items with images lead with a square
+ * media cover on the left (text/details on the right) — click it for the
+ * lightbox. The "Triage" button opens the Tinder-style review walkthrough.
  */
 
 export function InboxPage() {
@@ -124,10 +126,16 @@ export function InboxPage() {
                   key={item.id}
                   className={`aa-inbox__item${item.id === targetItemId ? " is-search-target" : ""}`}
                 >
-                  {/* The row wrapper (not the Link) owns the padding/border so
-                      the thumbnail strip can sit beside the link — the thumbs
-                      are anchors themselves and cannot nest inside it. */}
-                  <div className="aa-inbox__row">
+                  {/* The row wrapper (not the Link) owns the padding/border.
+                      Image rows put the AttachmentCover on the left and the
+                      triage link on the right (the cover is a button itself
+                      and cannot nest inside the link). */}
+                  <div
+                    className={`aa-inbox__row${item.attachments.length > 0 ? " aa-inbox__row--media" : ""}`}
+                  >
+                    {item.attachments.length > 0 && (
+                      <AttachmentCover attachments={item.attachments} />
+                    )}
                     <Link
                       to={`/do/inbox/review?i=${i}`}
                       className="aa-inbox__row-main"
@@ -140,7 +148,7 @@ export function InboxPage() {
                           </span>
                           {item.sourceUrl && (
                             <Chip variant="teal" small>
-                              Link attached
+                              ↗ {sourceHost(item.sourceUrl)}
                             </Chip>
                           )}
                         {item.parsedDate && (
@@ -185,7 +193,6 @@ export function InboxPage() {
                     </div>
                       <ArrowRightIcon className="aa-inbox__row-arrow" />
                     </Link>
-                    <AttachmentThumbs attachments={item.attachments} />
                   </div>
                 </li>
               ))}
@@ -221,4 +228,15 @@ function InboxPreview({
 
 function normalizePreview(value: string): string {
   return value.replace(/\s+/g, " ").trim();
+}
+
+/** The share's origin for the link chip — a hostname says more than
+ *  "Link attached" and stays short. Falls back to the old label for
+ *  malformed URLs (never render raw untrusted text as-is). */
+function sourceHost(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "") || "Link attached";
+  } catch {
+    return "Link attached";
+  }
 }

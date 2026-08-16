@@ -43,6 +43,55 @@
 }
 
 /* ============================================================
+   AttachmentCover — the inbox row's left-side media preview.
+   One square cover of the first image; "+N" badge when more
+   follow. Click → lightbox.
+   ============================================================ */
+.aa-attach-cover {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  padding: 0;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  overflow: hidden;
+  background: var(--aa-surface-muted);
+  cursor: zoom-in;
+  flex: none;
+}
+
+.aa-attach-cover:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-attach-cover__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.aa-attach-cover__count {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 1px 6px;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  color: #fff;
+  background: oklch(0.2 0.02 230 / 0.75);
+  border-radius: var(--aa-radius-full);
+}
+
+@media (max-width: 640px) {
+  .aa-attach-cover {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+/* ============================================================
    AttachmentGallery — the triage card's media surface. First image
    large (2–3× the old thumbs, responsive), scroll-snap carousel
    through the rest. Click any image → lightbox.

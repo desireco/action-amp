@@ -197,6 +197,60 @@ export function AttachmentGallery({
 }
 
 /**
+ * AttachmentCover — the inbox row's left-side media preview.
+ *
+ * One square cover (first image, ~2× the old thumbnail strip) so the image
+ * reads as part of the row, with a "+N" badge when more images follow.
+ * Click opens the AttachmentLightbox at the first image; ←/→ page through
+ * the rest there. `object-fit: cover` keeps the row tidy — the lightbox
+ * shows the full, uncropped image.
+ */
+export function AttachmentCover({
+  attachments,
+}: {
+  attachments: AttachmentThumb[];
+}) {
+  const [open, setOpen] = useState(false);
+  if (attachments.length === 0) return null;
+  const first = attachments[0];
+  return (
+    <>
+      <button
+        type="button"
+        className="aa-attach-cover"
+        onClick={() => setOpen(true)}
+        aria-label={`Open image ${first.filename}`}
+        aria-haspopup="dialog"
+        title={
+          attachments.length > 1
+            ? `${attachments.length} images — ${first.filename}`
+            : first.filename
+        }
+      >
+        <img
+          className="aa-attach-cover__img"
+          src={attachmentSrc(first.id)}
+          alt={first.filename}
+          loading="lazy"
+        />
+        {attachments.length > 1 && (
+          <span className="aa-attach-cover__count">
+            +{attachments.length - 1}
+          </span>
+        )}
+      </button>
+      {open && (
+        <AttachmentLightbox
+          attachments={attachments}
+          index={0}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+/**
  * AttachmentLightbox — the full-size image viewer behind a thumbnail.
  *
  * Popover-family overlay shell (INTERACTION.md §9.2/§9.5): dimmed backdrop,
