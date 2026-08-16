@@ -12,9 +12,67 @@
  * `requireAdmin`). No row-level user data beyond feedback submitter is surfaced.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Entities = Record<string, any>;
-import { getFunnelStatsCore, type FunnelRange, type FunnelStats } from "../analytics/operationsCore";
+/**
+ * The read-only Prisma-delegate slice these stats cores call (named, not a
+ * loose map). Payment/AnalyticsEvent/AnalyticsSession are optional because
+ * some Wasp op entity lists omit them — the stat degrades to 0 when absent.
+ */
+interface AdminStatsEntities {
+  User: { count(args?: { where?: Prisma.UserWhereInput }): Promise<number> };
+  Task: { count(args?: { where?: Prisma.TaskWhereInput }): Promise<number> };
+  Payment?: {
+    count(args?: { where?: Prisma.PaymentWhereInput }): Promise<number>;
+  };
+  AnalyticsEvent?: {
+    count(args?: { where?: Prisma.AnalyticsEventWhereInput }): Promise<number>;
+  };
+  AnalyticsSession?: {
+    findMany(args: {
+      where: {
+        events: {
+          some: {
+            name: "APP_OPENED";
+            occurredAt: { gte: Date };
+            userId: { not: null };
+          };
+        };
+      };
+      select: {
+        deviceClass: true;
+        events: {
+          where: {
+            name: "APP_OPENED";
+            occurredAt: { gte: Date };
+            userId: { not: null };
+          };
+          select: { userId: true; occurredAt: true };
+        };
+      };
+    }): Promise<DeviceSessionRow[]>;
+  };
+  Feedback: {
+    count(args?: { where?: Prisma.FeedbackWhereInput }): Promise<number>;
+    groupBy(args: {
+      by: ["status"];
+      where?: { deletedAt?: null };
+      _count: { _all: true };
+    }): Promise<Array<{ status: string; _count: { _all: number } }>>;
+    findMany(args: Prisma.FeedbackFindManyArgs): Promise<FeedbackRow[]>;
+  };
+}
+
+/** The slice getRecentFeedbackCore uses (its Wasp op injects Feedback only). */
+type FeedbackLookupEntities = {
+  Feedback: {
+    findMany(args: Prisma.FeedbackFindManyArgs): Promise<FeedbackRow[]>;
+  };
+};
+import {
+  getFunnelStatsCore,
+  type FunnelRange,
+  type FunnelStats,
+} from "../analytics/operationsCore";
+import type { Prisma } from "@prisma/client";
 
 export const FEEDBACK_STATUSES = [
   "OPEN",
@@ -68,7 +126,12 @@ export type AdminStats = {
   };
 };
 
-export type DeviceUserCounts = { mobile: number; tablet: number; desktop: number; unknown: number };
+export type DeviceUserCounts = {
+  mobile: number;
+  tablet: number;
+  desktop: number;
+  unknown: number;
+};
 
 /** Fields mirrored from feedback/operationsCore.ts FEEDBACK_SELECT. */
 export type FeedbackRow = {
@@ -127,8 +190,29 @@ function windows() {
   };
 }
 
-function deviceUserCounts(sessions: any[], d7: Date, d30: Date): { sevenDays: DeviceUserCounts; thirtyDays: DeviceUserCounts } {
-  const blank = (): DeviceUserCounts => ({ mobile: 0, tablet: 0, desktop: 0, unknown: 0 });
+/** AnalyticsSession rows the device-count select returns (nested APP_OPENED events). */
+interface DeviceSessionRow {
+  deviceClass: string | null;
+  events: Array<{ userId: string | null; occurredAt: Date }>;
+}
+
+/** Active-user device counts per window (7d / 30d). */
+export interface DeviceUserCountsByWindow {
+  sevenDays: DeviceUserCounts;
+  thirtyDays: DeviceUserCounts;
+}
+
+function deviceUserCounts(
+  sessions: DeviceSessionRow[],
+  d7: Date,
+  d30: Date,
+): DeviceUserCountsByWindow {
+  const blank = (): DeviceUserCounts => ({
+    mobile: 0,
+    tablet: 0,
+    desktop: 0,
+    unknown: 0,
+  });
   const seven = new Map<keyof DeviceUserCounts, Set<string>>();
   const thirty = new Map<keyof DeviceUserCounts, Set<string>>();
   for (const kind of ["mobile", "tablet", "desktop", "unknown"] as const) {
@@ -136,7 +220,12 @@ function deviceUserCounts(sessions: any[], d7: Date, d30: Date): { sevenDays: De
     thirty.set(kind, new Set());
   }
   for (const session of sessions) {
-    const kind: keyof DeviceUserCounts = session.deviceClass === "mobile" || session.deviceClass === "tablet" || session.deviceClass === "desktop" ? session.deviceClass : "unknown";
+    const kind: keyof DeviceUserCounts =
+      session.deviceClass === "mobile" ||
+      session.deviceClass === "tablet" ||
+      session.deviceClass === "desktop"
+        ? session.deviceClass
+        : "unknown";
     for (const event of session.events ?? []) {
       if (!event.userId) continue;
       const occurredAt = new Date(event.occurredAt);
@@ -153,12 +242,15 @@ function deviceUserCounts(sessions: any[], d7: Date, d30: Date): { sevenDays: De
 }
 
 export async function getAdminStatsCore(
-  entities: Entities,
+  entities: AdminStatsEntities,
   range: FunnelRange = "30d",
 ): Promise<AdminStats> {
   const { today, d7, d30 } = windows();
   const now = Date.now();
-  const sinceDate = range === "all" ? null : new Date(now - (range === "7d" ? 7 : 30) * 24 * 60 * 60 * 1000);
+  const sinceDate =
+    range === "all"
+      ? null
+      : new Date(now - (range === "7d" ? 7 : 30) * 24 * 60 * 60 * 1000);
   const selectedSince = sinceDate ? { gte: sinceDate } : undefined;
 
   const [
@@ -195,21 +287,31 @@ export async function getAdminStatsCore(
     entities.Task.count({ where: { isDone: true, completedAt: { gte: d7 } } }),
     entities.Task.count(),
     entities.User.count({ where: { createdAt: selectedSince ?? undefined } }),
-    entities.User.count({ where: { lastActiveAt: selectedSince ?? undefined } }),
+    entities.User.count({
+      where: { lastActiveAt: selectedSince ?? undefined },
+    }),
     entities.Payment?.count
-      ? entities.Payment.count({ where: { status: "SUCCEEDED", paidAt: selectedSince } })
+      ? entities.Payment.count({
+          where: { status: "SUCCEEDED", paidAt: selectedSince },
+        })
       : Promise.resolve(0),
     entities.Payment?.count
       ? entities.Payment.count({ where: { status: "SUCCEEDED" } })
       : Promise.resolve(0),
     entities.AnalyticsEvent?.count
-      ? entities.AnalyticsEvent.count({ where: { name: "CAPTURE_CREATED", occurredAt: selectedSince } })
+      ? entities.AnalyticsEvent.count({
+          where: { name: "CAPTURE_CREATED", occurredAt: selectedSince },
+        })
       : Promise.resolve(0),
     entities.AnalyticsEvent?.count
-      ? entities.AnalyticsEvent.count({ where: { name: "TRIAGE_COMPLETED", occurredAt: selectedSince } })
+      ? entities.AnalyticsEvent.count({
+          where: { name: "TRIAGE_COMPLETED", occurredAt: selectedSince },
+        })
       : Promise.resolve(0),
     entities.Task.count({ where: { createdAt: selectedSince } }),
-    entities.Task.count({ where: { isDone: true, completedAt: selectedSince } }),
+    entities.Task.count({
+      where: { isDone: true, completedAt: selectedSince },
+    }),
     // Soft-deleted feedback is excluded from both the total + the byStatus
     // breakdown — those are triage signals, and a deleted row isn't being
     // triaged anymore.
@@ -221,20 +323,41 @@ export async function getAdminStatsCore(
     }),
     entities.AnalyticsSession?.findMany
       ? entities.AnalyticsSession.findMany({
-          where: { events: { some: { name: "APP_OPENED", occurredAt: { gte: d30 }, userId: { not: null } } } },
-          select: { deviceClass: true, events: { where: { name: "APP_OPENED", occurredAt: { gte: d30 }, userId: { not: null } }, select: { userId: true, occurredAt: true } } },
+          where: {
+            events: {
+              some: {
+                name: "APP_OPENED",
+                occurredAt: { gte: d30 },
+                userId: { not: null },
+              },
+            },
+          },
+          select: {
+            deviceClass: true,
+            events: {
+              where: {
+                name: "APP_OPENED",
+                occurredAt: { gte: d30 },
+                userId: { not: null },
+              },
+              select: { userId: true, occurredAt: true },
+            },
+          },
         })
       : Promise.resolve([]),
   ]);
 
-  const byStatus: FeedbackStatusCounts = {
+  const byStatus = {
     OPEN: 0,
     IN_PROGRESS: 0,
     RESOLVED: 0,
     CLOSED: 0,
-  };
+  } satisfies FeedbackStatusCounts;
   // SAFETY: type assertion is safe — value is validated or from a trusted source.
-  for (const row of feedbackByStatusRaw as { status: FeedbackStatus; _count: { _all: number } }[]) {
+  for (const row of feedbackByStatusRaw as {
+    status: FeedbackStatus;
+    _count: { _all: number };
+  }[]) {
     if (row.status in byStatus) {
       byStatus[row.status] = row._count._all;
     }
@@ -243,11 +366,15 @@ export async function getAdminStatsCore(
   const funnel = entities.AnalyticsSession?.findMany
     ? (await getFunnelStatsCore(entities, range)).funnel
     : [];
-  const taskCompletionPct = tasksCreatedSelected > 0
-    ? Math.round((tasksCompletedSelected / tasksCreatedSelected) * 1000) / 10
-    : null;
-  const checkoutCount = funnel.find((step) => step.name === "CHECKOUT_STARTED")?.count ?? 0;
-  const paymentCount = funnel.find((step) => step.name === "PAYMENT_CONFIRMED")?.count ?? paymentsConfirmed;
+  const taskCompletionPct =
+    tasksCreatedSelected > 0
+      ? Math.round((tasksCompletedSelected / tasksCreatedSelected) * 1000) / 10
+      : null;
+  const checkoutCount =
+    funnel.find((step) => step.name === "CHECKOUT_STARTED")?.count ?? 0;
+  const paymentCount =
+    funnel.find((step) => step.name === "PAYMENT_CONFIRMED")?.count ??
+    paymentsConfirmed;
 
   return {
     range,
@@ -264,11 +391,17 @@ export async function getAdminStatsCore(
       selectedActive,
       deviceActivity: deviceUserCounts(deviceSessions ?? [], d7, d30),
     },
-    tasks: { created7d: tasksCreated7d, completed7d: tasksCompleted7d, total: tasksTotal },
+    tasks: {
+      created7d: tasksCreated7d,
+      completed7d: tasksCompleted7d,
+      total: tasksTotal,
+    },
     payments: {
       confirmed: paymentsConfirmed,
       total: paymentsTotal,
-      checkoutToPaidPct: checkoutCount ? Math.round((paymentCount / checkoutCount) * 1000) / 10 : null,
+      checkoutToPaidPct: checkoutCount
+        ? Math.round((paymentCount / checkoutCount) * 1000) / 10
+        : null,
     },
     activity: {
       captures,
@@ -289,8 +422,12 @@ export async function getAdminStatsCore(
 // current page. The core fetches limit+1 to detect hasNext, then trims.
 // limit is bounded (1–50) by the caller. Mirrors the FEEDBACK_SELECT shape.
 export async function getRecentFeedbackCore(
-  entities: Entities,
-  { afterId, limit, statuses }: { afterId?: string | null; limit: number; statuses?: FeedbackStatus[] },
+  entities: FeedbackLookupEntities,
+  {
+    afterId,
+    limit,
+    statuses,
+  }: { afterId?: string | null; limit: number; statuses?: FeedbackStatus[] },
 ): Promise<{ items: FeedbackRow[]; hasNext: boolean }> {
   const fetchLimit = limit + 1;
   // SAFETY: type assertion is safe — value is validated or from a trusted source.
@@ -306,8 +443,9 @@ export async function getRecentFeedbackCore(
     queryOpts.skip = 1;
     queryOpts.cursor = { id: afterId };
   }
-  const rows = (await entities.Feedback.findMany(queryOpts)
-  })) as FeedbackRow[];
+  // SAFETY: FEEDBACK_SELECT is checked into this module; the delegate's
+  // loose return type is narrowed to the matching row shape.
+  const rows = (await entities.Feedback.findMany(queryOpts)) as FeedbackRow[];
 
   const hasNext = rows.length > limit;
   const items = hasNext ? rows.slice(0, limit) : rows;
