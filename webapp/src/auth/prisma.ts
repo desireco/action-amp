@@ -39,6 +39,12 @@ export const authEntities = {
   TaskSession: authPrisma.taskSession,
   TaskUpdate: authPrisma.taskUpdate,
   InboxItem: authPrisma.inboxItem,
+  InboxAttachment: authPrisma.inboxAttachment,
+  // createListItemCore (CLI triage's list-item decision + the share-page
+  // direct-to-list path) creates ListItems; without this delegate the CLI
+  // route would crash on `undefined.create` at runtime.
+  ListItem: authPrisma.listItem,
+  ListItemAttachment: authPrisma.listItemAttachment,
   Project: authPrisma.project,
   Goal: authPrisma.goal,
   Tag: authPrisma.tag,

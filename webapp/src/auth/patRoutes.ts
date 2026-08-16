@@ -65,6 +65,11 @@ import {
   triageInboxItemCore,
   type TriageDecision,
 } from "../inbox/operationsCore";
+import {
+  findOwnedAttachment,
+  isAttachmentId,
+  writeAttachmentResponse,
+} from "../attachments/serveAttachment";
 import { createListItemCore } from "../simpleLists/operationsCore";
 import {
   getProjectsData,
@@ -996,6 +1001,40 @@ export const cliInboxTriage = async (
       return res.status(404).json({ error: err.message });
     }
     return res.status(500).json({ error: "Could not triage inbox item." });
+  }
+};
+
+// GET /api/cli/attachment/:id — download a captured image by attachment id
+// (the ids `inbox list --json` reports). The CLI twin of the browser's
+// /api/attachments/:id: same owner-gated lookup and response headers, PAT
+// auth instead of the session cookie. `--out` filename comes from the
+// Content-Disposition the CLI reads.
+export const cliAttachmentDownload = async (
+  req: Request,
+  res: Response,
+  _context: unknown,
+) => {
+  const user = req.patUser;
+  if (!user) {
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+  const id = req.params.id;
+  if (!isAttachmentId(id)) {
+    return res.status(404).json({ error: "Not found." });
+  }
+  try {
+    const record = await findOwnedAttachment(authEntities, {
+      id,
+      userId: user.id,
+    });
+    if (!record) {
+      return res.status(404).json({ error: "Not found." });
+    }
+    writeAttachmentResponse(res, record);
+    return;
+  } catch (err) {
+    console.error("[cli/attachment] failed:", err);
+    return res.status(500).json({ error: "Could not load the image." });
   }
 };
 

@@ -75,3 +75,43 @@ export async function request<T>(path: string, init?: ApiInit): Promise<T> {
   }
   return body;
 }
+
+/** A successful binary download: the bytes plus the response metadata. */
+export type DownloadResult = {
+  buffer: Buffer;
+  mimeType: string;
+  /** Filename from Content-Disposition, when the server sent one. */
+  filename: string | null;
+  size: number;
+};
+
+/**
+ * Binary download — like request(), but for file bytes (attachment
+ * downloads). Throws the same ApiErrors on 401/402/4xx/5xx (those responses
+ * are JSON error bodies, so they parse the same way).
+ */
+export async function download(path: string): Promise<DownloadResult> {
+  const cfg = readConfig();
+  if (!cfg) {
+    throw new ApiError(401, { error: "Not logged in. Run: actionamp login" });
+  }
+  const res = await fetch(
+    `${cfg.apiUrl.replace(/\/$/, "")}${path}`,
+    { headers: { Authorization: `Bearer ${cfg.token}` } },
+  );
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string } & Record<string, unknown>;
+    if (res.status === 401) {
+      throw new ApiError(401, { error: "Token rejected (401). Run: actionamp login" });
+    }
+    throw new ApiError(res.status, body);
+  }
+  const disposition = res.headers.get("content-disposition") ?? "";
+  const match = disposition.match(/filename="([^"]+)"/);
+  return {
+    buffer: Buffer.from(await res.arrayBuffer()),
+    mimeType: res.headers.get("content-type") ?? "application/octet-stream",
+    filename: match?.[1] ?? null,
+    size: Number(res.headers.get("content-length") ?? 0),
+  };
+}

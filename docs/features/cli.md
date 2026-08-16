@@ -37,7 +37,11 @@ server-side from the authenticated ranked + hydrated Task (`buildNowContext`); t
 client supplies no Project/Goal/why data. Verified 2026-08-10:
 `cli/src/commands/now.test.ts` (13 cases) + `cli run build` + `wasp compile`.
 - **Capture/inbox:** `capture` (NL parsing + `--title/--content/--source-url/
---file` for shared content + up to four images), `inbox (list|triage)`.
+--file` for shared content + up to four images), `inbox (list|triage)`, and
+`inbox download <attachmentId> [path]` — pulls a captured image to disk by
+attachment id (`GET /api/cli/attachment/:id`, PAT-authed, same owner gate
+as the browser's `/api/attachments/:id`) so app/mobile work can loop on
+real share payloads. `inbox list` prints each attachment's id.
 - **Tasks:** `task (show|start|pause|done|snooze|move)`.
 - **Planning:** `project (list|show|create|add-task)` (list/show carry
   resources), `goal (list|show|create)`, `resource (list|add|update|delete)`.

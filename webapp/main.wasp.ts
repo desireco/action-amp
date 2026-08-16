@@ -171,6 +171,7 @@ import {
   cliTodayDone,
   cliInboxList,
   cliInboxTriage,
+  cliAttachmentDownload,
   cliProjectList,
   cliProjectShow,
   cliProjectCreate,
@@ -745,6 +746,13 @@ export default app({
       middlewareConfigFn: patRouteMiddleware,
     }),
     api("POST", "/api/cli/inbox/triage", cliInboxTriage, {
+      entities: [],
+      auth: false,
+      middlewareConfigFn: patRouteMiddleware,
+    }),
+    // Attachment download — the ids come from `inbox list --json`. Twin of
+    // the browser's /api/attachments/:id (same owner gate + headers), PAT-authed.
+    api("GET", "/api/cli/attachment/:id", cliAttachmentDownload, {
       entities: [],
       auth: false,
       middlewareConfigFn: patRouteMiddleware,
