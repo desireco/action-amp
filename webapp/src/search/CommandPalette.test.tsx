@@ -8,17 +8,28 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // tokens the component passes through to it.
 import { CommandPalette, type CommandPaletteDeps } from "./CommandPalette";
 import type { SearchSiteResult } from "./operationsCore";
+import {
+  getCommandPaletteIndex as realGetCommandPaletteIndex,
+  searchSite as realSearchSite,
+} from "wasp/client/operations";
 
-const useQuery = vi.fn();
-const searchSite = vi.fn();
-const getCommandPaletteIndex = vi.fn();
-// SAFETY: vi.fn() fakes satisfy the ops signatures at runtime; the single
-// grouped cast covers all three (Wasp's QueryFn generics can't infer through).
-const deps = {
+// vi.fn(realOp) for the two non-generic ops: the fakes carry the REAL
+// signatures and stay identity tokens the assertions compare against; the
+// real ops never execute (the fake query runner ignores the queryFn).
+const searchSite = vi.fn(realSearchSite);
+const getCommandPaletteIndex = vi.fn(realGetCommandPaletteIndex);
+
+// useQuery is generic — vi.fn() can't carry that type — so the mock sits
+// behind a contextually-typed delegating wrapper (no assertions needed).
+const useQueryMock = vi.fn();
+const useQuery: CommandPaletteDeps["useQuery"] = (...args) =>
+  useQueryMock(...args);
+
+const deps: CommandPaletteDeps = {
   useQuery,
   searchSite,
   getCommandPaletteIndex,
-} as CommandPaletteDeps;
+};
 
 const RESULT = {
   id: "task-1",
@@ -58,7 +69,7 @@ function renderPalette(
 
 beforeEach(() => {
   vi.useFakeTimers();
-  useQuery.mockImplementation(() => ({
+  useQueryMock.mockImplementation(() => ({
     data: undefined,
     error: null,
     isFetching: false,
@@ -86,7 +97,7 @@ describe("CommandPalette", () => {
         "find and move through all your ActionAmp work from one place",
       ),
     ).toBeInTheDocument();
-    expect(useQuery.mock.calls[0][2]).toMatchObject({ enabled: false });
+    expect(useQueryMock.mock.calls[0][2]).toMatchObject({ enabled: false });
   });
 
   it("opens command mode with destinations and runs selected command on Enter", () => {
@@ -127,7 +138,7 @@ describe("CommandPalette", () => {
   });
 
   it("debounces search, renders grouped results, and opens the selected destination", () => {
-    useQuery.mockImplementation((operation) => ({
+    useQueryMock.mockImplementation((operation) => ({
       data:
         operation === searchSite
           ? { query: "renewal", results: [RESULT], truncated: false }
@@ -157,14 +168,16 @@ describe("CommandPalette", () => {
     expect(
       screen.getByText("Type one more character to search."),
     ).toBeInTheDocument();
-    expect(useQuery.mock.calls.at(-1)?.[2]).toMatchObject({ enabled: false });
+    expect(useQueryMock.mock.calls.at(-1)?.[2]).toMatchObject({
+      enabled: false,
+    });
   });
 
   it("keeps one-character local command matching usable without server search", () => {
     renderPalette({ mode: "command" });
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "t" } });
     expect(screen.getByRole("option", { name: /Today/ })).toBeInTheDocument();
-    expect(useQuery.mock.calls[0][2]).toMatchObject({ enabled: false });
+    expect(useQueryMock.mock.calls[0][2]).toMatchObject({ enabled: false });
   });
 
   it("closes on Escape", () => {
@@ -180,7 +193,7 @@ describe("CommandPalette", () => {
   });
 
   it("uses Fuse typo matching while server search is unavailable", () => {
-    useQuery.mockImplementation((operation) =>
+    useQueryMock.mockImplementation((operation) =>
       operation === getCommandPaletteIndex
         ? {
             data: {
@@ -213,7 +226,7 @@ describe("CommandPalette", () => {
   });
 
   it("switches a Lens from the compact index by pointer", () => {
-    useQuery.mockImplementation((operation) =>
+    useQueryMock.mockImplementation((operation) =>
       operation === getCommandPaletteIndex
         ? {
             data: {
@@ -242,7 +255,7 @@ describe("CommandPalette", () => {
   });
 
   it("renders loading, empty, error, and truthful truncation states", () => {
-    useQuery.mockImplementation((operation) =>
+    useQueryMock.mockImplementation((operation) =>
       operation === searchSite
         ? { data: undefined, error: null, isFetching: true }
         : { data: undefined, error: null, isFetching: false },
@@ -254,7 +267,7 @@ describe("CommandPalette", () => {
     act(() => vi.advanceTimersByTime(201));
     expect(screen.getByText("Searching…")).toBeInTheDocument();
 
-    useQuery.mockImplementation((operation) =>
+    useQueryMock.mockImplementation((operation) =>
       operation === searchSite
         ? {
             data: { query: "renewal", results: [], truncated: false },
@@ -270,7 +283,7 @@ describe("CommandPalette", () => {
     );
     expect(screen.getByText(/No matches/)).toBeInTheDocument();
 
-    useQuery.mockImplementation((operation) =>
+    useQueryMock.mockImplementation((operation) =>
       operation === searchSite
         ? { data: undefined, error: new Error("nope"), isFetching: false }
         : { data: undefined, error: null, isFetching: false },
@@ -284,7 +297,7 @@ describe("CommandPalette", () => {
       screen.getByText("Search unavailable. Try again."),
     ).toBeInTheDocument();
 
-    useQuery.mockImplementation((operation) =>
+    useQueryMock.mockImplementation((operation) =>
       operation === searchSite
         ? {
             data: { query: "renewal", results: [RESULT], truncated: true },
@@ -314,7 +327,7 @@ describe("CommandPalette", () => {
   });
 
   it("ignores a stale server response after the query changes", () => {
-    useQuery.mockImplementation((operation) => ({
+    useQueryMock.mockImplementation((operation) => ({
       data:
         operation === searchSite
           ? { query: "renewal", results: [RESULT], truncated: false }
@@ -356,7 +369,7 @@ describe("CommandPalette", () => {
       message: "No matches for “renewal”.",
     },
   ])("renders the $state async state", ({ response, message }) => {
-    useQuery.mockImplementation((operation) =>
+    useQueryMock.mockImplementation((operation) =>
       operation === searchSite
         ? response
         : { data: { items: [] }, error: null, isFetching: false },
@@ -372,7 +385,7 @@ describe("CommandPalette", () => {
   it("keeps selection attached to a stable id while results reorder", () => {
     const second = { ...RESULT, id: "task-2", title: "Renewal quote" };
     let results = [RESULT, second];
-    useQuery.mockImplementation((operation) => ({
+    useQueryMock.mockImplementation((operation) => ({
       data:
         operation === searchSite
           ? { query: "renewal", results, truncated: false }
@@ -426,7 +439,7 @@ describe("CommandPalette", () => {
 
   it("keeps selection by stable id when server results merge in", () => {
     let serverResults: (typeof RESULT)[] = [];
-    useQuery.mockImplementation((operation) =>
+    useQueryMock.mockImplementation((operation) =>
       operation === getCommandPaletteIndex
         ? {
             data: {
@@ -500,7 +513,7 @@ describe("CommandPalette", () => {
       href,
       state: archived ? "archived" : kind === "inbox" ? "inbox" : "active",
     } as SearchSiteResult;
-    useQuery.mockImplementation((operation) => ({
+    useQueryMock.mockImplementation((operation) => ({
       data:
         operation === searchSite
           ? { query: "record", results: [result], truncated: false }
