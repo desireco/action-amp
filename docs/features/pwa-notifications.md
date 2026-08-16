@@ -71,7 +71,10 @@ review screen before anything is saved.
 **iOS gap.** `share_target` is Android/Chrome only. iOS Safari ignores the
 manifest block — the feature simply doesn't appear in the iOS share sheet.
 iOS requires a native Share Extension (a post-PMF native-shell concern; see
-`docs/ROADMAP.md` Icebox). iOS users continue to use `⌘K` / paste capture.
+`docs/ROADMAP.md` Icebox). iOS users continue to use `⌘K` capture — which
+accepts pasted (`⌘V`) and dropped images (2026-08-16, see
+`docs/features/capture.md`), so screenshots still reach the Inbox with
+attachments.
 
 **Spec + plan.** `docs/superpowers/specs/2026-07-25-pwa-share-target-design.md`
 + `docs/superpowers/plans/2026-07-25-pwa-share-target.md`.

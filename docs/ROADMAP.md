@@ -377,6 +377,17 @@ normal release verification and publish path.
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **capture-image-intake** (`shipped` 2026-08-16) — `⌘K` capture accepts
+  images: paste (`⌘V`) into the input, or drop a file on the open popover
+  (the whole overlay is the target) or on the Capture FAB, which opens the
+  popover with the files preloaded. Client-side mirror of
+  `prepareImageAttachments` (four images, ≤5 MB each, `image/*` only, same
+  error copy) rejects bad files before submit; the op re-validates. Saves
+  through `createInboxItem`'s `attachments` — the identical InboxItem path
+  the Android share target and `actionamp capture --file` use; image-only
+  captures fall back to the first filename as display text. Extends
+  `share-target-images-and-structured-capture`; no server changes. (No spec —
+  client glue over an existing pipeline.)
 - **observability-minimal + growth analytics** (`shipped` 2026-08-03;
   StatCounter confirmed working 2026-08-11) — StatCounter runs on the
   production marketing site and app with anonymous landing, signup, first-app-

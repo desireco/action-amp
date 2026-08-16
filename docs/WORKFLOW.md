@@ -76,6 +76,9 @@ the previous Lens. Projects never move into a Simple-list Lens.
   Lens on triage's Classify step. A Simple-list Lens produces a List Item;
   a matched Project supplies its Life-area Project + Lens destination. Capture
   is about speed (target: thought → inbox in under 2 seconds).
+- Images ride along (2026-08-16): paste (`⌘V`) or drop — on the popover or the
+  Capture button — attaches up to four images (≤5 MB each) to the item; they
+  move with it through triage (§2.2). An image alone is a valid capture.
 
 ### 2.2 Triage — the transfer
 

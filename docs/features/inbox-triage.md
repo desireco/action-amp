@@ -21,7 +21,8 @@ verified: 2026-07-04
   Project/Goal). Ready is gated until lens + filing target set.
 
 **Image attachments are viewable** (2026-08-16). Items captured with images
-(Android share target) show their thumbnails inline — on the inbox row and on
+(Android share target, ⌘K paste/drop, or the CLI) show their thumbnails
+inline — on the inbox row and on
 the triage card while deciding; click opens the full image. Served by
 `GET /api/attachments/:id` (`attachments/serveAttachment.ts`), the only
 reader of the attachment `data` blobs (InboxAttachment + ListItemAttachment,
