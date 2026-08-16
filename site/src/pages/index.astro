@@ -22,12 +22,12 @@ const HERO_TASKS = [
   { title: "Review pull request #284", why: "Why this: due today and fits your time", meta: "30 min estimate · Due today" },
   { title: "Prep notes for 1:1 with Marco", why: "Why this: a quick task you can finish now", meta: "10 min estimate · Tomorrow" },
   { title: "Reply to legal re: contract", why: "Why this: important and overdue", meta: "20 min estimate · Due yesterday" },
-  { title: "Draft the Q3 launch plan", why: "Why this: important—start with one next step", meta: "45 min estimate · This week" },
+  { title: "Draft the Q3 launch plan", why: "Why this: important: start with one next step", meta: "45 min estimate · This week" },
 ];
 
 const FAQ_ITEMS = [
   { q: "Is this just another todo app?", a: 'No. The list is demoted. "What do I do next?" is the home screen. ActionAmp optimizes the decision, not the capture.' },
-  { q: "Do I need to know GTD?", a: "No. The methodology is there if you want it, invisible if you don't. Most users just capture, triage, and do." },
+  { q: "Do I need to know GTD?", a: "No. The methodology is there if you want it, invisible if you don't. Most users capture, triage, and do." },
   { q: "Is ActionAmp available now?", a: "Yes. ActionAmp is live in early access. Start free today." },
 ];
 ---
@@ -42,11 +42,11 @@ const FAQ_ITEMS = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0EA5E9" />
     <title>ActionAmp — One task. The next one that matters.</title>
-    <meta name="description" content="Every other app opens to your list. ActionAmp opens to the one task that matters next — an attention engine, not a todo app." />
+    <meta name="description" content="Almost every app opens to your list. ActionAmp opens to the one task that matters next." />
     <link rel="canonical" href="https://actionamp.com/" />
     <link rel="alternate" type="application/rss+xml" title="ActionAmp — Blog" href="/rss.xml" />
     <meta property="og:title" content="ActionAmp — One task. The next one that matters." />
-    <meta property="og:description" content="Every other app opens to your list. ActionAmp opens to the one task that matters next — an attention engine, not a todo app." />
+    <meta property="og:description" content="Almost every app opens to your list. ActionAmp opens to the one task that matters next." />
     <meta property="og:url" content="https://actionamp.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ActionAmp" />
@@ -157,13 +157,13 @@ const FAQ_ITEMS = [
           <span class="aa-light">Your app should</span> support your focus.
         </h2>
         <p class="aa-lede">
-          Most apps optimize <b>capture</b>, writing things down. None optimize
+          Most apps optimize <b>capture</b>, writing things down. Few optimize
           the <b>decision</b>: of all this, what do I do right now?
         </p>
         <p class="aa-lede">
           The list grows faster than you can work it. You don't fail to capture.
           You fail to <b>pick</b>. A list that doesn't help you pick isn't
-          helping you focus, it's just nagging.
+          helping you focus, it's nagging.
         </p>
         <p class="aa-lede aa-lede-punch">
           So we made something that does the picking for you.
@@ -209,9 +209,9 @@ const FAQ_ITEMS = [
           Open. One task. <b>Done.</b>
         </h2>
         <p class="aa-soul-sub">
-          Every other app opens to your full todo list. ActionAmp opens to one
+          Almost every app opens to your full todo list. ActionAmp opens to one
           task, the next thing that matters, and hides the rest. You can always
-          see it. You just don't have to.
+          see it. You don't have to.
         </p>
       </section>
 
@@ -261,7 +261,7 @@ const FAQ_ITEMS = [
         <p class="aa-lede">
           If you know <b>Getting Things Done</b>, you're home: inbox, triage,
           projects, someday. If you don't, none of that matters, the app still
-          just works.
+          works.
         </p>
         <p class="aa-lede">
           We also borrowed from <b>PARA</b>, with one deliberate change: we took
@@ -280,7 +280,7 @@ const FAQ_ITEMS = [
 
       <section class="aa-section aa-faq-section" id="faq">
         <div class="aa-eyebrow">FAQ</div>
-        <h2 class="aa-display aa-display-sm">Answers to Your Burning Questions.</h2>
+        <h2 class="aa-display aa-display-sm">Questions people ask.</h2>
         <div class="aa-faq-list">
           {FAQ_ITEMS.map((item, index) => (
             <div class="aa-faq-item">

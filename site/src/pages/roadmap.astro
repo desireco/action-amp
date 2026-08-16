@@ -15,20 +15,20 @@ const shipped = [
   { date: "Aug 16", trunk: "Capture image intake", summary: "Paste or drop images into the capture popover (⌘V or drag-and-drop). Inbox rows show a media cover for captured images. The triage card displays images large with a swipe carousel, and clicking opens a lightbox. The CLI can download inbox images to disk." },
   { date: "Aug 15", trunk: "This Week + project lifecycle", summary: "A Monday–Sunday Week view with weekday scheduling and Someday auto-promote. Projects gained completed and archived collapsible sections, a move-between-Lenses action, and an overflow menu for lifecycle controls. Shared captures can route directly to projects and lists." },
   { date: "Aug 14", trunk: "Welcome experience", summary: "A calm fade-in veil between login and the app. All routes moved from /app to /do, with legacy redirects preserved. The context line now reads 'Next in <lens>'." },
-  { date: "Aug 11", trunk: "Guided first-run + Goal rationale + admin tools", summary: "New users get a staged onboarding loop with a practice task and a skip option. The Next card and Focus mode now explain why a task was chosen — including its Goal context. Admin gained a user directory with device tiles and deletion safeguards. Yearly Pro now includes a goal-setting workshop." },
+  { date: "Aug 11", trunk: "Guided first-run + Goal rationale + admin tools", summary: "New users get a staged onboarding loop with a practice task and a skip option. The Next card and Focus mode now explain why a task was chosen, including its Goal context. Admin gained a user directory with device tiles and deletion safeguards. Yearly Pro now includes a goal-setting workshop." },
   { date: "Aug 10", trunk: "Simple-list Lenses", summary: "A second Lens behavior for flat checklists like shopping lists. Items can be added directly or arrive through capture and inbox triage, without the full project/goal machinery. Pro-only custom creation; empty Lenses can convert between types." },
   { date: "Aug 8", trunk: "Command palette + Review rhythms + Focus sessions", summary: "A sitewide search (/) and command palette (⌘\\) for quick navigation and actions. Review gained distinct Today, Week, and Month cadences with check-in prompts and per-Lens completion counts. Focus sessions are now recorded with a configurable timer and margin clock." },
   { date: "Aug 3", trunk: "Pro CLI + marketing site polish", summary: "CLI and API access restricted to Pro accounts. The marketing site gained a guide library, share images, a sitemap, pricing comparison, founding-member improvements, and dozens of mobile and accessibility fixes." },
   { date: "Aug 3", trunk: "Analytics + observability", summary: "StatCounter now measures the anonymous landing → signup → first app open → checkout path, while a first-party event ledger powers the admin Funnel for acquisition, activation, payment conversion, and D1/D7 retention. Local development traffic is excluded." },
-  { date: "Jul 29", trunk: "CLI: resources + shared capture", summary: "The terminal client gained project resource management (list, add, update, delete) and the capture command now accepts a shared page's title, body, source link, and one image attachment — mirroring the Android share target. Resources are full CRUD from the CLI, closing the last deferred CLI spec." },
-  { date: "Jul 28", trunk: "Project resources", summary: "The Resource entity is real: links and notes filed under a project, with add, edit, and remove on the project page. Ownership is project-only — the over-engineered 'project or goal' dual-parent was dropped, so the invariant is enforced by the database." },
+  { date: "Jul 29", trunk: "CLI: resources + shared capture", summary: "The terminal client gained project resource management (list, add, update, delete) and the capture command now accepts a shared page's title, body, source link, and one image attachment, mirroring the Android share target. Resources are full CRUD from the CLI, closing the last deferred CLI spec." },
+  { date: "Jul 28", trunk: "Project resources", summary: "The Resource entity is real: links and notes filed under a project, with add, edit, and remove on the project page. Ownership is project-only: the over-engineered 'project or goal' dual-parent was dropped, so the invariant is enforced by the database." },
   { date: "Jul 28", trunk: "Share target: images + structured capture", summary: "The Android share target now separates a shared page's title, body, source link, and image before saving. One image (up to 5 MB) can be attached; the review page shows parsed chips so nothing reaches the inbox until you confirm." },
-  { date: "Jul 28", trunk: "Magic-link sign-in", summary: "Passwordless email sign-in replaces passwords. Enter your address and get a six-digit code or a sign-in link — either creates a normal session. The challenge is rate-limited, time-boxed, and consumed atomically; a failed delivery leaves no usable credential behind." },
-  { date: "Jul 28", trunk: "Task outcome field", summary: "Tasks gained an Outcome field — what happened, captured at completion — alongside the existing Context field. Both are optional markdown and invisible when empty; a one-line task stays a one-line task." },
+  { date: "Jul 28", trunk: "Magic-link sign-in", summary: "Passwordless email sign-in replaces passwords. Enter your address and get a six-digit code or a sign-in link; either creates a normal session. The challenge is rate-limited, time-boxed, and consumed atomically; a failed delivery leaves no usable credential behind." },
+  { date: "Jul 28", trunk: "Task outcome field", summary: "Tasks gained an Outcome field (what happened, captured at completion) alongside the existing Context field. Both are optional markdown and invisible when empty; a one-line task stays a one-line task." },
   { date: "Jul 26", trunk: "Won't-do state + CLI lenses", summary: "Tasks gained a fourth status, WONT_DO: the non-destructive decline for a task you considered and chose not to do. It drops out of every active list and surfaces in the Logbook with a Restore, so a 'no' is a recorded decision, not a deletion. The CLI also gained lens management (list, show, switch, current)." },
-  { date: "Jul 23", trunk: "Admin dashboard + feedback triage", summary: "First in-app admin surface — a stats-first page at Settings → Admin showing global user, task, and feedback counts across today / 7-day / 30-day windows, with an inline feedback-status triage list. Activity tracking (when users signed up, when they were last active) wired through the core loop. A separate admin terminal client (actionamp-admin) gets `stats` and `feedback` commands backed by the same pure cores. The in-app feedback button now feeds a real Feedback model with human-addressable short IDs (XXXX-XXXX) and a triage workflow (open → in-progress → resolved → closed)." },
-  { date: "Jul 22", trunk: "ActionAmp CLI — terminal client", summary: "A standalone terminal client for ActionAmp. OAuth browser login (no copy-paste tokens), 11 commands covering the full decision loop — now, task (start/pause/done/snooze/move), today, capture, inbox, project, goal, logbook — each with --json output for agents. The CLI talks to new /api/cli/* routes backed by pure op cores shared with the web app (zero duplicated logic). Plus 'actionamp llm' prints agent instructions." },
-  { date: "Jul 21", trunk: "Installable PWA + resilient sessions", summary: "ActionAmp is now a real installable PWA — standalone display, maskable icons, and long-press app-icon shortcuts (Capture, Next, Today) on Chromium Android. A sliding 30-day session cookie rides alongside the existing token so iOS/Brave PWA users no longer get logged out by WebKit's 7-day storage cap or Brave's clear-on-exit." },
+  { date: "Jul 23", trunk: "Admin dashboard + feedback triage", summary: "First in-app admin surface: a stats-first page at Settings → Admin showing global user, task, and feedback counts across today / 7-day / 30-day windows, with an inline feedback-status triage list. Activity tracking (when users signed up, when they were last active) wired through the core loop. A separate admin terminal client (actionamp-admin) gets `stats` and `feedback` commands backed by the same pure cores. The in-app feedback button now feeds a real Feedback model with human-addressable short IDs (XXXX-XXXX) and a triage workflow (open → in-progress → resolved → closed)." },
+  { date: "Jul 22", trunk: "ActionAmp CLI — terminal client", summary: "A standalone terminal client for ActionAmp. OAuth browser login (no copy-paste tokens), 11 commands covering the full decision loop (now, task (start/pause/done/snooze/move), today, capture, inbox, project, goal, logbook), each with --json output for agents. The CLI talks to new /api/cli/* routes backed by pure op cores shared with the web app (zero duplicated logic). Plus 'actionamp llm' prints agent instructions." },
+  { date: "Jul 21", trunk: "Installable PWA + resilient sessions", summary: "ActionAmp is now a real installable PWA: standalone display, maskable icons, and long-press app-icon shortcuts (Capture, Next, Today) on Chromium Android. A sliding 30-day session cookie rides alongside the existing token so iOS/Brave PWA users no longer get logged out by WebKit's 7-day storage cap or Brave's clear-on-exit." },
   { date: "Jul 21", trunk: "Daily Today reminder + version surfacing", summary: "Web Push reminder at a chosen local time, per-device subscriptions, a per-minute PgBoss job that sends at most once per user per day. App version (git SHA) now shows in Settings and the login footer, and a calm banner prompts you to refresh when a new build is deployed." },
   { date: "Jul 20", trunk: "Founding 100 price correction + public footer", summary: "Founding 100 price was advertised as $139 in several surfaces; corrected to $99 everywhere to match live checkout. Public page footer went full-bleed and in-app legal links repointed to the marketing apex." },
   { date: "Jul 16", trunk: "Deps, email transport, billing boot guard", summary: "nodemailer bumped through 6→7→9 with an audit fix; unused @react-email/ui dropped. Billing server no longer crashes on boot when STRIPE_SECRET_KEY is absent. Semver-safe bumps across the webapp." },
@@ -36,7 +36,7 @@ const shipped = [
   { date: "Jul 15", trunk: "E2E suite rebuild + dev worktrees", summary: "The Playwright suite was rebuilt around cross-layer invariants (trimmed 60→18, repaired against the refactored triage/planning UI). A general-purpose dev-worktree tool landed for parallel feature development with teardown and sync helpers." },
   { date: "Jul 10", trunk: "Planning surfaces unified", summary: "A design pass aligned Today, Upcoming, Logbook, and Someday to a shared surface scale and empty-state treatment. Inbox and triage preparation were refined, overdue tasks gained an unschedule recovery, and task edits now return to their originating view." },
   { date: "Jul 9", trunk: "Focus mobile + breadcrumb navigation", summary: "Focus mode went genuinely mobile: hold-to-complete, an action bar with Pause and Not-now, and pause-on-exit. Breadcrumbs were wired into every detail page through a route model, and Settings became reachable on mobile." },
-  { date: "Jul 9", trunk: "Brand identity + production billing", summary: "A canonical brand kit — Attention Engine — was applied across the landing hero, Founding 100 page, and About, with a solid token-teal favicon and logo. Stripe production billing was verified end-to-end: a webhook gap was found and fixed, and live checkout confirmed." },
+  { date: "Jul 9", trunk: "Brand identity + production billing", summary: "A canonical brand kit, Attention Engine, was applied across the landing hero, Founding 100 page, and About, with a solid token-teal favicon and logo. Stripe production billing was verified end-to-end: a webhook gap was found and fixed, and live checkout confirmed." },
   { date: "Jul 8", trunk: "Blog, social meta, transactional email", summary: "A two-lane blog with a rotating featured zone and inline line illustrations for the three core essays, plus per-post Open Graph image and Twitter/LinkedIn cards. Transactional emails migrated to react-email and moved to the Resend HTTP API after Railway proved unable to reach SMTP." },
   { date: "Jul 6", trunk: "Astro marketing site", summary: "Landing, roadmap, about, privacy, and terms ported to a standalone Astro site on Cloudflare Pages, split out of the Wasp app. A public Founding 100 status endpoint, landing teaser, and llms.txt replaced the old in-app marketing routes." },
   { date: "Jul 5", trunk: "Focus redesign + task page", summary: "The focus screen rebuilt around a margin clock (live session, running total), summoned composer, and confirm-on-complete. Task permalinks and full-field chip editing landed, with a shared property-chips editor across triage and the task page." },
@@ -47,7 +47,7 @@ const shipped = [
   { date: "Jul 3", trunk: "Entitlements + custom lenses", summary: "Free-tier caps enforced server-side and surfaced as calm Pro moments. Lenses became first-class: kinds, identity colors, Pro CRUD, adaptive switcher." },
   { date: "Jun 30", trunk: "Capture polish + lens theming", summary: "Rapid-fire capture with token parsing, per-lens identity color across the shell, mobile thumb-zone dock, in-app feedback, and signup CTAs on the landing page." },
   { date: "Jun 27", trunk: "First-run, auth, friction cleanup", summary: "Onboarding routes new users to a magic moment; OAuth-ready legal pages; the real 'why this?' line under Next; Someday promote, Goal detail, Today's Done section." },
-  { date: "Jun 25", trunk: "Project detail + triage wizard", summary: "A project page to work its tasks inline. Triage became a co-author wizard with lossless Archive — nothing is ever silently deleted." },
+  { date: "Jun 25", trunk: "Project detail + triage wizard", summary: "A project page to work its tasks inline. Triage became a co-author wizard with lossless Archive; nothing is ever silently deleted." },
   { date: "Jun 22", trunk: "Founding 100 + test suite", summary: "Capped lifetime tier with live Stripe checkout and a real spots-remaining count. Vitest + Playwright stood up; the suite went green and stayed green." },
   { date: "Jun 16", trunk: "Foundation", summary: "Design system, the full core loop (capture → triage → Next → Today → Logbook), deploy to Railway on a custom domain, and the polished landing page." },
 ];
@@ -55,7 +55,7 @@ const shipped = [
 
 <PublicLayout
   title="Roadmap — ActionAmp"
-  description="What we're building, what shipped, where we're headed. A living record of how ActionAmp is growing — one shipped step at a time."
+  description="What we're building, what shipped, where we're headed. A living record of how ActionAmp is growing, one shipped step at a time."
   fullWidth
 >
   <div class="aa-roadmap">
@@ -63,7 +63,7 @@ const shipped = [
     <header class="aa-roadmap-hero">
       <h1>Building in the open</h1>
       <p class="aa-roadmap-lede">
-        ActionAmp didn't arrive finished. It's shipping every week — new
+        ActionAmp didn't arrive finished. It's shipping every week: new
         surfaces, fixes, and ideas, in the open. This is the record of how it's
         growing up.
       </p>
@@ -138,7 +138,7 @@ const shipped = [
               <span class="aa-roadmap-dot aa-roadmap-dot--done" />
               <span>
                 <span class="aa-roadmap-item-name">Capture media pipeline</span><br />
-                <span class="aa-roadmap-item-note">Image paste/drop into capture, inbox media covers, triage gallery with carousel, and lightbox — all shipped.</span>
+                <span class="aa-roadmap-item-note">Image paste/drop into capture, inbox media covers, triage gallery with carousel, and lightbox, all shipped.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">
@@ -214,14 +214,14 @@ const shipped = [
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
               <span>
                 <span class="aa-roadmap-item-name">Habits and recurring activities</span><br />
-                <span class="aa-roadmap-item-note">Daily, weekly, and custom routines that appear when relevant and roll forward after completion — without streaks, guilt, or a pile of duplicate tasks.</span>
+                <span class="aa-roadmap-item-note">Daily, weekly, and custom routines that appear when relevant and roll forward after completion, without streaks, guilt, or a pile of duplicate tasks.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
               <span>
                 <span class="aa-roadmap-item-name">Reflection on completed work</span><br />
-                <span class="aa-roadmap-item-note">Help users look back at what they finished — what worked, what they learned. Thoughtful review, not streaks or guilt.</span>
+                <span class="aa-roadmap-item-note">Help users look back at what they finished: what worked, what they learned. Thoughtful review, not streaks or guilt.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">

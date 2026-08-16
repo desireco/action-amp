@@ -12,7 +12,7 @@ featuredAs: take
 
 ActionAmp is being built in the open, and we wanted a way to make that real for the people who show up at the start.
 
-Founding 100 is a one-time tier — **$99, lifetime Pro** — for the first hundred people who claim a spot. When the hundred are gone, the tier retires for good. No countdown timer, no fake scarcity. Just a fixed number, in public, that goes down as people claim it.
+Founding 100 is a one-time tier: **$99, lifetime Pro**, for the first hundred people who claim a spot. When the hundred are gone, the tier retires for good. No countdown timer, no fake scarcity. Just a fixed number, in public, that goes down as people claim it.
 
 ## What lifetime Pro means
 
@@ -20,9 +20,9 @@ Everything in Pro, for as long as ActionAmp exists, for the one-time price. No r
 
 ## Why capped at 100
 
-Because it has to be capped to mean something. An unlimited "founding tier" that runs forever is just a discount in a founding-themed hat. A fixed number, retired when claimed, is a real thing — it says this window closes, and the people in it are identifiable.
+Because it has to be capped to mean something. An unlimited "founding tier" that runs forever is a discount in a founding-themed hat. A fixed number, retired when claimed, is a real thing: it says this window closes, and the people in it are identifiable.
 
-100 is also small enough that we can mean it when we say we'll listen. Founding members get a direct line — feedback that actually reaches the people building, not a ticket queue. That's the real thing being offered: a small, early cohort whose input shapes the product.
+100 is also small enough that we can mean it when we say we'll listen. Founding members get a direct line: feedback that reaches the people building, not a ticket queue. That's the real thing being offered: a small, early cohort whose input shapes the product.
 
 ## How to claim
 

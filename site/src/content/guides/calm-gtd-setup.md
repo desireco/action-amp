@@ -1,6 +1,6 @@
 ---
 title: "A calm GTD setup in 15 minutes"
-description: "Set up capture, triage, one goal, one project, and one task—without a complex system."
+description: "Set up capture, triage, one goal, one project, and one task, without a complex system."
 pubDate: 2026-08-03
 group: setup
 order: 1

@@ -1,6 +1,6 @@
 ---
 title: "Why the list is the problem, not the answer"
-description: "Every todo app optimizes capture. None optimize the decision. The list grows faster than you can work it, and the app that promised to help becomes the thing you avoid."
+description: "Most todo apps optimize capture. Few optimize the decision. The list grows faster than you can work it, and the app that promised to help becomes the thing you avoid."
 pubDate: 2026-07-05
 kind: essay
 tags: [Focus]
@@ -9,7 +9,7 @@ featured: true
 featuredAs: hero
 ---
 
-Every todo app ever made has the same shape. A capture box. A list. A checkbox.
+Almost every todo app ever made has the same shape. A capture box. A list. A checkbox.
 
 The implied promise: write things down and the overwhelm will recede. It doesn't. Three weeks in, the list is longer than the day, the week is already lost, and the app that was supposed to help has become the thing you avoid opening. You haven't failed the app. The app has failed the actual problem.
 
@@ -59,7 +59,7 @@ If the decision is the cost, then the surface that presents the decision is wher
 
 The home screen should be a **chooser**, not a list.
 
-Not because the list is wrong — the list is the right place to *store* everything. But the home screen isn't storage. It's the moment you decided to sit down and do something, and in that moment the full list is the enemy of picking. Show me one thing. The next thing that matters. Hide the rest. I can always see it. I just don't have to.
+Not because the list is wrong — the list is the right place to *store* everything. But the home screen isn't storage. It's the moment you decided to sit down and do something, and in that moment the full list is the enemy of picking. Show me one thing. The next thing that matters. Hide the rest. I can always see it. I don't have to.
 
 This sounds reductive until you watch someone use it. The anxiety drops. Not because the work went away — it's all still there, in the project view, in the inbox, in someday. But the home screen stopped pretending I could hold ninety things in mind at once. It handed me one and trusted me to do it.
 
@@ -69,7 +69,7 @@ There's a reason most apps don't do this. It requires the app to have an opinion
 
 That's the actual engineering. Not the list. Not the capture. The decision surface, and the trust it has to earn.
 
-Most apps stop at the list because the list is safe. It doesn't commit. It just reflects, and reflection is cheap. The work ActionAmp does is in the space between your full inventory and the one thing on the screen — the triage, the priority, the lens scoping that collapses a hundred options to a single recommendation without you having to replay the comparison each time.
+Most apps stop at the list because the list is safe. It doesn't commit. It reflects, and reflection is cheap. The work ActionAmp does is in the space between your full inventory and the one thing on the screen — the triage, the priority, the lens scoping that collapses a hundred options to a single recommendation without you having to replay the comparison each time.
 
 ## The test
 

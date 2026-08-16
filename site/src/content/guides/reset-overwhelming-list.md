@@ -1,11 +1,11 @@
 ---
 title: "How to reset an overwhelming to-do list"
-description: "Triage an ignored backlog into now, later, reference, and let-go—without rebuilding the whole system."
+description: "Triage an ignored backlog into now, later, reference, and let-go, without rebuilding the whole system."
 pubDate: 2026-08-03
 group: choose
 order: 3
 readTime: "7 min"
-actionAmp: "ActionAmp gives each item a destination—task, project, reference, later, or no. Its Inbox is a staging area, so clearing a backlog means making decisions, not rebuilding a prettier backlog."
+actionAmp: "ActionAmp gives each item a destination: task, project, reference, later, or no. Its Inbox is a staging area, so clearing a backlog means making decisions, not rebuilding a prettier backlog."
 nextGuide: weekly-triage
 ---
 

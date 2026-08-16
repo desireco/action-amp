@@ -1,13 +1,13 @@
 ---
 title: "About ActionAmp"
-description: "Why ActionAmp exists — the bet that todo apps optimize capture, nobody optimizes the decision."
+description: "Why ActionAmp exists: the bet that todo apps optimize capture and few optimize the decision."
 ---
 
 # About ActionAmp
 
 ActionAmp is an attention engine built on a simple bet: **the problem isn't capturing tasks, it's deciding which one to do next.**
 
-Every todo app helps you write things down. None of them help you pick. The result is a list that grows faster than you can work it, and a feeling of overwhelm that the app was supposed to solve but instead made worse.
+Most todo apps help you write things down. Few help you pick. The result is a list that grows faster than you can work it, and a feeling of overwhelm that the app was supposed to solve but instead made worse.
 
 ## What we believe
 
@@ -23,5 +23,5 @@ ActionAmp is built by one person who has too much on their plate and got tired o
 
 Questions, feedback, or just want to say hi?
 
-- Email: hello@actionamp.com
+- Email: <hello@actionamp.com>
 - Built in the open, when it can be.

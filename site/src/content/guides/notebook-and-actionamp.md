@@ -35,4 +35,4 @@ One action should exist in one place. The notebook can explain it; ActionAmp sho
 
 Use any mark that feels natural: a box, star, or arrow. Its only job is to make one promise easy to find later. Do not create a second notation system to manage every note.
 
-If a marked line is only context—an idea, a quote, or a sketch—leave it in the notebook. Capture it only when you want ActionAmp to bring it back to you as a commitment, project, or next action.
+If a marked line is only context (an idea, a quote, or a sketch), leave it in the notebook. Capture it only when you want ActionAmp to bring it back to you as a commitment, project, or next action.

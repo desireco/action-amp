@@ -7,7 +7,7 @@ order: 4
 featured: true
 featuredRank: 1
 readTime: "6 min"
-actionAmp: "ActionAmp keeps the whole system accounted for—Inbox, projects, Upcoming, Someday, and completed work—while Next shows one task instead of the entire inventory. The list remains trustworthy without becoming your working environment."
+actionAmp: "ActionAmp keeps the whole system accounted for (Inbox, projects, Upcoming, Someday, completed work) while Next shows one task instead of the entire inventory. The list remains trustworthy without becoming your working environment."
 example:
   label: "Tuesday, 10:17"
   before: "Forty-seven tasks, three projects, and several things you might do someday."

@@ -9,7 +9,7 @@ actionAmp: "ActionAmp keeps goals, projects, and tasks distinct, so a large outc
 nextGuide: make-task-small-enough
 ---
 
-“Redo website” is not a task. It is a project: multiple actions, decisions, and a finish line. Putting it on a task list is a small lie—it looks actionable while hiding the work required to start.
+“Redo website” is not a task. It is a project: multiple actions, decisions, and a finish line. Putting it on a task list is a small lie: it looks actionable while hiding the work required to start.
 
 Use this test:
 
