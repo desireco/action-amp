@@ -4,7 +4,7 @@ title: "Focus mode (single-task surface)"
 feature_area: focus
 status: shipped
 spec: —
-verified: 2026-08-10
+verified: 2026-08-16
 ---
 
 # Focus mode
@@ -18,14 +18,18 @@ Hides the sidebar; no counts, no list — just the one task. Esc exits.
 - **Centered countdown ring** — one 25- or 45-minute Pomodoro control replaces
   both the detached margin clock and ambiguous completion circle. The ring owns
   time and pause/resume only.
-- **Explicit Task actions** — Add note, Pause, and Complete task sit together
+- **Explicit Task actions** — Add note, Pause, and Wrap up sit together
   below the title and clarification. Completion no longer hides behind a circle.
 - **One inline composer** — the notes thread is always visible; the composer
   appears on demand rather than permanently. Add note opens a progress prompt.
-  Complete opens the same notes-area surface with a leading **How did it go?**
-  question and optional Outcome. **Keep working** dismisses it; **Complete
-  task** finishes without a modal or backdrop. Completion writes a `TaskUpdate`
-  with `kind=COMPLETED`.
+  Wrap up swaps the working row for a **How did it go?** panel in the same slot
+  (the row unmounts, so its buttons never compete with the panel's) and the
+  watch freezes — the ring dims and the countdown holds. **Mark complete**
+  fires completion with the optional Outcome; **Keep working** posts any typed
+  text as a progress note and restores the row, and the watch resumes from
+  where it froze. Esc dismisses the panel the same way but keeps the draft.
+  Completion writes a `TaskUpdate` with `kind=COMPLETED`, never a modal or
+  backdrop.
 - **Recorded sessions** — start stores `plannedMinutes`; countdown completion
   closes the row with `completed=true`; manual pause closes it incomplete. A
   completed focus session never completes the Task. Completed sessions appear
@@ -54,9 +58,10 @@ mapped by `app/focusTaskView.ts` (`toFocusTask.goalContext`).
 `app/focusTaskView.ts`; pure normalization in `app/taskContext.ts`; segment
 accounting in `tasks/operations.ts` (`startTask`/`pauseTask`/`toggleTaskDone`).
 
-**Verified 2026-08-10.** `app/focusTaskView.test.ts` (Goal precedence +
+**Verified 2026-08-16.** `app/focusTaskView.test.ts` (Goal precedence +
 trimming), `components/ui/FocusMode.test.tsx` (described / Toward fallback /
-absent states; matcher rationale + continuity not repeated), `wasp compile`.
+absent states; matcher rationale + continuity not repeated; wrap-up row swap,
+frozen watch, Keep-working note posting), `wasp compile`.
 
 **Done?** Shipped. Focus timer and explicit action hierarchy are live; broader
 hard-mode work remains separate.

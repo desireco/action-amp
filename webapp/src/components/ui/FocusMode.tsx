@@ -52,12 +52,15 @@ export interface FocusTask {
  * The task is the protagonist; the clock is chrome. Layout:
  *   - centered Pomodoro countdown ring with pause/resume
  *   - task title + clarification beneath the ring
- *   - explicit Add note / Pause / Complete task actions
+ *   - explicit Add note / Pause / Wrap up actions
  *   - append-only progress thread (newest first)
  *   - bottom rail of subtle keyboard hints
  *
- * Interactions: `n` summons the notes composer, `d` opens the completion
- * reflection in that same area, and `Esc` exits. The keyboard map is the only
+ * Interactions: `n` summons the notes composer, `d` opens the wrap-up panel
+ * ("How did it go?") in the action row's place — the row unmounts so its
+ * buttons can't compete, and the watch freezes until the panel closes.
+ * Mark complete fires onComplete; Keep working posts any typed reflection as
+ * a note and restores the row. `Esc` exits. The keyboard map is the only
  * chrome.
  * and `docs/specs/focus-engine-v2.md` § "Focus screen — RESOLVED
  * 2026-07-05".
@@ -94,13 +97,27 @@ export function FocusMode({
   onSnooze?: (preset: SnoozePreset) => Promise<void> | void;
 }) {
   // One notes-area composer handles both progress notes and completion
-  // reflection. Completion stays in the task flow instead of opening a modal.
+  // reflection. Completion stays in the task flow instead of opening a modal:
+  // the action row yields its slot to the composer, so only one set of
+  // actions is ever live.
   const [composerMode, setComposerMode] = useState<ComposerMode>(null);
   const [draft, setDraft] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [completingTask, setCompletingTask] = useState(false);
   const [completionError, setCompletionError] = useState<string | null>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
+
+  // Wrap-up steps out of the countdown: the watch freezes where it was and
+  // the timer region dims. Keep working / Esc thaw it.
+  const [clockFrozenAt, setClockFrozenAt] = useState<number | null>(null);
+
+  // When a composer closes, the action row remounts — remember which action
+  // should receive focus so keyboard flow survives the swap.
+  const [refocusRowKey, setRefocusRowKey] = useState<
+    "note" | "complete" | null
+  >(null);
+  const addNoteRef = useRef<HTMLButtonElement>(null);
+  const wrapUpRef = useRef<HTMLButtonElement>(null);
 
   // Durable content editor — separate from the append-only thread. Kept
   // inline-summoned like the composer, toggled from the notes section.
@@ -151,8 +168,35 @@ export function FocusMode({
       return;
     }
     setCompletionError(null);
+    setClockFrozenAt(Date.now());
     setComposerMode("completion");
   }, [completeTask, onComplete, skipCompletionReflection]);
+
+  // Closing the wrap-up panel thaws the watch. The typed outcome stays in the
+  // draft — only Keep working consumes it (as a note).
+  const closeComposer = useCallback(() => {
+    setRefocusRowKey(composerMode === "note" ? "note" : "complete");
+    setComposerMode(null);
+    setClockFrozenAt(null);
+  }, [composerMode]);
+
+  // Keep working: post whatever reflection was typed as a progress note and
+  // put the working action row back. The watch resumes from where it froze.
+  const keepWorking = useCallback(async () => {
+    if (completingTask) return;
+    const note = outcomeDraft.trim();
+    setRefocusRowKey("complete");
+    setComposerMode(null);
+    setClockFrozenAt(null);
+    if (!note || !onAddNote) return;
+    setOutcomeDraft("");
+    setSubmitting(true);
+    try {
+      await onAddNote(note);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [completingTask, onAddNote, outcomeDraft]);
 
   // Reset transient state when the task changes. Content drafts key off
   // task.content (they reflect a server-backed field that can change); outcome
@@ -170,6 +214,8 @@ export function FocusMode({
     setCompletingTask(false);
     setCompletionError(null);
     setSnoozeOpen(false);
+    setClockFrozenAt(null);
+    setRefocusRowKey(null);
     completingSessionRef.current = false;
   }, [task.id, task.content]);
 
@@ -197,13 +243,25 @@ export function FocusMode({
     }
   }, [composerMode]);
 
+  // Hand focus back to the row action that opened the composer once the row
+  // remounts.
+  useEffect(() => {
+    if (composerMode || !refocusRowKey) return;
+    const target =
+      refocusRowKey === "note" ? addNoteRef.current : wrapUpRef.current;
+    setRefocusRowKey(null);
+    target?.focus({ preventScroll: true });
+  }, [composerMode, refocusRowKey]);
+
   // Session clock — elapsed since the current open session began (resets on
   // each Start). Falls back to startedAt for the rare case where a task has
-  // the pointer but no matching session row (e.g. migration legacy).
+  // the pointer but no matching session row (e.g. migration legacy). While
+  // wrapping up, elapsed holds at the frozen timestamp.
+  const clockNowMs = clockFrozenAt ?? Date.now();
   const sessionElapsedMs = task.sessionStartedAt
-    ? Math.max(0, Date.now() - task.sessionStartedAt.getTime())
+    ? Math.max(0, clockNowMs - task.sessionStartedAt.getTime())
     : task.startedAt
-      ? Math.max(0, Date.now() - task.startedAt.getTime())
+      ? Math.max(0, clockNowMs - task.startedAt.getTime())
       : null;
   const sessionDurationMs = task.focusSessionMinutes * 60_000;
   const completedFocusSessions = Math.max(
@@ -249,7 +307,7 @@ export function FocusMode({
           return;
         }
         if (composerMode) {
-          setComposerMode(null);
+          closeComposer();
           return;
         }
         if (editingContent) {
@@ -282,8 +340,8 @@ export function FocusMode({
         return;
       }
 
-      // `d` → open the inline completion reflection. Enter is intentionally
-      // free: the timer and Task completion are separate controls.
+      // `d` → open the wrap-up panel in the action row's place. Enter is
+      // intentionally free: the timer and Task completion are separate controls.
       if ((e.key === "d" || e.key === "D") && onComplete) {
         e.preventDefault();
         openCompletionComposer();
@@ -299,6 +357,7 @@ export function FocusMode({
     snoozeOpen,
     editingContent,
     content,
+    closeComposer,
     openCompletionComposer,
   ]);
 
@@ -354,7 +413,12 @@ export function FocusMode({
       />
 
       <div className="aa-focus__body">
-        <section className="aa-focus-timer" aria-label="Focus session timer">
+        <section
+          className={`aa-focus-timer${
+            composerMode === "completion" ? " aa-focus-timer--faded" : ""
+          }`}
+          aria-label="Focus session timer"
+        >
           <div className="aa-focus-timer__glow" aria-hidden="true" />
           <div className="aa-focus-timer__ring">
             <CircularProgressbarWithChildren
@@ -488,46 +552,52 @@ export function FocusMode({
           )}
         </section>
 
-        <div className="aa-focus__primary-actions" aria-label="Task actions">
-          {onAddNote && (
+        {/* The working row yields its slot to whichever composer is open —
+            only one set of actions is live at a time. */}
+        {!composerMode && (
+          <div className="aa-focus__primary-actions" aria-label="Task actions">
+            {onAddNote && (
+              <button
+                ref={addNoteRef}
+                type="button"
+                className="aa-focus-action aa-focus-action--note"
+                onClick={() => setComposerMode("note")}
+              >
+                <NotePencil size={20} aria-hidden />
+                <span>Add note</span>
+              </button>
+            )}
             <button
               type="button"
-              className="aa-focus-action aa-focus-action--note"
-              onClick={() => setComposerMode("note")}
+              className="aa-focus-action aa-focus-action--pause"
+              onClick={onClose}
             >
-              <NotePencil size={20} aria-hidden />
-              <span>Add note</span>
+              <Pause size={20} weight="fill" aria-hidden />
+              <span>Pause</span>
             </button>
-          )}
-          <button
-            type="button"
-            className="aa-focus-action aa-focus-action--pause"
-            onClick={onClose}
-          >
-            <Pause size={20} weight="fill" aria-hidden />
-            <span>Pause</span>
-          </button>
-          {onComplete && (
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={openCompletionComposer}
-              aria-expanded={
-                skipCompletionReflection
-                  ? undefined
-                  : composerMode === "completion"
-              }
-              aria-controls={
-                skipCompletionReflection
-                  ? undefined
-                  : "aa-focus-completion-composer"
-              }
-              className="aa-focus-action aa-focus-action--complete"
-            >
-              Complete task
-            </Button>
-          )}
-        </div>
+            {onComplete && (
+              <Button
+                ref={wrapUpRef}
+                variant="primary"
+                size="lg"
+                onClick={openCompletionComposer}
+                aria-expanded={
+                  skipCompletionReflection
+                    ? undefined
+                    : composerMode === "completion"
+                }
+                aria-controls={
+                  skipCompletionReflection
+                    ? undefined
+                    : "aa-focus-completion-composer"
+                }
+                className="aa-focus-action aa-focus-action--complete"
+              >
+                Wrap up
+              </Button>
+            )}
+          </div>
+        )}
 
         {composerMode && (
           <section
@@ -551,19 +621,27 @@ export function FocusMode({
                     : "Add a note"}
                 </h2>
                 <p className="aa-focus-composer__prompt">
-                  {composerMode === "completion"
-                    ? `${
+                  {composerMode === "completion" ? (
+                    <>
+                      ${
                         sessionElapsedMs !== null
                           ? `You focused for ${formatDuration(sessionElapsedMs)}. `
                           : ""
-                      }Capture what changed, what you learned, or the next step.`
-                    : "Capture a decision, blocker, or next step without leaving focus."}
+                      }
+                      Capture a result, decision, learning, or next step.{" "}
+                      <span className="aa-focus-composer__optional">
+                        Optional
+                      </span>
+                    </>
+                  ) : (
+                    "Capture a decision, blocker, or next step without leaving focus."
+                  )}
                 </p>
               </div>
               <button
                 type="button"
                 className="aa-focus-composer__dismiss"
-                onClick={() => setComposerMode(null)}
+                onClick={closeComposer}
                 aria-label={
                   composerMode === "completion"
                     ? "Close completion reflection"
@@ -607,14 +685,14 @@ export function FocusMode({
             <div className="aa-focus-composer__foot">
               <span className="aa-focus-composer__hint">
                 <Kbd>⌘↵</Kbd>{" "}
-                {composerMode === "completion" ? "complete" : "post note"}
+                {composerMode === "completion" ? "mark complete" : "save note"}
               </span>
               <div className="aa-focus-composer__actions">
                 {composerMode === "completion" && (
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => setComposerMode(null)}
+                    onClick={keepWorking}
                     disabled={completingTask}
                   >
                     Keep working
@@ -633,8 +711,8 @@ export function FocusMode({
                   }
                 >
                   {composerMode === "completion"
-                    ? "Complete task"
-                    : "Post note"}
+                    ? "Mark complete"
+                    : "Save note"}
                 </Button>
               </div>
             </div>

@@ -1267,6 +1267,15 @@
   display: grid;
   place-items: center;
   margin-bottom: clamp(30px, 4vh, 42px);
+  transition:
+    filter var(--aa-dur-base) var(--aa-ease-out),
+    opacity var(--aa-dur-base) var(--aa-ease-out);
+}
+
+/* Wrap-up steps out of the countdown — the ring dims while the watch holds. */
+.aa-focus-timer--faded {
+  filter: saturate(0.55);
+  opacity: 0.72;
 }
 
 .aa-focus-timer__glow {
@@ -1498,6 +1507,11 @@
   color: var(--aa-text-3);
   font-size: var(--aa-text-sm);
   line-height: var(--aa-leading-normal);
+}
+
+.aa-focus-composer__optional {
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-xs);
 }
 
 .aa-focus-composer__dismiss {

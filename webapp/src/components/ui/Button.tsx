@@ -1,10 +1,12 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import "./Button.css";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /** Button element ref (React 19 passes ref as a regular prop) */
+  ref?: Ref<HTMLButtonElement>;
   /** Visual style */
   variant?: ButtonVariant;
   /** Preset size */

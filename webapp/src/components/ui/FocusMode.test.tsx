@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen, fireEvent, waitFor, within } from "@testing-library/react";
+import {
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+  act,
+} from "@testing-library/react";
 import { FocusMode, type FocusTask } from "./FocusMode";
 import { renderInContext } from "wasp/client/test";
 
@@ -9,8 +15,10 @@ import { renderInContext } from "wasp/client/test";
 //   2. The thread renders NOTE vs COMPLETED entries distinctly.
 //   3. The composer is summoned via `n` and posts via ⌘↵ (Enter inserts a
 //      newline — the composer is dedicated and multi-line).
-//   4. Completion opens an inline reflection before firing onComplete, with an
-//      optimistic payoff (title strikes through).
+//   4. Wrap up replaces the working row with the inline reflection before
+//      firing onComplete, with an optimistic payoff (title strikes through).
+//      The watch freezes while wrapping; Keep working posts the typed
+//      reflection as a note and restores the row.
 //   5. Esc dismisses composer → confirm → exit, in that order.
 //
 // Uses fireEvent over user-event (no dep), matching the rest of the suite.
@@ -382,8 +390,8 @@ describe("FocusMode", () => {
       fireEvent.keyDown(window, { key: "n" });
       const composer = screen.getByPlaceholderText(/learn, decide/i);
       fireEvent.change(composer, { target: { value: "   " } });
-      // Post button is disabled when the draft is empty/whitespace.
-      expect(screen.getByRole("button", { name: /post note/i })).toBeDisabled();
+      // Save button is disabled when the draft is empty/whitespace.
+      expect(screen.getByRole("button", { name: /save note/i })).toBeDisabled();
       // ⌘↵ doesn't fire either — submitNote bails on empty body.
       fireEvent.keyDown(composer, { key: "Enter", metaKey: true });
       expect(onAddNote).not.toHaveBeenCalled();
@@ -421,11 +429,12 @@ describe("FocusMode", () => {
     });
   });
 
-  // ---- Flow 3: completion reflects inline in the notes area ----
-  // Clicking the explicit Complete task action (or pressing D) opens a calm,
-  // optional Outcome prompt in the existing notes flow. Only its final action
-  // fires onComplete; the op-level behavior is covered in operations.test.ts.
-  describe("completion — inline reflection before firing", () => {
+  // ---- Flow 3: wrap-up — the reflection replaces the working row ----
+  // Clicking the explicit Wrap up action (or pressing D) swaps the working
+  // row for a calm, optional Outcome panel in the same slot. Only its final
+  // action fires onComplete; the op-level behavior is covered in
+  // operations.test.ts.
+  describe("wrap-up — reflection replaces the working row", () => {
     it("completes a practice task immediately without asking for reflection", () => {
       const onComplete = vi.fn();
       renderInContext(
@@ -437,7 +446,7 @@ describe("FocusMode", () => {
         />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
 
       expect(onComplete).toHaveBeenCalledWith("");
       expect(
@@ -445,16 +454,17 @@ describe("FocusMode", () => {
       ).toBeNull();
     });
 
-    it("clicking Complete task opens the inline reflection", () => {
+    it("Wrap up replaces the working row with the inline reflection", () => {
       const onComplete = vi.fn();
       renderInContext(
         <FocusMode
           task={BASE_TASK}
           onClose={() => {}}
           onComplete={onComplete}
+          onAddNote={vi.fn()}
         />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
       expect(
         screen.getByRole("region", { name: /complete task reflection/i }),
       ).toBeInTheDocument();
@@ -462,6 +472,11 @@ describe("FocusMode", () => {
       expect(
         screen.queryByRole("dialog", { name: /mark this done/i }),
       ).toBeNull();
+      // The working row yielded its slot — none of its actions stay live
+      // alongside the reflection.
+      expect(screen.queryByRole("button", { name: /wrap up/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /^pause$/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /add note/i })).toBeNull();
       expect(onComplete).not.toHaveBeenCalled();
     });
 
@@ -489,12 +504,12 @@ describe("FocusMode", () => {
           onComplete={onComplete}
         />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
       const reflection = screen.getByRole("region", {
         name: /complete task reflection/i,
       });
       fireEvent.click(
-        within(reflection).getByRole("button", { name: /complete task/i }),
+        within(reflection).getByRole("button", { name: /mark complete/i }),
       );
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
@@ -511,12 +526,12 @@ describe("FocusMode", () => {
           onComplete={onComplete}
         />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
       const reflection = screen.getByRole("region", {
         name: /complete task reflection/i,
       });
       fireEvent.click(
-        within(reflection).getByRole("button", { name: /complete task/i }),
+        within(reflection).getByRole("button", { name: /mark complete/i }),
       );
       expect(onComplete).toHaveBeenCalledWith("");
     });
@@ -530,7 +545,7 @@ describe("FocusMode", () => {
           onComplete={onComplete}
         />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
       fireEvent.change(screen.getByLabelText(/completion note optional/i), {
         target: { value: "Shipped the draft to Sarah." },
       });
@@ -538,7 +553,7 @@ describe("FocusMode", () => {
         name: /complete task reflection/i,
       });
       fireEvent.click(
-        within(reflection).getByRole("button", { name: /complete task/i }),
+        within(reflection).getByRole("button", { name: /mark complete/i }),
       );
       expect(onComplete).toHaveBeenCalledWith("Shipped the draft to Sarah.");
     });
@@ -552,7 +567,7 @@ describe("FocusMode", () => {
           onComplete={onComplete}
         />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
       fireEvent.keyDown(screen.getByLabelText(/completion note optional/i), {
         key: "Enter",
       });
@@ -568,7 +583,7 @@ describe("FocusMode", () => {
           onComplete={onComplete}
         />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
       fireEvent.change(screen.getByLabelText(/completion note optional/i), {
         target: { value: "Shipped the draft." },
       });
@@ -588,12 +603,73 @@ describe("FocusMode", () => {
           onComplete={onComplete}
         />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
       fireEvent.click(screen.getByRole("button", { name: /keep working/i }));
       expect(onComplete).not.toHaveBeenCalled();
       expect(
         screen.queryByRole("region", { name: /complete task reflection/i }),
       ).toBeNull();
+    });
+
+    it("Keep working posts the typed reflection as a note and restores the row", async () => {
+      const onComplete = vi.fn();
+      const onAddNote = vi.fn().mockResolvedValue(undefined);
+      renderInContext(
+        <FocusMode
+          task={BASE_TASK}
+          onClose={() => {}}
+          onComplete={onComplete}
+          onAddNote={onAddNote}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
+      fireEvent.change(screen.getByLabelText(/completion note optional/i), {
+        target: { value: "  Halfway there — resume tomorrow  " },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /keep working/i }));
+
+      await waitFor(() =>
+        expect(onAddNote).toHaveBeenCalledWith("Halfway there — resume tomorrow"),
+      );
+      expect(onComplete).not.toHaveBeenCalled();
+      // The working row is back in place.
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: /wrap up/i }),
+        ).toBeInTheDocument(),
+      );
+    });
+
+    it("freezes the watch while wrapping and resumes on Keep working", () => {
+      vi.useFakeTimers();
+      try {
+        const onAddNote = vi.fn().mockResolvedValue(undefined);
+        const { container } = renderInContext(
+          <FocusMode
+            task={BASE_TASK}
+            onClose={() => {}}
+            onComplete={vi.fn()}
+            onAddNote={onAddNote}
+          />,
+        );
+        const readTime = () =>
+          container.querySelector(".aa-focus-timer__time")?.textContent ?? "";
+
+        fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
+        const frozen = readTime();
+        act(() => {
+          vi.advanceTimersByTime(90_000);
+        });
+        expect(readTime()).toBe(frozen);
+
+        fireEvent.click(screen.getByRole("button", { name: /keep working/i }));
+        act(() => {
+          vi.advanceTimersByTime(90_000);
+        });
+        expect(readTime()).not.toBe(frozen);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("restores the reflection and typed outcome when completion fails", async () => {
@@ -605,7 +681,7 @@ describe("FocusMode", () => {
           onComplete={onComplete}
         />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
       fireEvent.change(screen.getByLabelText(/completion note optional/i), {
         target: { value: "Keep this outcome" },
       });
@@ -613,7 +689,7 @@ describe("FocusMode", () => {
         name: /complete task reflection/i,
       });
       fireEvent.click(
-        within(reflection).getByRole("button", { name: /complete task/i }),
+        within(reflection).getByRole("button", { name: /mark complete/i }),
       );
 
       expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -657,7 +733,7 @@ describe("FocusMode", () => {
           onComplete={onComplete}
         />,
       );
-      fireEvent.click(screen.getByRole("button", { name: /complete task/i }));
+      fireEvent.click(screen.getByRole("button", { name: /wrap up/i }));
       fireEvent.keyDown(window, { key: "Escape" });
       expect(
         screen.queryByRole("region", { name: /complete task reflection/i }),
