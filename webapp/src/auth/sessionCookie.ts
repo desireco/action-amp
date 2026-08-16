@@ -14,14 +14,12 @@
  *      middleware. When there's no `Authorization` header but a valid
  *      `wasp_session` cookie is present, it synthesizes the Bearer header so
  *      Wasp's auth path works unchanged. No SDK patching, no fork.
- *   2. `sessionCookieWriteMiddleware` — runs after `auth` resolves:
+ *   2. `sessionCookieWriteMiddleware` — wraps `res.end` so the cookie lands
+ *      before headers flush:
  *        - On `/auth/login` 200: writes the cookie (httpOnly, sameSite=lax).
  *        - On `/auth/logout`: clears it.
  *        - On any authenticated request with `req.sessionId`: re-stamps the
- *          cookie with a fresh 30-day maxAge → sliding expiration. As long as
- *          you open the app at least once every 30 days, you stay logged in
- *          indefinitely. Server-side Lucia also does half-life renewal, so
- *          the two layers stay in sync.
+ *          cookie with a fresh 30-day maxAge → sliding expiration.
  *
  * Security:
  *   - `httpOnly`: client JS can't read it (XSS-exfil resistance beats
@@ -63,9 +61,11 @@ function cookieOptions() {
 /**
  * Read side: lift `wasp_session` cookie → `Authorization` header.
  *
- * Placed in the global middleware Map after `cookieParser`. Runs before the
- * per-route `auth` handler, which then sees a normal Bearer header and does
- * its usual thing.
+ * Safe to mount anywhere: it reads `req.cookies` when a cookie parser has
+ * already run (the global middleware Map position) and falls back to parsing
+ * the raw `Cookie` header (the app-root position, where no parser has run
+ * yet — see serverSetupFn in serverMiddleware.ts for why the root position
+ * exists).
  */
 export function attachSessionFromCookie(
   req: Request,
@@ -78,57 +78,126 @@ export function attachSessionFromCookie(
     return next();
   }
 
-  const cookieValue = req.cookies?.[SESSION_COOKIE_NAME];
-  if (typeof cookieValue === "string" && cookieValue.length > 0) {
+  const cookieValue = readSessionCookie(req);
+  if (cookieValue) {
     req.headers.authorization = `Bearer ${cookieValue}`;
   }
   next();
 }
 
+function readSessionCookie(req: Request): string | undefined {
+  const parsed = req.cookies?.[SESSION_COOKIE_NAME];
+  if (typeof parsed === "string" && parsed.length > 0) return parsed;
+  const header = req.headers.cookie;
+  if (typeof header !== "string") return undefined;
+  for (const part of header.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    if (part.slice(0, eq).trim() !== SESSION_COOKIE_NAME) continue;
+    const raw = part.slice(eq + 1).trim();
+    if (!raw) return undefined;
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
+  }
+  return undefined;
+}
+
 /**
  * Write side: set/clear/refresh the cookie.
  *
- * Runs after `auth` has populated `req.sessionId` (on protected routes) or
- * after the login/logout handlers have run. Uses `res.on("finish")` so the
- * response path isn't blocked by cookie writes, and so we see the final
- * status code (login 200 → set; logout → clear).
+ * The cookie must be stamped BEFORE the response's headers go out, so this
+ * wraps `res.end` (every Express response path — json/send/redirect — funnels
+ * through it) instead of listening on `finish`, which fires after the headers
+ * are already on the wire and would make `res.cookie()` a silent no-op.
+ *
+ * When to write:
+ *   - On `/auth/logout`: always clear.
+ *   - On `/auth/*login` 2xx: the response body is `{ sessionId }` (Wasp's own
+ *     shape) — parse it and stamp the cookie. The `auth` middleware doesn't
+ *     run on login routes, so `req.sessionId` is not available there.
+ *   - On any other authenticated 2xx (`req.sessionId` set by Wasp's `auth`
+ *     middleware): re-stamp with a fresh 30-day maxAge → sliding expiration.
+ *     As long as you open the app at least once every 30 days, you stay
+ *     logged in indefinitely. Server-side Lucia also does half-life renewal,
+ *     so the two layers stay in sync.
  */
 export function sessionCookieWriteMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
 ): void {
-  res.on("finish", () => {
-    // Wasp's auth middleware assigns this at runtime, but its Express Request
-    // augmentation is not visible in the generated server's TypeScript build.
-    const sessionId = (req as Request & { sessionId?: unknown }).sessionId;
-    const path = req.path;
-    const isLogin = path === "/auth/login" || path.endsWith("/auth/email/login");
-    const isLogout = path === "/auth/logout" || path.endsWith("/auth/logout");
+  // Pass-through end(): keep the original overloads opaque so chunk/callback
+  // forms all survive untouched.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const originalEnd = res.end.bind(res) as (...args: unknown[]) => unknown;
+  let cookieHandled = false;
 
-    // Logout always clears, regardless of status — losing the cookie on a
-    // failed logout request is harmless (the client also clears localStorage).
-    if (isLogout) {
-      res.clearCookie(SESSION_COOKIE_NAME, { path: "/" });
-      return;
+  res.end = ((
+    ...args: unknown[]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ) => {
+    if (!cookieHandled) {
+      cookieHandled = true;
+      try {
+        stampSessionCookie(req, res, args[0]);
+      } catch {
+        // The cookie is a fallback on top of the Bearer token; a failed write
+        // must never break the response itself.
+      }
     }
+    return originalEnd(...args);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }) as any as typeof res.end;
 
-    // Login: only stamp on success. The handler returns { sessionId } on 200.
-    // Re-stamp on every other authenticated request (req.sessionId set by the
-    // `auth` middleware) → sliding expiration.
-    const shouldRefresh =
-      (isLogin && res.statusCode >= 200 && res.statusCode < 300) ||
-      (typeof sessionId === "string" && res.statusCode >= 200 && res.statusCode < 300);
-
-    // Guard against ERR_HTTP_HEADERS_SENT: the `finish` event fires after the
-    // response has been written to the wire, so `res.cookie()` (which calls
-    // `setHeader`) throws if headers already went out. The sliding refresh is
-    // best-effort — if we can't set the cookie here, the client still holds a
-    // valid session via its existing cookie / Bearer token; only the refresh
-    // is skipped for this response. Crash > skipped refresh.
-    if (shouldRefresh && typeof sessionId === "string" && !res.headersSent) {
-      res.cookie(SESSION_COOKIE_NAME, sessionId, cookieOptions());
-    }
-  });
   next();
+}
+
+function stampSessionCookie(req: Request, res: Response, chunk: unknown): void {
+  // Wasp's auth middleware assigns this at runtime, but its Express Request
+  // augmentation is not visible in the generated server's TypeScript build.
+  const sessionId = (req as Request & { sessionId?: unknown }).sessionId;
+  // This middleware also runs inside mounted routers ("/auth", "/operations"),
+  // where Express strips the mount prefix — match by suffix so both the full
+  // ("/auth/email/login") and stripped ("/email/login") forms are covered.
+  const path = req.path;
+  const isLogin = path.endsWith("/login");
+  const isLogout = path.endsWith("/logout");
+
+  // Logout always clears, regardless of status — losing the cookie on a
+  // failed logout request is harmless (the client also clears localStorage).
+  if (isLogout) {
+    res.clearCookie(SESSION_COOKIE_NAME, { path: "/" });
+    return;
+  }
+
+  const ok = res.statusCode >= 200 && res.statusCode < 300;
+  if (!ok) return;
+
+  if (isLogin) {
+    // Wasp's login handlers return { sessionId } as JSON. `chunk` is the
+    // serialized body on the first end() call.
+    let loginSessionId: unknown;
+    if (typeof chunk === "string" || Buffer.isBuffer(chunk)) {
+      try {
+        const body = JSON.parse(
+          typeof chunk === "string" ? chunk : chunk.toString("utf8"),
+        );
+        loginSessionId = (body as { sessionId?: unknown })?.sessionId;
+      } catch {
+        // Non-JSON body (e.g. a redirect) — nothing to stamp.
+      }
+    }
+    if (typeof loginSessionId === "string" && loginSessionId.length > 0) {
+      res.cookie(SESSION_COOKIE_NAME, loginSessionId, cookieOptions());
+    }
+    return;
+  }
+
+  // Sliding refresh on every other authenticated request.
+  if (typeof sessionId === "string" && sessionId.length > 0) {
+    res.cookie(SESSION_COOKIE_NAME, sessionId, cookieOptions());
+  }
 }

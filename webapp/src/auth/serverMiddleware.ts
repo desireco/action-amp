@@ -69,8 +69,11 @@ export const globalMiddlewareConfigFn: MiddlewareConfigFn = (
     }),
   );
 
-  // Insertion order matters: this runs after cookieParser (already in the
-  // default Map) and before Wasp's per-route auth handler (not in this Map).
+  // Kept for the /auth/* and /operations/* routers, which run this stack
+  // before their handlers. NOTE: /api/* routes compose `[auth, ...stack]` —
+  // Wasp's auth handler runs BEFORE this lift there, so API routes that must
+  // authenticate by cookie use `auth: false` + sessionRouteAuthMiddleware
+  // (src/auth/sessionAuth.ts) instead.
   middlewareConfig.set("sessionCookieAuth", attachSessionFromCookie);
   middlewareConfig.set("sessionCookieWrite", sessionCookieWriteMiddleware);
   return middlewareConfig;

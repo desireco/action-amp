@@ -5,6 +5,7 @@ import { AppShell } from "./app/AppShell";
 import { SplashScreen } from "./components/ui";
 import { StatCounter, trackStatCounterEvent } from "./analytics/StatCounter";
 import { trackAnalyticsEvent } from "./analytics/tracking";
+import { syncSessionCookie } from "./auth/sessionCookieMirror";
 import "./App.css";
 
 /**
@@ -38,6 +39,13 @@ export function App() {
       }
     }
   }, [user?.id, isApp]);
+
+  // Keep the wasp_session cookie in sync with the SDK's session token so
+  // header-less requests (image loads, the PWA share POST) authenticate.
+  // Runs on mount and whenever the authed user changes (login/logout).
+  useEffect(() => {
+    syncSessionCookie();
+  }, [status, user?.id]);
 
   // Auth gate. Wasp wraps each *page* in `createAuthRequiredPage`, but this is
   // the layout (the `rootElement`), so it isn't wrapped. Without a gate here,
