@@ -161,6 +161,7 @@ describe("FocusMode", () => {
       );
 
       fireEvent.click(screen.getByRole("button", { name: /edit details/i }));
+      // SAFETY: getByRole returns Element; cast to HTMLElement for .focus() interaction.
       const editor = screen.getByRole("textbox", {
         name: /task details/i,
       }) as HTMLTextAreaElement;
@@ -187,6 +188,7 @@ describe("FocusMode", () => {
       fireEvent.click(
         screen.getByRole("button", { name: /add task details/i }),
       );
+      // SAFETY: getByRole returns Element; cast to HTMLElement for .focus() interaction.
       fireEvent.change(screen.getByRole("textbox", { name: /task details/i }), {
         target: { value: "Opening call bullets" },
       });
@@ -369,6 +371,7 @@ describe("FocusMode", () => {
         <FocusMode task={BASE_TASK} onClose={() => {}} onAddNote={onAddNote} />,
       );
       fireEvent.keyDown(window, { key: "n" });
+      // SAFETY: getByPlaceholderText returns Element; cast to HTMLTextAreaElement for .value access.
       const composer = screen.getByPlaceholderText(
         /learn, decide/i,
       ) as HTMLTextAreaElement;
@@ -388,6 +391,7 @@ describe("FocusMode", () => {
         <FocusMode task={BASE_TASK} onClose={() => {}} onAddNote={onAddNote} />,
       );
       fireEvent.keyDown(window, { key: "n" });
+      // SAFETY: getByPlaceholderText returns Element; cast to HTMLTextAreaElement for .value access.
       const composer = screen.getByPlaceholderText(/learn, decide/i);
       fireEvent.change(composer, { target: { value: "   " } });
       // Save button is disabled when the draft is empty/whitespace.
@@ -403,6 +407,7 @@ describe("FocusMode", () => {
         <FocusMode task={BASE_TASK} onClose={() => {}} onAddNote={onAddNote} />,
       );
       fireEvent.keyDown(window, { key: "n" });
+      // SAFETY: getByPlaceholderText returns Element; cast to HTMLTextAreaElement for .value access.
       const composer = screen.getByPlaceholderText(
         /learn, decide/i,
       ) as HTMLTextAreaElement;
@@ -419,6 +424,7 @@ describe("FocusMode", () => {
       // Open the composer, focus it, then press `n` to type into it — the
       // global handler must not toggle it closed.
       fireEvent.keyDown(window, { key: "n" });
+      // SAFETY: getByPlaceholderText returns Element; cast to HTMLTextAreaElement for .value access.
       const composer = screen.getByPlaceholderText(
         /learn, decide/i,
       ) as HTMLTextAreaElement;

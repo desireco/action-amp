@@ -114,7 +114,9 @@ describe("LensesPage Lens types", () => {
 
   it("shows type-appropriate counts", () => {
     renderPage();
+    // SAFETY: getByText/getByRole returns Element; cast to HTMLElement for closest() interaction.
     const studioRow = screen.getByText("Studio").closest(".aa-lenses-row") as HTMLElement;
+    // SAFETY: getByText/getByRole returns Element; cast to HTMLElement for closest() interaction.
     const shoppingRow = screen.getByText("Shopping").closest(".aa-lenses-row") as HTMLElement;
     expect(within(studioRow).getByText("1 goals")).toBeInTheDocument();
     expect(within(studioRow).getByText("3 tasks")).toBeInTheDocument();
@@ -124,6 +126,7 @@ describe("LensesPage Lens types", () => {
 
   it("converts an empty custom Lens through the edit form", async () => {
     renderPage();
+    // SAFETY: getByText/getByRole returns Element; cast to HTMLElement for closest() interaction.
     const row = screen.getByText("Errands").closest(".aa-lenses-row") as HTMLElement;
     fireEvent.click(within(row).getByRole("button", { name: "Edit" }));
     fireEvent.click(screen.getByRole("radio", { name: /simple list/i }));
@@ -136,6 +139,7 @@ describe("LensesPage Lens types", () => {
 
   it("explains in a modal why a populated Life-area Lens cannot convert", () => {
     renderPage();
+    // SAFETY: getByText/getByRole returns Element; cast to HTMLElement for closest() interaction.
     const row = screen.getByText("Studio").closest(".aa-lenses-row") as HTMLElement;
     fireEvent.click(within(row).getByRole("button", { name: "Edit" }));
     const lifeAreaOption = screen.getByRole("radio", { name: /life area/i });
@@ -151,6 +155,7 @@ describe("LensesPage Lens types", () => {
 
   it("explains why checklist items block conversion to a Life area", () => {
     renderPage();
+    // SAFETY: getByText/getByRole returns Element; cast to HTMLElement for closest() interaction.
     const row = screen.getByText("Shopping").closest(".aa-lenses-row") as HTMLElement;
     fireEvent.click(within(row).getByRole("button", { name: "Edit" }));
     fireEvent.click(screen.getByRole("radio", { name: /life area/i }));
@@ -162,6 +167,7 @@ describe("LensesPage Lens types", () => {
 
   it("offers only same-type reassignment targets", async () => {
     renderPage();
+    // SAFETY: getByText/getByRole returns Element; cast to HTMLElement for closest() interaction.
     const shoppingRow = screen.getByText("Shopping").closest(".aa-lenses-row") as HTMLElement;
     fireEvent.click(within(shoppingRow).getByRole("button", { name: "Edit" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete lens" }));
