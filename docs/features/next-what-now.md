@@ -52,7 +52,7 @@ winner (not every candidate) via a shared owned hydration core
 
 **Added 2026-08-16 — the alternatives rail** (WORKFLOW.md §5.12). Below the
 card, while deciding (`next` candidate state, picked task included), the next
-ranked candidates (up to 3) render under "Or choose another task in \<Lens\>"
+ranked candidates (up to 2) render under "Or choose another task in \<Lens\>"
 with the hint "The recommendation stays available." Sourced from
 `getTaskAlternatives` (`tasks/operations.ts`) → `getTaskAlternativesData`
 (`tasks/operationsCore.ts`): the same `activePoolWhere` pool and comparator as

@@ -114,7 +114,7 @@ Triage drains the universal Inbox across both Lens types.
     (`Task.startedAt`) persists across navigation.
     - **Alternatives rail** (added 2026-08-16, §5.12): while deciding — the
       `next` candidate state, a picked task included — the next ranked
-      candidates (same pool, same comparator, up to 3) wait below the card
+      candidates (same pool, same comparator, up to 2) wait below the card
       under "Or choose another task in \<Lens\>". Choosing one routes through
       the picked-task path (`/do/today/:permalink`): nothing is snoozed,
       started, or demoted; the recommendation re-enters the list (flagged
@@ -553,7 +553,7 @@ Lens` while skipping the standalone lens picker by default. See
 12. **Choosing another task from Next is navigation, not mutation (locked
     2026-08-16).** The alternatives rail under the Next card ("Or choose
     another task in \<Lens\>") draws from the same ranked pool and comparator
-    as `getTopTask`, minus whatever is on stage, capped at 3. Picking a row
+    as `getTopTask`, minus whatever is on stage, capped at 2. Picking a row
     routes through the existing picked-task path (`/do/today/:permalink`) —
     the recommendation is never snoozed or demoted to make room; it re-enters
     the list (flagged "Suggested") and stays one tap away. The rail renders

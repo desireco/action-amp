@@ -256,6 +256,9 @@ describe("getTaskAlternativesData", () => {
     const result = await getTaskAlternativesData(m.entities, {
       userId: "user-1",
       lensId: "lens-1",
+      // Explicit limit so this test pins ordering, not the default cap
+      // (covered separately below).
+      limit: 3,
     });
 
     expect(result.map((t: { id: string }) => t.id)).toEqual([
@@ -299,7 +302,7 @@ describe("getTaskAlternativesData", () => {
       excludeIds: ["on-stage"],
     });
 
-    expect(result.map((t: { id: string }) => t.id)).toEqual(["a", "b", "c"]);
+    expect(result.map((t: { id: string }) => t.id)).toEqual(["a", "b"]);
     expect(result.length).toBe(TASK_ALTERNATIVES_LIMIT);
   });
 

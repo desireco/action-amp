@@ -251,7 +251,7 @@ export async function getTopTaskData(
 }
 
 /** How many alternative tasks the Next chooser offers below the top task. */
-export const TASK_ALTERNATIVES_LIMIT = 3;
+export const TASK_ALTERNATIVES_LIMIT = 2;
 
 // The Next screen's "Or choose another task" rail (next-alternatives): the
 // same ranked pool as the top task, minus whatever is already on stage — the
