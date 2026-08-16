@@ -1,17 +1,15 @@
 // @vitest-environment node
-// Server-op tests run in node: ops import entitlement guards that pull
-// `wasp/server` (HttpError), blocked by detectServerImports in jsdom. No DOM
-// APIs here — node is correct.
+// Server project (see vitest.config.ts): the REAL entitlement guards run —
+// no module mocking. Guard-gated triage needs an entitled user AND lenses the
+// guards can resolve, so the arrange() helper provides both.
 import { describe, it, expect, vi } from "vitest";
 
-// Stub the server-only HttpError layer so this test never loads `wasp/server`.
-vi.mock("../billing/entitlementHttp", () => ({
-  assertLensAllowed: vi.fn().mockResolvedValue(undefined),
-  assertLifeAreaLens: vi.fn().mockResolvedValue(undefined),
-  assertUnderCap: vi.fn().mockResolvedValue(undefined),
-}));
 import { triageInboxItem } from "./operations";
-import { mockContext } from "../test/mockContext";
+import { mockContext, type MockContext } from "../test/mockContext";
+
+// planRenewsAt is load-bearing: isPlanActive treats PRO with a null/past
+// renewal as FREE (the old mocked guards hid this).
+const FUTURE = new Date(Date.now() + 60_000);
 
 /**
  * Triage — the inbox transformation. Canonical Tier C test: the op mutates
@@ -42,10 +40,21 @@ const BASE_ITEM = {
   }[],
 };
 
-/** Arrange the common precondition: the inbox item exists and is ours. */
-function arrange(overrides: Partial<typeof BASE_ITEM> = {}) {
-  const m = mockContext();
-  m.entities.Lens.findFirst.mockResolvedValue({ type: "LIFE_AREA" });
+/** Arrange the common precondition: the inbox item exists, is ours, and the
+ *  calling user passes the REAL entitlement guards (active PRO + a lens the
+ *  guards resolve as an included LIFE_AREA). */
+function arrange(overrides: Partial<typeof BASE_ITEM> = {}): MockContext {
+  const m = mockContext({
+    id: "user-1",
+    plan: "PRO",
+    planRenewsAt: FUTURE,
+  });
+  m.entities.Lens.findFirst.mockResolvedValue({
+    id: "shopping",
+    name: "Me",
+    isIncluded: true,
+    type: "LIFE_AREA",
+  });
   m.entities.InboxItem.findUnique.mockResolvedValue({
     ...BASE_ITEM,
     ...overrides,
@@ -150,7 +159,7 @@ describe("triageInboxItem — guards", () => {
   });
 
   it("rejects an item that belongs to another user", async () => {
-    const m = mockContext();
+    const m = arrange();
     m.entities.InboxItem.findUnique.mockResolvedValue({
       ...BASE_ITEM,
       userId: "someone-else",

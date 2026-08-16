@@ -1,15 +1,10 @@
 // @vitest-environment node
-// Server-op tests run in node: ops import entitlement guards that pull
-// `wasp/server` (HttpError), blocked by detectServerImports in jsdom. No DOM
-// APIs here — node is correct.
+// Server project (see vitest.config.ts): the wasp/server import chain loads
+// for real — no module mocking. createInboxItem/getInboxItems call no
+// entitlement guards (filing guards gate triage, covered in
+// operations.test.ts), so plain fixtures suffice.
 import { describe, it, expect, vi } from "vitest";
 
-// Stub the server-only HttpError layer so this test never loads `wasp/server`.
-vi.mock("../billing/entitlementHttp", () => ({
-  assertLensAllowed: vi.fn().mockResolvedValue(undefined),
-  assertLifeAreaLens: vi.fn().mockResolvedValue(undefined),
-  assertUnderCap: vi.fn().mockResolvedValue(undefined),
-}));
 import { mockContext } from "../test/mockContext";
 import { createInboxItem, getInboxItem, getInboxItems, getProjectsForResolver } from "./operations";
 
