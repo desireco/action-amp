@@ -60,7 +60,8 @@ export async function getProjectsData(
     include: {
       goal: { select: { id: true, name: true } },
       tasks: {
-        where: { isDone: false },
+        // Open work only — a declined (WONT_DO) task is not a next action.
+        where: { isDone: false, status: { not: "WONT_DO" } },
         select: {
           id: true,
           permalink: true,
@@ -74,10 +75,12 @@ export async function getProjectsData(
         take: 1,
       },
       resources: {
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ createdAt: "desc" }],
         select: { id: true, title: true, url: true, notes: true, createdAt: true },
       },
-      _count: { select: { tasks: { where: { isDone: false } } } },
+      // Open count excludes declined tasks — they live in the Logbook, not in
+      // the project's momentum.
+      _count: { select: { tasks: { where: { isDone: false, status: { not: "WONT_DO" } } } } },
     },
   });
 

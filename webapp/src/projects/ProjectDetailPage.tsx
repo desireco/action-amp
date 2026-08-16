@@ -189,17 +189,25 @@ export function ProjectDetailPage() {
     (p: ProjectOption) => p.id !== project?.id,
   );
 
+  // Declined (WONT_DO) tasks have left the project's active surface — they
+  // live in the Logbook until restored there. Exclude them before grouping or
+  // counting so declining a task (from its detail page) visibly removes it
+  // here, same as every other list.
+  const activeTasks = useMemo(
+    () => (project?.tasks ?? []).filter((t) => t.status !== "WONT_DO"),
+    [project],
+  );
+
   // Group the project's tasks by horizon. Open tasks split into Today / Upcoming
   // / Someday; done ones collect at the bottom.
   const groups = useMemo<GroupDef<ProjectTask>[]>(() => {
-    if (!project) return [];
     const buckets: Record<string, ProjectTask[]> = {
       TODAY: [],
       UPCOMING: [],
       SOMEDAY: [],
       DONE: [],
     };
-    for (const t of project.tasks) {
+    for (const t of activeTasks) {
       (t.isDone ? buckets.DONE : (buckets[t.status] ?? buckets.SOMEDAY)).push(
         t,
       );
@@ -210,10 +218,10 @@ export function ProjectDetailPage() {
       { key: "SOMEDAY", label: "Someday", items: buckets.SOMEDAY },
       { key: "DONE", label: "Done", items: buckets.DONE },
     ];
-  }, [project]);
+  }, [activeTasks]);
 
-  const doneCount = project?.tasks.filter((t) => t.isDone).length ?? 0;
-  const total = project?.tasks.length ?? 0;
+  const doneCount = activeTasks.filter((t) => t.isDone).length;
+  const total = activeTasks.length;
   const progressPct =
     project && total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
@@ -221,24 +229,22 @@ export function ProjectDetailPage() {
   // already-loaded task list (no extra query). "This week" = last 7 days,
   // measured from completedAt (set when a task is marked done).
   const openCount = total - doneCount;
-  const todayOpenCount = (project?.tasks ?? []).filter(
+  const todayOpenCount = activeTasks.filter(
     (t) => !t.isDone && t.status === "TODAY",
   ).length;
-  const doneThisWeek =
-    (project?.tasks ?? []).filter((t) => {
-      if (!t.isDone || !t.completedAt) return false;
-      const ageMs = Date.now() - new Date(t.completedAt).getTime();
-      return ageMs <= 7 * 86_400_000;
-    }).length ?? 0;
+  const doneThisWeek = activeTasks.filter((t) => {
+    if (!t.isDone || !t.completedAt) return false;
+    const ageMs = Date.now() - new Date(t.completedAt).getTime();
+    return ageMs <= 7 * 86_400_000;
+  }).length;
 
   // Next-step candidate: the first Today task. A project can have more than
   // one task scheduled for today, but that should never hide the way to begin:
   // start the first one right from this page and leave the remaining tasks in
   // the Today group below.
   const todayTasks = useMemo(
-    () =>
-      (project?.tasks ?? []).filter((t) => !t.isDone && t.status === "TODAY"),
-    [project],
+    () => activeTasks.filter((t) => !t.isDone && t.status === "TODAY"),
+    [activeTasks],
   );
   const nextStep = todayTasks[0] ?? null;
 
@@ -247,9 +253,8 @@ export function ProjectDetailPage() {
   // in this app (WORKFLOW §2.2), so we never auto-pull an Upcoming task into a
   // hero; the cue just names the situation and points at the rows below.
   const hasUpcoming = useMemo(
-    () =>
-      (project?.tasks ?? []).some((t) => !t.isDone && t.status === "UPCOMING"),
-    [project],
+    () => activeTasks.some((t) => !t.isDone && t.status === "UPCOMING"),
+    [activeTasks],
   );
   const showNoTodayCue = !nextStep && todayTasks.length === 0 && hasUpcoming;
 

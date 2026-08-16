@@ -117,7 +117,12 @@ describe("getProjects — happy path", () => {
     expect(m.entities.Project.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         include: expect.objectContaining({
-          _count: { select: { tasks: { where: { isDone: false } } } },
+          // Open count excludes declined tasks — they live in the Logbook.
+          _count: {
+            select: {
+              tasks: { where: { isDone: false, status: { not: "WONT_DO" } } },
+            },
+          },
         }),
       }),
     );

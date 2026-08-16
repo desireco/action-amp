@@ -67,3 +67,32 @@ test("lifecycle actions sit behind ⋯; Edit and Add task stay visible (desktop)
   await page.getByRole("menuitem", { name: /^archive$/i }).click();
   await expect(page.getByText(/archive this project/i)).toBeVisible({ timeout: 10_000 });
 });
+
+test("declining a project task from its page removes it from the project", async ({ page }) => {
+  await signupNewUser(page);
+
+  const projectName = "Decline cleanup project";
+  await triageOneItem(page, projectName, { type: "project" });
+  await page.goto("/do/projects");
+  await page.getByText(projectName).click();
+  await expect(page.getByRole("heading", { name: projectName })).toBeVisible({ timeout: 10_000 });
+
+  const taskName = "Decline me from the task page";
+  await page.getByRole("button", { name: /add task/i }).click();
+  await page.getByPlaceholder(/what needs doing/i).fill(taskName);
+  await page.getByRole("button", { name: /^create$/i }).click();
+  await expect(page.getByText(taskName)).toBeVisible({ timeout: 10_000 });
+
+  // Open the task's page (row → Edit) and decline it (X → confirm).
+  const row = page.locator(".aa-project__row", { hasText: taskName });
+  await row.locator(".aa-task-row__title").click();
+  await row.getByRole("button", { name: /^edit/i }).click();
+  await expect(page).toHaveURL(/\/do\/tasks\//);
+  await page.getByRole("button", { name: "Mark as won't do" }).click();
+  await page.getByRole("button", { name: "Mark won't do" }).click();
+
+  // Back on the project (returnTo), the declined task is gone — a decline is
+  // a removal from the project's surface, not a re-file into Someday.
+  await expect(page).toHaveURL(/\/do\/projects\//, { timeout: 10_000 });
+  await expect(page.getByText(taskName)).toHaveCount(0, { timeout: 10_000 });
+});

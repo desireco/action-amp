@@ -384,6 +384,62 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
   });
 });
 
+describe("ProjectDetailPage — declined tasks (WONT_DO)", () => {
+  it("shows a declined task in no group, stat, or cue — it lives in the Logbook", () => {
+    // One open task + one declined. Declining is a removal from the project's
+    // active surface: if the declined task leaked into a group (it used to
+    // fall into Someday), the user would see "won't do didn't remove it".
+    projectData.current = makeProject({
+      tasks: [
+        {
+          id: "t1",
+          description: "Email Sarah",
+          isDone: false,
+          status: "TODAY",
+          priority: "NORMAL",
+          size: "M",
+        },
+        {
+          id: "t2",
+          description: "Something to be removed",
+          isDone: false,
+          status: "WONT_DO",
+          priority: "NORMAL",
+          size: "M",
+        },
+      ],
+    });
+    renderAt("/do/projects/p1");
+
+    // Not in any horizon group — the decline is a removal from this page.
+    expect(screen.queryByText("Something to be removed")).toBeNull();
+    // The Open momentum stat counts active work only (1 open task, not 2):
+    // the first number in the momentum row is openCount.
+    const momentum = screen.getByLabelText("Project momentum");
+    const openNum = momentum.querySelector(".aa-project__momentum-num");
+    expect(openNum).toHaveTextContent(/^1$/);
+  });
+
+  it("treats a project whose only task was declined as empty", () => {
+    projectData.current = makeProject({
+      tasks: [
+        {
+          id: "t2",
+          description: "Something to be removed",
+          isDone: false,
+          status: "WONT_DO",
+          priority: "NORMAL",
+          size: "M",
+        },
+      ],
+    });
+    renderAt("/do/projects/p1");
+
+    expect(screen.getByText(/no tasks yet/i)).toBeInTheDocument();
+    expect(screen.queryByText("Something to be removed")).toBeNull();
+  });
+});
+
 describe("ProjectDetailPage — re-link to goal (spec §C)", () => {
   it("the goal picker lists active goals in the project's Lens", () => {
     projectData.current = makeProject();
