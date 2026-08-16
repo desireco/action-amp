@@ -2,19 +2,23 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { useQuery, searchSite, getCommandPaletteIndex } = vi.hoisted(() => ({
-  useQuery: vi.fn(),
-  searchSite: vi.fn(),
-  getCommandPaletteIndex: vi.fn(),
-}));
-vi.mock("wasp/client/operations", () => ({
-  getCommandPaletteIndex,
-  searchSite,
-  useQuery,
-}));
-
-import { CommandPalette } from "./CommandPalette";
+// No module mocking: the ops are injected through the component's explicit
+// `deps` seam (see CommandPalette.tsx). The fake useQuery returns a
+// controllable query state; searchSite/getCommandPaletteIndex are identity
+// tokens the component passes through to it.
+import { CommandPalette, type CommandPaletteDeps } from "./CommandPalette";
 import type { SearchSiteResult } from "./operationsCore";
+
+const useQuery = vi.fn();
+const searchSite = vi.fn();
+const getCommandPaletteIndex = vi.fn();
+// SAFETY: vi.fn() fakes satisfy the ops signatures at runtime; the single
+// grouped cast covers all three (Wasp's QueryFn generics can't infer through).
+const deps = {
+  useQuery,
+  searchSite,
+  getCommandPaletteIndex,
+} as CommandPaletteDeps;
 
 const RESULT = {
   id: "task-1",
@@ -41,6 +45,7 @@ function renderPalette(
     onCapture: vi.fn(),
     onToggleTheme: vi.fn(),
     onOpenShortcuts: vi.fn(),
+    deps,
     ...overrides,
   };
   const view = render(
@@ -108,10 +113,16 @@ describe("CommandPalette", () => {
       mode: "command",
       activeLensType: "SIMPLE_LIST",
     });
-    fireEvent.click(screen.getByRole("option", { name: /List.*Open checklist/i }));
+    fireEvent.click(
+      screen.getByRole("option", { name: /List.*Open checklist/i }),
+    );
     expect(props.onNavigate).toHaveBeenCalledWith("/do/list");
-    expect(screen.queryByRole("option", { name: /Next/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /Capture a thought/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: /Next/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: /Capture a thought/ }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /Inbox/ })).toBeInTheDocument();
   });
 

@@ -49,6 +49,17 @@ const KIND_ORDER: Record<SearchResultKind | "lens" | "command", number> = {
   lens: 6,
 };
 
+/**
+ * Injectable operations — the test seam (see CommandPalette.test.tsx).
+ * Production renders pass nothing (real Wasp hooks); tests inject fakes
+ * instead of module-mocking wasp/client/operations.
+ */
+export interface CommandPaletteDeps {
+  useQuery: typeof useQuery;
+  searchSite: typeof searchSite;
+  getCommandPaletteIndex: typeof getCommandPaletteIndex;
+}
+
 export function CommandPalette({
   mode,
   entitled,
@@ -60,6 +71,7 @@ export function CommandPalette({
   onToggleTheme,
   onOpenShortcuts,
   activeLensType = "LIFE_AREA",
+  deps,
 }: {
   mode: CommandPaletteMode;
   entitled: boolean;
@@ -71,7 +83,12 @@ export function CommandPalette({
   onToggleTheme: () => void;
   onOpenShortcuts: () => void;
   activeLensType?: "LIFE_AREA" | "SIMPLE_LIST";
+  /** Test seam — defaults to the real Wasp operations. */
+  deps?: Partial<CommandPaletteDeps>;
 }) {
+  const runQuery = deps?.useQuery ?? useQuery;
+  const runSearch = deps?.searchSite ?? searchSite;
+  const runIndex = deps?.getCommandPaletteIndex ?? getCommandPaletteIndex;
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -96,13 +113,13 @@ export function CommandPalette({
     return () => window.clearTimeout(timeout);
   }, [normalized]);
 
-  const { data, error, isFetching } = useQuery(
-    searchSite,
+  const { data, error, isFetching } = runQuery(
+    runSearch,
     { query: debouncedQuery },
     { enabled: canSearch && debouncedQuery === normalized },
   );
-  const { data: indexData, isFetching: indexFetching } = useQuery(
-    getCommandPaletteIndex,
+  const { data: indexData, isFetching: indexFetching } = runQuery(
+    runIndex,
     undefined,
     { enabled: entitled && mode === "command" },
   );
@@ -170,9 +187,7 @@ export function CommandPalette({
             definition.common &&
             (!definition.lensTypes ||
               definition.lensTypes.includes(activeLensType)),
-        ).map(
-          (definition) => `command-${definition.id}`,
-        ),
+        ).map((definition) => `command-${definition.id}`),
       );
       return commands
         .filter((command) => commonIds.has(command.id))
@@ -219,7 +234,15 @@ export function CommandPalette({
     return matchPaletteEntries([...entries.values()], normalized).map(
       (entry) => entry.payload,
     );
-  }, [activeLensType, commands, currentData, indexedCommands, mode, normalized, showCommands]);
+  }, [
+    activeLensType,
+    commands,
+    currentData,
+    indexedCommands,
+    mode,
+    normalized,
+    showCommands,
+  ]);
 
   useEffect(() => setSelectedId(null), [query]);
   useEffect(() => {
