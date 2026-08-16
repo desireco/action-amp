@@ -2,11 +2,19 @@ import type { TriageChip, TriageExit } from "../components/ui";
 import type { ParsedPriority, ParsedSize } from "./parseCapture";
 import { formatRelativeDay } from "../shared/dateFormat";
 
-export type Outcome = "task-today" | "upcoming" | "someday" | "project" | "resource" | "list-item" | "delete";
-export type ChosenType = "task" | "project" | "resource" | "list-item" | "delete";
+export type Outcome =
+  | "task-today"
+  | "upcoming"
+  | "someday"
+  | "project"
+  | "resource"
+  | "list-item"
+  | "delete";
+export type ChosenType =
+  "task" | "project" | "resource" | "list-item" | "delete";
 export type Step = "classify" | "spec";
 
-export const OUTCOME_EXIT: Record<Outcome, TriageExit> = {
+export const OUTCOME_EXIT = {
   "task-today": "right",
   upcoming: "right",
   someday: "left",
@@ -14,7 +22,7 @@ export const OUTCOME_EXIT: Record<Outcome, TriageExit> = {
   resource: "left",
   "list-item": "right",
   delete: "down",
-};
+} as const satisfies Record<Outcome, TriageExit>;
 
 export const WHEN_OPTS = ["Today", "Upcoming", "Someday"] as const;
 export const SIZE_OPTS: ParsedSize[] = ["S", "M", "L", "XL"];
@@ -48,11 +56,19 @@ interface ParsedChipSource {
 export function buildTriageChips(item: ParsedChipSource | null): TriageChip[] {
   if (!item) return [];
   const chips: TriageChip[] = [];
-  if (item.parsedDate) chips.push({ tone: "date", label: `📅 ${formatRelativeDay(item.parsedDate)}` });
-  if (item.parsedLens) chips.push({ tone: "tag", label: `[[${item.parsedLens}]]` });
-  if (item.parsedProject) chips.push({ tone: "tag", label: `▣ ${item.parsedProject}` });
-  if (item.parsedPriority === "IMPORTANT") chips.push({ tone: "priority", label: "★ Important" });
-  if (item.parsedPriority === "LOW") chips.push({ tone: "priority", label: "low" });
+  if (item.parsedDate)
+    chips.push({
+      tone: "date",
+      label: `📅 ${formatRelativeDay(item.parsedDate)}`,
+    });
+  if (item.parsedLens)
+    chips.push({ tone: "tag", label: `[[${item.parsedLens}]]` });
+  if (item.parsedProject)
+    chips.push({ tone: "tag", label: `▣ ${item.parsedProject}` });
+  if (item.parsedPriority === "IMPORTANT")
+    chips.push({ tone: "priority", label: "★ Important" });
+  if (item.parsedPriority === "LOW")
+    chips.push({ tone: "priority", label: "low" });
   if (item.parsedSize) chips.push({ tone: "tag", label: item.parsedSize });
   for (const tag of item.parsedTags) chips.push({ tone: "tag", label: tag });
   return chips;
@@ -63,7 +79,11 @@ function buildOutcome(w: Working): Outcome {
   if (w.type === "project") return "project";
   if (w.type === "resource") return "resource";
   if (w.type === "list-item") return "list-item";
-  return w.when === "Today" ? "task-today" : w.when === "Upcoming" ? "upcoming" : "someday";
+  return w.when === "Today"
+    ? "task-today"
+    : w.when === "Upcoming"
+      ? "upcoming"
+      : "someday";
 }
 
 /**
@@ -79,14 +99,9 @@ function buildOutcome(w: Working): Outcome {
  * `resolvedProjectId` is the capture-resolved project for the task path only;
  * it's the fallback when the user didn't pick one manually in the spec step.
  */
-export function buildDispatchPayload(
-  w: Working,
-  ctx: {
-    inboxItemId: string;
-    lensId: string;
-    resolvedProjectId?: string | null;
-  },
-): {
+/** The triageInboxItem args payload a dispatch builds (the named owner
+ *  contract for TriagePage's dispatch call). */
+export interface DispatchPayload {
   inboxItemId: string;
   decision: Outcome;
   lensId: string;
@@ -96,9 +111,22 @@ export function buildDispatchPayload(
   priority?: ParsedPriority;
   size?: ParsedSize;
   content?: string;
-} {
+}
+
+export function buildDispatchPayload(
+  w: Working,
+  ctx: {
+    inboxItemId: string;
+    lensId: string;
+    resolvedProjectId?: string | null;
+  },
+): DispatchPayload {
   const outcome = buildOutcome(w);
-  const base = { inboxItemId: ctx.inboxItemId, decision: outcome, lensId: ctx.lensId };
+  const base: DispatchPayload = {
+    inboxItemId: ctx.inboxItemId,
+    decision: outcome,
+    lensId: ctx.lensId,
+  };
   const name = w.title.trim();
   if (w.type === "task") {
     return {
@@ -125,7 +153,10 @@ export function buildDispatchPayload(
   return base;
 }
 
-export function canComplete(w: Working | null, chosenLensId: string | null): boolean {
+export function canComplete(
+  w: Working | null,
+  chosenLensId: string | null,
+): boolean {
   if (!w || !chosenLensId) return false;
   if (!w.title.trim()) return false;
   if (w.type === "resource") return !!w.parentProjectId;

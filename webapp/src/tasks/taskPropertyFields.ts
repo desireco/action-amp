@@ -131,16 +131,16 @@ function duePreset(dueDate: Date | string | null): string {
   return "next-month";
 }
 
-const PRIORITY_LABEL: Record<TaskPriority, string> = {
+const PRIORITY_LABEL = {
   LOW: "Low",
   NORMAL: "Normal",
   IMPORTANT: "Important",
-};
-const WHEN_LABEL: Record<TaskStatus, string> = {
+} as const satisfies Record<TaskPriority, string>;
+const WHEN_LABEL = {
   TODAY: "Today",
   UPCOMING: "Upcoming",
   SOMEDAY: "Someday",
-};
+} as const satisfies Record<TaskStatus, string>;
 
 export interface TaskPropertyArgs {
   task: TaskChipState;
@@ -247,26 +247,49 @@ export function taskPropertyFields({
   return fields;
 }
 
+/** The updateTaskDetails patch a PropertyChips pick produces. */
+export interface TaskChipPatch {
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  size?: TaskSize;
+  dueDate?: Date | null;
+}
+
+const TASK_STATUSES = new Set<string>(["TODAY", "UPCOMING", "SOMEDAY"]);
+const TASK_PRIORITIES = new Set<string>(["LOW", "NORMAL", "IMPORTANT"]);
+const TASK_SIZES = new Set<string>(["S", "M", "L", "XL"]);
+
+function isTaskStatus(value: string): value is TaskStatus {
+  return TASK_STATUSES.has(value);
+}
+
+function isTaskPriority(value: string): value is TaskPriority {
+  return TASK_PRIORITIES.has(value);
+}
+
+function isTaskSize(value: string): value is TaskSize {
+  return TASK_SIZES.has(value);
+}
+
 /**
  * Translate a PropertyChips onPick field+value into an updateTaskDetails patch.
  * The chip editor speaks string values; this maps them back to the task enums
- * / Date the op expects. TaskDetailPage promotes a Someday task to Upcoming
- * when it applies a concrete schedule.
+ * / Date the op expects — validating each value at the boundary (an invalid
+ * pick is dropped, {} — the old cast-through let bogus enums reach the op).
+ * TaskDetailPage promotes a Someday task to Upcoming when it applies a
+ * concrete schedule.
  */
 export function chipPickToTaskPatch(
   fieldKey: string,
   value: string,
-): { status?: TaskStatus; priority?: TaskPriority; size?: TaskSize; dueDate?: Date | null } {
+): TaskChipPatch {
   switch (fieldKey) {
     case "status":
-      // SAFETY: type assertion is safe — value is validated or from a trusted source.
-      return { status: value as TaskStatus };
+      return isTaskStatus(value) ? { status: value } : {};
     case "priority":
-      // SAFETY: type assertion is safe — value is validated or from a trusted source.
-      return { priority: value as TaskPriority };
+      return isTaskPriority(value) ? { priority: value } : {};
     case "size":
-      // SAFETY: type assertion is safe — value is validated or from a trusted source.
-      return { size: value as TaskSize };
+      return isTaskSize(value) ? { size: value } : {};
     case "due":
       return { dueDate: presetToDate(value) };
     default:
