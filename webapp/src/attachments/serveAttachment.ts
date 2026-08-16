@@ -98,9 +98,14 @@ export function writeAttachmentResponse(
     res.status(404).json({ error: "Not found." });
     return 404;
   }
-  // Strip characters that would break out of the quoted-string or inject
-  // headers; filenames are user-supplied via the share sheet.
-  const safeFilename = record.filename.replace(/["\r\n]/g, "");
+  // Node rejects non-latin1 bytes in header values, and real filenames have
+  // them: macOS screenshots are full of narrow no-break spaces (U+202F) —
+  // "Screenshot … at … PM.png" — which look like spaces but crash setHeader
+  // (the broken-thumbnail 500s). Serve an ASCII-only filename= fallback plus
+  // the RFC 5987 filename* form carrying the true name for clients that
+  // honor it (the CLI download names files from this header).
+  const cleanName = record.filename.replace(/["\r\n]/g, "");
+  const asciiName = cleanName.replace(/[^\x20-\x7E]/g, "_") || "image";
 
   // helmet's default CORP (same-origin) would block these bytes in the
   // browser: the client origin (app host / dev :4000) differs from the API
@@ -110,7 +115,10 @@ export function writeAttachmentResponse(
   res.setHeader("Content-Type", record.mimeType);
   res.setHeader("Content-Length", String(record.size));
   res.setHeader("Cache-Control", "private, max-age=31536000, immutable");
-  res.setHeader("Content-Disposition", `inline; filename="${safeFilename}"`);
+  res.setHeader(
+    "Content-Disposition",
+    `inline; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(cleanName)}`,
+  );
   res.status(200).end(Buffer.from(record.data));
   return 200;
 }

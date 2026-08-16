@@ -19,7 +19,16 @@ function makeRes(): Response & { headers: Record<string, string>; body: Buffer |
   const res = {
     headers,
     body: null as Buffer | null,
-    setHeader: (key: string, value: string) => { headers[key.toLowerCase()] = String(value); },
+    // Node's ServerResponse.setHeader validation (node:_http_outgoing) —
+    // anything outside tab + printable ASCII + latin1 throws. The mock must
+    // match, or header-breaking filenames pass tests but 500 in production
+    // (the macOS screenshot bug).
+    setHeader: (key: string, value: string) => {
+      if (/[^\t\x20-\x7e\x80-\xff]/.test(String(value))) {
+        throw new TypeError(`Invalid character in header content ["${key}"]`);
+      }
+      headers[key.toLowerCase()] = String(value);
+    },
     status: vi.fn().mockReturnThis(),
     json: vi.fn(),
     end: vi.fn((chunk?: Buffer) => { if (chunk) res.body = Buffer.from(chunk); }),
@@ -131,5 +140,26 @@ describe("serveAttachment", () => {
     await serveAttachment(makeReq(UUID), res, { entities });
     expect(res.headers["content-disposition"]).not.toContain("\r\n");
     expect(res.headers["content-disposition"]).toContain('badname');
+  });
+
+  // Regression (2026-08-16): macOS screenshot filenames use narrow no-break
+  // spaces (U+202F), which Node's setHeader rejects — every thumbnail 500'd.
+  // The ASCII fallback must be header-safe; the true name rides in filename*.
+  it("serves macOS screenshot filenames (narrow no-break spaces) without throwing", async () => {
+    const filename =
+      "Screenshot 2026-08-16\u202fat\u202f12.53.46\u202fPM.png";
+    const entities = makeEntities({
+      data: Buffer.from("x"), filename, mimeType: "image/png", size: 1,
+      inboxItem: { userId: "u1" },
+    });
+    const res = makeRes();
+    await serveAttachment(makeReq(UUID), res, { entities });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.headers["content-disposition"]).toContain(
+      "Screenshot 2026-08-16_at_12.53.46_PM.png",
+    );
+    expect(res.headers["content-disposition"]).toContain(
+      `filename*=UTF-8''${encodeURIComponent(filename)}`,
+    );
   });
 });
