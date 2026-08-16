@@ -31,7 +31,10 @@ import {
 } from "./parseCapture";
 import { taskPermalinkSource, uniquePermalink } from "../shared/permalinks";
 import { createListItemCore } from "../simpleLists/operationsCore";
-import { prepareImageAttachments, type ImageAttachmentInput } from "../shared/imageAttachments";
+import {
+  prepareImageAttachments,
+  type ImageAttachmentInput,
+} from "../shared/imageAttachments";
 
 /**
  * The entities slice these cores read. Loosely typed (same approach as
@@ -71,7 +74,17 @@ export async function createInboxItemCore(
     content,
     sourceUrl,
     attachments,
-  }: { userId: string; text: string; projectName?: string; projectId?: string; lensId?: string; title?: string; content?: string; sourceUrl?: string; attachments?: ImageAttachmentInput[] },
+  }: {
+    userId: string;
+    text: string;
+    projectName?: string;
+    projectId?: string;
+    lensId?: string;
+    title?: string;
+    content?: string;
+    sourceUrl?: string;
+    attachments?: ImageAttachmentInput[];
+  },
 ) {
   const raw = text?.trim();
   if (!raw) {
@@ -93,20 +106,21 @@ export async function createInboxItemCore(
   const preparedAttachments = prepareImageAttachments(attachments);
   const selectedProject = projectId
     ? await entities.Project.findFirst({
-      where: { id: projectId, userId },
-      select: { id: true, lensId: true },
-    })
+        where: { id: projectId, userId },
+        select: { id: true, lensId: true },
+      })
     : null;
   if (projectId && !selectedProject) throw new Error("Project not found.");
 
   const selectedLensId = selectedProject?.lensId ?? lensId;
   const selectedLens = selectedLensId
     ? await entities.Lens.findFirst({
-      where: { id: selectedLensId, userId },
-      select: { id: true },
-    })
+        where: { id: selectedLensId, userId },
+        select: { id: true },
+      })
     : null;
-  if (selectedLensId && !selectedLens) throw new Error("List or area not found.");
+  if (selectedLensId && !selectedLens)
+    throw new Error("List or area not found.");
   if (projectId && lensId && selectedProject?.lensId !== lensId) {
     throw new Error("Project and list must belong to the same area.");
   }
@@ -117,7 +131,9 @@ export async function createInboxItemCore(
       title: title?.trim() || null,
       content: content?.trim() || null,
       sourceUrl: sourceUrl?.trim() || null,
-      attachments: preparedAttachments ? { create: preparedAttachments } : undefined,
+      attachments: preparedAttachments
+        ? { create: preparedAttachments }
+        : undefined,
       userId,
       parsedDate: parsed.parsedDate,
       parsedPriority: parsed.parsedPriority,
@@ -126,8 +142,7 @@ export async function createInboxItemCore(
       // Explicit typeahead pick overrides anything the parser might extract
       // from the first # token. The picker and parser both feed the same
       // persisted project hint for triage resolution.
-      parsedProject:
-        projectName?.trim().toLowerCase() || parsed.parsedProject,
+      parsedProject: projectName?.trim().toLowerCase() || parsed.parsedProject,
       parsedLens: parsed.parsedLens,
       parsedProjectId: selectedProject?.id ?? null,
       parsedLensId: selectedLens?.id ?? null,
@@ -222,6 +237,22 @@ async function resolveEffectiveProject(
 }
 
 /** task-today / upcoming / someday → a Task with the mapped status. */
+/** The Task.create payload a triage "task" decision builds (tags attached
+ *  inline when parsed tags resolved, keeping the create a single write). */
+interface TaskTriageCreateData {
+  description: string;
+  permalink: string;
+  content: string | null;
+  userId: string;
+  lensId: string;
+  status: string;
+  priority: string;
+  size: string;
+  dueDate: Date | null;
+  projectId: string | null;
+  tags?: { connect: { id: string }[] };
+}
+
 async function createTaskFromTriage(
   entities: Entities,
   userId: string,
@@ -254,28 +285,30 @@ async function createTaskFromTriage(
       return !!existing;
     },
   );
+  // Built then conditionally extended (B5 convention) so the create stays a
+  // single atomic write — tags inline when present, no conditional spread.
+  // Tags carry onto tasks only (projects/goals drop them).
+  const taskData: TaskTriageCreateData = {
+    description: opts.title,
+    permalink,
+    content: opts.content,
+    userId,
+    lensId: opts.lensId,
+    status,
+    priority: opts.priority,
+    size: opts.size,
+    dueDate: opts.dueDate,
+    projectId: opts.projectId,
+  };
+  if (opts.tagRecords.length > 0) {
+    taskData.tags = {
+      connect: opts.tagRecords.map((t) => ({ id: t.id })),
+    };
+  }
   const task = await entities.Task.create({
-    data: {
-      description: opts.title,
-      permalink,
-      content: opts.content,
-      userId,
-      lensId: opts.lensId,
-      status,
-      priority: opts.priority,
-      size: opts.size,
-      dueDate: opts.dueDate,
-      projectId: opts.projectId,
-    },
+    data: taskData,
     select: { id: true },
   });
-  // Tags carry onto tasks only (projects/goals drop them).
-  if (opts.tagRecords.length > 0) {
-    await entities.Task.update({
-      where: { id: task.id },
-      data: { tags: { connect: opts.tagRecords.map((t) => ({ id: t.id })) } },
-    });
-  }
   return { kind: "task", id: task.id };
 }
 
@@ -371,7 +404,9 @@ export async function triageInboxItemCore(
     // Metadata only — the blobs are fetched solely in the list-item branch
     // (the one decision that moves attachments). Loading `data` here would
     // pull up to 20 MB of images into memory on every triage click.
-    include: { attachments: { select: { filename: true, mimeType: true, size: true } } },
+    include: {
+      attachments: { select: { filename: true, mimeType: true, size: true } },
+    },
   });
   if (!item || item.userId !== userId) {
     throw new Error("Inbox item not found.");
@@ -396,7 +431,11 @@ export async function triageInboxItemCore(
   if (decision === "list-item" && destinationLens?.type !== "SIMPLE_LIST") {
     throw new Error("List items require a Simple-list Lens.");
   }
-  if (filesIntoLens && decision !== "list-item" && destinationLens?.type !== "LIFE_AREA") {
+  if (
+    filesIntoLens &&
+    decision !== "list-item" &&
+    destinationLens?.type !== "LIFE_AREA"
+  ) {
     throw new Error("Tasks, Projects, and Resources require a Life-area Lens.");
   }
 
@@ -408,15 +447,23 @@ export async function triageInboxItemCore(
   const resolvedSize = size ?? item.parsedSize ?? "M";
   const resolvedContent = content?.trim() || null;
   const title = name?.trim() || item.title || item.text;
-  const itemNotes = [item.content, item.sourceUrl].filter(Boolean).join("\n\n") || null;
+  const itemNotes =
+    [item.content, item.sourceUrl].filter(Boolean).join("\n\n") || null;
 
-  let result: { kind: "task" | "project" | "list-item" | "archive" | "delete"; id: string };
+  let result: {
+    kind: "task" | "project" | "list-item" | "archive" | "delete";
+    id: string;
+  };
 
   switch (decision) {
     case "task-today":
     case "upcoming":
     case "someday": {
-      const tagRecords = await resolveTagRecords(entities, userId, item.parsedTags);
+      const tagRecords = await resolveTagRecords(
+        entities,
+        userId,
+        item.parsedTags,
+      );
       const effectiveProject = await resolveEffectiveProject(
         entities,
         userId,
