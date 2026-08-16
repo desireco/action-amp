@@ -22,7 +22,10 @@ verified: 2026-07-04
 
 **Image attachments are viewable** (2026-08-16). Items captured with images
 (Android share target, ⌘K paste/drop, or the CLI) show their media inline.
-The inbox row shows small thumbnails; the **triage card shows media large** —
+The **inbox row leads with a square media cover on the left** — 96px (72px
+narrow screens), first image, `+N` badge when more follow — with the text,
+source hostname, and parsed chips to its right; the link chip shows the
+share's hostname, not a generic label. The **triage card shows media large** —
 the first image at ~2–3× thumbnail size spanning the card (`clamp(144px, 26vh,
 224px)`, `object-fit: contain` — never cropped), with multiple images as a
 scroll-snap carousel (swipe/trackpad, prev/next chevrons, clickable dots) so
