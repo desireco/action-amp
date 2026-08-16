@@ -3,27 +3,23 @@ import {
   ensureOnboarded,
   setPreferredName,
   completeOnboarding,
+  onboardingDb,
 } from "./operations";
 import { mockContext } from "../test/mockContext";
 
-// sendWelcomeEmail reaches Auth via a module-level PrismaClient (Auth isn't
-// exposed through context.entities). Mock it so tests don't hit the real DB;
-// auth.findFirst returns null by default => no email resolves, no send. The
-// email path itself is covered in welcomeEmail.test.ts (buildWelcomeEmail).
-// vi.hoisted: vi.mock is hoisted above top-level consts, so the mock fn must
-// be hoisted too or it's accessed before initialization.
-const { authFindFirst } = vi.hoisted(() => ({
-  authFindFirst: vi.fn().mockResolvedValue(null),
-}));
-vi.mock("@prisma/client", () => ({
-  PrismaClient: class MockPrismaClient {
-    auth = { findFirst: authFindFirst };
-  },
-}));
+// sendWelcomeEmail reaches Auth via the module's direct PrismaClient (Auth
+// isn't exposed through context.entities). The onboardingDb seam makes that
+// one lookup swappable — no @prisma/client module mocking. Default: no auth
+// row resolves, so no email is composed or sent (the email path itself is
+// covered in welcomeEmail.test.ts).
+const findAuthByUser = vi.fn().mockResolvedValue(null);
+const realFindAuthByUser = onboardingDb.findAuthByUser;
 
 beforeEach(() => {
-  authFindFirst.mockResolvedValue(null);
-  authFindFirst.mockClear();
+  findAuthByUser.mockResolvedValue(null);
+  findAuthByUser.mockClear();
+  // SAFETY: vi.fn() satisfies the auth-lookup signature at runtime.
+  onboardingDb.findAuthByUser = findAuthByUser as typeof realFindAuthByUser;
 });
 
 /**
@@ -40,7 +36,7 @@ describe("ensureOnboarded — guards", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
     await expect(
-    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
+      // SAFETY: op takes no positional input; Wasp passes empty object at call site.
       ensureOnboarded(undefined as never, m.context),
     ).rejects.toThrow(/Not authenticated/);
   });
@@ -75,11 +71,23 @@ describe("ensureOnboarded — idempotency", () => {
     // flags (Work=indigo/excluded, Me=emerald/included).
     expect(m.entities.Lens.create).toHaveBeenCalledTimes(2);
     expect(m.entities.Lens.create).toHaveBeenNthCalledWith(1, {
-      data: { name: "Work", isDefault: true, isIncluded: false, color: "indigo", userId: "user-1" },
+      data: {
+        name: "Work",
+        isDefault: true,
+        isIncluded: false,
+        color: "indigo",
+        userId: "user-1",
+      },
       select: { id: true, name: true },
     });
     expect(m.entities.Lens.create).toHaveBeenNthCalledWith(2, {
-      data: { name: "Me", isDefault: true, isIncluded: true, color: "emerald", userId: "user-1" },
+      data: {
+        name: "Me",
+        isDefault: true,
+        isIncluded: true,
+        color: "emerald",
+        userId: "user-1",
+      },
       select: { id: true, name: true },
     });
     // General project seeded once per lens.
@@ -189,9 +197,17 @@ describe("ensureOnboarded — idempotency", () => {
     const m = mockContext();
     m.entities.Lens.findFirst
       .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
-      .mockResolvedValueOnce({ id: "lens-life", name: "Life", color: "emerald" }) // renamed!
+      .mockResolvedValueOnce({
+        id: "lens-life",
+        name: "Life",
+        color: "emerald",
+      }) // renamed!
       .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
-      .mockResolvedValueOnce({ id: "lens-life", name: "Life", color: "emerald" });
+      .mockResolvedValueOnce({
+        id: "lens-life",
+        name: "Life",
+        color: "emerald",
+      });
     m.entities.Project.findFirst.mockResolvedValue({ id: "gen" });
     m.entities.Task.count.mockResolvedValue(5);
 
@@ -218,7 +234,9 @@ describe("ensureOnboarded — first-run seed", () => {
     m.entities.Project.findFirst
       .mockResolvedValueOnce({ id: "gen-work" })
       .mockResolvedValueOnce({ id: "gen-me" });
-    m.entities.User.findUnique.mockResolvedValue({ onboardingStage: "SAMPLE_TASK" });
+    m.entities.User.findUnique.mockResolvedValue({
+      onboardingStage: "SAMPLE_TASK",
+    });
     m.entities.Task.count.mockResolvedValue(0); // ← zero-task guard triggers
     m.entities.Task.create.mockResolvedValue({ id: "seed-task" });
 
@@ -250,7 +268,9 @@ describe("ensureOnboarded — first-run seed", () => {
       .mockResolvedValueOnce({ id: "lens-work", name: "Work", color: "indigo" })
       .mockResolvedValueOnce({ id: "lens-me", name: "Me", color: "emerald" });
     m.entities.Project.findFirst.mockResolvedValue({ id: "general" });
-    m.entities.User.findUnique.mockResolvedValue({ onboardingStage: "COMPLETE" });
+    m.entities.User.findUnique.mockResolvedValue({
+      onboardingStage: "COMPLETE",
+    });
     m.entities.Task.count.mockResolvedValue(0);
 
     // SAFETY: op takes no positional input; Wasp passes empty object at call site.
@@ -300,7 +320,7 @@ describe("completeOnboarding — guards + behavior", () => {
   it("throws if not authenticated", async () => {
     const m = mockContext(null);
     await expect(
-    // SAFETY: op takes no positional input; Wasp passes empty object at call site.
+      // SAFETY: op takes no positional input; Wasp passes empty object at call site.
       completeOnboarding(undefined as never, m.context),
     ).rejects.toThrow(/Not authenticated/);
   });
@@ -325,10 +345,7 @@ describe("completeOnboarding — guards + behavior", () => {
     });
     // The email path ran (auth queried for the address) even though the
     // default mock returns no identity, so nothing was sent.
-    expect(authFindFirst).toHaveBeenCalledWith({
-      where: { userId: "user-1" },
-      include: { identities: true },
-    });
+    expect(findAuthByUser).toHaveBeenCalledWith("user-1");
   });
 
   it("lets a returning member skip guided practice", async () => {
@@ -363,7 +380,7 @@ describe("completeOnboarding — guards + behavior", () => {
     expect(result).toEqual({ hasSeenOnboarding: true });
     expect(m.entities.User.update).not.toHaveBeenCalled();
     // Early-return short-circuits before the email path too.
-    expect(authFindFirst).not.toHaveBeenCalled();
+    expect(findAuthByUser).not.toHaveBeenCalled();
   });
 });
 

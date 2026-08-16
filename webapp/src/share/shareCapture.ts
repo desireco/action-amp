@@ -4,6 +4,15 @@ import { createInboxItemCore } from "../inbox/operationsCore";
 import { getSessionAuth } from "../auth/sessionAuth";
 import { composeShareText, type ShareFields } from "./composeShareText";
 
+/**
+ * Injectable capture dependency — the seam the share tests swap (the pure
+ * core's DB work is its own tested concern; the handler's redirects +
+ * compose threading are what this route's tests exercise).
+ */
+export const shareDeps = {
+  createInboxItem: createInboxItemCore,
+};
+
 // POST /api/share — the manifest.json share_target action. Receives a
 // form-urlencoded body (title / text / url), composes a single capture string,
 // saves it via createInboxItemCore (the pure core the Wasp createInboxItem
@@ -63,7 +72,7 @@ export const shareCapture = async (
   if (!text) return respondWithRedirect(res, "/share?error=empty", wantsJson);
 
   try {
-    const created = await createInboxItemCore(_context.entities, {
+    const created = await shareDeps.createInboxItem(_context.entities, {
       userId: auth.userId,
       text,
     });

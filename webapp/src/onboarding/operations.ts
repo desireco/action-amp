@@ -47,15 +47,25 @@ const STARTER_TASK = "Practice: complete this task";
 // module-level instance (PrismaClient is designed as a long-lived singleton).
 const prisma = new PrismaClient();
 
+/**
+ * Injectable Auth lookup — the seam tests swap (the direct PrismaClient
+ * exists because Wasp keeps auth models out of context.entities; tests fake
+ * the one query the welcome-email path needs).
+ */
+export const onboardingDb = {
+  findAuthByUser: (userId: string) =>
+    prisma.auth.findFirst({
+      where: { userId },
+      include: { identities: true },
+    }),
+};
+
 async function sendWelcomeEmail(user: {
   id: string;
   firstName?: string | null;
   preferredName?: string | null;
 }) {
-  const auth = await prisma.auth.findFirst({
-    where: { userId: user.id },
-    include: { identities: true },
-  });
+  const auth = await onboardingDb.findAuthByUser(user.id);
   if (!auth) return;
 
   // Map Wasp's flat AuthIdentity rows into the {email, google} shape
@@ -101,7 +111,13 @@ export const ensureOnboarded = (async (_args, context) => {
     });
     if (!existing) {
       const row = await context.entities.Lens.create({
-        data: { name: lens.name, isDefault: true, isIncluded: lens.isIncluded, color: lens.color, userId },
+        data: {
+          name: lens.name,
+          isDefault: true,
+          isIncluded: lens.isIncluded,
+          color: lens.color,
+          userId,
+        },
         select: { id: true, name: true },
       });
       created.push(row);
@@ -158,13 +174,16 @@ export const ensureOnboarded = (async (_args, context) => {
     });
     const taskCount = await context.entities.Task.count({ where: { userId } });
     if (onboarding?.onboardingStage === "SAMPLE_TASK" && taskCount === 0) {
-      const permalink = await uniquePermalink(STARTER_TASK, async (candidate) => {
-        const existing = await context.entities.Task.findFirst({
-          where: { userId, permalink: candidate },
-          select: { id: true },
-        });
-        return !!existing;
-      });
+      const permalink = await uniquePermalink(
+        STARTER_TASK,
+        async (candidate) => {
+          const existing = await context.entities.Task.findFirst({
+            where: { userId, permalink: candidate },
+            select: { id: true },
+          });
+          return !!existing;
+        },
+      );
       await context.entities.Task.create({
         data: {
           description: STARTER_TASK,
@@ -234,11 +253,15 @@ export const completeOnboarding = (async (args, context) => {
     },
   });
 
-  void recordAnalyticsEventCore(context.entities, {
-    name: "ONBOARDING_COMPLETED",
-    visitorId: `user_${context.user.id}`,
-    route: "/welcome",
-  }, context.user.id).catch(() => {});
+  void recordAnalyticsEventCore(
+    context.entities,
+    {
+      name: "ONBOARDING_COMPLETED",
+      visitorId: `user_${context.user.id}`,
+      route: "/welcome",
+    },
+    context.user.id,
+  ).catch(() => {});
 
   try {
     await sendWelcomeEmail(context.user);
