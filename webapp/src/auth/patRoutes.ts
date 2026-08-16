@@ -188,7 +188,8 @@ async function gateLens(
   if (violation) return { status: "denied", msg: violation };
   const lensType = await resolveLensType(authEntities, userId, lensId);
   if (!lensType) return { status: "not-found" };
-  if (requiredType === "LIFE_AREA" && lensType !== "LIFE_AREA") return { status: "incompatible" };
+  if (requiredType === "LIFE_AREA" && lensType !== "LIFE_AREA")
+    return { status: "incompatible" };
   return { status: "ok", lens, lensType };
 }
 
@@ -224,18 +225,114 @@ function sendViolation(res: Response, msg: EntitlementMessage) {
   });
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Request-boundary parsing — the ONLY layer that reads req.query / req.body.
+// External CLI values are decoded into domain types here; handlers below
+// consume only parsed types.
+// ───────────────────────────────────────────────────────────────────────────
+
+/** A JSON value as body-parser produces it (JSON.parse output — no
+ *  unknown/any escape hatch; every arm is concrete). */
+type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+
+/** A parsed CLI request body (all fields optional — routes read what they own). */
+type CliBody = { [key: string]: Json | undefined };
+
+/** An inbox/list capture attachment as the CLI sends it (base64 image parts).
+ *  A type alias (not interface) so it satisfies Json's index signature. */
+type CliAttachment = {
+  filename: string;
+  mimeType: string;
+  dataBase64: string;
+};
+
+/**
+ * Primitive-string test for JSON-parsed values. JSON.parse only ever produces
+ * primitive strings (never boxed), so constructor identity is exact here —
+ * numbers, booleans, arrays, and plain objects all fail it.
+ */
+function isJsonString(value: Json | undefined): value is string {
+  return value?.constructor === String;
+}
+
 /** Safely read a string from an Express query param or null. */
 function queryString(req: Request, key: string): string | null {
   const v = req.query[key];
-  return typeof v === "string" ? v : null;
+  // qs produces strings, arrays, and plain objects — a real param value is
+  // the one arm that is not an Object instance.
+  return v != null && !(v instanceof Object) ? v : null;
 }
 
-/** Safely read a string field from a JSON body or undefined. */
-function bodyString(body: unknown, key: string): string | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "string" ? v : undefined;
+/** Safely read a string field from a parsed JSON body or undefined. */
+function bodyString(
+  body: CliBody | null | undefined,
+  key: string,
+): string | undefined {
+  const v = body?.[key];
+  return isJsonString(v) ? v : undefined;
 }
+
+const TRIAGE_DECISIONS = new Set<string>([
+  "task-today",
+  "upcoming",
+  "someday",
+  "project",
+  "resource",
+  "list-item",
+  "archive",
+  "delete",
+]);
+
+function isTriageDecision(value: string): value is TriageDecision {
+  return TRIAGE_DECISIONS.has(value);
+}
+
+const PRIORITIES = new Set<string>(["LOW", "NORMAL", "IMPORTANT"]);
+
+function isPriority(value: string): value is "LOW" | "NORMAL" | "IMPORTANT" {
+  return PRIORITIES.has(value);
+}
+
+const SIZES = new Set<string>(["S", "M", "L", "XL"]);
+
+function isSize(value: string): value is "S" | "M" | "L" | "XL" {
+  return SIZES.has(value);
+}
+
+/** Read + validate `priority`; an invalid value is a 400 at the boundary (the
+ *  raw string used to be cast through and fail later at the Prisma enum). */
+function readPriority(body: CliBody | null | undefined) {
+  const raw = bodyString(body, "priority");
+  if (raw === undefined) return undefined;
+  if (!isPriority(raw)) {
+    throw new InvalidCliField("priority must be LOW, NORMAL, or IMPORTANT.");
+  }
+  return raw;
+}
+
+/** Read + validate `size` (same boundary treatment as priority). */
+function readSize(body: CliBody | null | undefined) {
+  const raw = bodyString(body, "size");
+  if (raw === undefined) return undefined;
+  if (!isSize(raw)) {
+    throw new InvalidCliField("size must be S, M, L, or XL.");
+  }
+  return raw;
+}
+
+/** Structural check for the attachment objects the CLI posts. */
+function isCliAttachment(value: Json): value is CliAttachment {
+  return (
+    value instanceof Object &&
+    !Array.isArray(value) &&
+    isJsonString(value.filename) &&
+    isJsonString(value.mimeType) &&
+    isJsonString(value.dataBase64)
+  );
+}
+
+/** A boundary-validation failure thrown by the read* helpers (mapped to 400). */
+class InvalidCliField extends Error {}
 
 /**
  * A thrown entitlement rejection from an injected `assertLens` /
@@ -253,12 +350,16 @@ interface EntitlementRejection {
   reason?: string;
 }
 
-/** Type guard for the entitlement-rejection objects the callbacks throw. */
-function isEntitlementRejection(err: unknown): err is EntitlementRejection {
+/** Type guard for the entitlement-rejection objects the callbacks throw.
+ *  The tag + both payload fields are checked — every thrower in this file
+ *  constructs the full shape. */
+function isEntitlementRejection(cause: unknown): cause is EntitlementRejection {
   return (
-    typeof err === "object" &&
-    err !== null &&
-    (err as { __entitlement?: unknown }).__entitlement === true
+    cause instanceof Object &&
+    "__entitlement" in cause &&
+    cause.__entitlement === true &&
+    "httpStatus" in cause &&
+    "message" in cause
   );
 }
 
@@ -268,11 +369,11 @@ function isEntitlementRejection(err: unknown): err is EntitlementRejection {
  * unexpected. Mirrors how the Wasp ops surface these (404 via throwHttpStatus
  * vs 500 fallback) without needing wasp/server here.
  */
-function taskWriteError(res: Response, err: unknown, op: string) {
-  if (err instanceof Error && /not found/i.test(err.message)) {
-    return res.status(404).json({ error: err.message });
+function taskWriteError(res: Response, cause: unknown, op: string) {
+  if (cause instanceof Error && /not found/i.test(cause.message)) {
+    return res.status(404).json({ error: cause.message });
   }
-  console.error(`[cli/task/${op}] failed:`, err);
+  console.error(`[cli/task/${op}] failed:`, cause);
   return res.status(500).json({ error: `Could not ${op} task.` });
 }
 
@@ -291,10 +392,7 @@ export const patIssue = async (
   if (cliViolation) {
     return sendViolation(res, cliViolation);
   }
-  const label =
-    typeof req.body?.label === "string"
-      ? req.body.label.trim().slice(0, 80)
-      : "";
+  const label = bodyString(req.body, "label")?.trim().slice(0, 80) ?? "";
   if (!label) {
     return res.status(400).json({ error: "A label is required." });
   }
@@ -329,7 +427,7 @@ export const patRevoke = async (
   if (!context.user) {
     return res.status(401).json({ error: "Not authenticated." });
   }
-  const id = typeof req.body?.id === "string" ? req.body.id : null;
+  const id = bodyString(req.body, "id") ?? null;
   if (!id) {
     return res.status(400).json({ error: "An id is required." });
   }
@@ -379,7 +477,7 @@ export const patList = async (
 export const cliNow = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -474,14 +572,14 @@ export const cliNow = async (
 export const cliCapture = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
     return res.status(401).json({ error: "Not authenticated." });
   }
 
-  const text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+  const text = bodyString(req.body, "text")?.trim() ?? "";
   if (!text) {
     return res.status(400).json({ error: "Capture text is required." });
   }
@@ -489,45 +587,41 @@ export const cliCapture = async (
   const projectId = bodyString(req.body, "projectId");
   const listId = bodyString(req.body, "listId");
   if (projectId && listId) {
-    return res.status(400).json({ error: "Choose either projectId or listId, not both." });
-  }
-  const attachments = Array.isArray(req.body?.attachments)
-    ? req.body.attachments.filter(
-        (
-          attachment: unknown,
-        ): attachment is {
-          filename: string;
-          mimeType: string;
-          dataBase64: string;
-        } =>
-          typeof attachment === "object" &&
-          attachment !== null &&
-          typeof (attachment as Record<string, unknown>).filename ===
-            "string" &&
-          typeof (attachment as Record<string, unknown>).mimeType ===
-            "string" &&
-          typeof (attachment as Record<string, unknown>).dataBase64 ===
-            "string",
-      )
-    : undefined;
-  if (
-    Array.isArray(req.body?.attachments) &&
-    attachments?.length !== req.body.attachments.length
-  ) {
     return res
       .status(400)
-      .json({
-        error: "Attachments must include filename, mimeType, and dataBase64.",
-      });
+      .json({ error: "Choose either projectId or listId, not both." });
+  }
+  const rawAttachments = req.body?.attachments;
+  const attachments = Array.isArray(rawAttachments)
+    ? rawAttachments.filter((a: Json): a is CliAttachment => isCliAttachment(a))
+    : undefined;
+  if (
+    Array.isArray(rawAttachments) &&
+    attachments?.length !== rawAttachments.length
+  ) {
+    return res.status(400).json({
+      error: "Attachments must include filename, mimeType, and dataBase64.",
+    });
   }
 
   try {
     if (listId) {
-      const gate = await gateLens(toEntUser(user), user.id, listId, WORK_LENS_MESSAGE, "ANY");
-      if (gate.status === "not-found") return res.status(404).json({ error: "No such list for this account." });
+      const gate = await gateLens(
+        toEntUser(user),
+        user.id,
+        listId,
+        WORK_LENS_MESSAGE,
+        "ANY",
+      );
+      if (gate.status === "not-found")
+        return res
+          .status(404)
+          .json({ error: "No such list for this account." });
       if (gate.status === "denied") return sendViolation(res, gate.msg);
       if (gate.status === "incompatible" || gate.lensType !== "SIMPLE_LIST") {
-        return res.status(400).json({ error: "listId must identify a Simple list." });
+        return res
+          .status(400)
+          .json({ error: "listId must identify a Simple list." });
       }
       const created = await createListItemCore(authEntities, {
         userId: user.id,
@@ -552,11 +646,9 @@ export const cliCapture = async (
     return res.status(201).json({ ok: true, kind: "inbox-item", ...created });
   } catch (err) {
     console.error("[cli/capture] failed:", err);
-    return res
-      .status(400)
-      .json({
-        error: err instanceof Error ? err.message : "Could not capture.",
-      });
+    return res.status(400).json({
+      error: err instanceof Error ? err.message : "Could not capture.",
+    });
   }
 };
 
@@ -570,7 +662,7 @@ export const cliCapture = async (
 export const cliWhoami = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -599,7 +691,7 @@ export const cliWhoami = async (
 export const cliTaskShow = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -625,7 +717,7 @@ export const cliTaskShow = async (
 export const cliTaskStart = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -655,7 +747,7 @@ export const cliTaskStart = async (
 export const cliTaskPause = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -677,7 +769,7 @@ export const cliTaskPause = async (
 export const cliTaskDone = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -704,7 +796,7 @@ export const cliTaskDone = async (
 export const cliTaskSnooze = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -740,7 +832,7 @@ export const cliTaskSnooze = async (
 export const cliTaskMove = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -754,11 +846,8 @@ export const cliTaskMove = async (
   if (status !== "TODAY" && status !== "UPCOMING" && status !== "SOMEDAY") {
     return res.status(400).json({ error: "Invalid status." });
   }
-  const dueDateRaw = req.body?.dueDate;
-  const dueDate =
-    typeof dueDateRaw === "string" || dueDateRaw instanceof Date
-      ? new Date(dueDateRaw)
-      : undefined;
+  const dueDateRaw = bodyString(req.body, "dueDate");
+  const dueDate = dueDateRaw !== undefined ? new Date(dueDateRaw) : undefined;
   try {
     const task = await updateTaskStatusCore(authEntities, {
       userId: user.id,
@@ -782,7 +871,7 @@ export const cliTaskMove = async (
 export const cliToday = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -805,7 +894,7 @@ export const cliToday = async (
 export const cliTodayDone = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -839,7 +928,7 @@ export const cliTodayDone = async (
 export const cliInboxList = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -868,7 +957,7 @@ export const cliInboxList = async (
 export const cliInboxTriage = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -876,14 +965,19 @@ export const cliInboxTriage = async (
   }
   const entUser = toEntUser(user);
   const inboxItemId = bodyString(req.body, "inboxItemId");
-  const decision = bodyString(req.body, "decision") as
-    TriageDecision | undefined;
-  const lensId = bodyString(req.body, "lensId");
-  if (!inboxItemId || !decision) {
+  const decisionRaw = bodyString(req.body, "decision");
+  if (!inboxItemId || !decisionRaw) {
     return res
       .status(400)
       .json({ error: "inboxItemId and decision are required." });
   }
+  if (!isTriageDecision(decisionRaw)) {
+    return res.status(400).json({
+      error: `decision must be one of: ${[...TRIAGE_DECISIONS].join(", ")}.`,
+    });
+  }
+  const decision: TriageDecision = decisionRaw;
+  const lensId = bodyString(req.body, "lensId");
   // Archive + delete discard the item — neither files into a lens, so lensId
   // is optional for them. Every other decision (task/project/resource) needs
   // a lens to file into.
@@ -898,7 +992,13 @@ export const cliInboxTriage = async (
   // Throws a tagged violation so the catch below can 402 it. Mirrors
   // `assertLensAllowed` from entitlementHttp.ts without the HttpError dep.
   const assertLens = async (resolvedLensId: string): Promise<void> => {
-    const gate = await gateLens(entUser, user.id, resolvedLensId, WORK_LENS_MESSAGE, "ANY");
+    const gate = await gateLens(
+      entUser,
+      user.id,
+      resolvedLensId,
+      WORK_LENS_MESSAGE,
+      "ANY",
+    );
     if (gate.status === "not-found") {
       // The core resolved a lens that doesn't belong to the user — treat as
       // 404 so the CLI surfaces "not found" rather than a silent 402.
@@ -980,15 +1080,18 @@ export const cliInboxTriage = async (
       goalId: bodyString(req.body, "goalId"),
       projectId: bodyString(req.body, "projectId"),
       name: bodyString(req.body, "name"),
-      priority: bodyString(req.body, "priority") as
-        "LOW" | "NORMAL" | "IMPORTANT" | undefined,
-      size: bodyString(req.body, "size") as "S" | "M" | "L" | "XL" | undefined,
+      priority: readPriority(req.body),
+      size: readSize(req.body),
       content: bodyString(req.body, "content"),
       assertLens,
       assertProjectCap,
     });
     return res.status(200).json({ result });
   } catch (err) {
+    // Boundary validation (readPriority / readSize) → 400.
+    if (err instanceof InvalidCliField) {
+      return res.status(400).json({ error: err.message });
+    }
     // Entitlement-tagged rejections from the injected callbacks → their status.
     if (isEntitlementRejection(err)) {
       return res
@@ -1012,7 +1115,7 @@ export const cliInboxTriage = async (
 export const cliAttachmentDownload = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1046,7 +1149,7 @@ export const cliAttachmentDownload = async (
 export const cliProjectList = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1084,7 +1187,7 @@ export const cliProjectList = async (
 export const cliProjectShow = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1111,7 +1214,7 @@ export const cliProjectShow = async (
 export const cliProjectCreate = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1178,7 +1281,7 @@ export const cliProjectCreate = async (
 export const cliProjectAddTask = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1253,7 +1356,7 @@ export const cliProjectAddTask = async (
 export const cliResourceList = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) return res.status(401).json({ error: "Not authenticated." });
@@ -1279,7 +1382,7 @@ export const cliResourceList = async (
 export const cliResourceCreate = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) return res.status(401).json({ error: "Not authenticated." });
@@ -1306,19 +1409,16 @@ export const cliResourceCreate = async (
     return res.status(201).json({ resource });
   } catch (err) {
     console.error("[cli/resource/create] failed:", err);
-    return res
-      .status(400)
-      .json({
-        error:
-          err instanceof Error ? err.message : "Could not create resource.",
-      });
+    return res.status(400).json({
+      error: err instanceof Error ? err.message : "Could not create resource.",
+    });
   }
 };
 
 export const cliResourceUpdate = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) return res.status(401).json({ error: "Not authenticated." });
@@ -1347,19 +1447,16 @@ export const cliResourceUpdate = async (
   } catch (err) {
     if (err instanceof Error && /not found/i.test(err.message))
       return res.status(404).json({ error: err.message });
-    return res
-      .status(400)
-      .json({
-        error:
-          err instanceof Error ? err.message : "Could not update resource.",
-      });
+    return res.status(400).json({
+      error: err instanceof Error ? err.message : "Could not update resource.",
+    });
   }
 };
 
 export const cliResourceDelete = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) return res.status(401).json({ error: "Not authenticated." });
@@ -1398,7 +1495,7 @@ export const cliResourceDelete = async (
 export const cliGoalList = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1436,7 +1533,7 @@ export const cliGoalList = async (
 export const cliGoalShow = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1463,7 +1560,7 @@ export const cliGoalShow = async (
 export const cliGoalCreate = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1525,7 +1622,7 @@ export const cliGoalCreate = async (
 export const cliLensList = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1547,7 +1644,7 @@ export const cliLensList = async (
 export const cliLensShow = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1580,7 +1677,7 @@ export const cliLensShow = async (
 export const cliLogbook = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1641,7 +1738,7 @@ export const cliLogbook = async (
 export const cliReview = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!user) {
@@ -1734,7 +1831,7 @@ function requireAdmin(
 export const cliFeedbackList = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!requireAdmin(user, res)) return;
@@ -1778,7 +1875,7 @@ export const cliFeedbackList = async (
 export const cliFeedbackShow = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!requireAdmin(user, res)) return;
@@ -1804,7 +1901,7 @@ export const cliFeedbackShow = async (
 export const cliFeedbackStatus = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!requireAdmin(user, res)) return;
@@ -1815,18 +1912,14 @@ export const cliFeedbackStatus = async (
   }
   const status = bodyString(req.body, "status");
   if (!status) {
-    return res
-      .status(400)
-      .json({
-        error: `status is required. One of: ${FEEDBACK_STATUSES.join(", ")}.`,
-      });
+    return res.status(400).json({
+      error: `status is required. One of: ${FEEDBACK_STATUSES.join(", ")}.`,
+    });
   }
   if (!isFeedbackStatus(status)) {
-    return res
-      .status(400)
-      .json({
-        error: `Invalid status. Must be one of: ${FEEDBACK_STATUSES.join(", ")}.`,
-      });
+    return res.status(400).json({
+      error: `Invalid status. Must be one of: ${FEEDBACK_STATUSES.join(", ")}.`,
+    });
   }
 
   try {
@@ -1851,7 +1944,7 @@ export const cliFeedbackStatus = async (
 export const cliFeedbackDelete = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!requireAdmin(user, res)) return;
@@ -1882,7 +1975,7 @@ export const cliFeedbackDelete = async (
 export const cliAdminStats = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!requireAdmin(user, res)) return;
@@ -1901,7 +1994,7 @@ export const cliAdminStats = async (
 export const cliAdminGrowth = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!requireAdmin(user, res)) return;
@@ -1920,7 +2013,7 @@ export const cliAdminGrowth = async (
 export const cliAdminFeedback = async (
   req: Request,
   res: Response,
-  _context: unknown,
+  _context: WaspApiContext,
 ) => {
   const user = req.patUser;
   if (!requireAdmin(user, res)) return;
