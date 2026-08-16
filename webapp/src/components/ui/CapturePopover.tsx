@@ -5,6 +5,14 @@ import { CloseButton } from "./CloseButton";
 import { parseCapture, type ParsedCapture } from "../../inbox/parseCapture";
 import { detectMention, type MentionState } from "./detectMention";
 import { getCaretCoordinates } from "./caretCoords";
+import {
+  MAX_IMAGE_ATTACHMENTS,
+  MAX_IMAGE_ATTACHMENT_BYTES,
+} from "../../shared/imageAttachments";
+import {
+  imageFilesFromDataTransfer,
+  rawFilesFromDataTransfer,
+} from "../../shared/imageFiles";
 import "./Overlays.css";
 
 /**
@@ -19,18 +27,28 @@ import "./Overlays.css";
  *   Shift+Enter → literal newline
  *   #           → opens autocomplete dropdown (projects ▣)
  *                 Arrow keys navigate, Enter/Tab accepts, Esc closes
+ *   ⌘V / drop   → attach images (screenshots etc., up to 4, ≤5 MB each);
+ *                 a drop on the closed-state FAB opens the popover with
+ *                 the files preloaded via `initialFiles`
  */
 
 interface CapturedItem {
   id: number;
   text: string;
   parsed: ParsedCapture;
+  imageCount: number;
 }
 
 interface Mention {
   name: string;
   kind: "project";
   lensName?: string | null;
+}
+
+/** A not-yet-saved image: the File plus its local preview object URL. */
+interface PendingImage {
+  file: File;
+  url: string;
 }
 
 const MAX_HEIGHT_PX = 96;
@@ -42,12 +60,15 @@ export function CapturePopover({
   projects,
   customLensNames,
   activeLensName,
+  initialFiles,
 }: {
   onClose: () => void;
-  onSubmit: (text: string) => Promise<void> | void;
+  onSubmit: (text: string, files?: File[]) => Promise<void> | void;
   projects: { id: string; name: string; lensName: string | null }[];
   customLensNames: string[];
   activeLensName: string | null;
+  /** Files dropped on the FAB before the popover opened (consumed on mount). */
+  initialFiles?: File[];
 }) {
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -56,8 +77,15 @@ export function CapturePopover({
   const [caretIndex, setCaretIndex] = useState(0);
   const [mentionSel, setMentionSel] = useState(0);
   const [mentionPos, setMentionPos] = useState<{ top: number; left: number } | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<PendingImage[]>([]);
+  const [dragging, setDragging] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  // dragenter/dragleave fire per child element — count depth so the
+  // highlight stays stable while the drag moves across the card.
+  const dragDepth = useRef(0);
+  // Latest attachments for the unmount cleanup — state itself is stale there.
+  const pendingFilesRef = useRef<PendingImage[]>([]);
 
   const parsed = text.trim()
     ? parseCapture(text, new Date(), customLensNames)
@@ -121,6 +149,89 @@ export function CapturePopover({
     grow();
   }, []);
 
+  useEffect(() => {
+    pendingFilesRef.current = pendingFiles;
+  });
+
+  // Revoke any leftover preview URLs on close (Esc / backdrop / × with
+  // images still pending — the submit paths revoke via clearFiles()).
+  useEffect(() => {
+    return () => {
+      for (const p of pendingFilesRef.current) URL.revokeObjectURL(p.url);
+    };
+  }, []);
+
+  // Files dropped on the FAB before open — validated like any other add.
+  useEffect(() => {
+    if (initialFiles?.length) addFiles(initialFiles);
+  }, []);
+
+  /**
+   * Validate + queue images. Client-side mirror of prepareImageAttachments
+   * (same caps, same error copy) so bad files are rejected before submit;
+   * the server still re-validates.
+   */
+  function addFiles(incoming: File[]) {
+    setError(null);
+    const images = incoming.filter((f) => f.type.startsWith("image/"));
+    if (images.length === 0) {
+      if (incoming.length > 0) setError("Only images can be attached.");
+      return;
+    }
+    const fitting = images.filter((f) => f.size <= MAX_IMAGE_ATTACHMENT_BYTES);
+    let nextError: string | null =
+      fitting.length < images.length ? "Each image must be 5 MB or smaller." : null;
+    const room = MAX_IMAGE_ATTACHMENTS - pendingFiles.length;
+    const accepted = fitting.slice(0, Math.max(0, room));
+    if (accepted.length < fitting.length) {
+      nextError = `Attach up to ${MAX_IMAGE_ATTACHMENTS} images at a time.`;
+    }
+    if (accepted.length > 0) {
+      setPendingFiles((prev) => [
+        ...prev,
+        ...accepted.map((file) => ({ file, url: URL.createObjectURL(file) })),
+      ]);
+    }
+    setError(nextError);
+  }
+
+  function removeFile(target: PendingImage) {
+    URL.revokeObjectURL(target.url);
+    setPendingFiles((prev) => prev.filter((p) => p.url !== target.url));
+  }
+
+  function clearFiles() {
+    for (const p of pendingFiles) URL.revokeObjectURL(p.url);
+    setPendingFiles([]);
+  }
+
+  function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    if (submitting) return;
+    const files = imageFilesFromDataTransfer(e.clipboardData);
+    if (files.length === 0) return; // plain-text paste falls through untouched
+    e.preventDefault();
+    addFiles(files);
+  }
+
+  function handleDragEnter(e: React.DragEvent<HTMLDivElement>) {
+    if (!e.dataTransfer.types.includes("Files")) return; // text drags: ignore
+    dragDepth.current += 1;
+    setDragging(true);
+  }
+
+  function handleDragLeave() {
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setDragging(false);
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault(); // never let the browser navigate away on a miss-drop
+    dragDepth.current = 0;
+    setDragging(false);
+    if (submitting) return;
+    addFiles(rawFilesFromDataTransfer(e.dataTransfer));
+  }
+
   function grow() {
     const el = taRef.current;
     if (!el) return;
@@ -133,6 +244,7 @@ export function CapturePopover({
     setCaretIndex(0);
     setMentionSel(0);
     setMentionPos(null);
+    clearFiles();
     const el = taRef.current;
     if (el) el.style.height = "auto";
     requestAnimationFrame(() => taRef.current?.focus());
@@ -160,17 +272,30 @@ export function CapturePopover({
 
   async function capture(close: boolean) {
     const trimmed = text.trim();
-    if (!trimmed || submitting) return;
+    if ((!trimmed && pendingFiles.length === 0) || submitting) return;
     setSubmitting(true);
     try {
-      await onSubmit(trimmed);
+      const files = pendingFiles.map((p) => p.file);
+      // Single-arg call when there are no files — keeps the text-only
+      // contract (and its tests) unchanged.
+      if (files.length > 0) await onSubmit(trimmed, files);
+      else await onSubmit(trimmed);
       if (close) {
+        clearFiles();
         onClose();
         return;
       }
       const p = parseCapture(trimmed, new Date(), customLensNames);
       setCaptured((prev) =>
-        [{ id: Date.now(), text: p.cleanText, parsed: p }, ...prev].slice(0, 3),
+        [
+          {
+            id: Date.now(),
+            text: p.cleanText || (files.length > 0 ? "Image" : ""),
+            parsed: p,
+            imageCount: files.length,
+          },
+          ...prev,
+        ].slice(0, 3),
       );
       resetInput();
     } catch (err) {
@@ -226,10 +351,14 @@ export function CapturePopover({
       aria-modal="true"
       aria-label="Quick capture"
       onClick={onClose}
+      onDragEnter={handleDragEnter}
+      onDragOver={(e) => e.preventDefault()}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <div
         ref={cardRef}
-        className="aa-overlay-card aa-capture"
+        className={`aa-overlay-card aa-capture ${dragging ? "is-dragover" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         {captured.length > 0 && (
@@ -249,6 +378,11 @@ export function CapturePopover({
                 </span>
                 <span className="aa-capture__captured-text">{item.text}</span>
                 <CapturedChips parsed={item.parsed} />
+                {item.imageCount > 0 && (
+                  <Chip variant="muted" small>
+                    {item.imageCount === 1 ? "1 image" : `${item.imageCount} images`}
+                  </Chip>
+                )}
               </div>
             ))}
           </div>
@@ -277,6 +411,7 @@ export function CapturePopover({
               setCaretIndex(e.currentTarget.selectionStart ?? e.currentTarget.value.length)
             }
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             disabled={submitting}
             aria-label="Capture"
           />
@@ -287,6 +422,25 @@ export function CapturePopover({
             title="Close (Esc)"
           />
         </div>
+
+        {pendingFiles.length > 0 && (
+          <div className="aa-capture__attachments" aria-label="Images to attach">
+            {pendingFiles.map((p) => (
+              <span key={p.url} className="aa-capture__attachment">
+                <img
+                  src={p.url}
+                  alt={p.file.name}
+                  draggable={false}
+                />
+                <CloseButton
+                  onClose={() => removeFile(p)}
+                  label={`Remove ${p.file.name}`}
+                  className="aa-capture__attachment-remove"
+                />
+              </span>
+            ))}
+          </div>
+        )}
 
         {mention && mentionMatches.length > 0 && mentionPos && (
           <div
@@ -349,7 +503,7 @@ export function CapturePopover({
           <button
             type="button"
             className="aa-capture__save"
-            disabled={!text.trim() || submitting}
+            disabled={(!text.trim() && pendingFiles.length === 0) || submitting}
             onClick={() => capture(true)}
           >
             Save

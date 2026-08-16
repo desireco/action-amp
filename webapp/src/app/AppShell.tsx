@@ -36,6 +36,7 @@ import {
 } from "../search/CommandPalette";
 import { isPaletteBlocked } from "../search/paletteAvailability";
 import { applyTheme, preferredTheme, toggleTheme } from "./theme";
+import { fileToImageAttachmentInput } from "../shared/imageFiles";
 import {
   registerServiceWorker,
   useServiceWorkerUpdate,
@@ -400,6 +401,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Focus mode is page-scoped (set by a task's onOpen), so it lives in pages,
   // not the shell. Esc closes whichever overlay is open.
   const [captureOpen, setCaptureOpen] = useState(false);
+  // Files dropped on the capture FAB while the popover was closed — fed into
+  // the popover via initialFiles on open. Reset on every open (⌘K etc.
+  // just pass nothing).
+  const [pendingCaptureFiles, setPendingCaptureFiles] = useState<File[]>([]);
+  const [fabDragOver, setFabDragOver] = useState(false);
+  // dragenter/leave depth counter for the FAB (they fire per child element).
+  const fabDragDepth = useRef(0);
   const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [mobileLensOpen, setMobileLensOpen] = useState(false);
@@ -420,8 +428,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     setPaletteMode(null);
   };
 
-  const openCapture = () => {
+  const openCapture = (files?: File[]) => {
     closeGlobalOverlays();
+    setPendingCaptureFiles(files && files.length > 0 ? files : []);
     setCaptureOpen(true);
   };
 
@@ -960,10 +969,29 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <button
           type="button"
-          className={`aa-app-capture-fab ${mobileLensOpen ? "is-hidden-while-lens-open" : ""}`}
+          className={`aa-app-capture-fab ${fabDragOver ? "is-dragover" : ""} ${mobileLensOpen ? "is-hidden-while-lens-open" : ""}`}
           title="Capture (⌘K)"
           aria-label="Capture"
-          onClick={openCapture}
+          onClick={() => openCapture()}
+          onDragEnter={(e) => {
+            if (!e.dataTransfer.types.includes("Files")) return;
+            fabDragDepth.current += 1;
+            setFabDragOver(true);
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDragLeave={() => {
+            fabDragDepth.current = Math.max(0, fabDragDepth.current - 1);
+            if (fabDragDepth.current === 0) setFabDragOver(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            fabDragDepth.current = 0;
+            setFabDragOver(false);
+            const files = Array.from(e.dataTransfer.files).filter((f) =>
+              f.type.startsWith("image/"),
+            );
+            if (files.length > 0) openCapture(files);
+          }}
         >
           <PlusIcon width={18} height={18} />
           <span>Capture</span>
@@ -995,12 +1023,21 @@ export function AppShell({ children }: { children: ReactNode }) {
           projects={resolverProjects ?? []}
           customLensNames={customLensNames}
           activeLensName={activeLens?.name ?? null}
-          onSubmit={async (text) => {
+          initialFiles={pendingCaptureFiles}
+          onSubmit={async (text, files) => {
             // Belt-and-suspenders: the App.tsx gate should make this
             // unreachable without a user, but never fire an auth-required
             // action unauthenticated (the original "Not authenticated" 500).
             if (!user) return;
-            await createInboxItem({ text });
+            // Image-only captures need display text in the inbox — same
+            // fallback the share target uses (first filename).
+            const attachments = files?.length
+              ? await Promise.all(files.map(fileToImageAttachmentInput))
+              : undefined;
+            await createInboxItem({
+              text: text || files?.[0]?.name || "Image",
+              attachments,
+            });
             // Invalidate the inbox list + the sidebar counts so both refresh.
             // Without this, React Query serves the stale pre-capture cache
             // and the new item doesn't appear until a manual reload.

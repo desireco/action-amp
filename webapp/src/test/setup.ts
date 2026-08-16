@@ -2,6 +2,15 @@
 // One import; the wasp/client/test/setup module handles the rest.
 import "wasp/client/test/setup";
 
+// jsdom lacks URL.createObjectURL/revokeObjectURL (capture's image previews
+// use them). Stub with a deterministic counter — previews never load in jsdom
+// anyway; the tests only need stable URLs.
+if (typeof URL.createObjectURL !== "function") {
+  let next = 0;
+  URL.createObjectURL = () => `blob:mock-${++next}`;
+  URL.revokeObjectURL = () => {};
+}
+
 if (typeof globalThis.localStorage === "undefined") {
   const store = new Map<string, string>();
   Object.defineProperty(globalThis, "localStorage", {

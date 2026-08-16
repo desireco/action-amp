@@ -334,6 +334,13 @@
   transform: translateY(1px) scale(0.98);
 }
 
+/* Image drag in progress over the FAB — it's a drop target (opens capture
+ * with the files attached). Teal = system state; ring, not a color swap. */
+.aa-app-capture-fab.is-dragover {
+  background: var(--aa-teal-bright);
+  box-shadow: var(--aa-shadow-lg), var(--aa-focus-ring);
+}
+
 .aa-app-capture-fab:focus-visible {
   outline: 2px solid var(--aa-teal);
   outline-offset: 3px;

@@ -6,6 +6,7 @@ import { BrandMark } from "../components/ui/BrandMark";
 import { ArrowRightIcon, InboxIcon } from "../components/ui/icons";
 import { composeShareCapture, composeShareText, type ShareFields } from "./composeShareText";
 import { clearPendingShare, getPendingShare, type PendingShareImage } from "./pendingShare";
+import { blobToBase64 } from "../shared/imageFiles";
 import "./SharePage.css";
 
 const ERROR_COPY: Record<string, string> = {
@@ -16,15 +17,6 @@ const ERROR_COPY: Record<string, string> = {
 
 type PendingState = { id: string; fields: ShareFields; files: PendingShareImage[] } | null;
 type Destination = "" | `project:${string}` | `list:${string}`;
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(",", 2)[1] ?? "");
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
-}
 
 export function SharePage() {
   const [params] = useSearchParams();

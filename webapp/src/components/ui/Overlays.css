@@ -588,6 +588,63 @@
   margin-top: var(--aa-space-sm);
 }
 
+/* Pending image attachments (paste / drop). Sits between the head and the
+   parse preview — same separated-section treatment as the preview chips. */
+.aa-capture__attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-xs);
+  padding-top: var(--aa-space-sm);
+  border-top: 1px solid var(--aa-border);
+  margin-top: var(--aa-space-sm);
+}
+
+.aa-capture__attachment {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--aa-radius-sm);
+  border: 1px solid var(--aa-border);
+  background: var(--aa-surface-muted);
+  overflow: hidden;
+}
+
+.aa-capture__attachment img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Remove × — the shared close control shrunk onto the thumb, on a scrim
+   so it reads over any image. No token exists for scrims; this is the
+   one place a raw color is allowed to appear. */
+.aa-capture__attachment-remove {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 18px;
+  height: 18px;
+  color: #fff;
+  background: oklch(0.2 0.02 230 / 0.7);
+}
+
+.aa-capture__attachment-remove svg {
+  width: 10px;
+  height: 10px;
+}
+
+.aa-capture__attachment-remove:hover {
+  color: #fff;
+  background: oklch(0.2 0.02 230 / 0.9);
+}
+
+/* File drag in progress — the card is the drop zone; teal = system state. */
+.aa-capture.is-dragover {
+  border-color: var(--aa-teal);
+  box-shadow: var(--aa-shadow-lg), var(--aa-focus-ring);
+}
+
 /* Inline `#`-mention dropdown — absolutely positioned at the caret inside the
    textarea. Anchored to .aa-capture__head (which is position: relative) so it
    overlays the textarea cleanly. */

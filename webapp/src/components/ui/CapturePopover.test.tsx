@@ -275,4 +275,176 @@ describe("CapturePopover", () => {
       expect(screen.queryByText(/not authenticated/i)).not.toBeInTheDocument();
     });
   });
+
+  describe("image attachments (paste / drop)", () => {
+    /** A small in-memory image File. */
+    function imageFile(name = "shot.png", type = "image/png"): File {
+      return new File(["image-bytes"], name, { type });
+    }
+
+    /** Size is a read-only Blob getter — shadow it to fake a >5 MB file. */
+    function oversizedFile(): File {
+      const f = imageFile("huge.png");
+      Object.defineProperty(f, "size", { value: 6 * 1024 * 1024 });
+      return f;
+    }
+
+    // Constructing the event and passing it through fireEvent (rather than
+    // fireEvent.paste/drop init props) — jsdom's DataTransfer/ClipboardEvent
+    // can't carry a files payload reliably, and React reads the payload the
+    // same off a plain Event.
+    function firePaste(el: Element, files: File[]) {
+      const e = new Event("paste", { bubbles: true, cancelable: true });
+      Object.defineProperty(e, "clipboardData", { value: { files } });
+      fireEvent(el, e);
+    }
+
+    function fireDrop(el: Element, files: File[]) {
+      const e = new Event("drop", { bubbles: true, cancelable: true });
+      Object.defineProperty(e, "dataTransfer", { value: { files } });
+      fireEvent(el, e);
+    }
+
+    function overlayEl(container: HTMLElement) {
+      return container.querySelector(".aa-overlay")!;
+    }
+
+    function thumbs(container: HTMLElement) {
+      return container.querySelectorAll(".aa-capture__attachment");
+    }
+
+    it("pasting an image attaches it as a removable thumbnail", () => {
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      firePaste(screen.getByLabelText("Capture"), [imageFile()]);
+      expect(screen.getByAltText("shot.png")).toBeInTheDocument();
+      expect(thumbs(container)).toHaveLength(1);
+    });
+
+    it("a plain-text paste (no files) attaches nothing", () => {
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      firePaste(screen.getByLabelText("Capture"), []);
+      expect(container.querySelector(".aa-capture__attachments")).toBeNull();
+    });
+
+    it("dropping an image anywhere on the overlay attaches it", () => {
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      // Drop on the backdrop (outside the card) — the whole overlay is a target.
+      fireDrop(overlayEl(container), [imageFile("dropped.png")]);
+      expect(screen.getByAltText("dropped.png")).toBeInTheDocument();
+    });
+
+    it("a file drag highlights the card; leaving clears it", () => {
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      const card = container.querySelector(".aa-overlay-card")!;
+      const enter = new Event("dragenter", { bubbles: true });
+      Object.defineProperty(enter, "dataTransfer", { value: { types: ["Files"] } });
+      fireEvent(card, enter);
+      expect(card.className).toContain("is-dragover");
+
+      fireEvent(card, new Event("dragleave", { bubbles: true }));
+      expect(card.className).not.toContain("is-dragover");
+    });
+
+    it("rejects images over 5 MB with the size error", () => {
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      fireDrop(overlayEl(container), [oversizedFile()]);
+      expect(screen.getByText(/5 MB or smaller/i)).toBeInTheDocument();
+      expect(thumbs(container)).toHaveLength(0);
+    });
+
+    it("caps at four images and reports the limit", () => {
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      const five = [1, 2, 3, 4, 5].map((i) => imageFile(`shot-${i}.png`));
+      fireDrop(overlayEl(container), five);
+      expect(thumbs(container)).toHaveLength(4);
+      expect(screen.getByText(/attach up to 4 images/i)).toBeInTheDocument();
+    });
+
+    it("rejects non-image files", () => {
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      const pdf = new File(["%PDF"], "doc.pdf", { type: "application/pdf" });
+      fireDrop(overlayEl(container), [pdf]);
+      expect(screen.getByText(/only images can be attached/i)).toBeInTheDocument();
+      expect(container.querySelector(".aa-capture__attachments")).toBeNull();
+    });
+
+    it("the remove button detaches an image", () => {
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      firePaste(screen.getByLabelText("Capture"), [imageFile()]);
+      fireEvent.click(screen.getByLabelText(/remove shot.png/i));
+      expect(container.querySelector(".aa-capture__attachments")).toBeNull();
+      // Back to text-only: image-less, empty input can't submit.
+      expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled();
+    });
+
+    it("an image alone enables submit (screenshot-first capture)", async () => {
+      const file = imageFile();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const onClose = vi.fn();
+      renderInContext(
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      firePaste(screen.getByLabelText("Capture"), [file]);
+      fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+      expect(onSubmit).toHaveBeenCalledWith("", [file]);
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
+
+    it("submit passes text and files together", async () => {
+      const file = imageFile();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const onClose = vi.fn();
+      renderInContext(
+        <CapturePopover onClose={onClose} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      const input = typeIntoInput("bug screenshot");
+      firePaste(input, [file]);
+      fireEvent.keyDown(input, { key: "Enter" });
+      expect(onSubmit).toHaveBeenCalledWith("bug screenshot", [file]);
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
+
+    it("⌘Enter rapid-fire clears attachments and counts them in the toast", async () => {
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={onSubmit} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      const input = typeIntoInput("first with image");
+      firePaste(input, [imageFile()]);
+      fireEvent.keyDown(input, { key: "Enter", metaKey: true });
+      await waitFor(() => expect(input.value).toBe(""));
+      expect(container.querySelector(".aa-capture__attachments")).toBeNull();
+      expect(screen.getByText("1 image")).toBeInTheDocument();
+    });
+
+    it("initialFiles (dropped on the FAB) attach on open", () => {
+      renderInContext(
+        <CapturePopover
+          onClose={() => {}}
+          onSubmit={() => {}}
+          projects={[]}
+          customLensNames={[]}
+          activeLensName={null}
+          initialFiles={[imageFile("fab-drop.png")]}
+        />,
+      );
+      expect(screen.getByAltText("fab-drop.png")).toBeInTheDocument();
+    });
+  });
 });
