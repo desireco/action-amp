@@ -10,6 +10,7 @@ verified: 2026-07-04
 # Inbox + Triage
 
 **What.** Two surfaces.
+
 - **Inbox** (`inbox/InboxPage.tsx`) — a centered queue surface that lists
   unprocessed items newest-first with parsed-token chips. Its queue header keeps
   count + Start triage together; the empty state uses the same bounded surface
@@ -34,8 +35,8 @@ the **lightbox**: an in-app ~70% modal over a dimmed backdrop (popover-family
 shell, INTERACTION.md §9.2/§9.5) with Esc/backdrop-click dismissal and ←/→
 cycling for multi-image items. Bytes are served by
 `GET /api/attachments/:id` (`attachments/serveAttachment.ts`), the only
-reader of the attachment `data` blobs (InboxAttachment + ListItemAttachment,
-owner-gated, `Cache-Control: private, immutable`). The route is the storage
+reader of the attachment `data` blobs (InboxAttachment + ListItemAttachment
+- TaskAttachment, owner-gated, `Cache-Control: private, immutable`). The route is the storage
 seam: if attachments move to object storage, that handler is the single
 place to rewrite. Auth is `auth:false` + `auth/sessionAuth.ts` (session-cookie
 middleware — `<img>` loads can't send an Authorization header; see the
@@ -44,6 +45,7 @@ session-cookie notes in `auth/sessionCookie.ts` + `auth/sessionCookieMirror.ts`)
 **Resolver pre-fill** (grammar v2, `docs/specs/done/capture-grammar.md`, shipped).
 The Context step pre-fills from two inference paths, neither of which silently
 files — the user still hits Continue:
+
 - **`[[lens]]` token** (explicit): `[[work]]` / `[[personal]]` / `[[me]]` /
   `[[custom-name]]` resolves on `kind` (seeded) or name (custom); pre-fills the
   Context radio with a "from `[[ ]]`" chip.
@@ -52,6 +54,14 @@ files — the user still hits Continue:
   lens's projects (whitespace/sentence-boundary, longest wins). A matched
   project pre-fills both the Project row and that project's lens on the Context
   step. `[[ ]]` precedence wins on disagreement.
+
+**Image attachments survive task dispatch** (2026-08-16). Items captured
+with images and triaged to a task (Today/Upcoming/Someday) carry their blobs
+onto `TaskAttachment` rows — created in the same atomic write as the Task,
+then the seed `InboxItem` delete cascades only the originals. (Simple lists
+already did this via `ListItemAttachment`; project/resource decisions still
+drop images — known gap.) The task detail page renders the same thumbs +
+lightbox, and `task show --json` (CLI) includes the attachment metadata.
 
 **Files.** `inbox/InboxPage.tsx`; `inbox/TriagePage.tsx`; `inbox/operations.ts`
 (`triageInboxItem`).

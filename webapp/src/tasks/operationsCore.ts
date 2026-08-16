@@ -21,7 +21,6 @@
  */
 
 import type {
-  Lens,
   Prisma,
   Priority,
   Size,
@@ -101,6 +100,7 @@ export interface TaskLensListRow extends TaskListRow {
 export interface TaskDetailRow extends Task {
   project: { id: string; permalink: string; name: string } | null;
   goal: { id: string; permalink: string; name: string } | null;
+  attachments: Array<{ id: string; filename: string; mimeType: string }>;
 }
 
 /** The delegate slices for include-carrying reads — literal-arg methods so
@@ -144,6 +144,7 @@ interface TaskDetailEntities {
         updates: { orderBy: { createdAt: "asc" } };
         project: { select: { id: true; permalink: true; name: true } };
         goal: { select: { id: true; permalink: true; name: true } };
+        attachments: { select: { id: true; filename: true; mimeType: true } };
       };
     }): Promise<
       | (TaskDetailRow & {
@@ -200,8 +201,6 @@ interface TaskEntities {
   };
 }
 
-type Entities = TaskEntities;
-
 // ----------------------------------------------------------------
 // Rank maps (re-exported from operations.ts for back-compat)
 // ----------------------------------------------------------------
@@ -238,6 +237,7 @@ export async function getTaskData(
       updates: { orderBy: { createdAt: "asc" } },
       project: { select: { id: true, permalink: true, name: true } },
       goal: { select: { id: true, permalink: true, name: true } },
+      attachments: { select: { id: true, filename: true, mimeType: true } },
     },
   });
 }

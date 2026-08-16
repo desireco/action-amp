@@ -100,7 +100,7 @@ describe("triageInboxItem — Simple-list decisions", () => {
 
   it("moves an attachment-backed InboxItem into a Simple list", async () => {
     // The main read selects attachment metadata; the blobs are fetched in the
-    // list-item branch (the only decision that moves the images).
+    // branches that move the images (task + list-item).
     const m = arrange({ attachments: [{ id: "attachment-1", filename: "image.jpg", mimeType: "image/jpeg", size: 5 }] });
     m.entities.Lens.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST" });
     m.entities.ListItem.findFirst.mockResolvedValue(null);
@@ -278,6 +278,69 @@ describe("triageInboxItem — task decisions", () => {
     const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
       .calls[0][0];
     expect(call.data.tags).toBeUndefined();
+  });
+
+  it("moves an attachment-backed InboxItem onto the created Task", async () => {
+    // The main read selects attachment metadata; the task branch fetches the
+    // blobs only when some exist, then nested-creates TaskAttachment rows in
+    // the same atomic write (same convention as tags).
+    const m = arrange({
+      attachments: [{ id: "attachment-1", filename: "shot.png", mimeType: "image/png", size: 8 }],
+    });
+    m.entities.Task.create.mockResolvedValue({ id: "task-9" });
+    m.entities.InboxAttachment.findMany.mockResolvedValue([
+      { filename: "shot.png", mimeType: "image/png", size: 8, data: Buffer.from("png") },
+    ]);
+
+    await triageOne(
+      {
+        inboxItemId: "ix-1",
+        decision: "task-today",
+        lensId: "l",
+      },
+      m,
+    );
+
+    // Blobs fetched for the move —
+    expect(m.entities.InboxAttachment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { inboxItemId: "ix-1" } }),
+    );
+    // — and nested-created onto the Task in the single write.
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        attachments: {
+          create: [
+            { filename: "shot.png", mimeType: "image/png", size: 8, data: Buffer.from("png") },
+          ],
+        },
+      }),
+      select: { id: true },
+    });
+    // The seed (and its InboxAttachment rows) is deleted — the bytes now
+    // live on TaskAttachment, carried by the created task.
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+    });
+  });
+
+  it("does NOT fetch blobs or add an attachments key when the item has none", async () => {
+    const m = arrange();
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triageOne(
+      {
+        inboxItemId: "ix-1",
+        decision: "task-today",
+        lensId: "l",
+      },
+      m,
+    );
+
+    expect(m.entities.InboxAttachment.findMany).not.toHaveBeenCalled();
+    // SAFETY: mock .calls array is untyped; cast to ReturnType<typeof vi.fn> for .mock access.
+    const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(call.data.attachments).toBeUndefined();
   });
 
   it("files under the lens General project when no project is chosen", async () => {

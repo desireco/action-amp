@@ -2,7 +2,7 @@
 // Server project (see vitest.config.ts): the REAL entitlement guards run —
 // no module mocking. Guard-gated task ops need an entitled user and a lens
 // the guards resolve, so every non-anonymous fixture goes through guarded().
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
 import {
   getTask,
@@ -114,6 +114,7 @@ describe("getTask", () => {
         updates: { orderBy: { createdAt: "asc" } },
         project: { select: { id: true, permalink: true, name: true } },
         goal: { select: { id: true, permalink: true, name: true } },
+        attachments: { select: { id: true, filename: true, mimeType: true } },
       },
     });
   });

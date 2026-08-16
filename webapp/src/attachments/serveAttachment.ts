@@ -2,8 +2,8 @@ import type { Request, Response } from "express";
 
 // GET /api/attachments/:id — serve a captured image's bytes to its owner.
 //
-// This route is the ONLY reader of the `data` column on InboxAttachment and
-// ListItemAttachment. List queries select metadata only; the bytes leave the
+// This route is the ONLY reader of the `data` column on InboxAttachment,
+// ListItemAttachment, and TaskAttachment. List queries select metadata only; the bytes leave the
 // database exclusively through here (and the CLI twin route
 // /api/cli/attachment/:id, which shares the helpers below), gated to the
 // requesting user via the parent item's userId. That makes this the storage
@@ -38,6 +38,10 @@ export type AttachmentEntities = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     findUnique: (args: any) => Promise<any>;
   };
+  TaskAttachment: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    findUnique: (args: any) => Promise<any>;
+  };
 };
 
 /** True when `id` is a well-formed attachment uuid (Prisma uuid lookups throw otherwise). */
@@ -46,9 +50,9 @@ export function isAttachmentId(id: unknown): id is string {
 }
 
 /**
- * Owner-gated lookup across both attachment tables. Returns null for unknown
+ * Owner-gated lookup across the attachment tables. Returns null for unknown
  * ids AND foreign ids (no existence leak). Short-circuits: a matching
- * InboxAttachment never consults the ListItem table.
+ * InboxAttachment never consults the other tables.
  */
 export async function findOwnedAttachment(
   entities: AttachmentEntities,
@@ -79,6 +83,19 @@ export async function findOwnedAttachment(
   });
   if (listAttachment?.listItem.userId === userId) {
     return listAttachment;
+  }
+  const taskAttachment = await entities.TaskAttachment.findUnique({
+    where: { id },
+    select: {
+      data: true,
+      filename: true,
+      mimeType: true,
+      size: true,
+      task: { select: { userId: true } },
+    },
+  });
+  if (taskAttachment?.task.userId === userId) {
+    return taskAttachment;
   }
   return null;
 }

@@ -13,6 +13,7 @@ import {
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { Breadcrumb, Button, CloseButton, ConfirmDialog, Markdown, PickerSheet, PropertyChips, submitOnModEnter } from "../components/ui";
+import { AttachmentThumbs } from "../components/ui";
 import type { BreadcrumbItem } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { captureFeedbackContext } from "../feedback/captureContext";
@@ -22,7 +23,6 @@ import {
   chipPickToTaskPatch,
   type TaskChipGoal,
   type TaskChipProject,
-  type TaskChipState,
   type TaskPriority,
   type TaskSize,
   type TaskStatus,
@@ -427,6 +427,13 @@ export function TaskDetailPage() {
                   <Markdown>{content}</Markdown>
                 </div>
               )}
+              {/* Images carried from capture through triage (TaskAttachment).
+                  Read-only here — same thumbs + lightbox as everywhere else. */}
+              {(task.attachments?.length ?? 0) > 0 && (
+                <div className="aa-task-done-panel__attachments">
+                  <AttachmentThumbs attachments={task.attachments} size="md" />
+                </div>
+              )}
               {/* Outcome — captured at completion, editable here afterwards
                   (task-fields §F). Empty reads as nothing in the Logbook;
                   here we show an explicit (optional) field so it's editable. */}
@@ -535,6 +542,14 @@ export function TaskDetailPage() {
                 onChange={(event) => setContent(event.target.value)}
                 placeholder="Add details, links, or next steps."
               />
+              {/* Images carried from capture through triage. Display-only on
+                  the working copy — the bytes live on TaskAttachment rows and
+                  are managed (added/removed) at capture time, not here. */}
+              {(task.attachments?.length ?? 0) > 0 && (
+                <div className="aa-task-edit__attachments">
+                  <AttachmentThumbs attachments={task.attachments} size="md" />
+                </div>
+              )}
             </section>
           )}
 

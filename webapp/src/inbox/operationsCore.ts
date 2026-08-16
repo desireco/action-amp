@@ -34,6 +34,7 @@ import { createListItemCore } from "../simpleLists/operationsCore";
 import {
   prepareImageAttachments,
   type ImageAttachmentInput,
+  type PreparedImageAttachment,
 } from "../shared/imageAttachments";
 
 /**
@@ -251,6 +252,7 @@ interface TaskTriageCreateData {
   dueDate: Date | null;
   projectId: string | null;
   tags?: { connect: { id: string }[] };
+  attachments?: { create: PreparedImageAttachment[] };
 }
 
 async function createTaskFromTriage(
@@ -267,6 +269,7 @@ async function createTaskFromTriage(
     projectId: string | null;
     projectPermalink: string | null;
     tagRecords: { id: string }[];
+    preparedAttachments?: PreparedImageAttachment[];
   },
 ): Promise<{ kind: "task"; id: string }> {
   const status =
@@ -304,6 +307,11 @@ async function createTaskFromTriage(
     taskData.tags = {
       connect: opts.tagRecords.map((t) => ({ id: t.id })),
     };
+  }
+  // Captured images move with the item: nested-create the TaskAttachment
+  // rows in the same atomic write (same convention as tags above).
+  if (opts.preparedAttachments?.length) {
+    taskData.attachments = { create: opts.preparedAttachments };
   }
   const task = await entities.Task.create({
     data: taskData,
@@ -401,11 +409,11 @@ export async function triageInboxItemCore(
 ) {
   const item = await entities.InboxItem.findUnique({
     where: { id: inboxItemId },
-    // Metadata only — the blobs are fetched solely in the list-item branch
-    // (the one decision that moves attachments). Loading `data` here would
-    // pull up to 20 MB of images into memory on every triage click.
+    // Metadata only — the blobs are fetched solely in the branches that
+    // move attachments (task + list-item). Loading `data` here would pull
+    // up to 20 MB of images into memory on every triage click.
     include: {
-      attachments: { select: { filename: true, mimeType: true, size: true } },
+      attachments: { select: { id: true, filename: true, mimeType: true, size: true } },
     },
   });
   if (!item || item.userId !== userId) {
@@ -470,6 +478,14 @@ export async function triageInboxItemCore(
         lensId,
         projectId ?? null,
       );
+      // Images move with the item — fetch the blobs only when the seed
+      // actually has some (the main read selected metadata only).
+      const preparedAttachments = item.attachments.length
+        ? await entities.InboxAttachment.findMany({
+            where: { inboxItemId: item.id },
+            select: { filename: true, mimeType: true, size: true, data: true },
+          })
+        : undefined;
       result = await createTaskFromTriage(entities, userId, {
         decision,
         title,
@@ -481,6 +497,7 @@ export async function triageInboxItemCore(
         projectId: effectiveProject.id,
         projectPermalink: effectiveProject.permalink,
         tagRecords,
+        preparedAttachments,
       });
       break;
     }
@@ -515,7 +532,7 @@ export async function triageInboxItemCore(
       break;
     }
     case "list-item": {
-      // The only decision that keeps the images — fetch the blobs now (the
+      // The other decision that keeps the images — fetch the blobs now (the
       // main read selects metadata only).
       const attachments = await entities.InboxAttachment.findMany({
         where: { inboxItemId: item.id },

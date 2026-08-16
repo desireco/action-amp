@@ -175,6 +175,15 @@
   border-top: 1px solid var(--aa-border);
 }
 
+/* Captured images carried onto the task by triage — display-only thumbs.
+   Same divider discipline as the notes + outcome blocks. (The edit-mode twin
+   `.aa-task-edit__attachments` needs no rule: the notes section's grid gap
+   spaces it.) */
+.aa-task-done-panel__attachments {
+  padding-top: var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
+}
+
 /* Outcome — editable on done tasks (task-fields §F). Same divider discipline
    as the notes + feedback blocks above/below it. */
 .aa-task-done-panel__outcome {

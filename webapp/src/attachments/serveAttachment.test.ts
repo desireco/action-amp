@@ -43,10 +43,11 @@ function makeRes(): Response & { headers: Record<string, string>; body: Buffer |
   return res as unknown as Response & { headers: Record<string, string>; body: Buffer | null };
 }
 
-function makeEntities(inboxResult: unknown = null, listResult: unknown = null) {
+function makeEntities(inboxResult: unknown = null, listResult: unknown = null, taskResult: unknown = null) {
   return {
     InboxAttachment: { findUnique: vi.fn().mockResolvedValue(inboxResult) },
     ListItemAttachment: { findUnique: vi.fn().mockResolvedValue(listResult) },
+    TaskAttachment: { findUnique: vi.fn().mockResolvedValue(taskResult) },
   };
 }
 
@@ -100,6 +101,29 @@ describe("serveAttachment", () => {
     expect(res.body?.toString()).toBe("jpg-bytes");
   });
 
+  it("falls back to task attachments (images carried by triage)", async () => {
+    const data = Buffer.from("task-png");
+    const entities = makeEntities(null, null, {
+      data, filename: "shot.png", mimeType: "image/png", size: data.length,
+      task: { userId: "u3" },
+    });
+    const res = makeRes();
+    await serveAttachment(makeReq(UUID, "u3"), res, { entities });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.headers["content-type"]).toBe("image/png");
+    expect(res.body?.toString()).toBe("task-png");
+  });
+
+  it("returns 404 for a foreign user's task attachment — no existence leak", async () => {
+    const entities = makeEntities(null, null, {
+      data: Buffer.from("x"), filename: "a.png", mimeType: "image/png", size: 1,
+      task: { userId: "someone-else" },
+    });
+    const res = makeRes();
+    await serveAttachment(makeReq(UUID), res, { entities });
+    expect(res.status).toHaveBeenCalledWith(404);
+  });
+
   it("returns 404 — never a foreign user's attachment", async () => {
     const entities = makeEntities({
       data: Buffer.from("x"), filename: "a.png", mimeType: "image/png", size: 1,
@@ -130,6 +154,7 @@ describe("serveAttachment", () => {
     const entities = {
       InboxAttachment: { findUnique: vi.fn().mockRejectedValue(new Error("db down")) },
       ListItemAttachment: { findUnique: vi.fn() },
+      TaskAttachment: { findUnique: vi.fn() },
     };
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const res = makeRes();

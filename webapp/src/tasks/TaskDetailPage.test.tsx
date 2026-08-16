@@ -54,6 +54,7 @@ function makeTask(overrides: Record<string, unknown> = {}) {
     goal: { id: "g1", permalink: "grow-audience", name: "Grow audience" },
     tags: [],
     updates: [],
+    attachments: [],
     ...overrides,
   };
 }
@@ -149,5 +150,35 @@ describe("TaskDetailPage — breadcrumb (breadcrumb-nav spec)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(screen.getByTestId("upcoming")).toBeInTheDocument();
+  });
+});
+
+describe("TaskDetailPage — captured attachments (TaskAttachment)", () => {
+  it("shows thumbs for images carried onto the task by triage", () => {
+    taskData.current = makeTask({
+      attachments: [
+        { id: "att-1", filename: "shot.png", mimeType: "image/png" },
+        { id: "att-2", filename: "whiteboard.jpg", mimeType: "image/jpeg" },
+      ],
+    });
+    renderAt("/do/tasks/send-issue-1");
+    // AttachmentThumbs renders one <img> per image, alt = filename.
+    expect(screen.getByAltText("shot.png")).toBeInTheDocument();
+    expect(screen.getByAltText("whiteboard.jpg")).toBeInTheDocument();
+  });
+
+  it("renders no attachment row when the task has none", () => {
+    taskData.current = makeTask();
+    renderAt("/do/tasks/send-issue-1");
+    expect(screen.queryByAltText(/\.(png|jpe?g|gif|webp)$/i)).toBeNull();
+  });
+
+  it("shows thumbs on the done panel too (read-only evidence)", () => {
+    taskData.current = makeTask({
+      isDone: true,
+      attachments: [{ id: "att-1", filename: "receipt.png", mimeType: "image/png" }],
+    });
+    renderAt("/do/tasks/send-issue-1");
+    expect(screen.getByAltText("receipt.png")).toBeInTheDocument();
   });
 });

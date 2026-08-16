@@ -78,6 +78,13 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
 > image attachments
 > context. It can be created directly or transformed from an InboxItem during
 > triage; it never becomes a Task or enters focus, Review, or Logbook.
+>
+> v11 (2026-08-16): **Task attachments.** `TaskAttachment` (same shape as
+> `InboxAttachment`/`ListItemAttachment`) holds captured images that triage
+> moves onto the created Task — the seed `InboxItem` delete no longer cascades
+> the blobs away. Served by the same owner-gated `/api/attachments/:id` (and
+> the CLI twin), and displayed on the task detail page. Project/Resource
+> decisions still drop images (known gap, tracked for follow-up).
 
 ---
 
@@ -91,7 +98,8 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
                    (Projects under a Goal sort by `Project.order` then name)
              ├─ Task        ← an atomic action (THE focus candidate)
              │    ├─ TaskUpdate   ← append-only notes/activity log (kind = NOTE | COMPLETED)
-             │    └─ TaskSession  ← recorded focus session (start/end, planned minutes, completed)
+             │    ├─ TaskSession  ← recorded focus session (start/end, planned minutes, completed)
+             │    └─ TaskAttachment ← captured image carried onto the task by triage
              └─ Resource    ← reference material, not an action  [PARA Resource]
 
   Lens(type=SIMPLE_LIST)

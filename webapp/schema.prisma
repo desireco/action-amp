@@ -1,5 +1,6 @@
 datasource db {
   provider = "postgresql"
+  // pi-lens-ignore: P1012
   url      = env("DATABASE_URL")
 }
 
@@ -423,6 +424,7 @@ model Task {
   tags     Tag[]
   updates  TaskUpdate[] // activity log / progress notes
   sessions TaskSession[] // per-task focus-segment accounting (the clock totals)
+  attachments TaskAttachment[]
 
   @@unique([userId, permalink])
   @@index([userId, createdAt])
@@ -457,6 +459,22 @@ enum TaskStatus {
   UPCOMING
   TODAY
   WONT_DO
+}
+
+// Image attachments carried onto a Task by triage (mirrors InboxAttachment /
+// ListItemAttachment — the same shape, one row per image, bytes in `data`).
+// The blobs MOVE here from InboxAttachment when triage dispatches the seed
+// item to a task; the InboxItem delete cascades the originals away.
+model TaskAttachment {
+  id        String   @id @default(uuid())
+  filename  String
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId String
 }
 
 // One persistent first-run path, independent from ordinary task state.

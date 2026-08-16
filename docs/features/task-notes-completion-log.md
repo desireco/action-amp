@@ -14,6 +14,7 @@ backed by `TaskUpdate`, and completing a task from Focus writes a typed
 completion event into the same thread.
 
 **Today.**
+
 - `TaskUpdate` has a `kind` discriminator (`TaskUpdateKind = NOTE | COMPLETED`,
   `schema.prisma`); default `NOTE`.
 - Server ops in `tasks/operations.ts` write notes and the completion event;
@@ -22,6 +23,10 @@ completion event into the same thread.
   asks for an optional completion note on Done (confirm-on-complete).
 - Notes can also be captured during triage and edited from task rows — same
   writer, same model.
+- Captured images carried onto a task by triage (`TaskAttachment`, 2026-08-16)
+  render on the task detail page below the Context editor (and on the
+  done panel, read-only) using the shared thumbs + lightbox — display-only,
+  added/removed at capture time.
 - This is the focused slice extracted from the broader `work-area-merged.md`
   spec; route merging, NOT_DOING, and task archive remain out of scope.
 
