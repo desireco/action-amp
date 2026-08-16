@@ -4,6 +4,7 @@ import { useQuery } from "wasp/client/operations";
 import { getInboxItems } from "wasp/client/operations";
 import type { InboxItem } from "@prisma/client";
 import {
+  AttachmentThumbs,
   Chip,
   ArrowRightIcon,
   CalendarIcon,
@@ -123,26 +124,25 @@ export function InboxPage() {
                   key={item.id}
                   className={`aa-inbox__item${item.id === targetItemId ? " is-search-target" : ""}`}
                 >
-                  <Link
-                    to={`/do/inbox/review?i=${i}`}
-                    className="aa-inbox__row"
-                  >
-                    <div className="aa-inbox__row-content">
-                      <InboxPreview item={item} />
-                      <div className="aa-inbox__row-meta">
-                        <span className="aa-inbox__row-ago">
-                          captured {formatAgo(item.createdAt)}
-                        </span>
-                        {item.sourceUrl && (
-                          <Chip variant="teal" small>
-                            Link attached
-                          </Chip>
-                        )}
-                        {item.attachments.length > 0 && (
-                          <Chip variant="teal" small>
-                            Image attached
-                          </Chip>
-                        )}
+                  {/* The row wrapper (not the Link) owns the padding/border so
+                      the thumbnail strip can sit beside the link — the thumbs
+                      are anchors themselves and cannot nest inside it. */}
+                  <div className="aa-inbox__row">
+                    <Link
+                      to={`/do/inbox/review?i=${i}`}
+                      className="aa-inbox__row-main"
+                    >
+                      <div className="aa-inbox__row-content">
+                        <InboxPreview item={item} />
+                        <div className="aa-inbox__row-meta">
+                          <span className="aa-inbox__row-ago">
+                            captured {formatAgo(item.createdAt)}
+                          </span>
+                          {item.sourceUrl && (
+                            <Chip variant="teal" small>
+                              Link attached
+                            </Chip>
+                          )}
                         {item.parsedDate && (
                           <Chip variant="teal" small>
                             <CalendarIcon className="aa-chip__icon" />
@@ -183,8 +183,10 @@ export function InboxPage() {
                         ))}
                       </div>
                     </div>
-                    <ArrowRightIcon className="aa-inbox__row-arrow" />
-                  </Link>
+                      <ArrowRightIcon className="aa-inbox__row-arrow" />
+                    </Link>
+                    <AttachmentThumbs attachments={item.attachments} />
+                  </div>
                 </li>
               ))}
             </ul>

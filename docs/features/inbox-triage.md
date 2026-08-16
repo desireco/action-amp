@@ -20,6 +20,17 @@ verified: 2026-07-04
   Note(Resource) / Delete, (3) Spec — inline-expanding rows (When/Size/Priority/
   Project/Goal). Ready is gated until lens + filing target set.
 
+**Image attachments are viewable** (2026-08-16). Items captured with images
+(Android share target) show their thumbnails inline — on the inbox row and on
+the triage card while deciding; click opens the full image. Served by
+`GET /api/attachments/:id` (`attachments/serveAttachment.ts`), the only
+reader of the attachment `data` blobs (InboxAttachment + ListItemAttachment,
+owner-gated, `Cache-Control: private, immutable`). The route is the storage
+seam: if attachments move to object storage, that handler is the single
+place to rewrite. Auth is `auth:false` + `auth/sessionAuth.ts` (session-cookie
+middleware — `<img>` loads can't send an Authorization header; see the
+session-cookie notes in `auth/sessionCookie.ts` + `auth/sessionCookieMirror.ts`).
+
 **Resolver pre-fill** (grammar v2, `docs/specs/done/capture-grammar.md`, shipped).
 The Context step pre-fills from two inference paths, neither of which silently
 files — the user still hits Continue:

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Chip } from "./Chip";
+import { AttachmentThumbs, type AttachmentThumb } from "./AttachmentThumbs";
 import "./TriageCard.css";
 
 export type TriageChipTone = "date" | "priority" | "tag";
@@ -20,6 +21,9 @@ interface TriageCardProps {
   meta?: string;
   /** Parsed-token chips */
   chips?: TriageChip[];
+  /** Captured images — shown while the item is being decided so it can be
+      judged by what was shared, not just its text. */
+  media?: AttachmentThumb[];
   /** Exit animation direction; null = at rest */
   exit?: TriageExit;
   /** Brief confirm pulse when dispatched */
@@ -47,6 +51,7 @@ export function TriageCard({
   onBodyChange,
   meta,
   chips,
+  media,
   exit = null,
   dispatched = false,
   entering = false,
@@ -86,6 +91,11 @@ export function TriageCard({
               {c.label}
             </Chip>
           ))}
+        </div>
+      )}
+      {media && media.length > 0 && (
+        <div className="aa-triage-card__media">
+          <AttachmentThumbs attachments={media} size="md" />
         </div>
       )}
       {children}

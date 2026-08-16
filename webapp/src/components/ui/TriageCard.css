@@ -106,6 +106,12 @@
   margin: 0 0 var(--aa-space-md);
 }
 
+.aa-triage-card__media {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--aa-space-md);
+}
+
 /* Prominent chips: the triage card is the one place parsed-token context
    decides an outcome, so the chips carry meaning (not decoration). Scaled up
    from the base .aa-chip so they read alongside the 1.2rem body, not as an

@@ -486,6 +486,7 @@ export function TriagePage() {
             onBodyChange={step === "spec" || isSimpleListDestination ? (title) => setW({ title }) : undefined}
             meta={`captured ${formatAgo(item.createdAt)}`}
             chips={isSimpleListDestination ? [] : triageChips}
+            media={item.attachments}
             exit={exit}
             dispatched={dispatched}
             entering={entering}

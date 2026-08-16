@@ -21,7 +21,9 @@ control entitlement. `ListItem` is a separate tenant-scoped model and never
 participates in Today, Do, Focus, Review, Logbook, Projects, or Goals. It can be
 created directly or from universal Inbox triage. Structured creation operations
 still reject a Simple-list Lens, and Lens deletion only offers same-type
-reassignment targets.
+reassignment targets. Items carrying image attachments (from Inbox triage or
+direct share) display them as thumbnails; the bytes come from
+`GET /api/attachments/:id` (see `docs/features/inbox-triage.md`).
 
 **Interface.** The desktop shell reduces to universal Inbox plus List while
 retaining Lens switching, Settings, account, theme, search, feedback, and

@@ -64,4 +64,22 @@ describe("TriageCard", () => {
       expect(container.querySelector(".aa-triage-card__chips")).toBeNull();
     });
   });
+
+  describe("media", () => {
+    const media = [{ id: "att-1", filename: "Screenshot.png" }];
+
+    it("renders thumbnails linking to the serve route when provided", () => {
+      renderInContext(<TriageCard body="X" media={media} />);
+      const link = screen.getByRole("link", { name: /Screenshot\.png/i });
+      expect(link).toHaveAttribute("href", expect.stringContaining("/api/attachments/att-1"));
+      expect(screen.getByAltText("Screenshot.png")).toBeInTheDocument();
+    });
+
+    it("renders no media section when media is empty or undefined", () => {
+      const { container, rerender } = renderInContext(<TriageCard body="X" media={[]} />);
+      expect(container.querySelector(".aa-triage-card__media")).toBeNull();
+      rerender(<TriageCard body="X" />);
+      expect(container.querySelector(".aa-triage-card__media")).toBeNull();
+    });
+  });
 });

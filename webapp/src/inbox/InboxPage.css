@@ -117,17 +117,12 @@
   padding: 0;
 }
 
+/* The row wrapper owns padding/border/hover so the thumbnail strip can sit
+   beside the triage link (thumbnail anchors can't nest inside it). */
 .aa-inbox__row {
-  display: flex;
-  align-items: center;
-  gap: var(--aa-space-lg);
   padding: 18px var(--aa-space-xl);
   border-bottom: 1px solid var(--aa-border);
-  color: inherit;
-  text-decoration: none;
-  transition:
-    background var(--aa-dur-fast) var(--aa-ease-out),
-    padding-left var(--aa-dur-fast) var(--aa-ease-out);
+  transition: background var(--aa-dur-fast) var(--aa-ease-out);
 }
 
 .aa-inbox__item:last-child .aa-inbox__row {
@@ -136,13 +131,29 @@
 
 .aa-inbox__row:hover {
   background: var(--aa-surface-muted);
-  padding-left: calc(var(--aa-space-xl) + 3px);
 }
 
-.aa-inbox__row:focus-visible {
+.aa-inbox__row-main {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-lg);
+  color: inherit;
+  text-decoration: none;
+  transition: padding-left var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-inbox__row-main:hover {
+  padding-left: 3px;
+}
+
+.aa-inbox__row-main:focus-visible {
   outline: none;
   box-shadow: inset 3px 0 0 var(--aa-teal);
   background: var(--aa-surface-muted);
+}
+
+.aa-inbox__row .aa-attach-thumbs {
+  margin-top: var(--aa-space-sm);
 }
 
 .aa-inbox__row-content {

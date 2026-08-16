@@ -198,6 +198,7 @@ import { mintCliToken } from "./src/auth/cliMint" with { type: "ref" };
 import { patRouteMiddleware } from "./src/auth/patMiddleware" with { type: "ref" };
 import { shareCapture } from "./src/share/shareCapture" with { type: "ref" };
 import { shareRouteMiddleware } from "./src/share/shareRouteMiddleware" with { type: "ref" };
+import { serveAttachment } from "./src/attachments/serveAttachment" with { type: "ref" };
 import { SharePage } from "./src/share/SharePage" with { type: "ref" };
 import { PatSettingsPage } from "./src/app/PatSettingsPage" with { type: "ref" };
 import { AdminPage } from "./src/admin/AdminPage" with { type: "ref" };
@@ -217,6 +218,7 @@ import {
 } from "./src/auth/magicLogin" with { type: "ref" };
 import { onAfterLogin } from "./src/auth/hooks" with { type: "ref" };
 import { globalMiddlewareConfigFn } from "./src/auth/serverMiddleware" with { type: "ref" };
+import { sessionRouteAuthMiddleware } from "./src/auth/sessionAuth" with { type: "ref" };
 // Google social auth — disabled to skip GOOGLE_CLIENT_ID/SECRET setup for now.
 // All supporting code (config, GoogleButton, userSignupFields) stays in place;
 // flip the block below back on + re-add <GoogleButton /> to Login/Signup pages
@@ -643,6 +645,16 @@ export default app({
       entities: ["InboxItem", "Lens"],
       auth: true,
       middlewareConfigFn: shareRouteMiddleware,
+    }),
+    // Captured-image serving — the only reader of the attachment `data`
+    // blobs (InboxAttachment + ListItemAttachment). auth:false + the session
+    // middleware: <img> tags authenticate via the wasp_session cookie (they
+    // cannot send an Authorization header). See src/attachments/serveAttachment.ts
+    // for the storage-seam contract and src/auth/sessionAuth.ts for the auth.
+    api("GET", "/api/attachments/:id", serveAttachment, {
+      entities: ["InboxAttachment", "ListItemAttachment"],
+      auth: false,
+      middlewareConfigFn: sessionRouteAuthMiddleware,
     }),
     // The CLI stub: PAT-middleware protected (not session auth). `auth: false`
     // so Wasp doesn't add the session handler on top — the PAT middleware

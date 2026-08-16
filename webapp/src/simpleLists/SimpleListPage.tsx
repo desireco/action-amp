@@ -9,7 +9,7 @@ import {
   setListItemDone,
 } from "wasp/client/operations";
 import type { ListItem } from "@prisma/client";
-import { ConfirmDialog } from "../components/ui";
+import { AttachmentThumbs, ConfirmDialog } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import "./SimpleListPage.css";
 
@@ -317,7 +317,9 @@ function ListSection(props: ListSectionProps) {
                       </a>
                     )}
                     {item.attachments.length > 0 && (
-                      <span>{item.attachments.length} image{item.attachments.length === 1 ? "" : "s"} attached</span>
+                      <div onClick={(event) => event.stopPropagation()}>
+                        <AttachmentThumbs attachments={item.attachments} />
+                      </div>
                     )}
                   </div>
                 )}

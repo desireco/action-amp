@@ -1,0 +1,37 @@
+@import "../../styles/tokens.css";
+
+/* ============================================================
+   AttachmentThumbs — captured-image thumbnails
+   ============================================================ */
+.aa-attach-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aa-space-xs, 6px);
+}
+
+.aa-attach-thumbs__link {
+  display: block;
+  border-radius: var(--aa-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--aa-border);
+  background: var(--aa-surface-muted);
+  transition: border-color 0.15s ease;
+}
+
+.aa-attach-thumbs__link:hover,
+.aa-attach-thumbs__link:focus-visible {
+  border-color: var(--aa-border-strong);
+}
+
+.aa-attach-thumbs__img {
+  display: block;
+  height: 44px;
+  width: 44px;
+  object-fit: cover;
+}
+
+.aa-attach-thumbs--md .aa-attach-thumbs__img {
+  height: 72px;
+  width: 72px;
+}
