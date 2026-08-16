@@ -160,6 +160,10 @@ Pick the task; read the doc(s) on the right **before** writing code.
   ground against the versioned docs (`webapp/AGENTS.md` §Documentation protocol).
 - **Work on `main`.** Commit directly to `main` unless the user explicitly
   asks for a branch. Do not auto-create feature branches.
+- **Commit as you go.** During multi-part work, commit each part as soon as
+  it is fully working and can land without breaking the app — don't batch
+  everything into one end-of-task commit. Keep each commit focused (one
+  concern), and never commit a state that leaves the app broken.
 - **Be brief.** Keep prose concise and direct, but use normal grammar and complete
   sentences. Preserve technical substance. Add detail when needed for clarity,
   security warnings, irreversible-action confirmations, or complex sequences.
