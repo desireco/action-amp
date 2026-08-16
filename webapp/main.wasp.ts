@@ -611,7 +611,10 @@ export default app({
     action(createCheckoutSession, { entities: ["User"], auth: true }),
     action(createCustomerPortalSession, { entities: ["User"], auth: true }),
     api("POST", "/webhooks/stripe", stripeWebhook, {
-      entities: ["User", "Payment"],
+      // AnalyticsSession/AnalyticsEvent are needed by the PAYMENT_CONFIRMED
+      // event the webhook records via recordAnalyticsEventCore — without them
+      // the event silently failed (entities.AnalyticsSession was undefined).
+      entities: ["User", "Payment", "AnalyticsSession", "AnalyticsEvent"],
       middlewareConfigFn: stripeWebhookMiddleware,
     }),
     api("GET", "/founding-100/status", founding100StatusHandler, {
