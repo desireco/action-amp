@@ -39,11 +39,12 @@
  */
 import type { Request, Response, NextFunction } from "express";
 
-// Wasp's auth middleware assigns the Lucia session id at runtime; this
+// Wasp's auth middleware assigns the Lucia session id at runtime (null for
+// tokenless requests — see the generated SDK's core/auth.ts); this
 // augmentation makes the read below cast-free.
 declare module "express-serve-static-core" {
   interface Request {
-    sessionId?: string;
+    sessionId?: string | null;
   }
 }
 
