@@ -77,6 +77,7 @@ export function mockContext(userId: string | MockUser | null = "user-1"): MockCo
     InboxItem: entitySpy(),
     InboxAttachment: entitySpy(),
     TaskAttachment: entitySpy(),
+    ProjectAttachment: entitySpy(),
     ListItemAttachment: entitySpy(),
     ListItem: entitySpy(),
     Resource: entitySpy(),

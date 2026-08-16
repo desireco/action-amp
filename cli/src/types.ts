@@ -65,6 +65,7 @@ export type Project = {
   _count?: { tasks: number };
   taskCount?: number;
   resources?: Resource[];
+  attachments?: { id: string; filename: string; mimeType: string }[];
 };
 
 export type Goal = {

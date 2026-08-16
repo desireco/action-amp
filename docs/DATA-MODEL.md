@@ -83,8 +83,9 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
 > `InboxAttachment`/`ListItemAttachment`) holds captured images that triage
 > moves onto the created Task — the seed `InboxItem` delete no longer cascades
 > the blobs away. Served by the same owner-gated `/api/attachments/:id` (and
-> the CLI twin), and displayed on the task detail page. Project/Resource
-> decisions still drop images (known gap, tracked for follow-up).
+> the CLI twin), and displayed on the task detail page. `ProjectAttachment`
+> (same day) extends the carry to the project decision. The resource decision
+> still drops images (known gap, tracked for follow-up).
 
 ---
 
@@ -96,6 +97,7 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
    └─ Goal        ← the organizing layer — replaces PARA's Areas
         └─ Project ← an outcome that needs >1 step  [PARA Project / GTD outcome]
                    (Projects under a Goal sort by `Project.order` then name)
+             ├─ ProjectAttachment ← captured image carried onto the project by triage
              ├─ Task        ← an atomic action (THE focus candidate)
              │    ├─ TaskUpdate   ← append-only notes/activity log (kind = NOTE | COMPLETED)
              │    ├─ TaskSession  ← recorded focus session (start/end, planned minutes, completed)

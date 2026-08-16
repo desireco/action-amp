@@ -237,6 +237,22 @@ async function resolveEffectiveProject(
   return { id: general?.id ?? null, permalink: general?.permalink ?? null };
 }
 
+/** Fetch the seed item's attachment blobs for a branch that moves them.
+ *  The orchestrator's main read selects metadata only, so branches that carry
+ *  images onto the created entity (task / project / list-item) pull the bytes
+ *  lazily here. Returns undefined when the item has none, so callers skip
+ *  the attachments key entirely — no `create: []` writes. */
+async function fetchSeedAttachmentBlobs(
+  entities: Entities,
+  item: { id: string; attachments: unknown[] },
+): Promise<PreparedImageAttachment[] | undefined> {
+  if (!item.attachments.length) return undefined;
+  return entities.InboxAttachment.findMany({
+    where: { inboxItemId: item.id },
+    select: { filename: true, mimeType: true, size: true, data: true },
+  });
+}
+
 /** task-today / upcoming / someday → a Task with the mapped status. */
 /** The Task.create payload a triage "task" decision builds (tags attached
  *  inline when parsed tags resolved, keeping the create a single write). */
@@ -334,6 +350,7 @@ async function createProjectFromTriage(
     name: string;
     lensId: string;
     goalId?: string;
+    preparedAttachments?: PreparedImageAttachment[];
   },
   assertProjectCap?: (lensId: string, currentCount: number) => Promise<void>,
 ): Promise<{ kind: "project"; id: string }> {
@@ -350,14 +367,27 @@ async function createProjectFromTriage(
     });
     return !!existing;
   });
+  // Built then conditionally extended (B5 convention — same as the Task
+  // create) so images ride on the single atomic write.
+  const projectData: {
+    name: string;
+    permalink: string;
+    userId: string;
+    lensId: string;
+    goalId?: string;
+    attachments?: { create: PreparedImageAttachment[] };
+  } = {
+    name: opts.name,
+    permalink,
+    userId,
+    lensId: opts.lensId,
+    goalId: opts.goalId,
+  };
+  if (opts.preparedAttachments?.length) {
+    projectData.attachments = { create: opts.preparedAttachments };
+  }
   const project = await entities.Project.create({
-    data: {
-      name: opts.name,
-      permalink,
-      userId,
-      lensId: opts.lensId,
-      goalId: opts.goalId,
-    },
+    data: projectData,
     select: { id: true },
   });
   return { kind: "project", id: project.id };
@@ -410,8 +440,8 @@ export async function triageInboxItemCore(
   const item = await entities.InboxItem.findUnique({
     where: { id: inboxItemId },
     // Metadata only — the blobs are fetched solely in the branches that
-    // move attachments (task + list-item). Loading `data` here would pull
-    // up to 20 MB of images into memory on every triage click.
+    // move attachments (task + project + list-item). Loading `data` here
+    // would pull up to 20 MB of images into memory on every triage click.
     include: {
       attachments: { select: { id: true, filename: true, mimeType: true, size: true } },
     },
@@ -480,12 +510,7 @@ export async function triageInboxItemCore(
       );
       // Images move with the item — fetch the blobs only when the seed
       // actually has some (the main read selected metadata only).
-      const preparedAttachments = item.attachments.length
-        ? await entities.InboxAttachment.findMany({
-            where: { inboxItemId: item.id },
-            select: { filename: true, mimeType: true, size: true, data: true },
-          })
-        : undefined;
+      const preparedAttachments = await fetchSeedAttachmentBlobs(entities, item);
       result = await createTaskFromTriage(entities, userId, {
         decision,
         title,
@@ -501,7 +526,10 @@ export async function triageInboxItemCore(
       });
       break;
     }
-    case "project":
+    case "project": {
+      // Images move with the item here too — a captured mockup triaged into
+      // "Website redesign" becomes the project's own media.
+      const preparedAttachments = await fetchSeedAttachmentBlobs(entities, item);
       result = await createProjectFromTriage(
         entities,
         userId,
@@ -509,10 +537,12 @@ export async function triageInboxItemCore(
           name: title,
           lensId,
           goalId,
+          preparedAttachments,
         },
         assertProjectCap,
       );
       break;
+    }
     case "resource": {
       // Resources are shared project context. No loose or Goal-owned resources.
       if (!projectId) {
@@ -534,10 +564,7 @@ export async function triageInboxItemCore(
     case "list-item": {
       // The other decision that keeps the images — fetch the blobs now (the
       // main read selects metadata only).
-      const attachments = await entities.InboxAttachment.findMany({
-        where: { inboxItemId: item.id },
-        select: { filename: true, mimeType: true, size: true, data: true },
-      });
+      const attachments = await fetchSeedAttachmentBlobs(entities, item);
       const listItem = await createListItemCore(entities, {
         userId,
         lensId,

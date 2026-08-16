@@ -611,3 +611,9 @@
     transform: none !important;
   }
 }
+
+/* Captured images carried onto the project by triage — display-only thumbs
+   under the description, same calm treatment as the task detail page. */
+.aa-project__attachments {
+  margin-top: var(--aa-space-sm);
+}

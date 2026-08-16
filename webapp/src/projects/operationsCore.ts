@@ -196,6 +196,7 @@ export async function getProjectData(
           createdAt: true,
         },
       },
+      attachments: { select: { id: true, filename: true, mimeType: true } },
     },
   });
   if (!project) return null;
@@ -216,6 +217,7 @@ export async function getProjectData(
     goal: project.goal,
     tasks: project.tasks,
     resources: project.resources,
+    attachments: project.attachments,
   };
 }
 

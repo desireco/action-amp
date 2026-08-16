@@ -20,6 +20,7 @@ import {
 } from "wasp/client/operations";
 import { Breadcrumb } from "../components/ui";
 import type { BreadcrumbItem } from "../components/ui";
+import { AttachmentThumbs } from "../components/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
@@ -53,21 +54,6 @@ const SIZE_DURATION: Record<string, string> = {
   M: "30 min",
   L: "1 hr",
   XL: "2 hr+",
-};
-
-type ProjectData = {
-  id: string;
-  permalink: string;
-  name: string;
-  description: string | null;
-  dueDate: Date | string | null;
-  isDone: boolean;
-  archivedAt: Date | string | null;
-  order: number;
-  lensId: string;
-  goal: { id: string; permalink: string; name: string } | null;
-  tasks: ProjectTask[];
-  resources: ProjectResource[];
 };
 
 type ProjectResource = {
@@ -560,6 +546,14 @@ export function ProjectDetailPage() {
                 <h1 className="aa-project__title">{project.name}</h1>
                 {project.description && (
                   <p className="aa-project__desc">{project.description}</p>
+                )}
+                {/* Captured images carried onto the project by triage
+                    (ProjectAttachment) — display-only, same thumbs + lightbox
+                    as everywhere else. Sits with the identity it belongs to. */}
+                {(project.attachments?.length ?? 0) > 0 && (
+                  <div className="aa-project__attachments">
+                    <AttachmentThumbs attachments={project.attachments} size="md" />
+                  </div>
                 )}
 
                 {/* WHY — the goal is the project's reason for existing. Its own

@@ -43,11 +43,12 @@ function makeRes(): Response & { headers: Record<string, string>; body: Buffer |
   return res as unknown as Response & { headers: Record<string, string>; body: Buffer | null };
 }
 
-function makeEntities(inboxResult: unknown = null, listResult: unknown = null, taskResult: unknown = null) {
+function makeEntities(inboxResult: unknown = null, listResult: unknown = null, taskResult: unknown = null, projectResult: unknown = null) {
   return {
     InboxAttachment: { findUnique: vi.fn().mockResolvedValue(inboxResult) },
     ListItemAttachment: { findUnique: vi.fn().mockResolvedValue(listResult) },
     TaskAttachment: { findUnique: vi.fn().mockResolvedValue(taskResult) },
+    ProjectAttachment: { findUnique: vi.fn().mockResolvedValue(projectResult) },
   };
 }
 
@@ -114,6 +115,29 @@ describe("serveAttachment", () => {
     expect(res.body?.toString()).toBe("task-png");
   });
 
+  it("falls back to project attachments (images carried by triage)", async () => {
+    const data = Buffer.from("proj-png");
+    const entities = makeEntities(null, null, null, {
+      data, filename: "mockup.png", mimeType: "image/png", size: data.length,
+      project: { userId: "u4" },
+    });
+    const res = makeRes();
+    await serveAttachment(makeReq(UUID, "u4"), res, { entities });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.headers["content-type"]).toBe("image/png");
+    expect(res.body?.toString()).toBe("proj-png");
+  });
+
+  it("returns 404 for a foreign user's project attachment — no existence leak", async () => {
+    const entities = makeEntities(null, null, null, {
+      data: Buffer.from("x"), filename: "a.png", mimeType: "image/png", size: 1,
+      project: { userId: "someone-else" },
+    });
+    const res = makeRes();
+    await serveAttachment(makeReq(UUID), res, { entities });
+    expect(res.status).toHaveBeenCalledWith(404);
+  });
+
   it("returns 404 for a foreign user's task attachment — no existence leak", async () => {
     const entities = makeEntities(null, null, {
       data: Buffer.from("x"), filename: "a.png", mimeType: "image/png", size: 1,
@@ -155,6 +179,7 @@ describe("serveAttachment", () => {
       InboxAttachment: { findUnique: vi.fn().mockRejectedValue(new Error("db down")) },
       ListItemAttachment: { findUnique: vi.fn() },
       TaskAttachment: { findUnique: vi.fn() },
+      ProjectAttachment: { findUnique: vi.fn() },
     };
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const res = makeRes();

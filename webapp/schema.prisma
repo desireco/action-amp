@@ -368,10 +368,27 @@ model Project {
 
   tasks     Task[]
   resources Resource[]
+  attachments ProjectAttachment[]
 
   @@unique([userId, permalink])
   @@index([userId, createdAt])
   @@index([userId, archivedAt])
+}
+
+// Image attachments carried onto a Project by triage (mirrors
+// InboxAttachment / ListItemAttachment / TaskAttachment — same shape, one row
+// per image, bytes in `data`). A captured mockup/screenshot triaged into
+// "Website redesign" becomes the project's own media.
+model ProjectAttachment {
+  id        String   @id @default(uuid())
+  filename  String
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
 }
 
 // ============================================================

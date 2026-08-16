@@ -36,6 +36,7 @@ shell, INTERACTION.md §9.2/§9.5) with Esc/backdrop-click dismissal and ←/→
 cycling for multi-image items. Bytes are served by
 `GET /api/attachments/:id` (`attachments/serveAttachment.ts`), the only
 reader of the attachment `data` blobs (InboxAttachment + ListItemAttachment
+
 - TaskAttachment, owner-gated, `Cache-Control: private, immutable`). The route is the storage
 seam: if attachments move to object storage, that handler is the single
 place to rewrite. Auth is `auth:false` + `auth/sessionAuth.ts` (session-cookie
@@ -55,13 +56,17 @@ files — the user still hits Continue:
   project pre-fills both the Project row and that project's lens on the Context
   step. `[[ ]]` precedence wins on disagreement.
 
-**Image attachments survive task dispatch** (2026-08-16). Items captured
-with images and triaged to a task (Today/Upcoming/Someday) carry their blobs
-onto `TaskAttachment` rows — created in the same atomic write as the Task,
-then the seed `InboxItem` delete cascades only the originals. (Simple lists
-already did this via `ListItemAttachment`; project/resource decisions still
-drop images — known gap.) The task detail page renders the same thumbs +
-lightbox, and `task show --json` (CLI) includes the attachment metadata.
+**Image attachments survive task + project dispatch** (2026-08-16). Items
+captured with images and triaged to a task (Today/Upcoming/Someday) carry
+their blobs onto `TaskAttachment` rows — created in the same atomic write as
+the Task, then the seed `InboxItem` delete cascades only the originals. The
+**project decision carries too** (`ProjectAttachment`): a captured mockup
+triaged into "Website redesign" becomes the project's own media, shown as
+display-only thumbs under the project detail header. (Simple lists already
+did this via `ListItemAttachment`; the resource decision still drops images —
+known gap.) The task/project detail pages render the same thumbs + lightbox,
+and `task show --json` / `project show --json` (CLI) include the attachment
+metadata.
 
 **Files.** `inbox/InboxPage.tsx`; `inbox/TriagePage.tsx`; `inbox/operations.ts`
 (`triageInboxItem`).

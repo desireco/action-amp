@@ -514,6 +514,57 @@ describe("triageInboxItem — project / resource / archive", () => {
     expect(m.entities.InboxItem.delete).toHaveBeenCalled();
   });
 
+  it("moves an attachment-backed InboxItem onto the created Project", async () => {
+    // A captured mockup triaged into a new project becomes the project's
+    // own media — blobs nested-created in the same atomic write (same
+    // convention as the task branch).
+    const m = arrange({
+      attachments: [{ id: "attachment-1", filename: "mockup.png", mimeType: "image/png", size: 8 }],
+    });
+    m.entities.Project.create.mockResolvedValue({ id: "proj-9" });
+    m.entities.InboxAttachment.findMany.mockResolvedValue([
+      { filename: "mockup.png", mimeType: "image/png", size: 8, data: Buffer.from("png") },
+    ]);
+
+    await triageInboxItem(
+      { inboxItemId: "ix-1", decision: "project", lensId: "lens-1" },
+      m.context,
+    );
+
+    expect(m.entities.InboxAttachment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { inboxItemId: "ix-1" } }),
+    );
+    expect(m.entities.Project.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        attachments: {
+          create: [
+            { filename: "mockup.png", mimeType: "image/png", size: 8, data: Buffer.from("png") },
+          ],
+        },
+      }),
+      select: { id: true },
+    });
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+    });
+  });
+
+  it("does NOT fetch blobs or add an attachments key on a project without images", async () => {
+    const m = arrange();
+    m.entities.Project.create.mockResolvedValue({ id: "proj-1" });
+
+    await triageInboxItem(
+      { inboxItemId: "ix-1", decision: "project", lensId: "lens-1" },
+      m.context,
+    );
+
+    expect(m.entities.InboxAttachment.findMany).not.toHaveBeenCalled();
+    // SAFETY: mock .calls array is untyped; cast to ReturnType<typeof vi.fn> for .mock access.
+    const call = (m.entities.Project.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(call.data.attachments).toBeUndefined();
+  });
+
   it("resource requires a project", async () => {
     const m = arrange();
     await expect(

@@ -95,6 +95,7 @@ function makeProject(overrides: Record<string, unknown> = {}) {
       },
     ],
     resources: [],
+    attachments: [],
     ...overrides,
   };
 }
@@ -347,8 +348,8 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
 
     const row = screen
       .getAllByText("Email Sarah")
-      .find((element) => element.classList.contains("aa-task-row__title"))
-      ?.closest(".aa-project__row")!;
+      .find((element) => element.classList.contains("aa-task-row__title"))!
+      .closest(".aa-project__row")!;
     const trigger = row.querySelector(".aa-task-row__main")!;
     openTaskActions("Email Sarah");
 
@@ -668,5 +669,31 @@ describe("ProjectDetailPage — Next-step hero (Direction D)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Work.*Life area/i }));
 
     await waitFor(() => expect(moveProject).toHaveBeenCalledWith({ id: "p1", targetLensId: "work" }));
+  });
+});
+
+// ----------------------------------------------------------------
+// Captured attachments (ProjectAttachment) — images carried onto the
+// project by triage render as display-only thumbs in the header.
+// ----------------------------------------------------------------
+describe("ProjectDetailPage — captured attachments", () => {
+  it("shows thumbs for images carried onto the project by triage", () => {
+    projectData.current = makeProject({
+      attachments: [
+        { id: "att-1", filename: "mockup.png", mimeType: "image/png" },
+        { id: "att-2", filename: "ref.jpg", mimeType: "image/jpeg" },
+      ],
+    });
+    renderAt("/do/projects/p1");
+
+    expect(screen.getByAltText("mockup.png")).toBeInTheDocument();
+    expect(screen.getByAltText("ref.jpg")).toBeInTheDocument();
+  });
+
+  it("renders no attachment block when the project has none", () => {
+    projectData.current = makeProject();
+    renderAt("/do/projects/p1");
+
+    expect(screen.queryByAltText(/\.(png|jpe?g|gif|webp)$/i)).toBeNull();
   });
 });
