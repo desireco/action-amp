@@ -4,19 +4,225 @@ import {
   reviewPeriod,
   type ReviewCadence,
 } from "./period";
+import type { Prisma, Size } from "@prisma/client";
 import type {
   ReviewAnswers,
   ReviewGoalItem,
   ReviewGoalOption,
+  ReviewGoalRef,
+  ReviewLensRef,
   ReviewProjectItem,
   ReviewResult,
   ReviewSnapshot,
   ReviewTaskItem,
 } from "./types";
 
-// Prisma delegate, Wasp entity map, or Vitest mock map.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Entities = Record<string, any>;
+/** A saved Review row (snapshot/answers are Prisma JSON columns). */
+interface ReviewRow {
+  snapshot: Prisma.JsonValue | null;
+  answers: Prisma.JsonValue | null;
+  completedAt: Date | null;
+  updatedAt: Date | null;
+}
+
+/** Task rows the evidence select returns. */
+interface EvidenceTaskRow {
+  id: string;
+  description: string;
+  permalink: string;
+  outcome: string | null;
+  size: Size;
+  completedAt: Date | null;
+  lens: ReviewLensRef;
+  goal: ReviewGoalRef | null;
+  project: {
+    id: string;
+    name: string;
+    permalink: string;
+    goal: ReviewGoalRef | null;
+  } | null;
+}
+
+/** Project rows the evidence select returns. */
+interface EvidenceProjectRow {
+  id: string;
+  name: string;
+  permalink: string;
+  description: string | null;
+  completedAt: Date | null;
+  lens: ReviewLensRef;
+  goal: ReviewGoalRef | null;
+}
+
+/** Goal rows the shared Goal select returns (evidence reads + picker options
+ *  use the same select so the delegate keeps one honest signature). */
+interface GoalListRow {
+  id: string;
+  name: string;
+  permalink: string;
+  description: string | null;
+  completedAt: Date | null;
+  isDone: boolean;
+  lens: ReviewLensRef;
+}
+
+/** Focus-session rows the evidence select returns. */
+interface FocusSessionRow {
+  startedAt: Date;
+  endedAt: Date | null;
+  task: { lensId: string } | null;
+}
+
+/** The one Goal select both review queries use (evidence + picker options). */
+const GOAL_LIST_SELECT = {
+  id: true,
+  name: true,
+  permalink: true,
+  description: true,
+  completedAt: true,
+  isDone: true,
+  lens: { select: { id: true, name: true, color: true } },
+} as const;
+
+/**
+ * The Prisma-delegate slices these cores call, split per function so each op
+ * demands only the entities its Wasp route injects (named, not a loose map):
+ * Wasp's per-op entities, the PAT route's shared client, and the Vitest
+ * factory all satisfy the relevant slice structurally.
+ */
+
+/** Evidence loading (getReviewData, completeReviewData). */
+interface EvidenceEntities {
+  Task: {
+    findMany(args: {
+      where: {
+        userId: string;
+        isDone: true;
+        completedAt: { gte: Date; lt: Date };
+      };
+      orderBy: { completedAt: "asc" };
+      select: {
+        id: true;
+        description: true;
+        permalink: true;
+        outcome: true;
+        size: true;
+        completedAt: true;
+        lens: { select: { id: true; name: true; color: true } };
+        goal: { select: { id: true; name: true; permalink: true } };
+        project: {
+          select: {
+            id: true;
+            name: true;
+            permalink: true;
+            goal: { select: { id: true; name: true; permalink: true } };
+          };
+        };
+      };
+    }): Promise<EvidenceTaskRow[]>;
+  };
+  Project: {
+    findMany(args: {
+      where: {
+        userId: string;
+        isDone: true;
+        completedAt: { gte: Date; lt: Date };
+      };
+      orderBy: { completedAt: "asc" };
+      select: {
+        id: true;
+        name: true;
+        permalink: true;
+        description: true;
+        completedAt: true;
+        lens: { select: { id: true; name: true; color: true } };
+        goal: { select: { id: true; name: true; permalink: true } };
+      };
+    }): Promise<EvidenceProjectRow[]>;
+  };
+  Goal: {
+    findMany(args: {
+      where: {
+        userId: string;
+        isDone?: true;
+        completedAt?: { gte: Date; lt: Date };
+      };
+      orderBy: { completedAt: "asc" } | { createdAt: "asc" };
+      select: {
+        id: true;
+        name: true;
+        permalink: true;
+        description: true;
+        completedAt: true;
+        isDone: true;
+        lens: { select: { id: true; name: true; color: true } };
+      };
+    }): Promise<GoalListRow[]>;
+  };
+  TaskSession: {
+    findMany(args: {
+      where: {
+        userId: string;
+        startedAt: { lt: Date };
+        endedAt: { not: null; gt: Date };
+      };
+      select: {
+        startedAt: true;
+        endedAt: true;
+        task: { select: { lensId: true } };
+      };
+    }): Promise<FocusSessionRow[]>;
+  };
+}
+
+/** The saved-Review slice (findUnique for reads, upsert for writes). */
+interface ReviewStore {
+  Review: {
+    findUnique(args: {
+      where: {
+        userId_cadence_periodStart: {
+          userId: string;
+          cadence: ReviewCadence;
+          periodStart: Date;
+        };
+      };
+    }): Promise<ReviewRow | null>;
+    upsert(args: {
+      where: {
+        userId_cadence_periodStart: {
+          userId: string;
+          cadence: ReviewCadence;
+          periodStart: Date;
+        };
+      };
+      create: {
+        userId: string;
+        cadence: ReviewCadence;
+        periodStart: Date;
+        periodEnd: Date;
+        timeZone: string;
+        answers: ReviewAnswers;
+        snapshot?: ReviewSnapshot;
+        completedAt?: Date;
+      };
+      update: {
+        periodEnd: Date;
+        timeZone: string;
+        answers: ReviewAnswers;
+        snapshot?: ReviewSnapshot;
+        completedAt?: Date;
+      };
+      select: { id: true; updatedAt: true; completedAt: true };
+    }): Promise<{ id: string; updatedAt: Date; completedAt: Date | null }>;
+  };
+}
+
+/** Everything getReviewData needs (evidence + the saved row). */
+type ReviewReadEntities = EvidenceEntities & ReviewStore;
+/** Everything completeReviewData needs (evidence + writes). */
+type ReviewWriteEntities = EvidenceEntities & ReviewStore;
+/** saveReviewDraftData writes only. */
+type ReviewDraftEntities = ReviewStore;
 
 export type ReviewArgs = {
   cadence: ReviewCadence;
@@ -29,7 +235,7 @@ export type SaveReviewArgs = ReviewArgs & {
 };
 
 export async function getReviewData(
-  entities: Entities,
+  entities: ReviewReadEntities,
   userId: string,
   args: ReviewArgs,
   now = new Date(),
@@ -90,7 +296,7 @@ export async function getReviewData(
 }
 
 export async function saveReviewDraftData(
-  entities: Entities,
+  entities: ReviewDraftEntities,
   userId: string,
   args: SaveReviewArgs,
 ) {
@@ -122,7 +328,7 @@ export async function saveReviewDraftData(
 }
 
 export async function completeReviewData(
-  entities: Entities,
+  entities: ReviewWriteEntities,
   userId: string,
   args: SaveReviewArgs,
   now = new Date(),
@@ -172,7 +378,7 @@ export async function completeReviewData(
 }
 
 async function loadEvidence(
-  entities: Entities,
+  entities: EvidenceEntities,
   userId: string,
   start: Date,
   end: Date,
@@ -219,14 +425,7 @@ async function loadEvidence(
     entities.Goal.findMany({
       where: { userId, isDone: true, completedAt: range },
       orderBy: { completedAt: "asc" },
-      select: {
-        id: true,
-        name: true,
-        permalink: true,
-        description: true,
-        completedAt: true,
-        lens: { select: { id: true, name: true, color: true } },
-      },
+      select: GOAL_LIST_SELECT,
     }),
     entities.TaskSession.findMany({
       where: {
@@ -242,36 +441,37 @@ async function loadEvidence(
     }),
   ]);
 
-  const taskItems: ReviewTaskItem[] = tasks.map((task: any) => ({
+  const taskItems: ReviewTaskItem[] = tasks.map((task) => ({
     id: task.id,
     title: task.description,
     permalink: task.permalink,
     outcome: task.outcome ?? null,
     size: task.size,
-    completedAt: new Date(task.completedAt).toISOString(),
+    // Non-null: the evidence where-clause filters on a completedAt range.
+    completedAt: new Date(task.completedAt!).toISOString(),
     lens: task.lens,
     project: task.project,
     goal: task.project?.goal ?? task.goal ?? null,
   }));
-  const projectItems: ReviewProjectItem[] = projects.map((project: any) => ({
+  const projectItems: ReviewProjectItem[] = projects.map((project) => ({
     id: project.id,
     name: project.name,
     permalink: project.permalink,
     description: project.description ?? null,
-    completedAt: new Date(project.completedAt).toISOString(),
+    completedAt: new Date(project.completedAt!).toISOString(),
     lens: project.lens,
     goal: project.goal ?? null,
   }));
-  const goalItems: ReviewGoalItem[] = goals.map((goal: any) => ({
+  const goalItems: ReviewGoalItem[] = goals.map((goal) => ({
     id: goal.id,
     name: goal.name,
     permalink: goal.permalink,
     description: goal.description ?? null,
-    completedAt: new Date(goal.completedAt).toISOString(),
+    completedAt: new Date(goal.completedAt!).toISOString(),
     lens: goal.lens,
   }));
   const focusMsByLens = new Map<string, number>();
-  const focusMs = sessions.reduce((sum: number, session: any) => {
+  const focusMs = sessions.reduce((sum: number, session) => {
     if (!session.endedAt) return sum;
     const clippedStart = Math.max(
       start.getTime(),
@@ -314,19 +514,13 @@ async function loadEvidence(
 }
 
 async function loadAvailableGoals(
-  entities: Entities,
+  entities: EvidenceEntities,
   userId: string,
 ): Promise<ReviewGoalOption[]> {
   return entities.Goal.findMany({
     where: { userId },
     orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      name: true,
-      permalink: true,
-      isDone: true,
-      lens: { select: { id: true, name: true, color: true } },
-    },
+    select: GOAL_LIST_SELECT,
   });
 }
 
@@ -334,7 +528,10 @@ export function validateAnswers(
   cadence: ReviewCadence,
   value: ReviewAnswers,
 ): ReviewAnswers {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  // Runtime defense for op-layer input the type system can't vouch for:
+  // arrays/null slip through Wasp's arg typing. instanceof + isArray is
+  // exact for JSON-decoded values.
+  if (!value || !(value instanceof Object) || Array.isArray(value)) {
     throw new Error("Review answers must be an object.");
   }
   const allowed =
@@ -364,7 +561,8 @@ export function validateAnswers(
     // SAFETY: narrowing from string to keyof union member.
     const raw = value[key as keyof ReviewAnswers];
     if (raw === undefined || raw === null) continue;
-    if (typeof raw !== "string")
+    // Constructor identity: exact string test for JSON-decoded values.
+    if (raw?.constructor !== String)
       throw new Error("Review answers must contain text values.");
     const trimmed = raw.trim();
     if (trimmed.length > 4_000)
@@ -377,32 +575,40 @@ export function validateAnswers(
   return clean;
 }
 
-function normalizeAnswers(value: unknown): ReviewAnswers {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+/** Answer keys across all cadences (kept-when-present, per validateAnswers). */
+const ANSWER_KEYS = [
+  "howGoing",
+  "goingWell",
+  "challenges",
+  "currentAttention",
+  "memory",
+  "moved",
+  "change",
+  "proud",
+  "learned",
+  "attention",
+  "emphasisGoalId",
+] as const;
+
+function normalizeAnswers(
+  value: Prisma.JsonValue | null | undefined,
+): ReviewAnswers {
+  if (!(value instanceof Object) || Array.isArray(value)) return {};
   const answers: ReviewAnswers = {};
-  for (const key of [
-    "howGoing",
-    "goingWell",
-    "challenges",
-    "currentAttention",
-    "memory",
-    "moved",
-    "change",
-    "proud",
-    "learned",
-    "attention",
-    "emphasisGoalId",
-  ] as const) {
-    // SAFETY: widening to Record for generic field access.
-    const raw = (value as Record<string, unknown>)[key];
-    if (typeof raw === "string") answers[key] = raw;
+  for (const key of ANSWER_KEYS) {
+    const raw = value[key];
+    // Constructor identity: exact primitive-string test for JSON values.
+    if (raw?.constructor === String) answers[key] = raw;
   }
   return answers;
 }
 
-function parseSnapshot(value: unknown): ReviewSnapshot | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  // SAFETY: type assertion is safe — value is validated or from a trusted source.
+function parseSnapshot(
+  value: Prisma.JsonValue | null | undefined,
+): ReviewSnapshot | null {
+  if (!(value instanceof Object) || Array.isArray(value)) return null;
+  // SAFETY: shallow shape checked below (version + the three arrays); the
+  // array element shapes were written by our own completeReviewData.
   const record = value as Partial<ReviewSnapshot>;
   if (
     record.version !== 1 ||
@@ -437,10 +643,10 @@ function addIsoDays(value: string, days: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-function dateString(value: unknown): string | null {
+function dateString(value: Date | string | null | undefined): string | null {
   return value instanceof Date
     ? value.toISOString()
-    : typeof value === "string"
+    : value !== undefined && value !== null
       ? new Date(value).toISOString()
       : null;
 }
