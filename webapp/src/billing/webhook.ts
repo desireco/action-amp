@@ -24,6 +24,7 @@ import type Stripe from "stripe";
 import { stripe, requireStripe } from "./stripe";
 import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 import type { AnalyticsEventEntities } from "../analytics/operationsCore";
+import type { Prisma, Plan as DbPlan } from "@prisma/client";
 // Wasp API handlers receive Express req/res; our express.raw middleware puts
 // raw bytes in req.body as a Buffer (not in the type signature).
 import type { Request, Response } from "express";
@@ -33,37 +34,18 @@ import type { Request, Response } from "express";
 /** Plan values this module may write to User.plan (subset of the Prisma Plan enum). */
 type Plan = "PRO" | "FOUNDER";
 
-/** The User fields webhook handlers read. */
+/** The User fields webhook handlers read. `plan` is the DB enum — Payment.plan
+ *  (also a Plan column) requires it, and the webhook's write-subset
+ *  ("PRO" | "FOUNDER") is assignable to it. */
 interface BillingUser {
   id: string;
-  plan: string;
-}
-
-/** The only User fields the webhook ever writes. */
-interface UserPlanUpdate {
-  plan?: Plan;
-  planRenewsAt?: Date | null;
-  stripeCustomerId?: string;
+  plan: DbPlan;
 }
 
 /** Stripe-side ids a Payment row is deduplicated on (idempotency guard). */
 interface PaymentStripeIdLookup {
   stripeCheckoutSessionId?: string;
   stripeInvoiceId?: string;
-}
-
-/** Payment row exactly as the webhook creates it. */
-interface PaymentCreateData {
-  userId: string;
-  amount: number;
-  currency: string;
-  plan: string;
-  description: string;
-  status: "SUCCEEDED" | "FAILED";
-  paidAt?: Date;
-  stripeCheckoutSessionId?: string;
-  stripeInvoiceId?: string;
-  stripePaymentIntentId?: string;
 }
 
 /** Plan + renewal granted by a price key (from setup-stripe.mjs metadata). */
@@ -87,24 +69,20 @@ interface SubscriptionMeta {
   userId?: string;
 }
 
-/** The Prisma delegate slice this handler touches — the exact methods and
- *  payloads used, named (not loose dictionaries) so callers and tests share
- *  one contract. */
+/** The Prisma delegate slice this handler touches — the exact methods used,
+ *  typed with the REAL Prisma arg types so the delegates Wasp injects (and
+ *  the generated api route passes) satisfy the signature. Hand-narrowed
+ *  literal payloads (the old `PaymentCreateData` shape) break against
+ *  `PaymentCreateInput | PaymentUncheckedCreateInput` unions — the checked
+ *  variant types scalar FKs like `userId` as `never`. */
 type BillingEntities = {
   User: {
-    findFirst(args: {
-      where: { stripeCustomerId: string };
-    }): Promise<BillingUser | null>;
-    update(args: {
-      where: { id: string };
-      data: UserPlanUpdate;
-    }): Promise<BillingUser>;
+    findFirst(args: Prisma.UserFindFirstArgs): Promise<BillingUser | null>;
+    update(args: Prisma.UserUpdateArgs): Promise<BillingUser>;
   };
   Payment: {
-    findFirst(args: {
-      where: PaymentStripeIdLookup;
-    }): Promise<{ id: string } | null>;
-    create(args: { data: PaymentCreateData }): Promise<{ id: string }>;
+    findFirst(args: Prisma.PaymentFindFirstArgs): Promise<{ id: string } | null>;
+    create(args: Prisma.PaymentCreateArgs): Promise<{ id: string }>;
   };
 };
 
