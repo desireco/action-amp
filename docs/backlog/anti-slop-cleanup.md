@@ -36,18 +36,22 @@ Ordered by risk/effort: mechanical first, architectural last. Counts are the
 original scan and overlap where rules fire on the same lines (B6–B8 assume B3/B4
 already handled the hotspots).
 
-| # | Scope | ~Findings | Risk | Verify with |
-|---|-------|-----------|------|-------------|
-| B1 | `SAFETY:` comments on type assertions in **test files** | 131 | trivial (comment-only) | vitest on touched files |
-| B2 | Chained `as X as Y` assertions outside hotspots | 14 | low | vitest + lint |
-| B3 | **`src/billing/webhook.ts`** — parse at boundary | 74 | medium (payment code) | `webhook.test.ts`, lint |
-| B4 | **`src/auth/patRoutes.ts`** — typed CLI request parsing | 64 | medium | auth tests, `cli/` smoke |
-| B5 | Conditional empty-object spreads → built objects | 22 | low | feature vitest suites |
-| B6 | Widen + unsafe-dictionary pairs in src (`satisfies`, named types) | ~105 | medium | per-file vitest, `wasp compile` |
-| B7 | `typeof` chains → narrowing / discriminated unions / parsing | ~86 | medium | per-file vitest |
-| B8 | Unknown-parameter tail → explicit param types | ~38 | low-medium | vitest |
-| B9 | Module mocking → dependency injection in tests | 44 | high (architectural) | full vitest for touched dirs |
-| B10 | Return-type + object-param tail | 9 | low | lint |
+| # | Scope | ~Findings | Risk | Model | Verify with |
+|---|-------|-----------|------|-------|-------------|
+| B1 | `SAFETY:` comments on type assertions in **test files** | 131 | trivial (comment-only) | GLM-5-turbo | vitest on touched files |
+| B2 | Chained `as X as Y` assertions outside hotspots | 14 | low | GLM-5-turbo | vitest + lint |
+| B3 | **`src/billing/webhook.ts`** — parse at boundary | 74 | medium (payment code) | **GLM-5.3** | `webhook.test.ts`, lint |
+| B4 | **`src/auth/patRoutes.ts`** — typed CLI request parsing | 64 | medium | **GLM-5.3** | auth tests, `cli/` smoke |
+| B5 | Conditional empty-object spreads → built objects | 22 | low | GLM-5-turbo | feature vitest suites |
+| B6 | Widen + unsafe-dictionary pairs in src (`satisfies`, named types) | ~105 | medium | split¹ | per-file vitest, `wasp compile` |
+| B7 | `typeof` chains → narrowing / discriminated unions / parsing | ~86 | medium | split² | per-file vitest |
+| B8 | Unknown-parameter tail → explicit param types | ~38 | low-medium | GLM-5-turbo | vitest |
+| B9 | Module mocking → dependency injection in tests | 44 | high (architectural) | **GLM-5.3** | full vitest for touched dirs |
+| B10 | Return-type + object-param tail | 9 | low | GLM-5-turbo³ | lint |
+
+¹ Mechanical half (`as const`, `satisfies`, Prisma-generated input types) → turbo; contract half (new named owner types with no existing source) → 5.3. Suspects: `taskPropertyFields.ts`, `triageFlow.ts`, `eventApi.ts`.
+² Test/simple-union sites → turbo; sites where the rule wants a parsing layer (`dateFormat`, `shareCapture`) → 5.3.
+³ B10 findings live in hotspot files — they fold into B3/B4/their file-owner lane.
 
 Rules with **zero** findings (nothing to do): `no-widen-then-assert`,
 `no-reflect-apply`, `no-reflect-get`, `no-shape-in-symbol-names`,
@@ -87,8 +91,43 @@ the config there if wanted (follow-up, not part of these batches).
 - **B9** — `vi.mock` → inject the dependency (props, a service module, or a
   faithful fake). Architectural; do per directory. If a specific mock is
   genuinely the right call, restructure so the seam is explicit rather than
-  suppressing the rule.
-- **B10** — stragglers; fold into whichever batch touches the same files.
+  suppressing the rule. **Runs after Lane 1 lands** (same files).
+- **B10** — dissolved: every B10 finding lives in a file owned by a lane
+  (webhook → L2, loginActivity/sessionCookie → L3, SimpleListPage/search/
+  feedback → L4/L5). No standalone batch.
+
+## Parallel lanes (worker assignments)
+
+Batches above are the taxonomy; **lanes are the execution partition** for
+parallel workers. Ownership is **by file, not by rule** — a lane fixes every
+anti-slop finding in its files (except deferred module mocking), so workers
+never collide. Each lane runs in its own dev worktree
+(`webapp/scripts/dev-worktree.sh <name>`, see `docs/DEV-WORKTREES.md`), lands
+via `worktree-sync.sh --push`, one commit per logical chunk.
+
+| Lane | Model | Owns | ~Findings | Notes |
+|------|-------|------|-----------|-------|
+| L1 | GLM-5-turbo | all `*.test.ts(x)` + `src/test/*` **except** `src/billing`, `src/auth` tests | ~155 | SAFETY comments + chained asserts + trivial param/dict types. Skip `no-module-mocking` (B9). Comment *content* is the work — 2–3 exemplars in the brief; eyeball a sample after. |
+| L2 | **GLM-5.3** | `src/billing/**` (incl. tests) | ~106 | B3 webhook boundary parsing + entitlements/stripe/useEntitled sweeps. Its 5 mock findings may be fixed inline. |
+| L3 | **GLM-5.3** | `src/auth/**` (incl. `email/`) | ~113 | B4 patRoutes typed request parsing + sessionCookie/magicLogin sweeps. |
+| L4 | GLM-5-turbo | `src/{tasks,inbox,reviews,admin,feedback,share,shared,notifications,attachments,goals,lists,resources,logbook}` (src files only) | ~149 | Escalate⁴: `taskPropertyFields.ts`, `triageFlow.ts`. |
+| L5 | GLM-5-turbo | `src/{components,analytics,app,projects,lenses,search,simpleLists,onboarding}` (src files only) + `scripts/`, `playwright.config.ts`, `public/` | ~125 | Escalate⁴: `analytics/eventApi.ts`. |
+| B9 | **GLM-5.3** | the 26 mock-bearing test files | 39 | **Sequential, after L1 lands.** One directory at a time. |
+
+⁴ Turbo escalation rule: if a fix needs a *new named contract or parsing
+layer* rather than `satisfies` / `as const` / narrowing / Prisma-generated
+types — skip that finding, list it in the handoff for a 5.3 follow-up. Do not
+force it.
+
+**Lane ground rules**
+
+- Never edit a file your lane doesn't own, even for a drive-by fix — the
+  owner's lint count is the progress metric.
+- Done-condition per lane: `npx oxlint` reports **0** findings in owned paths
+  (minus explicitly deferred/escalated ones), vitest green for touched test
+  files, `wasp compile` green when types moved.
+- Pull/rebase onto `main` before each commit; lanes touch disjoint files, so
+  conflicts should be impossible — a conflict means an ownership breach.
 
 ### Ground rules (from the anti-slop skill)
 
