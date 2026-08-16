@@ -142,7 +142,6 @@ export function SharePage() {
           <div className="aa-share__intro">
             <p className="aa-share__eyebrow">Shared from another app</p>
             <h1 className="aa-share__title">Keep this for later.</h1>
-            <p className="aa-share__lede">Review it once, then it waits in your Inbox until you are ready.</p>
           </div>
 
           <section className="aa-share__preview" aria-label="Shared item preview">
@@ -154,23 +153,21 @@ export function SharePage() {
             {pending.files.map((file) => <ImagePreview key={`${file.filename}-${file.size}`} file={file} />)}
           </section>
           <section className="aa-share__details" aria-label="Optional capture details">
-            <label className="aa-share__field">
-              <span>Title <em>optional</em></span>
-              <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Give this a clear title"
-              />
-            </label>
-            <label className="aa-share__field">
-              <span>Description <em>optional</em></span>
-              <textarea
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="Describe why you saved this, or what to do with it"
-                rows={3}
-              />
-            </label>
+            <input
+              className="aa-share__title-input"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Title"
+              aria-label="Title (optional)"
+            />
+            <textarea
+              className="aa-share__description-input"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="Add a note — why you saved this, or what to do with it"
+              aria-label="Description (optional)"
+              rows={3}
+            />
             <label className="aa-share__field">
               <span>Where should this go? <em>optional</em></span>
               <select value={destination} onChange={(event) => setDestination(event.target.value as Destination)}>
