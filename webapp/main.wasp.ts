@@ -579,7 +579,10 @@ export default app({
       auth: true,
     }),
     action(setPreferredName, { entities: ["User"], auth: true }),
-    action(completeOnboarding, { entities: ["User"], auth: true }),
+    action(completeOnboarding, {
+      entities: ["User", "AnalyticsSession", "AnalyticsEvent"],
+      auth: true,
+    }),
     query(getInboxItems, {
       entities: ["InboxItem", "InboxAttachment"],
       auth: true,
@@ -593,7 +596,7 @@ export default app({
       auth: true,
     }),
     action(createInboxItem, {
-      entities: ["InboxItem", "InboxAttachment", "Lens", "User"],
+      entities: ["InboxItem", "InboxAttachment", "Lens", "Project", "User"],
       auth: true,
     }),
     action(triageInboxItem, {
