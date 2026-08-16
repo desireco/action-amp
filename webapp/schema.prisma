@@ -392,6 +392,10 @@ model Task {
   isDone      Boolean   @default(false)
   createdAt   DateTime  @default(now())
   completedAt DateTime?
+  // Last write, Prisma-maintained. The Logbook sorts wont-do declines on it
+  // ("most recently declined first") — the only record of WHEN a task was
+  // declined, since declining neither completes nor archives it.
+  updatedAt   DateTime  @updatedAt
   startedAt   DateTime? // non-null = "Now" (in progress); null = "Next" (candidate). Cleared on done/defer/pause.
   // The single harmless sample task used to introduce focus. Other guidance is
   // stage-backed so "capture" and "triage" never become fake task debt.

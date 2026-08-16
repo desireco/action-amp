@@ -48,7 +48,6 @@ export async function getLogbookData(
         userId,
         lensId,
         isDone: true,
-        archivedAt: null,
         completedAt: { not: null },
       },
       orderBy: { completedAt: "desc" },
