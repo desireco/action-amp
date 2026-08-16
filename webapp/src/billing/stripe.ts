@@ -12,18 +12,35 @@ if (!stripeSecretKey) {
   // Calls will fail at runtime with StripeAuthenticationError.
   console.warn(
     "[billing/stripe] STRIPE_SECRET_KEY is not set. " +
-      "Checkout and webhook calls will fail. Set it in .env.server."
+      "Checkout and webhook calls will fail. Set it in .env.server.",
   );
 }
 
-// `new Stripe("")` throws ("Neither apiKey nor config.authenticator provided")
-// in Stripe v22+, so only construct when the key is present. Export a typed
-// stub when absent — the warning above already flags the missing key.
-export const stripe = stripeSecretKey
+/**
+ * The Stripe client, or null when STRIPE_SECRET_KEY is missing (dev may not
+ * have Stripe set up — the startup warning above flags it). Call sites guard
+ * and fail with a clear runtime error instead of a typed null masquerading
+ * as a client.
+ */
+export const stripe: Stripe | null = stripeSecretKey
   ? new Stripe(stripeSecretKey, {
       // No explicit apiVersion — use the account's pinned version (stable).
     })
-  : (null as unknown as Stripe);
+  : null;
+
+/**
+ * The Stripe client, throwing with a clear message when unconfigured.
+ * Server-op call sites use this so a missing STRIPE_SECRET_KEY surfaces as a
+ * readable error instead of a null member access.
+ */
+export function requireStripe(): Stripe {
+  if (!stripe) {
+    throw new Error(
+      "[billing/stripe] STRIPE_SECRET_KEY is not set — Stripe calls are unavailable. Set it in .env.server.",
+    );
+  }
+  return stripe;
+}
 
 /** Price IDs from env — these are public identifiers, not secrets. */
 const priceIds = {

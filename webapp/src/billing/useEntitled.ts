@@ -28,17 +28,30 @@ export function useEntitled(): boolean {
  *
  * Use in a catch block: `const msg = extractEntitlementMessage(err); setGate(msg);`
  */
-export function extractEntitlementMessage(err: unknown): EntitlementMessage {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const e = err as any;
+/** The shapes a Wasp 402 HttpError can take when it reaches a client catch
+ *  block (Wasp propagates the data object under `.data` and, for some shapes,
+ *  the response body). The server guard always sends string fields. */
+interface ThrownEntitlementError {
+  data?: { feature?: string; reason?: string };
+  response?: { data?: { feature?: string; reason?: string } };
+  message?: { data?: { feature?: string; reason?: string } };
+  feature?: string;
+  reason?: string;
+}
+
+/** Coerce a possible message field to display text; null when absent/empty. */
+function textOf(value: string | undefined): string | null {
+  return value ? value : null;
+}
+
+export function extractEntitlementMessage(cause: unknown): EntitlementMessage {
+  // SAFETY: thrown values are opaque; we read only the optional 402 fields
+  // and every miss falls through to the calm default below.
+  const e = cause as ThrownEntitlementError;
   const data = e?.data ?? e?.response?.data ?? e?.message?.data;
-  if (data && typeof data.feature === "string" && typeof data.reason === "string") {
-    return { feature: data.feature, reason: data.reason };
-  }
-  // Fallbacks per surface — caller usually passes a default, but a stray 402
-  // still gets a calm message rather than a raw status.
   return {
-    feature: e?.feature ?? "That",
-    reason: e?.reason ?? "This is a Pro feature.",
+    feature: textOf(data?.feature) ?? textOf(e?.feature) ?? "That",
+    reason:
+      textOf(data?.reason) ?? textOf(e?.reason) ?? "This is a Pro feature.",
   };
 }

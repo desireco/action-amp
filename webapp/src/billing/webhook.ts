@@ -21,7 +21,7 @@
  * the `constructEvent` boundary.
  */
 import type Stripe from "stripe";
-import { stripe } from "./stripe";
+import { stripe, requireStripe } from "./stripe";
 import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 // Wasp API handlers receive Express req/res; our express.raw middleware puts
 // raw bytes in req.body as a Buffer (not in the type signature).
@@ -217,6 +217,12 @@ export const stripeWebhook = async (
     console.error("[webhook] STRIPE_WEBHOOK_SECRET is not set.");
     return res.status(500).send("Webhook secret not configured.");
   }
+  if (!stripe) {
+    console.error(
+      "[webhook] Stripe client is not configured (STRIPE_SECRET_KEY missing).",
+    );
+    return res.status(500).send("Stripe client not configured.");
+  }
 
   // With express.raw({ type: "*/*" }), the raw bytes land in req.body as a Buffer.
   const rawBody =
@@ -313,7 +319,7 @@ async function resolveInvoiceSubscriptionMeta(
   const subscriptionId = subscriptionIdOf(invoice);
   if (!subscriptionId) return {};
   try {
-    const sub = await stripe.subscriptions.retrieve(subscriptionId);
+    const sub = await requireStripe().subscriptions.retrieve(subscriptionId);
     return {
       priceKey: sub.metadata?.priceKey,
       userId: sub.metadata?.userId,

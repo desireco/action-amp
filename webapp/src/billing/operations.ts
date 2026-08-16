@@ -7,7 +7,8 @@ import {
   FOUNDING_100_PUBLIC_CAP,
   FOUNDER_MEMBERSHIP_WHERE,
 } from "./config";
-import { stripe, getPriceId } from "./stripe";
+import { getPriceId, requireStripe } from "./stripe";
+import type { Prisma } from "@prisma/client";
 import { HttpError } from "wasp/server";
 import type { Request, Response } from "express";
 
@@ -59,7 +60,7 @@ import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 
 export const createCheckoutSession = (async (
   args: { priceKey: "proYearly" | "proMonthly" | "proPrepaid" | "founder" },
-  context
+  context,
 ) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
@@ -79,7 +80,10 @@ export const createCheckoutSession = (async (
       where: FOUNDER_MEMBERSHIP_WHERE,
     });
     if (claimed >= FOUNDING_100_PUBLIC_CAP) {
-      throw new HttpError(409, "All public Founding memberships have been claimed.");
+      throw new HttpError(
+        409,
+        "All public Founding memberships have been claimed.",
+      );
     }
   }
 
@@ -93,7 +97,7 @@ export const createCheckoutSession = (async (
   // Reuse or create a Stripe Customer
   let customerId = dbUser.stripeCustomerId;
   if (!customerId) {
-    const customer = await stripe.customers.create({
+    const customer = await requireStripe().customers.create({
       metadata: { userId: dbUser.id },
     });
     customerId = customer.id;
@@ -110,28 +114,33 @@ export const createCheckoutSession = (async (
 
   // Founders land on a dedicated thank-you page; everyone else returns to the
   // billing page with a success banner.
-  const successUrl = priceKey === "founder"
-    ? `${origin}/founding-100/welcome`
-    : `${origin}/do/settings/billing?checkout=success`;
-  const cancelUrl = priceKey === "founder"
-    ? `${origin}/founding-100`
-    : `${origin}/do/settings/billing?checkout=cancelled`;
+  const successUrl =
+    priceKey === "founder"
+      ? `${origin}/founding-100/welcome`
+      : `${origin}/do/settings/billing?checkout=success`;
+  const cancelUrl =
+    priceKey === "founder"
+      ? `${origin}/founding-100`
+      : `${origin}/do/settings/billing?checkout=cancelled`;
 
   // line_items: the founder tier charges inline (price_data) — no Price object
   // in the dashboard, the amount lives in code (FOUNDING_100_PRICE_CENTS). The
   // recurring Pro tiers still use the dashboard-resolved priceId (subscriptions
   // require a real Price object).
-  const lineItems = priceKey === "founder"
-    ? [{
-        price_data: {
-          currency: "usd",
-          unit_amount: FOUNDING_100_PRICE_CENTS,
-          // One-time product data — name shown on the Checkout page.
-          product_data: { name: "Founding 100 — Lifetime Pro" },
-        },
-        quantity: 1,
-      }]
-    : [{ price: getPriceId(priceKey), quantity: 1 }];
+  const lineItems =
+    priceKey === "founder"
+      ? [
+          {
+            price_data: {
+              currency: "usd",
+              unit_amount: FOUNDING_100_PRICE_CENTS,
+              // One-time product data — name shown on the Checkout page.
+              product_data: { name: "Founding 100 — Lifetime Pro" },
+            },
+            quantity: 1,
+          },
+        ]
+      : [{ price: getPriceId(priceKey), quantity: 1 }];
 
   // automatic_tax is OFF — Stripe's tax calc requires an address on the
   // Customer (or capturing one in Checkout), and we don't want to gate the
@@ -140,7 +149,7 @@ export const createCheckoutSession = (async (
   // invoice_creation block below still apply to both modes.
   // invoice_creation is needed for one-time payments (Stripe auto-invoices
   // subscriptions); without it, prepaid/founder buyers get no receipt.
-  const session = await stripe.checkout.sessions.create({
+  const session = await requireStripe().checkout.sessions.create({
     customer: customerId,
     line_items: lineItems,
     mode: isRecurring ? ("subscription" as const) : ("payment" as const),
@@ -163,15 +172,22 @@ export const createCheckoutSession = (async (
     throw new Error("Stripe Checkout Session has no URL.");
   }
 
-  void recordAnalyticsEventCore(context.entities, {
-    name: "CHECKOUT_STARTED",
-    visitorId: `user_${dbUser.id}`,
-    route: priceKey === "founder" ? "/founding-100" : "/do/settings/billing",
-    metadata: { plan: priceKey },
-  }, dbUser.id).catch(() => {});
+  void recordAnalyticsEventCore(
+    context.entities,
+    {
+      name: "CHECKOUT_STARTED",
+      visitorId: `user_${dbUser.id}`,
+      route: priceKey === "founder" ? "/founding-100" : "/do/settings/billing",
+      metadata: { plan: priceKey },
+    },
+    dbUser.id,
+  ).catch(() => {});
 
   return { url: session.url };
-}) satisfies CreateCheckoutSession<{ priceKey: "proYearly" | "proMonthly" | "proPrepaid" | "founder" }, { url: string }>;
+}) satisfies CreateCheckoutSession<
+  { priceKey: "proYearly" | "proMonthly" | "proPrepaid" | "founder" },
+  { url: string }
+>;
 
 /**
  * Create a Stripe Customer Portal session for the user to self-serve manage
@@ -195,7 +211,7 @@ export const createCustomerPortalSession = (async (_args, context) => {
   }
 
   const origin = process.env.WASP_WEB_CLIENT_URL ?? "http://localhost:4000";
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await requireStripe().billingPortal.sessions.create({
     customer: dbUser.stripeCustomerId,
     return_url: `${origin}/do/settings/billing`,
   });
@@ -235,13 +251,17 @@ export const getFounding100Status = (async (_args, context) => {
  * spots-remaining count and cut off the offer when `isFull`.
  */
 type StatusApiContext = {
-  entities: { User: { count: (args: { where: Record<string, unknown> }) => Promise<number> } };
+  entities: {
+    User: {
+      count: (args: { where: Prisma.UserWhereInput }) => Promise<number>;
+    };
+  };
 };
 
 export const founding100StatusHandler = async (
   _req: Request,
   res: Response,
-  context: StatusApiContext
+  context: StatusApiContext,
 ) => {
   const claimed = await context.entities.User.count({
     where: FOUNDER_MEMBERSHIP_WHERE,

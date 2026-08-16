@@ -10,17 +10,25 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock the Stripe singleton so we control event construction (bypass real
 // signature crypto) and subscription retrieval, without touching the network.
+// requireStripe() hands back the same mocked client (webhook.ts uses it for
+// the subscription lookup).
+const mockStripe = vi.hoisted(() => ({
+  webhooks: { constructEvent: vi.fn() },
+  subscriptions: { retrieve: vi.fn() },
+}));
 vi.mock("./stripe", () => ({
-  stripe: {
-    webhooks: { constructEvent: vi.fn() },
-    subscriptions: { retrieve: vi.fn() },
-  },
+  stripe: mockStripe,
+  requireStripe: () => mockStripe,
 }));
 
 import type Stripe from "stripe";
 import { stripeWebhook } from "./webhook";
 import { stripe } from "./stripe";
 import { mockContext, type MockContext } from "../test/mockContext";
+
+// SAFETY: ./stripe is vi.mock'd below, so the client is always the mock
+// object — never the null the unconfigured singleton would produce.
+const mockedStripe = stripe as Stripe;
 
 /**
  * Stripe webhook — the ONLY place User.plan changes. Money-path: the suite
@@ -73,7 +81,7 @@ function event(type: string, id: string, object: StripeFixture): any {
 
 /** Wire constructEvent to return the given event, then run the handler. */
 async function dispatch(ev: any, m: MockContext) {
-  vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(ev);
+  vi.mocked(mockedStripe.webhooks.constructEvent).mockReturnValue(ev);
   const res = fakeRes();
   await stripeWebhook(fakeReq(), res, m.context);
   return res;
@@ -101,7 +109,7 @@ describe("stripeWebhook — guard rail", () => {
   });
 
   it("400s when signature verification throws", async () => {
-    vi.mocked(stripe.webhooks.constructEvent).mockImplementation(() => {
+    vi.mocked(mockedStripe.webhooks.constructEvent).mockImplementation(() => {
       throw new Error("bad signature");
     });
     const res = fakeRes();
@@ -288,7 +296,7 @@ describe("invoice.paid", () => {
     // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
     // Fixture provides only `metadata`; resolveInvoiceSubscriptionMeta is the
     // sole caller and reads nothing else off the subscription.
-    (stripe.subscriptions.retrieve as any).mockResolvedValue({
+    (mockedStripe.subscriptions.retrieve as any).mockResolvedValue({
       metadata: { priceKey: "pro_yearly", userId: "user-1" },
     });
 
@@ -302,7 +310,7 @@ describe("invoice.paid", () => {
       m,
     );
 
-    expect(stripe.subscriptions.retrieve).toHaveBeenCalledWith("sub_1");
+    expect(mockedStripe.subscriptions.retrieve).toHaveBeenCalledWith("sub_1");
     expect(m.entities.User.update).toHaveBeenCalledWith({
       where: { id: "user-1" },
       data: { plan: "PRO", planRenewsAt: expect.any(Date) },
@@ -327,7 +335,9 @@ describe("invoice.paid", () => {
     m.entities.Payment.findFirst.mockResolvedValue({ id: "pay_old" });
     // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
     // Empty metadata: the handler reads only metadata off the subscription.
-    (stripe.subscriptions.retrieve as any).mockResolvedValue({ metadata: {} });
+    (mockedStripe.subscriptions.retrieve as any).mockResolvedValue({
+      metadata: {},
+    });
 
     await dispatch(
       event("invoice.paid", "evt_i", {
@@ -347,7 +357,9 @@ describe("invoice.paid", () => {
     const m = mockContext();
     // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
     // Empty metadata: the handler reads only metadata off the subscription.
-    (stripe.subscriptions.retrieve as any).mockResolvedValue({ metadata: {} });
+    (mockedStripe.subscriptions.retrieve as any).mockResolvedValue({
+      metadata: {},
+    });
     m.entities.User.findFirst.mockResolvedValue({ id: "user-2", plan: "FREE" });
 
     await dispatch(
@@ -379,7 +391,9 @@ describe("invoice.paid", () => {
     const m = mockContext();
     // SAFETY: ./stripe is vi.mock'd — cast the spy to any for mock wiring.
     // Empty metadata: the handler reads only metadata off the subscription.
-    (stripe.subscriptions.retrieve as any).mockResolvedValue({ metadata: {} });
+    (mockedStripe.subscriptions.retrieve as any).mockResolvedValue({
+      metadata: {},
+    });
     await dispatch(
       event("invoice.paid", "evt_i", {
         id: "in_3",
