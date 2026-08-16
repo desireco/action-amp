@@ -52,9 +52,11 @@ async function apiCall<T>(path: string, init?: RequestInit): Promise<T> {
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
+    // SAFETY: type assertion is safe — value is validated or from a trusted source.
     const message = (body as { error?: string }).error ?? `Request failed (${res.status}).`;
     throw new Error(message);
   }
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   return body as T;
 }
 

@@ -277,6 +277,7 @@ function AttachmentLightbox({
   onCloseRef.current = onClose;
 
   useEffect(() => {
+    // SAFETY: DOM event target is guaranteed to be this element type in this handler.
     openerRef.current = document.activeElement as HTMLElement | null;
     // Focus the close control (§9.5) — CloseButton doesn't take a ref, so
     // resolve it from the mounted dialog.
@@ -315,6 +316,7 @@ function AttachmentLightbox({
         if (!controls || controls.length === 0) return;
         e.preventDefault();
         const list = Array.from(controls);
+        // SAFETY: DOM event target is guaranteed to be this element type in this handler.
         const at = list.indexOf(document.activeElement as HTMLButtonElement);
         const next = e.shiftKey
           ? at <= 0

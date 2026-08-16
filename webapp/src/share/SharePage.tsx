@@ -163,7 +163,7 @@ export function SharePage() {
             />
             <label className="aa-share__field">
               <span>Where should this go? <em>optional</em></span>
-              <select value={destination} onChange={(event) => setDestination(event.target.value as Destination)}>
+              <select value={destination} onChange={(event) => setDestination(/* SAFETY: <select> value is always a valid Destination. */ event.target.value as Destination)}>
                 <option value="">Inbox — decide later</option>
                 {(projects?.length ?? 0) > 0 && (
                   <optgroup label="Projects">

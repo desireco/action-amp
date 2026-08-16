@@ -361,6 +361,7 @@ export function validateAnswers(
           ];
   const clean: ReviewAnswers = {};
   for (const key of allowed) {
+    // SAFETY: narrowing from string to keyof union member.
     const raw = value[key as keyof ReviewAnswers];
     if (raw === undefined || raw === null) continue;
     if (typeof raw !== "string")
@@ -368,7 +369,10 @@ export function validateAnswers(
     const trimmed = raw.trim();
     if (trimmed.length > 4_000)
       throw new Error("Each review answer must be 4,000 characters or fewer.");
-    if (trimmed) clean[key as keyof ReviewAnswers] = trimmed;
+    if (trimmed) {
+      // SAFETY: key is iterated from allowed keys of ReviewAnswers.
+      clean[key as keyof ReviewAnswers] = trimmed;
+    }
   }
   return clean;
 }
@@ -389,6 +393,7 @@ function normalizeAnswers(value: unknown): ReviewAnswers {
     "attention",
     "emphasisGoalId",
   ] as const) {
+    // SAFETY: widening to Record for generic field access.
     const raw = (value as Record<string, unknown>)[key];
     if (typeof raw === "string") answers[key] = raw;
   }
@@ -397,6 +402,7 @@ function normalizeAnswers(value: unknown): ReviewAnswers {
 
 function parseSnapshot(value: unknown): ReviewSnapshot | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const record = value as Partial<ReviewSnapshot>;
   if (
     record.version !== 1 ||
@@ -405,6 +411,7 @@ function parseSnapshot(value: unknown): ReviewSnapshot | null {
     !Array.isArray(record.goals)
   )
     return null;
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   return record as ReviewSnapshot;
 }
 

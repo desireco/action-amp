@@ -47,6 +47,7 @@ function compactAnswers<K extends keyof ReviewAnswers>(
   answers: ReviewAnswers,
   keys: K[],
 ): Pick<ReviewAnswers, K> {
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   return Object.fromEntries(
     keys.flatMap((key) =>
       answers[key] === undefined ? [] : [[key, answers[key]]],

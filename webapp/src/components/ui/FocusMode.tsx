@@ -321,6 +321,7 @@ export function FocusMode({
 
       // While typing in a field, only the above Esc applies — `n`/Enter
       // must not steal keystrokes from the composer/editor.
+      // SAFETY: DOM event target is guaranteed to be this element type in this handler.
       const target = e.target as HTMLElement | null;
       if (isTypingTarget(target)) return;
       if (snoozeOpen) return;

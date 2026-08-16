@@ -10,6 +10,7 @@ type PriceKey = "proYearly" | "proMonthly" | "proPrepaid";
 
 const PLANS = [
   {
+    // SAFETY: type assertion is safe — value is validated or from a trusted source.
     id: "proMonthly" as PriceKey,
     name: "Monthly",
     price: "$12.95",
@@ -18,6 +19,7 @@ const PLANS = [
     recommended: false,
   },
   {
+    // SAFETY: type assertion is safe — value is validated or from a trusted source.
     id: "proYearly" as PriceKey,
     name: "Yearly",
     price: "$79.50",
@@ -27,6 +29,7 @@ const PLANS = [
     recommended: true,
   },
   {
+    // SAFETY: type assertion is safe — value is validated or from a trusted source.
     id: "proPrepaid" as PriceKey,
     name: "Prepaid",
     price: "$90",
@@ -281,6 +284,7 @@ function StatusPill({ status }: { status: string }) {
     status === "SUCCEEDED" ? "teal" :
     status === "FAILED" || status === "REFUNDED" ? "rose" :
     "muted";
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   return <Chip variant={variant as "teal" | "rose" | "muted"} small>{status.toLowerCase()}</Chip>;
 }
 

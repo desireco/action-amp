@@ -264,6 +264,7 @@ export function OnboardingPage() {
       queryClient.setQueryData(["auth/me"], (old: unknown) =>
         old
           ? {
+              // SAFETY: type assertion is safe — value is validated or from a trusted source.
               ...(old as object),
               hasSeenOnboarding: true,
               onboardingStage: skipGuidance ? "COMPLETE" : "SAMPLE_TASK",
@@ -292,6 +293,7 @@ export function OnboardingPage() {
   // name step owns Enter; arrow keys must retain their native text behavior.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // SAFETY: DOM event target is guaranteed to be this element type in this handler.
       const target = e.target as HTMLElement | null;
       if (
         currentPage === "name" ||

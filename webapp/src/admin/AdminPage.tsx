@@ -48,6 +48,7 @@ const FUNNEL_LABELS: Record<string, string> = {
 export function AdminPage() {
   const { data: user } = useAuth();
   const [params, setParams] = useSearchParams();
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const range = params.get("range") === "7d" || params.get("range") === "all" ? params.get("range") as FunnelRange : "30d";
 
   const { data: stats, isLoading: statsLoading, error: statsError, dataUpdatedAt } = useQuery(getAdminStats, { range });

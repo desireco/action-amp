@@ -181,7 +181,10 @@ async function resolveTagRecords(
   const names = (parsedTags ?? [])
     .map((t) => t.replace(/^[@#]/, "").toLowerCase())
     .filter((t) => t.length > 0);
-  if (names.length === 0) return [] as { id: string }[];
+  if (names.length === 0) {
+    // SAFETY: empty array satisfies the { id: string }[] return type.
+    return [] as { id: string }[];
+  }
   return Promise.all(
     names.map((name) =>
       entities.Tag.upsert({
@@ -503,6 +506,7 @@ export async function triageInboxItemCore(
       break;
     }
     default:
+      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       throw new Error(`Unknown triage decision: ${decision as string}`);
   }
 

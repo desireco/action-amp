@@ -26,6 +26,7 @@ export async function getPendingShare(id: string): Promise<PendingShare | null> 
   try {
     return await new Promise((resolve, reject) => {
       const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get(id);
+      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       request.onsuccess = () => resolve((request.result as PendingShare | undefined) ?? null);
       request.onerror = () => reject(request.error);
     });

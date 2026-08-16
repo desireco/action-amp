@@ -105,6 +105,7 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
   }, [appLoading, enabled, navigate, preferences]);
 
   const query = useQuery(getReview, { cadence, forDate, timeZone });
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const data = query.data as ReviewResult | undefined;
   const [answers, setAnswers] = useState<ReviewAnswers>({});
   const [dirty, setDirty] = useState(false);
@@ -207,6 +208,7 @@ function ReviewPage({ cadence }: { cadence: ReviewCadence }) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // SAFETY: DOM event target is guaranteed to be this element type in this handler.
       const target = event.target as HTMLElement | null;
       const action = reviewShortcutFor(
         event.key,

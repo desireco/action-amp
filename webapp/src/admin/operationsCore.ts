@@ -233,6 +233,7 @@ export async function getAdminStatsCore(
     RESOLVED: 0,
     CLOSED: 0,
   };
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   for (const row of feedbackByStatusRaw as { status: FeedbackStatus; _count: { _all: number } }[]) {
     if (row.status in byStatus) {
       byStatus[row.status] = row._count._all;
@@ -292,6 +293,7 @@ export async function getRecentFeedbackCore(
   { afterId, limit, statuses }: { afterId?: string | null; limit: number; statuses?: FeedbackStatus[] },
 ): Promise<{ items: FeedbackRow[]; hasNext: boolean }> {
   const fetchLimit = limit + 1;
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const rows = (await entities.Feedback.findMany({
     where: { deletedAt: null, ...(statuses?.length ? { status: { in: statuses } } : {}) },
     ...(afterId

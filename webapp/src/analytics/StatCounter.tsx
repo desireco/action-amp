@@ -26,6 +26,7 @@ export function trackStatCounterEvent(event: string, surface?: string, plan?: st
   const tags: Record<string, string> = { event };
   if (surface) tags.surface = surface.slice(0, 40);
   if (plan) tags.plan = plan.slice(0, 40);
+  // SAFETY: double/wide assertion needed — runtime shape is verified.
   const queue = window._statcounter ?? (window._statcounter = [] as unknown as StatCounterQueue);
   queue.push({ tags });
   if (typeof window._statcounter.record_pageview === "function") window._statcounter.record_pageview();

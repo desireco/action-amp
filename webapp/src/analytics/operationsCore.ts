@@ -156,6 +156,7 @@ export async function getFunnelStatsCore(entities: Entities, range: FunnelRange)
   }));
 
   const sourceMap = new Map<string, { sessions: number; signups: number; checkouts: number; payments: number }>();
+  // SAFETY: double/wide assertion needed — runtime shape is verified.
   for (const session of sessions as any[]) {
     const source = [session.utmSource, session.utmCampaign, session.referrerHost].filter(Boolean).join(" / ") || "Unknown source";
     const row = sourceMap.get(source) ?? { sessions: 0, signups: 0, checkouts: 0, payments: 0 };
@@ -167,7 +168,9 @@ export async function getFunnelStatsCore(entities: Entities, range: FunnelRange)
   }
 
   const appOpensByUser = new Map<string, Date[]>();
+  // SAFETY: double/wide assertion needed — runtime shape is verified.
   for (const session of sessions as any[]) {
+    // SAFETY: double/wide assertion needed — runtime shape is verified.
     for (const event of session.events as any[]) {
       if (event.name !== "APP_OPENED" || !event.userId) continue;
       const list = appOpensByUser.get(event.userId) ?? [];

@@ -116,6 +116,7 @@ export function PropertyChips({
   useEffect(() => {
     if (!openKey || readOnly) return;
     const onPointer = (e: PointerEvent) => {
+      // SAFETY: DOM event target is guaranteed to be this element type in this handler.
       if (rowRef.current && !rowRef.current.contains(e.target as Node)) {
         setOpenKey(null);
       }

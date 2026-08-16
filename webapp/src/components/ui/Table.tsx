@@ -59,7 +59,7 @@ export function Table<T>({
               <tr key={rowKey(row)} className={i % 2 === 1 ? "aa-table__row--striped" : ""}>
                 {columns.map((col) => (
                   <td key={col.key} className={`aa-table__td aa-table__td--${col.align ?? "left"}`}>
-                    {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? "")}
+                    {col.render ? col.render(row) : String((/* SAFETY: widening row to Record for dynamic key access. */ row as Record<string, unknown>)[col.key] ?? "")}
                   </td>
                 ))}
               </tr>

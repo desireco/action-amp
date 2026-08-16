@@ -150,6 +150,7 @@ export function LensPopover({
                 if (e.key === "Escape") {
                   setFilter("");
                   setFilterOpen(false);
+                  // SAFETY: DOM event target is guaranteed to be this element type in this handler.
                   (e.target as HTMLInputElement).blur();
                 }
               }}

@@ -259,10 +259,13 @@ export function chipPickToTaskPatch(
 ): { status?: TaskStatus; priority?: TaskPriority; size?: TaskSize; dueDate?: Date | null } {
   switch (fieldKey) {
     case "status":
+      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       return { status: value as TaskStatus };
     case "priority":
+      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       return { priority: value as TaskPriority };
     case "size":
+      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       return { size: value as TaskSize };
     case "due":
       return { dueDate: presetToDate(value) };

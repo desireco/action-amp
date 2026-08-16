@@ -39,6 +39,7 @@ export const FEEDBACK_STATUSES = [
 export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
 
 export function isFeedbackStatus(value: unknown): value is FeedbackStatus {
+  // SAFETY: narrowing readonly string array for .includes() call.
   return typeof value === "string" && (FEEDBACK_STATUSES as readonly string[]).includes(value);
 }
 

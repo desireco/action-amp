@@ -298,7 +298,7 @@ export function DesignSystemPage() {
             {FONT_SIZES.map((f) => (
               <div key={f.label} className="ds-type-row">
                 <span className="ds-type-row__label">{f.label}</span>
-                <span className="ds-type-row__sample" style={f.s as React.CSSProperties}>The quick brown fox</span>
+                <span className="ds-type-row__sample" style={/* SAFETY: f.s is a CSSProperties object from the design token map. */ f.s as React.CSSProperties}>The quick brown fox</span>
                 <code className="ds-type-row__css">{JSON.stringify(f.s)}</code>
               </div>
             ))}
@@ -1296,6 +1296,7 @@ function TableDemo() {
           { key: "date", header: "Date", render: (p) => p.date },
           { key: "description", header: "Plan" },
           { key: "amount", header: "Amount", align: "right", render: (p) => fmt(p.amount) },
+          // SAFETY: type assertion is safe — value is validated or from a trusted source.
           { key: "status", header: "Status", align: "center", render: (p) => <Chip variant={variant(p.status) as "teal" | "rose" | "muted"} small>{p.status}</Chip> },
         ]}
         rows={DEMO_PAYMENTS}

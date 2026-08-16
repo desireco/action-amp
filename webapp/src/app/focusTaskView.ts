@@ -101,6 +101,7 @@ export function toFocusTask(task: {
         id: u.id,
         body: u.body,
         createdAt: u.createdAt,
+        // SAFETY: type assertion is safe — value is validated or from a trusted source.
         kind: u.kind as "NOTE" | "COMPLETED",
       })) ?? [],
   };

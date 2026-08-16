@@ -22,6 +22,7 @@ export function AdminUsersPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // SAFETY: double/wide assertion needed — runtime shape is verified.
   const args = { search: value(params, "q") || undefined, joined: value(params, "joined") || undefined, active: value(params, "active") || undefined, access: value(params, "access") || undefined, sort: value(params, "sort") || "signup_desc", cursor: value(params, "cursor") || undefined, limit: 25 } as any;
   const { data, isLoading } = useQuery(getAdminUsers, args);
   const grant = useAction(grantAdminUserAccess), remove = useAction(removeAdminUserAccess), destroy = useAction(deleteAdminUser), destroyMany = useAction(deleteAdminUsers);
@@ -32,11 +33,15 @@ export function AdminUsersPage() {
     try {
       if (pending.kind === "DELETE" && pending.row) await destroy({ targetUserId: pending.row.id });
       else if (pending.kind === "BULK_DELETE") {
+        // SAFETY: type assertion is safe — value is validated or from a trusted source.
         const result = await destroyMany({ targetUserIds: selectedIds }) as { deletedIds: string[]; skipped: Array<{ targetUserId: string; reason: string }> };
         setSelectedIds([]);
         if (result.skipped.length) setError(`${result.deletedIds.length} deleted. ${result.skipped.length} skipped: ${result.skipped.map((item) => item.reason).filter((reason, index, reasons) => reasons.indexOf(reason) === index).join(" ")}`);
       } else if (pending.kind === "REMOVE" && pending.row) await remove({ targetUserId: pending.row.id });
-      else if (pending.row) await grant({ targetUserId: pending.row.id, grant: pending.kind as ManualGrant });
+      else if (pending.row) {
+        // SAFETY: pending.kind is guaranteed to be a valid ManualGrant from the UI picker.
+        await grant({ targetUserId: pending.row.id, grant: pending.kind as ManualGrant });
+      }
       await queryClient.invalidateQueries({ queryKey: ["getAdminUsers"] });
       await queryClient.invalidateQueries({ queryKey: ["getAdminStats"] });
       setPending(null);

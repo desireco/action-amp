@@ -44,6 +44,7 @@ export function getCaretCoordinates(
     // DOM CSSStyleDeclaration index signature is conservative. Same tradeoff
     // the upstream package makes.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // SAFETY: double/wide assertion needed — runtime shape is verified.
     (div.style as any)[prop] = (style as any)[prop];
   }
   // Force a known layout regardless of the textarea's own constraints.

@@ -47,6 +47,7 @@ export function OverflowMenu({ items, label = "More actions" }: OverflowMenuProp
   useEffect(() => {
     if (!open || isMobile) return;
     const onPointer = (e: PointerEvent) => {
+      // SAFETY: DOM event target is guaranteed to be this element type in this handler.
       if (!wrapRef.current?.contains(e.target as Node)) close(false);
     };
     const onKey = (e: KeyboardEvent) => {
@@ -75,6 +76,7 @@ export function OverflowMenu({ items, label = "More actions" }: OverflowMenuProp
       menuRef.current?.querySelectorAll<HTMLElement>(".aa-overflow__item") ?? [],
     );
     if (itemEls.length === 0) return;
+    // SAFETY: DOM event target is guaranteed to be this element type in this handler.
     const current = itemEls.indexOf(document.activeElement as HTMLElement);
     const next =
       e.key === "Home"

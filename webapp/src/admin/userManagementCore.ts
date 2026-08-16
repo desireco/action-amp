@@ -91,6 +91,7 @@ function validatedArgs(args: any) {
     (typeof args.cursor !== "string" || !args.cursor)
   )
     throw new AdminUserInputError("Invalid user cursor.");
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   return { ...args, limit, sort: (args?.sort ?? "signup_desc") as UserSort };
 }
 

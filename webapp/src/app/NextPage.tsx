@@ -242,12 +242,10 @@ export function NextPage() {
   // Both blocks are passed ONLY for the `next` candidate state. The home `now`
   // state keeps live execution context in Focus; a stale summary has no place
   // on the chooser while work is active.
-  const goalContext = !isNow
-    ? resolveGoal(task as TaskContextInput)
-    : null;
-  const continuity = !isNow
-    ? resolveContinuity(task as TaskContextInput)
-    : null;
+  // SAFETY: task is the full TaskContextInput shape when isNow is false.
+  const goalContext = !isNow ? resolveGoal(task as TaskContextInput) : null;
+  // SAFETY: task is the full TaskContextInput shape when isNow is false.
+  const continuity = !isNow ? resolveContinuity(task as TaskContextInput) : null;
   const continuityStats = continuity ? continuityStatsRow(continuity) : null;
 
   // Alternative rows — the ranked pool minus the on-stage task. `suggested`

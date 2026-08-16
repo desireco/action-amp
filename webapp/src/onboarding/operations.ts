@@ -62,7 +62,9 @@ async function sendWelcomeEmail(user: {
   // buildWelcomeEmail expects. providerUserId is the address for the email
   // provider; for google it's a sub id (filtered out by the @ check inside).
   const identities = {
+    // SAFETY: type assertion is safe — value is validated or from a trusted source.
     email: null as { id: string } | null,
+    // SAFETY: type assertion is safe — value is validated or from a trusted source.
     google: null as { id: string } | null,
   };
   for (const identity of auth.identities) {

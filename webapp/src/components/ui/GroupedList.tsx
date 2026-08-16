@@ -48,6 +48,7 @@ export function GroupedList<T>({
   groupClassName,
   className = "",
 }: GroupedListProps<T>) {
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const Heading = (`h${headingLevel}` as unknown) as "h3";
   return (
     <div className={["aa-grouped", className].filter(Boolean).join(" ")}>

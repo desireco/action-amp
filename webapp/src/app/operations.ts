@@ -310,6 +310,7 @@ export const saveFocusSessionMinutes = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   if (!FOCUS_SESSION_OPTIONS.includes(args.minutes as FocusSessionMinutes)) {
     throw new Error("Focus session must be 25 or 45 minutes.");
   }

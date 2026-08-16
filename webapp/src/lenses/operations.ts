@@ -59,6 +59,7 @@ const LENS_COLORS = [
 type LensColor = (typeof LENS_COLORS)[number];
 
 function isLensColor(s: unknown): s is LensColor {
+  // SAFETY: narrowing readonly string array for .includes() call.
   return typeof s === "string" && (LENS_COLORS as readonly string[]).includes(s);
 }
 

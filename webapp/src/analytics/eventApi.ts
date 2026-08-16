@@ -8,8 +8,10 @@ function bodyInput(body: unknown): AnalyticsEventInput | null {
     try { body = JSON.parse(body); } catch { return null; }
   }
   if (!body || typeof body !== "object") return null;
+  // SAFETY: widening to Record for generic field access.
   const b = body as Record<string, unknown>;
   if (typeof b.name !== "string" || typeof b.visitorId !== "string") return null;
+  // SAFETY: double/wide assertion needed — runtime shape is verified.
   return b as unknown as AnalyticsEventInput;
 }
 

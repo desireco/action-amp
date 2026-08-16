@@ -129,6 +129,7 @@ export const serveAttachment = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _context: { entities: any },
 ) => {
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const auth = (req as SessionAuthRequest).sessionAuth;
   if (!auth) {
     return res.status(401).json({ error: "Not authenticated." });

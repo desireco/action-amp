@@ -54,6 +54,7 @@ type LensRow = {
 
 function operationErrorMessage(err: unknown, fallback: string): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // SAFETY: double/wide assertion needed — runtime shape is verified.
   const e = err as any;
   const data = e?.data ?? e?.response?.data ?? e?.message?.data;
   if (data && typeof data.reason === "string") return data.reason;

@@ -127,6 +127,7 @@ export function useDeployedVersionUpdate() {
       try {
         const res = await fetch("/version.json", { cache: "no-store", signal: abort.signal });
         if (!res.ok) return;
+        // SAFETY: type assertion is safe — value is validated or from a trusted source.
         const data = (await res.json()) as { version?: string };
         if (cancelled) return;
         if (typeof data.version === "string" && data.version !== __APP_VERSION__) {

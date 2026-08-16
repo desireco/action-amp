@@ -69,6 +69,7 @@ export function ProjectsPage() {
   // ponytail: capture the inbox id in a ref — the nav state is cleared on mount
   // (so a refresh doesn't re-trigger), but handleCreate must still see it.
   const location = useLocation();
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const triageState = location.state as { fromInboxItemId?: string; initialName?: string } | null;
   const fromInboxRef = useRef<string | null>(triageState?.fromInboxItemId ?? null);
   const [initialName, setInitialName] = useState(triageState?.initialName ?? "");

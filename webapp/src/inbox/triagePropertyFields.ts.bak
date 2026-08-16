@@ -134,19 +134,14 @@ export function chipPickToWorkingPatch(
 ): Partial<Working> {
   switch (fieldKey) {
     case "when":
-      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       return { when: value as Working["when"] };
     case "size":
-      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       return { size: value as Working["size"] };
     case "priority":
-      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       return { priority: value as Working["priority"] };
     case "due":
-      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       return { due: value as Working["due"] };
     case "kind":
-      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       return { kind: value as Working["kind"] };
     default:
       return {};

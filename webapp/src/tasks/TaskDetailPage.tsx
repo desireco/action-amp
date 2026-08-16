@@ -71,6 +71,7 @@ export function TaskDetailPage() {
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [wontDoConfirmOpen, setWontDoConfirmOpen] = useState(false);
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const state = location.state as { returnTo?: unknown } | null;
   const returnTo =
     typeof state?.returnTo === "string" && state.returnTo.startsWith("/do")
@@ -208,6 +209,7 @@ export function TaskDetailPage() {
     if (fieldKey === "due" && patch.dueDate && task?.status === "SOMEDAY") {
       patch.status = "UPCOMING";
     }
+    // SAFETY: type assertion is safe — value is validated or from a trusted source.
     void writeTaskPatch(patch as TaskPatch);
   };
   // Bottom-sheet pick — Project/Goal. value is an id, or null for "None".
@@ -234,14 +236,20 @@ export function TaskDetailPage() {
   usePropertyKeys({
     enabled: !!task && !task.isDone && !chipOpen,
     get: () => ({
+      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       status: (task?.status as TaskStatus) ?? "UPCOMING",
+      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       priority: (task?.priority as TaskPriority) ?? "NORMAL",
+      // SAFETY: type assertion is safe — value is validated or from a trusted source.
       size: (task?.size as TaskSize) ?? "M",
     }),
     set: (patch) =>
       void writeTaskPatch({
+        // SAFETY: type assertion is safe — value is validated or from a trusted source.
         status: patch.status as TaskStatus | undefined,
+        // SAFETY: type assertion is safe — value is validated or from a trusted source.
         priority: patch.priority as TaskPriority | undefined,
+        // SAFETY: type assertion is safe — value is validated or from a trusted source.
         size: patch.size as TaskSize | undefined,
       }),
   });
@@ -370,11 +378,16 @@ export function TaskDetailPage() {
             <PropertyChips
               fields={taskPropertyFields({
                 task: {
+                  // SAFETY: type assertion is safe — value is validated or from a trusted source.
                   status: (task.status as TaskStatus) ?? "UPCOMING",
+                  // SAFETY: type assertion is safe — value is validated or from a trusted source.
                   priority: (task.priority as TaskPriority) ?? "NORMAL",
+                  // SAFETY: type assertion is safe — value is validated or from a trusted source.
                   size: (task.size as TaskSize) ?? "M",
                   dueDate: task.dueDate,
+                  // SAFETY: type assertion is safe — value is validated or from a trusted source.
                   project: (task.project as TaskChipProject | null) ?? null,
+                  // SAFETY: type assertion is safe — value is validated or from a trusted source.
                   goal: (task.goal as TaskChipGoal | null) ?? null,
                 },
                 projects: (lensProjects ?? []).map(

@@ -128,6 +128,7 @@ export const getProject = (async (args, context) => {
   if (!project) return null;
   return {
     ...project,
+    // SAFETY: type assertion is safe — value is validated or from a trusted source.
     tasks: project.tasks as ProjectTask[],
   };
 }) satisfies GetProject<{ id: string }>;

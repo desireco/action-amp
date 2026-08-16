@@ -30,6 +30,7 @@ function respondWithRedirect(res: Response, redirect: string, json: boolean) {
 
 function extractFields(body: unknown): ShareFields {
   if (!body || typeof body !== "object") return {};
+  // SAFETY: widening to Record for generic field access.
   const b = body as Record<string, unknown>;
   return {
     title: typeof b.title === "string" ? b.title : undefined,

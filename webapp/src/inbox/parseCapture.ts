@@ -238,6 +238,7 @@ export function parseCapture(
 
   // ---- Size: ~20m / ~1h / ~XL ----
   text = text.replace(/~(\d+\.?\d*)(m|h)\b/i, (_, val, unit) => {
+    // SAFETY: type assertion is safe — value is validated or from a trusted source.
     size = sizeFromTime(parseFloat(val), unit.toLowerCase() as "m" | "h");
     return "";
   });

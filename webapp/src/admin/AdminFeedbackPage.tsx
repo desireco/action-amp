@@ -28,6 +28,7 @@ export function AdminFeedbackPage() {
   const { data: user } = useAuth();
   const [params, setParams] = useSearchParams();
   const filter = params.get("status") === "all" ? "all" : "open";
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const statuses = filter === "all" ? undefined : ["OPEN", "IN_PROGRESS"] as FeedbackStatus[];
   const [items, setItems] = useState<FeedbackRow[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);

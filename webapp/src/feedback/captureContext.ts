@@ -60,6 +60,7 @@ export function captureFeedbackContext(location: {
 }): FeedbackCaptureContext {
   const hasWindow = typeof window !== "undefined";
 
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const w = hasWindow ? (window as { innerWidth?: number; innerHeight?: number }) : undefined;
   const viewport =
     w && typeof w.innerWidth === "number" && typeof w.innerHeight === "number"

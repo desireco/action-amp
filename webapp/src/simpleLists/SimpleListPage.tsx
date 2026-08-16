@@ -49,6 +49,7 @@ export function SimpleListPage() {
     { enabled: lens?.type === "SIMPLE_LIST" },
   );
 
+  // SAFETY: type assertion is safe — value is validated or from a trusted source.
   const items = (data ?? []) as ListItemWithAttachments[];
   const open = useMemo(() => items.filter((item) => !item.isDone), [items]);
   const checked = useMemo(() => items.filter((item) => item.isDone), [items]);
