@@ -114,6 +114,45 @@ via `worktree-sync.sh --push`, one commit per logical chunk.
 | L5 | GLM-5-turbo | `src/{components,analytics,app,projects,lenses,search,simpleLists,onboarding}` (src files only) + `scripts/`, `playwright.config.ts`, `public/` | ~125 | Escalate⁴: `analytics/eventApi.ts`. |
 | B9 | **GLM-5.3** | the 26 mock-bearing test files | 39 | **Sequential, after L1 lands.** One directory at a time. |
 
+#### B9 progress (2026-08-17)
+
+Cleared 6 of 44 findings in two commits, both with the mock removed and the
+real dependency exercised:
+
+- `billing/webhook.test.ts` — events now go through the **real**
+  `stripe.webhooks.constructEvent` with genuine HMAC signatures (node:crypto);
+  the one network call sits behind the `stripeCalls` seam exported from
+  `webhook.ts`. Commit `0cc0514`.
+- `auth/email/LoginPage.test.tsx` + `PasswordlessAuthPage.test.tsx` —
+  `PasswordlessAuthPage` takes an optional `deps` prop
+  (`PasswordlessAuthDeps`, structural types; defaults = the real Wasp
+  hooks/ops); tests inject fakes. `LoginPage` forwards `deps`. Commit `a616e7a`.
+
+The remaining **38 findings are blocked, not neglected** — two systemic
+blockers, both requiring src changes in files L4/L5 owned at the time:
+
+1. **`wasp/server` is hard-unimportable in every vitest environment**
+   (detectServerImports plugin; verified by probe — even node-env test files
+   are rejected). 12 findings / 10 files: the 8 `operations.test.ts` files
+   that stub `billing/entitlementHttp` (guard spies),
+   `billing/entitlements.ops.test.ts`, and `share/shareCapture.test.ts`
+   (`auth/sessionAuth` pulls the same chain), plus
+   `onboarding/operations.test.ts` (module-owned `PrismaClient`). Fix shape:
+   inject guard/auth dependencies into the op wrappers (extra param defaulting
+   to the real import), or give `entitlementHttp`/`sessionAuth` a swappable
+   seam module. Spy-based assertions then become behavior assertions or stay
+   as spies on the injected stubs.
+2. **Page components import Wasp ops directly** (`useQuery(getX, args)` /
+   `useAction`) and this Wasp version does not export `getQueryKey`, so
+   cache-seeding a real QueryClient is version-coupled. 25 findings / 12
+   page-test files. Fix shape: the `deps`-prop pattern proven in
+   `PasswordlessAuthPage` (structural types, real hooks as defaults), applied
+   per component — LensesPage, AppShell, SimpleListPage, Upcoming/SomedayPage
+   (also mock `lensContext` + `useTaskListActions`), TriagePage, InboxPage,
+   TaskDetail/ProjectDetail/GoalDetailPage, CommandPalette, App.
+
+Run B9's tail **after L4/L5 land**, directory by directory.
+
 ⁴ Turbo escalation rule: if a fix needs a *new named contract or parsing
 layer* rather than `satisfies` / `as const` / narrowing / Prisma-generated
 types — skip that finding, list it in the handoff for a 5.3 follow-up. Do not
