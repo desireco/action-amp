@@ -246,6 +246,44 @@ export async function getTopTaskData(
   entities: Entities,
   { userId, lensId }: { userId: string; lensId: string },
 ) {
+  const ranked = await fetchRankedActiveTasks(entities, { userId, lensId });
+  return ranked[0] ?? null;
+}
+
+/** How many alternative tasks the Next chooser offers below the top task. */
+export const TASK_ALTERNATIVES_LIMIT = 3;
+
+// The Next screen's "Or choose another task" rail (next-alternatives): the
+// same ranked pool as the top task, minus whatever is already on stage — the
+// ranked #1 while browsing the recommendation, or the picked task while
+// inspecting one (so the recommendation itself re-enters the list and stays
+// available). Rows stay light: project/goal names only, no history hydration.
+export async function getTaskAlternativesData(
+  entities: Entities,
+  {
+    userId,
+    lensId,
+    excludeIds,
+    limit = TASK_ALTERNATIVES_LIMIT,
+  }: {
+    userId: string;
+    lensId: string;
+    excludeIds?: string[];
+    limit?: number;
+  },
+) {
+  const ranked = await fetchRankedActiveTasks(entities, { userId, lensId });
+  const skip = new Set(excludeIds ?? []);
+  return ranked.filter((task: { id: string }) => !skip.has(task.id)).slice(0, limit);
+}
+
+// Shared candidate fetch + sort behind getTopTaskData and
+// getTaskAlternativesData — both surfaces must rank identically or the
+// "alternative" order would contradict the recommendation above it.
+async function fetchRankedActiveTasks(
+  entities: Entities,
+  { userId, lensId }: { userId: string; lensId: string },
+) {
   const candidates = await entities.Task.findMany({
     where: activePoolWhere({ userId, lensId }),
     include: {
@@ -253,10 +291,8 @@ export async function getTopTaskData(
       goal: { select: { id: true, name: true } },
     },
   });
-  if (candidates.length === 0) return null;
-
   rankTopTask(candidates);
-  return candidates[0];
+  return candidates;
 }
 
 // ----------------------------------------------------------------

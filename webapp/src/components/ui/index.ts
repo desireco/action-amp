@@ -63,6 +63,8 @@ export type { TriageChip, TriageChipTone, TriageExit } from "./TriageCard";
 export { Toggle } from "./Toggle";
 export { NextCard } from "./NextCard";
 export type { NextTask } from "./NextCard";
+export { NextAlternatives } from "./NextAlternatives";
+export type { NextAlternative } from "./NextAlternatives";
 export * from "./icons";
 export { ZoomDock } from "./ZoomDock";
 export type { ZoomDockItem } from "./ZoomDock";

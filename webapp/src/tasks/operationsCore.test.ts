@@ -7,11 +7,14 @@ import { describe, it, expect } from "vitest";
 import {
   snoozeTarget,
   getTopTaskData,
+  getTaskAlternativesData,
+  TASK_ALTERNATIVES_LIMIT,
   hydrateTopTaskData,
   toggleTaskDoneCore,
   pauseTaskCore,
   completeFocusSessionCore,
 } from "./operationsCore";
+import { activePoolWhere } from "./activePool";
 import { mockContext } from "../test/mockContext";
 
 /**
@@ -205,6 +208,117 @@ describe("getTopTaskData", () => {
     });
 
     expect(result).toMatchObject({ id: "older" });
+  });
+});
+
+// ----------------------------------------------------------------
+// getTaskAlternativesData — the Next rail: same pool, same comparator,
+// minus the on-stage task, capped at TASK_ALTERNATIVES_LIMIT
+// ----------------------------------------------------------------
+describe("getTaskAlternativesData", () => {
+  it("returns [] when there are no candidates", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([]);
+
+    const result = await getTaskAlternativesData(m.entities, {
+      userId: "user-1",
+      lensId: "lens-1",
+    });
+
+    expect(result).toEqual([]);
+  });
+
+  it("ranks with the same comparator as the top task (started → today → priority → size → oldest)", async () => {
+    const m = mockContext();
+    // Deliberately unordered input: bench LOW old, court IMPORTANT new, plain
+    // NORMAL middling. Expect the getTopTaskData order verbatim.
+    m.entities.Task.findMany.mockResolvedValue([
+      candidate({
+        id: "bench-low",
+        status: "UPCOMING",
+        priority: "LOW",
+        createdAt: new Date("2026-06-01T10:00:00Z"),
+      }),
+      candidate({
+        id: "court-important",
+        status: "TODAY",
+        priority: "IMPORTANT",
+        createdAt: new Date("2026-06-19T10:00:00Z"),
+      }),
+      candidate({
+        id: "court-normal",
+        status: "TODAY",
+        priority: "NORMAL",
+        createdAt: new Date("2026-06-18T10:00:00Z"),
+      }),
+    ]);
+
+    const result = await getTaskAlternativesData(m.entities, {
+      userId: "user-1",
+      lensId: "lens-1",
+    });
+
+    expect(result.map((t: { id: string }) => t.id)).toEqual([
+      "court-important",
+      "court-normal",
+      "bench-low",
+    ]);
+  });
+
+  it("excludes the on-stage task (by id) so a pick can trade places with the recommendation", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([
+      candidate({ id: "recommendation", priority: "IMPORTANT" }),
+      candidate({ id: "picked", createdAt: new Date("2026-06-18T10:00:00Z") }),
+      candidate({ id: "third", createdAt: new Date("2026-06-17T10:00:00Z") }),
+    ]);
+
+    const result = await getTaskAlternativesData(m.entities, {
+      userId: "user-1",
+      lensId: "lens-1",
+      excludeIds: ["picked"],
+    });
+
+    // The recommendation re-enters the list while a picked task is on stage.
+    expect(result.map((t: { id: string }) => t.id)).toEqual(["recommendation", "third"]);
+  });
+
+  it("caps the rail at TASK_ALTERNATIVES_LIMIT", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([
+      candidate({ id: "on-stage", priority: "IMPORTANT" }),
+      candidate({ id: "a", createdAt: new Date("2026-06-16T10:00:00Z") }),
+      candidate({ id: "b", createdAt: new Date("2026-06-17T10:00:00Z") }),
+      candidate({ id: "c", createdAt: new Date("2026-06-18T10:00:00Z") }),
+      candidate({ id: "d", createdAt: new Date("2026-06-19T10:00:00Z") }),
+    ]);
+
+    const result = await getTaskAlternativesData(m.entities, {
+      userId: "user-1",
+      lensId: "lens-1",
+      excludeIds: ["on-stage"],
+    });
+
+    expect(result.map((t: { id: string }) => t.id)).toEqual(["a", "b", "c"]);
+    expect(result.length).toBe(TASK_ALTERNATIVES_LIMIT);
+  });
+
+  it("draws its candidate pool from activePoolWhere (single source, like getTopTaskData)", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([]);
+
+    await getTaskAlternativesData(m.entities, {
+      userId: "user-1",
+      lensId: "lens-1",
+    });
+
+    const call = m.entities.Task.findMany.mock.calls[0][0];
+    const expected = activePoolWhere({ userId: "user-1", lensId: "lens-1" });
+    expect(call.where).toMatchObject(expected);
+    expect(call.include).toEqual({
+      project: { select: { id: true, name: true } },
+      goal: { select: { id: true, name: true } },
+    });
   });
 });
 

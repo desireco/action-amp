@@ -21,6 +21,7 @@ import {
   updateTaskStatus,
   unscheduleOverdueTasks,
   getTopTask,
+  getTaskAlternatives,
   getFocusedTask,
   snoozeTask,
   startTask,
@@ -743,6 +744,52 @@ describe("getTopTask", () => {
     const result = await getTopTask({ lensId: "lens-1" }, m.context);
 
     expect(result).toMatchObject({ id: "court" });
+  });
+});
+
+// ----------------------------------------------------------------
+// getTaskAlternatives — the Next screen's "Or choose another task" rail
+// ----------------------------------------------------------------
+
+describe("getTaskAlternatives", () => {
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(
+      getTaskAlternatives({ lensId: "lens-1" }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("guards the lens, then draws from the shared pool minus excludeIds", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([
+      candidate({ id: "top", priority: "IMPORTANT" }),
+      // alt-1 older than alt-2's default createdAt → oldest-first tie-break
+      // ranks alt-1 ahead; both are NORMAL/M/TODAY like BASE_TASK.
+      candidate({ id: "alt-1", createdAt: new Date("2026-06-18T10:00:00Z") }),
+      candidate({ id: "alt-2" }),
+    ]);
+
+    const result = await getTaskAlternatives(
+      { lensId: "lens-1", excludeIds: ["top"] },
+      m.context,
+    );
+
+    expect(assertLifeAreaLens).toHaveBeenCalledWith(m.context, "lens-1");
+    expect(result.map((t: { id: string }) => t.id)).toEqual(["alt-1", "alt-2"]);
+    // Same single-source predicate as getTopTask — alternatives and the
+    // recommendation must never disagree about what's on the table.
+    const expected = activePoolWhere({ userId: "user-1", lensId: "lens-1" });
+    const call = m.entities.Task.findMany.mock.calls[0][0];
+    expect(call.where).toMatchObject(expected);
+  });
+
+  it("treats a missing excludeIds as no exclusion (recommendation on stage)", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([candidate({ id: "top" })]);
+
+    const result = await getTaskAlternatives({ lensId: "lens-1" }, m.context);
+
+    expect(result.map((t: { id: string }) => t.id)).toEqual(["top"]);
   });
 });
 

@@ -5,6 +5,7 @@ import type {
   GetWeekTasks,
   GetDoneToday,
   GetTopTask,
+  GetTaskAlternatives,
   GetFocusedTask,
   SnoozeTask,
   StartTask,
@@ -31,6 +32,7 @@ import {
   getWeekTasksData,
   getDoneTodayData,
   getTopTaskData,
+  getTaskAlternativesData,
   hydrateTopTaskData,
   toggleTaskDoneCore,
   snoozeTaskCore,
@@ -306,6 +308,33 @@ export const getTopTask = (async (args, context) => {
     })) ?? null
   );
 }) satisfies GetTopTask<{ lensId: string }>;
+
+// ----------------------------------------------------------------
+// Read: the Next screen's alternative tasks (next-alternatives)
+// ----------------------------------------------------------------
+// The same ranked pool getTopTask drew its winner from, minus the task
+// already on stage (excludeIds — the ranked #1 while browsing the
+// recommendation, or the picked task while inspecting one, so the
+// recommendation re-enters the list and stays available). Capped at
+// TASK_ALTERNATIVES_LIMIT. Choosing one is pure client-side navigation to
+// /do/today/:permalink — nothing is mutated here.
+export const getTaskAlternatives = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  // Same entitlement posture as getTopTask: FREE users land on Me; the guard
+  // exists for the localStorage-bypass case where a Work lensId slips through.
+  await assertLensAllowed(context, args.lensId);
+  await assertLifeAreaLens(context, args.lensId);
+  return await getTaskAlternativesData(context.entities, {
+    userId: context.user.id,
+    lensId: args.lensId,
+    excludeIds: args.excludeIds,
+  });
+}) satisfies GetTaskAlternatives<{
+  lensId: string;
+  excludeIds?: string[];
+}>;
 
 // ----------------------------------------------------------------
 // Read: the single task currently in focus

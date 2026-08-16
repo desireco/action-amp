@@ -4,13 +4,20 @@ import { useQuery } from "wasp/client/operations";
 import { useAuth } from "wasp/client/auth";
 import {
   getTopTask,
+  getTaskAlternatives,
   getTask,
   snoozeTask,
   startTask,
   pauseTask,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { NextCard, SnoozeSheet, SplashScreen, type SnoozePreset } from "../components/ui";
+import {
+  NextAlternatives,
+  NextCard,
+  SnoozeSheet,
+  SplashScreen,
+  type SnoozePreset,
+} from "../components/ui";
 import { useActiveLens } from "./lensContext";
 import { composeWhy } from "./focusWhy";
 import {
@@ -22,11 +29,27 @@ import {
 import { formatWhen, sizeLabel } from "./focusTaskView";
 import "./NextPage.css";
 
+/** Light candidate row from getTaskAlternatives — full Task fields for
+ * display, but no history relations (those hydrate only on the winner). */
+type AlternativeCandidate = {
+  id: string;
+  permalink: string;
+  description: string;
+  status: string;
+  dueDate: Date | string | null;
+  size: string;
+  project?: { name: string } | null;
+};
+
 /**
  * The home screen — "Next". The product's wedge: not a list, a chooser.
  *
  * Renders the focus engine's top task (priority-first MVP, FEATURES.md F10),
  * or a calm empty state when nothing's on the table. Scoped to the active Lens.
+ * While deciding (not started), the alternatives rail below the card offers
+ * the next ranked candidates — picking one routes through the picked-task
+ * path (/do/today/:permalink); nothing is mutated, the recommendation stays
+ * available in the list.
  */
 export function NextPage() {
   const { data: user } = useAuth();
@@ -49,6 +72,18 @@ export function NextPage() {
   );
   const [snoozeOpen, setSnoozeOpen] = useState(false);
   const task = selectedTaskToken ? selectedTask : topTask;
+  // Alternatives: the same ranked pool minus whatever is on stage. Only
+  // fetched while deciding — a started task (Now) keeps the stage to itself.
+  const { data: alternatives } = useQuery(
+    getTaskAlternatives,
+    lens
+      ? {
+          lensId: lens.id,
+          excludeIds: task?.id ? [task.id] : undefined,
+        }
+      : undefined,
+    { enabled: !!lens && !task?.startedAt },
+  );
 
   // Splash latch: the welcome veil (see the render section) covers only the
   // *first* data load. `entered` latches once content has rendered, so later
@@ -76,6 +111,7 @@ export function NextPage() {
     // Snoozed task leaves Today → refresh focus + Upcoming/Someday + counts.
     queryClient.invalidateQueries({ queryKey: ["getTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getTaskAlternatives"] });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     if (selectedTaskToken) navigate("/do/today", { replace: true });
@@ -88,6 +124,7 @@ export function NextPage() {
     await startTask({ id: task.id });
     queryClient.invalidateQueries({ queryKey: ["getTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getTaskAlternatives"] });
     queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     if (openFocus) navigate("/do/focus");
@@ -97,6 +134,7 @@ export function NextPage() {
     await pauseTask({ id: task.id });
     queryClient.invalidateQueries({ queryKey: ["getTask"] });
     queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
+    queryClient.invalidateQueries({ queryKey: ["getTaskAlternatives"] });
     queryClient.invalidateQueries({ queryKey: ["getFocusedTask"] });
   };
 
@@ -172,12 +210,13 @@ export function NextPage() {
     );
   }
 
-  const dueLabel =
-    task.status === "TODAY"
+  const dueLabelFor = (t: { status: string; dueDate: Date | string | null }) =>
+    t.status === "TODAY"
       ? "due today"
-      : task.dueDate
-        ? `due ${formatWhen(task.dueDate)}`
+      : t.dueDate
+        ? `due ${formatWhen(t.dueDate)}`
         : null;
+  const dueLabel = dueLabelFor(task);
 
   // The honest "why this?" — composed from the same fields getTopTask ranked on
   // (startedAt → priority → due → size). Empty when there's nothing truthful
@@ -210,6 +249,21 @@ export function NextPage() {
     ? resolveContinuity(task as TaskContextInput)
     : null;
   const continuityStats = continuity ? continuityStatsRow(continuity) : null;
+
+  // Alternative rows — the ranked pool minus the on-stage task. `suggested`
+  // marks the engine's #1, which only appears here while a *picked* task is
+  // on stage (the recommendation itself is excluded while it holds the card).
+  const alternativeRows = (alternatives ?? [])
+    .filter((t: { id: string }) => t.id !== task.id)
+    .map((t: AlternativeCandidate) => ({
+      id: t.id,
+      permalink: t.permalink,
+      title: t.description,
+      project: t.project?.name,
+      due: dueLabelFor(t) ?? undefined,
+      size: sizeLabel(t.size),
+      suggested: t.id === topTask?.id,
+    }));
 
   return (
     <>
@@ -246,6 +300,15 @@ export function NextPage() {
         onPause={handlePause}
         onNotNow={() => setSnoozeOpen(true)}
       />
+      {!isNow && alternativeRows.length > 0 && (
+        <NextAlternatives
+          lensName={lens.name}
+          tasks={alternativeRows}
+          onChoose={(t) =>
+            navigate(`/do/today/${encodeURIComponent(t.permalink)}`)
+          }
+        />
+      )}
       {snoozeOpen && task && (
         <SnoozeSheet
           taskTitle={task.description}
