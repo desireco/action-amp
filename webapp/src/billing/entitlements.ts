@@ -288,7 +288,7 @@ export async function resolveAccessibleLenses(
     }
   ).Lens.findMany({
     where,
-    select: { id: true, name: true, color: true, kind: true },
+    select: { id: true, name: true, color: true, isIncluded: true },
   });
 }
 

@@ -48,7 +48,6 @@ export type CommandIndexItem = {
   href: string | null;
   aliases: string[];
   lensColor?: string | null;
-  lensKind?: string | null;
   occurredAt?: Date | null;
 };
 
@@ -601,7 +600,7 @@ export async function getCommandPaletteIndexData(
       entities.Lens.findMany({
         where: { userId },
         orderBy: { createdAt: "asc" },
-        select: { id: true, name: true, color: true, kind: true },
+        select: { id: true, name: true, color: true },
       }),
     ]);
 
@@ -675,7 +674,6 @@ export async function getCommandPaletteIndexData(
         href: null,
         aliases: ["lens", "switch context"],
         lensColor: row.color,
-        lensKind: row.kind,
       })),
     ],
   };
