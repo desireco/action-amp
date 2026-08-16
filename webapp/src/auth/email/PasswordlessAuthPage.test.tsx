@@ -3,31 +3,27 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-type UseAuthReturn = {
-  data: { id: string; fullName: string } | null;
-  status: "loading" | "success" | "error";
+// No module mocking: the ops the page calls are injected through its explicit
+// `deps` seam (see PasswordlessAuthPage.tsx). The real useAuth() still runs
+// under the QueryClientProvider; its value is ignored while deps.authData is set.
+import {
+  PasswordlessAuthPage,
+  type PasswordlessAuthDeps,
+} from "./PasswordlessAuthPage";
+
+const requestMagicLogin = vi.fn(
+  async (_args: { email: string; returnTo: string }) => ({ sent: true }),
+);
+const verifyMagicLogin = vi.fn(
+  async (_args: { token: string } | { email: string; code: string }) => ({
+    sessionId: "sess_test",
+  }),
+);
+const setSessionId = vi.fn();
+const anonymousAuth: PasswordlessAuthDeps["authData"] = {
+  data: null,
+  status: "success",
 };
-
-let mockUseAuthReturn: UseAuthReturn = { data: null, status: "success" };
-const requestMagicLogin = vi.fn();
-const verifyMagicLogin = vi.fn();
-
-vi.mock("wasp/client/auth", () => ({
-  useAuth: () => mockUseAuthReturn,
-  login: vi.fn(),
-}));
-
-vi.mock("wasp/client/api", () => ({
-  setSessionId: vi.fn(),
-}));
-
-vi.mock("wasp/client/operations", () => ({
-  prepareDevAutologin: vi.fn(),
-  requestMagicLogin: (...args: unknown[]) => requestMagicLogin(...args),
-  verifyMagicLogin: (...args: unknown[]) => verifyMagicLogin(...args),
-}));
-
-const { PasswordlessAuthPage } = await import("./PasswordlessAuthPage");
 
 function AppMarker() {
   return <div data-testid="app-marker">app page</div>;
@@ -42,7 +38,18 @@ function renderPage(mode: "login" | "signup", initialPath = `/${mode}`) {
         <Routes>
           <Route
             path={`/${mode}`}
-            element={<PasswordlessAuthPage mode={mode} footer={footer} />}
+            element={
+              <PasswordlessAuthPage
+                mode={mode}
+                footer={footer}
+                deps={{
+                  authData: anonymousAuth,
+                  requestMagicLogin,
+                  verifyMagicLogin,
+                  setSessionId,
+                }}
+              />
+            }
           />
           <Route path="/do" element={<AppMarker />} />
         </Routes>
@@ -53,9 +60,11 @@ function renderPage(mode: "login" | "signup", initialPath = `/${mode}`) {
 
 describe("PasswordlessAuthPage", () => {
   beforeEach(() => {
-    mockUseAuthReturn = { data: null, status: "success" };
-    requestMagicLogin.mockReset();
-    verifyMagicLogin.mockReset();
+    requestMagicLogin.mockClear();
+    verifyMagicLogin.mockClear();
+    setSessionId.mockClear();
+    requestMagicLogin.mockResolvedValue({ sent: true });
+    verifyMagicLogin.mockResolvedValue({ sessionId: "sess_test" });
   });
 
   it("frames signup as account creation without password or name fields", () => {
@@ -151,12 +160,13 @@ describe("PasswordlessAuthPage", () => {
   });
 
   it("redirects either route when an authenticated session already exists", () => {
-    mockUseAuthReturn = {
-      data: { id: "u1", fullName: "Jake" },
-      status: "success",
-    };
-    renderPage("signup");
+    anonymousAuth.data = { id: "u1" };
+    try {
+      renderPage("signup");
 
-    expect(screen.getByTestId("app-marker")).toBeInTheDocument();
+      expect(screen.getByTestId("app-marker")).toBeInTheDocument();
+    } finally {
+      anonymousAuth.data = null;
+    }
   });
 });

@@ -14,10 +14,38 @@ import { trackStatCounterEvent } from "../../analytics/StatCounter";
 
 const DEFAULT_DEV_EMAIL = "zeljko@dakic.com";
 
+/**
+ * Injectable dependencies — the explicit test seam for this page.
+ * Production renders pass nothing (the real Wasp hooks/ops run); tests
+ * inject fakes for the pieces they drive instead of module-mocking
+ * `wasp/client/*`. `authData` overrides the useAuth() result (the real hook
+ * still runs — hooks can't be conditional — but its value is ignored when
+ * the override is present).
+ */
+export type PasswordlessAuthDeps = {
+  /** Overrides the useAuth() result — the page reads only data truthiness + status. */
+  authData: {
+    data: { id: string } | null;
+    status: "loading" | "success" | "error";
+  };
+  requestMagicLogin: (args: {
+    email: string;
+    returnTo: string;
+  }) => Promise<{ sent: boolean }>;
+  verifyMagicLogin: (
+    args: { token: string } | { email: string; code: string },
+  ) => Promise<{ sessionId: string }>;
+  setSessionId: (sessionId: string) => void;
+  prepareDevAutologin: (args: {
+    email: string;
+  }) => Promise<{ email: string; password: string }>;
+};
+
 type PasswordlessAuthPageProps = {
   mode: "login" | "signup";
   footer: ReactNode;
   showDevAutologin?: boolean;
+  deps?: Partial<PasswordlessAuthDeps>;
 };
 
 /**
@@ -32,8 +60,15 @@ export function PasswordlessAuthPage({
   mode,
   footer,
   showDevAutologin = false,
+  deps,
 }: PasswordlessAuthPageProps) {
-  const { data: user, status: authStatus } = useAuth();
+  const realAuth = useAuth();
+  const { data: user, status: authStatus } = deps?.authData ?? realAuth;
+  const doRequestMagicLogin = deps?.requestMagicLogin ?? requestMagicLogin;
+  const doVerifyMagicLogin = deps?.verifyMagicLogin ?? verifyMagicLogin;
+  const applySessionId = deps?.setSessionId ?? setSessionId;
+  const doPrepareDevAutologin =
+    deps?.prepareDevAutologin ?? prepareDevAutologin;
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,7 +81,7 @@ export function PasswordlessAuthPage({
   const canDevAutologin = showDevAutologin && import.meta.env.DEV;
 
   async function finishLogin(sessionId: string) {
-    setSessionId(sessionId);
+    applySessionId(sessionId);
     if (mode === "signup") {
       trackAnalyticsEvent({
         name: "SIGNUP_COMPLETED",
@@ -63,7 +98,7 @@ export function PasswordlessAuthPage({
     setStatus(`Logging in ${localEmail}...`);
     setError(null);
     try {
-      const credentials = await prepareDevAutologin({ email: localEmail });
+      const credentials = await doPrepareDevAutologin({ email: localEmail });
       // Keep the local shortcut on Wasp's standard route; it is development-only.
       const { login } = await import("wasp/client/auth");
       await login(credentials);
@@ -85,7 +120,7 @@ export function PasswordlessAuthPage({
     setIsSubmitting(true);
     setStatus("Signing you in...");
     setError(null);
-    void verifyMagicLogin({ token })
+    void doVerifyMagicLogin({ token })
       .then(({ sessionId }) => finishLogin(sessionId))
       .catch((err) => {
         const cleanParams = new URLSearchParams(searchParams);
@@ -112,7 +147,7 @@ export function PasswordlessAuthPage({
     setError(null);
     setStatus("Sending your sign-in email...");
     try {
-      await requestMagicLogin({ email, returnTo });
+      await doRequestMagicLogin({ email, returnTo });
       setCodeSent(true);
       setStatus(
         import.meta.env.DEV
@@ -135,7 +170,7 @@ export function PasswordlessAuthPage({
     setError(null);
     setStatus("Signing you in...");
     try {
-      const { sessionId } = await verifyMagicLogin({ email, code });
+      const { sessionId } = await doVerifyMagicLogin({ email, code });
       await finishLogin(sessionId);
     } catch (err) {
       setStatus(null);

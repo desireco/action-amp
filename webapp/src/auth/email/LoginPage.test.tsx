@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeAll } from "vitest";
+import { describe, expect, it, beforeAll } from "vitest";
 import { screen } from "@testing-library/react";
 import { render } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router";
@@ -26,41 +26,26 @@ beforeAll(() => {
   (globalThis as { __APP_VERSION__?: string }).__APP_VERSION__ = "test";
 });
 
-type UseAuthReturn = {
-  data: { id: string; fullName: string } | null;
-  status: "loading" | "success" | "error";
-};
-
-let mockUseAuthReturn: UseAuthReturn = { data: null, status: "loading" };
-
-vi.mock("wasp/client/auth", () => ({
-  useAuth: () => mockUseAuthReturn,
-  // LoginForm + login are imported by LoginPage but unused in this redirect
-  // surface — stub them so the page renders without the real Wasp machinery.
-  LoginForm: () => <div data-testid="login-form">login form</div>,
-  login: vi.fn(),
-}));
-
-vi.mock("wasp/client/operations", () => ({
-  prepareDevAutologin: vi.fn(),
-  requestMagicLogin: vi.fn(),
-  verifyMagicLogin: vi.fn(),
-}));
-
-// Importing LoginPage AFTER vi.mock so it picks up the mocked useAuth.
-const { LoginPage } = await import("./LoginPage");
+// No module mocking: the auth state is injected through the page's explicit
+// `deps` seam (see PasswordlessAuthPage.tsx). The real useAuth() still runs
+// under the QueryClientProvider below; its value is ignored while deps is set.
+import { LoginPage } from "./LoginPage";
+import type { PasswordlessAuthDeps } from "./PasswordlessAuthPage";
 
 /** A marker rendered at /do so we can assert the redirect target. */
 function AppMarker() {
   return <div data-testid="app-marker">app page</div>;
 }
 
-function renderAt(initialPath: string) {
+function renderAt(
+  initialPath: string,
+  authData: PasswordlessAuthDeps["authData"],
+) {
   render(
     <QueryClientProvider client={new QueryClient()}>
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage deps={{ authData }} />} />
           <Route path="/do" element={<AppMarker />} />
         </Routes>
       </MemoryRouter>
@@ -70,24 +55,18 @@ function renderAt(initialPath: string) {
 
 describe("LoginPage redirect on existing session", () => {
   it("renders the form while the session is still resolving (no flash)", () => {
-    mockUseAuthReturn = { data: null, status: "loading" };
-    renderAt("/login");
+    renderAt("/login", { data: null, status: "loading" });
     // No redirect yet — the form is what the user sees.
     expect(screen.queryByTestId("app-marker")).not.toBeInTheDocument();
   });
 
   it("renders the form for a resolved anonymous user", () => {
-    mockUseAuthReturn = { data: null, status: "success" };
-    renderAt("/login");
+    renderAt("/login", { data: null, status: "success" });
     expect(screen.queryByTestId("app-marker")).not.toBeInTheDocument();
   });
 
   it("redirects to /do when the session resolves to a logged-in user", () => {
-    mockUseAuthReturn = {
-      data: { id: "u1", fullName: "Jake" },
-      status: "success",
-    };
-    renderAt("/login");
+    renderAt("/login", { data: { id: "u1" }, status: "success" });
     expect(screen.getByTestId("app-marker")).toBeInTheDocument();
   });
 });

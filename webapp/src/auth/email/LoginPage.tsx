@@ -1,10 +1,19 @@
-import { PasswordlessAuthPage } from "./PasswordlessAuthPage";
+import {
+  PasswordlessAuthPage,
+  type PasswordlessAuthDeps,
+} from "./PasswordlessAuthPage";
 
-export function LoginPage() {
+type LoginPageProps = {
+  /** Test seam — forwarded to PasswordlessAuthPage (see its deps docs). */
+  deps?: Partial<PasswordlessAuthDeps>;
+};
+
+export function LoginPage({ deps }: LoginPageProps) {
   return (
     <PasswordlessAuthPage
       mode="login"
       showDevAutologin
+      deps={deps}
       footer={
         <>
           <span>
