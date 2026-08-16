@@ -67,6 +67,7 @@ skills (`cli-skills`) — they need a typed, scriptable surface with stable
 | `today` / `today --done` | `getTasks` / `getDoneToday` | |
 | `inbox list` / `inbox capture <text>` | `getInboxItems` / `createInboxItem` | |
 | `inbox triage <id> --decision <d>` | `triageInboxItem` | |
+| `inbox download <attachmentId> [path]` | `GET /api/cli/attachment/:id` | attachment bytes (owner-gated), not an op; added 2026-08-16 for app/mobile test loops — ids come from `inbox list` |
 | `project list` / `show <id>` / `create` / `add-task` | `getProjects` / `getProject` / `createProject` / `createTask` | |
 | `goal list` / `show <id>` / `create` | `getGoals` / `getGoal` / `createGoal` | |
 | `logbook` | `getLogbook` | |
