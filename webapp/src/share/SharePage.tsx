@@ -140,8 +140,7 @@ export function SharePage() {
           </header>
 
           <div className="aa-share__intro">
-            <p className="aa-share__eyebrow">Shared from another app</p>
-            <h1 className="aa-share__title">Keep this for later.</h1>
+            <h1 className="aa-share__title aa-share__title--intro">Keep this for later.</h1>
           </div>
 
           <section className="aa-share__preview" aria-label="Shared item preview">

@@ -84,15 +84,6 @@
   margin-bottom: var(--aa-space-lg);
 }
 
-.aa-share__eyebrow {
-  margin: 0 0 var(--aa-space-xs);
-  color: var(--aa-text-3);
-  font-size: var(--aa-text-xs);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 .aa-share__check {
   /* mirrors .aa-capture__captured-check, scaled up for the page surface */
   display: inline-flex;
@@ -115,6 +106,16 @@
   line-height: var(--aa-leading-tight);
   color: var(--aa-text);
   margin: 0;
+}
+
+/* Review intro — one quiet line at half the heading scale, sitting above the
+   editable title (now the page's largest text). Loading/error shells keep the
+   full-size .aa-share__title. */
+.aa-share__title--intro {
+  font-size: clamp(0.85rem, 3.5vw, 1.075rem);
+  letter-spacing: normal;
+  line-height: var(--aa-leading-snug);
+  color: var(--aa-text-2);
 }
 
 .aa-share__preview {
