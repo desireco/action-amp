@@ -22,8 +22,10 @@ verified: 2026-07-04
 
 **Image attachments are viewable** (2026-08-16). Items captured with images
 (Android share target, ⌘K paste/drop, or the CLI) show their thumbnails
-inline — on the inbox row and on
-the triage card while deciding; click opens the full image. Served by
+inline — on the inbox row and on the triage card while deciding; click opens
+the **lightbox**: an in-app ~70% modal over a dimmed backdrop (popover-family
+shell, INTERACTION.md §9.2/§9.5) with Esc/backdrop-click dismissal, ←/→
+cycling and a position counter for multi-image items. Bytes are served by
 `GET /api/attachments/:id` (`attachments/serveAttachment.ts`), the only
 reader of the attachment `data` blobs (InboxAttachment + ListItemAttachment,
 owner-gated, `Cache-Control: private, immutable`). The route is the storage

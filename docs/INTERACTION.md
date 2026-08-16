@@ -368,6 +368,8 @@ context. Used for quick capture and inline edits.
 - **⌘K Capture** — the universal quick-add
 - **Quick edit** — inline field edits that need room
 - **Search / command palette** (shipped; desktop and touch browser-verified)
+- **Attachment lightbox** (2026-08-16) — full-size image viewing from the
+  inbox list / triage card; ~70% stage, ←/→ cycle multi-image items
 
 **Anatomy:** centered card (max-width 480px) · auto-focus input · footer with
 submit hint (`⏎ to save`).
