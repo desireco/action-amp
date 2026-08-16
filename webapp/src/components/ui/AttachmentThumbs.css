@@ -1,7 +1,7 @@
 @import "../../styles/tokens.css";
 
 /* ============================================================
-   AttachmentThumbs — captured-image thumbnails
+   AttachmentThumbs — captured-image thumbnails + lightbox
    ============================================================ */
 .aa-attach-thumbs {
   display: flex;
@@ -10,18 +10,24 @@
   gap: var(--aa-space-xs, 6px);
 }
 
-.aa-attach-thumbs__link {
+.aa-attach-thumbs__open {
   display: block;
+  padding: 0;
+  border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-sm);
   overflow: hidden;
-  border: 1px solid var(--aa-border);
   background: var(--aa-surface-muted);
+  cursor: pointer;
   transition: border-color 0.15s ease;
 }
 
-.aa-attach-thumbs__link:hover,
-.aa-attach-thumbs__link:focus-visible {
+.aa-attach-thumbs__open:hover {
   border-color: var(--aa-border-strong);
+}
+
+.aa-attach-thumbs__open:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
 }
 
 .aa-attach-thumbs__img {
@@ -34,4 +40,128 @@
 .aa-attach-thumbs--md .aa-attach-thumbs__img {
   height: 72px;
   width: 72px;
+}
+
+/* ============================================================
+   AttachmentLightbox — full-size viewer over a dimmed backdrop.
+   Popover-family shell (INTERACTION.md §9.2/§9.5): fade-in backdrop,
+   Esc + backdrop-click dismissal, ~70% stage.
+   ============================================================ */
+.aa-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100; /* same layer as .aa-overlay */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(0.2 0.02 230 / 0.4);
+  animation: aa-lightbox-fade 0.15s var(--aa-ease-out) both;
+}
+
+@keyframes aa-lightbox-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.aa-lightbox__stage {
+  position: relative;
+  width: 70vw;
+  height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: aa-lightbox-rise 0.2s var(--aa-ease-out-quart) both;
+}
+
+@keyframes aa-lightbox-rise {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.aa-lightbox__img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--aa-radius-lg);
+  box-shadow: var(--aa-shadow-lg);
+  background: var(--aa-surface);
+}
+
+/* Close floats on the dimmed backdrop above the stage — light on dark,
+   unlike the shared close control's surface-toned colors. */
+.aa-lightbox__close {
+  position: absolute;
+  top: -40px;
+  right: -4px;
+  color: #fff;
+}
+
+.aa-lightbox__close:hover {
+  color: #fff;
+  background: rgb(255 255 255 / 0.12);
+}
+
+.aa-lightbox__close:focus-visible {
+  outline: 2px solid var(--aa-teal-bright);
+}
+
+/* Prev/next sit on the stage edges over the image — scrim circles, ≥44px
+   tap targets (§9.3). */
+.aa-lightbox__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--aa-radius-full);
+  color: #fff;
+  background: oklch(0.2 0.02 230 / 0.7);
+  cursor: pointer;
+  transition: background 0.15s var(--aa-ease-out);
+}
+
+.aa-lightbox__nav:hover {
+  background: oklch(0.2 0.02 230 / 0.9);
+}
+
+.aa-lightbox__nav:focus-visible {
+  outline: 2px solid var(--aa-teal-bright);
+  outline-offset: 2px;
+}
+
+.aa-lightbox__nav svg {
+  width: 20px;
+  height: 20px;
+}
+
+.aa-lightbox__nav--prev {
+  left: 12px;
+}
+
+.aa-lightbox__nav--next {
+  right: 12px;
+}
+
+/* Muted position counter below the stage, on the backdrop. */
+.aa-lightbox__count {
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--aa-text-sm);
+  color: rgb(255 255 255 / 0.8);
+  font-variant-numeric: tabular-nums;
 }
