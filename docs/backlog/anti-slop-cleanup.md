@@ -173,15 +173,30 @@ HttpError 402s. Consequences worth keeping:
   `onboardingDb.findAuthByUser` (welcome email), `shareDeps.createInboxItem`
   (share capture).
 
-**Remaining 22 findings / 11 files** — all client-side page tests mocking
+**Remaining 24 findings / 11 files** — all client-side page tests mocking
 `wasp/client/operations` (+ local hooks): LensesPage (4), AppShell (4),
 SimpleListPage (3), UpcomingPage (3), SomedayPage (3), TriagePage (2), and
 InboxPage / TaskDetailPage / ProjectDetailPage / GoalDetailPage / App.test
 (1 each). Fix shape is now proven end-to-end in
 `src/search/CommandPalette.tsx`: an optional `deps` prop typed after the
-module's real ops, defaults = the real hooks, tests inject vi.fn() fakes.
-Components that also mock `lensContext`/`useTaskListActions`/
+module's real ops, defaults = the real hooks, tests inject `vi.fn(realOp)`
+fakes — cast-free; a generic hook like useQuery sits behind a
+contextually-typed delegating wrapper (see 95a5c1f — the Wasp SDK tsc,
+stricter than the app tsconfig, rejects grouped casts the app config
+accepts). Components that also mock `lensContext`/`useTaskListActions`/
 `useEntitled` add those to the same deps object.
+
+#### Session wrap (2026-08-17)
+
+Anti-slop totals across the whole effort: **690 → 171**. All lanes'
+done-states hold at HEAD: full suite 1168/1168, tsc 0 (app + SDK), wasp
+compile green. Real bugs found and fixed by the typing work: silently
+failing app-side analytics (10 ops missing entity injection), B5's
+syntax/type fallout in five files, the CLI review/admin routes crashing on
+missing authEntities delegates, and B5's non-atomic tag connect. Remaining
+tail: the 24-finding page-test batch above plus ~147 spread across src
+files (widening/typeof/dictionary — mechanical repeats of the patterns
+shipped in this session's commits).
 
 #### Escalated-files lane (2026-08-17, later that day)
 
