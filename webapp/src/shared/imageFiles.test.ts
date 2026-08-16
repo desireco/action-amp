@@ -16,12 +16,14 @@ function file(name: string, type: string): File {
 describe("imageFiles", () => {
   it("rawFilesFromDataTransfer prefers the files list", () => {
     const png = file("a.png", "image/png");
+    // SAFETY: DataTransfer is a DOM API not available in node; mock fixture cast via unknown.
     const dt = { files: [png], items: [] } as unknown as DataTransfer;
     expect(rawFilesFromDataTransfer(dt)).toEqual([png]);
   });
 
   it("falls back to items when files is empty (paste quirk in some browsers)", () => {
     const png = file("pasted.png", "image/png");
+    // SAFETY: DataTransfer is a DOM API not available in node; mock fixture cast via unknown.
     const dt = {
       files: [],
       items: [
@@ -36,6 +38,7 @@ describe("imageFiles", () => {
   it("imageFilesFromDataTransfer keeps only image/* entries", () => {
     const png = file("a.png", "image/png");
     const pdf = file("b.pdf", "application/pdf");
+    // SAFETY: DataTransfer is a DOM API not available in node; mock fixture cast via unknown.
     const dt = { files: [png, pdf] } as unknown as DataTransfer;
     expect(imageFilesFromDataTransfer(dt)).toEqual([png]);
   });

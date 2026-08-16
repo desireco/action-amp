@@ -8,6 +8,8 @@ const setListItemDone = vi.fn();
 const deleteListItem = vi.fn();
 const clearCompletedListItems = vi.fn();
 
+// SAFETY: test fixture uses any[] for useQuery mock data; Error | null for error field.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const query = { current: { data: [] as any[], isLoading: false, error: null as Error | null } };
 const activeLens = {
   current: {
@@ -15,6 +17,7 @@ const activeLens = {
     name: "Shopping",
     purpose: "Groceries",
     kind: "CUSTOM",
+    // SAFETY: fixture narrows CUSTOM to the union type the component expects.
     type: "SIMPLE_LIST" as "LIFE_AREA" | "SIMPLE_LIST",
     color: "cyan",
   },
@@ -31,6 +34,7 @@ vi.mock("wasp/client/operations", () => ({
 }));
 vi.mock("../app/lensContext", () => ({ useActiveLens: () => activeLens.current }));
 vi.mock("../components/ui", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ConfirmDialog: ({ title, message, confirmLabel, cancelLabel, onConfirm, onClose }: any) => (
     <div role="dialog" aria-label={title}>
       <p>{message}</p>

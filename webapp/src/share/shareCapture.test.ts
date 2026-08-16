@@ -92,6 +92,7 @@ describe("shareCapture", () => {
   });
 
   it("returns redirect data for the service-worker bridge", async () => {
+    // SAFETY: Record<string, unknown> cast for partial request body; makeReq adds typed fields.
     const req = makeReq({ url: "https://x.com" } as Record<string, unknown>, { userId: "u1" });
     Object.assign(req, { query: { response: "json" } });
     const res = makeRes();

@@ -7,15 +7,20 @@ import { serveAttachment } from "./serveAttachment";
 const UUID = "6daf2cad-c07a-4453-882e-ce04f3a60e15";
 
 function makeReq(id: string, userId = "u1"): Request {
+  // SAFETY: Express Request is wide; test fixture provides only params and sessionAuth.
+  // Chained assertion necessary because literal doesn't structurally overlap Request.
   return { params: { id }, sessionAuth: { userId } } as unknown as Request;
 }
 
 function makeReqUnauthenticated(id: string): Request {
+  // SAFETY: Express Request is wide; test fixture provides only params.
+  // Chained assertion necessary because literal doesn't structurally overlap Request.
   return { params: { id } } as unknown as Request;
 }
 
 function makeRes(): Response & { headers: Record<string, string>; body: Buffer | null } {
   const headers: Record<string, string> = {};
+  // SAFETY: null widened to Buffer | null for mock response body field.
   const res = {
     headers,
     body: null as Buffer | null,
@@ -33,6 +38,8 @@ function makeRes(): Response & { headers: Record<string, string>; body: Buffer |
     json: vi.fn(),
     end: vi.fn((chunk?: Buffer) => { if (chunk) res.body = Buffer.from(chunk); }),
   };
+  // SAFETY: mock Response extended with typed headers/body; chained assertion necessary
+  // because mock object doesn't structurally overlap Response.
   return res as unknown as Response & { headers: Record<string, string>; body: Buffer | null };
 }
 

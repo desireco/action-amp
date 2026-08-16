@@ -8,7 +8,7 @@ const updateLens = vi.fn();
 const deleteLens = vi.fn();
 const getLenses = vi.fn();
 const getAppData = vi.fn();
-
+// SAFETY: test fixture; empty array narrowed to Array<Record<string, unknown>> for useQuery mock data.
 const rows = {
   current: [] as Array<Record<string, unknown>>,
 };
@@ -30,6 +30,7 @@ vi.mock("../app/SettingsLayout", () => ({
 }));
 vi.mock("../components/ui", () => ({
   ProGate: () => <div>Pro gate</div>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ConfirmDialog: ({ title, message, confirmLabel, cancelLabel = "Cancel", onConfirm, onClose }: any) => (
     <div role="dialog" aria-label={title}>
       {message}
