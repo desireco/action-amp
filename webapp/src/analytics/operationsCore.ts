@@ -2,10 +2,10 @@
  * First-party analytics cores. No Wasp imports: browser operations, the public
  * API handler, and admin reporting all share these validation rules.
  */
+import { Prisma } from "@prisma/client";
 import type {
   AnalyticsEvent as AnalyticsEventRow,
   AnalyticsSession,
-  Prisma,
 } from "@prisma/client";
 
 /**
@@ -14,7 +14,7 @@ import type {
  * read the fields their select carried. Wasp ops, the webhook, the public
  * event API, and the admin stats core all satisfy this slice.
  */
-interface AnalyticsEventEntities {
+export interface AnalyticsEventEntities {
   AnalyticsSession: {
     findFirst(
       args: Prisma.AnalyticsSessionFindFirstArgs,
@@ -173,7 +173,9 @@ export async function recordAnalyticsEventCore(
       name: input.name,
       route: clean(input.route, 300),
       appVersion: clean(input.appVersion, 80),
-      metadata: validateMetadata(input.metadata),
+      // Json? column: Prisma rejects a plain-null write — DbNull is the
+      // explicit "no metadata" (previously a silent insert failure).
+      metadata: validateMetadata(input.metadata) ?? Prisma.DbNull,
       sessionId: session.id,
       userId: userId ?? session.userId ?? null,
     },
@@ -203,8 +205,24 @@ export type FunnelStats = {
   retention: { d1Pct: number | null; d7Pct: number | null; note?: string };
 };
 
+/** The funnel slice: AnalyticsSession may be absent when a caller's Wasp op
+ *  doesn't inject it — the core degrades to an empty session list. */
+/** A session row with its events relation attached (the funnel select
+ *  includes it; Prisma's DefaultSelection type is scalars-only). */
+export type AnalyticsSessionWithEvents = Prisma.AnalyticsSessionGetPayload<{
+  include: { events: true };
+}>;
+
+export interface FunnelEntities {
+  AnalyticsSession?: {
+    findMany(
+      args: Prisma.AnalyticsSessionFindManyArgs,
+    ): Promise<AnalyticsSession[]>;
+  };
+}
+
 export async function getFunnelStatsCore(
-  entities: Entities,
+  entities: FunnelEntities,
   range: FunnelRange,
 ): Promise<FunnelStats> {
   const now = Date.now();
@@ -212,8 +230,8 @@ export async function getFunnelStatsCore(
     range === "all"
       ? null
       : new Date(now - (range === "7d" ? 7 : 30) * 24 * 60 * 60 * 1000);
-  const sessions =
-    (await entities.AnalyticsSession.findMany({
+  const sessionsRaw =
+    (await entities.AnalyticsSession?.findMany({
       where: sinceDate ? { firstSeenAt: { gte: sinceDate } } : undefined,
       select: {
         id: true,
@@ -227,6 +245,9 @@ export async function getFunnelStatsCore(
         },
       },
     })) ?? [];
+  // SAFETY: the select above includes events; the delegate's un-narrowed
+  // DefaultSelection return cannot express the relation.
+  const sessions = sessionsRaw as AnalyticsSessionWithEvents[];
 
   const names: AnalyticsEventName[] = [
     "LANDING_VIEW",

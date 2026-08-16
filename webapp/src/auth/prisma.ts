@@ -51,5 +51,8 @@ export const authEntities = {
   Resource: authPrisma.resource,
   Feedback: authPrisma.feedback,
   Review: authPrisma.review,
+  Payment: authPrisma.payment,
+  AnalyticsSession: authPrisma.analyticsSession,
+  AnalyticsEvent: authPrisma.analyticsEvent,
   ApiKey: authPrisma.apiKey,
 };

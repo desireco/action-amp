@@ -23,6 +23,7 @@
 import type Stripe from "stripe";
 import { stripe, requireStripe } from "./stripe";
 import { recordAnalyticsEventCore } from "../analytics/operationsCore";
+import type { AnalyticsEventEntities } from "../analytics/operationsCore";
 // Wasp API handlers receive Express req/res; our express.raw middleware puts
 // raw bytes in req.body as a Buffer (not in the type signature).
 import type { Request, Response } from "express";
@@ -105,49 +106,6 @@ type BillingEntities = {
     }): Promise<{ id: string } | null>;
     create(args: { data: PaymentCreateData }): Promise<{ id: string }>;
   };
-  // recordAnalyticsEventCore links the payment to the visitor session through
-  // these delegates (see src/analytics/operationsCore.ts).
-  AnalyticsSession: {
-    findFirst(args: {
-      where: { userId: string };
-      orderBy: { lastSeenAt: "desc" };
-      select: { id: true; userId: true };
-    }): Promise<{ id: string; userId: string | null } | null>;
-    update(args: {
-      where: { id: string };
-      data: { lastSeenAt: Date };
-    }): Promise<{ id: string }>;
-    upsert(args: {
-      where: { visitorId: string };
-      create: {
-        visitorId: string;
-        userId: string | null;
-        referrerHost: string | null;
-        utmSource: string | null;
-        utmMedium: string | null;
-        utmCampaign: string | null;
-        utmContent: string | null;
-        utmTerm: string | null;
-        initialPath: string | null;
-        deviceClass: string | null;
-      };
-      update: { lastSeenAt: Date; userId?: string };
-      select: { id: true; userId: true };
-    }): Promise<{ id: string; userId: string | null }>;
-  };
-  AnalyticsEvent: {
-    create(args: {
-      data: {
-        name: string;
-        route: string | null;
-        appVersion: string | null;
-        metadata: Record<string, string | number | boolean | null> | null;
-        sessionId: string;
-        userId: string | null;
-      };
-      select: { id: true };
-    }): Promise<{ id: string }>;
-  };
 };
 
 /** The user behind a Stripe `customer` field (raw id or any expanded object). */
@@ -170,7 +128,7 @@ interface LegacyInvoiceFields {
 
 type RuntimeInvoice = Stripe.Invoice & LegacyInvoiceFields;
 
-type WaspApiContext = { entities: BillingEntities };
+type WaspApiContext = { entities: BillingEntities & AnalyticsEventEntities };
 
 /**
  * Injectable Stripe calls — the explicit seam for the one network call this

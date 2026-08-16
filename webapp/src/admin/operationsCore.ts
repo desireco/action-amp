@@ -26,30 +26,7 @@ interface AdminStatsEntities {
   AnalyticsEvent?: {
     count(args?: { where?: Prisma.AnalyticsEventWhereInput }): Promise<number>;
   };
-  AnalyticsSession?: {
-    findMany(args: {
-      where: {
-        events: {
-          some: {
-            name: "APP_OPENED";
-            occurredAt: { gte: Date };
-            userId: { not: null };
-          };
-        };
-      };
-      select: {
-        deviceClass: true;
-        events: {
-          where: {
-            name: "APP_OPENED";
-            occurredAt: { gte: Date };
-            userId: { not: null };
-          };
-          select: { userId: true; occurredAt: true };
-        };
-      };
-    }): Promise<DeviceSessionRow[]>;
-  };
+  AnalyticsSession?: FunnelEntities["AnalyticsSession"];
   Feedback: {
     count(args?: { where?: Prisma.FeedbackWhereInput }): Promise<number>;
     groupBy(args: {
@@ -72,7 +49,15 @@ import {
   type FunnelRange,
   type FunnelStats,
 } from "../analytics/operationsCore";
-import type { Prisma } from "@prisma/client";
+import type {
+  AnalyticsSession,
+  AnalyticsEvent as AnalyticsEventRow,
+  Prisma,
+} from "@prisma/client";
+import type {
+  AnalyticsSessionWithEvents,
+  FunnelEntities,
+} from "../analytics/operationsCore";
 
 export const FEEDBACK_STATUSES = [
   "OPEN",
@@ -203,7 +188,7 @@ export interface DeviceUserCountsByWindow {
 }
 
 function deviceUserCounts(
-  sessions: DeviceSessionRow[],
+  sessions: AnalyticsSessionWithEvents[],
   d7: Date,
   d30: Date,
 ): DeviceUserCountsByWindow {
@@ -321,30 +306,34 @@ export async function getAdminStatsCore(
       where: { deletedAt: null },
       _count: { _all: true },
     }),
-    entities.AnalyticsSession?.findMany
-      ? entities.AnalyticsSession.findMany({
-          where: {
-            events: {
-              some: {
-                name: "APP_OPENED",
-                occurredAt: { gte: d30 },
-                userId: { not: null },
-              },
+    (async () => {
+      if (!entities.AnalyticsSession?.findMany) return [];
+      const rows = await entities.AnalyticsSession.findMany({
+        where: {
+          events: {
+            some: {
+              name: "APP_OPENED",
+              occurredAt: { gte: d30 },
+              userId: { not: null },
             },
           },
-          select: {
-            deviceClass: true,
-            events: {
-              where: {
-                name: "APP_OPENED",
-                occurredAt: { gte: d30 },
-                userId: { not: null },
-              },
-              select: { userId: true, occurredAt: true },
+        },
+        select: {
+          deviceClass: true,
+          events: {
+            where: {
+              name: "APP_OPENED",
+              occurredAt: { gte: d30 },
+              userId: { not: null },
             },
+            select: { userId: true, occurredAt: true },
           },
-        })
-      : Promise.resolve([]),
+        },
+      });
+      // SAFETY: the select above includes the events relation; the delegate's
+      // un-narrowed DefaultSelection return cannot express it.
+      return rows as AnalyticsSessionWithEvents[];
+    })(),
   ]);
 
   const byStatus = {
