@@ -64,6 +64,97 @@ matcher, command-palette).
 > Predicates a judge can verify against reality. Grouped for readability; all
 > must pass. Build is free to split these across multiple commits, but the spec
 > is not `done` until every box is checked.
+>
+> **Implementation guide (2026-07-04).** This feature is large enough that Build
+> should not try to land it as one amorphous "planning" pass. Pull it in the
+> slices below, in order. Each slice should leave the app coherent, even though
+> the overall spec only flips `done` after all slices land.
+
+### Slice 1 — Lifecycle becomes real
+
+**Goal:** Goals and Projects can be explicitly completed and reopened, and
+completed Goals show up in the Logbook. This is the smallest slice that fixes
+the worst "barely done" feeling: the models already have `isDone` and
+`completedAt`, but the app cannot write or restore them.
+
+Build:
+- `setGoalDone({ id, isDone })`
+- `setProjectDone({ id, isDone })`
+- `getLogbook` goal rows
+- Logbook `Reopen` controls for completed Goals and Projects
+- Header actions on Goal/Project detail: `Complete` when active, `Reopen` when
+  completed
+
+Verification:
+- Operation tests for done/reopen timestamps and tenancy.
+- Logbook test for the new `kind: "goal"` rows.
+- UI smoke/e2e: complete Goal → appears in Logbook → reopen → appears in Goals.
+
+Do **not** include edit/delete/relink/order in this slice.
+
+### Slice 2 — Plans become mutable
+
+**Goal:** A user can correct and reshape the Goal → Project hierarchy after
+creation without recreating work through triage.
+
+Build:
+- `updateGoal({ id, name?, description? })`
+- `updateProject({ id, name?, description?, goalId?, dueDate? })`
+- Inline edit affordances on Goal and Project detail headers
+- Project parent Goal picker with unlink support
+- `deleteGoal({ id })` with lossless re-parenting of child Projects and
+  standalone Tasks
+- `deleteProject({ id })` with lossless re-parenting of child Tasks
+- Confirm sheets that state exactly what will move
+
+Verification:
+- Operation tests for empty names, duplicate-name errors where practical,
+  tenancy, same-Lens re-link rejection, and delete-with-children re-parenting.
+- UI smoke/e2e: relink a Project to another Goal; delete a Project and confirm
+  its Tasks still exist as standalone.
+
+Do **not** include project ordering in this slice.
+
+### Slice 3 — Goal pages become planning surfaces
+
+**Goal:** A Goal detail page is no longer just a roll-up. It can start and
+sequence the Projects that make the Goal real.
+
+Build:
+- Add Project from inside a Goal (`createProject` with the Goal's `lensId` and
+  `goalId`)
+- `Project.order Int @default(0)` if the model still lacks it
+- `reorderGoalProjects({ goalId, orderedIds })`
+- Goal detail linked-projects list ordered by `order`, with quiet up/down
+  controls
+- "Next: <project name>" line on Goal cards and Goal detail header, using the
+  first non-done Project by sequence
+
+Verification:
+- Migration if `Project.order` is added.
+- Operation tests for reorder ownership/same-goal validation.
+- E2E: add two Projects from a Goal, reorder, complete first Project, see the
+  next line advance.
+
+### Slice 4 — Task filing closes the loop
+
+**Goal:** Existing standalone tasks can be moved between unlinked, Goal-owned,
+and Project-owned states.
+
+Build:
+- Extend or add task update operation for `goalId` / `projectId` filing
+- Same-Lens invariant across Task, Goal, and Project
+- Minimal task-detail filing UI, or the smallest existing surface that can
+  expose the move without creating a new route
+
+Verification:
+- Operation tests for same-Lens rejection and mutual exclusivity of
+  `projectId`/`goalId`.
+- UI smoke/e2e: move a standalone Goal task into a Project and confirm it leaves
+  the Goal standalone list and appears on Project detail.
+
+This is last because the app is still materially better after Slices 1–3, while
+task filing touches the separate Task detail surface.
 
 ### A. Goal & Project lifecycle (server ops)
 
