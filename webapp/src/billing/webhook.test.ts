@@ -17,6 +17,7 @@ vi.mock("./stripe", () => ({
   },
 }));
 
+import type Stripe from "stripe";
 import { stripeWebhook } from "./webhook";
 import { stripe } from "./stripe";
 import { mockContext, type MockContext } from "../test/mockContext";
@@ -33,13 +34,11 @@ import { mockContext, type MockContext } from "../test/mockContext";
 
 const SECRET = "whsec_test";
 
-/** Minimal Express req: body is a Buffer (express.raw); headers overridable. */
+/** Minimal Express req: a Buffer body (express.raw) + overridable headers. */
 function fakeReq(
-  body: unknown = {},
   headers: Record<string, string> = { "stripe-signature": "t=1,v1=fake" },
 ): any {
-  const buf = Buffer.isBuffer(body) ? body : Buffer.from(JSON.stringify(body));
-  return { body: buf, headers };
+  return { body: Buffer.from(JSON.stringify({})), headers };
 }
 
 /** Minimal Express res: record status/send/json calls. */
@@ -51,14 +50,30 @@ function fakeRes(): any {
   return res;
 }
 
+/** Fields used by the synthetic Stripe payloads below (each fixture provides
+ *  only what its handler reads — mirrors the real payloads' shape). */
+interface StripeFixture {
+  id?: string;
+  mode?: string;
+  status?: string;
+  subscription?: string;
+  metadata?: Record<string, string>;
+  customer?: string | { id: string };
+  payment_intent?: string | { id: string };
+  amount_total?: number;
+  amount_paid?: number;
+  amount_due?: number;
+  currency?: string;
+}
+
 /** Build a synthetic Stripe.Event for a given type + data.object. */
-function event(type: string, id: string, object: Record<string, unknown>): any {
+function event(type: string, id: string, object: StripeFixture): any {
   return { id, type, data: { object } };
 }
 
 /** Wire constructEvent to return the given event, then run the handler. */
 async function dispatch(ev: any, m: MockContext) {
-  (stripe.webhooks.constructEvent as any).mockReturnValue(ev);
+  vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(ev);
   const res = fakeRes();
   await stripeWebhook(fakeReq(), res, m.context);
   return res;
@@ -81,18 +96,20 @@ describe("stripeWebhook — guard rail", () => {
 
   it("400s when the stripe-signature header is missing", async () => {
     const res = fakeRes();
-    await stripeWebhook(fakeReq({}, {}), res, mockContext().context);
+    await stripeWebhook(fakeReq({}), res, mockContext().context);
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
   it("400s when signature verification throws", async () => {
-    (stripe.webhooks.constructEvent as any).mockImplementation(() => {
+    vi.mocked(stripe.webhooks.constructEvent).mockImplementation(() => {
       throw new Error("bad signature");
     });
     const res = fakeRes();
     await stripeWebhook(fakeReq(), res, mockContext().context);
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.send).toHaveBeenCalledWith(expect.stringMatching(/bad signature/));
+    expect(res.send).toHaveBeenCalledWith(
+      expect.stringMatching(/bad signature/),
+    );
   });
 
   it("200s on unhandled event types without mutating anything", async () => {
@@ -268,9 +285,11 @@ describe("checkout.session.completed", () => {
 describe("invoice.paid", () => {
   it("reads plan + userId from the subscription metadata", async () => {
     const m = mockContext();
-    (stripe.subscriptions.retrieve as any).mockResolvedValue({
+    // SAFETY: fixture provides only `metadata` — resolveInvoiceSubscriptionMeta
+    // is the sole caller and reads nothing else off the subscription.
+    vi.mocked(stripe.subscriptions.retrieve).mockResolvedValue({
       metadata: { priceKey: "pro_yearly", userId: "user-1" },
-    });
+    } as Stripe.Subscription);
 
     await dispatch(
       event("invoice.paid", "evt_i", {
@@ -305,7 +324,10 @@ describe("invoice.paid", () => {
   it("skips an already-processed invoice (idempotency)", async () => {
     const m = mockContext();
     m.entities.Payment.findFirst.mockResolvedValue({ id: "pay_old" });
-    (stripe.subscriptions.retrieve as any).mockResolvedValue({ metadata: {} });
+    // SAFETY: empty metadata fixture — the handler reads only metadata off the subscription.
+    vi.mocked(stripe.subscriptions.retrieve).mockResolvedValue({
+      metadata: {},
+    } as Stripe.Subscription);
 
     await dispatch(
       event("invoice.paid", "evt_i", {
@@ -323,7 +345,10 @@ describe("invoice.paid", () => {
 
   it("falls back to customerId when the subscription has no userId", async () => {
     const m = mockContext();
-    (stripe.subscriptions.retrieve as any).mockResolvedValue({ metadata: {} });
+    // SAFETY: empty metadata fixture — the handler reads only metadata off the subscription.
+    vi.mocked(stripe.subscriptions.retrieve).mockResolvedValue({
+      metadata: {},
+    } as Stripe.Subscription);
     m.entities.User.findFirst.mockResolvedValue({ id: "user-2", plan: "FREE" });
 
     await dispatch(
@@ -353,7 +378,10 @@ describe("invoice.paid", () => {
 
   it("skips when no userId can be determined", async () => {
     const m = mockContext();
-    (stripe.subscriptions.retrieve as any).mockResolvedValue({ metadata: {} });
+    // SAFETY: empty metadata fixture — the handler reads only metadata off the subscription.
+    vi.mocked(stripe.subscriptions.retrieve).mockResolvedValue({
+      metadata: {},
+    } as Stripe.Subscription);
     await dispatch(
       event("invoice.paid", "evt_i", {
         id: "in_3",

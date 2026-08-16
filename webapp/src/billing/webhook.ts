@@ -91,11 +91,18 @@ interface SubscriptionMeta {
  *  one contract. */
 type BillingEntities = {
   User: {
-    findFirst(args: { where: { stripeCustomerId: string } }): Promise<BillingUser | null>;
-    update(args: { where: { id: string }; data: UserPlanUpdate }): Promise<BillingUser>;
+    findFirst(args: {
+      where: { stripeCustomerId: string };
+    }): Promise<BillingUser | null>;
+    update(args: {
+      where: { id: string };
+      data: UserPlanUpdate;
+    }): Promise<BillingUser>;
   };
   Payment: {
-    findFirst(args: { where: PaymentStripeIdLookup }): Promise<{ id: string } | null>;
+    findFirst(args: {
+      where: PaymentStripeIdLookup;
+    }): Promise<{ id: string } | null>;
     create(args: { data: PaymentCreateData }): Promise<{ id: string }>;
   };
   // recordAnalyticsEventCore links the payment to the visitor session through
@@ -106,7 +113,10 @@ type BillingEntities = {
       orderBy: { lastSeenAt: "desc" };
       select: { id: true; userId: true };
     }): Promise<{ id: string; userId: string | null } | null>;
-    update(args: { where: { id: string }; data: { lastSeenAt: Date } }): Promise<{ id: string }>;
+    update(args: {
+      where: { id: string };
+      data: { lastSeenAt: Date };
+    }): Promise<{ id: string }>;
     upsert(args: {
       where: { visitorId: string };
       create: {
@@ -153,7 +163,9 @@ interface CustomerRef {
 interface LegacyInvoiceFields {
   payment_intent?: string | CustomerRef | null;
   subscription?: string | null;
-  lines?: { data?: Array<{ price?: { metadata?: { actionamp_plan?: string } } }> };
+  lines?: {
+    data?: Array<{ price?: { metadata?: { actionamp_plan?: string } } }>;
+  };
 }
 
 type RuntimeInvoice = Stripe.Invoice & LegacyInvoiceFields;
@@ -164,11 +176,27 @@ type WaspApiContext = { entities: BillingEntities };
  * Maps price metadata keys (from setup-stripe.mjs) → our Plan + renewal duration.
  */
 const PRICING_ENTITLEMENT = {
-  pro_yearly: { plan: "PRO", renewalMs: 365 * 24 * 60 * 60 * 1000, label: "Pro Yearly" },
-  pro_monthly: { plan: "PRO", renewalMs: 30 * 24 * 60 * 60 * 1000, label: "Pro Monthly" },
-  pro_prepaid: { plan: "PRO", renewalMs: 365 * 24 * 60 * 60 * 1000, label: "Pro Prepaid (12 mo)" },
+  pro_yearly: {
+    plan: "PRO",
+    renewalMs: 365 * 24 * 60 * 60 * 1000,
+    label: "Pro Yearly",
+  },
+  pro_monthly: {
+    plan: "PRO",
+    renewalMs: 30 * 24 * 60 * 60 * 1000,
+    label: "Pro Monthly",
+  },
+  pro_prepaid: {
+    plan: "PRO",
+    renewalMs: 365 * 24 * 60 * 60 * 1000,
+    label: "Pro Prepaid (12 mo)",
+  },
   // Founding 100: one-time $99, lifetime. renewalMs = null → planRenewsAt stays null (never expires).
-  founder: { plan: "FOUNDER", renewalMs: null, label: "Founding 100 (lifetime)" },
+  founder: {
+    plan: "FOUNDER",
+    renewalMs: null,
+    label: "Founding 100 (lifetime)",
+  },
 } satisfies Record<string, PricingEntitlement>;
 
 const PRICE_KEYS = ["pro_yearly", "pro_monthly", "pro_prepaid", "founder"];
@@ -182,7 +210,7 @@ function isPriceKey(value: string): value is PriceKey {
 export const stripeWebhook = async (
   req: Request,
   res: Response,
-  context: WaspApiContext
+  context: WaspApiContext,
 ) => {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
@@ -191,7 +219,10 @@ export const stripeWebhook = async (
   }
 
   // With express.raw({ type: "*/*" }), the raw bytes land in req.body as a Buffer.
-  const rawBody = req.body instanceof Buffer ? req.body : Buffer.from(JSON.stringify(req.body));
+  const rawBody =
+    req.body instanceof Buffer
+      ? req.body
+      : Buffer.from(JSON.stringify(req.body));
 
   const sigHeader = req.headers["stripe-signature"];
   const sig = Array.isArray(sigHeader) ? sigHeader[0] : sigHeader;
@@ -237,7 +268,7 @@ export const stripeWebhook = async (
   }
 
   return res.status(200).json({ received: true });
-}
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -246,14 +277,20 @@ export const stripeWebhook = async (
  * object, depending on API version and expansion params. Expanded objects
  * always carry `id`.
  */
-function stripeIdOf(value: string | CustomerRef | null | undefined): string | undefined {
-  return value instanceof Object ? value.id : value ?? undefined;
+function stripeIdOf(
+  value: string | CustomerRef | null | undefined,
+): string | undefined {
+  return value instanceof Object ? value.id : (value ?? undefined);
 }
 
 /** Get the subscription id from an invoice (Stripe v22 nests it under `parent`). */
 function subscriptionIdOf(invoice: RuntimeInvoice): string | undefined {
   // Nested in parent.subscription_details (v22+); bare field on older API versions.
-  return stripeIdOf(invoice.parent?.subscription_details?.subscription) ?? invoice.subscription ?? undefined;
+  return (
+    stripeIdOf(invoice.parent?.subscription_details?.subscription) ??
+    invoice.subscription ??
+    undefined
+  );
 }
 
 /** Get the payment_intent id from an invoice (legacy field on older API versions). */
@@ -308,7 +345,11 @@ async function findUserByCustomer(
 
 /** Resolve an invoice's plan/label/renewal from a priceKey, with PRO defaults. */
 function invoiceEntitlement(priceKey: string | undefined): ResolvedEntitlement {
-  const entitlement = priceKey ? (isPriceKey(priceKey) ? PRICING_ENTITLEMENT[priceKey] : null) : null;
+  const entitlement = priceKey
+    ? isPriceKey(priceKey)
+      ? PRICING_ENTITLEMENT[priceKey]
+      : null
+    : null;
   return {
     plan: entitlement?.plan ?? "PRO",
     label: entitlement?.label ?? "Pro Subscription",
@@ -318,13 +359,18 @@ function invoiceEntitlement(priceKey: string | undefined): ResolvedEntitlement {
 
 // ── Event handlers ─────────────────────────────────────────────────────────
 
-async function handleCheckoutCompleted(event: Stripe.CheckoutSessionCompletedEvent, context: WaspApiContext) {
+async function handleCheckoutCompleted(
+  event: Stripe.CheckoutSessionCompletedEvent,
+  context: WaspApiContext,
+) {
   const session = event.data.object;
 
   // Only handle one-time payments here (prepaid).
   // Subscription checkouts trigger invoice.paid separately.
   if (session.mode === "subscription") {
-    console.log("[webhook] checkout.session.completed — subscription mode, skipping (invoice.paid will handle).");
+    console.log(
+      "[webhook] checkout.session.completed — subscription mode, skipping (invoice.paid will handle).",
+    );
     return;
   }
 
@@ -332,13 +378,21 @@ async function handleCheckoutCompleted(event: Stripe.CheckoutSessionCompletedEve
   const priceKey = session.metadata?.priceKey;
 
   if (!userId || !priceKey) {
-    console.error("[webhook] checkout.session.completed — missing userId or priceKey in metadata.");
+    console.error(
+      "[webhook] checkout.session.completed — missing userId or priceKey in metadata.",
+    );
     return;
   }
 
   // Idempotency: skip if we already processed this session
-  if (await alreadyProcessed(context.entities, { stripeCheckoutSessionId: session.id })) {
-    console.log(`[webhook] checkout.session.completed — already processed session ${session.id}, skipping.`);
+  if (
+    await alreadyProcessed(context.entities, {
+      stripeCheckoutSessionId: session.id,
+    })
+  ) {
+    console.log(
+      `[webhook] checkout.session.completed — already processed session ${session.id}, skipping.`,
+    );
     return;
   }
 
@@ -377,23 +431,36 @@ async function handleCheckoutCompleted(event: Stripe.CheckoutSessionCompletedEve
     },
   });
 
-  void recordAnalyticsEventCore(context.entities, {
-    name: "PAYMENT_CONFIRMED",
-    visitorId: `user_${userId}`,
-    route: priceKey === "founder" ? "/founding-100" : "/do/settings/billing",
-    metadata: { plan: priceKey },
-  }, userId).catch(() => {});
+  void recordAnalyticsEventCore(
+    context.entities,
+    {
+      name: "PAYMENT_CONFIRMED",
+      visitorId: `user_${userId}`,
+      route: priceKey === "founder" ? "/founding-100" : "/do/settings/billing",
+      metadata: { plan: priceKey },
+    },
+    userId,
+  ).catch(() => {});
 
-  console.log(`[webhook] Checkout completed: userId=${userId}, plan=${entitlement.plan}`);
+  console.log(
+    `[webhook] Checkout completed: userId=${userId}, plan=${entitlement.plan}`,
+  );
 }
 
-async function handleInvoicePaid(event: Stripe.InvoicePaidEvent, context: WaspApiContext) {
+async function handleInvoicePaid(
+  event: Stripe.InvoicePaidEvent,
+  context: WaspApiContext,
+) {
   const invoice: RuntimeInvoice = event.data.object;
   const invoiceId = invoice.id;
 
   // Idempotency
-  if (await alreadyProcessed(context.entities, { stripeInvoiceId: invoiceId })) {
-    console.log(`[webhook] invoice.paid — already processed invoice ${invoiceId}, skipping.`);
+  if (
+    await alreadyProcessed(context.entities, { stripeInvoiceId: invoiceId })
+  ) {
+    console.log(
+      `[webhook] invoice.paid — already processed invoice ${invoiceId}, skipping.`,
+    );
     return;
   }
 
@@ -419,7 +486,8 @@ async function handleInvoicePaid(event: Stripe.InvoicePaidEvent, context: WaspAp
     where: { id: userId },
     data: {
       plan,
-      planRenewsAt: plan === "FOUNDER" ? null : new Date(Date.now() + renewalMs),
+      planRenewsAt:
+        plan === "FOUNDER" ? null : new Date(Date.now() + renewalMs),
     },
   });
 
@@ -438,17 +506,24 @@ async function handleInvoicePaid(event: Stripe.InvoicePaidEvent, context: WaspAp
     },
   });
 
-  void recordAnalyticsEventCore(context.entities, {
-    name: "PAYMENT_CONFIRMED",
-    visitorId: `user_${userId}`,
-    route: "/do/settings/billing",
-    metadata: { plan: priceKey ?? "subscription" },
-  }, userId).catch(() => {});
+  void recordAnalyticsEventCore(
+    context.entities,
+    {
+      name: "PAYMENT_CONFIRMED",
+      visitorId: `user_${userId}`,
+      route: "/do/settings/billing",
+      metadata: { plan: priceKey ?? "subscription" },
+    },
+    userId,
+  ).catch(() => {});
 
   console.log(`[webhook] Invoice paid: userId=${userId}, plan=${plan}`);
 }
 
-async function handleInvoiceFailed(event: Stripe.InvoicePaymentFailedEvent, context: WaspApiContext) {
+async function handleInvoiceFailed(
+  event: Stripe.InvoicePaymentFailedEvent,
+  context: WaspApiContext,
+) {
   const invoice: RuntimeInvoice = event.data.object;
 
   const user = await findUserByCustomer(context.entities, invoice.customer);
@@ -479,7 +554,9 @@ async function handleInvoiceFailed(event: Stripe.InvoicePaymentFailedEvent, cont
 /** Subscription statuses where entitlement ends immediately. */
 type TerminalStatus = "canceled" | "unpaid" | "incomplete_expired";
 
-function isTerminalStatus(status: Stripe.Subscription.Status): status is TerminalStatus {
+function isTerminalStatus(
+  status: Stripe.Subscription.Status,
+): status is TerminalStatus {
   switch (status) {
     case "canceled":
     case "unpaid":
@@ -490,7 +567,10 @@ function isTerminalStatus(status: Stripe.Subscription.Status): status is Termina
   }
 }
 
-async function handleSubscriptionUpdated(event: Stripe.CustomerSubscriptionUpdatedEvent, context: WaspApiContext) {
+async function handleSubscriptionUpdated(
+  event: Stripe.CustomerSubscriptionUpdatedEvent,
+  context: WaspApiContext,
+) {
   const subscription = event.data.object;
   const status = subscription.status;
 
@@ -499,17 +579,22 @@ async function handleSubscriptionUpdated(event: Stripe.CustomerSubscriptionUpdat
   // expire now in case .deleted is missed or delayed. cancel_at_period_end is
   // intentionally a no-op (plan stays active until .deleted at period end).
   if (!isTerminalStatus(status)) {
-    console.log(`[webhook] subscription.updated — status='${status}', no action.`);
+    console.log(
+      `[webhook] subscription.updated — status='${status}', no action.`,
+    );
     return;
   }
 
   let userId: string | undefined = subscription.metadata?.userId;
   if (!userId) {
-    userId = (await findUserByCustomer(context.entities, subscription.customer))?.id;
+    userId = (await findUserByCustomer(context.entities, subscription.customer))
+      ?.id;
   }
 
   if (!userId) {
-    console.error("[webhook] subscription.updated — could not determine userId for terminal expiry.");
+    console.error(
+      "[webhook] subscription.updated — could not determine userId for terminal expiry.",
+    );
     return;
   }
 
@@ -518,15 +603,22 @@ async function handleSubscriptionUpdated(event: Stripe.CustomerSubscriptionUpdat
     data: { planRenewsAt: new Date() },
   });
 
-  console.log(`[webhook] subscription.updated — terminal status '${status}', expired userId=${userId}.`);
+  console.log(
+    `[webhook] subscription.updated — terminal status '${status}', expired userId=${userId}.`,
+  );
 }
 
-async function handleSubscriptionDeleted(event: Stripe.CustomerSubscriptionDeletedEvent, context: WaspApiContext) {
+async function handleSubscriptionDeleted(
+  event: Stripe.CustomerSubscriptionDeletedEvent,
+  context: WaspApiContext,
+) {
   const subscription = event.data.object;
   const userId = subscription.metadata?.userId;
 
   if (!userId) {
-    console.error("[webhook] subscription.deleted — missing userId in metadata.");
+    console.error(
+      "[webhook] subscription.deleted — missing userId in metadata.",
+    );
     return;
   }
 
@@ -538,5 +630,7 @@ async function handleSubscriptionDeleted(event: Stripe.CustomerSubscriptionDelet
     },
   });
 
-  console.log(`[webhook] Subscription deleted: userId=${userId} (plan expires now)`);
+  console.log(
+    `[webhook] Subscription deleted: userId=${userId} (plan expires now)`,
+  );
 }
