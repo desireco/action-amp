@@ -1,10 +1,20 @@
+/**
+ * Parse the Date-or-string representation once at the boundary —
+ * instanceof, so every formatter below consumes a concrete Date.
+ */
+function toDate(value: Date | string): Date {
+  return value instanceof Date ? value : new Date(value);
+}
+
 export function formatRelativeDue(d: Date | string): string {
-  const date = typeof d === "string" ? new Date(d) : d;
+  const date = toDate(d);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const target = new Date(date);
   target.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  const diffDays = Math.round(
+    (target.getTime() - today.getTime()) / 86_400_000,
+  );
   if (diffDays === 0) return "today";
   if (diffDays === 1) return "tomorrow";
   if (diffDays < 0) return `${Math.abs(diffDays)}d overdue`;
@@ -18,10 +28,15 @@ export function formatRelativeDue(d: Date | string): string {
  * `formatRelativeDue`, but splits the overdue signal out so the caller can
  * pick a chip variant without re-deriving it.
  */
-export function formatDueChip(
-  d: Date | string,
-): { label: string; overdue: boolean } {
-  const date = typeof d === "string" ? new Date(d) : d;
+/** Due-chip payload — the label plus the overdue signal, split so the caller
+ *  picks a chip variant without re-deriving it. */
+export interface DueChip {
+  label: string;
+  overdue: boolean;
+}
+
+export function formatDueChip(d: Date | string): DueChip {
+  const date = toDate(d);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const target = new Date(date);
@@ -29,12 +44,16 @@ export function formatDueChip(
   const diffDays = Math.round(
     (target.getTime() - today.getTime()) / 86_400_000,
   );
-  if (diffDays < 0) return { label: `${Math.abs(diffDays)}d overdue`, overdue: true };
+  if (diffDays < 0)
+    return { label: `${Math.abs(diffDays)}d overdue`, overdue: true };
   if (diffDays === 0) return { label: "today", overdue: false };
   if (diffDays === 1) return { label: "tomorrow", overdue: false };
   if (diffDays < 7) return { label: `in ${diffDays}d`, overdue: false };
   return {
-    label: date.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    label: date.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    }),
     overdue: false,
   };
 }
@@ -44,7 +63,7 @@ export function formatDueChip(
  * chips. Resolves to "just now" / "N min ago" / "N hr ago" / "N days ago".
  */
 export function formatAgo(date: Date | string): string {
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  const seconds = Math.floor((Date.now() - toDate(date).getTime()) / 1000);
   if (seconds < 60) return "just now";
   if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
@@ -57,12 +76,14 @@ export function formatAgo(date: Date | string): string {
  * Resolves to "today" / "yesterday" / "tomorrow" / "Mon D".
  */
 export function formatRelativeDay(d: Date | string): string {
-  const date = typeof d === "string" ? new Date(d) : d;
+  const date = toDate(d);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const target = new Date(date);
   target.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  const diffDays = Math.round(
+    (target.getTime() - today.getTime()) / 86_400_000,
+  );
   if (diffDays === 0) return "today";
   if (diffDays === 1) return "tomorrow";
   if (diffDays === -1) return "yesterday";
