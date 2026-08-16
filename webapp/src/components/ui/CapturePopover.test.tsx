@@ -446,5 +446,38 @@ describe("CapturePopover", () => {
       );
       expect(screen.getByAltText("fab-drop.png")).toBeInTheDocument();
     });
+
+    // Regression (2026-08-16): a FAB drop double-attached in dev — StrictMode
+    // fires mount effects twice, so the initialFiles preload ran twice. The
+    // effect is now ref-guarded and addFiles dedupes by file identity; these
+    // tests pin the dedupe (the part drivable without StrictMode).
+    it("the same file added twice attaches only once (double-paste)", () => {
+      const { container } = renderInContext(
+        <CapturePopover onClose={() => {}} onSubmit={() => {}} projects={[]} customLensNames={[]} activeLensName={null} />,
+      );
+      const file = imageFile();
+      const ta = screen.getByLabelText("Capture");
+      firePaste(ta, [file]);
+      firePaste(ta, [file]);
+      expect(thumbs(container)).toHaveLength(1);
+    });
+
+    it("a re-add of an initialFile after open is a silent no-op", () => {
+      const file = imageFile("fab-drop.png");
+      const { container } = renderInContext(
+        <CapturePopover
+          onClose={() => {}}
+          onSubmit={() => {}}
+          projects={[]}
+          customLensNames={[]}
+          activeLensName={null}
+          initialFiles={[file]}
+        />,
+      );
+      fireDrop(overlayEl(container), [file]);
+      expect(thumbs(container)).toHaveLength(1);
+      // A duplicate no-op must not raise the "only images" error either.
+      expect(screen.queryByText(/only images/i)).not.toBeInTheDocument();
+    });
   });
 });

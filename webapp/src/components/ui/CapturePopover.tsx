@@ -162,14 +162,21 @@ export function CapturePopover({
   }, []);
 
   // Files dropped on the FAB before open — validated like any other add.
+  // Ref-guarded: StrictMode double-fires mount effects in dev, which attached
+  // the preload twice (the FAB-drop duplicate-attachment bug). addFiles also
+  // dedupes by file identity as a second line of defense.
+  const initialFilesConsumed = useRef(false);
   useEffect(() => {
+    if (initialFilesConsumed.current) return;
+    initialFilesConsumed.current = true;
     if (initialFiles?.length) addFiles(initialFiles);
   }, []);
 
   /**
    * Validate + queue images. Client-side mirror of prepareImageAttachments
    * (same caps, same error copy) so bad files are rejected before submit;
-   * the server still re-validates.
+   * the server still re-validates. A file already in the pending list is a
+   * silent no-op — re-adding identical bytes is never the intent.
    */
   function addFiles(incoming: File[]) {
     setError(null);
@@ -178,9 +185,13 @@ export function CapturePopover({
       if (incoming.length > 0) setError("Only images can be attached.");
       return;
     }
-    const fitting = images.filter((f) => f.size <= MAX_IMAGE_ATTACHMENT_BYTES);
+    const fresh = images.filter(
+      (f) => !pendingFiles.some((p) => p.file === f),
+    );
+    if (fresh.length === 0) return;
+    const fitting = fresh.filter((f) => f.size <= MAX_IMAGE_ATTACHMENT_BYTES);
     let nextError: string | null =
-      fitting.length < images.length ? "Each image must be 5 MB or smaller." : null;
+      fitting.length < fresh.length ? "Each image must be 5 MB or smaller." : null;
     const room = MAX_IMAGE_ATTACHMENTS - pendingFiles.length;
     const accepted = fitting.slice(0, Math.max(0, room));
     if (accepted.length < fitting.length) {
