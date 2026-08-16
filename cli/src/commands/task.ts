@@ -29,7 +29,6 @@ export function makeTaskCommand(): Command {
             process.stdout.write(formatTask(result.task) + "\n");
             // The ids make `attachment download <id>` usable from text output
             // without a --json round-trip (same precedent as `inbox list`).
-            // pi-lens-ignore: typescript(2339)
             result.task.attachments?.forEach((a) => {
               process.stdout.write(`  ${formatAttachmentLine(a)}\n`);
             });

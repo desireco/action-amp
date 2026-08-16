@@ -1,6 +1,5 @@
 datasource db {
   provider = "postgresql"
-  // pi-lens-ignore: P1012
   url      = env("DATABASE_URL")
 }
 
