@@ -28,7 +28,7 @@ export function makeTaskCommand(): Command {
           if (result.task) {
             process.stdout.write(formatTask(result.task) + "\n");
             // The ids make `attachment download <id>` usable from text output
-            // without a --json round-trip (same precedent as `inbox list`).
+            // without a --json round-trip (shared formatter, per the M5 review).
             result.task.attachments?.forEach((a) => {
               process.stdout.write(`  ${formatAttachmentLine(a)}\n`);
             });

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Button } from "./Button";
+import { AttachmentThumbs } from "./AttachmentThumbs";
 import type { GoalContext } from "../../app/taskContext";
 import "./NextCard.css";
 
@@ -25,9 +26,10 @@ export interface NextTask {
   /** Optional newest NOTE preview (passive plain text, two-line clamp). Rendered
    *  only in the `next` state under a `Latest note` label, only when non-null. */
   latestNote?: string | null;
-  /** Captured image count — calm text chip in the meta row. The chooser stays
-   *  media-free; the images themselves live in Focus and the task detail. */
-  imageCount?: number;
+  /** Captured images carried onto the task by triage — rendered as
+   *  display-only thumbs in their own band below the "Why does this
+   *  matter?" section (same shared lightbox). */
+  attachments?: { id: string; filename: string }[];
 }
 
 interface NextCardProps {
@@ -74,24 +76,13 @@ export function NextCard({ task, context, onNotNow, onDo, state = "next", onPaus
 
       <h2 className="aa-wn-card__title">{task.title}</h2>
 
-      {(task.project || task.due || task.size || (task.imageCount ?? 0) > 0) && (
+      {(task.project || task.due || task.size) && (
         <div className="aa-wn-card__meta">
           {task.project && <span className="aa-wn-card__meta-item">{task.project}</span>}
           {task.project && task.due && <span className="aa-wn-card__sep" aria-hidden="true">·</span>}
           {task.due && <span className="aa-wn-card__meta-item">{task.due}</span>}
           {task.due && task.size && <span className="aa-wn-card__sep" aria-hidden="true">·</span>}
           {task.size && <span className="aa-wn-card__meta-item">{task.size}</span>}
-          {/* Separator before the image chip whenever ANY earlier meta item
-              rendered (project, due, or size) — a project-only row still gets
-              its "·" (R1 review fix). */}
-          {(task.project || task.due || task.size) && (task.imageCount ?? 0) > 0 && (
-            <span className="aa-wn-card__sep" aria-hidden="true">·</span>
-          )}
-          {(task.imageCount ?? 0) > 0 && (
-            <span className="aa-wn-card__meta-item">
-              {task.imageCount === 1 ? "1 image" : `${task.imageCount} images`}
-            </span>
-          )}
         </div>
       )}
 
@@ -136,6 +127,17 @@ export function NextCard({ task, context, onNotNow, onDo, state = "next", onPaus
             </div>
           )}
         </section>
+      )}
+
+      {/* Captured images (TaskAttachment) — below the "Why does this
+          matter?" block, in their own centered band before the actions: the
+          task on stage can be judged by what was actually shared. Display-only
+          thumbs; click opens the shared lightbox. Same treatment in both the
+          `next` and `now` states (Focus shows them again while working). */}
+      {(task.attachments?.length ?? 0) > 0 && (
+        <div className="aa-wn-card__attachments">
+          <AttachmentThumbs attachments={task.attachments ?? []} size="md" />
+        </div>
       )}
 
       <div className="aa-wn-card__actions">

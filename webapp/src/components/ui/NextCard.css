@@ -79,6 +79,17 @@
   font-weight: var(--aa-weight-semibold);
 }
 
+/* Captured images (TaskAttachment) — the real thing on stage, not a count.
+   Centered like the rest of the card; a little breathing room above and
+   below so the thumbs read as their own calm band below the "Why does this
+   matter?" section and above the actions. The shared thumbs handle their
+   own gap/wrap. */
+.aa-wn-card__attachments {
+  display: flex;
+  justify-content: center;
+  margin: 14px 0 36px;
+}
+
 /* ---- Goal rationale + paused-work continuity (focus-goal-context spec) ----
    Shown only in the `next` candidate state. Both blocks stay subordinate to
    the title and actions — narrower in visual weight, no card/icon/link/

@@ -280,7 +280,7 @@ export function NextPage() {
           goalContext,
           continuityStats,
           latestNote: !isNow ? continuity?.latestNote ?? null : null,
-          imageCount: task.attachments?.length,
+          attachments: task.attachments,
         }}
         context={
           <>

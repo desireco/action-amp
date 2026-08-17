@@ -30,28 +30,28 @@ describe("NextCard", () => {
       expect(screen.getByText("15 min")).toBeInTheDocument();
     });
 
-    it("shows a calm image-count chip when the task carries captured images", () => {
-      renderInContext(
-        <NextCard task={{ ...BASE_TASK, imageCount: 2 }} />,
-      );
-      expect(screen.getByText("2 images")).toBeInTheDocument();
-    });
-
-    it("separates the image chip from a project-only meta row (R1 review fix)", () => {
-      // No due/size — project and the image chip are the only meta items, so
-      // the "·" separator must still render between them.
+    it("shows the captured images as centered thumbs when the task carries them", () => {
       renderInContext(
         <NextCard
-          task={{ ...BASE_TASK, due: undefined, size: undefined, imageCount: 1 }}
+          task={{
+            ...BASE_TASK,
+            attachments: [
+              { id: "att-1", filename: "error-shot.png" },
+              { id: "att-2", filename: "trace.jpg" },
+            ],
+          }}
         />,
       );
-      const meta = screen.getByText("Ship v2").closest(".aa-wn-card__meta");
-      expect(meta?.textContent).toBe("Ship v2·1 image");
+      // The real thing on stage — one <img> per attachment, alt = filename.
+      expect(screen.getByAltText("error-shot.png")).toBeInTheDocument();
+      expect(screen.getByAltText("trace.jpg")).toBeInTheDocument();
+      // No count chip in the meta row — the images replaced it.
+      expect(screen.queryByText(/images?/i)).toBeNull();
     });
 
-    it("renders no image chip when the task has none", () => {
+    it("renders no attachment block when the task has none", () => {
       renderInContext(<NextCard task={BASE_TASK} />);
-      expect(screen.queryByText(/image/i)).toBeNull();
+      expect(screen.queryByAltText(/\.(png|jpe?g|gif|webp)$/i)).toBeNull();
     });
 
     it("shows the context line when provided", () => {

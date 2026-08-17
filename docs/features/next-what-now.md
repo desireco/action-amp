@@ -29,10 +29,15 @@ active lens, not done. **No moment/time-of-day/energy factor yet** — that is
 **"Why this?" line** (`app/focusWhy.ts`, `composeWhy`). Composed from the actual
 ranking factors, never fabricated; omitted entirely when nothing truthful applies.
 
-**Captured images** (2026-08-16). A candidate carrying images from triage
-(`TaskAttachment`) shows a calm text chip in the meta row — "1 image" /
-"N images" — nothing more. The chooser stays media-free; the images
-themselves render in Focus and on the task detail page.
+**Captured images** (2026-08-16; revised same day). A task carrying images
+from triage (`TaskAttachment`) shows them **on the card itself** — display-
+only thumbs (md, shared lightbox on click) in their own centered band below
+the "Why does this matter?" goal block, with breathing room above and below
+(`.aa-wn-card__attachments`, `margin: 14px 0 36px`). The task on stage can
+be judged by what was actually shared. (First cut was a calm "1 image" text
+chip in the meta row — replaced the same day: the real thing beats a count on
+the one card the app opens to.) Focus and the task detail page show the same
+thumbs.
 
 **Added 2026-08-10 — three rationale layers, never conflated**
 (focus-goal-context spec). Next candidate (`state="next"`) shows, in order:
