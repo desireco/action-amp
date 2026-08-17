@@ -115,6 +115,7 @@ type ProjectTask = {
   status: "SOMEDAY" | "UPCOMING" | "TODAY" | "WONT_DO";
   dueDate: Date | null;
   completedAt: Date | null;
+  attachments: { id: string; filename: string; mimeType: string }[];
 };
 
 export const getProject = (async (args, context) => {

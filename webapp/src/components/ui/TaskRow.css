@@ -86,6 +86,13 @@
   line-height: 1;
 }
 
+/* Leading media (captured-image thumbs etc.) — flex-start like the dot so it
+   sits on the title's line, shrink-proof so long filenames can't stretch the
+   row. stopPropagation lives in the component; this is pure layout. */
+.aa-task-row__leading {
+  flex-shrink: 0;
+}
+
 .aa-task-row__dot--today {
   background: var(--aa-teal-cta);
   box-shadow: 0 0 0 2.5px var(--aa-teal-soft);

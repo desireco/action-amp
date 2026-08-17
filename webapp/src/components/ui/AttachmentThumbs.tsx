@@ -31,7 +31,7 @@ export function AttachmentThumbs({
   size = "sm",
 }: {
   attachments: AttachmentThumb[];
-  size?: "sm" | "md";
+  size?: "xs" | "sm" | "md";
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   if (attachments.length === 0) return null;

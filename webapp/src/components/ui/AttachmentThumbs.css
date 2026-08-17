@@ -42,6 +42,13 @@
   width: 72px;
 }
 
+/* Row-inline: sits in front of a task row title without distorting the
+   row's height — square, border-contained, still clickable → lightbox. */
+.aa-attach-thumbs--xs .aa-attach-thumbs__img {
+  height: 28px;
+  width: 28px;
+}
+
 /* ============================================================
    AttachmentCover — the inbox row's left-side media preview.
    One square cover of the first image; "+N" badge when more

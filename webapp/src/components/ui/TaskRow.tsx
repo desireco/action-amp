@@ -45,6 +45,10 @@ interface TaskRowProps {
   className?: string;
   /** Right-aligned action slot — promote, Edit, Move, etc. Hover-revealed. */
   children?: ReactNode;
+  /** Leading media slot — sits between the status dot and the title (e.g.
+   * captured-image thumbs in front of the row). Callers own its click
+   * behavior; it renders OUTSIDE the row's clickable main region. */
+  leading?: ReactNode;
 }
 
 /**
@@ -109,6 +113,7 @@ export function TaskRow({
   showLens = false,
   className = "",
   children,
+  leading,
 }: TaskRowProps) {
   const done = task.isDone ?? false;
   const hasChildren = Boolean(children);
@@ -157,6 +162,14 @@ export function TaskRow({
           // Done-dot carries a checkmark glyph; status dots are purely visual.
         >
           {done ? "✓" : ""}
+        </span>
+      )}
+      {leading && (
+        <span
+          className="aa-task-row__leading"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {leading}
         </span>
       )}
       <div

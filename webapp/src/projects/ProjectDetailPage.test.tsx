@@ -100,6 +100,28 @@ function makeProject(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/** A second task with media — for row-thumb tests (the hero lifts the first
+ *  Today task, so a separate task exercises the grouped rows). */
+function withUpcomingMediaTask(project: ReturnType<typeof makeProject>) {
+  return {
+    ...project,
+    tasks: [
+      ...project.tasks,
+      {
+        id: "t2",
+        description: "Review the mockup",
+        isDone: false,
+        status: "UPCOMING",
+        priority: "NORMAL",
+        size: "M",
+        attachments: [
+          { id: "att-r1", filename: "mockup.png", mimeType: "image/png" },
+        ],
+      },
+    ],
+  };
+}
+
 function renderAt(path: string) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -688,6 +710,39 @@ describe("ProjectDetailPage — captured attachments", () => {
 
     expect(screen.getByAltText("mockup.png")).toBeInTheDocument();
     expect(screen.getByAltText("ref.jpg")).toBeInTheDocument();
+  });
+
+  it("leads the Next-step hero with a cover when the Today task carries images", () => {
+    projectData.current = makeProject({
+      tasks: [
+        {
+          id: "t1",
+          description: "Email Sarah",
+          isDone: false,
+          status: "TODAY",
+          priority: "NORMAL",
+          size: "M",
+          attachments: [
+            { id: "att-hero", filename: "hero-shot.png", mimeType: "image/png" },
+          ],
+        },
+      ],
+    });
+    renderAt("/do/projects/p1");
+
+    // AttachmentCover renders the first image (alt = filename) inside the
+    // hero's head row.
+    const cover = screen.getByAltText("hero-shot.png");
+    expect(cover.closest(".aa-project__next-head")).not.toBeNull();
+  });
+
+  it("shows leading xs thumbs on grouped task rows carrying images", () => {
+    projectData.current = withUpcomingMediaTask(makeProject());
+    renderAt("/do/projects/p1");
+
+    // The row thumb renders in front of the Upcoming task's title.
+    const thumb = screen.getByAltText("mockup.png");
+    expect(thumb.closest(".aa-task-row__leading")).not.toBeNull();
   });
 
   it("renders no attachment block when the project has none", () => {

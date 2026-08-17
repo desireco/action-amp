@@ -249,6 +249,13 @@
   font-weight: var(--aa-weight-semibold);
   margin-bottom: 4px;
 }
+/* Cover + title share a row — the hero leads with its media (same square
+   cover treatment an inbox row gets, ~hero scale). */
+.aa-project__next-head {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-md);
+}
 .aa-project__next-title {
   font-size: var(--aa-text-lg);
   font-weight: var(--aa-weight-semibold);

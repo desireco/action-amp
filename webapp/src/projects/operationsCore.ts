@@ -184,6 +184,7 @@ export async function getProjectData(
           status: true,
           dueDate: true,
           completedAt: true,
+          attachments: { select: { id: true, filename: true, mimeType: true } },
         },
       },
       resources: {

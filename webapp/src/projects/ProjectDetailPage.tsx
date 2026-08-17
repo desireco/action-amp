@@ -20,7 +20,7 @@ import {
 } from "wasp/client/operations";
 import { Breadcrumb } from "../components/ui";
 import type { BreadcrumbItem } from "../components/ui";
-import { AttachmentThumbs } from "../components/ui";
+import { AttachmentCover, AttachmentThumbs } from "../components/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
@@ -46,6 +46,7 @@ import "./ProjectDetailPage.css";
 type ProjectTask = TaskRowTask & {
   status: "TODAY" | "UPCOMING" | "SOMEDAY" | "WONT_DO";
   completedAt: Date | string | null;
+  attachments?: { id: string; filename: string; mimeType: string }[];
 };
 
 /** Size → human duration, matching the home screen (focusTaskView.sizeLabel). */
@@ -654,9 +655,18 @@ export function ProjectDetailPage() {
                 {!project.isDone && nextStep && (
                   <div className="aa-project__next">
                     <div className="aa-project__next-eyebrow">Next step</div>
-                    <h2 className="aa-project__next-title">
-                      {nextStep.description}
-                    </h2>
+                    <div className="aa-project__next-head">
+                      {/* The next step leads with its media — a square cover of
+                          the first image (+N badge when more follow), the same
+                          treatment an inbox row gets, at hero scale. Click
+                          opens the lightbox; it doesn't start the task. */}
+                      {(nextStep.attachments?.length ?? 0) > 0 && (
+                        <AttachmentCover attachments={nextStep.attachments} />
+                      )}
+                      <h2 className="aa-project__next-title">
+                        {nextStep.description}
+                      </h2>
+                    </div>
                     <div className="aa-project__next-row">
                       <span className="aa-project__next-meta">
                         Today
@@ -857,6 +867,19 @@ export function ProjectDetailPage() {
                           muted={task.status === "SOMEDAY" || task.isDone}
                           expanded={
                             task.isDone ? undefined : activeTaskId === task.id
+                          }
+                          // Captured-image thumbs lead the row (xs — smaller
+                          // than the hero's cover but unmistakably media).
+                          // Click opens the lightbox, not the task menu — the
+                          // slot stops propagation and sits outside the row's
+                          // clickable main region.
+                          leading={
+                            (task.attachments?.length ?? 0) > 0 ? (
+                              <AttachmentThumbs
+                                attachments={task.attachments ?? []}
+                                size="xs"
+                              />
+                            ) : undefined
                           }
                           onOpen={() => {
                             if (task.isDone) {
