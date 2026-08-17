@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { defineConfig } from "vite";
 import { wasp } from "wasp/client/vite";
-import tidewave from 'tidewave/vite-plugin';
+import tidewave from "tidewave/vite-plugin";
 
 // Embedded at build time so the deployed bundle can report what commit it
 // was built from (Settings → About, login footer, support/debug signal).
@@ -16,6 +16,8 @@ const APP_VERSION = (() => {
     return "dev";
   }
 })();
+
+const DEV_PORT = Number(process.env.VITE_PORT ?? 4000);
 
 // Emit a static version manifest into public/ at config-eval time so the
 // deployed host serves /version.json. The client polls it (see
@@ -41,7 +43,19 @@ try {
 }
 
 export default defineConfig({
-  plugins: [tidewave(), wasp()],
+  plugins: [
+    tidewave({
+      // Wasp resolves Vite's host to 0.0.0.0, while a local browser connects
+      // from localhost. Without this explicit allow-list, Tidewave rejects its
+      // own control WebSocket with 403 and can never attach a browser session.
+      allowedOrigins: [
+        `http://localhost:${DEV_PORT}`,
+        `http://127.0.0.1:${DEV_PORT}`,
+        `http://[::1]:${DEV_PORT}`,
+      ],
+    }),
+    wasp(),
+  ],
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),
   },
@@ -49,6 +63,6 @@ export default defineConfig({
     open: false,
     // Env-driven so the isolated e2e worktree can run on :4100 alongside dev
     // on :4000 without colliding. Dev leaves VITE_PORT unset → 4000.
-    port: Number(process.env.VITE_PORT ?? 4000),
+    port: DEV_PORT,
   },
 });
