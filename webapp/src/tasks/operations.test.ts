@@ -374,7 +374,7 @@ describe("getWeekTasks", () => {
     );
   });
 
-  it("reads dated Today and Upcoming tasks across accessible lenses for this Monday–Sunday week", async () => {
+  it("pools Today commits (any dueDate) and tasks dated before the week ends, across accessible lenses", async () => {
     const m = guarded();
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-personal", name: "Me", color: "emerald", isIncluded: true },
@@ -391,13 +391,20 @@ describe("getWeekTasks", () => {
       status: { in: ["TODAY", "UPCOMING"] },
       isDone: false,
     });
-    expect(call.where.dueDate.gte).toBeInstanceOf(Date);
-    expect(call.where.dueDate.lt).toBeInstanceOf(Date);
-    expect(call.where.dueDate.gte.getDay()).toBe(1);
-    expect(call.where.dueDate.lt.getDay()).toBe(1);
-    const nextMonday = new Date(call.where.dueDate.gte);
-    nextMonday.setDate(nextMonday.getDate() + 7);
-    expect(call.where.dueDate.lt).toEqual(nextMonday);
+    // Coherence contract (fixed 2026-08-17): a TODAY commit is due today —
+    // inside this week — even when its dueDate is null (the triage/move
+    // paths null Today dates), so it must not fall out of the week pool.
+    // The bare `lt` (no gte) also admits overdue rows — the page buckets
+    // them under Today instead of hiding them.
+    expect(call.where.OR).toEqual([
+      { status: "TODAY" },
+      { dueDate: { lt: expect.any(Date) } },
+    ]);
+    expect(call.where.OR[1].dueDate.lt).toBeInstanceOf(Date);
+    expect(call.where.OR[1].dueDate.lt.getDay()).toBe(1); // Monday: week end + 1
+    const weekStart = new Date(call.where.OR[1].dueDate.lt);
+    weekStart.setDate(weekStart.getDate() - 7);
+    expect(weekStart.getDay()).toBe(1); // gte-equivalent also a Monday
     expect(call.include).toMatchObject({
       lens: { select: { id: true, name: true, color: true } },
     });

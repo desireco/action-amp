@@ -24,9 +24,15 @@ can move to **Today** or **Someday**; Someday clears its date.
 per intent — no same-page swap, no duplicated `UPCOMING` data in two shapes.
 
 **This week** (`/do/week`, `lists/WeekPage.tsx`) is a separate global
-Monday–Sunday schedule reached from Today's hero. It uses dated `UPCOMING` and
+Monday–Sunday schedule reached from Today's hero. It pools `UPCOMING` and
 `TODAY` tasks across accessible Lenses, grouped by weekday, so a task remains
-visible after it is promoted onto Today. It is not the Week review and does
+visible after it is promoted onto Today. **Pool rule** (fixed 2026-08-17):
+a `TODAY` commit is due *today* — today is inside this week — so it enters
+the pool regardless of dueDate (the triage/move paths null Today dates);
+anything dated before the week ends also enters, with overdue rows bucketed
+under Today rather than hidden. Bucketing lives in the pure `lists/weekView.ts`
+(dated → its weekday, overdue/undated-Today → the Today bucket, undated
+Upcoming stays out). It is not the Week review and does
 not introduce another task status.
 
 **Someday** (`/do/someday`, `lists/SomedayPage.tsx`) — muted flat list, also

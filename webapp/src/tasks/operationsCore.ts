@@ -360,7 +360,15 @@ export async function getWeekTasksData(
       lensId: { in: lensIds },
       status: { in: ["TODAY", "UPCOMING"] },
       isDone: false,
-      dueDate: { gte: weekStart, lt: nextWeekStart },
+      // In the pool: committed-now tasks OR anything dated before the week
+      // ends. A Today commit is due TODAY — today is inside this week — even
+      // when it carries no dueDate (the triage/move paths null it), so it must
+      // count and render in the Today bucket; without the status arm, the
+      // Today badge could read 1 while This week read 0 for the same task.
+      // The bare `lt nextWeekStart` (not gte weekStart) also admits overdue
+      // rows — an open task that slipped past its date is still due, and the
+      // page buckets it under Today rather than hiding it.
+      OR: [{ status: "TODAY" }, { dueDate: { lt: nextWeekStart } }],
     },
     orderBy: [
       { dueDate: "asc" },

@@ -11,6 +11,7 @@ import {
   type TaskRowTask,
 } from "../components/ui";
 import { ListEmpty } from "./ListShell";
+import { bucketWeekTasks, dayKey } from "./weekView";
 import "./ListShell.css";
 import "./WeekPage.css";
 
@@ -19,11 +20,6 @@ function startOfWeek(now = new Date()): Date {
   start.setHours(0, 0, 0, 0);
   start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
   return start;
-}
-
-function dayKey(date: Date | string): string {
-  const day = new Date(date);
-  return `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
 }
 
 /** The global Monday–Sunday scheduling horizon. Today remains the commitment
@@ -37,19 +33,11 @@ export function WeekPage() {
   const weekStart = useMemo(() => startOfWeek(), []);
 
   const groups = useMemo<GroupDef<TaskRowTask>[]>(() => {
-    const byDay = new Map<string, TaskRowTask[]>();
-    for (let offset = 0; offset < 7; offset += 1) {
-      const date = new Date(weekStart);
-      date.setDate(date.getDate() + offset);
-      byDay.set(dayKey(date), []);
-    }
-    for (const task of tasks ?? []) {
-      if (task.dueDate) byDay.get(dayKey(task.dueDate))?.push(task);
-    }
-    return Array.from(byDay, ([key, items]) => {
+    // Pure bucketing (weekView.ts): dated → its weekday, overdue → Today,
+    // TODAY-undated → Today. Tested in weekView.test.ts.
+    return bucketWeekTasks(tasks ?? [], weekStart).map(({ key, items }) => {
       const [year, month, day] = key.split("-").map(Number);
-      const date = new Date(year, month, day);
-      const today = new Date();
+      const date = new Date(year, month - 1, day);
       const label = date.toLocaleDateString(undefined, {
         weekday: "long",
         month: "short",
@@ -57,7 +45,7 @@ export function WeekPage() {
       });
       return {
         key,
-        label: dayKey(date) === dayKey(today) ? `Today · ${label}` : label,
+        label: dayKey(date) === dayKey(new Date()) ? `Today · ${label}` : label,
         items,
       };
     });

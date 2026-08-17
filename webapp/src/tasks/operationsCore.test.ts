@@ -8,6 +8,7 @@ import {
   snoozeTarget,
   getTopTaskData,
   getTaskAlternativesData,
+  getWeekTasksData,
   TASK_ALTERNATIVES_LIMIT,
   hydrateTopTaskData,
   toggleTaskDoneCore,
@@ -657,5 +658,55 @@ describe("completeFocusSessionCore", () => {
         id: "task-1",
       }),
     ).resolves.toEqual({ completed: false });
+  });
+});
+
+// ----------------------------------------------------------------
+// getWeekTasksData — the global week pool (Monday–Sunday)
+// ----------------------------------------------------------------
+describe("getWeekTasksData", () => {
+  function asWeekPool(m: MockContext) {
+    const spies = { Task: m.entities.Task, Lens: m.entities.Lens };
+    // SAFETY: EntitySpy vi.fn()s satisfy the delegate slice at runtime.
+    return spies as Parameters<typeof getWeekTasksData>[0];
+  }
+
+  it("returns [] when no lenses are accessible", async () => {
+    const m = mockContext();
+    m.entities.Lens.findMany.mockResolvedValue([]);
+    m.entities.Task.findMany.mockResolvedValue([]);
+
+    await expect(
+      getWeekTasksData(asWeekPool(m), { user: null, userId: "user-1" }),
+    ).resolves.toEqual([]);
+    expect(m.entities.Task.findMany).not.toHaveBeenCalled();
+  });
+
+  it("pools TODAY commits regardless of dueDate, plus anything dated before the week ends (undated UPCOMING stays out)", async () => {
+    const m = mockContext();
+    m.entities.Lens.findMany.mockResolvedValue([
+      { id: "lens-1", name: "Work", color: null, isIncluded: true },
+    ]);
+    m.entities.Task.findMany.mockResolvedValue([]);
+
+    // Thursday 2026-08-13, 10:00 local → week Mon 2026-08-10 .. Sun 2026-08-16.
+    const now = new Date(2026, 7, 13, 10, 0, 0);
+    await getWeekTasksData(asWeekPool(m), { user: null, userId: "user-1", now });
+
+    // The OR arm is the coherence contract: a task committed to Today (whose
+    // dueDate the triage/move paths null) must count and render in the week
+    // view — otherwise Today reads 1 while This week reads 0 for the same
+    // task. The bare `lt nextWeekStart` also admits overdue rows.
+    expect(m.entities.Task.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId: "user-1",
+          lensId: { in: ["lens-1"] },
+          status: { in: ["TODAY", "UPCOMING"] },
+          isDone: false,
+          OR: [{ status: "TODAY" }, { dueDate: { lt: new Date(2026, 7, 17) } }],
+        }),
+      }),
+    );
   });
 });
