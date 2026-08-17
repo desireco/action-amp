@@ -222,6 +222,10 @@ fi
 if [ "$DO_CLEAN" -eq 1 ]; then
   log "wasp clean (--clean)"
   "$SAFE" clean
+  # `wasp clean` removes the entire `.wasp/` tree, including this runner's
+  # log directory. Recreate it before the next `log` call and before tee opens
+  # `$LOG` for Wasp's output.
+  mkdir -p "$(dirname "$LOG")"
 fi
 
 # ── supervise loop ─────────────────────────────────────────────────────────
