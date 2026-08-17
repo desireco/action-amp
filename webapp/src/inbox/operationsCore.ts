@@ -304,6 +304,13 @@ async function createTaskFromTriage(
       return !!existing;
     },
   );
+  // When=Today must never produce a future-dated Today task: the Next pool's
+  // due-guard treats any future dueDate as "snoozed until its time" and hides
+  // the task from the chooser — a Today task invisible on What Now (seen in
+  // the wild: a capture carrying a parsed "tomorrow" token + a manual When→
+  // Today flip created exactly that). The capture's parsedDate stays meaningful
+  // for Upcoming (surfaces when due); for Today the status IS the horizon.
+  const dueDate = opts.decision === "task-today" ? null : opts.dueDate;
   // Built then conditionally extended (B5 convention) so the create stays a
   // single atomic write — tags inline when present, no conditional spread.
   // Tags carry onto tasks only (projects/goals drop them).
@@ -316,7 +323,7 @@ async function createTaskFromTriage(
     status,
     priority: opts.priority,
     size: opts.size,
-    dueDate: opts.dueDate,
+    dueDate,
     projectId: opts.projectId,
   };
   if (opts.tagRecords.length > 0) {

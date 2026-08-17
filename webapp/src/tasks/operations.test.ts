@@ -608,6 +608,43 @@ describe("updateTaskStatus", () => {
       data: { status: "UPCOMING", dueDate: due },
     });
   });
+
+  it("clears a stale future dueDate when moving INTO Today (invisible-on-Next guard)", async () => {
+    // A snoozed/upcoming task moved to Today must not keep its future date —
+    // the Next pool's due-guard would hide it from What Now until the stale
+    // date arrives while it sits in Today.
+    const m = guarded();
+    const stale = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    m.entities.Task.findUnique.mockResolvedValue({
+      userId: "user-1",
+      dueDate: stale,
+    });
+    m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, status: "TODAY" });
+
+    await updateTaskStatus({ id: "task-1", status: "TODAY" }, m.context);
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { status: "TODAY", dueDate: null },
+    });
+  });
+
+  it("keeps a past dueDate when moving into Today (overdue is truthful)", async () => {
+    const m = guarded();
+    const past = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    m.entities.Task.findUnique.mockResolvedValue({
+      userId: "user-1",
+      dueDate: past,
+    });
+    m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, status: "TODAY" });
+
+    await updateTaskStatus({ id: "task-1", status: "TODAY" }, m.context);
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "task-1" },
+      data: { status: "TODAY", dueDate: undefined },
+    });
+  });
 });
 
 // ----------------------------------------------------------------

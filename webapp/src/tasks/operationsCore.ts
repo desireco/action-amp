@@ -755,14 +755,24 @@ export async function updateTaskStatusCore(
 ) {
   const task = await entities.Task.findUnique({
     where: { id },
-    select: { userId: true },
+    select: { userId: true, dueDate: true },
   });
   if (!task || task.userId !== userId) {
     throw new Error("Task not found.");
   }
+  // Moving INTO Today must never leave a future dueDate behind: the Next
+  // pool's due-guard treats any future date as "snoozed until its time", so a
+  // snoozed/upcoming task moved to Today would sit in Today but stay
+  // invisible on What Now until the stale date arrives. The move is the
+  // user saying "now" — a future date contradicts it. Past dates stay
+  // (overdue is truthful); other horizons pass dueDate through untouched.
+  const effectiveDue =
+    status === "TODAY" && !dueDate && task.dueDate && task.dueDate.getTime() > Date.now()
+      ? null
+      : (dueDate ?? undefined);
   return await entities.Task.update({
     where: { id },
-    data: { status, dueDate: dueDate ?? undefined },
+    data: { status, dueDate: effectiveDue },
   });
 }
 
