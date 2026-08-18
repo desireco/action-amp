@@ -189,7 +189,7 @@ export async function triageOneItem(
  * and show the item still present — a flaky "inbox zero" failure. Waiting on the
  * action response guarantees the InboxItem is gone (or ARCHIVED) before we return.
  */
-async function commitTriage(
+export async function commitTriage(
   page: Page,
   commitButton: import("@playwright/test").Locator,
   text: string,
@@ -202,4 +202,18 @@ async function commitTriage(
   if (res) expect(res.ok()).toBeTruthy();
   // The exit animation removes the item from the triage stage.
   await expect(page.getByText(text)).toHaveCount(0, { timeout: 10_000 });
+}
+
+/** Create a Simple-list Project from the Projects page (shared by the
+ *  simple-lists + triage-dispatch specs). Waits for the row to appear. */
+export async function createListProject(page: Page, name: string) {
+  await page.goto("/do/projects");
+  // Wait for the list to settle (the composer remounts when loading finishes).
+  await expect(page.getByText(/Loading projects…/)).toBeHidden({ timeout: 10_000 });
+  await page.getByRole("button", { name: /new project/i }).click();
+  const composer = page.locator(".aa-record-composer");
+  await composer.getByRole("textbox", { name: /^project$/i }).fill(name);
+  await composer.getByRole("radio", { name: /^simple list/i }).click();
+  await composer.getByRole("button", { name: /create project/i }).click();
+  await page.getByRole("link", { name }).waitFor({ state: "visible", timeout: 10_000 });
 }

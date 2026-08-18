@@ -1,5 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
-import { signupNewUser, openCapture } from "./helpers";
+import { test, expect } from "@playwright/test";
+import { signupNewUser, openCapture, createListProject } from "./helpers";
 
 /**
  * Simple-list Projects — checklists that live on the Projects page
@@ -11,18 +11,6 @@ import { signupNewUser, openCapture } from "./helpers";
  * open the checklist at the project URL, add/check/clear items, and file a
  * captured thought into the list through triage's one-step list-item flow.
  */
-
-async function createListProject(page: Page, name: string) {
-  await page.goto("/do/projects");
-  // Wait for the list to settle (the composer remounts when loading finishes).
-  await expect(page.getByText(/Loading projects…/)).toBeHidden({ timeout: 10_000 });
-  await page.getByRole("button", { name: /new project/i }).click();
-  const composer = page.locator(".aa-record-composer");
-  await composer.getByRole("textbox", { name: /^project$/i }).fill(name);
-  await composer.getByRole("radio", { name: /^simple list/i }).click();
-  await composer.getByRole("button", { name: /create project/i }).click();
-  await page.getByRole("link", { name }).waitFor({ state: "visible", timeout: 10_000 });
-}
 
 test("a Simple-list Project is created, opened, and checked off in place", async ({ page }) => {
   await signupNewUser(page);

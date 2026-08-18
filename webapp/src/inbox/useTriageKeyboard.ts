@@ -124,11 +124,15 @@ export function useTriageKeyboard({
       }
 
       if (step === "classify") {
+        // Number keys mirror the visual order of the type chooser (see
+        // TRIAGE_TYPES in TriagePage.tsx): Task, List item, Resource,
+        // Project, Delete.
         const typeByKey: Record<string, ChosenType> = {
           "1": "task",
-          "2": "project",
+          "2": "list-item",
           "3": "resource",
-          "4": "delete",
+          "4": "project",
+          "5": "delete",
         };
         const lensIndexByKey: Record<string, number> = {
           a: 0,
@@ -154,8 +158,12 @@ export function useTriageKeyboard({
 
       e.preventDefault();
       if (step === "classify" && chosenLensId && working) {
-        if (working.type === "delete" || working.type === "list-item") {
+        if (working.type === "delete") {
           dispatch();
+        } else if (working.type === "list-item") {
+          // Same gate as the Continue button — a list-item dispatch needs a
+          // chosen Simple-list Project before it can commit.
+          if (canComplete(working)) dispatch();
         } else {
           setStep("spec");
         }

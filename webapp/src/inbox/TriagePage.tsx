@@ -408,7 +408,16 @@ export function TriagePage() {
       }
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Triage failed.");
+      // A network-level failure means the request never reached the server —
+      // in dev that's usually `wasp start` recompiling and restarting mid-
+      // dispatch. The item is untouched; say so calmly instead of surfacing
+      // the axios "POST http://…" line.
+      const message = e instanceof Error ? e.message : "";
+      setError(
+        /network error|failed to fetch|err_(network|connection)/i.test(message)
+          ? "Couldn't reach the server — it may be restarting. Try again in a moment."
+          : message || "Triage failed.",
+      );
       setDispatched(false);
       setExit(null);
       return;
@@ -656,9 +665,9 @@ export function TriagePage() {
 
 const TRIAGE_TYPES = [
   { t: "task", label: "Task", sub: "an action — something to do", Icon: StarIcon },
+  { t: "list-item", label: "List item", sub: "a flat item to check off", Icon: BoxIcon },
   { t: "resource", label: "Resource", sub: "a link or reference — not an action", Icon: LogbookIcon },
   { t: "project", label: "Project", sub: "an outcome needing more than one step", Icon: ProjectsIcon },
-  { t: "list-item", label: "List item", sub: "a flat item to check off", Icon: BoxIcon },
   { t: "delete", label: "Delete", sub: "get rid of it — not kept", Icon: TrashIcon },
 ] as const;
 

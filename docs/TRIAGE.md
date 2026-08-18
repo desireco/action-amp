@@ -298,11 +298,12 @@ becomes and where it lands.
 | Key | Action |
 |---|---|
 | `1` | Type = Task |
-| `2` | Type = Project |
+| `2` | Type = List item (one-step flow; picks the Simple-list Project) |
 | `3` | Type = Resource / Note |
-| `4` | Type = Delete (hard-removes the InboxItem — not recoverable) |
+| `4` | Type = Project |
+| `5` | Type = Delete (hard-removes the InboxItem — not recoverable) |
 | `/` | Open the full Lens picker when there are more choices |
-| `Enter` | Continue to Spec, or dispatch immediately when Delete is selected |
+| `Enter` | Continue to Spec, or dispatch immediately when Delete or List item is selected |
 
 > **Lens selection UI (built 2026-07-05).** Lens renders as **large styled
 > pills**, not positional `A/S/D/F` slots — that keymap was retired. Type

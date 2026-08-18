@@ -197,7 +197,7 @@ commands.
   dispatch keys are gone. Type chooser is one-line rows with a leading icon;
   Lens is large styled pills. See `TRIAGE.md` §7.4 for the canonical keymap.
 - **Keyset (step-aware):**
-  - **Classify:** `1` Task · `2` Project · `3` Resource · `/` Lens picker · `Enter` continue · `Del`/`Backspace` Archive
+  - **Classify:** `1` Task · `2` List item · `3` Resource · `4` Project · `5` Delete · `/` Lens picker · `Enter` continue
   - **Spec:** `[`/`]` size · `-`/`=` priority · (shared `PropertyChips` editor)
   - **Navigation:** `←`/`→` prev/next Inbox item · `Esc` Spec→Classify or leave triage · `Q` done
 - **Mobile:** swipe-right = dispatch to Today, swipe-left = Someday, long-press = full menu.

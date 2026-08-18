@@ -410,7 +410,14 @@ describe("TriagePage", () => {
   it("uses Classify number keys to choose the type before Continue", async () => {
     renderTriagePage();
 
+    // The keymap mirrors the chooser order: Task, List item, Resource,
+    // Project, Delete (renumbered 2026-08-18).
     fireEvent.keyDown(window, { key: "2" });
+    expect(
+      await screen.findByRole("combobox", { name: "Add to list" }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "4" });
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
 
     expect(await screen.findByText(/2 · Specify the project/i)).toBeInTheDocument();
