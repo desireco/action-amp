@@ -218,6 +218,12 @@ describe("TriagePage", () => {
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
 
+    // Clicking the linkified URL is the link's own click — the body must NOT
+    // turn into an editor.
+    fireEvent.click(link);
+    expect(screen.queryByRole("textbox", { name: "Captured text" })).not.toBeInTheDocument();
+    expect(link).toBeInTheDocument();
+
     // The Spec step's title editor shows the raw text — an editor, not a viewer.
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
     expect(await screen.findByLabelText("Title")).toHaveValue(
@@ -234,10 +240,17 @@ describe("TriagePage", () => {
     };
     const { unmount } = renderTriagePage();
 
-    // Reading surface first — the editor is hidden until the pencil asks for it.
+    // Reading surface first — the editor is hidden until edit is asked for.
     expect(screen.getByText("I realy like this headphones")).toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "Captured text" })).not.toBeInTheDocument();
 
+    // Clicking the body text itself opens the editor (the simple-list rename
+    // pattern) — the pencil button is the visible affordance, not the only path.
+    fireEvent.click(screen.getByText("I realy like this headphones"));
+    expect(screen.getByRole("textbox", { name: "Captured text" })).toBeInTheDocument();
+    fireEvent.blur(screen.getByRole("textbox", { name: "Captured text" }));
+
+    // …and so does the pencil.
     fireEvent.click(screen.getByRole("button", { name: "Edit captured text" }));
     const editor = screen.getByRole("textbox", { name: "Captured text" });
     fireEvent.change(editor, { target: { value: "I really like these headphones" } });

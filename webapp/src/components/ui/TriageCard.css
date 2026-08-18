@@ -44,6 +44,12 @@
   margin: 0;
 }
 
+/* Click-the-text-to-edit: the text cursor says "this is editable" before
+   the corner pencil is ever noticed. */
+.aa-triage-card__body--editable {
+  cursor: text;
+}
+
 .aa-triage-card__body-edit {
   position: absolute;
   top: -4px;

@@ -100,7 +100,20 @@ export function TriageCard({
         </label>
       ) : (
         <div className="aa-triage-card__body-wrap">
-          <p className="aa-triage-card__body">
+          <p
+            className={`aa-triage-card__body${onBodyEdit ? " aa-triage-card__body--editable" : ""}`}
+            onClick={
+              onBodyEdit
+                ? (event) => {
+                    // Click-the-text-to-edit (the simple-list rename pattern).
+                    // A click on a linkified URL is the link's own — open it,
+                    // don't turn the body into an editor.
+                    if ((event.target as HTMLElement).closest("a")) return;
+                    onBodyEdit();
+                  }
+                : undefined
+            }
+          >
             <Linkify text={body} />
           </p>
           {onBodyEdit && (
