@@ -96,6 +96,7 @@ other docs, these win.
 |-----|---------|---------|
 | [`docs/research/wasp-research.md`](docs/research/wasp-research.md) | Can we build the API with wasp.sh? | **Yes, proceed.** |
 | [`docs/research/wasp-report.md`](docs/research/wasp-report.md) | Review of the project's Wasp skills after building the full app. | Improvement report |
+| [`docs/research/wasp-exit-hono-assessment-2026-08-18.md`](docs/research/wasp-exit-hono-assessment-2026-08-18.md) | Leaving Wasp for Vite/React + Hono while preserving domain logic. | **Research only; recommended exit path if approved.** |
 | [`docs/research/deployment-research.md`](docs/research/deployment-research.md) | Where to host (Wasp + VoidZero & Bun). | **Fly.io or Railway.** Cloudflare is client-only. |
 
 **🎨 Mockups — `docs/mockups/`**
