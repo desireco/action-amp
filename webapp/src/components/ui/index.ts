@@ -30,6 +30,7 @@ export type { LensPopoverOption } from "./LensPopover";
 export { InlineEntityEditForm } from "./InlineEntityEditForm";
 export { Kbd, submitOnModEnter } from "./keyboard";
 export { Markdown } from "./Markdown";
+export { Linkify, linkifySegments } from "./Linkify";
 export { ModeDial } from "./ModeDial";
 export type { ModeDialItem } from "./ModeDial";
 export { NavItem } from "./NavItem";

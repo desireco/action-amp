@@ -82,7 +82,7 @@ describe("InboxPage", () => {
       "href",
       "/do/inbox/review",
     );
-    expect(screen.getByRole("link", { name: /email sarah/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /triage.*email sarah/i })).toHaveAttribute(
       "href",
       "/do/inbox/review?i=0",
     );
@@ -115,9 +115,37 @@ describe("InboxPage", () => {
     };
     renderInbox();
 
+    expect(screen.getAllByText("Modern watch face")).toHaveLength(1);
+    // The URL appears once (title only — the duplicate body is suppressed)
+    // and renders as a real link, not raw text.
+    const url = screen.getAllByRole("link", {
+      name: "https://example.com/watch",
+    });
+    expect(url).toHaveLength(1);
+    expect(url[0]).toHaveAttribute("href", "https://example.com/watch");
+    expect(url[0]).toHaveAttribute("target", "_blank");
+  });
+
+  it("linkifies bare URLs in the captured text without losing the triage target", () => {
+    queryState.current = {
+      data: [item("url", "Read https://example.com/guide, then www.foo.dev.")],
+      isLoading: false,
+    };
+    renderInbox();
+
+    const guide = screen.getByRole("link", { name: "https://example.com/guide" });
+    expect(guide).toHaveAttribute("href", "https://example.com/guide");
+    expect(guide).toHaveAttribute("target", "_blank");
+    expect(guide).toHaveAttribute("rel", "noopener noreferrer");
+    // Bare www host gets the https scheme; trailing punctuation stays text.
+    expect(screen.getByRole("link", { name: "www.foo.dev" })).toHaveAttribute(
+      "href",
+      "https://www.foo.dev",
+    );
+    // The row still navigates to triage via its stretched link.
     expect(
-      screen.getAllByText("Modern watch face https://example.com/watch"),
-    ).toHaveLength(1);
+      screen.getByRole("link", { name: /triage.*read https:\/\/example/i }),
+    ).toHaveAttribute("href", "/do/inbox/review?i=0");
   });
 
   it("keeps a distinct structured share body under its title", () => {

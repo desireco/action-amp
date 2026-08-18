@@ -21,6 +21,17 @@ verified: 2026-07-04
   Note(Resource) / Delete, (3) Spec — inline-expanding rows (When/Size/Priority/
   Project/Goal). Ready is gated until lens + filing target set.
 
+**Bare URLs in captured text are real links** (2026-08-18). The row's title
+and body run through `components/ui/Linkify.tsx`: `http(s)://` and `www.`
+tokens render as anchors (`target="_blank"`, `rel="noopener noreferrer"`;
+bare `www.` hosts get the `https://` scheme, trailing sentence punctuation
+stays text, only URL-constructor-valid matches linkify). The row still
+navigates to triage on click via a **stretched link** (`.aa-inbox__row-link`,
+an absolute overlay over the row) so the URL anchors and the media cover
+remain clickable siblings above it — never anchors nested inside the triage
+anchor. Links follow the Markdown.tsx treatment (subtle underline, teal on
+hover).
+
 **Image attachments are viewable** (2026-08-16). Items captured with images
 (Android share target, ⌘K paste/drop, or the CLI) show their media inline.
 The **inbox row leads with a square media cover on the left** — 96px (72px

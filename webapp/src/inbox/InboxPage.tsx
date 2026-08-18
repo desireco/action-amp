@@ -6,6 +6,7 @@ import type { InboxItem } from "@prisma/client";
 import {
   AttachmentCover,
   Chip,
+  Linkify,
   ArrowRightIcon,
   CalendarIcon,
   BoxIcon,
@@ -22,9 +23,12 @@ type InboxItemWithAttachments = InboxItem & {
  * Inbox — the capture destination. Untriaged items, newest first.
  *
  * Each row shows the captured text + parsed-token chips (date/tag/priority)
- * and, for shares, the source hostname. Items with images lead with a square
- * media cover on the left (text/details on the right) — click it for the
- * lightbox. The "Triage" button opens the Tinder-style review walkthrough.
+ * and, for shares, the source hostname. URLs in the text render as real links
+ * (new tab); clicking anywhere else on the row opens triage — via a stretched
+ * link overlay, so the URL anchors and the media cover (below) never nest
+ * inside it. Items with images lead with a square media cover on the left
+ * (text/details on the right) — click it for the lightbox. The "Triage"
+ * button opens the Tinder-style review walkthrough.
  */
 
 export function InboxPage() {
@@ -126,20 +130,20 @@ export function InboxPage() {
                   key={item.id}
                   className={`aa-inbox__item${item.id === targetItemId ? " is-search-target" : ""}`}
                 >
-                  {/* The row wrapper (not the Link) owns the padding/border.
-                      Image rows put the AttachmentCover on the left and the
-                      triage link on the right (the cover is a button itself
-                      and cannot nest inside the link). */}
+                  {/* The row wrapper owns the padding/border and is the
+                      positioning frame for the stretched triage link. The
+                      body is a plain div — the triage target is the
+                      `.aa-inbox__row-link` overlay stretched over the row, so
+                      URL anchors in the text (and the media cover button) are
+                      clickable siblings above it, never anchors nested in an
+                      anchor. */}
                   <div
                     className={`aa-inbox__row${item.attachments.length > 0 ? " aa-inbox__row--media" : ""}`}
                   >
                     {item.attachments.length > 0 && (
                       <AttachmentCover attachments={item.attachments} />
                     )}
-                    <Link
-                      to={`/do/inbox/review?i=${i}`}
-                      className="aa-inbox__row-main"
-                    >
+                    <div className="aa-inbox__row-main">
                       <div className="aa-inbox__row-content">
                         <InboxPreview item={item} />
                         <div className="aa-inbox__row-meta">
@@ -189,10 +193,15 @@ export function InboxPage() {
                             {t}
                           </Chip>
                         ))}
+                        </div>
                       </div>
-                    </div>
                       <ArrowRightIcon className="aa-inbox__row-arrow" />
-                    </Link>
+                    </div>
+                    <Link
+                      to={`/do/inbox/review?i=${i}`}
+                      className="aa-inbox__row-link"
+                      aria-label={`Triage “${previewTitle(item)}”`}
+                    />
                   </div>
                 </li>
               ))}
@@ -204,12 +213,17 @@ export function InboxPage() {
   );
 }
 
+/** The row's display title — a structured share's title, else the raw capture. */
+function previewTitle(item: Pick<InboxItem, "text" | "title">): string {
+  return item.title?.trim() || item.text;
+}
+
 function InboxPreview({
   item,
 }: {
   item: Pick<InboxItem, "text" | "title" | "content">;
 }) {
-  const title = item.title?.trim() || item.text;
+  const title = previewTitle(item);
   // Some shares created before structured fields were consistently sent store
   // the same composed value in both `text` and `content`. Keep the capture
   // readable: render that value once, while preserving a genuinely distinct
@@ -220,8 +234,14 @@ function InboxPreview({
 
   return (
     <>
-      <p className="aa-inbox__row-text">{title}</p>
-      {showContent && <p className="aa-inbox__row-content-text">{content}</p>}
+      <p className="aa-inbox__row-text">
+        <Linkify text={title} />
+      </p>
+      {showContent && (
+        <p className="aa-inbox__row-content-text">
+          <Linkify text={content} />
+        </p>
+      )}
     </>
   );
 }
