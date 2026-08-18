@@ -75,32 +75,18 @@ afterEach(() => {
 const LENS_ME = {
   id: "l1",
   name: "Me",
-  kind: "PERSONAL",
-  type: "LIFE_AREA",
   color: null,
   purpose: null,
   createdAt: "2026-07-01T00:00:00.000Z",
-  counts: { goals: 0, projects: 0, tasks: 2, openItems: 0, checkedItems: 0 },
+  counts: { goals: 0, projects: 0, tasks: 2 },
 };
 const LENS_WORK = {
   id: "l2",
   name: "Work",
-  kind: "WORK",
-  type: "LIFE_AREA",
   color: "indigo",
   purpose: "Day job",
   createdAt: "2026-07-02T00:00:00.000Z",
-  counts: { goals: 1, projects: 3, tasks: 12, openItems: 0, checkedItems: 0 },
-};
-const LENS_SHOPPING = {
-  id: "l3",
-  name: "Shopping",
-  kind: "CUSTOM",
-  type: "SIMPLE_LIST",
-  color: "cyan",
-  purpose: "Groceries",
-  createdAt: "2026-07-03T00:00:00.000Z",
-  counts: { goals: 0, projects: 0, tasks: 0, openItems: 4, checkedItems: 2 },
+  counts: { goals: 1, projects: 3, tasks: 12 },
 };
 
 describe("lens list", () => {
@@ -110,17 +96,15 @@ describe("lens list", () => {
     expect(requestMock).toHaveBeenCalledWith("/api/cli/lens/list", undefined);
   });
 
-  it("human output names each lens with kind + purpose", async () => {
+  it("human output names each lens with purpose", async () => {
     requestMock.mockResolvedValue({ lenses: [LENS_ME, LENS_WORK] });
     const { stdout } = await run(makeLensCommand(), ["list"]);
     expect(stdout).toContain("Me");
-    // Lens identity kinds (personal/work) were removed 2026-08-15 — the
-    // label is now just the type.
-    expect(stdout).toContain("Me (life area)");
+    // The type label was removed 2026-08-18 — every lens is a life area now
+    // (simple lists are a Project type).
+    expect(stdout).not.toContain("life area");
     expect(stdout).toContain("Work");
-    expect(stdout).toContain("Work (life area)");
     expect(stdout).toContain("Day job");
-    expect(stdout).toContain("life area");
   });
 
   it("marks the active lens (matches config.lensId)", async () => {
@@ -173,25 +157,16 @@ describe("lens show", () => {
     );
   });
 
-  it("human output shows name, kind, purpose, counts, id", async () => {
+  it("human output shows name, purpose, counts, id", async () => {
     requestMock.mockResolvedValue({ lens: LENS_WORK });
     const { stdout } = await run(makeLensCommand(), ["show", "Work"]);
     expect(stdout).toContain("Work");
-    // Identity kind dropped 2026-08-15 — label is the type only.
-    expect(stdout).toContain("Work (life area)");
+    expect(stdout).not.toContain("life area");
     expect(stdout).toContain("Day job");
     expect(stdout).toContain("12 tasks");
     expect(stdout).toContain("3 projects");
     expect(stdout).toContain("1 goal");
     expect(stdout).toContain("l2");
-  });
-
-  it("shows Simple-list type and checklist counts", async () => {
-    requestMock.mockResolvedValue({ lens: LENS_SHOPPING });
-    const { stdout } = await run(makeLensCommand(), ["show", "Shopping"]);
-    expect(stdout).toContain("simple list");
-    expect(stdout).toContain("4 open · 2 checked");
-    expect(stdout).not.toContain("projects");
   });
 
   it("null → 'No such lens.'", async () => {
@@ -220,7 +195,7 @@ describe("lens switch", () => {
     expect(readConfig()?.lensId).toBe("l2");
   });
 
-  it("--json emits { ok, id, name, type }", async () => {
+  it("--json emits { ok, id, name }", async () => {
     requestMock.mockResolvedValue({ lens: LENS_WORK });
     const { stdout } = await run(makeLensCommand(), [
       "switch",
@@ -232,16 +207,7 @@ describe("lens switch", () => {
       ok: true,
       id: "l2",
       name: "Work",
-      type: "LIFE_AREA",
     });
-  });
-
-  it("does not promise Life-area commands after switching to a Simple list", async () => {
-    requestMock.mockResolvedValue({ lens: LENS_SHOPPING });
-    const { stdout } = await run(makeLensCommand(), ["switch", "Shopping"]);
-    expect(stdout).toContain("This is a simple list");
-    expect(stdout).not.toContain("project list");
-    expect(readConfig()?.lensId).toBe("l3");
   });
 
   it("not-found → human error on stderr, exit 1, no config write", async () => {

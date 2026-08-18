@@ -39,8 +39,12 @@ export function makeProjectCommand(): Command {
           }
           result.projects.forEach((p, i) => {
             const done = p.isDone ? chalk.gray(" (done)") : "";
-            const count = p.taskCount == null ? "" : chalk.gray(` (${p.taskCount})`);
-            process.stdout.write(`  ${chalk.gray(`${i + 1}.`)} ${p.name}${count}${done}\n`);
+            const list = p.type === "SIMPLE_LIST" ? chalk.gray(" (simple list)") : "";
+            const count =
+              p.type === "SIMPLE_LIST"
+                ? p.openItems != null ? chalk.gray(` (${p.openItems} open)`) : ""
+                : p.taskCount == null ? "" : chalk.gray(` (${p.taskCount})`);
+            process.stdout.write(`  ${chalk.gray(`${i + 1}.`)} ${p.name}${count}${list}${done}\n`);
             p.resources?.forEach((resource) => {
               process.stdout.write(`     ${chalk.gray("↳")} ${resource.title}${resource.url ? chalk.gray(` — ${resource.url}`) : ""}\n`);
             });
@@ -63,9 +67,15 @@ export function makeProjectCommand(): Command {
         result,
         () => {
           if (result.project) {
-            process.stdout.write(`${result.project.name}\n`);
+            const listTag = result.project.type === "SIMPLE_LIST" ? chalk.gray(" (simple list)") : "";
+            process.stdout.write(`${result.project.name}${listTag}\n`);
             if (result.project.description) {
               process.stdout.write(`  ${chalk.gray(result.project.description)}\n`);
+            }
+            if (result.project.type === "SIMPLE_LIST") {
+              const open = result.project.openItems ?? 0;
+              const checked = result.project.checkedItems ?? 0;
+              process.stdout.write(`  ${chalk.gray(`${open} open · ${checked} checked — manage items in the app or with: actionamp capture --list-id ${result.project.id}`)}\n`);
             }
             // The ids make `attachment download <id>` usable from text
             // output (same precedent as `inbox list`).
@@ -95,15 +105,17 @@ export function makeProjectCommand(): Command {
     .option("--lens-id <id>", "lens to create the project in (default: the active lens)")
     .option("--goal-id <id>", "goal the project belongs to")
     .option("--description <text>", "project description")
+    .option("--list", "create a Simple list (a direct checklist) instead of a standard project")
     .option("--json", "emit JSON output")
-    .action(async (name: string, opts: { lensId?: string; goalId?: string; description?: string; json?: boolean }) => {
+    .action(async (name: string, opts: { lensId?: string; goalId?: string; description?: string; list?: boolean; json?: boolean }) => {
       const ctx: OutputCtx = { json: opts.json ?? false };
       const lensId = opts.lensId ?? readConfig()?.lensId;
       if (!lensId) {
         fail("lens-id required (or run: actionamp lens switch <name>).", ctx);
       }
       const body: Record<string, unknown> = { name, lensId: lensId! };
-      if (opts.goalId) body.goalId = opts.goalId;
+      if (opts.list) body.type = "SIMPLE_LIST";
+      if (opts.goalId && !opts.list) body.goalId = opts.goalId;
       if (opts.description) body.description = opts.description;
       const result = await request<{ project: Project }>("/api/cli/project/create", {
         method: "POST",
@@ -112,7 +124,8 @@ export function makeProjectCommand(): Command {
       emit(
         result,
         () => {
-          process.stdout.write(`Created project '${result.project.name}'.\n`);
+          const kind = opts.list ? " (simple list)" : "";
+          process.stdout.write(`Created project '${result.project.name}'${kind}.\n`);
         },
         ctx,
       );

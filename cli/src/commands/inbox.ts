@@ -7,7 +7,8 @@
  * pulling captured images to disk so app/mobile work can loop on real share
  * payloads: `inbox list --json` → attachment ids → `inbox download <id>`.
  *
- * For triage, `--lens-id` is required for task/project decisions but optional
+ * For triage, `--lens-id` is required for task/project/resource decisions;
+ * the list-item decision files into a Simple-list project via `--project-id`.
  * overall: an explicit flag wins, else fall back to the active lens in config
  * (set by `lens switch`).
  */
@@ -59,8 +60,8 @@ export function makeInboxCommand(): Command {
     .command("triage <id>")
     .description("triage an inbox item (decision: task-today, upcoming, someday, project, resource, list-item, archive, delete)")
     .requiredOption("--decision <decision>", "triage decision")
-    .option("--lens-id <id>", "lens to file into (required for task/project/resource/list-item; optional for archive/delete)")
-    .option("--project-id <id>", "existing project to file into")
+    .option("--lens-id <id>", "lens to file into (required for task/project/resource; optional for archive/delete)")
+    .option("--project-id <id>", "existing project to file into (required for list-item — a Simple list)")
     .option("--json", "emit JSON output")
     .action(async (id: string, opts: { decision: string; lensId?: string; projectId?: string; json?: boolean }) => {
       const ctx: OutputCtx = { json: opts.json ?? false };

@@ -18,14 +18,6 @@ import { readConfig, setActiveLens } from "../config.js";
 import { emit, fail, type OutputCtx } from "../output.js";
 import type { Lens } from "../types.js";
 
-function typeLabel(type: Lens["type"]): string {
-  return type === "SIMPLE_LIST" ? "simple list" : "life area";
-}
-
-function lensLabel(lens: Lens): string {
-  return `(${typeLabel(lens.type)})`;
-}
-
 export function makeLensCommand(): Command {
   const lens = new Command("lens");
   lens.description("lens actions (list, show, switch, current)");
@@ -52,7 +44,7 @@ export function makeLensCommand(): Command {
             const active = l.id === activeId ? chalk.cyan(" ← active") : "";
             const purpose = l.purpose ? chalk.gray(` — ${l.purpose}`) : "";
             process.stdout.write(
-              `  ${chalk.gray(`${i + 1}.`)} ${l.name} ${chalk.gray(lensLabel(l))}${purpose}${active}\n`,
+              `  ${chalk.gray(`${i + 1}.`)} ${l.name}${purpose}${active}\n`,
             );
           });
         },
@@ -80,18 +72,13 @@ export function makeLensCommand(): Command {
           const l = result.lens;
           const activeId = readConfig()?.lensId;
           const active = l.id === activeId ? chalk.cyan(" (active)") : "";
-          process.stdout.write(
-            `${l.name}${active} ${chalk.gray(lensLabel(l))}\n`,
-          );
+          process.stdout.write(`${l.name}${active}\n`);
           if (l.purpose) {
             process.stdout.write(`  ${chalk.gray(l.purpose)}\n`);
           }
           if (l.counts) {
             const c = l.counts;
-            const summary =
-              l.type === "SIMPLE_LIST"
-                ? `${c.openItems} open · ${c.checkedItems} checked`
-                : `${c.tasks} task${c.tasks === 1 ? "" : "s"} · ${c.projects} project${c.projects === 1 ? "" : "s"} · ${c.goals} goal${c.goals === 1 ? "" : "s"}`;
+            const summary = `${c.tasks} task${c.tasks === 1 ? "" : "s"} · ${c.projects} project${c.projects === 1 ? "" : "s"} · ${c.goals} goal${c.goals === 1 ? "" : "s"}`;
             process.stdout.write(`  ${chalk.gray(summary)}\n`);
           }
           process.stdout.write(`  ${chalk.gray(l.id)}\n`);
@@ -117,12 +104,10 @@ export function makeLensCommand(): Command {
       const lens = result.lens;
       setActiveLens(lens.id);
       emit(
-        { ok: true, id: lens.id, name: lens.name, type: lens.type },
+        { ok: true, id: lens.id, name: lens.name },
         () => {
           const next =
-            lens.type === "SIMPLE_LIST"
-              ? "  This is a simple list. Checklist items are managed in the app."
-              : "  now / project list / goal list will use it until you switch it again.";
+            "  now / project list / goal list will use it until you switch it again.";
           process.stdout.write(
             `Switched to '${lens.name}'.\n${chalk.gray(next)}\n`,
           );
@@ -165,7 +150,7 @@ export function makeLensCommand(): Command {
             return;
           }
           const l = result.lens;
-          process.stdout.write(`${l.name} ${chalk.gray(lensLabel(l))}\n`);
+          process.stdout.write(`${l.name}\n`);
           if (l.purpose) {
             process.stdout.write(`  ${chalk.gray(l.purpose)}\n`);
           }

@@ -62,10 +62,13 @@ export type Project = {
   permalink?: string;
   description?: string | null;
   isDone: boolean;
+  type?: "STANDARD" | "SIMPLE_LIST";
   goalId?: string | null;
   lensId?: string;
-  _count?: { tasks: number };
+  _count?: { tasks: number; listItems?: number };
   taskCount?: number;
+  openItems?: number;
+  checkedItems?: number;
   resources?: Resource[];
   attachments?: { id: string; filename: string; mimeType: string }[];
 };
@@ -85,7 +88,6 @@ export type Lens = {
   name: string;
   isDefault: boolean;
   isIncluded: boolean;
-  type: "LIFE_AREA" | "SIMPLE_LIST";
   color?: string | null;
   purpose?: string | null;
   createdAt?: string;
