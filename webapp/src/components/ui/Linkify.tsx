@@ -50,9 +50,20 @@ function trimUrl(token: string): string {
   return token.slice(0, end);
 }
 
+/** Display form of a linkified URL: when the query string dominates the URL
+ *  (longer than everything before the `?`), show only the pre-`?` part —
+ *  tracking-heavy commerce links stay readable in the row while the href
+ *  keeps the full URL. */
+function displayUrl(url: string): string {
+  const q = url.indexOf("?");
+  return q !== -1 && q < url.length - q ? url.slice(0, q) : url;
+}
+
 /** Split `text` into text and URL segments. Anything the URL constructor
  *  rejects stays plain text; adjacent text runs (e.g. a trimmed trailing
- *  comma followed by more prose) are merged into one segment. */
+ *  comma followed by more prose) are merged into one segment. A URL segment
+ *  carries the full URL in `href`; `value` is the display form (see
+ *  `displayUrl`). */
 export function linkifySegments(text: string): LinkifySegment[] {
   const segments: LinkifySegment[] = [];
   const pushText = (value: string) => {
@@ -73,7 +84,7 @@ export function linkifySegments(text: string): LinkifySegment[] {
     }
     const start = match.index ?? 0;
     pushText(text.slice(last, start));
-    segments.push({ kind: "url", value: url, href });
+    segments.push({ kind: "url", value: displayUrl(url), href });
     pushText(raw.slice(url.length));
     last = start + raw.length;
   }

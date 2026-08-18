@@ -25,7 +25,9 @@ verified: 2026-07-04
 and body run through `components/ui/Linkify.tsx`: `http(s)://` and `www.`
 tokens render as anchors (`target="_blank"`, `rel="noopener noreferrer"`;
 bare `www.` hosts get the `https://` scheme, trailing sentence punctuation
-stays text, only URL-constructor-valid matches linkify). The row still
+stays text, only URL-constructor-valid matches linkify). URLs whose query
+string is longer than the rest of the address display as just their
+pre-`?` part — the href keeps the full URL. The row still
 navigates to triage on click via a **stretched link** (`.aa-inbox__row-link`,
 an absolute overlay over the row) so the URL anchors and the media cover
 remain clickable siblings above it — never anchors nested inside the triage

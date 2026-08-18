@@ -47,6 +47,29 @@ describe("linkifySegments", () => {
       { kind: "text", value: "example.com and https://" },
     ]);
   });
+
+  it("shortens the display of query-dominated URLs but keeps the full href", () => {
+    const segments = linkifySegments(
+      "https://www.amazon.com/dp/B0H83W7G56?pd_rd_w=7pMbj&pf_rd_p=781fe6e1-9487-4a74-b81e-5a879e5ec273&pf_rd_r=FE1CC5HJMH9GAM759ARD",
+    );
+    expect(segments).toEqual([
+      {
+        kind: "url",
+        value: "https://www.amazon.com/dp/B0H83W7G56",
+        href: "https://www.amazon.com/dp/B0H83W7G56?pd_rd_w=7pMbj&pf_rd_p=781fe6e1-9487-4a74-b81e-5a879e5ec273&pf_rd_r=FE1CC5HJMH9GAM759ARD",
+      },
+    ]);
+  });
+
+  it("keeps the full URL on display when the query is short", () => {
+    expect(linkifySegments("https://example.com/search?q=hi")).toEqual([
+      {
+        kind: "url",
+        value: "https://example.com/search?q=hi",
+        href: "https://example.com/search?q=hi",
+      },
+    ]);
+  });
 });
 
 describe("Linkify", () => {
@@ -80,6 +103,20 @@ describe("Linkify", () => {
 
     const link = screen.getByRole("link", { name: "https://example.com/" });
     expect(link).toHaveAttribute("href", "https://example.com/");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("shows a query-dominated URL shortened, linking to the full address", () => {
+    const full =
+      "https://www.amazon.com/SNOWSKY-Closed-Back-Over-Ear-Headphones-Detachable/dp/B0H83W7G56/ref=pd_ci_mcx_mh_mcx_views_0_image?pd_rd_w=7pMbj&content-id=amzn1.sym.781fe6e1-9487-4a74-b81e-5a879e5ec273&pf_rd_p=781fe6e1-9487-4a74-b81e-5a879e5ec273&pd_rd_wg=UULmS&pd_rd_r=07d8d3c6-9f14-4d55-aadc-d11ba62e9ef6";
+    render(<p>
+      <Linkify text={`Love these headphones ${full}`} />
+    </p>);
+
+    const link = screen.getByRole("link", {
+      name: "https://www.amazon.com/SNOWSKY-Closed-Back-Over-Ear-Headphones-Detachable/dp/B0H83W7G56/ref=pd_ci_mcx_mh_mcx_views_0_image",
+    });
+    expect(link).toHaveAttribute("href", full);
     expect(link).toHaveAttribute("target", "_blank");
   });
 });
