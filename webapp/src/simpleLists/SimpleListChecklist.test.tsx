@@ -21,16 +21,22 @@ vi.mock("wasp/client/operations", () => ({
   clearCompletedListItems,
   useQuery: () => query.current,
 }));
-vi.mock("../components/ui", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ConfirmDialog: ({ title, message, confirmLabel, cancelLabel, onConfirm, onClose }: any) => (
-    <div role="dialog" aria-label={title}>
-      <p>{message}</p>
-      <button onClick={onClose}>{cancelLabel}</button>
-      <button onClick={onConfirm}>{confirmLabel}</button>
-    </div>
-  ),
-}));
+vi.mock("../components/ui", async (importOriginal) => {
+  // Real components except ConfirmDialog (stubbed for dialog assertions) —
+  // Linkify must be the real one so URL rendering is exercised.
+  const actual = await importOriginal<typeof import("../components/ui")>();
+  return {
+    ...actual,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ConfirmDialog: ({ title, message, confirmLabel, cancelLabel, onConfirm, onClose }: any) => (
+      <div role="dialog" aria-label={title}>
+        <p>{message}</p>
+        <button onClick={onClose}>{cancelLabel}</button>
+        <button onClick={onConfirm}>{confirmLabel}</button>
+      </div>
+    ),
+  };
+});
 
 const { SimpleListChecklist } = await import("./SimpleListChecklist");
 
@@ -68,6 +74,35 @@ describe("SimpleListChecklist (a Simple-list Project's body)", () => {
     expect(screen.getByRole("heading", { name: "Checked 1" })).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Check Milk" })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Reopen Bread" })).toBeChecked();
+  });
+
+  it("linkifies bare URLs in the item text without blocking rename", () => {
+    query.current = {
+      data: [
+        {
+          ...item(
+            "link",
+            "Great headphones https://www.amazon.com/dp/B0H83W7G56?pd_rd_w=7pMbj&content-id=amzn1.sym.781fe6e1-9487-4a74-b81e-5a879e5ec273&pf_rd_p=781fe6e1&pf_rd_r=FE1CC5",
+          ),
+        },
+      ],
+      isLoading: false,
+      error: null,
+    };
+    render(<SimpleListChecklist projectId="shopping" />);
+    const anchor = screen.getByRole("link", { name: /amazon\.com/ });
+    // Query-dominated URLs display shortened; the href keeps everything.
+    expect(anchor).toHaveAttribute(
+      "href",
+      "https://www.amazon.com/dp/B0H83W7G56?pd_rd_w=7pMbj&content-id=amzn1.sym.781fe6e1-9487-4a74-b81e-5a879e5ec273&pf_rd_p=781fe6e1&pf_rd_r=FE1CC5",
+    );
+    expect(anchor.textContent).not.toContain("pf_rd_p");
+    // Clicking the link opens it — it does not enter rename mode.
+    fireEvent.click(anchor);
+    expect(screen.queryByRole("textbox", { name: /rename/i })).not.toBeInTheDocument();
+    // Clicking the plain title text still edits.
+    fireEvent.click(screen.getByText(/Great headphones/));
+    expect(screen.getByRole("textbox", { name: /rename/i })).toBeInTheDocument();
   });
 
   it("renders captured context and source without adding task properties", () => {

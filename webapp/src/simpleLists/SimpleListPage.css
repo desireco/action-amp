@@ -153,3 +153,11 @@
   .aa-simple-list__add { flex-direction: column; }
   .aa-simple-list__section li { padding: 0 var(--aa-space-sm); }
 }
+
+/* Linkified URLs in the title/body (Linkify.css carries the link look);
+   the title container is role=button, so the anchors simply nest. */
+.aa-simple-list__title .aa-linkify,
+.aa-simple-list__context .aa-linkify {
+  color: var(--aa-teal-text);
+  word-break: break-all;
+}

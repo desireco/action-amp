@@ -9,7 +9,7 @@ import {
   setListItemDone,
 } from "wasp/client/operations";
 import type { ListItem } from "@prisma/client";
-import { AttachmentThumbs, ConfirmDialog } from "../components/ui";
+import { AttachmentThumbs, ConfirmDialog, Linkify } from "../components/ui";
 import "./SimpleListPage.css";
 
 function errorMessage(error: unknown, fallback: string): string {
@@ -286,12 +286,30 @@ function ListSection(props: ListSectionProps) {
               />
             ) : (
               <div className="aa-simple-list__body">
-                <button className="aa-simple-list__title" type="button" onClick={() => props.onBeginEdit(item)}>
-                  {item.text}
-                </button>
+                {/* role=button (not a <button>) so linkified URLs inside stay
+                    real anchors — clicks on them open the link instead of
+                    entering rename; everything else edits. */}
+                <div
+                  className="aa-simple-list__title"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(event) => {
+                    // A click on a linkified URL opens the link, not the editor.
+                    if (event.target instanceof HTMLElement && event.target.closest("a")) return;
+                    props.onBeginEdit(item);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      props.onBeginEdit(item);
+                    }
+                  }}
+                >
+                  <Linkify text={item.text} />
+                </div>
                 {(item.content || sourceUrl || item.attachments.length > 0) && (
                   <div className="aa-simple-list__context">
-                    {item.content && <p>{item.content}</p>}
+                    {item.content && <p><Linkify text={item.content} /></p>}
                     {sourceUrl && (
                       <a
                         href={sourceUrl}
