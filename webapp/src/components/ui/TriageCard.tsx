@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Chip } from "./Chip";
+import { Linkify } from "./Linkify";
 import { AttachmentGallery, type AttachmentThumb } from "./AttachmentThumbs";
 import "./TriageCard.css";
 
@@ -82,7 +83,9 @@ export function TriageCard({
           />
         </label>
       ) : (
-        <p className="aa-triage-card__body">{body}</p>
+        <p className="aa-triage-card__body">
+          <Linkify text={body} />
+        </p>
       )}
       {meta && <p className="aa-triage-card__meta">{meta}</p>}
       {chips && chips.length > 0 && (

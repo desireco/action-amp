@@ -8,9 +8,12 @@
  * linkified, so the href's scheme is forced to https and `javascript:`-style
  * payloads stay inert text.
  *
- * Styling lives with each caller (`.aa-linkify`); Markdown.tsx's link look
- * (subtle underline, teal on hover) is the reference treatment.
+ * Styling ships with the component (Linkify.css — Markdown.tsx's link look);
+ * surfaces that stretch a link over the text (the inbox row) add their own
+ * positioning/z-index on `.aa-linkify`.
  */
+
+import "./Linkify.css";
 
 const URL_RE = /\b(?:https?:\/\/|www\.)[^\s]+/gi;
 

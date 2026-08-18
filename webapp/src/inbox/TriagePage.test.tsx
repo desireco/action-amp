@@ -203,6 +203,25 @@ describe("TriagePage", () => {
     expect(await screen.findByText(/2 · Specify the task/i)).toBeInTheDocument();
   });
 
+  it("linkifies bare URLs in the read-only Classify card, then edits raw in Spec", async () => {
+    inboxItems.current[0] = {
+      ...inboxItems.current[0],
+      text: "Read https://example.com/guide before standup",
+    };
+    renderTriagePage();
+
+    const link = await screen.findByRole("link", { name: "https://example.com/guide" });
+    expect(link).toHaveAttribute("href", "https://example.com/guide");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+
+    // The Spec step's title editor shows the raw text — an editor, not a viewer.
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    expect(await screen.findByLabelText("Title")).toHaveValue(
+      "Read https://example.com/guide before standup",
+    );
+  });
+
   it("Back from Spec returns to Classify so the type can be changed", async () => {
     renderTriagePage();
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));

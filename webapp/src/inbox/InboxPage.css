@@ -162,24 +162,12 @@
   background: var(--aa-surface-muted);
 }
 
-/* Bare URLs linkified in the captured text — Markdown.tsx's link treatment
-   (subtle underline, teal on hover); above the stretched triage link. */
+/* Bare URLs linkified in the captured text. Base link styling ships with
+   Linkify.css; here they only need to sit above the stretched triage link. */
 .aa-inbox__row-text .aa-linkify,
 .aa-inbox__row-content-text .aa-linkify {
   position: relative;
   z-index: 1;
-  color: var(--aa-text);
-  text-decoration: underline;
-  text-decoration-color: var(--aa-text-4);
-  text-underline-offset: 2px;
-  transition: color var(--aa-dur-fast) var(--aa-ease-out),
-    text-decoration-color var(--aa-dur-fast) var(--aa-ease-out);
-}
-
-.aa-inbox__row-text .aa-linkify:hover,
-.aa-inbox__row-content-text .aa-linkify:hover {
-  color: var(--aa-teal-cta);
-  text-decoration-color: var(--aa-teal);
 }
 
 /* Media rows: the cover button stays above the stretched triage link. */

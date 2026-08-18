@@ -30,7 +30,9 @@ navigates to triage on click via a **stretched link** (`.aa-inbox__row-link`,
 an absolute overlay over the row) so the URL anchors and the media cover
 remain clickable siblings above it — never anchors nested inside the triage
 anchor. Links follow the Markdown.tsx treatment (subtle underline, teal on
-hover).
+hover; base styles ship with `Linkify.css`). The **triage card's read-only
+Classify body linkifies the same way** — the Spec step's title editor stays
+raw text (an editor, not a viewer).
 
 **Image attachments are viewable** (2026-08-16). Items captured with images
 (Android share target, ⌘K paste/drop, or the CLI) show their media inline.
