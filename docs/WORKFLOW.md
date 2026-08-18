@@ -14,13 +14,10 @@
 
 ## 1. The mental model
 
-A Lens has one of two behavioral types:
-
-- **Life area (`LIFE_AREA`)** — the existing Work, Planning, and Review system.
-  Captured items enter its structured work through triage.
-- **Simple list (`SIMPLE_LIST`)** — a direct checklist. It has List Items, but
-  no Goals, Projects, Tasks, Today, focus, or reviews. It shares the universal
-  Capture → Inbox → Triage intake, where its only filing outcome is List Item.
+A Lens is a life area — the top-level scoping switch (Work/Me by default +
+user-defined on Pro). There is no Lens type discriminator anymore (removed
+2026-08-18). Simple lists are a **Project type**: a Simple-list Project is
+one direct checklist that lives in a Lens like any Project.
 
 ```
                             ┌──────────────────────────┐
@@ -41,26 +38,28 @@ A Lens has one of two behavioral types:
   Context = a Lens (Work/Me default + user-defined on Pro). Scopes Tasks,
   Projects, Goals, Resources. Capture + Inbox are NOT scoped — universal.
 
-  Simple-list Lens ── direct add ────────────────▶ List Item
-  Share + selected Simple list ──────────────────▶ List Item
-  Universal Inbox ── triage to Simple-list Lens ─▶ List Item ── check off ──▶ completed
+  Simple-list Project ── direct add ──────────────▶ List Item
+  Share + selected Simple list ───────────────────▶ List Item
+  Universal Inbox ── triage to Simple-list Project ▶ List Item ── check off ──▶ completed
 ```
 
-Life-area items only flow **left to right**: capture → inbox → triage → a Life
-area. Nothing appears in Work/Planning/Review except through triage. Simple-list
+Structured items only flow **left to right**: capture → inbox → triage → a
+Lens. Nothing appears in Work/Planning/Review except through triage. Simple-list
 items have three deliberate entry paths: direct add inside the list, a share
 explicitly sent to that list, or universal capture followed by a one-step triage
 assignment to that list.
 
-A Project may later move to another Life-area Lens. Its actions and history move
+A Project may later move to another Lens. Its actions and history move
 with it; because Goals are Lens-scoped, the Project is unlinked from any goal in
-the previous Lens. Projects never move into a Simple-list Lens.
+the previous Lens. A Simple-list Project moves the same way — its type never
+changes move semantics. Projects switch between Standard and Simple list only
+while empty.
 
 ## 2. The areas
 
 ### 2.1 Capture (Inbox) — pervasive
 
-- The universal area that exists across both Lens types and every normal mode.
+- The universal area that exists across every Lens and mode.
 - `⌘K` opens the capture popover from anywhere. **Enter** commits and
   closes (the common case — one thing on your mind, then back to work);
   **⌘Enter** commits and keeps the popover open to add another (rapid-fire).
@@ -73,8 +72,9 @@ the previous Lens. Projects never move into a Simple-list Lens.
   carries its Project + Lens into triage Classify). See `docs/specs/done/capture-grammar.md`.
 - Capture never asks "where does this go?" — that's triage's job. But capture
   _can_ hint: `[[work]]` / `[[personal]]` / `[[custom]]` preselects any eligible
-  Lens on triage's Classify step. A Simple-list Lens produces a List Item;
-  a matched Project supplies its Life-area Project + Lens destination. Capture
+  Lens on triage's Classify step. A matched Project supplies its Project +
+  Lens destination (Simple-list Projects are not capture targets — a list
+  destination is chosen in triage or share, not capture). Capture
   is about speed (target: thought → inbox in under 2 seconds).
 - Images ride along (2026-08-16): paste (`⌘V`) or drop — on the popover or the
   Capture button — attaches up to four images (≤5 MB each) to the item; they
@@ -82,7 +82,7 @@ the previous Lens. Projects never move into a Simple-list Lens.
 
 ### 2.2 Triage — the transfer
 
-Triage drains the universal Inbox across both Lens types.
+Triage drains the universal Inbox across every Lens.
 
 - Walks the inbox one item at a time. For each item, decide **what it becomes**
   and **where it lands**, through a deliberate **per-item specification wizard**
@@ -94,7 +94,7 @@ Triage drains the universal Inbox across both Lens types.
   Project, Goal, or Resource properties. Captured body and source URL move
   automatically as supporting context. Image attachments move with the item;
   triage never drops them.
-- Filing targets are scoped — triaging an item places it in the **Life-area Lens selected
+- Filing targets are scoped — triaging an item places it in the **Lens selected
   or inferred on the wizard's Classify step** (§5.5). If a concrete Project is
   resolved, that Project supplies both the Project and Lens destination and the
   standalone lens picker is skipped by default.
@@ -207,7 +207,7 @@ Triage drains the universal Inbox across both Lens types.
 
 ### 2.4 Planning Area — organizing
 
-Planning exists only in Life-area Lenses.
+Planning exists in every Lens (all Lenses are life areas).
 
 - Where **Projects** and **Goals** live, and where you organize tasks across
   time horizons.
@@ -219,6 +219,13 @@ Planning exists only in Life-area Lenses.
   removes them, reassigns them, or returns them to Triage. Projects retain
   explicit ordering under a Goal
   (`Project.order`) — the first non-done project surfaces as "Next: <name>".
+- **Simple-list Projects** (moved from Lens type 2026-08-18): a Project whose
+  `type` is `SIMPLE_LIST` is one direct checklist — groceries, packing,
+  errands. It lives in a Lens, sits on the Projects page among Standard
+  projects, and opens at its project page as the checklist (§2.6). No Goal,
+  no Tasks, no Resources, no due date, and no completion lifecycle — archive
+  and delete still work; delete removes its items. Type is chosen at
+  creation; an empty Project may switch types, a populated one never does.
 - Goals: the organizing layer (active outcomes, e.g. "Run a 10k"), always in a
   context. **Same lifecycle as Projects** — complete / reopen / edit / delete /
   re-link; completed Goals surface in the Logbook with a Reopen affordance.
@@ -229,7 +236,7 @@ Planning exists only in Life-area Lenses.
 
 ### 2.5 Review / Reporting Area — reflection
 
-Reviews aggregate Life-area records only. List Items never appear in cadence
+Reviews aggregate structured records only. List Items never appear in cadence
 reviews or the Logbook.
 
 - **Today, Week, and Month reviews** turn completion history into three distinct
@@ -262,22 +269,23 @@ reviews or the Logbook.
   and Month stay live and need no closing action. See
   `docs/specs/weekly-monthly-review.md`.
 
-### 2.6 Simple-list Area — checking off
+### 2.6 Simple-list Projects — checking off
 
-- A Simple-list Lens opens one calm checklist plus universal Inbox access,
-  instead of the Life-area planning/focus shell.
+Simple lists are Projects (§2.4), not a separate area or Lens mode. The normal
+shell stays put — there is no checklist-mode app swap.
+
+- A Simple-list Project opens one calm checklist at its project page. Universal
+  Capture, Inbox, triage, `⌘K`, and `⌘L` remain available.
 - `N` or the visible add control creates a List Item directly. There is no
   capture parsing, Inbox record, triage step, scheduling, priority, or size.
-- A shared item sent to a selected Simple list also creates a List Item directly,
-  preserving its editable description, source URL, and image attachments. It opens that list rather
-  than creating an Inbox item or entering triage.
+- A shared item sent to a selected Simple list also creates a List Item
+  directly, preserving its editable description, source URL, and image
+  attachments. It opens that list rather than creating an Inbox item or
+  entering triage.
 - Checking an item records completion; unchecking restores it. Active items
-  appear before completed items, with stable user-controlled ordering inside
-  each group.
-- Items can be renamed, reordered, and deleted. Completion stays inside this
-  Lens and never feeds Today, focus, Review, or Logbook.
-- `⌘L`, `⌘K`, Inbox, and triage remain available. Life-area planning, focus,
-  review, and structured-creation shortcuts are suppressed.
+  appear before completed items, with stable ordering inside each group.
+- Items can be renamed and deleted. Completion stays inside this Project and
+  never feeds Today, focus, Review, or Logbook.
 
 ### 2.7 First-run guidance — learn the loop by doing
 
@@ -294,23 +302,25 @@ reviews or the Logbook.
 
 ## 3. Context (Lens) scoping
 
-- `Lens.type` is the structural discriminator. `LIFE_AREA` is the default for
-  seeded and existing Lenses; `SIMPLE_LIST` selects the checklist behavior.
-  Lens names carry their human meaning (for example, Me or Work); there is no
-  Personal/Work/Custom category layered above the type.
-- Every Task / Project / Goal / Resource belongs to exactly one **Life-area
-  Lens**. Every List Item belongs to exactly one **Simple-list Lens**. Server
-  writes reject cross-type combinations; the UI boundary is not the guard.
-- **Inbox and Capture are universal across every Lens type. Today and cadence
-  Reviews are universal across Life-area Lenses only.** A captured
+- A Lens is always a life area — there is no type discriminator (removed
+  2026-08-18; simple lists moved to `Project.type`). Lens names carry their
+  human meaning (for example, Me or Work); there is no Personal/Work/Custom
+  category layered above them.
+- Every Task / Project / Goal / Resource belongs to exactly one Lens. Every
+  List Item belongs to exactly one **Simple-list Project** (which itself
+  belongs to a Lens). Server writes reject cross-type combinations — no Tasks
+  or Resources in a Simple-list Project, no List Items outside one; the UI
+  boundary is not the guard.
+- **Inbox and Capture are universal across every Lens. Today and cadence
+  Reviews are universal across Lenses.** A captured
   thought has no lens until triage assigns one (implicitly via the active lens,
   or explicitly if we adopt force-choice — §5). Today is universal so the day's
   commitment can be made across all lenses at once (reversed 2026-07-21, §5.11);
   each Today or Review row carries Lens provenance so it stays visible without
   partitioning the ritual.
-- Switching between Life-area Lenses swaps Work, Planning, and Logbook content.
-  Switching to a Simple-list Lens swaps the entire inner shell to its checklist.
-  Returning to a Life area restores its normal Work/Plan/Review destination.
+- Switching Lenses swaps Work, Planning, and Logbook content. There is no
+  separate checklist shell — a checklist is a Project page, reached like any
+  project.
 - **The switcher is adaptive.** At ≤3 lenses the sidebar shows the segmented
   control (today's `<LensSwitch>`); at ≥4 it collapses to a single chip that
   opens a keyboard-navigable popover (`⌘L`, `↑↓`/`↵`/`/`/`esc`). The swap is
@@ -331,15 +341,13 @@ reviews or the Logbook.
   errors. Inbox and Capture stay neutral — they have no lens. See
   `styles/tokens.css` (`--aa-lens-*`, `--aa-active-lens-*`).
 - **Lens configuration is Pro-only.** Creating, renaming, recoloring,
-  editing-purpose, changing an empty custom Lens's behavioral type, and deleting
-  lenses all require Pro (the Settings → Lenses
+  editing-purpose, and deleting lenses all require Pro (the Settings → Lenses
   tab is `<ProGate>`'d for FREE). FREE gets the seeded two: Me usable, Work
   visible-but-locked (selecting it shows the gate). Pro is soft-capped at
   `PRO_LIMITS.lenses`. The seeded two are renameable/recolorable but never
-  deletable or type-convertible — they're the stable handles. A custom Lens may
-  switch between Life area and Simple list only while empty. When content makes
-  conversion ambiguous, Settings explains the block in a modal rather than
-  silently disabling or discarding content. See `docs/specs/done/custom-lenses.md`.
+  deletable — they're the stable handles. Simple lists are not Lens
+  configuration anymore — they are Projects and follow the project caps.
+  See `docs/specs/done/custom-lenses.md`.
 
 ## 4. The three modes
 
@@ -560,6 +568,17 @@ Lens` while skipping the standalone lens picker by default. See
     only while deciding (the `next` candidate state, picked task included);
     a started task keeps the stage to itself.
 
+13. **Simple lists are a Project type, not a Lens type (locked 2026-08-18).**
+    `LensType` is removed; every Lens is a life area. `Project.type`
+    (`STANDARD` | `SIMPLE_LIST`) owns the checklist behavior: a Simple-list
+    Project contains List Items and nothing else, lives in a Lens, opens at
+    its project page as the checklist, and never participates in Today,
+    focus, Review, or the Logbook. Simple-list Projects count toward plan
+    project caps (FREE: the 3-project cap) — the previous effective Pro-only
+    status (via Pro-only Lens creation) is gone. An empty Project may switch
+    types; a populated one never does (blocked with an explanation, never
+    silently). Spec: `docs/specs/simple-list-projects.md`.
+
 ## 6. Document cascade
 
 The following were updated to match this doc (commit alongside):
@@ -606,6 +625,10 @@ The following were updated to match this doc (commit alongside):
   moved from lens-scoped to universal, matching §5.11. `DATA-MODEL.md` also
   documents the new `User.todayCap` column. One-line tweaks only; no
   structural changes beyond what §3 already records.
+- This §1/§2.4/§2.6/§3 rewrite + `docs/specs/simple-list-projects.md` (added
+  2026-08-18) — Simple lists move from Lens type to Project type
+  (`LensType` removed), matching §5.13. `DATA-MODEL.md`, `TRIAGE.md`,
+  `PAGES.md`, and the feature catalog follow in its cascade.
 
 ## 7. Code work implied by these decisions
 
