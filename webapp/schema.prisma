@@ -242,15 +242,15 @@ model AdminUserAction {
 // Lens — the top-level scoping switch (Work / Me by default + user-defined on Pro)
 // ============================================================
 // Defaults seeded for every user: Work + Me. See src/onboarding/operations.ts.
-// A Lens is either a structured life area or a direct checklist. Default and
+// A Lens is always a life area (the LensType discriminator was removed
+// 2026-08-18 — simple lists are a Project type now). Default and
 // included are product/entitlement facts, never user-facing lens categories.
 // `purpose` is one short line: "what this lens is for."
 model Lens {
   id        String   @id @default(uuid())
   name      String // user-facing label (default "Work"/"Me"; user-defined on Pro)
-  isDefault Boolean  @default(false) // seeded lenses cannot be deleted or type-converted
+  isDefault Boolean  @default(false) // seeded lenses cannot be deleted
   isIncluded Boolean @default(false) // the one Lens available on the Free plan
-  type      LensType @default(LIFE_AREA) // behavioral boundary: structured work or direct checklist
   color     String? // identity color key ("indigo", "emerald", …) from the lens palette in tokens.css
   purpose   String? // one short line: what this lens is for
   createdAt DateTime @default(now())
@@ -261,17 +261,11 @@ model Lens {
   goals    Goal[]
   projects Project[]
   tasks    Task[] // standalone tasks directly in this lens
-  listItems ListItem[]
 
   @@unique([userId, name]) // one user can't have two lenses with the same name
 }
 
-enum LensType {
-  LIFE_AREA
-  SIMPLE_LIST
-}
-
-// A direct checklist row owned by one SIMPLE_LIST Lens. It intentionally has
+// A direct checklist row owned by one SIMPLE_LIST Project. It intentionally has
 // none of Task's planning, focus, hierarchy, or review semantics.
 model ListItem {
   id          String    @id @default(uuid())
@@ -287,12 +281,12 @@ model ListItem {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
-  lens   Lens   @relation(fields: [lensId], references: [id], onDelete: Cascade)
-  lensId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
 
   attachments ListItemAttachment[]
 
-  @@index([lensId, isDone, order])
+  @@index([projectId, isDone, order])
 }
 
 model ListItemAttachment {
@@ -340,7 +334,9 @@ model Goal {
 // Project — an outcome needing >1 step
 // ============================================================
 // Container for Tasks + Resources only. NEVER nested. goalId optional
-// (projects can exist without a goal).
+// (projects can exist without a goal). `type` separates the structured
+// default (STANDARD) from direct checklists (SIMPLE_LIST — contains
+// ListItems and nothing else; moved here from Lens 2026-08-18).
 model Project {
   id          String    @id @default(uuid())
   name        String
@@ -348,6 +344,7 @@ model Project {
   description String?
   dueDate     DateTime?
   isDone      Boolean   @default(false)
+  type        ProjectType @default(STANDARD)
   // Per-Goal sequence (goal-planning spec §E). Projects with no goal sort by
   // name as before; projects under a goal sort by `order` then name. The first
   // non-done project in this order is surfaced as "Next: <name>".
@@ -368,10 +365,16 @@ model Project {
   tasks     Task[]
   resources Resource[]
   attachments ProjectAttachment[]
+  listItems ListItem[]
 
   @@unique([userId, permalink])
   @@index([userId, createdAt])
   @@index([userId, archivedAt])
+}
+
+enum ProjectType {
+  STANDARD
+  SIMPLE_LIST
 }
 
 // Image attachments carried onto a Project by triage (mirrors
