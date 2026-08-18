@@ -175,6 +175,37 @@ describe("TriagePage", () => {
     })));
   });
 
+  it("routes a Simple-list project mention to the one-step list-item flow", async () => {
+    appData.current = {
+      lenses: [
+        { id: "lens-1", name: "Work", color: "indigo" },
+      ],
+    };
+    activeLens.current = { id: "lens-1", name: "Work", color: "indigo" };
+    resolverProjects.current = [
+      { id: "shopping", name: "Shopping", permalink: "shopping", type: "SIMPLE_LIST", lensId: "lens-1", lensName: "Work", lensColor: "indigo" },
+    ];
+    inboxItems.current[0] = {
+      ...inboxItems.current[0],
+      text: "buy oat milk Shopping",
+      parsedProject: "Shopping",
+    };
+    triageInboxItem.mockResolvedValue({ kind: "list-item", id: "li-1" });
+    renderTriagePage();
+    // The mentioned list is preselected and structured types are not offered —
+    // the destination IS a checklist.
+    const listPicker = await screen.findByRole("combobox", { name: "Add to list" });
+    expect(listPicker).toHaveValue("shopping");
+    expect(screen.queryByRole("button", { name: /^Task/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Project/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Add to Shopping" }));
+    await waitFor(() => expect(triageInboxItem).toHaveBeenCalledWith(expect.objectContaining({
+      inboxItemId: "ix-1",
+      decision: "list-item",
+      projectId: "shopping",
+    })));
+  });
+
   it("lets a list-item choice override inferred project context", async () => {
     appData.current = {
       lenses: [

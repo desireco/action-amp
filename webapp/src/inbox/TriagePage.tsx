@@ -226,20 +226,20 @@ export function TriagePage() {
   const { data: resolverProjects } = useQuery(getProjectsForResolver, undefined, {
     enabled: !!activeLens,
   });
-  const projectBridge = useMemo<{ projectId: string; lensId: string; projectName: string } | null>(() => {
+  const projectBridge = useMemo<{ projectId: string; lensId: string; projectName: string; projectType: string } | null>(() => {
     const all = resolverProjects ?? [];
     if (all.length === 0) return null;
     const directlySelected = item?.parsedProjectId
       ? all.find((project) => project.id === item.parsedProjectId)
       : null;
     if (directlySelected) {
-      return { projectId: directlySelected.id, lensId: directlySelected.lensId, projectName: directlySelected.name };
+      return { projectId: directlySelected.id, lensId: directlySelected.lensId, projectName: directlySelected.name, projectType: directlySelected.type };
     }
     const match = resolveProjectCandidate(all, {
       parsedProject: item?.parsedProject,
       text: item?.text,
     });
-    return match ? { projectId: match.id, lensId: match.lensId, projectName: match.name } : null;
+    return match ? { projectId: match.id, lensId: match.lensId, projectName: match.name, projectType: match.type } : null;
   }, [resolverProjects, item?.parsedProject, item?.parsedProjectId, item?.text]);
 
   // An explicit [[lens]] token wins over inferred project context. This is
@@ -253,6 +253,12 @@ export function TriagePage() {
     ? projectDestinationLens
     : inferredLensFromToken ?? projectDestinationLens ?? null;
   const hasProjectDestination = hasExplicitProjectDestination || (!inferredLensFromToken && !!projectBridge && !!projectDestinationLens);
+  // A resolved destination that is a Simple-list Project routes the item to
+  // its checklist (one-step list-item flow) — the direct-checklist analogue
+  // of the old [[simple-list-lens]] token behavior. Structured decisions
+  // are not offered against a list.
+  const isListDestination =
+    hasProjectDestination && projectBridge?.projectType === "SIMPLE_LIST";
   // Drives the hint label: "from project MVP" vs "from [[work]]".
   const lensInferenceLabel = hasExplicitProjectDestination
       ? `selected project ${projectBridge?.projectName}`
@@ -300,12 +306,15 @@ export function TriagePage() {
     setChosenLensId(inferredLens?.id ?? activeLens?.id ?? null);
     setWorking({
       ...initWorking(),
-      projectId: hasProjectDestination ? projectBridge.projectId : null,
+      type: hasProjectDestination && projectBridge?.projectType === "SIMPLE_LIST" ? "list-item" : "task",
+      projectId: hasProjectDestination && projectBridge?.projectType !== "SIMPLE_LIST" ? projectBridge.projectId : null,
     });
-    setListProjectId(null);
+    setListProjectId(
+      hasProjectDestination && projectBridge?.projectType === "SIMPLE_LIST" ? projectBridge.projectId : null,
+    );
     setChipOpen(false);
     setEditingBody(false);
-  }, [item, activeLens?.id, initWorking, inferredLens, hasProjectDestination, projectBridge?.projectId]);
+  }, [item, activeLens?.id, initWorking, inferredLens, hasProjectDestination, projectBridge]);
 
   useEffect(() => {
     if (!item || step !== "classify" || lensTouchedRef.current) return;
@@ -319,6 +328,17 @@ export function TriagePage() {
   useEffect(() => {
     if (!item || !hasProjectDestination || !projectBridge || !projectDestinationLens) return;
     setChosenLensId(projectDestinationLens.id);
+    // The resolver source loads async — when the bridge lands after init,
+    // route a list destination into the one-step list-item flow.
+    if (projectBridge.projectType === "SIMPLE_LIST") {
+      setListProjectId(projectBridge.projectId);
+      setWorking((current) =>
+        current && current.type !== "list-item" && current.type !== "delete"
+          ? { ...current, type: "list-item", projectId: null }
+          : current,
+      );
+      return;
+    }
     setWorking((current) =>
       current && current.projectId !== projectBridge.projectId
         ? { ...current, projectId: projectBridge.projectId }
@@ -559,6 +579,7 @@ export function TriagePage() {
                   (p: { type: string }) => p.type === "SIMPLE_LIST",
                 )}
                 listProjectId={listProjectId}
+                restrictToListItem={isListDestination}
                 hasAttachments={Boolean(item.attachments?.length)}
                 hasProjectDestination={hasProjectDestination}
                 destination={
@@ -657,6 +678,7 @@ function ClassifyStep({
   lenses,
   listProjects,
   listProjectId,
+  restrictToListItem,
   hasAttachments,
   hasProjectDestination,
   destination,
@@ -673,6 +695,7 @@ function ClassifyStep({
   lenses: ClassifyLens[];
   listProjects: ClassifyListProject[];
   listProjectId: string | null;
+  restrictToListItem: boolean;
   hasAttachments: boolean;
   hasProjectDestination: boolean;
   destination: { project: string; lens: string } | null;
@@ -754,6 +777,14 @@ function ClassifyStep({
       )}
       <div className="aa-triage-types">
         {TRIAGE_TYPES
+          // A resolved list destination only accepts checklist (or delete)
+          // outcomes — the direct-checklist analogue of the old Lens-type
+          // restriction.
+          .filter(({ t }) =>
+            restrictToListItem
+              ? t === "list-item" || t === "delete"
+              : true,
+          )
           // A captured/resolved project means this is a task *in* that project
           // by default, not a new project by the same name — hide that option.
           .filter(({ t }) => !(t === "project" && (hasParsedProject || hasProjectDestination)))

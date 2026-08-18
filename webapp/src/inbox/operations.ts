@@ -9,7 +9,7 @@ import type {
 } from "wasp/server/operations";
 import { type ParsedPriority, type ParsedSize } from "./parseCapture";
 import { FREE_LIMITS } from "../billing/config";
-import { assertLensAllowed, assertUnderCap } from "../billing/entitlementHttp";
+import { assertLensAllowed, assertUnderCap, throwHttpStatus } from "../billing/entitlementHttp";
 // Pure cores shared with /api/cli/* routes — auth + entitlement guards stay
 // here (the wrapper), the DB shape lives in the core. See operationsCore.ts.
 import {
@@ -114,26 +114,39 @@ export const triageInboxItem = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
-  const result = await triageInboxItemCore(context.entities, {
-    userId: context.user.id,
-    inboxItemId: args.inboxItemId,
-    decision: args.decision,
-    lensId: args.lensId,
-    goalId: args.goalId,
-    projectId: args.projectId,
-    name: args.name,
-    priority: args.priority,
-    size: args.size,
-    content: args.content,
-    assertLens: async (lensId) => {
-      await assertLensAllowed(context, lensId);
-    },
-    assertProjectCap: (lensId, currentCount) =>
-      assertUnderCap(context, lensId, currentCount, FREE_LIMITS.projects, {
-        feature: "a 4th project",
-        reason: "organize more than 3 projects with Pro",
-      }),
-  });
+  let result;
+  try {
+    result = await triageInboxItemCore(context.entities, {
+      userId: context.user.id,
+      inboxItemId: args.inboxItemId,
+      decision: args.decision,
+      lensId: args.lensId,
+      goalId: args.goalId,
+      projectId: args.projectId,
+      name: args.name,
+      priority: args.priority,
+      size: args.size,
+      content: args.content,
+      assertLens: async (lensId) => {
+        await assertLensAllowed(context, lensId);
+      },
+      assertProjectCap: (lensId, currentCount) =>
+        assertUnderCap(context, lensId, currentCount, FREE_LIMITS.projects, {
+          feature: "a 4th project",
+          reason: "organize more than 3 projects with Pro",
+        }),
+    });
+  } catch (err) {
+    // The pure core throws plain Errors for business rules (tenancy,
+    // destination/type mismatches, validation). Left alone they surface as
+    // raw 500s with axios noise; rethrow as a 400 so the client shows the
+    // message itself. Anything non-Error (tagged entitlement rejections
+    // already threw HttpError) passes through untouched.
+    if (err instanceof Error && err.constructor === Error) {
+      throwHttpStatus(400, err.message);
+    }
+    throw err;
+  }
   await context.entities.User.updateMany({
     where: { id: context.user.id, onboardingStage: "TRIAGE" },
     data: { onboardingStage: "COMPLETE" },
