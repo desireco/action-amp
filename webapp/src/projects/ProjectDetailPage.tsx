@@ -290,6 +290,7 @@ export function ProjectDetailPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["getProject"] });
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjectsForResolver"] });
       queryClient.invalidateQueries({ queryKey: ["getTasks"] });
       queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
@@ -304,6 +305,7 @@ export function ProjectDetailPage() {
     await setProjectDone({ id: project.id, isDone: !project.isDone });
     queryClient.invalidateQueries({ queryKey: ["getProject"] });
     queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjectsForResolver"] });
     queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     // After completing, leave the detail page — the project leaves the active
@@ -331,6 +333,7 @@ export function ProjectDetailPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["getProject"] });
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjectsForResolver"] });
       queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
       setEditing(false);
     } catch (e) {
@@ -347,6 +350,7 @@ export function ProjectDetailPage() {
       await updateProject({ id: project.id, goalId });
       queryClient.invalidateQueries({ queryKey: ["getProject"] });
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjectsForResolver"] });
       queryClient.invalidateQueries({ queryKey: ["getGoals"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
       setPickingGoal(false);
@@ -369,6 +373,7 @@ export function ProjectDetailPage() {
       await updateTask({ id: taskId, projectId: targetProjectId });
       queryClient.invalidateQueries({ queryKey: ["getProject"] });
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjectsForResolver"] });
       queryClient.invalidateQueries({ queryKey: ["getTasks"] });
       queryClient.invalidateQueries({ queryKey: ["getGoals"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
@@ -391,6 +396,7 @@ export function ProjectDetailPage() {
       input.targetProjectId = deleteTargetProjectId;
     await deleteProject(input);
     queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjectsForResolver"] });
     queryClient.invalidateQueries({ queryKey: ["getTasks"] });
     queryClient.invalidateQueries({ queryKey: ["getGoals"] });
     queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
@@ -403,6 +409,7 @@ export function ProjectDetailPage() {
     if (!project) return;
     await archiveProject({ id: project.id });
     queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjectsForResolver"] });
     queryClient.invalidateQueries({ queryKey: ["getLogbook"] });
     queryClient.invalidateQueries({ queryKey: ["getAppData"] });
     setConfirmArchive(false);
@@ -416,6 +423,7 @@ export function ProjectDetailPage() {
       await moveProject({ id: project.id, targetLensId });
       queryClient.invalidateQueries({ queryKey: ["getProject"] });
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      queryClient.invalidateQueries({ queryKey: ["getProjectsForResolver"] });
       queryClient.invalidateQueries({ queryKey: ["getTasks"] });
       queryClient.invalidateQueries({ queryKey: ["getGoals"] });
       queryClient.invalidateQueries({ queryKey: ["getLenses"] });

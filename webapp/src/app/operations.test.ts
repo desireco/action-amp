@@ -134,7 +134,7 @@ describe("getAppData — happy path", () => {
     // Lenses carry their identity color + isIncluded entitlement flag + purpose.
     expect(m.entities.Lens.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        select: { id: true, name: true, color: true, isIncluded: true, type: true, purpose: true },
+        select: { id: true, name: true, color: true, isIncluded: true, purpose: true },
       }),
     );
   });

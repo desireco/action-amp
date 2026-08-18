@@ -14,10 +14,12 @@ import { signupNewUser, openCapture } from "./helpers";
 
 async function createListProject(page: Page, name: string) {
   await page.goto("/do/projects");
+  // Wait for the list to settle (the composer remounts when loading finishes).
+  await expect(page.getByText(/Loading projects…/)).toBeHidden({ timeout: 10_000 });
   await page.getByRole("button", { name: /new project/i }).click();
   const composer = page.locator(".aa-record-composer");
-  await composer.getByLabel(/^project$/i).fill(name);
-  await composer.getByRole("radio", { name: /simple list/i }).click();
+  await composer.getByRole("textbox", { name: /^project$/i }).fill(name);
+  await composer.getByRole("radio", { name: /^simple list/i }).click();
   await composer.getByRole("button", { name: /create project/i }).click();
   await page.getByRole("link", { name }).waitFor({ state: "visible", timeout: 10_000 });
 }
@@ -39,11 +41,13 @@ test("a Simple-list Project is created, opened, and checked off in place", async
   await expect(page.getByRole("checkbox", { name: /check passport/i })).toBeVisible({ timeout: 10_000 });
 
   // Checking records completion; the checked group collects it and
-  // Clear checked removes it for good.
+  // Clear checked removes it for good (the dialog's confirm shares the
+  // name — scope to the dialog for the second click).
   await page.getByRole("checkbox", { name: /check passport/i }).click();
   await expect(page.getByRole("checkbox", { name: /reopen passport/i })).toBeVisible({ timeout: 10_000 });
-  await page.getByRole("button", { name: /clear checked/i }).click();
-  await page.getByRole("button", { name: /^clear checked$/i }).click();
+  await page.locator(".aa-simple-list__clear").click();
+  const dialog = page.getByRole("dialog", { name: /clear checked items/i });
+  await dialog.getByRole("button", { name: /^clear checked$/i }).click();
   await expect(page.getByText("List clear.")).toBeVisible({ timeout: 10_000 });
 });
 
@@ -61,7 +65,10 @@ test("triage files a captured thought into a Simple list in one step", async ({ 
   await expect(page.getByText("Oat milk")).toBeVisible({ timeout: 10_000 });
 
   await page.locator(".aa-triage-types button").filter({ hasText: /^List item/ }).click();
-  await page.getByRole("combobox", { name: /add to list/i }).selectOption({ label: "Groceries" });
+  // Options carry the lens suffix ("Groceries · Me") — pick by the leading name.
+  const listPicker = page.getByRole("combobox", { name: /add to list/i });
+  const optionValue = await listPicker.locator("option", { hasText: /^Groceries/ }).getAttribute("value");
+  await listPicker.selectOption(optionValue!);
   await page.getByRole("button", { name: /add to groceries/i }).click();
   await expect(page.getByText("Oat milk")).toHaveCount(0, { timeout: 10_000 });
 

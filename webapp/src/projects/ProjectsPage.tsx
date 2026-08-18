@@ -125,6 +125,9 @@ export function ProjectsPage() {
         });
       }
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+      // The resolver feeds the triage list picker + share optgroup — a fresh
+      // list must appear there immediately, not after a refetch window.
+      queryClient.invalidateQueries({ queryKey: ["getProjectsForResolver"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
       queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });
       setCreating(false);
