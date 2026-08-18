@@ -50,7 +50,7 @@
 - [entitlements](./entitlements.md) (`shipped`) — server-side caps + ProGate paywall.
 - [billing](./billing.md) (`shipped`) — 3 Pro prices + Founding 100 (server-enforced cap).
 - [custom-lenses](./custom-lenses.md) (`shipped`) — user-defined lenses; Pro CRUD; `⌘L` switcher; per-lens identity.
-- [simple-list-lenses](./simple-list-lenses.md) (`shipped`, spec `review`) — Pro direct-checklist Lens type; isolated ListItems; list-only shell; browser persistence acceptance remains.
+- [simple-list-projects](./simple-list-projects.md) (`review`, spec `review`) — direct-checklist Project type (moved off the Lens 2026-08-18); isolated ListItems; checklist renders on the project page; lists count toward project caps.
 - [onboarding](./onboarding.md) (`shipped`) — `/welcome`, server flag, 3 seed tasks.
 - [auth](./auth.md) (`partial`) — **passwordless email live** (magic-link code + link, replaces passwords); Google OAuth code present but disabled.
 - [landing](./landing.md) (`partial`) — signup + Founding-100 CTAs; newsletter capture **missing but intended** (see [newsletter](./newsletter.md)).

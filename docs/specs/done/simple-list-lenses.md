@@ -8,6 +8,10 @@ kind: spec
 
 # Feature: Simple-list Lenses
 
+> **SUPERSEDED 2026-08-18** by [`simple-list-projects.md`](simple-list-projects.md)
+> — simple lists moved from a Lens type to a Project type; `LensType` was
+> removed. This document is historical.
+>
 > Product plan approved and implementation code-verified 2026-08-10. Status is
 > `review`, not `done`: automated verification passes, but the full browser
 > persistence path still needs a Wasp process started with the new generated

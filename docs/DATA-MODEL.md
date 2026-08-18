@@ -71,13 +71,17 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
 > retrospective answers written after it ends. Transitioning a period never
 > replaces its earlier check-in.
 >
-> v10 (planned 2026-08-10): **Typed Lenses and direct checklists.** `Lens.type`
-> separates the existing `LIFE_AREA` behavior from `SIMPLE_LIST`. Existing and
-> seeded Lenses default to `LIFE_AREA`. A `ListItem` belongs to one Simple-list
-> Lens and has checklist lifecycle fields plus optional captured body/source and
-> image attachments
-> context. It can be created directly or transformed from an InboxItem during
-> triage; it never becomes a Task or enters focus, Review, or Logbook.
+> v10 (2026-08-10, superseded 2026-08-18): **Typed Lenses and direct
+> checklists.** Originally shipped as `Lens.type`
+> (`LIFE_AREA` | `SIMPLE_LIST`); a `ListItem` belonged to one Simple-list Lens.
+> v13 below supersedes this — simple lists are a Project type now.
+>
+> v13 (2026-08-18): **Simple lists are a Project type.** `LensType` is
+> removed — every Lens is a life area. `Project.type`
+> (`STANDARD` | `SIMPLE_LIST`) owns the checklist behavior: a Simple-list
+> Project contains ListItems (re-homed `lensId` → `projectId`) and nothing
+> else. It lives in a Lens, sits on the Projects page, opens at its project
+> URL, and never participates in Today, focus, Review, or Logbook.
 >
 > v11 (2026-08-16): **Attachment carry across triage.** `TaskAttachment`,
 > `ProjectAttachment`, and `ResourceAttachment` (all the same shape as
@@ -93,21 +97,21 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
 ## 1. The entity hierarchy
 
 ```
-  Lens(type=LIFE_AREA) ← Work/Me (defaults) + user-defined on Pro
-                   carries stable kind (PERSONAL/WORK/CUSTOM) + identity color + purpose
+  Lens              ← Work/Me (defaults) + user-defined on Pro
+                   carries identity color + purpose (a life area — no type since 2026-08-18)
    └─ Goal        ← the organizing layer — replaces PARA's Areas
         └─ Project ← an outcome that needs >1 step  [PARA Project / GTD outcome]
-                   (Projects under a Goal sort by `Project.order` then name)
+                   (Projects under a Goal sort by `Project.order` then name;
+                    type: STANDARD | SIMPLE_LIST)
              ├─ ProjectAttachment ← captured image carried onto the project by triage
-             ├─ Task        ← an atomic action (THE focus candidate)
+             ├─ Task        ← an atomic action (THE focus candidate; STANDARD only)
              │    ├─ TaskUpdate   ← append-only notes/activity log (kind = NOTE | COMPLETED)
              │    ├─ TaskSession  ← recorded focus session (start/end, planned minutes, completed)
              │    └─ TaskAttachment ← captured image carried onto the task by triage
-             └─ Resource    ← reference material, not an action  [PARA Resource]
-                  └─ ResourceAttachment ← captured image carried onto the resource by triage
-
-  Lens(type=SIMPLE_LIST)
-   └─ ListItem    ← directly added checklist row (title, order, completedAt)
+             ├─ Resource    ← reference material, not an action  [PARA Resource] (STANDARD only)
+             │    └─ ResourceAttachment ← captured image carried onto the resource by triage
+             └─ ListItem    ← checklist row (SIMPLE_LIST only: title, order, completedAt)
+                              + ListItemAttachment
 
   Tag             ← GTD "@context": #errands, #phone, ~15m, low-energy
                      (focus refinements — Phase 2 nuance; `#`-prefixed at capture per grammar v2)
@@ -132,13 +136,11 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
   outcome-oriented ("Run a 10k", "Ship product v2") rather than passive buckets
   ("Health", "Work"). Projects link to a Goal to express _why_ they matter;
   Tasks do not align directly to Goals.
-- **Lens** = the top-level switch. `kind` controls seeded identity and
-  entitlement; `type` controls product behavior. Every Goal, Project,
-  standalone Task, and Resource belongs to a `LIFE_AREA` Lens. Every List Item
-  belongs to a `SIMPLE_LIST` Lens. Switching type changes the inner shell.
-- **ListItem** = one directly managed checklist row. It has a title, stable
-  order, completion timestamp, ownership through its Lens, and optional image
-  attachments. It has no Task
+- **Lens** = the top-level switch — a life area. Every Goal, Project,
+  standalone Task, and Resource belongs to exactly one Lens.
+- **ListItem** = one directly managed checklist row inside a Simple-list
+  Project. It has a title, stable order, completion timestamp, ownership
+  through its Project, and optional image attachments. It has no Task
   scheduling, hierarchy, priority, size, focus, triage, or review semantics.
 - **Archive** = where completed/dead items go. (PARA "Archive" / our Logbook.)
 - **Tag** = GTD "@context" — cross-cutting labels for focus refinement.
@@ -183,7 +185,7 @@ type controls which outcomes are eligible:
 | **"This is a step in something I'm already doing"** | → **Task** inside an existing **Project**         | "Draft press release" → "Q3 launch" project      |
 | **"This is reference, not an action"**              | → **Resource** filed under a **Project**          | "Competitor pricing PDF" → "Q3 launch" resources |
 | **"This supports a bigger goal"**                   | → **Project** linked to a **Goal**                | "Launch newsletter" → Goal: "Grow audience"      |
-| **"This belongs on a simple checklist"**           | → **ListItem** in a **Simple-list Lens**          | "Buy oat milk" → Shopping                        |
+| **"This belongs on a simple checklist"**           | → **ListItem** in a **Simple-list Project**      | "Buy oat milk" → Shopping list                   |
 
 So the InboxItem is **polymorphic at rest, concrete after triage.** A Life-area
 destination uses structured outcomes; a Simple-list destination uses only
@@ -220,15 +222,15 @@ Once triaged, items live in views defined by their attributes — _not_ by folde
 - **Goals** — all Goals in the active Lens, with their linked Projects rolled up.
 - **Archive / Logbook** — completed/dead items (PARA "Archive").
 
-The Inbox is the only Life-area intake queue. A Simple-list Lens is an explicit
+The Inbox is the only intake queue. A Simple-list Project is an explicit
 exception: its List Items form a directly managed checklist, not a derived view.
 
 ---
 
 ## 5. Implications for the focus engine ("Next")
 
-The matcher only ever considers **Tasks in `LIFE_AREA` Lenses** (never List
-Items, Resources, or bare Projects):
+The matcher only ever considers **Tasks** (never List Items, Resources, or
+bare Projects):
 
 - A **Task** inside a **Project** is a candidate.
 - A **Project** with no Tasks is invisible to focus (it's a container, not an action) — though the UI can show "this Project has no next action" as a nudge.
@@ -243,9 +245,9 @@ Items, Resources, or bare Projects):
   (shipped 2026-07-03; was Phase 2): create / rename / recolor / edit-purpose /
   delete at `/do/settings/lenses`. FREE gets the seeded two — Me usable, Work
   visible-but-locked.
-- In an active `LIFE_AREA` Lens, Projects, Goals, Tasks, Resources, and the
-  focus engine are scoped normally. An active `SIMPLE_LIST` Lens exposes only
-  that Lens's List Items and skips the Life-area queries and shell.
+- In the active Lens, Projects, Goals, Tasks, Resources, and the
+  focus engine are scoped normally. A Simple-list Project is just a Project
+  page — there is no checklist shell mode (removed 2026-08-18).
 - Switching Lens is one keystroke — **`⌘L`** (or chip+popover at ≥4 lenses).
   Active-lens state keys on `Lens.id` (not name) since 2026-07-03.
 - **Cross-lens exceptions** (an overdue Work item surfacing while you're in Me)
@@ -260,7 +262,7 @@ Items, Resources, or bare Projects):
 
 The "Next" engine, in its simplest form:
 
-1. Candidates = **Tasks** in the **active `LIFE_AREA` Lens** that are Today/overdue.
+1. Candidates = **Tasks** in the **active Lens** that are Today/overdue.
 2. Sort by **priority** (highest first).
 3. Surface the top 1 (max 3). Done.
 

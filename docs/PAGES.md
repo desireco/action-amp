@@ -42,9 +42,8 @@ Persistent UI that frames every page:
 └──────────┴──────────────────────────────────────────────┘
 ```
 
-- **Lens switch** at the top of the sidebar — changes scope and, when Lens type
-  changes, the inner shell. A Simple-list Lens keeps the switcher and account
-  chrome but replaces the focus navigation with its checklist.
+- **Lens switch** at the top of the sidebar — changes scope. There is no
+  checklist shell mode (removed 2026-08-18 — simple lists are Projects).
 - **Focus switch** (Work / Plan / Review) is an expanding-section nav — only one
   section open at a time. Capture (`⌘K`) and Inbox stay pinned outside both.
 - Active page highlighted. Counts (Inbox `(4)`) live-update.
@@ -53,8 +52,8 @@ Persistent UI that frames every page:
 
 ## 1. Primary pages (sidebar nav)
 
-These are the main Life-area destinations. Scoped surfaces use the active
-`LIFE_AREA` Lens; universal surfaces aggregate eligible Life-area Lenses.
+These are the main destinations. Scoped surfaces use the active Lens;
+universal surfaces aggregate all lenses.
 
 ### P1. Next → `/do`
 
@@ -110,8 +109,9 @@ The universal queue. (FEATURES F3.) Shows untriaged InboxItems as a list.
 Per-item co-author wizard (DATA-MODEL §3, TRIAGE.md §4). The
 single-card one-key dispatch is **gone**. Three steps per item:
 
-Simple-list Lenses appear as List Item destinations. Selecting one replaces the
-structured Type + Spec flow with an editable one-step **Add to list** confirmation.
+Choosing **List item** replaces the Lens pills with a Simple-list Project
+picker and the structured Type + Spec flow with an editable one-step
+**Add to list** confirmation.
 
 - **Classify** — Type chooser (one-line rows w/ leading icon: Task / Project /
   Resource / Archive) + Lens pills. A resolved Project supplies both Project +
@@ -192,21 +192,19 @@ Completed + archived items. (PARA "Archive" / FEATURES F18.)
 - Grouped by completion date and discoverable through the sitewide palette.
 - **Completed Goals surface here** since 2026-07-05, with a Reopen affordance.
 - No editing — restore or permanently delete only.
-- List Items are excluded; completion remains inside the Simple-list Lens.
+- List Items are excluded; completion remains inside the Simple-list Project.
 
-### P10. Simple list → `/do/list`
+### P10. Simple-list Project → `/do/projects/:permalink` (type `SIMPLE_LIST`)
 
-The primary Lens-scoped surface when the active Lens has `type=SIMPLE_LIST`.
+A Simple-list Project opens its checklist in place of the task sections
+(the `/do/list` route and the checklist shell mode were removed 2026-08-18).
 
-- Direct add creates a List Item in the active Lens; no Capture or Inbox record.
+- Direct add creates a List Item in the project; no Capture or Inbox record.
 - Active items precede completed items. Each row supports toggle, rename,
-  reorder, and delete.
-- Universal Inbox, triage, and Capture remain reachable. No Goals, Projects,
-  Tasks, Today, Upcoming, Someday, focus, Review, Logbook, or Life-area
-  navigation is rendered.
-- Opening `/do/list` with a Life-area Lens redirects to `/do`. Opening a
-  Life-area-only route with a Simple-list Lens redirects to `/do/list`;
-  `/do/inbox` and `/do/inbox/review` remain valid universal routes.
+  and delete.
+- The normal shell stays: universal Inbox, triage, and Capture remain
+  reachable. No goal, due date, completion lifecycle, tasks, or resources —
+  archive and delete still work.
 
 ---
 
@@ -292,7 +290,7 @@ Post-auth redirect → `/do` (Next).
 
 - **Account** — email, password, linked social accounts, delete account.
 - **Preferences** — theme (dark default), Today cap (default 5, or off), confirmation sounds, momentum toggle.
-- **Lenses** (`/do/settings/lenses`) — Pro-only CRUD for lenses: add/rename/recolor/edit-purpose/change-empty-custom-type/delete. Creation requires a behavioral type: **Life area** or **Simple list**. Empty custom Lenses may switch type. Populated Lenses keep their type; selecting the other type opens a modal explaining which content must be moved or removed first. FREE gets `<ProGate>`. Seeded two are Life areas, renameable/recolorable, and never deletable or type-convertible.
+- **Lenses** (`/do/settings/lenses`) — Pro-only CRUD for lenses: add/rename/recolor/edit-purpose/delete. FREE gets `<ProGate>`. Seeded two are renameable/recolorable and never deletable. Simple lists are not lens configuration (removed 2026-08-18) — they are Projects created from the Projects page.
 - **Billing** (`/do/settings/billing`) — Stripe-managed subscription surface.
 - **Shortcuts** — view/customize keyboard map.
 
@@ -303,7 +301,6 @@ Post-auth redirect → `/do` (Next).
 ```
 Authenticated app routes (all under /do):
   /do                                    Next (home, the chooser)
-  /do/list                               Active Simple-list Lens checklist
   /do/focus                              Focus (Variant F, single-task)
   /do/inbox                              Inbox
   /do/inbox/review                       Triage walkthrough (Classify → Spec → Complete)

@@ -1,3 +1,5 @@
+<!-- SUPERSEDED 2026-08-18: simple lists moved from Lens type to Project type
+     (docs/specs/simple-list-projects.md). This build queue is historical. -->
 # Simple-list Lenses — Model-friendly Task Queue
 
 > Queue state: **active; correction lane authorized**. Original SL01-SL13 were

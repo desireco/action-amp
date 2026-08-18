@@ -46,15 +46,17 @@ review screen before anything is saved.
    showing the save action and **Not now**. The source link is saved as an
    attached-reference property; images are previewed then saved as attachments
    (up to four images, 5 MB each). The user can optionally edit its title and
-   description, then select a Project (as a triage destination) or Simple list
-   (which saves directly to that list, skipping triage). Android's duplicated page
-   titles are removed. Nothing reaches the server until the user confirms.
+   description, then select a Project (as a triage destination) or Simple-list
+   Project (which saves directly to that list, skipping triage). Android's
+   duplicated page titles are removed. Nothing reaches the server until the
+   user confirms.
 3. With Inbox or a Project selected, saving calls the normal `createInboxItem`
-   action; a Project is preselected for triage. With a Simple list selected,
-   saving calls `createListItem` directly and opens that list, carrying its image
-   attachments with it.
+   action; a Project is preselected for triage. With a Simple-list Project
+   selected, saving calls `createListItem` directly and opens that project's
+   page, carrying its image attachments with it.
 4. Inbox saves open `/do/inbox`, where the new item is first in the universal
-   inbox; direct Simple-list saves open `/do/list`.
+   inbox; direct Simple-list saves open the list's project page
+   (`/do/projects/:permalink`).
 
 **Wiring:**
 

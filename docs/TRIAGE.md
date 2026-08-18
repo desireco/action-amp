@@ -24,8 +24,9 @@
 >   visible and reversible.
 > - Triage never auto-clutters Work — the default Task outcome is Upcoming
 >   (the bench); committing to Today is explicit. Demoting to Someday is, too.
-> - Triage accepts both Lens types. `SIMPLE_LIST` is a one-step List Item
->   destination; direct add inside the list remains available.
+> - Simple lists moved from Lens type to Project type (2026-08-18): the
+>   list-item decision files into a Simple-list Project (one-step flow;
+>   direct add inside the list remains available).
 
 ---
 
@@ -97,7 +98,7 @@ What an InboxItem can become (DATA-MODEL.md §3). One input shape, five outputs.
 | step in existing work | **Task** inside an existing **Project** | "Draft press release" → "Q3 launch" |
 | reference, not action | **Resource** (link/note) under a **Project** | "Competitor PDF" → "Q3 launch" |
 | supports a bigger goal | **Project** linked to a **Goal** | "Launch newsletter" → Goal: "Grow audience" |
-| belongs on a flat checklist | **List Item** in a **Simple-list Lens** | "Buy oat milk" → Shopping |
+| belongs on a flat checklist | **List Item** in a **Simple-list Project** | "Buy oat milk" → Shopping list |
 | captured by mistake | **Delete** — the InboxItem is hard-removed, not recoverable | misheard voice capture, wrong lens, duplicate |
 
 **Delete** (`4` in Classify) hard-removes the InboxItem and is not recoverable.
@@ -144,12 +145,11 @@ The wizard (per item):
 3. **Ready** — commits the spec; gated until the destination is valid and
    (for Task/Resource) a filing target is set.
 
-When Classify selects a `SIMPLE_LIST` Lens, Lens type resolves what the item
-becomes. Classify switches to a compact List Item confirmation with editable
-text and **Add to list**; Spec and Ready are skipped. No task metadata appears.
-Body text and source URL preserve automatically. An image-backed capture cannot
-be represented by a checklist row, so dispatch is rejected without deleting
-the InboxItem.
+Choosing **List item** replaces the Lens pills with a Simple-list Project
+picker (across lenses) and switches Classify to a compact confirmation with
+editable text and **Add to list**; Spec and Ready are skipped. No task
+metadata appears. Body text, source URL, and image attachments move with
+the item automatically.
 
 The spec rows are **inline-expanding**: tap a row → the options expand beneath
 it (no floating popover, no separate sheet — *except* Project/Goal/Parent,
@@ -191,11 +191,10 @@ Today** — the user must actively promote a task to Today.
 | Priority | **Normal** | |
 | Project | **General** (= no `projectId`) | scoped per Lens, not global. A `#project` capture token links if a project by that name exists in the chosen Lens; otherwise General (no auto-create). |
 | Goal | none | Tasks do not align directly to goals; projects can support goals. |
-| Lens | the active Lens | Life areas expose structured outcomes; Simple-list Lenses expose only List Item |
+| Lens | the active Lens | structured outcomes file into a Lens; the list-item decision files into a Simple-list Project instead |
 
 Parser pre-fills any token the user typed at capture (`tomorrow`, `!3`, `~XL`,
-`#deep-work`, `[[work]]`) — defaults only fill the gaps. A `[[lens]]` token
-resolves only to a Life-area Lens. `#` is a tag, `@` is
+`#deep-work`, `[[work]]`) — defaults only fill the gaps. `#` is a tag, `@` is
 time only, `[[lens]]` is the explicit lens override (§7.5). Project intent is
 resolver-driven from free text — a matched project name carries its lens into
 this step. `[[ ]]` precedence beats project-inferred lens when they disagree.
@@ -213,9 +212,9 @@ required, never in the way. **No triage walkthrough, no expanded editor, no
 command state on mobile.** Capture lands in the Inbox; triage happens later,
 on desktop.
 
-In a Simple-list Lens, mobile keeps direct add and checkboxes while also keeping
-Capture and Inbox available. Captured items wait for triage like every other
-Inbox item; assigning one to the active list uses the compact List Item path.
+A Simple-list Project keeps direct add and checkboxes on mobile while
+Capture and Inbox stay available. Captured items wait for triage like every
+other Inbox item; assigning one uses the compact List Item path.
 
 **The capture field grows, never scrolls sideways.** LOCKED 2026-06-22 —
 same element on every platform: starts as one line, wraps to a second on

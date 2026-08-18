@@ -15,7 +15,7 @@
 ## 1. The philosophy: modal, not menu
 
 ActionAmp's Life-area Lens is a **modal interface**, in the tradition of VIM /
-Emacs / Helix / Tmux. A Simple-list Lens deliberately uses a smaller direct
+Emacs / Helix / Tmux. A Simple-list Project deliberately uses a smaller direct
 checklist interaction; it is not squeezed into Mode × Scope.
 
 - **Menu apps** (every other task manager): navigation is a sidebar of nouns
@@ -106,21 +106,21 @@ Each mode below specifies: **purpose**, **entry**, **exit**, **keyset**,
 - **Chrome:** full HUD — top bar (brand/lens/breadcrumb/theme), side rails, bottom dial + zoom + capture.
 - **Indicator:** `NORMAL` (or hidden — it's the default).
 
-### SIMPLE LIST surface
+### SIMPLE LIST surface (a Project page)
 
 - **Purpose:** capture and check off a flat list without planning overhead.
-- **Entry:** select a `SIMPLE_LIST` Lens. The current Lens remains the route and
-  ownership context.
-- **Exit:** `⌘L` and select another Lens.
+- **Entry:** open a Simple-list Project (`/do/projects/:permalink`,
+  `type=SIMPLE_LIST`). There is no checklist shell mode (removed 2026-08-18) —
+  the normal shell stays put.
+- **Exit:** navigate anywhere; `⌘L` still switches Lens.
 - **Keyset:** `N` add · `J`/`K` move selection · `Space` toggle completion ·
-  `E` rename · `Delete`/`Backspace` delete · `Esc` cancel editing · `⌘L`
-  switch Lens. Text inputs suppress single-key commands.
-- **Mobile:** visible add control; tap checkbox to toggle; tap title to edit;
-  reorder handle when ordering is available.
-- **Chrome:** Lens switcher, theme/account controls, and list content only. No
-  Life-area mode dial, scope controls, Capture, Inbox, Today, Planning, Review,
-  or focus affordance.
-- **Indicator:** none; the Lens name and checklist shape provide orientation.
+  `E` rename · `Delete`/`Backspace` delete · `Esc` cancel editing. Text inputs
+  suppress single-key commands.
+- **Mobile:** visible add control; tap checkbox to toggle; tap title to edit.
+- **Chrome:** the full normal chrome — lens switcher, Inbox, Capture, Today,
+  Planning, Review all remain reachable. The checklist replaces the project
+  page's task sections only.
+- **Indicator:** none; the project name and checklist shape provide orientation.
 
 ### Review cadence navigation
 
@@ -176,8 +176,8 @@ commands.
 ### CAPTURE mode (`⌘K`)
 
 - **Purpose:** dump a thought into the universal Inbox, fast.
-- **Boundary:** available in both Lens types. `N` remains direct add inside a
-  Simple-list Lens; `⌘K` always captures for later triage.
+- **Boundary:** universal. `N` remains direct add inside a Simple-list
+  Project; `⌘K` always captures for later triage.
 - **Entry:** `⌘K` (even inside Working mode — the focus-protector).
 - **Exit:** `Enter` (saves to Inbox, returns to prior mode) / `Esc` (cancels).
 - **Keyset:** type freely; NL parsing chips appear inline; `Tab` cycles field focus.
@@ -188,8 +188,8 @@ commands.
 ### TRIAGE mode (Inbox review)
 
 - **Purpose:** GTD clarify — one Inbox item at a time, decide what it becomes.
-- **Boundary:** available only in Life-area Lenses; its Lens chooser excludes
-  Simple-list Lenses.
+- **Boundary:** universal; its Lens chooser covers every lens (the list-item
+  decision picks a Simple-list Project instead).
 - **Entry:** click Inbox count / `I` from Normal.
 - **Exit:** `Esc` / `Q` (done triaging) / empty inbox.
 - **Wizard flow** (replaces the old single-card dispatch): **Classify → Spec →
@@ -216,9 +216,8 @@ commands.
 
 ### SEARCH mode (`/`)
 
-- **Purpose:** find user-owned Life-area records across eligible Lenses and
-  lifecycle states. List Item search is deferred from the first Simple-list
-  release.
+- **Purpose:** find user-owned records across lenses and lifecycle states.
+  List Item search remains deferred.
 - **Entry:** `/` from Normal mode; the visible search button is the pointer/touch equivalent.
 - **Exit:** `Enter` (open result) / `Esc` (cancel).
 - **Keyset:** type query; ↑↓ navigate; Enter opens. `/` never steals text from an input/editor.

@@ -25,6 +25,9 @@
   included with recurring yearly Pro. Monthly, Free, Founding 100, and the
   unadvertised $90 prepaid option do not include the workshop. Scheduling is
   handled after purchase; no automated booking flow is claimed.
+- **Simple lists count as projects** (2026-08-18): a Simple-list Project is a
+  regular Project for caps — FREE can create them within the 3-project cap.
+  (Previously effectively Pro-only via Pro-only lens creation.)
 - **Founding 100:** **$99 one-time, lifetime (DECIDED 2026-07-10)** — capped at
   exactly 100 spots; a launch patron tier. CTA disabled until checkout + cap
   enforcement are wired. See §3 Model C.

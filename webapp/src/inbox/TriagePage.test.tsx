@@ -22,12 +22,12 @@ const inboxItems = {
 
 const appData = {
   current: {
-    lenses: [{ id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" }],
+    lenses: [{ id: "lens-1", name: "Work", color: "indigo" }],
   },
 };
 
 const activeLens = {
-  current: { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" },
+  current: { id: "lens-1", name: "Work", color: "indigo" },
 };
 
 const projects = {
@@ -45,7 +45,11 @@ const resolverProjects = {
   current: [] as Array<{
     id: string;
     name: string;
+    permalink?: string;
+    type?: string;
     lensId: string;
+    lensName?: string | null;
+    lensColor?: string | null;
   }>,
 };
 
@@ -103,9 +107,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.useRealTimers();
   appData.current = {
-    lenses: [{ id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" }],
+    lenses: [{ id: "lens-1", name: "Work", color: "indigo" }],
   };
-  activeLens.current = { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" };
+  activeLens.current = { id: "lens-1", name: "Work", color: "indigo" };
   projects.current = [];
   resolverProjects.current = [];
   inboxItems.current = [
@@ -129,8 +133,8 @@ describe("TriagePage", () => {
   it("offers Simple-list Lenses as destination choices", () => {
     appData.current = {
       lenses: [
-        { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" },
-        { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" },
+        { id: "lens-1", name: "Work", color: "indigo" },
+        { id: "shopping", name: "Shopping", color: "cyan" },
       ],
     };
     renderTriagePage();
@@ -329,11 +333,11 @@ describe("TriagePage", () => {
   it("uses a resolved Project as the destination and skips standalone Lens selection", async () => {
     appData.current = {
       lenses: [
-        { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" },
-        { id: "lens-2", name: "Me", kind: "PERSONAL", type: "LIFE_AREA", color: "emerald" },
+        { id: "lens-1", name: "Work", color: "indigo" },
+        { id: "lens-2", name: "Me", color: "emerald" },
       ],
     };
-    activeLens.current = { id: "lens-2", name: "Me", kind: "PERSONAL", type: "LIFE_AREA", color: "emerald" };
+    activeLens.current = { id: "lens-2", name: "Me", color: "emerald" };
     inboxItems.current = [
       {
         id: "ix-1",
