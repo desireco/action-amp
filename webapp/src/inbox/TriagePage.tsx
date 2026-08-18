@@ -190,17 +190,24 @@ export function TriagePage() {
   //      whitespace/sentence-boundary match; longest wins on ties. No fuzzy.
   // Link-only: no match → lands in General, user picks manually. No auto-create,
   // so a typo never spawns a stray project. (Declared after `item`/`projects`.)
+  // Structured projects only — a Simple-list Project is a checklist, never a
+  // task/resource filing target, so it can't be the resolver's fallback or a
+  // Spec-step picker option.
+  const structuredProjects = useMemo(
+    () => (projects ?? []).filter((project: Project) => project.type !== "SIMPLE_LIST"),
+    [projects],
+  );
   const resolvedProjectId = useMemo(() => {
     if (item?.parsedProjectId) {
-      return (projects ?? []).some((project: Project) => project.id === item.parsedProjectId)
+      return structuredProjects.some((project: Project) => project.id === item.parsedProjectId)
         ? item.parsedProjectId
         : null;
     }
-    return resolveProjectCandidate(projects ?? [], {
+    return resolveProjectCandidate(structuredProjects, {
       parsedProject: item?.parsedProject,
       text: item?.text,
     })?.id ?? null;
-  }, [item?.parsedProject, item?.parsedProjectId, item?.text, projects]);
+  }, [item?.parsedProject, item?.parsedProjectId, item?.text, structuredProjects]);
 
   // ---- Lens inference: [[ ]] token → real lens (explicit path) ----
   // Lens tokens resolve on the Lens's user-facing name.
@@ -483,7 +490,7 @@ export function TriagePage() {
     setChipOpen,
     setStep,
     setWorkingType: (type) => {
-      if (type === "project" && hasProjectDestination) return;
+      if (type === "project" && hasProjectDestination && !isListDestination) return;
       setW({ type });
     },
     selectLensByIndex,
@@ -500,12 +507,12 @@ export function TriagePage() {
   // the SpecRow display and what dispatch sends; a manual pick always wins.
   const effectiveProjectId = working?.projectId ?? resolvedProjectId ?? null;
   const projectName =
-    (projects ?? []).find((p: Project) => p.id === effectiveProjectId)?.name ?? null;
+    structuredProjects.find((p: Project) => p.id === effectiveProjectId)?.name ?? null;
   const projectGoalName =
     (goals ?? []).find((g: Goal) => g.id === working?.projectGoalId)?.name ?? null;
   const parentName = working
     ? working.parentProjectId
-      ? (projects ?? []).find((p: Project) => p.id === working.parentProjectId)?.name ?? null
+      ? structuredProjects.find((p: Project) => p.id === working.parentProjectId)?.name ?? null
       : null
     : null;
 
@@ -588,7 +595,7 @@ export function TriagePage() {
                   (p: { type: string }) => p.type === "SIMPLE_LIST",
                 )}
                 listProjectId={listProjectId}
-                restrictToListItem={isListDestination}
+                isListDestination={isListDestination}
                 hasAttachments={Boolean(item.attachments?.length)}
                 hasProjectDestination={hasProjectDestination}
                 destination={
@@ -645,7 +652,7 @@ export function TriagePage() {
         }}
         itemPresent={!!item}
         shortText={shortText}
-        projects={projects ?? []}
+        projects={structuredProjects}
         goals={goals ?? []}
         working={working}
         effectiveProjectId={effectiveProjectId}
@@ -687,7 +694,7 @@ function ClassifyStep({
   lenses,
   listProjects,
   listProjectId,
-  restrictToListItem,
+  isListDestination,
   hasAttachments,
   hasProjectDestination,
   destination,
@@ -704,7 +711,7 @@ function ClassifyStep({
   lenses: ClassifyLens[];
   listProjects: ClassifyListProject[];
   listProjectId: string | null;
-  restrictToListItem: boolean;
+  isListDestination: boolean;
   hasAttachments: boolean;
   hasProjectDestination: boolean;
   destination: { project: string; lens: string } | null;
@@ -746,8 +753,15 @@ function ClassifyStep({
               No lists yet — create one from the Projects page.
             </p>
           )}
+          {isListDestination && inferenceLabel && (
+            <p className="aa-triage-step__hint" aria-live="polite">
+              {inferenceLabel} — matched a list in your capture, so this is
+              preselected. Pick another type above to file it as structured
+              work instead.
+            </p>
+          )}
         </>
-      ) : hasProjectDestination ? (
+      ) : hasProjectDestination && !isListDestination ? (
         <div className="aa-triage-destination">
           <span className="aa-triage-destination__label">Destination</span>
           <span className="aa-triage-destination__value">
@@ -786,17 +800,11 @@ function ClassifyStep({
       )}
       <div className="aa-triage-types">
         {TRIAGE_TYPES
-          // A resolved list destination only accepts checklist (or delete)
-          // outcomes — the direct-checklist analogue of the old Lens-type
-          // restriction.
-          .filter(({ t }) =>
-            restrictToListItem
-              ? t === "list-item" || t === "delete"
-              : true,
-          )
-          // A captured/resolved project means this is a task *in* that project
-          // by default, not a new project by the same name — hide that option.
-          .filter(({ t }) => !(t === "project" && (hasParsedProject || hasProjectDestination)))
+          // The full menu always renders — a matched list is a DEFAULT, not a
+          // mode. A captured/resolved STRUCTURED project means this is a task
+          // *in* that project by default, not a new project by the same name.
+          .filter(({ t }) => !(t === "project" && hasParsedProject && !isListDestination))
+          .filter(({ t }) => !(t === "project" && hasProjectDestination && !isListDestination))
           .map(({ t, label, sub, Icon }) => (
             <button
               key={t}

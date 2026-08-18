@@ -175,7 +175,7 @@ describe("TriagePage", () => {
     })));
   });
 
-  it("routes a Simple-list project mention to the one-step list-item flow", async () => {
+  it("defaults a Simple-list project mention to the list flow without restricting the menu", async () => {
     appData.current = {
       lenses: [
         { id: "lens-1", name: "Work", color: "indigo" },
@@ -192,17 +192,49 @@ describe("TriagePage", () => {
     };
     triageInboxItem.mockResolvedValue({ kind: "list-item", id: "li-1" });
     renderTriagePage();
-    // The mentioned list is preselected and structured types are not offered —
-    // the destination IS a checklist.
+    // Intelligence, not a mode: the mentioned list is preselected on the
+    // one-step flow, the why is visible, and the full menu stays available.
     const listPicker = await screen.findByRole("combobox", { name: "Add to list" });
     expect(listPicker).toHaveValue("shopping");
-    expect(screen.queryByRole("button", { name: /^Task/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^Project/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/matched a list in your capture/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Task/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Resource/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Add to Shopping" }));
     await waitFor(() => expect(triageInboxItem).toHaveBeenCalledWith(expect.objectContaining({
       inboxItemId: "ix-1",
       decision: "list-item",
       projectId: "shopping",
+    })));
+  });
+
+  it("lets a list-mention item be filed as a Task instead — the bridge never becomes the task target", async () => {
+    appData.current = {
+      lenses: [
+        { id: "lens-1", name: "Work", color: "indigo" },
+      ],
+    };
+    activeLens.current = { id: "lens-1", name: "Work", color: "indigo" };
+    resolverProjects.current = [
+      { id: "shopping", name: "Shopping", permalink: "shopping", type: "SIMPLE_LIST", lensId: "lens-1", lensName: "Work", lensColor: "indigo" },
+    ];
+    inboxItems.current[0] = {
+      ...inboxItems.current[0],
+      text: "buy oat milk Shopping",
+      parsedProject: "Shopping",
+    };
+    triageInboxItem.mockResolvedValue({ kind: "task", id: "t-1" });
+    renderTriagePage();
+    await screen.findByRole("combobox", { name: "Add to list" });
+    // Override the smart default with Task — the list picker gives way to the
+    // lens pills and dispatch never targets the Simple-list project.
+    fireEvent.click(screen.getByRole("button", { name: /^Task/ }));
+    await screen.findByRole("radiogroup", { name: "Lens" });
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /^ready$/i }));
+    await waitFor(() => expect(triageInboxItem).toHaveBeenCalledWith(expect.objectContaining({
+      decision: "upcoming",
+      lensId: "lens-1",
+      projectId: undefined,
     })));
   });
 
