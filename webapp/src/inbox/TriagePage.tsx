@@ -60,7 +60,10 @@ const TEXT_SAVE_DEBOUNCE_MS = 600;
  *                        write back to the InboxItem (debounced), so the
  *                        inbox keeps the correction if triage is abandoned.
  *   2. Spec            — inline-expanding property rows (When / Size / Priority
- *                        / Project for a Task), value-tinted.
+ *                        / Project for a Task), value-tinted, plus the task's
+ *                        Context body. The title stays a reading surface here
+ *                        too — click to edit; most captures don't need
+ *                        renaming.
  *   3. Ready           — commits the spec; gated until destination + filing target
  *                        (for Task/Resource) are set.
  *
@@ -532,7 +535,7 @@ export function TriagePage() {
             key={item.id}
             body={working.title}
             onBodyChange={
-              step === "spec" || isSimpleListDestination || editingBody
+              editingBody || isSimpleListDestination
                 ? (text) => {
                     setW({ title: text });
                     if (step !== "spec") scheduleTextSave(item.id, text);
@@ -540,14 +543,12 @@ export function TriagePage() {
                 : undefined
             }
             onBodyBlur={
-              editingBody && step !== "spec" && !isSimpleListDestination
+              editingBody && !isSimpleListDestination
                 ? () => setEditingBody(false)
                 : undefined
             }
             onBodyEdit={
-              step === "classify" && !isSimpleListDestination
-                ? () => setEditingBody(true)
-                : undefined
+              !isSimpleListDestination ? () => setEditingBody(true) : undefined
             }
             autoFocusBody={editingBody}
             bodyLabel={step === "spec" ? "Title" : "Captured text"}
@@ -809,14 +810,14 @@ function SpecStep({
               onOpenChange={onChipOpenChange}
             />
             <label className="aa-triage-notes">
-              <span className="aa-triage-notes__label">Notes</span>
+              <span className="aa-triage-notes__label">Context</span>
               <textarea
                 className="aa-triage-notes__textarea"
-                aria-label="Task notes"
+                aria-label="Task context"
                 value={working.content}
                 onChange={(e) => setW({ content: e.target.value })}
                 rows={4}
-                placeholder="Add details, criteria, or reminders"
+                placeholder="Add details, links, or next steps."
               />
             </label>
           </>

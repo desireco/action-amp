@@ -32,20 +32,26 @@ navigates to triage on click via a **stretched link** (`.aa-inbox__row-link`,
 an absolute overlay over the row) so the URL anchors and the media cover
 remain clickable siblings above it — never anchors nested inside the triage
 anchor. Links follow the Markdown.tsx treatment (subtle underline, teal on
-hover; base styles ship with `Linkify.css`). The **triage card's read-only
-Classify body linkifies the same way** — the Spec step's title editor stays
-raw text (an editor, not a viewer).
+hover; base styles ship with `Linkify.css`). Both card bodies — Classify's
+capture and Spec's title — are reading surfaces first, so URLs stay links
+wherever the text is shown.
 
 **The capture is editable in triage** (2026-08-18). The Classify card's body
-is a reading surface until its pencil affordance ("Edit captured text")
+is a reading surface until it is clicked (or its pencil, "Edit captured
+text") — click-the-text-to-edit, the simple-list rename pattern — which
 swaps in the "Captured text" editor (focused on open; blur returns the
 reading view). Edits update the future entity's title immediately AND write
 back to the stored `InboxItem` on a ~600 ms debounce
 (`updateInboxItem`, UNPROCESSED-only by WHERE — a late flush after dispatch
 no-ops instead of racing the delete), so an abandoned triage session still
-leaves the inbox text corrected. Spec's "Title" editor stays local-only —
-renaming the future entity is not editing the capture. Simple-list triage
-(whose Classify step was always an editor) now persists its edits too.
+leaves the inbox text corrected. The **Spec step's title is likewise
+read-only until clicked** ("Edit title" / click the text) — most captures
+don't need renaming, so an editor is never the default state — and its
+edits stay local-only: renaming the future entity is not editing the
+capture. Simple-list triage (whose Classify step was always an editor)
+persists its edits too. The Spec step's task body is labeled **Context**,
+matching the task page (`Task.content` — the task's editable, Markdown-
+rendered description), not a transient note.
 
 **Image attachments are viewable** (2026-08-16). Items captured with images
 (Android share target, ⌘K paste/drop, or the CLI) show their media inline.

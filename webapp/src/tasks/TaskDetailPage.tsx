@@ -423,7 +423,7 @@ export function TaskDetailPage() {
               </p>
               {content && (
                 <div className="aa-task-done-panel__notes">
-                  <span className="aa-task-label">Notes</span>
+                  <span className="aa-task-label">Context</span>
                   <Markdown>{content}</Markdown>
                 </div>
               )}

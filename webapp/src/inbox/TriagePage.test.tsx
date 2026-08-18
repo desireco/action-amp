@@ -224,8 +224,14 @@ describe("TriagePage", () => {
     expect(screen.queryByRole("textbox", { name: "Captured text" })).not.toBeInTheDocument();
     expect(link).toBeInTheDocument();
 
-    // The Spec step's title editor shows the raw text — an editor, not a viewer.
+    // Spec keeps the title as a reading surface too — the URL stays a link…
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    expect(
+      await screen.findByRole("link", { name: "https://example.com/guide" }),
+    ).toBeInTheDocument();
+
+    // …and the pencil opens the raw-text editor (an editor, not a viewer).
+    fireEvent.click(screen.getByRole("button", { name: "Edit title" }));
     expect(await screen.findByLabelText("Title")).toHaveValue(
       "Read https://example.com/guide before standup",
     );
@@ -276,7 +282,11 @@ describe("TriagePage", () => {
     renderTriagePage();
 
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Title" }), {
+    // Spec's title is a reading surface until clicked — most captures don't
+    // need renaming, so the editor shouldn't be the default state.
+    expect(screen.queryByRole("textbox", { name: "Title" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Email Sarah"));
+    fireEvent.change(await screen.findByRole("textbox", { name: "Title" }), {
       target: { value: "Email Sarah about Q3" },
     });
     fireEvent.click(screen.getByRole("button", { name: /^ready$/i }));
@@ -371,12 +381,12 @@ describe("TriagePage", () => {
     expect(screen.queryByText(/inbox zero/i)).not.toBeInTheDocument();
   });
 
-  it("lets task notes be added during Spec and sends them to triage", async () => {
+  it("lets task context be added during Spec and sends it to triage", async () => {
     triageInboxItem.mockResolvedValue({ id: "task-1" });
     renderTriagePage();
 
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
-    const notes = await screen.findByLabelText(/task notes/i);
+    const notes = await screen.findByLabelText(/task context/i);
     fireEvent.change(notes, { target: { value: "  Call out invoice terms  " } });
     fireEvent.click(screen.getByRole("button", { name: /^ready$/i }));
 
@@ -396,7 +406,8 @@ describe("TriagePage", () => {
 
     expect(screen.queryByRole("textbox", { name: "Title" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
-    const title = screen.getByRole("textbox", { name: "Title" });
+    fireEvent.click(screen.getByRole("button", { name: "Edit title" }));
+    const title = await screen.findByRole("textbox", { name: "Title" });
     fireEvent.change(title, { target: { value: "Email Sarah about Q3" } });
     fireEvent.click(screen.getByRole("button", { name: /^ready$/i }));
 
@@ -412,6 +423,7 @@ describe("TriagePage", () => {
 
     expect(screen.queryByRole("textbox", { name: "Title" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit title" }));
     const title = screen.getByRole("textbox", { name: "Title" });
     title.focus();
     fireEvent.keyDown(title, { key: "Enter" });
@@ -424,7 +436,8 @@ describe("TriagePage", () => {
     renderTriagePage();
 
     fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Title" }), {
+    fireEvent.click(screen.getByRole("button", { name: "Edit title" }));
+    fireEvent.change(await screen.findByRole("textbox", { name: "Title" }), {
       target: { value: "   " },
     });
 
