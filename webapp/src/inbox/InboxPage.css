@@ -151,7 +151,12 @@
   inset: 0;
 }
 
-.aa-inbox__row:has(.aa-inbox__row-link:hover) .aa-inbox__row-main,
+/* Nudge on row hover — constant across the whole row, so the content never
+   shifts as the pointer crosses between the stretched link and the URL
+   anchors above it (a link-scoped :has() here would nudge/un-nudge and make
+   a link jitter under a cursor resting near its edge). Keyboard focus on
+   the stretched link gets parity. */
+.aa-inbox__row:hover .aa-inbox__row-main,
 .aa-inbox__row:has(.aa-inbox__row-link:focus-visible) .aa-inbox__row-main {
   padding-left: 3px;
 }
