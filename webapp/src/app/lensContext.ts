@@ -22,8 +22,6 @@ export interface ActiveLens {
   color: string | null;
   /** Whether this is the Lens included with the Free plan. */
   isIncluded?: boolean;
-  /** Behavioral boundary for the structured workspace or direct checklist. */
-  type: "LIFE_AREA" | "SIMPLE_LIST";
   /** One short line: what this lens is for. */
   purpose: string | null;
 }

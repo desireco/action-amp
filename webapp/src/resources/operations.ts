@@ -10,9 +10,12 @@ export const createResource = (async (args, context) => {
   if (!context.user) throw new Error("Not authenticated.");
   const project = await context.entities.Project.findFirst({
     where: { id: args.projectId, userId: context.user.id },
-    select: { lensId: true },
+    select: { lensId: true, type: true },
   });
   if (!project) throwHttpStatus(404, "Project not found.");
+  if (project.type === "SIMPLE_LIST") {
+    throwHttpStatus(400, "A Simple-list Project keeps only checklist items.");
+  }
   await assertLensAllowed(context, project.lensId);
   const result = await createResourceCore(context.entities, { userId: context.user.id, ...args });
   return result.resource;

@@ -136,69 +136,6 @@ beforeEach(() => {
 });
 
 describe("AppShell Lens workflows", () => {
-  it("routes to the list when a Simple-list Lens is selected", async () => {
-    localStorage.setItem("aa-lens-id", life.id);
-    renderShell();
-    // SAFETY: querySelector returns Element; cast to HTMLElement for within() interaction.
-    const sidebar = document.querySelector(".aa-app-side") as HTMLElement;
-    fireEvent.click(
-      within(sidebar).getByRole("button", { name: "Lens: Life" }),
-    );
-    fireEvent.click(screen.getByRole("option", { name: /Shopping/ }));
-    await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent("/do/list"),
-    );
-  });
-
-  it("routes back to home when a Life-area Lens is selected from the list", async () => {
-    localStorage.setItem("aa-lens-id", shopping.id);
-    renderShell("/do/list");
-    // SAFETY: querySelector returns Element; cast to HTMLElement for within() interaction.
-    const sidebar = document.querySelector(".aa-app-side") as HTMLElement;
-    fireEvent.click(
-      within(sidebar).getByRole("button", { name: "Lens: Shopping" }),
-    );
-    fireEvent.click(screen.getByRole("option", { name: /Life/ }));
-    await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent("/do"),
-    );
-  });
-
-  it("normalizes a stored Simple-list Lens while retaining universal intake", async () => {
-    localStorage.setItem("aa-lens-id", shopping.id);
-    renderShell();
-    await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent("/do/list"),
-    );
-
-    // SAFETY: querySelector returns Element; cast to HTMLElement for within() interaction.
-    const sidebar = document.querySelector(".aa-app-side") as HTMLElement;
-    expect(
-      within(sidebar).getByRole("link", { name: "List" }),
-    ).toBeInTheDocument();
-    expect(within(sidebar).getByRole("link", { name: /Inbox/ })).toBeInTheDocument();
-    expect(
-      within(sidebar).queryByRole("link", { name: "Today" }),
-    ).not.toBeInTheDocument();
-    expect(
-      within(sidebar).queryByRole("link", { name: "Do" }),
-    ).not.toBeInTheDocument();
-    expect(within(sidebar).queryByText("Plan")).not.toBeInTheDocument();
-    expect(within(sidebar).queryByText("Review")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Capture" })).toBeInTheDocument();
-
-    const mobile = screen.getByRole("navigation", {
-      name: "Mobile navigation",
-    });
-    expect(
-      within(mobile).getByRole("link", { name: "List" }),
-    ).toBeInTheDocument();
-    expect(
-      within(mobile).getByRole("button", { name: "Lens: Shopping" }),
-    ).toBeInTheDocument();
-    expect(within(mobile).getByRole("link", { name: /Inbox/ })).toBeInTheDocument();
-  });
-
   it("keeps Inbox routes open and Cmd+K capture available in a Simple-list Lens", async () => {
     localStorage.setItem("aa-lens-id", shopping.id);
     renderShell("/do/inbox");
@@ -222,18 +159,5 @@ describe("AppShell Lens workflows", () => {
     expect(screen.getByTestId("location")).toHaveTextContent("/do");
   });
 
-  it("routes a command-palette Simple-list switch to the list", async () => {
-    localStorage.setItem("aa-lens-id", life.id);
-    renderShell();
-    fireEvent.keyDown(window, { key: "\\", code: "Backslash", metaKey: true });
-    const input = screen.getByRole("combobox", { name: "Search ActionAmp" });
-    fireEvent.change(input, { target: { value: "shopping" } });
-    const option = await screen.findByRole("option", {
-      name: /Shopping.*Switch lens/i,
-    });
-    fireEvent.click(option);
-    await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent("/do/list"),
-    );
-  });
+
 });

@@ -22,7 +22,6 @@ import type {
 } from "wasp/server/operations";
 import {
   assertLensAllowed,
-  assertLifeAreaLens,
 } from "../billing/entitlementHttp";
 import { resolveAccessibleLenses } from "../billing/entitlements";
 import { recordAnalyticsEventCore } from "../analytics/operationsCore";
@@ -117,7 +116,6 @@ export const getTasks = (async (args, context) => {
   // locked). The detail reads (getTask) are unguarded — no data loss for
   // existing content; only list/scope reads enforce the lens rule.
   await assertLensAllowed(context, args.lensId);
-  await assertLifeAreaLens(context, args.lensId);
 
   return await getTasksData(context.entities, {
     userId: context.user.id,
@@ -191,7 +189,6 @@ export const getDoneToday = (async (args, context) => {
   if (args?.lensId) {
     // Lens-scoped path: enforce the FREE-lens entitlement for this one lens.
     await assertLensAllowed(context, args.lensId);
-    await assertLifeAreaLens(context, args.lensId);
     lensIds = [args.lensId];
   } else {
     // Global path: filter by the accessible-lens SET (entitlement-preserving).
@@ -273,7 +270,6 @@ export const unscheduleOverdueTasks = (async (args, context) => {
     throw new Error("Not authenticated.");
   }
   await assertLensAllowed(context, args.lensId);
-  await assertLifeAreaLens(context, args.lensId);
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -312,7 +308,6 @@ export const getTopTask = (async (args, context) => {
   // calls this; a FREE user lands on Me, so this passes — the guard exists for
   // the localStorage-bypass case where a Work lensId reaches the server.
   await assertLensAllowed(context, args.lensId);
-  await assertLifeAreaLens(context, args.lensId);
   // Candidate fetch + sort live in the core so the CLI `/api/cli/now` route
   // can rank candidates identically without re-implementing the comparator.
   const ranked = await getTopTaskData(context.entities, {
@@ -348,7 +343,6 @@ export const getTaskAlternatives = (async (args, context) => {
   // Same entitlement posture as getTopTask: FREE users land on Me; the guard
   // exists for the localStorage-bypass case where a Work lensId slips through.
   await assertLensAllowed(context, args.lensId);
-  await assertLifeAreaLens(context, args.lensId);
   return await getTaskAlternativesData(context.entities, {
     userId: context.user.id,
     lensId: args.lensId,
@@ -632,10 +626,13 @@ export const updateTaskDetails = (async (args, context) => {
     } else {
       const project = await context.entities.Project.findUnique({
         where: { id: args.projectId },
-        select: { userId: true, lensId: true },
+        select: { userId: true, lensId: true, type: true },
       });
       if (!project || project.userId !== context.user.id) {
         throw new Error("Project not found.");
+      }
+      if (project.type === "SIMPLE_LIST") {
+        throw new Error("A task cannot live in a Simple-list Project.");
       }
       if (project.lensId !== task.lensId) {
         throw new Error("Project must be in the same Lens.");

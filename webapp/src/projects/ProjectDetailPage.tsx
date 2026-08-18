@@ -41,6 +41,7 @@ import { CreateInline } from "../lists/CreateInline";
 import type { GroupDef } from "../components/ui";
 import { formatRelativeDue } from "../shared/dateFormat";
 import { getLenses } from "wasp/client/operations";
+import { SimpleListChecklist } from "../simpleLists/SimpleListChecklist";
 import "./ProjectDetailPage.css";
 
 type ProjectTask = TaskRowTask & {
@@ -72,7 +73,6 @@ type LensOption = {
   id: string;
   name: string;
   color: string | null;
-  type: "LIFE_AREA" | "SIMPLE_LIST";
 };
 
 /**
@@ -178,8 +178,7 @@ export function ProjectDetailPage() {
     enabled: movingProject,
   });
   const projectMoveTargets: LensOption[] = (allLenses ?? []).filter(
-    (lens: LensOption) =>
-      lens.type === "LIFE_AREA" && lens.id !== project?.lensId,
+    (lens: LensOption) => lens.id !== project?.lensId,
   );
   // Siblings only — a task can't move to the project it's already in.
   const moveTargets: ProjectOption[] = (lensProjects ?? []).filter(
@@ -543,7 +542,7 @@ export function ProjectDetailPage() {
                 {/* Identity rail — violet is project/goal identity, never the CTA. */}
                 <div className="aa-project__rail">
                   <span className="aa-project__rail-dot" aria-hidden="true" />
-                  Project
+                  {project.type === "SIMPLE_LIST" ? "List" : "Project"}
                 </div>
                 <h1 className="aa-project__title">{project.name}</h1>
                 {project.description && (
@@ -561,7 +560,9 @@ export function ProjectDetailPage() {
                 {/* WHY — the goal is the project's reason for existing. Its own
                     line, not tucked into the eyebrow. The name links to the goal
                     detail page; a calm control opens the re-link picker (spec §C),
-                    where the link can be changed or broken (None / standalone). */}
+                    where the link can be changed or broken (None / standalone).
+                    A Simple-list Project never sits under a goal. */}
+                {project.type !== "SIMPLE_LIST" && (
                 <div className="aa-project__why">
                   <span className="aa-project__why-eyebrow">Why</span>
                   {pickingGoal ? (
@@ -621,6 +622,7 @@ export function ProjectDetailPage() {
                     </button>
                   )}
                 </div>
+                )}
 
                 {/* Honest progress band — violet fill (project identity), teal due
                     chip (system/state). Hidden when there are no tasks; never
@@ -720,7 +722,7 @@ export function ProjectDetailPage() {
                     remaining lifecycle actions tuck behind ⋯ — popover on
                     desktop, bottom sheet on mobile — with Delete last. */}
                 <div className="aa-project__actions">
-                  {!project.isDone && (
+                  {!project.isDone && project.type !== "SIMPLE_LIST" && (
                     <Button
                       variant="primary"
                       size="sm"
@@ -750,7 +752,10 @@ export function ProjectDetailPage() {
                       { label: "Move", onPick: () => setMovingProject(true) },
                       // Archived projects hide Complete/Reopen and Archive —
                       // their lifecycle is settled until unarchived elsewhere.
-                      ...(!project.archivedAt
+                      // A Simple-list Project has no completion lifecycle at
+                      // all (checking items off is the whole model); Archive
+                      // stays for decluttering.
+                      ...(!project.archivedAt && project.type !== "SIMPLE_LIST"
                         ? [
                             {
                               label: project.isDone ? "Reopen" : "Complete",
@@ -762,6 +767,10 @@ export function ProjectDetailPage() {
                                 ? "Return to active projects"
                                 : "Mark this project done",
                             },
+                          ]
+                        : []),
+                      ...(!project.archivedAt
+                        ? [
                             {
                               label: "Archive",
                               onPick: () => setConfirmArchive(true),
@@ -789,7 +798,9 @@ export function ProjectDetailPage() {
             />
           )}
 
-          {total === 0 ? (
+          {project.type === "SIMPLE_LIST" ? (
+            <SimpleListChecklist projectId={project.id} />
+          ) : total === 0 ? (
             <div className="aa-list-empty aa-project__empty">
               <div className="aa-list-empty__icon">
                 <CompletionCircle size="md" />

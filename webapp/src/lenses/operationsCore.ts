@@ -2,12 +2,12 @@
  * Pure lens-operation cores — the shared DB layer for both the Wasp server ops
  * (`./operations.ts`) and the `/api/cli/lens/*` PAT routes.
  *
- * Pattern (mirrors `projects/operationsCore.ts`): every core takes `entities`
- * as its first arg (loosely typed — any Prisma-client-shaped object works)
- * plus plain args, does the DB work, and returns data. **No `wasp/server`
- * import lives here.** Wasp's detectServerImports plugin blocks `wasp/server`
- * under `src/` in the client build Vitest uses, so keeping this pure keeps it
- * unit-testable and importable from both worlds.
+ * Pattern (mirrors `projects/operationsCore.ts`): every core takes `entities` as
+ * its first arg (loosely typed — any Prisma-client-shaped object works) plus
+ * plain args, does the DB work, and returns data. **No `wasp/server` import
+ * lives here.** Wasp's detectServerImports plugin blocks `wasp/server` under
+ * `src/` in the client build Vitest uses, so keeping this pure keeps it unit-
+ * testable and importable from both worlds.
  *
  * Only the *read* cores live here — the lens config actions (create/update/
  * delete) are Pro-only and stay in the Wasp op layer for now (the CLI surface
@@ -30,9 +30,6 @@ export type LensSummary = {
   name: string;
   isDefault: boolean;
   isIncluded: boolean;
-  /** @deprecated Compatibility only for pre-migration test fixtures. */
-  kind?: string;
-  type: "LIFE_AREA" | "SIMPLE_LIST";
   color: string | null;
   purpose: string | null;
   hasAnyContent: boolean;
@@ -41,8 +38,6 @@ export type LensSummary = {
     goals: number;
     projects: number;
     tasks: number;
-    openItems: number;
-    checkedItems: number;
   };
 };
 
@@ -75,7 +70,6 @@ export async function getLensesCore(
       goals: { select: { id: true }, take: 1 },
       projects: { select: { id: true, name: true }, orderBy: { createdAt: "asc" } },
       tasks: { select: { id: true }, take: 1 },
-      listItems: { select: { isDone: true } },
     },
   });
   lenses.sort(
@@ -94,7 +88,6 @@ export async function getLensesCore(
       name: string;
       isDefault: boolean;
       isIncluded: boolean;
-      type: "LIFE_AREA" | "SIMPLE_LIST";
       color: string | null;
       purpose: string | null;
       createdAt: string;
@@ -102,27 +95,22 @@ export async function getLensesCore(
       goals: { id: string }[];
       projects: { id: string; name: string }[];
       tasks: { id: string }[];
-      listItems: { isDone: boolean }[];
     }): LensSummary => ({
       id: l.id,
       name: l.name,
       isDefault: l.isDefault,
       isIncluded: l.isIncluded,
-      type: l.type,
       color: l.color,
       purpose: l.purpose,
       hasAnyContent:
         l.goals.length > 0 ||
         l.projects.length > 0 ||
-        l.tasks.length > 0 ||
-        l.listItems.length > 0,
+        l.tasks.length > 0,
       blockingProjects: l.projects,
       counts: {
         goals: l._count.goals,
         projects: l._count.projects,
         tasks: l._count.tasks,
-        openItems: l.listItems.filter((item) => !item.isDone).length,
-        checkedItems: l.listItems.filter((item) => item.isDone).length,
       },
     }),
   );
@@ -156,7 +144,6 @@ export async function getLensCore(
       goals: { select: { id: true }, take: 1 },
       projects: { select: { id: true, name: true }, orderBy: { createdAt: "asc" } },
       tasks: { select: { id: true }, take: 1 },
-      listItems: { select: { isDone: true } },
     },
   });
   if (!lens) return null;
@@ -165,22 +152,18 @@ export async function getLensCore(
     name: lens.name,
     isDefault: lens.isDefault,
     isIncluded: lens.isIncluded,
-    type: lens.type,
     color: lens.color,
     purpose: lens.purpose,
     hasAnyContent:
       lens.goals.length > 0 ||
       lens.projects.length > 0 ||
-      lens.tasks.length > 0 ||
-      lens.listItems.length > 0,
+      lens.tasks.length > 0,
     blockingProjects: lens.projects,
     createdAt: lens.createdAt,
     counts: {
       goals: lens._count.goals,
       projects: lens._count.projects,
       tasks: lens._count.tasks,
-      openItems: lens.listItems.filter((item: { isDone: boolean }) => !item.isDone).length,
-      checkedItems: lens.listItems.filter((item: { isDone: boolean }) => item.isDone).length,
     },
   };
 }

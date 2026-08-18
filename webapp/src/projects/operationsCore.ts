@@ -84,10 +84,11 @@ export async function getProjectsData(
         },
       },
       // Open count excludes declined tasks — they live in the Logbook, not in
-      // the project's momentum.
+      // the project's momentum. List-item counts feed SIMPLE_LIST rows.
       _count: {
         select: {
           tasks: { where: { isDone: false, status: { not: "WONT_DO" } } },
+          listItems: { where: { isDone: false } },
         },
       },
     },
@@ -101,13 +102,24 @@ export async function getProjectsData(
     where: where2,
     select: {
       id: true,
-      _count: { select: { tasks: { where: { isDone: true } } } },
+      _count: {
+        select: {
+          tasks: { where: { isDone: true } },
+          listItems: { where: { isDone: true } },
+        },
+      },
     },
   });
   const doneCount = new Map(
     totals.map((p: { id: string; _count: { tasks: number } }) => [
       p.id,
       p._count.tasks,
+    ]),
+  );
+  const checkedCount = new Map(
+    totals.map((p: { id: string; _count: { listItems: number } }) => [
+      p.id,
+      p._count.listItems,
     ]),
   );
 
@@ -119,6 +131,7 @@ export async function getProjectsData(
       description: string | null;
       dueDate: Date | null;
       isDone: boolean;
+      type: "STANDARD" | "SIMPLE_LIST";
       completedAt: Date | null;
       archivedAt: Date | null;
       goal: { id: string; name: string } | null;
@@ -130,7 +143,7 @@ export async function getProjectsData(
         notes: string | null;
         createdAt: Date;
       }[];
-      _count: { tasks: number };
+      _count: { tasks: number; listItems: number };
     }) => ({
       id: p.id,
       permalink: p.permalink,
@@ -138,11 +151,14 @@ export async function getProjectsData(
       description: p.description,
       dueDate: p.dueDate,
       isDone: p.isDone,
+      type: p.type,
       completedAt: p.completedAt,
       archivedAt: p.archivedAt,
       goal: p.goal,
       openCount: p._count.tasks, // open (non-done) tasks
       doneCount: doneCount.get(p.id) ?? 0,
+      openItems: p._count.listItems, // open list items (SIMPLE_LIST rows)
+      checkedItems: checkedCount.get(p.id) ?? 0,
       nextAction: p.tasks[0] ?? null, // top-priority open task
       resources: p.resources,
     }),
@@ -213,6 +229,7 @@ export async function getProjectData(
     description: project.description,
     dueDate: project.dueDate,
     isDone: project.isDone,
+    type: project.type,
     archivedAt: project.archivedAt,
     order: project.order,
     lensId: project.lensId,
@@ -240,17 +257,22 @@ export async function createProjectCore(
     lensId,
     goalId,
     description,
+    type = "STANDARD",
   }: {
     userId: string;
     name: string;
     lensId: string;
     goalId?: string;
     description?: string;
+    type?: "STANDARD" | "SIMPLE_LIST";
   },
 ) {
   const trimmed = name.trim();
   if (!trimmed) {
     throw new Error("Project name is required.");
+  }
+  if (type === "SIMPLE_LIST" && goalId) {
+    throw new Error("A Simple-list Project cannot sit under a Goal.");
   }
 
   // Seed `order` so a new project lands at the end of its goal's sequence
@@ -281,6 +303,7 @@ export async function createProjectCore(
       goalId,
       description,
       order,
+      type,
     },
     select: { id: true, permalink: true, name: true },
   });

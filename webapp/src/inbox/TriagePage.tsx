@@ -125,21 +125,22 @@ export function TriagePage() {
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
   const [goalPickerOpen, setGoalPickerOpen] = useState(false);
   const [parentProjectPickerOpen, setParentProjectPickerOpen] = useState(false);
+  // The Simple-list Project chosen as a list-item destination (Classify step).
+  // Null until picked; cleared per item.
+  const [listProjectId, setListProjectId] = useState<string | null>(null);
 
   // Projects + goals scoped to the *confirmed* lens (step 1 output), not the
   // active one — filing targets must match where the item is actually landing.
   const scopedLensId = chosenLensId ?? activeLens?.id ?? null;
-  const scopedLens = lenses.find((lens) => lens.id === scopedLensId) ?? activeLens;
-  const isSimpleListDestination = scopedLens?.type === "SIMPLE_LIST";
   const { data: projects } = useQuery(
     getProjects,
-    scopedLensId && !isSimpleListDestination ? { lensId: scopedLensId } : undefined,
-    { enabled: !!scopedLensId && !isSimpleListDestination },
+    scopedLensId ? { lensId: scopedLensId } : undefined,
+    { enabled: !!scopedLensId },
   );
   const { data: goals } = useQuery(
     getGoals,
-    scopedLensId && !isSimpleListDestination ? { lensId: scopedLensId } : undefined,
-    { enabled: !!scopedLensId && !isSimpleListDestination },
+    scopedLensId ? { lensId: scopedLensId } : undefined,
+    { enabled: !!scopedLensId },
   );
 
   // Snapshot the list on first arrival. The triage walkthrough navigates this
@@ -301,6 +302,7 @@ export function TriagePage() {
       ...initWorking(),
       projectId: hasProjectDestination ? projectBridge.projectId : null,
     });
+    setListProjectId(null);
     setChipOpen(false);
     setEditingBody(false);
   }, [item, activeLens?.id, initWorking, inferredLens, hasProjectDestination, projectBridge?.projectId]);
@@ -324,27 +326,15 @@ export function TriagePage() {
     );
   }, [item, hasProjectDestination, projectBridge, projectDestinationLens]);
 
-  useEffect(() => {
-    if (!working || !scopedLens) return;
-    if (
-      scopedLens.type === "SIMPLE_LIST" &&
-      working.type !== "list-item" &&
-      working.type !== "delete"
-    ) {
-      setWorking({ ...working, type: "list-item" });
-    } else if (scopedLens.type === "LIFE_AREA" && working.type === "list-item") {
-      setWorking({ ...working, type: "task" });
-    }
-  }, [scopedLens?.id, scopedLens?.type, working?.type]);
-
   const setW = useCallback(
     (patch: Partial<Working>) => setWorking((w) => (w ? { ...w, ...patch } : w)),
     [],
   );
 
   const canComplete = useCallback(
-    (w: Working | null): boolean => canCompleteWorking(w, chosenLensId),
-    [chosenLensId],
+    (w: Working | null): boolean =>
+      canCompleteWorking(w, chosenLensId, listProjectId),
+    [chosenLensId, listProjectId],
   );
 
   const classifyLensOptions = useMemo(
@@ -352,8 +342,8 @@ export function TriagePage() {
       lenses.length > 0
         ? lenses
         : [
-            { id: "Work", name: "Work", color: "indigo", type: "LIFE_AREA" as const },
-            { id: "Me", name: "Me", color: "emerald", type: "LIFE_AREA" as const },
+            { id: "Work", name: "Work", color: "indigo" },
+            { id: "Me", name: "Me", color: "emerald" },
           ],
     [lenses],
   );
@@ -376,6 +366,7 @@ export function TriagePage() {
       inboxItemId: item.id,
       lensId: chosenLensId,
       resolvedProjectId,
+      listProjectId,
     });
     setDispatched(true);
     setExit(OUTCOME_EXIT[payload.decision]);
@@ -389,8 +380,11 @@ export function TriagePage() {
       // Await the task-list refetch so navigating to Today/Upcoming/Someday
       // after completing an item never shows the stale pre-triage cache (the
       // race where a just-triaged task appears missing until a manual refresh).
+      // A list-item never touches tasks — refresh the checklist instead.
       if (payload.decision !== "list-item") {
         await queryClient.refetchQueries({ queryKey: ["getTasks"] });
+      } else {
+        await queryClient.refetchQueries({ queryKey: ["getSimpleList"] });
       }
       setError(null);
     } catch (e) {
@@ -408,7 +402,7 @@ export function TriagePage() {
         requestAnimationFrame(() => setEntering(false));
       });
     }, 320);
-  }, [idx, total, exit, activeLens, working, chosenLensId, item, queryClient, resolvedProjectId]);
+  }, [idx, total, exit, activeLens, working, chosenLensId, item, queryClient, resolvedProjectId, listProjectId]);
 
   // ---- In-triage capture edits: persist back to the InboxItem ----
   // The Classify editor corrects the capture itself (Spec's "Title" editor
@@ -461,10 +455,6 @@ export function TriagePage() {
     setStep,
     setWorkingType: (type) => {
       if (type === "project" && hasProjectDestination) return;
-      if (isSimpleListDestination && type !== "delete") {
-        setW({ type: "list-item" });
-        return;
-      }
       setW({ type });
     },
     selectLensByIndex,
@@ -496,8 +486,8 @@ export function TriagePage() {
   const lensList: ClassifyLens[] = lenses.length > 0
     ? lenses
     : [
-        { id: "Work", name: "Work", color: "indigo", type: "LIFE_AREA" },
-        { id: "Me", name: "Me", color: "emerald", type: "LIFE_AREA" },
+        { id: "Work", name: "Work", color: "indigo" },
+        { id: "Me", name: "Me", color: "emerald" },
       ];
   // The active lens as a picker chip — passed to PickerSheet items so each
   // project row shows which lens (context) it lives in. All projects in these
@@ -535,7 +525,7 @@ export function TriagePage() {
             key={item.id}
             body={working.title}
             onBodyChange={
-              editingBody || isSimpleListDestination
+              editingBody || working.type === "list-item"
                 ? (text) => {
                     setW({ title: text });
                     if (step !== "spec") scheduleTextSave(item.id, text);
@@ -543,17 +533,17 @@ export function TriagePage() {
                 : undefined
             }
             onBodyBlur={
-              editingBody && !isSimpleListDestination
+              editingBody && working.type !== "list-item"
                 ? () => setEditingBody(false)
                 : undefined
             }
             onBodyEdit={
-              !isSimpleListDestination ? () => setEditingBody(true) : undefined
+              working.type !== "list-item" ? () => setEditingBody(true) : undefined
             }
             autoFocusBody={editingBody}
             bodyLabel={step === "spec" ? "Title" : "Captured text"}
             meta={`captured ${formatAgo(item.createdAt)}`}
-            chips={isSimpleListDestination ? [] : triageChips}
+            chips={working.type === "list-item" ? [] : triageChips}
             media={item.attachments}
             exit={exit}
             dispatched={dispatched}
@@ -565,8 +555,10 @@ export function TriagePage() {
                 working={working}
                 chosenLensId={chosenLensId}
                 lenses={lensList}
-                selectedLensType={scopedLens?.type ?? "LIFE_AREA"}
-                selectedLensName={scopedLens?.name ?? "list"}
+                listProjects={(resolverProjects ?? []).filter(
+                  (p: { type: string }) => p.type === "SIMPLE_LIST",
+                )}
+                listProjectId={listProjectId}
                 hasAttachments={Boolean(item.attachments?.length)}
                 hasProjectDestination={hasProjectDestination}
                 destination={
@@ -581,6 +573,7 @@ export function TriagePage() {
                   lensTouchedRef.current = true;
                   setChosenLensId(id);
                 }}
+                onSelectList={setListProjectId}
                 onSetType={(t) => setW({ type: t })}
                 onContinue={() =>
                   working.type === "delete" || working.type === "list-item"
@@ -614,7 +607,7 @@ export function TriagePage() {
       </div>
 
       {/* ---- File-into pickers (Project / Goal / Resource Project) ---- */}
-      {!isSimpleListDestination && <TriagePickers
+      <TriagePickers
         open={{
           project: projectPickerOpen,
           goal: goalPickerOpen,
@@ -631,7 +624,7 @@ export function TriagePage() {
         setProjectOpen={setProjectPickerOpen}
         setGoalOpen={setGoalPickerOpen}
         setParentProjectOpen={setParentProjectPickerOpen}
-      />}
+      />
     </div>
   );
 }
@@ -648,15 +641,22 @@ const TRIAGE_TYPES = [
   { t: "delete", label: "Delete", sub: "get rid of it — not kept", Icon: TrashIcon },
 ] as const;
 
-type ClassifyLens = { id: string; name: string; color?: string | null; type: "LIFE_AREA" | "SIMPLE_LIST" };
+type ClassifyLens = { id: string; name: string; color?: string | null };
+type ClassifyListProject = {
+  id: string;
+  name: string;
+  lensName?: string | null;
+};
 
-/** Step 1 — pick the type (Task/Project/Resource/Delete) + Lens/Project destination. */
+/** Step 1 — pick the type (Task/Project/Resource/List item/Delete) + destination.
+ *  A list item's destination is a Simple-list Project (across lenses); every
+ *  other type files into a Lens (or the resolved project's lens). */
 function ClassifyStep({
   working,
   chosenLensId,
   lenses,
-  selectedLensType,
-  selectedLensName,
+  listProjects,
+  listProjectId,
   hasAttachments,
   hasProjectDestination,
   destination,
@@ -664,14 +664,15 @@ function ClassifyStep({
   hasInferredLens,
   hasParsedProject,
   onSelectLens,
+  onSelectList,
   onSetType,
   onContinue,
 }: {
   working: Working;
   chosenLensId: string | null;
   lenses: ClassifyLens[];
-  selectedLensType: "LIFE_AREA" | "SIMPLE_LIST";
-  selectedLensName: string;
+  listProjects: ClassifyListProject[];
+  listProjectId: string | null;
   hasAttachments: boolean;
   hasProjectDestination: boolean;
   destination: { project: string; lens: string } | null;
@@ -679,13 +680,42 @@ function ClassifyStep({
   hasInferredLens: boolean;
   hasParsedProject: boolean;
   onSelectLens: (id: string) => void;
+  onSelectList: (id: string) => void;
   onSetType: (t: Working["type"]) => void;
   onContinue: () => void;
 }) {
+  const isListItem = working.type === "list-item";
+  const selectedList = listProjects.find((p) => p.id === listProjectId) ?? null;
   return (
     <div className="aa-triage-step">
       <div className="aa-triage-step__label">1 · Classify</div>
-      {hasProjectDestination ? (
+      {isListItem ? (
+        <>
+          {/* List destination — one Simple-list Project across all lenses.
+              A calm select keeps every list reachable without a lens detour. */}
+          <label className="aa-triage-list-picker">
+            <span className="aa-triage-list-picker__label">Add to list</span>
+            <select
+              value={listProjectId ?? ""}
+              onChange={(event) => onSelectList(event.target.value)}
+            >
+              <option value="" disabled>
+                Choose a list…
+              </option>
+              {listProjects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}{p.lensName ? ` · ${p.lensName}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          {listProjects.length === 0 && (
+            <p className="aa-triage-step__hint">
+              No lists yet — create one from the Projects page.
+            </p>
+          )}
+        </>
+      ) : hasProjectDestination ? (
         <div className="aa-triage-destination">
           <span className="aa-triage-destination__label">Destination</span>
           <span className="aa-triage-destination__value">
@@ -724,11 +754,6 @@ function ClassifyStep({
       )}
       <div className="aa-triage-types">
         {TRIAGE_TYPES
-          .filter(({ t }) =>
-            selectedLensType === "SIMPLE_LIST"
-              ? t === "list-item" || t === "delete"
-              : t !== "list-item"
-          )
           // A captured/resolved project means this is a task *in* that project
           // by default, not a new project by the same name — hide that option.
           .filter(({ t }) => !(t === "project" && (hasParsedProject || hasProjectDestination)))
@@ -745,23 +770,29 @@ function ClassifyStep({
             </button>
           ))}
       </div>
-      {selectedLensType === "SIMPLE_LIST" && (
+      {isListItem && (
         <p className="aa-triage-list-note">
           {hasAttachments
-            ? `Its image attachments will move with it to ${selectedLensName}.`
-            : `No dates, priority, projects, or other setup. This becomes one item in ${selectedLensName}.`}
+            ? `Its image attachments will move with it${selectedList ? ` to ${selectedList.name}` : ""}.`
+            : `No dates, priority, projects, or other setup.${selectedList ? ` This becomes one item in ${selectedList.name}.` : ""}`}
         </p>
       )}
       <Button
         variant="primary"
         className="aa-triage-step__continue"
         onClick={onContinue}
-        disabled={!chosenLensId || !working.title.trim()}
+        disabled={
+          working.type === "delete"
+            ? !working.title.trim()
+            : isListItem
+              ? !listProjectId || !working.title.trim()
+              : !chosenLensId || !working.title.trim()
+        }
       >
         {working.type === "delete"
           ? "Delete"
-          : working.type === "list-item"
-            ? `Add to ${selectedLensName}`
+          : isListItem
+            ? `Add to ${selectedList?.name ?? "list"}`
             : "Continue"}
       </Button>
     </div>

@@ -574,3 +574,25 @@
   line-height: 1.45;
 }
 .aa-triage-list-note.is-error { color: var(--aa-rose-text); }
+
+/* List destination picker — a Simple-list Project chosen as the filing
+   target for a list-item decision. Calm select, matches the step's rhythm. */
+.aa-triage-list-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+}
+
+.aa-triage-list-picker__label {
+  font-size: var(--aa-text-xs, 0.75rem);
+  color: var(--aa-text-muted);
+}
+
+.aa-triage-list-picker select {
+  font: inherit;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+}

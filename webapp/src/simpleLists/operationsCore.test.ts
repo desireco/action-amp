@@ -22,65 +22,65 @@ function delegate() {
 }
 
 function entities() {
-  return { Lens: delegate(), ListItem: delegate() };
+  return { Project: delegate(), ListItem: delegate() };
 }
 
-const simpleLens = { id: "list-1", type: "SIMPLE_LIST" };
-const ownedItem = { id: "item-1", userId: "user-1", lens: { type: "SIMPLE_LIST" } };
+const listProject = { id: "list-1", type: "SIMPLE_LIST" };
+const ownedItem = { id: "item-1", userId: "user-1", project: { type: "SIMPLE_LIST" } };
 
 describe("getSimpleListCore", () => {
   it("requires ownership and returns open items first in stable order", async () => {
     const db = entities();
-    db.Lens.findFirst.mockResolvedValue(simpleLens);
+    db.Project.findFirst.mockResolvedValue(listProject);
     db.ListItem.findMany.mockResolvedValue([]);
 
-    await getSimpleListCore(db, { userId: "user-1", lensId: "list-1" });
+    await getSimpleListCore(db, { userId: "user-1", projectId: "list-1" });
 
-    expect(db.Lens.findFirst).toHaveBeenCalledWith({
+    expect(db.Project.findFirst).toHaveBeenCalledWith({
       where: { id: "list-1", userId: "user-1" },
       select: { id: true, type: true },
     });
     expect(db.ListItem.findMany).toHaveBeenCalledWith({
-      where: { userId: "user-1", lensId: "list-1" },
+      where: { userId: "user-1", projectId: "list-1" },
       orderBy: [{ isDone: "asc" }, { order: "asc" }, { createdAt: "asc" }],
       include: { attachments: { select: { id: true, filename: true, mimeType: true } } },
     });
   });
 
-  it("rejects a missing or cross-tenant Lens", async () => {
+  it("rejects a missing or cross-tenant Project", async () => {
     const db = entities();
-    db.Lens.findFirst.mockResolvedValue(null);
-    await expect(getSimpleListCore(db, { userId: "user-1", lensId: "other" })).rejects.toThrow(/not found/i);
+    db.Project.findFirst.mockResolvedValue(null);
+    await expect(getSimpleListCore(db, { userId: "user-1", projectId: "other" })).rejects.toThrow(/not found/i);
   });
 
-  it("rejects a Life-area Lens", async () => {
+  it("rejects a standard Project", async () => {
     const db = entities();
-    db.Lens.findFirst.mockResolvedValue({ id: "life-1", type: "LIFE_AREA" });
-    await expect(getSimpleListCore(db, { userId: "user-1", lensId: "life-1" })).rejects.toThrow(/Simple-list Lens/i);
+    db.Project.findFirst.mockResolvedValue({ id: "std-1", type: "STANDARD" });
+    await expect(getSimpleListCore(db, { userId: "user-1", projectId: "std-1" })).rejects.toThrow(/Simple-list Project/i);
   });
 });
 
 describe("createListItemCore", () => {
   it("trims text and appends after the highest order", async () => {
     const db = entities();
-    db.Lens.findFirst.mockResolvedValue(simpleLens);
+    db.Project.findFirst.mockResolvedValue(listProject);
     db.ListItem.findFirst.mockResolvedValue({ order: 7 });
     db.ListItem.create.mockResolvedValue({ id: "item-2" });
 
-    await createListItemCore(db, { userId: "user-1", lensId: "list-1", text: "  Milk  " });
+    await createListItemCore(db, { userId: "user-1", projectId: "list-1", text: "  Milk  " });
 
     expect(db.ListItem.create).toHaveBeenCalledWith({
-      data: { userId: "user-1", lensId: "list-1", text: "Milk", content: null, sourceUrl: null, order: 8 },
+      data: { userId: "user-1", projectId: "list-1", text: "Milk", content: null, sourceUrl: null, order: 8 },
     });
   });
 
   it("preserves captured body and source without adding task metadata", async () => {
     const db = entities();
-    db.Lens.findFirst.mockResolvedValue(simpleLens);
+    db.Project.findFirst.mockResolvedValue(listProject);
     db.ListItem.findFirst.mockResolvedValue(null);
     await createListItemCore(db, {
       userId: "user-1",
-      lensId: "list-1",
+      projectId: "list-1",
       text: "Read later",
       content: "Useful checklist notes",
       sourceUrl: "https://example.com/list",
@@ -96,12 +96,12 @@ describe("createListItemCore", () => {
 
   it("stores multiple image attachments with the list item", async () => {
     const db = entities();
-    db.Lens.findFirst.mockResolvedValue(simpleLens);
+    db.Project.findFirst.mockResolvedValue(listProject);
     db.ListItem.findFirst.mockResolvedValue(null);
 
     await createListItemCore(db, {
       userId: "user-1",
-      lensId: "list-1",
+      projectId: "list-1",
       text: "Reference photos",
       attachments: [
         { filename: "first.jpg", mimeType: "image/jpeg", dataBase64: Buffer.from("first").toString("base64") },
@@ -123,10 +123,10 @@ describe("createListItemCore", () => {
 
   it("rejects empty and overlong text", async () => {
     const db = entities();
-    db.Lens.findFirst.mockResolvedValue(simpleLens);
+    db.Project.findFirst.mockResolvedValue(listProject);
     db.ListItem.findFirst.mockResolvedValue(null);
-    await expect(createListItemCore(db, { userId: "user-1", lensId: "list-1", text: "  " })).rejects.toThrow(/required/i);
-    await expect(createListItemCore(db, { userId: "user-1", lensId: "list-1", text: "x".repeat(MAX_LIST_ITEM_TEXT_LENGTH + 1) })).rejects.toThrow(/characters or fewer/i);
+    await expect(createListItemCore(db, { userId: "user-1", projectId: "list-1", text: "  " })).rejects.toThrow(/required/i);
+    await expect(createListItemCore(db, { userId: "user-1", projectId: "list-1", text: "x".repeat(MAX_LIST_ITEM_TEXT_LENGTH + 1) })).rejects.toThrow(/characters or fewer/i);
   });
 });
 
@@ -156,18 +156,18 @@ describe("item mutations", () => {
 
   it("rejects missing, cross-tenant, and wrong-type items", async () => {
     const db = entities();
-    db.ListItem.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ ...ownedItem, lens: { type: "LIFE_AREA" } });
+    db.ListItem.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ ...ownedItem, project: { type: "STANDARD" } });
     await expect(deleteListItemCore(db, { userId: "user-1", id: "other" })).rejects.toThrow(/not found/i);
-    await expect(deleteListItemCore(db, { userId: "user-1", id: "item-1" })).rejects.toThrow(/Simple-list Lens/i);
+    await expect(deleteListItemCore(db, { userId: "user-1", id: "item-1" })).rejects.toThrow(/Simple-list Project/i);
   });
 });
 
 describe("clearCompletedListItemsCore", () => {
-  it("deletes only completed owned items in one verified Simple-list Lens", async () => {
+  it("deletes only completed owned items in one verified Simple-list Project", async () => {
     const db = entities();
-    db.Lens.findFirst.mockResolvedValue(simpleLens);
+    db.Project.findFirst.mockResolvedValue(listProject);
     db.ListItem.deleteMany.mockResolvedValue({ count: 2 });
-    await clearCompletedListItemsCore(db, { userId: "user-1", lensId: "list-1" });
-    expect(db.ListItem.deleteMany).toHaveBeenCalledWith({ where: { userId: "user-1", lensId: "list-1", isDone: true } });
+    await clearCompletedListItemsCore(db, { userId: "user-1", projectId: "list-1" });
+    expect(db.ListItem.deleteMany).toHaveBeenCalledWith({ where: { userId: "user-1", projectId: "list-1", isDone: true } });
   });
 });

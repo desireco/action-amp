@@ -119,22 +119,23 @@ describe("CommandPalette", () => {
     expect(props.onCapture).toHaveBeenCalledTimes(1);
   });
 
-  it("shows only compatible workflow commands for a Simple-list Lens", () => {
+  it("keeps workflow commands lens-independent — lists live under Projects", () => {
     const { props } = renderPalette({
       mode: "command",
-      activeLensType: "SIMPLE_LIST",
     });
-    fireEvent.click(
-      screen.getByRole("option", { name: /List.*Open checklist/i }),
-    );
-    expect(props.onNavigate).toHaveBeenCalledWith("/do/list");
+    // No lens-type filtering anymore: the full command set is always offered,
+    // and the old "Go to List" shell command is gone (a Simple-list Project
+    // is reached like any project).
     expect(
-      screen.queryByRole("option", { name: /Next/ }),
+      screen.queryByRole("option", { name: /Open checklist/i }),
     ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("option", { name: /Projects/ }),
+    );
+    expect(props.onNavigate).toHaveBeenCalledWith("/do/projects");
     expect(
-      screen.getByRole("option", { name: /Capture a thought/ }),
+      screen.getByRole("option", { name: /Next/ }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /Inbox/ })).toBeInTheDocument();
   });
 
   it("debounces search, renders grouped results, and opens the selected destination", () => {

@@ -70,7 +70,6 @@ export function CommandPalette({
   onCapture,
   onToggleTheme,
   onOpenShortcuts,
-  activeLensType = "LIFE_AREA",
   deps,
 }: {
   mode: CommandPaletteMode;
@@ -82,7 +81,6 @@ export function CommandPalette({
   onCapture: () => void;
   onToggleTheme: () => void;
   onOpenShortcuts: () => void;
-  activeLensType?: "LIFE_AREA" | "SIMPLE_LIST";
   /** Test seam — defaults to the real Wasp operations. */
   deps?: Partial<CommandPaletteDeps>;
 }) {
@@ -128,11 +126,7 @@ export function CommandPalette({
 
   const commands = useMemo<PaletteCommand[]>(
     () =>
-      PALETTE_COMMANDS.filter(
-        (definition) =>
-          !definition.lensTypes ||
-          definition.lensTypes.includes(activeLensType),
-      ).map((definition) => ({
+      PALETTE_COMMANDS.map((definition) => ({
         id: `command-${definition.id}`,
         title: definition.title,
         subtitle: definition.subtitle,
@@ -145,7 +139,7 @@ export function CommandPalette({
           else if (definition.action === "shortcuts") onOpenShortcuts();
         },
       })),
-    [activeLensType, onCapture, onNavigate, onOpenShortcuts, onToggleTheme],
+    [onCapture, onNavigate, onOpenShortcuts, onToggleTheme],
   );
 
   const indexedCommands = useMemo<PaletteCommand[]>(() => {
@@ -182,12 +176,9 @@ export function CommandPalette({
   const items = useMemo<PaletteItem[]>(() => {
     if (showCommands) {
       const commonIds = new Set(
-        PALETTE_COMMANDS.filter(
-          (definition) =>
-            definition.common &&
-            (!definition.lensTypes ||
-              definition.lensTypes.includes(activeLensType)),
-        ).map((definition) => `command-${definition.id}`),
+        PALETTE_COMMANDS.filter((definition) => definition.common).map(
+          (definition) => `command-${definition.id}`,
+        ),
       );
       return commands
         .filter((command) => commonIds.has(command.id))
@@ -235,7 +226,6 @@ export function CommandPalette({
       (entry) => entry.payload,
     );
   }, [
-    activeLensType,
     commands,
     currentData,
     indexedCommands,

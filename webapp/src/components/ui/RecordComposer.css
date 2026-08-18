@@ -114,3 +114,40 @@
     flex: 1;
   }
 }
+
+/* Kind picker — a calm segmented row of two (Project / List). The selected
+   kind borrows the teal selection hue (system/state), never decoration. */
+.aa-record-composer__kinds {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--aa-space-sm);
+}
+
+.aa-record-composer__kind {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface);
+  text-align: left;
+  cursor: pointer;
+  color: var(--aa-text);
+  font: inherit;
+}
+
+.aa-record-composer__kind small {
+  color: var(--aa-text-muted);
+}
+
+.aa-record-composer__kind.is-active {
+  border-color: var(--aa-teal);
+  box-shadow: var(--aa-focus-ring);
+}
+
+@media (max-width: 640px) {
+  .aa-record-composer__kinds {
+    grid-template-columns: 1fr;
+  }
+}

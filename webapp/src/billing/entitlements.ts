@@ -215,14 +215,6 @@ interface LensNameLookup {
   };
 }
 
-interface LensTypeLookup {
-  Lens: {
-    findFirst(
-      args: Prisma.LensFindFirstArgs,
-    ): PromiseLike<{ type: "LIFE_AREA" | "SIMPLE_LIST" } | null>;
-  };
-}
-
 export interface LensListLookup {
   Lens: {
     findMany(args: Prisma.LensFindManyArgs): PromiseLike<AccessibleLensRow[]>;
@@ -250,21 +242,6 @@ export async function resolveLens(
     select: { name: true, isIncluded: true },
   });
   return lens ?? null;
-}
-
-/** Resolve only the behavioral Lens type, tenancy-safe. Kept separate from
- * entitlement resolution because type eligibility is a product boundary, not
- * a paid-plan decision. */
-export async function resolveLensType(
-  entities: LensTypeLookup,
-  userId: string,
-  lensId: string,
-): Promise<"LIFE_AREA" | "SIMPLE_LIST" | null> {
-  const lens = await entities.Lens.findFirst({
-    where: { id: lensId, userId },
-    select: { type: true },
-  });
-  return lens ? lens.type : null;
 }
 
 /**

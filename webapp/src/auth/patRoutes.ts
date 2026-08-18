@@ -36,7 +36,6 @@ import { authEntities } from "./prisma";
 import "./patMiddleware";
 import {
   resolveLens,
-  resolveLensType,
   resolveAccessibleLenses,
   lensViolation,
   capViolation,
@@ -165,39 +164,25 @@ function toEntUser(user: {
 type LensGateResult =
   | { status: "not-found" }
   | { status: "denied"; msg: EntitlementMessage }
-  | { status: "incompatible" }
   | {
       status: "ok";
       lens: { name: string; isIncluded?: boolean };
-      lensType: "LIFE_AREA" | "SIMPLE_LIST";
     };
-
-const LIFE_AREA_REQUIRED =
-  "This command requires a Life-area Lens. Switch to one with `actionamp lens switch <name>`.";
 
 async function gateLens(
   entUser: EntitlementUser,
   userId: string,
   lensId: string,
   msg: EntitlementMessage = WORK_LENS_MESSAGE,
-  requiredType: "LIFE_AREA" | "ANY" = "LIFE_AREA",
 ): Promise<LensGateResult> {
   const lens = await resolveLens(authEntities, userId, lensId);
   if (!lens) return { status: "not-found" };
   const violation = lensViolation(entUser, lens, msg);
   if (violation) return { status: "denied", msg: violation };
-  const lensType = await resolveLensType(authEntities, userId, lensId);
-  if (!lensType) return { status: "not-found" };
-  if (requiredType === "LIFE_AREA" && lensType !== "LIFE_AREA")
-    return { status: "incompatible" };
-  return { status: "ok", lens, lensType };
+  return { status: "ok", lens };
 }
 
-function sendIncompatibleLens(res: Response) {
-  return res.status(400).json({ error: LIFE_AREA_REQUIRED });
-}
-
-async function firstAccessibleLifeAreaLensId(
+async function firstAccessibleLensId(
   entUser: EntitlementUser,
   userId: string,
 ): Promise<string | null> {
@@ -206,14 +191,7 @@ async function firstAccessibleLifeAreaLensId(
     entUser,
     userId,
   );
-  for (const lens of accessible) {
-    if (
-      (await resolveLensType(authEntities, userId, lens.id)) === "LIFE_AREA"
-    ) {
-      return lens.id;
-    }
-  }
-  return null;
+  return accessible[0]?.id ?? null;
 }
 
 /** Send the 402 entitlement body (the shape `cliNow` established). */
@@ -503,16 +481,13 @@ export const cliNow = async (
       if (gate.status === "denied") {
         return sendViolation(res, gate.msg);
       }
-      if (gate.status === "incompatible") {
-        return sendIncompatibleLens(res);
-      }
       lensId = requestedLensId;
     } else {
       // No lens specified: default to the user's first *accessible* lens.
       // resolveAccessibleLenses already applies the entitlement filter
       // (FREE → PERSONAL-only), so the default can never land on a gated lens
       // — matching the web app's behavior where a FREE user lands on Me.
-      lensId = await firstAccessibleLifeAreaLensId(entUser, user.id);
+      lensId = await firstAccessibleLensId(entUser, user.id);
     }
 
     if (!lensId) {
@@ -606,26 +581,27 @@ export const cliCapture = async (
 
   try {
     if (listId) {
-      const gate = await gateLens(
-        toEntUser(user),
-        user.id,
-        listId,
-        WORK_LENS_MESSAGE,
-        "ANY",
-      );
-      if (gate.status === "not-found")
+      // listId identifies a Simple-list PROJECT (lists moved from Lens type
+      // to Project type). Entitlement gates on the project's lens.
+      const listProject = await authEntities.Project.findFirst({
+        where: { id: listId, userId: user.id },
+        select: { id: true, type: true, lensId: true },
+      });
+      if (!listProject) {
         return res
           .status(404)
           .json({ error: "No such list for this account." });
-      if (gate.status === "denied") return sendViolation(res, gate.msg);
-      if (gate.status === "incompatible" || gate.lensType !== "SIMPLE_LIST") {
+      }
+      if (listProject.type !== "SIMPLE_LIST") {
         return res
           .status(400)
           .json({ error: "listId must identify a Simple list." });
       }
+      const gate = await gateLens(toEntUser(user), user.id, listProject.lensId);
+      if (gate.status === "denied") return sendViolation(res, gate.msg);
       const created = await createListItemCore(authEntities, {
         userId: user.id,
-        lensId: listId,
+        projectId: listProject.id,
         text,
         content: bodyString(req.body, "content"),
         sourceUrl: bodyString(req.body, "sourceUrl"),
@@ -978,13 +954,21 @@ export const cliInboxTriage = async (
   }
   const decision: TriageDecision = decisionRaw;
   const lensId = bodyString(req.body, "lensId");
+  const projectId = bodyString(req.body, "projectId");
   // Archive + delete discard the item — neither files into a lens, so lensId
-  // is optional for them. Every other decision (task/project/resource) needs
-  // a lens to file into.
-  const lensOptional = decision === "archive" || decision === "delete";
+  // is optional for them. list-item files into a Simple-list PROJECT, so it
+  // needs projectId instead. Every other decision (task/project/resource)
+  // needs a lens to file into.
+  const lensOptional =
+    decision === "archive" || decision === "delete" || decision === "list-item";
   if (!lensOptional && !lensId) {
     return res.status(400).json({
       error: `lensId is required for the "${decision}" decision.`,
+    });
+  }
+  if (decision === "list-item" && !projectId) {
+    return res.status(400).json({
+      error: 'projectId (a Simple list) is required for the "list-item" decision.',
     });
   }
 
@@ -997,7 +981,6 @@ export const cliInboxTriage = async (
       user.id,
       resolvedLensId,
       WORK_LENS_MESSAGE,
-      "ANY",
     );
     if (gate.status === "not-found") {
       // The core resolved a lens that doesn't belong to the user — treat as
@@ -1015,28 +998,6 @@ export const cliInboxTriage = async (
         message: `${gate.msg.feature} is a Pro feature.`,
         feature: gate.msg.feature,
         reason: gate.msg.reason,
-      };
-    }
-    if (gate.status === "incompatible") {
-      throw {
-        __entitlement: true,
-        httpStatus: 400,
-        message: LIFE_AREA_REQUIRED,
-      };
-    }
-    const wantsListItem = decision === "list-item";
-    if (wantsListItem && gate.lensType !== "SIMPLE_LIST") {
-      throw {
-        __entitlement: true,
-        httpStatus: 400,
-        message: "The list-item decision requires a Simple-list Lens.",
-      };
-    }
-    if (!wantsListItem && gate.lensType !== "LIFE_AREA") {
-      throw {
-        __entitlement: true,
-        httpStatus: 400,
-        message: LIFE_AREA_REQUIRED,
       };
     }
   };
@@ -1073,10 +1034,10 @@ export const cliInboxTriage = async (
       userId: user.id,
       inboxItemId,
       decision,
-      // Core types lensId as a required string, but archive + delete don't
-      // use it (they discard the item). Pass an empty string in that case so
-      // the type holds; the core's assertLens guard skips the call for them.
-      lensId: lensId ?? "",
+      // lensId is unused by archive/delete (they discard the item) and by
+      // list-item (it files into projectId). The core's assertLens guard
+      // skips the call for those decisions.
+      lensId,
       goalId: bodyString(req.body, "goalId"),
       projectId: bodyString(req.body, "projectId"),
       name: bodyString(req.body, "name"),
@@ -1167,9 +1128,6 @@ export const cliProjectList = async (
   if (gate.status === "denied") {
     return sendViolation(res, gate.msg);
   }
-  if (gate.status === "incompatible") {
-    return sendIncompatibleLens(res);
-  }
   try {
     const projects = await getProjectsData(authEntities, {
       userId: user.id,
@@ -1228,6 +1186,11 @@ export const cliProjectCreate = async (
   }
   const description = bodyString(req.body, "description");
   const goalId = bodyString(req.body, "goalId");
+  const typeRaw = bodyString(req.body, "type");
+  if (typeRaw !== undefined && typeRaw !== "STANDARD" && typeRaw !== "SIMPLE_LIST") {
+    return res.status(400).json({ error: "type must be STANDARD or SIMPLE_LIST." });
+  }
+  const type = (typeRaw as "STANDARD" | "SIMPLE_LIST" | undefined) ?? "STANDARD";
 
   const gate = await gateLens(entUser, user.id, lensId);
   if (gate.status === "not-found") {
@@ -1235,9 +1198,6 @@ export const cliProjectCreate = async (
   }
   if (gate.status === "denied") {
     return sendViolation(res, gate.msg);
-  }
-  if (gate.status === "incompatible") {
-    return sendIncompatibleLens(res);
   }
   // Per-lens project cap (FREE). Count non-done projects so finishing frees a
   // slot — same predicate createProject uses.
@@ -1265,6 +1225,7 @@ export const cliProjectCreate = async (
       lensId,
       goalId,
       description,
+      type,
     });
     return res.status(201).json({ project });
   } catch (err) {
@@ -1314,13 +1275,6 @@ export const cliProjectAddTask = async (
         message: `${gate.msg.feature} is a Pro feature.`,
         feature: gate.msg.feature,
         reason: gate.msg.reason,
-      };
-    }
-    if (gate.status === "incompatible") {
-      throw {
-        __entitlement: true,
-        httpStatus: 400,
-        message: LIFE_AREA_REQUIRED,
       };
     }
   };
@@ -1392,12 +1346,16 @@ export const cliResourceCreate = async (
     return res.status(400).json({ error: "projectId and title are required." });
   const project = await authEntities.Project.findFirst({
     where: { id: projectId, userId: user.id },
-    select: { lensId: true },
+    select: { lensId: true, type: true },
   });
   if (!project) return res.status(404).json({ error: "Project not found." });
+  if (project.type === "SIMPLE_LIST") {
+    return res
+      .status(400)
+      .json({ error: "A Simple list keeps only checklist items." });
+  }
   const gate = await gateLens(toEntUser(user), user.id, project.lensId);
   if (gate.status === "denied") return sendViolation(res, gate.msg);
-  if (gate.status === "incompatible") return sendIncompatibleLens(res);
   try {
     const { resource } = await createResourceCore(authEntities, {
       userId: user.id,
@@ -1435,7 +1393,6 @@ export const cliResourceUpdate = async (
       existing.project.lensId,
     );
     if (gate.status === "denied") return sendViolation(res, gate.msg);
-    if (gate.status === "incompatible") return sendIncompatibleLens(res);
     const { resource } = await updateResourceCore(authEntities, {
       userId: user.id,
       id,
@@ -1473,7 +1430,6 @@ export const cliResourceDelete = async (
       existing.project.lensId,
     );
     if (gate.status === "denied") return sendViolation(res, gate.msg);
-    if (gate.status === "incompatible") return sendIncompatibleLens(res);
     const result = await deleteResourceCore(authEntities, {
       userId: user.id,
       id,
@@ -1512,9 +1468,6 @@ export const cliGoalList = async (
   }
   if (gate.status === "denied") {
     return sendViolation(res, gate.msg);
-  }
-  if (gate.status === "incompatible") {
-    return sendIncompatibleLens(res);
   }
   try {
     const goals = await getGoalsData(authEntities, {
@@ -1580,9 +1533,6 @@ export const cliGoalCreate = async (
   }
   if (gate.status === "denied") {
     return sendViolation(res, gate.msg);
-  }
-  if (gate.status === "incompatible") {
-    return sendIncompatibleLens(res);
   }
   const goalCount = await authEntities.Goal.count({
     where: { userId: user.id, lensId, isDone: false },
@@ -1695,14 +1645,11 @@ export const cliLogbook = async (
     if (gate.status === "denied") {
       return sendViolation(res, gate.msg);
     }
-    if (gate.status === "incompatible") {
-      return sendIncompatibleLens(res);
-    }
     lensId = requestedLensId;
   } else {
     // No lens specified: default to the first accessible lens (the web Logbook
     // is lens-scoped, so we pick the user's default rather than mixing lenses).
-    const firstLifeAreaId = await firstAccessibleLifeAreaLensId(
+    const firstLifeAreaId = await firstAccessibleLensId(
       entUser,
       user.id,
     );
@@ -1767,9 +1714,6 @@ export const cliReview = async (
     }
     if (gate.status === "denied") {
       return sendViolation(res, gate.msg);
-    }
-    if (gate.status === "incompatible") {
-      return sendIncompatibleLens(res);
     }
   }
 

@@ -53,6 +53,7 @@ const PROJECT_ROW = {
   permalink: "ship-product-v2",
   name: "Ship product v2",
   dueDate: null as Date | null,
+  type: "STANDARD" as const,
   goal: { id: "goal-1", permalink: "grow-audience", name: "Grow audience" },
   tasks: [
     {
@@ -64,12 +65,12 @@ const PROJECT_ROW = {
       isDone: false,
     },
   ],
-  _count: { tasks: 2 },
+  _count: { tasks: 2, listItems: 0 },
 };
 
 const PROJECT_TOTALS = {
   id: "proj-1",
-  _count: { tasks: 1 },
+  _count: { tasks: 1, listItems: 0 },
 };
 
 describe("getProjects — guards", () => {
@@ -91,12 +92,13 @@ describe("getProjects — happy path", () => {
 
     const result = await getProjects({ lensId: "lens-1" }, m.context);
 
-    expect(result).toEqual([
+    expect(result).toMatchObject([
       {
         id: "proj-1",
         permalink: "ship-product-v2",
         name: "Ship product v2",
         dueDate: null,
+        type: "STANDARD",
         goal: {
           id: "goal-1",
           permalink: "grow-audience",
@@ -104,6 +106,8 @@ describe("getProjects — happy path", () => {
         },
         openCount: 2,
         doneCount: 1,
+        openItems: 0,
+        checkedItems: 0,
         nextAction: expect.objectContaining({
           id: "task-1",
           description: "Email Sarah",
@@ -128,6 +132,7 @@ describe("getProjects — happy path", () => {
           _count: {
             select: {
               tasks: { where: { isDone: false, status: { not: "WONT_DO" } } },
+              listItems: { where: { isDone: false } },
             },
           },
         }),
@@ -339,6 +344,7 @@ describe("createTask — guards", () => {
 
   it("throws on empty description", async () => {
     const m = guarded();
+    m.entities.Project.findFirst.mockResolvedValue({ type: "STANDARD" });
     await expect(
       createTask(
         { description: "   ", lensId: "l", projectId: "p" },
@@ -349,6 +355,7 @@ describe("createTask — guards", () => {
 
   it("throws when the target project is missing or belongs to another user", async () => {
     const m = guarded();
+    m.entities.Project.findFirst.mockResolvedValue(null);
     m.entities.Project.findUnique.mockResolvedValue(null);
 
     await expect(
@@ -364,6 +371,7 @@ describe("createTask — guards", () => {
 describe("createTask — happy path", () => {
   it("creates a project task scoped to the persisted project's lens", async () => {
     const m = guarded();
+    m.entities.Project.findFirst.mockResolvedValue({ type: "STANDARD" });
     m.entities.Project.findUnique.mockResolvedValue({
       id: "proj-1",
       lensId: "project-lens",

@@ -21,6 +21,22 @@ function userId(context: { user?: { id: string } | null }): string {
   return context.user.id;
 }
 
+/** Lens-accessibility parity: a list in a locked lens stays gated on FREE. */
+async function assertProjectLensAllowed(
+  context: {
+    user?: { id: string } | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    entities: any;
+  },
+  projectId: string,
+) {
+  const project = await context.entities.Project.findFirst({
+    where: { id: projectId, userId: userId(context) },
+    select: { lensId: true },
+  });
+  if (project) await assertLensAllowed(context, project.lensId);
+}
+
 async function assertItemLensAllowed(
   context: {
     user?: { id: string } | null;
@@ -29,34 +45,33 @@ async function assertItemLensAllowed(
   },
   id: string,
 ) {
-  const ownerId = userId(context);
   const item = await context.entities.ListItem.findFirst({
-    where: { id, userId: ownerId },
-    select: { lensId: true },
+    where: { id, userId: userId(context) },
+    select: { projectId: true },
   });
-  if (item) await assertLensAllowed(context, item.lensId);
+  if (item) await assertProjectLensAllowed(context, item.projectId);
 }
 
 export const getSimpleList = (async (args, context) => {
-  await assertLensAllowed(context, args.lensId);
+  await assertProjectLensAllowed(context, args.projectId);
   return getSimpleListCore(context.entities, {
     userId: userId(context),
-    lensId: args.lensId,
+    projectId: args.projectId,
   });
-}) satisfies GetSimpleList<{ lensId: string }, Awaited<ReturnType<typeof getSimpleListCore>>>;
+}) satisfies GetSimpleList<{ projectId: string }, Awaited<ReturnType<typeof getSimpleListCore>>>;
 
 export const createListItem = (async (args, context) => {
-  await assertLensAllowed(context, args.lensId);
+  await assertProjectLensAllowed(context, args.projectId);
   return createListItemCore(context.entities, {
     userId: userId(context),
-    lensId: args.lensId,
+    projectId: args.projectId,
     text: args.text,
     content: args.content,
     sourceUrl: args.sourceUrl,
     attachments: args.attachments,
   });
 }) satisfies CreateListItem<
-  { lensId: string; text: string; content?: string; sourceUrl?: string; attachments?: { filename: string; mimeType: string; dataBase64: string }[] },
+  { projectId: string; text: string; content?: string; sourceUrl?: string; attachments?: { filename: string; mimeType: string; dataBase64: string }[] },
   Awaited<ReturnType<typeof createListItemCore>>
 >;
 
@@ -96,12 +111,12 @@ export const deleteListItem = (async (args, context) => {
 >;
 
 export const clearCompletedListItems = (async (args, context) => {
-  await assertLensAllowed(context, args.lensId);
+  await assertProjectLensAllowed(context, args.projectId);
   return clearCompletedListItemsCore(context.entities, {
     userId: userId(context),
-    lensId: args.lensId,
+    projectId: args.projectId,
   });
 }) satisfies ClearCompletedListItems<
-  { lensId: string },
+  { projectId: string },
   Awaited<ReturnType<typeof clearCompletedListItemsCore>>
 >;

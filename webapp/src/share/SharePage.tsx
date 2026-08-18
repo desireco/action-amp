@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { createInboxItem, createListItem, getLenses, getProjectsForResolver, useQuery } from "wasp/client/operations";
+import { createInboxItem, createListItem, getProjectsForResolver, useQuery } from "wasp/client/operations";
 import { BrandMark } from "../components/ui/BrandMark";
 import { ArrowRightIcon, InboxIcon } from "../components/ui/icons";
 import { composeShareCapture, composeShareText, type ShareFields } from "./composeShareText";
@@ -31,7 +31,6 @@ export function SharePage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [destination, setDestination] = useState<Destination>("");
-  const { data: lenses } = useQuery(getLenses, {});
   const { data: projects } = useQuery(getProjectsForResolver, undefined);
 
   useEffect(() => {
@@ -72,18 +71,22 @@ export function SharePage() {
       })));
       const [destinationType, destinationId] = destination.split(":", 2);
       if (destinationType === "list" && destinationId) {
+        const listProject = (projects ?? []).find(
+          (project) => project.id === destinationId && project.type === "SIMPLE_LIST",
+        );
+        if (!listProject) throw new Error("Couldn't find that list.");
         await createListItem({
-          lensId: destinationId,
+          projectId: listProject.id,
           text: text || pending.files[0]?.filename || "Shared image",
           content: description.trim() || undefined,
           sourceUrl: capture.url || undefined,
           attachments: attachments.length ? attachments : undefined,
         });
         await clearPendingShare(pending.id);
-        localStorage.setItem("aa-lens-id", destinationId);
         void queryClient.invalidateQueries({ queryKey: ["getSimpleList"] });
         void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-        navigate("/do/list", { replace: true });
+        void queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+        navigate(`/do/projects/${listProject.permalink}`, { replace: true });
         return;
       }
       // Use the normal Wasp capture action, not the cross-origin share API.
@@ -95,7 +98,6 @@ export function SharePage() {
         content: description.trim() || undefined,
         sourceUrl: capture.url || undefined,
         projectId: destinationType === "project" ? destinationId : undefined,
-        lensId: destinationType === "list" ? destinationId : undefined,
         attachments: attachments.length ? attachments : undefined,
       });
       await clearPendingShare(pending.id);
@@ -121,8 +123,14 @@ export function SharePage() {
   if (pendingId && pending) {
     const capture = composeShareCapture(pending.fields);
     if (!capture.text && pending.files.length === 0) return renderError(ERROR_COPY.empty);
+    const listProjects = (projects ?? []).filter(
+      (project) => project.type === "SIMPLE_LIST",
+    );
+    const standardProjects = (projects ?? []).filter(
+      (project) => project.type !== "SIMPLE_LIST",
+    );
     const selectedList = destination.startsWith("list:")
-      ? (lenses ?? []).find((lens) => lens.id === destination.slice("list:".length))
+      ? listProjects.find((project) => project.id === destination.slice("list:".length))
       : null;
     return (
       <main className="aa-share">
@@ -165,19 +173,21 @@ export function SharePage() {
               <span>Where should this go? <em>optional</em></span>
               <select value={destination} onChange={(event) => setDestination(/* SAFETY: <select> value is always a valid Destination. */ event.target.value as Destination)}>
                 <option value="">Inbox — decide later</option>
-                {(projects?.length ?? 0) > 0 && (
+                {standardProjects.length > 0 && (
                   <optgroup label="Projects">
-                    {projects?.map((project) => (
+                    {standardProjects.map((project) => (
                       <option key={project.id} value={`project:${project.id}`}>
                         {project.name}{project.lensName ? ` · ${project.lensName}` : ""}
                       </option>
                     ))}
                   </optgroup>
                 )}
-                {(lenses ?? []).some((lens) => lens.type === "SIMPLE_LIST") && (
+                {listProjects.length > 0 && (
                   <optgroup label="Simple lists">
-                    {(lenses ?? []).filter((lens) => lens.type === "SIMPLE_LIST").map((lens) => (
-                      <option key={lens.id} value={`list:${lens.id}`}>{lens.name}</option>
+                    {listProjects.map((project) => (
+                      <option key={project.id} value={`list:${project.id}`}>
+                        {project.name}{project.lensName ? ` · ${project.lensName}` : ""}
+                      </option>
                     ))}
                   </optgroup>
                 )}

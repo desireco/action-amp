@@ -17,12 +17,6 @@ const prisma = new PrismaClient();
 
 /** The tx-client slice the lens reassignment transaction uses. */
 interface LensTxClient {
-  listItem: {
-    updateMany(args: {
-      where: { lensId: string };
-      data: { lensId: string };
-    }): Promise<unknown>;
-  };
   goal: {
     updateMany(args: {
       where: { lensId: string };
@@ -114,22 +108,18 @@ type LensContentEntities = {
   Goal: { count: (args: { where: { lensId: string } }) => Promise<number> };
   Project: { count: (args: { where: { lensId: string } }) => Promise<number> };
   Task: { count: (args: { where: { lensId: string } }) => Promise<number> };
-  ListItem: { count: (args: { where: { lensId: string } }) => Promise<number> };
 };
 
-type LensType = "LIFE_AREA" | "SIMPLE_LIST";
 type LensUpdateArgs = {
   id: string;
   name?: string;
   purpose?: string;
   color?: string | null;
-  type?: LensType;
 };
 type LensUpdateData = {
   name?: string;
   purpose?: string | null;
   color?: string | null;
-  type?: LensType;
 };
 
 async function lensHasContent(
@@ -140,34 +130,8 @@ async function lensHasContent(
     entities.Goal.count({ where: { lensId } }),
     entities.Project.count({ where: { lensId } }),
     entities.Task.count({ where: { lensId } }),
-    entities.ListItem.count({ where: { lensId } }),
   ]);
   return counts.some((count) => count > 0);
-}
-
-function assertValidLensType(
-  type: unknown,
-): asserts type is LensType | undefined {
-  if (type !== undefined && type !== "LIFE_AREA" && type !== "SIMPLE_LIST") {
-    throwHttpStatus(400, "Unknown lens type.");
-  }
-}
-
-async function assertLensTypeChangeAllowed(
-  entities: LensContentEntities,
-  existing: { id: string; isDefault: boolean; type: string },
-  nextType: LensType | undefined,
-): Promise<void> {
-  if (nextType === undefined || nextType === existing.type) return;
-  if (existing.isDefault) {
-    throwHttpStatus(409, "Default lenses always remain Life areas.");
-  }
-  if (await lensHasContent(entities, existing.id)) {
-    throwHttpStatus(
-      409,
-      "This lens still has content. Move or remove it before changing lens type.",
-    );
-  }
 }
 
 function buildLensUpdateData(args: LensUpdateArgs): LensUpdateData {
@@ -184,7 +148,6 @@ function buildLensUpdateData(args: LensUpdateArgs): LensUpdateData {
     }
     data.color = args.color;
   }
-  if (args.type !== undefined) data.type = args.type;
   return data;
 }
 
@@ -204,10 +167,6 @@ export const createLens = (async (args, context) => {
     throwHttpStatus(400, "Unknown lens color.");
   }
   const purpose = args.purpose?.trim() || null;
-  const type = args.type ?? "LIFE_AREA";
-  if (type !== "LIFE_AREA" && type !== "SIMPLE_LIST") {
-    throwHttpStatus(400, "Unknown lens type.");
-  }
 
   // Entitlement: lens configuration is Pro-only. Cap check uses Pro because
   // FREE never reaches here (the config gate above throws first).
@@ -226,7 +185,6 @@ export const createLens = (async (args, context) => {
         name,
         isDefault: false,
         isIncluded: false,
-        type,
         color: args.color ?? null,
         purpose,
         userId: context.user.id,
@@ -236,7 +194,6 @@ export const createLens = (async (args, context) => {
         name: true,
         isDefault: true,
         isIncluded: true,
-        type: true,
         color: true,
         purpose: true,
       },
@@ -251,7 +208,6 @@ export const createLens = (async (args, context) => {
 }) satisfies CreateLens<
   {
     name: string;
-    type?: "LIFE_AREA" | "SIMPLE_LIST";
     color?: string | null;
     purpose?: string;
   },
@@ -260,7 +216,6 @@ export const createLens = (async (args, context) => {
     name: string;
     isDefault: boolean;
     isIncluded: boolean;
-    type: string;
     color: string | null;
     purpose: string | null;
   }
@@ -271,18 +226,16 @@ export const updateLens = (async (args, context) => {
     throw new Error("Not authenticated.");
   }
   assertLensConfigAllowed(context);
-  assertValidLensType(args.type);
 
   // Tenancy-scoped lookup (Lens has no compound id+userId index → findFirst).
   const existing = await context.entities.Lens.findFirst({
     where: { id: args.id, userId: context.user.id },
-    select: { id: true, name: true, isDefault: true, type: true },
+    select: { id: true, name: true, isDefault: true },
   });
   if (!existing) {
     throwHttpStatus(404, "Lens not found.");
   }
 
-  await assertLensTypeChangeAllowed(context.entities, existing, args.type);
   const data = buildLensUpdateData(args);
 
   if (args.name !== undefined && args.name.trim() !== existing.name) {
@@ -297,7 +250,6 @@ export const updateLens = (async (args, context) => {
           name: true,
           isDefault: true,
           isIncluded: true,
-          type: true,
           color: true,
           purpose: true,
         },
@@ -318,7 +270,6 @@ export const updateLens = (async (args, context) => {
       name: true,
       isDefault: true,
       isIncluded: true,
-      type: true,
       color: true,
       purpose: true,
     },
@@ -330,7 +281,6 @@ export const updateLens = (async (args, context) => {
     name: string;
     isDefault: boolean;
     isIncluded: boolean;
-    type: string;
     color: string | null;
     purpose: string | null;
   }
@@ -344,7 +294,7 @@ export const deleteLens = (async (args, context) => {
 
   const existing = await context.entities.Lens.findFirst({
     where: { id: args.id, userId: context.user.id },
-    select: { id: true, isDefault: true, type: true, name: true },
+    select: { id: true, isDefault: true, name: true },
   });
   if (!existing) {
     throwHttpStatus(404, "Lens not found.");
@@ -364,13 +314,10 @@ export const deleteLens = (async (args, context) => {
     // Tenancy-check the target.
     const target = await context.entities.Lens.findFirst({
       where: { id: args.targetLensId, userId: context.user.id },
-      select: { id: true, type: true },
+      select: { id: true },
     });
     if (!target) {
       throwHttpStatus(404, "Target lens not found.");
-    }
-    if (target.type !== existing.type) {
-      throwHttpStatus(400, "Content can only move to a Lens of the same type.");
     }
     // Move all content to the target lens, then drop the now-empty lens. Keep
     // the multi-entity move transactional so a later failure rolls back earlier
@@ -381,13 +328,9 @@ export const deleteLens = (async (args, context) => {
     const moveData = { lensId: args.targetLensId };
     try {
       return await lensDb.transaction(async (tx) => {
-        if (existing.type === "SIMPLE_LIST") {
-          await tx.listItem.updateMany({ where: moveWhere, data: moveData });
-        } else {
-          await tx.goal.updateMany({ where: moveWhere, data: moveData });
-          await tx.task.updateMany({ where: moveWhere, data: moveData });
-          await tx.project.updateMany({ where: moveWhere, data: moveData });
-        }
+        await tx.goal.updateMany({ where: moveWhere, data: moveData });
+        await tx.task.updateMany({ where: moveWhere, data: moveData });
+        await tx.project.updateMany({ where: moveWhere, data: moveData });
         return await tx.lens.delete({
           where: { id: existing.id },
           select: { id: true },

@@ -30,9 +30,10 @@ describe("Simple-list triage flow", () => {
     });
   });
 
-  it("requires destination and nonblank text without task metadata", () => {
-    expect(canComplete(working("list-item"), "shopping")).toBe(true);
-    expect(canComplete(working("list-item", "  "), "shopping")).toBe(false);
-    expect(canComplete(working("list-item"), null)).toBe(false);
+  it("requires a list destination and nonblank text without task metadata", () => {
+    expect(canComplete(working("list-item"), "shopping", "list-1")).toBe(true);
+    expect(canComplete(working("list-item"), "shopping", null)).toBe(false);
+    expect(canComplete(working("list-item", "  "), "shopping", "list-1")).toBe(false);
+    expect(canComplete(working("list-item"), null, null)).toBe(false);
   });
 });

@@ -28,11 +28,14 @@ interface ProjectRow {
   description: string | null;
   dueDate: Date | string | null;
   isDone: boolean;
+  type: "STANDARD" | "SIMPLE_LIST";
   completedAt: Date | string | null;
   archivedAt: Date | string | null;
   goal: { id: string; name: string } | null;
   openCount: number;
   doneCount: number;
+  openItems: number;
+  checkedItems: number;
   nextAction: { id: string; description: string; priority: string; size: string } | null;
 }
 
@@ -98,13 +101,14 @@ export function ProjectsPage() {
     (project: ProjectRow) => !!project.archivedAt,
   );
 
-  const handleCreate = async (name: string, description?: string) => {
+  const handleCreate = async (name: string, description?: string, kind?: string) => {
     if (!lens) return;
     setSubmitting(true);
     setGate(null);
     try {
       if (fromInboxRef.current) {
         // Came from triage (Shift+P): convert the inbox item into this project.
+        // Triage's project decision always creates a STANDARD project.
         await triageInboxItem({
           inboxItemId: fromInboxRef.current,
           decision: "project",
@@ -113,7 +117,12 @@ export function ProjectsPage() {
         });
         fromInboxRef.current = null;
       } else {
-        await createProject({ name, lensId: lens.id, description });
+        await createProject({
+          name,
+          lensId: lens.id,
+          description,
+          type: kind === "list" ? "SIMPLE_LIST" : "STANDARD",
+        });
       }
       queryClient.invalidateQueries({ queryKey: ["getProjects"] });
       queryClient.invalidateQueries({ queryKey: ["getAppData"] });
@@ -140,6 +149,10 @@ export function ProjectsPage() {
       descriptionLabel="What makes it done"
       descriptionPlaceholder="The concrete result this project should create"
       submitLabel="Create project"
+      kinds={[
+        { value: "project", label: "Project", hint: "Tasks, focus, and progress." },
+        { value: "list", label: "Simple list", hint: "Add items directly and check them off." },
+      ]}
       onCreate={handleCreate}
       onCancel={() => setCreating(false)}
       submitting={submitting}
@@ -217,8 +230,10 @@ export function ProjectsPage() {
       {activeProjects.length > 0 && (
         <RecordCardGrid>
         {activeProjects.map((p: ProjectRow) => {
-          const total = p.openCount + p.doneCount;
-          const pct = total === 0 ? 0 : Math.round((p.doneCount / total) * 100);
+          const isList = p.type === "SIMPLE_LIST";
+          const total = isList ? p.openItems + p.checkedItems : p.openCount + p.doneCount;
+          const done = isList ? p.checkedItems : p.doneCount;
+          const pct = total === 0 ? 0 : Math.round((done / total) * 100);
           return (
             <ProgressCard
               key={p.id}
@@ -227,20 +242,24 @@ export function ProjectsPage() {
               title={p.name}
               description={p.description}
               progress={pct}
-              progressLabel={`${p.doneCount}/${total} done`}
+              progressLabel={isList ? `${p.checkedItems}/${total} checked` : `${p.doneCount}/${total} done`}
               meta={
                 <>
-                  <span>{p.goal?.name ?? "Standalone"}</span>
+                  <span>{isList ? "List" : (p.goal?.name ?? "Standalone")}</span>
                   <span className="aa-projects__dot" aria-hidden="true">·</span>
-                  <span>{p.openCount} open</span>
-                  <span className="aa-projects__dot" aria-hidden="true">·</span>
-                  <span>{p.doneCount} done</span>
+                  <span>{isList ? `${p.openItems} open` : `${p.openCount} open`}</span>
+                  {!isList && (
+                    <>
+                      <span className="aa-projects__dot" aria-hidden="true">·</span>
+                      <span>{p.doneCount} done</span>
+                    </>
+                  )}
                   {p.dueDate && <Chip variant="teal" small>{formatRelativeDue(p.dueDate)}</Chip>}
                 </>
               }
-              focusLabel={p.nextAction ? "Focus" : "Status"}
-              focusValue={p.nextAction?.description ?? "No next action"}
-              focusTone={p.nextAction ? "amber" : "muted"}
+              focusLabel={isList ? "List" : (p.nextAction ? "Focus" : "Status")}
+              focusValue={isList ? "Check items off directly" : (p.nextAction?.description ?? "No next action")}
+              focusTone={isList || !p.nextAction ? "muted" : "amber"}
             />
           );
         })}
@@ -304,7 +323,7 @@ export function ProjectsPage() {
                   description={p.description}
                   progress={pct}
                   progressLabel={`${p.doneCount}/${total} done`}
-                  meta={<><span>{p.goal?.name ?? "Standalone"}</span><span className="aa-projects__dot" aria-hidden="true">·</span><span>Archived</span></>}
+                  meta={<><span>{p.type === "SIMPLE_LIST" ? "List" : (p.goal?.name ?? "Standalone")}</span><span className="aa-projects__dot" aria-hidden="true">·</span><span>Archived</span></>}
                   focusLabel="Status"
                   focusValue="Archived"
                   focusTone="muted"

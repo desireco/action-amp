@@ -141,55 +141,73 @@ describe("TriagePage", () => {
   it("uses one editable confirmation to add a captured item to a Simple list", async () => {
     appData.current = {
       lenses: [
-        { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" },
-        { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" },
+        { id: "lens-1", name: "Work", color: "indigo" },
       ],
     };
-    activeLens.current = { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" };
+    activeLens.current = { id: "lens-1", name: "Work", color: "indigo" };
+    resolverProjects.current = [
+      { id: "groceries", name: "Groceries", permalink: "groceries", type: "SIMPLE_LIST", lensId: "lens-1", lensName: "Work", lensColor: "indigo" },
+    ];
     triageInboxItem.mockResolvedValue({ kind: "list-item", id: "li-1" });
     renderTriagePage();
 
-    const title = await screen.findByRole("textbox", { name: "Captured text" });
-    expect(screen.getByRole("button", { name: "Add to Shopping" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /project/i })).not.toBeInTheDocument();
-    expect(screen.queryByText(/2 · Specify/i)).not.toBeInTheDocument();
-    fireEvent.change(title, { target: { value: "Oat milk" } });
-    fireEvent.click(screen.getByRole("button", { name: "Add to Shopping" }));
+    fireEvent.click(await screen.findByRole("button", { name: /List item/ }));
+    const listPicker = screen.getByRole("combobox", { name: "Add to list" });
+    fireEvent.change(listPicker, { target: { value: "groceries" } });
 
-    await waitFor(() => expect(triageInboxItem).toHaveBeenCalledWith({
+    const title = await screen.findByRole("textbox", { name: "Captured text" });
+    expect(screen.getByRole("button", { name: "Add to Groceries" })).toBeInTheDocument();
+    // One-step flow: no Spec step, no When/Size/Priority property rows.
+    expect(screen.queryByText(/2 · Specify/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/When/i)).not.toBeInTheDocument();
+    fireEvent.change(title, { target: { value: "Oat milk" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add to Groceries" }));
+
+    await waitFor(() => expect(triageInboxItem).toHaveBeenCalledWith(expect.objectContaining({
       inboxItemId: "ix-1",
       decision: "list-item",
-      lensId: "shopping",
+      projectId: "groceries",
       name: "Oat milk",
-    }));
+    })));
   });
 
-  it("lets an explicit Simple-list token override inferred project context", async () => {
+  it("lets a list-item choice override inferred project context", async () => {
     appData.current = {
       lenses: [
-        { id: "lens-1", name: "Work", kind: "WORK", type: "LIFE_AREA", color: "indigo" },
-        { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" },
+        { id: "lens-1", name: "Work", color: "indigo" },
       ],
     };
-    resolverProjects.current = [{ id: "project-1", name: "Groceries", lensId: "lens-1" }];
+    resolverProjects.current = [
+      { id: "project-1", name: "Groceries", permalink: "groceries", type: "STANDARD", lensId: "lens-1", lensName: "Work", lensColor: "indigo" },
+      { id: "packing", name: "Packing", permalink: "packing", type: "SIMPLE_LIST", lensId: "lens-1", lensName: "Work", lensColor: "indigo" },
+    ];
     inboxItems.current[0] = {
       ...inboxItems.current[0],
       text: "Buy milk Groceries",
-      parsedLens: "shopping",
       parsedProject: "Groceries",
     };
     renderTriagePage();
-    expect(await screen.findByRole("radio", { name: "Shopping" })).toBeChecked();
-    expect(screen.getByRole("button", { name: "Add to Shopping" })).toBeInTheDocument();
+    // Project-bridged inference names the task destination, but the user can
+    // still route this item to a Simple list instead.
+    fireEvent.click(await screen.findByRole("button", { name: /List item/ }));
+    const listPicker = screen.getByRole("combobox", { name: "Add to list" });
+    fireEvent.change(listPicker, { target: { value: "packing" } });
+    expect(screen.getByRole("button", { name: "Add to Packing" })).toBeInTheDocument();
   });
 
   it("allows image-backed captures to move into a Simple list", async () => {
     appData.current = {
-      lenses: [{ id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" }],
+      lenses: [{ id: "lens-1", name: "Work", color: "indigo" }],
     };
-    activeLens.current = { id: "shopping", name: "Shopping", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" };
+    activeLens.current = { id: "lens-1", name: "Work", color: "indigo" };
+    resolverProjects.current = [
+      { id: "shopping", name: "Shopping", permalink: "shopping", type: "SIMPLE_LIST", lensId: "lens-1", lensName: "Work", lensColor: "indigo" },
+    ];
     inboxItems.current[0] = { ...inboxItems.current[0], attachments: [{ id: "image-1" }] };
     renderTriagePage();
+    fireEvent.click(await screen.findByRole("button", { name: /List item/ }));
+    const listPicker = screen.getByRole("combobox", { name: "Add to list" });
+    fireEvent.change(listPicker, { target: { value: "shopping" } });
     expect(await screen.findByText(/attachments will move with it to Shopping/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add to Shopping" })).toBeEnabled();
   });

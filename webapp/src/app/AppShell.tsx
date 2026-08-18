@@ -242,7 +242,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       ? (lenses.find((l) => l.isIncluded) ?? resolvedLens)
       : resolvedLens;
   const activeLensName = activeLens?.name ?? "Me";
-  const isSimpleListLens = activeLens?.type === "SIMPLE_LIST";
   // Self-heal: if the stored id no longer matches a lens (deleted?), persist
   // the fallback so we don't keep looking up a stale id.
   useEffect(() => {
@@ -252,29 +251,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       setWorkGated(false);
     }
   }, [activeLens, lensId]);
-
-  // A Lens type owns its workflow routes. Keep settings/admin reachable as
-  // persistent account surfaces, but normalize every workflow route after the
-  // active Lens resolves so stale URLs cannot expose the other workflow.
-  useEffect(() => {
-    if (!activeLens) return;
-    const isPersistentRoute =
-      location.pathname.startsWith("/do/settings") ||
-      location.pathname.startsWith("/do/admin") ||
-      location.pathname.startsWith("/do/inbox");
-    if (
-      activeLens.type === "SIMPLE_LIST" &&
-      location.pathname !== "/do/list" &&
-      !isPersistentRoute
-    ) {
-      navigate("/do/list", { replace: true });
-    } else if (
-      activeLens.type === "LIFE_AREA" &&
-      location.pathname === "/do/list"
-    ) {
-      navigate("/do", { replace: true });
-    }
-  }, [activeLens?.id, activeLens?.type, location.pathname, navigate]);
 
   // The Work lens is "visible-but-locked" for FREE users: shown in the switch
   // with a tiny "Pro" affordance (proLocked), but selecting it shows the gate.
@@ -288,7 +264,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           label: l.name,
           color: l.color ?? undefined,
           purpose: l.purpose ?? undefined,
-          type: l.type,
           // FREE: only PERSONAL is usable; WORK + CUSTOM are gated.
           proLocked: workLocked && !l.isIncluded,
         }))
@@ -298,7 +273,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             label: "Work",
             color: "indigo",
             purpose: undefined,
-            type: "LIFE_AREA" as const,
             proLocked: workLocked,
           },
           {
@@ -306,7 +280,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             label: "Me",
             color: "emerald",
             purpose: undefined,
-            type: "LIFE_AREA" as const,
             proLocked: false,
           },
         ];
@@ -326,9 +299,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
     setWorkGated(false);
     setLens(id);
-    if (target?.type === "SIMPLE_LIST" && !location.pathname.startsWith("/do/inbox")) navigate("/do/list");
-    else if (target?.type === "LIFE_AREA" && location.pathname === "/do/list")
-      navigate("/do");
   };
 
   // The value pages consume via useActiveLens() to scope their queries.
@@ -338,7 +308,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         name: activeLens.name,
         color: activeLens.color ?? null,
         isIncluded: activeLens.isIncluded,
-        type: activeLens.type,
         purpose: activeLens.purpose,
       }
     : null;
@@ -491,9 +460,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     onCommandPalette: () => {
       if (!paletteBlocked) openPalette("command");
     },
-    onGoHome: isSimpleListLens ? undefined : () => navigate("/do"),
-    onNavigate: (dest) =>
-      navigate(isSimpleListLens ? "/do/list" : NAV_ROUTE[dest]),
+    onGoHome: () => navigate("/do"),
+    onNavigate: (dest) => navigate(NAV_ROUTE[dest]),
     onToggleCheatsheet: () => {
       const next = !cheatsheetOpen;
       closeGlobalOverlays();
@@ -543,8 +511,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="aa-app-side">
         <Link
           className="aa-app-brand"
-          to={isSimpleListLens ? "/do/list" : "/do"}
-          title={isSimpleListLens ? "List" : "Next"}
+          to="/do"
+          title="Next"
         >
           <span className="aa-app-mark" aria-hidden="true">
             <BrandMark size="sm" />
@@ -610,25 +578,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             Inbox (capture, universal), Today (day's commitment, universal),
             Do (Next/What-Now chooser, lens-scoped). All three are flat links;
             none belongs to a group, so they sit together at the top. */}
-        {isSimpleListLens && (
-          <nav className="aa-app-nav" aria-label="List navigation">
-            <NavItem
-              icon={<InboxIcon />}
-              label="Inbox"
-              active={isActive("/do/inbox")}
-              to="/do/inbox"
-              count={counts.inbox || undefined}
-            />
-            <NavItem
-              icon={<ListIcon />}
-              label="List"
-              active={isActive("/do/list")}
-              to="/do/list"
-            />
-          </nav>
-        )}
-        {!isSimpleListLens && (
-          <>
+        <>
             <nav className="aa-app-nav">
               <NavItem
                 icon={<InboxIcon />}
@@ -753,8 +703,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </div>
               </div>
             </nav>
-          </>
-        )}
+        </>
 
         {/* User footer */}
         <div className="aa-app-user">
@@ -883,39 +832,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
         <div
-          className={`aa-mobile-dock__row${isSimpleListLens ? " is-simple-list" : ""}`}
+          className="aa-mobile-dock__row"
         >
-          {isSimpleListLens ? (
-            <>
-              <Link
-                className={`aa-mobile-dock__item ${isActive("/do/inbox") ? "active" : ""}`}
-                to="/do/inbox"
-                aria-label="Inbox"
-              >
-                <InboxIcon />
-                <span>Inbox</span>
-              </Link>
-              <Link
-                className={`aa-mobile-dock__item ${isActive("/do/list") ? "active" : ""}`}
-                to="/do/list"
-                aria-label="List"
-              >
-                <ListIcon />
-                <span>List</span>
-              </Link>
-              <button
-                type="button"
-                className={`aa-mobile-dock__item aa-mobile-dock__lens-btn ${mobileLensOpen ? "active" : ""}`}
-                aria-label={`Lens: ${activeLensName}`}
-                aria-expanded={mobileLensOpen}
-                onClick={() => setMobileLensOpen((v) => !v)}
-              >
-                <span className="aa-mobile-dock__lens-dot" aria-hidden="true" />
-                <span>{activeLensName}</span>
-              </button>
-            </>
-          ) : (
-            <>
+          <>
               {/* Mobile dock: "Do" is the Next/What-Now chooser (the home screen).
               "Today" leaves the dock (its slot is covered by a Today link on
               the Next page, plus the Today↔Upcoming cross-link). Desktop keeps
@@ -962,8 +881,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span className="aa-mobile-dock__lens-dot" aria-hidden="true" />
                 <span>{activeLensName}</span>
               </button>
-            </>
-          )}
+          </>
         </div>
       </nav>
 
@@ -1014,13 +932,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           onCapture={openCapture}
           onToggleTheme={toggleTheme}
           onOpenShortcuts={() => setCheatsheetOpen(true)}
-          activeLensType={activeLens?.type ?? "LIFE_AREA"}
         />
       )}
       {captureOpen && (
         <CapturePopover
           onClose={() => setCaptureOpen(false)}
-          projects={resolverProjects ?? []}
+          projects={(resolverProjects ?? []).filter(
+            (project: { type: string }) => project.type !== "SIMPLE_LIST",
+          )}
           customLensNames={customLensNames}
           activeLensName={activeLens?.name ?? null}
           initialFiles={pendingCaptureFiles}

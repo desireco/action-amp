@@ -10,7 +10,6 @@ import {
 } from "wasp/client/operations";
 import type { ListItem } from "@prisma/client";
 import { AttachmentThumbs, ConfirmDialog } from "../components/ui";
-import { useActiveLens } from "../app/lensContext";
 import "./SimpleListPage.css";
 
 function errorMessage(error: unknown, fallback: string): string {
@@ -32,8 +31,13 @@ function safeSourceUrl(value: string | null): string | null {
   }
 }
 
-export function SimpleListPage() {
-  const lens = useActiveLens();
+/**
+ * The checklist body of a Simple-list Project — everything below the page's
+ * own header/breadcrumb (add form, Open/Checked sections, clear-checked,
+ * n/j/k/space/e/Delete keys). Extracted from the old `/do/list` page when
+ * simple lists moved from Lens type to Project type (2026-08-18).
+ */
+export function SimpleListChecklist({ projectId }: { projectId: string }) {
   const addInput = useRef<HTMLInputElement>(null);
   const refocusAfterAdd = useRef(false);
   const [text, setText] = useState("");
@@ -45,8 +49,7 @@ export function SimpleListPage() {
   const [confirmClear, setConfirmClear] = useState(false);
   const { data, isLoading, error: queryError } = useQuery(
     getSimpleList,
-    lens?.type === "SIMPLE_LIST" ? { lensId: lens.id } : undefined,
-    { enabled: lens?.type === "SIMPLE_LIST" },
+    { projectId },
   );
 
   // SAFETY: type assertion is safe — value is validated or from a trusted source.
@@ -75,10 +78,10 @@ export function SimpleListPage() {
   }
 
   async function addItem() {
-    if (!lens || !text.trim()) return;
+    if (!text.trim()) return;
     refocusAfterAdd.current = true;
     await mutate("add", async () => {
-      await createListItem({ lensId: lens.id, text });
+      await createListItem({ projectId, text });
       setText("");
     });
   }
@@ -136,26 +139,8 @@ export function SimpleListPage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [confirmClear, ordered, saving, selectedId]);
 
-  if (!lens) {
-    return <div className="aa-simple-list__loading" aria-label="Loading list" />;
-  }
-  if (lens.type !== "SIMPLE_LIST") {
-    return (
-      <section className="aa-simple-list aa-simple-list--incompatible">
-        <h1>Choose a Simple-list Lens.</h1>
-        <p>This route is only for direct checklists. Your Life area is unchanged.</p>
-      </section>
-    );
-  }
-
   return (
-    <section className="aa-simple-list">
-      <header className="aa-simple-list__header">
-        <div className="aa-simple-list__eyebrow">Simple list</div>
-        <h1>{lens.name}</h1>
-        {lens.purpose && <p>{lens.purpose}</p>}
-      </header>
-
+    <section className="aa-simple-list aa-simple-list--project">
       <form className="aa-simple-list__add" onSubmit={(event) => { event.preventDefault(); void addItem(); }}>
         <input
           ref={addInput}
@@ -237,7 +222,7 @@ export function SimpleListPage() {
           confirmDisabled={saving === "clear"}
           onClose={() => setConfirmClear(false)}
           onConfirm={() => void mutate("clear", async () => {
-            await clearCompletedListItems({ lensId: lens.id });
+            await clearCompletedListItems({ projectId });
             setConfirmClear(false);
           })}
         />

@@ -7,7 +7,6 @@ import {
   cliAccessViolation,
   sitewideSearchViolation,
   resolveLens,
-  resolveLensType,
   WORK_LENS_MESSAGE,
   CUSTOM_LENSES_MESSAGE,
 } from "./entitlements";
@@ -104,17 +103,25 @@ export async function assertLensAllowed(
   throwIfViolation(lensViolation(context.user ?? null, lens, msg));
 }
 
-/** Product-type guard, deliberately separate from paid entitlement checks. */
-export async function assertLifeAreaLens(
+/**
+ * Product-type guard, deliberately separate from paid entitlement checks:
+ * structured writes (tasks, resources, goal links) need a STANDARD project.
+ * A SIMPLE_LIST project takes list items only — its checklist is the whole
+ * project. 404 for an unknown project, 400 for a type mismatch.
+ */
+export async function assertStandardProject(
   context: GuardContext,
-  lensId: string,
+  projectId: string,
 ): Promise<void> {
-  const type = context.user
-    ? await resolveLensType(context.entities, context.user.id, lensId)
+  const project = context.user
+    ? await context.entities.Project.findFirst({
+        where: { id: projectId, userId: context.user.id },
+        select: { type: true },
+      })
     : null;
-  if (!type) throwHttpStatus(404, "Lens not found.");
-  if (type !== "LIFE_AREA") {
-    throwHttpStatus(400, "This action requires a Life-area Lens. Add checklist items directly in this list.");
+  if (!project) throwHttpStatus(404, "Project not found.");
+  if (project.type !== "STANDARD") {
+    throwHttpStatus(400, "This action requires a standard Project. Add checklist items directly in the list.");
   }
 }
 

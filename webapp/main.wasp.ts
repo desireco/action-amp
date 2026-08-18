@@ -104,7 +104,6 @@ import {
   deleteLens,
 } from "./src/lenses/operations" with { type: "ref" };
 import { getLenses } from "./src/lenses/operations" with { type: "ref" };
-import { SimpleListPage } from "./src/simpleLists/SimpleListPage" with { type: "ref" };
 import {
   getSimpleList,
   createListItem,
@@ -307,7 +306,6 @@ export default app({
       page(RedirectToMarketing, { authRequired: false }),
     ),
     route("AppRoute", "/do", page(NextPage)),
-    route("SimpleListRoute", "/do/list", page(SimpleListPage)),
     route("FocusRoute", "/do/focus", page(FocusPage)),
     route("InboxRoute", "/do/inbox", page(InboxPage)),
     route("InboxTriageRoute", "/do/inbox/review", page(TriagePage)),
@@ -469,7 +467,7 @@ export default app({
     action(setProjectDone, { entities: ["Project", "Lens"], auth: true }),
     action(archiveProject, { entities: ["Project", "Lens"], auth: true }),
     action(moveProject, { entities: ["Project", "Task", "Lens"], auth: true }),
-    action(updateProject, { entities: ["Project", "Goal"], auth: true }),
+    action(updateProject, { entities: ["Project", "Goal", "Task", "ListItem"], auth: true }),
     action(deleteProject, {
       entities: ["Project", "Task", "Resource", "InboxItem"],
       auth: true,
@@ -595,32 +593,32 @@ export default app({
       entities: ["Lens", "Project", "Task", "User"],
       auth: true,
     }),
-    action(createLens, { entities: ["Lens", "ListItem"], auth: true }),
+    action(createLens, { entities: ["Lens"], auth: true }),
     action(updateLens, {
-      entities: ["Lens", "Task", "Project", "Goal", "ListItem"],
+      entities: ["Lens", "Task", "Project", "Goal"],
       auth: true,
     }),
     action(deleteLens, {
-      entities: ["Lens", "Task", "Project", "Goal", "ListItem"],
+      entities: ["Lens", "Task", "Project", "Goal"],
       auth: true,
     }),
     query(getLenses, {
-      entities: ["Lens", "Task", "Project", "Goal", "ListItem"],
+      entities: ["Lens", "Task", "Project", "Goal"],
       auth: true,
     }),
     query(getSimpleList, {
-      entities: ["Lens", "ListItem", "ListItemAttachment"],
+      entities: ["Project", "Lens", "ListItem", "ListItemAttachment"],
       auth: true,
     }),
     action(createListItem, {
-      entities: ["Lens", "ListItem", "ListItemAttachment"],
+      entities: ["Project", "Lens", "ListItem", "ListItemAttachment"],
       auth: true,
     }),
-    action(renameListItem, { entities: ["Lens", "ListItem"], auth: true }),
-    action(setListItemDone, { entities: ["Lens", "ListItem"], auth: true }),
-    action(deleteListItem, { entities: ["Lens", "ListItem"], auth: true }),
+    action(renameListItem, { entities: ["Project", "Lens", "ListItem"], auth: true }),
+    action(setListItemDone, { entities: ["Project", "Lens", "ListItem"], auth: true }),
+    action(deleteListItem, { entities: ["Project", "Lens", "ListItem"], auth: true }),
     action(clearCompletedListItems, {
-      entities: ["Lens", "ListItem"],
+      entities: ["Project", "Lens", "ListItem"],
       auth: true,
     }),
     action(setPreferredName, {

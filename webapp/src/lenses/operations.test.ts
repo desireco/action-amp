@@ -30,10 +30,9 @@ interface LensTxForTest {
   lens: { delete: ReturnType<typeof vi.fn> };
 }
 
-/** Swap the lensDb transaction seam to run against a fake tx. The listItem
- *  delegate is only touched for SIMPLE_LIST lenses — LIFE_AREA fakes omit it. */
+/** Swap the lensDb transaction seam to run against a fake tx. */
 function swapTransaction(
-  tx: Partial<LensTxForTest> & Omit<LensTxForTest, "listItem">,
+  tx: Partial<LensTxForTest>,
 ) {
   // SAFETY: the fake satisfies the LensTxClient slice at runtime — vi.fn()
   // spies just aren't assignable to the Prisma-typed delegates.
@@ -96,7 +95,6 @@ describe("createLens", () => {
         name: "Studio",
         isDefault: false,
         isIncluded: false,
-        type: "LIFE_AREA",
         color: "coral",
         purpose: "side projects",
         userId: "user-1",
@@ -106,7 +104,6 @@ describe("createLens", () => {
         name: true,
         isDefault: true,
         isIncluded: true,
-        type: true,
         color: true,
         purpose: true,
       },
@@ -128,26 +125,6 @@ describe("createLens", () => {
       createLens({ name: "X", color: "hotpink" }, m.context),
     ).rejects.toThrow(/Unknown lens color/);
     expect(m.entities.Lens.create).not.toHaveBeenCalled();
-  });
-
-  it("creates a Simple-list Lens when selected", async () => {
-    resetSpies();
-    const m = mockContext(PRO_USER);
-    m.entities.Lens.count.mockResolvedValue(2);
-    m.entities.Lens.create.mockResolvedValue({
-      id: "shopping",
-      type: "SIMPLE_LIST",
-    });
-    await createLens({ name: "Shopping", type: "SIMPLE_LIST" }, m.context);
-    expect(m.entities.Lens.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          isDefault: false,
-          isIncluded: false,
-          type: "SIMPLE_LIST",
-        }),
-      }),
-    );
   });
 
   it("rewrites a P2002 unique violation into a 409", async () => {
@@ -180,7 +157,6 @@ describe("createLens", () => {
         name: "Studio",
         isDefault: false,
         isIncluded: false,
-        type: "LIFE_AREA",
         color: null,
         purpose: null,
         userId: "user-1",
@@ -190,7 +166,6 @@ describe("createLens", () => {
         name: true,
         isDefault: true,
         isIncluded: true,
-        type: true,
         color: true,
         purpose: true,
       },
@@ -199,80 +174,6 @@ describe("createLens", () => {
 });
 
 describe("updateLens", () => {
-  it("changes type for an empty custom Lens", async () => {
-    resetSpies();
-    const m = mockContext(PRO_USER);
-    m.entities.Lens.findFirst.mockResolvedValue({
-      id: "l",
-      name: "Errands",
-      isDefault: false,
-      type: "LIFE_AREA",
-    });
-    m.entities.Goal.count.mockResolvedValue(0);
-    m.entities.Project.count.mockResolvedValue(0);
-    m.entities.Task.count.mockResolvedValue(0);
-    m.entities.ListItem.count.mockResolvedValue(0);
-    m.entities.Lens.update.mockResolvedValue({
-      id: "l",
-      name: "Errands",
-      kind: "CUSTOM",
-      type: "SIMPLE_LIST",
-    });
-
-    await updateLens({ id: "l", type: "SIMPLE_LIST" }, m.context);
-
-    expect(m.entities.Lens.update).toHaveBeenCalledWith({
-      where: { id: "l" },
-      data: { type: "SIMPLE_LIST" },
-      select: {
-        id: true,
-        name: true,
-        isDefault: true,
-        isIncluded: true,
-        type: true,
-        color: true,
-        purpose: true,
-      },
-    });
-  });
-
-  it("blocks type conversion while a custom Lens has content", async () => {
-    resetSpies();
-    const m = mockContext(PRO_USER);
-    m.entities.Lens.findFirst.mockResolvedValue({
-      id: "l",
-      name: "Studio",
-      kind: "CUSTOM",
-      type: "LIFE_AREA",
-    });
-    m.entities.Goal.count.mockResolvedValue(1);
-    m.entities.Project.count.mockResolvedValue(0);
-    m.entities.Task.count.mockResolvedValue(0);
-    m.entities.ListItem.count.mockResolvedValue(0);
-
-    await expect(
-      updateLens({ id: "l", type: "SIMPLE_LIST" }, m.context),
-    ).rejects.toThrow(/still has content/i);
-    expect(m.entities.Lens.update).not.toHaveBeenCalled();
-  });
-
-  it("keeps seeded Lens types fixed", async () => {
-    resetSpies();
-    const m = mockContext(PRO_USER);
-    m.entities.Lens.findFirst.mockResolvedValue({
-      id: "work",
-      name: "Work",
-      isDefault: true,
-      type: "LIFE_AREA",
-    });
-
-    await expect(
-      updateLens({ id: "work", type: "SIMPLE_LIST" }, m.context),
-    ).rejects.toThrow(/always remain Life areas/i);
-    expect(m.entities.Goal.count).not.toHaveBeenCalled();
-    expect(m.entities.Lens.update).not.toHaveBeenCalled();
-  });
-
   it("updates name/purpose/color on a tenancy-scoped lens", async () => {
     resetSpies();
     const m = mockContext(PRO_USER);
@@ -295,7 +196,7 @@ describe("updateLens", () => {
     );
     expect(m.entities.Lens.findFirst).toHaveBeenCalledWith({
       where: { id: "l", userId: "user-1" },
-      select: { id: true, name: true, isDefault: true, type: true },
+      select: { id: true, name: true, isDefault: true },
     });
     expect(m.entities.Lens.update).toHaveBeenCalledWith({
       where: { id: "l" },
@@ -305,7 +206,6 @@ describe("updateLens", () => {
         name: true,
         isDefault: true,
         isIncluded: true,
-        type: true,
         color: true,
         purpose: true,
       },
@@ -337,7 +237,6 @@ describe("updateLens", () => {
         name: true,
         isDefault: true,
         isIncluded: true,
-        type: true,
         color: true,
         purpose: true,
       },
@@ -532,60 +431,6 @@ describe("deleteLens", () => {
     expect(m.entities.Task.updateMany).not.toHaveBeenCalled();
   });
 
-  it("rejects cross-type reassignment", async () => {
-    resetSpies();
-    const m = mockContext(PRO_USER);
-    m.entities.Lens.findFirst
-      .mockResolvedValueOnce({
-        id: "l",
-        name: "Studio",
-        kind: "CUSTOM",
-        type: "LIFE_AREA",
-      })
-      .mockResolvedValueOnce({ id: "shopping", type: "SIMPLE_LIST" });
-    await expect(
-      deleteLens(
-        { id: "l", mode: "reassign", targetLensId: "shopping" },
-        m.context,
-      ),
-    ).rejects.toThrow(/same type/i);
-    // No transaction ran: the seam still holds the real runner, which the
-    // mocked context can't satisfy — proof the op rejected before reaching it.
-    expect(lensDb.transaction).toBe(realTransaction);
-  });
-
-  it("reassigns Simple-list items without moving structured entities", async () => {
-    resetSpies();
-    const m = mockContext(PRO_USER);
-    const tx = {
-      listItem: { updateMany: vi.fn().mockResolvedValue({ count: 2 }) },
-      goal: { updateMany: vi.fn() },
-      task: { updateMany: vi.fn() },
-      project: { updateMany: vi.fn() },
-      lens: { delete: vi.fn().mockResolvedValue({ id: "shopping" }) },
-    };
-    swapTransaction(tx);
-    m.entities.Lens.findFirst
-      .mockResolvedValueOnce({
-        id: "shopping",
-        name: "Shopping",
-        kind: "CUSTOM",
-        type: "SIMPLE_LIST",
-      })
-      .mockResolvedValueOnce({ id: "packing", type: "SIMPLE_LIST" });
-
-    await deleteLens(
-      { id: "shopping", mode: "reassign", targetLensId: "packing" },
-      m.context,
-    );
-    expect(tx.listItem.updateMany).toHaveBeenCalledWith({
-      where: { lensId: "shopping" },
-      data: { lensId: "packing" },
-    });
-    expect(tx.goal.updateMany).not.toHaveBeenCalled();
-    expect(tx.task.updateMany).not.toHaveBeenCalled();
-    expect(tx.project.updateMany).not.toHaveBeenCalled();
-  });
 });
 
 describe("getLenses", () => {
@@ -605,28 +450,24 @@ describe("getLenses", () => {
         name: "Studio",
         isDefault: false,
         isIncluded: false,
-        type: "LIFE_AREA",
         color: "coral",
         purpose: "side",
         _count: { goals: 0, projects: 1, tasks: 4 },
         goals: [],
         projects: [{ id: "p", name: "Studio build" }],
         tasks: [{ id: "t" }],
-        listItems: [],
       },
       {
         id: "l-me",
         name: "Me",
         isDefault: true,
         isIncluded: true,
-        type: "LIFE_AREA",
         color: "emerald",
         purpose: null,
         _count: { goals: 1, projects: 2, tasks: 3 },
         goals: [{ id: "g" }],
         projects: [{ id: "p", name: "Personal project" }],
         tasks: [{ id: "t" }],
-        listItems: [],
       },
     ]);
     const out = await getLenses({}, m.context);

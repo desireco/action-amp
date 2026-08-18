@@ -69,12 +69,12 @@ describe("triageInboxItem — Simple-list decisions", () => {
       content: "Useful checklist patterns",
       sourceUrl: "https://example.com/list",
     });
-    m.entities.Lens.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST" });
+    m.entities.Project.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST", lensId: "me" });
     m.entities.ListItem.findFirst.mockResolvedValue({ order: 2 });
     m.entities.ListItem.create.mockResolvedValue({ id: "li-1" });
 
     const result = await triageInboxItem(
-      { inboxItemId: "ix-1", decision: "list-item", lensId: "shopping" },
+      { inboxItemId: "ix-1", decision: "list-item", projectId: "shopping" },
       m.context,
     );
 
@@ -82,14 +82,13 @@ describe("triageInboxItem — Simple-list decisions", () => {
     expect(m.entities.ListItem.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         userId: "user-1",
-        lensId: "shopping",
+        projectId: "shopping",
         text: "Read later",
         content: "Useful checklist patterns",
         sourceUrl: "https://example.com/list",
       }),
     });
     expect(m.entities.Task.create).not.toHaveBeenCalled();
-    expect(m.entities.Project.findFirst).not.toHaveBeenCalled();
     expect(m.entities.Tag.upsert).not.toHaveBeenCalled();
     expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({ where: { id: "ix-1" } });
     expect(m.entities.User.updateMany).toHaveBeenCalledWith({
@@ -102,7 +101,7 @@ describe("triageInboxItem — Simple-list decisions", () => {
     // The main read selects attachment metadata; the blobs are fetched in the
     // branches that move the images (task + list-item).
     const m = arrange({ attachments: [{ id: "attachment-1", filename: "image.jpg", mimeType: "image/jpeg", size: 5 }] });
-    m.entities.Lens.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST" });
+    m.entities.Project.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST", lensId: "me" });
     m.entities.ListItem.findFirst.mockResolvedValue(null);
     m.entities.ListItem.create.mockResolvedValue({ id: "list-item-1" });
     m.entities.InboxAttachment.findMany.mockResolvedValue([
@@ -110,7 +109,7 @@ describe("triageInboxItem — Simple-list decisions", () => {
     ]);
 
     await triageInboxItem(
-      { inboxItemId: "ix-1", decision: "list-item", lensId: "shopping" },
+      { inboxItemId: "ix-1", decision: "list-item", projectId: "shopping" },
       m.context,
     );
 
@@ -125,25 +124,35 @@ describe("triageInboxItem — Simple-list decisions", () => {
     expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({ where: { id: "ix-1" } });
   });
 
-  it("rejects decision and Lens-type mismatches before creating output", async () => {
-    const simple = arrange();
-    simple.entities.Lens.findFirst.mockResolvedValue({ type: "SIMPLE_LIST" });
+  it("rejects decision and Project-type mismatches before creating output", async () => {
+    const noProject = arrange();
     await expect(
       triageInboxItem(
-        { inboxItemId: "ix-1", decision: "upcoming", lensId: "shopping" },
-        simple.context,
+        { inboxItemId: "ix-1", decision: "list-item" },
+        noProject.context,
       ),
-    ).rejects.toThrow(/require a Life-area Lens/i);
-    expect(simple.entities.Task.create).not.toHaveBeenCalled();
+    ).rejects.toThrow(/require a Simple-list Project/i);
+    expect(noProject.entities.ListItem.create).not.toHaveBeenCalled();
 
-    const life = arrange();
+    const standard = arrange();
+    standard.entities.Project.findFirst.mockResolvedValue({ id: "mvp", type: "STANDARD", lensId: "me" });
     await expect(
       triageInboxItem(
-        { inboxItemId: "ix-1", decision: "list-item", lensId: "work" },
-        life.context,
+        { inboxItemId: "ix-1", decision: "list-item", projectId: "mvp" },
+        standard.context,
       ),
-    ).rejects.toThrow(/require a Simple-list Lens/i);
-    expect(life.entities.ListItem.create).not.toHaveBeenCalled();
+    ).rejects.toThrow(/require a Simple-list Project/i);
+    expect(standard.entities.ListItem.create).not.toHaveBeenCalled();
+
+    const listTask = arrange();
+    listTask.entities.Project.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST", lensId: "me", permalink: "shopping" });
+    await expect(
+      triageInboxItem(
+        { inboxItemId: "ix-1", decision: "upcoming", lensId: "me", projectId: "shopping" },
+        listTask.context,
+      ),
+    ).rejects.toThrow(/cannot be filed into a Simple-list Project/i);
+    expect(listTask.entities.Task.create).not.toHaveBeenCalled();
   });
 });
 
@@ -378,6 +387,7 @@ describe("triageInboxItem — task decisions", () => {
     m.entities.Project.findFirst.mockResolvedValue({
       id: "explicit-1",
       permalink: "mvp",
+      type: "STANDARD",
     });
     m.entities.Task.create.mockResolvedValue({ id: "t" });
 
@@ -393,7 +403,7 @@ describe("triageInboxItem — task decisions", () => {
 
     expect(m.entities.Project.findFirst).toHaveBeenCalledWith({
       where: { id: "explicit-1", userId: "user-1", lensId: "l" },
-      select: { id: true, permalink: true },
+      select: { id: true, permalink: true, type: true },
     });
     expect(m.entities.Task.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -581,6 +591,7 @@ describe("triageInboxItem — project / resource / archive", () => {
     const m = arrange({
       attachments: [{ id: "attachment-1", filename: "receipt.png", mimeType: "image/png", size: 7 }],
     });
+    m.entities.Project.findFirst.mockResolvedValue({ id: "p-1", type: "STANDARD" });
     m.entities.Resource.create.mockResolvedValue({ id: "res-1" });
     m.entities.InboxAttachment.findMany.mockResolvedValue([
       { filename: "receipt.png", mimeType: "image/png", size: 7, data: Buffer.from("png") },
@@ -612,6 +623,7 @@ describe("triageInboxItem — project / resource / archive", () => {
 
   it("does NOT fetch blobs or add an attachments key on a resource without images", async () => {
     const m = arrange();
+    m.entities.Project.findFirst.mockResolvedValue({ id: "p-1", type: "STANDARD" });
     m.entities.Resource.create.mockResolvedValue({ id: "res-1" });
 
     await triageInboxItem(

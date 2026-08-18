@@ -265,29 +265,31 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
     // still gates filing at commit time).
     const m = mockContext();
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-me", name: "Me", isIncluded: true },
-      { id: "lens-work", name: "Work", isIncluded: false },
+      { id: "lens-me", name: "Me", color: "emerald", isIncluded: true },
+      { id: "lens-work", name: "Work", color: "indigo", isIncluded: false },
     ]);
     m.entities.Project.findMany.mockResolvedValue([
-      { id: "p-1", name: "MVP", lensId: "lens-work" },
-      { id: "p-2", name: "Groceries", lensId: "lens-me" },
+      { id: "p-1", name: "MVP", permalink: "mvp", type: "STANDARD", lensId: "lens-work" },
+      { id: "p-2", name: "Groceries", permalink: "groceries", type: "SIMPLE_LIST", lensId: "lens-me" },
     ]);
 
     // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     const result = await getProjectsForResolver({} as never, m.context);
 
     expect(result).toEqual([
-      { id: "p-1", name: "MVP", lensId: "lens-work", lensName: "Work" },
-      { id: "p-2", name: "Groceries", lensId: "lens-me", lensName: "Me" },
+      { id: "p-1", name: "MVP", permalink: "mvp", type: "STANDARD", lensId: "lens-work", lensName: "Work", lensColor: "indigo" },
+      { id: "p-2", name: "Groceries", permalink: "groceries", type: "SIMPLE_LIST", lensId: "lens-me", lensName: "Me", lensColor: "emerald" },
     ]);
-    // Resolver stays cross-entitlement, but only Life-area Lenses are eligible.
+    // Resolver stays cross-entitlement — every lens's projects surface with
+    // their type, so consumers filter STANDARD (mentions) vs SIMPLE_LIST
+    // (triage list picker, share optgroup).
     expect(m.entities.Project.findMany).toHaveBeenCalledWith({
       where: {
         userId: "user-1",
-        lensId: { in: ["lens-me", "lens-work"] },
         isDone: false,
+        archivedAt: null,
       },
-      select: { id: true, name: true, lensId: true },
+      select: { id: true, name: true, permalink: true, type: true, lensId: true },
       orderBy: [{ name: "asc" }],
     });
   });
@@ -295,22 +297,21 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
   it("FREE user: WORK/CUSTOM lens projects surface (filter removed)", async () => {
     const m = mockContext(); // no plan → FREE
     m.entities.Lens.findMany.mockResolvedValue([
-      { id: "lens-me", name: "Me" },
-      { id: "lens-work", name: "Work" },
-      { id: "lens-studio", name: "Studio" },
+      { id: "lens-me", name: "Me", color: "emerald" },
+      { id: "lens-work", name: "Work", color: "indigo" },
+      { id: "lens-studio", name: "Studio", color: "coral" },
     ]);
     m.entities.Project.findMany.mockResolvedValue([
-      { id: "p-1", name: "MVP", lensId: "lens-work" },
-      { id: "p-2", name: "Studio work", lensId: "lens-studio" },
+      { id: "p-1", name: "MVP", permalink: "mvp", type: "STANDARD", lensId: "lens-work" },
+      { id: "p-2", name: "Studio work", permalink: "studio-work", type: "SIMPLE_LIST", lensId: "lens-studio" },
     ]);
 
     // SAFETY: op takes no positional input; Wasp passes empty object at call site.
     const result = await getProjectsForResolver({} as never, m.context);
 
-    // All eligible Life-area lenses remain visible regardless of entitlement.
-    expect(m.entities.Project.findMany.mock.calls[0][0].where.lensId).toEqual({
-      in: ["lens-me", "lens-work", "lens-studio"],
-    });
+    // Every lens's projects remain visible regardless of entitlement.
+    expect(m.entities.Project.findMany.mock.calls[0][0].where).not.toHaveProperty("lensId");
     expect(result).toHaveLength(2);
+    expect(result.map((r: { name: string }) => r.name)).toEqual(["MVP", "Studio work"]);
   });
 });

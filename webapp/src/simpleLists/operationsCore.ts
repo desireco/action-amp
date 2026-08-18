@@ -1,4 +1,4 @@
-/** Pure, tenant-scoped data operations for Simple-list Lenses. */
+/** Pure, tenant-scoped data operations for Simple-list Projects. */
 import type { Prisma } from "@prisma/client";
 import {
   prepareImageAttachments,
@@ -22,19 +22,19 @@ function normalizedText(text: string): string {
   return value;
 }
 
-async function requireSimpleListLens(
+async function requireSimpleListProject(
   entities: Entities,
-  { userId, lensId }: { userId: string; lensId: string },
+  { userId, projectId }: { userId: string; projectId: string },
 ) {
-  const lens = await entities.Lens.findFirst({
-    where: { id: lensId, userId },
+  const project = await entities.Project.findFirst({
+    where: { id: projectId, userId },
     select: { id: true, type: true },
   });
-  if (!lens) throw new Error("Lens not found.");
-  if (lens.type !== "SIMPLE_LIST") {
-    throw new Error("This operation requires a Simple-list Lens.");
+  if (!project) throw new Error("Project not found.");
+  if (project.type !== "SIMPLE_LIST") {
+    throw new Error("This operation requires a Simple-list Project.");
   }
-  return lens;
+  return project;
 }
 
 async function requireOwnedSimpleListItem(
@@ -43,22 +43,22 @@ async function requireOwnedSimpleListItem(
 ) {
   const item = await entities.ListItem.findFirst({
     where: { id, userId },
-    include: { lens: { select: { type: true } } },
+    include: { project: { select: { type: true } } },
   });
   if (!item) throw new Error("List item not found.");
-  if (item.lens.type !== "SIMPLE_LIST") {
-    throw new Error("This operation requires a Simple-list Lens.");
+  if (item.project.type !== "SIMPLE_LIST") {
+    throw new Error("This operation requires a Simple-list Project.");
   }
   return item;
 }
 
 export async function getSimpleListCore(
   entities: Entities,
-  { userId, lensId }: { userId: string; lensId: string },
+  { userId, projectId }: { userId: string; projectId: string },
 ) {
-  await requireSimpleListLens(entities, { userId, lensId });
+  await requireSimpleListProject(entities, { userId, projectId });
   return entities.ListItem.findMany({
-    where: { userId, lensId },
+    where: { userId, projectId },
     orderBy: [{ isDone: "asc" }, { order: "asc" }, { createdAt: "asc" }],
     include: {
       attachments: { select: { id: true, filename: true, mimeType: true } },
@@ -70,7 +70,7 @@ export async function createListItemCore(
   entities: Entities,
   {
     userId,
-    lensId,
+    projectId,
     text,
     content,
     sourceUrl,
@@ -78,7 +78,7 @@ export async function createListItemCore(
     preparedAttachments,
   }: {
     userId: string;
-    lensId: string;
+    projectId: string;
     text: string;
     content?: string | null;
     sourceUrl?: string | null;
@@ -86,17 +86,17 @@ export async function createListItemCore(
     preparedAttachments?: PreparedImageAttachment[];
   },
 ) {
-  await requireSimpleListLens(entities, { userId, lensId });
+  await requireSimpleListProject(entities, { userId, projectId });
   const imageAttachments =
     preparedAttachments ?? prepareImageAttachments(attachments);
   const previous = await entities.ListItem.findFirst({
-    where: { userId, lensId },
+    where: { userId, projectId },
     orderBy: { order: "desc" },
     select: { order: true },
   });
   const data: Prisma.ListItemUncheckedCreateInput = {
     userId,
-    lensId,
+    projectId,
     text: normalizedText(text),
     content: content?.trim() || null,
     sourceUrl: sourceUrl?.trim() || null,
@@ -138,10 +138,10 @@ export async function deleteListItemCore(
 
 export async function clearCompletedListItemsCore(
   entities: Entities,
-  { userId, lensId }: { userId: string; lensId: string },
+  { userId, projectId }: { userId: string; projectId: string },
 ) {
-  await requireSimpleListLens(entities, { userId, lensId });
+  await requireSimpleListProject(entities, { userId, projectId });
   return entities.ListItem.deleteMany({
-    where: { userId, lensId, isDone: true },
+    where: { userId, projectId, isDone: true },
   });
 }

@@ -198,7 +198,6 @@ export const getAppData = (async (args, context) => {
       name: string;
       color: string | null;
       isIncluded: boolean;
-      type: "LIFE_AREA" | "SIMPLE_LIST";
       purpose: string | null;
     }[];
     counts: {

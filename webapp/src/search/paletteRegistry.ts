@@ -6,10 +6,11 @@ export type PaletteCommandDefinition = {
   href?: string;
   action?: "capture" | "theme" | "shortcuts";
   common?: boolean;
-  lensTypes?: readonly ("LIFE_AREA" | "SIMPLE_LIST")[];
 };
 
-/** One typed registry keeps command labels, aliases, and routes in sync. */
+/** One typed registry keeps command labels, aliases, and routes in sync.
+ *  Simple lists are Projects — they surface as project search results, not
+ *  as a shell command. */
 export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
   {
     id: "next",
@@ -18,7 +19,6 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     aliases: ["home", "do", "what now"],
     href: "/do",
     common: true,
-    lensTypes: ["LIFE_AREA"],
   },
   {
     id: "capture",
@@ -27,7 +27,6 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     aliases: ["add", "new", "inbox"],
     action: "capture",
     common: true,
-    lensTypes: ["LIFE_AREA", "SIMPLE_LIST"],
   },
   {
     id: "inbox",
@@ -36,7 +35,6 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     aliases: ["capture", "notes"],
     href: "/do/inbox",
     common: true,
-    lensTypes: ["LIFE_AREA", "SIMPLE_LIST"],
   },
   {
     id: "today",
@@ -45,16 +43,14 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     aliases: ["tasks", "now"],
     href: "/do/today",
     common: true,
-    lensTypes: ["LIFE_AREA"],
   },
   {
     id: "projects",
     title: "Projects",
     subtitle: "Open view",
-    aliases: ["plan"],
+    aliases: ["plan", "lists", "checklist"],
     href: "/do/projects",
     common: true,
-    lensTypes: ["LIFE_AREA"],
   },
   {
     id: "goals",
@@ -63,7 +59,6 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     aliases: ["outcomes", "plan"],
     href: "/do/goals",
     common: true,
-    lensTypes: ["LIFE_AREA"],
   },
   {
     id: "triage",
@@ -71,7 +66,6 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     subtitle: "Review inbox",
     aliases: ["process", "dispatch"],
     href: "/do/inbox/review",
-    lensTypes: ["LIFE_AREA", "SIMPLE_LIST"],
   },
   {
     id: "upcoming",
@@ -79,7 +73,6 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     subtitle: "Open view",
     aliases: ["later", "plan"],
     href: "/do/upcoming",
-    lensTypes: ["LIFE_AREA"],
   },
   {
     id: "someday",
@@ -87,7 +80,6 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     subtitle: "Open view",
     aliases: ["maybe", "later"],
     href: "/do/someday",
-    lensTypes: ["LIFE_AREA"],
   },
   {
     id: "logbook",
@@ -95,7 +87,6 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     subtitle: "Open view",
     aliases: ["archive", "done", "history"],
     href: "/do/logbook",
-    lensTypes: ["LIFE_AREA"],
   },
   {
     id: "review",
@@ -103,16 +94,6 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     subtitle: "Open view",
     aliases: ["weekly", "monthly", "reflect"],
     href: "/do/review",
-    lensTypes: ["LIFE_AREA"],
-  },
-  {
-    id: "list",
-    title: "List",
-    subtitle: "Open checklist",
-    aliases: ["simple list", "checklist"],
-    href: "/do/list",
-    common: true,
-    lensTypes: ["SIMPLE_LIST"],
   },
   {
     id: "settings",

@@ -155,7 +155,7 @@ export const triageInboxItem = (async (args, context) => {
     | "list-item"
     | "archive"
     | "delete";
-  lensId: string;
+  lensId?: string; // required for task/project/resource; list-item files into projectId
   goalId?: string;
   projectId?: string;
   name?: string; // override the created Task/Project/Resource title (defaults to item text)
@@ -221,9 +221,10 @@ export const updateInboxItem = (async (args, context) => {
 // (docs/specs/capture-grammar.md). Lens-agnostic by design: at capture the
 // user is typing free text and may not know which lens a project lives in;
 // the dropdown shows all matches, and the chosen project's lens flows into
-// triage as the project-bridged inference. Returns just {id, name, lensId,
-// lensName} — no task counts or goal includes; the heavy `getProjects` is
-// still the per-lens page source.
+// triage as the project-bridged inference. Returns {id, name, lensId,
+// lensName, permalink, type, lensColor}; consumers filter by type —
+// CapturePopover mentions offer STANDARD projects, the triage list picker and
+// SharePage's "Simple lists" optgroup offer SIMPLE_LIST ones.
 //
 // Note: visibility ≠ write access. The `assertLensAllowed` filing guard in
 // `triageInboxItem` still rejects a FREE user's attempt to file into a
@@ -237,22 +238,25 @@ export const getProjectsForResolver = (async (_args, context) => {
   }
   const user = context.user;
   const lenses = await context.entities.Lens.findMany({
-    where: { userId: user.id, type: "LIFE_AREA" },
-    select: { id: true, name: true },
+    where: { userId: user.id },
+    select: { id: true, name: true, color: true },
   });
-  const lensNameById = new Map(lenses.map((l) => [l.id, l.name]));
+  const lensById = new Map(lenses.map((l) => [l.id, l]));
   const projects = await context.entities.Project.findMany({
-    where: { userId: user.id, lensId: { in: lenses.map((lens) => lens.id) }, isDone: false },
-    select: { id: true, name: true, lensId: true },
+    where: { userId: user.id, isDone: false, archivedAt: null },
+    select: { id: true, name: true, permalink: true, type: true, lensId: true },
     orderBy: [{ name: "asc" }],
   });
   return projects.map((p) => ({
     id: p.id,
     name: p.name,
+    permalink: p.permalink,
+    type: p.type,
     lensId: p.lensId,
-    lensName: lensNameById.get(p.lensId) ?? null,
+    lensName: lensById.get(p.lensId)?.name ?? null,
+    lensColor: lensById.get(p.lensId)?.color ?? null,
   }));
 }) satisfies GetProjectsForResolver<
   never,
-  { id: string; name: string; lensId: string; lensName: string | null }[]
+  { id: string; name: string; permalink: string; type: "STANDARD" | "SIMPLE_LIST"; lensId: string; lensName: string | null; lensColor: string | null }[]
 >;

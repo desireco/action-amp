@@ -17,7 +17,6 @@ const ME = {
   name: "Me",
   isDefault: true,
   isIncluded: true,
-  type: "LIFE_AREA",
   color: null,
   purpose: null,
   createdAt: "2026-07-01T00:00:00.000Z",
@@ -25,14 +24,12 @@ const ME = {
   goals: [],
   projects: [],
   tasks: [{ id: "t1" }],
-  listItems: [],
 };
 const WORK = {
   id: "l2",
   name: "Work",
   isDefault: true,
   isIncluded: false,
-  type: "LIFE_AREA",
   color: "indigo",
   purpose: "Day job",
   createdAt: "2026-07-02T00:00:00.000Z",
@@ -40,14 +37,12 @@ const WORK = {
   goals: [{ id: "g1" }],
   projects: [{ id: "p1", name: "Launch" }],
   tasks: [{ id: "t1" }],
-  listItems: [],
 };
 const STUDIO = {
   id: "l3",
   name: "Studio",
   isDefault: false,
   isIncluded: false,
-  type: "LIFE_AREA",
   color: "coral",
   purpose: "Side projects",
   createdAt: "2026-07-03T00:00:00.000Z",
@@ -55,24 +50,7 @@ const STUDIO = {
   goals: [],
   projects: [{ id: "p1", name: "Studio build" }],
   tasks: [{ id: "t1" }],
-  listItems: [],
 };
-const SHOPPING = {
-  id: "l4",
-  name: "Shopping",
-  isDefault: false,
-  isIncluded: false,
-  type: "SIMPLE_LIST",
-  color: "cyan",
-  purpose: "Groceries",
-  createdAt: "2026-07-04T00:00:00.000Z",
-  _count: { goals: 0, projects: 0, tasks: 0 },
-  goals: [],
-  projects: [],
-  tasks: [],
-  listItems: [{ isDone: false }, { isDone: false }, { isDone: true }],
-};
-
 describe("getLensesCore", () => {
   it("queries by userId only (no entitlement filter — list is always allowed)", async () => {
     const m = mockContext("user-1");
@@ -92,7 +70,6 @@ describe("getLensesCore", () => {
         goals: { select: { id: true }, take: 1 },
         projects: { select: { id: true, name: true }, orderBy: { createdAt: "asc" } },
         tasks: { select: { id: true }, take: 1 },
-        listItems: { select: { isDone: true } },
       },
     });
   });
@@ -107,24 +84,13 @@ describe("getLensesCore", () => {
         name: "Work",
         isDefault: true,
         isIncluded: false,
-        type: "LIFE_AREA",
         color: "indigo",
         purpose: "Day job",
         hasAnyContent: true,
         blockingProjects: [{ id: "p1", name: "Launch" }],
-        counts: { goals: 1, projects: 3, tasks: 12, openItems: 0, checkedItems: 0 },
+        counts: { goals: 1, projects: 3, tasks: 12 },
       },
     ]);
-  });
-
-  it("returns open and checked counts for a Simple-list Lens", async () => {
-    const m = mockContext("user-1");
-    m.entities.Lens.findMany.mockResolvedValue([SHOPPING]);
-    const out = await getLensesCore(m.entities, { userId: "user-1" });
-    expect(out[0]).toMatchObject({
-      type: "SIMPLE_LIST",
-      counts: { openItems: 2, checkedItems: 1 },
-    });
   });
 
   it("sorts included then default Lenses before later Lenses", async () => {
@@ -163,16 +129,8 @@ describe("getLensCore", () => {
         goals: { select: { id: true }, take: 1 },
         projects: { select: { id: true, name: true }, orderBy: { createdAt: "asc" } },
         tasks: { select: { id: true }, take: 1 },
-        listItems: { select: { isDone: true } },
       },
     });
-  });
-
-  it("returns type-specific counts for Simple-list detail", async () => {
-    const m = mockContext("user-1");
-    m.entities.Lens.findFirst.mockResolvedValue(SHOPPING);
-    const out = await getLensCore(m.entities, { userId: "user-1", idOrName: "Shopping" });
-    expect(out).toMatchObject({ type: "SIMPLE_LIST", hasAnyContent: true, counts: { openItems: 2, checkedItems: 1 } });
   });
 
   it("detects completed structured content even when active counts are zero", async () => {

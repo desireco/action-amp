@@ -1,7 +1,7 @@
 // @vitest-environment node
 // Server project: the REAL entitlement guards run (see vitest.config.ts).
 // Guard wiring is asserted through behavior — the guard's own tenancy-safe
-// Lens.findFirst query — rather than spies.
+// Project/Lens.findFirst queries — rather than spies.
 import { describe, expect, it, vi } from "vitest";
 
 import { createListItem, getSimpleList, renameListItem } from "./operations";
@@ -21,9 +21,16 @@ function context() {
     entities: {
       Lens: {
         findFirst: vi.fn().mockResolvedValue({
+          id: "me-1",
+          name: "Me",
+          isIncluded: true,
+        }),
+      },
+      Project: {
+        findFirst: vi.fn().mockResolvedValue({
           id: "list-1",
           name: "Shopping",
-          isIncluded: true,
+          lensId: "me-1",
           type: "SIMPLE_LIST",
         }),
       },
@@ -37,21 +44,24 @@ function context() {
   };
 }
 
-/** The guard's own lens-resolution query (tenancy-safe id+userId filter). */
-function lensLookup(lensId: string) {
+/** The guard's own project-resolution query (tenancy-safe id+userId filter). */
+function projectLookup(projectId: string) {
   return expect.objectContaining({
-    where: { id: lensId, userId: "user-1" },
+    where: { id: projectId, userId: "user-1" },
   });
 }
 
 describe("Simple-list operation entitlement boundary", () => {
-  it("checks Lens entitlement before reading a list", async () => {
+  it("checks the project's Lens entitlement before reading a list", async () => {
     const ctx = context();
     // SAFETY: mock context bypasses Wasp context type; only tested fields matter.
-    await getSimpleList({ lensId: "list-1" }, ctx as never);
-    // The real guard resolved the lens tenancy-safely before the read.
+    await getSimpleList({ projectId: "list-1" }, ctx as never);
+    // The real guard resolved the project (and its lens) tenancy-safely first.
+    expect(ctx.entities.Project.findFirst).toHaveBeenCalledWith(
+      projectLookup("list-1"),
+    );
     expect(ctx.entities.Lens.findFirst).toHaveBeenCalledWith(
-      lensLookup("list-1"),
+      expect.objectContaining({ where: { id: "me-1", userId: "user-1" } }),
     );
     expect(ctx.entities.ListItem.findMany).toHaveBeenCalled();
   });
@@ -62,7 +72,7 @@ describe("Simple-list operation entitlement boundary", () => {
 
     await createListItem(
       {
-        lensId: "list-1",
+        projectId: "list-1",
         text: "Read this",
         content: "Useful details",
         sourceUrl: "https://example.com",
@@ -74,7 +84,7 @@ describe("Simple-list operation entitlement boundary", () => {
     expect(ctx.entities.ListItem.create).toHaveBeenCalledWith({
       data: {
         userId: "user-1",
-        lensId: "list-1",
+        projectId: "list-1",
         text: "Read this",
         content: "Useful details",
         sourceUrl: "https://example.com",
@@ -83,11 +93,11 @@ describe("Simple-list operation entitlement boundary", () => {
     });
   });
 
-  it("resolves an item's Lens and checks entitlement before mutation", async () => {
+  it("resolves an item's project Lens and checks entitlement before mutation", async () => {
     const ctx = context();
     ctx.entities.ListItem.findFirst
-      .mockResolvedValueOnce({ lensId: "list-1" })
-      .mockResolvedValueOnce({ id: "item-1", lens: { type: "SIMPLE_LIST" } });
+      .mockResolvedValueOnce({ projectId: "list-1" })
+      .mockResolvedValueOnce({ id: "item-1", project: { type: "SIMPLE_LIST" } });
 
     await renameListItem(
       { id: "item-1", text: "Milk" },
@@ -95,14 +105,14 @@ describe("Simple-list operation entitlement boundary", () => {
       ctx as never,
     );
 
-    expect(ctx.entities.Lens.findFirst).toHaveBeenCalledWith(
-      lensLookup("list-1"),
+    expect(ctx.entities.Project.findFirst).toHaveBeenCalledWith(
+      projectLookup("list-1"),
     );
     expect(ctx.entities.ListItem.update).toHaveBeenCalled();
   });
 
   it("does not reach list data when entitlement rejects", async () => {
-    // FREE user + a non-included lens → the real guard throws HttpError 402.
+    // FREE user + a list in a non-included lens → the real guard throws 402.
     const ctx = context();
     ctx.user = {
       id: "user-1",
@@ -110,16 +120,21 @@ describe("Simple-list operation entitlement boundary", () => {
       planRenewsAt: null,
       isAdmin: false,
     };
-    ctx.entities.Lens.findFirst.mockResolvedValue({
+    ctx.entities.Project.findFirst.mockResolvedValue({
       id: "list-1",
+      name: "Work list",
+      lensId: "work-1",
+      type: "SIMPLE_LIST",
+    });
+    ctx.entities.Lens.findFirst.mockResolvedValue({
+      id: "work-1",
       name: "Work",
       isIncluded: false,
-      type: "SIMPLE_LIST",
     });
 
     await expect(
       getSimpleList(
-        { lensId: "list-1" },
+        { projectId: "list-1" },
         // SAFETY: mock context bypasses Wasp context type; only tested fields matter.
         ctx as never,
       ),

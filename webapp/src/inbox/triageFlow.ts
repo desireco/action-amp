@@ -119,6 +119,7 @@ export function buildDispatchPayload(
     inboxItemId: string;
     lensId: string;
     resolvedProjectId?: string | null;
+    listProjectId?: string | null;
   },
 ): DispatchPayload {
   const outcome = buildOutcome(w);
@@ -148,7 +149,11 @@ export function buildDispatchPayload(
       projectId: w.parentProjectId ?? undefined,
     };
   }
-  if (w.type === "list-item") return { ...base, name };
+  if (w.type === "list-item") {
+    // The destination is the chosen Simple-list Project; the lens rides
+    // along for API symmetry but the server files by projectId.
+    return { ...base, name, projectId: ctx.listProjectId ?? undefined };
+  }
   // Delete only needs the base — it does not file anything into a lens.
   return base;
 }
@@ -156,9 +161,11 @@ export function buildDispatchPayload(
 export function canComplete(
   w: Working | null,
   chosenLensId: string | null,
+  listProjectId?: string | null,
 ): boolean {
-  if (!w || !chosenLensId) return false;
-  if (!w.title.trim()) return false;
+  if (!w || !w.title.trim()) return false;
+  if (w.type === "list-item") return !!listProjectId;
+  if (!chosenLensId) return false;
   if (w.type === "resource") return !!w.parentProjectId;
   return true;
 }

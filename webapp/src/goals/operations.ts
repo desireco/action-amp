@@ -8,7 +8,7 @@ import type {
   ReorderGoalProjects,
 } from "wasp/server/operations";
 import { FREE_LIMITS } from "../billing/config";
-import { assertLensAllowed, assertLifeAreaLens, assertUnderCap, throwHttpStatus } from "../billing/entitlementHttp";
+import { assertLensAllowed, assertUnderCap, throwHttpStatus } from "../billing/entitlementHttp";
 // Pure cores shared with /api/cli/* routes — auth + entitlement guards stay
 // here (the wrapper), the DB shape lives in the core. See operationsCore.ts.
 import { getGoalsData, getGoalData, createGoalCore } from "./operationsCore";
@@ -27,7 +27,6 @@ export const getGoals = (async (args, context) => {
 
   // Entitlement: FREE users may only read the Me lens.
   await assertLensAllowed(context, args.lensId);
-  await assertLifeAreaLens(context, args.lensId);
 
   return await getGoalsData(context.entities, {
     userId: context.user.id,
@@ -62,7 +61,6 @@ export const createGoal = (async (args, context) => {
 
   // Entitlement: FREE users capped at FREE_LIMITS.goals per lens + Me-only.
   await assertLensAllowed(context, args.lensId);
-  await assertLifeAreaLens(context, args.lensId);
   const goalCount = await context.entities.Goal.count({
     where: { userId: context.user.id, lensId: args.lensId, isDone: false },
   });

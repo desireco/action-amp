@@ -84,6 +84,8 @@ export async function getLogbookData(
         lensId,
         isDone: true,
         completedAt: { not: null },
+        // Simple-list projects are never completable — keep them out.
+        type: "STANDARD",
       },
       orderBy: { completedAt: "desc" },
       select: {

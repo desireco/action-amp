@@ -127,6 +127,7 @@ interface EvidenceEntities {
         userId: string;
         isDone: true;
         completedAt: { gte: Date; lt: Date };
+        type?: "STANDARD" | "SIMPLE_LIST";
       };
       orderBy: { completedAt: "asc" };
       select: {
@@ -410,7 +411,7 @@ async function loadEvidence(
       },
     }),
     entities.Project.findMany({
-      where: { userId, isDone: true, completedAt: range },
+      where: { userId, isDone: true, completedAt: range, type: "STANDARD" },
       orderBy: { completedAt: "asc" },
       select: {
         id: true,

@@ -20,13 +20,12 @@ describe("palette command registry", () => {
       goals: "/do/goals",
       logbook: "/do/logbook",
       review: "/do/review",
-      list: "/do/list",
       settings: "/do/settings",
       billing: "/do/settings/billing",
     });
     expect(
       PALETTE_COMMANDS.filter((item) => item.action).map((item) => item.action),
     ).toEqual(["capture", "theme", "shortcuts"]);
-    expect(PALETTE_COMMANDS.filter((item) => item.common)).toHaveLength(7);
+    expect(PALETTE_COMMANDS.filter((item) => item.common)).toHaveLength(6);
   });
 });

@@ -223,10 +223,13 @@ async function resolveEffectiveProject(
   if (projectId) {
     const project = await entities.Project.findFirst({
       where: { id: projectId, userId, lensId },
-      select: { id: true, permalink: true },
+      select: { id: true, permalink: true, type: true },
     });
     if (!project) {
       throw new Error("Project not found.");
+    }
+    if (project.type === "SIMPLE_LIST") {
+      throw new Error("A task cannot be filed into a Simple-list Project.");
     }
     return { id: project.id, permalink: project.permalink };
   }
@@ -433,7 +436,7 @@ export async function triageInboxItemCore(
     userId: string;
     inboxItemId: string;
     decision: TriageDecision;
-    lensId: string;
+    lensId?: string; // required for task/project/resource; list-item files into projectId
     goalId?: string;
     projectId?: string;
     name?: string; // override the created Task/Project/Resource title (defaults to item text)
@@ -460,30 +463,36 @@ export async function triageInboxItemCore(
 
   // Entitlement: triage files entities into a lens. FREE users may only file
   // into Me (the Work lens is visible-but-locked). Guards every decision that
-  // creates a lens-scoped entity (task/project). Archive + delete don't file
-  // anything — they discard — so neither needs a lens and neither runs the
-  // guard (the route still receives a lensId for API symmetry, but it's
-  // unused on these branches).
-  const filesIntoLens = decision !== "archive" && decision !== "delete";
-  if (assertLens && filesIntoLens) await assertLens(lensId);
-
-  const destinationLens = filesIntoLens
-    ? await entities.Lens.findFirst({
-        where: { id: lensId, userId },
-        select: { type: true },
-      })
-    : null;
-  if (filesIntoLens && !destinationLens) throw new Error("Lens not found.");
-  if (decision === "list-item" && destinationLens?.type !== "SIMPLE_LIST") {
-    throw new Error("List items require a Simple-list Lens.");
+  // creates a lens-scoped entity (task/project — and list-item, via its
+  // project's lens). Archive + delete don't file anything — they discard — so
+  // neither needs a lens and neither runs the guard.
+  const filesSomewhere = decision !== "archive" && decision !== "delete";
+  let filingLensId: string | null = null;
+  if (decision === "list-item") {
+    // A list item files into a Simple-list PROJECT (the checklist is the
+    // whole destination); its lens feeds the entitlement check.
+    if (!projectId) {
+      throw new Error("List items require a Simple-list Project.");
+    }
+    const destinationProject = await entities.Project.findFirst({
+      where: { id: projectId, userId },
+      select: { id: true, type: true, lensId: true },
+    });
+    if (!destinationProject) throw new Error("Project not found.");
+    if (destinationProject.type !== "SIMPLE_LIST") {
+      throw new Error("List items require a Simple-list Project.");
+    }
+    filingLensId = destinationProject.lensId;
+  } else if (filesSomewhere) {
+    if (!lensId) throw new Error("Lens not found.");
+    const destinationLens = await entities.Lens.findFirst({
+      where: { id: lensId, userId },
+      select: { id: true },
+    });
+    if (!destinationLens) throw new Error("Lens not found.");
+    filingLensId = destinationLens.id;
   }
-  if (
-    filesIntoLens &&
-    decision !== "list-item" &&
-    destinationLens?.type !== "LIFE_AREA"
-  ) {
-    throw new Error("Tasks, Projects, and Resources require a Life-area Lens.");
-  }
+  if (assertLens && filingLensId) await assertLens(filingLensId);
 
   // Precedence: explicit triage choice > the capture parser's guess > default.
   // The triage wizard lets the user set Priority/Size deliberately (the spec
@@ -513,7 +522,7 @@ export async function triageInboxItemCore(
       const effectiveProject = await resolveEffectiveProject(
         entities,
         userId,
-        lensId,
+        lensId!,
         projectId ?? null,
       );
       // Images move with the item — fetch the blobs only when the seed
@@ -523,7 +532,7 @@ export async function triageInboxItemCore(
         decision,
         title,
         content: resolvedContent ?? itemNotes,
-        lensId,
+        lensId: lensId!,
         priority: resolvedPriority,
         size: resolvedSize,
         dueDate: item.parsedDate,
@@ -543,7 +552,7 @@ export async function triageInboxItemCore(
         userId,
         {
           name: title,
-          lensId,
+          lensId: lensId!,
           goalId,
           preparedAttachments,
         },
@@ -555,6 +564,14 @@ export async function triageInboxItemCore(
       // Resources are shared project context. No loose or Goal-owned resources.
       if (!projectId) {
         throw new Error("Resources must be filed under a project.");
+      }
+      const resourceProject = await entities.Project.findFirst({
+        where: { id: projectId, userId },
+        select: { id: true, type: true },
+      });
+      if (!resourceProject) throw new Error("Project not found.");
+      if (resourceProject.type === "SIMPLE_LIST") {
+        throw new Error("A resource cannot be filed into a Simple-list Project.");
       }
       // Images move with the item here too — a screenshot filed as project
       // reference material stays attached to the resource.
@@ -587,11 +604,12 @@ export async function triageInboxItemCore(
     }
     case "list-item": {
       // The other decision that keeps the images — fetch the blobs now (the
-      // main read selects metadata only).
+      // main read selects metadata only). The destination project was
+      // validated above (SIMPLE_LIST, owned).
       const attachments = await fetchSeedAttachmentBlobs(entities, item);
       const listItem = await createListItemCore(entities, {
         userId,
-        lensId,
+        projectId: projectId!,
         text: title,
         content: resolvedContent ?? item.content,
         sourceUrl: item.sourceUrl,

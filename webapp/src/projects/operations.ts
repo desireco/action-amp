@@ -13,7 +13,7 @@ import type {
 import { FREE_LIMITS } from "../billing/config";
 import {
   assertLensAllowed,
-  assertLifeAreaLens,
+  assertStandardProject,
   assertUnderCap,
   throwHttpStatus,
 } from "../billing/entitlementHttp";
@@ -38,7 +38,6 @@ export const getProjects = (async (args, context) => {
 
   // Entitlement: FREE users may only read the Me lens.
   await assertLensAllowed(context, args.lensId);
-  await assertLifeAreaLens(context, args.lensId);
 
   return await getProjectsData(context.entities, {
     userId: context.user.id,
@@ -63,7 +62,6 @@ export const createProject = (async (args, context) => {
   // Entitlement: FREE users capped at FREE_LIMITS.projects per lens, and the
   // Work lens is locked. Count non-done projects so finishing work frees a slot.
   await assertLensAllowed(context, args.lensId);
-  await assertLifeAreaLens(context, args.lensId);
   const projectCount = await context.entities.Project.count({
     where: { userId: context.user.id, lensId: args.lensId, isDone: false },
   });
@@ -79,13 +77,14 @@ export const createProject = (async (args, context) => {
   );
 
   // Name trim + order seeding + permalink uniqueness + the create live in the
-  // core.
+  // core. SIMPLE_LIST projects reject goalId there.
   return await createProjectCore(context.entities, {
     userId: context.user.id,
     name: args.name,
     lensId: args.lensId,
     goalId: args.goalId,
     description: args.description,
+    type: args.type,
   });
 }) satisfies CreateProject<
   {
@@ -93,6 +92,7 @@ export const createProject = (async (args, context) => {
     lensId: string;
     goalId?: string;
     description?: string;
+    type?: "STANDARD" | "SIMPLE_LIST";
   },
   { id: string; permalink: string; name: string }
 >;
@@ -145,6 +145,10 @@ export const createTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+  // A checklist project takes list items only — tasks need a STANDARD project.
+  if (args.projectId) {
+    await assertStandardProject(context, args.projectId);
+  }
   // The core resolves the parent's lens + creates; the entitlement guard runs
   // against the RESOLVED lens (injected as a callback so the core stays free of
   // wasp/server). Lens resolution → guard → create happens in that order in the
@@ -157,7 +161,6 @@ export const createTask = (async (args, context) => {
     goalId: args.goalId,
     assertLens: async (resolvedLensId) => {
       await assertLensAllowed(context, resolvedLensId);
-      await assertLifeAreaLens(context, resolvedLensId);
     },
   });
 }) satisfies CreateTask<
@@ -234,12 +237,11 @@ export const moveProject = (async (args, context) => {
 
   const target = await context.entities.Lens.findFirst({
     where: { id: args.targetLensId, userId: context.user.id },
-    select: { id: true, type: true },
+    select: { id: true },
   });
   if (!target) throwHttpStatus(404, "Destination Lens not found.");
   await assertLensAllowed(context, existing.lensId);
   await assertLensAllowed(context, target.id);
-  await assertLifeAreaLens(context, target.id);
 
   // Goals are Lens-scoped, so detach this project from any source-Lens goal.
   // Every child task moves with the project and becomes project-owned only.
@@ -268,7 +270,7 @@ export const updateProject = (async (args, context) => {
   }
   const existing = await context.entities.Project.findUnique({
     where: { id: args.id, userId: context.user.id },
-    select: { id: true, name: true, lensId: true },
+    select: { id: true, name: true, lensId: true, type: true },
   });
   if (!existing) {
     throwHttpStatus(404, "Project not found.");
@@ -278,7 +280,27 @@ export const updateProject = (async (args, context) => {
     description?: string | null;
     goalId?: string | null;
     dueDate?: Date | null;
+    type?: "STANDARD" | "SIMPLE_LIST";
   } = {};
+  // Type conversion: only while empty — converting tasks or list items would
+  // be ambiguous. Mirrors the old Lens rule (blocked with a reason, never
+  // silently).
+  const nextType = args.type ?? existing.type;
+  if (args.type !== undefined && args.type !== existing.type) {
+    const [taskCount, itemCount] = await Promise.all([
+      context.entities.Task.count({ where: { projectId: existing.id } }),
+      context.entities.ListItem.count({ where: { projectId: existing.id } }),
+    ]);
+    if (taskCount > 0 || itemCount > 0) {
+      throwHttpStatus(
+        400,
+        taskCount > 0
+          ? "Move or remove this project's actions before changing its type."
+          : "Clear this list before changing its type.",
+      );
+    }
+    data.type = args.type;
+  }
   if (args.name !== undefined) {
     const name = args.name.trim();
     if (!name) throw new Error("Project name cannot be empty.");
@@ -288,11 +310,17 @@ export const updateProject = (async (args, context) => {
     data.description = args.description.trim() || null;
   }
   if (args.dueDate !== undefined) {
+    if (nextType === "SIMPLE_LIST") {
+      throwHttpStatus(400, "A Simple-list Project has no due date.");
+    }
     data.dueDate = args.dueDate;
   }
   // Re-link: same-Lens invariant. Resolve the target goal and compare lensId.
   // goalId === null is valid (unlink to standalone in the same Lens).
   if (args.goalId !== undefined) {
+    if (nextType === "SIMPLE_LIST" && args.goalId !== null) {
+      throwHttpStatus(400, "A Simple-list Project cannot sit under a Goal.");
+    }
     if (args.goalId !== null) {
       const targetGoal = await context.entities.Goal.findUnique({
         where: { id: args.goalId, userId: context.user.id },
@@ -329,6 +357,7 @@ export const updateProject = (async (args, context) => {
     description?: string;
     goalId?: string | null;
     dueDate?: Date | null;
+    type?: "STANDARD" | "SIMPLE_LIST";
   },
   {
     id: string;
@@ -423,9 +452,12 @@ export const updateTask = (async (args, context) => {
     if (args.projectId !== null) {
       const project = await context.entities.Project.findUnique({
         where: { id: args.projectId, userId: context.user.id },
-        select: { id: true, lensId: true },
+        select: { id: true, lensId: true, type: true },
       });
       if (!project) throwHttpStatus(404, "Project not found.");
+      if (project.type === "SIMPLE_LIST") {
+        throwHttpStatus(400, "A task cannot live in a Simple-list Project.");
+      }
       if (project!.lensId !== task.lensId) {
         throwHttpStatus(
           400,

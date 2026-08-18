@@ -11,17 +11,6 @@ const clearCompletedListItems = vi.fn();
 // SAFETY: test fixture uses any[] for useQuery mock data; Error | null for error field.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const query = { current: { data: [] as any[], isLoading: false, error: null as Error | null } };
-const activeLens = {
-  current: {
-    id: "shopping",
-    name: "Shopping",
-    purpose: "Groceries",
-    kind: "CUSTOM",
-    // SAFETY: fixture narrows CUSTOM to the union type the component expects.
-    type: "SIMPLE_LIST" as "LIFE_AREA" | "SIMPLE_LIST",
-    color: "cyan",
-  },
-};
 
 vi.mock("wasp/client/operations", () => ({
   getSimpleList,
@@ -32,7 +21,6 @@ vi.mock("wasp/client/operations", () => ({
   clearCompletedListItems,
   useQuery: () => query.current,
 }));
-vi.mock("../app/lensContext", () => ({ useActiveLens: () => activeLens.current }));
 vi.mock("../components/ui", () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ConfirmDialog: ({ title, message, confirmLabel, cancelLabel, onConfirm, onClose }: any) => (
@@ -44,7 +32,7 @@ vi.mock("../components/ui", () => ({
   ),
 }));
 
-const { SimpleListPage } = await import("./SimpleListPage");
+const { SimpleListChecklist } = await import("./SimpleListChecklist");
 
 function item(id: string, text: string, isDone = false) {
   return {
@@ -58,7 +46,7 @@ function item(id: string, text: string, isDone = false) {
     createdAt: new Date(),
     updatedAt: new Date(),
     userId: "user-1",
-    lensId: "shopping",
+    projectId: "shopping",
     attachments: [],
   };
 }
@@ -66,7 +54,6 @@ function item(id: string, text: string, isDone = false) {
 beforeEach(() => {
   vi.clearAllMocks();
   query.current = { data: [item("milk", "Milk"), item("bread", "Bread", true)], isLoading: false, error: null };
-  activeLens.current = { id: "shopping", name: "Shopping", purpose: "Groceries", kind: "CUSTOM", type: "SIMPLE_LIST", color: "cyan" };
   createListItem.mockResolvedValue({ id: "new" });
   renameListItem.mockResolvedValue({ id: "milk" });
   setListItemDone.mockResolvedValue({ id: "milk" });
@@ -74,10 +61,9 @@ beforeEach(() => {
   clearCompletedListItems.mockResolvedValue({ count: 1 });
 });
 
-describe("SimpleListPage", () => {
+describe("SimpleListChecklist (a Simple-list Project's body)", () => {
   it("renders open and checked sections with accessible actions", () => {
-    render(<SimpleListPage />);
-    expect(screen.getByRole("heading", { name: "Shopping" })).toBeInTheDocument();
+    render(<SimpleListChecklist projectId="shopping" />);
     expect(screen.getByRole("heading", { name: "Open" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Checked 1" })).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Check Milk" })).not.toBeChecked();
@@ -90,7 +76,7 @@ describe("SimpleListPage", () => {
       isLoading: false,
       error: null,
     };
-    render(<SimpleListPage />);
+    render(<SimpleListChecklist projectId="shopping" />);
     expect(screen.getByText("Good checklist patterns")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open source" })).toHaveAttribute("href", "https://example.com/list");
     expect(screen.queryByText(/priority|project|when/i)).not.toBeInTheDocument();
@@ -102,21 +88,21 @@ describe("SimpleListPage", () => {
       isLoading: false,
       error: null,
     };
-    render(<SimpleListPage />);
+    render(<SimpleListChecklist projectId="shopping" />);
     expect(screen.queryByRole("link", { name: "Open source" })).not.toBeInTheDocument();
   });
 
   it("adds directly and keeps the field available", async () => {
-    render(<SimpleListPage />);
+    render(<SimpleListChecklist projectId="shopping" />);
     const input = screen.getByRole("textbox", { name: "Add an item" });
     fireEvent.change(input, { target: { value: "Coffee" } });
     fireEvent.submit(input.closest("form")!);
-    await waitFor(() => expect(createListItem).toHaveBeenCalledWith({ lensId: "shopping", text: "Coffee" }));
+    await waitFor(() => expect(createListItem).toHaveBeenCalledWith({ projectId: "shopping", text: "Coffee" }));
     await waitFor(() => expect(input).toHaveFocus());
   });
 
   it("checks, renames, and removes one row", async () => {
-    render(<SimpleListPage />);
+    render(<SimpleListChecklist projectId="shopping" />);
     fireEvent.click(screen.getByRole("checkbox", { name: "Check Milk" }));
     await waitFor(() => expect(setListItemDone).toHaveBeenCalledWith({ id: "milk", isDone: true }));
 
@@ -131,16 +117,16 @@ describe("SimpleListPage", () => {
   });
 
   it("confirms before clearing checked items", async () => {
-    render(<SimpleListPage />);
+    render(<SimpleListChecklist projectId="shopping" />);
     fireEvent.click(screen.getByRole("button", { name: "Clear checked" }));
     const dialog = screen.getByRole("dialog", { name: "Clear checked items?" });
     expect(within(dialog).getByText(/permanently remove 1 checked item/i)).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole("button", { name: "Clear checked" }));
-    await waitFor(() => expect(clearCompletedListItems).toHaveBeenCalledWith({ lensId: "shopping" }));
+    await waitFor(() => expect(clearCompletedListItems).toHaveBeenCalledWith({ projectId: "shopping" }));
   });
 
   it("supports row shortcuts and suppresses them while typing", async () => {
-    render(<SimpleListPage />);
+    render(<SimpleListChecklist projectId="shopping" />);
     fireEvent.keyDown(window, { key: " " });
     await waitFor(() => expect(setListItemDone).toHaveBeenCalledWith({ id: "milk", isDone: true }));
     await waitFor(() => expect(screen.getByRole("checkbox", { name: "Check Milk" })).not.toBeDisabled());
@@ -152,18 +138,14 @@ describe("SimpleListPage", () => {
     expect(input).toHaveFocus();
   });
 
-  it("renders loading, error, empty, and incompatible states honestly", () => {
+  it("renders loading, error, and empty states honestly", () => {
     query.current = { data: [], isLoading: true, error: null };
-    const view = render(<SimpleListPage />);
+    const view = render(<SimpleListChecklist projectId="shopping" />);
     expect(screen.getByLabelText("Loading list")).toBeInTheDocument();
 
     query.current = { data: [], isLoading: false, error: new Error("Offline") };
-    view.rerender(<SimpleListPage />);
+    view.rerender(<SimpleListChecklist projectId="shopping" />);
     expect(screen.getByRole("alert")).toHaveTextContent("Offline");
     expect(screen.getByText("List clear.")).toBeInTheDocument();
-
-    activeLens.current = { ...activeLens.current, type: "LIFE_AREA" };
-    view.rerender(<SimpleListPage />);
-    expect(screen.getByRole("heading", { name: "Choose a Simple-list Lens." })).toBeInTheDocument();
   });
 });
