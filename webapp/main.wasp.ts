@@ -71,6 +71,7 @@ import {
   getInboxItems,
   triageInboxItem,
   restoreArchivedItem,
+  updateInboxItem,
   getProjectsForResolver,
 } from "./src/inbox/operations" with { type: "ref" };
 import { TodayPage } from "./src/lists/TodayPage" with { type: "ref" };
@@ -671,6 +672,7 @@ export default app({
       auth: true,
     }),
     action(restoreArchivedItem, { entities: ["InboxItem"], auth: true }),
+    action(updateInboxItem, { entities: ["InboxItem"], auth: true }),
     query(getBillingStatus, {
       entities: ["Payment", "AnalyticsSession", "AnalyticsEvent"],
       auth: true,

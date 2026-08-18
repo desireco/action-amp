@@ -4,7 +4,7 @@
 // guards can resolve, so the arrange() helper provides both.
 import { describe, it, expect, vi } from "vitest";
 
-import { triageInboxItem } from "./operations";
+import { triageInboxItem, updateInboxItem } from "./operations";
 import { mockContext, type MockContext } from "../test/mockContext";
 
 // planRenewsAt is load-bearing: isPlanActive treats PRO with a null/past
@@ -667,5 +667,39 @@ describe("triageInboxItem — project / resource / archive", () => {
     // not twice. The `withCalledTimes` assertion guards against a regression
     // where someone removes delete from the guard.
     expect(m.entities.InboxItem.delete).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("updateInboxItem — in-triage capture edits", () => {
+  it("rewrites the caller's unprocessed item, trimming the text", async () => {
+    const m = mockContext("user-1");
+
+    const result = await updateInboxItem(
+      { inboxItemId: "ix-1", text: "  I really like these headphones  " },
+      m.context,
+    );
+
+    expect(result).toEqual({ id: "ix-1" });
+    // Ownership + UNPROCESSED live in the WHERE, so a late debounce flush
+    // after dispatch (item deleted) or someone else's item no-ops safely.
+    expect(m.entities.InboxItem.updateMany).toHaveBeenCalledWith({
+      where: { id: "ix-1", userId: "user-1", status: "UNPROCESSED" },
+      data: { text: "I really like these headphones" },
+    });
+  });
+
+  it("rejects blank text instead of emptying the capture", async () => {
+    const m = mockContext("user-1");
+    await expect(
+      updateInboxItem({ inboxItemId: "ix-1", text: "   " }, m.context),
+    ).rejects.toThrow(/cannot be empty/i);
+    expect(m.entities.InboxItem.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("throws if not authenticated", async () => {
+    const m = mockContext(null);
+    await expect(
+      updateInboxItem({ inboxItemId: "ix-1", text: "x" }, m.context),
+    ).rejects.toThrow(/Not authenticated/);
   });
 });

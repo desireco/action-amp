@@ -36,6 +36,17 @@ hover; base styles ship with `Linkify.css`). The **triage card's read-only
 Classify body linkifies the same way** — the Spec step's title editor stays
 raw text (an editor, not a viewer).
 
+**The capture is editable in triage** (2026-08-18). The Classify card's body
+is a reading surface until its pencil affordance ("Edit captured text")
+swaps in the "Captured text" editor (focused on open; blur returns the
+reading view). Edits update the future entity's title immediately AND write
+back to the stored `InboxItem` on a ~600 ms debounce
+(`updateInboxItem`, UNPROCESSED-only by WHERE — a late flush after dispatch
+no-ops instead of racing the delete), so an abandoned triage session still
+leaves the inbox text corrected. Spec's "Title" editor stays local-only —
+renaming the future entity is not editing the capture. Simple-list triage
+(whose Classify step was always an editor) now persists its edits too.
+
 **Image attachments are viewable** (2026-08-16). Items captured with images
 (Android share target, ⌘K paste/drop, or the CLI) show their media inline.
 The **inbox row leads with a square media cover on the left** — 96px (72px

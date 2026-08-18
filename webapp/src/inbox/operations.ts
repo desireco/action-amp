@@ -4,6 +4,7 @@ import type {
   GetInboxItems,
   TriageInboxItem,
   RestoreArchivedItem,
+  UpdateInboxItem,
   GetProjectsForResolver,
 } from "wasp/server/operations";
 import { type ParsedPriority, type ParsedSize } from "./parseCapture";
@@ -185,6 +186,34 @@ export const restoreArchivedItem = (async (args, context) => {
   });
   return { id: item.id };
 }) satisfies RestoreArchivedItem<{ inboxItemId: string }, { id: string }>;
+
+// ----------------------------------------------------------------
+// Edit — update an unprocessed item's captured text in place (triage).
+// ----------------------------------------------------------------
+// The triage card's Classify editor corrects the capture itself — typos,
+// pasted noise, half-sentences. The client debounces; the edit lands on the
+// InboxItem so an abandoned triage session still leaves the inbox text
+// corrected. UNPROCESSED-only in the WHERE on purpose: triage deletes the
+// item on dispatch, so a late debounce flush after Ready no-ops here
+// instead of racing the delete (updateMany never throws on zero rows).
+export const updateInboxItem = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  const text = args.text.trim();
+  if (!text) {
+    throw new Error("Text cannot be empty.");
+  }
+  await context.entities.InboxItem.updateMany({
+    where: {
+      id: args.inboxItemId,
+      userId: context.user.id,
+      status: "UNPROCESSED",
+    },
+    data: { text },
+  });
+  return { id: args.inboxItemId };
+}) satisfies UpdateInboxItem<{ inboxItemId: string; text: string }, { id: string }>;
 
 // ----------------------------------------------------------------
 // Project resolver source — lightweight project tuples across ALL the user's

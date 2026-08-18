@@ -33,6 +33,50 @@
   margin: 0 0 var(--aa-space-md);
 }
 
+/* Reading surface + its edit affordance. The wrap owns the block's spacing
+   so the pencil can sit at its top-right without disturbing the prose. */
+.aa-triage-card__body-wrap {
+  position: relative;
+  margin: 0 0 var(--aa-space-md);
+}
+
+.aa-triage-card__body-wrap .aa-triage-card__body {
+  margin: 0;
+}
+
+.aa-triage-card__body-edit {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--aa-radius-sm);
+  background: transparent;
+  color: var(--aa-text-4);
+  cursor: pointer;
+  transition: color var(--aa-dur-fast) var(--aa-ease-out),
+    background var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-triage-card__body-edit svg {
+  width: 14px;
+  height: 14px;
+}
+
+.aa-triage-card__body-edit:hover {
+  color: var(--aa-teal-cta);
+  background: var(--aa-surface-muted);
+}
+
+.aa-triage-card__body-edit:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 1px;
+}
+
 .aa-triage-card__title-field {
   display: flex;
   flex-direction: column;

@@ -51,6 +51,7 @@ const resolverProjects = {
 
 const getInboxItems = vi.fn();
 const triageInboxItem = vi.fn();
+const updateInboxItem = vi.fn();
 const getAppData = vi.fn();
 const getProjects = vi.fn();
 const getProjectsForResolver = vi.fn();
@@ -67,6 +68,7 @@ vi.mock("wasp/client/operations", () => ({
   },
   getInboxItems,
   triageInboxItem,
+  updateInboxItem,
   getAppData,
   getProjects,
   getProjectsForResolver,
@@ -120,6 +122,7 @@ beforeEach(() => {
     },
   ];
   triageInboxItem.mockRejectedValue(new Error("Server unavailable"));
+  updateInboxItem.mockResolvedValue({ id: "ix-1" });
 });
 
 describe("TriagePage", () => {
@@ -146,7 +149,7 @@ describe("TriagePage", () => {
     triageInboxItem.mockResolvedValue({ kind: "list-item", id: "li-1" });
     renderTriagePage();
 
-    const title = await screen.findByRole("textbox", { name: "Title" });
+    const title = await screen.findByRole("textbox", { name: "Captured text" });
     expect(screen.getByRole("button", { name: "Add to Shopping" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /project/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/2 · Specify/i)).not.toBeInTheDocument();
@@ -220,6 +223,53 @@ describe("TriagePage", () => {
     expect(await screen.findByLabelText("Title")).toHaveValue(
       "Read https://example.com/guide before standup",
     );
+  });
+
+  it("edits the captured text in Classify and persists it back to the item", async () => {
+    vi.useFakeTimers();
+    updateInboxItem.mockResolvedValue({ id: "ix-1" });
+    inboxItems.current[0] = {
+      ...inboxItems.current[0],
+      text: "I realy like this headphones",
+    };
+    const { unmount } = renderTriagePage();
+
+    // Reading surface first — the editor is hidden until the pencil asks for it.
+    expect(screen.getByText("I realy like this headphones")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Captured text" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit captured text" }));
+    const editor = screen.getByRole("textbox", { name: "Captured text" });
+    fireEvent.change(editor, { target: { value: "I really like these headphones" } });
+
+    // The write-back to the InboxItem is debounced.
+    await act(() => vi.advanceTimersByTimeAsync(600));
+    expect(updateInboxItem).toHaveBeenCalledWith({
+      inboxItemId: "ix-1",
+      text: "I really like these headphones",
+    });
+
+    // Blur returns the card to its reading surface with the corrected text.
+    fireEvent.blur(editor);
+    expect(screen.queryByRole("textbox", { name: "Captured text" })).not.toBeInTheDocument();
+    expect(screen.getByText("I really like these headphones")).toBeInTheDocument();
+
+    unmount();
+    vi.useRealTimers();
+  });
+
+  it("does not write Spec-step title renames back to the inbox item", async () => {
+    triageInboxItem.mockResolvedValue({ id: "task-1" });
+    renderTriagePage();
+
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Title" }), {
+      target: { value: "Email Sarah about Q3" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^ready$/i }));
+
+    await waitFor(() => expect(triageInboxItem).toHaveBeenCalled());
+    expect(updateInboxItem).not.toHaveBeenCalled();
   });
 
   it("Back from Spec returns to Classify so the type can be changed", async () => {

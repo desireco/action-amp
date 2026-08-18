@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { NavigateFunction } from "react-router";
 import { useQuery } from "wasp/client/operations";
-import { getInboxItems, triageInboxItem } from "wasp/client/operations";
+import { getInboxItems, triageInboxItem, updateInboxItem } from "wasp/client/operations";
 import { getAppData } from "wasp/client/operations";
 import type { Project, Goal } from "@prisma/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -44,6 +44,9 @@ import { formatAgo, isSameDay } from "../shared/dateFormat";
 import { useTriageKeyboard } from "./useTriageKeyboard";
 import "./TriagePage.css";
 
+/** Debounce for writing an in-triage capture edit back to the InboxItem. */
+const TEXT_SAVE_DEBOUNCE_MS = 600;
+
 /**
  * Triage — define each captured thing, one at a time.
  *
@@ -52,6 +55,10 @@ import "./TriagePage.css";
  * Ready that commits the spec:
  *
  *   1. Classify        — what it becomes plus the Lens/Project destination.
+ *                        The captured text stays a reading surface (URLs are
+ *                        links) until the pencil toggles its editor; edits
+ *                        write back to the InboxItem (debounced), so the
+ *                        inbox keeps the correction if triage is abandoned.
  *   2. Spec            — inline-expanding property rows (When / Size / Priority
  *                        / Project for a Task), value-tinted.
  *   3. Ready           — commits the spec; gated until destination + filing target
@@ -91,6 +98,10 @@ export function TriagePage() {
   const [dispatched, setDispatched] = useState(false);
   const [entering, setEntering] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Whether the Classify card's read-only body has been toggled into its
+  // "Captured text" editor (the pencil). Spec's "Title" editor and the
+  // simple-list editor are always-on and don't use this flag.
+  const [editingBody, setEditingBody] = useState(false);
 
   // ---- Wizard state ----
   const [step, setStep] = useState<Step>("classify");
@@ -288,6 +299,7 @@ export function TriagePage() {
       projectId: hasProjectDestination ? projectBridge.projectId : null,
     });
     setChipOpen(false);
+    setEditingBody(false);
   }, [item, activeLens?.id, initWorking, inferredLens, hasProjectDestination, projectBridge?.projectId]);
 
   useEffect(() => {
@@ -395,6 +407,42 @@ export function TriagePage() {
     }, 320);
   }, [idx, total, exit, activeLens, working, chosenLensId, item, queryClient, resolvedProjectId]);
 
+  // ---- In-triage capture edits: persist back to the InboxItem ----
+  // The Classify editor corrects the capture itself (Spec's "Title" editor
+  // names the future entity and stays local-only). Both update working.title
+  // immediately — dispatch uses it — while the stored item follows on a short
+  // debounce so an abandoned triage session still leaves the inbox text
+  // corrected. Flushing on item-advance and unmount keeps the last edit
+  // inside the debounce window from being lost.
+  const pendingTextSaveRef = useRef<{ id: string; text: string; timer: number } | null>(null);
+  const flushTextSave = useCallback(() => {
+    const pending = pendingTextSaveRef.current;
+    if (!pending) return;
+    pendingTextSaveRef.current = null;
+    window.clearTimeout(pending.timer);
+    // Calm failure: the working title already carries the edit; if dispatch
+    // raced the item's deletion, the server's UNPROCESSED guard no-ops it.
+    void updateInboxItem({ inboxItemId: pending.id, text: pending.text })
+      .then(() => queryClient.invalidateQueries({ queryKey: ["getInboxItems"] }))
+      .catch(() => {});
+  }, [queryClient]);
+  const scheduleTextSave = useCallback(
+    (id: string, text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) return; // never blank out the stored item
+      const prev = pendingTextSaveRef.current;
+      if (prev) window.clearTimeout(prev.timer);
+      const timer = window.setTimeout(() => flushTextSave(), TEXT_SAVE_DEBOUNCE_MS);
+      pendingTextSaveRef.current = { id, text: trimmed, timer };
+    },
+    [flushTextSave],
+  );
+  // Advancing the walkthrough (or leaving triage) flushes the pending edit.
+  useEffect(() => () => flushTextSave(), [flushTextSave]);
+  useEffect(() => {
+    flushTextSave();
+  }, [item?.id, flushTextSave]);
+
   useTriageKeyboard({
     isComplete,
     hasItem: !!item,
@@ -483,7 +531,26 @@ export function TriagePage() {
           <TriageCard
             key={item.id}
             body={working.title}
-            onBodyChange={step === "spec" || isSimpleListDestination ? (title) => setW({ title }) : undefined}
+            onBodyChange={
+              step === "spec" || isSimpleListDestination || editingBody
+                ? (text) => {
+                    setW({ title: text });
+                    if (step !== "spec") scheduleTextSave(item.id, text);
+                  }
+                : undefined
+            }
+            onBodyBlur={
+              editingBody && step !== "spec" && !isSimpleListDestination
+                ? () => setEditingBody(false)
+                : undefined
+            }
+            onBodyEdit={
+              step === "classify" && !isSimpleListDestination
+                ? () => setEditingBody(true)
+                : undefined
+            }
+            autoFocusBody={editingBody}
+            bodyLabel={step === "spec" ? "Title" : "Captured text"}
             meta={`captured ${formatAgo(item.createdAt)}`}
             chips={isSimpleListDestination ? [] : triageChips}
             media={item.attachments}
