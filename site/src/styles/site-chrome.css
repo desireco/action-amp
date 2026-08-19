@@ -197,6 +197,13 @@ body {
   font-size: 12px;
   color: var(--aa-text-4);
 }
+.aa-site-copy a {
+  color: var(--aa-text-3);
+  text-decoration: none;
+}
+.aa-site-copy a:hover {
+  color: var(--aa-text-2);
+}
 
 /* ============================================================
    RESPONSIVE — mobile (≤ 768px)
