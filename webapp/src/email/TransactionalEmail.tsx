@@ -43,9 +43,9 @@ export function TransactionalEmail({
   cta,
   footer = (
     <>
-      One task. Then the next. · Proudly built by{" "}
+      One task. Then the next. · Proudly{" "}
       <a href="https://dakic.com" style={{ color: colors.tealDark }}>
-        Dakic
+        Built By Dakic
       </a>
     </>
   ),

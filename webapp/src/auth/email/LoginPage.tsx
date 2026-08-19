@@ -21,7 +21,7 @@ export function LoginPage({ deps }: LoginPageProps) {
             <a href="https://actionamp.com/privacy">Privacy Policy</a>.
           </span>
           <span>
-            Proudly built by <a href="https://dakic.com">Dakic</a>.
+            Proudly <a href="https://dakic.com">Built By Dakic</a>.
           </span>
           <span className="aa-auth-version">v{__APP_VERSION__}</span>
         </>

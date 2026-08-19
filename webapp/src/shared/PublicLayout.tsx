@@ -51,8 +51,8 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <Link to="/founding-100">Founding 100</Link>
           </div>
           <div className="aa-pub-copy">
-            © 2026 ActionAmp · Proudly built by{" "}
-            <a href="https://dakic.com">Dakic</a>
+            © 2026 ActionAmp · Proudly{" "}
+            <a href="https://dakic.com">Built By Dakic</a>
           </div>
         </div>
       </footer>

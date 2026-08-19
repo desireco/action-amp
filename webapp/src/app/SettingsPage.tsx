@@ -128,7 +128,7 @@ export function SettingsPage() {
         </div>
         <Field label="Version" value={__APP_VERSION__} />
         <Field
-          label="Built by"
+          label="Built By"
           value={<a href="https://dakic.com">Dakic</a>}
         />
       </section>
