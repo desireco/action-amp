@@ -15,6 +15,9 @@ export function SignupPage() {
           <span>
             Already have an account? <Link to="/login">Log in</Link>
           </span>
+          <span>
+            Proudly built by <a href="https://dakic.com">Dakic</a>.
+          </span>
         </>
       }
     />

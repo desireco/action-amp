@@ -40,6 +40,14 @@
   word-break: break-word;
   font-weight: var(--aa-weight-medium);
 }
+.aa-field__value a {
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+}
+.aa-field__value a:hover {
+  color: var(--aa-teal-cta-hover);
+  text-decoration: underline;
+}
 
 /* Stack vertically on narrow viewports */
 @media (max-width: 480px) {

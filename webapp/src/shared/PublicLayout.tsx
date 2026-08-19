@@ -50,7 +50,10 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <a href="https://actionamp.com/roadmap">Roadmap</a>
             <Link to="/founding-100">Founding 100</Link>
           </div>
-          <div className="aa-pub-copy">© 2026 ActionAmp</div>
+          <div className="aa-pub-copy">
+            © 2026 ActionAmp · Proudly built by{" "}
+            <a href="https://dakic.com">Dakic</a>
+          </div>
         </div>
       </footer>
     </div>

@@ -41,7 +41,14 @@ export function TransactionalEmail({
   preview,
   children,
   cta,
-  footer = "One task. Then the next.",
+  footer = (
+    <>
+      One task. Then the next. · Proudly built by{" "}
+      <a href="https://dakic.com" style={{ color: colors.tealDark }}>
+        Dakic
+      </a>
+    </>
+  ),
 }: TransactionalEmailProps) {
   return (
     <Html lang="en">
