@@ -7,7 +7,8 @@ import { MemoryRouter, Routes, Route } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ---- Mock wasp ops ----
-const taskData: { current: unknown } = { current: null };
+type TestSlot<T = unknown> = { current: T };
+const taskData: TestSlot = { current: null };
 const getTask = vi.fn();
 const getProject = vi.fn();
 const getProjects = vi.fn(() => []);

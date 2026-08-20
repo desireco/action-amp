@@ -11,10 +11,11 @@ import { MemoryRouter, Routes, Route } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ---- Mock the wasp ops the page imports ----
-const projectData: { current: unknown } = { current: null };
-const lensProjectsData: { current: unknown[] } = { current: [] };
-const lensGoalsData: { current: unknown[] } = { current: [] };
-const lensesData: { current: unknown[] } = { current: [] };
+type TestSlot<T = unknown> = { current: T };
+const projectData: TestSlot = { current: null };
+const lensProjectsData: TestSlot<unknown[]> = { current: [] };
+const lensGoalsData: TestSlot<unknown[]> = { current: [] };
+const lensesData: TestSlot<unknown[]> = { current: [] };
 
 const getProject = vi.fn();
 const getGoals = vi.fn();

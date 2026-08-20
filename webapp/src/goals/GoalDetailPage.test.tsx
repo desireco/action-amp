@@ -16,7 +16,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // reads — vi.mock factories run before the module body, so we can't reach
 // instance properties on the mocks from inside the factory; a hoisted binding
 // works because it's a plain object.
-const goalData: { current: unknown } = { current: null };
+type TestSlot<T = unknown> = { current: T };
+const goalData: TestSlot = { current: null };
 const getGoal = vi.fn();
 const setGoalDone = vi.fn();
 const updateGoal = vi.fn();

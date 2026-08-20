@@ -29,10 +29,13 @@ const iso = (d: Date): string => d.toISOString();
 const minutesAfter = (base: Date, m: number): Date =>
   new Date(base.getTime() + m * 60_000);
 
+type SessionFixture = { startedAt: Date; endedAt: Date | null };
+type NoteFixture = { body: string; createdAt: Date; kind: string };
+
 function session(
   start: Date,
   endMin: number | null,
-): { startedAt: Date; endedAt: Date | null } {
+): SessionFixture {
   return {
     startedAt: start,
     endedAt: endMin === null ? null : minutesAfter(start, endMin),
@@ -43,7 +46,7 @@ function note(
   body: string,
   at: Date,
   kind: "NOTE" | "COMPLETED" = "NOTE",
-): { body: string; createdAt: Date; kind: string } {
+): NoteFixture {
   return { body, createdAt: at, kind };
 }
 
