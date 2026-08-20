@@ -17,7 +17,7 @@ describe("imageFiles", () => {
   it("rawFilesFromDataTransfer prefers the files list", () => {
     const png = file("a.png", "image/png");
     // SAFETY: DataTransfer is a DOM API not available in node; mock fixture cast via unknown.
-    const dt = { files: [png], items: [] } as unknown as DataTransfer;
+    const dt = Object.assign({} as DataTransfer, { files: [png], items: [] });
     expect(rawFilesFromDataTransfer(dt)).toEqual([png]);
   });
 
@@ -31,7 +31,7 @@ describe("imageFiles", () => {
         { kind: "string", getAsFile: () => null },
         { kind: "file", getAsFile: () => null }, // broken entry — skipped
       ],
-    } as unknown as DataTransfer;
+    } as DataTransfer;
     expect(rawFilesFromDataTransfer(dt)).toEqual([png]);
   });
 
@@ -39,7 +39,7 @@ describe("imageFiles", () => {
     const png = file("a.png", "image/png");
     const pdf = file("b.pdf", "application/pdf");
     // SAFETY: DataTransfer is a DOM API not available in node; mock fixture cast via unknown.
-    const dt = { files: [png, pdf] } as unknown as DataTransfer;
+    const dt = Object.assign({} as DataTransfer, { files: [png, pdf] });
     expect(imageFilesFromDataTransfer(dt)).toEqual([png]);
   });
 

@@ -50,21 +50,16 @@ function setTypingTarget(tagName: string) {
 let handlers: Required<ShortcutHandlers>;
 
 beforeEach(() => {
-  // vi.fn()'s Mock type isn't directly assignable to () => void (Vitest
-  // typing quirk), so one localized cast here keeps the rest of the file clean.
-  // SAFETY: vi.fn() mock type isn't assignable to () => void (Vitest typing quirk);
-  // as unknown as Required<ShortcutHandlers> bridges the gap. Chained assertion necessary
-  // because Mock doesn't structurally overlap the handler interface.
   handlers = {
-    onCapture: vi.fn(),
-    onSearch: vi.fn(),
-    onCommandPalette: vi.fn(),
-    onGoHome: vi.fn(),
-    onNavigate: vi.fn(),
-    onToggleCheatsheet: vi.fn(),
-    onToggleLens: vi.fn(),
-    onCloseOverlay: vi.fn(),
-  } as unknown as Required<ShortcutHandlers>;
+    onCapture: vi.fn<() => void>(),
+    onSearch: vi.fn<() => void>(),
+    onCommandPalette: vi.fn<() => void>(),
+    onGoHome: vi.fn<() => void>(),
+    onNavigate: vi.fn<(destination: string) => void>(),
+    onToggleCheatsheet: vi.fn<() => void>(),
+    onToggleLens: vi.fn<() => void>(),
+    onCloseOverlay: vi.fn<() => void>(),
+  } satisfies Required<ShortcutHandlers>;
 });
 
 afterEach(() => {

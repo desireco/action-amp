@@ -48,8 +48,14 @@ export function GroupedList<T>({
   groupClassName,
   className = "",
 }: GroupedListProps<T>) {
-  // SAFETY: type assertion is safe — value is validated or from a trusted source.
-  const Heading = (`h${headingLevel}` as unknown) as "h3";
+  const headingTags = {
+    2: "h2",
+    3: "h3",
+    4: "h4",
+    5: "h5",
+    6: "h6",
+  } as const;
+  const Heading = headingTags[headingLevel];
   return (
     <div className={["aa-grouped", className].filter(Boolean).join(" ")}>
       {groups.map((group) => {

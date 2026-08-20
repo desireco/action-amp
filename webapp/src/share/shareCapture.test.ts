@@ -19,7 +19,7 @@ beforeEach(() => {
 function makeReq(body: unknown, sessionAuth?: { userId: string }): Request {
   // SAFETY: Express Request is wide; fixture provides only the fields the handler accesses.
   // Chained assertion is necessary because the literal doesn't structurally overlap Request.
-  return { body, sessionAuth } as unknown as Request;
+  return Object.assign({} as Request, { body, sessionAuth });
 }
 
 function makeRes(): Response {
@@ -29,7 +29,7 @@ function makeRes(): Response {
     redirect: vi.fn(),
     status: vi.fn().mockReturnThis(),
     json: vi.fn(),
-  } as unknown as Response;
+  } as Response;
 }
 
 beforeEach(() => {
