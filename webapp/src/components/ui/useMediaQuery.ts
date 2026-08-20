@@ -9,23 +9,22 @@ import { useEffect, useState } from "react";
  */
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return false;
-    }
-    return window.matchMedia(query).matches;
+    return globalThis.window?.matchMedia?.(query)?.matches ?? false;
   });
 
   useEffect(() => {
-    if (typeof window.matchMedia !== "function") return;
-    const mql = window.matchMedia(query);
+    const mediaWindow = globalThis.window;
+    const matchMedia = mediaWindow?.matchMedia;
+    if (!mediaWindow || !matchMedia) return;
+    const mql = matchMedia.call(mediaWindow, query);
     const onChange = (e: MediaQueryListEvent) => setMatches(e.matches);
     setMatches(mql.matches);
     // Minimal test mocks (and very old engines) may only offer addListener.
-    if (typeof mql.addEventListener === "function") {
+    if (mql.addEventListener) {
       mql.addEventListener("change", onChange);
       return () => mql.removeEventListener("change", onChange);
     }
-    if (typeof mql.addListener === "function") {
+    if (mql.addListener) {
       mql.addListener(onChange);
       return () => mql.removeListener(onChange);
     }
