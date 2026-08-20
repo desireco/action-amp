@@ -69,13 +69,13 @@ const TOTAL_LIMIT = 30;
 const KIND_LIMIT = 10;
 const PASS_LIMIT = KIND_LIMIT + 1;
 const SNIPPET_LIMIT = 140;
-const KIND_ORDER: Record<SearchResultKind, number> = {
+const KIND_ORDER = {
   task: 0,
   project: 1,
   goal: 2,
   resource: 3,
   inbox: 4,
-};
+} satisfies Record<SearchResultKind, number>;
 
 export function normalizeSearchQuery(value: string): string {
   return value.trim().replace(/\s+/g, " ");

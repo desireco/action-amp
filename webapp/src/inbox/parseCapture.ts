@@ -119,7 +119,7 @@ function nextWeekday(target: number, from: Date): Date {
   return startOfDay(d);
 }
 
-const PRIORITY_WORDS: Record<string, ParsedPriority> = {
+const PRIORITY_WORDS = {
   "1": "LOW",
   low: "LOW",
   "2": "NORMAL",
@@ -132,7 +132,7 @@ const PRIORITY_WORDS: Record<string, ParsedPriority> = {
   "!!!": "IMPORTANT",
   "!!": "NORMAL",
   "!": "LOW",
-};
+} satisfies Record<string, ParsedPriority>;
 
 function sizeFromTime(value: number, unit: "m" | "h"): ParsedSize {
   const minutes = unit === "h" ? value * 60 : value;
@@ -142,13 +142,13 @@ function sizeFromTime(value: number, unit: "m" | "h"): ParsedSize {
   return "XL";
 }
 
-const SIZE_WORDS: Record<string, ParsedSize> = {
+const SIZE_WORDS = {
   s: "S",
   m: "M",
   l: "L",
   xl: "XL",
   xs: "S",
-};
+} satisfies Record<string, ParsedSize>;
 
 /**
  * @param raw Raw capture text.

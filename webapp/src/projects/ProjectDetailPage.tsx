@@ -51,12 +51,12 @@ type ProjectTask = TaskRowTask & {
 };
 
 /** Size → human duration, matching the home screen (focusTaskView.sizeLabel). */
-const SIZE_DURATION: Record<string, string> = {
+const SIZE_DURATION = {
   S: "15 min",
   M: "30 min",
   L: "1 hr",
   XL: "2 hr+",
-};
+} satisfies Record<string, string>;
 
 type ProjectResource = {
   id: string;

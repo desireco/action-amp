@@ -39,7 +39,7 @@ type PaletteItem =
   | { type: "result"; id: string; result: SearchSiteResult }
   | { type: "command"; id: string; command: PaletteCommand };
 
-const KIND_ORDER: Record<SearchResultKind | "lens" | "command", number> = {
+const KIND_ORDER = {
   command: 0,
   task: 1,
   project: 2,
@@ -47,7 +47,7 @@ const KIND_ORDER: Record<SearchResultKind | "lens" | "command", number> = {
   resource: 4,
   inbox: 5,
   lens: 6,
-};
+} satisfies Record<SearchResultKind | "lens" | "command", number>;
 
 /**
  * Injectable operations — the test seam (see CommandPalette.test.tsx).

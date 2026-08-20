@@ -74,14 +74,14 @@ import "./AppShell.css";
  */
 
 /** Routes for the Shift-letter navigation chords (useKeyboardShortcuts). */
-const NAV_ROUTE: Record<NavDestination, string> = {
+const NAV_ROUTE = {
   inbox: "/do/inbox",
   next: "/do",
   today: "/do/today",
   triage: "/do/inbox/review",
   planning: "/do/projects",
   review: "/do/review",
-};
+} satisfies Record<NavDestination, string>;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();

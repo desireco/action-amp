@@ -4,12 +4,12 @@ import { FEEDBACK_STATUSES, type FeedbackStatus } from "../feedback/operationsCo
 import "./StatusSelect.css";
 
 /** Display label + chip color per status. */
-const STATUS_DISPLAY: Record<FeedbackStatus, { label: string; variant: "default" | "amber" | "teal" | "muted" }> = {
+const STATUS_DISPLAY = {
   OPEN: { label: "open", variant: "default" },
   IN_PROGRESS: { label: "in progress", variant: "amber" },
   RESOLVED: { label: "resolved", variant: "teal" },
   CLOSED: { label: "closed", variant: "muted" },
-};
+} satisfies Record<FeedbackStatus, { label: string; variant: "default" | "amber" | "teal" | "muted" }>;
 
 interface StatusSelectProps {
   status: FeedbackStatus;

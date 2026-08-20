@@ -13,7 +13,7 @@ const RANGE_OPTIONS: Array<{ label: string; value: FunnelRange }> = [
   { label: "All time", value: "all" },
 ];
 
-const LABELS: Record<string, string> = {
+const LABELS = {
   LANDING_VIEW: "Landing",
   SIGNUP_COMPLETED: "Signup",
   APP_OPENED: "App open",
@@ -21,7 +21,7 @@ const LABELS: Record<string, string> = {
   TRIAGE_COMPLETED: "First triage",
   CHECKOUT_STARTED: "Checkout",
   PAYMENT_CONFIRMED: "Paid",
-};
+} satisfies Record<string, string>;
 
 export function AdminFunnelPage() {
   const { data: user } = useAuth();
