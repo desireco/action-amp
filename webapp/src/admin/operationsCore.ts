@@ -48,14 +48,12 @@ import {
   getFunnelStatsCore,
   type FunnelRange,
   type FunnelStats,
+  type AnalyticsSessionWithEvents,
+  type FunnelEntities,
 } from "../analytics/operationsCore";
 import type {
   Prisma,
 } from "@prisma/client";
-import type {
-  AnalyticsSessionWithEvents,
-  FunnelEntities,
-} from "../analytics/operationsCore";
 
 export const FEEDBACK_STATUSES = [
   "OPEN",

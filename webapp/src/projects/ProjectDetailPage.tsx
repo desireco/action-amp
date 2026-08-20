@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router";
-import { useQuery } from "wasp/client/operations";
 import {
+  useQuery,
   getProject,
   getGoals,
   getProjects,
@@ -17,12 +17,12 @@ import {
   createResource,
   updateResource,
   deleteResource,
+  getLenses,
 } from "wasp/client/operations";
-import { Breadcrumb } from "../components/ui";
-import type { BreadcrumbItem } from "../components/ui";
-import { AttachmentCover, AttachmentThumbs } from "../components/ui";
-import { useQueryClient } from "@tanstack/react-query";
 import {
+  Breadcrumb,
+  AttachmentCover,
+  AttachmentThumbs,
   Button,
   Chip,
   TaskRow,
@@ -35,12 +35,13 @@ import {
   useMediaQuery,
   PlusIcon,
   ArrowRightIcon,
+  type BreadcrumbItem,
+  type GroupDef,
   type TaskRowTask,
 } from "../components/ui";
+import { useQueryClient } from "@tanstack/react-query";
 import { CreateInline } from "../lists/CreateInline";
-import type { GroupDef } from "../components/ui";
 import { formatRelativeDue } from "../shared/dateFormat";
-import { getLenses } from "wasp/client/operations";
 import { SimpleListChecklist } from "../simpleLists/SimpleListChecklist";
 import "./ProjectDetailPage.css";
 

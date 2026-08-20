@@ -32,13 +32,11 @@ import {
   setTaskOutcome,
   completeTaskFromFocus,
 } from "./src/tasks/operations" with { type: "ref" };
-import { getProjects } from "./src/projects/operations" with { type: "ref" };
-import { createProject } from "./src/projects/operations" with { type: "ref" };
 import {
   getProject,
   createTask,
-} from "./src/projects/operations" with { type: "ref" };
-import {
+  getProjects,
+  createProject,
   setProjectDone,
   archiveProject,
   moveProject,
@@ -52,9 +50,10 @@ import {
   deleteResource,
 } from "./src/resources/operations" with { type: "ref" };
 import { ProjectDetailPage } from "./src/projects/ProjectDetailPage" with { type: "ref" };
-import { getGoals, getGoal } from "./src/goals/operations" with { type: "ref" };
-import { createGoal } from "./src/goals/operations" with { type: "ref" };
 import {
+  getGoals,
+  getGoal,
+  createGoal,
   setGoalDone,
   updateGoal,
   deleteGoal,
@@ -103,7 +102,6 @@ import {
   updateLens,
   deleteLens,
 } from "./src/lenses/operations" with { type: "ref" };
-import { getLenses } from "./src/lenses/operations" with { type: "ref" };
 import {
   getSimpleList,
   createListItem,

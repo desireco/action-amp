@@ -17,17 +17,6 @@ import {
 } from "./useKeyboardShortcuts";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { captureFeedbackContext } from "../feedback/captureContext";
-import {
-  Button,
-  CloseButton,
-  CapturePopover,
-  ShortcutCheatsheet,
-  ConfirmDialog,
-  ProGate,
-  LensChip,
-  LensPopover,
-  Kbd,
-} from "../components/ui";
 import { useEntitled } from "../billing/useEntitled";
 import {
   CommandPalette,
@@ -42,6 +31,15 @@ import {
   useDeployedVersionUpdate,
 } from "../notifications/client";
 import {
+  Button,
+  CloseButton,
+  CapturePopover,
+  ShortcutCheatsheet,
+  ConfirmDialog,
+  ProGate,
+  LensChip,
+  LensPopover,
+  Kbd,
   BrandMark,
   NavItem,
   PlusIcon,

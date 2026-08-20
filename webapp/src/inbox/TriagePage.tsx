@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router";
-import type { NavigateFunction } from "react-router";
+import { useNavigate, useSearchParams, type NavigateFunction } from "react-router";
 import { useQuery, getInboxItems, triageInboxItem, updateInboxItem, getAppData, getProjects, getProjectsForResolver, getGoals } from "wasp/client/operations";
 import type { Project, Goal } from "@prisma/client";
 import { useQueryClient } from "@tanstack/react-query";

@@ -11,8 +11,7 @@ import {
   snoozeTask,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { FocusMode } from "../components/ui";
-import type { SnoozePreset } from "../components/ui";
+import { FocusMode, type SnoozePreset } from "../components/ui";
 import { toFocusTask } from "./focusTaskView";
 import "./NextPage.css";
 

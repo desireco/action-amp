@@ -1,4 +1,9 @@
-import type { GetBillingStatus } from "wasp/server/operations";
+import type {
+  GetBillingStatus,
+  GetFounding100Status,
+  CreateCheckoutSession,
+  CreateCustomerPortalSession,
+} from "wasp/server/operations";
 import {
   isPaidPlan,
   FOUNDING_100_CAP,
@@ -52,10 +57,6 @@ export const getBillingStatus = (async (_args, context) => {
  * - Recurring plans (pro_yearly, pro_monthly) → `mode: "subscription"`
  * - One-time plans (pro_prepaid, founder) → `mode: "payment"`
  */
-import type {
-  CreateCheckoutSession,
-  CreateCustomerPortalSession,
-} from "wasp/server/operations";
 import { recordAnalyticsEventCore } from "../analytics/operationsCore";
 
 export const createCheckoutSession = (async (
@@ -226,8 +227,6 @@ export const createCustomerPortalSession = (async (_args, context) => {
  * User-specific state ("am I already a founder?") comes from useAuth() on the
  * client — this query returns only the global count.
  */
-import type { GetFounding100Status } from "wasp/server/operations";
-
 export const getFounding100Status = (async (_args, context) => {
   const claimed = await context.entities.User.count({
     where: FOUNDER_MEMBERSHIP_WHERE,

@@ -18,9 +18,10 @@ import {
   CompletionCircle,
   Chip,
   ConfirmDialog,
+  GroupedList,
+  type GroupDef,
   type TaskRowTask,
 } from "../components/ui";
-import { GroupedList, type GroupDef } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { FeedbackDialog } from "../app/FeedbackDialog";
 import { captureFeedbackContext } from "../feedback/captureContext";
