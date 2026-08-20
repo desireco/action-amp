@@ -197,12 +197,12 @@ export function ProjectDetailPage() {
   // Group the project's tasks by horizon. Open tasks split into Today / Upcoming
   // / Someday; done ones collect at the bottom.
   const groups = useMemo<GroupDef<ProjectTask>[]>(() => {
-    const buckets: Record<string, ProjectTask[]> = {
+    const buckets = {
       TODAY: [],
       UPCOMING: [],
       SOMEDAY: [],
       DONE: [],
-    };
+    } satisfies Record<string, ProjectTask[]>;
     for (const t of activeTasks) {
       (t.isDone ? buckets.DONE : (buckets[t.status] ?? buckets.SOMEDAY)).push(
         t,

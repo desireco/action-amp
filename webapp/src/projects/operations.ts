@@ -275,13 +275,14 @@ export const updateProject = (async (args, context) => {
   if (!existing) {
     throwHttpStatus(404, "Project not found.");
   }
-  const data: {
+  type ProjectUpdateData = {
     name?: string;
     description?: string | null;
     goalId?: string | null;
     dueDate?: Date | null;
     type?: "STANDARD" | "SIMPLE_LIST";
-  } = {};
+  };
+  const data: ProjectUpdateData = {};
   // Type conversion: only while empty — converting tasks or list items would
   // be ambiguous. Mirrors the old Lens rule (blocked with a reason, never
   // silently).
@@ -447,7 +448,8 @@ export const updateTask = (async (args, context) => {
   if (args.projectId && args.goalId) {
     throw new Error("Task can only be attached to one parent.");
   }
-  const data: { projectId?: string | null; goalId?: string | null } = {};
+  type TaskParentData = { projectId?: string | null; goalId?: string | null };
+  const data: TaskParentData = {};
   if (args.projectId !== undefined) {
     if (args.projectId !== null) {
       const project = await context.entities.Project.findUnique({

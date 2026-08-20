@@ -745,7 +745,13 @@ export const completeTaskFromFocus = (async (args, context) => {
     throw new Error("Start the task before completing it.");
   }
   const completedAt = new Date();
-  const data: Record<string, unknown> = {
+  type TaskCompletionData = {
+    isDone: true;
+    completedAt: Date;
+    startedAt: null;
+    outcome?: string | null;
+  };
+  const data: TaskCompletionData = {
     isDone: true,
     completedAt,
     startedAt: null,

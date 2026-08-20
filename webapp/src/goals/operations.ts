@@ -121,6 +121,8 @@ export const setGoalDone = (async (args, context) => {
 // another Goal name for this user (@@unique([userId, name])). description may
 // be set to null. P2002 from the unique constraint is rewritten to a 409 the
 // UI can show cleanly (same pattern as updateLens).
+type GoalUpdateData = { name?: string; description?: string | null };
+
 export const updateGoal = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
@@ -132,7 +134,7 @@ export const updateGoal = (async (args, context) => {
   if (!existing) {
     throwHttpStatus(404, "Goal not found.");
   }
-  const data: { name?: string; description?: string | null } = {};
+  const data: GoalUpdateData = {};
   if (args.name !== undefined) {
     const name = args.name.trim();
     if (!name) throw new Error("Goal name cannot be empty.");
