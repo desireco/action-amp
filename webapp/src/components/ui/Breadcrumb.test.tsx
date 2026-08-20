@@ -3,8 +3,7 @@
 // aria-current, and onSelect fires with the crumb id on click.
 import { describe, expect, it, vi } from "vitest";
 import { screen, fireEvent, render } from "@testing-library/react";
-import { Breadcrumb } from "./Breadcrumb";
-import type { BreadcrumbItem } from "./Breadcrumb";
+import { Breadcrumb, type BreadcrumbItem } from "./Breadcrumb";
 
 const ITEMS: BreadcrumbItem[] = [
   { id: "goal:g1", label: "Grow audience" },

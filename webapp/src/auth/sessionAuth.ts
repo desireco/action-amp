@@ -16,8 +16,7 @@
  * `Session.userId` → `Auth.id`; `Auth.userId` → `User.id`.
  */
 import type { Request, Response, NextFunction } from "express";
-import type { MiddlewareConfigFn } from "wasp/server";
-import { prisma } from "wasp/server";
+import { prisma, type MiddlewareConfigFn } from "wasp/server";
 import { attachSessionFromCookie } from "./sessionCookie";
 
 // Re-exported for route middleware composers (shareRouteMiddleware).

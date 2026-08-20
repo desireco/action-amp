@@ -1,5 +1,4 @@
-import { defineConfig } from "oxlint";
-import type { OxlintConfig } from "oxlint";
+import { defineConfig, type OxlintConfig } from "oxlint";
 
 export default defineConfig({
   rules: {

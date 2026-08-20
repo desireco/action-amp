@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { composeWhy } from "./focusWhy";
-import type { FocusWhyInput } from "./focusWhy";
+import { composeWhy, type FocusWhyInput } from "./focusWhy";
 
 /**
  * The transparent "why" line — every spec branch, plus the load-bearing

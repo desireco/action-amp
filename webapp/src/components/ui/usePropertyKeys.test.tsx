@@ -1,8 +1,7 @@
 // Test for usePropertyKeys — the property-key shortcuts ([ ] - = H).
 import { describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { usePropertyKeys } from "./usePropertyKeys";
-import type { PropertyKeyValues } from "./usePropertyKeys";
+import { usePropertyKeys, type PropertyKeyValues } from "./usePropertyKeys";
 
 function fireKey(key: string, opts: { target?: Element } = {}) {
   const event = new KeyboardEvent("keydown", {

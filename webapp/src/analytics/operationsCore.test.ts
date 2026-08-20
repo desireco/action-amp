@@ -1,7 +1,11 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { getFunnelStatsCore, recordAnalyticsEventCore } from "./operationsCore";
-import type { AnalyticsEventEntities, FunnelEntities } from "./operationsCore";
+import {
+  getFunnelStatsCore,
+  recordAnalyticsEventCore,
+  type AnalyticsEventEntities,
+  type FunnelEntities,
+} from "./operationsCore";
 
 type MockEntities = ReturnType<typeof mockContext>["entities"];
 

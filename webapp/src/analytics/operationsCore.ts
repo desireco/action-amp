@@ -2,10 +2,10 @@
  * First-party analytics cores. No Wasp imports: browser operations, the public
  * API handler, and admin reporting all share these validation rules.
  */
-import { Prisma } from "@prisma/client";
-import type {
-  AnalyticsEvent as AnalyticsEventRow,
-  AnalyticsSession,
+import {
+  Prisma,
+  type AnalyticsEvent as AnalyticsEventRow,
+  type AnalyticsSession,
 } from "@prisma/client";
 
 /**
