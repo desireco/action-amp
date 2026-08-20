@@ -7,8 +7,9 @@ const VISITOR_RE = /^[a-zA-Z0-9_-]+$/;
 function visitorId(): string {
   const existing = window.localStorage.getItem(VISITOR_KEY);
   if (existing && VISITOR_RE.test(existing)) return existing;
-  const value = typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID().replaceAll("-", "")
+  const uuid = crypto.randomUUID?.();
+  const value = uuid
+    ? uuid.replaceAll("-", "")
     : `${Date.now()}_${Math.random().toString(36).slice(2)}`;
   window.localStorage.setItem(VISITOR_KEY, value);
   return value;

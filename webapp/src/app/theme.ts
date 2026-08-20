@@ -1,10 +1,11 @@
 export type AppTheme = "light" | "dark";
 
 export function preferredTheme(): AppTheme {
-  if (typeof window === "undefined") return "light";
-  const stored = localStorage.getItem("aa-theme");
+  const browserWindow = globalThis.window;
+  if (!browserWindow) return "light";
+  const stored = browserWindow.localStorage.getItem("aa-theme");
   if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
+  return browserWindow.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
 }

@@ -30,7 +30,7 @@ export function trackStatCounterEvent(event: string, surface?: string, plan?: st
   // SAFETY: double/wide assertion needed — runtime shape is verified.
   const queue = window._statcounter ?? (window._statcounter = [] as StatCounterQueue);
   queue.push({ tags });
-  if (typeof window._statcounter.record_pageview === "function") window._statcounter.record_pageview();
+  window._statcounter.record_pageview?.();
 }
 
 /** Loads StatCounter only in production, keeping local development traffic out. */
