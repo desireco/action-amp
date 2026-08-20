@@ -22,8 +22,7 @@
  */
 import type Stripe from "stripe";
 import { stripe, requireStripe } from "./stripe";
-import { recordAnalyticsEventCore } from "../analytics/operationsCore";
-import type { AnalyticsEventEntities } from "../analytics/operationsCore";
+import { recordAnalyticsEventCore, type AnalyticsEventEntities } from "../analytics/operationsCore";
 import type { Prisma, Plan as DbPlan } from "@prisma/client";
 // Wasp API handlers receive Express req/res; our express.raw middleware puts
 // raw bytes in req.body as a Buffer (not in the type signature).

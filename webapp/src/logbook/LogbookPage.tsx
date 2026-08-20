@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router";
-import { useQuery } from "wasp/client/operations";
 import {
+  useQuery,
   getLogbook,
   restoreArchivedItem,
   setGoalDone,

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { useQuery } from "wasp/client/operations";
-import { getProjects, createProject, triageInboxItem, getAppData } from "wasp/client/operations";
+import { useQuery, getProjects, createProject, triageInboxItem, getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Chip,

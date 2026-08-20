@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
-import { useQuery } from "wasp/client/operations";
 import {
+  useQuery,
   getGoal,
   setGoalDone,
   updateGoal,
@@ -16,7 +16,7 @@ import {
   DetailHeaderActions,
   InlineEntityEditForm,
 } from "../components/ui";
-import type { BreadcrumbItem } from "../components/ui";
+import { type BreadcrumbItem } from "../components/ui";
 import { formatRelativeDue } from "../shared/dateFormat";
 import "./GoalDetailView.css";
 

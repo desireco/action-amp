@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useQuery } from "wasp/client/operations";
 import {
+  useQuery,
   getLenses,
   createLens,
   updateLens,

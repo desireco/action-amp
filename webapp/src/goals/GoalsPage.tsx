@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "wasp/client/operations";
-import { getGoals, createGoal, getAppData } from "wasp/client/operations";
+import { useQuery, getGoals, createGoal, getAppData } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { useActiveLens } from "../app/lensContext";
 import {

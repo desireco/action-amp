@@ -33,8 +33,7 @@
  */
 import cors from "cors";
 import express from "express";
-import type { MiddlewareConfigFn } from "wasp/server";
-import { config } from "wasp/server";
+import { config, type MiddlewareConfigFn } from "wasp/server";
 import {
   attachSessionFromCookie,
   sessionCookieWriteMiddleware,

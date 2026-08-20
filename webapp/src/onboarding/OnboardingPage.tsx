@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import type { RefObject } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, type RefObject } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "wasp/client/auth";
 import { useQueryClient } from "@tanstack/react-query";
