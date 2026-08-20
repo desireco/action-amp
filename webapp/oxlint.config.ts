@@ -3,6 +3,17 @@ import type { OxlintConfig } from "oxlint";
 
 export default defineConfig({
   rules: {
+    // Keep explicit guardrails beyond Oxlint's default correctness category.
+    // These catch common review findings before a human has to rediscover them.
+    "eqeqeq": "error",
+    "no-constant-binary-expression": "error",
+    "no-debugger": "error",
+    "no-duplicate-imports": "error",
+    "no-promise-executor-return": "error",
+    "no-template-curly-in-string": "error",
+
+    // Anti-slop is intentionally strict for new and changed code. Existing
+    // diagnostics are cleanup work, not a reason to weaken these safeguards.
     "anti-slop/no-chained-type-assertions": "error",
     "anti-slop/no-conditional-empty-object-spread": "error",
     "anti-slop/no-known-value-widening": "error",

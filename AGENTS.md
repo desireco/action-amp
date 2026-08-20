@@ -170,11 +170,16 @@ Pick the task; read the doc(s) on the right **before** writing code.
 - **Code review = fix loop.** When a code review is requested (explicit or
   implied), load the `code-review` skill, run the review, then **continue
   straight into implementing the fixes** — do not stop and wait for approval
-  unless a fix is destructive, outward-facing, or materially ambiguous. Group
-  fixes by file; verify with `wasp compile` (or the feature's test command) when
-  the change touches `webapp/`. Report what was reviewed, what was fixed, and
-  what was deferred (with reason) in the summary. Commits follow the existing
-  convention (direct to `main` unless told otherwise).
+  unless a fix is destructive, outward-facing, or materially ambiguous. Run
+  Oxlint as part of every review that changes `webapp/`: from `webapp/`, run
+  `npm run lint -- <changed source paths>` (or the full `npm run lint` when
+  assessing the whole webapp). It is the default lint gate and includes the
+  anti-slop rules plus correctness checks; do not bypass a new diagnostic with
+  a suppression merely to make review pass. Group fixes by file; verify with
+  `wasp compile` (or the feature's test command) when the change touches
+  `webapp/`. Report what was reviewed, what was fixed, and what was deferred
+  (with reason) in the summary. Commits follow the existing convention (direct
+  to `main` unless told otherwise).
 
 ## Where to start if you're new
 
