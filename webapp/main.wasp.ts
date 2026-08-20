@@ -101,6 +101,7 @@ import {
   createLens,
   updateLens,
   deleteLens,
+  getLenses,
 } from "./src/lenses/operations" with { type: "ref" };
 import {
   getSimpleList,
