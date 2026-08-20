@@ -24,14 +24,14 @@ describe("imageFiles", () => {
   it("falls back to items when files is empty (paste quirk in some browsers)", () => {
     const png = file("pasted.png", "image/png");
     // SAFETY: DataTransfer is a DOM API not available in node; mock fixture cast via unknown.
-    const dt = {
+    const dt = Object.assign({} as DataTransfer, {
       files: [],
       items: [
         { kind: "file", getAsFile: () => png },
         { kind: "string", getAsFile: () => null },
-        { kind: "file", getAsFile: () => null }, // broken entry — skipped
+        { kind: "file", getAsFile: () => null },
       ],
-    } as DataTransfer;
+    });
     expect(rawFilesFromDataTransfer(dt)).toEqual([png]);
   });
 

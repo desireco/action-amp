@@ -40,7 +40,9 @@ function makeRes(): Response & { headers: Record<string, string>; body: Buffer |
   };
   // SAFETY: mock Response extended with typed headers/body; chained assertion necessary
   // because mock object doesn't structurally overlap Response.
-  return Object.assign(res as Response, {} as { headers: Record<string, string>; body: Buffer | null });
+  const typed: Response & { headers: Record<string, string>; body: Buffer | null } =
+    Object.assign({} as Response, res);
+  return typed;
 }
 
 function makeEntities(inboxResult: unknown = null, listResult: unknown = null, taskResult: unknown = null, projectResult: unknown = null, resourceResult: unknown = null) {

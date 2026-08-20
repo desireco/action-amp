@@ -52,13 +52,14 @@ export function UpcomingPage() {
 
   const groups = useMemo<GroupDef<TaskRowTask>[]>(() => {
     if (!tasks) return [];
-    const buckets = {
+    type UpcomingBuckets = Record<string, TaskRowTask[]>;
+    const buckets: UpcomingBuckets = {
       Overdue: [],
       "This week": [],
       "Next week": [],
       Later: [],
       Unscheduled: [],
-    } satisfies Record<string, TaskRowTask[]>;
+    };
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     for (const t of tasks) {
