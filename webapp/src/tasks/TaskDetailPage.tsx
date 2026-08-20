@@ -12,9 +12,18 @@ import {
   updateTaskStatus,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { Breadcrumb, Button, CloseButton, ConfirmDialog, Markdown, PickerSheet, PropertyChips, submitOnModEnter } from "../components/ui";
-import { AttachmentThumbs } from "../components/ui";
-import type { BreadcrumbItem } from "../components/ui";
+import {
+  Breadcrumb,
+  Button,
+  CloseButton,
+  ConfirmDialog,
+  Markdown,
+  PickerSheet,
+  PropertyChips,
+  submitOnModEnter,
+  AttachmentThumbs,
+  type BreadcrumbItem,
+} from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { captureFeedbackContext } from "../feedback/captureContext";
 import { usePropertyKeys } from "../components/ui/usePropertyKeys";

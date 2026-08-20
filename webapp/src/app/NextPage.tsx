@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
-import { useQuery } from "wasp/client/operations";
 import { useAuth } from "wasp/client/auth";
 import {
+  useQuery,
   getTopTask,
   getTaskAlternatives,
   getTask,

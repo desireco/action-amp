@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useQuery } from "wasp/client/operations";
 import {
+  useQuery,
   getAppData,
   getTasks,
   unscheduleOverdueTasks,

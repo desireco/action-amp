@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router";
-import { useQuery } from "wasp/client/operations";
-import { getInboxItems } from "wasp/client/operations";
+import { useQuery, getInboxItems } from "wasp/client/operations";
 import type { InboxItem } from "@prisma/client";
 import {
   AttachmentCover,

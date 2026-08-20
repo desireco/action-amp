@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
 import { useAuth } from "wasp/client/auth";
-import { getAdminFunnel } from "wasp/client/operations";
-import { useQuery } from "wasp/client/operations";
+import { getAdminFunnel, useQuery } from "wasp/client/operations";
 import { AdminLayout } from "./AdminLayout";
 import { Card, Table, type TableColumn } from "../components/ui";
 import type { FunnelRange, FunnelStats } from "../analytics/operationsCore";

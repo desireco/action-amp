@@ -1,6 +1,6 @@
 import { Navigate, useNavigate } from "react-router";
-import { useQuery } from "wasp/client/operations";
 import {
+  useQuery,
   getFocusedTask,
   addTaskUpdate,
   updateTaskContent,
