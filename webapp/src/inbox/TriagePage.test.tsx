@@ -466,7 +466,9 @@ describe("TriagePage", () => {
     await waitFor(() => expect(screen.getByText("Server unavailable")).toBeInTheDocument());
 
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 400);
+      });
     });
 
     expect(screen.getByText("Email Sarah")).toBeInTheDocument();
@@ -557,7 +559,9 @@ describe("TriagePage", () => {
       fireEvent.click(await screen.findByRole("button", { name: /^ready$/i }));
       await waitFor(() => expect(triageInboxItem).toHaveBeenCalledTimes(expectedCallCount));
       await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 350));
+        await new Promise((resolve) => {
+          setTimeout(resolve, 350);
+        });
       });
     }
 

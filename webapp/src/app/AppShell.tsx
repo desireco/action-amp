@@ -83,32 +83,6 @@ const NAV_ROUTE: Record<NavDestination, string> = {
   review: "/do/review",
 };
 
-function ListIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M6 4h7M6 8h7M6 12h7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="m2.5 4 1 1 1.5-2M2.5 8l1 1L5 7M2.5 12l1 1L5 11"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: user } = useAuth();
   const location = useLocation();

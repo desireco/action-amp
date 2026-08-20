@@ -6,7 +6,6 @@ import {
   createLens,
   updateLens,
   deleteLens,
-  getAppData,
 } from "wasp/client/operations";
 import { useEntitled } from "../billing/useEntitled";
 import { PRO_LIMITS } from "../billing/config";

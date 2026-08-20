@@ -10,7 +10,6 @@ import {
   WORK_LENS_MESSAGE,
   CUSTOM_LENSES_MESSAGE,
 } from "./entitlements";
-import { FREE_LIMITS, PRO_LIMITS } from "./config";
 
 /**
  * Server-only entitlement guards — convert a pure violation decision (from

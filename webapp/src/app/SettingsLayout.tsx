@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router";
-import { useAuth } from "wasp/client/auth";
 import "./SettingsLayout.css";
 
 /**
@@ -29,8 +28,6 @@ export function SettingsLayout({
   fullWidth?: boolean;
 }) {
   const location = useLocation();
-  const { data: user } = useAuth();
-
   const tabs = TABS;
 
   return (

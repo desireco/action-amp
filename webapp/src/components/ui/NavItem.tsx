@@ -54,7 +54,7 @@ export function NavItem({
       <span className="aa-nav-item__icon">{icon}</span>
       <span className="aa-nav-item__label">{label}</span>
       {soon && <em className="aa-nav-item__soon">soon</em>}
-      {count != null && !soon && (
+      {count !== null && count !== undefined && !soon && (
         <span
           className={[
             "aa-nav-item__count",

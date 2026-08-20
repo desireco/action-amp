@@ -27,7 +27,14 @@ export function AdminUsersPage() {
   const { data, isLoading } = useQuery(getAdminUsers, args);
   const grant = useAction(grantAdminUserAccess), remove = useAction(removeAdminUserAccess), destroy = useAction(deleteAdminUser), destroyMany = useAction(deleteAdminUsers);
   const queryClient = useQueryClient();
-  const update = (key: string, next: string) => { const p = new URLSearchParams(params); next ? p.set(key, next) : p.delete(key); p.delete("cursor"); setSelectedIds([]); setParams(p); };
+  const update = (key: string, next: string) => {
+    const p = new URLSearchParams(params);
+    if (next) p.set(key, next);
+    else p.delete(key);
+    p.delete("cursor");
+    setSelectedIds([]);
+    setParams(p);
+  };
   const act = async () => {
     if (!pending) return; setError(null); setIsSubmitting(true);
     try {

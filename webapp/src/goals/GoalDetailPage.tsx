@@ -11,7 +11,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Breadcrumb,
-  Button,
   Chip,
   ConfirmDialog,
   DetailHeaderActions,
@@ -29,16 +28,6 @@ type LinkedProject = {
   order: number;
   dueDate: Date | string | null;
   tasks: { id: string; isDone: boolean }[];
-};
-
-type GoalData = {
-  id: string;
-  permalink: string;
-  name: string;
-  description: string | null;
-  isDone: boolean;
-  lensId: string;
-  projects: LinkedProject[];
 };
 
 /**

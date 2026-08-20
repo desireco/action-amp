@@ -3,7 +3,7 @@
 // for real — no module mocking. createInboxItem/getInboxItems call no
 // entitlement guards (filing guards gate triage, covered in
 // operations.test.ts), so plain fixtures suffice.
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
 import { mockContext } from "../test/mockContext";
 import { createInboxItem, getInboxItem, getInboxItems, getProjectsForResolver } from "./operations";
@@ -236,7 +236,9 @@ describe("getInboxItem — guards + ownership", () => {
     const m = mockContext("user-1");
     // A different user's item leaks out of findUnique (shouldn't, but defense).
     m.entities.InboxItem.findUnique.mockResolvedValue({
-      ...{ id: "ix-1", userId: "user-2", text: "theirs" },
+      id: "ix-1",
+      userId: "user-2",
+      text: "theirs",
     });
     const result = await getInboxItem({ id: "ix-1" }, m.context);
     expect(result).toBeNull();

@@ -47,22 +47,3 @@ export async function uniqueShortId(
     if (!(await exists(candidate))) return candidate;
   }
 }
-
-/**
- * Normalize an inbound id to the stored uppercased form for lookup. Strips
- * dashes, uppercases, maps ambiguous chars per Crockford (0→O, 1→I/L,
- * etc.) so a user who mistypes still resolves. Returns null if the input
- * isn't a plausible 8-char id (so callers can fall back to treating it as
- * a UUID).
- */
-function normalizeShortId(input: string): string | null {
-  const stripped = input.replace(/-/g, "").toUpperCase();
-  if (stripped.length !== ID_LEN) return null;
-  // Crockford canonicalization: map confusable input back to the alphabet.
-  const canonical = stripped
-    .replace(/O/g, "0")
-    .replace(/[IL]/g, "1")
-    .replace(/U/g, "V");
-  if (![...canonical].every((c) => ALPHABET.includes(c))) return null;
-  return formatShortId(canonical);
-}

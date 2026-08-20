@@ -238,7 +238,7 @@ function queryString(req: Request, key: string): string | null {
   const v = req.query[key];
   // qs produces strings, arrays, and plain objects — a real param value is
   // the one arm that is not an Object instance.
-  return v != null && !(v instanceof Object) ? v : null;
+  return v !== null && v !== undefined && !(v instanceof Object) ? v : null;
 }
 
 /** Safely read a string field from a parsed JSON body or undefined. */

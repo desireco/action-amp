@@ -3,7 +3,7 @@
 // genuine HttpError 402/404/409s, no module mocking. Guard-gated ops need an
 // entitled user AND a lens the guards can resolve, so every non-anonymous
 // fixture goes through guarded().
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
 import {
   getGoals,

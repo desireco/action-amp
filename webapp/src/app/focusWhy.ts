@@ -91,7 +91,9 @@ export function composeWhy(task: FocusWhyInput): FocusWhy {
   // 4/5. Append truthful detail clauses (due, then size-fit).
   const due = dueClause(task.dueDate);
   const size = sizeClause(task.size);
-  const parts = [due, size].filter((p): p is string => p != null);
+  const parts = [due, size].filter(
+    (p): p is string => p !== null && p !== undefined,
+  );
 
   let detail = "";
   if (parts.length > 0) {

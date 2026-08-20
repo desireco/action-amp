@@ -11,9 +11,7 @@ const { createLens, updateLens, deleteLens, getLenses, lensDb } =
 import {
   mockContext,
   type MockUser,
-  type MockContext,
 } from "../test/mockContext";
-import { PRO_LIMITS } from "../billing/config";
 
 // Swapped in the reassign tests; restored after each test so later suites
 // see the real transaction runner.

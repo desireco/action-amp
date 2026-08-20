@@ -50,8 +50,6 @@ import {
   type FunnelStats,
 } from "../analytics/operationsCore";
 import type {
-  AnalyticsSession,
-  AnalyticsEvent as AnalyticsEventRow,
   Prisma,
 } from "@prisma/client";
 import type {
@@ -176,11 +174,6 @@ function windows() {
 }
 
 /** AnalyticsSession rows the device-count select returns (nested APP_OPENED events). */
-interface DeviceSessionRow {
-  deviceClass: string | null;
-  events: Array<{ userId: string | null; occurredAt: Date }>;
-}
-
 /** Active-user device counts per window (7d / 30d). */
 export interface DeviceUserCountsByWindow {
   sevenDays: DeviceUserCounts;

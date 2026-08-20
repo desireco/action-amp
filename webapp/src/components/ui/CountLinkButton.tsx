@@ -17,7 +17,9 @@ interface CountLinkButtonProps {
  */
 export function CountLinkButton({ label, count, to }: CountLinkButtonProps) {
   const countLabel =
-    count == null ? "loading" : `${count} ${count === 1 ? "item" : "items"}`;
+    count === null || count === undefined
+      ? "loading"
+      : `${count} ${count === 1 ? "item" : "items"}`;
 
   return (
     <Link
