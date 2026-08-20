@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuth, logout } from "wasp/client/auth";
 import {

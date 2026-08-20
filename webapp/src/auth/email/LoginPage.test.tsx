@@ -1,6 +1,5 @@
 import { describe, expect, it, beforeAll } from "vitest";
-import { screen } from "@testing-library/react";
-import { render } from "@testing-library/react";
+import { screen, render } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 

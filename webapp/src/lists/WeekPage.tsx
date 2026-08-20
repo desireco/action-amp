@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { useQuery } from "wasp/client/operations";
-import { getAppData, getWeekTasks } from "wasp/client/operations";
+import { useQuery, getAppData, getWeekTasks } from "wasp/client/operations";
 import {
   Button,
   CompletionCircle,

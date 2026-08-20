@@ -15,8 +15,8 @@ import {
   ConfirmDialog,
   DetailHeaderActions,
   InlineEntityEditForm,
+  type BreadcrumbItem,
 } from "../components/ui";
-import { type BreadcrumbItem } from "../components/ui";
 import { formatRelativeDue } from "../shared/dateFormat";
 import "./GoalDetailView.css";
 

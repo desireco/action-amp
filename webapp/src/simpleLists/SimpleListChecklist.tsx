@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "wasp/client/operations";
 import {
+  useQuery,
   clearCompletedListItems,
   createListItem,
   deleteListItem,
