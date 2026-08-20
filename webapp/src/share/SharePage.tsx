@@ -9,11 +9,11 @@ import { clearPendingShare, getPendingShare, type PendingShareImage } from "./pe
 import { blobToBase64, fileToDataUrl } from "../shared/imageFiles";
 import "./SharePage.css";
 
-const ERROR_COPY: Record<string, string> = {
+const ERROR_COPY = {
   empty: "Nothing to capture.",
   server: "Capture failed — try again.",
   missing: "Couldn't find that capture.",
-};
+} satisfies Record<string, string>;
 
 type PendingState = { id: string; fields: ShareFields; files: PendingShareImage[] } | null;
 type Destination = "" | `project:${string}` | `list:${string}`;

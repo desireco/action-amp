@@ -127,19 +127,19 @@ export function useTriageKeyboard({
         // Number keys mirror the visual order of the type chooser (see
         // TRIAGE_TYPES in TriagePage.tsx): Task, List item, Resource,
         // Project, Delete.
-        const typeByKey: Record<string, ChosenType> = {
+        const typeByKey = {
           "1": "task",
           "2": "list-item",
           "3": "resource",
           "4": "project",
           "5": "delete",
-        };
-        const lensIndexByKey: Record<string, number> = {
+        } satisfies Record<string, ChosenType>;
+        const lensIndexByKey = {
           a: 0,
           s: 1,
           d: 2,
           f: 3,
-        };
+        } satisfies Record<string, number>;
         const type = typeByKey[e.key];
         if (type) {
           e.preventDefault();

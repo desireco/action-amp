@@ -22,13 +22,13 @@ interface DispatchButtonProps {
   className?: string;
 }
 
-const TONE_CLASS: Record<DispatchTone, string> = {
+const TONE_CLASS = {
   teal: "aa-disp__icon--teal",
   amber: "aa-disp__icon--amber",
   violet: "aa-disp__icon--violet",
   rose: "aa-disp__icon--rose",
   muted: "aa-disp__icon--muted",
-};
+} satisfies Record<DispatchTone, string>;
 
 /**
  * DispatchButton — triage action button. Icon + label + sublabel + kbd shortcut.

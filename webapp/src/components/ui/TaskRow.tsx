@@ -57,15 +57,17 @@ interface TaskRowProps {
  * places — both regions toggle on click + Enter, and expose role/tabIndex only
  * when interactive.
  */
-function clickableProps(
-  active: boolean,
-  onActivate: () => void,
-): {
+type ClickableProps = {
   onClick?: (e: MouseEvent) => void;
   onKeyDown?: (e: KeyboardEvent) => void;
   role?: "button";
   tabIndex?: number;
-} {
+};
+
+function clickableProps(
+  active: boolean,
+  onActivate: () => void,
+): ClickableProps {
   if (!active) return {};
   return {
     onClick: onActivate,

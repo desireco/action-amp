@@ -21,18 +21,18 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   bare?: boolean;
 }
 
-const VARIANT_MAP: Record<ButtonVariant, string> = {
+const VARIANT_MAP = {
   primary: "aa-btn--primary",
   secondary: "aa-btn--secondary",
   ghost: "aa-btn--ghost",
   danger: "aa-btn--danger",
-};
+} satisfies Record<ButtonVariant, string>;
 
-const SIZE_MAP: Record<ButtonSize, string> = {
+const SIZE_MAP = {
   sm: "aa-btn--sm",
   md: "",
   lg: "aa-btn--lg",
-};
+} satisfies Record<ButtonSize, string>;
 
 /**
  * Button — the primary interactive element.

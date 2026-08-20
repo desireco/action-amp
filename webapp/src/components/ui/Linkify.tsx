@@ -18,12 +18,12 @@ import "./Linkify.css";
 const URL_RE = /\b(?:https?:\/\/|www\.)[^\s]+/gi;
 
 const TRAILING_DROP = ".,;:!?\"'";
-const TRAILING_PAIRS: Record<string, string> = {
+const TRAILING_PAIRS = {
   ")": "(",
   "]": "[",
   "}": "{",
   ">": "<",
-};
+} satisfies Record<string, string>;
 
 export type LinkifySegment =
   | { kind: "text"; value: string }

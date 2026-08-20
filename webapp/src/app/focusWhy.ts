@@ -42,7 +42,7 @@ export interface FocusWhy {
   detail: string;
 }
 
-const SIZE_MINUTES: Record<string, number> = { S: 15, M: 30, L: 60, XL: 120 };
+const SIZE_MINUTES = { S: 15, M: 30, L: 60, XL: 120 } as const;
 
 /** Whole-day diff: 0 = today, -1 = overdue, 1 = tomorrow, etc. (timezone-naive by design — due dates are day-granular.) */
 function dayDiff(date: Date | string): number {

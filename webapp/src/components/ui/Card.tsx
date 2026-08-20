@@ -13,19 +13,19 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
 }
 
-const VARIANT_CLASS: Record<CardVariant, string> = {
+const VARIANT_CLASS = {
   default: "",
   elevated: "aa-card--elevated",
   interactive: "aa-card--interactive",
   highlighted: "aa-card--highlighted",
-};
+} satisfies Record<CardVariant, string>;
 
-const PADDING_CLASS: Record<string, string> = {
+const PADDING_CLASS = {
   none: "aa-card--pad-none",
   sm: "aa-card--pad-sm",
   md: "aa-card--pad-md",
   lg: "aa-card--pad-lg",
-};
+} satisfies Record<string, string>;
 
 /**
  * Card — surface card with optional elevation, interactivity, padding, and header.

@@ -4,6 +4,7 @@ const PROJECT_ID = "13339807";
 const SECURITY_CODE = "f345783e";
 const SCRIPT_ID = "actionamp-statcounter";
 type StatCounterQueue = Array<{ tags: Record<string, string> }> & { record_pageview?: () => void };
+type StatCounterTags = { event: string; surface?: string; plan?: string };
 
 const ALLOWED_EVENTS = new Set(["landing_view", "signup_complete", "app_first_open", "checkout_started"]);
 
@@ -23,7 +24,7 @@ function statCounterEnabled() {
  * custom-tagged pageview. Never pass identity, task content, or account data. */
 export function trackStatCounterEvent(event: string, surface?: string, plan?: string) {
   if (!statCounterEnabled() || !ALLOWED_EVENTS.has(event)) return;
-  const tags: Record<string, string> = { event };
+  const tags: StatCounterTags = { event };
   if (surface) tags.surface = surface.slice(0, 40);
   if (plan) tags.plan = plan.slice(0, 40);
   // SAFETY: double/wide assertion needed — runtime shape is verified.

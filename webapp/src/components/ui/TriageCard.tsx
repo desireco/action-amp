@@ -45,11 +45,11 @@ interface TriageCardProps {
   children?: ReactNode;
 }
 
-const CHIP_VARIANT: Record<TriageChipTone, "teal" | "amber" | "violet"> = {
+const CHIP_VARIANT = {
   date: "teal",
   priority: "amber",
   tag: "violet",
-};
+} satisfies Record<TriageChipTone, "teal" | "amber" | "violet">;
 
 /**
  * TriageCard — a single captured item during the Tinder-style triage walkthrough.
