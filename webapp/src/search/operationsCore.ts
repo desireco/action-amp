@@ -32,6 +32,12 @@ export type SearchSiteResult = {
   state: SearchResultState;
 };
 
+interface SearchWhere {
+  userId: string;
+  OR?: Array<Record<string, { equals?: string; startsWith?: string; mode?: string }>>;
+  AND?: unknown[];
+}
+
 export type SearchSiteResponse = {
   query: string;
   results: SearchSiteResult[];
@@ -162,7 +168,7 @@ async function fetchBoundedRows({
       [field]: { [operator]: query, mode: "insensitive" },
     })),
   });
-  const args = (where: object) => ({
+  const args = (where: SearchWhere) => ({
     where,
     orderBy: { createdAt: "desc" },
     take: PASS_LIMIT,

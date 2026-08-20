@@ -21,19 +21,19 @@ interface LensTxClient {
     updateMany(args: {
       where: { lensId: string };
       data: { lensId: string };
-    }): Promise<unknown>;
+    }): Promise<{ count: number }>;
   };
   task: {
     updateMany(args: {
       where: { lensId: string };
       data: { lensId: string };
-    }): Promise<unknown>;
+    }): Promise<{ count: number }>;
   };
   project: {
     updateMany(args: {
       where: { lensId: string };
       data: { lensId: string };
-    }): Promise<unknown>;
+    }): Promise<{ count: number }>;
   };
   lens: {
     delete(args: {

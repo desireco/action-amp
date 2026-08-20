@@ -191,10 +191,12 @@ export async function listFeedbackCore(
  * the list output and gets the newest match. Uniqueness is not required on the
  * input; if two rows share a prefix, the newer one wins.
  */
+type FeedbackSelect = Record<string, boolean>;
+
 async function findFeedbackByRef(
   entities: Entities,
   ref: string,
-  select: object,
+  select: FeedbackSelect,
 ) {
   const trimmed = ref.trim();
   if (!trimmed) return null;

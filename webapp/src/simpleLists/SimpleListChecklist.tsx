@@ -65,7 +65,7 @@ export function SimpleListChecklist({ projectId }: { projectId: string }) {
     }
   }, [ordered, selectedId]);
 
-  async function mutate(key: string, action: () => Promise<unknown>) {
+  async function mutate<T>(key: string, action: () => Promise<T>): Promise<void> {
     setSaving(key);
     setError(null);
     try {
