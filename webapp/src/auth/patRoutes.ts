@@ -1190,6 +1190,7 @@ export const cliProjectCreate = async (
   if (typeRaw !== undefined && typeRaw !== "STANDARD" && typeRaw !== "SIMPLE_LIST") {
     return res.status(400).json({ error: "type must be STANDARD or SIMPLE_LIST." });
   }
+  // SAFETY: typeRaw was validated against both allowed project types above.
   const type = (typeRaw as "STANDARD" | "SIMPLE_LIST" | undefined) ?? "STANDARD";
 
   const gate = await gateLens(entUser, user.id, lensId);

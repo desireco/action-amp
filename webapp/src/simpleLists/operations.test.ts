@@ -15,6 +15,7 @@ function context() {
     user: {
       id: "user-1",
       plan: "PRO",
+      // SAFETY: FUTURE is a Date fixture and the context contract permits null.
       planRenewsAt: FUTURE as Date | null,
       isAdmin: false,
     },
@@ -55,6 +56,7 @@ describe("Simple-list operation entitlement boundary", () => {
   it("checks the project's Lens entitlement before reading a list", async () => {
     const ctx = context();
     // SAFETY: mock context bypasses Wasp context type; only tested fields matter.
+    // SAFETY: ctx is the test double for the Wasp operation context.
     await getSimpleList({ projectId: "list-1" }, ctx as never);
     // The real guard resolved the project (and its lens) tenancy-safely first.
     expect(ctx.entities.Project.findFirst).toHaveBeenCalledWith(

@@ -93,6 +93,7 @@ export async function findOwnedAttachment(
       },
     });
     if (row?.[parent]?.userId === userId) {
+      // SAFETY: the selected parent row and MIME fields were validated at the attachment boundary.
       return row as ServedAttachment;
     }
   }

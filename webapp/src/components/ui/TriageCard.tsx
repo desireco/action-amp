@@ -108,6 +108,7 @@ export function TriageCard({
                     // Click-the-text-to-edit (the simple-list rename pattern).
                     // A click on a linkified URL is the link's own — open it,
                     // don't turn the body into an editor.
+                    // SAFETY: React mouse events always expose an Element target here.
                     if ((event.target as HTMLElement).closest("a")) return;
                     onBodyEdit();
                   }

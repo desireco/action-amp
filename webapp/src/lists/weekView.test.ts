@@ -6,6 +6,7 @@ import { bucketWeekTasks, dayKey } from "./weekView";
 import type { TaskLensListRow } from "../tasks/operationsCore";
 
 function task(overrides: Partial<TaskLensListRow>): TaskLensListRow {
+  // SAFETY: the fixture includes every field consumed by week bucketing.
   return {
     id: "t",
     description: "Task",
