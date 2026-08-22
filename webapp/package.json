@@ -18,6 +18,7 @@
     "lint": "oxlint"
   },
   "dependencies": {
+    "@js-temporal/polyfill": "^0.5.1",
     "@phosphor-icons/react": "^2.1.10",
     "cors": "^2.8.5",
     "fuse.js": "^7.1.0",

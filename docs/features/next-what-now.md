@@ -22,8 +22,10 @@ task — the next thing that matters — with a "why this?" line. State machine:
 4. Size: S < M < L < XL (quick wins first).
 5. Oldest `createdAt`.
 
-Candidate pool: `status ∈ {TODAY, UPCOMING}` AND (`dueDate` null OR `≤ now`),
-active lens, not done. **No moment/time-of-day/energy factor yet** — that is
+Candidate pool: `status ∈ {TODAY, UPCOMING}`, active lens, not done,
+`scheduledDate` null or no later than today in the user's time zone, and
+`snoozedUntil` null or no later than the current instant. **No
+moment/time-of-day/energy factor yet** — that is
 `focus-engine-v2` (not built).
 
 **"Why this?" line** (`app/focusWhy.ts`, `composeWhy`). Composed from the actual

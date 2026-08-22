@@ -129,17 +129,20 @@ Triage drains the universal Inbox across every Lens.
   what's not yet committed to Today but still on the radar. It lives on a
   single page, `/do/upcoming` under Planning (locked 2026-07-05; re-reversed
   later that day to drop the same-page swap toggle that briefly coexisted
-  with it). Date-bucketed (Overdue / This week / Next week / Later /
-  Unscheduled), rose-tinted overdue, inline notes, per-row promote-to-Today.
+  with it). Calendar-scheduled tasks are date-bucketed (Overdue / This week /
+  Next week / Later); exact-time deferrals appear as Snoozed; tasks with
+  neither value appear as Unscheduled. The page keeps rose-tinted overdue,
+  inline notes, and per-row promote-to-Today.
   Today and Upcoming cross-link to each other from their heroes — Today's
   hero links to `/do/upcoming` (with the bench count), Upcoming's links
   back to `/do/today`. No same-page swap; one page per intent.
 - **This week** (`/do/week`) is the global Monday–Sunday scheduling horizon,
   linked from Today. It groups incomplete dated `TODAY` and `UPCOMING` tasks
   from all accessible lenses by weekday. It does not add a new Task status:
-  scheduling means an Upcoming task with a specific `dueDate`; Today remains
-  the smaller, explicit commitment list. Week is planning, distinct from the
-  `/do/review/week` reflection.
+  scheduling means an Upcoming task with a calendar-only `scheduledDate`;
+  Today remains the smaller, explicit commitment list. Exact-time
+  `snoozedUntil` never supplies a Week bucket. Week is planning, distinct from
+  the `/do/review/week` reflection.
 - **Done today is scoped to Today** (locked 2026-07-05). The "Done today"
   section on `/do/today` only shows tasks whose `status === "TODAY"` — not
   any task completed since midnight. Completion (from focus mode) leaves
@@ -149,8 +152,9 @@ Triage drains the universal Inbox across every Lens.
   day, incomplete **Today** tasks roll to **Upcoming** so Today starts fresh
   — a deliberate re-commitment, not a backlog. Lazy: runs on app load (in
   `getAppData`), idempotent within a day via
-  `User.lastTodayRolloverAt`. Done tasks are left alone; `startedAt` (the
-  Now state) is preserved.
+  `User.lastTodayRolloverAt`. The calendar boundary is evaluated in the
+  user's persisted IANA `timeZone`, not the server's local zone. Done tasks are
+  left alone; `startedAt` (the Now state) is preserved.
 - This is the only area with a focus mode. Focus is a **dedicated route**
   (`/do/focus`, `FocusRoute` in `main.wasp.ts`) entered from Next's one-tap "Start"
   or any task row's focus affordance. The centered-session redesign (locked
@@ -379,11 +383,13 @@ These were the open structural calls. All resolved:
    a Next candidate on Next (§5.2) — triage should put real work in front of
    you, not hide it behind a toggle.
 2. **Next's Next candidate pool = Today + Upcoming (revised 2026-06-25).**
-   `getTopTask` selects `status ∈ {TODAY, UPCOMING}` **and** (`dueDate` is null
-   or `dueDate ≤ now`), in the active Lens, not done. So a freshly triaged task
-   (Upcoming, no due) surfaces as Next immediately; Today stays un-cluttered.
-   The due-guard preserves snooze: a snoozed task (Upcoming + future `dueDate`)
-   stays off Next until its time arrives — at which point it auto-resurfaces
+   `getTopTask` selects `status ∈ {TODAY, UPCOMING}`, in the active Lens, not
+   done, and applies two independent availability guards: `scheduledDate` is
+   null or no later than today's calendar date in `User.timeZone`, and
+   `snoozedUntil` is null or no later than the current exact instant. So a
+   freshly triaged task with neither value surfaces as Next immediately; Today
+   stays un-cluttered. A future schedule or snooze stays off Next until its
+   respective calendar day or exact instant arrives, then auto-resurfaces
    (the behavior §7 had deferred). _(Previously locked 2026-06-23 as "Today
    only"; reversed because a triaged task should be actionable, not invisible —
    the Someday default change in `TRIAGE.md` §5 made Today-only the wrong
@@ -432,7 +438,7 @@ Lens` while skipping the standalone lens picker by default. See
      new infra — works in dev and prod). Idempotent within a day via
      `User.lastTodayRolloverAt` (the day-boundary check short-circuits).
    - **Scope:** all incomplete `status=TODAY, isDone=false` tasks, regardless
-     of `dueDate`. Done tasks are left alone (they keep their status for the
+     of `scheduledDate` or `snoozedUntil`. Done tasks are left alone (they keep their status for the
      Logbook). `startedAt` (the Now state) is **preserved**, so an interrupted
      focus task resurfaces as #1 on Next even though it's now Upcoming.
    - **No effect on Next:** `getTopTask` already pools Today + Upcoming
@@ -440,8 +446,9 @@ Lens` while skipping the standalone lens picker by default. See
      concern, not a focus-engine concern. Resolves the pending note in §2.3.
    - **No effect on counts either (updated 2026-07-09):** the Today nav badge
      and the per-lens pill now draw from the **same shared actionable pool** as
-     Next (`tasks/activePool.ts` — status ∈ {TODAY, UPCOMING}, not done, due
-     null/now), so rolling TODAY→UPCOMING no longer flips them to 0 overnight.
+     Next (`tasks/activePool.ts` — status ∈ {TODAY, UPCOMING}, not done,
+     schedule/snooze available), so rolling TODAY→UPCOMING no longer flips
+     them to 0 overnight.
      Only the Today **page** (the strict committed list, `status === TODAY`)
      resets each morning. This closed a recurring drift where a task showed on
      Next ("due today") while the badge read 0 and the pill was empty. The

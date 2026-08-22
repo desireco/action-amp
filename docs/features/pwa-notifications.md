@@ -16,7 +16,11 @@ universal capture popover as `⌘K`.
 **Daily Today reminder.** Settings → Preferences can request notification
 permission and choose a local reminder time. The browser Push subscription is
 stored per device; a Wasp PgBoss job runs each minute, sends once per user/day,
-and notification actions open Capture, Next, or Today.
+and notification actions open Capture, Next, or Today. The preference is a
+local `PlainTime` plus an IANA time zone; delivery checks compare exact
+instants after resolving that local clock. Saving reminder preferences may
+initialize the account time zone, but never silently replaces an existing
+account time-zone choice.
 
 **Deployment configuration.** Set all three server environment variables:
 `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` (a `mailto:` or

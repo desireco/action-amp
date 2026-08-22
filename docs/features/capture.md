@@ -31,7 +31,7 @@ precedent). Helpers: `shared/imageFiles.ts` (DataTransfer extraction + base64).
 | Sigil | Means | Examples |
 |---|---|---|
 | `#` | project first, tags after | `#mvp #deep-work`; `#[Q3 Launch] #errands` |
-| `@` | date (time only) | `@today @tomorrow @tonight`; bare `today`/`tomorrow`/`tonight` + weekday/month forms also work |
+| `@` | schedule/snooze time | `@today @tomorrow` become calendar schedules; `@tonight` becomes an exact local-time snooze; bare forms + weekday/month forms also work |
 | `!` | priority | `!1/!2/!3`, `!low/!normal/!important/!high`, `!/!!/!!!` |
 | `~` | size | `~20m ~1h ~XL`; time tokens map to S/M/L/XL |
 | `[[name]]` | lens override | `[[work]] [[personal]] [[me]] [[studio]]`; resolves on `kind` (seeded) or name (custom); unknown → literal text |

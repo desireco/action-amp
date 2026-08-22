@@ -15,6 +15,25 @@
 >
 > The entity hierarchy (§1), triage transformations (§3), and focus ranking (§5–§7)
 > below remain the data-model authority.
+
+### Date and time model (locked 2026-08-22)
+
+- `Task.scheduledDate` is a calendar-only date. It is a PostgreSQL `date`
+  (`DateTime @db.Date` through Prisma) and maps to `Temporal.PlainDate` in
+  domain logic. Week and Upcoming use this field.
+- `Task.snoozedUntil` is an exact instant. It is PostgreSQL `timestamptz(3)`
+  and maps to `Temporal.Instant`. Next uses it as an availability guard.
+- The two fields are independent: snoozing does not erase a task's schedule,
+  and scheduling does not invent an exact time.
+- Lifecycle/audit fields (`createdAt`, `completedAt`, `startedAt`, `expiresAt`,
+  and similar) are exact instants. Reminder preferences combine a
+  `Temporal.PlainTime` with an IANA time zone.
+- `User.timeZone` owns user-calendar decisions such as Today rollover and
+  schedule availability. It is initialized explicitly and is never silently
+  overwritten when another device reports a different zone.
+- APIs serialize calendar dates as `YYYY-MM-DD` and exact instants as RFC 3339
+  strings. Prisma and third-party `Date` objects are converted only at shared
+  infrastructure boundaries.
 >
 > Core idea: **the Inbox is universal; every item is a seed that becomes
 > something during triage.** The triage step decides _what kind of thing_ it is,
@@ -310,6 +329,15 @@ basic loop works.
   `status=TODAY, isDone=false` task bulk-flips to `UPCOMING` and the timestamp
   is stamped. Lazy (no cron), idempotent within a day. See `WORKFLOW.md` §5.7
   for the full decision.
+
+### Added 2026-08-22 (Temporal and scheduling split)
+
+- ✅ **Calendar schedule and exact snooze are separate.** Legacy
+  `Task.dueDate` is replaced by `scheduledDate` and `snoozedUntil`. Existing
+  rows migrate additively before the legacy column is removed.
+- ✅ **Calendar behavior has an owner.** `User.timeZone` determines Today,
+  Week, relative date labels, and calendar-date availability; exact timestamps
+  remain zone-independent instants.
 
 ## 9. Still open
 
