@@ -1,5 +1,5 @@
 import { action, api, app, job, page, query, route } from "@wasp.sh/spec";
-import { App } from "./src/App" with { type: "ref" };
+import { AppRoot } from "./src/App" with { type: "ref" };
 import { NextPage } from "./src/app/NextPage" with { type: "ref" };
 import { LegacyAppRedirectPage } from "./src/app/LegacyAppRedirectPage" with { type: "ref" };
 import { FocusPage } from "./src/app/FocusPage" with { type: "ref" };
@@ -221,6 +221,12 @@ import {
 import { onAfterLogin } from "./src/auth/hooks" with { type: "ref" };
 import { globalMiddlewareConfigFn } from "./src/auth/serverMiddleware" with { type: "ref" };
 import { sessionRouteAuthMiddleware } from "./src/auth/sessionAuth" with { type: "ref" };
+import { setupErrorTracking } from "./src/observability/errorTracking.server" with { type: "ref" };
+import { initializeClientErrorTracking } from "./src/observability/clientErrorTracking" with { type: "ref" };
+import {
+  clientErrorMiddleware,
+  reportClientErrorApi,
+} from "./src/observability/clientErrorApi" with { type: "ref" };
 // Google social auth — disabled to skip GOOGLE_CLIENT_ID/SECRET setup for now.
 // All supporting code (config, GoogleButton, userSignupFields) stays in place;
 // flip the block below back on + re-add <GoogleButton /> to Login/Signup pages
@@ -295,9 +301,13 @@ export default app({
     // Adds the session-cookie fallback + sliding 30-day refresh. See
     // src/auth/sessionCookie.ts for the why (mobile PWA localStorage eviction).
     middlewareConfigFn: globalMiddlewareConfigFn,
+    // Installed after Wasp's routers so unexpected errors reach the final
+    // structured stack logger. Expected typed HttpErrors remain quiet.
+    setupFn: setupErrorTracking,
   },
   client: {
-    rootComponent: App,
+    rootComponent: AppRoot,
+    setupFn: initializeClientErrorTracking,
   },
   spec: [
     route(
@@ -697,6 +707,10 @@ export default app({
       entities: ["AnalyticsSession", "AnalyticsEvent"],
       auth: false,
       middlewareConfigFn: analyticsMiddleware,
+    }),
+    api("POST", "/api/errors/client", reportClientErrorApi, {
+      auth: false,
+      middlewareConfigFn: clientErrorMiddleware,
     }),
     // ── CLI auth (PAT plumbing) ────────────────────────────────────────────
     // The three session-authed token-management routes. `auth: true` (the

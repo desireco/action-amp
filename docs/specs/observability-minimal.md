@@ -77,7 +77,9 @@ is in instrumenting the four steps that decide the business.
 - **No custom dashboard.** The provider's default funnel view is enough here;
   the internal Growth dashboard belongs to `growth-analytics`.
 - **No A/B testing infra.**
-- **No server-side error tracking / Sentry.** Separate concern; defer.
+- **No server-side error tracking in this feature.** That separate concern is
+  now shipped as `error-tracking`; it deliberately uses the existing Railway
+  log stream rather than coupling acquisition analytics to an error provider.
 - **No identifying users across devices.** Anonymous funnel only.
 
 ## Decisions

@@ -31,6 +31,8 @@ const SERVER_TESTS = [
   "src/tasks/operations.test.ts",
   "src/lenses/operations.test.ts",
   "src/share/shareCapture.test.ts",
+  "src/observability/errorTracking.server.test.ts",
+  "src/observability/clientErrorApi.test.ts",
 ];
 
 export default defineConfig({

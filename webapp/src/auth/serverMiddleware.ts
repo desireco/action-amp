@@ -38,6 +38,7 @@ import {
   attachSessionFromCookie,
   sessionCookieWriteMiddleware,
 } from "./sessionCookie";
+import { requestTrackingMiddleware } from "../observability/errorTracking.server";
 
 export const globalMiddlewareConfigFn: MiddlewareConfigFn = (
   middlewareConfig,
@@ -77,5 +78,8 @@ export const globalMiddlewareConfigFn: MiddlewareConfigFn = (
   // (src/auth/sessionAuth.ts) instead.
   middlewareConfig.set("sessionCookieAuth", attachSessionFromCookie);
   middlewareConfig.set("sessionCookieWrite", sessionCookieWriteMiddleware);
+  // The same opaque ID is returned to the browser and attached to structured
+  // exception logs, making a reported failure searchable without user data.
+  middlewareConfig.set("requestTracking", requestTrackingMiddleware);
   return middlewareConfig;
 };

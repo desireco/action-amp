@@ -6,7 +6,17 @@ import { SplashScreen } from "./components/ui";
 import { StatCounter, trackStatCounterEvent } from "./analytics/StatCounter";
 import { trackAnalyticsEvent } from "./analytics/tracking";
 import { syncSessionCookie } from "./auth/sessionCookieMirror";
+import { AppErrorBoundary } from "./observability/AppErrorBoundary";
 import "./App.css";
+
+/** The boundary must sit above App so failures in the root layout are caught. */
+export function AppRoot() {
+  return (
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
+  );
+}
 
 /**
  * The root layout. Wasp renders this as the parent of every route, so it stays

@@ -8,7 +8,7 @@
 >
 > Owned by Discover. Build reads only.
 >
-> Last code-verified: **2026-08-11**.
+> Last code-verified: **2026-08-22**.
 
 ## How to read this
 
@@ -61,6 +61,7 @@
 - [cli](./cli.md) (`partial`) — **Phase 0 + 1 shipped** (PAT auth + full command surface incl. `lens` + `resource` + shared-content/image `capture`); Phase 2 (orchestration skills) still `draft`.
 - [command-palette](./command-palette.md) (`shipped`, spec `done`) — safe commands, cross-Lens fuzzy jumps, bounded sitewide text search, calm ProGate, exact destinations, and desktop/touch browser verification.
 - [observability-minimal](./observability-minimal.md) (`shipped`, spec `done`) — working StatCounter tracker + anonymous landing-to-checkout milestones; local traffic excluded.
+- [error-tracking](./error-tracking.md) (`shipped`, spec `done`) — privacy-safe server/browser stack capture, request IDs, and a root render-failure recovery screen.
 - [growth-analytics](./growth-analytics.md) (`shipped`) — first-party sessions/events, source attribution, admin Funnel, payment conversion, and D1/D7 retention.
 - [admin-user-management](./admin-user-management.md) (`shipped`, spec `draft`) — admin-only user directory, activity evidence, manual Pro/Founder/Friend grants, and guarded account deletion.
 

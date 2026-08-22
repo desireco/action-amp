@@ -68,3 +68,31 @@ svg {
   width: 30px;
   height: 30px;
 }
+
+/* Last-resort render failure: quiet, centered, and actionable. */
+.aa-fatal-error {
+  display: grid;
+  place-content: center;
+  justify-items: start;
+  min-height: 100dvh;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: var(--aa-space-xl);
+}
+
+.aa-fatal-error__eyebrow {
+  margin: 0 0 var(--aa-space-md);
+  color: var(--aa-teal);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+}
+
+.aa-fatal-error h1 {
+  margin: 0 0 var(--aa-space-md);
+  font-size: var(--aa-text-2xl);
+}
+
+.aa-fatal-error p:not(.aa-fatal-error__eyebrow) {
+  margin: 0 0 var(--aa-space-lg);
+  color: var(--aa-text-3);
+}
