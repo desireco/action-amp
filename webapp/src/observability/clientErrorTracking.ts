@@ -12,6 +12,28 @@ type ClientErrorContext = {
 
 const recentFingerprints = new Map<string, number>();
 const DEDUPE_WINDOW_MS = 10_000;
+const BETTER_STACK_BOOTSTRAP_SRC = "/betterstack.js";
+
+function loadBetterStackTag(): void {
+  if (document.querySelector(`script[src="${BETTER_STACK_BOOTSTRAP_SRC}"]`)) {
+    return;
+  }
+  const script = document.createElement("script");
+  script.src = BETTER_STACK_BOOTSTRAP_SRC;
+  script.async = true;
+  document.head.appendChild(script);
+}
+
+function scheduleBetterStackTag(): void {
+  // The static Wasp head participates in SSR hydration. Mutating it before
+  // React commits causes a recoverable hydration failure, so load telemetry
+  // only after the browser's load event.
+  if (document.readyState === "complete") {
+    window.setTimeout(loadBetterStackTag, 0);
+    return;
+  }
+  window.addEventListener("load", loadBetterStackTag, { once: true });
+}
 
 function endpoint(): string {
   const apiOrigin = (import.meta.env.REACT_APP_API_URL ?? "").replace(
@@ -74,7 +96,8 @@ export function captureClientError(
 
 /** Installed by Wasp before React mounts; the SDK remains provider-free. */
 export async function initializeClientErrorTracking(): Promise<void> {
-  if (import.meta.env.DEV) return;
+  if (import.meta.env.DEV || import.meta.env.SSR) return;
+  scheduleBetterStackTag();
   window.addEventListener("error", (event) => {
     captureClientError(
       event.error instanceof Error ? event.error : event.message,
