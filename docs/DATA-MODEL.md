@@ -179,7 +179,8 @@ a refinement layer we'll add later, on top of priority + size.
 
 - **Exactly one** Inbox across all Lenses. Universal capture lands here;
   direct Simple-list creation bypasses it.
-- An inbox entry is an **InboxItem**: raw text + parsed metadata — `parsedDate`,
+- An inbox entry is an **InboxItem**: raw text + parsed metadata —
+  `parsedScheduledDate` (calendar day), `parsedSnoozedUntil` (exact instant),
   `parsedPriority`, `parsedSize`, `parsedTags`, `parsedProject` (legacy, unused
   by the server — see v5 below), `parsedLens` (the `[[lens]]` token, or null),
   and optional explicit `parsedProjectId` / `parsedLensId` pre-triage destination

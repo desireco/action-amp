@@ -16,6 +16,7 @@ import type {
   ReviewSnapshot,
   ReviewTaskItem,
 } from "./types";
+import { Temporal, instantFrom } from "../shared/time/temporal";
 
 /** A saved Review row (snapshot/answers are Prisma JSON columns). */
 interface ReviewRow {
@@ -472,17 +473,24 @@ async function loadEvidence(
     lens: goal.lens,
   }));
   const focusMsByLens = new Map<string, number>();
+  const periodStart = instantFrom(start);
+  const periodEnd = instantFrom(end);
   const focusMs = sessions.reduce((sum: number, session) => {
     if (!session.endedAt) return sum;
-    const clippedStart = Math.max(
-      start.getTime(),
-      new Date(session.startedAt).getTime(),
-    );
-    const clippedEnd = Math.min(
-      end.getTime(),
-      new Date(session.endedAt).getTime(),
-    );
-    const duration = Math.max(0, clippedEnd - clippedStart);
+    const sessionStart = instantFrom(session.startedAt);
+    const sessionEnd = instantFrom(session.endedAt);
+    const clippedStart =
+      Temporal.Instant.compare(periodStart, sessionStart) >= 0
+        ? periodStart
+        : sessionStart;
+    const clippedEnd =
+      Temporal.Instant.compare(periodEnd, sessionEnd) <= 0
+        ? periodEnd
+        : sessionEnd;
+    const duration =
+      Temporal.Instant.compare(clippedEnd, clippedStart) > 0
+        ? clippedStart.until(clippedEnd).total("milliseconds")
+        : 0;
     if (session.task?.lensId) {
       focusMsByLens.set(
         session.task.lensId,

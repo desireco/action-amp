@@ -13,6 +13,7 @@
  */
 
 import { composeWhy, type FocusWhyInput } from "./focusWhy";
+import { Temporal, instantFrom } from "../shared/time/temporal";
 
 // ----------------------------------------------------------------
 // Input shapes — the owned, hydrated Task row (subset the resolvers read).
@@ -128,19 +129,20 @@ function isValidSession(s: {
   endedAt?: Date | string | null;
 }): boolean {
   if (!s.endedAt) return false;
-  const start = new Date(s.startedAt).getTime();
-  const end = new Date(s.endedAt).getTime();
-  if (Number.isNaN(start) || Number.isNaN(end)) return false;
-  return end > start;
+  try {
+    return Temporal.Instant.compare(instantFrom(s.endedAt), instantFrom(s.startedAt)) > 0;
+  } catch {
+    return false;
+  }
 }
 
 function sessionDurationMs(s: {
   startedAt: Date | string;
   endedAt?: Date | string | null;
 }): number {
-  const start = new Date(s.startedAt).getTime();
-  const end = new Date(s.endedAt!).getTime();
-  return Math.max(0, end - start);
+  const start = instantFrom(s.startedAt);
+  const end = instantFrom(s.endedAt!);
+  return Math.max(0, start.until(end).total("milliseconds"));
 }
 
 /**
