@@ -13,15 +13,15 @@ const RANGE_OPTIONS: Array<{ label: string; value: FunnelRange }> = [
   { label: "All time", value: "all" },
 ];
 
-const LABELS = {
-  LANDING_VIEW: "Landing",
-  SIGNUP_COMPLETED: "Signup",
-  APP_OPENED: "App open",
-  CAPTURE_CREATED: "First capture",
-  TRIAGE_COMPLETED: "First triage",
-  CHECKOUT_STARTED: "Checkout",
-  PAYMENT_CONFIRMED: "Paid",
-} satisfies Record<string, string>;
+const LABELS = new Map<string, string>([
+  ["LANDING_VIEW", "Landing"],
+  ["SIGNUP_COMPLETED", "Signup"],
+  ["APP_OPENED", "App open"],
+  ["CAPTURE_CREATED", "First capture"],
+  ["TRIAGE_COMPLETED", "First triage"],
+  ["CHECKOUT_STARTED", "Checkout"],
+  ["PAYMENT_CONFIRMED", "Paid"],
+]);
 
 export function AdminFunnelPage() {
   const { data: user } = useAuth();
@@ -60,7 +60,7 @@ export function AdminFunnelPage() {
           {(data?.funnel ?? LABELS_ORDER.map((name) => ({ name, count: 0, fromPreviousPct: null, fromLandingPct: null }))).map((step) => (
             <Card key={step.name} padding="md" className="aa-admin-funnel-step">
               <span className="aa-admin-funnel-step__count">{isLoading ? "—" : step.count.toLocaleString()}</span>
-              <span className="aa-admin-funnel-step__label">{LABELS[step.name]}</span>
+              <span className="aa-admin-funnel-step__label">{LABELS.get(step.name) ?? step.name}</span>
               <span className="aa-admin-funnel-step__rate">{step.fromPreviousPct === null ? "Start" : `${step.fromPreviousPct}% from prior`}</span>
             </Card>
           ))}

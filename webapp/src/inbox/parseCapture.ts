@@ -129,20 +129,20 @@ function nextWeekday(
   return from.add({ days: diff });
 }
 
-const PRIORITY_WORDS = {
-  "1": "LOW",
-  low: "LOW",
-  "2": "NORMAL",
-  normal: "NORMAL",
-  "3": "IMPORTANT",
-  important: "IMPORTANT",
-  imp: "IMPORTANT",
-  high: "IMPORTANT", // !high / !h aliases for the IMPORTANT level (enum is 3-level)
-  h: "IMPORTANT",
-  "!!!": "IMPORTANT",
-  "!!": "NORMAL",
-  "!": "LOW",
-} satisfies Record<string, ParsedPriority>;
+const PRIORITY_WORDS = new Map<string, ParsedPriority>([
+  ["1", "LOW"],
+  ["low", "LOW"],
+  ["2", "NORMAL"],
+  ["normal", "NORMAL"],
+  ["3", "IMPORTANT"],
+  ["important", "IMPORTANT"],
+  ["imp", "IMPORTANT"],
+  ["high", "IMPORTANT"], // !high / !h aliases for the IMPORTANT level (enum is 3-level)
+  ["h", "IMPORTANT"],
+  ["!!!", "IMPORTANT"],
+  ["!!", "NORMAL"],
+  ["!", "LOW"],
+]);
 
 function sizeFromTime(value: number, unit: "m" | "h"): ParsedSize {
   const minutes = unit === "h" ? value * 60 : value;
@@ -152,13 +152,13 @@ function sizeFromTime(value: number, unit: "m" | "h"): ParsedSize {
   return "XL";
 }
 
-const SIZE_WORDS = {
-  s: "S",
-  m: "M",
-  l: "L",
-  xl: "XL",
-  xs: "S",
-} satisfies Record<string, ParsedSize>;
+const SIZE_WORDS = new Map<string, ParsedSize>([
+  ["s", "S"],
+  ["m", "M"],
+  ["l", "L"],
+  ["xl", "XL"],
+  ["xs", "S"],
+]);
 
 /**
  * @param raw Raw capture text.
@@ -236,14 +236,16 @@ export function parseCapture(
   // was off-by-one on bang counts; this split is the fix.
   text = text.replace(/(!(\d+|[a-z]+)|!{1,3})/i, (match) => {
     if (/^!+$/.test(match)) {
-      if (PRIORITY_WORDS[match]) {
-        priority = PRIORITY_WORDS[match];
+      const parsedPriority = PRIORITY_WORDS.get(match);
+      if (parsedPriority) {
+        priority = parsedPriority;
         return "";
       }
     } else {
       const key = match.slice(1).toLowerCase();
-      if (PRIORITY_WORDS[key]) {
-        priority = PRIORITY_WORDS[key];
+      const parsedPriority = PRIORITY_WORDS.get(key);
+      if (parsedPriority) {
+        priority = parsedPriority;
         return "";
       }
     }
@@ -256,8 +258,9 @@ export function parseCapture(
     size = sizeFromTime(parseFloat(val), unit.toLowerCase() as "m" | "h");
     return "";
   });
-  text = text.replace(/~(xs|s|m|l|xl)\b/i, (_match, word) => {
-    size = SIZE_WORDS[word.toLowerCase()];
+  text = text.replace(/~(xs|s|m|l|xl)\b/i, (_match, word: string) => {
+    const parsedSize = SIZE_WORDS.get(word.toLowerCase());
+    if (parsedSize) size = parsedSize;
     return "";
   });
 

@@ -127,15 +127,15 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       // off the shifted glyph so this only matches true Shift+letter presses,
       // not Shift+arrow/Shift+symbol.
       if (e.shiftKey && e.key.length === 1) {
-        const SHIFT_NAV = {
-          I: "inbox",
-          N: "next",
-          T: "today",
-          G: "triage", // triaGe
-          P: "planning",
-          R: "review",
-        } satisfies Record<string, NavDestination>;
-        const dest = SHIFT_NAV[e.key.toUpperCase()];
+        const SHIFT_NAV = new Map<string, NavDestination>([
+          ["I", "inbox"],
+          ["N", "next"],
+          ["T", "today"],
+          ["G", "triage"], // triaGe
+          ["P", "planning"],
+          ["R", "review"],
+        ]);
+        const dest = SHIFT_NAV.get(e.key.toUpperCase());
         if (dest) {
           e.preventDefault();
           handlers.onNavigate?.(dest);

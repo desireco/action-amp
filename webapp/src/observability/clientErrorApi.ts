@@ -13,6 +13,7 @@ const MAX_PER_WINDOW = 20;
 const buckets = new Map<string, { count: number; startedAt: number }>();
 
 type JsonObject = { [key: string]: JsonValue };
+type ClientErrorApiContext = { entities: Record<string, never> };
 
 function object(value: JsonValue | undefined): JsonObject | null {
   if (!value || !(value instanceof Object) || Array.isArray(value)) return null;
@@ -69,7 +70,11 @@ export const clientErrorMiddleware: MiddlewareConfigFn = (middlewareConfig) => {
 };
 
 /** Anonymous, write-only browser error sink. It logs no IP or user identity. */
-export function reportClientErrorApi(req: Request, res: Response) {
+export function reportClientErrorApi(
+  req: Request,
+  res: Response,
+  _context: ClientErrorApiContext,
+) {
   const clientError = normalizeClientError(req.body);
   if (!clientError) {
     return res.status(400).json({ error: "Invalid error report." });

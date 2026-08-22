@@ -9,11 +9,12 @@ import { clearPendingShare, getPendingShare, type PendingShareImage } from "./pe
 import { blobToBase64, fileToDataUrl } from "../shared/imageFiles";
 import "./SharePage.css";
 
-const ERROR_COPY = {
-  empty: "Nothing to capture.",
-  server: "Capture failed — try again.",
-  missing: "Couldn't find that capture.",
-} satisfies Record<string, string>;
+const MISSING_ERROR_COPY = "Couldn't find that capture.";
+const ERROR_COPY = new Map<string, string>([
+  ["empty", "Nothing to capture."],
+  ["server", "Capture failed — try again."],
+  ["missing", MISSING_ERROR_COPY],
+]);
 
 type PendingState = { id: string; fields: ShareFields; files: PendingShareImage[] } | null;
 type Destination = "" | `project:${string}` | `list:${string}`;
@@ -123,7 +124,9 @@ export function SharePage() {
 
   if (pendingId && pending) {
     const capture = composeShareCapture(pending.fields);
-    if (!capture.text && pending.files.length === 0) return renderError(ERROR_COPY.empty);
+    if (!capture.text && pending.files.length === 0) {
+      return renderError(ERROR_COPY.get("empty") ?? MISSING_ERROR_COPY);
+    }
     const listProjects = (projects ?? []).filter(
       (project) => project.type === "SIMPLE_LIST",
     );
@@ -218,7 +221,7 @@ export function SharePage() {
     );
   }
 
-  return renderError(ERROR_COPY[error ?? ""] ?? ERROR_COPY.missing);
+  return renderError(ERROR_COPY.get(error ?? "") ?? MISSING_ERROR_COPY);
 }
 
 function ImagePreview({ file }: { file: PendingShareImage }) {

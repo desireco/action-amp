@@ -47,7 +47,12 @@ export interface FocusWhy {
   detail: string;
 }
 
-const SIZE_MINUTES = { S: 15, M: 30, L: 60, XL: 120 } as const;
+const SIZE_MINUTES = new Map<string, number>([
+  ["S", 15],
+  ["M", 30],
+  ["L", 60],
+  ["XL", 120],
+]);
 
 /** Whole-day diff: 0 = today, -1 = overdue, 1 = tomorrow, etc. (timezone-naive by design — due dates are day-granular.) */
 function dayDiff(date: Date | string): number {
@@ -70,7 +75,7 @@ function dueClause(scheduledDate: FocusWhyInput["scheduledDate"]): string | null
 
 /** "fits in 15 min" only for the small sizes where it's a useful nudge; L/XL don't add info here. */
 function sizeClause(size: FocusWhyInput["size"]): string | null {
-  const mins = SIZE_MINUTES[size];
+  const mins = SIZE_MINUTES.get(size);
   if (!mins || mins >= 60) return null; // L/XL: "fits in 1 hr+" isn't a useful focus signal
   return `fits in ${mins} min`;
 }
@@ -86,7 +91,8 @@ export function composeWhy(task: FocusWhyInput): FocusWhy {
   if (task.priority === "IMPORTANT") {
     lead = "Important";
   } else if (task.priority === "LOW") {
-    lead = SIZE_MINUTES[task.size] && SIZE_MINUTES[task.size] < 60 ? "Quick win" : "Low priority";
+    const minutes = SIZE_MINUTES.get(task.size);
+    lead = minutes && minutes < 60 ? "Quick win" : "Low priority";
   }
   // NORMAL → no lead (the detail carries the reason, if any).
 

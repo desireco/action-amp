@@ -127,26 +127,26 @@ export function useTriageKeyboard({
         // Number keys mirror the visual order of the type chooser (see
         // TRIAGE_TYPES in TriagePage.tsx): Task, List item, Resource,
         // Project, Delete.
-        const typeByKey = {
-          "1": "task",
-          "2": "list-item",
-          "3": "resource",
-          "4": "project",
-          "5": "delete",
-        } satisfies Record<string, ChosenType>;
-        const lensIndexByKey = {
-          a: 0,
-          s: 1,
-          d: 2,
-          f: 3,
-        } satisfies Record<string, number>;
-        const type = typeByKey[e.key];
+        const typeByKey = new Map<string, ChosenType>([
+          ["1", "task"],
+          ["2", "list-item"],
+          ["3", "resource"],
+          ["4", "project"],
+          ["5", "delete"],
+        ]);
+        const lensIndexByKey = new Map<string, number>([
+          ["a", 0],
+          ["s", 1],
+          ["d", 2],
+          ["f", 3],
+        ]);
+        const type = typeByKey.get(e.key);
         if (type) {
           e.preventDefault();
           setWorkingType(type);
           return;
         }
-        const lensIndex = lensIndexByKey[e.key.toLowerCase()];
+        const lensIndex = lensIndexByKey.get(e.key.toLowerCase());
         if (lensIndex !== undefined) {
           e.preventDefault();
           selectLensByIndex(lensIndex);

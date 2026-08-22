@@ -198,22 +198,25 @@ export function ProjectDetailPage() {
   // Group the project's tasks by horizon. Open tasks split into Today / Upcoming
   // / Someday; done ones collect at the bottom.
   const groups = useMemo<GroupDef<ProjectTask>[]>(() => {
-    const buckets = {
-      TODAY: [],
-      UPCOMING: [],
-      SOMEDAY: [],
-      DONE: [],
-    } satisfies Record<string, ProjectTask[]>;
+    const todayTasks = new Array<ProjectTask>();
+    const upcomingTasks = new Array<ProjectTask>();
+    const somedayTasks = new Array<ProjectTask>();
+    const doneTasks = new Array<ProjectTask>();
     for (const t of activeTasks) {
-      (t.isDone ? buckets.DONE : (buckets[t.status] ?? buckets.SOMEDAY)).push(
-        t,
-      );
+      const bucket = t.isDone
+        ? doneTasks
+        : t.status === "TODAY"
+          ? todayTasks
+          : t.status === "UPCOMING"
+            ? upcomingTasks
+            : somedayTasks;
+      bucket.push(t);
     }
     return [
-      { key: "TODAY", label: "Today", items: buckets.TODAY },
-      { key: "UPCOMING", label: "Upcoming", items: buckets.UPCOMING },
-      { key: "SOMEDAY", label: "Someday", items: buckets.SOMEDAY },
-      { key: "DONE", label: "Done", items: buckets.DONE },
+      { key: "TODAY", label: "Today", items: todayTasks },
+      { key: "UPCOMING", label: "Upcoming", items: upcomingTasks },
+      { key: "SOMEDAY", label: "Someday", items: somedayTasks },
+      { key: "DONE", label: "Done", items: doneTasks },
     ];
   }, [activeTasks]);
 
@@ -388,13 +391,9 @@ export function ProjectDetailPage() {
     taskDisposition: "delete" | "reassign" | "triage" = "delete",
   ) => {
     if (!project) return;
-    const input: {
-      id: string;
-      taskDisposition: "delete" | "reassign" | "triage";
-      targetProjectId?: string;
-    } = { id: project.id, taskDisposition };
-    if (taskDisposition === "reassign")
-      input.targetProjectId = deleteTargetProjectId;
+    const input = taskDisposition === "reassign"
+      ? { id: project.id, taskDisposition, targetProjectId: deleteTargetProjectId }
+      : { id: project.id, taskDisposition };
     await deleteProject(input);
     queryClient.invalidateQueries({ queryKey: ["getProjects"] });
       queryClient.invalidateQueries({ queryKey: ["getProjectsForResolver"] });

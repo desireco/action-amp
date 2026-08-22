@@ -18,12 +18,12 @@ import "./Linkify.css";
 const URL_RE = /\b(?:https?:\/\/|www\.)[^\s]+/gi;
 
 const TRAILING_DROP = ".,;:!?\"'";
-const TRAILING_PAIRS = {
-  ")": "(",
-  "]": "[",
-  "}": "{",
-  ">": "<",
-} satisfies Record<string, string>;
+const TRAILING_PAIRS = new Map<string, string>([
+  [")", "("],
+  ["]", "["],
+  ["}", "{"],
+  [">", "<"],
+]);
 
 export type LinkifySegment =
   | { kind: "text"; value: string }
@@ -41,10 +41,10 @@ function trimUrl(token: string): string {
     const ch = token[end - 1];
     if (TRAILING_DROP.includes(ch)) {
       end -= 1;
-    } else if (TRAILING_PAIRS[ch] && !token.slice(0, end - 1).includes(TRAILING_PAIRS[ch])) {
-      end -= 1;
     } else {
-      break;
+      const openingPair = ch ? TRAILING_PAIRS.get(ch) : undefined;
+      if (!openingPair || token.slice(0, end - 1).includes(openingPair)) break;
+      end -= 1;
     }
   }
   return token.slice(0, end);
