@@ -75,6 +75,7 @@ export async function createInboxItemCore(
     content,
     sourceUrl,
     attachments,
+    timeZone = "UTC",
   }: {
     userId: string;
     text: string;
@@ -85,6 +86,7 @@ export async function createInboxItemCore(
     content?: string;
     sourceUrl?: string;
     attachments?: ImageAttachmentInput[];
+    timeZone?: string;
   },
 ) {
   const raw = text?.trim();
@@ -103,6 +105,7 @@ export async function createInboxItemCore(
     raw,
     new Date(),
     customLenses.map((l: { name: string }) => l.name),
+    timeZone,
   );
   const preparedAttachments = prepareImageAttachments(attachments);
   const selectedProject = projectId
@@ -136,7 +139,8 @@ export async function createInboxItemCore(
         ? { create: preparedAttachments }
         : undefined,
       userId,
-      parsedDate: parsed.parsedDate,
+      parsedScheduledDate: parsed.parsedScheduledDate,
+      parsedSnoozedUntil: parsed.parsedSnoozedUntil,
       parsedPriority: parsed.parsedPriority,
       parsedSize: parsed.parsedSize,
       parsedTags: parsed.parsedTags,
@@ -170,7 +174,8 @@ export async function getInboxItemsCore(
       sourceUrl: true,
       attachments: { select: { id: true, filename: true, mimeType: true } },
       createdAt: true,
-      parsedDate: true,
+      parsedScheduledDate: true,
+      parsedSnoozedUntil: true,
       parsedPriority: true,
       parsedSize: true,
       parsedTags: true,
@@ -268,7 +273,8 @@ interface TaskTriageCreateData {
   status: string;
   priority: string;
   size: string;
-  dueDate: Date | null;
+  scheduledDate: Date | null;
+  snoozedUntil: Date | null;
   projectId: string | null;
   tags?: { connect: { id: string }[] };
   attachments?: { create: PreparedImageAttachment[] };
@@ -284,7 +290,8 @@ async function createTaskFromTriage(
     lensId: string;
     priority: ParsedPriority;
     size: ParsedSize;
-    dueDate: Date | null;
+    scheduledDate: Date | null;
+    snoozedUntil: Date | null;
     projectId: string | null;
     projectPermalink: string | null;
     tagRecords: { id: string }[];
@@ -307,13 +314,10 @@ async function createTaskFromTriage(
       return !!existing;
     },
   );
-  // When=Today must never produce a future-dated Today task: the Next pool's
-  // due-guard treats any future dueDate as "snoozed until its time" and hides
-  // the task from the chooser — a Today task invisible on What Now (seen in
-  // the wild: a capture carrying a parsed "tomorrow" token + a manual When→
-  // Today flip created exactly that). The capture's parsedDate stays meaningful
-  // for Upcoming (surfaces when due); for Today the status IS the horizon.
-  const dueDate = opts.decision === "task-today" ? null : opts.dueDate;
+  const scheduledDate =
+    opts.decision === "task-today" ? null : opts.scheduledDate;
+  const snoozedUntil =
+    opts.decision === "task-today" ? null : opts.snoozedUntil;
   // Built then conditionally extended (B5 convention) so the create stays a
   // single atomic write — tags inline when present, no conditional spread.
   // Tags carry onto tasks only (projects/goals drop them).
@@ -326,7 +330,8 @@ async function createTaskFromTriage(
     status,
     priority: opts.priority,
     size: opts.size,
-    dueDate,
+    scheduledDate,
+    snoozedUntil,
     projectId: opts.projectId,
   };
   if (opts.tagRecords.length > 0) {
@@ -535,7 +540,8 @@ export async function triageInboxItemCore(
         lensId: lensId!,
         priority: resolvedPriority,
         size: resolvedSize,
-        dueDate: item.parsedDate,
+        scheduledDate: item.parsedScheduledDate,
+        snoozedUntil: item.parsedSnoozedUntil,
         projectId: effectiveProject.id,
         projectPermalink: effectiveProject.permalink,
         tagRecords,

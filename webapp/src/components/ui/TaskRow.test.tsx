@@ -128,7 +128,7 @@ describe("TaskRow", () => {
       const future = new Date();
       future.setDate(future.getDate() + 3);
       const { container } = renderInContext(
-        <TaskRow task={{ ...BASE_TASK, dueDate: future }} />,
+        <TaskRow task={{ ...BASE_TASK, scheduledDate: future }} />,
       );
       const teal = container.querySelector(".aa-chip--teal");
       expect(teal).toBeTruthy();
@@ -139,7 +139,7 @@ describe("TaskRow", () => {
       const past = new Date();
       past.setDate(past.getDate() - 2);
       const { container } = renderInContext(
-        <TaskRow task={{ ...BASE_TASK, dueDate: past }} />,
+        <TaskRow task={{ ...BASE_TASK, scheduledDate: past }} />,
       );
       const rose = container.querySelector(".aa-chip--rose");
       expect(rose).toBeTruthy();

@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   fixedClock,
+  calendarDayDifference,
   instantFrom,
   instantToDate,
   instantToPlainDate,
   plainDateFrom,
   plainDateFromDb,
+  plainDateFromValue,
   plainDateToDb,
 } from "./temporal";
 
@@ -18,6 +20,18 @@ describe("Temporal boundaries", () => {
   it("round-trips a calendar-only Prisma date without a local-zone shift", () => {
     const date = plainDateFrom("2026-03-29");
     expect(plainDateFromDb(plainDateToDb(date)).toString()).toBe("2026-03-29");
+  });
+
+  it("normalizes a Wasp ISO payload as a calendar date", () => {
+    expect(plainDateFromValue("2026-03-29T00:00:00.000Z").toString()).toBe(
+      "2026-03-29",
+    );
+    expect(
+      calendarDayDifference(
+        plainDateFrom("2026-03-28"),
+        plainDateFrom("2026-03-30"),
+      ),
+    ).toBe(2);
   });
 
   it("resolves the same instant to the correct date on either side of UTC", () => {

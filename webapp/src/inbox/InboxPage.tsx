@@ -12,7 +12,11 @@ import {
   HashIcon,
   StarIcon,
 } from "../components/ui";
-import { formatAgo, formatRelativeDay } from "../shared/dateFormat";
+import {
+  formatAgo,
+  formatRelativeDay,
+  formatSnoozedUntil,
+} from "../shared/dateFormat";
 import "./InboxPage.css";
 
 type InboxItemWithAttachments = InboxItem & {
@@ -154,10 +158,16 @@ export function InboxPage() {
                               ↗ {sourceHost(item.sourceUrl)}
                             </Chip>
                           )}
-                        {item.parsedDate && (
+                        {item.parsedScheduledDate && (
                           <Chip variant="teal" small>
                             <CalendarIcon className="aa-chip__icon" />
-                            {formatRelativeDay(item.parsedDate)}
+                            {formatRelativeDay(item.parsedScheduledDate)}
+                          </Chip>
+                        )}
+                        {item.parsedSnoozedUntil && (
+                          <Chip variant="teal" small>
+                            <CalendarIcon className="aa-chip__icon" />
+                            snoozed until {formatSnoozedUntil(item.parsedSnoozedUntil)}
                           </Chip>
                         )}
                         {item.parsedProject && (

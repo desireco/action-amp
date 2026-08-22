@@ -11,12 +11,10 @@ import { activePoolWhere } from "./activePool";
  */
 
 const NOW = new Date("2026-07-09T12:00:00Z");
-const PAST = new Date("2026-07-08T12:00:00Z"); // already due
-const FUTURE = new Date("2026-07-10T12:00:00Z"); // snoozed / scheduled
+const TODAY = new Date("2026-07-09T00:00:00Z");
 
 describe("activePoolWhere — what's IN the pool (actionable)", () => {
-  it("includes TODAY regardless of dueDate", () => {
-    // The court: a committed-today task is always actionable.
+  it("defines the active status and completion guards", () => {
     expect(activePoolWhere({ userId: "u1", now: NOW })).toMatchObject({
       userId: "u1",
       status: { in: ["TODAY", "UPCOMING"] },
@@ -24,21 +22,47 @@ describe("activePoolWhere — what's IN the pool (actionable)", () => {
     });
   });
 
-  it("includes UPCOMING with no dueDate (bench, undated → immediately actionable)", () => {
+  it("admits an unscheduled and unsnoozed bench task", () => {
     const w = activePoolWhere({ userId: "u1", now: NOW });
-    // The OR clause must allow a null dueDate (triaged-to-Upcoming surfaces now).
-    expect(w.OR).toEqual([
-      { dueDate: null },
-      { dueDate: { lte: NOW } },
+    expect(w.AND).toEqual([
+      {
+        OR: [
+          { scheduledDate: null },
+          { scheduledDate: { lte: TODAY } },
+        ],
+      },
+      {
+        OR: [
+          { snoozedUntil: null },
+          { snoozedUntil: { lte: NOW } },
+        ],
+      },
     ]);
   });
 
-  it("includes UPCOMING whose dueDate is now/past (snooze arrived)", () => {
-    // Same OR clause covers dueDate <= now.
+  it("uses an exact instant for snooze availability", () => {
     const w = activePoolWhere({ userId: "u1", now: NOW });
-    expect(w.OR).toContainEqual({ dueDate: { lte: NOW } });
-    // Sanity: the due-now date is not in the future.
-    expect(PAST.getTime()).toBeLessThanOrEqual(NOW.getTime());
+    expect(w.AND).toContainEqual({
+      OR: [
+        { snoozedUntil: null },
+        { snoozedUntil: { lte: NOW } },
+      ],
+    });
+  });
+
+  it("resolves a schedule against the user's calendar date", () => {
+    const instant = new Date("2026-07-09T00:30:00Z");
+    const losAngeles = activePoolWhere({
+      userId: "u1",
+      now: instant,
+      timeZone: "America/Los_Angeles",
+    });
+    expect(losAngeles.AND).toContainEqual({
+      OR: [
+        { scheduledDate: null },
+        { scheduledDate: { lte: new Date("2026-07-08T00:00:00.000Z") } },
+      ],
+    });
   });
 });
 
@@ -46,7 +70,7 @@ describe("activePoolWhere — what's OUT of the pool (not actionable)", () => {
   // These are enforced by the shape of the predicate, not by enumerating
   // exclusions — status is { in: [TODAY, UPCOMING] } so SOMEDAY can't match;
   // isDone: false so completed tasks can't match; the OR clause requires null
-  // or past dueDate so a future (snoozed) dueDate can't match. We assert each
+  // or past scheduledDate so a future (snoozed) scheduledDate can't match. We assert each
   // constraint is present so a future edit can't silently widen the pool.
 
   it("excludes SOMEDAY (status set is exactly TODAY + UPCOMING)", () => {
@@ -59,14 +83,8 @@ describe("activePoolWhere — what's OUT of the pool (not actionable)", () => {
     expect(activePoolWhere({ userId: "u1", now: NOW }).isDone).toBe(false);
   });
 
-  it("excludes snoozed tasks (future dueDate fails the OR guard)", () => {
-    // FUTURE is strictly after NOW; the OR only admits null or <= NOW, so a
-    // snoozed-to-tomorrow task is kept off Next until its time arrives.
-    expect(FUTURE.getTime()).toBeGreaterThan(NOW.getTime());
-    // SAFETY: activePoolWhere returns a Prisma WhereInput; OR is typed as a nested
-    // conditional union, but in practice it's always an array here.
-    const or = activePoolWhere({ userId: "u1", now: NOW }).OR as unknown[];
-    expect(or).toEqual([{ dueDate: null }, { dueDate: { lte: NOW } }]);
+  it("requires both the calendar schedule and exact snooze guards", () => {
+    expect(activePoolWhere({ userId: "u1", now: NOW }).AND).toHaveLength(2);
   });
 });
 
@@ -82,17 +100,16 @@ describe("activePoolWhere — lens scoping", () => {
   });
 });
 
-describe("activePoolWhere — regression: the reported bug", () => {
-  // The bug: an UPCOMING task with a today dueDate showed on Next (label
-  // "due today") but the Today badge + lens pill read 0, because they filtered
-  // status === "TODAY" only. The pool predicate must COUNT that task. This test
-  // encodes the scenario as the where-clause shape that would admit it.
-  it("would count an UPCOMING + due-today task (the case that read 0)", () => {
+describe("activePoolWhere — count coherence", () => {
+  it("uses the same schedule guard for UPCOMING counts and Next", () => {
     const w = activePoolWhere({ userId: "u1", lensId: "lens-work", now: NOW });
-    // An UPCOMING task due today matches: status set admits UPCOMING, and
-    // dueDate <= now admits a today dueDate.
     expect(w.status).toEqual({ in: ["TODAY", "UPCOMING"] });
-    expect(w.OR).toContainEqual({ dueDate: { lte: NOW } });
+    expect(w.AND).toContainEqual({
+      OR: [
+        { scheduledDate: null },
+        { scheduledDate: { lte: TODAY } },
+      ],
+    });
     expect(w.lensId).toBe("lens-work");
   });
 

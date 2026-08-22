@@ -32,6 +32,11 @@ model User {
   // default to COMPLETE; new members enter SAMPLE_TASK when they finish /welcome.
   onboardingStage   OnboardingStage @default(COMPLETE)
 
+  // Calendar-day decisions (Today rollover, schedules, relative labels) use
+  // this IANA zone. Null means the account has not confirmed one yet; callers
+  // use UTC until an explicit browser/CLI preference initializes it.
+  timeZone String?
+
   // Work-tracker entities
   lenses            Lens[]
   listItems         ListItem[]
@@ -342,7 +347,7 @@ model Project {
   name        String
   permalink   String
   description String?
-  dueDate     DateTime?
+  dueDate     DateTime? @db.Date
   isDone      Boolean   @default(false)
   type        ProjectType @default(STANDARD)
   // Per-Goal sequence (goal-planning spec §E). Projects with no goal sort by
@@ -425,7 +430,9 @@ model Task {
   priority Priority   @default(NORMAL) // primary sort key
   size     Size       @default(M) // secondary signal + XL break-down nudge
   status   TaskStatus @default(SOMEDAY) // TODAY | UPCOMING | SOMEDAY (pre-filters focus)
-  dueDate  DateTime?
+  // Calendar scheduling and exact-time deferral are intentionally separate.
+  scheduledDate DateTime? @db.Date
+  snoozedUntil  DateTime? @db.Timestamptz(3)
   order    Int        @default(0) // manual sort order within a list
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -448,6 +455,8 @@ model Task {
   @@unique([userId, permalink])
   @@index([userId, createdAt])
   @@index([userId, completedAt])
+  @@index([userId, scheduledDate])
+  @@index([userId, snoozedUntil])
 }
 
 // Primary sort key for the focus engine. Important > Normal > Low.
@@ -779,7 +788,8 @@ model InboxItem {
   userId String
 
   // ---- Parsed-token guesses from the NL parser (nullable; assigned at triage) ----
-  parsedDate     DateTime?
+  parsedScheduledDate DateTime? @db.Date
+  parsedSnoozedUntil  DateTime? @db.Timestamptz(3)
   parsedPriority Priority?
   parsedSize     Size?
   parsedTags     String[] // raw tag strings: ["#work"] — grammar v2: @ is time-only, extra # mentions are tags

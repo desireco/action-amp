@@ -45,13 +45,19 @@ export const saveDailyReminder = (async (args, context) => {
   if (!TIME_RE.test(args?.time ?? "")) throw new Error("Choose a valid reminder time.");
   const timeZone = args.timeZone?.trim();
   if (!timeZone || timeZone.length > 100) throw new Error("Could not determine device time zone.");
+  const existing = await context.entities.User.findUniqueOrThrow({
+    where: { id: userId },
+    select: { timeZone: true },
+  });
+  const data = {
+    dailyReminderEnabled: Boolean(args.enabled),
+    dailyReminderTime: args.time,
+    dailyReminderTimeZone: timeZone,
+    timeZone: existing.timeZone ?? timeZone,
+  };
   await context.entities.User.update({
     where: { id: userId },
-    data: {
-      dailyReminderEnabled: Boolean(args.enabled),
-      dailyReminderTime: args.time,
-      dailyReminderTimeZone: timeZone,
-    },
+    data,
   });
   return { ok: true };
 }) satisfies SaveDailyReminder<{ enabled: boolean; time: string; timeZone: string }, { ok: true }>;

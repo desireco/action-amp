@@ -1,4 +1,13 @@
 import type { PropertyField, PropertyOption } from "../components/ui";
+import {
+  calendarDayDifference,
+  currentPlainDate,
+  instantFrom,
+  instantToPlainDate,
+  plainDateFromValue,
+  plainDateToDb,
+  systemTimeZone,
+} from "../shared/time/temporal";
 
 /* ------------------------------------------------------------------
  * taskPropertyFields — build the PropertyChips field config for a task.
@@ -27,7 +36,7 @@ export interface TaskChipState {
   status: TaskStatus;
   priority: TaskPriority;
   size: TaskSize;
-  dueDate: Date | string | null;
+  scheduledDate: Date | string | null;
   project: TaskChipProject | null;
   goal: TaskChipGoal | null;
 }
@@ -56,30 +65,24 @@ const SIZE_OPTS: PropertyOption[] = [
 ];
 
 /** Scheduling presets resolve to a concrete local calendar day. */
-export function presetToDate(preset: string, now = new Date()): Date | null {
+export function presetToScheduledDate(preset: string, now = new Date()): Date | null {
   if (preset === "none") return null;
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-  if (preset === "today") return d;
-  if (preset === "tomorrow") {
-    d.setDate(d.getDate() + 1);
-    return d;
-  }
+  const today = instantToPlainDate(instantFrom(now), systemTimeZone());
+  if (preset === "today") return plainDateToDb(today);
+  if (preset === "tomorrow") return plainDateToDb(today.add({ days: 1 }));
 
   const weekday = Number(preset.replace("weekday-", ""));
   if (Number.isInteger(weekday) && weekday >= 0 && weekday <= 6) {
-    const daysAhead = (weekday - d.getDay() + 7) % 7;
-    d.setDate(d.getDate() + daysAhead);
-    return d;
+    const targetDay = weekday === 0 ? 7 : weekday;
+    const daysAhead = (targetDay - today.dayOfWeek + 7) % 7;
+    return plainDateToDb(today.add({ days: daysAhead }));
   }
 
   if (preset === "next-week") {
-    d.setDate(d.getDate() + 7 - ((d.getDay() + 6) % 7));
-    return d;
+    return plainDateToDb(today.add({ days: 8 - today.dayOfWeek }));
   }
   if (preset === "next-month") {
-    d.setMonth(d.getMonth() + 1);
-    return d;
+    return plainDateToDb(today.add({ months: 1 }));
   }
   return null;
 }
@@ -99,34 +102,25 @@ const DUE_OPTS: PropertyOption[] = [
   { value: "next-month", label: "Next month" },
 ];
 
-function dueLabel(dueDate: Date | string | null): string | null {
-  if (!dueDate) return null;
-  const d = new Date(dueDate);
-  if (Number.isNaN(d.getTime())) return null;
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const target = new Date(d);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((target.getTime() - now.getTime()) / 86_400_000);
+function dueLabel(scheduledDate: Date | string | null): string | null {
+  if (!scheduledDate) return null;
+  const target = plainDateFromValue(scheduledDate);
+  const diffDays = calendarDayDifference(currentPlainDate(), target);
   if (diffDays <= 0) return "Today";
   if (diffDays === 1) return "Tomorrow";
   if (diffDays <= 7)
-    return d.toLocaleDateString(undefined, { weekday: "short" });
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return target.toLocaleString(undefined, { weekday: "short" });
+  return target.toLocaleString(undefined, { month: "short", day: "numeric" });
 }
 
-function duePreset(dueDate: Date | string | null): string {
-  if (!dueDate) return "none";
-  const d = new Date(dueDate);
-  if (Number.isNaN(d.getTime())) return "none";
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const target = new Date(d);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((target.getTime() - now.getTime()) / 86_400_000);
+function duePreset(scheduledDate: Date | string | null): string {
+  if (!scheduledDate) return "none";
+  const target = plainDateFromValue(scheduledDate);
+  const diffDays = calendarDayDifference(currentPlainDate(), target);
   if (diffDays === 0) return "today";
   if (diffDays === 1) return "tomorrow";
-  if (diffDays >= 0 && diffDays <= 6) return `weekday-${target.getDay()}`;
+  if (diffDays >= 0 && diffDays <= 6)
+    return `weekday-${target.dayOfWeek === 7 ? 0 : target.dayOfWeek}`;
   if (diffDays >= 7 && diffDays <= 13) return "next-week";
   return "next-month";
 }
@@ -191,12 +185,12 @@ export function taskPropertyFields({
   ];
 
   // Due — preset popover, or quiet "+ Due" when unset.
-  const dueLabelNow = dueLabel(task.dueDate);
+  const dueLabelNow = dueLabel(task.scheduledDate);
   if (dueLabelNow) {
     fields.push({
       key: "due",
       variant: "due",
-      value: duePreset(task.dueDate),
+      value: duePreset(task.scheduledDate),
       displayValue: dueLabelNow,
       options: DUE_OPTS,
     });
@@ -252,7 +246,7 @@ export interface TaskChipPatch {
   status?: TaskStatus;
   priority?: TaskPriority;
   size?: TaskSize;
-  dueDate?: Date | null;
+  scheduledDate?: Date | null;
 }
 
 const TASK_STATUSES = new Set<string>(["TODAY", "UPCOMING", "SOMEDAY"]);
@@ -291,7 +285,7 @@ export function chipPickToTaskPatch(
     case "size":
       return isTaskSize(value) ? { size: value } : {};
     case "due":
-      return { dueDate: presetToDate(value) };
+      return { scheduledDate: presetToScheduledDate(value) };
     default:
       return {};
   }

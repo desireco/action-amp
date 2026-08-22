@@ -1,4 +1,11 @@
 import type { Prisma } from "@prisma/client";
+import {
+  Temporal,
+  instantFrom,
+  instantToDate,
+  instantToPlainDate,
+  plainDateToDb,
+} from "../shared/time/temporal";
 
 /**
  * The actionable pool — the single source of truth for "what's on the table
@@ -9,10 +16,11 @@ import type { Prisma } from "@prisma/client";
  * Semantics (WORKFLOW.md §5.2):
  * - status ∈ {TODAY (the court), UPCOMING (the bench)}
  * - not done
- * - no dueDate (always actionable) OR dueDate ≤ now (a snooze that has arrived)
+ * - no future scheduledDate in the user's calendar
+ * - no future snoozedUntil exact instant
  *
- * A future dueDate means the task is snoozed/scheduled → excluded until its time
- * arrives. SOMEDAY is never actionable.
+ * The two guards are independent: a task may retain its schedule while a short
+ * snooze temporarily removes it from Next. SOMEDAY is never actionable.
  *
  * This exists because the Today badge + lens pill previously filtered
  * `status: "TODAY"` only, while Next pooled TODAY + UPCOMING — so an Upcoming
@@ -24,21 +32,35 @@ import type { Prisma } from "@prisma/client";
 export function activePoolWhere({
   userId,
   lensId,
-  now = new Date(),
+  now = instantToDate(Temporal.Now.instant()),
+  timeZone = "UTC",
 }: {
   userId: string;
   lensId?: string;
   now?: Date;
+  timeZone?: string;
 }): Prisma.TaskWhereInput {
+  const nowInstant = instantFrom(now);
+  const today = plainDateToDb(instantToPlainDate(nowInstant, timeZone));
   const where: Prisma.TaskWhereInput = {
     userId,
     status: { in: ["TODAY", "UPCOMING"] },
     isDone: false,
-    // A future dueDate = snoozed/scheduled; keep it off Next until due.
-    // (null dueDate = no horizon → always a candidate.)
-    OR: [{ dueDate: null }, { dueDate: { lte: now } }],
+    AND: [
+      {
+        OR: [
+          { scheduledDate: null },
+          { scheduledDate: { lte: today } },
+        ],
+      },
+      {
+        OR: [
+          { snoozedUntil: null },
+          { snoozedUntil: { lte: instantToDate(nowInstant) } },
+        ],
+      },
+    ],
   };
   if (lensId) where.lensId = lensId;
   return where;
 }
-

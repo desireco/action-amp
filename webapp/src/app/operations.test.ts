@@ -5,6 +5,7 @@ import {
   saveTodayCap,
   saveFocusSessionMinutes,
   saveReviewPreferences,
+  initializeTimeZone,
 } from "./operations";
 import { mockContext } from "../test/mockContext";
 
@@ -83,6 +84,7 @@ describe("getAppData — happy path", () => {
       todayCap: 5,
       focusSessionMinutes: 25,
       reviewPreferences: { today: true, week: false, month: true },
+      timeZone: "UTC",
     });
 
     // Inbox is global (no lens) but only counts unprocessed items, matching
@@ -562,6 +564,29 @@ describe("saveFocusSessionMinutes", () => {
       where: { id: "user-1" },
       data: { focusSessionMinutes: minutes },
     });
+  });
+});
+
+describe("initializeTimeZone", () => {
+  it("initializes only an empty stored zone", async () => {
+    const m = mockContext();
+
+    await expect(
+      initializeTimeZone({ timeZone: "Europe/Belgrade" }, m.context),
+    ).resolves.toEqual({ ok: true });
+
+    expect(m.entities.User.updateMany).toHaveBeenCalledWith({
+      where: { id: "user-1", timeZone: null },
+      data: { timeZone: "Europe/Belgrade" },
+    });
+  });
+
+  it("rejects invalid zones before writing", async () => {
+    const m = mockContext();
+    await expect(
+      initializeTimeZone({ timeZone: "Mars/Olympus" }, m.context),
+    ).rejects.toThrow(/IANA/);
+    expect(m.entities.User.updateMany).not.toHaveBeenCalled();
   });
 });
 

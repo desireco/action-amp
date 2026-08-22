@@ -4,8 +4,15 @@ import type {
   SaveTodayCap,
   SaveFocusSessionMinutes,
   SaveReviewPreferences,
+  InitializeTimeZone,
 } from "wasp/server/operations";
 import { isEntitled } from "../billing/entitlements";
+import {
+  Temporal,
+  instantFrom,
+  instantToDate,
+  instantToPlainDate,
+} from "../shared/time/temporal";
 
 /**
  * App-shell bootstrap data — runs on every app load and lens switch.
@@ -67,17 +74,24 @@ export const getAppData = (async (args, context) => {
       weekReviewEnabled: true,
       monthReviewEnabled: true,
       lastActiveAt: true,
+      timeZone: true,
     },
   });
+  const now = Temporal.Now.instant();
+  const timeZone = userRow?.timeZone ?? "UTC";
   const lastRoll = userRow?.lastTodayRolloverAt ?? null;
-  if (!lastRoll || isDifferentDay(lastRoll, new Date())) {
+  const today = instantToPlainDate(now, timeZone);
+  const lastRollDate = lastRoll
+    ? instantToPlainDate(instantFrom(lastRoll), timeZone)
+    : null;
+  if (!lastRollDate || !lastRollDate.equals(today)) {
     await context.entities.Task.updateMany({
       where: { userId, status: "TODAY", isDone: false },
       data: { status: "UPCOMING" },
     });
     await context.entities.User.update({
       where: { id: userId },
-      data: { lastTodayRolloverAt: new Date() },
+      data: { lastTodayRolloverAt: instantToDate(now) },
     });
   }
 
@@ -86,11 +100,14 @@ export const getAppData = (async (args, context) => {
   // an activity write must never break an app load. Mirrors the rollover's
   // lazy-write idiom. Powers admin stats' activeToday/7d/30d.
   const lastActive = userRow?.lastActiveAt ?? null;
-  const stale = !lastActive || Date.now() - lastActive.getTime() > 15 * 60 * 1000;
+  const stale =
+    !lastActive ||
+    now.epochMilliseconds - instantFrom(lastActive).epochMilliseconds >
+      15 * 60 * 1000;
   if (stale) {
     context.entities.User.update({
       where: { id: userId },
-      data: { lastActiveAt: new Date() },
+      data: { lastActiveAt: instantToDate(now) },
     }).catch(() => {
       // Swallow — activity tracking is best-effort.
     });
@@ -189,6 +206,7 @@ export const getAppData = (async (args, context) => {
       week: userRow?.weekReviewEnabled ?? true,
       month: userRow?.monthReviewEnabled ?? true,
     },
+    timeZone,
   };
 }) satisfies GetAppData<
   { lensId?: string | null },
@@ -211,22 +229,9 @@ export const getAppData = (async (args, context) => {
     todayCap: number;
     focusSessionMinutes: FocusSessionMinutes;
     reviewPreferences: { today: boolean; week: boolean; month: boolean };
+    timeZone: string;
   }
 >;
-
-/**
- * Calendar-day inequality — drives the lazy Today rollover. True when `a` and
- * `b` fall on different Y/M/D (in their own locale). Returns true when `a` is
- * null is handled by the caller (the `!lastRoll` check), so this assumes two
- * valid dates.
- */
-function isDifferentDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() !== b.getFullYear() ||
-    a.getMonth() !== b.getMonth() ||
-    a.getDate() !== b.getDate()
-  );
-}
 
 function cleanName(value: string | undefined, fieldName: string): string {
   const trimmed = value?.trim();
@@ -303,6 +308,21 @@ export function normalizeFocusSessionMinutes(
 ): FocusSessionMinutes {
   return value === 45 ? 45 : FOCUS_SESSION_DEFAULT;
 }
+
+/** Initialize the calendar zone once; a saved user choice always wins. */
+export const initializeTimeZone = (async (args, context) => {
+  if (!context.user) throw new Error("Not authenticated.");
+  try {
+    Temporal.Now.instant().toZonedDateTimeISO(args.timeZone);
+  } catch {
+    throw new Error("Time zone must be a valid IANA identifier.");
+  }
+  await context.entities.User.updateMany({
+    where: { id: context.user.id, timeZone: null },
+    data: { timeZone: args.timeZone },
+  });
+  return { ok: true as const };
+}) satisfies InitializeTimeZone<{ timeZone: string }, { ok: true }>;
 
 /** Store the closed-set Pomodoro duration used when opening new TaskSessions. */
 export const saveFocusSessionMinutes = (async (args, context) => {

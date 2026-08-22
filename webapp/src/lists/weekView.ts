@@ -7,38 +7,38 @@
  *   make it disappear from its weekday);
  * - dated before the week started (overdue) → the Today bucket — an open
  *   task that slipped past its date is still due;
- * - TODAY with no dueDate → the Today bucket — a Today commit is due today,
+ * - TODAY with no scheduledDate → the Today bucket — a Today commit is due today,
  *   and today is inside this week;
  * - undated UPCOMING never reaches the pool (the query excludes it); a stray
  *   one is skipped defensively.
  */
 import type { TaskLensListRow } from "../tasks/operationsCore";
+import {
+  currentPlainDate,
+  plainDateFromValue,
+} from "../shared/time/temporal";
 
 export type WeekBucket = { key: string; items: TaskLensListRow[] };
 
 /** yyyy-mm-dd local — the bucket key. */
-export function dayKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = `${date.getMonth() + 1}`.padStart(2, "0");
-  const d = `${date.getDate()}`.padStart(2, "0");
-  return `${y}-${m}-${d}`;
+export function dayKey(date: Date | string): string {
+  return plainDateFromValue(date).toString();
 }
 
 export function bucketWeekTasks(
   tasks: TaskLensListRow[],
-  weekStart: Date,
-  today = new Date(),
+  weekStart: Date | string,
+  today: Date | string = currentPlainDate().toString(),
 ): WeekBucket[] {
   const byDay = new Map<string, TaskLensListRow[]>();
+  const start = plainDateFromValue(weekStart);
   for (let offset = 0; offset < 7; offset += 1) {
-    const date = new Date(weekStart);
-    date.setDate(date.getDate() + offset);
-    byDay.set(dayKey(date), []);
+    byDay.set(start.add({ days: offset }).toString(), []);
   }
   const todayKey = dayKey(today);
   for (const task of tasks) {
-    if (task.dueDate) {
-      const key = dayKey(new Date(task.dueDate));
+    if (task.scheduledDate) {
+      const key = dayKey(new Date(task.scheduledDate));
       if (byDay.has(key)) {
         byDay.get(key)!.push(task); // dated this week → its weekday
       } else {

@@ -4,6 +4,11 @@ import {
   type GoalContext,
   type GoalRef,
 } from "./taskContext";
+import {
+  calendarDayDifference,
+  currentPlainDate,
+  plainDateFromValue,
+} from "../shared/time/temporal";
 
 export function sizeLabel(size: string | null | undefined): string {
   if (!size) return "";
@@ -11,15 +16,13 @@ export function sizeLabel(size: string | null | undefined): string {
 }
 
 export function formatWhen(date: Date | string): string {
-  const d = new Date(date);
-  const now = new Date();
-  d.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((d.getTime() - now.getTime()) / 86_400_000);
+  const target = plainDateFromValue(date);
+  const diffDays = calendarDayDifference(currentPlainDate(), target);
   if (diffDays <= 0) return "today";
   if (diffDays === 1) return "tomorrow";
-  if (diffDays <= 7) return d.toLocaleDateString("en-US", { weekday: "short" });
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (diffDays <= 7)
+    return target.toLocaleString("en-US", { weekday: "short" });
+  return target.toLocaleString("en-US", { month: "short", day: "numeric" });
 }
 
 export function toFocusTask(task: {
@@ -28,7 +31,7 @@ export function toFocusTask(task: {
   content?: string | null;
   outcome?: string | null;
   status: string;
-  dueDate?: Date | string | null;
+  scheduledDate?: Date | string | null;
   size?: string | null;
   startedAt?: Date | string | null;
   // focus-goal-context: Project carries nested Goal (id/name/description) so
@@ -49,8 +52,8 @@ export function toFocusTask(task: {
   const due =
     task.status === "TODAY"
       ? "due today"
-      : task.dueDate
-        ? `due ${formatWhen(task.dueDate)}`
+      : task.scheduledDate
+        ? `due ${formatWhen(task.scheduledDate)}`
         : null;
 
   // Focus-segment accounting. Each session row is either closed (endedAt set)

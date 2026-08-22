@@ -10,7 +10,7 @@ const inboxItems = {
       id: "ix-1",
       text: "Email Sarah",
       createdAt: new Date(),
-      parsedDate: null,
+      parsedScheduledDate: null,
       parsedLens: null,
       parsedProject: null,
       parsedPriority: null,
@@ -117,7 +117,7 @@ beforeEach(() => {
       id: "ix-1",
       text: "Email Sarah",
       createdAt: new Date(),
-      parsedDate: null,
+      parsedScheduledDate: null,
       parsedLens: null,
       parsedProject: null,
       parsedPriority: null,
@@ -406,7 +406,7 @@ describe("TriagePage", () => {
         id: "ix-1",
         text: "Draft MVP plan",
         createdAt: new Date(),
-        parsedDate: null,
+        parsedScheduledDate: null,
         parsedLens: null,
         parsedProject: null,
         parsedPriority: null,
@@ -547,9 +547,9 @@ describe("TriagePage", () => {
 
   it("wraps to earlier inbox items after starting triage from a row", async () => {
     inboxItems.current = [
-      { id: "ix-1", text: "First", createdAt: new Date(), parsedDate: null, parsedLens: null, parsedProject: null, parsedPriority: null, parsedSize: null, parsedTags: [] },
-      { id: "ix-2", text: "Middle", createdAt: new Date(), parsedDate: null, parsedLens: null, parsedProject: null, parsedPriority: null, parsedSize: null, parsedTags: [] },
-      { id: "ix-3", text: "Last", createdAt: new Date(), parsedDate: null, parsedLens: null, parsedProject: null, parsedPriority: null, parsedSize: null, parsedTags: [] },
+      { id: "ix-1", text: "First", createdAt: new Date(), parsedScheduledDate: null, parsedLens: null, parsedProject: null, parsedPriority: null, parsedSize: null, parsedTags: [] },
+      { id: "ix-2", text: "Middle", createdAt: new Date(), parsedScheduledDate: null, parsedLens: null, parsedProject: null, parsedPriority: null, parsedSize: null, parsedTags: [] },
+      { id: "ix-3", text: "Last", createdAt: new Date(), parsedScheduledDate: null, parsedLens: null, parsedProject: null, parsedPriority: null, parsedSize: null, parsedTags: [] },
     ];
     triageInboxItem.mockResolvedValue({ id: "task-1" });
     renderTriagePage("/do/inbox/review?i=1");

@@ -36,7 +36,7 @@ type AlternativeCandidate = {
   permalink: string;
   description: string;
   status: string;
-  dueDate: Date | string | null;
+  scheduledDate: Date | string | null;
   size: string;
   project?: { name: string } | null;
 };
@@ -210,11 +210,11 @@ export function NextPage() {
     );
   }
 
-  const dueLabelFor = (t: { status: string; dueDate: Date | string | null }) =>
+  const dueLabelFor = (t: { status: string; scheduledDate: Date | string | null }) =>
     t.status === "TODAY"
       ? "due today"
-      : t.dueDate
-        ? `due ${formatWhen(t.dueDate)}`
+      : t.scheduledDate
+        ? `due ${formatWhen(t.scheduledDate)}`
         : null;
   const dueLabel = dueLabelFor(task);
 

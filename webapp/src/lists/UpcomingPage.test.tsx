@@ -20,7 +20,7 @@ interface UpcomingTask {
   description: string;
   status: "UPCOMING";
   isDone: false;
-  dueDate: string | null;
+  scheduledDate: string | null;
 }
 
 vi.mock("wasp/client/operations", () => ({
@@ -80,7 +80,7 @@ describe("UpcomingPage overdue recovery", () => {
           description: "Past task",
           status: "UPCOMING",
           isDone: false,
-          dueDate: "2000-07-09T12:00:00.000Z",
+          scheduledDate: "2000-07-09T12:00:00.000Z",
         },
       ],
       isLoading: false,
@@ -103,7 +103,7 @@ describe("UpcomingPage overdue recovery", () => {
           description: "Future task",
           status: "UPCOMING",
           isDone: false,
-          dueDate: "2099-07-11T12:00:00.000Z",
+          scheduledDate: "2099-07-11T12:00:00.000Z",
         },
       ],
       isLoading: false,
@@ -131,7 +131,7 @@ describe("UpcomingPage overdue recovery", () => {
           description: "Future task",
           status: "UPCOMING",
           isDone: false,
-          dueDate: "2099-07-11T12:00:00.000Z",
+          scheduledDate: "2099-07-11T12:00:00.000Z",
         },
       ],
       isLoading: false,
@@ -151,7 +151,7 @@ describe("UpcomingPage overdue recovery", () => {
           description: "Past task",
           status: "UPCOMING",
           isDone: false,
-          dueDate: "2000-07-09T12:00:00.000Z",
+          scheduledDate: "2000-07-09T12:00:00.000Z",
         },
       ],
       isLoading: false,

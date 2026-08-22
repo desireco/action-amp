@@ -881,7 +881,7 @@ export function ProjectDetailPage() {
                           // look like unfinished work.
                           task={
                             task.isDone
-                              ? { ...task, size: undefined, dueDate: null }
+                              ? { ...task, size: undefined, scheduledDate: null }
                               : task
                           }
                           muted={task.status === "SOMEDAY" || task.isDone}

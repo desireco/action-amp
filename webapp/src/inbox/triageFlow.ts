@@ -45,7 +45,8 @@ export interface Working {
 }
 
 interface ParsedChipSource {
-  parsedDate: Date | string | null;
+  parsedScheduledDate: Date | string | null;
+  parsedSnoozedUntil: Date | string | null;
   parsedLens: string | null;
   parsedProject: string | null;
   parsedPriority: ParsedPriority | string | null;
@@ -56,11 +57,13 @@ interface ParsedChipSource {
 export function buildTriageChips(item: ParsedChipSource | null): TriageChip[] {
   if (!item) return [];
   const chips: TriageChip[] = [];
-  if (item.parsedDate)
+  if (item.parsedScheduledDate)
     chips.push({
       tone: "date",
-      label: `📅 ${formatRelativeDay(item.parsedDate)}`,
+      label: `📅 ${formatRelativeDay(item.parsedScheduledDate)}`,
     });
+  if (item.parsedSnoozedUntil)
+    chips.push({ tone: "date", label: "Snoozed" });
   if (item.parsedLens)
     chips.push({ tone: "tag", label: `[[${item.parsedLens}]]` });
   if (item.parsedProject)

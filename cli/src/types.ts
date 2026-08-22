@@ -20,7 +20,8 @@ export type Task = {
   priority: "LOW" | "NORMAL" | "IMPORTANT";
   size: "S" | "M" | "L" | "XL";
   status: "SOMEDAY" | "UPCOMING" | "TODAY";
-  dueDate?: string | null;
+  scheduledDate?: string | null;
+  snoozedUntil?: string | null;
   projectId?: string | null;
   goalId?: string | null;
   lensId?: string;
@@ -34,7 +35,8 @@ export type InboxItem = {
   text: string;
   status: "UNPROCESSED" | "ARCHIVED";
   createdAt: string;
-  parsedDate?: string | null;
+  parsedScheduledDate?: string | null;
+  parsedSnoozedUntil?: string | null;
   parsedPriority?: string | null;
   parsedSize?: string | null;
   parsedTags?: string[];

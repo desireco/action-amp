@@ -25,6 +25,13 @@ export function plainDateFrom(value: string): PlainDate {
   return Temporal.PlainDate.from(value);
 }
 
+/** Normalize Wasp's ISO DateTime serialization or a YYYY-MM-DD wire value. */
+export function plainDateFromValue(value: Date | string): PlainDate {
+  return value instanceof Date
+    ? plainDateFromDb(value)
+    : Temporal.PlainDate.from(value.slice(0, 10));
+}
+
 /** Prisma maps PostgreSQL DATE to Date at UTC midnight. */
 export function plainDateFromDb(value: Date): PlainDate {
   return Temporal.Instant.fromEpochMilliseconds(value.getTime())
@@ -43,6 +50,14 @@ export function instantToPlainDate(value: Instant, timeZone: string): PlainDate 
 
 export function systemTimeZone(): string {
   return Temporal.Now.timeZoneId();
+}
+
+export function currentPlainDate(timeZone = systemTimeZone()): PlainDate {
+  return Temporal.Now.plainDateISO(timeZone);
+}
+
+export function calendarDayDifference(start: PlainDate, end: PlainDate): number {
+  return start.until(end, { largestUnit: "days" }).days;
 }
 
 export interface Clock {

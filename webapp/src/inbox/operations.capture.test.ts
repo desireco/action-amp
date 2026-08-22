@@ -193,7 +193,8 @@ describe("getInboxItems — scoping", () => {
         sourceUrl: true,
         attachments: { select: { id: true, filename: true, mimeType: true } },
         createdAt: true,
-        parsedDate: true,
+        parsedScheduledDate: true,
+        parsedSnoozedUntil: true,
         parsedPriority: true,
         parsedSize: true,
         parsedTags: true,
@@ -219,7 +220,7 @@ describe("getInboxItem — guards + ownership", () => {
     const item = {
       id: "ix-1", userId: "user-1", text: "Cool — https://x.com",
       createdAt: new Date("2026-07-25T10:00"), status: "UNPROCESSED",
-      archivedAt: null, parsedDate: null, parsedPriority: null,
+      archivedAt: null, parsedScheduledDate: null, parsedPriority: null,
       parsedSize: null, parsedTags: [], parsedProject: null, parsedLens: null,
     };
     m.entities.InboxItem.findUnique.mockResolvedValue(item);

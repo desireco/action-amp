@@ -13,6 +13,7 @@ const getAppData = vi.fn();
 const getProjectsForResolver = vi.fn();
 const getCommandPaletteIndex = vi.fn();
 const searchSite = vi.fn();
+const initializeTimeZone = vi.fn().mockResolvedValue({ ok: true });
 const entitled = { current: true };
 
 const life = {
@@ -47,6 +48,7 @@ vi.mock("wasp/client/operations", () => ({
   searchSite,
   createInboxItem: vi.fn(),
   submitFeedback: vi.fn(),
+  initializeTimeZone,
   useQuery: (operation: unknown) => {
     if (operation === getAppData) {
       return {

@@ -86,6 +86,7 @@ import { getLogbookData } from "../logbook/operationsCore";
 import { getReviewData } from "../reviews/operationsCore";
 import { localDateFor, shiftReviewDate } from "../reviews/period";
 import { buildReviewReport } from "../reviews/report";
+import { plainDateFrom, plainDateToDb } from "../shared/time/temporal";
 import {
   createResourceCore,
   deleteResourceCore,
@@ -768,7 +769,7 @@ export const cliTaskDone = async (
   }
 };
 
-// POST /api/cli/task/snooze — body { id, preset }. Returns { id, status, dueDate }.
+// POST /api/cli/task/snooze — body { id, preset }. Returns the explicit snooze instant.
 export const cliTaskSnooze = async (
   req: Request,
   res: Response,
@@ -793,10 +794,15 @@ export const cliTaskSnooze = async (
     return res.status(400).json({ error: "Invalid snooze preset." });
   }
   try {
+    const preferences = await authEntities.User.findUnique({
+      where: { id: user.id },
+      select: { timeZone: true },
+    });
     const result = await snoozeTaskCore(authEntities, {
       userId: user.id,
       id,
       preset,
+      timeZone: preferences?.timeZone ?? "UTC",
     });
     return res.status(200).json(result);
   } catch (err) {
@@ -804,7 +810,7 @@ export const cliTaskSnooze = async (
   }
 };
 
-// POST /api/cli/task/move — body { id, status, dueDate? }. Returns the updated task.
+// POST /api/cli/task/move — body { id, status, scheduledDate? }. Returns the updated task.
 export const cliTaskMove = async (
   req: Request,
   res: Response,
@@ -822,14 +828,26 @@ export const cliTaskMove = async (
   if (status !== "TODAY" && status !== "UPCOMING" && status !== "SOMEDAY") {
     return res.status(400).json({ error: "Invalid status." });
   }
-  const dueDateRaw = bodyString(req.body, "dueDate");
-  const dueDate = dueDateRaw !== undefined ? new Date(dueDateRaw) : undefined;
+  const scheduledDateRaw = bodyString(req.body, "scheduledDate");
+  let scheduledDate: Date | undefined;
   try {
+    scheduledDate = scheduledDateRaw
+      ? plainDateToDb(plainDateFrom(scheduledDateRaw))
+      : undefined;
+  } catch {
+    return res.status(400).json({ error: "scheduledDate must use YYYY-MM-DD." });
+  }
+  try {
+    const preferences = await authEntities.User.findUnique({
+      where: { id: user.id },
+      select: { timeZone: true },
+    });
     const task = await updateTaskStatusCore(authEntities, {
       userId: user.id,
       id,
       status,
-      dueDate,
+      scheduledDate,
+      timeZone: preferences?.timeZone ?? "UTC",
     });
     return res.status(200).json({ task });
   } catch (err) {

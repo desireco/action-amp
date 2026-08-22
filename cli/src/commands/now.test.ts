@@ -65,7 +65,7 @@ const FULL_TASK = {
   size: "M",
   status: "TODAY",
   startedAt: null,
-  dueDate: new Date().toISOString(),
+  scheduledDate: new Date().toISOString(),
   project: { id: "p1", name: "Launch v2", permalink: "launch-v2" },
   goal: null,
 };

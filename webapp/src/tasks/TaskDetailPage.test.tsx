@@ -48,7 +48,7 @@ function makeTask(overrides: Record<string, unknown> = {}) {
     status: "UPCOMING",
     priority: "NORMAL",
     size: "M",
-    dueDate: null,
+    scheduledDate: null,
     outcome: null,
     lensId: "lens-1",
     project: { id: "p1", permalink: "newsletter", name: "Newsletter" },

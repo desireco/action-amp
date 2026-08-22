@@ -374,7 +374,7 @@ describe("getWeekTasks", () => {
     );
   });
 
-  it("pools Today commits (any dueDate) and tasks dated before the week ends, across accessible lenses", async () => {
+  it("pools Today commits (any scheduledDate) and tasks dated before the week ends, across accessible lenses", async () => {
     const m = guarded();
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-personal", name: "Me", color: "emerald", isIncluded: true },
@@ -392,17 +392,17 @@ describe("getWeekTasks", () => {
       isDone: false,
     });
     // Coherence contract (fixed 2026-08-17): a TODAY commit is due today —
-    // inside this week — even when its dueDate is null (the triage/move
+    // inside this week — even when its scheduledDate is null (the triage/move
     // paths null Today dates), so it must not fall out of the week pool.
     // The bare `lt` (no gte) also admits overdue rows — the page buckets
     // them under Today instead of hiding them.
     expect(call.where.OR).toEqual([
       { status: "TODAY" },
-      { dueDate: { lt: expect.any(Date) } },
+      { scheduledDate: { lt: expect.any(Date) } },
     ]);
-    expect(call.where.OR[1].dueDate.lt).toBeInstanceOf(Date);
-    expect(call.where.OR[1].dueDate.lt.getDay()).toBe(1); // Monday: week end + 1
-    const weekStart = new Date(call.where.OR[1].dueDate.lt);
+    expect(call.where.OR[1].scheduledDate.lt).toBeInstanceOf(Date);
+    expect(call.where.OR[1].scheduledDate.lt.getDay()).toBe(1); // Monday: week end + 1
+    const weekStart = new Date(call.where.OR[1].scheduledDate.lt);
     weekStart.setDate(weekStart.getDate() - 7);
     expect(weekStart.getDay()).toBe(1); // gte-equivalent also a Monday
     expect(call.include).toMatchObject({
@@ -586,7 +586,7 @@ describe("updateTaskStatus", () => {
     ["TODAY", "TODAY"],
     ["UPCOMING", "UPCOMING"],
     ["SOMEDAY", "SOMEDAY"],
-  ] as const)("sets status to %s without a dueDate", async (_label, status) => {
+  ] as const)("sets status to %s without a scheduledDate", async (_label, status) => {
     const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, status });
@@ -595,28 +595,32 @@ describe("updateTaskStatus", () => {
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
-      data: { status, dueDate: undefined },
+      data: {
+        status,
+        scheduledDate: status === "SOMEDAY" ? null : undefined,
+        snoozedUntil: status === "TODAY" || status === "SOMEDAY" ? null : undefined,
+      },
     });
   });
 
-  it("passes through a provided dueDate", async () => {
+  it("passes through a provided scheduledDate", async () => {
     const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     const due = new Date("2026-06-25T09:00:00Z");
-    m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, dueDate: due });
+    m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, scheduledDate: due });
 
     await updateTaskStatus(
-      { id: "task-1", status: "UPCOMING", dueDate: due },
+      { id: "task-1", status: "UPCOMING", scheduledDate: due },
       m.context,
     );
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
-      data: { status: "UPCOMING", dueDate: due },
+      data: { status: "UPCOMING", scheduledDate: due, snoozedUntil: undefined },
     });
   });
 
-  it("clears a stale future dueDate when moving INTO Today (invisible-on-Next guard)", async () => {
+  it("clears a stale future scheduledDate when moving INTO Today (invisible-on-Next guard)", async () => {
     // A snoozed/upcoming task moved to Today must not keep its future date —
     // the Next pool's due-guard would hide it from What Now until the stale
     // date arrives while it sits in Today.
@@ -624,7 +628,7 @@ describe("updateTaskStatus", () => {
     const stale = new Date(Date.now() + 24 * 60 * 60 * 1000);
     m.entities.Task.findUnique.mockResolvedValue({
       userId: "user-1",
-      dueDate: stale,
+      scheduledDate: stale,
     });
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, status: "TODAY" });
 
@@ -632,16 +636,16 @@ describe("updateTaskStatus", () => {
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
-      data: { status: "TODAY", dueDate: null },
+      data: { status: "TODAY", scheduledDate: null, snoozedUntil: null },
     });
   });
 
-  it("keeps a past dueDate when moving into Today (overdue is truthful)", async () => {
+  it("keeps a past scheduledDate when moving into Today (overdue is truthful)", async () => {
     const m = guarded();
     const past = new Date(Date.now() - 24 * 60 * 60 * 1000);
     m.entities.Task.findUnique.mockResolvedValue({
       userId: "user-1",
-      dueDate: past,
+      scheduledDate: past,
     });
     m.entities.Task.update.mockResolvedValue({ ...BASE_TASK, status: "TODAY" });
 
@@ -649,7 +653,7 @@ describe("updateTaskStatus", () => {
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
-      data: { status: "TODAY", dueDate: undefined },
+      data: { status: "TODAY", scheduledDate: undefined, snoozedUntil: null },
     });
   });
 });
@@ -704,7 +708,10 @@ describe("getTopTask", () => {
         lensId: "lens-1",
         status: { in: ["TODAY", "UPCOMING"] },
         isDone: false,
-        OR: [{ dueDate: null }, { dueDate: { lte: expect.any(Date) } }],
+        AND: [
+          { OR: [{ scheduledDate: null }, { scheduledDate: { lte: expect.any(Date) } }] },
+          { OR: [{ snoozedUntil: null }, { snoozedUntil: { lte: expect.any(Date) } }] },
+        ],
       },
       include: {
         project: { select: { id: true, name: true } },
@@ -724,7 +731,16 @@ describe("getTopTask", () => {
 
     const expected = activePoolWhere({ userId: "user-1", lensId: "lens-1" });
     const call = m.entities.Task.findMany.mock.calls[0][0];
-    expect(call.where).toMatchObject(expected);
+    expect(call.where).toMatchObject({
+      userId: expected.userId,
+      lensId: expected.lensId,
+      status: expected.status,
+      isDone: expected.isDone,
+      AND: [
+        { OR: [{ scheduledDate: null }, { scheduledDate: { lte: expect.any(Date) } }] },
+        { OR: [{ snoozedUntil: null }, { snoozedUntil: { lte: expect.any(Date) } }] },
+      ],
+    });
   });
 
   it("hydrates the ranked winner through the owned hydration core", async () => {
@@ -867,45 +883,20 @@ describe("getTaskAlternatives", () => {
     expect(result.map((t: { id: string }) => t.id)).toEqual(["alt-1", "alt-2"]);
     // Same single-source predicate as getTopTask — alternatives and the
     // recommendation must never disagree about what's on the table.
-    // (A 1ms Date.now() tick between the core's predicate and this one made
-    // exact equality intermittently fail — compare the ticking date within a
-    // 1s window, everything else exactly.)
+    // Date values can tick between calls, so compare the predicate structure
+    // after replacing boundary values with stable markers.
     const expected = activePoolWhere({ userId: "user-1", lensId: "lens-1" });
     const call = m.entities.Task.findMany.mock.calls[0][0];
-    // activePoolWhere emits OR: [{dueDate: null}, {dueDate: {lte: now}}] —
-    // compare the ticking `lte` within a 1s window, the rest exactly.
-    const lteOf = (where: {
-      OR: Array<{ dueDate?: { lte?: Date } | null }>;
-    }) =>
-      where.OR[1]?.dueDate && !(where.OR[1].dueDate instanceof Date)
-        ? where.OR[1].dueDate.lte
-        : undefined;
-    type WhereView = Parameters<typeof lteOf>[0] &
-      Parameters<typeof stripTicking>[0];
-    // SAFETY: expected carries the OR-array shape lteOf/stripTicking walk.
-    const expectedView = expected as WhereView;
-    // SAFETY: same shape, recorded side.
-    const actualView = call.where as WhereView;
-    const expectedLte = lteOf(expectedView);
-    const actualLte = lteOf(actualView);
-    expect(actualLte).toBeInstanceOf(Date);
-    if (expectedLte && actualLte) {
-      expect(
-        Math.abs(actualLte.getTime() - expectedLte.getTime()),
-      ).toBeLessThan(1000);
-    }
-    const stripTicking = (
-      where: Parameters<typeof lteOf>[0] & { OR: unknown[] },
-    ) => {
-      const rest = {
-        ...where,
-        OR: where.OR.map((branch, i) =>
-          i === 1 ? { ...branch, dueDate: "ticking" } : branch,
-        ),
-      };
-      return rest;
-    };
-    expect(stripTicking(actualView)).toEqual(stripTicking(expectedView));
+    expect(call.where).toMatchObject({
+      userId: expected.userId,
+      lensId: expected.lensId,
+      status: expected.status,
+      isDone: expected.isDone,
+      AND: [
+        { OR: [{ scheduledDate: null }, { scheduledDate: { lte: expect.any(Date) } }] },
+        { OR: [{ snoozedUntil: null }, { snoozedUntil: { lte: expect.any(Date) } }] },
+      ],
+    });
   });
 
   it("treats a missing excludeIds as no exclusion (recommendation on stage)", async () => {
@@ -946,13 +937,13 @@ describe("unscheduleOverdueTasks", () => {
         lensId: "lens-1",
         status: "UPCOMING",
         isDone: false,
-        dueDate: { lt: expect.any(Date) },
+        scheduledDate: { lt: expect.any(Date) },
       },
-      data: { dueDate: null },
+      data: { scheduledDate: null },
     });
     const call = m.entities.Task.updateMany.mock.calls[0][0];
-    expect(call.where.dueDate.lt).toEqual(
-      new Date(new Date().setHours(0, 0, 0, 0)),
+    expect(call.where.scheduledDate.lt).toEqual(
+      new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`),
     );
   });
 });
@@ -983,41 +974,47 @@ describe("snoozeTask", () => {
     ["tomorrow", "UPCOMING"],
     ["weekend", "UPCOMING"],
   ] as const)(
-    "preset %s sets status %s with a future dueDate",
+    "preset %s sets status %s with a future snoozedUntil",
     async (preset, status) => {
       const m = guarded();
       m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
       m.entities.Task.update.mockResolvedValue({
         id: "task-1",
         status,
-        dueDate: new Date(),
+        snoozedUntil: new Date(),
       });
 
       await snoozeTask({ id: "task-1", preset }, m.context);
 
       expect(m.entities.Task.update).toHaveBeenCalledWith({
         where: { id: "task-1" },
-        data: { status, dueDate: expect.any(Date), startedAt: null },
-        select: { id: true, status: true, dueDate: true },
+        data: { status, snoozedUntil: expect.any(Date), startedAt: null },
+        select: { id: true, status: true, scheduledDate: true, snoozedUntil: true },
       });
     },
   );
 
-  it("preset someday sets status SOMEDAY and clears dueDate", async () => {
+  it("preset someday sets status SOMEDAY and clears schedule and snooze", async () => {
     const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     m.entities.Task.update.mockResolvedValue({
       id: "task-1",
       status: "SOMEDAY",
-      dueDate: null,
+      scheduledDate: null,
+      snoozedUntil: null,
     });
 
     await snoozeTask({ id: "task-1", preset: "someday" }, m.context);
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
-      data: { status: "SOMEDAY", dueDate: null, startedAt: null },
-      select: { id: true, status: true, dueDate: true },
+      data: {
+        status: "SOMEDAY",
+        scheduledDate: null,
+        snoozedUntil: null,
+        startedAt: null,
+      },
+      select: { id: true, status: true, scheduledDate: true, snoozedUntil: true },
     });
   });
 });
@@ -1433,7 +1430,8 @@ describe("updateTaskDetails", () => {
         priority: true,
         size: true,
         status: true,
-        dueDate: true,
+        scheduledDate: true,
+        snoozedUntil: true,
         projectId: true,
         goalId: true,
       },
@@ -1476,12 +1474,12 @@ describe("updateTaskDetails", () => {
     );
   });
 
-  it("writes dueDate alone (null clears it)", async () => {
+  it("writes scheduledDate alone (null clears it)", async () => {
     const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
-    await updateTaskDetails({ taskId: "task-1", dueDate: null }, m.context);
+    await updateTaskDetails({ taskId: "task-1", scheduledDate: null }, m.context);
     expect(m.entities.Task.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { dueDate: null } }),
+      expect.objectContaining({ data: { scheduledDate: null } }),
     );
   });
 

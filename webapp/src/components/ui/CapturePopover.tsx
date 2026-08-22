@@ -3,6 +3,13 @@ import { BrandMark } from "./BrandMark";
 import { Chip } from "./Chip";
 import { CloseButton } from "./CloseButton";
 import { parseCapture, type ParsedCapture } from "../../inbox/parseCapture";
+import {
+  calendarDayDifference,
+  currentPlainDate,
+  instantFrom,
+  plainDateFromValue,
+  systemTimeZone,
+} from "../../shared/time/temporal";
 import { detectMention, type MentionState } from "./detectMention";
 import { getCaretCoordinates } from "./caretCoords";
 import {
@@ -479,7 +486,8 @@ export function CapturePopover({
         )}
 
         {parsed &&
-          (parsed.parsedDate ||
+          (parsed.parsedScheduledDate ||
+            parsed.parsedSnoozedUntil ||
             parsed.parsedPriority ||
             parsed.parsedSize ||
             parsed.parsedLens ||
@@ -556,9 +564,14 @@ export function ParsedCaptureChips({
           [[{parsed.parsedLens}]]
         </Chip>
       )}
-      {parsed.parsedDate && (
+      {parsed.parsedScheduledDate && (
         <Chip variant="teal" small>
-          {verbose ? `📅 ${formatPreviewDate(parsed.parsedDate)}` : formatPreviewDate(parsed.parsedDate)}
+          {verbose ? `📅 ${formatPreviewDate(parsed.parsedScheduledDate)}` : formatPreviewDate(parsed.parsedScheduledDate)}
+        </Chip>
+      )}
+      {parsed.parsedSnoozedUntil && (
+        <Chip variant="teal" small>
+          {formatPreviewSnooze(parsed.parsedSnoozedUntil)}
         </Chip>
       )}
       {parsed.parsedProject && (
@@ -591,15 +604,23 @@ export function ParsedCaptureChips({
 }
 
 function formatPreviewDate(date: Date): string {
-  const d = new Date(date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(d);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.round(
-    (target.getTime() - today.getTime()) / 86_400_000,
-  );
+  const target = plainDateFromValue(date);
+  const diffDays = calendarDayDifference(currentPlainDate(), target);
   if (diffDays === 0) return "today";
   if (diffDays === 1) return "tomorrow";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return target.toLocaleString(undefined, { month: "short", day: "numeric" });
+}
+
+function formatPreviewSnooze(date: Date): string {
+  const value = instantFrom(date).toZonedDateTimeISO(systemTimeZone());
+  const day = value.toPlainDate().equals(currentPlainDate())
+    ? "today"
+    : value.toPlainDate().toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+      });
+  return `snoozed until ${day} ${value.toPlainTime().toLocaleString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  })}`;
 }

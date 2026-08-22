@@ -27,7 +27,7 @@ const BASE_ITEM = {
   text: "Email Sarah",
   parsedPriority: "IMPORTANT" as string | null,
   parsedSize: "S" as string | null,
-  parsedDate: null as Date | null,
+  parsedScheduledDate: null as Date | null,
   parsedTags: [] as string[],
   parsedProject: null as string | null,
   content: null as string | null,

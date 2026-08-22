@@ -14,7 +14,7 @@ interface InboxItem {
   title?: string | null;
   content?: string | null;
   createdAt: Date;
-  parsedDate: Date | null;
+  parsedScheduledDate: Date | null;
   parsedProject: string | null;
   parsedPriority: string | null;
   parsedSize: string | null;
@@ -34,7 +34,7 @@ function item(id: string, text: string): InboxItem {
     id,
     text,
     createdAt: new Date(),
-    parsedDate: null,
+    parsedScheduledDate: null,
     parsedProject: null,
     parsedPriority: null,
     parsedSize: null,

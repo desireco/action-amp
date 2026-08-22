@@ -117,6 +117,7 @@ import {
   saveTodayCap,
   saveFocusSessionMinutes,
   saveReviewPreferences,
+  initializeTimeZone,
 } from "./src/app/operations" with { type: "ref" };
 import {
   getNotificationPreferences,
@@ -532,6 +533,7 @@ export default app({
     action(saveTodayCap, { entities: ["User"], auth: true }),
     action(saveFocusSessionMinutes, { entities: ["User"], auth: true }),
     action(saveReviewPreferences, { entities: ["User"], auth: true }),
+    action(initializeTimeZone, { entities: ["User"], auth: true }),
     query(getNotificationPreferences, { entities: ["User"], auth: true }),
     action(savePushSubscription, {
       entities: ["PushSubscription"],

@@ -73,7 +73,7 @@ task show    → { task: {...} | null }
 task done    → { task: {...} }           # the updated task
 task start   → { id, startedAt }
 task pause   → { id, startedAt: null }
-task snooze  → { id, status, dueDate }
+task snooze  → { id, status, snoozedUntil }
 task move    → { task: {...} }
 inbox list   → { items: [...] }
 resource list → { projectId, resources: [...] }
@@ -97,7 +97,7 @@ Errors: \`{ error: "<message>" }\` to stdout, exit code 1.
 id, description, permalink, content (context notes), outcome (completion note),
 isDone, createdAt, completedAt, startedAt (non-null = in progress / "Now"),
 priority (LOW | NORMAL | IMPORTANT), size (S | M | L | XL),
-status (SOMEDAY | UPCOMING | TODAY), dueDate,
+status (SOMEDAY | UPCOMING | TODAY), scheduledDate, snoozedUntil,
 projectId, goalId, lensId,
 project { id, name }, goal { id, name }
 \`\`\`

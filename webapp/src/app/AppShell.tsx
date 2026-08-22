@@ -8,6 +8,7 @@ import {
   createInboxItem,
   submitFeedback,
   getProjectsForResolver,
+  initializeTimeZone,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
 import { LensContext } from "./lensContext";
@@ -25,6 +26,7 @@ import {
 import { isPaletteBlocked } from "../search/paletteAvailability";
 import { applyTheme, preferredTheme, toggleTheme } from "./theme";
 import { fileToImageAttachmentInput } from "../shared/imageFiles";
+import { systemTimeZone } from "../shared/time/temporal";
 import {
   registerServiceWorker,
   useServiceWorkerUpdate,
@@ -133,12 +135,25 @@ export function AppShell({ children }: { children: ReactNode }) {
   // we fire once per user session; the count===0 guard inside handles across
   // logins. Production (no StrictMode) is unaffected.
   const onboardedFor = useRef<string | null>(null);
+  const timeZoneInitializedFor = useRef<string | null>(null);
   useEffect(() => {
     if (user && onboardedFor.current !== user.id) {
       onboardedFor.current = user.id;
       ensureOnboarded();
     }
   }, [user, ensureOnboarded]);
+
+  useEffect(() => {
+    if (!user || timeZoneInitializedFor.current === user.id) return;
+    timeZoneInitializedFor.current = user.id;
+    void initializeTimeZone({ timeZone: systemTimeZone() })
+      .then(() => {
+        void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+      })
+      .catch(() => {
+        timeZoneInitializedFor.current = null;
+      });
+  }, [user, queryClient]);
 
   // Shell data: lenses (sidebar switch + query scoping) + nav counts. The query
   // takes the active lens ID directly (id-keyed, like the rest of the state) —
@@ -927,6 +942,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             await createInboxItem({
               text: text || files?.[0]?.name || "Image",
               attachments,
+              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             });
             // Invalidate the inbox list + the sidebar counts so both refresh.
             // Without this, React Query serves the stale pre-capture cache

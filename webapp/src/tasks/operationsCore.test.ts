@@ -74,45 +74,46 @@ function candidate(overrides: Partial<typeof BASE_TASK> = {}) {
 // snoozeTarget — pure, deterministic (no Date.now(), no DB)
 // ----------------------------------------------------------------
 describe("snoozeTarget", () => {
-  it("1h → UPCOMING with dueDate = now + 1h", () => {
-    const { status, dueDate } = snoozeTarget("1h", NOW);
+  it("1h → UPCOMING with snoozedUntil = now + 1h", () => {
+    const { status, snoozedUntil } = snoozeTarget("1h", NOW);
     expect(status).toBe("UPCOMING");
-    expect(dueDate).toBeInstanceOf(Date);
-    expect(dueDate!.getTime()).toBe(NOW.getTime() + 3600_000);
+    expect(snoozedUntil).toBeInstanceOf(Date);
+    expect(snoozedUntil!.getTime()).toBe(NOW.getTime() + 3600_000);
   });
 
-  it("3h → UPCOMING with dueDate = now + 3h", () => {
-    const { status, dueDate } = snoozeTarget("3h", NOW);
+  it("3h → UPCOMING with snoozedUntil = now + 3h", () => {
+    const { status, snoozedUntil } = snoozeTarget("3h", NOW);
     expect(status).toBe("UPCOMING");
-    expect(dueDate!.getTime()).toBe(NOW.getTime() + 3 * 3600_000);
+    expect(snoozedUntil!.getTime()).toBe(NOW.getTime() + 3 * 3600_000);
   });
 
-  it("tomorrow → UPCOMING, dueDate is the next day at 09:00 local", () => {
-    const { status, dueDate } = snoozeTarget("tomorrow", NOW);
+  it("tomorrow → UPCOMING, snoozedUntil is 09:00 in the user zone", () => {
+    const { status, snoozedUntil } = snoozeTarget(
+      "tomorrow",
+      NOW,
+      "Europe/Belgrade",
+    );
     expect(status).toBe("UPCOMING");
-    expect(dueDate).toBeInstanceOf(Date);
-    expect(dueDate!.getDate()).toBe(NOW.getDate() + 1);
-    expect(dueDate!.getHours()).toBe(9);
+    expect(snoozedUntil!.toISOString()).toBe("2026-06-21T07:00:00.000Z");
   });
 
-  it("weekend → UPCOMING, dueDate lands on a Saturday at 09:00 local", () => {
-    const { status, dueDate } = snoozeTarget("weekend", NOW);
+  it("weekend → UPCOMING, snoozedUntil lands on the next Saturday at 09:00 local", () => {
+    const { status, snoozedUntil } = snoozeTarget(
+      "weekend",
+      NOW,
+      "Europe/Belgrade",
+    );
     expect(status).toBe("UPCOMING");
-    expect(dueDate).toBeInstanceOf(Date);
-    // getDay() === 6 is Saturday.
-    expect(dueDate!.getDay()).toBe(6);
-    expect(dueDate!.getHours()).toBe(9);
-    // Always strictly in the future — "today is Saturday" still defers a week.
-    expect(dueDate!.getTime()).toBeGreaterThan(NOW.getTime());
+    expect(snoozedUntil!.toISOString()).toBe("2026-06-27T07:00:00.000Z");
   });
 
-  it("someday → SOMEDAY with dueDate cleared to null", () => {
-    const { status, dueDate } = snoozeTarget("someday", NOW);
+  it("someday → SOMEDAY with snoozedUntil cleared to null", () => {
+    const { status, snoozedUntil } = snoozeTarget("someday", NOW);
     expect(status).toBe("SOMEDAY");
-    expect(dueDate).toBeNull();
+    expect(snoozedUntil).toBeNull();
   });
 
-  it("is deterministic — same inputs always yield the same dueDate", () => {
+  it("is deterministic — same inputs always yield the same instant", () => {
     expect(snoozeTarget("1h", NOW)).toEqual(snoozeTarget("1h", NOW));
   });
 });
@@ -682,7 +683,7 @@ describe("getWeekTasksData", () => {
     expect(m.entities.Task.findMany).not.toHaveBeenCalled();
   });
 
-  it("pools TODAY commits regardless of dueDate, plus anything dated before the week ends (undated UPCOMING stays out)", async () => {
+  it("pools TODAY commits regardless of schedule, plus anything scheduled before the week ends", async () => {
     const m = mockContext();
     m.entities.Lens.findMany.mockResolvedValue([
       { id: "lens-1", name: "Work", color: null, isIncluded: true },
@@ -694,7 +695,7 @@ describe("getWeekTasksData", () => {
     await getWeekTasksData(asWeekPool(m), { user: null, userId: "user-1", now });
 
     // The OR arm is the coherence contract: a task committed to Today (whose
-    // dueDate the triage/move paths null) must count and render in the week
+    // scheduledDate the triage/move paths null) must count and render in the week
     // view — otherwise Today reads 1 while This week reads 0 for the same
     // task. The bare `lt nextWeekStart` also admits overdue rows.
     expect(m.entities.Task.findMany).toHaveBeenCalledWith(
@@ -704,7 +705,10 @@ describe("getWeekTasksData", () => {
           lensId: { in: ["lens-1"] },
           status: { in: ["TODAY", "UPCOMING"] },
           isDone: false,
-          OR: [{ status: "TODAY" }, { dueDate: { lt: new Date(2026, 7, 17) } }],
+          OR: [
+            { status: "TODAY" },
+            { scheduledDate: { lt: new Date("2026-08-17T00:00:00.000Z") } },
+          ],
         }),
       }),
     );

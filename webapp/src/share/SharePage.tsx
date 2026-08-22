@@ -99,6 +99,7 @@ export function SharePage() {
         sourceUrl: capture.url || undefined,
         projectId: destinationType === "project" ? destinationId : undefined,
         attachments: attachments.length ? attachments : undefined,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
       await clearPendingShare(pending.id);
       void queryClient.invalidateQueries({ queryKey: ["getInboxItems"] });

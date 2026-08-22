@@ -9,6 +9,8 @@ import { parseCapture } from "./parseCapture";
 describe("parseCapture", () => {
   // Fixed "now" so relative date tests are deterministic: Wed 2026-06-24 10:00
   const NOW = new Date(2026, 5, 24, 10, 0, 0); // June = month index 5
+  const scheduled = (value: string) =>
+    new Date(`${value}T00:00:00.000Z`);
 
   describe("project (#)", () => {
     it.each([
@@ -77,26 +79,27 @@ describe("parseCapture", () => {
 
     it("@today sets the date (not a tag)", () => {
       const r = parseCapture("work on capture @today", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-24"));
       expect(r.parsedTags).not.toContain("@today");
       expect(r.cleanText).toBe("work on capture");
     });
 
     it("@tomorrow / @tmrw / @tmr set the date", () => {
-      expect(parseCapture("ship @tomorrow", NOW).parsedDate).toEqual(
-        new Date(2026, 5, 25, 9, 0, 0),
+      expect(parseCapture("ship @tomorrow", NOW).parsedScheduledDate).toEqual(
+        scheduled("2026-06-25"),
       );
-      expect(parseCapture("ship @tmrw", NOW).parsedDate).toEqual(
-        new Date(2026, 5, 25, 9, 0, 0),
+      expect(parseCapture("ship @tmrw", NOW).parsedScheduledDate).toEqual(
+        scheduled("2026-06-25"),
       );
-      expect(parseCapture("ship @tmr", NOW).parsedDate).toEqual(
-        new Date(2026, 5, 25, 9, 0, 0),
+      expect(parseCapture("ship @tmr", NOW).parsedScheduledDate).toEqual(
+        scheduled("2026-06-25"),
       );
     });
 
     it("@tonight sets today at 8pm", () => {
       const r = parseCapture("call @tonight", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 20, 0, 0));
+      expect(r.parsedScheduledDate).toBeNull();
+      expect(r.parsedSnoozedUntil).toEqual(new Date(2026, 5, 24, 20, 0, 0));
     });
   });
 
@@ -199,33 +202,34 @@ describe("parseCapture", () => {
   describe("dates — relative words", () => {
     it("'today' → today at 9am", () => {
       const r = parseCapture("do it today", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-24"));
       expect(r.cleanText).toBe("do it");
     });
 
     it("'tomorrow' → next day at 9am", () => {
       const r = parseCapture("do it tomorrow", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 25, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-25"));
     });
 
     it("'tmrw' and 'tmr' also work", () => {
-      expect(parseCapture("x tmrw", NOW).parsedDate).toEqual(new Date(2026, 5, 25, 9, 0, 0));
-      expect(parseCapture("x tmr", NOW).parsedDate).toEqual(new Date(2026, 5, 25, 9, 0, 0));
+      expect(parseCapture("x tmrw", NOW).parsedScheduledDate).toEqual(scheduled("2026-06-25"));
+      expect(parseCapture("x tmr", NOW).parsedScheduledDate).toEqual(scheduled("2026-06-25"));
     });
 
     it("'tonight' → today at 8pm", () => {
       const r = parseCapture("call tonight", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 24, 20, 0, 0));
+      expect(r.parsedScheduledDate).toBeNull();
+      expect(r.parsedSnoozedUntil).toEqual(new Date(2026, 5, 24, 20, 0, 0));
     });
 
     it("'next week' → +7 days at 9am", () => {
       const r = parseCapture("review next week", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 6, 1, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-07-01"));
     });
 
     it("'next month' → +1 month at 9am", () => {
       const r = parseCapture("launch next month", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 6, 24, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-07-24"));
     });
   });
 
@@ -233,47 +237,47 @@ describe("parseCapture", () => {
     // NOW is Wednesday 2026-06-24.
     it("'monday' → next Monday (6 days)", () => {
       const r = parseCapture("meet monday", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 29, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-29"));
     });
 
     it("'fri' → next Friday (2 days)", () => {
       const r = parseCapture("ship fri", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 26, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-26"));
     });
 
     it("'wed' from a Wednesday → next week (7 days, not today)", () => {
       const r = parseCapture("call wed", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 6, 1, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-07-01"));
     });
   });
 
   describe("dates — month names", () => {
     it("'jun 30' → that date this year", () => {
       const r = parseCapture("deadline jun 30", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 30, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-30"));
     });
 
     it("'june 30' long form works", () => {
       const r = parseCapture("deadline june 30", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 30, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-30"));
     });
 
     it("past month/day rolls to next year", () => {
       // 'jan 5' is before Jun 24 → 2027
       const r = parseCapture("reset jan 5", NOW);
-      expect(r.parsedDate).toEqual(new Date(2027, 0, 5, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2027-01-05"));
     });
   });
 
   describe("dates — numeric M/D", () => {
     it("'6/30' → month/day this year", () => {
       const r = parseCapture("due 6/30", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 30, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-30"));
     });
 
     it("'12/25' rolls correctly (future this year)", () => {
       const r = parseCapture("xmas 12/25", NOW);
-      expect(r.parsedDate).toEqual(new Date(2026, 11, 25, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-12-25"));
     });
   });
 
@@ -284,7 +288,7 @@ describe("parseCapture", () => {
         NOW,
       );
       expect(r.cleanText).toBe("Email Sarah re: invoice");
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 25, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-25"));
       expect(r.parsedPriority).toBe("IMPORTANT");
       expect(r.parsedSize).toBe("M"); // 20m → M
       expect(r.parsedProject).toBe("mvp"); // first #token → project
@@ -295,7 +299,7 @@ describe("parseCapture", () => {
       const r = parseCapture("[[work]] ship the launch deck tomorrow !2", NOW);
       expect(r.parsedLens).toBe("work");
       expect(r.cleanText).toBe("ship the launch deck");
-      expect(r.parsedDate).toEqual(new Date(2026, 5, 25, 9, 0, 0));
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-25"));
       expect(r.parsedPriority).toBe("NORMAL");
     });
 
@@ -320,7 +324,7 @@ describe("parseCapture", () => {
     it("plain text returns as-is with no tokens", () => {
       const r = parseCapture("just a thought", NOW);
       expect(r.cleanText).toBe("just a thought");
-      expect(r.parsedDate).toBeNull();
+      expect(r.parsedScheduledDate).toBeNull();
       expect(r.parsedPriority).toBeNull();
       expect(r.parsedSize).toBeNull();
       expect(r.parsedTags).toEqual([]);

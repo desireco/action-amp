@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { composeWhy, type FocusWhyInput } from "./focusWhy";
+import { currentPlainDate } from "../shared/time/temporal";
 
 /**
  * The transparent "why" line — every spec branch, plus the load-bearing
@@ -11,19 +12,14 @@ import { composeWhy, type FocusWhyInput } from "./focusWhy";
  * offset helpers.
  */
 
-const TODAY = new Date();
-TODAY.setHours(0, 0, 0, 0);
-const daysFromNow = (n: number): string => {
-  const d = new Date(TODAY);
-  d.setDate(d.getDate() + n);
-  return d.toISOString();
-};
+const daysFromNow = (n: number): string =>
+  currentPlainDate().add({ days: n }).toString();
 
 const task = (over: Partial<FocusWhyInput>): FocusWhyInput => ({
   priority: "NORMAL",
   size: "M",
   startedAt: null,
-  dueDate: null,
+  scheduledDate: null,
   ...over,
 });
 
@@ -32,7 +28,7 @@ const joined = (w: { lead: string; detail: string }): string =>
 
 describe("composeWhy — in-progress (the terminal signal)", () => {
   it("says 'You're already doing this.' and nothing else, regardless of other fields", () => {
-    const w = composeWhy(task({ startedAt: new Date(), priority: "IMPORTANT", dueDate: daysFromNow(-3) }));
+    const w = composeWhy(task({ startedAt: new Date(), priority: "IMPORTANT", scheduledDate: daysFromNow(-3) }));
     expect(w.lead).toBe("You're already doing this.");
     expect(w.detail).toBe("");
     expect(joined(w)).toBe("You're already doing this.");
@@ -41,13 +37,13 @@ describe("composeWhy — in-progress (the terminal signal)", () => {
 
 describe("composeWhy — Important", () => {
   it("leads with 'Important' and appends overdue", () => {
-    const w = composeWhy(task({ priority: "IMPORTANT", dueDate: daysFromNow(-1) }));
+    const w = composeWhy(task({ priority: "IMPORTANT", scheduledDate: daysFromNow(-1) }));
     expect(w.lead).toBe("Important");
     expect(joined(w).toLowerCase()).toContain("overdue");
   });
 
   it("leads with 'Important' and appends due today", () => {
-    const w = composeWhy(task({ priority: "IMPORTANT", dueDate: daysFromNow(0) }));
+    const w = composeWhy(task({ priority: "IMPORTANT", scheduledDate: daysFromNow(0) }));
     expect(joined(w).toLowerCase()).toContain("due today");
   });
 
@@ -83,36 +79,36 @@ describe("composeWhy — Normal priority (no lead; detail is the reason)", () =>
   });
 
   it("Normal task due tomorrow → 'Due tomorrow' (size L isolates the due clause)", () => {
-    const w = composeWhy(task({ priority: "NORMAL", size: "L", dueDate: daysFromNow(1) }));
+    const w = composeWhy(task({ priority: "NORMAL", size: "L", scheduledDate: daysFromNow(1) }));
     expect(joined(w)).toBe("Due tomorrow");
   });
 
   it("Normal overdue task → 'Overdue' (size L isolates the overdue clause)", () => {
-    const w = composeWhy(task({ priority: "NORMAL", size: "L", dueDate: daysFromNow(-2) }));
+    const w = composeWhy(task({ priority: "NORMAL", size: "L", scheduledDate: daysFromNow(-2) }));
     expect(joined(w)).toBe("Overdue");
   });
 });
 
 describe("composeWhy — the load-bearing invariant: never lie", () => {
-  it("NEVER says 'due today' for a task with no dueDate", () => {
+  it("NEVER says 'due today' for a task with no scheduledDate", () => {
     const w = composeWhy(task({ priority: "NORMAL" }));
     expect(joined(w).toLowerCase()).not.toContain("due");
   });
 
   it("NEVER says 'Important' for a Normal task", () => {
-    const w = composeWhy(task({ priority: "NORMAL", dueDate: daysFromNow(0) }));
+    const w = composeWhy(task({ priority: "NORMAL", scheduledDate: daysFromNow(0) }));
     expect(w.lead).toBe("");
     expect(joined(w).toLowerCase()).not.toContain("important");
   });
 
   it("NEVER says 'overdue' for a future-dated task", () => {
-    const w = composeWhy(task({ priority: "IMPORTANT", dueDate: daysFromNow(5) }));
+    const w = composeWhy(task({ priority: "IMPORTANT", scheduledDate: daysFromNow(5) }));
     expect(joined(w).toLowerCase()).not.toContain("overdue");
     expect(joined(w).toLowerCase()).toContain("due");
   });
 
   it("composes a multi-clause truthful line: Quick win — due today, fits in 15 min", () => {
-    const w = composeWhy(task({ priority: "LOW", size: "S", dueDate: daysFromNow(0) }));
+    const w = composeWhy(task({ priority: "LOW", size: "S", scheduledDate: daysFromNow(0) }));
     // lead = "Quick win"; detail carries the due + size clauses.
     expect(w.lead).toBe("Quick win");
     expect(w.detail.toLowerCase()).toContain("due today");

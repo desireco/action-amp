@@ -478,7 +478,7 @@ export function DesignSystemPage() {
                   id: "task-row-list",
                   description: "I want to work on",
                   project: { id: "project", name: "General" },
-                  dueDate: new Date(),
+                  scheduledDate: new Date(),
                   size: "M",
                   status: "TODAY",
                 }}

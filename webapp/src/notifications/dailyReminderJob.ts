@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import type { SendDailyTodayReminder } from "wasp/server/jobs";
+import { instantFrom, systemClock } from "../shared/time/temporal";
 
 type DailyReminderArgs = Record<string, never>;
 
@@ -23,17 +24,11 @@ export function buildReminderBody(names: string[], totalCount: number): string {
 }
 
 function localClock(now: Date, timeZone: string) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(now);
-  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
-  return { date: `${value("year")}-${value("month")}-${value("day")}`, time: `${value("hour")}:${value("minute")}` };
+  const local = instantFrom(now).toZonedDateTimeISO(timeZone);
+  return {
+    date: local.toPlainDate().toString(),
+    time: local.toPlainTime().toString({ smallestUnit: "minute" }),
+  };
 }
 
 export const sendDailyTodayReminder: SendDailyTodayReminder<DailyReminderArgs, { sent: number }> = async (_args, context) => {
@@ -43,7 +38,7 @@ export const sendDailyTodayReminder: SendDailyTodayReminder<DailyReminderArgs, {
   if (!publicKey || !privateKey || !subject) return { sent: 0 };
 
   webpush.setVapidDetails(subject, publicKey, privateKey);
-  const now = new Date();
+  const now = new Date(systemClock.instant().epochMilliseconds);
   const users = await context.entities.User.findMany({
     where: { dailyReminderEnabled: true },
     select: { id: true, dailyReminderTime: true, dailyReminderTimeZone: true, lastDailyReminderAt: true, pushSubscriptions: true },

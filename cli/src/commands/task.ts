@@ -107,7 +107,11 @@ export function makeTaskCommand(): Command {
     .option("--json", "emit JSON output")
     .action(async (id: string, opts: { preset: string; json?: boolean }) => {
       const ctx: OutputCtx = { json: opts.json ?? false };
-      const result = await request<{ id: string; status: string; dueDate: string | null }>(
+      const result = await request<{
+        id: string;
+        status: string;
+        snoozedUntil: string | null;
+      }>(
         "/api/cli/task/snooze",
         { method: "POST", body: { id, preset: opts.preset } },
       );
@@ -117,8 +121,8 @@ export function makeTaskCommand(): Command {
           const when =
             opts.preset === "someday"
               ? "someday"
-              : result.dueDate
-                ? `until ${new Date(result.dueDate).toLocaleString()}`
+              : result.snoozedUntil
+                ? `until ${new Date(result.snoozedUntil).toLocaleString()}`
                 : "until later";
           process.stdout.write(`Snoozed ${when}.\n`);
         },

@@ -26,11 +26,20 @@
 
 export type ParsedPriority = "LOW" | "NORMAL" | "IMPORTANT";
 export type ParsedSize = "S" | "M" | "L" | "XL";
+import {
+  Temporal,
+  instantFrom,
+  instantToDate,
+  instantToPlainDate,
+  plainDateToDb,
+  systemTimeZone,
+} from "../shared/time/temporal";
 
 export interface ParsedCapture {
   /** The text with all parsed tokens removed, trimmed */
   cleanText: string;
-  parsedDate: Date | null;
+  parsedScheduledDate: Date | null;
+  parsedSnoozedUntil: Date | null;
   parsedPriority: ParsedPriority | null;
   parsedSize: ParsedSize | null;
   parsedTags: string[];
@@ -77,46 +86,47 @@ const MONTHS: { re: RegExp; month: number }[] = [
   { re: /december|dec\b/i, month: 11 },
 ];
 
-function startOfDay(d: Date): Date {
-  const x = new Date(d);
-  x.setHours(9, 0, 0, 0); // 9am default — avoids midnight edge cases
-  return x;
+interface ParsedTimeTarget {
+  scheduledDate: Temporal.PlainDate | null;
+  snoozedUntil: Temporal.Instant | null;
 }
 
-/**
- * Resolve a "near day" keyword (today / tomorrow / tonight) to a Date.
- * Returns `null` for unrecognized keywords so callers can fall through.
- * Shared by the `@`-sigil pass and the bare-word pass so the two forms
- * always produce the same Date for the same word.
- */
-function nearDayKeyword(keyword: string, now: Date): Date | null {
+function nearDayKeyword(
+  keyword: string,
+  now: Temporal.Instant,
+  timeZone: string,
+): ParsedTimeTarget | null {
+  const today = instantToPlainDate(now, timeZone);
   switch (keyword.toLowerCase()) {
     case "today":
-      return startOfDay(now);
-    case "tonight": {
-      const d = new Date(now);
-      d.setHours(20, 0, 0, 0);
-      return d;
-    }
+      return { scheduledDate: today, snoozedUntil: null };
+    case "tonight":
+      return {
+        scheduledDate: null,
+        snoozedUntil: today
+          .toZonedDateTime({
+            timeZone,
+            plainTime: Temporal.PlainTime.from("20:00"),
+          })
+          .toInstant(),
+      };
     case "tomorrow":
     case "tmrw":
-    case "tmr": {
-      const d = new Date(now);
-      d.setDate(d.getDate() + 1);
-      return startOfDay(d);
-    }
+    case "tmr":
+      return { scheduledDate: today.add({ days: 1 }), snoozedUntil: null };
     default:
       return null;
   }
 }
 
-function nextWeekday(target: number, from: Date): Date {
-  const d = new Date(from);
-  const cur = d.getDay();
-  let diff = (target - cur + 7) % 7;
+function nextWeekday(
+  target: number,
+  from: Temporal.PlainDate,
+): Temporal.PlainDate {
+  const temporalTarget = target === 0 ? 7 : target;
+  let diff = (temporalTarget - from.dayOfWeek + 7) % 7;
   if (diff === 0) diff = 7; // "next monday" from monday = next week
-  d.setDate(d.getDate() + diff);
-  return startOfDay(d);
+  return from.add({ days: diff });
 }
 
 const PRIORITY_WORDS = {
@@ -161,12 +171,16 @@ export function parseCapture(
   raw: string,
   now: Date = new Date(),
   knownLensNames: string[] = [],
+  timeZone = systemTimeZone(),
 ): ParsedCapture {
   let text = raw;
   const tags: string[] = [];
   let project: string | null = null; // first #token → project name hint (resolved at triage)
   let lens: string | null = null;
-  let date: Date | null = null;
+  const nowInstant = instantFrom(now);
+  const today = instantToPlainDate(nowInstant, timeZone);
+  let scheduledDate: Temporal.PlainDate | null = null;
+  let snoozedUntil: Temporal.Instant | null = null;
   let priority: ParsedPriority | null = null;
   let size: ParsedSize | null = null;
 
@@ -188,10 +202,10 @@ export function parseCapture(
   // `@` is time-only under grammar v2. A user typing @today means
   // today-the-date. Other @words (@phone, @errands) are NOT extracted — they
   // stay literal text. Stripped before the #tag pass so they never fall through.
-  if (!date) {
+  if (!scheduledDate && !snoozedUntil) {
     text = text.replace(/@(tonight|today|tomorrow|tmrw|tmr)\b/gi, (_, kw: string) => {
-      const d = nearDayKeyword(kw, now);
-      if (d) date = d;
+      const target = nearDayKeyword(kw, nowInstant, timeZone);
+      if (target) ({ scheduledDate, snoozedUntil } = target);
       return "";
     });
   }
@@ -250,36 +264,32 @@ export function parseCapture(
   // ---- Dates (order matters: multi-word first) ----
   // next week / next month
   text = text.replace(/\bnext\s+week\b/i, () => {
-    const d = new Date(now);
-    d.setDate(d.getDate() + 7);
-    date = startOfDay(d);
+    scheduledDate = today.add({ weeks: 1 });
     return "";
   });
   text = text.replace(/\bnext\s+month\b/i, () => {
-    const d = new Date(now);
-    d.setMonth(d.getMonth() + 1);
-    date = startOfDay(d);
+    scheduledDate = today.add({ months: 1 });
     return "";
   });
 
   // today / tomorrow / tonight
   text = text.replace(/\b(tonight|today|tomorrow|tmrw|tmr)\b/gi, (_, kw: string) => {
-    const d = nearDayKeyword(kw, now);
-    if (d) date = d;
+    const target = nearDayKeyword(kw, nowInstant, timeZone);
+    if (target) ({ scheduledDate, snoozedUntil } = target);
     return "";
   });
 
   // weekday names → next occurrence
   for (const { re, dow } of WEEKDAYS) {
-    if (re.test(text) && !date) {
-      date = nextWeekday(dow, now);
+    if (re.test(text) && !scheduledDate && !snoozedUntil) {
+      scheduledDate = nextWeekday(dow, today);
       text = text.replace(re, "");
       break;
     }
   }
 
   // "jun 30" / "june 30" → that date (this year, or next if past)
-  if (!date) {
+  if (!scheduledDate && !snoozedUntil) {
     for (const { re, month } of MONTHS) {
       // Wrap the month alternation in a non-capturing group so the day
       // pattern applies to the whole — without it, "june|jun\b\s+30" parses
@@ -290,13 +300,15 @@ export function parseCapture(
       );
       if (m) {
         const day = parseInt(m[1], 10);
-        const year = now.getFullYear();
-        let d = new Date(year, month, day, 9, 0, 0, 0);
-        if (d.getTime() < now.getTime() - 86_400_000) {
-          // already past this year → next year
-          d = new Date(year + 1, month, day, 9, 0, 0, 0);
+        let candidate = Temporal.PlainDate.from({
+          year: today.year,
+          month: month + 1,
+          day,
+        });
+        if (Temporal.PlainDate.compare(candidate, today) < 0) {
+          candidate = candidate.with({ year: today.year + 1 });
         }
-        date = startOfDay(d);
+        scheduledDate = candidate;
         text = text.replace(m[0], "");
         break;
       }
@@ -304,17 +316,20 @@ export function parseCapture(
   }
 
   // "6/30" or "06/30" → M/D date
-  if (!date) {
+  if (!scheduledDate && !snoozedUntil) {
     const m = text.replace(/\b(\d{1,2})\/(\d{1,2})\b/, (_, mm, dd) => {
       const month = parseInt(mm, 10) - 1;
       const day = parseInt(dd, 10);
       if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
-        const year = now.getFullYear();
-        let d = new Date(year, month, day, 9, 0, 0, 0);
-        if (d.getTime() < now.getTime() - 86_400_000) {
-          d = new Date(year + 1, month, day, 9, 0, 0, 0);
+        let candidate = Temporal.PlainDate.from({
+          year: today.year,
+          month: month + 1,
+          day,
+        });
+        if (Temporal.PlainDate.compare(candidate, today) < 0) {
+          candidate = candidate.with({ year: today.year + 1 });
         }
-        date = startOfDay(d);
+        scheduledDate = candidate;
         return "";
       }
       return _;
@@ -327,7 +342,8 @@ export function parseCapture(
 
   return {
     cleanText: text || raw.trim(), // keep original if everything was a token
-    parsedDate: date,
+    parsedScheduledDate: scheduledDate ? plainDateToDb(scheduledDate) : null,
+    parsedSnoozedUntil: snoozedUntil ? instantToDate(snoozedUntil) : null,
     parsedPriority: priority,
     parsedSize: size,
     parsedTags: tags,

@@ -33,6 +33,15 @@ import {
   type LensListLookup,
 } from "../billing/entitlements";
 import { activePoolWhere } from "./activePool";
+import {
+  Temporal,
+  instantFrom,
+  instantToDate,
+  instantToPlainDate,
+  plainDateFromDb,
+  plainDateToDb,
+  systemClock,
+} from "../shared/time/temporal";
 
 /**
  * The entities slice these cores touch, typed with Prisma-generated arg types
@@ -245,7 +254,7 @@ export async function getTaskData(
 // ----------------------------------------------------------------
 // Read: list tasks in a lens, optionally filtered by status
 // ----------------------------------------------------------------
-// Used by Today (status=TODAY, not done), Upcoming (status=UPCOMING or dueDate
+// Used by Today (status=TODAY, not done), Upcoming (status=UPCOMING or scheduledDate
 // in the future), Someday (status=SOMEDAY), Logbook (isDone=true).
 export async function getTasksData(
   entities: TaskListEntities & LensListLookup,
@@ -332,11 +341,13 @@ export async function getWeekTasksData(
   {
     user,
     userId,
-    now = new Date(),
+    now = instantToDate(Temporal.Now.instant()),
+    timeZone = "UTC",
   }: {
     user: Parameters<typeof resolveAccessibleLenses>[1];
     userId: string;
     now?: Date;
+    timeZone?: string;
   },
 ): Promise<TaskLensListResult> {
   const accessible = await resolveAccessibleLenses(
@@ -347,12 +358,9 @@ export async function getWeekTasksData(
   const lensIds = accessible.map((lens) => lens.id);
   if (lensIds.length === 0) return [];
 
-  const weekStart = new Date(now);
-  weekStart.setHours(0, 0, 0, 0);
-  // JavaScript Sunday=0; ActionAmp weeks are Monday–Sunday.
-  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
-  const nextWeekStart = new Date(weekStart);
-  nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+  const today = instantToPlainDate(instantFrom(now), timeZone);
+  const weekStart = today.subtract({ days: today.dayOfWeek - 1 });
+  const nextWeekStart = weekStart.add({ days: 7 });
 
   return await entities.Task.findMany({
     where: {
@@ -362,16 +370,19 @@ export async function getWeekTasksData(
       isDone: false,
       // In the pool: committed-now tasks OR anything dated before the week
       // ends. A Today commit is due TODAY — today is inside this week — even
-      // when it carries no dueDate (the triage/move paths null it), so it must
+      // when it carries no scheduledDate (the triage/move paths null it), so it must
       // count and render in the Today bucket; without the status arm, the
       // Today badge could read 1 while This week read 0 for the same task.
       // The bare `lt nextWeekStart` (not gte weekStart) also admits overdue
       // rows — an open task that slipped past its date is still due, and the
       // page buckets it under Today rather than hiding it.
-      OR: [{ status: "TODAY" }, { dueDate: { lt: nextWeekStart } }],
+      OR: [
+        { status: "TODAY" },
+        { scheduledDate: { lt: plainDateToDb(nextWeekStart) } },
+      ],
     },
     orderBy: [
-      { dueDate: "asc" },
+      { scheduledDate: "asc" },
       { order: "asc" },
       { priority: "desc" },
       { createdAt: "asc" },
@@ -397,7 +408,11 @@ export async function getWeekTasksData(
 // (startOfToday) computation stays in this core so both paths share it.
 export async function getDoneTodayData(
   entities: DoneTodayEntities,
-  { userId, lensIds }: { userId: string; lensIds: string[] },
+  {
+    userId,
+    lensIds,
+    timeZone = "UTC",
+  }: { userId: string; lensIds: string[]; timeZone?: string },
 ): Promise<DoneTodayResult> {
   // Local-midnight boundary: completedAt is stamped server-side on toggle; we
   // compare against the start of "today" in the server's locale. Day-granular
@@ -406,8 +421,9 @@ export async function getDoneTodayData(
   // Completion (completeTaskFromFocus) sets isDone + completedAt but leaves
   // status untouched, so an Upcoming task finished via focus stays
   // status=UPCOMING and is correctly excluded.
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  const startOfToday = instantToDate(
+    Temporal.Now.plainDateISO(timeZone).toZonedDateTime(timeZone).toInstant(),
+  );
 
   // Empty accessible set → empty result (no Prisma `in: []` surprise).
   if (lensIds.length === 0) return [];
@@ -435,15 +451,23 @@ export async function getDoneTodayData(
 // ----------------------------------------------------------------
 // Candidates = the shared actionable pool (tasks/activePool.ts): status TODAY
 // or UPCOMING in the active Lens, not done, due null or ≤ now. The due-guard
-// keeps snooze working: a snoozed task carries a future dueDate, so it stays
+// keeps snooze working: a snoozed task carries a future snoozedUntil, so it stays
 // off Next until its time arrives (then auto-resurfaces). Rank by priority
 // (IMPORTANT > NORMAL > LOW), then size (smaller = quick win), then oldest.
 // Returns the top 1, or null when nothing's on the table.
 export async function getTopTaskData(
   entities: RankedPoolEntities,
-  { userId, lensId }: { userId: string; lensId: string },
+  {
+    userId,
+    lensId,
+    timeZone = "UTC",
+  }: { userId: string; lensId: string; timeZone?: string },
 ): Promise<RankedPoolResult> {
-  const ranked = await fetchRankedActiveTasks(entities, { userId, lensId });
+  const ranked = await fetchRankedActiveTasks(entities, {
+    userId,
+    lensId,
+    timeZone,
+  });
   return ranked[0] ?? null;
 }
 
@@ -462,14 +486,20 @@ export async function getTaskAlternativesData(
     lensId,
     excludeIds,
     limit = TASK_ALTERNATIVES_LIMIT,
+    timeZone = "UTC",
   }: {
     userId: string;
     lensId: string;
     excludeIds?: string[];
     limit?: number;
+    timeZone?: string;
   },
 ): Promise<{ [K in keyof RankedPoolRow]: RankedPoolRow[K] }[]> {
-  const ranked = await fetchRankedActiveTasks(entities, { userId, lensId });
+  const ranked = await fetchRankedActiveTasks(entities, {
+    userId,
+    lensId,
+    timeZone,
+  });
   const skip = new Set(excludeIds ?? []);
   return ranked
     .filter((task: { id: string }) => !skip.has(task.id))
@@ -493,10 +523,14 @@ interface RankedPoolEntities {
 
 async function fetchRankedActiveTasks(
   entities: RankedPoolEntities,
-  { userId, lensId }: { userId: string; lensId: string },
+  {
+    userId,
+    lensId,
+    timeZone,
+  }: { userId: string; lensId: string; timeZone: string },
 ) {
   const candidates = await entities.Task.findMany({
-    where: activePoolWhere({ userId, lensId }),
+    where: activePoolWhere({ userId, lensId, timeZone }),
     include: {
       project: { select: { id: true, name: true } },
       goal: { select: { id: true, name: true } },
@@ -640,7 +674,7 @@ export async function toggleTaskDoneCore(
   const next = !task.isDone;
   const data: Prisma.TaskUpdateInput = {
     isDone: next,
-    completedAt: next ? new Date() : null,
+    completedAt: next ? instantToDate(systemClock.instant()) : null,
     startedAt: null,
   };
   // Outcome is part of the completion act, not the un-completion act. A future
@@ -658,59 +692,68 @@ export async function toggleTaskDoneCore(
 // ----------------------------------------------------------------
 // Snooze — "Not now" flow (FEATURES.md F11)
 // ----------------------------------------------------------------
-// Presets: 1h / 3h / tomorrow / weekend → Task(status=UPCOMING, dueDate=then)
-//          someday                                   → Task(status=SOMEDAY, dueDate=null)
+// Presets resolve to an exact availability instant in the user's time zone.
 // The task leaves the focus queue until the snooze expires (then it's a
 // candidate again via Upcoming/Today rollover).
-const SNOOZE_OFFSETS = {
-  "1h": 3600_000,
-  "3h": 3 * 3600_000,
-} as const satisfies Record<"1h" | "3h", number>;
-
 /**
  * Pure snooze math — given a preset and a `now`, return the resulting
- * `{ status, dueDate }`. No DB, no `Date.now()` — `now` is a parameter so this
+ * `{ status, snoozedUntil }`. `now` is a parameter so this
  * is unit-testable and deterministic. Extracted from `snoozeTaskCore` so the
  * pure decision can be pinned without a mock.
  */
 /** The Task patch a snooze preset resolves to. */
 export interface SnoozeTarget {
   status: "UPCOMING" | "SOMEDAY";
-  dueDate: Date | null;
+  snoozedUntil: Date | null;
 }
 
 export function snoozeTarget(
   preset: "1h" | "3h" | "tomorrow" | "weekend" | "someday",
   now: Date,
+  timeZone = "UTC",
 ): SnoozeTarget {
   let status: "UPCOMING" | "SOMEDAY" = "UPCOMING";
-  let dueDate: Date | null = new Date(now.getTime());
+  const nowInstant = instantFrom(now);
+  let snoozedUntil: Date | null;
   switch (preset) {
     case "1h":
+      snoozedUntil = instantToDate(nowInstant.add({ hours: 1 }));
+      break;
     case "3h":
-      dueDate = new Date(now.getTime() + SNOOZE_OFFSETS[preset]);
+      snoozedUntil = instantToDate(nowInstant.add({ hours: 3 }));
       break;
     case "tomorrow": {
-      const d = new Date(now.getTime());
-      d.setDate(d.getDate() + 1);
-      d.setHours(9, 0, 0, 0);
-      dueDate = d;
+      const date = instantToPlainDate(nowInstant, timeZone).add({ days: 1 });
+      snoozedUntil = instantToDate(
+        date
+          .toZonedDateTime({
+            timeZone,
+            plainTime: Temporal.PlainTime.from("09:00"),
+          })
+          .toInstant(),
+      );
       break;
     }
     case "weekend": {
-      const d = new Date(now.getTime());
-      const dow = d.getDay();
-      d.setDate(d.getDate() + ((6 - dow + 7) % 7 || 7)); // next Saturday
-      d.setHours(9, 0, 0, 0);
-      dueDate = d;
+      const today = instantToPlainDate(nowInstant, timeZone);
+      const days = (6 - today.dayOfWeek + 7) % 7 || 7;
+      snoozedUntil = instantToDate(
+        today
+          .add({ days })
+          .toZonedDateTime({
+            timeZone,
+            plainTime: Temporal.PlainTime.from("09:00"),
+          })
+          .toInstant(),
+      );
       break;
     }
     case "someday":
       status = "SOMEDAY";
-      dueDate = null;
+      snoozedUntil = null;
       break;
   }
-  return { status, dueDate };
+  return { status, snoozedUntil };
 }
 
 export async function snoozeTaskCore(
@@ -719,10 +762,12 @@ export async function snoozeTaskCore(
     userId,
     id,
     preset,
+    timeZone = "UTC",
   }: {
     userId: string;
     id: string;
     preset: "1h" | "3h" | "tomorrow" | "weekend" | "someday";
+    timeZone?: string;
   },
 ) {
   const task = await entities.Task.findUnique({
@@ -733,12 +778,23 @@ export async function snoozeTaskCore(
     throw new Error("Task not found.");
   }
 
-  const { status, dueDate } = snoozeTarget(preset, new Date());
+  const { status, snoozedUntil } = snoozeTarget(
+    preset,
+    instantToDate(Temporal.Now.instant()),
+    timeZone,
+  );
+
+  const data: Prisma.TaskUpdateInput = {
+    status,
+    snoozedUntil,
+    startedAt: null,
+  };
+  if (status === "SOMEDAY") data.scheduledDate = null;
 
   return await entities.Task.update({
     where: { id },
-    data: { status, dueDate, startedAt: null },
-    select: { id: true, status: true, dueDate: true },
+    data,
+    select: { id: true, status: true, scheduledDate: true, snoozedUntil: true },
   });
 }
 
@@ -753,34 +809,45 @@ export async function updateTaskStatusCore(
     userId,
     id,
     status,
-    dueDate,
+    scheduledDate,
+    snoozedUntil,
+    timeZone = "UTC",
   }: {
     userId: string;
     id: string;
     status: "TODAY" | "UPCOMING" | "SOMEDAY" | "WONT_DO";
-    dueDate?: Date | null;
+    scheduledDate?: Date | null;
+    snoozedUntil?: Date | null;
+    timeZone?: string;
   },
 ) {
   const task = await entities.Task.findUnique({
     where: { id },
-    select: { userId: true, dueDate: true },
+    select: { userId: true, scheduledDate: true, snoozedUntil: true },
   });
   if (!task || task.userId !== userId) {
     throw new Error("Task not found.");
   }
-  // Moving INTO Today must never leave a future dueDate behind: the Next
-  // pool's due-guard treats any future date as "snoozed until its time", so a
-  // snoozed/upcoming task moved to Today would sit in Today but stay
-  // invisible on What Now until the stale date arrives. The move is the
-  // user saying "now" — a future date contradicts it. Past dates stay
-  // (overdue is truthful); other horizons pass dueDate through untouched.
-  const effectiveDue =
-    status === "TODAY" && !dueDate && task.dueDate && task.dueDate.getTime() > Date.now()
+  const today = instantToPlainDate(Temporal.Now.instant(), timeZone);
+  const nextSchedule =
+    scheduledDate === undefined ? task.scheduledDate : scheduledDate;
+  const effectiveSchedule =
+    status === "SOMEDAY"
       ? null
-      : (dueDate ?? undefined);
+      : status === "TODAY" &&
+          nextSchedule &&
+          Temporal.PlainDate.compare(plainDateFromDb(nextSchedule), today) > 0
+        ? null
+        : scheduledDate;
+  const effectiveSnooze =
+    status === "TODAY" || status === "SOMEDAY" ? null : snoozedUntil;
   return await entities.Task.update({
     where: { id },
-    data: { status, dueDate: effectiveDue },
+    data: {
+      status,
+      scheduledDate: effectiveSchedule,
+      snoozedUntil: effectiveSnooze,
+    },
   });
 }
 
@@ -815,9 +882,9 @@ export async function startTaskCore(
   // is still open. Close it so the totals stay honest across task switches.
   await entities.TaskSession.updateMany({
     where: { userId, endedAt: null },
-    data: { endedAt: new Date() },
+    data: { endedAt: instantToDate(systemClock.instant()) },
   });
-  const now = new Date();
+  const now = instantToDate(systemClock.instant());
   await entities.TaskSession.create({
     data: {
       taskId: id,
@@ -859,19 +926,19 @@ export async function completeFocusSessionCore(
   if (!session) return { completed: false as const };
 
   const plannedMinutes = session.plannedMinutes === 45 ? 45 : 25;
-  const now = new Date();
-  const targetEnd = new Date(
-    session.startedAt.getTime() + plannedMinutes * 60_000,
+  const now = systemClock.instant();
+  const targetEnd = instantFrom(session.startedAt).add(
+    Temporal.Duration.from({ minutes: plannedMinutes }),
   );
-  if (now.getTime() < targetEnd.getTime()) {
+  if (Temporal.Instant.compare(now, targetEnd) < 0) {
     throw new Error("Focus session is still running.");
   }
 
   await entities.TaskSession.update({
     where: { id: session.id },
-    data: { endedAt: targetEnd, completed: true },
+    data: { endedAt: instantToDate(targetEnd), completed: true },
   });
-  return { completed: true as const, endedAt: targetEnd };
+  return { completed: true as const, endedAt: instantToDate(targetEnd) };
 }
 
 export async function pauseTaskCore(
@@ -889,7 +956,7 @@ export async function pauseTaskCore(
   // updateMany is idempotent — pausing an already-paused task is a no-op here.
   await entities.TaskSession.updateMany({
     where: { taskId: id, endedAt: null },
-    data: { endedAt: new Date() },
+    data: { endedAt: instantToDate(systemClock.instant()) },
   });
   return await entities.Task.update({
     where: { id },

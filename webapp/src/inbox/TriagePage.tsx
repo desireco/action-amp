@@ -35,6 +35,7 @@ import {
   chipPickToWorkingPatch,
 } from "./triagePropertyFields";
 import { formatAgo, isSameDay } from "../shared/dateFormat";
+import { currentPlainDate } from "../shared/time/temporal";
 import { useTriageKeyboard } from "./useTriageKeyboard";
 import "./TriagePage.css";
 
@@ -284,7 +285,11 @@ export function TriagePage() {
       // un-cluttered EXCEPT when the user said so explicitly at capture: an
       // `today`/`tonight` token is intent, not a default, so it pre-fills Today
       // (the "no auto-Today by default" principle still holds for everything else).
-      when: item?.parsedDate && isSameDay(item.parsedDate, new Date()) ? "Today" : "Upcoming",
+      when:
+        item?.parsedScheduledDate &&
+        isSameDay(item.parsedScheduledDate, currentPlainDate().toString())
+          ? "Today"
+          : "Upcoming",
       size: item?.parsedSize ?? "M",
       priority: item?.parsedPriority ?? "NORMAL",
       content: "",

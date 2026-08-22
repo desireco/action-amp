@@ -12,7 +12,7 @@ function task(overrides: Partial<TaskLensListRow>): TaskLensListRow {
     description: "Task",
     isDone: false,
     status: "TODAY",
-    dueDate: null,
+    scheduledDate: null,
     // SAFETY: test fixture widens the base row with just the fields the
     // bucketing reads; the remaining Task columns are irrelevant here.
     ...overrides,
@@ -26,7 +26,7 @@ const TODAY = new Date(2026, 7, 13);
 describe("bucketWeekTasks", () => {
   it("places a dated task on its weekday", () => {
     const buckets = bucketWeekTasks(
-      [task({ id: "dated", dueDate: new Date(2026, 7, 14) })], // Friday
+      [task({ id: "dated", scheduledDate: new Date(2026, 7, 14) })], // Friday
       WEEK_START,
       TODAY,
     );
@@ -36,7 +36,7 @@ describe("bucketWeekTasks", () => {
 
   it("places an undated TODAY task in the Today bucket", () => {
     const buckets = bucketWeekTasks(
-      [task({ id: "committed", status: "TODAY", dueDate: null })],
+      [task({ id: "committed", status: "TODAY", scheduledDate: null })],
       WEEK_START,
       TODAY,
     );
@@ -46,7 +46,7 @@ describe("bucketWeekTasks", () => {
 
   it("places an overdue task (dated before the week) in the Today bucket", () => {
     const buckets = bucketWeekTasks(
-      [task({ id: "late", status: "UPCOMING", dueDate: new Date(2026, 7, 3) })], // previous Monday
+      [task({ id: "late", status: "UPCOMING", scheduledDate: new Date(2026, 7, 3) })], // previous Monday
       WEEK_START,
       TODAY,
     );
@@ -58,7 +58,7 @@ describe("bucketWeekTasks", () => {
     // Promoting a scheduled task to Today must not make it disappear from its
     // weekday (the view's founding rule).
     const buckets = bucketWeekTasks(
-      [task({ id: "promoted", status: "TODAY", dueDate: new Date(2026, 7, 15) })],
+      [task({ id: "promoted", status: "TODAY", scheduledDate: new Date(2026, 7, 15) })],
       WEEK_START,
       TODAY,
     );
@@ -69,7 +69,7 @@ describe("bucketWeekTasks", () => {
 
   it("drops an undated UPCOMING task defensively (the pool never sends one)", () => {
     const buckets = bucketWeekTasks(
-      [task({ id: "bench", status: "UPCOMING", dueDate: null })],
+      [task({ id: "bench", status: "UPCOMING", scheduledDate: null })],
       WEEK_START,
       TODAY,
     );

@@ -23,7 +23,7 @@ test("an Upcoming task (no due date) also surfaces on home", async ({ page }) =>
   await completeTopTask(page);
 
   // Triage to Upcoming (the default since 2026-06-25) — no When chosen, so it
-  // lands on the bench with no dueDate. Next's candidate pool is Today +
+  // lands on the bench with no scheduledDate. Next's candidate pool is Today +
   // Upcoming-with-no-future-due, so a triaged task must be actionable, not
   // hidden behind the Today toggle (WORKFLOW.md §5.2).
   await triageOneItem(page, "Bench task", { type: "task" });

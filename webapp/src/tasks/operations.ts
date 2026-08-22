@@ -51,6 +51,13 @@ import {
   type TaskLensListRow,
   type DoneTodayRow,
 } from "./operationsCore";
+import {
+  Temporal,
+  instantToDate,
+  instantToPlainDate,
+  plainDateToDb,
+  systemClock,
+} from "../shared/time/temporal";
 
 /** Wasp op outputs must be index-signature-assignable (Payload). Prisma model
  *  interfaces are not; homomorphic mapped types are — one per row shape. */
@@ -105,7 +112,7 @@ export const getTask = (async (args, context) => {
 // ----------------------------------------------------------------
 // Read: list tasks in a lens, optionally filtered by status
 // ----------------------------------------------------------------
-// Used by Today (status=TODAY, not done), Upcoming (status=UPCOMING or dueDate
+// Used by Today (status=TODAY, not done), Upcoming (status=UPCOMING or scheduledDate
 // in the future), Someday (status=SOMEDAY), Logbook (isDone=true).
 export const getTasks = (async (args, context) => {
   if (!context.user) {
@@ -164,9 +171,11 @@ export const getWeekTasks = (async (_args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+  const timeZone = context.user.timeZone ?? "UTC";
   return await getWeekTasksData(context.entities, {
     user: context.user,
     userId: context.user.id,
+    timeZone,
   });
 }) satisfies GetWeekTasks<never, TaskLensListPayload>;
 
@@ -204,6 +213,7 @@ export const getDoneToday = (async (args, context) => {
   return await getDoneTodayData(context.entities, {
     userId: context.user.id,
     lensIds,
+    timeZone: context.user.timeZone ?? "UTC",
   });
 }) satisfies GetDoneToday<{ lensId?: string }, DoneTodayPayload>;
 
@@ -246,16 +256,20 @@ export const updateTaskStatus = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+  const timeZone = context.user.timeZone ?? "UTC";
   return await updateTaskStatusCore(context.entities, {
     userId: context.user.id,
     id: args.id,
     status: args.status,
-    dueDate: args.dueDate,
+    scheduledDate: args.scheduledDate,
+    snoozedUntil: args.snoozedUntil,
+    timeZone,
   });
 }) satisfies UpdateTaskStatus<{
   id: string;
   status: "TODAY" | "UPCOMING" | "SOMEDAY" | "WONT_DO";
-  dueDate?: Date | null;
+  scheduledDate?: Date | null;
+  snoozedUntil?: Date | null;
 }>;
 
 // ----------------------------------------------------------------
@@ -271,8 +285,10 @@ export const unscheduleOverdueTasks = (async (args, context) => {
   }
   await assertLensAllowed(context, args.lensId);
 
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  const timeZone = context.user.timeZone ?? "UTC";
+  const today = plainDateToDb(
+    instantToPlainDate(Temporal.Now.instant(), timeZone),
+  );
 
   return await context.entities.Task.updateMany({
     where: {
@@ -280,9 +296,9 @@ export const unscheduleOverdueTasks = (async (args, context) => {
       lensId: args.lensId,
       status: "UPCOMING",
       isDone: false,
-      dueDate: { lt: startOfToday },
+      scheduledDate: { lt: today },
     },
-    data: { dueDate: null },
+    data: { scheduledDate: null },
   });
 }) satisfies UnscheduleOverdueTasks<{ lensId: string }, { count: number }>;
 
@@ -291,9 +307,9 @@ export const unscheduleOverdueTasks = (async (args, context) => {
 // ----------------------------------------------------------------
 // Candidates = the shared actionable pool (tasks/activePool.ts): status TODAY
 // or UPCOMING in the active Lens, not done, due null or ≤ now. The due-guard
-// keeps snooze working: a snoozed task carries a future dueDate, so it stays
+// keeps snooze working: a snoozed task carries a future snoozedUntil, so it stays
 // off Next until its time arrives (then auto-resurfaces). A triaged-to-
-// Upcoming task has no dueDate, so it surfaces as Next immediately — triage
+// Upcoming task has no schedule or snooze, so it surfaces as Next immediately — triage
 // puts real work in front of you, not behind a toggle (WORKFLOW.md §5.2).
 // Rank by priority (IMPORTANT > NORMAL > LOW), then size (smaller = quick win),
 // then oldest. Returns the top 1, or null when nothing's on the table.
@@ -308,11 +324,13 @@ export const getTopTask = (async (args, context) => {
   // calls this; a FREE user lands on Me, so this passes — the guard exists for
   // the localStorage-bypass case where a Work lensId reaches the server.
   await assertLensAllowed(context, args.lensId);
+  const timeZone = context.user.timeZone ?? "UTC";
   // Candidate fetch + sort live in the core so the CLI `/api/cli/now` route
   // can rank candidates identically without re-implementing the comparator.
   const ranked = await getTopTaskData(context.entities, {
     userId: context.user.id,
     lensId: args.lensId,
+    timeZone,
   });
   if (!ranked) return null;
   // Hydrate the owned winner with Project→Goal + session + NOTE context
@@ -343,10 +361,12 @@ export const getTaskAlternatives = (async (args, context) => {
   // Same entitlement posture as getTopTask: FREE users land on Me; the guard
   // exists for the localStorage-bypass case where a Work lensId slips through.
   await assertLensAllowed(context, args.lensId);
+  const timeZone = context.user.timeZone ?? "UTC";
   return await getTaskAlternativesData(context.entities, {
     userId: context.user.id,
     lensId: args.lensId,
     excludeIds: args.excludeIds,
+    timeZone,
   });
 }) satisfies GetTaskAlternatives<
   {
@@ -402,21 +422,23 @@ export const getFocusedTask = (async (_args, context) => {
 // ----------------------------------------------------------------
 // Snooze — "Not now" flow (FEATURES.md F11)
 // ----------------------------------------------------------------
-// Presets: 1h / 3h / tomorrow / weekend → Task(status=UPCOMING, dueDate=then)
-//          someday                                   → Task(status=SOMEDAY, dueDate=null)
+// Presets: 1h / 3h / tomorrow / weekend → Task(status=UPCOMING, snoozedUntil=then)
+//          someday                     → Task(status=SOMEDAY, snoozedUntil=null)
 // The task leaves the focus queue until the snooze expires (then it's a
 // candidate again via Upcoming/Today rollover). The pure `snoozeTarget`
-// helper (preset → {status, dueDate}) lives in operationsCore.ts and is unit-
+// helper (preset → {status, snoozedUntil}) lives in operationsCore.ts and is unit-
 // tested there; the wrapper is just auth + tenancy + the write.
 
 export const snoozeTask = (async (args, context) => {
   if (!context.user) {
     throw new Error("Not authenticated.");
   }
+  const timeZone = context.user.timeZone ?? "UTC";
   return await snoozeTaskCore(context.entities, {
     userId: context.user.id,
     id: args.id,
     preset: args.preset,
+    timeZone,
   });
 }) satisfies SnoozeTask<{
   id: string;
@@ -568,7 +590,7 @@ export const setTaskOutcome = (async (args, context) => {
 // Edit the core task fields shown on the task detail page. This is the full
 // "edit task" path; list rows should navigate here instead of editing notes.
 // Title + notes arrive together from the Save footer (buffered prose), while
-// structural fields (priority/size/status/dueDate/projectId/goalId) arrive
+// structural fields (priority/size/status/scheduledDate/projectId/goalId) arrive
 // one at a time from the chip popovers (live edits). Any subset of the
 // structural fields may be present; only the passed ones are written.
 // Server enforces: title required (when description is present + non-empty
@@ -609,8 +631,8 @@ export const updateTaskDetails = (async (args, context) => {
   if (args.status !== undefined) {
     data.status = args.status;
   }
-  if (args.dueDate !== undefined) {
-    data.dueDate = args.dueDate;
+  if (args.scheduledDate !== undefined) {
+    data.scheduledDate = args.scheduledDate;
   }
 
   // Project / goal reassignment — enforce one-parent + same-Lens invariants.
@@ -675,7 +697,8 @@ export const updateTaskDetails = (async (args, context) => {
       priority: true,
       size: true,
       status: true,
-      dueDate: true,
+      scheduledDate: true,
+      snoozedUntil: true,
       projectId: true,
       goalId: true,
     },
@@ -688,7 +711,7 @@ export const updateTaskDetails = (async (args, context) => {
     priority?: "LOW" | "NORMAL" | "IMPORTANT";
     size?: "S" | "M" | "L" | "XL";
     status?: "TODAY" | "UPCOMING" | "SOMEDAY";
-    dueDate?: Date | null;
+    scheduledDate?: Date | null;
     projectId?: string | null;
     goalId?: string | null;
   },
@@ -699,7 +722,8 @@ export const updateTaskDetails = (async (args, context) => {
     priority: string;
     size: string;
     status: string;
-    dueDate: Date | null;
+    scheduledDate: Date | null;
+    snoozedUntil: Date | null;
     projectId: string | null;
     goalId: string | null;
   }
@@ -744,7 +768,7 @@ export const completeTaskFromFocus = (async (args, context) => {
   if (!task.startedAt) {
     throw new Error("Start the task before completing it.");
   }
-  const completedAt = new Date();
+  const completedAt = instantToDate(systemClock.instant());
   type TaskCompletionData = {
     isDone: true;
     completedAt: Date;

@@ -393,7 +393,7 @@ const baseMatcher: FocusWhyInput = {
   startedAt: null,
   priority: "IMPORTANT",
   size: "M",
-  dueDate: iso(NOW), // due today → truthful due clause
+  scheduledDate: iso(NOW), // due today → truthful due clause
 };
 
 function cliTask(
@@ -474,7 +474,7 @@ describe("buildNowContext", () => {
     const task = cliTask({
       priority: "NORMAL",
       size: "L", // not a quick win
-      dueDate: null, // no due clause
+      scheduledDate: null, // no due clause
       startedAt: null,
     });
     const ctx = buildNowContext(task, null);

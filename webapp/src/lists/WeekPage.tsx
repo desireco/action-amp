@@ -11,14 +11,16 @@ import {
 } from "../components/ui";
 import { ListEmpty } from "./ListShell";
 import { bucketWeekTasks, dayKey } from "./weekView";
+import {
+  currentPlainDate,
+  plainDateFrom,
+} from "../shared/time/temporal";
 import "./ListShell.css";
 import "./WeekPage.css";
 
-function startOfWeek(now = new Date()): Date {
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-  return start;
+function startOfWeek(): string {
+  const today = currentPlainDate();
+  return today.subtract({ days: today.dayOfWeek - 1 }).toString();
 }
 
 /** The global Monday–Sunday scheduling horizon. Today remains the commitment
@@ -35,16 +37,18 @@ export function WeekPage() {
     // Pure bucketing (weekView.ts): dated → its weekday, overdue → Today,
     // TODAY-undated → Today. Tested in weekView.test.ts.
     return bucketWeekTasks(tasks ?? [], weekStart).map(({ key, items }) => {
-      const [year, month, day] = key.split("-").map(Number);
-      const date = new Date(year, month - 1, day);
-      const label = date.toLocaleDateString(undefined, {
+      const date = plainDateFrom(key);
+      const label = date.toLocaleString(undefined, {
         weekday: "long",
         month: "short",
         day: "numeric",
       });
       return {
         key,
-        label: dayKey(date) === dayKey(new Date()) ? `Today · ${label}` : label,
+        label:
+          dayKey(key) === currentPlainDate().toString()
+            ? `Today · ${label}`
+            : label,
         items,
       };
     });

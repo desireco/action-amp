@@ -19,7 +19,8 @@ export interface TaskRowTask {
   // WONT_DO is included so a row can render in restore-from-logbook contexts;
   // active-list queries never produce it (positive status filters exclude it).
   status?: TaskStatus;
-  dueDate?: Date | string | null;
+  scheduledDate?: Date | string | null;
+  snoozedUntil?: Date | string | null;
   project?: { id: string; name: string } | null;
   goal?: { id: string; name: string } | null;
   /** Provenance lens — set by global Today so each row can show a lens pill. */
@@ -124,7 +125,7 @@ export function TaskRow({
   const openTask = () => onOpen?.(task);
 
   const dotClass = dotClassFor(task);
-  const due = task.dueDate ? formatDueChip(task.dueDate) : null;
+  const due = task.scheduledDate ? formatDueChip(task.scheduledDate) : null;
   const showLensPill = Boolean(showLens && task.lens);
   const hasMeta =
     task.priority === "IMPORTANT" ||

@@ -16,7 +16,7 @@
  *   2. priority IMPORTANT → lead with "Important".
  *   3. priority LOW       → "Quick win" if size is S/M, else "Low priority".
  *      (NORMAL has no lead — it's the absence of a stronger signal.)
- *   4. due context        → appended ONLY when a dueDate exists: "overdue" /
+ *   4. due context        → appended ONLY when a scheduledDate exists: "overdue" /
  *      "due today" / "due tomorrow" / "due <weekday>" / "due <Jun 30>".
  *   5. size-fit           → appended only when it adds info (S/M → "fits in …").
  *
@@ -24,6 +24,11 @@
  * `whyEmphasis` (detail, rendered strong in amber) props, keeping the visual
  * identical to the old hardcoded line.
  */
+import {
+  calendarDayDifference,
+  currentPlainDate,
+  plainDateFromValue,
+} from "../shared/time/temporal";
 
 // The Task fields the matcher actually uses. Subset of the Prisma Task row —
 // kept as a structural type so the helper depends on data shape, not the ORM.
@@ -32,7 +37,7 @@ export interface FocusWhyInput {
   priority: "LOW" | "NORMAL" | "IMPORTANT" | string;
   size: "S" | "M" | "L" | "XL" | string;
   status?: "TODAY" | "UPCOMING" | "SOMEDAY" | string;
-  dueDate?: Date | string | null;
+  scheduledDate?: Date | string | null;
 }
 
 export interface FocusWhy {
@@ -46,24 +51,21 @@ const SIZE_MINUTES = { S: 15, M: 30, L: 60, XL: 120 } as const;
 
 /** Whole-day diff: 0 = today, -1 = overdue, 1 = tomorrow, etc. (timezone-naive by design — due dates are day-granular.) */
 function dayDiff(date: Date | string): number {
-  const d = new Date(date);
-  const now = new Date();
-  d.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
-  return Math.round((d.getTime() - now.getTime()) / 86_400_000);
+  return calendarDayDifference(currentPlainDate(), plainDateFromValue(date));
 }
 
 /** The truthful due clause, or null when there's no due date to speak of. */
-function dueClause(dueDate: FocusWhyInput["dueDate"]): string | null {
-  if (!dueDate) return null; // no horizon → never fabricate a due reason
-  const diff = dayDiff(dueDate);
+function dueClause(scheduledDate: FocusWhyInput["scheduledDate"]): string | null {
+  if (!scheduledDate) return null; // no horizon → never fabricate a due reason
+  const diff = dayDiff(scheduledDate);
   if (diff < 0) return "overdue";
   if (diff === 0) return "due today";
   if (diff === 1) return "due tomorrow";
+  const date = plainDateFromValue(scheduledDate);
   if (diff <= 7) {
-    return `due ${new Date(dueDate).toLocaleDateString("en-US", { weekday: "short" })}`;
+    return `due ${date.toLocaleString("en-US", { weekday: "short" })}`;
   }
-  return `due ${new Date(dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+  return `due ${date.toLocaleString("en-US", { month: "short", day: "numeric" })}`;
 }
 
 /** "fits in 15 min" only for the small sizes where it's a useful nudge; L/XL don't add info here. */
@@ -89,7 +91,7 @@ export function composeWhy(task: FocusWhyInput): FocusWhy {
   // NORMAL → no lead (the detail carries the reason, if any).
 
   // 4/5. Append truthful detail clauses (due, then size-fit).
-  const due = dueClause(task.dueDate);
+  const due = dueClause(task.scheduledDate);
   const size = sizeClause(task.size);
   const parts = [due, size].filter(
     (p): p is string => p !== null && p !== undefined,

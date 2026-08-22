@@ -92,7 +92,7 @@ export function FocusPage() {
       }}
       onSnooze={async (preset: SnoozePreset) => {
         // "Not now" from the mobile action bar. Snoozes the task out of the
-        // focus queue entirely (sets status/dueDate, clears startedAt). The
+        // focus queue entirely (sets status/snoozedUntil, clears startedAt). The
         // task reappears in Upcoming/Someday when the snooze expires.
         await snoozeTask({ id: task.id, preset });
         refreshTaskState();

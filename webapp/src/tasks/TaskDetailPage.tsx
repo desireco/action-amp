@@ -215,7 +215,7 @@ export function TaskDetailPage() {
   const handlePick = (fieldKey: string, value: string): void => {
     const patch = chipPickToTaskPatch(fieldKey, value);
     if (Object.keys(patch).length === 0) return;
-    if (fieldKey === "due" && patch.dueDate && task?.status === "SOMEDAY") {
+    if (fieldKey === "due" && patch.scheduledDate && task?.status === "SOMEDAY") {
       patch.status = "UPCOMING";
     }
     // SAFETY: type assertion is safe — value is validated or from a trusted source.
@@ -393,7 +393,7 @@ export function TaskDetailPage() {
                   priority: (task.priority as TaskPriority) ?? "NORMAL",
                   // SAFETY: type assertion is safe — value is validated or from a trusted source.
                   size: (task.size as TaskSize) ?? "M",
-                  dueDate: task.dueDate,
+                  scheduledDate: task.scheduledDate,
                   // SAFETY: type assertion is safe — value is validated or from a trusted source.
                   project: (task.project as TaskChipProject | null) ?? null,
                   // SAFETY: type assertion is safe — value is validated or from a trusted source.

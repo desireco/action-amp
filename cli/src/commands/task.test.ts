@@ -183,13 +183,13 @@ describe("task commands", () => {
 
   describe("task snooze", () => {
     it("default preset is tomorrow → 'Snoozed until'", async () => {
-      requestMock.mockResolvedValue({ id: "task-1", status: "UPCOMING", dueDate: "2026-07-23T09:00:00.000Z" });
+      requestMock.mockResolvedValue({ id: "task-1", status: "UPCOMING", snoozedUntil: "2026-07-23T09:00:00.000Z" });
       const { stdout } = await runCommand(["snooze", "task-1"]);
       expect(stdout).toContain("Snoozed until");
     });
 
     it("--preset someday → 'Snoozed someday.'", async () => {
-      requestMock.mockResolvedValue({ id: "task-1", status: "SOMEDAY", dueDate: null });
+      requestMock.mockResolvedValue({ id: "task-1", status: "SOMEDAY", snoozedUntil: null });
       const { stdout } = await runCommand(["snooze", "task-1", "--preset", "someday"]);
       expect(stdout).toContain("Snoozed someday.");
     });

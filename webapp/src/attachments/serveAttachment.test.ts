@@ -38,11 +38,13 @@ function makeRes(): Response & { headers: Record<string, string>; body: Buffer |
     json: vi.fn(),
     end: vi.fn((chunk?: Buffer) => { if (chunk) res.body = Buffer.from(chunk); }),
   };
-  // SAFETY: mock Response extended with typed headers/body; chained assertion necessary
-  // because mock object doesn't structurally overlap Response.
-  const typed: Response & { headers: Record<string, string>; body: Buffer | null } =
-    Object.assign({} as Response, res);
-  return typed;
+  // SAFETY: the mock implements the Response members this route calls and the
+  // extra observable fields. Return the same object captured by end(), rather
+  // than a shallow copy whose body field would stop reflecting writes.
+  return res as unknown as Response & {
+    headers: Record<string, string>;
+    body: Buffer | null;
+  };
 }
 
 function makeEntities(inboxResult: unknown = null, listResult: unknown = null, taskResult: unknown = null, projectResult: unknown = null, resourceResult: unknown = null) {

@@ -46,6 +46,7 @@ export const createInboxItem = (async (args, context) => {
     content: args.content,
     sourceUrl: args.sourceUrl,
     attachments: args.attachments,
+    timeZone: args.timeZone ?? context.user.timeZone ?? "UTC",
   });
   await context.entities.User.updateMany({
     where: { id: context.user.id, onboardingStage: "CAPTURE" },
@@ -58,7 +59,7 @@ export const createInboxItem = (async (args, context) => {
   }, context.user.id).catch(() => {});
   return created;
 }) satisfies CreateInboxItem<
-  { text: string; projectName?: string; projectId?: string; lensId?: string; title?: string; content?: string; sourceUrl?: string; attachments?: { filename: string; mimeType: string; dataBase64: string }[] },
+  { text: string; projectName?: string; projectId?: string; lensId?: string; title?: string; content?: string; sourceUrl?: string; timeZone?: string; attachments?: { filename: string; mimeType: string; dataBase64: string }[] },
   { id: string; text: string; createdAt: Date }
 >;
 

@@ -21,18 +21,24 @@ import { ListEmpty } from "./ListShell";
 import { useTaskListActions } from "./useTaskListActions";
 import "./ListShell.css";
 import "./UpcomingPage.css";
+import {
+  calendarDayDifference,
+  currentPlainDate,
+  plainDateFromValue,
+} from "../shared/time/temporal";
 
 /**
- * Upcoming — tasks with status=UPCOMING (or a future dueDate), grouped by
- * how far out they are: Overdue / This week / Next week / Later / Unscheduled.
+ * Upcoming — tasks with status=UPCOMING (or a future scheduledDate), grouped by
+ * how far out they are: Overdue / This week / Next week / Later / Snoozed /
+ * Unscheduled.
  *
  * Buckets:
- *   - Overdue:     dueDate in the past. Surfaced at the top in rose so a
+ *   - Overdue:     scheduledDate in the past. Surfaced at the top in rose so a
  *                  forward-looking list never quietly hides something past due.
  *   - This week:   due in 0–7 days (inclusive of today).
  *   - Next week:   due in 8–14 days.
  *   - Later:       due beyond 14 days.
- *   - Unscheduled: no dueDate. Tasks with no date don't pretend to be "this
+ *   - Unscheduled: no scheduledDate. Tasks with no date don't pretend to be "this
  *                  week" — they get a clear bucket of their own.
  */
 export function UpcomingPage() {
@@ -58,18 +64,23 @@ export function UpcomingPage() {
       "This week": [],
       "Next week": [],
       Later: [],
+      Snoozed: [],
       Unscheduled: [],
     };
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
+    const today = currentPlainDate();
     for (const t of tasks) {
-      const due = t.dueDate ? new Date(t.dueDate) : null;
-      if (!due) {
+      if (!t.scheduledDate) {
+        if (t.snoozedUntil) {
+          buckets.Snoozed.push(t);
+          continue;
+        }
         buckets["Unscheduled"].push(t);
         continue;
       }
-      due.setHours(0, 0, 0, 0);
-      const diffDays = Math.round((due.getTime() - now.getTime()) / 86_400_000);
+      const diffDays = calendarDayDifference(
+        today,
+        plainDateFromValue(t.scheduledDate),
+      );
       if (diffDays < 0) buckets["Overdue"].push(t);
       else if (diffDays <= 7) buckets["This week"].push(t);
       else if (diffDays <= 14) buckets["Next week"].push(t);
