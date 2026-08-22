@@ -256,6 +256,8 @@ export default app({
     "<meta name='apple-mobile-web-app-capable' content='yes' />",
     "<meta name='apple-mobile-web-app-status-bar-style' content='default' />",
     "<meta name='theme-color' content='#008AC0' />",
+    // Wasp renders head entries inside TSX, so the bootstrap lives in public/.
+    "<script src='/betterstack.js'></script>",
   ],
   auth: {
     userEntity: "User",

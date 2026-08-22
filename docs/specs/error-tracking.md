@@ -9,9 +9,9 @@ kind: spec
 
 ## Summary
 
-Make unexpected production failures traceable without introducing user or task
-data into telemetry. Railway's existing log stream is the sink; ActionAmp emits
-one-line JSON records that can be searched by an opaque error/request ID.
+Make unexpected production failures traceable. ActionAmp's own error records
+remain bounded and sanitized in Railway; the app also loads Better Stack's
+frontend Error Tracking tag in production.
 
 ## Done-conditions
 
@@ -22,14 +22,17 @@ one-line JSON records that can be searched by an opaque error/request ID.
       report sanitized browser/component stacks through a write-only endpoint.
 - [x] The root React boundary replaces a blank screen with a calm reload action.
 - [x] Browser reports are deduplicated, bounded, and rate-limited server-side.
-- [x] Email addresses, bearer/JWT/database credentials, URL query strings,
-      cookies, user IDs, and task content are not intentional telemetry fields.
+- [x] Better Stack's public frontend tag token is loaded only outside local
+      development; it never enters the server environment.
+- [x] ActionAmp's structured error records do not intentionally include email
+      addresses, credentials, URL query strings, cookies, user IDs, or task
+      content. Better Stack tag collection is governed by its remote settings.
 - [x] Expected typed HTTP failures are not reported as exceptions.
 - [x] Focused tests, Oxlint, and `wasp compile` pass.
 
 ## Non-goals
 
 - A new admin dashboard.
-- Session replay or user identification.
-- A third-party error provider. Structured logs keep that choice reversible.
+- Configuring Better Stack's remotely managed collection and replay settings.
+- Server-side Better Stack ingestion. Railway remains the server error sink.
 - Swallowing fatal process errors; Node retains its normal crash behavior.

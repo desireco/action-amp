@@ -78,8 +78,9 @@ is in instrumenting the four steps that decide the business.
   the internal Growth dashboard belongs to `growth-analytics`.
 - **No A/B testing infra.**
 - **No server-side error tracking in this feature.** That separate concern is
-  now shipped as `error-tracking`; it deliberately uses the existing Railway
-  log stream rather than coupling acquisition analytics to an error provider.
+  now shipped as `error-tracking`; it uses Railway for server errors and Better
+  Stack for frontend errors without coupling acquisition analytics to error
+  telemetry.
 - **No identifying users across devices.** Anonymous funnel only.
 
 ## Decisions
