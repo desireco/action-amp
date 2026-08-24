@@ -492,6 +492,58 @@
   color: var(--aa-border-strong);
 }
 
+/* Commitment proof */
+.aa-commitment {
+  padding: 0 56px 160px;
+}
+.aa-commitment-inner {
+  max-width: 1068px;
+  margin: 0 auto;
+  padding: 56px;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  background: linear-gradient(135deg, var(--aa-surface) 0%, var(--aa-bg) 100%);
+  box-shadow: var(--aa-shadow-sm);
+}
+.aa-commitment .aa-display {
+  margin-top: 14px;
+}
+.aa-commitment .aa-lede {
+  margin-top: 22px;
+  max-width: 52ch;
+}
+.aa-commitment-states {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 48px;
+  border-top: 1px solid var(--aa-border);
+}
+.aa-commitment-state {
+  min-height: 118px;
+  padding: 24px 28px 0;
+}
+.aa-commitment-state:first-child {
+  padding-left: 0;
+}
+.aa-commitment-state + .aa-commitment-state {
+  border-left: 1px solid var(--aa-border);
+}
+.aa-commitment-kicker {
+  display: block;
+  color: var(--aa-teal-cta);
+  font-family: var(--aa-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.aa-commitment-state p {
+  margin-top: 10px;
+  color: var(--aa-text-3);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
 /* Soul */
 .aa-soul {
   padding: 180px 56px;
@@ -910,6 +962,28 @@
   .aa-flow-step h3 {
     font-size: 19px;
     margin-bottom: 6px;
+  }
+
+  .aa-commitment {
+    padding: 0 22px 88px;
+  }
+  .aa-commitment-inner {
+    padding: 32px 22px;
+  }
+  .aa-commitment .aa-lede {
+    margin-top: 16px;
+  }
+  .aa-commitment-states {
+    grid-template-columns: 1fr;
+    margin-top: 28px;
+  }
+  .aa-commitment-state {
+    min-height: 0;
+    padding: 18px 0;
+  }
+  .aa-commitment-state + .aa-commitment-state {
+    border-top: 1px solid var(--aa-border);
+    border-left: 0;
   }
 
   .aa-soul {

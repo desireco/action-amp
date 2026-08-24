@@ -28,6 +28,7 @@ const HERO_TASKS = [
 const FAQ_ITEMS = [
   { q: "Is this just another todo app?", a: 'No. The list is demoted. "What do I do next?" is the home screen. ActionAmp optimizes the decision, not the capture.' },
   { q: "Do I need to know GTD?", a: "No. The methodology is there if you want it, invisible if you don't. Most users capture, triage, and do." },
+  { q: "Will it keep reminding me?", a: "No stream of task alerts. If it helps, set one daily reminder for Today." },
   { q: "Is ActionAmp available now?", a: "Yes. ActionAmp is live in early access. Start free today." },
 ];
 ---
@@ -181,7 +182,7 @@ const FAQ_ITEMS = [
           <div class="aa-flow-step">
             <div class="aa-flow-num">01</div>
             <h3>Capture</h3>
-            <p>Thought goes to inbox in under two seconds. From anywhere.</p>
+            <p>Get it out of your head. No sorting required.</p>
           </div>
           <div class="aa-flow-arrow">
             <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
@@ -191,7 +192,7 @@ const FAQ_ITEMS = [
           <div class="aa-flow-step">
             <div class="aa-flow-num">02</div>
             <h3>Triage</h3>
-            <p>Decide what each thing <i>is</i>: task, project, or reference.</p>
+            <p>Give it a home when you are ready.</p>
           </div>
           <div class="aa-flow-arrow">
             <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
@@ -201,7 +202,34 @@ const FAQ_ITEMS = [
           <div class="aa-flow-step">
             <div class="aa-flow-num">03</div>
             <h3>Focus</h3>
-            <p>Start the next task, or choose another. The rest disappears.</p>
+            <p>See one clear next task when it is time to act.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="aa-commitment" aria-labelledby="commitment-title">
+        <div class="aa-commitment-inner">
+          <div class="aa-eyebrow">A smaller day</div>
+          <h2 class="aa-display" id="commitment-title">
+            Today is a promise. <span class="aa-light">Not a backlog.</span>
+          </h2>
+          <p class="aa-lede">
+            Your whole plan has a place. Only the work you mean to do today has
+            to compete for your attention.
+          </p>
+          <div class="aa-commitment-states">
+            <div class="aa-commitment-state">
+              <span class="aa-commitment-kicker">Today</span>
+              <p>Keep a deliberately small set of commitments.</p>
+            </div>
+            <div class="aa-commitment-state">
+              <span class="aa-commitment-kicker">Upcoming</span>
+              <p>The rest waits safely on the bench.</p>
+            </div>
+            <div class="aa-commitment-state">
+              <span class="aa-commitment-kicker">Tomorrow</span>
+              <p>Start clean. Recommit on purpose.</p>
+            </div>
           </div>
         </div>
       </section>
