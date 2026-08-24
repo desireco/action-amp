@@ -98,6 +98,8 @@ other docs, these win.
 | [`docs/research/wasp-report.md`](docs/research/wasp-report.md) | Review of the project's Wasp skills after building the full app. | Improvement report |
 | [`docs/research/wasp-exit-hono-assessment-2026-08-18.md`](docs/research/wasp-exit-hono-assessment-2026-08-18.md) | Leaving Wasp for Vite/React + Hono while preserving domain logic. | **Research only; recommended exit path if approved.** |
 | [`docs/research/deployment-research.md`](docs/research/deployment-research.md) | Where to host (Wasp + VoidZero & Bun). | **Fly.io or Railway.** Cloudflare is client-only. |
+| [`docs/research/focus-and-todo-app-user-research-2026-08-24.md`](docs/research/focus-and-todo-app-user-research-2026-08-24.md) | Recurring focus and todo-app complaints from Reddit and forums. | **Research only; validates the decision-first thesis and identifies quiet planning blocks for user validation.** |
+| [`docs/research/focus-and-todo-app-gap-analysis-2026-08-24.md`](docs/research/focus-and-todo-app-gap-analysis-2026-08-24.md) | Comparison of that research with ActionAmp’s shipped features and public positioning. | **P0: correct unshipped time-aware matcher claims; then validate the matcher and quiet planning blocks.** |
 
 **🎨 Mockups — `docs/mockups/`**
 

@@ -18,11 +18,11 @@ const apiUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3001";
 
 // Hero demo tasks — the card can focus, switch recommendations, or complete.
 const HERO_TASKS = [
-  { title: "Email Sarah re: Q3 invoice", why: "Why this: important and due today", meta: "15 min estimate · Due today" },
-  { title: "Review pull request #284", why: "Why this: due today and fits your time", meta: "30 min estimate · Due today" },
-  { title: "Prep notes for 1:1 with Marco", why: "Why this: a quick task you can finish now", meta: "10 min estimate · Tomorrow" },
-  { title: "Reply to legal re: contract", why: "Why this: important and overdue", meta: "20 min estimate · Due yesterday" },
-  { title: "Draft the Q3 launch plan", why: "Why this: important: start with one next step", meta: "45 min estimate · This week" },
+  { title: "Email Sarah re: Q3 invoice", why: "Why this: important and scheduled for today", meta: "Small · Today" },
+  { title: "Review pull request #284", why: "Why this: scheduled for today", meta: "Medium · Today" },
+  { title: "Prep notes for 1:1 with Marco", why: "Why this: the smallest task in your queue", meta: "Small · Upcoming" },
+  { title: "Reply to legal re: contract", why: "Why this: important and overdue", meta: "Medium · Overdue" },
+  { title: "Draft the Q3 launch plan", why: "Why this: important and oldest in your queue", meta: "Large · Upcoming" },
 ];
 
 const FAQ_ITEMS = [
@@ -92,7 +92,8 @@ const FAQ_ITEMS = [
             </h1>
             <p class="aa-hero-sub">
               Capture everything. ActionAmp brings <b>one task</b> forward,
-              explains why, and keeps your plan one click away.
+              tells you what made it the next choice, and keeps your plan one
+              click away.
             </p>
             <div class="aa-hero-meta">
               <span>
@@ -124,7 +125,7 @@ const FAQ_ITEMS = [
             <div class="aa-wn-card" id="hero-card">
               <div class="aa-wn-ctx" id="aa-wn-ctx" aria-live="polite">
                 <span class="aa-dot"></span>
-                30 min available
+                Suggested next task
               </div>
               <div class="aa-wn-complete">
                 <button
@@ -137,7 +138,7 @@ const FAQ_ITEMS = [
                     <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </button>
-                <span>Mark done</span>
+                <span>Start on it</span>
               </div>
               <div class="aa-wn-title" id="aa-wn-title">{HERO_TASKS[0].title}</div>
               <div class="aa-wn-meta" id="aa-wn-meta">{HERO_TASKS[0].meta}</div>
@@ -166,7 +167,8 @@ const FAQ_ITEMS = [
           helping you focus, it's nagging.
         </p>
         <p class="aa-lede aa-lede-punch">
-          So we made something that does the picking for you.
+          So ActionAmp brings one clear next task forward. You can always choose
+          another.
         </p>
       </section>
 
@@ -199,7 +201,7 @@ const FAQ_ITEMS = [
           <div class="aa-flow-step">
             <div class="aa-flow-num">03</div>
             <h3>Focus</h3>
-            <p>ActionAmp picks the next thing. You do it. The rest disappears.</p>
+            <p>Start the next task, or choose another. The rest disappears.</p>
           </div>
         </div>
       </section>
@@ -359,7 +361,7 @@ const FAQ_ITEMS = [
           focusBtn.textContent = "Start focus";
           focusBtn.disabled = false;
           switchBtn.disabled = false;
-          contextEl.innerHTML = '<span class="aa-dot"></span>30 min available';
+          contextEl.innerHTML = '<span class="aa-dot"></span>Suggested next task';
           titleEl.textContent = task.title;
           metaEl.textContent = task.meta;
           whyEl.textContent = task.why;
@@ -374,7 +376,7 @@ const FAQ_ITEMS = [
           focusBtn.classList.add("is-focusing");
           focusBtn.textContent = "Focusing now";
           focusBtn.disabled = true;
-          contextEl.innerHTML = '<span class="aa-dot"></span>In focus · 30 min available';
+          contextEl.innerHTML = '<span class="aa-dot"></span>In focus';
         }
 
         function complete() {
