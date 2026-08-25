@@ -4,6 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
+    "types": ["node"],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -15,8 +16,7 @@
     "sourceMap": true,
     "paths": {
       "wasp/client/operations": ["../webapp/.wasp/out/sdk/wasp/dist/client/operations.d.ts"]
-    },
-    "baseUrl": "."
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
