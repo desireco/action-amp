@@ -26,6 +26,7 @@ import { useActiveLens } from "../app/lensContext";
 import { FeedbackDialog } from "../app/FeedbackDialog";
 import { captureFeedbackContext } from "../feedback/captureContext";
 import { ListEmpty } from "./ListShell";
+import { TaskRowEditor } from "../tasks/TaskRowEditor";
 import { TODAY_CAP_DEFAULT } from "../app/operations";
 import "./ListShell.css";
 import "./TodayPage.css";
@@ -243,14 +244,10 @@ export function TodayPage() {
                   >
                     Do
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editTask(task)}
-                    title="Edit task"
-                  >
-                    Edit
-                  </Button>
+                  <TaskRowEditor
+                    task={task}
+                    onClose={() => setActiveTaskId(null)}
+                  />
                   <Button
                     variant="ghost"
                     size="sm"

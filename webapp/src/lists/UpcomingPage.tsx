@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useQuery,
@@ -19,6 +19,7 @@ import {
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
 import { useTaskListActions } from "./useTaskListActions";
+import { TaskRowEditor } from "../tasks/TaskRowEditor";
 import "./ListShell.css";
 import "./UpcomingPage.css";
 import {
@@ -44,7 +45,6 @@ import {
 export function UpcomingPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
-  const location = useLocation();
   const queryClient = useQueryClient();
   const { promoteToToday, moveToSomeday } = useTaskListActions();
   const [isUnscheduling, setIsUnscheduling] = useState(false);
@@ -94,7 +94,6 @@ export function UpcomingPage() {
   }, [tasks]);
 
   const count = tasks?.length ?? 0;
-  const returnTo = `${location.pathname}${location.search}${location.hash}`;
   const overdueCount =
     groups.find((g) => g.key === "Overdue")?.items.length ?? 0;
 
@@ -225,17 +224,11 @@ export function UpcomingPage() {
               >
                 Someday
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  navigate(`/do/tasks/${task.permalink ?? task.id}`, {
-                    state: { returnTo },
-                  })
-                }
-              >
-                Edit
-              </Button>
+              <TaskRowEditor
+                task={task}
+                lensId={lens?.id ?? null}
+                onClose={() => setActiveTaskId(null)}
+              />
             </TaskRow>
           )}
         />

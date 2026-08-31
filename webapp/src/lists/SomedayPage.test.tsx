@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -18,6 +19,11 @@ interface SomedayTask {
 
 vi.mock("wasp/client/operations", () => ({
   getTasks,
+  // Consumed by TaskRowEditor (inline row editing) — stubbed, not exercised here.
+  getProjects: vi.fn(),
+  getGoals: vi.fn(),
+  updateTaskDetails: vi.fn(),
+  updateTaskStatus: vi.fn(),
   useQuery: () => queryState.current,
 }));
 
@@ -32,10 +38,16 @@ vi.mock("./useTaskListActions", () => ({
 const { SomedayPage } = await import("./SomedayPage");
 
 function renderPage() {
+  // QueryClientProvider: TaskRowEditor (inline row editing) needs a client.
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <MemoryRouter>
-      <SomedayPage />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <SomedayPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

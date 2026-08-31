@@ -27,6 +27,11 @@ vi.mock("wasp/client/operations", () => ({
   getTasks,
   getAppData,
   unscheduleOverdueTasks,
+  // Consumed by TaskRowEditor (inline row editing) — stubbed, not exercised here.
+  getProjects: vi.fn(),
+  getGoals: vi.fn(),
+  updateTaskDetails: vi.fn(),
+  updateTaskStatus: vi.fn(),
   useQuery: (operation: unknown) =>
     operation === getAppData
       ? { data: queryState.appData, isLoading: false }

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router";
 import { useQuery, getTasks } from "wasp/client/operations";
 import type { Task } from "@prisma/client";
 import {
@@ -10,6 +9,7 @@ import {
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
 import { useTaskListActions } from "./useTaskListActions";
+import { TaskRowEditor } from "../tasks/TaskRowEditor";
 import "./ListShell.css";
 import "./SomedayPage.css";
 
@@ -22,8 +22,6 @@ import "./SomedayPage.css";
  */
 export function SomedayPage() {
   const lens = useActiveLens();
-  const navigate = useNavigate();
-  const location = useLocation();
   const { promoteToToday } = useTaskListActions();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
@@ -32,7 +30,6 @@ export function SomedayPage() {
   );
 
   const count = tasks?.length ?? 0;
-  const returnTo = `${location.pathname}${location.search}${location.hash}`;
 
   // Active row for the click-to-reveal action drawer. Null = no row open.
   // Mirrors UpcomingPage/TodayPage. Without this, Someday rows would have no
@@ -97,18 +94,11 @@ export function SomedayPage() {
                 >
                   Today
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    navigate(`/do/tasks/${task.permalink ?? task.id}`, {
-                      state: { returnTo },
-                    })
-                  }
-                  title="Open task"
-                >
-                  Open
-                </Button>
+                <TaskRowEditor
+                  task={task}
+                  lensId={lens?.id ?? null}
+                  onClose={() => setActiveTaskId(null)}
+                />
               </TaskRow>
             </li>
           ))}

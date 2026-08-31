@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useQuery, getAppData, getWeekTasks } from "wasp/client/operations";
 import {
   Button,
@@ -11,6 +11,7 @@ import {
 } from "../components/ui";
 import { ListEmpty } from "./ListShell";
 import { bucketWeekTasks, dayKey } from "./weekView";
+import { TaskRowEditor } from "../tasks/TaskRowEditor";
 import {
   currentPlainDate,
   plainDateFrom,
@@ -27,7 +28,6 @@ function startOfWeek(): string {
  * list; this page simply makes each dated task's intended day visible. */
 export function WeekPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { data: tasks, isLoading } = useQuery(getWeekTasks);
   const { data: appData } = useQuery(getAppData);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
@@ -55,7 +55,6 @@ export function WeekPage() {
   }, [tasks, weekStart]);
 
   const count = tasks?.length ?? 0;
-  const returnTo = `${location.pathname}${location.search}${location.hash}`;
 
   return (
     <section className="aa-week" aria-label="This week">
@@ -104,9 +103,10 @@ export function WeekPage() {
               expanded={activeTaskId === task.id}
               onOpen={() => setActiveTaskId((current) => current === task.id ? null : task.id)}
             >
-              <Button variant="ghost" size="sm" onClick={() => navigate(`/do/tasks/${task.permalink ?? task.id}`, { state: { returnTo } })}>
-                Edit
-              </Button>
+              <TaskRowEditor
+                task={task}
+                onClose={() => setActiveTaskId(null)}
+              />
             </TaskRow>
           )}
         />
