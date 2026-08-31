@@ -114,6 +114,38 @@ body {
   color: var(--aa-teal-cta);
   text-decoration: none;
 }
+/* Burger toggle — hidden everywhere except mobile nav with JS running
+   (see the ≤768px block below). 44px tap target. */
+.aa-nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  border: 0;
+  border-radius: var(--aa-radius-md);
+  background: transparent;
+  color: var(--aa-text-2);
+  cursor: pointer;
+}
+.aa-nav-toggle:hover {
+  color: var(--aa-text);
+}
+.aa-nav-toggle-icon--close {
+  display: none;
+}
+.aa-nav-toggle[aria-expanded="true"] .aa-nav-toggle-icon--burger {
+  display: none;
+}
+.aa-nav-toggle[aria-expanded="true"] .aa-nav-toggle-icon--close {
+  display: block;
+}
+/* Mobile dropdown panel — only ever visible ≤768px with JS. `hidden` must
+   win over the flex rule, hence the :not([hidden]) guard. */
+.aa-nav-menu {
+  display: none;
+}
 
 /* ============================================================
    Site footer — normal flow, no scroll-snap anywhere.
@@ -209,10 +241,10 @@ body {
 /* ============================================================
    RESPONSIVE — mobile (≤ 768px)
    ============================================================
-   Nav: section anchors hide on mobile (they only make sense when the
-   landing's sections are visible); the Log in link stays. Brand shrinks
-   slightly. Footer: brand spans its own row; navigation stays easy to scan
-   in two columns, with Legal as a compact full-width row. */
+   Nav with JS: burger toggle opens a full-width dropdown panel with all
+   six links; the top bar keeps brand + Log in. Nav without JS (and the
+   section anchors note below) falls back to the previous wrapped,
+   horizontally scrollable links row, so destinations stay reachable. */
 @media (max-width: 768px) {
   .aa-nav {
     min-height: 56px;
@@ -253,6 +285,46 @@ body {
   .aa-brand-mark {
     width: 24px;
     height: 24px;
+  }
+
+  /* — Burger mode (JS on): swap the wrapped row for toggle + panel — */
+  [data-js].aa-nav {
+    flex-wrap: nowrap;
+    padding: 6px 20px;
+  }
+  [data-js] .aa-nav-links {
+    display: none;
+  }
+  .aa-nav-toggle {
+    display: inline-flex;
+  }
+  .aa-nav-menu:not([hidden]) {
+    display: flex;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    padding: 8px 20px 16px;
+    background: var(--aa-bg);
+    border-bottom: 1px solid var(--aa-border);
+    box-shadow: var(--aa-shadow-md);
+  }
+  .aa-nav-menu-link {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom-color: transparent;
+    border-left: 2px solid transparent;
+    font-size: 15px;
+    color: var(--aa-text-2);
+  }
+  .aa-nav-menu-link--active,
+  .aa-nav-menu-link--active:hover {
+    color: var(--aa-teal-cta);
+    border-bottom-color: transparent;
+    border-left-color: var(--aa-teal);
   }
 
   /* Footer — brand leads; destination groups scan in two columns. */

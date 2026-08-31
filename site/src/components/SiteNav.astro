@@ -1,10 +1,15 @@
 ---
 // SiteNav — the single shared site header.
 //
-// Sticky teal-tinted site navigation, used on every public page. The route map
+// Sticky site navigation, used on every public page. The route map
 // stays identical across the landing and content surfaces so a visitor never
-// has to relearn navigation. Current route gets a quiet teal marker. On mobile
-// links remain available in a horizontally scrollable row.
+// has to relearn navigation. Current route gets a quiet teal marker.
+//
+// Mobile (≤768px): the links collapse into a burger menu that opens a
+// full-width dropdown panel under the bar (links + Log in). The toggle and
+// panel are progressive enhancement — without JS the nav keeps the previous
+// wrapped, horizontally scrollable links row, so every destination stays
+// reachable.
 //
 // Styles live in styles/site-chrome.css (imported by both index.astro and
 // PublicLayout.astro).
@@ -26,7 +31,7 @@ const links = [
 ];
 ---
 
-<nav class="aa-nav">
+<nav class="aa-nav" data-nav>
   <a href="/" class="aa-brand" aria-label="ActionAmp home">
     <BrandMark />
     <span class="aa-brand-name">ActionAmp</span>
@@ -41,4 +46,55 @@ const links = [
   <div class="aa-nav-auth">
     <a class="aa-nav-link aa-nav-link-auth" href={`${appUrl}/login`}>Log in</a>
   </div>
+  <button class="aa-nav-toggle" type="button" aria-expanded="false" aria-controls="aa-nav-menu" aria-label="Open menu" hidden>
+    <svg class="aa-nav-toggle-icon aa-nav-toggle-icon--burger" viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
+      <path d="M3 5.5h14M3 10h14M3 14.5h14" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" />
+    </svg>
+    <svg class="aa-nav-toggle-icon aa-nav-toggle-icon--close" viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">
+      <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" />
+    </svg>
+  </button>
+  <div class="aa-nav-menu" id="aa-nav-menu" hidden>
+    {links.map((link) => (
+      <a class:list={["aa-nav-link aa-nav-menu-link", { "aa-nav-link--active": link.active }]} href={link.href} aria-current={link.active ? "page" : undefined}>
+        {link.label}
+      </a>
+    ))}
+  </div>
 </nav>
+
+<script>
+  // Progressive enhancement: with JS, the mobile nav swaps its wrapped links
+  // row for a burger toggle + dropdown panel. The `data-js` attribute on the
+  // nav is the CSS hook; without it the fallback row renders as before.
+  for (const nav of document.querySelectorAll<HTMLElement>("[data-nav]")) {
+    const toggle = nav.querySelector<HTMLButtonElement>(".aa-nav-toggle");
+    const menu = nav.querySelector<HTMLElement>(".aa-nav-menu");
+    if (!toggle || !menu) continue;
+
+    nav.dataset.js = "true";
+    toggle.hidden = false;
+
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      menu.hidden = !open;
+    };
+
+    toggle.addEventListener("click", () => {
+      setOpen(toggle.getAttribute("aria-expanded") !== "true");
+    });
+    menu.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).closest("a")) setOpen(false);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (!nav.contains(e.target as Node)) setOpen(false);
+    });
+  }
+</script>
