@@ -15,4 +15,7 @@ export default defineConfig({
   // Cloudflare Pages serves static files; Astro's default static output is what we want.
   output: "static",
   trailingSlash: "ignore",
+  // Dev-only toolbar renders as a floating pill in local screenshots/QA runs;
+  // disabled so automated visual checks see the real page.
+  devToolbar: { enabled: false },
 });
