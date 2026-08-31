@@ -1,4 +1,10 @@
 /** Pure resource data operations shared by Wasp actions and the CLI API. */
+import type { Prisma } from "@prisma/client";
+import {
+  prepareImageAttachments,
+  type ImageAttachmentInput,
+} from "../shared/imageAttachments";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Entities = Record<string, any>;
 
@@ -44,7 +50,7 @@ export async function getProjectResourcesData(
 
 export async function createResourceCore(
   entities: Entities,
-  { userId, projectId, title, url, notes }: Required<Pick<ResourceInput, "title">> & { userId: string; projectId: string } & ResourceInput,
+  { userId, projectId, title, url, notes, attachments }: Required<Pick<ResourceInput, "title">> & { userId: string; projectId: string } & ResourceInput & { attachments?: ImageAttachmentInput[] },
 ) {
   const project = await entities.Project.findFirst({
     where: { id: projectId, userId },
@@ -53,14 +59,17 @@ export async function createResourceCore(
   if (!project) throw new Error("Project not found.");
   const normalizedTitle = title.trim();
   if (!normalizedTitle) throw new Error("Resource title cannot be empty.");
+  const preparedAttachments = prepareImageAttachments(attachments);
+  const data: Prisma.ResourceUncheckedCreateInput = {
+    title: normalizedTitle,
+    url: normalizeUrl(url) ?? null,
+    notes: notes?.trim() || null,
+    userId,
+    projectId: project.id,
+  };
+  if (preparedAttachments) data.attachments = { create: preparedAttachments };
   const resource = await entities.Resource.create({
-    data: {
-      title: normalizedTitle,
-      url: normalizeUrl(url) ?? null,
-      notes: notes?.trim() || null,
-      userId,
-      projectId: project.id,
-    },
+    data,
     select: { id: true, title: true, url: true, notes: true, projectId: true },
   });
   return { resource, lensId: project.lensId };

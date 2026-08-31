@@ -20,7 +20,7 @@ export const createResource = (async (args, context) => {
   const result = await createResourceCore(context.entities, { userId: context.user.id, ...args });
   return result.resource;
 }) satisfies CreateResource<
-  { projectId: string; title: string; url?: string; notes?: string },
+  { projectId: string; title: string; url?: string; notes?: string; attachments?: { filename: string; mimeType: string; dataBase64: string }[] },
   { id: string; title: string }
 >;
 
