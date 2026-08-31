@@ -2,7 +2,7 @@
 id: admin-activity-dashboard
 kind: spec
 title: "User activity dashboard — calendar-week (Mon–Sun) activity metrics"
-status: ready
+status: building
 priority: P1
 feature: admin-activity-dashboard
 spec_owner: discover
@@ -12,7 +12,7 @@ depends_on: [admin-workspace, growth-analytics]
 
 # sync-managed (do not hand-edit; written by duet sync):
 gh_node_id: PVTI_lAHN6NzOAXMArs4OMmW5      # sync-managed (write-once)
-gh_synced_at: 2026-08-31T19:10:22Z   # sync-managed (drift detection)
+gh_synced_at: 2026-08-31T19:41:07Z
 ---
 
 # Spec: User activity dashboard — calendar-week (Mon–Sun) activity metrics
