@@ -2,7 +2,22 @@
 
 <!-- Build owns this file. Discover reads it to sign off. -->
 
-Spec: `docs/specs/task-inline-edit.md` (issue #4) · Commit `0aad632`.
+Spec: `docs/specs/task-inline-edit.md` (issue #4) · Commits `0aad632`,
+`HEAD` (project-rows extension).
+
+## Addendum — project detail rows (Jake's follow-up)
+
+The same `TaskRowEditor` now renders in **Project detail** task rows
+(`ProjectDetailPage.tsx`): selecting a task shows the live chips (When /
+Priority / Size / **Project** / Due) plus the Edit toggle. The old §C "Move
+to project" affordance is removed — the Project chip replaces it (pick a
+sibling project to reassign, "No project" to unlink to standalone), along
+with the navigational Edit button and `handleMoveTask`. The project horizon
+buttons (Today / Not today / Upcoming) stay. Done rows remain review-only.
+The page passes its own project object to the editor (its task select
+doesn't include the relation), and the one-parent rule correctly hides the
+Goal chip there. The delete-dialog's "reassign to project" picker is
+unaffected (it shares `lensProjects`, which stays).
 
 ## What changed
 

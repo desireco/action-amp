@@ -30,6 +30,7 @@ const moveProject = vi.fn();
 const updateProject = vi.fn();
 const deleteProject = vi.fn();
 const updateTask = vi.fn();
+const updateTaskDetails = vi.fn();
 const updateTaskContent = vi.fn();
 const createResource = vi.fn();
 const updateResource = vi.fn();
@@ -63,6 +64,7 @@ vi.mock("wasp/client/operations", () => ({
   updateProject,
   deleteProject,
   updateTask,
+  updateTaskDetails,
   updateTaskContent,
   createResource,
   updateResource,
@@ -236,111 +238,45 @@ describe("ProjectDetailPage — search destination", () => {
   });
 });
 
-describe("ProjectDetailPage — move-task affordance (spec §C)", () => {
-  it("a task row exposes a Move button that expands the picker", () => {
+describe("ProjectDetailPage — inline row editor (replaces the old Move picker)", () => {
+  it("an open task row exposes the property chips and Edit toggle, not a Move button", () => {
     projectData.current = makeProjectMultiToday();
-    lensProjectsData.current = [{ id: "p2", name: "Other project" }];
     renderAt("/do/projects/p1");
 
-    // The Move button is present on the open task row.
     openTaskActions("Email Sarah");
-    const moveBtn = screen.getByRole("button", {
-      name: /move email sarah to another project/i,
-    });
-    fireEvent.click(moveBtn);
 
-    // Picker reveals the sibling project as an option.
-    expect(screen.getByText("Other project")).toBeInTheDocument();
-    // And the standalone (unlink) option.
+    // The Project chip reads as the containing project; complexity, due, and
+    // when are all inline now. The old Move affordance is gone.
     expect(
-      screen.getByRole("button", { name: /^standalone$/i }),
-    ).toBeInTheDocument();
-  });
-
-  it("selecting a sibling project fires updateTask with the target projectId", async () => {
-    projectData.current = makeProjectMultiToday();
-    lensProjectsData.current = [{ id: "p2", name: "Other project" }];
-    renderAt("/do/projects/p1");
-
-    openTaskActions("Email Sarah");
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /move email sarah to another project/i,
-      }),
-    );
-    fireEvent.click(screen.getByText("Other project"));
-
-    await waitFor(() =>
-      expect(updateTask).toHaveBeenCalledWith({ id: "t1", projectId: "p2" }),
-    );
-  });
-
-  it("selecting Standalone fires updateTask with projectId=null (unlink)", async () => {
-    projectData.current = makeProjectMultiToday();
-    lensProjectsData.current = [{ id: "p2", name: "Other project" }];
-    renderAt("/do/projects/p1");
-
-    openTaskActions("Email Sarah");
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /move email sarah to another project/i,
-      }),
-    );
-    fireEvent.click(screen.getByRole("button", { name: /^standalone$/i }));
-
-    await waitFor(() =>
-      expect(updateTask).toHaveBeenCalledWith({ id: "t1", projectId: null }),
-    );
-  });
-
-  it("the current project is excluded from the move targets", () => {
-    projectData.current = makeProjectMultiToday();
-    lensProjectsData.current = [
-      { id: "p1", name: "Ship product v2" }, // the current project — should NOT appear
-      { id: "p2", name: "Other project" },
-    ];
-    renderAt("/do/projects/p1");
-
-    openTaskActions("Email Sarah");
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /move email sarah to another project/i,
-      }),
-    );
-    // Only "Other project" appears as an option button, not the current project.
-    const movePicker = screen.getByText("Other project").parentElement!;
-    expect(movePicker).not.toHaveTextContent("Ship product v2");
-  });
-
-  it("shows an empty-state message when there are no other projects in the Lens", () => {
-    projectData.current = makeProjectMultiToday();
-    lensProjectsData.current = [{ id: "p1", name: "Ship product v2" }]; // only the current project
-    renderAt("/do/projects/p1");
-
-    openTaskActions("Email Sarah");
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /move email sarah to another project/i,
-      }),
-    );
+      screen.queryByRole("button", { name: /move email sarah/i }),
+    ).toBeNull();
     expect(
-      screen.getByText(/no other projects in this lens/i),
-    ).toBeInTheDocument();
+      screen.getAllByRole("button", { name: "Edit title and notes" }).length,
+    ).toBeGreaterThan(0);
+    // "Ship product v2" appears as the breadcrumb AND the Project chip.
+    expect(
+      screen.getAllByRole("button", { name: "Ship product v2" }).length,
+    ).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole("button", { name: "M" })).toBeInTheDocument();
+  });
+
+  it("Edit opens the inline title/notes working copy", () => {
+    projectData.current = makeProjectMultiToday();
+    renderAt("/do/projects/p1");
+
+    openTaskActions("Email Sarah");
+    // Multiple rows render editors (only the active row's is visible) —
+    // operate on the first.
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Edit title and notes" })[0],
+    );
+
+    expect(screen.getByLabelText("Task title")).toHaveValue("Email Sarah");
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
   });
 });
 
 describe("ProjectDetailPage — Edit affordance on task rows", () => {
-  it("each task row has an Edit button that opens the task page", () => {
-    projectData.current = makeProjectMultiToday();
-    renderAt("/do/projects/p1");
-
-    openTaskActions("Email Sarah");
-    const editBtn = screen.getByRole("button", { name: /edit email sarah/i });
-    fireEvent.click(editBtn);
-
-    expect(screen.getByTestId("task-detail")).toBeInTheDocument();
-  });
-
   it("done tasks open their review-only task detail without an Edit button", () => {
     projectData.current = makeProject({
       tasks: [

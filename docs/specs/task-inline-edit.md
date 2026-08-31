@@ -43,10 +43,20 @@ on done tasks) — but the common edits no longer require the round trip.
 1. **One shared component**: `webapp/src/tasks/TaskRowEditor.tsx`, rendered
    inside `TaskRow`'s expanded children. It owns the chips, the prose editor,
    the won't-do confirm, and the invalidations after every write.
-2. **Wired into the four active list surfaces**: Today (main rows; overflow
-   and done rows stay as-is), Upcoming, Someday, Week. Each page keeps its
-   own quick actions (Do / Today / Someday / Move to Upcoming) and drops its
-   navigational Edit/Open button — the editor replaces it.
+2. **Wired into the five active list surfaces**: Today (main rows; overflow
+   and done rows stay as-is), Upcoming, Someday, Week, and **Project detail
+   rows** (added 2026-08-31 on Jake's direction — selecting a task there
+   edits complexity/project/due inline). Each page keeps its own quick
+   actions (Do / Today / Someday / Move to Upcoming / project horizon
+   buttons) and drops its navigational Edit/Open button — the editor
+   replaces it.
+   - **Project detail specifics:** the row editor's Project chip replaces
+     the old §C "Move to project" picker entirely (picking another project
+     reassigns; "No project" unlinks to standalone) — the Move button,
+     inline picker, and `handleMoveTask` are removed. The page supplies the
+     containing project to the editor (its task select doesn't include the
+     relation); the one-parent rule then hides the Goal chip, which is
+     correct on a project's rows.
 3. **Same write paths as the detail page**: `updateTaskDetails` for every
    structural pick and the prose save; `updateTaskStatus({status: "WONT_DO"})`
    for the decline; identical invalidation set (getTask, getTasks, getTopTask,
@@ -85,4 +95,6 @@ on done tasks) — but the common edits no longer require the round trip.
 - Hard delete of tasks from rows (WONT_DO is the decline path).
 - Property-key shortcuts ([ / ] / H) inside list rows (detail page only).
 - Editing overflow (beyond-cap) or done-today rows.
-- Project detail page rows (keeps navigation edit for now).
+- ~~Project detail page rows~~ — **reversed 2026-08-31 (Jake):** project rows
+  now carry the editor; the Move picker they used to have is gone (superseded
+  by the Project chip).

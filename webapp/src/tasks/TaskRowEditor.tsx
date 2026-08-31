@@ -247,7 +247,7 @@ export function TaskRowEditor({
             variant="ghost"
             size="sm"
             onClick={() => setEditing(true)}
-            title="Edit title and notes"
+            aria-label="Edit title and notes"
           >
             Edit
           </Button>

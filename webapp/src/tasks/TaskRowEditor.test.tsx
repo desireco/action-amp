@@ -54,12 +54,12 @@ beforeEach(() => {
 describe("TaskRowEditor", () => {
   it("renders the chips row with an Edit toggle, not a navigation button", () => {
     renderEditor();
-    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit title and notes" })).toBeInTheDocument();
   });
 
   it("Edit opens the title/notes working copy; Save is gated until something changes", async () => {
     renderEditor();
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit title and notes" }));
 
     const title = screen.getByLabelText("Task title");
     expect(title).toHaveValue("Email Sarah");
@@ -81,19 +81,19 @@ describe("TaskRowEditor", () => {
 
   it("Cancel returns to chips without writing", () => {
     renderEditor();
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit title and notes" }));
     fireEvent.change(screen.getByLabelText("Task title"), {
       target: { value: "Discarded change" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(updateTaskDetails).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit title and notes" })).toBeInTheDocument();
   });
 
   it("won't do confirms, then writes WONT_DO through the status op", async () => {
     renderEditor();
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit title and notes" }));
     fireEvent.click(screen.getByRole("button", { name: "Mark as won't do" }));
 
     // Confirm dialog gates the decline.
