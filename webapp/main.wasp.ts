@@ -483,9 +483,11 @@ export default app({
       auth: true,
     }),
     action(updateTask, { entities: ["Task", "Project", "Goal"], auth: true }),
-    action(createResource, { entities: ["Resource", "Project"], auth: true }),
-    action(updateResource, { entities: ["Resource", "Project"], auth: true }),
-    action(deleteResource, { entities: ["Resource", "Project"], auth: true }),
+    // Lens is required by assertLensAllowed (FREE-lens filing guard); without
+    // it the guard 500s on context.entities.Lens for FREE-plan users.
+    action(createResource, { entities: ["Resource", "Project", "Lens"], auth: true }),
+    action(updateResource, { entities: ["Resource", "Project", "Lens"], auth: true }),
+    action(deleteResource, { entities: ["Resource", "Project", "Lens"], auth: true }),
     query(getGoals, {
       entities: ["Goal", "Project", "Task", "Lens"],
       auth: true,
