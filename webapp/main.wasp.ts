@@ -128,6 +128,7 @@ import { sendDailyTodayReminder } from "./src/notifications/dailyReminderJob" wi
 import { submitFeedback } from "./src/feedback/operations" with { type: "ref" };
 import {
   getAdminStats,
+  getAdminActivityStats,
   getRecentFeedback,
   updateFeedbackStatus,
   deleteFeedback,
@@ -207,6 +208,7 @@ import { AdminPage } from "./src/admin/AdminPage" with { type: "ref" };
 import { AdminFeedbackPage } from "./src/admin/AdminFeedbackPage" with { type: "ref" };
 import { AdminUsersPage } from "./src/admin/AdminUsersPage" with { type: "ref" };
 import { AdminFunnelPage } from "./src/admin/AdminFunnelPage" with { type: "ref" };
+import { AdminActivityPage } from "./src/admin/AdminActivityPage" with { type: "ref" };
 import { AdminRedirectPage } from "./src/admin/AdminRedirectPage" with { type: "ref" };
 import { CliLoginPage } from "./src/auth/CliLoginPage" with { type: "ref" };
 import { EmailVerificationPage } from "./src/auth/email/EmailVerificationPage" with { type: "ref" };
@@ -343,6 +345,7 @@ export default app({
     route("PatSettingsRoute", "/do/settings/pat", page(PatSettingsPage)),
     route("AdminRoute", "/do/admin", page(AdminRedirectPage)),
     route("AdminOverviewRoute", "/do/admin/overview", page(AdminPage)),
+    route("AdminActivityRoute", "/do/admin/activity", page(AdminActivityPage)),
     route("AdminUsersRoute", "/do/admin/users", page(AdminUsersPage)),
     route("AdminFunnelRoute", "/do/admin/funnel", page(AdminFunnelPage)),
     route("AdminFeedbackRoute", "/do/admin/feedback", page(AdminFeedbackPage)),
@@ -562,6 +565,10 @@ export default app({
         "AnalyticsSession",
         "AnalyticsEvent",
       ],
+      auth: true,
+    }),
+    query(getAdminActivityStats, {
+      entities: ["User", "Task", "AnalyticsEvent"],
       auth: true,
     }),
     query(getAdminUsers, {

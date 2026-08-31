@@ -4,6 +4,8 @@ import { describe, it, expect } from "vitest";
 import {
   getAdminStatsCore,
   getRecentFeedbackCore,
+  getActivityStatsCore,
+  startOfISOWeek,
   FEEDBACK_STATUSES,
 } from "./operationsCore";
 import { mockContext } from "../test/mockContext";
@@ -274,5 +276,158 @@ describe("getRecentFeedbackCore", () => {
     expect(entities.Feedback.findMany.mock.calls[0][0]).toMatchObject({
       where: { deletedAt: null },
     });
+  });
+});
+
+function asActivity(entities: ReturnType<typeof mockContext>["entities"]) {
+  const spies = {
+    User: entities.User,
+    Task: entities.Task,
+    AnalyticsEvent: entities.AnalyticsEvent,
+  };
+  // SAFETY: EntitySpy vi.fn()s satisfy the read-only delegate slice at runtime.
+  return spies as Parameters<typeof getActivityStatsCore>[0];
+}
+
+describe("startOfISOWeek", () => {
+  it("returns the same instant for Monday 00:00 UTC", () => {
+    expect(startOfISOWeek(new Date("2026-08-31T00:00:00.000Z")).toISOString()).toBe("2026-08-31T00:00:00.000Z");
+  });
+
+  it("maps Sunday 23:59:59.999 UTC to the previous Monday", () => {
+    expect(startOfISOWeek(new Date("2026-09-06T23:59:59.999Z")).toISOString()).toBe("2026-08-31T00:00:00.000Z");
+  });
+
+  it("maps a midweek Thursday back to its Monday", () => {
+    expect(startOfISOWeek(new Date("2026-09-03T12:00:00Z")).toISOString()).toBe("2026-08-31T00:00:00.000Z");
+  });
+
+  it("keeps a week spanning a year boundary Monday-derived", () => {
+    // Friday Jan 1 2027 belongs to the week starting Monday Dec 28 2026.
+    expect(startOfISOWeek(new Date("2027-01-01T05:00:00Z")).toISOString()).toBe("2026-12-28T00:00:00.000Z");
+  });
+});
+
+describe("getActivityStatsCore", () => {
+  const NOW = new Date("2026-09-03T12:00:00Z"); // Thursday
+
+  function zeroMocks(entities: ReturnType<typeof mockContext>["entities"]) {
+    entities.User.count.mockResolvedValue(0);
+    entities.Task.count.mockResolvedValue(0);
+    entities.AnalyticsEvent.count.mockResolvedValue(0);
+  }
+
+  it("returns 8 full ISO trend weeks, oldest → newest, last marked current", async () => {
+    const { entities } = mockContext();
+    zeroMocks(entities);
+
+    const stats = await getActivityStatsCore(asActivity(entities), { now: NOW });
+
+    expect(stats.weeks).toHaveLength(8);
+    expect(stats.weeks[0].weekStart).toBe("2026-07-13T00:00:00.000Z");
+    expect(stats.weeks[7].weekStart).toBe("2026-08-31T00:00:00.000Z");
+    expect(stats.weeks[7].weekEnd).toBe("2026-09-07T00:00:00.000Z");
+    expect(stats.weeks.map((w) => w.isCurrent)).toEqual([
+      false, false, false, false, false, false, false, true,
+    ]);
+  });
+
+  it("clips month buckets to the calendar month so the rows sum to the month", async () => {
+    const { entities } = mockContext();
+    zeroMocks(entities);
+
+    const stats = await getActivityStatsCore(asActivity(entities), { now: NOW });
+
+    expect(stats.month.label).toBe("September 2026");
+    expect(stats.month.weeks.map((w) => [w.weekStart, w.weekEnd])).toEqual([
+      ["2026-09-01T00:00:00.000Z", "2026-09-08T00:00:00.000Z"],
+      ["2026-09-08T00:00:00.000Z", "2026-09-15T00:00:00.000Z"],
+      ["2026-09-15T00:00:00.000Z", "2026-09-22T00:00:00.000Z"],
+      ["2026-09-22T00:00:00.000Z", "2026-09-29T00:00:00.000Z"],
+      ["2026-09-29T00:00:00.000Z", "2026-10-01T00:00:00.000Z"],
+    ]);
+    expect(stats.month.weeks[0].isCurrent).toBe(true);
+    expect(stats.month.weeks.slice(1).every((w) => !w.isCurrent)).toBe(true);
+  });
+
+  it("counts each bucket with exclusive-end createdAt ranges", async () => {
+    const { entities } = mockContext();
+    zeroMocks(entities);
+
+    await getActivityStatsCore(asActivity(entities), { now: NOW });
+
+    const signupCalls = entities.User.count.mock.calls
+      .map((c) => c[0])
+      .filter((c) => c?.where?.createdAt?.gte);
+    const currentWeekCall = signupCalls.find(
+      (c) => c.where.createdAt.gte.getTime() === Date.parse("2026-08-31T00:00:00Z"),
+    );
+    // A row exactly at weekEnd (Sep 7 00:00) is excluded here (lt) and lands in the next bucket.
+    expect(currentWeekCall).toBeTruthy();
+    expect(currentWeekCall.where.createdAt.lt?.getTime()).toBe(Date.parse("2026-09-07T00:00:00Z"));
+  });
+
+  it("derives bucket numbers from the matching range, month rows independently", async () => {
+    const { entities } = mockContext();
+    entities.User.count.mockImplementation(async (args: { where?: { createdAt?: { gte?: Date } } }) => {
+      const gte = args?.where?.createdAt?.gte;
+      return gte?.getTime() === Date.parse("2026-08-31T00:00:00Z") ? 4 : 1;
+    });
+    entities.Task.count.mockResolvedValue(0);
+    entities.AnalyticsEvent.count.mockResolvedValue(0);
+
+    const stats = await getActivityStatsCore(asActivity(entities), { now: NOW });
+
+    // The trend's current week starts Aug 31 (Monday); the month's first row starts Sep 1 (clipped).
+    expect(stats.weeks[7].signups).toBe(4);
+    expect(stats.month.weeks[0].signups).toBe(1);
+  });
+
+  it("counts captures and triage from analytics events by occurredAt window", async () => {
+    const { entities } = mockContext();
+    zeroMocks(entities);
+
+    await getActivityStatsCore(asActivity(entities), { now: NOW });
+
+    const eventNames = entities.AnalyticsEvent.count.mock.calls.map((c) => c[0]?.where?.name);
+    expect(eventNames).toContain("CAPTURE_CREATED");
+    expect(eventNames).toContain("TRIAGE_COMPLETED");
+    for (const call of entities.AnalyticsEvent.count.mock.calls) {
+      expect(call[0]?.where?.occurredAt?.gte).toBeInstanceOf(Date);
+      expect(call[0]?.where?.occurredAt?.lt).toBeInstanceOf(Date);
+    }
+  });
+
+  it("counts completed tasks with isDone and a completedAt window", async () => {
+    const { entities } = mockContext();
+    zeroMocks(entities);
+
+    await getActivityStatsCore(asActivity(entities), { now: NOW });
+
+    const doneCalls = entities.Task.count.mock.calls
+      .map((c) => c[0])
+      .filter((c) => c?.where?.isDone === true);
+    expect(doneCalls.length).toBeGreaterThan(0);
+    for (const call of doneCalls) {
+      expect(call.where.completedAt?.gte).toBeInstanceOf(Date);
+      expect(call.where.completedAt?.lt).toBeInstanceOf(Date);
+    }
+  });
+
+  it("coerces undefined counts to zero and survives a missing AnalyticsEvent delegate", async () => {
+    const { entities } = mockContext();
+    // Test doubles may resolve undefined (the core coerces to 0, not NaN).
+    entities.User.count.mockImplementation(async () => undefined);
+    entities.Task.count.mockImplementation(async () => undefined);
+    const { AnalyticsEvent: _missing, ...rest } = asActivity(entities);
+
+    const stats = await getActivityStatsCore(rest, { now: NOW });
+
+    for (const week of [...stats.weeks, ...stats.month.weeks]) {
+      expect(week.signups).toBe(0);
+      expect(week.captures).toBe(0);
+      expect(week.triageCompleted).toBe(0);
+      expect(week.tasksCompleted).toBe(0);
+    }
   });
 });

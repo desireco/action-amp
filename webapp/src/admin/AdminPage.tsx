@@ -215,7 +215,10 @@ export function AdminPage() {
       )}
 
       <div className="aa-admin-group">
-        <h3 className="aa-admin-group__title">Users</h3>
+        <div className="aa-admin-section-head">
+          <h3 className="aa-admin-group__title">Users</h3>
+          <Link to="/do/admin/activity">Weekly signups → Activity</Link>
+        </div>
         <div className="aa-admin-tiles">
           <Tile value={num(u?.total)} label="Total signups" to="/do/admin/users?sort=signup_desc" />
           <Tile value={num(u?.selectedSignups)} label={`New signups · ${range}`} to={`/do/admin/users${range === "all" ? "?sort=signup_desc" : `?joined=${range}&sort=signup_desc`}`} />

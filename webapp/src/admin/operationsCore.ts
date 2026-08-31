@@ -396,6 +396,136 @@ export async function getAdminStatsCore(
 }
 
 // ----------------------------------------------------------------
+// Activity dashboard — calendar-week (Mon–Sun UTC) activity metrics
+// ----------------------------------------------------------------
+
+/** The delegate slice the activity core calls (all counts, no row data). */
+interface ActivityStatsEntities {
+  User: { count(args?: { where?: Prisma.UserWhereInput }): Promise<number> };
+  Task: { count(args?: { where?: Prisma.TaskWhereInput }): Promise<number> };
+  AnalyticsEvent?: {
+    count(args?: { where?: Prisma.AnalyticsEventWhereInput }): Promise<number>;
+  };
+}
+
+export type ActivityWeek = {
+  /** ISO — bucket start (Monday 00:00 UTC for trend weeks; month-clipped for month rows). */
+  weekStart: string;
+  /** ISO — bucket end, exclusive. */
+  weekEnd: string;
+  isCurrent: boolean;
+  signups: number;
+  activeUsers: number;
+  captures: number;
+  triageCompleted: number;
+  tasksCreated: number;
+  tasksCompleted: number;
+};
+
+export type ActivityStats = {
+  /** Last 8 full ISO weeks, oldest → newest. The final entry is the current week. */
+  weeks: ActivityWeek[];
+  /** Current calendar month, split into buckets clipped to the month's edges (so the rows sum to the month's totals). */
+  month: { label: string; weeks: ActivityWeek[] };
+};
+
+/** Monday 00:00:00.000 UTC of the ISO week containing `date` (Sunday is the week's last day). */
+export function startOfISOWeek(date: Date): Date {
+  const d = new Date(date.getTime());
+  const daysSinceMonday = (d.getUTCDay() + 6) % 7; // Mon=0 … Sun=6
+  d.setUTCDate(d.getUTCDate() - daysSinceMonday);
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+
+function startOfUTCMonth(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+}
+
+const MONTH_LABEL = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+export const ACTIVITY_TREND_WEEKS = 8;
+
+/**
+ * Week-bucketed activity counts for the admin Activity page. Every bucket is
+ * counted with exclusive-end ranges (`gte` start, `lt` end): a row exactly at
+ * the boundary lands in the next bucket. Trend weeks are full ISO weeks
+ * (Monday → Sunday UTC); month rows are clipped to the calendar month so the
+ * month table sums to the month's own totals.
+ */
+export async function getActivityStatsCore(
+  entities: ActivityStatsEntities,
+  { now = new Date() }: { now?: Date } = {},
+): Promise<ActivityStats> {
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+
+  const currentWeekStart = startOfISOWeek(now);
+  const trendBounds: Array<[Date, Date]> = [];
+  for (let i = ACTIVITY_TREND_WEEKS - 1; i >= 0; i--) {
+    const start = new Date(currentWeekStart.getTime() - i * weekMs);
+    trendBounds.push([start, new Date(start.getTime() + weekMs)]);
+  }
+
+  const monthStart = startOfUTCMonth(now);
+  const monthEnd = new Date(
+    Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1),
+  );
+  const monthBounds: Array<[Date, Date]> = [];
+  for (let t = monthStart.getTime(); t < monthEnd.getTime(); t += weekMs) {
+    monthBounds.push([new Date(t), new Date(Math.min(t + weekMs, monthEnd.getTime()))]);
+  }
+
+  const bucket = async ([gte, lt]: [Date, Date]): Promise<Omit<ActivityWeek, "weekStart" | "weekEnd" | "isCurrent">> => {
+    const eventCount = (name: "CAPTURE_CREATED" | "TRIAGE_COMPLETED") =>
+      entities.AnalyticsEvent?.count
+        ? entities.AnalyticsEvent.count({
+            where: { name, occurredAt: { gte, lt } },
+          })
+        : Promise.resolve(0);
+    const [signups, activeUsers, captures, triageCompleted, tasksCreated, tasksCompleted] =
+      await Promise.all([
+        entities.User.count({ where: { createdAt: { gte, lt } } }),
+        entities.User.count({ where: { lastActiveAt: { gte, lt } } }),
+        eventCount("CAPTURE_CREATED"),
+        eventCount("TRIAGE_COMPLETED"),
+        entities.Task.count({ where: { createdAt: { gte, lt } } }),
+        entities.Task.count({ where: { isDone: true, completedAt: { gte, lt } } }),
+      ]);
+    return {
+      signups: signups ?? 0,
+      activeUsers: activeUsers ?? 0,
+      captures: captures ?? 0,
+      triageCompleted: triageCompleted ?? 0,
+      tasksCreated: tasksCreated ?? 0,
+      tasksCompleted: tasksCompleted ?? 0,
+    };
+  };
+
+  const toWeek = async (bounds: [Date, Date], isCurrent: boolean): Promise<ActivityWeek> => ({
+    weekStart: bounds[0].toISOString(),
+    weekEnd: bounds[1].toISOString(),
+    isCurrent,
+    ...(await bucket(bounds)),
+  });
+
+  const weeks = await Promise.all(
+    trendBounds.map((bounds, i) => toWeek(bounds, i === trendBounds.length - 1)),
+  );
+  const monthWeeks = await Promise.all(
+    monthBounds.map(([start, end]) => toWeek([start, end], now >= start && now < end)),
+  );
+
+  return {
+    weeks,
+    month: { label: MONTH_LABEL.format(now), weeks: monthWeeks },
+  };
+}
+
+// ----------------------------------------------------------------
 // Recent feedback (cursor paged) — admin dashboard "recent" list
 // ----------------------------------------------------------------
 // Newest first (createdAt desc, id desc). afterId = last item's id on the

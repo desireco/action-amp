@@ -1,0 +1,12 @@
+/*
+ * AdminActivityPage — page-specific bits only. Shared aa-admin-* classes
+ * (tiles, groups, section heads, notes) come from AdminPage.css, imported
+ * alongside this file.
+ */
+
+/* Month-total footer row label + current-week emphasis stay typographic, not
+   colored — this is a quiet read, and the two-accent rule reserves color for
+   state, not emphasis. */
+.aa-admin-activity-total {
+  font-weight: 600;
+}

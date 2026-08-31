@@ -1,6 +1,6 @@
 import { HttpError, prisma } from "wasp/server";
-import type { GetAdminStats, GetRecentFeedback, UpdateFeedbackStatus, DeleteFeedback, GetAdminUsers, GrantAdminUserAccess, RemoveAdminUserAccess, DeleteAdminUser, DeleteAdminUsers } from "wasp/server/operations";
-import { getAdminStatsCore, getRecentFeedbackCore, type AdminStats, type FeedbackRow } from "./operationsCore";
+import type { GetAdminStats, GetRecentFeedback, UpdateFeedbackStatus, DeleteFeedback, GetAdminUsers, GrantAdminUserAccess, RemoveAdminUserAccess, DeleteAdminUser, DeleteAdminUsers, GetAdminActivityStats } from "wasp/server/operations";
+import { getAdminStatsCore, getRecentFeedbackCore, getActivityStatsCore, type AdminStats, type FeedbackRow, type ActivityStats } from "./operationsCore";
 import { updateFeedbackStatusCore, deleteFeedbackCore, type FeedbackStatus } from "../feedback/operationsCore";
 import type { FunnelRange } from "../analytics/operationsCore";
 import {
@@ -32,6 +32,19 @@ export const getAdminStats = (async ({ range = "30d" }: { range?: FunnelRange } 
   const validRange: FunnelRange = range === "7d" || range === "all" ? range : "30d";
   return getAdminStatsCore(context.entities, validRange);
 }) satisfies GetAdminStats<{ range?: FunnelRange }, AdminStats>;
+
+export type AdminActivityArgs = Record<string, never>;
+export type AdminActivityResult = ActivityStats;
+
+/**
+ * Week-bucketed activity metrics for the admin Activity page (calendar
+ * Monday–Sunday UTC weeks; current-month rows clipped to the month). Same
+ * admin boundary as getAdminStats — the server gate is the boundary.
+ */
+export const getAdminActivityStats = (async (_args: AdminActivityArgs | undefined, context) => {
+  requireAdmin(context);
+  return getActivityStatsCore(context.entities);
+}) satisfies GetAdminActivityStats<AdminActivityArgs | undefined, AdminActivityResult>;
 
 export type RecentFeedbackArgs = { afterId?: string | null; limit?: number; statuses?: FeedbackStatus[] };
 export type RecentFeedbackResult = { items: FeedbackRow[]; hasNext: boolean };
