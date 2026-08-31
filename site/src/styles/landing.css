@@ -1031,6 +1031,18 @@
     align-items: center;
     min-height: 44px;
   }
+
+  /* Guides teaser: the desktop two-column grid (250px-min right column +
+     80px gap + 56px gutters) cannot fit a phone — the left column collapsed
+     to 0px and the links column pushed the page 11px sideways. Stack it. */
+  .aa-guides-teaser {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 64px 22px;
+  }
+  .aa-guides-teaser-links {
+    align-self: auto;
+  }
 }
 
 /* ============================================================
