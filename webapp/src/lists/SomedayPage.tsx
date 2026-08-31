@@ -3,12 +3,10 @@ import { useQuery, getTasks } from "wasp/client/operations";
 import type { Task } from "@prisma/client";
 import {
   TaskRow,
-  Button,
   CompletionCircle,
 } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
-import { useTaskListActions } from "./useTaskListActions";
 import { TaskRowEditor } from "../tasks/TaskRowEditor";
 import "./ListShell.css";
 import "./SomedayPage.css";
@@ -22,7 +20,6 @@ import "./SomedayPage.css";
  */
 export function SomedayPage() {
   const lens = useActiveLens();
-  const { promoteToToday } = useTaskListActions();
   const { data: tasks, isLoading } = useQuery(
     getTasks,
     lens ? { lensId: lens.id, status: "SOMEDAY", isDone: false } : undefined,
@@ -83,19 +80,7 @@ export function SomedayPage() {
                   )
                 }
                 below={<TaskRowEditor task={task} lensId={lens?.id ?? null} />}
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setActiveTaskId(null);
-                    void promoteToToday(task);
-                  }}
-                  title="Move to Today"
-                >
-                  Today
-                </Button>
-              </TaskRow>
+              />
             </li>
           ))}
         </ul>

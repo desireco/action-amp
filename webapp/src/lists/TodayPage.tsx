@@ -7,7 +7,6 @@ import {
   getWeekTasks,
   getDoneToday,
   getAppData,
-  updateTaskStatus,
   submitFeedback,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,7 +16,6 @@ import {
   TaskRow,
   CompletionCircle,
   Chip,
-  ConfirmDialog,
   GroupedList,
   type GroupDef,
   type TaskRowTask,
@@ -102,18 +100,7 @@ export function TodayPage() {
     [doneToday],
   );
 
-  // Demote a Today task to Upcoming (it moves to /do/upcoming, never
-  // "disappears"). Promote happens on the Upcoming page now — Today only
-  // links over.
-  const handleDemote = async (task: TaskRowTask) => {
-    await updateTaskStatus({ id: task.id, status: "UPCOMING" });
-    queryClient.invalidateQueries({ queryKey: ["getTodayTasks"] });
-    queryClient.invalidateQueries({ queryKey: ["getTasks"] });
-    queryClient.invalidateQueries({ queryKey: ["getTopTask"] });
-    queryClient.invalidateQueries({ queryKey: ["getAppData"] });
-  };
   const [feedbackTask, setFeedbackTask] = useState<TaskRowTask | null>(null);
-  const [demoteTask, setDemoteTask] = useState<TaskRowTask | null>(null);
 
   const overCapacity = (tasks?.length ?? 0) > todayCap;
   const overflow = useMemo(() => (tasks ?? []).slice(todayCap), [tasks, todayCap]);
@@ -236,27 +223,7 @@ export function TodayPage() {
                     )
                   }
                   below={<TaskRowEditor task={task} />}
-                >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => pickTask(task)}
-                    title="Start focus on this task"
-                  >
-                    Do
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setActiveTaskId(null);
-                      setDemoteTask(task);
-                    }}
-                    title="Move back to Upcoming"
-                  >
-                    Move to Upcoming
-                  </Button>
-                </TaskRow>
+                />
               )}
             />
 
@@ -357,25 +324,6 @@ export function TodayPage() {
                 ? { id: lens.id, name: lens.name, color: lens.color }
                 : null,
             });
-          }}
-        />
-      )}
-      {demoteTask && (
-        <ConfirmDialog
-          title="Move this off Today?"
-          message={
-            <>
-              <strong>{demoteTask.description}</strong> will move to Upcoming.
-              It moves to Upcoming.
-            </>
-          }
-          confirmLabel="Move to Upcoming"
-          cancelLabel="Keep today"
-          onClose={() => setDemoteTask(null)}
-          onConfirm={async () => {
-            const task = demoteTask;
-            setDemoteTask(null);
-            await handleDemote(task);
           }}
         />
       )}

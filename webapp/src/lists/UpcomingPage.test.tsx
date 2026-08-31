@@ -6,8 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const getTasks = vi.fn();
 const getAppData = vi.fn();
 const unscheduleOverdueTasks = vi.fn();
-const promoteToToday = vi.fn();
-const moveToSomeday = vi.fn();
 const queryState = {
   // SAFETY: test fixture; empty array narrowed to UpcomingTask[] for type compatibility.
   current: { data: [] as UpcomingTask[], isLoading: false },
@@ -40,10 +38,6 @@ vi.mock("wasp/client/operations", () => ({
 
 vi.mock("../app/lensContext", () => ({
   useActiveLens: () => ({ id: "lens-1", name: "Work" }),
-}));
-
-vi.mock("./useTaskListActions", () => ({
-  useTaskListActions: () => ({ promoteToToday, moveToSomeday }),
 }));
 
 const { UpcomingPage } = await import("./UpcomingPage");
@@ -94,9 +88,13 @@ describe("UpcomingPage overdue recovery", () => {
     renderPage();
 
     expect(screen.getByRole("button", { name: "Unschedule 1 overdue" })).toBeInTheDocument();
+    // Expanding reveals the below-title editor (chips + Edit); the old
+    // right-side Today/Someday quick actions are gone — the When chip covers them.
     fireEvent.click(screen.getByText("Past task"));
-    expect(screen.getByRole("button", { name: "Someday" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+    // The row's own accessible name absorbs its content, so /edit/i matches
+    // both the row button and the editor's Edit — assert presence, not uniqueness.
+    expect(screen.getAllByRole("button", { name: /edit/i }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Someday" })).not.toBeInTheDocument();
   });
 
   it("opens and closes a task's action drawer instead of navigating on row click", () => {
@@ -116,15 +114,14 @@ describe("UpcomingPage overdue recovery", () => {
 
     renderPage();
     const row = screen.getByText("Future task").closest(".aa-task-row")!;
-    const trigger = row.querySelector(".aa-task-row__main")!;
 
     fireEvent.click(screen.getByText("Future task"));
     expect(row).toHaveClass("aa-upcoming__row--active");
-    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(row).toHaveAttribute("aria-expanded", "true");
 
     fireEvent.click(screen.getByText("Future task"));
     expect(row).not.toHaveClass("aa-upcoming__row--active");
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(row).toHaveAttribute("aria-expanded", "false");
   });
 
   it("does not show recovery controls without overdue tasks", () => {

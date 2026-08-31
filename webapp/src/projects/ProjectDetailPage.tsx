@@ -906,43 +906,7 @@ export function ProjectDetailPage() {
                               current === task.id ? null : task.id,
                             );
                           }}
-                        >
-                          {!task.isDone ? (
-                            <>
-                              <div className="aa-project__horizon">
-                                {task.status !== "TODAY" && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="aa-project__row-ctrl"
-                                    onClick={() =>
-                                      setStatus(
-                                        task,
-                                        task.status === "SOMEDAY"
-                                          ? "UPCOMING"
-                                          : "TODAY",
-                                      )
-                                    }
-                                  >
-                                    {task.status === "SOMEDAY"
-                                      ? "Upcoming"
-                                      : "Today"}
-                                  </Button>
-                                )}
-                                {task.status === "TODAY" && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="aa-project__row-ctrl"
-                                    onClick={() => setStatus(task, "UPCOMING")}
-                                  >
-                                    Not today
-                                  </Button>
-                                )}
-                              </div>
-                            </>
-                          ) : null}
-                        </TaskRow>
+                        />
                       ))}
                     </ul>
                   </section>

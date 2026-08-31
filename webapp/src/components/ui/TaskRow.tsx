@@ -163,6 +163,9 @@ export function TaskRow({
     <Element
       className={rootClass}
       {...clickableProps(clickableOnRoot, openTask)}
+      // Root-clickable rows (no action children) still expose expansion when
+      // they carry a below-slot editor.
+      aria-expanded={clickableOnRoot && below ? expanded : undefined}
     >
       {dotClass && (
         <span

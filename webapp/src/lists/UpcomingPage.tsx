@@ -18,7 +18,6 @@ import {
 } from "../components/ui";
 import { useActiveLens } from "../app/lensContext";
 import { ListEmpty } from "./ListShell";
-import { useTaskListActions } from "./useTaskListActions";
 import { TaskRowEditor } from "../tasks/TaskRowEditor";
 import "./ListShell.css";
 import "./UpcomingPage.css";
@@ -46,7 +45,6 @@ export function UpcomingPage() {
   const lens = useActiveLens();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { promoteToToday, moveToSomeday } = useTaskListActions();
   const [isUnscheduling, setIsUnscheduling] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const { data: tasks, isLoading } = useQuery(
@@ -202,30 +200,7 @@ export function UpcomingPage() {
                 )
               }
               below={<TaskRowEditor task={task} lensId={lens?.id ?? null} />}
-            >
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  setActiveTaskId(null);
-                  void promoteToToday(task);
-                }}
-                title="Promote to Today"
-              >
-                Today
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setActiveTaskId(null);
-                  void moveToSomeday(task);
-                }}
-                title="Move to Someday"
-              >
-                Someday
-              </Button>
-            </TaskRow>
+            />
           )}
         />
       )}

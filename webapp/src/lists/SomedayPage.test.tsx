@@ -31,10 +31,6 @@ vi.mock("../app/lensContext", () => ({
   useActiveLens: () => ({ id: "lens-1", name: "Work" }),
 }));
 
-vi.mock("./useTaskListActions", () => ({
-  useTaskListActions: () => ({ promoteToToday: vi.fn() }),
-}));
-
 const { SomedayPage } = await import("./SomedayPage");
 
 function renderPage() {

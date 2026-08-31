@@ -308,16 +308,17 @@ describe("ProjectDetailPage — Edit affordance on task rows", () => {
       .getAllByText("Email Sarah")
       .find((element) => element.classList.contains("aa-task-row__title"))!
       .closest(".aa-project__row")!;
-    const trigger = row.querySelector(".aa-task-row__main")!;
     openTaskActions("Email Sarah");
 
     expect(row).toHaveClass("aa-project__row--active");
-    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    // Rows with no action children are root-clickable — expansion state
+    // (the below-title editor) lives on the row itself.
+    expect(row).toHaveAttribute("aria-expanded", "true");
     expect(screen.queryByTestId("task-detail")).toBeNull();
 
     openTaskActions("Email Sarah");
     expect(row).not.toHaveClass("aa-project__row--active");
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(row).toHaveAttribute("aria-expanded", "false");
   });
 
   it("keeps a done row settled by hiding its old size and due metadata", () => {
