@@ -3,8 +3,6 @@ import { useLocation, useNavigate, useParams } from "react-router";
 import {
   useQuery,
   getTask,
-  getProjects,
-  getGoals,
   getProject,
   submitFeedback,
   setTaskOutcome,
@@ -29,7 +27,6 @@ import { captureFeedbackContext } from "../feedback/captureContext";
 import { usePropertyKeys } from "../components/ui/usePropertyKeys";
 import {
   taskPropertyFields,
-  chipPickToTaskPatch,
   type TaskChipGoal,
   type TaskChipProject,
   type TaskPriority,
@@ -41,15 +38,11 @@ import "./TaskDetailPage.css";
 /**
  * Task detail — the dedicated URL for a single Task.
  *
- * The page reads as a task, not a settings form. Under the title sits a row of
- * chips (When / Priority / Size / Project / Due / Goal) — each chip IS the
- * editor for that property. Click a chip, a small popover opens with just that
- * property's options; pick one and it saves instantly (live). Title and notes
- * stay on the working-copy + Save footer (you don't want a write per
- * keystroke). Done tasks render read-only.
- *
- * Project / Goal chips open a bottom sheet (PickerSheet) since those lists are
- * data-driven (the lens's projects / goals).
+ * Edit mode is prose only: title + notes on a working copy with a Save
+ * footer (2026-08-31 per Jake: no instantly-saving property chips here).
+ * Structural properties are edited where they live — the inline row chips in
+ * lists and the property-key shortcuts (which still work on this page).
+ * Done tasks render read-only, chips included.
  */
 export function TaskDetailPage() {
   const lens = useActiveLens();
@@ -96,19 +89,6 @@ export function TaskDetailPage() {
     setSaveError(null);
   }, [task]);
 
-  // Lens projects / goals for the bottom-sheet pickers. Only fetched when the
-  // task is loaded and not done (done tasks have no editors).
-  const lensId = task?.lensId;
-  const { data: lensProjects } = useQuery(
-    getProjects,
-    lensId ? { lensId } : undefined,
-    { enabled: !!lensId && !task?.isDone },
-  );
-  const { data: lensGoals } = useQuery(
-    getGoals,
-    lensId ? { lensId } : undefined,
-    { enabled: !!lensId && !task?.isDone },
-  );
   // Project Resources are shared context. Fetch only for a task already filed
   // into a project; standalone tasks deliberately have no resource picker.
   const { data: projectWithResources } = useQuery(
@@ -176,17 +156,8 @@ export function TaskDetailPage() {
     }
   };
 
-  // Live-edit a structural field. Chip picks (When/Priority/Size/Due) arrive
-  // here via PropertyChips' onPick; picker picks (Project/Goal) via
-  // onPickerPick. Both write immediately through updateTaskDetails. The same
-  // write path is used by the property-key shortcuts (usePropertyKeys below).
-  const [chipError, setChipError] = useState<string | null>(null);
-  // Tracks whether any chip popover / picker sheet is open — the property-key
-  // shortcuts disable themselves while one is (you can't cycle size with "]"
-  // while the size popover is open).
-  const [chipOpen, setChipOpen] = useState(false);
-
-  // The set of structural fields we can live-edit. Omit taskId (added below).
+  // The set of structural fields the property-key shortcuts below can edit.
+  // Omit taskId (added by the writer).
   type TaskPatch = Omit<
     Parameters<typeof updateTaskDetails>[0],
     "taskId"
@@ -194,7 +165,6 @@ export function TaskDetailPage() {
 
   const writeTaskPatch = async (patch: TaskPatch) => {
     if (!task) return;
-    setChipError(null);
     try {
       await updateTaskDetails({ taskId: task.id, ...patch });
       await Promise.all([
@@ -207,24 +177,9 @@ export function TaskDetailPage() {
         queryClient.invalidateQueries({ queryKey: ["getAppData"] }),
       ]);
     } catch {
-      setChipError("Couldn't update that. Try again.");
+      // The property-key shortcuts are silent writes; the invalidation
+      // refetch keeps the display honest either way.
     }
-  };
-
-  // Inline popover pick — When/Priority/Size/Due.
-  const handlePick = (fieldKey: string, value: string): void => {
-    const patch = chipPickToTaskPatch(fieldKey, value);
-    if (Object.keys(patch).length === 0) return;
-    if (fieldKey === "due" && patch.scheduledDate && task?.status === "SOMEDAY") {
-      patch.status = "UPCOMING";
-    }
-    // SAFETY: type assertion is safe — value is validated or from a trusted source.
-    void writeTaskPatch(patch as TaskPatch);
-  };
-  // Bottom-sheet pick — Project/Goal. value is an id, or null for "None".
-  const handlePickerPick = (fieldKey: string, value: string | null): void => {
-    if (fieldKey === "project") void writeTaskPatch({ projectId: value });
-    else if (fieldKey === "goal") void writeTaskPatch({ goalId: value });
   };
 
   const insertProjectResource = (resource: { id: string; title: string; url: string | null }) => {
@@ -238,12 +193,12 @@ export function TaskDetailPage() {
   };
 
   // Property-key shortcuts (TRIAGE.md §7.4/§7.6): [ / ] = size, - / = =
-  // priority, H = cycle When. Same scheme as triage; disabled while a chip
-  // popover/sheet is open OR the title/notes inputs are focused OR the task is
-  // done. The hook guards typing targets itself. The hook is intentionally
-  // string-typed (it serves triage + task page); cast to the op's enums here.
+  // priority, H = cycle When. Same scheme as triage; disabled while the
+  // title/notes inputs are focused or the task is done. The hook guards
+  // typing targets itself. The hook is intentionally string-typed (it serves
+  // triage + task page); cast to the op's enums here.
   usePropertyKeys({
-    enabled: !!task && !task.isDone && !chipOpen,
+    enabled: !!task && !task.isDone,
     get: () => ({
       // SAFETY: type assertion is safe — value is validated or from a trusted source.
       status: (task?.status as TaskStatus) ?? "UPCOMING",
@@ -383,41 +338,29 @@ export function TaskDetailPage() {
               />
             )}
 
-            {/* The chip row IS the editor for every structural field. */}
-            <PropertyChips
-              fields={taskPropertyFields({
-                task: {
-                  // SAFETY: type assertion is safe — value is validated or from a trusted source.
-                  status: (task.status as TaskStatus) ?? "UPCOMING",
-                  // SAFETY: type assertion is safe — value is validated or from a trusted source.
-                  priority: (task.priority as TaskPriority) ?? "NORMAL",
-                  // SAFETY: type assertion is safe — value is validated or from a trusted source.
-                  size: (task.size as TaskSize) ?? "M",
-                  scheduledDate: task.scheduledDate,
-                  // SAFETY: type assertion is safe — value is validated or from a trusted source.
-                  project: (task.project as TaskChipProject | null) ?? null,
-                  // SAFETY: type assertion is safe — value is validated or from a trusted source.
-                  goal: (task.goal as TaskChipGoal | null) ?? null,
-                },
-                projects: (lensProjects ?? []).map(
-                  (p: { id: string; name: string; goal?: { name: string } | null }) => ({
-                    id: p.id,
-                    label: p.name,
-                    meta: p.goal?.name ?? null,
-                  }),
-                ),
-                goals: (lensGoals ?? []).map((g: { id: string; name: string }) => ({
-                  id: g.id,
-                  label: g.name,
-                })),
-              })}
-              readOnly={task.isDone}
-              onPick={handlePick}
-              onPickerPick={handlePickerPick}
-              onOpenChange={setChipOpen}
-            />
-            {chipError && !task.isDone && (
-              <p className="aa-task-edit__err">{chipError}</p>
+            {/* Done tasks keep their chips as a read-only summary; the edit
+             * view carries no chips — properties edit in the list rows. */}
+            {task.isDone && (
+              <PropertyChips
+                fields={taskPropertyFields({
+                  task: {
+                    // SAFETY: type assertion is safe — value is validated or from a trusted source.
+                    status: (task.status as TaskStatus) ?? "UPCOMING",
+                    // SAFETY: type assertion is safe — value is validated or from a trusted source.
+                    priority: (task.priority as TaskPriority) ?? "NORMAL",
+                    // SAFETY: type assertion is safe — value is validated or from a trusted source.
+                    size: (task.size as TaskSize) ?? "M",
+                    scheduledDate: task.scheduledDate,
+                    // SAFETY: type assertion is safe — value is validated or from a trusted source.
+                    project: (task.project as TaskChipProject | null) ?? null,
+                    // SAFETY: type assertion is safe — value is validated or from a trusted source.
+                    goal: (task.goal as TaskChipGoal | null) ?? null,
+                  },
+                  projects: [],
+                  goals: [],
+                })}
+                readOnly
+              />
             )}
           </section>
 
@@ -598,7 +541,7 @@ export function TaskDetailPage() {
           </div>
           {!task.isDone && (
             <p className="aa-task-edit__help">
-              Save writes the title and notes. Chips above are live.
+              Save writes the title and notes.
             </p>
           )}
           {resourcePickerOpen && task.project && (

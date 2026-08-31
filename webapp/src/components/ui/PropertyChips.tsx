@@ -79,8 +79,8 @@ export interface PropertyField {
 interface PropertyChipsProps {
   fields: PropertyField[];
   readOnly?: boolean;
-  /** Inline option pick. */
-  onPick: (fieldKey: string, value: string) => void;
+  /** Inline option pick. Optional only for pure readOnly renderings. */
+  onPick?: (fieldKey: string, value: string) => void;
   /** Picker pick (value is the item id, or null when "None" is chosen). Only
    *  called for fields with a built-in `picker` config (not externalPicker). */
   onPickerPick?: (fieldKey: string, value: string | null) => void;
@@ -235,7 +235,7 @@ export function PropertyChips({
                       key={opt.value}
                       active={f.value === opt.value}
                       onClick={() => {
-                        onPick(f.key, opt.value);
+                        onPick?.(f.key, opt.value);
                         setOpenKey(null);
                       }}
                     >
@@ -254,7 +254,7 @@ export function PropertyChips({
                       key={opt.value}
                       active={false}
                       onClick={() => {
-                        onPick(f.key, opt.value);
+                        onPick?.(f.key, opt.value);
                         setOpenKey(null);
                       }}
                     >
