@@ -2,7 +2,7 @@
 id: admin-activity-dashboard
 kind: spec
 title: "User activity dashboard — calendar-week (Mon–Sun) activity metrics"
-status: building
+status: review
 priority: P1
 feature: admin-activity-dashboard
 spec_owner: discover
