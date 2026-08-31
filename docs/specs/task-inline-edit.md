@@ -2,7 +2,7 @@
 id: task-inline-edit
 kind: spec
 title: "Inline task editing in lists — properties autosave, title/notes editor one level up"
-status: building
+status: review
 priority: P1
 feature: tasks
 spec_owner: discover
