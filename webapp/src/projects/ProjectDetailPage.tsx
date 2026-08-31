@@ -874,6 +874,24 @@ export function ProjectDetailPage() {
                               />
                             ) : undefined
                           }
+                          // The inline editor (below the title on expansion)
+                          // replaces the old Move picker (the Project chip
+                          // reassigns — "No project" unlinks to standalone)
+                          // and the navigational Edit. The rows don't select
+                          // task.project, so pass the containing project; the
+                          // one-parent rule then hides the Goal chip. Gated on
+                          // expansion, so done rows never render it.
+                          below={
+                            <TaskRowEditor
+                              task={{
+                                ...task,
+                                project: project
+                                  ? { id: project.id, name: project.name }
+                                  : null,
+                              }}
+                              lensId={project?.lensId ?? null}
+                            />
+                          }
                           onOpen={() => {
                             if (task.isDone) {
                               navigate(
@@ -922,21 +940,6 @@ export function ProjectDetailPage() {
                                   </Button>
                                 )}
                               </div>
-                              {/* The inline editor replaces the old Move
-                                picker (the Project chip reassigns — and
-                                "No project" unlinks to standalone) and the
-                                navigational Edit. The rows don't select
-                                task.project, so pass the containing project;
-                                the one-parent rule then hides the Goal chip. */}
-                              <TaskRowEditor
-                                task={{
-                                  ...task,
-                                  project: project
-                                    ? { id: project.id, name: project.name }
-                                    : null,
-                                }}
-                                lensId={project?.lensId ?? null}
-                              />
                             </>
                           ) : null}
                         </TaskRow>

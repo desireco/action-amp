@@ -102,11 +102,8 @@ export function WeekPage() {
               className={activeTaskId === task.id ? "aa-week__row--active" : undefined}
               expanded={activeTaskId === task.id}
               onOpen={() => setActiveTaskId((current) => current === task.id ? null : task.id)}
-            >
-              <TaskRowEditor
-                task={task}
-              />
-            </TaskRow>
+              below={<TaskRowEditor task={task} />}
+            />
           )}
         />
       )}

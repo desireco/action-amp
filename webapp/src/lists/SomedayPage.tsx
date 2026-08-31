@@ -82,6 +82,7 @@ export function SomedayPage() {
                     current === task.id ? null : task.id,
                   )
                 }
+                below={<TaskRowEditor task={task} lensId={lens?.id ?? null} />}
               >
                 <Button
                   variant="ghost"
@@ -94,10 +95,6 @@ export function SomedayPage() {
                 >
                   Today
                 </Button>
-                <TaskRowEditor
-                  task={task}
-                  lensId={lens?.id ?? null}
-                />
               </TaskRow>
             </li>
           ))}

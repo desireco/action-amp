@@ -12,6 +12,12 @@
   list-style: none;
 }
 
+/* Expanded rows carry a full-width editor under the title — the root wraps
+   so the below-slot can claim its own line. */
+.aa-task-row--has-below {
+  flex-wrap: wrap;
+}
+
 .aa-task-row--surface {
   padding: var(--aa-space-sm) var(--aa-space-md);
   background: var(--aa-bg);
@@ -264,6 +270,16 @@
   .aa-task-row__actions {
     opacity: 1;
   }
+}
+
+/* Below-slot — the inline property editor on an expanded row. Sits under the
+   title (full width), indented to align with the title column: the dot is
+   7px + 12px gap = 19px; small padding rounds it to a calm 20px. Always
+   visible while expanded — expanding IS the reveal. */
+.aa-task-row__below {
+  flex-basis: 100%;
+  margin-top: var(--aa-space-xs);
+  padding-left: 19px;
 }
 
 /* Reduced motion */

@@ -46,6 +46,10 @@ interface TaskRowProps {
   className?: string;
   /** Right-aligned action slot — promote, Edit, Move, etc. Hover-revealed. */
   children?: ReactNode;
+  /** Full-width slot rendered under the row when `expanded` — the inline
+   *  property editor (TaskRowEditor) lives here, below the task title
+   *  instead of crowded beside it. */
+  below?: ReactNode;
   /** Leading media slot — sits between the status dot and the title (e.g.
    * captured-image thumbs in front of the row). Callers own its click
    * behavior; it renders OUTSIDE the row's clickable main region. */
@@ -116,6 +120,7 @@ export function TaskRow({
   showLens = false,
   className = "",
   children,
+  below,
   leading,
 }: TaskRowProps) {
   const done = task.isDone ?? false;
@@ -141,6 +146,7 @@ export function TaskRow({
     muted ? "aa-task-row--muted" : "",
     clickableOnRoot ? "aa-task-row--clickable" : "",
     onOpen && hasChildren ? "aa-task-row--split" : "",
+    below && expanded ? "aa-task-row--has-below" : "",
     className,
   ]
     .filter(Boolean)
@@ -220,6 +226,9 @@ export function TaskRow({
       </div>
       {hasChildren && (
         <div className="aa-task-row__actions">{children}</div>
+      )}
+      {below && expanded && (
+        <div className="aa-task-row__below">{below}</div>
       )}
     </Element>
   );

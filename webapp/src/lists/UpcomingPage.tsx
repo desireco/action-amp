@@ -201,6 +201,7 @@ export function UpcomingPage() {
                   current === task.id ? null : task.id,
                 )
               }
+              below={<TaskRowEditor task={task} lensId={lens?.id ?? null} />}
             >
               <Button
                 variant="secondary"
@@ -224,10 +225,6 @@ export function UpcomingPage() {
               >
                 Someday
               </Button>
-              <TaskRowEditor
-                task={task}
-                lensId={lens?.id ?? null}
-              />
             </TaskRow>
           )}
         />

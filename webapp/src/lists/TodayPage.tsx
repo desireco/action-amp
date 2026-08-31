@@ -235,6 +235,7 @@ export function TodayPage() {
                       current === task.id ? null : task.id,
                     )
                   }
+                  below={<TaskRowEditor task={task} />}
                 >
                   <Button
                     variant="ghost"
@@ -244,9 +245,6 @@ export function TodayPage() {
                   >
                     Do
                   </Button>
-                  <TaskRowEditor
-                    task={task}
-                  />
                   <Button
                     variant="ghost"
                     size="sm"
