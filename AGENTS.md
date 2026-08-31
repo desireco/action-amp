@@ -73,6 +73,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | The admin dashboard (in-app stats page + `actionamp-admin stats`) | `docs/superpowers/specs/2026-07-22-admin-dashboard-design.md` + `webapp/src/admin/` + `admin-cli/README.md` |
 | Share-to-inbox (PWA `share_target`, Android/Chrome) | `docs/features/pwa-notifications.md` (Share target §) + `webapp/src/share/` + `docs/superpowers/specs/2026-07-25-pwa-share-target-design.md` |
 | Marketing/public site | `docs/MARKETING.md` + `docs/PUBLIC-PAGES.md` |
+| The September 2026 signup campaign (100 users, weekly milestones, channel plan) | `docs/GTM-SEPTEMBER-2026.md` |
 | Deployment / hosting | `docs/research/deployment-research.md` |
 | What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/backlog/` |
 | Duet pull / decompose contract | `docs/queue.md` (round-robin + `parent:`/`children:` rules; steering is via the GH Projects board, not a frontmatter flag) |

@@ -860,6 +860,10 @@ correct (ACV < $5K, self-serve possible, technical-ish buyer). The motion is
 not in question; **the missing prerequisite is audience.** So the launch is
 sequenced as audience-first.
 
+> **Execution overlay:** the September 2026 campaign against these phases
+> (100-signup goal, weekly milestones, Sep 21 go/no-go) lives in
+> `docs/GTM-SEPTEMBER-2026.md`.
+
 ### Motion: Product-Led Growth (self-serve, free → paid)
 
 - **Free tier** is the wedge (Next, full focus loop, personal scope). It
