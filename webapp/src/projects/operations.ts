@@ -113,7 +113,8 @@ type ProjectTask = {
   priority: "LOW" | "NORMAL" | "IMPORTANT";
   size: "S" | "M" | "L" | "XL";
   status: "SOMEDAY" | "UPCOMING" | "TODAY" | "WONT_DO";
-  dueDate: Date | null;
+  scheduledDate: Date | null;
+  snoozedUntil: Date | null;
   completedAt: Date | null;
   attachments: { id: string; filename: string; mimeType: string }[];
 };
