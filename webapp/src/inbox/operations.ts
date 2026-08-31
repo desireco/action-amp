@@ -240,6 +240,11 @@ export const updateInboxItem = (async (args, context) => {
 // CapturePopover mentions offer STANDARD projects, the triage list picker and
 // SharePage's "Simple lists" optgroup offer SIMPLE_LIST ones.
 //
+// Ordering: most recently active first (latest child task/list-item/resource
+// createdAt, falling back to the project's own createdAt), name as the
+// tiebreaker. "Where did I put the last thing?" is the question every
+// consumer asks, so recent-first beats alphabetical in all three surfaces.
+//
 // Note: visibility ≠ write access. The `assertLensAllowed` filing guard in
 // `triageInboxItem` still rejects a FREE user's attempt to file into a
 // WORK/CUSTOM lens at commit time (402). Surfacing those projects here lets
@@ -258,10 +263,41 @@ export const getProjectsForResolver = (async (_args, context) => {
   const lensById = new Map(lenses.map((l) => [l.id, l]));
   const projects = await context.entities.Project.findMany({
     where: { userId: user.id, isDone: false, archivedAt: null },
-    select: { id: true, name: true, permalink: true, type: true, lensId: true },
+    select: { id: true, name: true, permalink: true, type: true, lensId: true, createdAt: true },
     orderBy: [{ name: "asc" }],
   });
-  return projects.map((p) => ({
+  // Latest child-entity timestamp per project — three cheap _max groupBys on
+  // indexed FK columns instead of per-project child queries.
+  const [taskActivity, listItemActivity, resourceActivity] = await Promise.all([
+    context.entities.Task.groupBy({
+      by: ["projectId"],
+      where: { userId: user.id },
+      _max: { createdAt: true },
+    }),
+    context.entities.ListItem.groupBy({
+      by: ["projectId"],
+      where: { userId: user.id },
+      _max: { createdAt: true },
+    }),
+    context.entities.Resource.groupBy({
+      by: ["projectId"],
+      where: { userId: user.id },
+      _max: { createdAt: true },
+    }),
+  ]);
+  const lastActiveAt = new Map<string, Date>();
+  for (const row of [...taskActivity, ...listItemActivity, ...resourceActivity]) {
+    const at = row._max.createdAt;
+    if (!row.projectId || !at) continue;
+    const current = lastActiveAt.get(row.projectId);
+    if (!current || at > current) lastActiveAt.set(row.projectId, at);
+  }
+  const recentFirst = [...projects].sort((a, b) => {
+    const aAt = lastActiveAt.get(a.id) ?? a.createdAt;
+    const bAt = lastActiveAt.get(b.id) ?? b.createdAt;
+    return bAt.getTime() - aAt.getTime() || a.name.localeCompare(b.name);
+  });
+  return recentFirst.map((p) => ({
     id: p.id,
     name: p.name,
     permalink: p.permalink,

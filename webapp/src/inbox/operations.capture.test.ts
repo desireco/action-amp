@@ -262,7 +262,7 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
     );
   });
 
-  it("returns all projects across all lenses with lensName attached", async () => {
+  it("returns all projects across all lenses, most recently active first", async () => {
     // No entitlement filter — all the user's projects surface regardless of
     // plan. Visibility ≠ write access (triageInboxItem's assertLensAllowed
     // still gates filing at commit time).
@@ -272,8 +272,13 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
       { id: "lens-work", name: "Work", color: "indigo", isIncluded: false },
     ]);
     m.entities.Project.findMany.mockResolvedValue([
-      { id: "p-1", name: "MVP", permalink: "mvp", type: "STANDARD", lensId: "lens-work" },
-      { id: "p-2", name: "Groceries", permalink: "groceries", type: "SIMPLE_LIST", lensId: "lens-me" },
+      { id: "p-1", name: "MVP", permalink: "mvp", type: "STANDARD", lensId: "lens-work", createdAt: new Date("2026-01-01") },
+      { id: "p-2", name: "Groceries", permalink: "groceries", type: "SIMPLE_LIST", lensId: "lens-me", createdAt: new Date("2026-02-01") },
+    ]);
+    // A task filed into MVP in August outranks Groceries' newer creation —
+    // latest activity is the sort key, createdAt only the fallback.
+    m.entities.Task.groupBy.mockResolvedValue([
+      { projectId: "p-1", _max: { createdAt: new Date("2026-08-30") } },
     ]);
 
     // SAFETY: op takes no positional input; Wasp passes empty object at call site.
@@ -292,7 +297,7 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
         isDone: false,
         archivedAt: null,
       },
-      select: { id: true, name: true, permalink: true, type: true, lensId: true },
+      select: { id: true, name: true, permalink: true, type: true, lensId: true, createdAt: true },
       orderBy: [{ name: "asc" }],
     });
   });
@@ -305,8 +310,8 @@ describe("getProjectsForResolver — lens-agnostic source for capture + triage",
       { id: "lens-studio", name: "Studio", color: "coral" },
     ]);
     m.entities.Project.findMany.mockResolvedValue([
-      { id: "p-1", name: "MVP", permalink: "mvp", type: "STANDARD", lensId: "lens-work" },
-      { id: "p-2", name: "Studio work", permalink: "studio-work", type: "SIMPLE_LIST", lensId: "lens-studio" },
+      { id: "p-1", name: "MVP", permalink: "mvp", type: "STANDARD", lensId: "lens-work", createdAt: new Date("2026-08-01") },
+      { id: "p-2", name: "Studio work", permalink: "studio-work", type: "SIMPLE_LIST", lensId: "lens-studio", createdAt: new Date("2026-03-01") },
     ]);
 
     // SAFETY: op takes no positional input; Wasp passes empty object at call site.

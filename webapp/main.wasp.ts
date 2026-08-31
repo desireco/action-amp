@@ -650,7 +650,9 @@ export default app({
       auth: true,
     }),
     query(getProjectsForResolver, {
-      entities: ["Project", "Lens"],
+      // Task/ListItem/Resource feed the recent-activity groupBys that order
+      // the resolver's results (most recently active first).
+      entities: ["Project", "Lens", "Task", "ListItem", "Resource"],
       auth: true,
     }),
     action(createInboxItem, {
