@@ -18,6 +18,7 @@ import {
   getDoneToday,
   getTopTask,
   getTaskAlternatives,
+  getOtherLensTaskCounts,
   getFocusedTask,
   toggleTaskDone,
   updateTaskStatus,
@@ -422,6 +423,7 @@ export default app({
     query(getDoneToday, { entities: ["Task", "Lens"], auth: true }),
     query(getTopTask, { entities: ["Task", "Lens"], auth: true }),
     query(getTaskAlternatives, { entities: ["Task", "Lens"], auth: true }),
+    query(getOtherLensTaskCounts, { entities: ["Task", "Lens"], auth: true }),
     query(getFocusedTask, {
       entities: ["Task", "TaskSession", "User"],
       auth: true,

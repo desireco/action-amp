@@ -28,7 +28,22 @@ export interface ActiveLens {
 
 export const LensContext = createContext<ActiveLens | null>(null);
 
+/**
+ * The AppShell's guarded lens switcher (FREE-plan gating included), shared so
+ * pages can offer a lens switch in place — e.g. the Next empty state's
+ * "Work · 3 on the table" pointer. Null outside the app shell; callers treat
+ * that as "no switch available" and render plain text.
+ */
+export const LensSwitchContext = createContext<((id: string) => void) | null>(
+  null,
+);
+
 /** Read the active lens. Returns null until lenses load or if on a non-app route. */
 export function useActiveLens(): ActiveLens | null {
   return useContext(LensContext);
+}
+
+/** Switch the active lens by id. Null until the app shell mounts. */
+export function useLensSwitch(): ((id: string) => void) | null {
+  return useContext(LensSwitchContext);
 }

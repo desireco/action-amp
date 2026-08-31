@@ -14,6 +14,7 @@ import {
   toggleTaskDoneCore,
   pauseTaskCore,
   completeFocusSessionCore,
+  getOtherLensCountsData,
 } from "./operationsCore";
 import { mockContext, type MockContext } from "../test/mockContext";
 
@@ -712,5 +713,85 @@ describe("getWeekTasksData", () => {
         }),
       }),
     );
+  });
+});
+
+// ----------------------------------------------------------------
+// getOtherLensCountsData — Next empty state's per-lens pointers
+// ----------------------------------------------------------------
+describe("getOtherLensCountsData", () => {
+  const ENTITLED_USER = { plan: "PRO" };
+
+  function asLensCounts(m: MockContext) {
+    const spies = { Task: m.entities.Task, Lens: m.entities.Lens };
+    // SAFETY: EntitySpy vi.fn()s satisfy the delegate slice at runtime.
+    return spies as Parameters<typeof getOtherLensCountsData>[0];
+  }
+
+  it("counts the actionable pool per other lens and omits empty lenses", async () => {
+    const m = mockContext({ id: "user-1", plan: "PRO" });
+    m.entities.Lens.findMany.mockResolvedValue([
+      { id: "lens-me", name: "Me", color: null, isIncluded: true },
+      { id: "lens-work", name: "Work", color: null, isIncluded: false },
+    ]);
+    m.entities.Task.count.mockImplementation(({ where }) =>
+      Promise.resolve(where.lensId === "lens-work" ? 3 : 0),
+    );
+
+    const rows = await getOtherLensCountsData(asLensCounts(m), {
+      user: ENTITLED_USER,
+      userId: "user-1",
+      excludeLensId: "lens-me",
+      timeZone: "UTC",
+    });
+
+    expect(rows).toEqual([{ lensId: "lens-work", lensName: "Work", count: 3 }]);
+    // The count query must reuse the actionable-pool predicate (TODAY +
+    // UPCOMING, not done) so hint numbers agree with the chooser.
+    expect(m.entities.Task.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          lensId: "lens-work",
+          status: { in: ["TODAY", "UPCOMING"] },
+          isDone: false,
+        }),
+      }),
+    );
+  });
+
+  it("returns [] when every other lens is also empty", async () => {
+    const m = mockContext({ id: "user-1", plan: "PRO" });
+    m.entities.Lens.findMany.mockResolvedValue([
+      { id: "lens-me", name: "Me", color: null, isIncluded: true },
+      { id: "lens-work", name: "Work", color: null, isIncluded: false },
+    ]);
+    m.entities.Task.count.mockResolvedValue(0);
+
+    await expect(
+      getOtherLensCountsData(asLensCounts(m), {
+        user: ENTITLED_USER,
+        userId: "user-1",
+        excludeLensId: "lens-me",
+        timeZone: "UTC",
+      }),
+    ).resolves.toEqual([]);
+  });
+
+  it("never reports a locked lens for a FREE user", async () => {
+    const m = mockContext("user-1");
+    // Only the included (Me) lens is accessible; it's the excluded active one.
+    m.entities.Lens.findMany.mockResolvedValue([
+      { id: "lens-me", name: "Me", color: null, isIncluded: true },
+    ]);
+
+    await expect(
+      getOtherLensCountsData(asLensCounts(m), {
+        user: { plan: "FREE" },
+        userId: "user-1",
+        excludeLensId: "lens-me",
+        timeZone: "UTC",
+      }),
+    ).resolves.toEqual([]);
+    expect(m.entities.Task.count).not.toHaveBeenCalled();
   });
 });

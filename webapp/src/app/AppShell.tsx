@@ -11,7 +11,7 @@ import {
   initializeTimeZone,
 } from "wasp/client/operations";
 import { useQueryClient } from "@tanstack/react-query";
-import { LensContext } from "./lensContext";
+import { LensContext, LensSwitchContext } from "./lensContext";
 import {
   useKeyboardShortcuts,
   type NavDestination,
@@ -772,6 +772,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* ---- Page content ---- */}
         <main className="aa-app-main">
           <LensContext.Provider value={activeLensValue}>
+            <LensSwitchContext.Provider value={selectLens}>
             {/* Work-lens gate: a FREE user clicking Work sees the ProGate in the
              * main area instead of Work content. The lens isn't switched (setLens
              * bails), so the Me lens stays active behind the gate. */}
@@ -784,6 +785,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             ) : (
               children
             )}
+            </LensSwitchContext.Provider>
           </LensContext.Provider>
         </main>
       </div>

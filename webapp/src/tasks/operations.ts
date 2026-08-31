@@ -6,6 +6,7 @@ import type {
   GetDoneToday,
   GetTopTask,
   GetTaskAlternatives,
+  GetOtherLensTaskCounts,
   GetFocusedTask,
   SnoozeTask,
   StartTask,
@@ -35,6 +36,7 @@ import {
   getDoneTodayData,
   getTopTaskData,
   getTaskAlternativesData,
+  getOtherLensCountsData,
   hydrateTopTaskData,
   toggleTaskDoneCore,
   snoozeTaskCore,
@@ -374,6 +376,28 @@ export const getTaskAlternatives = (async (args, context) => {
     excludeIds?: string[];
   },
   { [K in keyof RankedPoolRow]: RankedPoolRow[K] }[]
+>;
+
+// ----------------------------------------------------------------
+// Read: actionable counts in the OTHER accessible lenses (do-empty-lens-hints)
+// ----------------------------------------------------------------
+// Powers the Next empty state's pointer lines ("Work · 3 on the table").
+// Accessibility is resolved inside the core (FREE plans only reach the Me
+// lens), so no locked lens ever leaks a count. No per-lens assertLensAllowed
+// guard applies — this reads the accessible set, not one requested lens.
+export const getOtherLensTaskCounts = (async (args, context) => {
+  if (!context.user) {
+    throw new Error("Not authenticated.");
+  }
+  return await getOtherLensCountsData(context.entities, {
+    user: context.user,
+    userId: context.user.id,
+    excludeLensId: args.excludeLensId,
+    timeZone: context.user.timeZone ?? "UTC",
+  });
+}) satisfies GetOtherLensTaskCounts<
+  { excludeLensId: string },
+  Awaited<ReturnType<typeof getOtherLensCountsData>>
 >;
 
 // ----------------------------------------------------------------

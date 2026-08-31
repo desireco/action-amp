@@ -99,3 +99,31 @@
   color: var(--aa-teal-cta);
   text-decoration: none;
 }
+
+/* Other-lens pointers under the empty state (do-empty-lens-hints). One calm
+ * line per lens with actionable work; a button when the switcher is wired,
+ * plain text otherwise. Teal only on interaction — resting state is quiet. */
+.aa-wn-lens-hints {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--aa-space-xs);
+  margin-top: var(--aa-space-lg);
+}
+
+.aa-wn-lens-hint {
+  font-size: var(--aa-text-md);
+  line-height: var(--aa-leading-normal);
+  color: var(--aa-text-3);
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.aa-wn-lens-hint:hover,
+button.aa-wn-lens-hint:focus-visible {
+  color: var(--aa-accent);
+}

@@ -30,6 +30,7 @@ import type {
 } from "@prisma/client";
 import {
   resolveAccessibleLenses,
+  type EntitlementUser,
   type LensListLookup,
 } from "../billing/entitlements";
 import { activePoolWhere } from "./activePool";
@@ -197,6 +198,7 @@ interface TaskEntities {
     findMany(args: Prisma.TaskFindManyArgs): Promise<Task[]>;
     update(args: Prisma.TaskUpdateArgs): Promise<Task>;
     updateMany(args: Prisma.TaskUpdateManyArgs): Promise<Prisma.BatchPayload>;
+    count(args: Prisma.TaskCountArgs): Promise<number>;
   };
   TaskSession: {
     findFirst(
@@ -504,6 +506,52 @@ export async function getTaskAlternativesData(
   return ranked
     .filter((task: { id: string }) => !skip.has(task.id))
     .slice(0, limit);
+}
+
+// ----------------------------------------------------------------
+// Read: per-lens actionable counts for the Next empty state (do-empty-lens-hints)
+// ----------------------------------------------------------------
+// "Nothing on the table" is only true for THIS lens. One count per OTHER
+// accessible lens, using the same activePoolWhere the Next card ranks from —
+// the hint numbers can never disagree with what the chooser would show after
+// the switch. Lenses with nothing actionable are omitted (whitespace, not
+// zeroes); locked (FREE-plan) lenses never appear because accessibility is
+// resolved first.
+// Mapped type (not an interface): Wasp op outputs must be index-signature-
+// assignable for SuperJSON serialization — see TaskDetailResult's note.
+export type OtherLensCount = {
+  [K in "lensId" | "lensName" | "count"]: K extends "count"
+    ? number
+    : string;
+};
+
+export async function getOtherLensCountsData(
+  entities: Pick<TaskEntities, "Task"> & LensListLookup,
+  {
+    user,
+    userId,
+    excludeLensId,
+    timeZone,
+  }: {
+    user: EntitlementUser | null;
+    userId: string;
+    excludeLensId: string;
+    timeZone: string;
+  },
+): Promise<OtherLensCount[]> {
+  const lenses = (await resolveAccessibleLenses(entities, user, userId)).filter(
+    (lens) => lens.id !== excludeLensId,
+  );
+  const counts = await Promise.all(
+    lenses.map((lens) =>
+      entities.Task.count({
+        where: activePoolWhere({ userId, lensId: lens.id, timeZone }),
+      }),
+    ),
+  );
+  return lenses
+    .map((lens, i) => ({ lensId: lens.id, lensName: lens.name, count: counts[i] }))
+    .filter((row) => row.count > 0);
 }
 
 // Shared candidate fetch + sort behind getTopTaskData and

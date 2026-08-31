@@ -5,6 +5,7 @@ import {
   useQuery,
   getTopTask,
   getTaskAlternatives,
+  getOtherLensTaskCounts,
   getTask,
   snoozeTask,
   startTask,
@@ -18,7 +19,7 @@ import {
   SplashScreen,
   type SnoozePreset,
 } from "../components/ui";
-import { useActiveLens } from "./lensContext";
+import { useActiveLens, useLensSwitch } from "./lensContext";
 import { composeWhy } from "./focusWhy";
 import {
   resolveGoal,
@@ -54,6 +55,7 @@ type AlternativeCandidate = {
 export function NextPage() {
   const { data: user } = useAuth();
   const lens = useActiveLens();
+  const switchLens = useLensSwitch();
   const navigate = useNavigate();
   const { permalink } = useParams<{ permalink: string }>();
   const [searchParams] = useSearchParams();
@@ -83,6 +85,15 @@ export function NextPage() {
         }
       : undefined,
     { enabled: !!lens && !task?.startedAt },
+  );
+  // "Nothing on the table" is only true for THIS lens. Fetched only in the
+  // empty state (no picked task, nothing on the table): one count per other
+  // accessible lens, from the same actionable pool the card ranks from.
+  // Empty (or loading) → no hints — whitespace, not zeroes.
+  const { data: otherLensCounts } = useQuery(
+    getOtherLensTaskCounts,
+    lens ? { excludeLensId: lens.id } : undefined,
+    { enabled: !!lens && !selectedTaskToken && !task },
   );
 
   // Splash latch: the welcome veil (see the render section) covers only the
@@ -205,6 +216,26 @@ export function NextPage() {
               </>
             )}
           </p>
+          {!selectedTaskToken && otherLensCounts && otherLensCounts.length > 0 && (
+            <div className="aa-wn-lens-hints">
+              {otherLensCounts.map((hint) =>
+                switchLens ? (
+                  <button
+                    key={hint.lensId}
+                    type="button"
+                    className="aa-wn-lens-hint"
+                    onClick={() => switchLens(hint.lensId)}
+                  >
+                    {hint.lensName} · {hint.count} on the table →
+                  </button>
+                ) : (
+                  <span key={hint.lensId} className="aa-wn-lens-hint">
+                    {hint.lensName} · {hint.count} on the table
+                  </span>
+                ),
+              )}
+            </div>
+          )}
         </div>
       </>
     );
