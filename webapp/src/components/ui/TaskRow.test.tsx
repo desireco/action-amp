@@ -145,6 +145,20 @@ describe("TaskRow", () => {
       expect(rose).toBeTruthy();
       expect(rose!.textContent).toMatch(/2d overdue/);
     });
+
+    it("hides the due chip on committed (TODAY) tasks — the status is the date", () => {
+      const today = new Date();
+      const { container } = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, status: "TODAY", scheduledDate: today }} />,
+      );
+      // Same task without the commitment keeps its chip — the rule is about
+      // redundancy on Today, not about hiding dates everywhere.
+      expect(container.querySelector(".aa-chip--teal")).toBeNull();
+      const bench = renderInContext(
+        <TaskRow task={{ ...BASE_TASK, scheduledDate: today }} />,
+      );
+      expect(bench.container.querySelector(".aa-chip--teal")).toBeTruthy();
+    });
   });
 
   describe("row click (onOpen)", () => {

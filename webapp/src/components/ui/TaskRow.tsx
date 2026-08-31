@@ -130,7 +130,15 @@ export function TaskRow({
   const openTask = () => onOpen?.(task);
 
   const dotClass = dotClassFor(task);
-  const due = task.scheduledDate ? formatDueChip(task.scheduledDate) : null;
+  // The due chip is scheduling signal — it matters on the bench (Upcoming:
+  // overdue vs today vs later). Once a task is committed (status TODAY) the
+  // date is redundant — every committed task reads as "today" — and a stale
+  // past date would only guilt-trip. Hide it there so two TODAY tasks never
+  // render different chip sets just because one kept its scheduledDate.
+  const due =
+    task.scheduledDate && task.status !== "TODAY"
+      ? formatDueChip(task.scheduledDate)
+      : null;
   const showLensPill = Boolean(showLens && task.lens);
   const hasMeta =
     task.priority === "IMPORTANT" ||
