@@ -76,6 +76,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Deployment / hosting | `docs/research/deployment-research.md` |
 | What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/backlog/` |
 | Duet pull / decompose contract | `docs/queue.md` (round-robin + `parent:`/`children:` rules; steering is via the GH Projects board, not a frontmatter flag) |
+| The roadmap board (GH Projects — picking up stories, moving statuses) | "Roadmap board (GitHub Projects)" section below |
 | Running a second `wasp start` / parallel dev / distributing work across agents | `docs/DEV-WORKTREES.md` + `webapp/scripts/dev-worktree.sh <name>` (worktree + own DB + own ports; `--list` / `--remove`). From inside one: `worktree-teardown.sh` (remove + cd back) and `worktree-sync.sh` (rebase onto main; `--push`/`--abort`/`--continue`) |
 | Capturing a new idea fast ("maybe" bucket) | `scripts/duet-capture.sh "<idea>"` (the intake floor) |
 | Refining a draft toward ready (enrich + decompose) | `duet-refine` skill (Discover sub-mode; operates only on `status: draft`) |
@@ -136,6 +137,27 @@ Pick the task; read the doc(s) on the right **before** writing code.
 - Use psql for inspection and ad-hoc queries; schema changes go through
   `wasp db migrate-dev` (see "Rules that always apply"), never hand-written DDL
   against `actionamp_dev`.
+
+## Roadmap board (GitHub Projects)
+
+The steering surface for stories is the **ActionAmp Roadmap** board:
+<https://github.com/users/desireco/projects/5> (project number `5`, owner
+`desireco`, project id `PVT_kwHN6NzOAXMArg`). Board items are usually mirrors
+of GH issues in `desireco/action-amp` — the issue body is the story text.
+
+- **List items** (flat JSON per item: `title`, `status`, `id`, `content.url`):
+  `gh project item-list 5 --owner desireco --format json`
+- **Status workflow:** Draft → Ready → Next → **Building** → **Review** →
+  Done (plus Bugs & Enhancements, Blocked). When you pick up a story, move it
+  to **Building** yourself; move it to **Review** when the work is done and
+  validated and it awaits Jake's sign-off.
+- **Moving an item** — ids come from the API, never from memory:
+  1. `gh project field-list 5 --owner desireco --format json | jq -r '.fields[] | select(.name=="Status") | .id as $f | .options[] | "\($f)  \(.id)  \(.name)"'`
+  2. `gh project item-edit --project-id PVT_kwHN6NzOAXMArg --id <item-id> --field-id <status-field-id> --single-select-option-id <option-id>`
+- **Never hand-type item ids.** `PVTI_…` ids end in easily-dropped doubled
+  characters (the "Mobile review site" item ends `…McSs`); a truncated id
+  fails with `Could not resolve to a node`. Pipe ids straight from
+  `item-list` output via jq.
 
 ## Rules that always apply
 
