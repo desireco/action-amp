@@ -30,10 +30,13 @@ selected (expanded) task row gains:
 1. **Property chips, live** — the same `PropertyChips` + `taskPropertyFields`
    row the detail page uses (When / Priority / Size / Project / Due / Goal).
    Every pick saves immediately through `updateTaskDetails` (autosave).
-2. **An inline prose editor** — Edit toggles title input + notes textarea
-   with **Save / Cancel** and the non-destructive decline
-   (**Mark as won't do**, the same `WONT_DO` + confirm dialog as the detail
-   page). Save writes through `updateTaskDetails` and returns to chips view.
+2. **An Edit button that opens the task detail page**, exactly as the rows
+   always did — title/notes editing, Save/Cancel, and won't-do stay there.
+
+*(Reshaped 2026-08-31 per Jake: "like it was before, I just want these
+dropdowns to be inline." The first cut also put the title/notes working copy
+and won't-do inline; that was walked back — the detail page remains the prose
+editor, reached by the row's Edit button.)*
 
 The detail page stays (deep URL, breadcrumbs, attachments, outcome, feedback
 on done tasks) — but the common edits no longer require the round trip.

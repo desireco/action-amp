@@ -96,9 +96,7 @@ describe("UpcomingPage overdue recovery", () => {
     expect(screen.getByRole("button", { name: "Unschedule 1 overdue" })).toBeInTheDocument();
     fireEvent.click(screen.getByText("Past task"));
     expect(screen.getByRole("button", { name: "Someday" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Edit title and notes" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
   });
 
   it("opens and closes a task's action drawer instead of navigating on row click", () => {

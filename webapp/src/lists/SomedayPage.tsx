@@ -97,7 +97,6 @@ export function SomedayPage() {
                 <TaskRowEditor
                   task={task}
                   lensId={lens?.id ?? null}
-                  onClose={() => setActiveTaskId(null)}
                 />
               </TaskRow>
             </li>

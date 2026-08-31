@@ -246,7 +246,6 @@ export function TodayPage() {
                   </Button>
                   <TaskRowEditor
                     task={task}
-                    onClose={() => setActiveTaskId(null)}
                   />
                   <Button
                     variant="ghost"

@@ -227,7 +227,6 @@ export function UpcomingPage() {
               <TaskRowEditor
                 task={task}
                 lensId={lens?.id ?? null}
-                onClose={() => setActiveTaskId(null)}
               />
             </TaskRow>
           )}

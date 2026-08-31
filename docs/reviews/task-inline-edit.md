@@ -3,7 +3,17 @@
 <!-- Build owns this file. Discover reads it to sign off. -->
 
 Spec: `docs/specs/task-inline-edit.md` (issue #4) · Commits `0aad632`,
-`HEAD` (project-rows extension).
+`fee1caf`, `HEAD` (project rows + the "like it was before" reshape).
+
+## Addendum 2 — reshape (Jake, same day)
+
+"Like it was before, I just want these dropdowns to be inline." The row
+editor is now **chips only**: every property pick autosaves, and the row's
+**Edit button opens the task detail page** (with returnTo), exactly like the
+pre-feature rows. The inline title/notes working copy and the inline won't-do
+confirm were removed — prose editing, Save/Cancel, and won't-do live on the
+detail page, one click away. All six surfaces (Today, Upcoming, Someday,
+Week, Project detail) behave identically.
 
 ## Addendum — project detail rows (Jake's follow-up)
 

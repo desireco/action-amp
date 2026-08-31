@@ -105,7 +105,6 @@ export function WeekPage() {
             >
               <TaskRowEditor
                 task={task}
-                onClose={() => setActiveTaskId(null)}
               />
             </TaskRow>
           )}

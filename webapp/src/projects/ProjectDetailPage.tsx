@@ -936,7 +936,6 @@ export function ProjectDetailPage() {
                                     : null,
                                 }}
                                 lensId={project?.lensId ?? null}
-                                onClose={() => setActiveTaskId(null)}
                               />
                             </>
                           ) : null}

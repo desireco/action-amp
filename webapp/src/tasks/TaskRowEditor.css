@@ -1,7 +1,8 @@
 /*
- * TaskRowEditor — the inline editor inside an expanded task row. Chips mode
- * flows with the row's other quick actions; editing mode becomes a column
- * (title, notes, actions) so the inputs get real width.
+ * TaskRowEditor — the live property chips inside an expanded task row.
+ * Flows inline with the row's other quick actions; a failed pick just
+ * doesn't stick (the refetch restores the server values), so there is no
+ * error styling to carry.
  */
 
 .aa-row-editor {
@@ -10,45 +11,4 @@
   align-items: center;
   gap: 0.5rem;
   min-width: 0;
-}
-
-.aa-row-editor--editing {
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-}
-
-.aa-row-editor__input,
-.aa-row-editor__textarea {
-  width: 100%;
-  font: inherit;
-  color: inherit;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--aa-border-subtle);
-  padding: 0.25rem 0;
-}
-
-.aa-row-editor__input:focus,
-.aa-row-editor__textarea:focus {
-  outline: none;
-  border-bottom-color: var(--aa-accent);
-}
-
-.aa-row-editor__textarea {
-  min-height: 4.5rem;
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.aa-row-editor__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.aa-row-editor__err {
-  color: var(--aa-danger, inherit);
-  margin: 0;
-  font-size: 0.875rem;
 }

@@ -251,7 +251,7 @@ describe("ProjectDetailPage — inline row editor (replaces the old Move picker)
       screen.queryByRole("button", { name: /move email sarah/i }),
     ).toBeNull();
     expect(
-      screen.getAllByRole("button", { name: "Edit title and notes" }).length,
+      screen.getAllByRole("button", { name: /edit email sarah/i }).length,
     ).toBeGreaterThan(0);
     // "Ship product v2" appears as the breadcrumb AND the Project chip.
     expect(
@@ -260,7 +260,7 @@ describe("ProjectDetailPage — inline row editor (replaces the old Move picker)
     expect(screen.getByRole("button", { name: "M" })).toBeInTheDocument();
   });
 
-  it("Edit opens the inline title/notes working copy", () => {
+  it("Edit opens the task detail page (title/notes editing lives there)", () => {
     projectData.current = makeProjectMultiToday();
     renderAt("/do/projects/p1");
 
@@ -268,11 +268,10 @@ describe("ProjectDetailPage — inline row editor (replaces the old Move picker)
     // Multiple rows render editors (only the active row's is visible) —
     // operate on the first.
     fireEvent.click(
-      screen.getAllByRole("button", { name: "Edit title and notes" })[0],
+      screen.getAllByRole("button", { name: /edit email sarah/i })[0],
     );
 
-    expect(screen.getByLabelText("Task title")).toHaveValue("Email Sarah");
-    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(screen.getByTestId("task-detail")).toBeInTheDocument();
   });
 });
 

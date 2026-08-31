@@ -1,18 +1,16 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getProjects = vi.fn();
 const getGoals = vi.fn();
 const updateTaskDetails = vi.fn();
-const updateTaskStatus = vi.fn();
 
 vi.mock("wasp/client/operations", () => ({
   getProjects,
   getGoals,
   updateTaskDetails,
-  updateTaskStatus,
   useQuery: () => ({ data: [] }),
 }));
 
@@ -38,8 +36,17 @@ function renderEditor() {
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <TaskRowEditor task={TASK} lensId="lens-1" onClose={() => {}} />
+      <MemoryRouter initialEntries={["/do/upcoming"]}>
+        <Routes>
+          <Route
+            path="/do/tasks/:permalink"
+            element={<div data-testid="task-detail" />}
+          />
+          <Route
+            path="*"
+            element={<TaskRowEditor task={TASK} lensId="lens-1" />}
+          />
+        </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -48,64 +55,19 @@ function renderEditor() {
 beforeEach(() => {
   vi.clearAllMocks();
   updateTaskDetails.mockResolvedValue({});
-  updateTaskStatus.mockResolvedValue({});
 });
 
 describe("TaskRowEditor", () => {
-  it("renders the chips row with an Edit toggle, not a navigation button", () => {
+  it("renders the property chips row", () => {
     renderEditor();
-    expect(screen.getByRole("button", { name: "Edit title and notes" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "M" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Normal" })).toBeInTheDocument();
   });
 
-  it("Edit opens the title/notes working copy; Save is gated until something changes", async () => {
+  it("Edit opens the task detail page (title/notes editing lives there)", () => {
     renderEditor();
-    fireEvent.click(screen.getByRole("button", { name: "Edit title and notes" }));
-
-    const title = screen.getByLabelText("Task title");
-    expect(title).toHaveValue("Email Sarah");
-    const save = screen.getByRole("button", { name: "Save" });
-    expect(save).toBeDisabled();
-
-    fireEvent.change(title, { target: { value: "Email Sarah about the draft" } });
-    expect(save).toBeEnabled();
-
-    fireEvent.click(save);
-    await waitFor(() =>
-      expect(updateTaskDetails).toHaveBeenCalledWith({
-        taskId: "task-1",
-        description: "Email Sarah about the draft",
-        content: "",
-      }),
-    );
-  });
-
-  it("Cancel returns to chips without writing", () => {
-    renderEditor();
-    fireEvent.click(screen.getByRole("button", { name: "Edit title and notes" }));
-    fireEvent.change(screen.getByLabelText("Task title"), {
-      target: { value: "Discarded change" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-
-    expect(updateTaskDetails).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Edit title and notes" })).toBeInTheDocument();
-  });
-
-  it("won't do confirms, then writes WONT_DO through the status op", async () => {
-    renderEditor();
-    fireEvent.click(screen.getByRole("button", { name: "Edit title and notes" }));
-    fireEvent.click(screen.getByRole("button", { name: "Mark as won't do" }));
-
-    // Confirm dialog gates the decline.
-    expect(updateTaskStatus).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Mark won't do" }));
-
-    await waitFor(() =>
-      expect(updateTaskStatus).toHaveBeenCalledWith({
-        id: "task-1",
-        status: "WONT_DO",
-      }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /edit email sarah/i }));
+    expect(screen.getByTestId("task-detail")).toBeInTheDocument();
   });
 
   it("renders nothing for done tasks", () => {
@@ -118,5 +80,32 @@ describe("TaskRowEditor", () => {
       </QueryClientProvider>,
     );
     expect(container.querySelector(".aa-row-editor")).toBeNull();
+  });
+
+  it("autosaves a size pick through updateTaskDetails", async () => {
+    // Drive a pick through the real PropertyChips: open the size popover and
+    // choose L. The chips row is the editor's public surface; this is the
+    // "dropdowns are inline" contract.
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <TaskRowEditor task={TASK} lensId="lens-1" />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "M" }));
+    // Option names concatenate label + hint (e.g. "L 1 hr").
+    const option = await screen.findByRole("button", { name: /1 hr/ });
+    fireEvent.click(option);
+
+    await waitFor(() =>
+      expect(updateTaskDetails).toHaveBeenCalledWith(
+        expect.objectContaining({ taskId: "task-1", size: "L" }),
+      ),
+    );
   });
 });
