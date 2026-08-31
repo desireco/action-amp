@@ -50,17 +50,21 @@ review screen before anything is saved.
    showing the save action and **Not now**. The source link is saved as an
    attached-reference property; images are previewed then saved as attachments
    (up to four images, 5 MB each). The user can optionally edit its title and
-   description, then select a Project (as a triage destination) or Simple-list
-   Project (which saves directly to that list, skipping triage). Android's
-   duplicated page titles are removed. Nothing reaches the server until the
-   user confirms.
-3. With Inbox or a Project selected, saving calls the normal `createInboxItem`
-   action; a Project is preselected for triage. With a Simple-list Project
-   selected, saving calls `createListItem` directly and opens that project's
-   page, carrying its image attachments with it.
+   description, then pick a destination: **Inbox** (default — decide later), a
+   **Project**, or a **Simple-list Project**, grouped separately in the dropdown
+   and ordered most-recently-active first. Android's duplicated page titles are
+   removed. Nothing reaches the server until the user confirms.
+3. With Inbox selected, saving calls the normal `createInboxItem` action — the
+   item waits in the universal inbox for triage. With a Project selected,
+   saving calls `createResource` directly and the share lands in that project's
+   Resources section immediately, skipping triage (a shared item assigned to a
+   project is reference material, not a pending decision); a rare non-http
+   source URL folds into the resource's notes. With a Simple-list Project
+   selected, saving calls `createListItem` directly. Both direct paths carry
+   the image attachments and are entitlement-gated on the destination's Lens.
 4. Inbox saves open `/do/inbox`, where the new item is first in the universal
-   inbox; direct Simple-list saves open the list's project page
-   (`/do/projects/:permalink`).
+   inbox; direct Project and Simple-list saves open the destination's project
+   page (`/do/projects/:permalink`).
 
 **Wiring:**
 

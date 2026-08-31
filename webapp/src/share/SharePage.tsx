@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { createInboxItem, createListItem, getProjectsForResolver, useQuery } from "wasp/client/operations";
+import { createInboxItem, createListItem, createResource, getProjectsForResolver, useQuery } from "wasp/client/operations";
 import { BrandMark } from "../components/ui/BrandMark";
-import { ArrowRightIcon, InboxIcon } from "../components/ui/icons";
+import { ArrowRightIcon, InboxIcon, ProjectsIcon } from "../components/ui/icons";
 import { composeShareCapture, composeShareText, type ShareFields } from "./composeShareText";
 import { clearPendingShare, getPendingShare, type PendingShareImage } from "./pendingShare";
 import { blobToBase64, fileToDataUrl } from "../shared/imageFiles";
@@ -90,6 +90,37 @@ export function SharePage() {
         navigate(`/do/projects/${listProject.permalink}`, { replace: true });
         return;
       }
+      // A shared item assigned to a project is reference material, not a
+      // decision waiting to happen: it files straight in as a Resource — no
+      // triage, same as the list branch above. The Inbox is the only
+      // destination that goes through triage.
+      if (destinationType === "project" && destinationId) {
+        const targetProject = (projects ?? []).find(
+          (project) => project.id === destinationId && project.type !== "SIMPLE_LIST",
+        );
+        if (!targetProject) throw new Error("Couldn't find that project.");
+        // Resource URLs must be http(s); a rare non-http share source (some
+        // Android apps share content:// or intent:// URIs) folds into the
+        // notes rather than failing the save.
+        const httpUrl = /^https?:\/\//i.test(capture.url) ? capture.url : undefined;
+        const notes = [
+          description.trim(),
+          httpUrl ? undefined : capture.url || undefined,
+        ].filter(Boolean).join("\n\n") || undefined;
+        await createResource({
+          projectId: targetProject.id,
+          title: title.trim() || text || pending.files[0]?.filename || "Shared item",
+          url: httpUrl,
+          notes,
+          attachments: attachments.length ? attachments : undefined,
+        });
+        await clearPendingShare(pending.id);
+        void queryClient.invalidateQueries({ queryKey: ["getProject"] });
+        void queryClient.invalidateQueries({ queryKey: ["getAppData"] });
+        void queryClient.invalidateQueries({ queryKey: ["getProjects"] });
+        navigate(`/do/projects/${targetProject.permalink}`, { replace: true });
+        return;
+      }
       // Use the normal Wasp capture action, not the cross-origin share API.
       // Inbox reads through the same authenticated operation, so a confirmed
       // item cannot be written under a different stale cookie session.
@@ -136,13 +167,18 @@ export function SharePage() {
     const selectedList = destination.startsWith("list:")
       ? listProjects.find((project) => project.id === destination.slice("list:".length))
       : null;
+    const selectedProject = destination.startsWith("project:")
+      ? standardProjects.find((project) => project.id === destination.slice("project:".length))
+      : null;
+    const assignedDestination = selectedList ?? selectedProject;
+    const DestinationIcon = assignedDestination ? ProjectsIcon : InboxIcon;
     return (
       <main className="aa-share">
         <div className="aa-share__card aa-share__card--review">
           <header className="aa-share__header">
             <span className="aa-share__brand"><BrandMark size="sm" /></span>
             <span className="aa-share__brand-name">ActionAmp</span>
-            <span className="aa-share__destination"><InboxIcon /> {selectedList?.name ?? "Inbox"}</span>
+            <span className="aa-share__destination"><DestinationIcon /> {assignedDestination?.name ?? "Inbox"}</span>
           </header>
 
           <div className="aa-share__intro">
@@ -201,8 +237,8 @@ export function SharePage() {
           {submitError && <p className="aa-share__error" role="alert">{submitError}</p>}
           <div className="aa-share__actions">
             <button className="aa-share__button" type="button" onClick={() => void confirmPending()} disabled={submitting}>
-              <InboxIcon />
-              {submitting ? "Adding…" : selectedList ? "Add to list" : "Add to Inbox"}
+              <DestinationIcon />
+              {submitting ? "Adding…" : selectedList ? "Add to list" : selectedProject ? "Add to project" : "Add to Inbox"}
               {!submitting && <ArrowRightIcon />}
             </button>
             <button className="aa-share__link aa-share__link--button" type="button" onClick={() => void discardPending()}>
@@ -210,11 +246,9 @@ export function SharePage() {
             </button>
           </div>
           <p className="aa-share__reassurance">
-            {destination.startsWith("list:")
-              ? "It will be added directly to this list."
-              : destination
-                ? "It still goes through triage before anything is filed."
-                : "Nothing is organized or scheduled yet."}
+            {assignedDestination
+              ? `It will be added directly to this ${selectedList ? "list" : "project"}.`
+              : "Nothing is organized or scheduled yet."}
           </p>
         </div>
       </main>

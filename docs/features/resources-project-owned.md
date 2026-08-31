@@ -26,6 +26,12 @@ display-only row thumbs (shared thumbs + lightbox), bytes served by the
 owner-gated `/api/attachments/:id`; `resource list --json` (CLI) includes the
 attachment metadata for agents.
 
+**Share → Project files a Resource directly** (2026-08-31). The PWA share
+screen's project destination skips triage entirely: confirming calls
+`createResource` (now attachment-aware) with the shared title/url/notes/images
+and opens the project page. The Inbox remains the only share destination that
+flows through triage — see `docs/features/pwa-notifications.md` §Share target.
+
 **Two scope cuts vs. the `ready` spec** (recorded in ROADMAP §Shipped):
 
 - **No `TaskResource` join.** Tasks reference project material as **markdown
