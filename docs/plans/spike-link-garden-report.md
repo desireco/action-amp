@@ -55,6 +55,19 @@ silently dropped); `npm start`-style regen-on-every-boot is slow but
 self-healing. The `apps/api` shape the switch plan wants is directly
 supported.
 
+## 6a. What the Imba discoveries bought us
+
+The point of the spike was discovery, and the Imba arm delivered it: for the
+price of one afternoon we now know — with reproducible receipts in
+`imba-cheatsheet.md` — that the entire vite-plugin-imba pairing is
+pre-production (alpha-only compiler fork, five distinct event-binding rules,
+a reconciler that orphans swapped branches, no auto-calling of zero-arg
+methods), what it would take to work around each rule if we ever had to,
+and exactly which signals to watch for Imba 2 final (a stable `vite-plugin`
+on the mainline, `@ivar` sugar, conditional-event binding, hot-reload
+stability). That is the cheapest possible way to learn this — the expensive
+way is discovering rule #3 during the real migration.
+
 ## 6. Verdict inputs + escape-hatch score
 
 - Typebase: DX genuinely good (typed client, zod-through, Drizzle schema
