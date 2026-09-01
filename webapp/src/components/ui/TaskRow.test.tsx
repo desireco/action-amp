@@ -15,6 +15,20 @@ const BASE_TASK: TaskRowTask = {
   isDone: false,
 };
 
+/**
+ * A scheduledDate the way the app stores them: Prisma DATE reads back as a
+ * UTC-midnight Date, and formatDueChip reads Dates as UTC calendar days
+ * against the LOCAL today. Anchoring on local-today-at-UTC-midnight keeps
+ * the expected day-diff stable at any run time or timezone — a bare
+ * `new Date()` shifts with the local clock and flaked near day boundaries.
+ */
+function utcMidnightFromLocalToday(days: number): Date {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() + days),
+  );
+}
+
 describe("TaskRow", () => {
   describe("rendering", () => {
     it("shows the task description", () => {
@@ -125,10 +139,10 @@ describe("TaskRow", () => {
     });
 
     it("shows due date as a teal chip when in the future", () => {
-      const future = new Date();
-      future.setDate(future.getDate() + 3);
       const { container } = renderInContext(
-        <TaskRow task={{ ...BASE_TASK, scheduledDate: future }} />,
+        <TaskRow
+          task={{ ...BASE_TASK, scheduledDate: utcMidnightFromLocalToday(3) }}
+        />,
       );
       const teal = container.querySelector(".aa-chip--teal");
       expect(teal).toBeTruthy();
@@ -136,10 +150,10 @@ describe("TaskRow", () => {
     });
 
     it("shows due date as a rose chip when overdue", () => {
-      const past = new Date();
-      past.setDate(past.getDate() - 2);
       const { container } = renderInContext(
-        <TaskRow task={{ ...BASE_TASK, scheduledDate: past }} />,
+        <TaskRow
+          task={{ ...BASE_TASK, scheduledDate: utcMidnightFromLocalToday(-2) }}
+        />,
       );
       const rose = container.querySelector(".aa-chip--rose");
       expect(rose).toBeTruthy();
@@ -147,7 +161,7 @@ describe("TaskRow", () => {
     });
 
     it("hides the due chip on committed (TODAY) tasks — the status is the date", () => {
-      const today = new Date();
+      const today = utcMidnightFromLocalToday(0);
       const { container } = renderInContext(
         <TaskRow task={{ ...BASE_TASK, status: "TODAY", scheduledDate: today }} />,
       );

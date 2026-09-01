@@ -184,26 +184,31 @@ export function taskPropertyFields({
     },
   ];
 
-  // Due — preset popover, or quiet "+ Due" when unset.
-  const dueLabelNow = dueLabel(task.scheduledDate);
-  if (dueLabelNow) {
-    fields.push({
-      key: "due",
-      variant: "due",
-      value: duePreset(task.scheduledDate),
-      displayValue: dueLabelNow,
-      options: DUE_OPTS,
-    });
-  } else {
-    fields.push({
-      key: "due",
-      variant: "due",
-      value: null,
-      displayValue: "Due",
-      addLabel: "Due",
-      unset: true,
-      options: DUE_OPTS.filter((o) => o.value !== "none"),
-    });
+  // Due — preset popover, or quiet "+ Due" when unset. Bench only: a
+  // committed task (status TODAY) never gets a Due chip — its When chip
+  // already reads "Today", so a dated one would render two Today chips
+  // saying the same thing (same rule as TaskRow's meta pills).
+  if (task.status !== "TODAY") {
+    const dueLabelNow = dueLabel(task.scheduledDate);
+    if (dueLabelNow) {
+      fields.push({
+        key: "due",
+        variant: "due",
+        value: duePreset(task.scheduledDate),
+        displayValue: dueLabelNow,
+        options: DUE_OPTS,
+      });
+    } else {
+      fields.push({
+        key: "due",
+        variant: "due",
+        value: null,
+        displayValue: "Due",
+        addLabel: "Due",
+        unset: true,
+        options: DUE_OPTS.filter((o) => o.value !== "none"),
+      });
+    }
   }
 
   // Goal — picker-backed, only when there's no project (one-parent rule).

@@ -210,7 +210,11 @@ export function TaskRow({
           )}
           {task.description}
         </span>
-        {hasMeta && (
+        {/* Summary pills hide while the below-editor is open — it shows the
+            same properties as editors, so an expanded row would say M twice
+            and pill some properties but not others. Collapse brings the
+            summary back. */}
+        {hasMeta && !(below && expanded) && (
           <div className="aa-task-row__meta">
             {task.priority === "IMPORTANT" && (
               <Chip variant="amber" small>
