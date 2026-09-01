@@ -76,6 +76,7 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | The September 2026 signup campaign (100 users, weekly milestones, channel plan) | `docs/GTM-SEPTEMBER-2026.md` |
 | Deployment / hosting | `docs/research/deployment-research.md` |
 | The platform switch off Wasp — plan + agent goal set | `docs/plans/2026-08-31-platform-switch-v3.md` (execution: `2026-08-31-platform-switch-goals.md`; supersedes v1/v2 in the same folder) |
+| The Typebase dual-frontend spike (Svelte vs Imba — link garden) | `docs/plans/2026-08-31-spike-link-garden.md` |
 | What's left to do / pick up next | `docs/ROADMAP.md` (priority order + ready specs) + `docs/backlog/` |
 | Duet pull / decompose contract | `docs/queue.md` (round-robin + `parent:`/`children:` rules; steering is via the GH Projects board, not a frontmatter flag) |
 | The roadmap board (GH Projects — picking up stories, moving statuses) | "Roadmap board (GitHub Projects)" section below |
