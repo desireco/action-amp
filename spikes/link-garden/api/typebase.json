@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/typebase-io/monorepo/refs/heads/main/apps/cli/src/helpers/typebase.schema.json",
+  "projectPath": "typebase",
+  "server": {
+    "adapter": "bun",
+    "outDir": "_server",
+    "output": "ts",
+    "port": 8080
+  }
+}

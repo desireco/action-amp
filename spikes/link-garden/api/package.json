@@ -1,0 +1,21 @@
+{
+  "name": "link-garden-api",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "bun": ">=1.3.0"
+  },
+  "scripts": {
+    "codegen": "typebase-io-cli codegen",
+    "generate": "typebase-io-cli generate-server --adapter bun --output ts --out-dir _server --port ${PORT:-8080}",
+    "db:push": "typebase-io-cli db dev push",
+    "start": "bun run codegen && bun run generate && ln -sfn ../../.env typebase/_server/.env && bun install --cwd typebase/_server && bun --cwd typebase/_server run src/index.ts",
+    "typecheck": "typebase-io-cli codegen && typebase-io-cli generate-server --adapter bun --output ts --out-dir _server --port 8080"
+  },
+  "dependencies": {
+    "typebase-io": "0.1.15"
+  },
+  "devDependencies": {
+    "typebase-io-cli": "0.1.15"
+  }
+}
