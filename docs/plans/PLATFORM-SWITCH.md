@@ -3,13 +3,14 @@
 > The one place for the roadmap, current status, and how work is organized
 > for moving ActionAmp off Wasp. Everything else is an artifact linked below;
 > this page is the cockpit. **Any agent that lands work updates §Status
-> before finishing its turn.** Last updated: 2026-09-01 (D1-api reviewed
-> pass-after-fixes; F1 reviewed pass; next: F2 paste + D1-svelte by ZCode).
+> before finishing its turn.** Last updated: 2026-09-01 (goal charter added:
+> `migration-goal.md`; next: F4 domain pilot by ZCode).
 
 ## Artifacts — what owns what
 
 | Artifact | Owns |
 |---|---|
+| [`migration-goal.md`](migration-goal.md) | The goal: what "done" means — full parity, confirmed by the migrated + extended test suite |
 | [`2026-08-31-platform-switch-v3.md`](2026-08-31-platform-switch-v3.md) | Strategy: premises, invariants I1–I5, milestones M1–M5, the switch-day runbook |
 | [`2026-08-31-platform-switch-goals.md`](2026-08-31-platform-switch-goals.md) | Execution: every goal (F/S/V) with deps + done-conditions; model dispatch + cross-family review |
 | [`2026-08-31-spike-link-garden.md`](2026-08-31-spike-link-garden.md) | The 2-day Typebase × Svelte-vs-Imba spike |
