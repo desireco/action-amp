@@ -1,8 +1,9 @@
 # ActionAmp Platform Transition — Plan v2
 
-> Status: proposed. Supersedes
-> [`2026-08-31-platform-transition-svelte-typebase.md`](2026-08-31-platform-transition-svelte-typebase.md)
-> (v1 + review). Date: 2026-08-31. Owner: Jake, with agents executing phases.
+> Status: **superseded** by
+> [`2026-08-31-platform-switch-v3.md`](2026-08-31-platform-switch-v3.md) —
+> the tiny active user base removes the need for a phased migration, so v3
+> collapses this into a single rebuild + switch. Proposed 2026-08-31.
 
 ---
 
