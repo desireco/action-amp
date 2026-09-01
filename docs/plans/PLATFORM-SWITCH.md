@@ -36,16 +36,12 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | Goal | State | Notes |
 |---|---|---|
 | Planning (plan v3, goal set, spike design) | ✅ done | docs/plans/, commits `5e706fc`…`fb3ef2c` |
-| Spike dispatch files | ✅ ready | `spikes/link-garden/dispatch/` — start with `D1-api-codex.md` |
-| Spike D1 — backend (api/) | ✅ pass-after-fixes | `3465000` + review fixes; deploy waived by Jake (local-only); ports pinned 5173/3000 |
-| Spike D1 — Svelte client | ▶ next | ZCode authors it here — say "go on svelte" |
-| Spike D2 — Imba client | ☐ next | file: `D2-imba-gemini.md` → Gemini |
-| Spike D2 — report | ☐ next | file: `D2-report-zai.md` → Z.AI |
-| **Lane G (parallel foundation)** | ▶ paste anytime | `docs/plans/dispatch/` → Gemini, in order |
-| F1 monorepo skeleton | ✅ pass | `2fc2a88` · gates re-verified by ZCode · author swap logged |
-| F2 snapshot + staging | ▶ paste now | `F2-staging-gemini.md` → Gemini · prompt issued |
-| F3 introspection report | ☐ after F2 | `F3-introspection-gemini.md` · ZCode audits |
-| All other F/S/V goals | ☐ | gated on spike report + Jake's go (F1–F3 exempt: framework-independent) |
+| F1 monorepo skeleton | ✅ pass | `2fc2a88` · gates re-verified |
+| **Link garden spike — COMPLETE** | ✅ **ready for Jake's review** | all three apps built + browser-verified by ZCode; report: `docs/plans/spike-link-garden-report.md` |
+| F2/F3 (staging, introspection) | ✗ dropped | 2026-09-01: Jake — local only, no multi-environment machinery |
+| **Process change** | — | 2026-09-01: ZCode executes everything locally; no agent ferrying; Jake reviews once at the end |
+| Ports (all local) | — | API `:8080` · Svelte `:5174` (5173 belongs to another project) · Imba `:3131` |
+| All other F/S/V goals | ☐ | gated on spike report + Jake's go |
 
 Blockers: none. Open decisions for Jake: none yet (first gate is the spike
 report).
