@@ -37,8 +37,11 @@ And one property that makes trying this cheap: **the build never modifies
 
 - Few active users, and the main daily user is Jake himself. The asset to
   protect is **the data and the momentum**, not zero-downtime continuity.
-- Both stacks read/write the **same database with the same schema** (invariant
-  I2), so "migrating users" is mostly "Jake starts using the other app."
+- **Production runs exactly one backend from today until the switch.** The
+  new stack is built and verified entirely against a **staging copy** of
+  production; it touches the production database for the first time on
+  switch day, when it *becomes* the backend. No read-only prod roles, no
+  dogfooding against prod, no second writer — ever.
 - Existing sessions and CLI tokens keep working across the switch (§5, M1),
   so most users notice nothing at all.
 - Consequently: no dual-run period, no routing flips, no write-access ladder,
@@ -66,8 +69,10 @@ Drizzle → PostgreSQL (Railway, existing database) → optionally Neon later
 ```
 
 `tokens.css` carries over untouched (no Tailwind by default). The 13
-`operationsCore.ts` files already contain nearly all business logic, pure and
-test-covered — the backend port is mostly moving files. Only one scheduled
+`operationsCore.ts` files (5,423 lines) already contain nearly all business
+logic, and their tests mock the `entities` seam — so each core keeps its
+signatures and tests, and only the seam is re-bound to Drizzle behind a thin
+data-access layer. The Phase 0 pilot fixes that pattern; only one scheduled
 job exists (`sendDailyTodayReminder`).
 
 ---
@@ -88,8 +93,8 @@ job exists (`sendDailyTodayReminder`).
   supply them on writes.
 * **I4 — Parity, not redesign.** Port behavior per `docs/INTERACTION.md` and
   the existing Playwright suite. Improvements come later, as product work.
-* **I5 — A same-day `pg_dump` exists before every milestone that writes to
-  production** (dogfooding, switch day).
+* **I5 — A same-day `pg_dump` exists before switch day** and before any
+  other operation that touches production.
 
 ---
 
@@ -104,13 +109,14 @@ resolved for the cost of a few days:
 
 1. Monorepo skeleton (`apps/web`, `apps/api`, `packages/domain`,
    `packages/contract`, npm workspaces). `webapp/` untouched.
-2. Read-only role `actionamp_ro` on Railway Postgres; snapshot script
-   (`pg_dump` prod → local restore).
+2. Snapshot tooling (`pg_dump` prod → local/staging restore). The new stack
+   never connects to production (single-backend rule), so no read-only prod
+   role is needed.
 3. `drizzle-kit pull` against the snapshot; diff report vs
    `webapp/schema.prisma`, especially the client-side-defaults gotcha (I3).
 4. Two `operationsCore` files into `packages/domain`, tests green.
-5. **Typebase arm:** `tasks.list` + one write on the snapshot; generated
-   client; Bun; isolated Railway deploy on the RO role.
+5. **Typebase arm:** `tasks.list` + one write against the snapshot; generated
+   client; Bun; isolated Railway deploy pointed at staging.
 6. **Control arm:** same endpoints in Hono + Drizzle (~half a day).
 7. Drift-check script (regen + `git diff --exit-code`) in CI.
 8. **Decision doc.** Hard gates: custom Wasp-compatible auth possible without
@@ -130,13 +136,15 @@ in a stable, parkable state:
 | **M2 — Core loop** | Capture (⌘K + NL parse), Inbox/triage, What Now/Focus, Today — Jake could run his whole day in the new app | 6–9 |
 | **M3 — Structure** | Tasks/lists (Upcoming/Someday, row editors), Projects, Goals, Lenses, Logbook, Search, Resources | 8–12 |
 | **M4 — The rest + auth issuance** | Settings, notifications/push (VAPID keys carry over), PWA/share target, onboarding, billing + entitlements + Stripe webhooks, admin dashboard + admin routes, scheduled job; **new app issues Wasp-format sessions** (passwordless flow via Resend per `docs/EMAIL-INTEGRATION.md`) — Wasp accepts those sessions unchanged | 6–9 |
-| **M5 — Verification** | full e2e suite ported and green against a prod snapshot; dogfooding on production complete; switch rehearsal executed against staging, timed | 3–5 |
+| **M5 — Verification** | full e2e suite green against a refreshed prod snapshot; Jake's staging dogfood week complete; switch rehearsal executed and timed | 3–5 |
 
-**Dogfooding replaces the migration period.** From M2, Jake uses the new app
-locally (or via a Jake-only host override) against production — safe because
-the logic is shared and the schema is frozen (I2). From M4 the new app is his
-primary; Wasp is the fallback. Since Jake *is* the main active user, his
-cutover de-risks everyone else's.
+**Dogfooding happens on staging, not production.** The staging environment
+runs a refreshed production snapshot, so Jake exercises the new app against
+his real data — capturing, triaging, running focus sessions — without
+production ever growing a second backend. Refresh the snapshot at the start
+of the dogfood week and again before the rehearsal. Since Jake is the main
+active user, one realistic week of his staging use de-risks everyone else's
+cutover.
 
 **Parity bar.** 100% for everything a real user touches in a normal week
 (cross-checked against usage analytics). The long tail (rare admin corners,
@@ -169,10 +177,10 @@ quiet hour for the flip.
 
 ## 6. The switch runbook
 
-**Preconditions (all must be true):** M5 exit — e2e green on snapshot;
-Jake's daily use on the new app ≥ 1 week; rollback script tested; same-day
-backup taken; new stack deployed and warm on Railway; Stripe test-mode dry
-run of webhook handling passed.
+**Preconditions (all must be true):** M5 exit — e2e green on a refreshed
+snapshot; Jake's staging dogfood week complete; rollback script tested;
+same-day production backup taken; new stack deployed and warm; Stripe
+test-mode dry run of webhook handling passed.
 
 **The switch, in order:**
 
