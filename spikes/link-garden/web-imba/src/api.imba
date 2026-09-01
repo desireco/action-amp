@@ -17,13 +17,21 @@ def authPost path, payload
 	if response.ok
 		return await response.json!
 
-	var detail = null
+	# optional chaining (?.) compiles broken in this fork — plain ifs only
+	var message = null
+	var code = null
 	try
-		detail = await response.json!
+		const parsed = await response.json!
+		message = parsed.message
+		code = parsed.code
 	catch
-		detail = null
+		null
 
-	throw new Error(detail?.message or detail?.code or 'auth failed')
+	if message
+		throw new Error(message)
+	if code
+		throw new Error(code)
+	throw new Error('auth failed')
 
 export def signUp name, email, password
 	await authPost('sign-up/email', {name: name, email: email, password: password})
@@ -51,12 +59,24 @@ export def rpc action, input
 	})
 
 	const body = await response.json!
-	const payload = body?.json
+	var payload = null
+	if body
+		payload = body.json
 
 	if response.ok
 		return payload
 
-	throw new Error(payload?.message or payload?.code or 'rpc ' + action + ' failed')
+	var message = null
+	var code = null
+	if payload
+		message = payload.message
+		code = payload.code
+
+	if message
+		throw new Error(message)
+	if code
+		throw new Error(code)
+	throw new Error('rpc ' + action + ' failed')
 
 export def createLink url, tags
 	await rpc('links/create', {url: url, tags: tags})

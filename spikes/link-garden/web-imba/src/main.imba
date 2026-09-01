@@ -40,6 +40,12 @@ tag link-garden
 		self.links.filter do |link|
 			link.status == self.tab and (not self.tagFilter or link.tags.includes(self.tagFilter))
 
+	get statsText
+		if self.stats
+			"today: {self.stats.captured} captured · {self.stats.kept} kept"
+		else
+			"today: 0 captured · 0 kept"
+
 	def countFor statusArg
 		self.links.filter(do |l| l.status == statusArg).length
 
@@ -174,7 +180,7 @@ tag link-garden
 			<self.app>
 				<header>
 					<h1> "Link Garden"
-					<span.meta> "today: {self.stats?.captured or 0} captured · {self.stats?.kept or 0} kept"
+					<span.meta> self.statsText
 					<span.spacer>
 					<button.ghost @click=toggleTheme>
 						if self.dark
