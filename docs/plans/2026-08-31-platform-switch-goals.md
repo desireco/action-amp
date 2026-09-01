@@ -207,33 +207,29 @@ ported and green against mocked entities; the pattern is written up in
 `packages/domain/README.md` (rules + how to add entity-slice methods);
 lint/typecheck green.
 
-### F5 — Spike: Typebase arm · deps: F3, F4 · 1d
-### F6 — Spike: Hono control arm · deps: F3, F4 · 1d — parallel with F5
+### F5/F6/F7 — ~~Spike arms + decision~~ **RESOLVED by the link-garden spike (2026-09-01)**
 
-Outcome per arm: `tasks.list` + one write over the ported tasks core,
-against staging; generated/typed client (Typebase) or oRPC client (Hono);
-running under Bun locally; one throwaway Railway deploy pointed at staging.
+The spike (`spikes/link-garden/`, report at
+`docs/plans/spike-link-garden-report.md`) ran the Typebase arm end-to-end
+and Jake decided: **Svelte 5 + Hono + oRPC + Drizzle + Bun**. Key inputs:
+Typebase's regen-restart dev loop (no watch/hot mode, ~5–10s cycles),
+better-auth bundle quirks (CORS preflight 404s, JSON-only, static config
+extraction, 500-on-validation), while oRPC's typed client + `bun --hot`
+deliver the same DX wins without codegen. No further framework work needed.
 
-Done when: both endpoints work; notes recorded for the F7 rubric on DX,
-typed-client quality, error handling, logging visibility, deploy friction,
-and how naturally the custom Wasp-compatible auth (not better-auth) fits.
+### F8 — `apps/api` skeleton (Hono + oRPC) · deps: F4 (parallel: F9) · 1–2d
 
-### F7 — Framework decision doc · deps: F5, F6 · 0.5d
+Outcome: Hono app in `apps/api` with the oRPC router mounted; **dev loop is
+`bun --hot src/index.ts` — edit-and-save, no restarts** (the DX requirement
+that decided the framework); typed error taxonomy with proper 4xx on
+validation (the spike showed Typebase 500s — own the semantics); JSON
+logging with request IDs; `/health`, `/ready`; `tasks.list` served over the
+domain package; the oRPC client + Router type exported for `packages/contract`
+— same typed-client DX the spike proved, zero codegen.
 
-Done when: `docs/plans/framework-decision.md` answers v1's checkpoint
-questions + scores the rubric; hard gates evaluated (custom auth possible,
-Bun clean on Railway, schema adequate); the framework is chosen. Default on
-any tie or gate failure: **Hono + oRPC + Drizzle**.
-
-### F8 — `apps/api` skeleton · deps: F7 (parallel: F9) · 1–2d
-
-Outcome: chosen framework scaffolded; typed error taxonomy mapped to
-contract error codes; JSON logging with request IDs; `/health`, `/ready`;
-`tasks.list` served over the domain package; CI; deployed to a Railway
-staging service.
-
-Done when: staging URL serves `tasks.list` for a seeded user; logs show a
-request end-to-end; deploy is one command and documented.
+Done when: `tasks.list` serves for a seeded local user; a source edit
+reloads in under a second; the Svelte app consumes the typed client
+end-to-end.
 
 ### F9 — Web shell with mock client · deps: F1 only · 2d — parallel with F4–F8
 
@@ -390,6 +386,28 @@ Per v3 §5 P3: pooled `DATABASE_URL` swap in a quiet window, verification
 checklist, rollback = repoint the URL. Only after V5.
 
 ---
+
+## Spike learnings applied (2026-09-01)
+
+From `spike/link-garden/` — report + notes are the receipts:
+
+* **Framework**: Hono + oRPC over Typebase (Jake's call) — regen-restart DX
+  vs `bun --hot`; oRPC keeps the typed client (`createRouterClient<Router>`
+  with a type-only Router import worked perfectly in the spike).
+* **Dev proxy is the standard**: vite proxies `/api` + `/rpc` to the backend
+  — same-origin cookies, no CORS surface. Bake into F9 and every slice's
+  e2e setup. (better-auth's broken preflight forced this in the spike; it's
+  correct practice regardless.)
+* **F9 seeds from the spike**: `spikes/link-garden/web-svelte/` is the
+  template — runes stores (`lib/stores/`), focused components, scoped
+  styles, svelte-check 0/0, adapter-static SPA (`ssr = false`).
+* **Tooling**: `bun install` on this machine (npm crashed repeatedly);
+  ports — 5173 and 3000 are occupied by other projects, and localhost
+  IPv4/IPv6 can split-brain two servers on one port — pick quiet ports,
+  verify with `lsof -nP -iTCP:<port> -sTCP:LISTEN`.
+* **Imba escape hatch**: measured 1/5 at current toolchain
+  (imba-cheatsheet.md documents every trap + workaround); revisit on
+  Imba 2 final.
 
 ## Parallelism summary
 

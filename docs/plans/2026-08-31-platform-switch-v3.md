@@ -1,10 +1,14 @@
 # ActionAmp Platform Switch — Plan v3
 
-> Status: proposed. Supersedes
-> [`2026-08-31-platform-transition-v2.md`](2026-08-31-platform-transition-v2.md)
-> (same date). Premise changed: the active user base is tiny — the primary
-> daily user is Jake — so there is **no migration program**, just a rebuild
-> against the same database and one clean switch. Date: 2026-08-31.
+> Status: **framework decision made (2026-09-01, Jake)** after the link-garden
+> spike (`docs/plans/spike-link-garden-report.md`): **Svelte 5 confirmed**;
+> **Hono + oRPC + Drizzle** replaces Typebase for `apps/api` — the measured
+> regen-restart loop and 0.1.x bundle issues outweigh the generated-client
+> convenience, oRPC keeps the same typed client with zero codegen, and
+> `bun --hot` gives instant-reload dev. Premise otherwise unchanged: the
+> active user base is tiny — the primary daily user is Jake — so there is
+> **no migration program**, just a rebuild against the same database and one
+> clean switch. Date: 2026-08-31, decision addendum 2026-09-01.
 
 ---
 

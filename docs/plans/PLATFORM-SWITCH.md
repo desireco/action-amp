@@ -41,7 +41,11 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | F2/F3 (staging, introspection) | ✗ dropped | 2026-09-01: Jake — local only, no multi-environment machinery |
 | **Process change** | — | 2026-09-01: ZCode executes everything locally; no agent ferrying; Jake reviews once at the end |
 | Ports (all local) | — | API `:8080` · Svelte `:5174` (5173 belongs to another project) · Imba `:3131` |
-| All other F/S/V goals | ☐ | gated on spike report + Jake's go |
+| **Framework decision** | ✅ 2026-09-01 | Jake: **Svelte + Hono + oRPC + Drizzle + Bun** — spike report read; F5–F7 resolved |
+| F4 domain pilot (tasks core port) | ▶ next | ZCode, local — the pattern-setter |
+| F8 api skeleton | ☐ after F4 | Hono + oRPC, `bun --hot` dev loop |
+| F9 web shell | ☐ after F8 | seeds from `spikes/link-garden/web-svelte/` |
+| Remaining S/V goals | ☐ | per goal set, updated with spike learnings |
 
 Blockers: none. Open decisions for Jake: none yet (first gate is the spike
 report).
