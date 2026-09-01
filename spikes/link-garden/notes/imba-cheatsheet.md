@@ -91,6 +91,37 @@ tag login-form < form          # inheritance: `tag x < parent` on the tag line
 The two fixes that unlocked it after the `do`-handler era: direct-call
 handlers (`@click=fn(arg)`) and `bind=` (not `@bind=`).
 
+## Reconciler orphans children on branch swap (root cause of the "ugly login")
+
+Repro: load with a session → first paint shows the correct auth view (user
+still null), then `self.user` resolves → re-render swaps `<self.auth>` for
+`<self.app>` and the reconciler **leaves the old branch's children in the
+DOM, stripped of their wrapper** — both views visible, styles gone. (It
+also fooled DOM metrics: `.auth` count reads 0 while the orphaned children
+still render.)
+
+**Workaround (verified): never swap structure.** Render both subtrees once
+inside stable sibling divs and toggle via inline style fed by getters:
+
+```imba
+get appDisplay
+	if self.user then 'block' else 'none'
+
+def render
+	<self>
+		<div.app style="display:{self.appDisplay}">
+			…
+		<div.auth style="display:{self.authDisplay}">
+			…
+```
+
+Plain-value interpolation in attributes works; attribute structure never
+changes, so the broken swap path is never exercised. CSS: custom elements
+are inline by default — give the root `link-garden { display: block }`.
+
+Minor casualty that remains: the `for … else` empty-state message does not
+render when the list is empty.
+
 ## HMR accumulates stale state (2026-09-01, confirmed)
 
 After a session of hot edits, the dev server's module graph goes stale:

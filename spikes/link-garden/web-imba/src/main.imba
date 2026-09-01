@@ -46,6 +46,12 @@ tag link-garden
 		else
 			"today: 0 captured · 0 kept"
 
+	get appDisplay
+		if self.user then 'block' else 'none'
+
+	get authDisplay
+		if self.user then 'none' else 'block'
+
 	def countFor statusArg
 		self.links.filter(do |l| l.status == statusArg).length
 
@@ -179,8 +185,8 @@ tag link-garden
 				self.tagInput = ''
 
 	def render
-		if self.user
-			<self.app>
+		<self>
+			<div.app style="display:{self.appDisplay}">
 				<header>
 					<h1> "Link Garden"
 					<span.meta> self.statsText
@@ -265,8 +271,7 @@ tag link-garden
 					<span> "⌘K capture"
 				if self.error
 					<p.error> self.error
-		else
-			<self.auth>
+			<div.auth style="display:{self.authDisplay}">
 				<h1> "Link Garden"
 				<p.sub> "capture · triage · keep"
 				<form @submit.prevent=doAuth>
