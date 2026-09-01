@@ -26,10 +26,10 @@
   let tagFilter = $state<string | null>(null);
   let captureOpen = $state(false);
   let captureText = $state("");
-  let captureEl: HTMLInputElement | undefined;
+  let captureEl = $state<HTMLInputElement | undefined>(undefined);
   let tagInputFor = $state<string | null>(null);
   let tagInput = $state("");
-  let tagEl: HTMLInputElement | undefined;
+  let tagEl = $state<HTMLInputElement | undefined>(undefined);
   let error = $state("");
   let busy = $state(false);
   let stats = $state<{ captured: number; kept: number } | null>(null);
@@ -252,13 +252,16 @@
 
     <ul class="list">
       {#each shown as link, index (link.id)}
-        <li
-          class:selected={index === selected}
-          onclick={() => (selected = index)}
-        >
+        <li class:selected={index === selected}>
           <div class="row">
-            <span class="title">{link.title}</span>
-            <span class="host">{host(link.url)}</span>
+            <button
+              type="button"
+              class="row-main"
+              onclick={() => (selected = index)}
+            >
+              <span class="title">{link.title}</span>
+              <span class="host">{host(link.url)}</span>
+            </button>
             <span class="chips">
               {#each link.tags as tag (tag)}
                 <button class="chip" class:active={tagFilter === tag} onclick={() => (tagFilter = tag)}>#{tag}</button>
@@ -415,6 +418,20 @@
     display: flex;
     align-items: baseline;
     gap: 0.6rem;
+  }
+  .row-main {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 0;
+    background: none;
+    border: none;
+    color: inherit;
+    text-align: left;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
   }
   .title {
     font-size: var(--aa-text-base);

@@ -1,0 +1,14 @@
+/* Global styles (not scoped to any component) — imported by +layout.svelte. */
+
+body {
+  margin: 0;
+  background: var(--aa-bg);
+  color: var(--aa-text);
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-snug);
+}
+
+button {
+  font-family: inherit;
+}
