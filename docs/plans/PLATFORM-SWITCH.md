@@ -3,8 +3,8 @@
 > The one place for the roadmap, current status, and how work is organized
 > for moving ActionAmp off Wasp. Everything else is an artifact linked below;
 > this page is the cockpit. **Any agent that lands work updates §Status
-> before finishing its turn.** Last updated: 2026-08-31 (planning complete,
-> spike dispatch files ready).
+> before finishing its turn.** Last updated: 2026-08-31 (spike dispatched;
+> parallel lane G open — F1–F3 to Gemini).
 
 ## Artifacts — what owns what
 
@@ -41,7 +41,11 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | Spike D1 — Svelte client | ☐ next | file: `D1-svelte-zai.md` → Z.AI |
 | Spike D2 — Imba client | ☐ next | file: `D2-imba-gemini.md` → Gemini |
 | Spike D2 — report | ☐ next | file: `D2-report-zai.md` → Z.AI |
-| All F/S/V goals | ☐ | start after spike report + Jake's go |
+| **Lane G (parallel foundation)** | ▶ paste anytime | `docs/plans/dispatch/` → Gemini, in order |
+| F1 monorepo skeleton | ☐ next | `F1-skeleton-gemini.md` (author swap: Gemini, Codex busy w/ spike) |
+| F2 snapshot + staging | ☐ after F1 | `F2-staging-gemini.md` |
+| F3 introspection report | ☐ after F2 | `F3-introspection-gemini.md` · ZCode audits |
+| All other F/S/V goals | ☐ | gated on spike report + Jake's go (F1–F3 exempt: framework-independent) |
 
 Blockers: none. Open decisions for Jake: none yet (first gate is the spike
 report).
