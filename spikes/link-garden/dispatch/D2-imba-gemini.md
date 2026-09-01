@@ -2,7 +2,9 @@
 
 **TARGET MODEL: Gemini (capable tier) — author**
 Goal: spike D2-AM · Timebox: half a day · Repo: action-amp root
-Precondition: backend deployed + Svelte client exists. Read
+Precondition: backend running locally + Svelte client exists (see notes).
+Run your dev server on port **3000** — the API's auth trusts exactly
+`localhost:5173` and `localhost:3000`. Read
 `spikes/link-garden/notes/api-notes.md` (endpoint shapes) and skim
 `spikes/link-garden/web-svelte/` for the spec's visual baseline.
 
@@ -15,7 +17,7 @@ Precondition: backend deployed + Svelte client exists. Read
 ## Scope — build exactly this, nothing more
 
 An **Imba** app at `spikes/link-garden/web-imba/`, consuming the **same
-deployed backend** with a **hand-rolled HTTP/JSON fetch layer** (no
+local backend** with a **hand-rolled HTTP/JSON fetch layer** (no
 Typebase-generated client — Imba cannot use the TS client; that gap is the
 thing being measured):
 

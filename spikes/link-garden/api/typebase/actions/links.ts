@@ -24,9 +24,21 @@ const linkOutput = z.object({
 
 type LinkStatus = z.infer<typeof statusSchema>;
 
+// Spike-grade SSRF blocklist — not a substitute for egress controls if this
+// pattern ever reaches production.
+const isInternalHost = (hostname: string) =>
+  hostname === "localhost" ||
+  hostname.endsWith(".localhost") ||
+  hostname === "::1" ||
+  hostname === "[::1]" ||
+  hostname === "0.0.0.0" ||
+  /^(127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(hostname);
+
 const titleFromUrl = async (url: string): Promise<string> => {
   try {
-    const response = await fetch(url, {
+    const target = new URL(url);
+    if (isInternalHost(target.hostname)) return url;
+    const response = await fetch(target, {
       headers: { "user-agent": "ActionAmp-Link-Garden-Spike/1.0" },
       signal: AbortSignal.timeout(5_000),
     });
@@ -121,7 +133,7 @@ export const list = authedAction
       .leftJoin(linkTags, q.eq(linkTags.linkId, links.id))
       .leftJoin(tags, q.eq(linkTags.tagId, tags.id))
       .where(q.and(...filters))
-      .orderBy(q.desc(links.createdAt));
+      .orderBy(q.desc(links.createdAt), q.asc(tags.name));
 
     const grouped = new Map<string, ReturnType<typeof toLinkOutput>>();
     for (const row of rows) {

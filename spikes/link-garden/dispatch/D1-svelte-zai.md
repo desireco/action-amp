@@ -2,8 +2,10 @@
 
 **TARGET MODEL: Z.AI (capable tier) — author**
 Goal: spike D1-PM · Timebox: half a day · Repo: action-amp root
-Precondition: the backend from `D1-api-codex.md` is deployed — get its URL
-and read `spikes/link-garden/notes/api-notes.md` first.
+Precondition: the backend runs **locally** (deployment waived — see notes).
+Read `spikes/link-garden/notes/api-notes.md` first. Run your dev server on
+port **5173** (SvelteKit default) — the API's auth trusts exactly
+`localhost:5173` and `localhost:3000`.
 
 ## Read first
 

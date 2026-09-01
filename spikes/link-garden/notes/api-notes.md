@@ -84,3 +84,35 @@ create a new scratch Railway project/service and Postgres only for this spike;
 do not attach either to an ActionAmp service or database. Set `DATABASE_URL`,
 `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and the frontend origin before running
 the Bun start command.
+
+## Notes for the frontend clients (from review)
+
+* Dev ports are **pinned**: SvelteKit on `localhost:5173`, Imba on
+  `localhost:3000`. The API's auth trusts exactly those two origins.
+* Different localhost ports are the same **site**, so `SameSite=Lax` session
+  cookies flow between client and API. If `/rpc` calls still hit CORS
+  credentials errors, suspect the generated CORSPlugin's credentials option,
+  not better-auth.
+* The server is started with `bun run start` from `spikes/link-garden/api/`
+  (regenerates + boots; default port 8080).
+
+## Review verdict (Zcode review, 2026-09-01)
+
+```text
+REVIEW: spike D1-api · author Codex/capable · reviewer ZCode (Z.AI)/capable
+verdict: pass-after-fixes
+notes: deploy done-condition waived by Jake — local-only spike. Fixes applied
+by reviewer: SSRF blocklist in titleFromUrl, deterministic tag ordering in
+links.list. Auth kept static (see finding below).
+```
+
+Reviewer findings that became spike learnings:
+
+* **Typebase codegen statically extracts auth config.** An env-driven
+  `trustedOrigins` array is silently dropped from the generated server
+  (codegen warns, runtime ends up with no origins). At 0.1.15 auth config
+  must be static literals — a real constraint for multi-environment use of
+  the generated-server workflow.
+* `titleFromUrl` now carries a spike-grade SSRF blocklist (loopback/private
+  ranges). The pattern — server-side fetch of user-supplied URLs — must not
+  reach production without real egress controls.
