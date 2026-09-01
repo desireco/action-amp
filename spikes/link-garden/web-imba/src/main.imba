@@ -1,266 +1,126 @@
 import './tokens.css'
 import './app.css'
-import { signUp, signIn, getSessionUser, createLink, listLinks, setStatus, addTag, todayStats } from './api.imba'
+import { state } from './state.imba'
+import { boot, doAuth, toggleAuthMode, openCapture, capture, setLinkStatus, submitTag, selectTab, filterTag, clearFilter, selectRow, toggleTheme, shownLinks, countFor, statsText, appDisplay, authDisplay, captureFormD, captureHintD, activeD, plainD, filterD, selD, unselD, chipActiveD, chipPlainD, taglineD, signupD, signinD, sunD, moonD } from './actions.imba'
+import { hostOf } from './util.imba'
+import { onKey } from './keymap.imba'
 
-def hostOf url
-	try
-		return new URL(url).host
-	catch
-		return url
+# Structure-stable render. Two fork rules shape it (imba-cheatsheet.md):
+#   1. conditionally rendered elements never get event bindings → every
+#      variant renders once, visibility toggled on WRAPPER divs;
+#   2. an interpolated style attribute kills the event attribute on the same
+#      element → interactive elements carry no style; wrappers carry it.
 
 tag link-garden
-	def setup
-		self.user = null
-		self.mode = 'signup'
-		self.authName = ''
-		self.authEmail = ''
-		self.authPassword = ''
-		self.authError = ''
-		self.links = []
-		self.tab = 'NEW'
-		self.selected = 0
-		self.tagFilter = null
-		self.captureOpen = no
-		self.captureText = ''
-		self.tagInputFor = null
-		self.tagInput = ''
-		self.error = ''
-		self.stats = null
-		self.dark = document.documentElement.dataset.theme == 'dark'
-
+	# Event attributes only bind tag-local methods — imported refs do nothing.
 	def mount
-		window.addEventListener('keydown', self.onKey)
-		self.boot()
+		window.addEventListener('keydown', onKey)
+		boot()
 
-	def boot
-		self.user = await getSessionUser!
-		if self.user then await self.reload!
+	def submitCapture
+		capture()
 
-	get shown
-		self.links.filter do |link|
-			link.status == self.tab and (not self.tagFilter or link.tags.includes(self.tagFilter))
-
-	get statsText
-		if self.stats
-			"today: {self.stats.captured} captured · {self.stats.kept} kept"
-		else
-			"today: 0 captured · 0 kept"
-
-	get appDisplay
-		if self.user then 'block' else 'none'
-
-	get authDisplay
-		if self.user then 'none' else 'block'
-
-	def countFor statusArg
-		self.links.filter(do |l| l.status == statusArg).length
-
-	def reload
-		try
-			self.links = await listLinks!
-			self.stats = await todayStats!
-		catch err
-			self.error = err.message or String(err)
-
-	def refreshStats
-		todayStats!.then do |s| self.stats = s
-
-	def doAuth
-		self.authError = ''
-		try
-			if self.mode == 'signup'
-				await signUp(self.authName, self.authEmail, self.authPassword)
-			else
-				await signIn(self.authEmail, self.authPassword)
-			self.user = await getSessionUser!
-			if self.user
-				await self.reload!
-			else
-				self.authError = 'no session after auth'
-		catch err
-			self.authError = err.message or String(err)
-
-	def parseCapture
-		const parts = self.captureText.trim.split(/\s+/).filter do |p| p.length > 0
-		const tags = parts.filter(do |p| p.startsWith('#')).map(do |p| p.slice(1))
-		const url = parts.find(do |p| not p.startsWith('#')) or ''
-		return { url: url, tags: tags }
-
-	def capture
-		const parsed = self.parseCapture()
-		if not parsed.url
-			self.error = 'enter a url (plus optional #tags)'
-			return
-		if not /^https?:\/\//.test(parsed.url)
-			self.error = 'enter a full url starting with http:// or https://'
-			return
-		try
-			const link = await createLink(parsed.url, parsed.tags)
-			self.links.unshift(link)
-			self.captureText = ''
-			self.captureOpen = no
-			self.tab = 'NEW'
-			self.refreshStats()
-		catch err
-			self.error = err.message or String(err)
-
-	def setLinkStatus next
-		const link = self.shown[self.selected]
-		unless link then return
-		const prev = link.status
-		link.status = next
-		try
-			const updated = await setStatus(link.id, next)
-			const index = self.links.findIndex(do |l| l.id == link.id)
-			if index >= 0 then self.links[index] = updated
-			self.refreshStats()
-		catch err
-			self.error = err.message or String(err)
-			link.status = prev
-
-	def submitTag link
-		const name = self.tagInput.trim
-		self.tagInputFor = null
-		if not name or link.tags.includes(name) then return
-		link.tags.push(name)
-		try
-			const updated = await addTag(link.id, name)
-			const index = self.links.findIndex(do |l| l.id == link.id)
-			if index >= 0 then self.links[index] = updated
-		catch err
-			self.error = err.message or String(err)
-			link.tags.splice(link.tags.indexOf(name), 1)
-
-	def toggleTheme
-		self.dark = not self.dark
-		document.documentElement.dataset.theme = if self.dark then 'dark' else 'light'
-		try
-			localStorage.setItem('lg-theme', if self.dark then 'dark' else 'light')
-
-	def selectTab tabArg
-		self.tab = tabArg
-		self.selected = 0
-
-	def filterTag t
-		self.tagFilter = t
-
-	def clearFilter
-		self.tagFilter = null
-
-	def selectRow index
-		self.selected = index
-
-	def toggleAuthMode
-		if self.mode == 'signup'
-			self.mode = 'signin'
-		else
-			self.mode = 'signup'
-
-	def openCapture
-		self.captureOpen = yes
-
-	def onKey event
-		if (event.metaKey or event.ctrlKey) and event.key.toLowerCase! == 'k'
+	def submitOnEnter event
+		if event.key == 'Enter'
 			event.preventDefault
-			self.captureOpen = yes
-			return
-		if event.target instanceof HTMLInputElement then return
-		if event.key == 'Escape'
-			self.captureOpen = no
-			self.tagInputFor = null
-			self.tagFilter = null
-			return
-		if event.key == 'j'
-			self.selected = Math.min(self.selected + 1, self.shown.length - 1)
-		if event.key == 'k'
-			self.selected = Math.max(self.selected - 1, 0)
-		if event.key == 'K'
-			self.setLinkStatus('KEPT')
-		if event.key == 'D'
-			self.setLinkStatus('DISMISSED')
-		if event.key == 'T'
-			const link = self.shown[self.selected]
-			if link
-				self.tagInputFor = link.id
-				self.tagInput = ''
+			capture()
+
+	def tagOnEnter event
+		if event.key == 'Enter'
+			event.preventDefault
+			const link = shownLinks().find(do |l| l.id == state.tagTarget)
+			if link then submitTag(link)
+
+	def authSubmit
+		doAuth()
+
+	def tabNew
+		selectTab('NEW')
+
+	def tabKept
+		selectTab('KEPT')
+
+	def tabDismissed
+		selectTab('DISMISSED')
+
+	def rowTag t
+		filterTag(t)
+
+	def rowTagInput link
+		submitTag(link)
 
 	def render
 		<self>
-			<div.app style="display:{self.appDisplay}">
+			<div.app style="display:{appDisplay()}">
 				<header>
 					<h1> "Link Garden"
-					<span.meta> self.statsText
+					<span.meta> statsText()
 					<span.spacer>
 					<button.ghost @click=toggleTheme>
-						if self.dark
-							"☀"
-						else
-							"☾"
-				if self.captureOpen
-					<form.capture @submit.prevent=capture>
-						<input autofocus placeholder='url  #tag #tag…' bind=self.captureText>
-						<button> "add"
-				else
+						<span style="display:{sunD()}"> "☀"
+						<span style="display:{moonD()}"> "☾"
+				<div style="display:{captureFormD()}">
+					<div.capture>
+						<input placeholder='url  #tag #tag…' bind=state.captureText @keydown=submitOnEnter>
+						<button type='button' @click=submitCapture> "add"
+				<div style="display:{captureHintD()}">
 					<button.capture-hint @click=openCapture>
 						<kbd> "⌘K"
 						" capture"
 				<nav.tabs>
-					if self.tab == 'NEW'
-						<button.active @click=selectTab('NEW')>
+					<div style="display:{activeD('NEW')}">
+						<button.active @click=tabNew>
 							"new "
-							<span.count> self.countFor('NEW')
-					else
-						<button @click=selectTab('NEW')>
+							<span.count> countFor('NEW')
+					<div style="display:{plainD('NEW')}">
+						<button @click=tabNew>
 							"new "
-							<span.count> self.countFor('NEW')
-					if self.tab == 'KEPT'
-						<button.active @click=selectTab('KEPT')>
+							<span.count> countFor('NEW')
+					<div style="display:{activeD('KEPT')}">
+						<button.active @click=tabKept>
 							"kept "
-							<span.count> self.countFor('KEPT')
-					else
-						<button @click=selectTab('KEPT')>
+							<span.count> countFor('KEPT')
+					<div style="display:{plainD('KEPT')}">
+						<button @click=tabKept>
 							"kept "
-							<span.count> self.countFor('KEPT')
-					if self.tab == 'DISMISSED'
-						<button.active @click=selectTab('DISMISSED')>
+							<span.count> countFor('KEPT')
+					<div style="display:{activeD('DISMISSED')}">
+						<button.active @click=tabDismissed>
 							"dismissed "
-							<span.count> self.countFor('DISMISSED')
-					else
-						<button @click=selectTab('DISMISSED')>
+							<span.count> countFor('DISMISSED')
+					<div style="display:{plainD('DISMISSED')}">
+						<button @click=tabDismissed>
 							"dismissed "
-							<span.count> self.countFor('DISMISSED')
-					if self.tagFilter
-						<button.filter @click=clearFilter> "#{self.tagFilter} ✕"
+							<span.count> countFor('DISMISSED')
+					<div style="display:{filterD()}">
+						<button.filter @click=clearFilter> "#{state.tagFilter} ✕"
 				<ul.list>
-					for link, index in self.shown
-						if index == self.selected
-							<li.selected @click=selectRow(index)>
-								<div.row>
+					for link, index in shownLinks()
+						<li.selected style="display:{selD(index)}">
+							<div.row>
+								<button.row-main @click=selectRow(index)>
 									<span.title> link.title
 									<span.host> hostOf(link.url)
-									<span.chips>
-										for t in link.tags
-											if self.tagFilter == t
-												<button.chip.active @click=filterTag(t)> "##{t}"
-											else
-												<button.chip @click=filterTag(t)> "##{t}"
-								if self.tagInputFor == link.id
-									<form.tagline @submit.prevent=submitTag(link)>
-										<input autofocus placeholder='tag name' bind=self.tagInput>
-						else
-							<li @click=selectRow(index)>
-								<div.row>
+								<span.chips>
+									for t in link.tags
+										<span style="display:{chipActiveD(t)}">
+											<button.chip.active @click=rowTag(t)> "##{t}"
+										<span style="display:{chipPlainD(t)}">
+											<button.chip @click=rowTag(t)> "##{t}"
+							<div style="display:{taglineD(link)}">
+								<div.tagline>
+									<input placeholder='tag name' bind=state.tagInput @keydown=tagOnEnter(link)>
+						<li style="display:{unselD(index)}">
+							<div.row>
+								<button.row-main @click=selectRow(index)>
 									<span.title> link.title
 									<span.host> hostOf(link.url)
-									<span.chips>
-										for t in link.tags
-											if self.tagFilter == t
-												<button.chip.active @click=filterTag(t)> "##{t}"
-											else
-												<button.chip @click=filterTag(t)> "##{t}"
-								if self.tagInputFor == link.id
-									<form.tagline @submit.prevent=submitTag(link)>
-										<input autofocus placeholder='tag name' bind=self.tagInput>
+								<span.chips>
+									for t in link.tags
+										<span style="display:{chipActiveD(t)}">
+											<button.chip.active @click=rowTag(t)> "##{t}"
+										<span style="display:{chipPlainD(t)}">
+											<button.chip @click=rowTag(t)> "##{t}"
 					else
 						<li.empty> "nothing here — capture with ⌘K"
 				<footer.keys>
@@ -269,27 +129,23 @@ tag link-garden
 					<span> "D dismiss"
 					<span> "T tag"
 					<span> "⌘K capture"
-				if self.error
-					<p.error> self.error
-			<div.auth style="display:{self.authDisplay}">
+				if state.error
+					<p.error> state.error
+			<div.auth style="display:{authDisplay()}">
 				<h1> "Link Garden"
 				<p.sub> "capture · triage · keep"
-				<form @submit.prevent=doAuth>
-					if self.mode == 'signup'
-						<input placeholder='name' bind=self.authName>
-					<input placeholder='email' type='email' bind=self.authEmail>
-					<input placeholder='password' type='password' bind=self.authPassword>
+				<form @submit.prevent=authSubmit>
+					<div style="display:{signupD()}">
+						<input placeholder='name' bind=state.authName>
+					<input placeholder='email' type='email' bind=state.authEmail>
+					<input placeholder='password' type='password' bind=state.authPassword>
 					<button type='submit'>
-						if self.mode == 'signup'
-							"Create account"
-						else
-							"Sign in"
-				if self.authError
-					<p.error> self.authError
+						<span style="display:{signupD()}"> "Create account"
+						<span style="display:{signinD()}"> "Sign in"
+				if state.authError
+					<p.error> state.authError
 				<button.link @click=toggleAuthMode>
-					if self.mode == 'signup'
-						"have an account? sign in"
-					else
-						"new here? create an account"
+					<span style="display:{signupD()}"> "have an account? sign in"
+					<span style="display:{signinD()}"> "new here? create an account"
 
 imba.mount <link-garden>
