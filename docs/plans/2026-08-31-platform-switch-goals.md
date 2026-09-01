@@ -1,421 +1,184 @@
-# Platform Switch — Agent Goal Set
+# Platform Switch — Goal Set (simplified 2026-09-01)
 
 > Companion to [`2026-08-31-platform-switch-v3.md`](2026-08-31-platform-switch-v3.md).
-> Every goal is self-contained: outcome, dependencies, done-conditions,
-> verification. Hand one goal per agent. IDs (F/S/V) are stable — reference
-> them in commits and board items. Date: 2026-08-31.
+> Stack decided after the link-garden spike: **Svelte 5 + Hono + oRPC +
+> Drizzle + Bun** (report: `spike-link-garden-report.md`). One worker (ZCode),
+> all local, Jake reviews at the gates. IDs are stable — reference them in
+> commits.
 
----
+## Working rules (all that remain)
 
-## How to dispatch
+1. `webapp/`, `cli/`, `admin-cli/` are never modified. Abort = delete
+   `apps/` + `packages/`.
+2. Nothing under `apps/` touches production until V4. Development runs
+   against local databases; when real data matters (F4a, V1), restore a
+   prod `pg_dump` into a local DB — one command, still local.
+3. Every chunk ends green: tests / e2e / typecheck / lint, per its own
+   done-line. Commit per chunk with the goal ID.
+4. Dev loop: API `bun --hot`, frontends vite; vite dev-proxy (`/api`, `/rpc`)
+   is the standard (spike-proven — same-origin cookies, no CORS surface).
+5. `bun install`, never npm (crashes on this machine). Ports 5173/3000 are
+   taken by other projects; pick quiet ports.
 
-**Rules that bind every goal:**
-
-1. **`webapp/` is never modified.** If a goal seems to need it, stop and
-   escalate. Abort of the whole program = delete `apps/` + `packages/`.
-2. **Single backend.** Nothing under `apps/` ever connects to the production
-   database. All work runs against the staging snapshot; production is
-   touched exactly once — by V4, the switch.
-3. **Parallel agents work in dev worktrees** (`docs/DEV-WORKTREES.md`,
-   `webapp/scripts/dev-worktree.sh`), land via `worktree-sync.sh`, commit to
-   `main` focused-per-concern.
-4. **Verification is part of every done-condition:** domain work = unit
-   tests green; UI work = the surface's e2e spec ported and green against
-   staging; everything = typecheck + `npm run lint` clean.
-5. **Merge discipline for shared packages:** one surface = one contract
-   file; `entities`-slice additions to `packages/domain/db` are centralized
-   in that goal's PR and pulled before the next slice syncs.
-6. **Cross-family review on every landing.** The model family that authored
-   a change never reviews it; reviewers run the `code-review` skill + lint
-   gate and continue into fixes per `AGENTS.md`. See "Model dispatch &
-   cross-family review" below.
-
-**Dependency map** (arrows mean "blocks"):
+## Path
 
 ```text
-F1 skeleton ──┬── F4 domain pilot ──┬── F5 Typebase arm ─┐
-              │                     └── F6 Hono arm ─────┴── F7 decision
-F2 snapshot/staging ── F3 introspection ─────────────────────┤
-F9 web shell (mock client) ─────────────────────────────────  F8 api skeleton ── F10 auth validation
-                                                             │        └────────── F11 e2e harness
-                                                             ▼
-   WAVE 1 (core loop, 2 agents): S1+S4 | S2+S3
-   WAVE 2 (structure, 2–3 agents): S5+S7 | S6+S8 | S9
-   WAVE 3 (account/platform, 2 agents): S10+S13 | S11+S12, S14, S15
-   WAVE 4 (money/admin, 1–2 agents): S16 | S17+S18
-   WAVE 5: V1 parity → V2 rehearsal → V3 switch kit → V4 SWITCH → V5 cleanup
+F1 ✓ → F4a → F4b → F4c → F8a → F8b → F10a → F10b/c → F11
+                    └── F9a → F9b (parallel, mock client)
+S1 → S4 → S2 → S3 → S5 → S7 → S6 → S8 → S9 → S11 → S12 → S13 → S10 → S14 → S15 → S16 → S17 → S18
+V1 → V2 → V3 → V4 (switch, with Jake) → V5 → (V6 optional)
 ```
 
-**Critical path:** F1→F2/F3→F4→F5/F6→F7→F8→F10→F11→Wave 1→V1→V2→V4.
-F9 and Wave 3's S11/S13 can start early off the mock client.
-
-**Realistic parallelism: 3 agents** (2 full-stack slices + 1
-infra/platform). More than that collides in `packages/contract` and
-`packages/domain`.
+Each block below is sized for **one focused sitting** (½–1 day). Tick the
+checkboxes in order; park anywhere between blocks.
 
 ---
 
-## Model dispatch & cross-family review
+## Foundation
 
-Three families are available — **Z.AI, Codex, Gemini** — each in a capable
-tier and a fast tier. The defaults below are swappable per goal; the two
-invariants are not:
+### F1 — Monorepo skeleton ✅ (2026-09-01, `2fc2a88`)
 
-* **M1 — Author family ≠ reviewer family** on every piece that lands.
-* **M2 — Silent-failure surfaces get capable authorship *and* capable
-  cross-family review:** auth/sessions (F10, S10), billing/Stripe (S16),
-  the port pattern (F4), the schema report audit (F3), service-worker
-  takeover (S12), and all of Wave 5.
+`apps/` + `packages/` workspaces; install/test/typecheck/lint green at root.
 
-**Principles:**
+### F4 — Domain pilot (the pattern everything copies) — 3 chunks
 
-* **Spec down, execute fast, review cross.** A capable model writes the
-  tight spec for each *kind* of work (F4's port pattern, S1's screen
-  pattern, a surface's parity checklist); fast models execute the remaining
-  instances against it; a different family reviews. This is what makes the
-  bulk porting cheap without quality loss.
-* **First of a kind → capable; rest of the kind → fast.** F4 fixes the
-  port pattern, so cores 2–13 are fast-tier. S1's screens fix the UI
-  pattern, so later screens are fast-tier.
-* **Fast models only get work with an executable net** — unit tests, e2e
-  specs, lint, typecheck. If a piece can't fail loudly, it isn't fast-tier
-  work.
-* **The bake-off is cross-family by construction:** Codex runs the Typebase
-  arm (F5), Z.AI runs the Hono arm (F6), and Gemini — author of neither —
-  adjudicates F7. Jake approves the decision.
+The 13 `operationsCore.ts` files take a Prisma-shaped `entities` object and
+do DB work inside; tests mock that seam. The port keeps signatures and
+tests, re-binds the seam to Drizzle.
 
-**Standard decomposition of an S-goal** — every slice breaks into the same
-seven pieces, each a separate dispatch:
+- [ ] **F4a — Local schema + defaults audit** (½d): `drizzle-kit pull`
+  against `actionamp_dev` (read-only) → commit schema under
+  `apps/api/db/schema/`; write `docs/plans/introspection-report.md` listing
+  every column whose default lives only in the Prisma **client**
+  (`uuid()`, `cuid()`, `updatedAt`) — those values become the domain
+  layer's job on insert. Done: report + schema committed.
+- [ ] **F4b — Entity seam + tasks core port** (1d): `packages/domain/db/`
+  implementing exactly the entity-method surface the tasks core uses, over
+  Drizzle; `tasks/operationsCore.ts` + deps (`activePool`,
+  `billing/entitlements`) moved in with signatures unchanged. Done: core
+  compiles against the seam; used-query inventory documented.
+- [ ] **F4c — Tests green + pattern doc** (½d): port
+  `operationsCore.test.ts` + `activePool.test.ts` (mock the new seam);
+  write `packages/domain/README.md` — the port recipe all 12 remaining
+  cores follow. Done: tests green; lint/typecheck green.
 
-| Piece | Work | Author | Reviewer |
-|---|---|---|---|
-| P0 parity spec | read the Wasp impl + e2e spec + docs; write the surface's parity checklist (behaviors, keys, states, edge cases) | capable | capable (cross-family) |
-| P1 contract types | transcribe types into `packages/contract/<surface>` | fast | fast (cross-family) |
-| P2 domain port | move the core + tests; extend the entity slice per the F4 pattern | fast (capable for first-of-kind) | capable |
-| P3 API endpoints | wire endpoints over the domain package | fast | fast; capable if auth-adjacent |
-| P4 UI screens | Svelte screens from `tokens.css` + the shell pattern | fast (capable for S1) | capable for S1, fast after |
-| P5 e2e port | port the surface's spec(s), green on staging | fast | fast |
-| P6 keyboard + polish | `docs/INTERACTION.md` checklist pass | fast | capable spot-check |
+### F8 — API skeleton (Hono + oRPC) — 2 chunks
 
-**Goal-by-goal defaults:**
+- [ ] **F8a — Server shell** (½d): Hono app, `bun --hot src/index.ts`
+  (edit-and-save, no restarts), JSON logging with request IDs, `/health`,
+  `/ready`. Done: edit → reload < 1s, logs visible.
+- [ ] **F8b — oRPC router + typed client** (1d): router over the domain
+  package; `tasks.list` working; typed error taxonomy with proper 4xx on
+  validation; Router type + client exported via `packages/contract` (the
+  spike-proven `createRouterClient<Router>` pattern, zero codegen). Done:
+  seeded local user served; Svelte consumes the client end-to-end.
 
-| Goal | Author | Reviewer |
-|---|---|---|
-| F1 skeleton | Z.AI capable | Codex fast |
-| F2 snapshot/staging | fast | capable |
-| F3 report | fast (pull) + **capable audit** of the diff | capable |
-| F4 domain pilot | **capable** | **capable cross-family** |
-| F5 Typebase arm | Codex capable | Z.AI fast |
-| F6 Hono arm | Z.AI capable | Codex fast |
-| F7 decision doc | **Gemini capable** (adjudicates both arms) | Jake approves |
-| F8 api skeleton | capable — the family that ran the winning arm | capable |
-| F9 web shell | capable | capable |
-| F10 auth validation | **capable** | **capable cross-family + third-family test pass** |
-| F11 e2e harness | fast | capable |
-| S1–S18 | per-piece table; **S10, S12, S16 capable throughout** | per-piece |
-| S18 conformance harness | fast | capable |
-| V1 parity run | **the family that authored the fewest slices** (adversarial) | capable |
-| V2 rehearsal · V4 switch | capable lead + Jake | — |
-| V3 switch kit | fast (drafts) | capable |
-| V5 cleanup | fast | fast |
-| V6 Neon | capable | capable |
+### F9 — Web shell — 2 chunks (parallel with F8, mock client first)
 
-**Review protocol** (wired into the existing "code review = fix loop" rule):
+- [ ] **F9a — Shell from the spike** (½d): seed `apps/web` from
+  `spikes/link-garden/web-svelte/` structure — runes stores, scoped styles,
+  `tokens.css`, adapter-static SPA (`ssr = false`), modal-nav shell per
+  `docs/INTERACTION.md`. Done: shell renders, keyboard nav works.
+- [ ] **F9b — Mock client + store wiring** (½d): contract client behind a
+  mock transport; first real store + screen skeleton against it. Done: a
+  screen works with mocked data; no import outside `packages/contract`.
 
-1. Reviews run in the author's worktree **before** sync, by a different
-   family.
-2. Reviewer loads the `code-review` skill, runs `npm run lint`, typecheck,
-   and the goal's tests, then checks every done-condition against the goal
-   text.
-3. Verdict recorded with the landing: goal ID · author family/tier ·
-   reviewer family/tier · pass or fixes applied.
-4. Two failed rounds → escalate to the third family, then to Jake.
-5. The family that authored a wave never runs that wave's V1 verification.
+### F10 — Auth validation (Wasp-compatible) — 3 chunks
 
-**Worktree budget:** still max 3 concurrent worktrees — the merge cap in
-`packages/contract` drives this, not model count. Each worktree gets the
-staging snapshot restored into its own DB via F2's script, so slice
-verification is self-contained. Fast tiers do best on sequential small
-pieces inside one worktree: churn worktrees less, dispatch more pieces per
-worktree.
+The switch's superpower: nobody re-logs-in on switch day, both CLIs keep
+working.
 
-**Where the capable budget goes:** ~60–70% of the total volume (13 domain
-cores, ~17 e2e specs, most screens, contract transcription, scripts) is
-fast-tolerant mechanical porting. Capable spend concentrates in the F3
-audit, F4, F7, F8–F10, S10/S12/S16, wave integration, and Wave 5.
+- [ ] **F10a — Session validation** (½d): read the Wasp session cookie →
+  `Session → Auth → User` lookup (read-only, local DB). Done: a real Wasp
+  cookie (captured once, format documented) authenticates via curl.
+- [ ] **F10b — PAT validation** (¼d): `ApiKey` lookup for CLI tokens.
+  Done: a minted PAT authenticates.
+- [ ] **F10c — Test affordances** (½d): session-seeding helper (INSERT a
+  `Session` row — how e2e logs in), dev-only `devEmail=` equivalent, CSRF
+  stance (SameSite + custom header). Done: seed helper mints a working
+  session; expired/absent/invalid covered by tests.
+
+### F11 — E2E harness · deps: F8b, F9b, F10c · ½–1d
+
+- [ ] Playwright config against local; port `webapp/e2e/` helpers with
+  login via the F10c seed. Done: one example spec green end-to-end.
 
 ---
 
-## Wave 0 — Foundation
+## Surface slices
 
-### F1 — Monorepo skeleton + CI · deps: none · 0.5–1d
+**Every slice uses the same chunk checklist** — tick in order, commit per
+chunk:
 
-Outcome: `apps/web`, `apps/api`, `packages/domain`, `packages/contract` as
-npm workspaces; root scripts (`dev`, `build`, `test`, `lint`, `typecheck`).
+- [ ] P0 — read the Wasp impl + e2e spec + docs; jot the parity notes
+      (behaviors, keys, edge cases) into the slice's contract file header
+- [ ] P1 — contract types in `packages/contract/<surface>`
+- [ ] P2 — domain core port per `packages/domain/README.md` (+ entity-seam
+      additions), tests green
+- [ ] P3 — oRPC endpoints over the domain core
+- [ ] P4 — Svelte screens (tokens, keyboard parity per
+      `docs/INTERACTION.md`), stores following the spike's pattern
+- [ ] P5 — port the surface's e2e spec(s); green
 
-Done when: fresh clone → `npm install && npm test && npm run typecheck`
-green; CI runs on `main` covering the new packages only; the diff touches
-nothing outside the new folders + root config.
+**Surface map** (what to read before each slice):
 
-### F2 — Snapshot + staging environment · deps: none · 1d
+| # | Surface | Domain core | Wasp impl | e2e spec(s) | Key docs |
+|---|---|---|---|---|---|
+| S1 | What Now + Focus | `tasks` | `src/app/` | `next.spec` | `WORKFLOW.md` §2.3 |
+| S2 | Capture + NL parse | `inbox` | `src/app/` | `capture.spec` | `WORKFLOW.md` §2.1 |
+| S3 | Inbox / triage | `inbox` | `src/inbox/` | `triage*.spec` | `TRIAGE.md` |
+| S4 | Tasks & lists | `tasks`, `simpleLists` | `src/tasks/`, `src/lists/` | `today.spec`, `simple-lists.spec` | `INTERACTION.md` |
+| S5 | Projects | `projects` | `src/projects/` | `project-detail.spec` | — |
+| S6 | Goals | `goals` | `src/goals/` | `goal-planning.spec` | — |
+| S7 | Lenses / areas | `lenses` | cross-cutting | — | `WORKFLOW.md` |
+| S8 | Logbook | `logbook` | `src/logbook/` | `logbook.spec` | — |
+| S9 | Search + Resources | `search`, `resources` | `src/search/` | `search.spec` | — |
+| S10 | Auth pages + issuance | — | `src/auth/` | `login.spec`, `auth-regression.spec` | `EMAIL-INTEGRATION.md` |
+| S11 | Settings / account | — | `src/app/` | — | — |
+| S12 | Push + PWA/share | — | `src/share/` | — | `features/pwa-notifications.md` |
+| S13 | Onboarding | — | `src/onboarding/` | — | — |
+| S14 | Emails + cron | — | emailSender, `sendDailyTodayReminder` | — | `EMAIL-INTEGRATION.md` |
+| S15 | Public/landing | — | `src/public/`, `src/landing/` | — | `PUBLIC-PAGES.md` |
+| S16 | Billing + entitlements | `billing` | `src/billing/` | `entitlements.spec` | `BILLING-INTEGRATION.md` |
+| S17 | Admin dashboard + routes | `admin`, `feedback` | `src/admin/` | `admin-users.spec` | — |
+| S18 | CLI `/api/cli/*` | all cores | `src/auth/patRoutes.ts` | conformance | `cli/README.md` |
 
-Outcome: `scripts/db/snapshot.sh` (pg_dump production — run by Jake or with
-his creds) and `scripts/db/restore-staging.sh` (refresh the staging Postgres
-from the snapshot); a staging Postgres instance provisioned (Railway second
-service or local), with its URL documented as the only `DATABASE_URL` the
-new stack ever uses.
+**Order and why:** S1→S4 together (same core/contract files), then S2→S3
+(capture→triage pipeline). S5, S7 after those contracts settle (lenses are
+cross-cutting). S6, S8, S9 independent — any order. S10 late on purpose
+(bridge carries auth until then; issuance = Wasp-format sessions + Resend
+passwordless per the email doc). S16 last before admin (money), S18 any
+time after F10b — path-compatible routes, both CLIs unchanged,
+`--json` outputs diffed against Wasp's = 100% match.
 
-Done when: snapshot→restore→`apps/api` (once it exists) connects round-trip
-documented in the script headers; restore is idempotent (drops + recreates).
+## Verification & switch
 
-### F3 — Introspection + schema diff report · deps: F2 · 1d
-
-Outcome: `drizzle-kit pull` against the restored staging DB; generated
-schema committed under `apps/api/db/schema`; report at
-`docs/plans/introspection-report.md`.
-
-Done when: report covers every table, enum, FK, index, unique constraint,
-and default vs `webapp/schema.prisma`; it explicitly lists (a) columns whose
-defaults live only in the Prisma **client** (`uuid()`, `cuid()`,
-`updatedAt`) and must be supplied by the domain layer on insert, and (b)
-type mappings to watch (`timestamp(3)`, enums, JSON columns). This report is
-the contract for F4's data-access layer.
-
-### F4 — Domain pilot: tasks core + the port pattern · deps: F1, F3 · 2d
-
-**The highest-leverage goal in the set — it fixes the pattern all 13 ports
-follow.**
-
-The cores are not I/O-free: each takes a Prisma-shaped `entities` object as
-its first argument and does DB work inside; their tests mock that seam
-(`mockContext`). The port pattern to establish:
-
-- Move the core into `packages/domain/<feature>/` with **signatures, args,
-  and return shapes unchanged** (tests port nearly verbatim).
-- Replace `@prisma/client` type imports with domain-owned types (generated
-  from the F3 schema).
-- Introduce `packages/domain/db/` — a thin data-access layer exposing the
-  **same entity-method surface the core actually uses**
-  (`Task.findMany`, `TaskSession.create`, …), implemented over Drizzle.
-  Inventory the used query surface first (which methods × which where/
-  include shapes); implement exactly that, no more.
-
-Done when: `tasks/operationsCore.ts` (1,014 lines — the largest core) and
-its deps (`activePool`, `billing/entitlements`, temporal helpers) run in
-`packages/domain` with `operationsCore.test.ts` + `activePool.test.ts`
-ported and green against mocked entities; the pattern is written up in
-`packages/domain/README.md` (rules + how to add entity-slice methods);
-lint/typecheck green.
-
-### F5/F6/F7 — ~~Spike arms + decision~~ **RESOLVED by the link-garden spike (2026-09-01)**
-
-The spike (`spikes/link-garden/`, report at
-`docs/plans/spike-link-garden-report.md`) ran the Typebase arm end-to-end
-and Jake decided: **Svelte 5 + Hono + oRPC + Drizzle + Bun**. Key inputs:
-Typebase's regen-restart dev loop (no watch/hot mode, ~5–10s cycles),
-better-auth bundle quirks (CORS preflight 404s, JSON-only, static config
-extraction, 500-on-validation), while oRPC's typed client + `bun --hot`
-deliver the same DX wins without codegen. No further framework work needed.
-
-### F8 — `apps/api` skeleton (Hono + oRPC) · deps: F4 (parallel: F9) · 1–2d
-
-Outcome: Hono app in `apps/api` with the oRPC router mounted; **dev loop is
-`bun --hot src/index.ts` — edit-and-save, no restarts** (the DX requirement
-that decided the framework); typed error taxonomy with proper 4xx on
-validation (the spike showed Typebase 500s — own the semantics); JSON
-logging with request IDs; `/health`, `/ready`; `tasks.list` served over the
-domain package; the oRPC client + Router type exported for `packages/contract`
-— same typed-client DX the spike proved, zero codegen.
-
-Done when: `tasks.list` serves for a seeded local user; a source edit
-reloads in under a second; the Svelte app consumes the typed client
-end-to-end.
-
-### F9 — Web shell with mock client · deps: F1 only · 2d — parallel with F4–F8
-
-Outcome: SvelteKit scaffold in `apps/web`; `tokens.css` imported as-is
-(light/dark both work); app shell per `docs/INTERACTION.md` (modal
-navigation, keyboard-first chrome); the contract client wired behind a
-**mock transport** so screens can be built before the API exists.
-
-Done when: shell renders with mocked data on the dev server; keyboard
-navigation works; no import from anything outside `packages/contract` (mock
-lives in `apps/web/lib/api/mock.ts`).
-
-### F10 — Auth validation (Wasp-compatible) · deps: F8 · 2d
-
-Outcome: the new backend authenticates **existing-format** credentials
-against the staging DB: session cookie → `Session → Auth → User` lookup;
-PAT → `ApiKey` lookup (serves S18 later). Plus: a session-seeding helper
-(INSERT a `Session` row — this is how e2e and staging dogfood log in), a
-dev-only autologin equivalent of `/login?devEmail=`, and the CSRF stance
-(SameSite + custom header on writes, no permissive CORS).
-
-Done when: a real Wasp session cookie (captured once from the current app,
-format documented) authenticates on staging; the seed helper mints sessions
-e2e can use; tests cover expired/absent/invalid cookies. **This goal is the
-switch's superpower: nobody re-logs-in on switch day.**
-
-### F11 — E2E harness · deps: F8, F9, F10 · 1–2d
-
-Outcome: Playwright config against staging; `webapp/e2e/` helpers ported
-(`global-setup/teardown`, `helpers.ts`) with login replaced by the F10 seed
-helper; dark-mode/screenshot helpers.
-
-Done when: one example spec runs green end-to-end against staging from a
-clean snapshot restore.
-
----
-
-## Waves 1–4 — Surface slices
-
-Every slice goal has the same done-shape, so it's stated once:
-
-> **Slice done =** contract file for the surface in `packages/contract` ·
-> endpoints over the ported domain core in `apps/api` (entity-slice
-> additions centralized per merge rule 5) · Svelte screens in `apps/web`
-> styled from `tokens.css` with keyboard parity per `docs/INTERACTION.md` ·
-> behavior parity with the Wasp implementation (read the listed e2e spec —
-> port it and make it green) · unit + e2e + lint + typecheck green.
-
-**Surface reference map** (read these before starting a slice):
-
-| Surface | Domain core | Wasp implementation | e2e spec to port | Key docs |
-|---|---|---|---|---|
-| S1 What Now + Focus | `tasks` (+TaskSession) | `src/app/` What Now | `next.spec` | `WORKFLOW.md` §2.3, §5 |
-| S2 Capture + NL parse | `inbox` + parser | `src/app/` capture | `capture.spec` | `WORKFLOW.md` §2.1, `features/capture.md` |
-| S3 Inbox / triage | `inbox` | `src/inbox/`, `src/app/` triage | `triage.spec`, `triage-dispatch.spec` | `TRIAGE.md` |
-| S4 Tasks & lists | `tasks`, `simpleLists` | `src/tasks/`, `src/lists/` | `today.spec`, `simple-lists.spec` | `WORKFLOW.md`, `INTERACTION.md` |
-| S5 Projects | `projects` | `src/projects/` | `project-detail.spec` | `WORKFLOW.md` |
-| S6 Goals | `goals` | `src/goals/` | `goal-planning.spec` | `WORKFLOW.md` |
-| S7 Lenses / areas | `lenses` | lens scoping across pages | — | `WORKFLOW.md` (Lens scoping) |
-| S8 Logbook | `logbook` | `src/logbook/` | `logbook.spec` | — |
-| S9 Search + Resources | `search`, `resources` | `src/search/`, `src/resources/` | `search.spec` | — |
-| S10 Auth pages + issuance | — | `src/auth/` | `login.spec`, `auth-regression.spec` | `EMAIL-INTEGRATION.md` |
-| S11 Settings / account | — | `src/app/` settings | — | — |
-| S12 Push + PWA/share | — | `src/share/`, push | — | `features/pwa-notifications.md` |
-| S13 Onboarding | — | `src/onboarding/` | — | — |
-| S14 Emails + cron | — | Wasp emailSender, `sendDailyTodayReminder` | — | `EMAIL-INTEGRATION.md` |
-| S15 Public/landing | — | `src/public/`, `src/landing/` | — | `PUBLIC-PAGES.md` |
-| S16 Billing + entitlements | `billing/entitlements` | `src/billing/` | `entitlements.spec` | `BILLING-INTEGRATION.md` |
-| S17 Admin dashboard + routes | `admin`, `feedback` | `src/admin/` | `admin-users.spec` | admin-dashboard spec |
-| S18 CLI `/api/cli/*` | all cores | `src/auth/patRoutes.ts` | conformance harness | `cli/README.md` |
-
-### Wave 1 — Core loop (2 agents, after F8–F11)
-
-- **Agent A: S1 (What Now + Focus) then S4 (Tasks & lists).** Same domain
-  core and contract files — one agent avoids the worst merge contention.
-  Include row editors, When semantics, due-chip rules (behavior parity:
-  port the specs, don't re-judge design).
-- **Agent B: S2 (Capture + NL parser — the parser is pure, port with its
-  tests) then S3 (Inbox/triage keymap per `TRIAGE.md`).**
-
-### Wave 2 — Structure (2–3 agents, after Wave 1 contracts settle)
-
-- **Agent C: S5 (Projects), then S7 (Lenses)** — lenses cut across surfaces,
-  so they land after Wave 1's contracts stabilize.
-- **Agent D: S6 (Goals), then S8 (Logbook).**
-- **S9 (Search + Resources)** is read-heavy and low-risk — first free agent
-  picks it up.
-
-### Wave 3 — Account & platform (2 agents; S11/S13 can start after F9+F10)
-
-- **Agent E: S10 (auth pages + issuance)** — passwordless six-digit code +
-  one-time link via Resend directly, hashing/expiry/rate limits per
-  `EMAIL-INTEGRATION.md`, dev code `111111`, **issuing Wasp-format sessions**
-  (same cookie, same `Session` rows — Wasp accepts them unchanged, which the
-  rehearsal proves). Then **S13 (Onboarding)**.
-- **Agent F: S11 (Settings/account), then S12 (push + PWA/share target)**
-  — VAPID keys carried over as staging-then-prod env; service-worker
-  takeover plan for the domain flip written here, executed at V4. Then
-  **S14 (remaining transactional emails + port `sendDailyTodayReminder` to
-  a Bun cron)** and **S15 (public/landing — default: port the in-app pages,
-  leave marketing on Cloudflare; confirm with Jake).**
-
-### Wave 4 — Money & admin (1–2 agents, after Wave 1)
-
-- **S16 (Billing + entitlements + Stripe webhooks)** — endpoints and portal
-  flows over the ported `billing` logic; webhook handler verified against
-  Stripe test-mode events; never dual-write (irrelevant here anyway — the
-  handler goes live only at V4).
-- **S17 (Admin dashboard + admin routes)** — `isAdmin` gating preserved.
-- **S18 (CLI `/api/cli/*`)** — reimplement path-compatible under PAT auth
-  (F10); both CLIs' binaries unchanged; **conformance harness**: run every
-  `cli/` and `admin-cli/` command with `--json` against Wasp (dev) and the
-  new backend (staging snapshot), diff outputs, 100% match required.
-
----
-
-## Wave 5 — Verification & switch
-
-### V1 — Full parity run · deps: all slices · 2–3d
-
-Refresh the staging snapshot from production; run the entire ported e2e
-suite + unit suites; fix gaps (budget: this goal includes the fixes). Done
-when: the whole suite is green on a fresh restore, twice in a row.
-
-### V2 — Rehearsal · deps: V1, S10, S12, S14 · 1–2d
-
-Execute the v3 §6 runbook end-to-end **against staging/scratch infra**:
-freeze-sim, backup (of staging), flip a scratch domain to the new stack,
-Stripe test-mode webhook delivered to the new URL, verification checklist,
-rollback drill, all timed. Done when: every step is timed, the rollback
-works, and the timings feed the V4 go/no-go.
-
-### V3 — Switch kit · deps: V2 · 1d
-
-The scripts and documents V4 runs from: freeze/backup/flip/verify script
-skeletons, the announcement email draft (honest, calm — see `PRODUCT.md`
-tone), the rollback one-pager with trigger conditions, the user comms list.
-
-### V4 — Switch day · deps: V3 + Jake · 0.5–1d
-
-Execute the v3 §6 runbook on production. Preconditions and rollback are
-defined there. Jake + one agent, in a quiet hour.
-
-### V5 — Cleanup + schema handover · start 2–4 weeks after V4 · 2–3d
-
-Wasp stopped-but-startable immediately, deleted at the end of the window
-along with `webapp/` and Prisma; **first Drizzle migration happens now** —
-Drizzle becomes the source of truth; doc cascade updated (`AGENTS.md`,
-`docs/ROADMAP.md` §Shipped, feature catalog, this goal set marked done).
-
-### V6 — Postgres → Neon · optional, separate project · 2–3d
-
-Per v3 §5 P3: pooled `DATABASE_URL` swap in a quiet window, verification
-checklist, rollback = repoint the URL. Only after V5.
+- [ ] **V1 — Parity run** (2–3d): restore fresh prod dump locally; entire
+  e2e + unit suites green, twice in a row; fixes included.
+- [ ] **V2 — Rehearsal** (1–2d): run the v3 §6 runbook end-to-end against
+  local/scratch — backup, flip, Stripe test-mode webhook, verification
+  checklist, rollback drill; every step timed.
+- [ ] **V3 — Switch kit** (1d): flip/verify script skeletons, announcement
+  email draft (`PRODUCT.md` tone), rollback one-pager with triggers.
+- [ ] **V4 — Switch day** (with Jake, quiet hour): execute v3 §6.
+- [ ] **V5 — Cleanup** (2–4 wks after V4): delete Wasp + `webapp/` +
+  Prisma; first Drizzle migration (ownership handover); doc cascade.
+- [ ] **V6 — Neon** (optional, separate): pooled `DATABASE_URL` swap.
 
 ---
 
 ## Spike learnings applied (2026-09-01)
 
-From `spike/link-garden/` — report + notes are the receipts:
+* **Framework**: Hono + oRPC over Typebase — regen-restart DX vs
+  `bun --hot`; oRPC keeps the typed client with zero codegen.
+* **Dev proxy standard**: vite proxies `/api` + `/rpc`; same-origin cookies.
+* **F9 seeds from** `spikes/link-garden/web-svelte/` (stores, components,
+  svelte-check 0/0, SPA mode).
+* **Imba**: 1/5 at current toolchain (cheatsheet has every trap); revisit
+  on Imba 2 final.
 
-* **Framework**: Hono + oRPC over Typebase (Jake's call) — regen-restart DX
-  vs `bun --hot`; oRPC keeps the typed client (`createRouterClient<Router>`
-  with a type-only Router import worked perfectly in the spike).
-* **Dev proxy is the standard**: vite proxies `/api` + `/rpc` to the backend
-  — same-origin cookies, no CORS surface. Bake into F9 and every slice's
-  e2e setup. (better-auth's broken preflight forced this in the spike; it's
-  correct practice regardless.)
-* **F9 seeds from the spike**: `spikes/link-garden/web-svelte/` is the
-  template — runes stores (`lib/stores/`), focused components, scoped
-  styles, svelte-check 0/0, adapter-static SPA (`ssr = false`).
-* **Tooling**: `bun install` on this machine (npm crashed repeatedly);
-  ports — 5173 and 3000 are occupied by other projects, and localhost
-  IPv4/IPv6 can split-brain two servers on one port — pick quiet ports,
-  verify with `lsof -nP -iTCP:<port> -sTCP:LISTEN`.
-* **Imba escape hatch**: measured 1/5 at current toolchain
-  (imba-cheatsheet.md documents every trap + workaround); revisit on
-  Imba 2 final.
+## Effort
 
-## Parallelism summary
-
-| With | Elapsed (part-time) |
-|---|---|
-| Serial (Jake + 1 agent) | ~8–10 weeks |
-| 3 agents (recommended) | ~4–6 weeks: Wave 0 ≈ 1.5 wk, Waves 1–2 ≈ 2 wk, Waves 3–4 ≈ 1–1.5 wk, Wave 5 ≈ 1 wk |
-
-Total estimated effort ≈ 30–40 focused days — the same rebuild v3 sized,
-now with the idle time parallelized. The rebuild itself is irreducible;
-what parallelism removes is calendar.
+~30–36 focused days total for one worker: foundation ≈ 5–7d, slices ≈
+18–24d, verification + switch ≈ 5–7d. Calendar depends on GTM — the
+campaign always wins.
