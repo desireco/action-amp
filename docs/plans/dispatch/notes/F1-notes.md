@@ -59,3 +59,14 @@ From the repository root:
 ## Notes & Observations
 
 - Nothing surprising. Standard npm workspaces setup with TypeScript NodeNext module resolution.
+
+## Review verdict (Zcode review, 2026-09-01)
+
+```text
+REVIEW: F1 · author Gemini/capable · reviewer ZCode (Z.AI)/capable
+verdict: pass
+notes: gates re-run by reviewer — install (0 vulns), test (1/1 green),
+typecheck (all workspaces), lint (oxlint, 0 warnings) all pass. Scope
+verified: workspaces = apps/* + packages/* only; webapp/cli/admin-cli
+untouched. No fixes needed.
+```

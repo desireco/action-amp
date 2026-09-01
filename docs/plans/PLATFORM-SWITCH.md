@@ -3,8 +3,8 @@
 > The one place for the roadmap, current status, and how work is organized
 > for moving ActionAmp off Wasp. Everything else is an artifact linked below;
 > this page is the cockpit. **Any agent that lands work updates §Status
-> before finishing its turn.** Last updated: 2026-08-31 (spike dispatched;
-> parallel lane G open — F1–F3 to Gemini).
+> before finishing its turn.** Last updated: 2026-09-01 (D1-api reviewed
+> pass-after-fixes; F1 reviewed pass; next: F2 paste + D1-svelte by ZCode).
 
 ## Artifacts — what owns what
 
@@ -42,8 +42,8 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | Spike D2 — Imba client | ☐ next | file: `D2-imba-gemini.md` → Gemini |
 | Spike D2 — report | ☐ next | file: `D2-report-zai.md` → Z.AI |
 | **Lane G (parallel foundation)** | ▶ paste anytime | `docs/plans/dispatch/` → Gemini, in order |
-| F1 monorepo skeleton | ☐ next | `F1-skeleton-gemini.md` (author swap: Gemini, Codex busy w/ spike) |
-| F2 snapshot + staging | ☐ after F1 | `F2-staging-gemini.md` |
+| F1 monorepo skeleton | ✅ pass | `2fc2a88` · gates re-verified by ZCode · author swap logged |
+| F2 snapshot + staging | ▶ paste now | `F2-staging-gemini.md` → Gemini · prompt issued |
 | F3 introspection report | ☐ after F2 | `F3-introspection-gemini.md` · ZCode audits |
 | All other F/S/V goals | ☐ | gated on spike report + Jake's go (F1–F3 exempt: framework-independent) |
 
