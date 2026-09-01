@@ -25,6 +25,10 @@
 5. **Merge discipline for shared packages:** one surface = one contract
    file; `entities`-slice additions to `packages/domain/db` are centralized
    in that goal's PR and pulled before the next slice syncs.
+6. **Cross-family review on every landing.** The model family that authored
+   a change never reviews it; reviewers run the `code-review` skill + lint
+   gate and continue into fixes per `AGENTS.md`. See "Model dispatch &
+   cross-family review" below.
 
 **Dependency map** (arrows mean "blocks"):
 
@@ -48,6 +52,97 @@ F9 and Wave 3's S11/S13 can start early off the mock client.
 **Realistic parallelism: 3 agents** (2 full-stack slices + 1
 infra/platform). More than that collides in `packages/contract` and
 `packages/domain`.
+
+---
+
+## Model dispatch & cross-family review
+
+Three families are available — **Z.AI, Codex, Gemini** — each in a capable
+tier and a fast tier. The defaults below are swappable per goal; the two
+invariants are not:
+
+* **M1 — Author family ≠ reviewer family** on every piece that lands.
+* **M2 — Silent-failure surfaces get capable authorship *and* capable
+  cross-family review:** auth/sessions (F10, S10), billing/Stripe (S16),
+  the port pattern (F4), the schema report audit (F3), service-worker
+  takeover (S12), and all of Wave 5.
+
+**Principles:**
+
+* **Spec down, execute fast, review cross.** A capable model writes the
+  tight spec for each *kind* of work (F4's port pattern, S1's screen
+  pattern, a surface's parity checklist); fast models execute the remaining
+  instances against it; a different family reviews. This is what makes the
+  bulk porting cheap without quality loss.
+* **First of a kind → capable; rest of the kind → fast.** F4 fixes the
+  port pattern, so cores 2–13 are fast-tier. S1's screens fix the UI
+  pattern, so later screens are fast-tier.
+* **Fast models only get work with an executable net** — unit tests, e2e
+  specs, lint, typecheck. If a piece can't fail loudly, it isn't fast-tier
+  work.
+* **The bake-off is cross-family by construction:** Codex runs the Typebase
+  arm (F5), Z.AI runs the Hono arm (F6), and Gemini — author of neither —
+  adjudicates F7. Jake approves the decision.
+
+**Standard decomposition of an S-goal** — every slice breaks into the same
+seven pieces, each a separate dispatch:
+
+| Piece | Work | Author | Reviewer |
+|---|---|---|---|
+| P0 parity spec | read the Wasp impl + e2e spec + docs; write the surface's parity checklist (behaviors, keys, states, edge cases) | capable | capable (cross-family) |
+| P1 contract types | transcribe types into `packages/contract/<surface>` | fast | fast (cross-family) |
+| P2 domain port | move the core + tests; extend the entity slice per the F4 pattern | fast (capable for first-of-kind) | capable |
+| P3 API endpoints | wire endpoints over the domain package | fast | fast; capable if auth-adjacent |
+| P4 UI screens | Svelte screens from `tokens.css` + the shell pattern | fast (capable for S1) | capable for S1, fast after |
+| P5 e2e port | port the surface's spec(s), green on staging | fast | fast |
+| P6 keyboard + polish | `docs/INTERACTION.md` checklist pass | fast | capable spot-check |
+
+**Goal-by-goal defaults:**
+
+| Goal | Author | Reviewer |
+|---|---|---|
+| F1 skeleton | Z.AI capable | Codex fast |
+| F2 snapshot/staging | fast | capable |
+| F3 report | fast (pull) + **capable audit** of the diff | capable |
+| F4 domain pilot | **capable** | **capable cross-family** |
+| F5 Typebase arm | Codex capable | Z.AI fast |
+| F6 Hono arm | Z.AI capable | Codex fast |
+| F7 decision doc | **Gemini capable** (adjudicates both arms) | Jake approves |
+| F8 api skeleton | capable — the family that ran the winning arm | capable |
+| F9 web shell | capable | capable |
+| F10 auth validation | **capable** | **capable cross-family + third-family test pass** |
+| F11 e2e harness | fast | capable |
+| S1–S18 | per-piece table; **S10, S12, S16 capable throughout** | per-piece |
+| S18 conformance harness | fast | capable |
+| V1 parity run | **the family that authored the fewest slices** (adversarial) | capable |
+| V2 rehearsal · V4 switch | capable lead + Jake | — |
+| V3 switch kit | fast (drafts) | capable |
+| V5 cleanup | fast | fast |
+| V6 Neon | capable | capable |
+
+**Review protocol** (wired into the existing "code review = fix loop" rule):
+
+1. Reviews run in the author's worktree **before** sync, by a different
+   family.
+2. Reviewer loads the `code-review` skill, runs `npm run lint`, typecheck,
+   and the goal's tests, then checks every done-condition against the goal
+   text.
+3. Verdict recorded with the landing: goal ID · author family/tier ·
+   reviewer family/tier · pass or fixes applied.
+4. Two failed rounds → escalate to the third family, then to Jake.
+5. The family that authored a wave never runs that wave's V1 verification.
+
+**Worktree budget:** still max 3 concurrent worktrees — the merge cap in
+`packages/contract` drives this, not model count. Each worktree gets the
+staging snapshot restored into its own DB via F2's script, so slice
+verification is self-contained. Fast tiers do best on sequential small
+pieces inside one worktree: churn worktrees less, dispatch more pieces per
+worktree.
+
+**Where the capable budget goes:** ~60–70% of the total volume (13 domain
+cores, ~17 e2e specs, most screens, contract transcription, scripts) is
+fast-tolerant mechanical porting. Capable spend concentrates in the F3
+audit, F4, F7, F8–F10, S10/S12/S16, wave integration, and Wave 5.
 
 ---
 
