@@ -9,7 +9,7 @@
     "codegen": "typebase-io-cli codegen",
     "generate": "typebase-io-cli generate-server --adapter bun --output ts --out-dir _server --port ${PORT:-8080}",
     "db:push": "typebase-io-cli db dev push",
-    "start": "bun run codegen && bun run generate && ln -sfn ../../.env typebase/_server/.env && bun install --cwd typebase/_server && bun --cwd typebase/_server run src/index.ts",
+    "start": "bun run codegen && bun run generate && bun install --cwd typebase/_server && bun typebase/_server/src/index.ts",
     "typecheck": "typebase-io-cli codegen && typebase-io-cli generate-server --adapter bun --output ts --out-dir _server --port 8080"
   },
   "dependencies": {
