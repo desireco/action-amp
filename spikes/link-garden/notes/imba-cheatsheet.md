@@ -130,6 +130,22 @@ only restarting `bun run dev` does (then hard-reload the tab). Refined rule:
 weird after a small edit → reload the tab; weird after many edits → restart
 the dev server.
 
+## Event-binding rules (the refactor's hard-won map)
+
+1. **Conditionally rendered elements never get event bindings.** Every
+   variant must render exactly once; visibility toggles on wrapper divs.
+2. **An interpolated `style` attribute kills the event attribute on the
+   same element** — interactive elements carry no style; wrappers do.
+3. **A `<form>` inside a style-wrapper loses its own bindings AND its
+   descendants'.** Use divs with `@keydown`-Enter + button `@click`
+   instead of form submission in toggled sections.
+4. **Zero-arg methods are NOT auto-called**: `text.trim` is a property
+   (the function), `text.trim()` calls it. `x.toLowerCase!` sugar also
+   calls. A whole feature can sit dead on this one (`text.trim.split`
+   → TypeError swallowed by the event dispatcher).
+5. State updates: property **assignment** re-renders; **in-place mutation**
+   of module-state arrays/objects does not — map/concat to new refs.
+
 ## Runtime renderer bug (final finding, reproducible)
 
 Even with everything compiling: on a clean reload the app renders the top
