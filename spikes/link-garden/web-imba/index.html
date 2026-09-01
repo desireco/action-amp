@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Link Garden — Imba</title>
+    <script>
+      try {
+        const theme = localStorage.getItem("lg-theme");
+        if (theme) document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <script type="module" src="/src/main.imba"></script>
+  </body>
+</html>

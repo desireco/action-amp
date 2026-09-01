@@ -1,0 +1,4 @@
+# web-svelte
+node_modules/
+.svelte-kit/
+build/

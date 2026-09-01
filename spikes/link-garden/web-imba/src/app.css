@@ -1,0 +1,294 @@
+/* Same class vocabulary and tokens as the Svelte client — styling strategy
+   is identical so the comparison measures the language, not the CSS. */
+
+body {
+  margin: 0;
+  background: var(--aa-bg);
+  color: var(--aa-text);
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-snug);
+}
+
+.app,
+.auth {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+h1 {
+  font-size: var(--aa-text-lg);
+  font-weight: var(--aa-weight-semibold);
+  margin: 0;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.meta {
+  font-size: var(--aa-text-sm);
+  opacity: 0.7;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.ghost {
+  background: none;
+  border: 1px solid var(--aa-border);
+  border-radius: 6px;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.15rem 0.5rem;
+  font-size: var(--aa-text-sm);
+}
+
+.capture,
+.capture-hint {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  box-sizing: border-box;
+}
+
+.capture {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.capture input {
+  flex: 1;
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: 8px;
+  background: var(--aa-bg-soft);
+  color: inherit;
+}
+
+.capture button {
+  background: var(--aa-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0 1rem;
+  cursor: pointer;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+}
+
+.capture-hint {
+  background: none;
+  border: 1px dashed var(--aa-border-strong);
+  border-radius: 8px;
+  color: inherit;
+  opacity: 0.75;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  font-size: var(--aa-text-sm);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.tabs button {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: var(--aa-text-sm);
+  padding: 0.35rem 0.6rem;
+  opacity: 0.65;
+}
+
+.tabs button.active {
+  opacity: 1;
+  border-bottom-color: var(--aa-accent);
+}
+
+.tabs .count {
+  font-size: var(--aa-text-xs);
+  opacity: 0.7;
+}
+
+.tabs .filter {
+  margin-left: auto;
+  color: var(--aa-primary);
+  opacity: 1;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--aa-border);
+  border-radius: 10px;
+  background: var(--aa-bg-soft);
+  overflow: hidden;
+}
+
+.list li {
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--aa-border);
+  cursor: pointer;
+}
+
+.list li:last-child {
+  border-bottom: none;
+}
+
+.list li.selected {
+  background: var(--aa-accent-soft);
+  box-shadow: inset 3px 0 0 var(--aa-accent);
+}
+
+.list li.empty {
+  cursor: default;
+  opacity: 0.6;
+  text-align: center;
+  padding: 2rem;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.title {
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.host {
+  font-size: var(--aa-text-xs);
+  opacity: 0.6;
+  font-family: var(--aa-font-mono);
+  white-space: nowrap;
+}
+
+.chips {
+  margin-left: auto;
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.chip {
+  background: none;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: 999px;
+  color: inherit;
+  cursor: pointer;
+  font-size: var(--aa-text-xs);
+  padding: 0 0.45rem;
+}
+
+.chip.active {
+  background: var(--aa-accent-soft);
+  border-color: var(--aa-accent);
+}
+
+.tagline {
+  margin-top: 0.4rem;
+}
+
+.tagline input {
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: 6px;
+  background: var(--aa-bg);
+  color: inherit;
+  width: 12rem;
+}
+
+.keys {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-size: var(--aa-text-xs);
+  opacity: 0.55;
+}
+
+kbd {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  border: 1px solid var(--aa-border-strong);
+  border-radius: 4px;
+  padding: 0 0.25rem;
+}
+
+.error {
+  color: var(--aa-amber-text, var(--aa-amber));
+  font-size: var(--aa-text-sm);
+  margin-top: 0.75rem;
+}
+
+.auth {
+  max-width: 20rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-top: 4rem;
+}
+
+.auth .sub {
+  margin: 0 0 0.5rem;
+  font-size: var(--aa-text-sm);
+  opacity: 0.6;
+}
+
+.auth form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth input {
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: 8px;
+  background: var(--aa-bg-soft);
+  color: inherit;
+}
+
+.auth button[type="submit"] {
+  background: var(--aa-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  font-weight: var(--aa-weight-medium);
+}
+
+.auth .link {
+  background: none;
+  border: none;
+  color: var(--aa-primary);
+  cursor: pointer;
+  font-size: var(--aa-text-sm);
+  padding: 0;
+  text-align: left;
+}
+
+input:focus {
+  outline: none;
+  box-shadow: var(--aa-focus-ring);
+}
