@@ -91,6 +91,14 @@ tag login-form < form          # inheritance: `tag x < parent` on the tag line
 The two fixes that unlocked it after the `do`-handler era: direct-call
 handlers (`@click=fn(arg)`) and `bind=` (not `@bind=`).
 
+## HMR accumulates stale state (2026-09-01, confirmed)
+
+After a session of hot edits, the dev server's module graph goes stale:
+both if/else branches render at once, styles drop, reload does NOT fix it —
+only restarting `bun run dev` does (then hard-reload the tab). Refined rule:
+weird after a small edit → reload the tab; weird after many edits → restart
+the dev server.
+
 ## Runtime renderer bug (final finding, reproducible)
 
 Even with everything compiling: on a clean reload the app renders the top
