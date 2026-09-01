@@ -85,6 +85,9 @@ tag link-garden
 		if not parsed.url
 			self.error = 'enter a url (plus optional #tags)'
 			return
+		if not /^https?:\/\//.test(parsed.url)
+			self.error = 'enter a full url starting with http:// or https://'
+			return
 		try
 			const link = await createLink(parsed.url, parsed.tags)
 			self.links.unshift(link)

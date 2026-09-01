@@ -96,6 +96,12 @@ the Bun start command.
 * The server is started with `bun run start` from `spikes/link-garden/api/`
   (regenerates + boots; default port 8080).
 
+* **Input validation failures map to 500s.** A zod-rejected input (e.g.
+  `url: "hello"`) surfaces as `INTERNAL_SERVER_ERROR` / "Internal server
+  error" from the generated server — not a 4xx validation response. The
+  clients now pre-validate; the server stays the real gate, but its error
+  semantics are lossy at 0.1.15 (finding for F7).
+
 ## Review verdict (Zcode review, 2026-09-01)
 
 ```text

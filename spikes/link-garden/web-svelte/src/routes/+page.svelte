@@ -93,6 +93,10 @@
       error = "enter a url (plus optional #tags)";
       return;
     }
+    if (!/^https?:\/\//i.test(url)) {
+      error = "enter a full url starting with http:// or https://";
+      return;
+    }
     busy = true;
     try {
       const link = await client.links.create({ url, tags });
