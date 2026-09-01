@@ -1,6 +1,9 @@
 # ActionAmp Platform Transition Plan
 
-> Proposed 2026-08-31 by Jake. Status: proposal under review — see
+> Proposed 2026-08-31 by Jake. Status: **superseded** by
+> [`2026-08-31-platform-transition-v2.md`](2026-08-31-platform-transition-v2.md)
+> (same date; v2 restructures the phases and folds the review's gaps in).
+> Kept for history. See
 > [Review notes](#review-notes-zcode-2026-08-31) at the end of this document.
 
 ## Objective
