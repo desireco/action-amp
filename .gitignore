@@ -3,6 +3,7 @@ aa-old/
 
 # wasp / node
 node_modules/
+dist/
 webapp/node_modules/
 webapp/.wasp/
 webapp/.env*

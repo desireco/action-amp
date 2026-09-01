@@ -1,0 +1,11 @@
+{
+  "name": "@actionamp/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"@actionamp/web dev placeholder (SvelteKit scaffold is goal F9)\"",
+    "build": "echo \"@actionamp/web build placeholder\"",
+    "typecheck": "tsc --noEmit"
+  }
+}

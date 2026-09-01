@@ -1,0 +1,11 @@
+{
+  "name": "@actionamp/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"@actionamp/api dev placeholder (API framework decided in F7)\"",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  }
+}
