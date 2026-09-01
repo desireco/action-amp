@@ -39,7 +39,6 @@ import {
   instantFrom,
   instantToDate,
   instantToPlainDate,
-  plainDateFromDb,
   plainDateToDb,
   systemClock,
 } from "../shared/time/temporal";
@@ -859,34 +858,32 @@ export async function updateTaskStatusCore(
     status,
     scheduledDate,
     snoozedUntil,
-    timeZone = "UTC",
   }: {
     userId: string;
     id: string;
     status: "TODAY" | "UPCOMING" | "SOMEDAY" | "WONT_DO";
     scheduledDate?: Date | null;
     snoozedUntil?: Date | null;
+    // Kept for signature stability — the CLI passes it; the date-drop rule
+    // below is calendar-day independent, so it is not read (nor destructured).
     timeZone?: string;
   },
 ) {
   const task = await entities.Task.findUnique({
     where: { id },
-    select: { userId: true, scheduledDate: true, snoozedUntil: true },
+    select: { userId: true },
   });
   if (!task || task.userId !== userId) {
     throw new Error("Task not found.");
   }
-  const today = instantToPlainDate(Temporal.Now.instant(), timeZone);
-  const nextSchedule =
-    scheduledDate === undefined ? task.scheduledDate : scheduledDate;
+  // One field may say "today": status is the commitment, scheduledDate is
+  // bench scheduling. Committing (TODAY) or parking (SOMEDAY) always drops
+  // the date — a TODAY row carrying scheduledDate=today rendered "today"
+  // twice in the UI, and a SOMEDAY row must never keep a stale deadline.
   const effectiveSchedule =
-    status === "SOMEDAY"
+    status === "TODAY" || status === "SOMEDAY"
       ? null
-      : status === "TODAY" &&
-          nextSchedule &&
-          Temporal.PlainDate.compare(plainDateFromDb(nextSchedule), today) > 0
-        ? null
-        : scheduledDate;
+      : scheduledDate;
   const effectiveSnooze =
     status === "TODAY" || status === "SOMEDAY" ? null : snoozedUntil;
   return await entities.Task.update({

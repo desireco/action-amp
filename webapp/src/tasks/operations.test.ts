@@ -597,7 +597,7 @@ describe("updateTaskStatus", () => {
       where: { id: "task-1" },
       data: {
         status,
-        scheduledDate: status === "SOMEDAY" ? null : undefined,
+        scheduledDate: status === "TODAY" || status === "SOMEDAY" ? null : undefined,
         snoozedUntil: status === "TODAY" || status === "SOMEDAY" ? null : undefined,
       },
     });
@@ -640,7 +640,10 @@ describe("updateTaskStatus", () => {
     });
   });
 
-  it("keeps a past scheduledDate when moving into Today (overdue is truthful)", async () => {
+  it("drops even a past scheduledDate when moving into Today (one field may say today)", async () => {
+    // The commitment owns "today": a TODAY row keeping a due date rendered
+    // Today twice (When chip + Due chip). Supersedes the old "overdue is
+    // truthful" behavior — overdueness on a committed task is noise.
     const m = guarded();
     const past = new Date(Date.now() - 24 * 60 * 60 * 1000);
     m.entities.Task.findUnique.mockResolvedValue({
@@ -653,7 +656,7 @@ describe("updateTaskStatus", () => {
 
     expect(m.entities.Task.update).toHaveBeenCalledWith({
       where: { id: "task-1" },
-      data: { status: "TODAY", scheduledDate: undefined, snoozedUntil: null },
+      data: { status: "TODAY", scheduledDate: null, snoozedUntil: null },
     });
   });
 });
@@ -1465,12 +1468,25 @@ describe("updateTaskDetails", () => {
     );
   });
 
-  it("writes status alone when only status is passed", async () => {
+  it("writes status and drops the date when committing to TODAY — one field may say today", async () => {
     const m = guarded();
     m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
     await updateTaskDetails({ taskId: "task-1", status: "TODAY" }, m.context);
     expect(m.entities.Task.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { status: "TODAY" } }),
+      expect.objectContaining({
+        data: { status: "TODAY", scheduledDate: null },
+      }),
+    );
+  });
+
+  it("drops the date when parking to SOMEDAY (no stale deadlines)", async () => {
+    const m = guarded();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    await updateTaskDetails({ taskId: "task-1", status: "SOMEDAY" }, m.context);
+    expect(m.entities.Task.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { status: "SOMEDAY", scheduledDate: null },
+      }),
     );
   });
 

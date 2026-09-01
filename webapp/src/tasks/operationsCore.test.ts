@@ -15,6 +15,7 @@ import {
   pauseTaskCore,
   completeFocusSessionCore,
   getOtherLensCountsData,
+  updateTaskStatusCore,
 } from "./operationsCore";
 import { mockContext, type MockContext } from "../test/mockContext";
 
@@ -793,5 +794,70 @@ describe("getOtherLensCountsData", () => {
       }),
     ).resolves.toEqual([]);
     expect(m.entities.Task.count).not.toHaveBeenCalled();
+  });
+});
+
+// ----------------------------------------------------------------
+// updateTaskStatusCore — "one field may say today"
+// ----------------------------------------------------------------
+describe("updateTaskStatusCore", () => {
+  function asStatusWrites(m: MockContext) {
+    const spies = { Task: m.entities.Task };
+    // SAFETY: EntitySpy vi.fn()s satisfy the delegate slice at runtime.
+    return spies as Parameters<typeof updateTaskStatusCore>[0];
+  }
+
+  it("drops scheduledDate when committing to TODAY (status owns today)", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+
+    await updateTaskStatusCore(asStatusWrites(m), {
+      userId: "user-1",
+      id: "task-1",
+      status: "TODAY",
+    });
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "TODAY", scheduledDate: null }),
+      }),
+    );
+  });
+
+  it("drops scheduledDate when parking to SOMEDAY, even when a date is passed", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+
+    await updateTaskStatusCore(asStatusWrites(m), {
+      userId: "user-1",
+      id: "task-1",
+      status: "SOMEDAY",
+      scheduledDate: new Date("2026-09-15T00:00:00.000Z"),
+    });
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "SOMEDAY", scheduledDate: null }),
+      }),
+    );
+  });
+
+  it("keeps an explicit scheduledDate on bench (UPCOMING) writes", async () => {
+    const m = mockContext();
+    m.entities.Task.findUnique.mockResolvedValue({ userId: "user-1" });
+    const date = new Date("2026-09-15T00:00:00.000Z");
+
+    await updateTaskStatusCore(asStatusWrites(m), {
+      userId: "user-1",
+      id: "task-1",
+      status: "UPCOMING",
+      scheduledDate: date,
+    });
+
+    expect(m.entities.Task.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "UPCOMING", scheduledDate: date }),
+      }),
+    );
   });
 });

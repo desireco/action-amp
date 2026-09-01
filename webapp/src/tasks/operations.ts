@@ -654,6 +654,13 @@ export const updateTaskDetails = (async (args, context) => {
   }
   if (args.status !== undefined) {
     data.status = args.status;
+    // One field may say "today" (same rule as updateTaskStatusCore): the
+    // status is the commitment, scheduledDate is bench scheduling —
+    // committing (TODAY) or parking (SOMEDAY) always drops the date, so a
+    // committed row can never render "today" twice.
+    if (args.status === "TODAY" || args.status === "SOMEDAY") {
+      data.scheduledDate = null;
+    }
   }
   if (args.scheduledDate !== undefined) {
     data.scheduledDate = args.scheduledDate;
