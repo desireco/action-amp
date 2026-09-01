@@ -123,6 +123,20 @@ kill_tree() {
   free_ports --force --quiet 2>/dev/null || true
 }
 
+# PIDs holding a TCP LISTEN socket on $1, one per line (empty = port free).
+# Prefers lsof (macOS default; clean one-PID-per-line -t output); falls back
+# to ss (iproute2, base install on mainstream Linux) so the runner needs no
+# lsof install and no root. No ss -H: old iproute2 rejects the flag, and the
+# header line can't match grep's pid= pattern anyway.
+port_pids() {
+  local port="$1"
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -ti tcp:"$port" -sTCP:LISTEN 2>/dev/null || true
+  else
+    ss -tlnp "sport = :$port" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 || true
+  fi
+}
+
 # Free the configured ports. Returns 0 only if both are free on return.
 # --force: kill whatever holds them, retrying because nodemon respawns node
 #          on exit (a single kill just bounces the listener). Keeps killing
@@ -140,14 +154,14 @@ free_ports() {
   client_port="${PORTS##*:}"
   local p
   for p in "$server_port" "$client_port"; do
-    pids="$(lsof -ti tcp:"$p" -sTCP:LISTEN 2>/dev/null || true)"
+    pids="$(port_pids "$p")"
     [ -z "$pids" ] && continue
     if [ "$force" -eq 1 ]; then
       # Try up to 8 rounds: kill the current holder, brief grace, recheck.
       # Multiple rounds because nodemon restarts node on death.
       local round=0
       while [ "$round" -lt 8 ]; do
-        pids="$(lsof -ti tcp:"$p" -sTCP:LISTEN 2>/dev/null || true)"
+        pids="$(port_pids "$p")"
         [ -z "$pids" ] && break
         kill -KILL $pids 2>/dev/null || true
         sleep 0.4
@@ -211,7 +225,8 @@ trap on_signal INT TERM
 trap on_exit EXIT
 
 # ── preflight ──────────────────────────────────────────────────────────────
-command -v lsof >/dev/null || die "lsof required (macOS has it by default)"
+command -v lsof >/dev/null 2>&1 || command -v ss >/dev/null 2>&1 \
+  || die "need lsof or ss to find port holders (neither on PATH)"
 if free_ports --quiet; then
   log "preflight: ports $PORTS free"
 else
