@@ -68,8 +68,6 @@ export const getTaskDetail = oc
   .input(z.object({ id: z.string().min(1) }))
   .output(TaskDetailSchema.nullable());
 
-/** The tasks namespace — paths: POST /rpc/tasks/list, POST /rpc/tasks/detail. */
+/** The tasks namespace — paths: POST /rpc/tasks/list, POST /rpc/tasks/detail.
+ *  Composed into the tree by src/router.ts (the one composition point). */
 export const tasksContract = { list: listTasks, detail: getTaskDetail };
-
-/** The full contract router. New features nest alongside `tasks`. */
-export const contractRouter = { tasks: tasksContract };

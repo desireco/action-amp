@@ -22,7 +22,7 @@ import type { ContractRouterClient } from "@orpc/contract";
 import type { z } from "zod";
 // Value import (referenced as a value inside `typeof ...`); erased from the
 // emitted output since this module exports types only.
-import { contractRouter } from "./tasks.js";
+import { contractRouter } from "./router.js";
 import type {
   PrioritySchema,
   TaskSchema,

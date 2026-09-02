@@ -15,12 +15,13 @@ export {
 } from "./client.js";
 
 // The contract itself (zod schemas + oc procedures) — apps/api implements it;
-// clients normally touch only the types and factories above.
+// clients normally touch only the types and factories above. Surface
+// fragments live in their own files; src/router.ts composes the tree.
 export {
-  contractRouter,
   tasksContract,
   PrioritySchema,
   TaskDetailSchema,
   TaskSchema,
   TaskStatusSchema,
 } from "./tasks.js";
+export { contractRouter } from "./router.js";
