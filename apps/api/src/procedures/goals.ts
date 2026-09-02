@@ -66,7 +66,7 @@ function asGuardUser(user: ApiContext["user"]): GuardUser {
 
 async function primaryLensId(context: ApiContext, userId: string): Promise<string | null> {
   const lenses = await context.entities.Lens.findMany({
-    where: { userId },
+    where: { userId, isIncluded: true },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
   });
   return lenses[0]?.id ?? null;

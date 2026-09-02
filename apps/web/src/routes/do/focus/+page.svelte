@@ -3,12 +3,17 @@
   // exposes the user's single started task; this page renders it and bounces
   // to /do when none (never on a stale empty cache — the store refreshes
   // before deciding).
+  import { goto } from "$app/navigation";
   import FocusView from "../../../lib/components/FocusView.svelte";
   import { whatNow } from "../../../lib/stores/whatNow.svelte";
 
   let ready = $state(false);
   whatNow.focused = null;
   void whatNow.loadFocused().then(() => (ready = true));
+
+  $effect(() => {
+    if (ready && !whatNow.focused) void goto("/do", { replaceState: true });
+  });
 </script>
 
 {#if !ready}

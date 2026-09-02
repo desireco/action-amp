@@ -22,6 +22,7 @@ import { onboardingContract } from "./onboarding.js"; // S13 (temporary gate wir
 import { publicContract } from "./public.js"; // S15 (temporary gate wiring)
 import { billingContract } from "./billing.js"; // S16 (temporary gate wiring)
 import { adminContract } from "./admin.js"; // S17 (temporary gate wiring)
+import { feedbackContract } from "./feedback.js"; // S-review: feedback submit
 
 export const contractRouter = {
   tasks: tasksContract,
@@ -38,5 +39,6 @@ export const contractRouter = {
   public: publicContract, // S15 (temporary gate wiring)
   billing: billingContract, // S16 (temporary gate wiring)
   admin: adminContract, // S17 (temporary gate wiring)
+  feedback: feedbackContract, // S-review: feedback submit
   // Next surfaces nest here, one line each (inbox, projects, goals, …):
 };

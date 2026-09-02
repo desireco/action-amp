@@ -51,7 +51,9 @@
   const errorParam = $derived(new URL(page.url.href).searchParams.get("error") ?? "");
 
   let pending = $state<PendingState>(null);
-  let loadingPending = $state<boolean>(!!pendingId);
+  // The ?pending= effect below sets this on mount; it starts false so the
+  // no-pending error card never flashes behind a load.
+  let loadingPending = $state<boolean>(false);
   let submitting = $state(false);
   let submitError = $state<string | null>(null);
   let title = $state("");
@@ -299,7 +301,7 @@
           {/if}
           {#each pending.files as file (previewKey(file))}
             {#if previews[previewKey(file)]}
-              <img class="aa-share__image" src={previews[previewKey(file)]} alt="Shared image preview" />
+              <img class="aa-share__image" src={previews[previewKey(file)]} alt="" />
             {/if}
           {/each}
         </section>
@@ -597,9 +599,7 @@
     font-weight: var(--aa-weight-normal);
   }
 
-  .aa-share__field textarea,
-  .aa-share__field select,
-  .aa-share__field input {
+  .aa-share__field select {
     width: 100%;
     border: 0;
     border-radius: 0;
@@ -610,17 +610,7 @@
     padding: var(--aa-space-xs) 0;
   }
 
-  .aa-share__field textarea {
-    resize: vertical;
-  }
-
-  .aa-share__field textarea::placeholder {
-    color: var(--aa-text-4);
-  }
-
-  .aa-share__field textarea:focus-visible,
-  .aa-share__field select:focus-visible,
-  .aa-share__field input:focus-visible {
+  .aa-share__field select:focus-visible {
     outline: 2px solid var(--aa-teal-cta);
     outline-offset: 3px;
   }

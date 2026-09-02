@@ -34,7 +34,9 @@ async function createUpcomingTask(page: Page, text: string): Promise<void> {
     text,
   });
   const appData = await apiPost<{ lenses: LensDto[] }>(page, "/rpc/tasks/appData", {});
-  const lensId = appData.lenses[0]?.id;
+  // FREE default: the included lens (webapp lensContext parity) — the
+  // fixture users carry a locked Work lens created by onboarding.
+  const lensId = (appData.lenses.find((l) => l.isIncluded) ?? appData.lenses[0])?.id;
   if (!lensId) throw new Error("No lens for the dev user — run seed.ts.");
   const result = await apiPost<{ kind: string }>(page, "/rpc/inbox/triage", {
     inboxItemId: capture.id,

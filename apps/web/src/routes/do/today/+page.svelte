@@ -9,7 +9,9 @@
   import ListEmpty from "../../../lib/components/ListEmpty.svelte";
   import CompletionCircle from "../../../lib/components/CompletionCircle.svelte";
   import RowEditor from "../../../lib/components/RowEditor.svelte";
+  import FeedbackDialog from "../../../lib/components/FeedbackDialog.svelte";
   import { lists } from "../../../lib/stores/lists.svelte";
+  import { feedback } from "../../../lib/stores/feedback.svelte";
   import type { TaskLensListRowDto } from "../../../lib/dto";
 
   lists.loaded = false;
@@ -179,6 +181,14 @@
           {#snippet renderItem(item)}
             {@const task = item as TaskLensListRowDto}
             <TaskRow task={task} showLens={showLensPill} muted>
+              <button
+                type="button"
+                class="aa-btn aa-btn--ghost"
+                onclick={() =>
+                  feedback.showForTask({ id: task.id, description: task.description })}
+              >
+                Leave feedback
+              </button>
               <a class="aa-btn aa-btn--ghost" href="/do/tasks/{task.permalink ?? task.id}">Open</a>
             </TaskRow>
           {/snippet}
@@ -187,6 +197,10 @@
     </section>
   {/if}
 </section>
+
+{#if feedback.open}
+  <FeedbackDialog />
+{/if}
 
 <style>
   .aa-today {

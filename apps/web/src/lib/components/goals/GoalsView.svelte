@@ -5,9 +5,10 @@
    * (hidden when there is no next project — "never lies"), plus the create
    * composer and the ProGate panel on a 402.
    */
-  import { onMount } from "svelte";
+  import { untrack } from "svelte";
   import "../../styles/projects.css";
   import { goals } from "../../stores/goals.svelte";
+  import { lenses } from "../../stores/lenses.svelte";
   import { type GateMessage } from "../../stores/projects.svelte";
   import ProgressCard from "../projects/ProgressCard.svelte";
 
@@ -24,8 +25,15 @@
     node.focus();
   }
 
-  onMount(() => {
-    void goals.load();
+  // The load effect tracks ONLY the shell's active lens: switching lenses in
+  // the switcher re-runs it, re-scoping the goals (goals.load mirrors the
+  // id). load() runs untracked — it reads+writes store state (busy, rows),
+  // which must not re-trigger the effect.
+  $effect(() => {
+    void lenses.activeLensId;
+    untrack(() => {
+      void goals.load();
+    });
   });
 
   // Webapp parity: the empty state renders when the list is empty and the

@@ -410,7 +410,7 @@ export async function seedCliFixtures(db: DomainDb): Promise<CliFixtures> {
     status: "WONT_DO",
     updatedAt: new Date(),
   });
-  ensureTask(db, proUserId, lensWorkId, "Conformance: someday task", {
+  await ensureTask(db, proUserId, lensWorkId, "Conformance: someday task", {
     status: "SOMEDAY",
   });
 
@@ -528,7 +528,6 @@ export async function seedCliFixtures(db: DomainDb): Promise<CliFixtures> {
   await ensureTask(db, freeUserId, freeLensMeId, "Free fixture task", {
     status: "TODAY",
   });
-  void freeLensWorkId;
 
   // ── ADMIN data — one feedback row + funnel events ────────────────────────
   // Find a LIVE (non-deleted) row: the conformance suite soft-deletes the row

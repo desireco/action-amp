@@ -58,8 +58,26 @@ function makeUnonboarded(userId: string): void {
   );
 }
 
-async function getStatus(page: Page): Promise<OnboardingStatus> {
-  return await apiPost<OnboardingStatus>(page, "/rpc/onboarding/status");
+async function getStatus(page: Page, userId: string): Promise<OnboardingStatus> {
+  // Read straight off the User row: the gate's flag + stage + name live on
+  // the account, and psql stays decoupled from whichever RPC surfaces them
+  // (the retired onboarding.status shim, the auth me read, or both).
+  const row = execFileSync(
+    PSQL,
+    [
+      DB_URL,
+      "-tA",
+      "-c",
+      `SELECT json_build_object(
+         'hasSeenOnboarding', "hasSeenOnboarding",
+         'onboardingStage', "onboardingStage",
+         'firstName', "firstName",
+         'preferredName', "preferredName"
+       )::text FROM "User" WHERE id='${userId}'`,
+    ],
+    { encoding: "utf-8" },
+  ).trim();
+  return JSON.parse(row) as OnboardingStatus;
 }
 
 async function getLenses(page: Page): Promise<LensRow[]> {
@@ -110,7 +128,7 @@ test("fresh user: gate bounces the app home to /welcome, full flow completes and
   await expect(page).not.toHaveURL(/\/welcome/);
 
   // Server state: flag flipped, guidance started (SAMPLE_TASK stage).
-  const status = await getStatus(page);
+  const status = await getStatus(page, user.id);
   expect(status.hasSeenOnboarding).toBe(true);
   expect(status.onboardingStage).toBe("SAMPLE_TASK");
   expect(status.preferredName).toBe("Ada");
@@ -157,7 +175,7 @@ test("skip path: Esc-less skip ends COMPLETE with no sample task", async ({
   await expect(page).toHaveURL(/\/$/);
   await expect(page).not.toHaveURL(/\/welcome/);
 
-  const status = await getStatus(page);
+  const status = await getStatus(page, user.id);
   expect(status.hasSeenOnboarding).toBe(true);
   // COMPLETE — which also prevents ensureOnboarded from seeding the task.
   expect(status.onboardingStage).toBe("COMPLETE");

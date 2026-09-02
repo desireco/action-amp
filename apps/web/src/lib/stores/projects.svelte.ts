@@ -10,6 +10,7 @@
  */
 
 import { client } from "../api";
+import { lenses } from "./lenses.svelte";
 
 /** Input shapes the projects procedures take (contract mirrors — the shared
  *  client's type gains `projects`/`goals` when the composition lines in
@@ -192,22 +193,34 @@ class ProjectsStore {
   error = $state<string | null>(null);
   busy = $state(false);
   loaded = $state(false);
+  /** The lens scope the current `projects` rows were loaded with (the switch
+   *  race guard). */
+  loadedLensId = $state<string | null>(null);
 
   async load() {
     if (this.busy) return;
     this.busy = true;
     this.error = null;
     try {
-      // Both includes on; the view re-filters (webapp parity).
+      // Both includes on; the view re-filters (webapp parity). Scoped to the
+      // shell's active lens (the server falls back to the first lens when the
+      // switcher hasn't chosen yet); the screens re-run load() on a switch.
+      const lensId = lenses.activeLensId ?? undefined;
       this.projects = await rpc.list({
+        lensId,
         includeCompleted: true,
         includeArchived: true,
       });
+      this.loadedLensId = lensId ?? null;
       this.loaded = true;
     } catch (e) {
       this.error = messageFromError(e);
     } finally {
       this.busy = false;
+      // The busy guard drops a reload that arrives mid-flight; if the lens
+      // moved during the fetch, converge on the new scope (recurs at most
+      // once per switch).
+      if ((lenses.activeLensId ?? null) !== this.loadedLensId) void this.load();
     }
   }
 
@@ -231,7 +244,8 @@ class ProjectsStore {
     type?: ProjectType;
   }): Promise<{ ok: true } | { ok: false; gate: GateMessage | null; message: string }> {
     try {
-      await rpc.create(input);
+      // New projects land in the shell's active lens (server default: first).
+      await rpc.create({ ...input, lensId: lenses.activeLensId ?? undefined });
       await this.load();
       return { ok: true };
     } catch (e) {

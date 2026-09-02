@@ -21,6 +21,7 @@
   import Icon from "../../../../lib/components/Icon.svelte";
   import { client } from "../../../../lib/api";
   import { inbox } from "../../../../lib/stores/inbox.svelte";
+  import { lenses as lensStore } from "../../../../lib/stores/lenses.svelte";
   import {
     OUTCOME_EXIT,
     buildDispatchPayload,
@@ -64,6 +65,7 @@
     id: string;
     name: string;
     color?: string | null;
+    isIncluded?: boolean;
   }
   interface ResolverProject {
     id: string;
@@ -141,7 +143,13 @@
   const triageChips = $derived(buildTriageChips(item));
 
   // ---- Project + lens resolution (grammar v2 paths) ----
-  const scopedLensId = $derived(chosenLensId ?? lenses[0]?.id ?? null);
+  const defaultLensId = $derived.by(() => {
+    if (lensStore.activeLensId && lenses.some((l) => l.id === lensStore.activeLensId)) {
+      return lensStore.activeLensId;
+    }
+    return lenses.find((l) => l.isIncluded)?.id ?? lenses[0]?.id ?? null;
+  });
+  const scopedLensId = $derived(chosenLensId ?? defaultLensId);
   const scopedProjects = $derived(
     resolverProjects.filter(
       (p) => p.lensId === scopedLensId && p.type !== "SIMPLE_LIST",
@@ -275,7 +283,7 @@
     initializedItemId = item.id;
     lensTouched = false;
     step = "classify";
-    chosenLensId = inferredLens?.id ?? lenses[0]?.id ?? null;
+    chosenLensId = inferredLens?.id ?? defaultLensId;
     working = {
       ...initWorking(item),
       type:
@@ -299,9 +307,9 @@
   // touches the lens choice (and only while still on Classify).
   $effect(() => {
     if (!item || step !== "classify" || lensTouched) return;
-    const targetLensId = inferredLens?.id ?? lenses[0]?.id ?? null;
+    const targetLensId = inferredLens?.id ?? defaultLensId;
     if (!targetLensId) return;
-    if (!chosenLensId || chosenLensId === lenses[0]?.id) chosenLensId = targetLensId;
+    if (!chosenLensId || chosenLensId === defaultLensId) chosenLensId = targetLensId;
   });
 
   // Late project-bridge: route a SIMPLE_LIST destination into the one-step

@@ -4,11 +4,10 @@
  * Store pattern (the shell.svelte convention): a class with `$state` fields +
  * plain methods, exported as a singleton from a `*.svelte.ts` module.
  *
- * The overlay is GLOBAL (INTERACTION/WORKFLOW §2.1): mounted once by the
- * authenticated shell, opened from anywhere. Mounting lives in
- * +layout.svelte (the integrator's wiring line — see
- * docs/plans/slices/s2-s3-wiring.md); the S2/S3 route pages mount it
- * themselves so the capture→triage pipeline works before that line lands.
+ * The overlay is GLOBAL (INTERACTION/WORKFLOW §2.1): mounted once by the root
+ * +layout.svelte, opened from anywhere (⌘K, the FAB, `?capture=1`, the
+ * empty-inbox CTA). The S3 route page's own mount is retired — the global one
+ * covers every route.
  */
 
 import { client } from "../api";

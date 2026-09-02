@@ -131,7 +131,7 @@ test("a #project capture token preselects the project link (type stays Task)", a
   // The #token opens the autocomplete; the first Enter accepts the
   // suggestion (closing the menu), the second submits the capture.
   const textarea = await openCapture(page);
-  await textarea.fill(`${brief} #b`);
+  await textarea.fill(`${brief} #briefs`);
   // The resolver prefetch races the fill — wait for the dropdown, then
   // Enter accepts the suggestion and a second Enter submits the capture.
   await page
@@ -172,6 +172,9 @@ test("becoming a Project uses the item text as the name", async ({ page }) => {
   await openReview(page, text);
 
   // "4" selects Project; Enter advances to Spec; Ready commits.
+  await expect(
+    page.getByRole("button", { name: /Project an outcome needing more than one step/ }),
+  ).toBeVisible();
   await page.keyboard.press("4");
   await page.keyboard.press("Enter");
   await expect(page.getByText("Specify the project")).toBeVisible({ timeout: 10_000 });
@@ -199,7 +202,7 @@ test("becoming a Resource requires a parent before Ready", async ({ page }) => {
   await capture(page, text);
   await openReview(page, text);
 
-  // "3" selects Resource; Enter advances to Spec.
+  await expect(page.getByRole("button", { name: /Resource a link or reference/ })).toBeVisible();
   await page.keyboard.press("3");
   await page.keyboard.press("Enter");
   await expect(page.getByText("File the resource")).toBeVisible({ timeout: 10_000 });

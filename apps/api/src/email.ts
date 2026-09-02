@@ -51,7 +51,12 @@ export function renderMagicLoginEmailHtml(args: MagicLoginEmailArgs): string {
     tealDark: "#008AC0",
   };
   const esc = (value: string): string =>
-    value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   const code = esc(args.code);
   const loginUrl = esc(args.loginUrl);
   return `<!DOCTYPE html>

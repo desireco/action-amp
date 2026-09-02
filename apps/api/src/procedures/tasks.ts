@@ -331,7 +331,7 @@ function toFocusedDto(row: FocusedTaskRow, focusSessionMinutes: 25 | 45) {
 const tasksList = ORPC.tasks.list.handler(async ({ context }) => {
   const userId = requireUser(context).id;
   const primaryLens = await context.entities.Lens.findMany({
-    where: { userId },
+    where: { userId, isIncluded: true },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
   });
   const lens = primaryLens[0];

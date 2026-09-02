@@ -2,8 +2,13 @@
  * What Now store — the S1 chooser + focus engine client (F9a pattern: a
  * class with `$state` fields + plain methods, exported as a singleton).
  * All server contact goes through the client in `../api`.
+ *
+ * The stage is scoped to the shell's active lens (lenses.activeLensId, first
+ * accessible lens as fallback) — the LensSwitcher's switch re-points the id
+ * and WhatNow.svelte's load effect re-runs off it.
  */
 import { client } from "../api";
+import { lenses } from "./lenses.svelte";
 import type {
   AppData,
   FocusedTask,
@@ -31,11 +36,18 @@ class WhatNowStore {
   loading = $state(false);
   error = $state<string | null>(null);
 
-  /** Active lens: remembered, else the first accessible one. */
-  lensId = $state<string | null>(null);
+  /** Active lens id: the switcher's choice, else the first accessible one. */
+  get lensId(): string | null {
+    const list = this.appData?.lenses ?? [];
+    const id = lenses.activeLensId;
+    if (id && list.some((l) => l.id === id)) return id;
+    // FREE default: the included lens, never a locked one (webapp parity).
+    return list.find((l) => l.isIncluded)?.id ?? list[0]?.id ?? null;
+  }
+
   get lens() {
-    const lenses = this.appData?.lenses ?? [];
-    return lenses.find((l) => l.id === this.lensId) ?? lenses[0] ?? null;
+    const lensesList = this.appData?.lenses ?? [];
+    return lensesList.find((l) => l.id === this.lensId) ?? lensesList[0] ?? null;
   }
 
   get todayCap(): number {
@@ -45,9 +57,6 @@ class WhatNowStore {
   async loadAppData() {
     try {
       this.appData = await client.tasks.appData({});
-      if (!this.lensId || !this.appData.lenses.some((l) => l.id === this.lensId)) {
-        this.lensId = this.appData.lenses[0]?.id ?? null;
-      }
     } catch (e) {
       this.error = e instanceof Error ? e.message : String(e);
     }
@@ -63,11 +72,13 @@ class WhatNowStore {
     try {
       if (pickedToken) {
         this.picked = await client.tasks.task({ id: pickedToken });
+        if (lensId !== this.lensId) return; // a switch superseded this load
         this.topTask = this.picked ? await client.tasks.topTask({ lensId }) : null;
       } else {
         this.picked = null;
         this.topTask = await client.tasks.topTask({ lensId });
       }
+      if (lensId !== this.lensId) return; // a switch superseded this load
       const task = this.picked ?? this.topTask;
       // Alternatives render only while deciding — a started task keeps the
       // stage to itself.

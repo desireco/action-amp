@@ -1,4 +1,6 @@
-/** The feedback cores (S17) — see ./operationsCore.ts for the port notes. */
+/** The feedback cores (S17) — see ./operationsCore.ts for the port notes.
+ *  `submitFeedbackCore` (the user-facing write) is the S-review port; see
+ *  ./submit.ts. */
 export {
   deleteFeedbackCore,
   FEEDBACK_SELECT,
@@ -12,3 +14,7 @@ export {
   type FeedbackSelect,
   type FeedbackStatus,
 } from "./operationsCore.js";
+export {
+  submitFeedbackCore,
+  type FeedbackSubmitEntities,
+} from "./submit.js";

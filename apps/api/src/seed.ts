@@ -15,7 +15,7 @@
  * defaults the seam normally supplies — uuid ids via `mintId()`, and
  * `updatedAt` on Task (no DB default; ordering-critical for the Logbook).
  */
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import {
   auth,
   authIdentity,
@@ -125,15 +125,22 @@ async function ensureSampleTasks(
   lensId: string,
 ): Promise<number> {
   let created = 0;
+  // RESET semantics for the sample rows: specs complete/promote them, so a
+  // find-or-create top-up would leave isDone=true rows behind and fail the
+  // next run. Deleting exactly the four sample descriptions (scoped to this
+  // user) keeps re-runs deterministic without touching other data.
+  await db
+    .delete(taskTable)
+    .where(
+      and(
+        eq(taskTable.userId, userId),
+        inArray(
+          taskTable.description,
+          SAMPLE_TASKS.map((sample) => sample.description),
+        ),
+      ),
+    );
   for (const sample of SAMPLE_TASKS) {
-    // Idempotency key is the sample's fixed description (the slug math below
-    // suffixes on collision, so the permalink is NOT stable across runs).
-    const existing = await db
-      .select({ id: taskTable.id })
-      .from(taskTable)
-      .where(and(eq(taskTable.userId, userId), eq(taskTable.description, sample.description)))
-      .limit(1);
-    if (existing[0]) continue;
 
     // The domain's own slug math (same helper the webapp create paths use) —
     // collision-retried against the Task(userId, permalink) unique.

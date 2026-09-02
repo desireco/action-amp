@@ -3,15 +3,14 @@
    * Inbox — the capture destination (S3). Untriaged items, newest first,
    * with parsed-token chips. Ported from webapp/src/inbox/InboxPage.tsx.
    * `?item=<id>` deep-links: the row scrolls into view + highlights.
-   * The capture overlay mounts here (globally it belongs in +layout.svelte —
-   * the integrator's wiring line; see docs/plans/slices/s2-s3-wiring.md).
+   * Capture opens through the global ⌘K overlay mounted by +layout.svelte
+   * (`?capture=1` and the empty-state CTA open the same one).
    */
   import { onMount } from "svelte";
   import { page } from "$app/state";
   import Chip from "../../../lib/components/Chip.svelte";
   import Icon from "../../../lib/components/Icon.svelte";
   import Linkify from "../../../lib/components/Linkify.svelte";
-  import CapturePopover from "../../../lib/components/CapturePopover.svelte";
   import CaptureFab from "../../../lib/components/CaptureFab.svelte";
   import { capture } from "../../../lib/stores/capture.svelte";
   import { inbox, type InboxItem } from "../../../lib/stores/inbox.svelte";
@@ -19,7 +18,6 @@
 
   import "../../../lib/styles/Chip.css";
   import "../../../lib/styles/Linkify.css";
-  import "../../../lib/styles/Overlays.css";
   import "../../../lib/styles/InboxPage.css";
 
   onMount(() => {
@@ -78,8 +76,6 @@
     }
   }
 </script>
-
-<svelte:window onkeydown={(e) => capture.onGlobalKey(e)} />
 
 <div class="aa-inbox">
   <header class="aa-inbox__header">
@@ -218,7 +214,4 @@
   </section>
 </div>
 
-{#if capture.open}
-  <CapturePopover />
-{/if}
 <CaptureFab />

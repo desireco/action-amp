@@ -5,7 +5,7 @@
    * with two kinds (project / simple list) + the ProGate panel on a 402.
    * Styles: ../styles/projects.css (shared planning-surface classes).
    */
-  import { onMount } from "svelte";
+  import { untrack } from "svelte";
   import "../../styles/projects.css";
   import {
     projects,
@@ -13,6 +13,7 @@
     type GateMessage,
     type ProjectSummary,
   } from "../../stores/projects.svelte";
+  import { lenses } from "../../stores/lenses.svelte";
   import ProgressCard from "./ProgressCard.svelte";
 
   let creating = $state(false);
@@ -31,8 +32,15 @@
     node.focus();
   }
 
-  onMount(() => {
-    void projects.load();
+  // The load effect tracks ONLY the shell's active lens: switching lenses in
+  // the switcher re-runs it, re-scoping the cards (projects.load mirrors the
+  // id). load() runs untracked — it reads+writes store state (busy, rows),
+  // which must not re-trigger the effect.
+  $effect(() => {
+    void lenses.activeLensId;
+    untrack(() => {
+      void projects.load();
+    });
   });
 
   const active = $derived(projects.projects.filter((p) => !p.isDone && !p.archivedAt));

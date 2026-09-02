@@ -25,6 +25,7 @@ import { onboardingProcedures } from "./procedures/onboarding.js"; // S13 (slice
 import { publicProcedures } from "./procedures/public.js"; // S15 (slice wiring — docs/plans/slices/s13-s15-wiring.md)
 import { billingProcedures } from "./procedures/billing.js"; // S16 (slice wiring — docs/plans/slices/s16-wiring.md)
 import { adminProcedures } from "./procedures/admin.js"; // S17 (slice wiring — docs/plans/slices/s17-wiring.md)
+import { feedbackProcedures } from "./procedures/feedback.js"; // S-review: feedback submit
 import { notificationsProcedures } from "./push.js"; // S12 (slice wiring — docs/plans/slices/s12-s14-wiring.md)
 
 export type { ApiContext } from "./context.js";
@@ -49,6 +50,6 @@ export const router = {
   public: publicProcedures, // S15 (slice wiring)
   billing: billingProcedures, // S16 (slice wiring)
   admin: adminProcedures, // S17 (slice wiring)
+  feedback: feedbackProcedures, // S-review: feedback submit
   notifications: notificationsProcedures, // S12 (slice wiring)
-  // Next surfaces compose here, one line each (inbox, projects, goals, …):
 };

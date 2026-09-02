@@ -76,12 +76,9 @@ export const completeOnboarding = oc
   .input(z.object({ skipGuidance: z.boolean().optional() }))
   .output(z.object({ hasSeenOnboarding: z.boolean() }));
 
-/** The gate read (useAuth parity shim — retired when S10's auth/me lands). */
-export const onboardingStatus = oc.output(OnboardingStatusSchema);
-
 /**
  * The onboarding namespace — paths:
- * POST /rpc/onboarding/{ensureOnboarded,setPreferredName,completeOnboarding,status}.
+ * POST /rpc/onboarding/{ensureOnboarded,setPreferredName,completeOnboarding}.
  * Composed into the tree by src/router.ts (the composition line lives in
  * docs/plans/slices/s13-s15-wiring.md).
  */
@@ -89,5 +86,4 @@ export const onboardingContract = {
   ensureOnboarded,
   setPreferredName,
   completeOnboarding,
-  status: onboardingStatus,
 };

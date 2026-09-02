@@ -8,20 +8,31 @@
   import ListEmpty from "../../../lib/components/ListEmpty.svelte";
   import CompletionCircle from "../../../lib/components/CompletionCircle.svelte";
   import RowEditor from "../../../lib/components/RowEditor.svelte";
+  import { untrack } from "svelte";
   import { lists } from "../../../lib/stores/lists.svelte";
+  import { lenses } from "../../../lib/stores/lenses.svelte";
   import { calendarDayDifference, currentPlainDate, plainDateFromValue } from "../../../lib/taskView";
   import type { TaskListRowDto } from "../../../lib/dto";
 
-  lists.loaded = false;
-  void lists.loadLensList("UPCOMING");
-  void lists.loadAppData();
+  // The load effect tracks ONLY the shell's active lens: switching lenses in
+  // the switcher re-runs it, re-scoping the bench (lists.scopedLensId mirrors
+  // it). The loads run untracked — they read+write other store state, which
+  // must not re-trigger the effect.
+  $effect(() => {
+    void lenses.activeLensId;
+    untrack(() => {
+      lists.loaded = false;
+      void lists.loadLensList("UPCOMING");
+      void lists.loadAppData();
+    });
+  });
 
   let activeTaskId = $state<string | null>(null);
   let isUnscheduling = $state(false);
 
   const tasks = $derived(lists.upcoming);
   const isLoading = $derived(lists.loading && !lists.loaded);
-  const lensId = $derived(lists.appData?.lenses[0]?.id ?? null);
+  const lensId = $derived(lists.scopedLensId);
 
   const groups = $derived.by(() => {
     const buckets: Record<string, TaskListRowDto[]> = {

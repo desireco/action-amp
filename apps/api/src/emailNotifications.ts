@@ -7,14 +7,19 @@
  * webapp/src/feedback/{operations.ts,config.ts} (parity checklist:
  * packages/contract/src/s14-emails-cron/README.md §2.2/§2.3).
  *
- * Call-site postures (deliberate, per the webapp — do not "fix"):
+ * Call-site postures when wired (deliberate, per the webapp — do not "fix"):
  *   - welcome  → best-effort; onboarding must never fail because its email
- *     did. Call site: **S13's `completeOnboarding`** (once per account, on
- *     onboarding completion) — wrap in try/catch and swallow.
+ *     did. Intended call site: S13's `completeOnboarding` (once per account,
+ *     on onboarding completion) — wrap in try/catch and swallow. STILL A
+ *     STUB: procedures/onboarding.ts leaves the core's `sendWelcomeEmail`
+ *     dep unset (its WIRING NOTE; s13-s15-wiring.md §3 wiring list), so no
+ *     welcome email fires yet — wire the dep, don't rebuild the builder.
  *   - feedback → production-only; the Feedback row is the source of truth.
- *     Call site: **S17's `submitFeedback` op** — call AFTER the row is saved
- *     and swallow (`sendFeedbackNotificationEmail` gates + returns null in
- *     non-production; still wrap for transport errors).
+ *     Intended call site: the user-facing feedback-submit op — call AFTER the
+ *     row is saved and swallow (`sendFeedbackNotificationEmail` gates +
+ *     returns null in non-production; still wrap for transport errors). The
+ *     new stack has no feedback-submit op yet (only the S17 admin triage),
+ *     so this sender is currently uncalled.
  */
 import { EMAIL_FROM } from "./email.js";
 
@@ -62,6 +67,21 @@ export async function sendEmail(email: OutgoingEmail): Promise<{ id: string }> {
 // title/preview/CTA + the fixed footer; minimal static HTML port, same
 // simplification S10 noted for the magic-login template)
 // ----------------------------------------------------------------
+
+/**
+ * HTML-escape user-derived interpolations. The webapp rendered through
+ * react-email, which auto-escapes; this static template must do it at the
+ * interpolation sites (the builders below) or user text would land in the
+ * HTML raw.
+ */
+function esc(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function transactionalHtml(parts: {
   title: string;
@@ -139,7 +159,7 @@ export function buildWelcomeEmail(
       title: "Your first task is waiting",
       preview: "Start with one task, not a list.",
       cta: { label: "Open ActionAmp", href: url },
-      bodyHtml: `<p style="margin:0 0 12px;">Hi ${firstName},</p>
+      bodyHtml: `<p style="margin:0 0 12px;">Hi ${esc(firstName)},</p>
 <p style="margin:0 0 12px;">Welcome to ActionAmp.</p>
 <p style="margin:0 0 12px;color:#5B656A;">The app is built around one loop:</p>
 <p style="margin:0 0 12px;">Capture what is on your mind.<br/>Triage it when you are ready.<br/>Start with one task, not a list.</p>
@@ -202,7 +222,9 @@ export function buildFeedbackEmail(feedback: FeedbackEmailInput): BuiltEmail {
     "",
     feedback.message,
   ];
-  const meta = `From: ${feedback.userName || "Unknown"}${feedback.userEmail ? ` <${feedback.userEmail}>` : ""} · ${feedback.route || "-"}${feedback.lensName ? ` · ${feedback.lensName}` : ""}`;
+  // Every user-derived field is escaped — userName/message are arbitrary
+  // user input headed for the admin's inbox.
+  const meta = `From: ${esc(feedback.userName || "Unknown")}${feedback.userEmail ? ` &lt;${esc(feedback.userEmail)}&gt;` : ""} · ${esc(feedback.route || "-")}${feedback.lensName ? ` · ${esc(feedback.lensName)}` : ""}`;
   return {
     to: getAdminEmail(),
     subject: "ActionAmp feedback",
@@ -210,7 +232,7 @@ export function buildFeedbackEmail(feedback: FeedbackEmailInput): BuiltEmail {
     html: transactionalHtml({
       title: "New ActionAmp feedback",
       bodyHtml: `<p style="margin:0 0 12px;color:#5B656A;">${meta}</p>
-<pre style="margin:0;white-space:pre-wrap;font-family:inherit;font-size:14px;">${feedback.message}</pre>`,
+<pre style="margin:0;white-space:pre-wrap;font-family:inherit;font-size:14px;">${esc(feedback.message)}</pre>`,
     }),
   };
 }

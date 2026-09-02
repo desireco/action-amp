@@ -436,12 +436,15 @@ export const listProject = oc
   .input(z.object({ permalink: z.string().min(1) }))
   .output(ListProjectSchema.nullable());
 
-/** The checklist body: open before checked, stable order. */
+/** The checklist body: open before checked, stable order.
+ *  402 when the checklist's project sits in a non-included lens. */
 export const simpleList = oc
+  .errors(ProGateErrorMap)
   .input(z.object({ projectId: z.string().min(1) }))
   .output(z.array(ListItemSchema));
 
 export const createListItem = oc
+  .errors(ProGateErrorMap)
   .input(
     z.object({
       projectId: z.string().min(1),
@@ -453,18 +456,22 @@ export const createListItem = oc
   .output(ListItemSchema);
 
 export const renameListItem = oc
+  .errors(ProGateErrorMap)
   .input(z.object({ id: z.string().min(1), text: z.string() }))
   .output(ListItemSchema);
 
 export const setListItemDone = oc
+  .errors(ProGateErrorMap)
   .input(z.object({ id: z.string().min(1), isDone: z.boolean() }))
   .output(ListItemSchema);
 
 export const deleteListItem = oc
+  .errors(ProGateErrorMap)
   .input(z.object({ id: z.string().min(1) }))
   .output(z.object({ ok: z.literal(true) }));
 
 export const clearCompletedListItems = oc
+  .errors(ProGateErrorMap)
   .input(z.object({ projectId: z.string().min(1) }))
   .output(z.object({ count: z.number().int() }));
 

@@ -5,7 +5,6 @@
   // / search and ⌘\ command palette work on every page; the switcher scopes
   // every lens-aware screen. Mount lines come from the slices' wiring notes
   // (docs/plans/slices/s9-wiring.md §2, s7-s11-wiring.md "shell mount").
-  import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import CapturePopover from "../lib/components/CapturePopover.svelte";
   import CommandPalette from "../lib/components/search/CommandPalette.svelte";
@@ -26,7 +25,6 @@
   // is S12 long-tail (s12-s14-wiring.md).
   import { registerServiceWorker } from "../lib/push";
   let { children } = $props();
-  const captureHostedByPage = $derived($page.url.pathname === "/do/inbox");
 
   let showGate = $state(false);
   $effect(() => {
@@ -113,7 +111,7 @@
     </div>
   </div>
 {/if}
-{#if capture.open && !captureHostedByPage}
+{#if capture.open}
   <CapturePopover />
 {/if}
 {#if search.open}

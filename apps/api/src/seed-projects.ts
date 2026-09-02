@@ -17,6 +17,8 @@
  */
 import { and, eq } from "drizzle-orm";
 import {
+  auth,
+  authIdentity,
   createDb,
   goal as goalTable,
   lens as lensTable,
@@ -64,7 +66,6 @@ const SEED_PROJECTS: SeedFixture[] = [
 ];
 
 async function findDevUserId(db: DomainDb): Promise<string | null> {
-  const { auth, authIdentity } = await import("@actionamp/domain/db");
   const rows = await db
     .select({ userId: auth.userId })
     .from(authIdentity)

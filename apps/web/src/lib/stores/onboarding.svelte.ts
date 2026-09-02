@@ -4,18 +4,30 @@
  * ops, and the once-per-session `ensureOnboarded` bootstrap (the webapp's
  * AppShell call, ref-guarded against StrictMode double-fire).
  *
- * The optimistic-completion rule is load-bearing (s13-onboarding/README.md
- * §5): the gate reads the same server flag `completeOnboarding` writes, so
- * `complete()` patches the cached status IN PLACE before navigating — the
- * webapp patched the ["auth/me"] query cache for the same reason — and the
- * caller must NEVER navigate on a failed completion (a false flag would
- * bounce the user straight back to /welcome: a redirect loop).
- *
- * `status` is the useAuth parity shim (see packages/contract/src/onboarding.ts):
- * S10's future auth/me supersedes the fields; the gate + carousel read here.
+ * The gate read is the auth `me` session (lib/auth.ts fetchAuthUser — the
+ * /api/auth/me REST twin), which carries hasSeenOnboarding + the name fields:
+ * S10's `me` superseded S13's onboarding.status shim, exactly as the contract
+ * note promised. The optimistic-completion rule is load-bearing
+ * (s13-onboarding/README.md §5): the gate reads the same server flag
+ * `completeOnboarding` writes, so `complete()` patches the cached status IN
+ * PLACE before navigating — the webapp patched the ["auth/me"] query cache for
+ * the same reason — and the caller must NEVER navigate on a failed completion
+ * (a false flag would bounce the user straight back to /welcome: a redirect
+ * loop).
  */
 import { client } from "../api";
-import type { OnboardingStage, OnboardingStatus } from "@actionamp/contract";
+import { fetchAuthUser } from "../auth";
+
+/** The gate's snapshot (the onboarding slice of the auth `me` read). */
+export interface OnboardingSnapshot {
+  hasSeenOnboarding: boolean;
+  /** Local-only mirror of User.onboardingStage (the optimistic patch target;
+   *  nothing reads it client-side — the server owns the real stage). */
+  onboardingStage: "SAMPLE_TASK" | "CAPTURE" | "TRIAGE" | "COMPLETE";
+  /** Drives the carousel's name step: shown only when blank. */
+  firstName: string;
+  preferredName: string | null;
+}
 
 interface OnboardingClientSlice {
   ensureOnboarded(): Promise<{ createdLenses: { name: string; id: string }[] }>;
@@ -25,7 +37,6 @@ interface OnboardingClientSlice {
   completeOnboarding(input: {
     skipGuidance?: boolean;
   }): Promise<{ hasSeenOnboarding: boolean }>;
-  status(): Promise<OnboardingStatus>;
 }
 
 const rpc = (client as unknown as { onboarding: OnboardingClientSlice })
@@ -33,11 +44,11 @@ const rpc = (client as unknown as { onboarding: OnboardingClientSlice })
 
 class OnboardingStore {
   /** The gate read — null until first loaded (resolving). */
-  status = $state<OnboardingStatus | null>(null);
-  /** True once a status read answered (success OR 401 — the gate must not
-   *  spin on unauthenticated visitors). */
+  status = $state<OnboardingSnapshot | null>(null);
+  /** True once a status read answered (success OR signed-out — the gate must
+   *  not spin on unauthenticated visitors). */
   resolved = $state(false);
-  /** True when a status read answered 401 (no session) — gate goes inert. */
+  /** True when the session read answered signed-out — gate goes inert. */
   unauthenticated = $state(false);
   completing = $state(false);
   completionError = $state(false);
@@ -50,11 +61,20 @@ class OnboardingStore {
     if (this.resolved) return Promise.resolve();
     this.#loading ??= (async () => {
       try {
-        this.status = await rpc.status();
-        this.unauthenticated = false;
+        const user = await fetchAuthUser();
+        this.status = user
+          ? {
+              hasSeenOnboarding: user.hasSeenOnboarding,
+              onboardingStage: "COMPLETE",
+              firstName: user.firstName,
+              preferredName: user.preferredName,
+            }
+          : null;
+        this.unauthenticated = !user;
       } catch {
-        // No session (401) is the expected "not applicable" case; treat any
-        // failure as "gate inert" — never bounce a visitor off a page.
+        // A failed read is treated as "gate inert" — never bounce a visitor
+        // off a page (the webapp's gate also rendered nothing without an
+        // auth answer).
         this.unauthenticated = true;
       } finally {
         this.resolved = true;
@@ -80,7 +100,7 @@ class OnboardingStore {
   }
 
   /** The name step. Save failures are swallowed — onboarding must never block
-   *  on a network hiccup; the name is re-editable in Settings. */
+   * on a network hiccup; the name is re-editable in Settings. */
   async setPreferredName(preferredName: string, fallback?: string): Promise<void> {
     const name = preferredName.trim() || fallback;
     if (!name) return;
@@ -110,9 +130,7 @@ class OnboardingStore {
     }
     if (this.status) {
       this.status.hasSeenOnboarding = true;
-      this.status.onboardingStage = (
-        skipGuidance ? "COMPLETE" : "SAMPLE_TASK"
-      ) as OnboardingStage;
+      this.status.onboardingStage = skipGuidance ? "COMPLETE" : "SAMPLE_TASK";
     } else {
       this.status = {
         hasSeenOnboarding: true,

@@ -1,9 +1,14 @@
 /**
  * Lists store — the S4 surfaces' data client (Today / Week / Done-today /
  * lens-scoped Upcoming + Someday), F9a class-singleton pattern.
+ *
+ * Lens scoping rides the shell's active lens (lenses.activeLensId, first lens
+ * as fallback): the LensSwitcher's switch re-points the id and the /do/upcoming
+ * + /do/someday screens re-run their loads off it.
  */
 import { client } from "../api";
 import type { TaskLensListRowDto, TaskListRowDto, AppData, TaskStatus } from "../dto";
+import { lenses } from "./lenses.svelte";
 
 /** Today-cap fallback while appData is loading (matches the server default). */
 export const TODAY_CAP_DEFAULT = 5;
@@ -22,6 +27,15 @@ class ListsStore {
 
   get todayCap(): number {
     return this.appData?.todayCap ?? TODAY_CAP_DEFAULT;
+  }
+
+  /** The lens the lens-scoped lists render: the shell's active lens, falling
+   *  back to the first accessible one while the switcher hasn't chosen. */
+  get scopedLensId(): string | null {
+    if (lenses.activeLensId) return lenses.activeLensId;
+    // FREE default: the included lens, never a locked one (webapp parity).
+    const list = this.appData?.lenses ?? [];
+    return list.find((l) => l.isIncluded)?.id ?? list[0]?.id ?? null;
   }
 
   get showLensPill(): boolean {
@@ -63,13 +77,15 @@ class ListsStore {
     this.error = null;
     try {
       if (!this.appData) await this.loadAppData();
-      const lensId = this.appData?.lenses[0]?.id;
+      const lensId = this.scopedLensId;
       if (!lensId) {
         if (status === "UPCOMING") this.upcoming = [];
         else this.someday = [];
         return;
       }
       const rows = await client.tasks.byLens({ lensId, status, isDone: false });
+      // A switch superseded this fetch: let the newer load win the write.
+      if (lensId !== this.scopedLensId) return;
       if (status === "UPCOMING") this.upcoming = rows;
       else this.someday = rows;
       this.loaded = true;
@@ -91,7 +107,7 @@ class ListsStore {
   }
 
   async unscheduleOverdue() {
-    const lensId = this.appData?.lenses[0]?.id;
+    const lensId = this.scopedLensId;
     if (!lensId) return;
     await client.tasks.unscheduleOverdue({ lensId });
     await this.refreshAll();

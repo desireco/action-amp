@@ -211,7 +211,7 @@ d("S18 CLI conformance — auth + transport contract", () => {
         id: "string",
         email: "string",
         fullName: "string",
-        plan: PRO_EMAIL === fx.pro.email ? "string" : "string",
+        plan: "string",
         isAdmin: "boolean",
       },
     });

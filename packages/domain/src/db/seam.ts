@@ -2340,6 +2340,35 @@ export interface FeedbackUpdateArgs {
   select?: FeedbackSelect;
 }
 
+/** S-review — the submit path's collision probe (`uniqueShortId`'s exists
+ *  predicate resolves by the `Feedback_shortId_key` unique). */
+export interface FeedbackFindUniqueArgs {
+  where: { shortId: string };
+  select?: FeedbackSelect;
+}
+
+/** S-review — the user-facing submit write. `id`/`createdAt`/`updatedAt` are
+ *  client-stamped below the seam (Prisma `@default(uuid())` + `@updatedAt`
+ *  parity); `status` defaults to OPEN in the column. */
+export interface FeedbackCreateArgs {
+  data: {
+    shortId: string;
+    message: string;
+    userId: string;
+    userName?: string | null;
+    userEmail?: string | null;
+    route?: string | null;
+    section?: string | null;
+    lensId?: string | null;
+    lensName?: string | null;
+    lensColor?: string | null;
+    userAgent?: string | null;
+    viewport?: string | null;
+    timezone?: string | null;
+  };
+  select?: FeedbackSelect;
+}
+
 /** The byStatus zero-fill source (getAdminStatsCore). */
 export interface FeedbackGroupByArgs {
   by: ["status"];
@@ -2354,8 +2383,10 @@ export interface FeedbackStatusCountRow {
 
 export interface FeedbackDelegate {
   count(args?: { where?: FeedbackWhereInput }): Promise<number>;
+  findUnique(args: FeedbackFindUniqueArgs): Promise<FeedbackRow | null>;
   findFirst(args: FeedbackFindFirstArgs): Promise<FeedbackRow | null>;
   findMany(args: FeedbackFindManyArgs): Promise<FeedbackRow[]>;
+  create(args: FeedbackCreateArgs): Promise<FeedbackRow>;
   update(args: FeedbackUpdateArgs): Promise<FeedbackRow>;
   groupBy(args: FeedbackGroupByArgs): Promise<FeedbackStatusCountRow[]>;
 }

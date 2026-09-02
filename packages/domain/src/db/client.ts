@@ -65,8 +65,10 @@ import type {
   AnalyticsSessionStatsDelegate,
   AnalyticsSessionWithEvents,
   FeedbackDelegate,
+  FeedbackCreateArgs,
   FeedbackFindFirstArgs,
   FeedbackFindManyArgs,
+  FeedbackFindUniqueArgs,
   FeedbackGroupByArgs,
   FeedbackRow,
   FeedbackSelect,
@@ -348,10 +350,20 @@ function startsWithCond(
     : sql`${column} LIKE ${pattern}`;
 }
 
+/** Equality honoring Prisma's `mode: "insensitive"` (the search's exact-title
+ *  pass): Prisma compiles insensitive `equals` case-insensitively, so a plain
+ *  `eq` would silently narrow the match to exact case. NULL semantics match
+ *  Prisma's `equals` too (NULL column → NULL → filtered). */
+function eqCond(column: Column, value: string, mode?: "insensitive"): SQL {
+  return mode === "insensitive"
+    ? sql`lower(${column}) = lower(${value})`
+    : eq(column, value);
+}
+
 function stringCond(column: Column, value: string | StringFilter): SQL {
   if (typeof value === "string") return eq(column, value);
   const parts: SQL[] = [];
-  if (value.equals !== undefined) parts.push(eq(column, value.equals));
+  if (value.equals !== undefined) parts.push(eqCond(column, value.equals, value.mode));
   if (value.contains !== undefined) parts.push(containsCond(column, value));
   if (value.startsWith !== undefined) parts.push(startsWithCond(column, value));
   if (value.in !== undefined) parts.push(inArray(column, value.in));
@@ -372,7 +384,7 @@ function nullableStringCond(
   if (typeof value === "string") return eq(column, value);
   const parts: SQL[] = [];
   if (value.equals !== undefined) {
-    parts.push(value.equals === null ? isNull(column) : eq(column, value.equals));
+    parts.push(value.equals === null ? isNull(column) : eqCond(column, value.equals, value.mode));
   }
   if (value.contains !== undefined) parts.push(containsCond(column, value));
   if (value.startsWith !== undefined) parts.push(startsWithCond(column, value));
@@ -534,7 +546,6 @@ function orderByCond(order: object, columns: OrderMap): SQL[] {
   return parts;
 }
 
-export 
 /** S9 — the optional inner conditions of the task-note EXISTS probe (values
  *  bound; identifiers raw — see taskWhereToSql's EXISTS SAFETY note). */
 function someConditions(some: NonNullable<TaskWhereInput["updates"]>["some"]): SQL {
@@ -2915,10 +2926,8 @@ function createUserDelegate(db: DomainDb): UserDelegate {
                 and(eq(sortCol, cursorValue), gt(user.id, args.cursor.id)),
               );
       whereSql = and(whereSql, tupleCond)!;
-      // The cursor row itself is excluded (Prisma's skip: 1 pairing).
-      if (args.skip === undefined) {
-        args = { ...args, skip: 1 };
-      }
+      // The cursor row itself is excluded by the strict tuple condition
+      // (Prisma's `cursor` + `skip: 1` pairing); no offset is needed.
     }
     const rows = await db
       .select()
@@ -3157,6 +3166,45 @@ function createFeedbackDelegate(db: DomainDb): FeedbackDelegate {
         .from(feedback)
         .where(feedbackWhereToSql(args?.where ?? {}));
       return rows[0]?.value ?? 0;
+    },
+    findUnique: async (args: FeedbackFindUniqueArgs): Promise<FeedbackRow | null> => {
+      // The submit path's shortId collision probe (the unique-index lookup).
+      const rows = await db
+        .select()
+        .from(feedback)
+        .where(eq(feedback.shortId, args.where.shortId))
+        .limit(1);
+      return rows[0] ? pruneFeedbackRow(rows[0], args.select) : null;
+    },
+    create: async (args: FeedbackCreateArgs): Promise<FeedbackRow> => {
+      // Client-side defaults below the seam: `id` (Prisma @default(uuid())
+      // parity) + `createdAt`/`updatedAt` (Prisma @default(now())/@updatedAt
+      // parity). `status` stays column-default OPEN.
+      const now = new Date();
+      const rows = await db
+        .insert(feedback)
+        .values({
+          id: mintId(),
+          createdAt: now,
+          updatedAt: now,
+          shortId: args.data.shortId,
+          message: args.data.message,
+          userId: args.data.userId,
+          userName: args.data.userName ?? null,
+          userEmail: args.data.userEmail ?? null,
+          route: args.data.route ?? null,
+          section: args.data.section ?? null,
+          lensId: args.data.lensId ?? null,
+          lensName: args.data.lensName ?? null,
+          lensColor: args.data.lensColor ?? null,
+          userAgent: args.data.userAgent ?? null,
+          viewport: args.data.viewport ?? null,
+          timezone: args.data.timezone ?? null,
+        })
+        .returning();
+      const row = rows[0];
+      assertFound(row, "Feedback");
+      return pruneFeedbackRow(row, args.select);
     },
     findFirst: async (args: FeedbackFindFirstArgs): Promise<FeedbackRow | null> => {
       const rows = await db

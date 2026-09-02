@@ -4,6 +4,7 @@
  */
 
 import { client } from "../api";
+import { lenses } from "./lenses.svelte";
 import { gateFromError, messageFromError, type GateMessage } from "./projects.svelte";
 
 /** Client slice for the goals procedures (see projects.svelte.ts note — the
@@ -69,18 +70,29 @@ class GoalsStore {
   error = $state<string | null>(null);
   busy = $state(false);
   loaded = $state(false);
+  /** The lens scope the current `goals` rows were loaded with (the switch
+   *  race guard). */
+  loadedLensId = $state<string | null>(null);
 
   async load() {
     if (this.busy) return;
     this.busy = true;
     this.error = null;
     try {
-      this.goals = await rpc.list({});
+      // Scoped to the shell's active lens (server falls back to the first
+      // lens); the screen re-runs load() when the switcher moves.
+      const lensId = lenses.activeLensId ?? undefined;
+      this.goals = await rpc.list({ lensId });
+      this.loadedLensId = lensId ?? null;
       this.loaded = true;
     } catch (e) {
       this.error = messageFromError(e);
     } finally {
       this.busy = false;
+      // The busy guard drops a reload that arrives mid-flight; if the lens
+      // moved during the fetch, converge on the new scope (at most once per
+      // switch).
+      if ((lenses.activeLensId ?? null) !== this.loadedLensId) void this.load();
     }
   }
 
@@ -110,7 +122,7 @@ class GoalsStore {
     { ok: true } | { ok: false; gate: GateMessage | null; message: string }
   > {
     try {
-      await rpc.create(input);
+      await rpc.create({ ...input, lensId: lenses.activeLensId ?? undefined });
       await this.load();
       return { ok: true };
     } catch (e) {

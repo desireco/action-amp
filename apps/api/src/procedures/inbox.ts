@@ -36,6 +36,7 @@ import {
 import { inboxItem, lens, listItem, project, resource, task, user } from "@actionamp/domain/db";
 import { ORPCError } from "@orpc/server";
 import { requireUser, type ApiContext } from "../context.js";
+import { isEntitled } from "@actionamp/domain/billing";
 
 const ORPC = implement(contractRouter).$context<ApiContext>();
 
@@ -340,8 +341,32 @@ const inboxProjectsForResolver = ORPC.inbox.projectsForResolver.handler(
  */
 const inboxLenses = ORPC.inbox.lenses.handler(async ({ context }) => {
   const acting = requireUser(context);
+  // Webapp parity: the Classify pills source is getAppData's ACCESSIBLE set —
+  // for a FREE user that's the included lens only (a locked Work lens never
+  // offered as a filing destination).
+  // Same db.select shape as prefs.getAccount (the seam's User guard-read
+  // select is intentionally narrow).
+  const userRows = await context.db
+    .select({
+      plan: user.plan,
+      planRenewsAt: user.planRenewsAt,
+      isAdmin: user.isAdmin,
+      manualAccessGrant: user.manualAccessGrant,
+    })
+    .from(user)
+    .where(eq(user.id, acting.id))
+    .limit(1);
+  const userRow = userRows[0];
+  const entitled =
+    !!userRow &&
+    isEntitled(
+      userRow.plan,
+      userRow.planRenewsAt,
+      userRow.isAdmin,
+      userRow.manualAccessGrant,
+    );
   const rows = await context.entities.Lens.findMany({
-    where: { userId: acting.id },
+    where: { userId: acting.id, ...(entitled ? {} : { isIncluded: true }) },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
   });
   return rows.map((l) => ({

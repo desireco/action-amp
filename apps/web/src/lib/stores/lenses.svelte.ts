@@ -124,7 +124,13 @@ class LensesStore {
   /** The active lens row (first lens until lenses load — webapp fallback). */
   get active(): AppData["lenses"][number] | null {
     const lenses = this.lenses;
-    return lenses.find((l) => l.id === this.activeLensId) ?? lenses[0] ?? null;
+    return (
+      lenses.find((l) => l.id === this.activeLensId) ??
+      // FREE default: the included lens, never a locked one (webapp parity).
+      lenses.find((l) => l.isIncluded) ??
+      lenses[0] ??
+      null
+    );
   }
 
   /** Entitlement per the Account read (lenses gate is whole-account Pro). */
@@ -138,7 +144,11 @@ class LensesStore {
       this.appData = await client.tasks.appData({});
       const stored = typeof localStorage !== "undefined" ? localStorage.getItem("aa-lens-id") : null;
       const valid = stored && this.appData.lenses.some((l) => l.id === stored);
-      this.activeLensId = valid ? stored : (this.appData.lenses[0]?.id ?? null);
+      this.activeLensId = valid
+        ? stored
+        : (this.appData.lenses.find((l) => l.isIncluded)?.id ??
+          this.appData.lenses[0]?.id ??
+          null);
       if (this.activeLensId !== stored) this.persistActive();
       this.mirrorLensColor();
     } catch (e) {

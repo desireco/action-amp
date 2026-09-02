@@ -1,39 +1,23 @@
 /**
- * S12/S14 — the push surface + the daily-reminder job (the app's only cron).
+ * S12/S14 — the push surface + the daily-reminder scheduler (the app's only cron).
  *
- * Three concerns live here:
+ * Two concerns live here:
  *
  * 1. `notificationsProcedures` — the oRPC fragment implementing
  *    `notificationsContract.savePushSubscription` over the domain core (the
  *    endpoint-keyed upsert). Composed by src/router.ts (one line; see
  *    docs/plans/slices/s12-s14-wiring.md).
  *
- * 2. `runDailyReminderPass` — the ported `sendDailyTodayReminder` job body
- *    (webapp/src/notifications/dailyReminderJob.ts). The DB + web-push work is
- *    injected as `ReminderDeps` so the loop's invariants are unit-testable:
- *      - VAPID gate: any key missing → `{sent: 0}` (no-op, no error).
- *      - Per user: invalid IANA zone → skip (never aborts the run); the local
- *        HH:mm must equal the saved time; already sent this LOCAL date → skip.
- *      - Top-3 open TODAY tasks (priority desc, order asc) + total count feed
- *        the domain's `buildReminderBody`; payload `{title:"ActionAmp",
- *        body, url:"/do/today"}` to every subscription via allSettled.
- *      - 404/410 rejections prune the subscription row; other rejections
- *        just don't count as sent.
- *      - Once-per-local-day stamp: the webapp stamped AFTER an attempted
- *        delivery (check-then-stamp, not atomic). The S14 port note requires
- *        multi-worker safety, so the stamp became an atomic conditional
- *        UPDATE **claimed before sending** (`claimDailyReminder`: sets
- *        `lastDailyReminderAt = now` only when no stamp exists at/after the
- *        user's local midnight, and only when the user has ≥1 subscription).
- *        Same observable contract — failures still consume the day, zero-
- *        subscription users are never stamped — but two workers can no longer
- *        double-send within the same minute.
- *
- * 3. `startDailyReminderScheduler` — the bun-native replacement for the
+ * 2. `startDailyReminderScheduler` — the bun-native replacement for the
  *    webapp's PgBoss `* * * * *` schedule: a 60s interval with an overlap
  *    guard, any user-chosen local HH:mm fires within a minute. Runs in every
  *    environment (skipped under NODE_ENV=test) — without VAPID env configured
  *    the pass no-ops at the gate, so dev stays quiet unless keys are set.
+ *
+ * The pass body itself (`runDailyReminderPass`, the ported
+ * `sendDailyTodayReminder` job) lives in src/reminder.ts — pure, injected
+ * effects, no contract imports, so vitest can unit-test the loop's invariants
+ * without dragging the contract chain in.
  */
 import { implement, ORPCError } from "@orpc/server";
 import {
@@ -54,14 +38,6 @@ import type { DomainDb } from "@actionamp/domain/db";
 import { pushSubscription, task, user } from "@actionamp/domain/db";
 import { requireUser, type ApiContext } from "./context.js";
 import { runDailyReminderPass, type ReminderDeps } from "./reminder.js";
-
-export { runDailyReminderPass } from "./reminder.js";
-export type {
-  ReminderDeps,
-  ReminderRunResult,
-  ReminderSubscriptionRow,
-  ReminderUserRow,
-} from "./reminder.js";
 
 const ORPC = implement(notificationsContract).$context<ApiContext>();
 
@@ -86,8 +62,6 @@ const savePushSubscription = ORPC.savePushSubscription.handler(
       }
       throw err;
     }
-    // NOTE — fragment implements FRAGMENT: the `notifications:` composition
-    // line for src/router.ts lives in docs/plans/slices/s12-s14-wiring.md.
     return { ok: true as const };
   },
 );
@@ -98,11 +72,7 @@ export const notificationsProcedures = {
 };
 
 // ----------------------------------------------------------------
-// 2. The daily-reminder job (ported sendDailyTodayReminder)
-// ----------------------------------------------------------------
-
-// ----------------------------------------------------------------
-// 3. The real deps (Drizzle + web-push) + the scheduler
+// 2. The real deps (Drizzle + web-push) + the scheduler
 // ----------------------------------------------------------------
 
 /** Build the production ReminderDeps over the domain's Drizzle handle. */

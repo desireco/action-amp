@@ -7,8 +7,9 @@
   redirected to /welcome exactly once per account. Scoped to the app home
   ONLY — never yanks an un-onboarded user off /founding-100, /welcome, or any
   future public path. Skips while the status read is still resolving, and
-  goes inert without a session (401) — the webapp gate ran under the auth
-  provider; here 401 is the "not applicable" answer.
+  goes inert when the session read answers signed-out (user: null) — the
+  webapp gate ran under the auth provider; here the null user is the "not
+  applicable" answer.
 
   WIRING (shared file, additive): mounted once from the root +layout.svelte —
   the webapp kept this logic in App.tsx, its equivalent spot. See

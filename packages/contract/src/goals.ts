@@ -96,8 +96,10 @@ export const createGoal = oc
   )
   .output(z.object({ id: z.string(), permalink: z.string(), name: z.string() }));
 
-/** Complete / reopen. Children untouched; idempotent; no cap check. */
+/** Complete / reopen. Children untouched; idempotent; no cap check.
+ *  402 when the goal's lens is a non-included one (the handler's lens gate). */
 export const setGoalDone = oc
+  .errors(ProGateErrorMap)
   .input(z.object({ id: z.string(), isDone: z.boolean() }))
   .output(z.object({ id: z.string() }));
 

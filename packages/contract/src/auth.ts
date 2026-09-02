@@ -27,6 +27,8 @@
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 
+import { ProGateErrorMap } from "./projects.js";
+
 export const requestMagicLogin = oc
   .input(z.object({ email: z.string(), returnTo: z.string().optional() }))
   .output(z.object({ sent: z.literal(true) }));
@@ -41,8 +43,10 @@ export const verifyMagicLogin = oc
   )
   .output(z.object({ sessionId: z.string() }));
 
-/** PAT mint for the CLI OAuth consent page. Plaintext shown exactly once. */
+/** PAT mint for the CLI OAuth consent page. Plaintext shown exactly once.
+ *  402 when a FREE user mints (the CLI keys its upsell off the declared code). */
 export const mintCliToken = oc
+  .errors(ProGateErrorMap)
   .input(z.object({ label: z.string().optional() }))
   .output(z.object({ token: z.string(), label: z.string() }));
 

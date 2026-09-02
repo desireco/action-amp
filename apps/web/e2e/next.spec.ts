@@ -24,7 +24,7 @@ const EMAIL = "s4-next@test.local";
 
 async function lensIdOf(page: import("@playwright/test").Page): Promise<string> {
   const appData = await apiPost<{ lenses: { id: string }[] }>(page, "/rpc/tasks/appData", {});
-  return appData.lenses[0]!.id;
+  return (appData.lenses.find((l) => l.isIncluded) ?? appData.lenses[0])!.id;
 }
 
 interface RowDto {

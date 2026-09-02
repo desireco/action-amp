@@ -3,11 +3,13 @@
   // list. Now/Next state machine: Start → focus; Pause / Defer / Done exit
   // Now. `pickedToken` (/do/today/:permalink or ?task=) puts a chosen
   // alternative on the stage; alternatives render only while deciding.
+  import { untrack } from "svelte";
   import { goto } from "$app/navigation";
   import WhatNowCard from "./WhatNowCard.svelte";
   import AlternativesRail from "./AlternativesRail.svelte";
   import SnoozeSheet from "./SnoozeSheet.svelte";
   import { whatNow } from "../stores/whatNow.svelte";
+  import { lenses } from "../stores/lenses.svelte";
   import {
     composeWhy,
     resolveGoal,
@@ -26,9 +28,17 @@
   let entered = $state(false);
 
   $effect(() => {
-    // Splash latch: the veil covers only the first data load.
-    void whatNow.load(pickedToken).then(() => {
-      entered = true;
+    // Splash latch: the veil covers only the first data load. Tracked: the
+    // shell's active lens (re-scopes the stage when the switcher moves) and
+    // the picked token (re-stages when the route points at another task).
+    // The load itself runs untracked — it reads+writes store state (appData,
+    // loading), which must not re-trigger the effect.
+    void lenses.activeLensId;
+    const token = pickedToken;
+    untrack(() => {
+      void whatNow.load(token).then(() => {
+        entered = true;
+      });
     });
   });
 

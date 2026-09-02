@@ -9,11 +9,14 @@
  * typed 401 first, and the guard() shim rethrows core Errors as
  * BAD_REQUEST so the webapp message reaches the client like HttpError(400).
  *
- * `status` is the useAuth parity shim (contract header + wiring doc): the
+ * `status` is the first-run read (contract header + wiring doc): the
  * webapp's first-run gate + carousel read hasSeenOnboarding/firstName off
- * useAuth(); the new stack has no auth/me until S10, so this read serves.
- * onboardingStage doesn't ride the session user, so it takes one by-PK read
- * (the same query useAuth made).
+ * useAuth(). S10's `auth.me` now carries `hasSeenOnboarding`, but NOT
+ * `onboardingStage` (it doesn't ride the session user), so this read remains
+ * the only stage source for the stage-aware capture/triage guidance — it is
+ * NOT retired by S10; retirement would mean folding the stage into `me`
+ * (a contract change, out of this fragment's scope). Either way it takes one
+ * by-PK read (the same query useAuth made).
  *
  * WIRING NOTE (S12's email seam): completeOnboarding's `sendWelcomeEmail` dep
  * is a stub — the welcome email fires here when S12's email-send seam lands
@@ -35,6 +38,7 @@ import {
   setPreferredNameCore,
 } from "@actionamp/domain/onboarding";
 import { requireUser, type ApiContext } from "../context.js";
+import { sendWelcomeEmail } from "../emailNotifications.js";
 import { recordPublicAnalyticsEvent } from "./publicCore.js";
 
 const ORPC = implement(onboardingContract).$context<ApiContext>();
@@ -95,10 +99,20 @@ const completeOnboarding = ORPC.completeOnboarding.handler(
           skipGuidance: input?.skipGuidance,
         },
         {
-          // WIRING NOTE: welcome email fires here when S12's email seam lands
-          // (buildWelcomeEmail port + transport). Best-effort by design —
-          // completion must never fail because mail is down.
-          // sendWelcomeEmail: (u) => sendWelcomeEmailViaSeam(u),
+          // S12's email seam — best-effort by design (the core swallows dep
+          // errors; completion never fails because mail is down). Localhost
+          // skips the send per email.ts's transport gate.
+          sendWelcomeEmail: async (u) => {
+          // PAT callers can lack an address — no email, no send. Localhost
+          // skips the transport per email.ts's gate; the core swallows dep
+          // errors either way (completion never fails because mail is down).
+          if (!user.email) return;
+          await sendWelcomeEmail({
+            email: user.email,
+            firstName: u.firstName,
+            preferredName: u.preferredName,
+          });
+        },
           recordOnboardingCompleted: (userId) =>
             // Fire-and-forget inside the core (errors swallowed). Same
             // payload the webapp's recordAnalyticsEventCore received.
@@ -116,26 +130,6 @@ const completeOnboarding = ORPC.completeOnboarding.handler(
     }),
 );
 
-const status = ORPC.status.handler(async ({ context }) => {
-  const user = requireUser(context);
-  // One by-PK read for everything (onboardingStage doesn't ride the session
-  // user; PAT callers have a narrower ActingUser than sessions).
-  const row = await context.entities.User.findUnique({
-    where: { id: user.id },
-    select: {
-      onboardingStage: true,
-      hasSeenOnboarding: true,
-      firstName: true,
-      preferredName: true,
-    },
-  });
-  return {
-    hasSeenOnboarding: row?.hasSeenOnboarding ?? false,
-    onboardingStage: row?.onboardingStage ?? "COMPLETE",
-    firstName: row?.firstName ?? "",
-    preferredName: row?.preferredName ?? null,
-  };
-});
 
 /** The implemented onboarding fragment — composed by src/router.ts (one line;
  *  see docs/plans/slices/s13-s15-wiring.md). */
@@ -143,5 +137,4 @@ export const onboardingProcedures = {
   ensureOnboarded,
   setPreferredName,
   completeOnboarding,
-  status,
 };

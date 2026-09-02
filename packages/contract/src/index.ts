@@ -181,3 +181,16 @@ export type {
   FunnelStats,
 } from "./admin.js";
 export { contractRouter } from "./router.js";
+// S-review (feedback submit) fragment — additive export of the slice's own
+// schemas only; the composition line lives in src/router.ts (both routers,
+// marked `S-review: feedback submit`).
+export {
+  feedbackContract,
+  FeedbackLensSchema,
+  FeedbackSectionSchema,
+  FeedbackSubmitErrorMap,
+} from "./feedback.js";
+export type {
+  FeedbackLens,
+  FeedbackSection,
+} from "./feedback.js";

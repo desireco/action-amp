@@ -12,6 +12,10 @@
    *   Live chips  → the SAME NL parser the server persists with (client copy)
    */
   import { tick } from "svelte";
+  // The overlay styles ship with the component (webapp's ui/Overlays.css
+  // classes): the popover mounts from +layout.svelte on every page, so it
+  // cannot rely on a per-page import.
+  import "../styles/Overlays.css";
   import Chip from "./Chip.svelte";
   import { capture } from "../stores/capture.svelte";
   import { inbox } from "../stores/inbox.svelte";

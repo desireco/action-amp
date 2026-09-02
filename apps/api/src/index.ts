@@ -153,8 +153,6 @@ app.use("/rpc/*", async (c, next) => {
   await next();
 });
 
-// TODO(F8+): REST routes under /api/* (app.route("/api", apiRoutes)).
-
 // S13/S15 slice wiring — the public REST fragment: GET /founding-100/status
 // (Cache-Control + actionamp.com CORS), GET / (marketing redirect), and
 // POST /api/analytics/event (FunnelTracker ingest). See
@@ -371,9 +369,7 @@ app.get("/api/auth/me", async (c) => {
     return c.json({ user: null });
   }
   // Re-hydrate the full shape (PAT callers resolve a narrower acting user).
-  const hydrated = await drizzleSessionAuthPort(db).findUserWithEmail(
-    resolution.user.id,
-  );
+  const hydrated = await sessionPort.findUserWithEmail(resolution.user.id);
   if (!hydrated) return c.json({ user: null });
   // Sliding-cookie parity: the webapp re-stamped a fresh 30-day maxAge on
   // every authenticated 2xx (sessionCookie.ts stampSessionCookie).

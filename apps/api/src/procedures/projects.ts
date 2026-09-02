@@ -92,7 +92,7 @@ function lensGuard(context: ApiContext, user: GuardUser) {
  *  picker is a later slice). Mirrors the tasks.list resolution. */
 async function primaryLensId(context: ApiContext, userId: string): Promise<string | null> {
   const lenses = await context.entities.Lens.findMany({
-    where: { userId },
+    where: { userId, isIncluded: true },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
   });
   return lenses[0]?.id ?? null;
@@ -341,8 +341,13 @@ const updateTask = ORPC.updateTask.handler(async ({ context, input }) =>
 );
 
 /**
- * Move-picker feed (temporary stand-in for the lenses contract — see
- * s5-s6-wiring.md): the OTHER lenses a project could move to.
+ * Move-picker feed: the OTHER lenses a project could move to. STAND-IN STATUS
+ * (S-review): S11 landed — `lenses.list` carries everything this returns plus
+ * more, so the data is covered. The path stays because apps/web's typed
+ * client (built from this contract) still calls `projects.moveTargets`, and
+ * both the contract fragment and apps/web are outside this layer's scope;
+ * retiring it means a coordinated contract + web change (drop the op, point
+ * ProjectDetailView at lenses.list, filter out the current lens).
  */
 const moveTargets = ORPC.moveTargets.handler(async ({ context, input }) =>
   guard(async () => {
@@ -365,8 +370,11 @@ const moveTargets = ORPC.moveTargets.handler(async ({ context, input }) =>
 );
 
 /**
- * Horizon/status write (temporary stand-in for the tasks-mutations
- * namespace — the domain core is already ported; see s5-s6-wiring.md).
+ * Horizon/status write. STAND-IN STATUS (S-review): S4 landed —
+ * `tasks.updateStatus` is the general surface (it also takes scheduledDate/
+ * snoozedUntil and returns the full row). The path stays only because
+ * apps/web's typed client still calls `projects.setTaskStatus`; retiring it
+ * means a coordinated contract + web change (same as moveTargets above).
  */
 const setTaskStatus = ORPC.setTaskStatus.handler(async ({ context, input }) =>
   guard(async () => {
@@ -383,12 +391,15 @@ const setTaskStatus = ORPC.setTaskStatus.handler(async ({ context, input }) =>
 const startTask = ORPC.startTask.handler(async ({ context, input }) =>
   guard(async () => {
     const user = requireUser(context);
+    // The user's focusSessionMinutes (25 default) — the tasks.start precedent
+    // (the original stand-in hardcoded 25 pending the S11 prefs hydration).
+    const prefsRow = await context.entities.User.findUnique({
+      where: { id: user.id },
+    });
     const row = await startTaskCore(context.entities, {
       userId: user.id,
       id: input.id,
-      // The webapp op reads user.focusSessionMinutes (25 default); the acting
-      // user doesn't carry it yet, so the default applies (S11 refines).
-      focusSessionMinutes: 25,
+      focusSessionMinutes: prefsRow?.focusSessionMinutes === 45 ? 45 : 25,
     });
     return { id: row.id, startedAt: row.startedAt ? row.startedAt.toISOString() : null };
   }),
