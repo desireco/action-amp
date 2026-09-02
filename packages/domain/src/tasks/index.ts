@@ -4,3 +4,9 @@
 // reaching into the package's internal paths.
 export * from './operationsCore.js';
 export * from './activePool.js';
+// S1+S4 batch — additive barrel lines for the new task cores (frozen core
+// files untouched; this file only aggregates).
+export * from './taskExtrasCore.js';
+export * from './appDataCore.js';
+export * from './extrasEntities.js';
+export * from './focusedTask.js';

@@ -1,21 +1,20 @@
 <script lang="ts">
-  import { createKeyHandler } from "../lib/keyboard";
-  import { shell } from "../lib/stores/shell.svelte";
-  import ModeScreen from "../lib/components/ModeScreen.svelte";
-  import ModeIndicator from "../lib/components/ModeIndicator.svelte";
-  import KeysFooter from "../lib/components/KeysFooter.svelte";
+  // The home screen — What Now (`/do`). One task card, not a list. A
+  // `?task=<token>` query rides the picked-task path: it redirects to
+  // /do/today/:permalink (replace) exactly like the webapp route.
+  import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
+  import WhatNow from "../lib/components/WhatNow.svelte";
 
-  // One global key handler wired to the shell store — the pattern every
-  // later mode extends (mode-specific handlers layer on top of this one).
-  const onKey = createKeyHandler({
-    setMode: (mode) => shell.setMode(mode),
-    reset: () => shell.reset(),
-    toggleKeysHint: () => shell.toggleKeysHint(),
+  const taskToken = $derived(($page.url.searchParams.get("task") ?? "") || null);
+
+  $effect(() => {
+    if (taskToken) {
+      void goto(`/do/today/${encodeURIComponent(taskToken)}`, { replaceState: true });
+    }
   });
 </script>
 
-<svelte:window onkeydown={onKey} />
-
-<ModeScreen />
-<KeysFooter />
-<ModeIndicator />
+{#if !taskToken}
+  <WhatNow />
+{/if}
