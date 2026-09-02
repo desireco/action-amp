@@ -47,12 +47,11 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | Workspace deps for new stack | ✅ `ff6339b` | hono+orpc (api), svelte 5 kit (web), drizzle 0.45 (domain), zod (contract); bun isolated linker; root scripts → bun filters |
 | P0 parity pre-studies (all slices) | ✅ 2026-09-01 | 15 note sets in `packages/contract/src/s*/README.md` — routes, ops, keys, edge cases, e2e inventory per surface (feeds every slice's P0) |
 | Auth pre-study (feeds F10) | ✅ 2026-09-01 | `docs/plans/auth-compatibility-notes.md` — cookie `wasp_session`, sessions unhashed (exact-match `Session.id`), PAT = SHA-256 hex of `aa_…`, expiry side effects to replicate |
-| F4 domain pilot (tasks core port) | ▶ F4b running | F4a ✅ `2bfc80c` (reviewed): introspected schema in `packages/domain/src/db` + defaults audit `docs/plans/introspection-report.md`; zero drift vs schema.prisma; bytea customType is the one sanctioned hand-edit |
-| F8a api shell | ✅ `6eac663` | reviewed PASS — 8ms hot reload verified, JSON logs with reqIds, `/health` + `/ready`; F8b note: drop `src/env.d.ts` when @types/bun lands |
-| F9a+F9b web shell + mock client | ✅ `193a462` | both reviewed PASS — runes stores + keyboard shell, tokens verbatim, oRPC mock client with one-line F8b swap points; zero imports outside `@actionamp/contract` |
+| F4 domain pilot | ✅ COMPLETE | F4a `2bfc80c` · F4b `29911c5` · F4c `cbd8c54` — all reviewed; seam + port recipe in `packages/domain/README.md`; tests 54/54 under `bunx --bun vitest` (Node lacks Temporal) |
+| F8 api skeleton | ✅ COMPLETE | F8a `6eac663` · F8b `7dcc577` — oRPC at /rpc over domain cores, contract typed client live in Svelte, /ready db ping, localhost-only seed; error-log gap in oRPC 500s flagged for F10 |
+| F9a+F9b web shell + mock client | ✅ `193a462` | both reviewed PASS — now on the REAL client since F8b |
 | P0 parity pre-studies (all slices) | ✅ `8730024` | cross-reviewed: ~200 claims fact-checked vs sources, 2 fixes |
-| F8b oRPC router | ☐ after F4b | swap points ready (`router-type.ts:45`, `api.ts` createClient) |
-| F10 auth validation | ☐ after F8b | spec ready (auth-compatibility-notes) |
+| F10 auth validation | ▶ next | spec ready (auth-compatibility-notes); F8b handoff: context {db,entities}, replace resolveSeedUserId stub, 401 shape proven |
 | F11 e2e harness | ☐ after F8b+F9b+F10c | — |
 | Remaining S/V goals | ☐ | P0 notes ready for every slice; port order per goal set |
 
