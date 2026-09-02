@@ -3,8 +3,9 @@
 > The one place for the roadmap, current status, and how work is organized
 > for moving ActionAmp off Wasp. Everything else is an artifact linked below;
 > this page is the cockpit. **Any agent that lands work updates §Status
-> before finishing its turn.** Last updated: 2026-09-01 (goal charter added:
-> `migration-goal.md`; next: F4 domain pilot by ZCode).
+> before finishing its turn.** Last updated: 2026-09-01 (subagent parallel
+> execution: all 15 P0 parity pre-studies + auth pre-study landed; F4a/F8a/F9a
+> in flight under cross-review).
 
 ## Artifacts — what owns what
 
@@ -42,14 +43,21 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | F2/F3 (staging, introspection) | ✗ dropped | 2026-09-01: Jake — local only, no multi-environment machinery |
 | **Process change** | — | 2026-09-01: ZCode executes everything locally; no agent ferrying; Jake reviews once at the end |
 | Ports (all local) | — | API `:8080` · Svelte `:5174` (5173 belongs to another project) · Imba `:3131` |
-| **Framework decision** | ✅ 2026-09-01 | Jake: **Svelte + Hono + oRPC + Drizzle + Bun** — spike report read; F5–F7 resolved |
-| F4 domain pilot (tasks core port) | ▶ next | ZCode, local — the pattern-setter |
-| F8 api skeleton | ☐ after F4 | Hono + oRPC, `bun --hot` dev loop |
-| F9 web shell | ☐ after F8 | seeds from `spikes/link-garden/web-svelte/` |
-| Remaining S/V goals | ☐ | per goal set, updated with spike learnings |
+| **Framework decision** | ✅ 2026-09-01 | Jake: **Svelte + Hono + oRPC + Drizzle + Bun** — spike report read; F5–F7 resolved (Jake gate #2 done) |
+| Workspace deps for new stack | ✅ `ff6339b` | hono+orpc (api), svelte 5 kit (web), drizzle 0.45 (domain), zod (contract); bun isolated linker; root scripts → bun filters |
+| P0 parity pre-studies (all slices) | ✅ 2026-09-01 | 15 note sets in `packages/contract/src/s*/README.md` — routes, ops, keys, edge cases, e2e inventory per surface (feeds every slice's P0) |
+| Auth pre-study (feeds F10) | ✅ 2026-09-01 | `docs/plans/auth-compatibility-notes.md` — cookie `wasp_session`, sessions unhashed (exact-match `Session.id`), PAT = SHA-256 hex of `aa_…`, expiry side effects to replicate |
+| F4 domain pilot (tasks core port) | ▶ F4a running | drizzle pull snapshot landed in `packages/domain/drizzle/`; introspection report next; F4b/c queue behind it |
+| F8a api shell | ▶ landed, in review | Hono app + JSON logs + `/health` + `/ready` in `apps/api/src/index.ts`; reviewer + commit pending |
+| F9a web shell | ▶ landed, in review | SvelteKit SPA shell in `apps/web/` (runes stores, keyboard module, tokens.css, dev proxy 5174→8080); reviewer + commit pending |
+| F9b mock client + stores | ▶ dispatched | contract client behind mock transport; first store + screen against it |
+| F8b oRPC router | ☐ after F4b | router over domain; `tasks.list`; Router type → `packages/contract` |
+| F10 auth validation | ☐ after F8b | spec ready (auth-compatibility-notes) |
+| F11 e2e harness | ☐ after F8b+F9b+F10c | — |
+| Remaining S/V goals | ☐ | P0 notes ready for every slice; port order per goal set |
 
-Blockers: none. Open decisions for Jake: none yet (first gate is the spike
-report).
+Blockers: none. Jake gates still open: V2 rehearsal attendance, V4 switch-day
+presence, V5 deletion approval. (Spike gate and F7 framework gate are done.)
 
 State marks: ☐ not started · ▶ in progress (add agent + worktree) · ✅ done
 (add commit).
