@@ -71,7 +71,7 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | Wave-4 integration | ✅ | 75/75 e2e twice (billing spec live on test-mode Stripe env); api 209/209; domain 454/454 |
 | **BUILD COMPLETE — all S-goals landed** | ✅ | every slice P0→P5 with cross-review; suite: 454 domain + 209 api + 75 e2e |
 | V3 switch kit | ✅ 658edd2 | runbook + rollback one-pager + announcement + safe-by-default scripts; reviewed pass. Jake fills {{…}} placeholders at V2 |
-| V1 parity run | ▶ BLOCKED on the prod dump | restore a fresh prod pg_dump locally, then full suites green twice — **needs Jake/Railway** |
+| V1 parity run | ✅ `2ba2ec1` | prod dump pulled from Railway (pg_dump via the public TCP proxy; 5 users/83 tasks/33 sessions) → restored locally as `actionamp_v1`; domain 454/454 · api 209/209 · e2e 75/75 **twice consecutively**; one fixture-overfitted growth-retention assertion relaxed (data-driven value, envelope still pinned) |
 | V2 rehearsal → V3 switch kit | ☐ after V1 | runbook dry run + flip/verify scripts, announcement draft, rollback one-pager |
 | V4 switch day | ☐ | WITH JAKE (quiet hour) — gate #4. V3 kit ready (658edd2) |
 | V5 cleanup · V6 Neon (optional) | ☐ | after V4 + 2–4 wks; Jake approves deletion (gates #5) |
