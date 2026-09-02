@@ -1,0 +1,1884 @@
+@import "../tokens.css";
+
+/* ============================================================
+   Shared overlay shell — backdrop + card motion.
+   Used by ShortcutCheatsheet, CapturePopover, FocusMode.
+   See docs/modal-approach.md.
+   ============================================================ */
+.aa-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: oklch(0.2 0.02 230 / 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--aa-space-lg);
+  animation: aa-overlay-fade 0.15s var(--aa-ease-out) both;
+  /* Scroll lock is applied via JS (body overflow hidden) in the provider. */
+}
+
+@keyframes aa-overlay-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.aa-overlay-card {
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  box-shadow: var(--aa-shadow-lg);
+  width: 100%;
+  animation: aa-overlay-rise 0.25s var(--aa-ease-out-quart) both;
+}
+
+@keyframes aa-overlay-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.aa-overlay-card--sm {
+  max-width: 420px;
+}
+
+/* Close button (top-right of overlay cards) */
+.aa-overlay__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--aa-radius-sm);
+  background: none;
+  border: none;
+  color: var(--aa-text-3);
+  cursor: pointer;
+  transition:
+    background 0.12s var(--aa-ease-out),
+    color 0.12s var(--aa-ease-out);
+}
+
+.aa-overlay__close:hover {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text);
+}
+
+.aa-overlay__close:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Confirm dialog (overlay pattern #04 — small centered)
+   ============================================================ */
+.aa-confirm {
+  padding: var(--aa-space-md) var(--aa-space-lg);
+}
+
+.aa-confirm__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--aa-space-sm);
+}
+
+.aa-confirm__title {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-bold);
+  color: var(--aa-text);
+  margin: 0;
+}
+
+.aa-confirm__body {
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-normal);
+  color: var(--aa-text-2);
+  margin: var(--aa-space-xs) 0 var(--aa-space-lg);
+}
+
+/* The session-time summary that precedes the Outcome field on the completion
+   sheet. Quiet — it's context, not the focus. */
+.aa-confirm__meta {
+  margin: 0 0 var(--aa-space-sm);
+}
+
+/* Outcome capture at completion (task-fields §F). Lives inside the completion
+   sheet so the note is tied to the act of finishing. The label carries an
+   "optional" hint so the field never feels mandatory. */
+.aa-confirm__outcome {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aa-confirm__outcome-label {
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-2);
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-xs);
+}
+
+.aa-confirm__outcome-hint {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-regular);
+  color: var(--aa-text-4);
+}
+
+.aa-confirm__outcome-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 4.5em;
+  padding: var(--aa-space-sm);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  font: inherit;
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-normal);
+}
+
+.aa-confirm__outcome-input:focus {
+  outline: none;
+  border-color: var(--aa-teal);
+  box-shadow: var(--aa-focus-ring);
+}
+
+.aa-confirm__outcome-input::placeholder {
+  color: var(--aa-text-4);
+}
+
+/* Discoverability hint for the ⌘↵ complete chord. Quiet — sits under the field
+   so keyboard users find the binding without a help overlay. */
+.aa-confirm__outcome-kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  margin-top: 2px;
+}
+
+.aa-confirm__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--aa-space-sm);
+}
+
+/* ============================================================
+   Feedback dialog
+   ============================================================ */
+.aa-feedback {
+  padding: var(--aa-space-md) var(--aa-space-lg);
+}
+
+.aa-feedback__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-feedback__title {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-bold);
+  color: var(--aa-text);
+  margin: 0;
+}
+
+.aa-feedback__sub {
+  font-size: var(--aa-text-sm);
+  line-height: var(--aa-leading-snug);
+  color: var(--aa-text-3);
+  margin: 4px 0 0;
+}
+
+.aa-feedback__textarea {
+  width: 100%;
+  min-height: 130px;
+  resize: vertical;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-bg-soft);
+  color: var(--aa-text);
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-snug);
+  padding: var(--aa-space-sm);
+}
+
+.aa-feedback__textarea:focus {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+  border-color: transparent;
+}
+
+.aa-feedback__textarea::placeholder {
+  color: var(--aa-text-4);
+}
+
+.aa-feedback__error {
+  margin: var(--aa-space-xs) 0 0;
+  color: var(--aa-rose-text);
+  font-size: var(--aa-text-sm);
+}
+
+.aa-feedback__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  margin-top: var(--aa-space-md);
+}
+
+.aa-feedback__count {
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-sm);
+}
+
+.aa-feedback__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--aa-space-sm);
+}
+
+/* ============================================================
+   Shortcut cheatsheet
+   ============================================================ */
+.aa-cheatsheet {
+  max-width: 480px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.aa-cheatsheet__head {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  padding: var(--aa-space-md) var(--aa-space-lg);
+  border-bottom: 1px solid var(--aa-border);
+}
+
+.aa-cheatsheet__mark {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--aa-radius-sm);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--aa-surface);
+  flex-shrink: 0;
+}
+
+.aa-cheatsheet__heading {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+}
+
+.aa-cheatsheet__title {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-bold);
+  color: var(--aa-text);
+  margin: 0;
+}
+
+.aa-cheatsheet__sub {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  margin: 0;
+}
+
+.aa-cheatsheet__sections {
+  overflow-y: auto;
+  padding: var(--aa-space-xs) 0;
+}
+
+.aa-cheatsheet__section {
+  padding: var(--aa-space-xs) 0;
+}
+
+.aa-cheatsheet__section + .aa-cheatsheet__section {
+  border-top: 1px solid var(--aa-border);
+}
+
+.aa-cheatsheet__section-title {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  margin: 0;
+  padding: var(--aa-space-sm) var(--aa-space-lg) var(--aa-space-xs);
+}
+
+.aa-cheatsheet__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aa-cheatsheet__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-lg);
+  padding: 7px var(--aa-space-lg);
+}
+
+.aa-cheatsheet__row:hover {
+  background: var(--aa-surface-muted);
+}
+
+.aa-cheatsheet__label {
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-2);
+}
+
+.aa-cheatsheet__note {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-4);
+  font-weight: var(--aa-weight-regular);
+}
+
+.aa-cheatsheet__keys {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.aa-cheatsheet__kbd {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-2);
+  padding: 2px 7px;
+  border-radius: var(--aa-radius-xs);
+  border: 1px solid var(--aa-border);
+  line-height: var(--aa-leading-snug);
+}
+
+.aa-cheatsheet__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  padding: var(--aa-space-sm) var(--aa-space-lg);
+  border-top: 1px solid var(--aa-border);
+  background: var(--aa-bg-soft);
+}
+
+.aa-cheatsheet__tip {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-4);
+  font-style: italic;
+  line-height: var(--aa-leading-snug);
+  flex: 1;
+}
+
+.aa-cheatsheet__done {
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-surface);
+  background: var(--aa-teal-cta);
+  padding: 7px 16px;
+  border-radius: var(--aa-radius-sm);
+  box-shadow: 0 2px 8px var(--aa-teal-tint-shadow);
+  cursor: pointer;
+  transition:
+    background 0.12s var(--aa-ease-out),
+    transform 0.1s var(--aa-ease-out);
+  flex-shrink: 0;
+}
+
+.aa-cheatsheet__done:hover {
+  background: var(--aa-teal-cta-hover);
+}
+
+.aa-cheatsheet__done:active {
+  transform: scale(0.97);
+}
+
+/* ============================================================
+   Capture popover
+   ============================================================ */
+.aa-capture {
+  max-width: 480px;
+  padding: var(--aa-space-md);
+  position: relative; /* anchors the absolutely-positioned mention dropdown */
+}
+
+.aa-capture__head {
+  display: flex;
+  align-items: flex-start; /* pin mark + close to top so they don't drift when the textarea grows */
+  gap: var(--aa-space-sm);
+}
+
+.aa-capture__mark {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--aa-radius-sm);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--aa-surface);
+  flex-shrink: 0;
+}
+
+.aa-capture__textarea {
+  flex: 1;
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-md);
+  line-height: var(--aa-leading-normal);
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--aa-text);
+  padding: var(--aa-space-sm) 0;
+  resize: none;
+  overflow-y: auto;
+  min-height: 1.5rem; /* one line */
+  max-height: 6rem; /* ~4 lines; JS clamps too */
+}
+
+.aa-capture__textarea::placeholder {
+  color: var(--aa-text-4);
+}
+
+/* Rapid-fire captured stack (top of the palette, newest first) */
+.aa-capture__captured {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 0 var(--aa-space-sm);
+  margin-bottom: var(--aa-space-sm);
+  border-bottom: 1px solid var(--aa-border);
+}
+
+.aa-capture__captured-item {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  padding: 5px var(--aa-space-sm);
+  background: var(--aa-teal-soft);
+  border-radius: var(--aa-radius-sm);
+  animation: aa-capture-slidein 0.2s var(--aa-ease-out) both;
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-2);
+}
+
+@keyframes aa-capture-slidein {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.aa-capture__captured-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  color: var(--aa-surface);
+  flex-shrink: 0;
+}
+
+.aa-capture__captured-check svg {
+  width: 9px;
+  height: 9px;
+}
+
+.aa-capture__captured-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aa-capture__captured-chips {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.aa-capture__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-sm);
+  padding-top: var(--aa-space-sm);
+}
+
+.aa-capture__close {
+  flex-shrink: 0;
+  margin-top: 2px; /* optical align with the mark */
+}
+
+.aa-capture__save {
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-surface);
+  background: var(--aa-teal-cta);
+  padding: 7px 18px;
+  border-radius: var(--aa-radius-sm);
+  border: none;
+  box-shadow: 0 2px 8px var(--aa-teal-tint-shadow);
+  cursor: pointer;
+  transition:
+    background 0.12s var(--aa-ease-out),
+    transform 0.1s var(--aa-ease-out);
+  flex-shrink: 0;
+}
+
+.aa-capture__save:hover:not(:disabled) {
+  background: var(--aa-teal-cta-hover);
+}
+
+.aa-capture__save:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.aa-capture__save:disabled {
+  opacity: 0.5;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* Live preview chips (parsed tokens) */
+.aa-capture__preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: var(--aa-space-sm);
+  border-top: 1px solid var(--aa-border);
+  margin-top: var(--aa-space-sm);
+}
+
+/* Pending image attachments (paste / drop). Sits between the head and the
+   parse preview — same separated-section treatment as the preview chips. */
+.aa-capture__attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-xs);
+  padding-top: var(--aa-space-sm);
+  border-top: 1px solid var(--aa-border);
+  margin-top: var(--aa-space-sm);
+}
+
+.aa-capture__attachment {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--aa-radius-sm);
+  border: 1px solid var(--aa-border);
+  background: var(--aa-surface-muted);
+  overflow: hidden;
+}
+
+.aa-capture__attachment img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Remove × — the shared close control shrunk onto the thumb, on a scrim
+   so it reads over any image. No token exists for scrims; this is the
+   one place a raw color is allowed to appear. */
+.aa-capture__attachment-remove {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 18px;
+  height: 18px;
+  color: #fff;
+  background: oklch(0.2 0.02 230 / 0.7);
+}
+
+.aa-capture__attachment-remove svg {
+  width: 10px;
+  height: 10px;
+}
+
+.aa-capture__attachment-remove:hover {
+  color: #fff;
+  background: oklch(0.2 0.02 230 / 0.9);
+}
+
+/* File drag in progress — the card is the drop zone; teal = system state. */
+.aa-capture.is-dragover {
+  border-color: var(--aa-teal);
+  box-shadow: var(--aa-shadow-lg), var(--aa-focus-ring);
+}
+
+/* Inline `#`-mention dropdown — absolutely positioned at the caret inside the
+   textarea. Anchored to .aa-capture__head (which is position: relative) so it
+   overlays the textarea cleanly. */
+.aa-capture__mention {
+  position: absolute;
+  z-index: 10;
+  min-width: 200px;
+  max-width: 280px;
+  margin-top: 2px;
+  border: 1px solid var(--aa-border);
+  border-radius: 8px;
+  background: var(--aa-surface);
+  box-shadow: var(--aa-shadow-md);
+  overflow: hidden;
+  padding: 4px;
+}
+.aa-capture__mention-item {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  gap: var(--aa-space-xs);
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text);
+  width: 100%;
+}
+.aa-capture__mention-mark {
+  flex-shrink: 0;
+  color: var(--aa-text-4);
+  width: 1em;
+  text-align: center;
+}
+.aa-capture__mention-name {
+  flex: 1;
+}
+.aa-capture__mention-lens {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  flex-shrink: 0;
+}
+.aa-capture__mention-item:hover,
+.aa-capture__mention-item.active {
+  background: var(--aa-surface-muted);
+}
+.aa-capture__mention-item.active {
+  color: var(--aa-teal-cta);
+}
+
+.aa-capture__hint {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+}
+
+.aa-capture__kbd {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-3);
+  padding: 1px 5px;
+  border-radius: var(--aa-radius-xs);
+  border: 1px solid var(--aa-border);
+}
+
+/* Inline error (replaces the hint line when a submit fails). Rose is the
+   system's rare-emphasis accent — used only for the rare negative case, so
+   it carries meaning instead of alarming. No red dot, no exclamation. */
+.aa-capture__error {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-rose-text);
+}
+
+/* ============================================================
+   Focus mode (full-screen single task) — Variant F
+   The task is the protagonist; the clock is chrome.
+   See docs/mockups/focus-f-final.html and
+   docs/specs/focus-engine-v2.md § "RESOLVED 2026-07-05".
+   ============================================================ */
+.aa-focus {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--aa-bg);
+  display: flex;
+  flex-direction: column;
+  animation: aa-overlay-fade 0.25s var(--aa-ease-out) both;
+}
+
+/* ---- Top bar: margin clock (left) + session footprint + close (right) ---- */
+.aa-focus__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--aa-space-lg) var(--aa-space-xl);
+}
+
+/* Margin clock — informational elapsed time. Reads like a wall clock:
+   present, glanceable, never between the eye and the title. */
+.aa-clock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1;
+}
+.aa-clock__row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.aa-clock__num {
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--aa-text-2);
+  letter-spacing: -0.02em;
+}
+.aa-clock__unit {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--aa-text-4);
+}
+/* Total across all sessions — the honest record. Smaller and dimmer than
+   the session number so the live segment stays the protagonist. Hidden
+   until totalMs > 0 (no "total 0 min" on a fresh start). */
+.aa-clock__total {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  margin-top: 2px;
+}
+.aa-clock__label {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--aa-text-4);
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.aa-clock__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  /* Gentle pulse — the only motion at rest. Sub-perceptible. */
+  animation: aa-focus-breathe-dot 4s var(--aa-ease-out-quart) infinite;
+}
+@keyframes aa-focus-breathe-dot {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.aa-focus__top-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--aa-space-sm);
+}
+.aa-session {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-4);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.aa-session__sep {
+  color: var(--aa-border-strong);
+  margin: 0 6px;
+}
+
+/* Focus-specific close button. Distinct from .aa-overlay__close (which is
+   shared with other overlays) so we can place it in the top-right cluster
+   without affecting ConfirmDialog/BottomSheet. */
+.aa-focus__close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--aa-text-3);
+  border-radius: var(--aa-radius-full);
+  cursor: pointer;
+  transition:
+    background var(--aa-dur-base) var(--aa-ease-out),
+    color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-focus__close:hover {
+  background: var(--aa-surface);
+  color: var(--aa-text);
+}
+
+/* ---- Body: hero circle → title → meta ---- */
+.aa-focus__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--aa-space-xl) var(--aa-space-2xl);
+  text-align: center;
+  gap: var(--aa-space-xl);
+}
+
+/* Hero presence: breathing halo behind the completion circle. */
+.aa-presence {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+}
+.aa-presence__halo {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--aa-radius-full);
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--aa-teal-tint-shadow) 0%,
+    transparent 70%
+  );
+  animation: aa-focus-breathe-halo 5s var(--aa-ease-out-quart) infinite;
+  pointer-events: none;
+}
+@keyframes aa-focus-breathe-halo {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.9;
+  }
+}
+/* When the task is completed locally, hold the halo steady at full. */
+.aa-focus--done .aa-presence__halo {
+  animation: none;
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.aa-presence__circle {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+}
+/* The CompletionCircle component is 44px at `lg`; the hero scale-up is local
+   so we don't touch CompletionCircle's API. The check is sized at 55% of
+   the button, so it scales with this override automatically. */
+.aa-presence__circle .aa-cc {
+  width: 72px;
+  height: 72px;
+  border-width: 3px;
+}
+
+/* ---- Hold-to-complete fill ring (touch) ----
+   While the user presses and holds the hero circle, a teal arc sweeps around
+   it. It uses a conic-gradient driven by a CSS custom property (--aa-hold-pct)
+   that animates 0 → 1 over HOLD_MS (kept in sync with the JS timer). When it
+   reaches 100% the onAnimationEnd handler (or the JS timer, whichever first)
+   opens the confirm dialog. Releasing early removes the class and the ring
+   vanishes. Gated to coarse pointers so mouse/trackpad never show it. */
+.aa-presence__circle--holding::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: var(--aa-radius-full);
+  /* Two stops: filled arc up to --aa-hold-pct, then transparent. The 0.001
+     gap avoids a hairline seam at the sweep front. */
+  background: conic-gradient(
+    var(--aa-teal) calc(var(--aa-hold-pct, 0) * 360deg),
+    transparent calc(var(--aa-hold-pct, 0) * 360deg + 0.001deg)
+  );
+  -webkit-mask: radial-gradient(circle, transparent 58%, black 60%);
+  mask: radial-gradient(circle, transparent 58%, black 60%);
+  animation: aa-hold-fill 600ms linear forwards;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes aa-hold-fill {
+  from {
+    --aa-hold-pct: 0;
+  }
+  to {
+    --aa-hold-pct: 1;
+  }
+}
+/* CSS custom properties aren't animatable without @property registration in
+   all engines; register so the conic-gradient sweep is smooth (not stepped). */
+@property --aa-hold-pct {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+.aa-title {
+  font-size: clamp(1.625rem, 3.2vw, 2.125rem);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: -0.015em;
+  line-height: 1.18;
+  color: var(--aa-text);
+  margin: 0;
+  max-width: 620px;
+}
+.aa-focus--done .aa-title {
+  color: var(--aa-text-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--aa-text-4);
+}
+
+.aa-meta {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  margin: calc(-1 * var(--aa-space-md)) 0 0;
+}
+
+/* ---- Goal rationale (focus-goal-context) — quiet, below the title ----
+   Question: small muted supporting text. Answer: normal body weight, below
+   title prominence. Attribution: quiet violet (the existing Project/Goal
+   identity hue — never amber). No card, icon, link, or focus target. */
+.aa-focus__goal {
+  max-width: 620px;
+  margin: var(--aa-space-sm) 0 var(--aa-space-lg);
+  text-align: left;
+}
+.aa-focus__goal-question {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  margin: 0 0 var(--aa-space-xs);
+}
+.aa-focus__goal-answer {
+  font-size: var(--aa-text-md);
+  color: var(--aa-text-2);
+  line-height: 1.45;
+  margin: 0;
+}
+.aa-focus__goal-attribution {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-violet-text);
+  margin: var(--aa-space-xs) 0 0;
+}
+
+/* ---- Durable content (working notes) — editable, separate from thread ---- */
+.aa-focus__notes {
+  width: 100%;
+  max-width: 620px;
+  text-align: left;
+}
+.aa-focus__notes-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  margin-bottom: var(--aa-space-xs);
+}
+.aa-focus__notes-label {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  color: var(--aa-text-4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.aa-focus__notes-action {
+  border: 0;
+  background: transparent;
+  color: var(--aa-teal-cta);
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  padding: var(--aa-space-2xs) 0;
+  cursor: pointer;
+}
+.aa-focus__notes-action:hover {
+  color: var(--aa-teal-cta-hover);
+}
+.aa-focus__content {
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-2);
+  line-height: var(--aa-leading-normal);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.aa-focus__content-empty {
+  margin: 0;
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-4);
+  font-style: italic;
+}
+.aa-focus__notes-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+}
+.aa-focus__content-editor {
+  width: 100%;
+  min-height: 7rem;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  font: inherit;
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-normal);
+  color: var(--aa-text-2);
+  resize: vertical;
+}
+.aa-focus__content-editor:focus {
+  outline: none;
+  border-color: var(--aa-accent);
+}
+.aa-focus__notes-actions {
+  display: flex;
+  gap: var(--aa-space-sm);
+}
+
+/* ---- Progress thread (append-only notes + system events) ----
+   Newest first via flex-direction: column-reverse on the <ol>. The source
+   order stays chronological so screen readers and DOM tests read oldest →
+   newest; visually, the newest sits closest to the title. */
+.aa-thread {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 620px;
+  text-align: left;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0;
+}
+.aa-thread__empty {
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-sm);
+  text-align: center;
+  padding: var(--aa-space-xs) 0;
+}
+.aa-thread__note {
+  padding: var(--aa-space-sm) 0;
+  border-bottom: 1px solid var(--aa-border);
+  animation: aa-thread-in 0.3s var(--aa-ease-out-quart);
+}
+.aa-thread__note:last-child {
+  border-bottom: none;
+}
+@keyframes aa-thread-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.aa-thread__note-body {
+  font-size: var(--aa-text-sm);
+  line-height: var(--aa-leading-normal);
+  color: var(--aa-text-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.aa-thread__event {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  padding: var(--aa-space-xs) 0;
+  border-bottom: 1px solid var(--aa-border);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-4);
+}
+.aa-thread__event:last-child {
+  border-bottom: none;
+}
+.aa-thread__event-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  flex-shrink: 0;
+}
+.aa-thread__event-text {
+  color: var(--aa-teal-cta);
+  font-weight: var(--aa-weight-semibold);
+}
+.aa-thread__time {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.aa-thread__event .aa-thread__time {
+  margin-top: 0;
+  margin-left: auto;
+}
+
+/* ---- Bottom rail: subtle keyboard map ---- */
+.aa-focus__rail {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--aa-space-lg);
+  padding: var(--aa-space-md) var(--aa-space-xl) var(--aa-space-lg);
+  opacity: 0.55;
+  transition: opacity var(--aa-dur-slow) var(--aa-ease-out);
+}
+.aa-focus__rail:hover {
+  opacity: 1;
+}
+.aa-hint {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-hint:hover {
+  color: var(--aa-text-2);
+}
+
+/* ---- Mobile action bar (Pause + Not now) ----
+   Replaces the keyboard rail on touch — the rail's kbd hints are meaningless
+   without a keyboard. Hidden by default; shown only at ≤768px (see media query
+   below). Two full-width buttons in a row, anchored in the thumb zone with
+   safe-area insets. Desktop never sees it. */
+.aa-focus__actions {
+  display: none;
+}
+.aa-focus__action-btn {
+  flex: 1;
+}
+/* Pale-teal (the system's "pale blue") treatment for the action buttons.
+   Overrides the shared Button variants locally so the bar reads as a calm,
+   unified pair — without touching Button.css (used everywhere else). Pause is
+   the stronger tint (primary exit action); Not now is the lighter ghost. */
+.aa-focus__action-btn.aa-btn--secondary {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal);
+}
+.aa-focus__action-btn.aa-btn--secondary:hover:not(:disabled) {
+  background: var(--aa-teal-soft-strong);
+  color: var(--aa-teal-cta-hover);
+}
+.aa-focus__action-btn.aa-btn--ghost {
+  background: transparent;
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal-soft-strong);
+}
+.aa-focus__action-btn.aa-btn--ghost:hover:not(:disabled) {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta-hover);
+}
+
+/* Shared kbd chip — used in hints, composer foot, empty state. */
+.aa-kbd {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  padding: 1px 5px;
+  border-radius: var(--aa-radius-sm);
+  color: var(--aa-text-3);
+}
+
+/* ============================================================
+   Focus mode — centered focus session (2026-08-07)
+   These later rules intentionally supersede Variant F's margin-clock layout
+   above while its overlay primitives remain shared by older components.
+   ============================================================ */
+.aa-focus {
+  overflow: hidden;
+}
+
+.aa-focus .aa-focus__close {
+  position: fixed;
+  top: var(--aa-space-lg);
+  right: var(--aa-space-xl);
+  z-index: 2;
+  color: var(--aa-text-4);
+}
+
+.aa-focus .aa-focus__body {
+  justify-content: flex-start;
+  gap: 0;
+  overflow-y: auto;
+  min-height: 0;
+  padding: clamp(96px, 14.5vh, 138px) var(--aa-space-xl) var(--aa-space-2xl);
+}
+
+.aa-focus-timer {
+  position: relative;
+  width: clamp(260px, 40vh, 320px);
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  margin-bottom: clamp(30px, 4vh, 42px);
+  transition:
+    filter var(--aa-dur-base) var(--aa-ease-out),
+    opacity var(--aa-dur-base) var(--aa-ease-out);
+}
+
+/* Wrap-up steps out of the countdown — the ring dims while the watch holds. */
+.aa-focus-timer--faded {
+  filter: saturate(0.55);
+  opacity: 0.72;
+}
+
+.aa-focus-timer__glow {
+  position: absolute;
+  inset: 17%;
+  border-radius: var(--aa-radius-full);
+  box-shadow: 0 0 76px 34px var(--aa-teal-tint-shadow);
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+.aa-focus-timer__ring {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.aa-focus-timer__ring .CircularProgressbar {
+  overflow: visible;
+}
+
+.aa-focus-timer__ring .CircularProgressbar-path {
+  filter: drop-shadow(0 0 5px var(--aa-teal-tint-shadow));
+}
+
+.aa-focus-timer__time {
+  display: block;
+  color: var(--aa-text);
+  font-size: clamp(3.35rem, 7vh, 4.75rem);
+  font-weight: var(--aa-weight-medium);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.aa-focus-timer__label {
+  margin-top: var(--aa-space-sm);
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-base);
+  line-height: 1;
+}
+
+.aa-focus-timer__cycles {
+  min-height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 10px;
+  color: var(--aa-teal-cta);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.aa-focus-timer__cycles + .aa-focus-timer__control {
+  margin-top: var(--aa-space-md);
+}
+
+.aa-focus-timer__control {
+  width: 58px;
+  height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--aa-space-lg);
+  border: 1px solid var(--aa-teal);
+  border-radius: var(--aa-radius-full);
+  background: color-mix(in srgb, var(--aa-bg) 82%, transparent);
+  color: var(--aa-teal-cta);
+  cursor: pointer;
+  transition:
+    background var(--aa-dur-base) var(--aa-ease-out),
+    color var(--aa-dur-base) var(--aa-ease-out),
+    transform var(--aa-dur-base) var(--aa-ease-out);
+}
+
+.aa-focus-timer__control:hover {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta-hover);
+  transform: scale(1.04);
+}
+
+.aa-focus-timer__control:focus-visible,
+.aa-focus-action:focus-visible,
+.aa-focus__details-empty:focus-visible,
+.aa-focus__details-edit:focus-visible,
+.aa-focus__not-now:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 3px;
+}
+
+.aa-focus .aa-title {
+  max-width: 760px;
+  font-size: clamp(1.75rem, 2.6vw, 1.95rem);
+  line-height: 1.15;
+  margin: 0;
+}
+
+.aa-focus__clarification {
+  width: min(680px, 100%);
+  margin-top: var(--aa-space-md);
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-lg);
+  line-height: var(--aa-leading-normal);
+}
+
+.aa-focus__clarification .aa-focus__content {
+  color: inherit;
+  font-size: inherit;
+  text-align: center;
+}
+
+.aa-focus__details-empty,
+.aa-focus__details-edit {
+  border: 0;
+  background: transparent;
+  color: var(--aa-text-3);
+  font: inherit;
+  cursor: pointer;
+}
+
+.aa-focus__details-empty {
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+}
+
+.aa-focus__details-empty:hover,
+.aa-focus__details-edit:hover {
+  color: var(--aa-teal-cta);
+}
+
+.aa-focus__details-edit {
+  display: block;
+  margin: var(--aa-space-xs) auto 0;
+  padding: var(--aa-space-2xs);
+  font-size: var(--aa-text-xs);
+}
+
+.aa-focus__clarification .aa-focus__notes-editor {
+  width: min(620px, 100%);
+  margin: 0 auto;
+  text-align: left;
+}
+
+.aa-focus__primary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(var(--aa-space-lg), 2.5vw, 36px);
+  margin-top: clamp(28px, 4vh, 42px);
+}
+
+.aa-focus-action:not(.aa-btn) {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--aa-space-xs);
+  padding: 0 var(--aa-space-sm);
+  border: 0;
+  background: transparent;
+  color: var(--aa-text-3);
+  font: inherit;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
+  cursor: pointer;
+  transition: color var(--aa-dur-base) var(--aa-ease-out);
+}
+
+.aa-focus-action--note:not(.aa-btn) {
+  color: var(--aa-teal-cta);
+}
+
+.aa-focus-action:not(.aa-btn):hover {
+  color: var(--aa-text);
+}
+
+.aa-focus-action--note:not(.aa-btn):hover {
+  color: var(--aa-teal-cta-hover);
+}
+
+.aa-focus-action--complete.aa-btn {
+  min-width: 156px;
+  min-height: 48px;
+  box-shadow: 0 8px 28px var(--aa-teal-tint-shadow);
+}
+
+.aa-focus-composer {
+  width: min(620px, 100%);
+  margin-top: clamp(28px, 4vh, 42px);
+  padding-top: var(--aa-space-lg);
+  border-top: 1px solid var(--aa-border);
+  text-align: left;
+  animation: aa-focus-composer-in 0.2s var(--aa-ease-out-quart);
+}
+
+@keyframes aa-focus-composer-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aa-focus-composer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-focus-composer__title {
+  margin: 0;
+  color: var(--aa-text);
+  font-size: var(--aa-text-lg);
+  font-weight: var(--aa-weight-semibold);
+  line-height: var(--aa-leading-tight);
+}
+
+.aa-focus-composer__prompt {
+  margin: 6px 0 0;
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  line-height: var(--aa-leading-normal);
+}
+
+.aa-focus-composer__optional {
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-xs);
+}
+
+.aa-focus-composer__dismiss {
+  flex: 0 0 auto;
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.aa-focus-composer__text {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  padding: 12px 14px;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface-raised);
+  color: var(--aa-text);
+  font: inherit;
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-normal);
+  outline: none;
+  transition:
+    border-color var(--aa-dur-base) var(--aa-ease-out),
+    box-shadow var(--aa-dur-base) var(--aa-ease-out);
+}
+
+.aa-focus-composer__text:focus {
+  border-color: var(--aa-teal);
+  box-shadow: var(--aa-focus-ring);
+}
+
+.aa-focus-composer__text::placeholder {
+  color: var(--aa-text-4);
+}
+
+.aa-focus-composer__error {
+  margin: var(--aa-space-xs) 0 0;
+  color: var(--aa-rose-text);
+  font-size: var(--aa-text-sm);
+}
+
+.aa-focus-composer__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  margin-top: var(--aa-space-sm);
+}
+
+.aa-focus-composer__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-xs);
+}
+
+.aa-focus-composer__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+}
+
+.aa-focus-composer + .aa-thread {
+  margin-top: var(--aa-space-lg);
+}
+
+.aa-focus .aa-thread {
+  width: min(620px, 100%);
+  margin-top: clamp(28px, 4vh, 42px);
+}
+
+.aa-focus .aa-thread__empty {
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-base);
+}
+
+.aa-focus__not-now {
+  display: none;
+  margin-top: var(--aa-space-md);
+  padding: var(--aa-space-xs);
+  border: 0;
+  background: transparent;
+  color: var(--aa-text-4);
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .aa-focus .aa-focus__close {
+    top: var(--aa-space-md);
+    right: var(--aa-space-md);
+  }
+
+  .aa-focus .aa-focus__body {
+    padding: 54px var(--aa-space-md)
+      max(var(--aa-space-xl), env(safe-area-inset-bottom));
+  }
+
+  .aa-focus-timer {
+    width: min(62vw, 244px);
+    margin-bottom: var(--aa-space-xl);
+  }
+
+  .aa-focus-timer__time {
+    font-size: clamp(3rem, 14vw, 4rem);
+  }
+
+  .aa-focus__primary-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: var(--aa-space-sm);
+    margin-top: var(--aa-space-xl);
+  }
+
+  .aa-focus-action:not(.aa-btn) {
+    flex: 1 1 42%;
+  }
+
+  .aa-focus-action--complete.aa-btn {
+    order: 3;
+    flex: 1 0 100%;
+    width: 100%;
+  }
+
+  .aa-focus-composer {
+    padding-top: var(--aa-space-md);
+  }
+
+  .aa-focus-composer__foot {
+    align-items: flex-end;
+    flex-direction: column;
+  }
+
+  .aa-focus-composer__actions {
+    width: 100%;
+  }
+
+  .aa-focus-composer__actions .aa-btn {
+    flex: 1;
+  }
+
+  .aa-focus__not-now {
+    display: inline-flex;
+  }
+}
+
+/* ============================================================
+   Bottom sheet (overlay pattern #03)
+   ============================================================ */
+.aa-bottom-sheet-overlay {
+  align-items: flex-end; /* anchor to bottom edge */
+  padding: 0;
+}
+
+.aa-bottom-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-bottom: none;
+  border-radius: var(--aa-radius-xl) var(--aa-radius-xl) 0 0;
+  box-shadow: var(--aa-shadow-lg);
+  padding: var(--aa-space-md) var(--aa-space-lg) var(--aa-space-xl);
+  animation: aa-sheet-up 0.3s var(--aa-ease-out-quart) both;
+}
+
+@keyframes aa-sheet-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.aa-bottom-sheet__grabber {
+  width: 36px;
+  height: 4px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-border-strong);
+  margin: 0 auto var(--aa-space-md);
+}
+
+.aa-bottom-sheet__title {
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  margin: 0 0 var(--aa-space-md);
+  text-align: center;
+}
+
+.aa-bottom-sheet__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+}
+
+/* ---- Snooze options ---- */
+.aa-snooze__task {
+  text-align: center;
+  margin: 0 0 var(--aa-space-sm);
+}
+
+.aa-snooze__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aa-snooze__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  width: 100%;
+  padding: 12px 14px;
+  background: none;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  font-family: var(--aa-font);
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 6px;
+  min-height: 44px; /* tap target */
+  transition:
+    background 0.12s var(--aa-ease-out),
+    border-color 0.12s var(--aa-ease-out);
+}
+
+.aa-snooze__option:hover:not(:disabled) {
+  background: var(--aa-surface-muted);
+  border-color: var(--aa-border-strong);
+}
+
+.aa-snooze__option:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-snooze__option:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.aa-snooze__option-label {
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+}
+
+.aa-snooze__option-hint {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+}
+
+/* ---- Resource picker ---- */
+.aa-picker__body {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.aa-picker__group {
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-picker__group-label {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  margin: 0 0 var(--aa-space-xs);
+}
+
+.aa-picker__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  width: 100%;
+  padding: 11px 14px;
+  background: none;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  font-family: var(--aa-font);
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 6px;
+  min-height: 44px;
+  transition:
+    background 0.12s var(--aa-ease-out),
+    border-color 0.12s var(--aa-ease-out);
+}
+
+.aa-picker__option:hover:not(:disabled) {
+  background: var(--aa-surface-muted);
+  border-color: var(--aa-border-strong);
+}
+
+.aa-picker__option:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-picker__option-label {
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text);
+}
+
+.aa-picker__option-hint {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  font-style: italic;
+}
+
+/* ---- Responsive: swap keyboard rail → mobile action bar on touch ----
+   The rail's kbd hints (n / ↵ / p) are meaningless without a keyboard. On
+   mobile, hide the rail and show the tappable action bar (Pause + Not now)
+   instead. Also add bottom padding to the body so the centered circle/title
+   aren't hidden behind the bar. */
+@media (max-width: 768px) {
+  .aa-focus__rail {
+    display: none;
+  }
+  .aa-focus__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--aa-space-sm);
+    padding: var(--aa-space-sm)
+      max(var(--aa-space-md), env(safe-area-inset-right))
+      max(var(--aa-space-md), env(safe-area-inset-bottom))
+      max(var(--aa-space-md), env(safe-area-inset-left));
+  }
+  /* Reclaim a little body space so centered content sits above the bar. */
+  .aa-focus__body {
+    padding-bottom: var(--aa-space-lg);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-overlay,
+  .aa-overlay-card,
+  .aa-focus,
+  .aa-focus-composer,
+  .aa-thread__note,
+  .aa-presence__halo,
+  .aa-presence__circle--holding::before,
+  .aa-clock__dot {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .aa-focus-timer__ring .CircularProgressbar-path,
+  .aa-focus-timer__control,
+  .aa-focus-action,
+  .aa-focus-composer__text {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,716 @@
+// Ported from webapp/src/inbox/operations.test.ts (S3) — assertions unchanged
+// where they concern the core; the Wasp-wrapper concerns (auth check,
+// onboarding advance) moved to the API layer and their tests moved with it.
+// The entitlement guards arrive as injected callbacks here, so the guard tests
+// assert the calls instead of real entitlement resolution.
+import { describe, it, expect, vi } from "vitest";
+
+import {
+  triageInboxItemCore,
+  type TriageDecision,
+} from "./operationsCore.js";
+import { mockContext } from "../test/mockContext.js";
+
+/**
+ * Triage — the inbox transformation. Canonical Tier C test: the core mutates
+ * 4 possible entities across an 8-way decision, then deletes the seed item.
+ * Highest server-side risk surface in the app, so it gets the deepest cover.
+ *
+ * Strategy: call the core directly with mocked entities, assert the right
+ * delegate fired with the right payload + that the seed was deleted.
+ */
+
+// SAFETY: fixture widens literal types to match Prisma's runtime string-based enum representation.
+const BASE_ITEM = {
+  id: "ix-1",
+  userId: "user-1",
+  text: "Email Sarah",
+  parsedPriority: "IMPORTANT" as string | null,
+  parsedSize: "S" as string | null,
+  parsedScheduledDate: null as Date | null,
+  parsedTags: [] as string[],
+  parsedProject: null as string | null,
+  content: null as string | null,
+  sourceUrl: null as string | null,
+  attachments: [] as {
+    id: string;
+    filename: string;
+    mimeType: string;
+    size: number;
+  }[],
+};
+
+/** The default injected guards: pass-through spies (an entitled caller). */
+function guardSpies() {
+  return {
+    assertLens: vi.fn().mockResolvedValue(undefined),
+    assertProjectCap: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
+/** Arrange the common precondition: the inbox item exists and is ours. */
+function arrange(overrides: Partial<typeof BASE_ITEM> = {}) {
+  const m = mockContext("user-1");
+  m.entities.Lens.findFirst.mockResolvedValue({
+    id: "lens-1",
+    name: "Me",
+    isIncluded: true,
+  });
+  m.entities.InboxItem.findUnique.mockResolvedValue({
+    ...BASE_ITEM,
+    ...overrides,
+  });
+  const guards = guardSpies();
+  return { m, guards };
+}
+
+// SAFETY: mocks replace the delegates entirely; cast to the core's slice.
+type Core = Parameters<typeof triageInboxItemCore>[0];
+const asCore = (entities: unknown): Core => entities as Core;
+
+/** Thin wrapper so the tests read clearly and stay DRY. */
+function triage(
+  m: ReturnType<typeof mockContext>,
+  guards: ReturnType<typeof guardSpies>,
+  args: {
+    inboxItemId: string;
+    decision: TriageDecision;
+    lensId?: string;
+    goalId?: string;
+    projectId?: string;
+    name?: string;
+    priority?: "LOW" | "NORMAL" | "IMPORTANT";
+    size?: "S" | "M" | "L" | "XL";
+    content?: string;
+  },
+) {
+  return triageInboxItemCore(asCore(m.entities), {
+    userId: "user-1",
+    ...args,
+    assertLens: guards.assertLens,
+    assertProjectCap: guards.assertProjectCap,
+  });
+}
+
+describe("triageInboxItemCore — Simple-list decisions", () => {
+  it("creates a flat ListItem, preserves captured context, then deletes the InboxItem", async () => {
+    const { m, guards } = arrange({
+      text: "Read later",
+      content: "Useful checklist patterns",
+      sourceUrl: "https://example.com/list",
+    });
+    m.entities.Project.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST", lensId: "me" });
+    m.entities.ListItem.findFirst.mockResolvedValue({ order: 2 });
+    m.entities.ListItem.create.mockResolvedValue({ id: "li-1", order: 3 });
+
+    const result = await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "list-item",
+      projectId: "shopping",
+    });
+
+    expect(result).toEqual({ kind: "list-item", id: "li-1" });
+    expect(m.entities.ListItem.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: "user-1",
+        projectId: "shopping",
+        text: "Read later",
+        content: "Useful checklist patterns",
+        sourceUrl: "https://example.com/list",
+      }),
+    });
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
+    expect(m.entities.Tag.upsert).not.toHaveBeenCalled();
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({ where: { id: "ix-1" } });
+    // A list-item files via its project's lens — the injected guard saw it.
+    expect(guards.assertLens).toHaveBeenCalledWith("me");
+  });
+
+  it("moves an attachment-backed InboxItem into a Simple list", async () => {
+    // The main read selects attachment metadata; the blobs are fetched in the
+    // branches that move the images (task + list-item).
+    const { m, guards } = arrange({ attachments: [{ id: "attachment-1", filename: "image.jpg", mimeType: "image/jpeg", size: 5 }] });
+    m.entities.Project.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST", lensId: "me" });
+    m.entities.ListItem.findFirst.mockResolvedValue(null);
+    m.entities.ListItem.create.mockResolvedValue({ id: "list-item-1", order: 0 });
+    m.entities.InboxAttachment.findMany.mockResolvedValue([
+      { filename: "image.jpg", mimeType: "image/jpeg", size: 5, data: Buffer.from("hello") },
+    ]);
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "list-item",
+      projectId: "shopping",
+    });
+
+    expect(m.entities.InboxAttachment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { inboxItemId: "ix-1" } }),
+    );
+    expect(m.entities.ListItem.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        attachments: { create: [expect.objectContaining({ filename: "image.jpg" })] },
+      }),
+    }));
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({ where: { id: "ix-1" } });
+  });
+
+  it("rejects decision and Project-type mismatches before creating output", async () => {
+    const noProject = arrange();
+    await expect(
+      triage(noProject.m, noProject.guards, {
+        inboxItemId: "ix-1",
+        decision: "list-item",
+      }),
+    ).rejects.toThrow(/require a Simple-list Project/i);
+    expect(noProject.m.entities.ListItem.create).not.toHaveBeenCalled();
+
+    const standard = arrange();
+    standard.m.entities.Project.findFirst.mockResolvedValue({ id: "mvp", type: "STANDARD", lensId: "me" });
+    await expect(
+      triage(standard.m, standard.guards, {
+        inboxItemId: "ix-1",
+        decision: "list-item",
+        projectId: "mvp",
+      }),
+    ).rejects.toThrow(/require a Simple-list Project/i);
+    expect(standard.m.entities.ListItem.create).not.toHaveBeenCalled();
+
+    const listTask = arrange();
+    listTask.m.entities.Project.findFirst.mockResolvedValue({ id: "shopping", type: "SIMPLE_LIST", lensId: "me", permalink: "shopping" });
+    await expect(
+      triage(listTask.m, listTask.guards, {
+        inboxItemId: "ix-1",
+        decision: "upcoming",
+        lensId: "me",
+        projectId: "shopping",
+      }),
+    ).rejects.toThrow(/cannot be filed into a Simple-list Project/i);
+    expect(listTask.m.entities.Task.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("triageInboxItemCore — tenancy + injected guards", () => {
+  it("rejects an item that belongs to another user", async () => {
+    const { m, guards } = arrange();
+    m.entities.InboxItem.findUnique.mockResolvedValue({
+      ...BASE_ITEM,
+      userId: "someone-else",
+    });
+    await expect(
+      triage(m, guards, { inboxItemId: "ix-1", decision: "archive", lensId: "l" }),
+    ).rejects.toThrow(/not found/i);
+  });
+
+  it("runs the lens guard on filing decisions and skips it for archive/delete", async () => {
+    const filing = arrange();
+    filing.m.entities.Task.create.mockResolvedValue({ id: "t" });
+    await triage(filing.m, filing.guards, {
+      inboxItemId: "ix-1",
+      decision: "upcoming",
+      lensId: "lens-9",
+    });
+    // The guard sees the RESOLVED lens id (arrange's Lens.findFirst returns
+    // id "lens-1"), not the raw request argument.
+    expect(filing.guards.assertLens).toHaveBeenCalledWith("lens-1");
+
+    for (const decision of ["archive", "delete"] as const) {
+      const discard = arrange();
+      await triage(discard.m, discard.guards, {
+        inboxItemId: "ix-1",
+        decision,
+        lensId: "lens-9",
+      });
+      expect(discard.guards.assertLens).not.toHaveBeenCalled();
+    }
+  });
+
+  it("hands the lens's non-done project count to the project-cap guard", async () => {
+    const { m, guards } = arrange();
+    m.entities.Project.count.mockResolvedValue(3);
+    m.entities.Project.create.mockResolvedValue({ id: "proj-1" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "project",
+      lensId: "lens-1",
+    });
+
+    expect(m.entities.Project.count).toHaveBeenCalledWith({
+      where: { userId: "user-1", lensId: "lens-1", isDone: false },
+    });
+    expect(guards.assertProjectCap).toHaveBeenCalledWith("lens-1", 3);
+  });
+});
+
+describe("triageInboxItemCore — task decisions", () => {
+  it.each([
+    ["task-today", "TODAY"],
+    ["upcoming", "UPCOMING"],
+    ["someday", "SOMEDAY"],
+  ] as const)(
+    "%s creates a Task with status %s, carrying parsed priority/size",
+    async (decision, status) => {
+      const { m, guards } = arrange();
+      m.entities.Task.create.mockResolvedValue({ id: "task-9" });
+
+      const result = await triage(m, guards, {
+        inboxItemId: "ix-1",
+        decision,
+        lensId: "lens-1",
+      });
+
+      expect(result).toEqual({ kind: "task", id: "task-9" });
+      expect(m.entities.Task.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          status,
+          priority: "IMPORTANT",
+          size: "S",
+          lensId: "lens-1",
+          description: "Email Sarah",
+        }),
+        select: { id: true },
+      });
+      expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({
+        where: { id: "ix-1" },
+      });
+    },
+  );
+
+  it("falls back to NORMAL/M when the item has no parsed tokens", async () => {
+    const { m, guards } = arrange({ parsedPriority: null, parsedSize: null });
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, { inboxItemId: "ix-1", decision: "task-today", lensId: "l" });
+
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ priority: "NORMAL", size: "M" }),
+      select: { id: true },
+    });
+  });
+
+  it("carries parsedTags onto the task (resolve-or-create, legacy prefixes stripped)", async () => {
+    const { m, guards } = arrange({ parsedTags: ["#phone", "#mvp"] });
+    m.entities.Tag.upsert
+      .mockResolvedValueOnce({ id: "tag-phone" })
+      .mockResolvedValueOnce({ id: "tag-mvp" });
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+    });
+
+    // Two upserts — one per tag, stripped of # (and legacy @) and lowercased.
+    expect(m.entities.Tag.upsert).toHaveBeenCalledTimes(2);
+    expect(m.entities.Tag.upsert).toHaveBeenCalledWith({
+      where: { userId_name: { userId: "user-1", name: "phone" } },
+      create: expect.objectContaining({ name: "phone" }),
+      update: {},
+      select: { id: true },
+    });
+    expect(m.entities.Tag.upsert).toHaveBeenCalledWith({
+      where: { userId_name: { userId: "user-1", name: "mvp" } },
+      create: expect.objectContaining({ name: "mvp" }),
+      update: {},
+      select: { id: true },
+    });
+    // Both tags connected to the created task.
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        tags: { connect: [{ id: "tag-phone" }, { id: "tag-mvp" }] },
+      }),
+      select: { id: true },
+    });
+  });
+
+  it("does NOT attach tags when the item has none (no tags key, no upserts)", async () => {
+    const { m, guards } = arrange({ parsedTags: [] });
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+    });
+
+    expect(m.entities.Tag.upsert).not.toHaveBeenCalled();
+    // SAFETY: mock .calls array is untyped; cast to ReturnType<typeof vi.fn> for .mock access.
+    const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(call.data.tags).toBeUndefined();
+  });
+
+  it("moves an attachment-backed InboxItem onto the created Task", async () => {
+    // The main read selects attachment metadata; the task branch fetches the
+    // blobs only when some exist, then nested-creates TaskAttachment rows in
+    // the same atomic write (same convention as tags).
+    const { m, guards } = arrange({
+      attachments: [{ id: "attachment-1", filename: "shot.png", mimeType: "image/png", size: 8 }],
+    });
+    m.entities.Task.create.mockResolvedValue({ id: "task-9" });
+    m.entities.InboxAttachment.findMany.mockResolvedValue([
+      { filename: "shot.png", mimeType: "image/png", size: 8, data: Buffer.from("png") },
+    ]);
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+    });
+
+    // Blobs fetched for the move —
+    expect(m.entities.InboxAttachment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { inboxItemId: "ix-1" } }),
+    );
+    // — and nested-created onto the Task in the single write.
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        attachments: {
+          create: [
+            { filename: "shot.png", mimeType: "image/png", size: 8, data: Buffer.from("png") },
+          ],
+        },
+      }),
+      select: { id: true },
+    });
+    // The seed (and its InboxAttachment rows) is deleted — the bytes now
+    // live on TaskAttachment, carried by the created task.
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+    });
+  });
+
+  it("does NOT fetch blobs or add an attachments key when the item has none", async () => {
+    const { m, guards } = arrange();
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+    });
+
+    expect(m.entities.InboxAttachment.findMany).not.toHaveBeenCalled();
+    // SAFETY: mock .calls array is untyped; cast to ReturnType<typeof vi.fn> for .mock access.
+    const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(call.data.attachments).toBeUndefined();
+  });
+
+  it("files under the lens General project when no project is chosen", async () => {
+    const { m, guards } = arrange();
+    m.entities.Project.findFirst.mockResolvedValue({
+      id: "general-1",
+      permalink: "general",
+    });
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+    });
+
+    expect(m.entities.Project.findFirst).toHaveBeenCalledWith({
+      where: { userId: "user-1", lensId: "l", name: "General" },
+      select: { id: true, permalink: true },
+    });
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        projectId: "general-1",
+        permalink: "general-email-sarah",
+      }),
+      select: { id: true },
+    });
+  });
+
+  it("uses the explicit projectId when provided (no General lookup needed)", async () => {
+    const { m, guards } = arrange();
+    m.entities.Project.findFirst.mockResolvedValue({
+      id: "explicit-1",
+      permalink: "mvp",
+      type: "STANDARD",
+    });
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+      projectId: "explicit-1",
+    });
+
+    expect(m.entities.Project.findFirst).toHaveBeenCalledWith({
+      where: { id: "explicit-1", userId: "user-1", lensId: "l" },
+      select: { id: true, permalink: true, type: true },
+    });
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        projectId: "explicit-1",
+        permalink: "mvp-email-sarah",
+      }),
+      select: { id: true },
+    });
+  });
+
+  it("does not align triaged tasks directly to goals", async () => {
+    const { m, guards } = arrange();
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+      goalId: "goal-should-not-attach",
+    });
+
+    // SAFETY: mock .calls array is untyped; cast to ReturnType<typeof vi.fn> for .mock access.
+    const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(call.data.goalId).toBeUndefined();
+  });
+
+  it("saves task notes as Task.content, trimmed", async () => {
+    const { m, guards } = arrange();
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+      content: "  Bring the contract notes  ",
+    });
+
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ content: "Bring the contract notes" }),
+      select: { id: true },
+    });
+  });
+
+  it("uses the edited title for the task description and permalink", async () => {
+    const { m, guards } = arrange();
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+      name: "  Email Sarah about Q3  ",
+    });
+
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        description: "Email Sarah about Q3",
+        permalink: "email-sarah-about-q3",
+      }),
+      select: { id: true },
+    });
+  });
+
+  it("stores blank task notes as null", async () => {
+    const { m, guards } = arrange();
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+      content: "   \n  ",
+    });
+
+    expect(m.entities.Task.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ content: null }),
+      select: { id: true },
+    });
+  });
+});
+
+describe("triageInboxItemCore — project / resource / archive", () => {
+  it("project creates a Project named after the item text", async () => {
+    const { m, guards } = arrange();
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Project.create.mockResolvedValue({ id: "proj-1" });
+
+    const result = await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "project",
+      lensId: "lens-1",
+    });
+
+    expect(result).toEqual({ kind: "project", id: "proj-1" });
+    expect(m.entities.Project.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ name: "Email Sarah", lensId: "lens-1" }),
+      select: { id: true },
+    });
+    expect(m.entities.InboxItem.delete).toHaveBeenCalled();
+  });
+
+  it("moves an attachment-backed InboxItem onto the created Project", async () => {
+    // A captured mockup triaged into a new project becomes the project's
+    // own media — blobs nested-created in the same atomic write (same
+    // convention as the task branch).
+    const { m, guards } = arrange({
+      attachments: [{ id: "attachment-1", filename: "mockup.png", mimeType: "image/png", size: 8 }],
+    });
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Project.create.mockResolvedValue({ id: "proj-9" });
+    m.entities.InboxAttachment.findMany.mockResolvedValue([
+      { filename: "mockup.png", mimeType: "image/png", size: 8, data: Buffer.from("png") },
+    ]);
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "project",
+      lensId: "lens-1",
+    });
+
+    expect(m.entities.InboxAttachment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { inboxItemId: "ix-1" } }),
+    );
+    expect(m.entities.Project.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        attachments: {
+          create: [
+            { filename: "mockup.png", mimeType: "image/png", size: 8, data: Buffer.from("png") },
+          ],
+        },
+      }),
+      select: { id: true },
+    });
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+    });
+  });
+
+  it("does NOT fetch blobs or add an attachments key on a project without images", async () => {
+    const { m, guards } = arrange();
+    m.entities.Project.count.mockResolvedValue(0);
+    m.entities.Project.create.mockResolvedValue({ id: "proj-1" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "project",
+      lensId: "lens-1",
+    });
+
+    expect(m.entities.InboxAttachment.findMany).not.toHaveBeenCalled();
+    // SAFETY: mock .calls array is untyped; cast to ReturnType<typeof vi.fn> for .mock access.
+    const call = (m.entities.Project.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(call.data.attachments).toBeUndefined();
+  });
+
+  it("resource requires a project", async () => {
+    const { m, guards } = arrange();
+    await expect(
+      triage(m, guards, {
+        inboxItemId: "ix-1",
+        decision: "resource",
+        lensId: "l",
+      }),
+    ).rejects.toThrow(/filed under a project/i);
+  });
+
+  it("moves an attachment-backed InboxItem onto the created Resource", async () => {
+    // A screenshot filed as project reference material stays attached to
+    // the resource — blobs nested-created in the same atomic write.
+    const { m, guards } = arrange({
+      attachments: [{ id: "attachment-1", filename: "receipt.png", mimeType: "image/png", size: 7 }],
+    });
+    m.entities.Project.findFirst.mockResolvedValue({ id: "p-1", type: "STANDARD" });
+    m.entities.Resource.create.mockResolvedValue({ id: "res-1" });
+    m.entities.InboxAttachment.findMany.mockResolvedValue([
+      { filename: "receipt.png", mimeType: "image/png", size: 7, data: Buffer.from("png") },
+    ]);
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "resource",
+      lensId: "lens-1",
+      projectId: "p-1",
+    });
+
+    expect(m.entities.InboxAttachment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { inboxItemId: "ix-1" } }),
+    );
+    expect(m.entities.Resource.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        projectId: "p-1",
+        attachments: {
+          create: [
+            { filename: "receipt.png", mimeType: "image/png", size: 7, data: Buffer.from("png") },
+          ],
+        },
+      }),
+      select: { id: true },
+    });
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+    });
+  });
+
+  it("does NOT fetch blobs or add an attachments key on a resource without images", async () => {
+    const { m, guards } = arrange();
+    m.entities.Project.findFirst.mockResolvedValue({ id: "p-1", type: "STANDARD" });
+    m.entities.Resource.create.mockResolvedValue({ id: "res-1" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "resource",
+      lensId: "lens-1",
+      projectId: "p-1",
+    });
+
+    expect(m.entities.InboxAttachment.findMany).not.toHaveBeenCalled();
+    // SAFETY: mock .calls array is untyped; cast to ReturnType<typeof vi.fn> for .mock access.
+    const call = (m.entities.Resource.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(call.data.attachments).toBeUndefined();
+  });
+
+  it("archive marks the item ARCHIVED (kept) and creates nothing", async () => {
+    const { m, guards } = arrange();
+    const result = await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "archive",
+      lensId: "l",
+    });
+
+    expect(result).toEqual({ kind: "archive", id: "ix-1" });
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
+    expect(m.entities.Project.create).not.toHaveBeenCalled();
+    // Archive is lossless: it updates the status + stamps archivedAt, and does
+    // NOT delete (unlike the create-type decisions).
+    expect(m.entities.InboxItem.update).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+      data: { status: "ARCHIVED", archivedAt: expect.any(Date) },
+    });
+    expect(m.entities.InboxItem.delete).not.toHaveBeenCalled();
+  });
+
+  it("delete hard-removes the InboxItem and creates nothing", async () => {
+    const { m, guards } = arrange();
+    const result = await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "delete",
+      lensId: "l",
+    });
+
+    expect(result).toEqual({ kind: "delete", id: "ix-1" });
+    expect(m.entities.Task.create).not.toHaveBeenCalled();
+    expect(m.entities.Project.create).not.toHaveBeenCalled();
+    expect(m.entities.Resource.create).not.toHaveBeenCalled();
+    // Delete is destructive: it removes the row outright, not a status flip.
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledWith({
+      where: { id: "ix-1" },
+    });
+    // And it does NOT also call update (no ARCHIVED status, no archivedAt).
+    expect(m.entities.InboxItem.update).not.toHaveBeenCalled();
+    // The trailing seed-delete guard runs once — but it skips delete (and
+    // archive), so InboxItem.delete is called exactly once (from the case),
+    // not twice. The `toHaveBeenCalledTimes` assertion guards against a
+    // regression where someone removes delete from the guard.
+    expect(m.entities.InboxItem.delete).toHaveBeenCalledTimes(1);
+  });
+});

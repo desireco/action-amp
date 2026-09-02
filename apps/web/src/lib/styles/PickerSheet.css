@@ -1,0 +1,160 @@
+@import "../tokens.css";
+
+.aa-picker-sheet__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aa-picker-sheet__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-md);
+  padding: 12px 14px;
+  border: none;
+  border-radius: var(--aa-radius-md);
+  background: transparent;
+  color: var(--aa-text);
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-picker-sheet__item:hover {
+  background: var(--aa-surface-muted);
+}
+
+.aa-picker-sheet__item.current {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+
+.aa-picker-sheet__meta {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  font-weight: var(--aa-weight-regular);
+  /* NOTE: no margin-right:auto here — that's the name's job. meta sits
+     between name and num, kept tight. Previously both name AND meta had
+     margin-right:auto, which made them compete and produced uneven spacing. */
+}
+
+.aa-picker-sheet__name {
+  margin-right: auto;
+}
+
+/* Leading identity chip — e.g. a lens pill so the user sees which context
+   a project lives in. Small pill with a colored dot (lens identity color). */
+.aa-picker-sheet__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-active-lens-soft);
+  color: var(--aa-active-lens-text);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  flex-shrink: 0;
+  /* Re-point the active-lens vars per data-lens-color so the chip carries
+     the right identity color. Mirrors the lens-pill / radio pattern. */
+}
+.aa-picker-sheet__chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-active-lens);
+  flex-shrink: 0;
+}
+.aa-picker-sheet__chip[data-lens-color="indigo"] {
+  --aa-active-lens: var(--aa-lens-indigo);
+  --aa-active-lens-text: var(--aa-lens-indigo-text);
+  --aa-active-lens-soft: var(--aa-lens-indigo-soft);
+}
+.aa-picker-sheet__chip[data-lens-color="emerald"] {
+  --aa-active-lens: var(--aa-lens-emerald);
+  --aa-active-lens-text: var(--aa-lens-emerald-text);
+  --aa-active-lens-soft: var(--aa-lens-emerald-soft);
+}
+.aa-picker-sheet__chip[data-lens-color="slate"] {
+  --aa-active-lens: var(--aa-lens-slate);
+  --aa-active-lens-text: var(--aa-lens-slate-text);
+  --aa-active-lens-soft: var(--aa-lens-slate-soft);
+}
+.aa-picker-sheet__chip[data-lens-color="cyan"] {
+  --aa-active-lens: var(--aa-lens-cyan);
+  --aa-active-lens-text: var(--aa-lens-cyan-text);
+  --aa-active-lens-soft: var(--aa-lens-cyan-soft);
+}
+.aa-picker-sheet__chip[data-lens-color="coral"] {
+  --aa-active-lens: var(--aa-lens-coral);
+  --aa-active-lens-text: var(--aa-lens-coral-text);
+  --aa-active-lens-soft: var(--aa-lens-coral-soft);
+}
+.aa-picker-sheet__chip[data-lens-color="honey"] {
+  --aa-active-lens: var(--aa-lens-honey);
+  --aa-active-lens-text: var(--aa-lens-honey-text);
+  --aa-active-lens-soft: var(--aa-lens-honey-soft);
+}
+.aa-picker-sheet__chip[data-lens-color="lime"] {
+  --aa-active-lens: var(--aa-lens-lime);
+  --aa-active-lens-text: var(--aa-lens-lime-text);
+  --aa-active-lens-soft: var(--aa-lens-lime-soft);
+}
+.aa-picker-sheet__chip[data-lens-color="magenta"] {
+  --aa-active-lens: var(--aa-lens-magenta);
+  --aa-active-lens-text: var(--aa-lens-magenta-text);
+  --aa-active-lens-soft: var(--aa-lens-magenta-soft);
+}
+/* On the current row (teal background), the chip stays legible by keeping
+   its lens tint rather than going teal. */
+.aa-picker-sheet__item.current .aa-picker-sheet__chip {
+  /* unchanged — the lens tint is identity, not state */
+}
+
+.aa-picker-sheet__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface-muted);
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.aa-picker-sheet__item.current .aa-picker-sheet__num {
+  background: var(--aa-teal-cta);
+  color: var(--aa-surface);
+}
+
+.aa-picker-sheet__item--action {
+  border-top: 1px solid var(--aa-border);
+  margin-top: 4px;
+  padding-top: 14px;
+  color: var(--aa-teal-cta);
+}
+
+.aa-picker-sheet__empty {
+  margin: 0;
+  padding: var(--aa-space-md) var(--aa-space-sm);
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-base);
+  text-align: center;
+}
+
+/* Reduced motion — kill the item hover transition. */
+@media (prefers-reduced-motion: reduce) {
+  .aa-picker-sheet__item {
+    transition-duration: 0.01ms !important;
+  }
+}

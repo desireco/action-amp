@@ -1,0 +1,391 @@
+@import "../tokens.css";
+
+.aa-inbox {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+/* ---- Header ---- */
+.aa-inbox__header {
+  margin: var(--aa-space-sm) 0 var(--aa-space-xl);
+}
+
+.aa-inbox__eyebrow {
+  margin: 0 0 var(--aa-space-sm);
+  color: var(--aa-teal-cta);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.aa-inbox__title {
+  font-size: var(--aa-text-2xl);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--aa-text);
+  margin: 0 0 var(--aa-space-sm);
+}
+
+.aa-inbox__sub {
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-3);
+  margin: 0;
+  max-width: 52ch;
+  line-height: var(--aa-leading-normal);
+}
+
+/* ---- Shared queue / empty surface ---- */
+.aa-inbox__surface {
+  overflow: hidden;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-xl);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-inbox__queue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-lg);
+  padding: var(--aa-space-lg) var(--aa-space-xl);
+  border-bottom: 1px solid var(--aa-border);
+  background: var(--aa-bg-soft);
+}
+
+.aa-inbox__queue-title {
+  margin: 0 0 3px;
+  color: var(--aa-text);
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
+}
+
+.aa-inbox__queue-count {
+  margin: 0;
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-sm);
+}
+
+.aa-inbox__cta {
+  flex: none;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--aa-space-sm);
+  padding: 9px 16px;
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-teal-cta);
+  color: var(--aa-surface);
+  box-shadow: var(--aa-shadow-sm);
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  text-decoration: none;
+  transition:
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    box-shadow var(--aa-dur-fast) var(--aa-ease-out),
+    transform var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-inbox__cta:hover {
+  background: var(--aa-teal-cta-hover);
+  box-shadow: 0 4px 12px var(--aa-teal-tint-shadow);
+}
+
+.aa-inbox__cta:active {
+  transform: scale(0.98);
+}
+
+.aa-inbox__cta:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+/* ---- List ---- */
+.aa-inbox__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.aa-inbox__item {
+  margin: 0;
+  padding: 0;
+}
+
+/* The row wrapper owns padding/border/hover and is the positioning frame for
+   the stretched triage link — URL anchors in the text and the media cover
+   must stay clickable siblings above it, never nested anchors. */
+.aa-inbox__row {
+  position: relative;
+  padding: 18px var(--aa-space-xl);
+  border-bottom: 1px solid var(--aa-border);
+  transition: background var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-inbox__item:last-child .aa-inbox__row {
+  border-bottom: none;
+}
+
+.aa-inbox__row:hover {
+  background: var(--aa-surface-muted);
+}
+
+/* Row body — plain content. The triage target is the stretched link below. */
+.aa-inbox__row-main {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-lg);
+  transition: padding-left var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+/* The whole row navigates to triage via a link stretched over it. Clicks on
+   URL anchors (.aa-linkify) and the media cover land above it (z-index 1);
+   everything else falls through to the overlay. */
+.aa-inbox__row-link {
+  position: absolute;
+  inset: 0;
+}
+
+/* Nudge on row hover — constant across the whole row, so the content never
+   shifts as the pointer crosses between the stretched link and the URL
+   anchors above it (a link-scoped :has() here would nudge/un-nudge and make
+   a link jitter under a cursor resting near its edge). Keyboard focus on
+   the stretched link gets parity. */
+.aa-inbox__row:hover .aa-inbox__row-main,
+.aa-inbox__row:has(.aa-inbox__row-link:focus-visible) .aa-inbox__row-main {
+  padding-left: 3px;
+}
+
+.aa-inbox__row-link:focus-visible {
+  outline: none;
+  box-shadow: inset 3px 0 0 var(--aa-teal);
+  background: var(--aa-surface-muted);
+}
+
+/* Bare URLs linkified in the captured text. Base link styling ships with
+   Linkify.css; here they only need to sit above the stretched triage link. */
+.aa-inbox__row-text .aa-linkify,
+.aa-inbox__row-content-text .aa-linkify {
+  position: relative;
+  z-index: 1;
+}
+
+/* Media rows: the cover button stays above the stretched triage link. */
+.aa-inbox__row--media .aa-attach-cover {
+  position: relative;
+  z-index: 1;
+}
+
+/* Image rows: media cover on the left, the triage link (text + chips +
+   arrow) on the right — the image gets real space and still shares the row
+   with its details. */
+.aa-inbox__row--media {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--aa-space-md);
+  align-items: center;
+}
+
+.aa-inbox__row-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.aa-inbox__row-text {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text);
+  margin: 0 0 var(--aa-space-xs);
+  line-height: var(--aa-leading-snug);
+  overflow-wrap: anywhere;
+}
+
+.aa-inbox__row-content-text {
+  margin: 0 0 var(--aa-space-xs);
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  line-height: var(--aa-leading-normal);
+  overflow-wrap: anywhere;
+}
+
+.aa-inbox__row-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.aa-inbox__row-ago {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+}
+
+.aa-inbox__row-arrow {
+  flex: none;
+  color: var(--aa-text-4);
+  transition:
+    color var(--aa-dur-fast) var(--aa-ease-out),
+    transform var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-inbox__row:hover .aa-inbox__row-arrow,
+.aa-inbox__row:has(.aa-inbox__row-link:focus-visible) .aa-inbox__row-arrow {
+  color: var(--aa-teal-cta);
+  transform: translateX(2px);
+}
+
+/* ---- Empty state ---- */
+.aa-inbox__empty {
+  text-align: center;
+  min-height: 360px;
+  padding: var(--aa-space-3xl) var(--aa-space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.aa-inbox__empty-mark {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  margin-bottom: var(--aa-space-lg);
+  border-radius: var(--aa-radius-xl);
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+  border: 1px solid var(--aa-teal-soft-strong);
+}
+
+.aa-inbox__empty-mark svg {
+  width: 38px;
+  height: 38px;
+}
+
+.aa-inbox__empty-title {
+  font-size: var(--aa-text-lg);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: -0.015em;
+  color: var(--aa-text);
+  margin: 0 0 var(--aa-space-sm);
+}
+
+.aa-inbox__empty-text {
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-3);
+  margin: 0 auto var(--aa-space-lg);
+  max-width: 38ch;
+  line-height: var(--aa-leading-normal);
+}
+
+.aa-inbox__empty-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  margin: 0;
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-sm);
+}
+
+.aa-inbox__empty-cta {
+  margin-top: var(--aa-space-lg);
+}
+
+.aa-inbox__kbd {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-4);
+  padding: 2px 6px;
+  border-radius: var(--aa-radius-xs);
+  border: 1px solid var(--aa-border);
+  white-space: nowrap;
+}
+
+/* ---- Loading state ---- */
+.aa-inbox__loading {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--aa-space-md);
+  padding: var(--aa-space-xl);
+}
+
+.aa-inbox__loading-line {
+  width: 74%;
+  height: 14px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-surface-muted-2);
+  animation: aa-inbox-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.aa-inbox__loading-line--short {
+  width: 34%;
+}
+.aa-inbox__loading-line--mid {
+  width: 55%;
+}
+
+@keyframes aa-inbox-pulse {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 620px) {
+  .aa-inbox__header {
+    padding-right: 56px;
+  }
+
+  .aa-inbox__queue-header {
+    align-items: flex-start;
+    padding: var(--aa-space-lg);
+  }
+
+  .aa-inbox__row {
+    padding-left: var(--aa-space-lg);
+    padding-right: var(--aa-space-lg);
+  }
+
+  .aa-inbox__row:hover {
+    padding-left: var(--aa-space-lg);
+  }
+
+  .aa-inbox__empty {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 430px) {
+  .aa-inbox__queue-header {
+    flex-direction: column;
+  }
+
+  .aa-inbox__cta {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-inbox__row,
+  .aa-inbox__row-arrow,
+  .aa-inbox__loading-line {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+.aa-inbox__item.is-search-target {
+  border-radius: var(--aa-radius-sm);
+  box-shadow: 0 0 0 2px var(--aa-teal);
+}

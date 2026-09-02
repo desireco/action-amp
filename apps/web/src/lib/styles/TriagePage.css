@@ -1,0 +1,598 @@
+@import "../tokens.css";
+
+.aa-triage {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 56px - var(--aa-space-3xl) * 2);
+  min-height: calc(100dvh - 56px - var(--aa-space-3xl) * 2);
+}
+
+/* ---- Top row: close + progress ---- */
+.aa-triage__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-triage__close {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--aa-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--aa-text-3);
+  cursor: pointer;
+  transition:
+    background 0.15s var(--aa-ease-out),
+    color 0.15s var(--aa-ease-out);
+}
+
+.aa-triage__close:hover {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text);
+}
+
+.aa-triage__close:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-triage__top-spacer {
+  width: 32px;
+}
+
+.aa-triage__progress {
+  flex: 1;
+  margin: 0 var(--aa-space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.aa-triage__progress-count {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text-4);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.aa-triage__progress-count b {
+  color: var(--aa-text-2);
+}
+
+.aa-triage__progress-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--aa-surface-muted);
+  border-radius: var(--aa-radius-full);
+  overflow: hidden;
+}
+
+.aa-triage__progress-fill {
+  height: 100%;
+  background: var(--aa-teal);
+  border-radius: var(--aa-radius-full);
+  transition: width 0.4s var(--aa-ease-out-quart);
+}
+
+/* ---- Title ---- */
+.aa-triage__title {
+  text-align: center;
+  margin: var(--aa-space-lg) 0 var(--aa-space-sm);
+}
+
+.aa-triage__title h1 {
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: -0.015em;
+  color: var(--aa-text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.aa-triage__title p {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  margin: 4px 0 0;
+}
+
+/* ---- Error banner ---- */
+.aa-triage__error {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  margin-bottom: var(--aa-space-md);
+  background: var(--aa-rose-soft);
+  border: 1px solid var(--aa-rose);
+  border-radius: var(--aa-radius-sm);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-rose-text);
+  line-height: var(--aa-leading-snug);
+}
+
+/* ---- Stage: the card ---- */
+.aa-triage__stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--aa-space-xl);
+  padding: var(--aa-space-lg) 0;
+}
+
+/* ============================================================
+   Wizard step block (rendered inside the TriageCard children)
+   ============================================================ */
+.aa-triage-step {
+  text-align: left;
+  margin-top: var(--aa-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-md);
+}
+
+.aa-triage-step__label {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  text-align: center;
+}
+
+.aa-triage-step__q {
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+  margin: 0;
+  text-align: center;
+}
+
+.aa-triage-step__hint {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  margin: var(--aa-space-xs) 0 0;
+  text-align: center;
+}
+
+.aa-triage-step__hint code {
+  font-family: inherit;
+  background: var(--aa-surface-muted);
+  padding: 0.05rem 0.3rem;
+  border-radius: var(--aa-radius-xs);
+  color: var(--aa-teal-cta);
+}
+
+.aa-triage-step__continue {
+  align-self: center;
+  margin-top: var(--aa-space-xs);
+}
+
+.aa-triage-destination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  padding: 12px 14px;
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-teal-soft);
+  border: 1px solid var(--aa-teal-soft-strong);
+}
+
+.aa-triage-destination__label {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+}
+
+.aa-triage-destination__value {
+  color: var(--aa-teal-cta);
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-bold);
+  text-align: right;
+}
+
+/* ---- Step 1: Lens radio ---- */
+.aa-triage-radio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+}
+
+.aa-triage-radio__opt {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  color: var(--aa-text);
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    border-color var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-triage-radio__opt:hover {
+  background: var(--aa-surface-muted);
+  border-color: var(--aa-border-strong);
+}
+
+.aa-triage-radio__opt.active {
+  background: var(--aa-active-lens-soft);
+  border-color: var(--aa-active-lens);
+  color: var(--aa-active-lens-text);
+}
+/* Each lens option previews its own identity color when selected — so picking
+   a lens shows you the context you're filing into. Scoped per data-lens-color
+   (set from Lens.color), re-pointing the active-lens vars locally. */
+.aa-triage-radio__opt[data-lens-color="indigo"].active {
+  --aa-active-lens: var(--aa-lens-indigo);
+  --aa-active-lens-text: var(--aa-lens-indigo-text);
+  --aa-active-lens-soft: var(--aa-lens-indigo-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-indigo-soft-strong);
+}
+.aa-triage-radio__opt[data-lens-color="emerald"].active {
+  --aa-active-lens: var(--aa-lens-emerald);
+  --aa-active-lens-text: var(--aa-lens-emerald-text);
+  --aa-active-lens-soft: var(--aa-lens-emerald-soft);
+  --aa-active-lens-soft-strong: var(--aa-lens-emerald-soft-strong);
+}
+
+.aa-triage-radio__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--aa-radius-full);
+  border: 2px solid var(--aa-text-4);
+  background: transparent;
+  flex-shrink: 0;
+  transition:
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    background var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-triage-radio__opt.active .aa-triage-radio__dot {
+  border-color: var(--aa-active-lens);
+  background: var(--aa-active-lens);
+  box-shadow: inset 0 0 0 2px var(--aa-surface);
+}
+
+/* ---- Step 1: Lens pills (radio-style, 2× regular chip size) ----
+   Larger than the spec-step chips — these are the primary "where does this
+   go" choice, so they earn more visual weight. The active pill fills with
+   the lens's identity color (scoped per data-lens-color, re-pointing the
+   active-lens vars locally — same trick as the radio above). */
+.aa-triage-lens-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-sm);
+}
+.aa-triage-lens-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* Still well above a regular chip (5px 11px / text-sm), but trimmed from
+     the original 12px 22px — long lens lists were wrapping to two lines. */
+  padding: 9px 15px;
+  border-radius: var(--aa-radius-full);
+  border: 1.5px solid var(--aa-border-strong);
+  background: var(--aa-surface);
+  color: var(--aa-text-2);
+  font-family: inherit;
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
+  cursor: pointer;
+  transition:
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    color var(--aa-dur-fast) var(--aa-ease-out),
+    transform var(--aa-dur-fast) var(--aa-ease-out);
+}
+.aa-triage-lens-pill:hover {
+  border-color: var(--aa-text-4);
+  background: var(--aa-surface-muted);
+  transform: translateY(-1px);
+}
+.aa-triage-lens-pill:focus-visible {
+  outline: none;
+  box-shadow: var(--aa-focus-ring);
+}
+/* Each lens carries its own identity color when active. The data-lens-color
+   attr re-points the active-lens vars locally so the fill + dot match. */
+.aa-triage-lens-pill.active {
+  background: var(--aa-active-lens-soft-strong);
+  border-color: var(--aa-active-lens);
+  color: var(--aa-active-lens-text);
+}
+.aa-triage-lens-pill[data-lens-color="indigo"].active {
+  --aa-active-lens: var(--aa-lens-indigo);
+  --aa-active-lens-text: var(--aa-lens-indigo-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-indigo-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="emerald"].active {
+  --aa-active-lens: var(--aa-lens-emerald);
+  --aa-active-lens-text: var(--aa-lens-emerald-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-emerald-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="slate"].active {
+  --aa-active-lens: var(--aa-lens-slate);
+  --aa-active-lens-text: var(--aa-lens-slate-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-slate-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="cyan"].active {
+  --aa-active-lens: var(--aa-lens-cyan);
+  --aa-active-lens-text: var(--aa-lens-cyan-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-cyan-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="coral"].active {
+  --aa-active-lens: var(--aa-lens-coral);
+  --aa-active-lens-text: var(--aa-lens-coral-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-coral-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="honey"].active {
+  --aa-active-lens: var(--aa-lens-honey);
+  --aa-active-lens-text: var(--aa-lens-honey-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-honey-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="lime"].active {
+  --aa-active-lens: var(--aa-lens-lime);
+  --aa-active-lens-text: var(--aa-lens-lime-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-lime-soft-strong);
+}
+.aa-triage-lens-pill[data-lens-color="magenta"].active {
+  --aa-active-lens: var(--aa-lens-magenta);
+  --aa-active-lens-text: var(--aa-lens-magenta-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-magenta-soft-strong);
+}
+
+.aa-triage-lens-pill__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--aa-radius-full);
+  border: 2px solid var(--aa-text-4);
+  background: transparent;
+  flex-shrink: 0;
+  transition:
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    background var(--aa-dur-fast) var(--aa-ease-out);
+}
+/* Active dot fills with the lens identity color (the inner ring reads as
+   a "selected" radio marker against the soft-strong fill). */
+.aa-triage-lens-pill.active .aa-triage-lens-pill__dot {
+  border-color: var(--aa-active-lens);
+  background: var(--aa-active-lens);
+  box-shadow: inset 0 0 0 2px var(--aa-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-triage-lens-pill,
+  .aa-triage-lens-pill__dot {
+    transition-duration: 0.01ms !important;
+  }
+  .aa-triage-lens-pill:hover {
+    transform: none !important;
+  }
+}
+
+/* ---- Step 2: Type chooser (one-line rows, icon leading) ---- */
+.aa-triage-types {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+}
+
+.aa-triage-type {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  color: var(--aa-text-3);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    color var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-triage-type:hover {
+  background: var(--aa-surface-muted);
+  border-color: var(--aa-border-strong);
+  color: var(--aa-text-2);
+}
+
+.aa-triage-type.active {
+  background: var(--aa-teal-soft);
+  border-color: transparent;
+  color: var(--aa-teal-cta);
+}
+
+/* Icon leading — picks up currentColor, so it inherits the row's state. */
+.aa-triage-type__icon {
+  flex-shrink: 0;
+  color: var(--aa-text-4);
+  transition: color var(--aa-dur-fast) var(--aa-ease-out);
+}
+.aa-triage-type:hover .aa-triage-type__icon {
+  color: var(--aa-text-3);
+}
+.aa-triage-type.active .aa-triage-type__icon {
+  color: var(--aa-teal-cta);
+}
+
+.aa-triage-type__label {
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  flex-shrink: 0;
+}
+
+.aa-triage-type__sub {
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-regular);
+  color: var(--aa-text-4);
+  /* Trailing description sits on the same line, muted. Truncate so a long
+     description never wraps the row. */
+  margin-left: var(--aa-space-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aa-triage-type.active .aa-triage-type__sub {
+  color: var(--aa-teal-cta);
+  opacity: 0.8;
+}
+
+/* ---- Confirm bar (summary + Ready, gated) ---- */
+.aa-triage-confirm {
+  display: flex;
+  gap: var(--aa-space-sm);
+  align-items: center;
+  margin-top: var(--aa-space-sm);
+}
+
+.aa-triage-confirm__summary {
+  flex: 1;
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-4);
+  line-height: var(--aa-leading-snug);
+  text-align: left;
+}
+
+.aa-triage-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+}
+
+.aa-triage-notes__label {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+}
+
+.aa-triage-notes__textarea {
+  width: 100%;
+  min-height: 6.5rem;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  color: var(--aa-text-2);
+  font: inherit;
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-normal);
+  resize: vertical;
+}
+
+.aa-triage-notes__textarea:focus {
+  outline: none;
+  border-color: var(--aa-accent);
+}
+
+.aa-triage-notes__textarea::placeholder {
+  color: var(--aa-text-4);
+}
+
+/* ============================================================
+   Empty state — inbox zero
+   ============================================================ */
+.aa-triage-empty {
+  text-align: center;
+  max-width: 380px;
+  margin: 0 auto;
+  padding: var(--aa-space-3xl) 0;
+  animation: aa-triage-fade 0.5s var(--aa-ease-out) both;
+}
+
+@keyframes aa-triage-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Layout spacing around the shared .aa-empty-mark utility. */
+.aa-triage-empty .aa-empty-mark {
+  margin-bottom: var(--aa-space-lg);
+}
+
+.aa-triage-empty__title {
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: -0.02em;
+  color: var(--aa-text);
+  margin: 0 0 var(--aa-space-sm);
+}
+
+.aa-triage-empty__text {
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-3);
+  margin: 0 auto var(--aa-space-xl);
+  max-width: 28ch;
+  line-height: var(--aa-leading-normal);
+}
+
+.aa-triage-empty__actions {
+  display: flex;
+  gap: var(--aa-space-sm);
+  justify-content: center;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-triage__progress-fill,
+  .aa-triage-empty {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+.aa-triage-list-note {
+  margin: var(--aa-space-sm) 0 0;
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  line-height: 1.45;
+}
+.aa-triage-list-note.is-error { color: var(--aa-rose-text); }
+
+/* List destination picker — a Simple-list Project chosen as the filing
+   target for a list-item decision. Calm select, matches the step's rhythm. */
+.aa-triage-list-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+}
+
+.aa-triage-list-picker__label {
+  font-size: var(--aa-text-xs, 0.75rem);
+  color: var(--aa-text-muted);
+}
+
+.aa-triage-list-picker select {
+  font: inherit;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+}
