@@ -4,8 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "echo \"@actionamp/api dev placeholder (API framework decided in F7)\"",
-    "build": "tsc",
+    "dev": "bun --hot src/index.ts",
+    "start": "bun src/index.ts",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@actionamp/contract": "workspace:*",
+    "@actionamp/domain": "workspace:*",
+    "@orpc/server": "^1.0.0",
+    "hono": "^4.0.0",
+    "zod": "^4.4.3"
   }
 }
