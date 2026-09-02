@@ -65,8 +65,15 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | **S12+S14 Push/PWA + reminder** | ✅ 7e7328e | reviewed pass — SW/manifest byte-identical, share CSRF exception approved (Lax), atomic claim-before-send |
 | **S13+S15 Onboarding + public** | ✅ d7366bc | reviewed pass-with-fixes — public endpoints byte-exact; bootstrap 500 fixed (webapp has the same hole) |
 | Wave-3 integration | ✅ 9dda9cb | **INCIDENT: stash-pop from a pre-session branch applied old webapp WIP to webapp/ — I1 restored byte-clean same day; the WIP remains safely in stash@{0} (fix/today-badge-lens-scoping) for its owner**. Gates: domain 364/364, api 112/112, e2e 60/60 twice |
-| Wave 4 (S16 billing, S17 admin, S18 CLI conformance) | ▶ running | last functional surfaces; S18 is byte-exact --json conformance, both CLIs unchanged |
-| V-series (V1 parity run → V2 rehearsal → V3 kit → V4 WITH JAKE) | ☐ next | V1 needs a fresh prod pg_dump restored locally (Jake creds likely) |
+| **S16 Billing** | ✅ 6c097aa | reviewed pass, zero defects — webhooks verbatim + idempotent, live signed probe (FOUNDER flip + replay), test-mode only |
+| **S17 Admin** | ✅ d7728a2 | reviewed approved — zero-reads-on-denial spy-pinned, deletion semantics pinned at the DB level |
+| **S18 CLI conformance** | ✅ 39178be | reviewed approved — REAL unmodified CLIs ran the full surface vs the new API; 57-test conformance suite |
+| Wave-4 integration | ✅ | 75/75 e2e twice (billing spec live on test-mode Stripe env); api 209/209; domain 454/454 |
+| **BUILD COMPLETE — all S-goals landed** | ✅ | every slice P0→P5 with cross-review; suite: 454 domain + 209 api + 75 e2e |
+| V1 parity run | ▶ next | restore a fresh prod pg_dump locally, then full suites green twice — **needs the dump (Jake/Railway)** |
+| V2 rehearsal → V3 switch kit | ☐ after V1 | runbook dry run + flip/verify scripts, announcement draft, rollback one-pager |
+| V4 switch day | ☐ | WITH JAKE (quiet hour) — gates #4 |
+| V5 cleanup · V6 Neon (optional) | ☐ | after V4 + 2–4 wks; Jake approves deletion (gates #5) |
 | Remaining S/V goals | ☐ | P0 notes ready for every slice; port order per goal set |
 
 Blockers: none. Jake gates still open: V2 rehearsal attendance, V4 switch-day
