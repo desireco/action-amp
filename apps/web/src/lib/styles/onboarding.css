@@ -1,0 +1,431 @@
+/*
+ * Onboarding page styles — ported from webapp/src/onboarding/OnboardingPage.css
+ * (S13 parity: same look). Consumes design tokens; tokens.css is loaded
+ * globally (src/routes/+layout.svelte), so the webapp file's @import is dropped.
+ * Full-screen first-run flow.
+ */
+
+.aa-onboarding {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  background: oklch(0.14 0.02 230 / 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+.aa-onboarding.leaving {
+  opacity: 0;
+}
+
+/* dim background pattern */
+.aa-ob-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 50% 30%,
+      oklch(0.58 0.16 225 / 0.12) 0%,
+      transparent 60%
+    ),
+    transparent;
+  pointer-events: none;
+}
+
+/* skip link */
+.aa-ob-skip {
+  margin-top: var(--aa-space-md);
+  padding: 4px 8px;
+  font-size: var(--aa-text-sm);
+  font-weight: 500;
+  color: var(--aa-text-4);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--aa-dur-base);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+.aa-ob-skip:hover {
+  color: var(--aa-text-3);
+}
+.aa-ob-skip:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+  border-radius: var(--aa-radius-sm);
+}
+
+/* stage */
+.aa-ob-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 32px;
+  position: relative;
+  z-index: 2;
+}
+
+/* page */
+.aa-ob-page {
+  text-align: center;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.aa-ob-enter {
+  animation: aa-ob-fade-in 0.4s var(--aa-ease-out-quart) both;
+}
+@keyframes aa-ob-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* eyebrow */
+.aa-ob-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--aa-teal);
+  margin-bottom: 18px;
+}
+
+/* headings */
+.aa-ob-h1 {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.1;
+  color: white;
+  margin-bottom: 18px;
+  max-width: 16ch;
+}
+.aa-ob-h1--wide {
+  max-width: 18ch;
+}
+.aa-ob-h2 {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.15;
+  color: white;
+  margin-bottom: 18px;
+  max-width: 20ch;
+}
+.aa-ob-title-mobile {
+  display: none;
+}
+
+/* body */
+.aa-ob-body {
+  font-size: 18px;
+  line-height: 1.5;
+  color: oklch(0.8 0.01 230 / 0.78);
+  max-width: 34ch;
+  margin-bottom: 30px;
+}
+.aa-ob-body--intro {
+  max-width: 37ch;
+}
+.aa-ob-body b {
+  color: oklch(0.9 0.01 230 / 0.95);
+  font-weight: 600;
+}
+
+/* progress dots */
+.aa-ob-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.aa-ob-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--aa-radius-full);
+  background: oklch(0.7 0.01 230 / 0.2);
+  transition: all var(--aa-dur-base);
+}
+.aa-ob-dot.active {
+  background: var(--aa-teal);
+  width: 18px;
+}
+
+/* ============================================================
+   LOOP VISUALS (the real 3-step loop: capture / triage / focus)
+   Calm, static, one shape each — replaces the mobile-gesture demo.
+   ============================================================ */
+.aa-ob-loop-visual {
+  width: 260px;
+  max-width: 100%;
+  margin: 0 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Capture: ⌘K chip + a faint prompt line */
+.aa-ob-loop-capture {
+  gap: var(--aa-space-md);
+}
+.aa-ob-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  height: 40px;
+  padding: 0 12px;
+  font-family: var(--aa-font-mono, ui-monospace, monospace);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--aa-teal);
+  background: oklch(0.72 0.15 220 / 0.12);
+  border: 1px solid oklch(0.72 0.15 220 / 0.4);
+  border-radius: var(--aa-radius-md);
+}
+.aa-ob-mobile-capture-chip {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: white;
+  background: var(--aa-teal-cta);
+  border-radius: var(--aa-radius-full);
+  box-shadow: 0 8px 24px var(--aa-teal-tint-shadow);
+}
+.aa-ob-mobile-capture-chip :global(svg) {
+  width: 18px;
+  height: 18px;
+}
+.aa-ob-capture-line {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--aa-text-3);
+}
+
+/* Triage: two rows, each a text + a key chip */
+.aa-ob-loop-triage {
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+  width: 220px;
+}
+.aa-ob-triage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  padding: 10px 14px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+}
+.aa-ob-triage-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--aa-text);
+}
+.aa-ob-triage-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--aa-surface);
+  background: var(--aa-teal-cta);
+  border-radius: var(--aa-radius-sm);
+}
+
+/* Focus: a single card with a check + one task — everything else gone */
+.aa-ob-focus-card {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  width: 220px;
+  padding: 16px 18px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  box-shadow: 0 8px 24px oklch(0.1 0.01 230 / 0.25);
+}
+.aa-ob-focus-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--aa-radius-full);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  color: white;
+  flex-shrink: 0;
+}
+.aa-ob-focus-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--aa-text);
+}
+
+/* Inline error when completeOnboarding fails — calm, not a guilt-trip red. */
+.aa-ob-error {
+  margin: 0 0 var(--aa-space-md);
+  font-size: 0.9rem;
+  color: var(--aa-amber);
+}
+
+/* Preferred-name text input (onboarding step 0).
+   ponytail: no TextField component yet — only 2 input instances exist (this
+   + auth forms, which can't be swapped). Promote to a component at 3+. */
+.aa-ob-name-input {
+  width: 100%;
+  max-width: 320px;
+  padding: var(--aa-space-md) 14px;
+  font-size: 1.05rem;
+  border-radius: var(--aa-radius-md);
+  border: 1px solid var(--aa-border-strong);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  margin-top: var(--aa-space-sm);
+  transition:
+    border-color var(--aa-dur-base) var(--aa-ease-out),
+    box-shadow var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-ob-name-input:focus {
+  outline: none;
+  border-color: var(--aa-teal);
+  box-shadow: var(--aa-focus-ring);
+}
+.aa-ob-name-input::placeholder {
+  color: var(--aa-text-4);
+}
+.aa-ob-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--aa-teal-cta);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  min-height: 52px;
+  min-width: 128px;
+  padding: 15px 32px;
+  border-radius: var(--aa-radius-lg);
+  box-shadow: 0 8px 24px var(--aa-teal-tint-shadow);
+  transition:
+    transform var(--aa-dur-fast),
+    background var(--aa-dur-base);
+  border: none;
+  cursor: pointer;
+}
+.aa-ob-cta:hover {
+  background: var(--aa-teal-cta-hover);
+}
+/* CTA placed inline below an input (name step), not in the footer strip. */
+.aa-ob-cta--inline {
+  margin-top: var(--aa-space-lg);
+}
+.aa-ob-cta:active {
+  transform: scale(0.96);
+}
+.aa-ob-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 26px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .aa-ob-stage {
+    padding: 78px 28px 54px;
+  }
+  .aa-ob-page {
+    max-width: 100%;
+  }
+  .aa-ob-h1 {
+    font-size: 34px;
+    max-width: 15ch;
+  }
+  .aa-ob-h2 {
+    font-size: 30px;
+    max-width: 16ch;
+  }
+  .aa-ob-body {
+    font-size: 17px;
+    max-width: 31ch;
+    margin-bottom: 28px;
+  }
+  .aa-ob-loop-visual {
+    width: 220px;
+    margin-bottom: 24px;
+  }
+  .aa-ob-title-desktop {
+    display: none;
+  }
+  .aa-ob-title-mobile {
+    display: inline;
+  }
+  .aa-ob-kbd--desktop {
+    display: none;
+  }
+  .aa-ob-mobile-capture-chip {
+    display: inline-flex;
+  }
+  .aa-ob-actions {
+    margin-top: 24px;
+  }
+  .aa-ob-cta {
+    min-width: 154px;
+    max-width: 100%;
+    padding-inline: 26px;
+  }
+  .aa-ob-name-input {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .aa-ob-stage {
+    padding-inline: 24px;
+  }
+  .aa-ob-h1 {
+    font-size: 31px;
+  }
+  .aa-ob-h2 {
+    font-size: 27px;
+  }
+  .aa-ob-body {
+    font-size: 16px;
+  }
+  .aa-ob-cta {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .aa-onboarding *,
+  .aa-onboarding *::before,
+  .aa-onboarding *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
