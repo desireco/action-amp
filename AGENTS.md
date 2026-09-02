@@ -90,6 +90,25 @@ Pick the task; read the doc(s) on the right **before** writing code.
 | Wasp mechanics (config, imports, migrations, ops) | `webapp/AGENTS.md` ← load the `wasp` skill too |
 | **Code review** (reviewing changes/PRs/diffs) | `code-review` skill — then auto-implement the fixes (see "Rules that always apply") |
 
+## New-stack layout (api/ · web/ · packages/)
+
+The platform-switch rebuild lives at the root alongside the legacy folders:
+
+- **`api/`** — the new API (Hono + oRPC on Bun, Drizzle). Dev: `bun run dev:api`.
+- **`web/`** — the new web app (Svelte 5 + SvelteKit SPA). Dev: `bun run dev:web`.
+- **`packages/domain`** — the ported business logic (all 13 cores + the Drizzle
+  seam). **`packages/contract`** — the sole API surface + typed client.
+
+Root tasks (bun; npm run also executes them — but NEVER `npm install`):
+`bun run dev` (api + web together) · `dev:api` · `dev:web` · `test` ·
+`test:e2e` (needs `E2E_DATABASE_URL` set to the same DB the API uses, plus
+`STRIPE_WEBHOOK_SECRET` from webapp/.env.server for the billing specs) ·
+`lint` · `typecheck`. Env for the API lives in `api/.env` (gitignored; copy
+the shape from webapp/.env.server — local DB + test-mode Stripe keys).
+
+Auth for local checks: `web` has no login page dependency for seeded flows —
+`POST /api/dev/login?email=…` (dev-only) or the devEmail route on :5174.
+
 ## Implementation map (webapp/)
 
 - **`webapp/main.wasp.ts`** — every route, page, auth op, operation. The fastest
