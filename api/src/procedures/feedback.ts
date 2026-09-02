@@ -26,6 +26,7 @@
 import { implement, ORPCError } from "@orpc/server";
 import { feedbackContract } from "@actionamp/contract";
 import { submitFeedbackCore } from "@actionamp/domain/feedback";
+import { sendFeedbackNotificationEmail } from "../emailNotifications.js";
 import { requireUser, type ApiContext } from "../context.js";
 
 const ORPC = implement(feedbackContract).$context<ApiContext>();
@@ -58,6 +59,25 @@ const submit = ORPC.submit.handler(async ({ context, input }) =>
       userName: acting.fullName ?? null,
       userEmail: acting.email ?? null,
     });
+    // Webapp parity: best-effort heads-up to the admin (prod-only inside the
+    // seam; a mail failure never fails the submission).
+    try {
+      await sendFeedbackNotificationEmail({
+        id: feedback.id,
+        message: feedback.message,
+        route: feedback.route,
+        section: feedback.section,
+        lensName: input.lens?.name ?? null,
+        lensColor: null,
+        userName: acting.fullName ?? null,
+        userEmail: acting.email ?? null,
+        userAgent: input.userAgent ?? null,
+        viewport: input.viewport ?? null,
+        timezone: input.timezone ?? null,
+      });
+    } catch {
+      // Swallowed by design.
+    }
     return { id: feedback.id };
   }),
 );

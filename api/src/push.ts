@@ -37,6 +37,7 @@ import { notificationsContract } from "@actionamp/contract";
 import type { DomainDb } from "@actionamp/domain/db";
 import { pushSubscription, task, user } from "@actionamp/domain/db";
 import { requireUser, type ApiContext } from "./context.js";
+import { logEvent } from "./logger.js";
 import { runDailyReminderPass, type ReminderDeps } from "./reminder.js";
 
 const ORPC = implement(notificationsContract).$context<ApiContext>();
@@ -213,7 +214,10 @@ export function startDailyReminderScheduler(db: DomainDb): ReminderScheduler {
     try {
       const { sent } = await runDailyReminderPass(deps);
       if (sent > 0) {
-        console.log(JSON.stringify({ ts: new Date().toISOString(), level: "info", event: "dailyReminder", sent }));
+        logEvent("info", `daily reminder sent to ${sent} user${sent === 1 ? "" : "s"}`, {
+          event: "dailyReminder",
+          sent,
+        });
       }
     } catch (err) {
       // The pass itself never throws by design; this is a belt-and-braces log.

@@ -46,6 +46,7 @@ import {
   type BillingWebhookDeps,
 } from "@actionamp/domain/billing";
 import { isStripeConfigured, requireStripe } from "./billing/stripe.js";
+import { logEvent } from "./logger.js";
 import { recordPublicAnalyticsEvent } from "./procedures/publicCore.js";
 
 export interface StripeWebhookRouteDeps {
@@ -166,6 +167,10 @@ export function createStripeWebhookRoute(deps: StripeWebhookRouteDeps): Hono {
       return c.text("Webhook handler error.", 500);
     }
 
+    logEvent("info", `stripe webhook handled: ${event.type}`, {
+      event: "stripeWebhook",
+      type: event.type,
+    });
     return c.json({ received: true });
   });
 

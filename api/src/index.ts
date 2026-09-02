@@ -3,12 +3,13 @@
  *
  * Dev: `bun --hot src/index.ts` (edit-and-save reloads; no process restart).
  *
- * Log format: one JSON line per event on stdout
- *   request:  {ts, level:"info", reqId, method, path, status, durationMs}
- *   error:    {ts, level:"error", reqId, error}
- *   startup:  {ts, level:"info", event:"startup", port, pid}
+ * Logs (see logger.ts): human-readable colored lines in development, one JSON
+ * line per event in production (NODE_ENV=production or LOG_FORMAT=json).
+ * Every request line carries WHO called (acting-user email from the F10
+ * resolution) and WHAT (method + path + outcome).
  */
 import { Hono } from "hono";
+import { logEvent, logRequest } from "./logger.js";
 import { RPCHandler } from "@orpc/server/fetch";
 import { eq } from "drizzle-orm";
 import {
@@ -57,16 +58,13 @@ import { cliAccessViolation, isEntitled } from "@actionamp/domain/billing";
 const db = createDb(databaseUrl());
 const entities = createEntities(db);
 
-type AppEnv = { Variables: { reqId: string } };
+type AppEnv = { Variables: { reqId: string; actingEmail: string | null } };
 
 const app = new Hono<AppEnv>();
 
-/** Emit a single JSON log line to stdout. */
-function logLine(level: "info" | "error", fields: Record<string, unknown>): void {
-  console.log(JSON.stringify({ ts: new Date().toISOString(), level, ...fields }));
-}
-
-// --- request ID + access logging -------------------------------------------
+// --- request ID + access logging --------------------------------------------
+// WHO (acting-user email, set by the /rpc auth wrapper below) + WHAT (method,
+// path, outcome) on every line. Health polls are silent unless failing.
 
 app.use("*", async (c, next) => {
   const reqId = crypto.randomUUID();
@@ -74,12 +72,12 @@ app.use("*", async (c, next) => {
   const start = performance.now();
   await next();
   const durationMs = Math.round((performance.now() - start) * 100) / 100;
-  logLine("info", {
-    reqId,
+  logRequest({
     method: c.req.method,
     path: c.req.path,
     status: c.res.status,
     durationMs,
+    user: c.get("actingEmail") ?? null,
   });
   c.res.headers.set("x-request-id", reqId);
 });
@@ -87,12 +85,7 @@ app.use("*", async (c, next) => {
 // --- global error handler ----------------------------------------------------
 
 app.onError((err, c) => {
-  const reqId = c.get("reqId") ?? crypto.randomUUID();
-  // Name + message only — never the stack.
-  logLine("error", {
-    reqId,
-    error: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
-  });
+  logEvent("error", `${c.req.method} ${c.req.path} — ${err.message || err.name}`);
   return c.json({ error: { code: "INTERNAL" } }, 500);
 });
 
@@ -145,6 +138,7 @@ app.use("/rpc/*", async (c, next) => {
   }
   const user =
     resolution.kind === "authenticated" ? resolution.user : null;
+  c.set("actingEmail", user?.email ?? null);
   const { matched, response } = await rpcHandler.handle(c.req.raw, {
     prefix: "/rpc",
     context: { db, entities, user },
@@ -468,7 +462,11 @@ app.notFound((c) => c.json({ error: { code: "NOT_FOUND" } }, 404));
 
 const port = Number(process.env.PORT ?? 8080);
 const server = Bun.serve({ port, fetch: app.fetch });
-logLine("info", { event: "startup", port: server.port, pid: process.pid });
+logEvent(
+  "info",
+  `ActionAmp API listening on http://localhost:${server.port} (pid ${process.pid})`,
+  { port: server.port, pid: process.pid },
+);
 
 // S14 — the daily-reminder scheduler (the PgBoss `* * * * *` replacement): a
 // 60s interval, overlap-guarded, once-per-local-day per user via the atomic
