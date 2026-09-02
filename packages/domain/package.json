@@ -11,8 +11,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "bunx --bun vitest run",
+    "test:watch": "bunx --bun vitest",
     "typecheck": "tsc --noEmit",
     "db:introspect": "drizzle-kit pull"
   },
