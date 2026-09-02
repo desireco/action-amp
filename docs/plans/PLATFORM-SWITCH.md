@@ -47,11 +47,11 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | Workspace deps for new stack | ✅ `ff6339b` | hono+orpc (api), svelte 5 kit (web), drizzle 0.45 (domain), zod (contract); bun isolated linker; root scripts → bun filters |
 | P0 parity pre-studies (all slices) | ✅ 2026-09-01 | 15 note sets in `packages/contract/src/s*/README.md` — routes, ops, keys, edge cases, e2e inventory per surface (feeds every slice's P0) |
 | Auth pre-study (feeds F10) | ✅ 2026-09-01 | `docs/plans/auth-compatibility-notes.md` — cookie `wasp_session`, sessions unhashed (exact-match `Session.id`), PAT = SHA-256 hex of `aa_…`, expiry side effects to replicate |
-| F4 domain pilot (tasks core port) | ▶ F4a running | drizzle pull snapshot landed in `packages/domain/drizzle/`; introspection report next; F4b/c queue behind it |
-| F8a api shell | ▶ landed, in review | Hono app + JSON logs + `/health` + `/ready` in `apps/api/src/index.ts`; reviewer + commit pending |
-| F9a web shell | ▶ landed, in review | SvelteKit SPA shell in `apps/web/` (runes stores, keyboard module, tokens.css, dev proxy 5174→8080); reviewer + commit pending |
-| F9b mock client + stores | ▶ dispatched | contract client behind mock transport; first store + screen against it |
-| F8b oRPC router | ☐ after F4b | router over domain; `tasks.list`; Router type → `packages/contract` |
+| F4 domain pilot (tasks core port) | ▶ F4b running | F4a ✅ `2bfc80c` (reviewed): introspected schema in `packages/domain/src/db` + defaults audit `docs/plans/introspection-report.md`; zero drift vs schema.prisma; bytea customType is the one sanctioned hand-edit |
+| F8a api shell | ✅ `6eac663` | reviewed PASS — 8ms hot reload verified, JSON logs with reqIds, `/health` + `/ready`; F8b note: drop `src/env.d.ts` when @types/bun lands |
+| F9a+F9b web shell + mock client | ✅ `193a462` | both reviewed PASS — runes stores + keyboard shell, tokens verbatim, oRPC mock client with one-line F8b swap points; zero imports outside `@actionamp/contract` |
+| P0 parity pre-studies (all slices) | ✅ `8730024` | cross-reviewed: ~200 claims fact-checked vs sources, 2 fixes |
+| F8b oRPC router | ☐ after F4b | swap points ready (`router-type.ts:45`, `api.ts` createClient) |
 | F10 auth validation | ☐ after F8b | spec ready (auth-compatibility-notes) |
 | F11 e2e harness | ☐ after F8b+F9b+F10c | — |
 | Remaining S/V goals | ☐ | P0 notes ready for every slice; port order per goal set |
