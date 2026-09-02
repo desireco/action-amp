@@ -11,7 +11,7 @@
         "vitest": "^4.1.11",
       },
     },
-    "apps/api": {
+    "api": {
       "name": "@actionamp/api",
       "version": "0.1.0",
       "dependencies": {
@@ -27,25 +27,6 @@
       "devDependencies": {
         "@types/bun": "^1.2.0",
         "@types/web-push": "^3.6.4",
-      },
-    },
-    "apps/web": {
-      "name": "@actionamp/web",
-      "version": "0.1.0",
-      "dependencies": {
-        "@actionamp/contract": "workspace:*",
-        "fuse.js": "^7.5.0",
-      },
-      "devDependencies": {
-        "@orpc/client": "^1.0.0",
-        "@playwright/test": "^1.50.0",
-        "@sveltejs/adapter-static": "^3.0.0",
-        "@sveltejs/kit": "^2.0.0",
-        "@sveltejs/vite-plugin-svelte": "^5.0.0",
-        "svelte": "^5.0.0",
-        "svelte-check": "^4.0.0",
-        "typescript": "^5.8.0",
-        "vite": "^6.0.0",
       },
     },
     "packages/contract": {
@@ -68,15 +49,34 @@
         "postgres": "^3.4.0",
       },
     },
+    "web": {
+      "name": "@actionamp/web",
+      "version": "0.1.0",
+      "dependencies": {
+        "@actionamp/contract": "workspace:*",
+        "fuse.js": "^7.5.0",
+      },
+      "devDependencies": {
+        "@orpc/client": "^1.0.0",
+        "@playwright/test": "^1.50.0",
+        "@sveltejs/adapter-static": "^3.0.0",
+        "@sveltejs/kit": "^2.0.0",
+        "@sveltejs/vite-plugin-svelte": "^5.0.0",
+        "svelte": "^5.0.0",
+        "svelte-check": "^4.0.0",
+        "typescript": "^5.8.0",
+        "vite": "^6.0.0",
+      },
+    },
   },
   "packages": {
-    "@actionamp/api": ["@actionamp/api@workspace:apps/api"],
+    "@actionamp/api": ["@actionamp/api@workspace:api"],
 
     "@actionamp/contract": ["@actionamp/contract@workspace:packages/contract"],
 
     "@actionamp/domain": ["@actionamp/domain@workspace:packages/domain"],
 
-    "@actionamp/web": ["@actionamp/web@workspace:apps/web"],
+    "@actionamp/web": ["@actionamp/web@workspace:web"],
 
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.10.2", "", {}, "sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w=="],
 

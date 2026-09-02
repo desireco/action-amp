@@ -3,7 +3,7 @@
  * S1 (What Now + Focus) + S4 (Tasks & lists) batch.
  *
  * Contract-first: zod schemas + `oc` builders define the wire surface here;
- * apps/api implements it (`implement(contractRouter)` → `.handler(...)`) and
+ * api implements it (`implement(contractRouter)` → `.handler(...)`) and
  * every client consumes it as types (`ContractRouterClient`). Zod on `input`
  * gives the error taxonomy for free: a schema violation surfaces as an oRPC
  * `BAD_REQUEST` (4xx) before any handler runs.

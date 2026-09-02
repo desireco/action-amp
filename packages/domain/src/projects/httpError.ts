@@ -1,7 +1,7 @@
 // S5 — the HTTP-ish error the ports of webapp's op-layer throw. Webapp ops
 // threw `HttpError` from `wasp/server` (with `statusCode`); the domain keeps
 // the exact message+status surface without any framework import. The API
-// layer (`apps/api`) maps these onto oRPC's typed errors — NOT_FOUND → 404,
+// layer (`api`) maps these onto oRPC's typed errors — NOT_FOUND → 404,
 // CONFLICT → 409, BAD_REQUEST → 400 — and the unit tests ported from webapp
 // assert on the same `statusCode` field.
 export class HttpError extends Error {

@@ -11,7 +11,7 @@
  * framework or web-push import lives here.**
  *
  * The send loop itself (VAPID gate, per-user clock matching, 404/410 prune,
- * the once-per-local-day stamp) is apps/api's job seam — `apps/api/src/push.ts`
+ * the once-per-local-day stamp) is api's job seam — `api/src/push.ts`
  * — because it binds web-push + Drizzle directly (there are no User /
  * PushSubscription delegates on the F4b seam). The pieces worth unit-pinning —
  * the subscription upsert semantics and the body-string contract — live here.

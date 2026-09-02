@@ -1,7 +1,7 @@
 /**
  * Pure admin-stats cores (S17) — ported from webapp/src/admin/
  * operationsCore.ts. Shared DB layer for the browser oRPC queries
- * (`apps/api/src/procedures/admin.ts`) and the admin-cli `/api/cli/admin/*`
+ * (`api/src/procedures/admin.ts`) and the admin-cli `/api/cli/admin/*`
  * PAT routes.
  *
  * Pattern: every core takes `entities` as its first arg and plain args, does

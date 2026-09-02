@@ -5,7 +5,7 @@
  * cores receive the already-verified Stripe event payload and the seam
  * entities, so the money-path mutations are unit-testable without the SDK or
  * an HTTP server. The Hono endpoint that verifies signatures and maps guard
- * rails to statuses lives in apps/api/src/webhooks-stripe.ts.
+ * rails to statuses lives in api/src/webhooks-stripe.ts.
  *
  * Behaviors are VERBATIM (s16-billing/README.md §3.1 is the checklist):
  *

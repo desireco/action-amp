@@ -1,0 +1,365 @@
+/**
+ * Natural-language capture parser (grammar v2, locked 2026-07-04).
+ *
+ * CLIENT COPY of @actionamp/domain/src/shared/capture/parse.ts (S2) — keep
+ * the two files in sync. web depends only on the contract package, so
+ * the live chip preview runs this copy against the local Temporal shim
+ * (./temporal-shim); the server persists with the domain port of the exact
+ * same grammar. The shared test suite (domain parse.test.ts, 66 cases) is
+ * the contract both copies satisfy. See docs/specs/capture-grammar.md.
+ *
+ * Extracts structured tokens from free-text capture and returns them along
+ * with the cleaned (token-stripped) text.
+ *
+ * Grammar:
+ *   #mvp / #[Q3 Launch] → project hint (first # mention wins; lowercased, no prefix)
+ *   #tag               → context tag (any #token after the first; lowercased)
+ *   @today/@tomorrow   → date (also @tonight, @tmrw, @tmr; bare forms work too)
+ *   !1  !low  !!!      → priority (1=low, 2=normal, 3=important)
+ *   ~20m  ~1h  ~XL     → size (time→S/M/L/XL: <15m=S, <1h=M, <2h=L, else XL)
+ *   [[work]]           → lens override (seeded: work/personal/me; custom via
+ *                        knownLensNames). First recognized token wins; unknown
+ *                        tokens stay literal text.
+ *
+ * `@` is time-only (grammar v2). `@phone`, `@errands` etc. are NOT extracted —
+ * they stay literal. Only @today/@tomorrow/@tonight (+ aliases) set the date.
+ * `#` is the project sigil: the first `#token`/`#[name]` is the project hint,
+ * and any further `#token`s are tags. The capture `#` autocomplete surfaces
+ * project names.
+ *
+ * Used at capture time (server) to populate InboxItem.parsed-* fields, and
+ * available client-side for live preview in the capture popover.
+ */
+
+export type ParsedPriority = "LOW" | "NORMAL" | "IMPORTANT";
+export type ParsedSize = "S" | "M" | "L" | "XL";
+import {
+  Temporal,
+  instantFrom,
+  instantToDate,
+  instantToPlainDate,
+  plainDateToDb,
+  systemTimeZone,
+  type Instant as TemporalInstant,
+  type PlainDate as TemporalPlainDate,
+} from "./temporal-shim";
+
+export interface ParsedCapture {
+  /** The text with all parsed tokens removed, trimmed */
+  cleanText: string;
+  parsedScheduledDate: Date | null;
+  parsedSnoozedUntil: Date | null;
+  parsedPriority: ParsedPriority | null;
+  parsedSize: ParsedSize | null;
+  parsedTags: string[];
+  /**
+   * Project name hint — the first `#token`/`#[name]` in the capture (lowercased, no
+   * prefix). Resolved to a real project at triage. The capture `#` autocomplete
+   * surfaces project names to make this intent explicit; typing a project name
+   * that doesn't exist just falls through to "General" at triage.
+   */
+  parsedProject: string | null;
+  /** Lens token from `[[name]]` (lowercased); null when absent or unrecognized. */
+  parsedLens: string | null;
+}
+
+// Seeded lens tokens — resolve on `kind` at triage (rename-safe). `[[me]]` and
+// `[[personal]]` both map to the PERSONAL kind; `[[work]]` to WORK. Custom lens
+// tokens are supplied by the caller via `knownLensNames` (the parser can't query
+// the DB). Unknown tokens stay literal so pasted wiki-links (Obsidian/Notion)
+// don't false-positive into lens inference.
+const SEEDED_LENS_TOKENS = new Set(["work", "personal", "me"]);
+
+const WEEKDAYS = [
+  { re: /sunday|sun\b/i, dow: 0 },
+  { re: /monday|mon\b/i, dow: 1 },
+  { re: /tuesday|tue\b|tues\b/i, dow: 2 },
+  { re: /wednesday|wed\b/i, dow: 3 },
+  { re: /thursday|thu\b|thur\b|thurs\b/i, dow: 4 },
+  { re: /friday|fri\b/i, dow: 5 },
+  { re: /saturday|sat\b/i, dow: 6 },
+];
+
+const MONTHS: { re: RegExp; month: number }[] = [
+  { re: /january|jan\b/i, month: 0 },
+  { re: /february|feb\b/i, month: 1 },
+  { re: /march|mar\b/i, month: 2 },
+  { re: /april|apr\b/i, month: 3 },
+  { re: /may\b/i, month: 4 },
+  { re: /june|jun\b/i, month: 5 },
+  { re: /july|jul\b/i, month: 6 },
+  { re: /august|aug\b/i, month: 7 },
+  { re: /september|sep\b|sept\b/i, month: 8 },
+  { re: /october|oct\b/i, month: 9 },
+  { re: /november|nov\b/i, month: 10 },
+  { re: /december|dec\b/i, month: 11 },
+];
+
+interface ParsedTimeTarget {
+  scheduledDate: TemporalPlainDate | null;
+  snoozedUntil: TemporalInstant | null;
+}
+
+function nearDayKeyword(
+  keyword: string,
+  now: TemporalInstant,
+  timeZone: string,
+): ParsedTimeTarget | null {
+  const today = instantToPlainDate(now, timeZone);
+  switch (keyword.toLowerCase()) {
+    case "today":
+      return { scheduledDate: today, snoozedUntil: null };
+    case "tonight":
+      return {
+        scheduledDate: null,
+        snoozedUntil: today
+          .toZonedDateTime({
+            timeZone,
+            plainTime: Temporal.PlainTime.from("20:00"),
+          })
+          .toInstant(),
+      };
+    case "tomorrow":
+    case "tmrw":
+    case "tmr":
+      return { scheduledDate: today.add({ days: 1 }), snoozedUntil: null };
+    default:
+      return null;
+  }
+}
+
+function nextWeekday(
+  target: number,
+  from: TemporalPlainDate,
+): TemporalPlainDate {
+  const temporalTarget = target === 0 ? 7 : target;
+  let diff = (temporalTarget - from.dayOfWeek + 7) % 7;
+  if (diff === 0) diff = 7; // "next monday" from monday = next week
+  return from.add({ days: diff });
+}
+
+const PRIORITY_WORDS = new Map<string, ParsedPriority>([
+  ["1", "LOW"],
+  ["low", "LOW"],
+  ["2", "NORMAL"],
+  ["normal", "NORMAL"],
+  ["3", "IMPORTANT"],
+  ["important", "IMPORTANT"],
+  ["imp", "IMPORTANT"],
+  ["high", "IMPORTANT"], // !high / !h aliases for the IMPORTANT level (enum is 3-level)
+  ["h", "IMPORTANT"],
+  ["!!!", "IMPORTANT"],
+  ["!!", "NORMAL"],
+  ["!", "LOW"],
+]);
+
+function sizeFromTime(value: number, unit: "m" | "h"): ParsedSize {
+  const minutes = unit === "h" ? value * 60 : value;
+  if (minutes < 15) return "S";
+  if (minutes < 60) return "M";
+  if (minutes < 120) return "L";
+  return "XL";
+}
+
+const SIZE_WORDS = new Map<string, ParsedSize>([
+  ["s", "S"],
+  ["m", "M"],
+  ["l", "L"],
+  ["xl", "XL"],
+  ["xs", "S"],
+]);
+
+/**
+ * @param raw Raw capture text.
+ * @param now Reference time for relative date resolution (tests).
+ * @param knownLensNames Lowercased names of the user's CUSTOM lenses (beyond the
+ *   seeded work/personal/me). Lets the parser recognize `[[studio]]` when the
+ *   user has a "Studio" lens. Empty by default — tests run with seeded-only.
+ */
+export function parseCapture(
+  raw: string,
+  now: Date = new Date(),
+  knownLensNames: string[] = [],
+  timeZone = systemTimeZone(),
+): ParsedCapture {
+  let text = raw;
+  const tags: string[] = [];
+  let project: string | null = null; // first #token → project name hint (resolved at triage)
+  let lens: string | null = null;
+  const nowInstant = instantFrom(now);
+  const today = instantToPlainDate(nowInstant, timeZone);
+  let scheduledDate: TemporalPlainDate | null = null;
+  let snoozedUntil: TemporalInstant | null = null;
+  let priority: ParsedPriority | null = null;
+  let size: ParsedSize | null = null;
+
+  // ---- Lens override: [[name]] — first recognized token wins ----
+  // Seeded tokens (work/personal/me) + caller-supplied custom names. Unknown
+  // tokens stay literal (no false positives on pasted wiki-links). A second
+  // [[ ]] in the same capture is always preserved as literal text.
+  const knownSet = new Set([...SEEDED_LENS_TOKENS, ...knownLensNames.map((n) => n.toLowerCase())]);
+  text = text.replace(/\[\[([a-zA-Z0-9_-]+)\]\]/, (_full, name) => {
+    const lower = String(name).toLowerCase();
+    if (knownSet.has(lower)) {
+      lens = lower;
+      return "";
+    }
+    return _full; // unknown → leave literal
+  });
+
+  // ---- @date words: @today / @tomorrow / @tonight (also @tmrw / @tmr) ----
+  // `@` is time-only under grammar v2. A user typing @today means
+  // today-the-date. Other @words (@phone, @errands) are NOT extracted — they
+  // stay literal text. Stripped before the #tag pass so they never fall through.
+  if (!scheduledDate && !snoozedUntil) {
+    text = text.replace(/@(tonight|today|tomorrow|tmrw|tmr)\b/gi, (_, kw: string) => {
+      const target = nearDayKeyword(kw, nowInstant, timeZone);
+      if (target) ({ scheduledDate, snoozedUntil } = target);
+      return "";
+    });
+  }
+
+  // ---- Project hint: first #name wins (TRIAGE.md §7.5 — `#` links a project) ----
+  // The first #token becomes the project hint; any further #tokens fall through
+  // to tags below so nothing is lost. The capture autocomplete surfaces project
+  // names on `#`; the parser decides intent by position: first one is the
+  // project, rest are tags.
+  text = text.replace(/#\[([^\]\r\n]+)\]|#([a-zA-Z0-9_-]+)/, (_match, bracketName, tokenName) => {
+    project = String(bracketName ?? tokenName).trim().toLowerCase();
+    return "";
+  });
+
+  // ---- Tags: leftover #names (any number; lowercased) ----
+  // `@` is intentionally absent — under grammar v2 `@` is time-only. Only
+  // leftover `#tokens` (the ones after the first) collect as tags.
+  text = text.replace(/#\[([^\]\r\n]+)\]|#([a-zA-Z0-9_-]+)/g, (_match, bracketName, tokenName) => {
+    tags.push(`#${String(bracketName ?? tokenName).trim().toLowerCase()}`);
+    return "";
+  });
+
+  // ---- Priority: !1/!2/!3 or !word or !/!!/!!! ----
+  // Two shapes: a bang + number/word, OR a run of bangs (!{1,3}).
+  // Specific pattern first — otherwise !{1,3} grabs just ! from !1.
+  // PRIORITY_WORDS keys bang-runs with their leading ! (!/!!/!!!) but
+  // keys number/word without (!1 → "1"). ponytail: prior single-regex form
+  // was off-by-one on bang counts; this split is the fix.
+  text = text.replace(/(!(\d+|[a-z]+)|!{1,3})/i, (match) => {
+    if (/^!+$/.test(match)) {
+      const parsedPriority = PRIORITY_WORDS.get(match);
+      if (parsedPriority) {
+        priority = parsedPriority;
+        return "";
+      }
+    } else {
+      const key = match.slice(1).toLowerCase();
+      const parsedPriority = PRIORITY_WORDS.get(key);
+      if (parsedPriority) {
+        priority = parsedPriority;
+        return "";
+      }
+    }
+    return match;
+  });
+
+  // ---- Size: ~20m / ~1h / ~XL ----
+  text = text.replace(/~(\d+\.?\d*)(m|h)\b/i, (_, val, unit) => {
+    // SAFETY: type assertion is safe — value is validated or from a trusted source.
+    size = sizeFromTime(parseFloat(val), unit.toLowerCase() as "m" | "h");
+    return "";
+  });
+  text = text.replace(/~(xs|s|m|l|xl)\b/i, (_match, word: string) => {
+    const parsedSize = SIZE_WORDS.get(word.toLowerCase());
+    if (parsedSize) size = parsedSize;
+    return "";
+  });
+
+  // ---- Dates (order matters: multi-word first) ----
+  // next week / next month
+  text = text.replace(/\bnext\s+week\b/i, () => {
+    scheduledDate = today.add({ weeks: 1 });
+    return "";
+  });
+  text = text.replace(/\bnext\s+month\b/i, () => {
+    scheduledDate = today.add({ months: 1 });
+    return "";
+  });
+
+  // today / tomorrow / tonight
+  text = text.replace(/\b(tonight|today|tomorrow|tmrw|tmr)\b/gi, (_, kw: string) => {
+    const target = nearDayKeyword(kw, nowInstant, timeZone);
+    if (target) ({ scheduledDate, snoozedUntil } = target);
+    return "";
+  });
+
+  // weekday names → next occurrence
+  for (const { re, dow } of WEEKDAYS) {
+    if (re.test(text) && !scheduledDate && !snoozedUntil) {
+      scheduledDate = nextWeekday(dow, today);
+      text = text.replace(re, "");
+      break;
+    }
+  }
+
+  // "jun 30" / "june 30" → that date (this year, or next if past)
+  if (!scheduledDate && !snoozedUntil) {
+    for (const { re, month } of MONTHS) {
+      // Wrap the month alternation in a non-capturing group so the day
+      // pattern applies to the whole — without it, "june|jun\b\s+30" parses
+      // as (june) OR (jun\b\s+30), so "june 30" matches "june" alone and
+      // drops the day. ponytail: this bit us silently before tests existed.
+      const m = text.match(
+        new RegExp("(?:" + re.source + ")\\s+(\\d{1,2})", "i"),
+      );
+      if (m) {
+        const day = parseInt(m[1], 10);
+        let candidate = Temporal.PlainDate.from({
+          year: today.year,
+          month: month + 1,
+          day,
+        });
+        if (Temporal.PlainDate.compare(candidate, today) < 0) {
+          candidate = candidate.with({ year: today.year + 1 });
+        }
+        scheduledDate = candidate;
+        text = text.replace(m[0], "");
+        break;
+      }
+    }
+  }
+
+  // "6/30" or "06/30" → M/D date
+  if (!scheduledDate && !snoozedUntil) {
+    const m = text.replace(/\b(\d{1,2})\/(\d{1,2})\b/, (_, mm, dd) => {
+      const month = parseInt(mm, 10) - 1;
+      const day = parseInt(dd, 10);
+      if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+        let candidate = Temporal.PlainDate.from({
+          year: today.year,
+          month: month + 1,
+          day,
+        });
+        if (Temporal.PlainDate.compare(candidate, today) < 0) {
+          candidate = candidate.with({ year: today.year + 1 });
+        }
+        scheduledDate = candidate;
+        return "";
+      }
+      return _;
+    });
+    text = m;
+  }
+
+  // ---- Collapse extra whitespace + trim ----
+  text = text.replace(/\s+/g, " ").trim();
+
+  return {
+    cleanText: text || raw.trim(), // keep original if everything was a token
+    parsedScheduledDate: scheduledDate ? plainDateToDb(scheduledDate) : null,
+    parsedSnoozedUntil: snoozedUntil ? instantToDate(snoozedUntil) : null,
+    parsedPriority: priority,
+    parsedSize: size,
+    parsedTags: tags,
+    parsedProject: project,
+    parsedLens: lens,
+  };
+}

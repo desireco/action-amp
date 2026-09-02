@@ -2,7 +2,7 @@
 // which exposes the exact Prisma-delegate surface the ported operationsCores
 // speak, implemented over the introspected schema (`./schema`).
 //
-// Layering (v3 architecture): apps/api calls ONLY packages/domain for logic —
+// Layering (v3 architecture): api calls ONLY packages/domain for logic —
 // it builds `const entities = createEntities(createDb(DATABASE_URL))` once and
 // passes it as every core's first argument (the seam `entities` object the
 // cores' docs describe). Tests (F4c) fake the same surface with plain objects.

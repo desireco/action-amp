@@ -3,14 +3,18 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "apps/*",
+    "api",
+    "web",
     "packages/*"
   ],
   "scripts": {
     "dev": "bun run --filter '*' dev",
+    "dev:api": "bun run --filter '@actionamp/api' dev",
+    "dev:web": "bun run --filter '@actionamp/web' dev",
     "build": "bun run --filter '*' build",
     "test": "bun run --filter '*' test",
-    "lint": "oxlint apps packages",
+    "test:e2e": "cd web && bun run test:e2e",
+    "lint": "oxlint api web packages scripts",
     "typecheck": "bun run --filter '*' typecheck"
   },
   "devDependencies": {

@@ -14,7 +14,7 @@
  *     transport concern (see docs/plans/slices/s10-wiring.md §2): an oRPC
  *     procedure cannot Set-Cookie through the RPCHandler response path, so
  *     the LIVE login surface is the REST twin at POST /api/auth/* in
- *     apps/api/src/index.ts, which calls the SAME cores and stamps the
+ *     api/src/index.ts, which calls the SAME cores and stamps the
  *     cookie. These procedures remain the composed /rpc/auth/* surface.
  *   - mintCliToken is auth:true — the caller must be an authenticated user;
  *     FREE plans get the 402 upsell (feature "CLI and API access").

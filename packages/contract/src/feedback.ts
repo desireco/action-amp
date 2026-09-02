@@ -17,7 +17,7 @@
  *
  * The admin notification email the webapp wrapper sent is NOT part of the
  * contract — the stored row is the source of truth (see
- * apps/api/src/procedures/feedback.ts for the wiring note).
+ * api/src/procedures/feedback.ts for the wiring note).
  */
 
 import { oc } from "@orpc/contract";

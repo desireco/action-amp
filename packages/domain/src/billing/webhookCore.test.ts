@@ -1,6 +1,6 @@
 // Ported from webapp/src/billing/webhook.test.ts (S16) — the per-event
 // behavior suite. The transport guard rails (500/400 status codes, signature
-// verification) moved WITH the endpoint to apps/api/src/webhooks-stripe.test.ts;
+// verification) moved WITH the endpoint to api/src/webhooks-stripe.test.ts;
 // everything here drives the cores directly with mock entities and pins the
 // exact seam effects of each verified event (the money-path check: what a
 // verified webhook does to a user's plan + payment record can't silently

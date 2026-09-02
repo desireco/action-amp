@@ -4,7 +4,7 @@
  * pure `(entities, args)` functions the same way the goals ops became
  * lifecycle cores. The entitlement guards (`assertLensConfigAllowed` +
  * `assertUnderCap`) stay at the API wrapper — their placement (before the
- * count/create) is parity-critical and lives in apps/api's lens fragment.
+ * count/create) is parity-critical and lives in api's lens fragment.
  *
  * Error surface unchanged: validation failures throw plain `Error`s (the
  * webapp 400 messages), tenancy/404/409 go through `throwHttpStatus` from

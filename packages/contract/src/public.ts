@@ -14,7 +14,7 @@
  *
  * The same payload is also served as a REST endpoint, `GET /founding-100/status`
  * (Cache-Control: public, max-age=60; CORS widened for exactly
- * https://actionamp.com) — that handler lives in apps/api/src/procedures/
+ * https://actionamp.com) — that handler lives in api/src/procedures/
  * public.ts because it is an HTTP surface, not an oRPC procedure; the Astro
  * marketing site (a separate deployable) can't call the /rpc mount.
  */

@@ -6,7 +6,7 @@
  * Pattern (mirrors `tasks/operationsCore.ts`): every core takes `entities` as
  * its first arg (the Prisma-client-shaped seam object) plus plain args, does
  * the DB work, and returns data. **No server framework import lives here.**
- * The API ops (`apps/api`) are thin wrappers: auth check + entitlement guards
+ * The API ops (`api`) are thin wrappers: auth check + entitlement guards
  * (`../projects/guards.js`) + delegate here. Tenancy + the entitlement
  * decision stay in the wrapper; the pure DB shape stays here.
  *

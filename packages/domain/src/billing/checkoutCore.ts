@@ -4,7 +4,7 @@
  *
  * The webapp ops embedded these inline in the Wasp actions with the Stripe
  * SDK's own param objects; the pieces that are pure data/decisions live here
- * so the API fragment (apps/api/src/procedures/billing.ts) stays a thin
+ * so the API fragment (api/src/procedures/billing.ts) stays a thin
  * wrapper: it resolves the Stripe customer, then hands the built params to
  * `stripe.checkout.sessions.create` / `billingPortal.sessions.create`.
  *
