@@ -6,68 +6,55 @@
  * shapes and the wire paths (`/rpc/tasks/*`) come from there, not from here.
  *
  * Layering (the F4b pattern-setter's rules, applied server-side):
- * - Handlers are thin wrappers: resolve the user (stubbed until F10), call a
+ * - Handlers are thin wrappers: resolve the acting user (`requireUser` — the
+ *   F10 auth wrapper in index.ts already validated the credential), call a
  *   domain core from @actionamp/domain with `context.entities`, map the row to
  *   the contract DTO. No SQL and no business logic lives here.
- * - Context: `{ db, entities }`, built once in index.ts. F10 adds the real
- *   authenticated user to this context via middleware and replaces
- *   `resolveSeedUserId`.
+ * - Context: `{ db, entities, user }` — built per request in index.ts, which
+ *   runs the F10 session/PAT resolution before the oRPC handler.
  * - Validation is already done by the contract (zod on `oc.input`) before any
  *   handler runs — violations surface as oRPC BAD_REQUEST (4xx).
  */
 import { implement, ORPCError } from "@orpc/server";
-import { eq } from "drizzle-orm";
 import { contractRouter } from "@actionamp/contract";
-import { auth, authIdentity } from "@actionamp/domain/db";
 import type { Entities, DomainDb } from "@actionamp/domain/db";
 import type { TaskDetailFullRow, TaskListRow } from "@actionamp/domain/db";
 import { getTaskData, getTasksData } from "@actionamp/domain/tasks";
-import { SEED_DEV_EMAIL } from "./db.js";
+import type { ActingUser } from "./actingUser.js";
 
-/** Per-request context the handlers read. Built once in index.ts. */
+/** Per-request context the handlers read. Built per request in index.ts. */
 export interface ApiContext {
-  /** Drizzle handle — infrastructure lookups only (the F10 user stub). */
+  /** Drizzle handle — infrastructure lookups only. */
   db: DomainDb;
   /** The Prisma-shaped seam every domain core speaks. */
   entities: Entities;
+  /**
+   * The authenticated user (F10) — resolved BEFORE the handler by index.ts's
+   * /rpc wrapper (session cookie/Bearer → F10a, `aa_` Bearer → F10b). Null
+   * when no valid credential rode the request; handlers must go through
+   * `requireUser`, which turns null into the typed 401.
+   */
+  user: ActingUser | null;
 }
 
 const ORPC = implement(contractRouter).$context<ApiContext>();
 
 // ----------------------------------------------------------------
-// The F10 seam: user resolution, stubbed
+// The F10 seam: user enforcement
 // ----------------------------------------------------------------
 
-let cachedSeedUserId: string | null = null;
-
 /**
- * The acting user for every procedure until real auth lands (F10).
- *
- * Order: `SEED_USER_ID` env → the seeded dev user (found once per process via
- * Wasp's email AuthIdentity). Throws UNAUTHORIZED when neither exists — the
- * client sees a typed 401 rather than silently reading another user's data.
+ * The acting user for a procedure. Throws the typed oRPC UNAUTHORIZED when
+ * the wrapper resolved no valid credential — the same 401 contract F8b set
+ * with the seed-user stub, now driven by real session/PAT auth.
  */
-async function resolveSeedUserId({ db }: ApiContext): Promise<string> {
-  const fromEnv = process.env.SEED_USER_ID;
-  if (fromEnv) return fromEnv;
-  if (cachedSeedUserId) return cachedSeedUserId;
-
-  const rows = await db
-    .select({ userId: auth.userId })
-    .from(authIdentity)
-    .innerJoin(auth, eq(authIdentity.authId, auth.id))
-    .where(
-      eq(authIdentity.providerUserId, SEED_DEV_EMAIL),
-    )
-    .limit(1);
-  const userId = rows[0]?.userId;
-  if (!userId) {
+export function requireUser(context: ApiContext): ActingUser {
+  if (!context.user) {
     throw new ORPCError("UNAUTHORIZED", {
-      message: "No acting user — run `bun src/seed.ts` or set SEED_USER_ID.",
+      message: "Authentication required.",
     });
   }
-  cachedSeedUserId = userId;
-  return userId;
+  return context.user;
 }
 
 // ----------------------------------------------------------------
@@ -108,7 +95,7 @@ function toTaskDetailDto(row: TaskDetailFullRow) {
  * same shape the webapp lists page surfaces).
  */
 export const tasksList = ORPC.tasks.list.handler(async ({ context }) => {
-  const userId = await resolveSeedUserId(context);
+  const userId = requireUser(context).id;
   const primaryLens = await context.entities.Lens.findMany({
     where: { userId },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
@@ -129,7 +116,7 @@ export const tasksList = ORPC.tasks.list.handler(async ({ context }) => {
  * Unknown id → null per the contract.
  */
 export const tasksDetail = ORPC.tasks.detail.handler(async ({ context, input }) => {
-  const userId = await resolveSeedUserId(context);
+  const userId = requireUser(context).id;
   const row = await getTaskData(context.entities, {
     userId,
     id: input.id,
