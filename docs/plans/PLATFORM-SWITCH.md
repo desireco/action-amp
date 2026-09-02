@@ -51,8 +51,14 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | F8 api skeleton | ✅ COMPLETE | F8a `6eac663` · F8b `7dcc577` — oRPC at /rpc over domain cores, contract typed client live in Svelte, /ready db ping, localhost-only seed; error-log gap in oRPC 500s flagged for F10 |
 | F9a+F9b web shell + mock client | ✅ `193a462` | both reviewed PASS — now on the REAL client since F8b |
 | P0 parity pre-studies (all slices) | ✅ `8730024` | cross-reviewed: ~200 claims fact-checked vs sources, 2 fixes |
-| F10 auth validation | ▶ next | spec ready (auth-compatibility-notes); F8b handoff: context {db,entities}, replace resolveSeedUserId stub, 401 shape proven |
-| F11 e2e harness | ☐ after F8b+F9b+F10c | — |
+| F10 auth validation | ✅ `0a3c175` | adversarially reviewed — session/PAT/CSRF/dev-routes + 38 tests; seed-session helper is the e2e login |
+| F11 e2e harness | ✅ `de9c1ae` | 3-test smoke green; found+fixed the in-browser CSRF gap (SPA client sends x-requested-with); global-setup re-seeds fixtures |
+| **S1+S4 What Now/Focus/lists** | ✅ `945873a` | reviewed pass-with-fixes — 34 procedures, simpleLists+taskExtras ports; daily loop usable |
+| **S2+S3 Capture/Triage** | ✅ `325aec9` | reviewed pass-with-fixes — parser byte-verbatim (66/66), wizard keymap faithful |
+| **S5+S6 Projects/Goals** | ✅ `63e9bc7` | reviewed pass-with-fixes — deleteGoal corrected (webapp bug not ported), 402 copy byte-exact |
+| Wave-1 integration | ✅ `ffc9fff` | fragment composition, seam extensions, deterministic e2e seeds; 21 passed + 1 skipped (S8's), twice |
+| Wave 2 (S7 lenses, S8 logbook, S9 search+resources) | ▶ next | P0 notes ready; S9 closes S5's deferred resources section |
+| Remaining S/V goals | ☐ | S10–S18 per goal-set order; P0 notes ready for every slice |
 | Remaining S/V goals | ☐ | P0 notes ready for every slice; port order per goal set |
 
 Blockers: none. Jake gates still open: V2 rehearsal attendance, V4 switch-day
