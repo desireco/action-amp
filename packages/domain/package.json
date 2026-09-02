@@ -7,7 +7,11 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./db": "./src/db/index.ts"
+    "./db": "./src/db/index.ts",
+    "./tasks": "./src/tasks/index.ts",
+    "./billing": "./src/billing/index.ts",
+    "./shared/time": "./src/shared/time/temporal.ts",
+    "./shared/permalinks": "./src/shared/permalinks.ts"
   },
   "scripts": {
     "build": "tsc",

@@ -1,50 +1,46 @@
 /**
- * Placeholder Router — the ONE type goal F8b replaces.
+ * The Router type — derived from the real contract since F8b.
  *
- * F8b defines the real contract in this package with `@orpc/contract`
- * (zod schemas + `oc` builders) and swaps the alias at the bottom for:
+ * The contract lives in `./tasks.js` (zod schemas + `oc` builders); this
+ * module derives the client-side Router from it:
  *
  *   export type Router = ContractRouterClient<typeof contractRouter>
  *
- * That is the whole swap: one line here, and every client, mock, and store
- * downstream keeps compiling (the mock router type derives from `Router`).
- *
- * The placeholder mirrors structurally what `ContractRouterClient` produces —
- * nested namespaces of oRPC `Client` callables — with a single procedure,
- * `tasks.list`, so the seam is exercised end-to-end today. It is `any`-free.
+ * `ContractRouterClient` maps each contract procedure to an oRPC `Client`
+ * callable, so `client.tasks.list()` / `client.tasks.detail({ id })` are
+ * fully typed end-to-end (inputs via `InferSchemaInput`, outputs via
+ * `InferSchemaOutput`). Swapping transport never touches this file again:
+ * `createClient` (real) and `createMockClient` (in-memory) both produce this
+ * same shape.
  *
  * It must stay a type *alias* (not an `interface`): only aliases get the
  * implicit index signatures required to satisfy oRPC's `NestedClient`
  * constraint in `createORPCClient<Router>(...)`.
  */
 
-import type { Client } from "@orpc/client";
+import type { ContractRouterClient } from "@orpc/contract";
+import type { z } from "zod";
+// Value import (referenced as a value inside `typeof ...`); erased from the
+// emitted output since this module exports types only.
+import { contractRouter } from "./tasks.js";
+import type {
+  PrioritySchema,
+  TaskSchema,
+  TaskStatusSchema,
+} from "./tasks.js";
+
+export type Router = ContractRouterClient<typeof contractRouter>;
+
+/** DTO types the screens consume — inferred from the contract's zod schemas. */
 
 /** `enum TaskStatus` (webapp/schema.prisma) — wire format is a string union. */
-export type TaskStatus = "SOMEDAY" | "UPCOMING" | "TODAY" | "WONT_DO";
+export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 
 /** `enum Priority` (webapp/schema.prisma). */
-export type Priority = "LOW" | "NORMAL" | "IMPORTANT";
+export type Priority = z.infer<typeof PrioritySchema>;
 
 /**
  * List-row slice of the `Task` model (webapp/schema.prisma): the fields a
- * list screen renders. Field names and types match the schema so F8b's
- * contract DTOs supersede this as a type-only change.
+ * list screen renders. Field names and types match the schema.
  */
-export interface Task {
-  id: string;
-  /** The title — what to do (`Task.description` in schema.prisma). */
-  description: string;
-  status: TaskStatus;
-  priority: Priority;
-  isDone: boolean;
-  /** Manual sort order within a list (`order Int @default(0)`). */
-  order: number;
-}
-
-export type Router = {
-  tasks: {
-    /** No input → the user's tasks in list order. */
-    list: Client<Record<never, never>, undefined, Task[], never>;
-  };
-};
+export type Task = z.infer<typeof TaskSchema>;

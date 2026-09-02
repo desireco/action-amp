@@ -4,7 +4,7 @@
   import { tasks } from "../stores/tasks.svelte";
 
   // The screen owns its data: it loads on mount. Against the real API this
-  // hits /rpc through the contract client (mocked today — see lib/api.ts).
+  // hits /rpc through the contract client (see lib/api.ts).
   onMount(() => {
     void tasks.load();
   });
@@ -19,9 +19,9 @@
   };
 </script>
 
-<!-- Minimal task list against the mocked contract client. Calm by design:
-     tokens only, one amber use (IMPORTANT — the sanctioned human emphasis),
-     status as quiet mono text. -->
+<!-- Minimal task list served by the real /rpc API through the contract
+     client. Calm by design: tokens only, one amber use (IMPORTANT — the
+     sanctioned human emphasis), status as quiet mono text. -->
 <div class="tasks" aria-busy={tasks.busy} aria-label="Tasks">
   {#if tasks.error}
     <p class="message" role="alert">{tasks.error}</p>
