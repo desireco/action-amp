@@ -45,7 +45,7 @@ import {
   type BillingSubscription,
   type BillingWebhookDeps,
 } from "@actionamp/domain/billing";
-import { requireStripe, stripe } from "./billing/stripe.js";
+import { isStripeConfigured, requireStripe } from "./billing/stripe.js";
 import { recordPublicAnalyticsEvent } from "./procedures/publicCore.js";
 
 export interface StripeWebhookRouteDeps {
@@ -84,7 +84,9 @@ export function createStripeWebhookRoute(deps: StripeWebhookRouteDeps): Hono {
       console.error("[webhook] STRIPE_WEBHOOK_SECRET is not set.");
       return c.text("Webhook secret not configured.", 500);
     }
-    const client = deps.stripeClient !== undefined ? deps.stripeClient : stripe;
+    // The configured rail: without a key the endpoint answers the readable
+    // 500 (and signed-payload tests can inject a client via deps).
+    const client = deps.stripeClient !== undefined ? deps.stripeClient : isStripeConfigured() ? requireStripe() : null;
     if (!client) {
       console.error(
         "[webhook] Stripe client is not configured (STRIPE_SECRET_KEY missing).",

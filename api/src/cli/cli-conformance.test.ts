@@ -27,11 +27,12 @@ import { createCliRoutes } from "./routes.js";
 // whole 34-route table (§1.1–§1.11 of the s18 P0 notes) is verified in one
 // place, each route against the file that owns it.
 import { createCliRest } from "../cli-routes.js";
-import {
-  seedCliFixtures,
-  PRO_EMAIL,
-  type CliFixtures,
-} from "../seed-cli.js";
+// Deferred (dynamic) import: seed-cli.ts hard-throws at module scope when
+// DATABASE_URL is missing — deliberate for CLI use, fatal for `npm test` at
+// the root. The harness only needs it when hasDb is true (beforeAll).
+let seedCliFixtures: (typeof import("../seed-cli.js"))["seedCliFixtures"];
+let PRO_EMAIL: string;
+type CliFixtures = import("../seed-cli.js").CliFixtures;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shape matcher — objects pin EXACT key order + recursion; arrays pin element
@@ -154,6 +155,7 @@ const UNKNOWN_TOKEN =
   "aa_" + "A".repeat(43); // right shape, never minted
 
 beforeAll(async () => {
+  ({ seedCliFixtures, PRO_EMAIL } = await import("../seed-cli.js"));
   db = createDb(DB_URL);
   entities = createEntities(db);
   fx = await seedCliFixtures(db);

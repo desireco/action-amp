@@ -9,11 +9,13 @@
   ],
   "scripts": {
     "dev": "bun run --filter '*' dev",
+    "api": "bun run --filter '@actionamp/api' dev",
+    "web": "bun run --filter '@actionamp/web' dev",
     "dev:api": "bun run --filter '@actionamp/api' dev",
     "dev:web": "bun run --filter '@actionamp/web' dev",
     "build": "bun run --filter '*' build",
     "test": "bun run --filter '*' test",
-    "test:e2e": "cd web && bun run test:e2e",
+    "test:e2e": "bash scripts/test-e2e.sh",
     "lint": "oxlint api web packages scripts",
     "typecheck": "bun run --filter '*' typecheck"
   },

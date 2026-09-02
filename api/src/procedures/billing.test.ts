@@ -287,8 +287,17 @@ describe("billingStripeOps (the real seam) — config guard", () => {
     // null), so the real ops fail with the readable requireStripe() message —
     // never a null member access. (The ops arrow is not async: requireStripe
     // throws synchronously before any promise exists.)
-    expect(() =>
-      billingStripeOps.createCustomer({ metadata: { userId: "u" } }),
-    ).toThrow(/STRIPE_SECRET_KEY is not set/);
+    // NOTE: api/.env may legitimately provide the key at run time (bun loads
+    // it for `bun run dev:api`); the guard reads the value captured at module
+    // import, so the test removes it for the process regardless.
+    const had = process.env.STRIPE_SECRET_KEY;
+    delete process.env.STRIPE_SECRET_KEY;
+    try {
+      expect(() =>
+        billingStripeOps.createCustomer({ metadata: { userId: "u" } }),
+      ).toThrow(/STRIPE_SECRET_KEY is not set/);
+    } finally {
+      if (had !== undefined) process.env.STRIPE_SECRET_KEY = had;
+    }
   });
 });

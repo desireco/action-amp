@@ -2,48 +2,37 @@
  * Stripe client singleton + price-ID lookups from env — the S16 port of
  * webapp/src/billing/stripe.ts. Server-only — never import this on the client.
  *
- * DEPENDENCY NOTE (docs/plans/slices/s16-wiring.md §6): the `stripe` package
- * is not on the public registry from this environment (offline sandbox), so
- * `api/node_modules/stripe` is a symlink to the webapp's pinned install
- * (22.5.0, same major the webapp declares at ^22.3.2). When the registry is
- * reachable: `cd api && bun add stripe@^22.3.2` and drop the symlink.
  */
 import Stripe from "stripe";
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-if (!stripeSecretKey) {
-  // Allow startup without the key (dev may not have Stripe set up yet).
-  // Calls will fail at runtime with StripeAuthenticationError.
-  console.warn(
-    "[billing/stripe] STRIPE_SECRET_KEY is not set. " +
-      "Checkout and webhook calls will fail. Set it in .env.server.",
-  );
-}
+// Read at CALL time, not import time: bun loads api/.env before user code in
+// dev, and tests deliberately delete the key to exercise the unconfigured
+// guard — an import-time capture would freeze whichever state came first.
+let cached: { key: string; client: Stripe } | null = null;
 
 /**
- * The Stripe client, or null when STRIPE_SECRET_KEY is missing (dev may not
- * have Stripe set up — the startup warning above flags it). Call sites guard
- * and fail with a clear runtime error instead of a typed null masquerading
- * as a client.
- */
-export const stripe: Stripe | null = stripeSecretKey
-  ? new Stripe(stripeSecretKey, {
-      // No explicit apiVersion — use the account's pinned version (stable).
-    })
-  : null;
-
-/**
- * The Stripe client, throwing with a clear message when unconfigured.
- * Server-op call sites use this so a missing STRIPE_SECRET_KEY surfaces as a
- * readable error instead of a null member access.
+ * The Stripe client (cached per key), throwing with a clear message when
+ * STRIPE_SECRET_KEY is unset. Server-op call sites use this so a missing key
+ * surfaces as a readable error instead of a null member access.
  */
 export function requireStripe(): Stripe {
-  if (!stripe) {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    // Allow startup without the key (dev may not have Stripe set up yet);
+    // calls fail at runtime with this readable error instead.
     throw new Error(
       "[billing/stripe] STRIPE_SECRET_KEY is not set — Stripe calls are unavailable. Set it in .env.server.",
     );
   }
-  return stripe;
+  if (!cached || cached.key !== key) {
+    cached = { key, client: new Stripe(key) };
+  }
+  return cached.client;
+}
+
+/** Whether a Stripe key is configured (the webhook's configured-500 rail). */
+export function isStripeConfigured(): boolean {
+  return Boolean(process.env.STRIPE_SECRET_KEY);
 }
 
 /** Price IDs from env — these are public identifiers, not secrets. */
