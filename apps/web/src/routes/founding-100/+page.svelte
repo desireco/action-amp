@@ -9,17 +9,17 @@
   security): anonymous → /login?returnTo=%2Ffounding-100 (preserving intent
   through code entry + magic-link return); authed → checkout.
 
-  WIRING NOTE (S16 — checkout): the authed CTA currently navigates to a dead
-  checkout route — `createCheckoutSession({ priceKey: "founder" })` is S16's
-  billing slice; when it lands, the marked branch calls it and redirects to
-  `result.url` (Stripe), firing the CHECKOUT_STARTED funnel event first, as
-  the webapp did.
+  WIRING NOTE (S16 — DONE): the authed CTA calls `createCheckoutSession({
+  priceKey: "founder" })` and redirects to the returned Stripe URL; the 409
+  at the public cap renders as the inline error (the server guard is the one
+  place that matters). CHECKOUT_STARTED still fires before the money path.
 -->
 <script lang="ts">
   import { onMount } from "svelte";
   import PublicLayout from "../../lib/components/PublicLayout.svelte";
   import { publicStore, trackFunnelEvent } from "../../lib/stores/public.svelte";
   import { prefs } from "../../lib/stores/prefs.svelte";
+  import { billing } from "../../lib/stores/billing.svelte";
   import "../../lib/styles/founding100.css";
 
   let loading = $state(false);
@@ -51,7 +51,7 @@
   );
   let ctaDisabled = $derived(isFull || alreadyFounder || loading);
 
-  function handleCheckout() {
+  async function handleCheckout() {
     // Preserve purchase intent through code entry and emailed magic links.
     if (isAnonymous) {
       window.location.assign("/login?returnTo=%2Ffounding-100");
@@ -60,12 +60,17 @@
     error = null;
     // Funnel event BEFORE the money path (webapp fired it on redirect).
     trackFunnelEvent("CHECKOUT_STARTED", { surface: "founding" });
-    // S16 wiring note (file header): this is the dead-checkout stand-in.
-    // When billing composes, replace with:
-    //   const result = await rpc.billing.createCheckoutSession({ priceKey: "founder" });
-    //   if (result.url) window.location.href = result.url;
     loading = true;
-    window.location.assign("/checkout/founder?priceKey=founder");
+    try {
+      // S16: the real checkout — the store redirects to the hosted Stripe
+      // session; the server 409s at the public cap (98) before any Stripe
+      // call, so the catch below renders the honest full-cap state.
+      await billing.checkout("founder");
+    } catch (err) {
+      error =
+        err instanceof Error ? err.message : "Could not open checkout.";
+      loading = false;
+    }
   }
 </script>
 

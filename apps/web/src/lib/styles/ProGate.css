@@ -1,7 +1,8 @@
 /*
  * S9 — ProGate styles. Ported verbatim from webapp's ProGate.css (inline
  * panel): the upgrade-links block composes with the billing surface (S16) —
- * the styles ride along so that slice only adds markup.
+ * the styles ride along so that slice only adds markup. S16 completed the
+ * half below the compose-marker: the links' styles + the at-cap trigger.
  */
 
 .aa-progate {
@@ -59,6 +60,74 @@
   margin-top: 6px;
 }
 
+/* ---- Upgrade links (S16 — the billing surface exists) ---- */
+
 .aa-progate__primary {
   font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+  padding: 6px 0;
+  border-bottom: 1.5px solid transparent;
+  transition: border-color 0.12s var(--aa-ease-out);
+}
+
+.aa-progate__primary:hover {
+  border-bottom-color: var(--aa-teal-cta);
+}
+
+.aa-progate__secondary {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  text-decoration: none;
+  transition: color 0.12s var(--aa-ease-out);
+}
+
+.aa-progate__secondary:hover {
+  color: var(--aa-text-2);
+}
+
+/* ---- Trigger (at-cap create affordance, S16) ---- */
+/* Replaces the "New project" / "New goal" button when a FREE user is at the
+ * cap — a quiet upgrade path, not a dead button. Visually echoes a secondary
+ * button so the row doesn't feel broken. */
+.aa-progate-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: var(--aa-radius-sm);
+  border: 1px solid var(--aa-teal-soft-strong);
+  background: var(--aa-teal-soft);
+  transition:
+    background 0.12s var(--aa-ease-out),
+    box-shadow 0.12s var(--aa-ease-out);
+}
+
+.aa-progate-trigger:hover {
+  background: var(--aa-teal-soft-strong);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-progate-trigger__label {
+  color: var(--aa-text-2);
+  font-weight: var(--aa-weight-medium);
+}
+
+.aa-progate-trigger__cta {
+  color: var(--aa-teal-cta);
+}
+
+/* Reduced motion — kill the hover transitions. The lock mark's static
+   rotate(180deg) stays; it's not motion, just orientation. */
+@media (prefers-reduced-motion: reduce) {
+  .aa-progate-trigger,
+  .aa-progate__primary,
+  .aa-progate__secondary {
+    transition-duration: 0.01ms !important;
+  }
 }

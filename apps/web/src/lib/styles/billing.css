@@ -1,0 +1,360 @@
+/*
+ * S16 — Billing page styles. Ported from webapp/src/app/BillingPage.css plus
+ * the Card/Table/Button component styles it composes (the Svelte side has no
+ * shared Card/Table component — the classes ride here instead).
+ */
+@import "../tokens.css";
+
+/* ============================================================
+   Billing page — uses the settings section head + Card/Table/Chip classes.
+   Only plan-grid + plan-card-internal styles live here.
+   ============================================================ */
+.aa-billing-section {
+  margin-bottom: var(--aa-space-2xl);
+}
+
+.aa-billing-section .aa-settings-section-head {
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-billing-section .aa-settings-sh {
+  margin-bottom: var(--aa-space-xs);
+}
+
+.aa-billing-section:last-child {
+  margin-bottom: 0;
+}
+
+.aa-billing-state {
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-3);
+  margin: 0;
+}
+
+/* ---- Checkout banner ---- */
+.aa-billing-banner-card {
+  margin-bottom: var(--aa-space-xl);
+}
+
+.aa-billing-banner-success {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-teal-cta);
+}
+
+.aa-billing-banner-muted {
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-3);
+}
+
+/* ---- Card (the webapp ui/Card default surface) ---- */
+.aa-card {
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+}
+
+.aa-card--pad-sm {
+  padding: var(--aa-space-md);
+}
+.aa-card--pad-md {
+  padding: var(--aa-space-lg);
+}
+.aa-card--pad-lg {
+  padding: var(--aa-space-xl);
+}
+
+.aa-card--highlighted {
+  border-color: var(--aa-teal-cta);
+  box-shadow: 0 0 0 1px var(--aa-teal-cta), var(--aa-shadow-sm);
+}
+
+.aa-card--interactive {
+  cursor: pointer;
+  transition:
+    border-color 0.15s var(--aa-ease-out),
+    box-shadow 0.15s var(--aa-ease-out),
+    transform 0.15s var(--aa-ease-out);
+}
+
+.aa-card--interactive:hover {
+  border-color: var(--aa-border-strong);
+  box-shadow: var(--aa-shadow-sm);
+  transform: translateY(-1px);
+}
+
+/* ---- Active plan (inside Card) ---- */
+.aa-billing-active {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-lg);
+}
+
+.aa-billing-current-card {
+  background: var(--aa-bg-soft);
+}
+
+.aa-billing-active-title {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  color: var(--aa-text);
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+}
+
+.aa-billing-active-renewal {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-2);
+  margin: var(--aa-space-xs) 0 0;
+}
+
+.aa-billing-payment-state {
+  flex: none;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-3);
+}
+
+/* ============================================================
+   Plan picker grid
+   ============================================================ */
+.aa-billing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--aa-space-md);
+  align-items: stretch;
+}
+
+/* The Card is the visual container; the button fills it. The interactive
+   variant adds hover lift; highlighted (recommended) gets the teal border. */
+.aa-billing-plan-card {
+  display: flex;
+  min-width: 0;
+  min-height: 248px;
+}
+
+.aa-billing-plan {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--aa-font);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.aa-billing-plan:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.aa-billing-plan:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 5px;
+  border-radius: var(--aa-radius-xs);
+}
+
+.aa-billing-plan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 24px;
+  gap: var(--aa-space-sm);
+  margin-bottom: var(--aa-space-lg);
+}
+
+.aa-billing-plan-badge {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--aa-teal-cta);
+  background: var(--aa-teal-soft);
+  padding: 2px 7px;
+  border-radius: var(--aa-radius-xs);
+  flex: none;
+}
+
+.aa-billing-plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-xs);
+  margin-bottom: var(--aa-space-md);
+  white-space: nowrap;
+}
+
+.aa-billing-plan-amount {
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
+  color: var(--aa-text);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.aa-billing-plan-period {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+}
+
+.aa-billing-plan-name {
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+}
+
+.aa-billing-plan-pitch {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  line-height: var(--aa-leading-snug);
+  margin: 0 0 var(--aa-space-xl);
+  flex: 1;
+}
+
+.aa-billing-plan-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-teal-cta);
+}
+
+.aa-billing-plan-cta svg {
+  transition: transform var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-billing-plan:hover:not(:disabled) .aa-billing-plan-cta svg {
+  transform: translateX(2px);
+}
+
+/* ---- Payment history (the webapp ui/Table look) ---- */
+.aa-billing-history {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--aa-radius-sm);
+  border: 1px solid var(--aa-border);
+  background: var(--aa-surface);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-billing-history table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-sm);
+}
+
+.aa-billing-history th {
+  text-align: left;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  background: var(--aa-surface-muted);
+  border-bottom: 1px solid var(--aa-border);
+  white-space: nowrap;
+}
+
+.aa-billing-history th--right,
+.aa-billing-history .th-right {
+  text-align: right;
+}
+
+.aa-billing-history td {
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  color: var(--aa-text-2);
+  border-bottom: 1px solid var(--aa-border);
+  vertical-align: middle;
+}
+
+.aa-billing-history .td-right {
+  text-align: right;
+}
+
+.aa-billing-history .td-center {
+  text-align: center;
+}
+
+.aa-billing-history tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* The webapp Table's striped rows. */
+.aa-billing-history tbody tr:nth-child(even) {
+  background: var(--aa-surface-muted);
+}
+
+.aa-billing-empty {
+  padding: var(--aa-space-lg) var(--aa-space-md);
+  color: var(--aa-text-3);
+  text-align: center;
+}
+
+/* ---- Button (the webapp ui/Button secondary/small) ---- */
+.aa-btn-secondary-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition:
+    background 0.12s var(--aa-ease-out),
+    box-shadow 0.12s var(--aa-ease-out);
+}
+
+.aa-btn-secondary-sm:hover:not(:disabled) {
+  background: var(--aa-surface-muted);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-btn-secondary-sm:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 600px) {
+  .aa-billing-grid {
+    grid-template-columns: 1fr;
+  }
+  .aa-billing-active {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .aa-billing-plan-card {
+    min-height: 220px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-billing-plan-cta svg,
+  .aa-card--interactive {
+    transition-duration: 0.01ms !important;
+  }
+}
