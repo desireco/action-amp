@@ -1,0 +1,252 @@
+/*
+ * S9 — command palette styles. Ported verbatim from
+ * webapp/src/search/CommandPalette.css — the token names match this stack's
+ * tokens.css (the S5+ styles consumed the same map); the webapp-side
+ * `@import "../styles/tokens.css"` is dropped: tokens load once in the app
+ * shell here.
+ */
+
+.aa-command-palette {
+  max-width: 480px;
+  max-height: min(720px, 86vh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.aa-command-palette__header {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  min-height: 60px;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  border-bottom: 1px solid var(--aa-border);
+}
+
+.aa-command-palette__search-icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--aa-text-3);
+}
+
+.aa-command-palette__input-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.aa-command-palette__input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--aa-text);
+  font: inherit;
+  font-size: var(--aa-text-md);
+  line-height: var(--aa-leading-normal);
+}
+
+.aa-command-palette__input::placeholder {
+  color: var(--aa-text-4);
+}
+
+.aa-command-palette__results {
+  min-height: 190px;
+  max-height: 416px;
+  overflow-y: auto;
+  padding: var(--aa-space-xs) 0;
+  overscroll-behavior: contain;
+}
+
+.aa-command-palette__guidance {
+  margin: var(--aa-space-xs) var(--aa-space-md) var(--aa-space-sm);
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-xs);
+  line-height: var(--aa-leading-normal);
+}
+
+.aa-command-palette__group + .aa-command-palette__group {
+  border-top: 1px solid var(--aa-border);
+  margin-top: var(--aa-space-xs);
+  padding-top: var(--aa-space-xs);
+}
+
+.aa-command-palette__group-title {
+  margin: 0;
+  padding: 7px var(--aa-space-md) 5px;
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.aa-command-palette__row {
+  width: calc(100% - 12px);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  margin: 0 6px;
+  padding: 9px var(--aa-space-sm);
+  border: 0;
+  border-radius: var(--aa-radius-sm);
+  background: transparent;
+  color: var(--aa-text-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.aa-command-palette__row.is-selected {
+  background: var(--aa-teal-soft);
+  color: var(--aa-text);
+}
+
+.aa-command-palette__row:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: -2px;
+}
+
+.aa-command-palette__row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.aa-command-palette__row-heading {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+}
+
+.aa-command-palette__row-title {
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  line-height: var(--aa-leading-snug);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aa-command-palette__row-subtitle,
+.aa-command-palette__row-meta,
+.aa-command-palette__snippet,
+.aa-command-palette__matched,
+.aa-command-palette__enter {
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-xs);
+}
+
+.aa-command-palette__row-meta,
+.aa-command-palette__matched {
+  flex: none;
+  white-space: nowrap;
+}
+
+.aa-command-palette__snippet {
+  overflow: hidden;
+  line-height: var(--aa-leading-snug);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aa-command-palette mark {
+  border-radius: 2px;
+  background: var(--aa-teal-soft-strong);
+  color: inherit;
+  font-weight: inherit;
+}
+
+.aa-command-palette__message {
+  min-height: 190px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: var(--aa-space-xl);
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  text-align: center;
+}
+
+.aa-command-palette__message.is-error {
+  color: var(--aa-rose-text);
+}
+
+.aa-command-palette__gate {
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--aa-space-xl) var(--aa-space-2xl);
+}
+
+.aa-command-palette__gate .aa-progate {
+  width: 100%;
+}
+
+.aa-command-palette__footer {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-md);
+  padding: 0 var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-xs);
+}
+
+.aa-command-palette__count {
+  margin-left: auto;
+}
+
+.aa-command-palette__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .aa-command-palette {
+    align-self: flex-end;
+    max-height: min(78vh, 680px);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .aa-command-palette__row-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .aa-command-palette__matched {
+    display: none;
+  }
+
+  .aa-command-palette__footer {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-command-palette,
+  .aa-command-palette__row {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

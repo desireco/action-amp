@@ -1,0 +1,122 @@
+/*
+ * S9 — Resources section styles. Ported verbatim from
+ * webapp/src/projects/ProjectDetailPage.css's resources block — tokens only,
+ * the section is secondary project context after actionable work.
+ */
+
+/* ---- Resources — secondary project context, after actionable work. ---- */
+.aa-project__resources {
+  margin-top: var(--aa-space-xl);
+  padding-top: var(--aa-space-xl);
+  border-top: 1px solid var(--aa-border);
+}
+/* Title row — Add resource leads on the left, matching Add task above;
+   the copy wraps onto its own line. */
+.aa-project__resources-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aa-space-sm);
+}
+.aa-project__resources-title {
+  margin: 0;
+  font-size: var(--aa-text-lg);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+}
+.aa-project__resources-copy,
+.aa-project__resources-empty {
+  margin: 4px 0 0;
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+}
+.aa-project__resources-copy {
+  flex-basis: 100%;
+}
+.aa-project__resources-list {
+  margin: var(--aa-space-md) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--aa-border);
+}
+.aa-project__resource {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--aa-space-md);
+  padding: var(--aa-space-md) 0;
+  border-bottom: 1px solid var(--aa-border);
+}
+.aa-project__resource.is-search-target {
+  border-radius: var(--aa-radius-sm);
+  box-shadow: 0 0 0 2px var(--aa-teal);
+}
+.aa-project__resource-main {
+  min-width: 0;
+}
+.aa-project__resource-link,
+.aa-project__resource-title {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text);
+}
+.aa-project__resource-link {
+  color: var(--aa-teal-cta);
+  text-decoration: none;
+}
+.aa-project__resource-link:hover {
+  text-decoration: underline;
+}
+.aa-project__resource-notes {
+  margin: 4px 0 0;
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  line-height: var(--aa-leading-normal);
+  white-space: pre-wrap;
+}
+.aa-project__resource-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 2px;
+}
+.aa-project__resource-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-md);
+}
+.aa-project__resource-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--aa-text-2);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+}
+.aa-project__resource-form label span {
+  color: var(--aa-text-4);
+  font-weight: var(--aa-weight-normal);
+}
+.aa-project__resource-form input,
+.aa-project__resource-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  font: inherit;
+  padding: 9px 10px;
+}
+.aa-project__resource-form textarea {
+  resize: vertical;
+}
+.aa-project__resource-error {
+  margin: 0;
+  color: var(--aa-rose-text);
+  font-size: var(--aa-text-sm);
+}
+.aa-project__resource-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--aa-space-sm);
+}

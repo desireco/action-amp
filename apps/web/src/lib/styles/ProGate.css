@@ -1,0 +1,64 @@
+/*
+ * S9 — ProGate styles. Ported verbatim from webapp's ProGate.css (inline
+ * panel): the upgrade-links block composes with the billing surface (S16) —
+ * the styles ride along so that slice only adds markup.
+ */
+
+.aa-progate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 28px 32px;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  background: var(--aa-surface);
+  max-width: 420px;
+}
+
+.aa-progate__feature {
+  margin: 0;
+  font-size: var(--aa-text-lg);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: var(--aa-leading-snug);
+}
+
+/* A quiet key-cap mark — not a bright lock badge (PRODUCT.md bans attention-
+ * grabbing UI). Teal = system/state, the calm accent. */
+.aa-progate__lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--aa-radius-xs);
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-bold);
+  transform: rotate(180deg); /* ⌃ reads as a roof/caret — subtle */
+  flex-shrink: 0;
+}
+
+.aa-progate__reason {
+  margin: 0;
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-2);
+  line-height: var(--aa-leading-normal);
+}
+
+.aa-progate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.aa-progate__primary {
+  font-size: var(--aa-text-base);
+}

@@ -13,7 +13,8 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@actionamp/contract": "workspace:*"
+    "@actionamp/contract": "workspace:*",
+    "fuse.js": "^7.5.0"
   },
   "devDependencies": {
     "@orpc/client": "^1.0.0",
