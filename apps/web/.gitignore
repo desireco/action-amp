@@ -3,3 +3,7 @@ node_modules/
 .svelte-kit/
 build/
 dist/
+
+# Playwright (e2e)
+test-results/
+playwright-report/

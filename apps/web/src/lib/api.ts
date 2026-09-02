@@ -15,6 +15,11 @@ import { createClient } from "@actionamp/contract";
 /** The path the vite dev proxy forwards to the Hono server (see vite.config.ts). */
 export const API_PROXY_PATH = "/rpc";
 
-export const client = createClient({ url: API_PROXY_PATH });
+// The custom header satisfies the API's CSRF stance for cookie-authed
+// mutations — oRPC defaults reads to POST too, so it must ride EVERY call.
+export const client = createClient({
+	url: API_PROXY_PATH,
+	headers: () => ({ "x-requested-with": "actionamp" }),
+});
 
 export type { Task, TaskStatus } from "@actionamp/contract";
