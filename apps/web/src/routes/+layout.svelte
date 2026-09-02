@@ -15,6 +15,16 @@
   import { search } from "../lib/stores/search.svelte";
   import { lenses } from "../lib/stores/lenses.svelte";
   import { prefs } from "../lib/stores/prefs.svelte";
+  // S13 slice wiring — the first-run onboarding gate (the webapp kept this in
+  // App.tsx; this mount is its equivalent spot). See
+  // docs/plans/slices/s13-s15-wiring.md §3.
+  import OnboardingGate from "../lib/components/OnboardingGate.svelte";
+  // S12 slice wiring — the PWA worker (push + share target; caches NOTHING).
+  // Registration failure is non-fatal (AppShell parity). The waiting-worker
+  // protocol lives in the SW itself: install → wait → (banner's SKIP_WAITING)
+  // → activate; the reload side rides controllerchange below. The banner UI
+  // is S12 long-tail (s12-s14-wiring.md).
+  import { registerServiceWorker } from "../lib/push";
   let { children } = $props();
   const captureHostedByPage = $derived($page.url.pathname === "/do/inbox");
 
@@ -22,6 +32,20 @@
   $effect(() => {
     if (!lenses.appData) void lenses.loadAppData();
     if (!prefs.account) void prefs.loadAccount();
+    registerServiceWorker();
+    if ("serviceWorker" in navigator) {
+      // Reload only on a REAL update activation (webapp useServiceWorkerUpdate
+      // parity: a null controller is the FIRST-ever install — an initial
+      // claim, not an update; the SW claims the page silently and no reload
+      // fires). The update path is: banner's SKIP_WAITING → activate →
+      // controllerchange → reload.
+      if (navigator.serviceWorker.controller) {
+        const onChange = () => window.location.reload();
+        navigator.serviceWorker.addEventListener("controllerchange", onChange);
+        return () =>
+          navigator.serviceWorker.removeEventListener("controllerchange", onChange);
+      }
+    }
   });
   const lensOptions = $derived(
     lenses.lenses.map((l) => ({
@@ -41,6 +65,21 @@
     search.onGlobalKey(e);
   }}
 />
+
+<!-- S12 slice wiring — the PWA head (webapp main.wasp.ts `head`, verbatim).
+     `display: standalone` in the manifest is what exempts the installed PWA
+     from WebKit ITP's 7-day localStorage cap — why install is promoted. -->
+<svelte:head>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#008AC0" />
+</svelte:head>
+
+<!-- S13 slice wiring — first-run gate: hasSeenOnboarding === false on the app
+     home redirects to /welcome (component renders nothing itself). -->
+<OnboardingGate />
 
 <!-- Single screen container: the app is modal — modes re-render in place,
      navigation never spawns new chrome around this container. -->

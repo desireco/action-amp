@@ -72,7 +72,7 @@ export default async function globalSetup() {
   // deterministic. Idempotent + localhost-only by construction.
   const { spawnSync } = await import("node:child_process");
   const apiDir = new URL("../../api/", import.meta.url).pathname;
-  for (const seed of ["seed-s4.ts", "seed-inbox.ts", "seed-projects.ts"]) {
+  for (const seed of ["seed-s4.ts", "seed-inbox.ts", "seed-projects.ts", "seed-lenses.ts"]) {
     const proc = spawnSync(
       "bun",
       ["src/" + seed],

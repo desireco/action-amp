@@ -18,6 +18,7 @@ import {
   lens,
   listItem,
   manualAccessGrant,
+  onboardingStage,
   plan,
   priority,
   project,
@@ -44,6 +45,8 @@ export type TaskStatus = (typeof taskStatus.enumValues)[number];
 export type TaskUpdateKind = (typeof taskUpdateKind.enumValues)[number];
 export type Plan = (typeof plan.enumValues)[number];
 export type ManualAccessGrant = (typeof manualAccessGrant.enumValues)[number];
+/** S13 — the onboarding state machine stage (`User.onboardingStage`). */
+export type OnboardingStage = (typeof onboardingStage.enumValues)[number];
 export type ProjectType = (typeof projectType.enumValues)[number];
 export type InboxItemStatus = (typeof inboxItemStatus.enumValues)[number];
 

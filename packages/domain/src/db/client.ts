@@ -33,6 +33,7 @@ import {
   listItemAttachment,
   project,
   projectAttachment,
+  pushSubscription,
   resource,
   resourceAttachment,
   tag,
@@ -41,6 +42,7 @@ import {
   taskSession,
   taskUpdate,
   tagToTask,
+  user,
 } from "./schema/index.js";
 import type {
   BatchPayload,
@@ -141,6 +143,12 @@ import type {
   DateTimeNullableFilter,
   TagDelegate,
   TagUpsertArgs,
+  PushSubscriptionDelegate,
+  UserCountArgs,
+  UserDelegate,
+  UserFindUniqueArgs,
+  UserUpdateArgs,
+  UserWhereInput,
   TaskCreateArgs,
   TaskDelegate,
   TaskDeleteManyArgs,
@@ -190,7 +198,14 @@ import type {
   TaskAttachment,
   TaskSession,
   TaskUpdate,
+  User,
 } from "./types.js";
+// S12 — push-subscription delegate arg shapes (type-only; the notifications
+// cores import shared/time only, no cycle).
+import type {
+  PushSubscriptionDeleteArgs,
+  PushSubscriptionUpsertArgs,
+} from "../notifications/operationsCore.js";
 
 /** The schema config drizzle() expects: tables AND Relations entries in one
  *  map (drizzle-orm 0.45 builds the relational-query config from exactly
@@ -221,6 +236,8 @@ export function createEntities(db: DomainDb): Entities {
     InboxAttachment: createInboxAttachmentDelegate(db),
     Resource: createResourceDelegate(db),
     ListItem: createListItemDelegate(db),
+    User: createUserDelegate(db), // S13/S15 — onboarding writes + founder count
+    PushSubscription: createPushSubscriptionDelegate(db), // S12 — push save/prune
   };
 }
 
@@ -1175,6 +1192,7 @@ function createTaskDelegate(db: DomainDb): TaskDelegate {
         status: args.data.status,
         priority: args.data.priority,
         size: args.data.size,
+        isOnboardingSample: args.data.isOnboardingSample,
         scheduledDate: args.data.scheduledDate,
         snoozedUntil: args.data.snoozedUntil,
         updatedAt: new Date(),
@@ -2632,6 +2650,109 @@ function createListItemDelegate(db: DomainDb): ListItemDelegate {
         );
       }
       return row;
+    },
+  };
+}
+
+// ================================================================
+// S13/S15 — User delegate: the onboarding core's writes (preferredName /
+// hasSeenOnboarding / onboardingStage) + the billing membership count
+// (`FOUNDER_MEMBERSHIP_WHERE`). Narrow by design — the acting user's own
+// fields ride the auth context, not this delegate.
+// ================================================================
+
+function userWhereToSql(where: UserWhereInput): SQL {
+  const parts: SQL[] = [];
+  if (where.id !== undefined) parts.push(eq(user.id, where.id));
+  if (where.plan !== undefined) parts.push(enumCond(user.plan, where.plan));
+  if (where.manualAccessGrant !== undefined) {
+    parts.push(
+      where.manualAccessGrant === null
+        ? isNull(user.manualAccessGrant)
+        : enumCond(user.manualAccessGrant, where.manualAccessGrant),
+    );
+  }
+  if (where.AND !== undefined) {
+    const inner = where.AND.map(userWhereToSql);
+    if (inner.length > 0) parts.push(combine(inner));
+  }
+  if (where.OR !== undefined) {
+    const inner = where.OR.map(userWhereToSql);
+    if (inner.length > 0) {
+      const anyOf = or(...inner);
+      if (anyOf) parts.push(anyOf);
+    }
+  }
+  if (where.NOT !== undefined) {
+    const members = Array.isArray(where.NOT) ? where.NOT : [where.NOT];
+    const inner = members.map(userWhereToSql);
+    if (inner.length > 0) parts.push(not(combine(inner)));
+  }
+  return combine(parts);
+}
+
+function createUserDelegate(db: DomainDb): UserDelegate {
+  return {
+    // By-PK guard read (the sample-task seed's stage probe); full row — the
+    // advisory-select precedent (Task/Lens findFirst).
+    findUnique: async (args: UserFindUniqueArgs): Promise<User | null> => {
+      const rows = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, args.where.id))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+    update: async (args: UserUpdateArgs): Promise<User> => {
+      const rows = await db
+        .update(user)
+        .set(args.data)
+        .where(eq(user.id, args.where.id))
+        .returning();
+      const row = rows[0];
+      assertFound(row, "User");
+      return row;
+    },
+    count: async (args: UserCountArgs): Promise<number> => {
+      const rows = await db
+        .select({ value: count() })
+        .from(user)
+        .where(userWhereToSql(args.where));
+      return rows[0]?.value ?? 0;
+    },
+  };
+}
+
+// S12 — Web-Push subscriptions. The webapp's Prisma upsert keyed by the
+// unique `endpoint`, as a Postgres ON CONFLICT; the create leg mints the uuid
+// + stamps updatedAt (the seam's client-side defaults, below the core).
+function createPushSubscriptionDelegate(db: DomainDb): PushSubscriptionDelegate {
+  return {
+    upsert: async (args: PushSubscriptionUpsertArgs): Promise<unknown> => {
+      await db
+        .insert(pushSubscription)
+        .values({
+          id: mintId(),
+          userId: args.create.userId,
+          endpoint: args.create.endpoint,
+          p256Dh: args.create.p256dh,
+          auth: args.create.auth,
+          updatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: pushSubscription.endpoint,
+          set: {
+            userId: args.update.userId,
+            p256Dh: args.update.p256dh,
+            auth: args.update.auth,
+            updatedAt: new Date(),
+          },
+        });
+      return {};
+    },
+    delete: async (args: PushSubscriptionDeleteArgs): Promise<unknown> => {
+      await db.delete(pushSubscription).where(eq(pushSubscription.id, args.where.id));
+      return {};
     },
   };
 }

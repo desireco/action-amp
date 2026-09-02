@@ -21,6 +21,7 @@ import type {
   Lens,
   ListItem,
   ManualAccessGrant,
+  OnboardingStage,
   Plan,
   Priority,
   Project,
@@ -31,7 +32,14 @@ import type {
   TaskSession,
   TaskStatus,
   TaskUpdateKind,
+  User,
 } from "./types.js";
+// S12 — the push-subscription delegate's arg shapes (type-only; no cycle —
+// the notifications cores import shared/time only).
+import type {
+  PushSubscriptionDeleteArgs,
+  PushSubscriptionUpsertArgs,
+} from "../notifications/operationsCore.js";
 
 // ----------------------------------------------------------------
 // Scalar filter primitives (the Prisma `XFilter` subset actually used)
@@ -158,8 +166,8 @@ export interface LensWhereInput {
   NOT?: LensWhereInput | LensWhereInput[];
 }
 
-/** User filters — only what billing constants + future billing cores pass
- *  (e.g. `FOUNDER_MEMBERSHIP_WHERE`). No delegate exists for it yet. */
+/** User filters — the billing status count (`FOUNDER_MEMBERSHIP_WHERE`) plus
+ *  the S13 onboarding core's by-PK reads. */
 export interface UserWhereInput {
   id?: string;
   plan?: Plan | EnumFilter<Plan>;
@@ -167,6 +175,61 @@ export interface UserWhereInput {
   AND?: UserWhereInput[];
   OR?: UserWhereInput[];
   NOT?: UserWhereInput | UserWhereInput[];
+}
+
+// ----------------------------------------------------------------
+// S13/S15 — the User delegate: the onboarding core's writes (preferredName /
+// hasSeenOnboarding / onboardingStage) and the billing status count
+// (`FOUNDER_MEMBERSHIP_WHERE` — billed OR manual FOUNDER, never FRIEND).
+// No full-row reads are inventoried; the acting user's own fields ride the
+// auth context, not this delegate.
+// ----------------------------------------------------------------
+
+/** User patch — the three fields the onboarding cores write. */
+export interface UserUpdateInput {
+  preferredName?: string;
+  hasSeenOnboarding?: boolean;
+  onboardingStage?: OnboardingStage;
+}
+
+export interface UserFindUniqueArgs {
+  where: { id: string };
+  /** Guard-read select (the sample-task seed reads onboardingStage); the
+   *  implementation returns the FULL row — the delegate-wide advisory-select
+   *  precedent (Task findUnique). */
+  select?: {
+    onboardingStage?: true;
+    hasSeenOnboarding?: true;
+    preferredName?: true;
+    firstName?: true;
+  };
+}
+
+export interface UserUpdateArgs {
+  where: { id: string };
+  data: UserUpdateInput;
+}
+
+export interface UserCountArgs {
+  where: UserWhereInput;
+}
+
+export interface UserDelegate {
+  findUnique(args: UserFindUniqueArgs): Promise<User | null>;
+  update(args: UserUpdateArgs): Promise<User>;
+  count(args: UserCountArgs): Promise<number>;
+}
+
+// ----------------------------------------------------------------
+// S12 — Web-Push subscriptions: the endpoint-keyed upsert (webapp
+// notifications/operations.ts :: savePushSubscription) + the 404/410
+// dead-endpoint prune (the daily-reminder job). Arg shapes live with the
+// core that speaks them (@actionamp/domain/notifications).
+// ----------------------------------------------------------------
+
+export interface PushSubscriptionDelegate {
+  upsert(args: PushSubscriptionUpsertArgs): Promise<unknown>;
+  delete(args: PushSubscriptionDeleteArgs): Promise<unknown>;
 }
 
 /** S5 — Project filters: exactly the shapes the projects/goals cores pass. */
@@ -370,6 +433,8 @@ export interface TaskCreateInput {
   status?: TaskStatus;
   priority?: Priority;
   size?: Size;
+  /** S13 — the onboarding sample-task seed's marker (surfaces in UI copy). */
+  isOnboardingSample?: boolean;
   scheduledDate?: Date | null;
   snoozedUntil?: Date | null;
   /** S3 triage — resolved parsed tags connect inline (single atomic write). */
@@ -1982,4 +2047,8 @@ export interface Entities {
   InboxAttachment: InboxAttachmentDelegate;
   Resource: ResourceDelegate;
   ListItem: ListItemDelegate;
+  /** S13/S15 — onboarding writes + the Founding-100 membership count. */
+  User: UserDelegate;
+  /** S12 — push subscriptions (save upsert + dead-endpoint prune). */
+  PushSubscription: PushSubscriptionDelegate;
 }

@@ -63,6 +63,17 @@ import {
   searchSiteData,
 } from "../search/operationsCore.js";
 import { createResourceCore } from "../resources/operationsCore.js";
+// S13 — onboarding (the injected-dep cores; deps are not part of the seam).
+import {
+  completeOnboardingCore,
+  ensureOnboardedCore,
+  setPreferredNameCore,
+} from "../onboarding/operationsCore.js";
+// S12 — push subscriptions (save upsert + dead-endpoint prune).
+import {
+  deletePushSubscriptionCore,
+  savePushSubscriptionCore,
+} from "../notifications/operationsCore.js";
 import type { Entities } from "./seam.js";
 
 function expectEntities<F>(
@@ -131,4 +142,12 @@ export function seamLocks(entities: Entities): void {
   expectEntities(searchSiteData, entities);
   expectEntities(getCommandPaletteIndexData, entities);
   expectEntities(createResourceCore, entities);
+  // S13 — onboarding (User delegate rides the same entities object).
+  expectEntities(ensureOnboardedCore, entities);
+  expectEntities(setPreferredNameCore, entities);
+  expectEntities(completeOnboardingCore, entities);
+  // S12 — push subscriptions (PushSubscription delegate rides the same
+  // entities object).
+  expectEntities(savePushSubscriptionCore, entities);
+  expectEntities(deletePushSubscriptionCore, entities);
 }

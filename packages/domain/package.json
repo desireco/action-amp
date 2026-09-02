@@ -17,7 +17,9 @@
     "./resources": "./src/resources/index.ts",
     "./lenses": "./src/lenses/index.ts",
     "./logbook": "./src/logbook/index.ts",
+    "./notifications": "./src/notifications/index.ts",
     "./billing": "./src/billing/index.ts",
+    "./onboarding": "./src/onboarding/index.ts",
     "./shared/time": "./src/shared/time/temporal.ts",
     "./shared/permalinks": "./src/shared/permalinks.ts"
   },

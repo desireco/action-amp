@@ -21,6 +21,9 @@ import { lensesProcedures } from "./procedures/lenses.js";
 import { prefsProcedures } from "./procedures/prefs.js";
 import { searchProcedures } from "./procedures/search.js"; // S9 (temporary gate wiring)
 import { resourcesProcedures } from "./procedures/resources.js"; // S9 (temporary gate wiring)
+import { onboardingProcedures } from "./procedures/onboarding.js"; // S13 (slice wiring — docs/plans/slices/s13-s15-wiring.md)
+import { publicProcedures } from "./procedures/public.js"; // S15 (slice wiring — docs/plans/slices/s13-s15-wiring.md)
+import { notificationsProcedures } from "./push.js"; // S12 (slice wiring — docs/plans/slices/s12-s14-wiring.md)
 
 export type { ApiContext } from "./context.js";
 export { requireUser } from "./context.js";
@@ -40,5 +43,8 @@ export const router = {
   prefs: prefsProcedures,
   search: searchProcedures, // S9 (temporary gate wiring)
   resources: resourcesProcedures, // S9 (temporary gate wiring)
+  onboarding: onboardingProcedures, // S13 (slice wiring)
+  public: publicProcedures, // S15 (slice wiring)
+  notifications: notificationsProcedures, // S12 (slice wiring)
   // Next surfaces compose here, one line each (inbox, projects, goals, …):
 };

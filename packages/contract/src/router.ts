@@ -17,6 +17,9 @@ import { lensesContract } from "./lenses.js";
 import { prefsContract } from "./prefs.js";
 import { searchContract } from "./search.js"; // S9 (temporary gate wiring)
 import { resourcesContract } from "./resources.js"; // S9 (temporary gate wiring)
+import { notificationsContract } from "./notifications.js"; // S12 (temporary gate wiring)
+import { onboardingContract } from "./onboarding.js"; // S13 (temporary gate wiring)
+import { publicContract } from "./public.js"; // S15 (temporary gate wiring)
 
 export const contractRouter = {
   tasks: tasksContract,
@@ -28,5 +31,8 @@ export const contractRouter = {
   prefs: prefsContract,
   search: searchContract, // S9 (temporary gate wiring)
   resources: resourcesContract, // S9 (temporary gate wiring)
+  notifications: notificationsContract, // S12 (temporary gate wiring)
+  onboarding: onboardingContract, // S13 (temporary gate wiring)
+  public: publicContract, // S15 (temporary gate wiring)
   // Next surfaces nest here, one line each (inbox, projects, goals, …):
 };

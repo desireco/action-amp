@@ -119,4 +119,31 @@ export type {
   CommandIndexResponse,
 } from "./search.js";
 export { resourcesContract } from "./resources.js";
+// S12 (push/PWA/share) fragment — additive export of the slice's own op only
+// (saveDailyReminder/getNotificationPreferences already ship via prefs.ts);
+// the router composition line lives in docs/plans/slices/s12-s14-wiring.md.
+export { notificationsContract } from "./notifications.js";
+// S10 (auth pages + issuance) fragment — additive exports of the slice's own
+// ops only; the router composition line lives in
+// docs/plans/slices/s10-wiring.md.
+export { authContract } from "./auth.js";
+// S13 (onboarding) + S15 (public/founding-100) fragments — additive exports
+// of the slices' own schemas only; the router composition lines live in
+// docs/plans/slices/s13-s15-wiring.md.
+export {
+  onboardingContract,
+  CreatedLensSchema,
+  OnboardingStageSchema,
+  OnboardingStatusSchema,
+  PreferredNameErrorMap,
+} from "./onboarding.js";
+export type {
+  OnboardingStage,
+  OnboardingStatus,
+} from "./onboarding.js";
+export {
+  publicContract,
+  Founding100StatusSchema,
+} from "./public.js";
+export type { Founding100Status } from "./public.js";
 export { contractRouter } from "./router.js";

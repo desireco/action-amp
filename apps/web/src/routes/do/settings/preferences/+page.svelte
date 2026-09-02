@@ -11,6 +11,7 @@
   import Chip from "../../../../lib/components/Chip.svelte";
   import Field from "../../../../lib/components/settings/Field.svelte";
   import { prefs, systemTimeZone, FOCUS_SESSION_OPTIONS, TODAY_CAP_DEFAULT, TODAY_CAP_MIN, TODAY_CAP_MAX, FOCUS_SESSION_DEFAULT, type FocusSessionMinutes } from "../../../../lib/stores/prefs.svelte";
+  import { enablePushSubscription } from "../../../../lib/push";
   import { applyTheme, preferredTheme, type AppTheme } from "../../../../lib/theme";
 
   // ---- Theme: live, persisted ----
@@ -107,22 +108,21 @@
       if (enabled) {
         // The web push flow (webapp notifications/client + PreferencesPage):
         // browser support → VAPID key → permission → subscribe → save the
-        // subscription. S12 owns the VAPID keys + savePushSubscription; until
-        // it composes the flow stops at the vapid check (the webapp's exact
-        // behavior without the env configured).
+        // subscription. enablePushSubscription throws the webapp's exact
+        // strings ("This browser does not support push notifications.",
+        // "Notifications are not configured on this ActionAmp server yet.",
+        // "Notification permission was not granted.", "Could not create
+        // notification subscription.").
         if (typeof Notification === "undefined" || !("serviceWorker" in navigator)) {
           throw new Error("This browser does not support push notifications.");
         }
         if (!prefs.notifications?.vapidPublicKey) {
           throw new Error("Notifications are not configured on this ActionAmp server yet.");
         }
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          throw new Error("Notification permission was not granted.");
-        }
-        // S12 wiring: subscribe via serviceWorker.ready + pushManager and call
-        // savePushSubscription({ endpoint, p256dh, auth }) here before the
-        // saveDailyReminder below.
+        // S12 wiring: permission + pushManager.subscribe under the waiting
+        // worker + savePushSubscription({endpoint, p256dh, auth}) — before
+        // the saveDailyReminder below (webapp PreferencesPage parity).
+        await enablePushSubscription(prefs.notifications.vapidPublicKey);
       }
       await prefs.saveDailyReminder(enabled, time, systemTimeZone());
       reminderEnabled = enabled;

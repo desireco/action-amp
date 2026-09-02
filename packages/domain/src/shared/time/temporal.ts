@@ -33,6 +33,11 @@ export interface TemporalTimeLike {
   minutes?: number;
 }
 
+/** String read (S12/S14 daily reminder: `toString({smallestUnit:"minute"})`). */
+export interface TemporalPlainTimeStringOptions {
+  smallestUnit?: "minute";
+}
+
 /** Calendar-field partial for `PlainDate.with` (S2 capture parser: year rolls). */
 export interface TemporalPlainDateLike {
   year?: number;
@@ -48,6 +53,8 @@ export interface TemporalInstant {
 
 export interface TemporalZonedDateTime {
   toPlainDate(): TemporalPlainDate;
+  /** S12/S14 — the local wall-clock read (daily-reminder time matching). */
+  toPlainTime(): TemporalPlainTime;
   toInstant(): TemporalInstant;
 }
 
@@ -63,7 +70,7 @@ export interface TemporalPlainDate {
    *  next year) — returns a new PlainDate, `this` untouched. */
   with(duration: TemporalPlainDateLike): TemporalPlainDate;
   toZonedDateTime(
-    timeZone: string | { timeZone: string; plainTime?: TemporalPlainTime | TemporalTimeLike },
+    timeZone: string | { timeZone: string; plainTime?: TemporalPlainTime | TemporalTimeLike | string },
   ): TemporalZonedDateTime;
   until(other: TemporalPlainDate, options?: { largestUnit?: "auto" | "days" | "hours" | "months" | "years" }): TemporalDuration;
 }
@@ -72,6 +79,8 @@ export interface TemporalPlainDate {
  *  through to `toZonedDateTime`. */
 export interface TemporalPlainTime {
   readonly __brand: "TemporalPlainTime";
+  /** S12/S14 — wall-clock string at minutes precision ("09:00"). */
+  toString(options?: TemporalPlainTimeStringOptions): string;
 }
 
 export interface TemporalNow {
