@@ -95,11 +95,15 @@ Pick the task; read the doc(s) on the right **before** writing code.
 - **`webapp/main.wasp.ts`** — every route, page, auth op, operation. The fastest
   way to see the app's full surface area.
 - **`webapp/schema.prisma`** — core models: `User, Lens, Goal, Project, Task,
-  Resource, InboxItem (+ InboxAttachment), Tag, Payment`; supporting models:
-  `MagicLoginChallenge` (passwordless email), `ApiKey` (CLI PATs), `Feedback`
-  (triage), `PushSubscription` (Web Push), `TaskSession` (focus accounting),
-  `TaskUpdate` (activity log). Enums: `Plan, Priority, Size, TaskStatus
-  (incl. WONT_DO), InboxItemStatus, PaymentStatus, FeedbackStatus`.
+  Resource, InboxItem (+ InboxAttachment), Tag, ListItem (+ ListItemAttachment),
+  Payment`; supporting models: `MagicLoginChallenge` (passwordless email),
+  `ApiKey` (CLI PATs), `Feedback` (triage), `PushSubscription` (Web Push),
+  `TaskSession` (focus accounting), `TaskUpdate` (activity log), `Review`,
+  `ProjectAttachment` / `TaskAttachment` / `ResourceAttachment`, `LoginEvent`,
+  `AdminUserAction`, `AnalyticsSession` / `AnalyticsEvent`. Enums: `Plan,
+  Priority, Size, TaskStatus (incl. WONT_DO), InboxItemStatus, PaymentStatus,
+  FeedbackStatus, ProjectType, OnboardingStage, TaskUpdateKind, ReviewCadence,
+  ManualAccessGrant, AdminUserActionType, AnalyticsEventName`.
 - **`webapp/src/`** — vertical per feature. Each feature folder typically has its
   page (`*Page.tsx`), server ops (`operations.ts`), and styles (`*.css`):
   - `src/app/` — shell, What Now, Inbox, triage, settings, keyboard shortcuts
@@ -127,11 +131,9 @@ Pick the task; read the doc(s) on the right **before** writing code.
 
 ## Agent database access
 
-- Local PostgreSQL 18 (Homebrew `postgresql@18`, brew service) listens on
-  `localhost:5432`; connect as user `jake`, no password (`psql -h localhost`).
-- Plain `psql` may not resolve on the agent's inherited PATH (a stale
-  `postgresql@15` entry lingers from the Aug 2026 upgrade). Invoke it by
-  absolute path: `/opt/homebrew/opt/postgresql@18/bin/psql`.
+- Local PostgreSQL 18 runs in the Docker container `actionamp-pg`
+  (`postgres:18-alpine`), published on `localhost:5432`; connect as user
+  `jake`, no password (`psql -h localhost`, `/usr/bin/psql`).
 - Databases: `actionamp_dev` is the dev DB (`webapp/.env.server`
   `DATABASE_URL`), `actionamp_e2e` for e2e runs. The same server also hosts
   unrelated projects' databases — leave those alone.
