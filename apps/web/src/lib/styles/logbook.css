@@ -1,0 +1,217 @@
+@import "../tokens.css";
+
+/* Logbook — the record of things no longer active, grouped by day (webapp
+   LogbookPage.css port). Hosted by LogbookView.svelte; the .aa-logbook scope
+   keeps the GroupedList overrides from leaking into other surfaces. */
+
+.aa-logbook {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+/* GroupedList overrides — doubled classes so they win against the component's
+   scoped styles regardless of stylesheet order. */
+.aa-logbook .aa-grouped.aa-grouped {
+  gap: var(--aa-space-md);
+  padding: var(--aa-space-md) var(--aa-space-xl);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-xl);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-logbook .aa-grouped__group + .aa-grouped__group {
+  padding-top: var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
+}
+
+.aa-logbook .aa-grouped__heading.aa-grouped__heading {
+  margin-bottom: var(--aa-space-xs);
+}
+
+.aa-logbook-empty-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  color: var(--aa-surface);
+}
+
+.aa-logbook-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--aa-space-sm);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--aa-border);
+}
+
+.aa-logbook-row:last-child {
+  border-bottom: none;
+}
+
+.aa-logbook-row__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal);
+  color: var(--aa-surface);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.aa-logbook-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+  flex-wrap: wrap;
+}
+
+.aa-logbook-row__title {
+  display: inline;
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-2);
+  line-height: var(--aa-leading-snug);
+  text-decoration: none;
+}
+
+/* Outcome — the "what happened" note under a completed task (task-fields §G).
+   Slightly smaller than the title, body-color so it reads as the substance of
+   the row, not chrome. Empty outcomes render nothing (no stub). */
+.aa-logbook-row__outcome {
+  flex-basis: 100%;
+  margin-top: -2px;
+  padding-left: 1px;
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+}
+
+.aa-logbook-row__outcome .aa-md {
+  font-size: inherit;
+  color: inherit;
+}
+
+.aa-logbook-row__outcome .aa-md p {
+  margin: 0 0 var(--aa-space-sm);
+}
+
+.aa-logbook-row__outcome .aa-md ul,
+.aa-logbook-row__outcome .aa-md ol {
+  margin: 0 0 var(--aa-space-sm);
+  padding-left: 1.4em;
+}
+
+.aa-logbook-row__outcome .aa-md li {
+  margin: 2px 0;
+}
+
+.aa-logbook-row__outcome .aa-md a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.aa-logbook-row__outcome .aa-md a:hover {
+  color: var(--aa-teal-cta);
+}
+
+.aa-logbook-row__outcome .aa-md strong {
+  font-weight: var(--aa-weight-semibold);
+}
+
+.aa-logbook-row__outcome .aa-md del {
+  color: var(--aa-text-3);
+}
+
+.aa-logbook-row__outcome .aa-md code {
+  font-family: var(--aa-font-mono);
+  font-size: 0.85em;
+  background: var(--aa-surface-muted);
+  padding: 1px 5px;
+  border-radius: var(--aa-radius-xs);
+}
+
+.aa-logbook-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 0;
+}
+
+/* Archived-note rows: muted check (not the teal "done" mark) + restore action. */
+.aa-logbook-row .aa-logbook-row__check:has(svg rect) {
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-3);
+}
+
+.aa-logbook-row__restore {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 5px 12px;
+  border-radius: var(--aa-radius-sm);
+  border: 1px solid var(--aa-border-strong);
+  background: var(--aa-surface);
+  color: var(--aa-text-2);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  cursor: pointer;
+  transition:
+    opacity var(--aa-dur-fast) var(--aa-ease-out),
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    color var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+@media (hover: hover) {
+  .aa-logbook-row__restore {
+    opacity: 0;
+  }
+
+  .aa-logbook-row:hover .aa-logbook-row__restore,
+  .aa-logbook-row:focus-within .aa-logbook-row__restore {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 620px) {
+  .aa-logbook .aa-grouped.aa-grouped {
+    padding: var(--aa-space-sm) var(--aa-space-md);
+  }
+
+  .aa-logbook-row {
+    padding: var(--aa-space-sm) 0;
+  }
+
+  .aa-logbook-row__check {
+    margin-top: 2px;
+  }
+
+  .aa-logbook-row__main {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .aa-logbook-row__meta {
+    margin-top: 0;
+  }
+}
+
+.aa-logbook-row__restore:hover {
+  background: var(--aa-teal-soft);
+  border-color: var(--aa-teal);
+  color: var(--aa-teal-cta);
+}
+
+.aa-logbook-row.is-search-target {
+  border-radius: var(--aa-radius-sm);
+  box-shadow: 0 0 0 2px var(--aa-teal);
+}
