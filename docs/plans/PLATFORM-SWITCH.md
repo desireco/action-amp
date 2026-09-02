@@ -61,9 +61,12 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | **S8 Logbook** | ✅ `d1242a3` | reviewed approve — lens-gate gap closed (documented deviation) |
 | **S9 Search+Resources** | ✅ `0fd817e` | reviewed pass-with-fixes — real fuse.js swapped in at integration |
 | Wave-2 integration | ✅ `c3da0d3` | LensSwitcher/palette/capture shell mounts, theme fallback, fixme un-skipped; 38 e2e passed twice, zero skipped |
-| Wave 3 (S10 auth issuance, S12 push/PWA, S13 onboarding, S14 emails+cron, S15 public) | ▶ running | — |
-| Wave 4 (S16 billing, S17 admin, S18 CLI conformance) | ☐ next | P0 notes ready (S18 is byte-exact conformance) |
-| V-series (V1 parity run → V2 rehearsal → V3 kit → V4 WITH JAKE) | ☐ | V1 needs a fresh prod pg_dump restored locally |
+| **S10 Auth issuance** | ✅ dd45476 | adversarial pass — fail-open localhost-code hole FIXED (prod never gets 111111); Wasp-format issuance proven at row level |
+| **S12+S14 Push/PWA + reminder** | ✅ 7e7328e | reviewed pass — SW/manifest byte-identical, share CSRF exception approved (Lax), atomic claim-before-send |
+| **S13+S15 Onboarding + public** | ✅ d7366bc | reviewed pass-with-fixes — public endpoints byte-exact; bootstrap 500 fixed (webapp has the same hole) |
+| Wave-3 integration | ✅ 9dda9cb | **INCIDENT: stash-pop from a pre-session branch applied old webapp WIP to webapp/ — I1 restored byte-clean same day; the WIP remains safely in stash@{0} (fix/today-badge-lens-scoping) for its owner**. Gates: domain 364/364, api 112/112, e2e 60/60 twice |
+| Wave 4 (S16 billing, S17 admin, S18 CLI conformance) | ▶ running | last functional surfaces; S18 is byte-exact --json conformance, both CLIs unchanged |
+| V-series (V1 parity run → V2 rehearsal → V3 kit → V4 WITH JAKE) | ☐ next | V1 needs a fresh prod pg_dump restored locally (Jake creds likely) |
 | Remaining S/V goals | ☐ | P0 notes ready for every slice; port order per goal set |
 
 Blockers: none. Jake gates still open: V2 rehearsal attendance, V4 switch-day
