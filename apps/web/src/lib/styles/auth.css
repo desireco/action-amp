@@ -1,0 +1,273 @@
+/*
+ * ActionAmp auth pages (login / signup / CLI consent) — S10 port of
+ * webapp/src/components/ui/AuthLayout.css, minus the Wasp-form override
+ * blocks (the new stack renders its own form controls, no Wasp forms to
+ * retheme). Classes stay `aa-auth-*` for parity; tokens come from
+ * lib/tokens.css (loaded globally by +layout.svelte).
+ */
+
+/* ---- Full-screen calm stage ---- */
+.aa-auth {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--aa-space-2xl) var(--aa-space-lg);
+  background: var(--aa-bg);
+}
+
+/* ---- Card ---- */
+.aa-auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  box-shadow: var(--aa-shadow-md);
+  padding: var(--aa-space-2xl) var(--aa-space-xl);
+}
+
+/* ---- Brand mark ---- */
+.aa-auth-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--aa-radius-md);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px var(--aa-teal-tint-shadow);
+  margin: 0 auto var(--aa-space-lg);
+}
+
+/* ---- Headline ---- */
+.aa-auth-title {
+  text-align: center;
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--aa-text);
+  margin: 0;
+}
+
+.aa-auth-subtitle {
+  text-align: center;
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-snug);
+  color: var(--aa-text-3);
+  margin: var(--aa-space-sm) 0 0;
+}
+
+/* ---- Passwordless code form ---- */
+.aa-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+  margin-top: var(--aa-space-xl);
+}
+
+.aa-auth-label {
+  margin-top: var(--aa-space-xs);
+  color: var(--aa-text-2);
+  font-weight: var(--aa-weight-medium);
+  font-size: var(--aa-text-base);
+  margin-bottom: 6px;
+}
+
+.aa-auth-input {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--aa-surface);
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  padding: 10px 12px;
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-snug);
+  color: var(--aa-text);
+  box-shadow: none;
+  transition:
+    border-color var(--aa-dur-base) var(--aa-ease-out),
+    box-shadow var(--aa-dur-base) var(--aa-ease-out);
+}
+
+.aa-auth-input:focus {
+  border-color: var(--aa-teal);
+  box-shadow: var(--aa-focus-ring);
+  outline: none;
+}
+
+#magic-code {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-lg) !important;
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.24em;
+  text-align: left;
+}
+
+.aa-auth-submit {
+  width: 100%;
+  margin-top: var(--aa-space-sm);
+  border: 0;
+  border-radius: var(--aa-radius-sm);
+  padding: 11px 14px;
+  background: var(--aa-teal-cta);
+  color: white;
+  cursor: pointer;
+  font-weight: var(--aa-weight-semibold);
+  font-size: var(--aa-text-base);
+}
+
+.aa-auth-submit:hover:not(:disabled) {
+  background: var(--aa-teal-cta-hover);
+}
+
+.aa-auth-submit:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.aa-auth-status,
+.aa-auth-error {
+  margin: var(--aa-space-md) 0 0;
+  font-size: var(--aa-text-sm);
+  line-height: var(--aa-leading-snug);
+}
+
+.aa-auth-status { color: var(--aa-teal-cta); }
+.aa-auth-error { color: var(--aa-rose-text); }
+
+/* ---- Footer links ---- */
+.aa-auth-footer {
+  margin-top: var(--aa-space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+  text-align: center;
+  font-size: var(--aa-text-base);
+  color: var(--aa-text-3);
+}
+
+.aa-auth-footer a {
+  color: var(--aa-teal-cta);
+  font-weight: var(--aa-weight-medium);
+  text-decoration: none;
+}
+
+.aa-auth-footer a:hover {
+  color: var(--aa-teal-cta-hover);
+  text-decoration: underline;
+}
+
+/* Build identifier — quietest line in the footer, last thing on the page.
+   Surfaces what commit is deployed so support/debug reports are actionable. */
+.aa-auth-version {
+  margin-top: var(--aa-space-xs);
+  font-size: var(--aa-text-xs);
+  font-family: var(--aa-font-mono);
+  opacity: 0.6;
+}
+
+/* ---- Local dev panel (dev builds only, login mode) ---- */
+.aa-auth-dev {
+  margin: var(--aa-space-lg) 0;
+  padding: var(--aa-space-md);
+  border: 1px dashed var(--aa-border-strong);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface-muted);
+}
+
+.aa-auth-dev__label {
+  margin-bottom: var(--aa-space-xs);
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.aa-auth-dev__button {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-bold);
+  padding: 9px 10px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.aa-auth-dev__button:hover:not(:disabled) {
+  border-color: var(--aa-teal);
+  color: var(--aa-teal-cta);
+}
+
+.aa-auth-dev__button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.aa-auth-dev__hint {
+  margin: var(--aa-space-xs) 0 0;
+  font-size: var(--aa-text-sm);
+  line-height: var(--aa-leading-snug);
+  color: var(--aa-text-4);
+}
+
+.aa-auth-dev__hint code {
+  color: var(--aa-text-2);
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+}
+
+/* ---- Splash veil (covers the form while the session is being checked:
+        returning users would otherwise see the form flash before the
+        redirect to returnTo) ---- */
+.aa-auth-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--aa-bg);
+}
+
+.aa-auth-splash .aa-auth-mark {
+  margin: 0;
+  animation: aa-auth-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes aa-auth-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-auth-splash .aa-auth-mark {
+    animation: none;
+  }
+  .aa-auth-input {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 480px) {
+  .aa-auth {
+    padding: var(--aa-space-lg) var(--aa-space-md);
+  }
+  .aa-auth-card {
+    padding: var(--aa-space-xl) var(--aa-space-lg);
+    border-radius: var(--aa-radius-lg);
+  }
+}
