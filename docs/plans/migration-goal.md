@@ -8,7 +8,7 @@
 ## The goal
 
 A fully functional ActionAmp rebuilt on the new stack — the web app in
-`apps/web/`, the API in `apps/api/`, with `packages/domain` carrying the
+`web/`, the API in `api/`, with `packages/domain` carrying the
 ported business logic and `packages/contract` as the sole API surface —
 that **matches the functionality of `webapp/`**.
 

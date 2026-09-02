@@ -18,7 +18,7 @@
 #
 # Env:
 #   BASE_URL        Target base URL. Default http://localhost:8080 (the local
-#                   apps/api dev server). Nothing touches production unless
+#                   api dev server). Nothing touches production unless
 #                   you set this explicitly.
 #   SESSION_COOKIE  The authenticated cookie for the read + scratch write.
 #                   Accepts the bare token or a full "wasp_session=<token>"
