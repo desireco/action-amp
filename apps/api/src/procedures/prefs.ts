@@ -14,10 +14,9 @@
  * - `getPreferences` is new — the webapp read these values off getAppData,
  *   whose S4 contract output doesn't carry them; the preferences screen has
  *   its own read instead.
- * - `getNotificationPreferences.vapidPublicKey` returns null until S12 (push
- *   subscription save + VAPID keys are S12's; the client enable flow surfaces
- *   the webapp's exact "not configured" error, today's behavior without the
- *   VAPID env).
+ * - `getNotificationPreferences.vapidPublicKey` returned null at the S11
+ *   boundary; S12 wired it to the VAPID env (see
+ *   docs/plans/slices/s12-s14-wiring.md).
  *
  * NOTE — fragment implements FRAGMENT: the `prefs:` composition line for
  * apps/api/src/router.ts lives in docs/plans/slices/s7-s11-wiring.md.
@@ -244,9 +243,11 @@ const getNotificationPreferences = ORPC.getNotificationPreferences.handler(
       dailyReminderEnabled: row?.dailyReminderEnabled ?? false,
       dailyReminderTime: row?.dailyReminderTime ?? "09:00",
       dailyReminderTimeZone: row?.dailyReminderTimeZone ?? "UTC",
-      // S12 owns the VAPID keys (and savePushSubscription); null keeps the
-      // client's enable flow on the webapp's "not configured" error string.
-      vapidPublicKey: null,
+      // S12 wiring (was the S11 boundary): the real public key when the VAPID
+      // env is configured; null keeps the client's enable flow on the
+      // webapp's exact "not configured" error string. Missing keys also make
+      // the reminder job no-op (see src/push.ts).
+      vapidPublicKey: process.env.VAPID_PUBLIC_KEY ?? null,
     };
   },
 );
