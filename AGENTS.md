@@ -94,16 +94,16 @@ Pick the task; read the doc(s) on the right **before** writing code.
 
 The platform-switch rebuild lives at the root alongside the legacy folders:
 
-- **`api/`** — the new API (Hono + oRPC on Bun, Drizzle). Dev: `bun run dev:api`.
-- **`web/`** — the new web app (Svelte 5 + SvelteKit SPA). Dev: `bun run dev:web`.
+- **`api/`** — the new API (Hono + oRPC on Bun, Drizzle).
+- **`web/`** — the new web app (Svelte 5 + SvelteKit SPA).
 - **`packages/domain`** — the ported business logic (all 13 cores + the Drizzle
   seam). **`packages/contract`** — the sole API surface + typed client.
 
 Root tasks (bun; npm run also executes them — but NEVER `npm install`):
-`bun run dev` (api + web together) · `dev:api` · `dev:web` · `test` ·
-`test:e2e` (needs `E2E_DATABASE_URL` set to the same DB the API uses, plus
-`STRIPE_WEBHOOK_SECRET` from webapp/.env.server for the billing specs) ·
-`lint` · `typecheck`. Env for the API lives in `api/.env` (gitignored; copy
+**`npm run app`** starts the whole app — API (:8080) first, web (:5174) once
+it's ready; Ctrl-C stops both. Also: `test` · `test:e2e` (servers must be
+running; env is read from api/.env + webapp/.env.server) · `lint` ·
+`typecheck` · `build`. Env for the API lives in `api/.env` (gitignored; copy
 the shape from webapp/.env.server — local DB + test-mode Stripe keys).
 
 Auth for local checks: `web` has no login page dependency for seeded flows —

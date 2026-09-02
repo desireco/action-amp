@@ -8,11 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --filter '*' dev",
-    "api": "bun run --filter '@actionamp/api' dev",
-    "web": "bun run --filter '@actionamp/web' dev",
-    "dev:api": "bun run --filter '@actionamp/api' dev",
-    "dev:web": "bun run --filter '@actionamp/web' dev",
+    "app": "bash scripts/dev.sh",
     "build": "bun run --filter '*' build",
     "test": "bun run --filter '*' test",
     "test:e2e": "bash scripts/test-e2e.sh",
