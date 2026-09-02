@@ -53,6 +53,25 @@ export {
   ProjectTypeSchema,
   ProGateErrorMap,
 } from "./projects.js";
+// S7+S11 (lenses + prefs) fragments — additive exports of the slice's own
+// schemas only; the router composition lines live in
+// docs/plans/slices/s7-s11-wiring.md.
+export {
+  lensesContract,
+  LensColorSchema,
+  LensCreatedSchema,
+  LensSummarySchema,
+  LENS_COLORS,
+} from "./lenses.js";
+export {
+  prefsContract,
+  FOCUS_SESSION_DEFAULT,
+  FOCUS_SESSION_OPTIONS,
+  TODAY_CAP_DEFAULT,
+  TODAY_CAP_MAX,
+  TODAY_CAP_MIN,
+} from "./prefs.js";
+export type { FocusSessionMinutes } from "./prefs.js";
 // S2+S3 (capture + inbox/triage) fragment — additive exports of the slice's
 // own schemas only; the router composition line lives in
 // docs/plans/slices/s2-s3-wiring.md.
@@ -67,4 +86,37 @@ export {
   TriageDecisionSchema,
   TriageResultSchema,
 } from "./inbox.js";
+// S8 (Logbook) fragment — additive exports of the slice's own schemas only;
+// the router composition line lives in docs/plans/slices/s8-wiring.md.
+export {
+  logbookContract,
+  LogbookArchivedSchema,
+  LogbookGoalSchema,
+  LogbookProjectSchema,
+  LogbookSchema,
+  LogbookTaskSchema,
+  LogbookWontDoSchema,
+} from "./logbook.js";
+// S9 (search + resources) fragment — additive exports of the slice's own
+// schemas only; the router composition lines live in
+// docs/plans/slices/s9-wiring.md.
+export {
+  searchContract,
+  CommandIndexItemSchema,
+  SearchMatchedFieldSchema,
+  SearchResultKindSchema,
+  SearchResultStateSchema,
+  SearchSiteResultSchema,
+} from "./search.js";
+export type {
+  CommandIndexItem,
+  CommandIndexKind,
+  SearchMatchedField,
+  SearchResultKind,
+  SearchResultState,
+  SearchSiteResponse,
+  SearchSiteResult,
+  CommandIndexResponse,
+} from "./search.js";
+export { resourcesContract } from "./resources.js";
 export { contractRouter } from "./router.js";

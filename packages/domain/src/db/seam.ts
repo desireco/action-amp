@@ -25,7 +25,6 @@ import type {
   Priority,
   Project,
   ProjectType,
-  Resource,
   Size,
   Tag,
   Task,
@@ -42,14 +41,26 @@ export type SortOrder = "asc" | "desc";
 
 export interface StringFilter {
   equals?: string;
+  /** S9 — literal substring (Prisma `contains`; %/_ are escaped, not wildcards). */
+  contains?: string;
+  /** S9 — Prisma's `startsWith` probe (the search prefix pass). */
+  startsWith?: string;
   in?: string[];
   not?: string | StringFilter;
+  /** S9 — only "insensitive" appears in the ported reads. */
+  mode?: "insensitive";
 }
 
 export interface StringNullableFilter {
   equals?: string | null;
+  /** S9 — literal substring (Prisma `contains`). */
+  contains?: string;
+  /** S9 — Prisma's `startsWith` probe (the search prefix pass). */
+  startsWith?: string;
   in?: string[];
   not?: string | StringNullableFilter | null;
+  /** S9 — only "insensitive" appears in the ported reads. */
+  mode?: "insensitive";
 }
 
 export interface BoolFilter {
@@ -114,6 +125,8 @@ export interface TaskWhereInput {
   startedAt?: Date | null | DateTimeNullableFilter;
   scheduledDate?: Date | null | DateTimeNullableFilter;
   snoozedUntil?: Date | null | DateTimeNullableFilter;
+  /** S9 — the search's nested task-note probe (`updates: { some: … }`). */
+  updates?: TaskUpdateSomeFilter;
   AND?: TaskWhereInput[];
   OR?: TaskWhereInput[];
   NOT?: TaskWhereInput | TaskWhereInput[];
@@ -168,13 +181,18 @@ export interface ProjectWhereInput {
   archivedAt?: Date | null | DateTimeNullableFilter;
   type?: ProjectType | EnumFilter<ProjectType>;
   dueDate?: Date | null | DateTimeNullableFilter;
+  /** S8 — the Logbook's done-projects read filters completedAt: { not: null }. */
+  completedAt?: Date | null | DateTimeNullableFilter;
+  /** S9 — the search's description probe (name + description AND-tokens). */
+  description?: string | StringNullableFilter;
   AND?: ProjectWhereInput[];
   OR?: ProjectWhereInput[];
   NOT?: ProjectWhereInput | ProjectWhereInput[];
 }
 
 /** S6 — Goal filters: the goal cores only scope by user/lens/isDone and
- *  resolve id-or-permalink. */
+ *  resolve id-or-permalink. S8 adds the completedAt filter (the Logbook's
+ *  done-goals read). */
 export interface GoalWhereInput {
   id?: string;
   permalink?: string;
@@ -182,15 +200,31 @@ export interface GoalWhereInput {
   lensId?: string;
   name?: string | StringFilter;
   isDone?: boolean | BoolFilter;
+  completedAt?: Date | null | DateTimeNullableFilter;
+  /** S9 — the search's description probe (name + description AND-tokens). */
+  description?: string | StringNullableFilter;
   AND?: GoalWhereInput[];
   OR?: GoalWhereInput[];
   NOT?: GoalWhereInput | GoalWhereInput[];
 }
 
-/** S5 — deleteProject purges the deleted project's resources. */
+/**
+ * S9 — resource filters, widened from S5's purge-only pair to the full read
+ * surface the search core + resource CRUD cores pass: the contains probes
+ * (title/notes/url) plus AND/OR composition and id/ownership scoping. The
+ * original fields stay required-compatible (optional now — the S5 deleteMany
+ * caller still passes both).
+ */
 export interface ResourceWhereInput {
-  projectId: string;
-  userId: string;
+  id?: string;
+  projectId?: string;
+  userId?: string;
+  title?: string | StringFilter;
+  notes?: string | StringNullableFilter;
+  url?: string | StringNullableFilter;
+  AND?: ResourceWhereInput[];
+  OR?: ResourceWhereInput[];
+  NOT?: ResourceWhereInput | ResourceWhereInput[];
 }
 
 /** S5 — the type-conversion guard counts a project's list items. */
@@ -412,11 +446,16 @@ export interface InboxItemUpdateInput {
   archivedAt?: Date | null;
 }
 
-/** S3 — inbox reads/writes scope by owner + status; nothing else filters. */
+/** S3 — inbox reads/writes scope by owner + status; S9 adds the search's
+ *  text probes (Android-share title, body, content, source link). */
 export interface InboxItemWhereInput {
   id?: string;
   userId?: string;
   status?: InboxItemStatus | EnumFilter<InboxItemStatus>;
+  text?: string | StringFilter;
+  title?: string | StringNullableFilter;
+  content?: string | StringNullableFilter;
+  sourceUrl?: string | StringNullableFilter;
   AND?: InboxItemWhereInput[];
   OR?: InboxItemWhereInput[];
   NOT?: InboxItemWhereInput | InboxItemWhereInput[];
@@ -426,6 +465,8 @@ export interface InboxItemOrderBy {
   id?: SortOrder;
   createdAt?: SortOrder;
   status?: SortOrder;
+  /** S8 — the Logbook's archived-notes read orders on archivedAt. */
+  archivedAt?: SortOrder;
 }
 export type InboxItemOrderByInput = InboxItemOrderBy | InboxItemOrderBy[];
 
@@ -488,7 +529,13 @@ export interface InboxItemFindUniqueArgs {
 export interface InboxItemFindManyArgs {
   where: InboxItemWhereInput;
   orderBy?: InboxItemOrderByInput;
-  select?: InboxItemListSelect;
+  select?:
+    | InboxItemListSelect
+    | InboxItemLogbookSelect
+    | InboxItemSearchSelect
+    | InboxItemIndexSelect;
+  /** S9 — the search passes request one sentinel row beyond the public cap. */
+  take?: number;
 }
 
 export interface InboxItemCreateArgs {
@@ -517,7 +564,8 @@ export interface ResourceCreateInput {
 
 export interface ResourceCreateArgs {
   data: ResourceCreateInput;
-  select?: { id?: true };
+  /** S9 — the CRUD core projects the created row for the op payload. */
+  select?: { id?: true; title?: true; url?: true; notes?: true; projectId?: true };
 }
 
 /** S3 — ListItem create/fetch (the triage list-item decision calls
@@ -909,6 +957,85 @@ export interface GoalDetailRow extends Goal {
 }
 
 // ----------------------------------------------------------------
+// S8 — Logbook selects + rows: the five projected reads getLogbookData
+// passes (done tasks, wont-do tasks, done projects, done goals, archived
+// inbox items). Prisma prunes to the select; the seam returns exactly these
+// shapes because they reach API payloads.
+// ----------------------------------------------------------------
+
+export interface TaskLogbookSelect {
+  id: true;
+  description: true;
+  completedAt: true;
+  size: true;
+  outcome: true;
+  project: { select: { id: true; name: true } };
+}
+
+export interface TaskWontDoSelect {
+  id: true;
+  description: true;
+  updatedAt: true;
+  size: true;
+  project: { select: { id: true; name: true } };
+}
+
+export interface TaskLogbookRow {
+  id: string;
+  description: string;
+  completedAt: Date | null;
+  size: Size;
+  outcome: string | null;
+  project: { id: string; name: string } | null;
+}
+
+export interface TaskWontDoRow {
+  id: string;
+  description: string;
+  updatedAt: Date | null;
+  size: Size;
+  project: { id: string; name: string } | null;
+}
+
+export interface ProjectLogbookSelect {
+  id: true;
+  name: true;
+  completedAt: true;
+  goal: { select: { id: true; name: true } };
+}
+
+export interface ProjectLogbookRow {
+  id: string;
+  name: string;
+  completedAt: Date | null;
+  goal: { id: string; name: string } | null;
+}
+
+export interface GoalLogbookSelect {
+  id: true;
+  name: true;
+  completedAt: true;
+}
+
+export interface GoalLogbookRow {
+  id: string;
+  name: string;
+  completedAt: Date | null;
+}
+
+export interface InboxItemLogbookSelect {
+  id: true;
+  text: true;
+  archivedAt: true;
+}
+
+export interface InboxItemLogbookRow {
+  id: string;
+  text: string;
+  archivedAt: Date | null;
+}
+
+// ----------------------------------------------------------------
 // Delegate arg aliases (what the cores' `XEntities` slices reference)
 // ----------------------------------------------------------------
 
@@ -943,7 +1070,11 @@ export type TaskFindManyArgs =
       include: TaskLensListInclude;
     }
   | { where: TaskWhereInput; include: RankedPoolInclude }
-  | { where: TaskWhereInput; select?: TaskSelect };
+  | { where: TaskWhereInput; orderBy?: TaskOrderByInput; select?: TaskSelect }
+  /** S9 — the search's three bounded passes (take: 11, projected relations). */
+  | { where: TaskWhereInput; orderBy?: TaskOrderByInput; take: number; select: TaskSearchSelect }
+  /** S9 — the compact palette-index read. */
+  | { where: TaskWhereInput; orderBy?: TaskOrderByInput; select: TaskIndexSelect };
 
 /** Guard-read select (S5 deleteProject's task fetch — the core reads only
  *  id/description/content; the widened full-row return stays truthful). */
@@ -1058,6 +1189,89 @@ export interface LensFindManyArgs {
 }
 
 // ----------------------------------------------------------------
+// S7/S11 — the Settings Lenses tab's summary include (webapp
+// getLensesCore/getLensCore): per-lens non-done `_count`s plus the relation
+// probes `hasAnyContent`/`blockingProjects` read. Shapes match
+// webapp/src/lenses/operationsCore.ts's include verbatim.
+// ----------------------------------------------------------------
+
+export interface LensSummaryInclude {
+  _count: {
+    select: {
+      goals: { where: { isDone: false } };
+      projects: { where: { isDone: false } };
+      tasks: { where: { isDone: false } };
+    };
+  };
+  goals: { select: { id: true }; take: 1 };
+  projects: { select: { id: true; name: true }; orderBy: { createdAt: "asc" } };
+  tasks: { select: { id: true }; take: 1 };
+}
+
+/** A Lens row hydrated with the summary include's relations. */
+export interface LensSummaryRow extends Lens {
+  _count: { goals: number; projects: number; tasks: number };
+  goals: { id: string }[];
+  projects: { id: string; name: string }[];
+  tasks: { id: string }[];
+}
+
+export interface LensCountArgs {
+  where: LensWhereInput;
+}
+
+/** The create/update projection — the webapp lens ops' select shape. */
+export interface LensCreated {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  isIncluded: boolean;
+  color: string | null;
+  purpose: string | null;
+}
+
+export interface LensCreateArgs {
+  data: {
+    name: string;
+    isDefault: boolean;
+    isIncluded: boolean;
+    color: string | null;
+    purpose: string | null;
+    userId: string;
+  };
+  select: {
+    id: true;
+    name: true;
+    isDefault: true;
+    isIncluded: true;
+    color: true;
+    purpose: true;
+  };
+}
+
+export interface LensUpdateArgs {
+  where: { id: string };
+  data: {
+    name?: string;
+    purpose?: string | null;
+    color?: string | null;
+  };
+  select: {
+    id: true;
+    name: true;
+    isDefault: true;
+    isIncluded: true;
+    color: true;
+    purpose: true;
+  };
+}
+
+export interface LensDeleteArgs {
+  where: { id: string };
+  select: { id: true };
+}
+
+// ----------------------------------------------------------------
 // Delegates — one overload per inventoried query shape; the arg-type aliases
 // above and these overloads must stay in lockstep (each overload pairs one
 // where/include shape with the row type it returns).
@@ -1091,6 +1305,33 @@ export interface TaskDelegate {
     where: TaskWhereInput;
     include: RankedPoolInclude;
   }): Promise<RankedPoolRow[]>;
+  // S8 — the Logbook's two projected task reads (done + wont-do). Placed
+  // before the loose select overload so the relation-carrying selects resolve
+  // to their exact row types.
+  findMany(args: {
+    where: TaskWhereInput;
+    orderBy?: TaskOrderByInput;
+    select: TaskLogbookSelect;
+  }): Promise<TaskLogbookRow[]>;
+  findMany(args: {
+    where: TaskWhereInput;
+    orderBy?: TaskOrderByInput;
+    select: TaskWontDoSelect;
+  }): Promise<TaskWontDoRow[]>;
+  // S9 — the search's three bounded passes (take: 11, projected relations)
+  // and the compact palette-index read. Relation-carrying selects resolve
+  // before the loose select overload.
+  findMany(args: {
+    where: TaskWhereInput;
+    orderBy?: TaskOrderByInput;
+    take: number;
+    select: TaskSearchSelect;
+  }): Promise<TaskSearchRow[]>;
+  findMany(args: {
+    where: TaskWhereInput;
+    orderBy?: TaskOrderByInput;
+    select: TaskIndexSelect;
+  }): Promise<TaskIndexRow[]>;
   findMany(args: {
     where: TaskWhereInput;
     select?: TaskSelect;
@@ -1132,7 +1373,24 @@ export interface TaskSessionDelegate {
 
 export interface LensDelegate {
   findFirst(args: LensFindFirstArgs): Promise<Lens | null>;
+  // S7/S11 — the summary-include reads (Settings Lenses tab + the CLI's
+  // lens list/show precedent). Placed before the loose overload so the
+  // relation-carrying include resolves to its exact row type.
+  findFirst(args: {
+    where: LensWhereInput;
+    include: LensSummaryInclude;
+  }): Promise<LensSummaryRow | null>;
   findMany(args: LensFindManyArgs): Promise<Lens[]>;
+  findMany(args: {
+    where: LensWhereInput;
+    orderBy?: LensOrderByInput;
+    include: LensSummaryInclude;
+  }): Promise<LensSummaryRow[]>;
+  // S7/S11 — the Settings Lenses tab's CRUD writes (webapp lens ops).
+  count(args: LensCountArgs): Promise<number>;
+  create(args: LensCreateArgs): Promise<LensCreated>;
+  update(args: LensUpdateArgs): Promise<LensCreated>;
+  delete(args: LensDeleteArgs): Promise<{ id: string }>;
 }
 
 // ----------------------------------------------------------------
@@ -1187,7 +1445,9 @@ export interface ProjectFindManyArgs {
   where: ProjectWhereInput;
   orderBy?: ProjectOrderByInput;
   include?: ProjectListInclude;
-  select?: ProjectTotalsSelect;
+  select?: ProjectTotalsSelect | ProjectSearchSelect | ProjectIndexSelect;
+  /** S9 — the search passes request one sentinel row beyond the public cap. */
+  take?: number;
 }
 
 export interface ProjectCreateArgs {
@@ -1222,6 +1482,24 @@ export interface ProjectDelegate {
     orderBy?: ProjectOrderByInput;
     include: ProjectListInclude;
   }): Promise<ProjectListRow[]>;
+  // S8 — the Logbook's projected done-projects read (goal ref + completedAt).
+  findMany(args: {
+    where: ProjectWhereInput;
+    orderBy?: ProjectOrderByInput;
+    select: ProjectLogbookSelect;
+  }): Promise<ProjectLogbookRow[]>;
+  // S9 — the search's bounded passes + the compact palette-index read.
+  findMany(args: {
+    where: ProjectWhereInput;
+    orderBy?: ProjectOrderByInput;
+    take: number;
+    select: ProjectSearchSelect;
+  }): Promise<ProjectSearchRow[]>;
+  findMany(args: {
+    where: ProjectWhereInput;
+    orderBy?: ProjectOrderByInput;
+    select: ProjectIndexSelect;
+  }): Promise<ProjectIndexRow[]>;
   findMany(args: {
     where: ProjectWhereInput;
     select: ProjectTotalsSelect;
@@ -1251,6 +1529,9 @@ export interface GoalFindManyArgs {
   where: GoalWhereInput;
   orderBy?: GoalOrderByInput;
   include?: GoalListInclude;
+  /** S9 — the search/index reads (rows are the projected search shapes). */
+  select?: GoalSearchSelect | GoalIndexSelect;
+  take?: number;
 }
 
 export interface GoalCreateArgs {
@@ -1285,6 +1566,25 @@ export interface GoalDelegate {
     orderBy?: GoalOrderByInput;
     include: GoalListInclude;
   }): Promise<GoalListRow[]>;
+  // S8 — the Logbook's projected done-goals read.
+  findMany(args: {
+    where: GoalWhereInput;
+    orderBy?: GoalOrderByInput;
+    select: GoalLogbookSelect;
+    take?: number;
+  }): Promise<GoalLogbookRow[]>;
+  // S9 — the search's bounded passes + the compact palette-index read.
+  findMany(args: {
+    where: GoalWhereInput;
+    orderBy?: GoalOrderByInput;
+    take: number;
+    select: GoalSearchSelect;
+  }): Promise<GoalSearchRow[]>;
+  findMany(args: {
+    where: GoalWhereInput;
+    orderBy?: GoalOrderByInput;
+    select: GoalIndexSelect;
+  }): Promise<GoalIndexRow[]>;
   findMany(args: GoalFindManyArgs): Promise<Goal[]>;
   create(args: GoalCreateArgs): Promise<Goal>;
   update(args: GoalUpdateArgs): Promise<Goal>;
@@ -1303,6 +1603,24 @@ export interface InboxItemDelegate {
   }): Promise<{ id: string; text: string; createdAt: Date }>;
   findUnique(args: InboxItemFindUniqueArgs): Promise<InboxItemWithAttachments | null>;
   findUnique(args: { where: { id: string } }): Promise<InboxItem | null>;
+  // S8 — the Logbook's projected archived-notes read (no attachments).
+  findMany(args: {
+    where: InboxItemWhereInput;
+    orderBy?: InboxItemOrderByInput;
+    select: InboxItemLogbookSelect;
+  }): Promise<InboxItemLogbookRow[]>;
+  // S9 — the search's bounded passes + the compact palette-index read.
+  findMany(args: {
+    where: InboxItemWhereInput;
+    orderBy?: InboxItemOrderByInput;
+    take: number;
+    select: InboxItemSearchSelect;
+  }): Promise<InboxItemSearchRow[]>;
+  findMany(args: {
+    where: InboxItemWhereInput;
+    orderBy?: InboxItemOrderByInput;
+    select: InboxItemIndexSelect;
+  }): Promise<InboxItemIndexRow[]>;
   findMany(args: InboxItemFindManyArgs): Promise<InboxItemListRow[]>;
   update(args: InboxItemUpdateArgs): Promise<InboxItem>;
   updateMany(args: {
@@ -1321,10 +1639,27 @@ export interface InboxAttachmentDelegate {
 }
 
 /** S5 — resources are project-owned and leave with a deleted project; S3
- *  adds the triage resource create. */
+ *  adds the triage resource create; S9 adds the project CRUD surface
+ *  (ownership-scoped reads, patch update, delete). */
 export interface ResourceDelegate {
   deleteMany(args: { where: ResourceWhereInput }): Promise<BatchPayload>;
-  create(args: ResourceCreateArgs): Promise<{ id: string }>;
+  /** The row the create returns (superset of S3 triage's `{ id }` read). */
+  create(args: ResourceCreateArgs): Promise<ResourceCreatedRow>;
+  /** The CRUD cores' tenancy-scoped guard read (+ its project's lens). */
+  findFirst(args: ResourceFindFirstArgs): Promise<ResourceWithLens | null>;
+  findMany(args: {
+    where: ResourceWhereInput;
+    orderBy?: { createdAt?: SortOrder };
+    take: number;
+    select: ResourceSearchSelect;
+  }): Promise<ResourceSearchRow[]>;
+  findMany(args: {
+    where: ResourceWhereInput;
+    orderBy?: { createdAt?: SortOrder };
+    select: ResourceIndexSelect;
+  }): Promise<ResourceIndexRow[]>;
+  update(args: ResourceUpdateArgs): Promise<ResourceUpdatedRow>;
+  delete(args: ResourceDeleteArgs): Promise<{ id: string }>;
 }
 
 /** S5 — the SIMPLE_LIST type-conversion guard counts list items; S3 adds
@@ -1333,6 +1668,305 @@ export interface ListItemDelegate {
   count(args: ListItemCountArgs): Promise<number>;
   findFirst(args: ListItemFindFirstArgs): Promise<ListItem | null>;
   create(args: ListItemCreateArgs): Promise<ListItem>;
+}
+
+// ----------------------------------------------------------------
+// S9 — search + resource CRUD shapes: the projected reads the search core's
+// three bounded passes per kind and the compact palette index make, plus the
+// resource CRUD arg/row shapes. Prisma prunes to the select; the seam returns
+// exactly these shapes because they reach API payloads.
+// ----------------------------------------------------------------
+
+/** The nested `updates: { some: … }` probe (task-note matches, tenancy-scoped). */
+export interface TaskUpdateSomeFilter {
+  some: {
+    userId?: string;
+    kind?: TaskUpdateKind;
+    body?: string | StringFilter;
+  };
+}
+
+/** Lens pill — `{ id, name, color }` (the search result lens chip). */
+export interface SearchLensPill {
+  id: string;
+  name: string;
+  color: string | null;
+}
+
+/** searchSiteData's task select (the projected row the rank loop reads). */
+export interface TaskSearchSelect {
+  id: true;
+  description: true;
+  permalink: true;
+  content: true;
+  outcome: true;
+  isDone: true;
+  status: true;
+  createdAt: true;
+  lens: { select: { id: true; name: true; color: true } };
+  project: { select: { name: true } };
+  updates: {
+    where: {
+      userId: string;
+      kind: TaskUpdateKind;
+      OR: Array<{ body: { contains: string; mode: "insensitive" } }>;
+    };
+    orderBy: { createdAt: SortOrder };
+    take: number;
+    select: { body: true };
+  };
+}
+
+export interface TaskSearchRow {
+  id: string;
+  description: string;
+  permalink: string;
+  content: string | null;
+  outcome: string | null;
+  isDone: boolean;
+  status: TaskStatus;
+  createdAt: Date;
+  lens: SearchLensPill | null;
+  project: { name: string } | null;
+  updates: Array<{ body: string }>;
+}
+
+/** getCommandPaletteIndexData's task select (title-only, no bodies). */
+export interface TaskIndexSelect {
+  id: true;
+  description: true;
+  permalink: true;
+  status: true;
+  isDone: true;
+  project: { select: { name: true } };
+  lens: { select: { name: true; color: true } };
+}
+
+export interface TaskIndexRow {
+  id: string;
+  description: string;
+  permalink: string;
+  status: TaskStatus;
+  isDone: boolean;
+  project: { name: string } | null;
+  lens: { name: string; color: string | null };
+}
+
+export interface ProjectSearchSelect {
+  id: true;
+  name: true;
+  permalink: true;
+  description: true;
+  isDone: true;
+  createdAt: true;
+  lens: { select: { id: true; name: true; color: true } };
+  goal: { select: { name: true } };
+}
+
+export interface ProjectSearchRow {
+  id: string;
+  name: string;
+  permalink: string;
+  description: string | null;
+  isDone: boolean;
+  createdAt: Date;
+  lens: SearchLensPill | null;
+  goal: { name: string } | null;
+}
+
+export interface ProjectIndexSelect {
+  id: true;
+  name: true;
+  permalink: true;
+  isDone: true;
+  lens: { select: { name: true; color: true } };
+}
+
+export interface ProjectIndexRow {
+  id: string;
+  name: string;
+  permalink: string;
+  isDone: boolean;
+  lens: { name: string; color: string | null };
+}
+
+export interface GoalSearchSelect {
+  id: true;
+  name: true;
+  permalink: true;
+  description: true;
+  isDone: true;
+  createdAt: true;
+  lens: { select: { id: true; name: true; color: true } };
+}
+
+export interface GoalSearchRow {
+  id: string;
+  name: string;
+  permalink: string;
+  description: string | null;
+  isDone: boolean;
+  createdAt: Date;
+  lens: SearchLensPill | null;
+}
+
+export interface GoalIndexSelect {
+  id: true;
+  name: true;
+  permalink: true;
+  isDone: true;
+  lens: { select: { name: true; color: true } };
+}
+
+export interface GoalIndexRow {
+  id: string;
+  name: string;
+  permalink: string;
+  isDone: boolean;
+  lens: { name: string; color: string | null };
+}
+
+export interface ResourceSearchSelect {
+  id: true;
+  title: true;
+  notes: true;
+  url: true;
+  createdAt: true;
+  project: {
+    select: {
+      name: true;
+      permalink: true;
+      isDone: true;
+      lens: { select: { id: true; name: true; color: true } };
+    };
+  };
+}
+
+export interface ResourceSearchRow {
+  id: string;
+  title: string;
+  notes: string | null;
+  url: string | null;
+  createdAt: Date;
+  project: {
+    name: string;
+    permalink: string;
+    isDone: boolean;
+    lens: SearchLensPill;
+  };
+}
+
+export interface ResourceIndexSelect {
+  id: true;
+  title: true;
+  project: {
+    select: {
+      name: true;
+      permalink: true;
+      lens: { select: { name: true; color: true } };
+    };
+  };
+}
+
+export interface ResourceIndexRow {
+  id: string;
+  title: string;
+  project: {
+    name: string;
+    permalink: string;
+    lens: { name: string; color: string | null };
+  };
+}
+
+export interface InboxItemSearchSelect {
+  id: true;
+  text: true;
+  title: true;
+  content: true;
+  sourceUrl: true;
+  status: true;
+  createdAt: true;
+}
+
+export interface InboxItemSearchRow {
+  id: string;
+  text: string;
+  title: string | null;
+  content: string | null;
+  sourceUrl: string | null;
+  status: InboxItemStatus;
+  createdAt: Date;
+}
+
+export interface InboxItemIndexSelect {
+  id: true;
+  title: true;
+  text: true;
+  status: true;
+  createdAt: true;
+  archivedAt: true;
+}
+
+export interface InboxItemIndexRow {
+  id: string;
+  title: string | null;
+  text: string;
+  status: InboxItemStatus;
+  createdAt: Date;
+  archivedAt: Date | null;
+}
+
+// ---- S9 resource CRUD args + rows ----
+
+/** createResourceCore's created-row projection (the op payload rides it). */
+export interface ResourceCreatedRow {
+  id: string;
+  title: string;
+  url: string | null;
+  notes: string | null;
+  projectId: string;
+}
+
+/** getResourceData's guard read: the resource + its project's lens id. */
+export interface ResourceFindFirstArgs {
+  where: { id: string; userId: string };
+  include?: { project: { select: { lensId: true } } };
+}
+
+export interface ResourceWithLens {
+  id: string;
+  userId: string;
+  projectId: string;
+  title: string;
+  url: string | null;
+  notes: string | null;
+  createdAt: Date;
+  project: { lensId: string };
+}
+
+/** Resource patch — `undefined` leaves a field untouched, `null` clears it. */
+export interface ResourceUpdateInput {
+  title?: string;
+  url?: string | null;
+  notes?: string | null;
+}
+
+export interface ResourceUpdateArgs {
+  where: { id: string };
+  data: ResourceUpdateInput;
+  select?: { id?: true; title?: true; url?: true; notes?: true; projectId?: true };
+}
+
+export interface ResourceUpdatedRow {
+  id: string;
+  title: string;
+  url: string | null;
+  notes: string | null;
+  projectId: string;
+}
+
+export interface ResourceDeleteArgs {
+  where: { id: string };
 }
 
 /** The entities object a core receives: the Prisma-delegate slice, built over

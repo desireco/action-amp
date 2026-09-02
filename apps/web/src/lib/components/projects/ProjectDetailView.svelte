@@ -22,6 +22,9 @@
   import ListEmpty from "../ListEmpty.svelte";
   import PickerSheet from "../PickerSheet.svelte";
   import BottomSheet from "../BottomSheet.svelte";
+  // S9 — the Resources section (webapp ProjectDetailPage parity; closes S5's
+  // deferral — see s5-s6-wiring.md §3.3 and docs/plans/slices/s9-wiring.md).
+  import ResourceSection from "./ResourceSection.svelte";
   import { projects, formatRelativeDue, SIZE_DURATION, type ProjectDetailTask } from "../../stores/projects.svelte";
   import { goals } from "../../stores/goals.svelte";
 
@@ -584,6 +587,12 @@
           {/if}
         {/each}
       </div>
+    {/if}
+
+    <!-- S9 — Resources (links, notes, reference material) after the
+         actionable work; owns its own sheets + #resource- anchor. -->
+    {#if project.type !== "SIMPLE_LIST"}
+      <ResourceSection project={project} />
     {/if}
   {/if}
 </div>

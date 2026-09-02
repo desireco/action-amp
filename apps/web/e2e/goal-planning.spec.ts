@@ -119,9 +119,24 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
   await expect(page.getByRole("link", { name: goalName })).toHaveCount(0, { timeout: 10_000 });
 });
 
-// Ported from webapp steps 6–7 — pending S8's /do/logbook surface (the teal
-// Goal kind chip row + Reopen). Reopen drives the same /rpc/goals/set-done
-// endpoint the Complete step above already exercises.
-test.fixme("completed goals appear in the Logbook and reopen from there", async () => {
-  // Requires /do/logbook (S8).
+// Ported from webapp steps 6–7 — the completed goal surfaces in /do/logbook
+// (S8) as a row with the teal Goal chip; Reopen drives /rpc/goals/setDone
+// {isDone:false} and the goal returns to /do/goals. Self-contained: creates +
+// completes its own goal over the RPC wire.
+test("completed goals appear in the Logbook and reopen from there", async ({ page }) => {
+  await loginAs(page);
+  const name = `Logbook reopen ${run()}`;
+  const created = await apiPost<{ id: string }>(page, "/rpc/goals/create", { name });
+  expect(created.id).toBeTruthy();
+  await apiPost(page, "/rpc/goals/setDone", { id: created.id, isDone: true });
+
+  await page.goto("/do/logbook");
+  const row = page.locator(".aa-logbook-row", { hasText: name }).first();
+  await expect(row).toBeVisible({ timeout: 10_000 });
+  await expect(row.locator(".aa-logbook-row__meta").getByText("Goal")).toBeVisible();
+  await row.getByRole("button", { name: "Reopen" }).click();
+  await expect(row).toHaveCount(0, { timeout: 10_000 });
+  // The goal is active again.
+  await page.goto("/do/goals");
+  await expect(page.getByRole("link", { name })).toBeVisible({ timeout: 10_000 });
 });

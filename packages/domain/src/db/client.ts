@@ -53,9 +53,14 @@ import type {
   GoalFindUniqueArgs,
   GoalListInclude,
   GoalListRow,
+  GoalIndexRow,
+  GoalSearchRow,
   GoalOrderBy,
+  GoalOrderByInput,
   GoalCreateArgs,
   GoalUpdateArgs,
+  GoalLogbookRow,
+  GoalLogbookSelect,
   GoalWhereInput,
   GoalPermalinkInclude,
   HydratedTask,
@@ -65,7 +70,12 @@ import type {
   InboxItemDelegate,
   InboxItemFindManyArgs,
   InboxItemFindUniqueArgs,
+  InboxItemLogbookRow,
+  InboxItemLogbookSelect,
   InboxItemListRow,
+  InboxItemIndexRow,
+  InboxItemSearchRow,
+  InboxItemOrderByInput,
   InboxItemUpdateArgs,
   InboxItemWhereInput,
   InboxItemWithAttachments,
@@ -73,6 +83,13 @@ import type {
   LensFindFirstArgs,
   LensFindManyArgs,
   LensOrderBy,
+  LensOrderByInput,
+  LensCountArgs,
+  LensCreateArgs,
+  LensCreated,
+  LensDeleteArgs,
+  LensSummaryRow,
+  LensUpdateArgs,
   LensWhereInput,
   ListItemCountArgs,
   ListItemCreateArgs,
@@ -89,7 +106,10 @@ import type {
   ProjectFindUniqueArgs,
   ProjectListInclude,
   ProjectListRow,
+  ProjectIndexRow,
+  ProjectSearchRow,
   ProjectOrderBy,
+  ProjectLogbookRow,
   ProjectPermalinkInclude,
   ProjectRefInclude,
   ProjectTotalsRow,
@@ -100,7 +120,17 @@ import type {
   RankedPoolInclude,
   RankedPoolRow,
   ResourceCreateArgs,
+  ResourceCreatedRow,
   ResourceDelegate,
+  ResourceDeleteArgs,
+  ResourceFindFirstArgs,
+  ResourceIndexRow,
+  ResourceIndexSelect,
+  ResourceSearchRow,
+  ResourceSearchSelect,
+  ResourceUpdateArgs,
+  ResourceUpdatedRow,
+  ResourceWithLens,
   ResourceWhereInput,
   SessionsInclude,
   SortOrder,
@@ -115,6 +145,10 @@ import type {
   TaskDelegate,
   TaskDeleteManyArgs,
   TaskDetailFullRow,
+  TaskIndexRow,
+  TaskIndexSelect,
+  TaskSearchRow,
+  TaskSearchSelect,
   TaskDetailInclude,
   TaskFindFirstArgs,
   TaskFindManyArgs,
@@ -124,7 +158,12 @@ import type {
   TaskLensListRow,
   TaskListInclude,
   TaskListRow,
+  TaskLogbookRow,
+  TaskLogbookSelect,
   TaskOrderBy,
+  TaskOrderByInput,
+  TaskWontDoRow,
+  TaskWontDoSelect,
   TaskSessionCreateArgs,
   TaskSessionDelegate,
   TaskSessionFindFirstArgs,
@@ -196,10 +235,46 @@ function combine(parts: SQL[]): SQL {
   return and(...parts) ?? sql`true`;
 }
 
+/** Escape LIKE wildcards — Prisma's `contains` is a LITERAL substring match,
+ *  so a query token "50%" must not become a pattern (S9 search parity). */
+function likePattern(needle: string): string {
+  return `%${needle.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+}
+
+/** A literal-substring condition; `mode: "insensitive"` compiles to ILIKE.
+ *  Postgres' default LIKE escape character is the backslash, which pairs with
+ *  likePattern's escaping (no ESCAPE clause needed). */
+function containsCond(
+  column: Column,
+  value: StringFilter | StringNullableFilter,
+): SQL {
+  const needle = value.contains;
+  if (needle === undefined) return sql`true`;
+  const pattern = likePattern(needle);
+  return value.mode === "insensitive"
+    ? sql`${column} ILIKE ${pattern}`
+    : sql`${column} LIKE ${pattern}`;
+}
+
+/** A literal-prefix condition (`startsWith` — the search's second pass). */
+function startsWithCond(
+  column: Column,
+  value: StringFilter | StringNullableFilter,
+): SQL {
+  const needle = value.startsWith;
+  if (needle === undefined) return sql`true`;
+  const pattern = likePattern(needle).slice(1);
+  return value.mode === "insensitive"
+    ? sql`${column} ILIKE ${pattern}`
+    : sql`${column} LIKE ${pattern}`;
+}
+
 function stringCond(column: Column, value: string | StringFilter): SQL {
   if (typeof value === "string") return eq(column, value);
   const parts: SQL[] = [];
   if (value.equals !== undefined) parts.push(eq(column, value.equals));
+  if (value.contains !== undefined) parts.push(containsCond(column, value));
+  if (value.startsWith !== undefined) parts.push(startsWithCond(column, value));
   if (value.in !== undefined) parts.push(inArray(column, value.in));
   if (value.not !== undefined) {
     parts.push(
@@ -220,6 +295,8 @@ function nullableStringCond(
   if (value.equals !== undefined) {
     parts.push(value.equals === null ? isNull(column) : eq(column, value.equals));
   }
+  if (value.contains !== undefined) parts.push(containsCond(column, value));
+  if (value.startsWith !== undefined) parts.push(startsWithCond(column, value));
   if (value.in !== undefined) parts.push(inArray(column, value.in));
   if (value.not !== undefined) {
     parts.push(
@@ -378,7 +455,29 @@ function orderByCond(order: object, columns: OrderMap): SQL[] {
   return parts;
 }
 
-export function taskWhereToSql(where: TaskWhereInput): SQL | undefined {
+export 
+/** S9 — the optional inner conditions of the task-note EXISTS probe (values
+ *  bound; identifiers raw — see taskWhereToSql's EXISTS SAFETY note). */
+function someConditions(some: NonNullable<TaskWhereInput["updates"]>["some"]): SQL {
+  const parts: SQL[] = [];
+  if (some.userId !== undefined) parts.push(sql` AND "aa_tu"."userId" = ${some.userId}`);
+  if (some.kind !== undefined) parts.push(sql` AND "aa_tu"."kind" = ${some.kind}`);
+  if (some.body !== undefined) {
+    const filter: StringFilter | StringNullableFilter =
+      typeof some.body === "string" ? { contains: some.body } : some.body;
+    if (filter.contains !== undefined) {
+      const pattern = likePattern(filter.contains);
+      const cond =
+        filter.mode === "insensitive"
+          ? sql`"aa_tu"."body" ILIKE ${pattern}`
+          : sql`"aa_tu"."body" LIKE ${pattern}`;
+      parts.push(sql` AND ${cond}`);
+    }
+  }
+  return sql.join(parts);
+}
+
+function taskWhereToSql(where: TaskWhereInput): SQL | undefined {
   const parts: SQL[] = [];
   if (where.id !== undefined) parts.push(stringCond(task.id, where.id));
   if (where.permalink !== undefined) parts.push(eq(task.permalink, where.permalink));
@@ -400,12 +499,26 @@ export function taskWhereToSql(where: TaskWhereInput): SQL | undefined {
   if (where.startedAt !== undefined) parts.push(dateCond(task.startedAt, where.startedAt));
   if (where.scheduledDate !== undefined) parts.push(dateCond(task.scheduledDate, where.scheduledDate));
   if (where.snoozedUntil !== undefined) parts.push(dateCond(task.snoozedUntil, where.snoozedUntil));
+  // S9 — the nested task-note probe: `updates: { some: { … } }` compiles to a
+  // correlated EXISTS (tenancy + kind + literal-substring body match).
+  // SAFETY: identifiers are raw because drizzle's column refs resolve against
+  // the relational builder's ROOT alias (`"Task" "task"`, drizzle 0.45
+  // relational v1 — the same alias the generated lateral joins correlate on),
+  // which a column object cannot express from inside a subquery. All values
+  // stay bound parameters. Revisit on a drizzle major that changes the
+  // relational aliasing.
+  if (where.updates?.some) {
+    const some = where.updates.some;
+    parts.push(
+      sql`EXISTS (SELECT 1 FROM "TaskUpdate" "aa_tu" WHERE "aa_tu"."taskId" = "task"."id"${someConditions(some)})`,
+    );
+  }
   if (where.AND !== undefined) {
-    const inner = where.AND.map(taskWhereToSql).filter((c): c is SQL => c !== undefined);
+    const inner = where.AND.map((w) => taskWhereToSql(w)).filter((c): c is SQL => c !== undefined);
     if (inner.length > 0) parts.push(combine(inner));
   }
   if (where.OR !== undefined) {
-    const inner = where.OR.map(taskWhereToSql).filter((c): c is SQL => c !== undefined);
+    const inner = where.OR.map((w) => taskWhereToSql(w)).filter((c): c is SQL => c !== undefined);
     if (inner.length > 0) {
       // or() returns undefined only for an empty/all-undefined input, which
       // `inner.length > 0` rules out when every member compiled.
@@ -415,7 +528,7 @@ export function taskWhereToSql(where: TaskWhereInput): SQL | undefined {
   }
   if (where.NOT !== undefined) {
     const members = Array.isArray(where.NOT) ? where.NOT : [where.NOT];
-    const inner = members.map(taskWhereToSql).filter((c): c is SQL => c !== undefined);
+    const inner = members.map((w) => taskWhereToSql(w)).filter((c): c is SQL => c !== undefined);
     if (inner.length > 0) parts.push(not(combine(inner)));
   }
   return parts.length === 0 ? undefined : combine(parts);
@@ -493,6 +606,9 @@ export function projectWhereToSql(where: ProjectWhereInput): SQL | undefined {
   if (where.archivedAt !== undefined) parts.push(dateCond(project.archivedAt, where.archivedAt));
   if (where.type !== undefined) parts.push(enumCond(project.type, where.type));
   if (where.dueDate !== undefined) parts.push(dateCond(project.dueDate, where.dueDate));
+  if (where.completedAt !== undefined) parts.push(dateCond(project.completedAt, where.completedAt));
+  // S9 — the search's description probe.
+  if (where.description !== undefined) parts.push(nullableStringCond(project.description, where.description));
   if (where.AND !== undefined) {
     const inner = where.AND.map(projectWhereToSql).filter((c): c is SQL => c !== undefined);
     if (inner.length > 0) parts.push(combine(inner));
@@ -520,6 +636,9 @@ export function goalWhereToSql(where: GoalWhereInput): SQL | undefined {
   if (where.lensId !== undefined) parts.push(eq(goal.lensId, where.lensId));
   if (where.name !== undefined) parts.push(stringCond(goal.name, where.name));
   if (where.isDone !== undefined) parts.push(boolCond(goal.isDone, where.isDone));
+  if (where.completedAt !== undefined) parts.push(dateCond(goal.completedAt, where.completedAt));
+  // S9 — the search's description probe.
+  if (where.description !== undefined) parts.push(nullableStringCond(goal.description, where.description));
   if (where.AND !== undefined) {
     const inner = where.AND.map(goalWhereToSql).filter((c): c is SQL => c !== undefined);
     if (inner.length > 0) parts.push(combine(inner));
@@ -845,7 +964,149 @@ function createTaskDelegate(db: DomainDb): TaskDelegate {
 
   const findManyImpl = async (
     args: TaskFindManyArgs,
-  ): Promise<TaskListRow[] | TaskLensListRow[] | RankedPoolRow[] | Task[]> => {
+  ): Promise<
+    | TaskListRow[]
+    | TaskLensListRow[]
+    | RankedPoolRow[]
+    | TaskLogbookRow[]
+    | TaskWontDoRow[]
+    | TaskSearchRow[]
+    | TaskIndexRow[]
+    | Task[]
+  > => {
+    // S9 — the search's bounded passes (updates probe select): relational
+    // fetch of lens pill + project name + the matching NOTEs, then prune to
+    // the exact search row.
+    if (
+      "select" in args &&
+      args.select &&
+      "updates" in args.select &&
+      typeof args.select.updates === "object"
+    ) {
+      const searchArgs = args as {
+        where: TaskWhereInput;
+        orderBy?: TaskOrderByInput;
+        take: number;
+        select: TaskSearchSelect;
+      };
+      const noteWhere = searchArgs.select.updates.where;
+      const noteConds: SQL[] = [
+        eq(taskUpdate.kind, noteWhere.kind),
+        or(...noteWhere.OR.map((clause) => containsCond(taskUpdate.body, clause.body)))!,
+      ];
+      if (noteWhere.userId !== undefined) {
+        noteConds.unshift(eq(taskUpdate.userId, noteWhere.userId));
+      }
+      const raw = (await db.query.task.findMany({
+        where: taskWhereToSql(searchArgs.where),
+        orderBy: orderByCond(searchArgs.orderBy ?? {}, TASK_ORDER_COLUMNS),
+        limit: searchArgs.take,
+        with: {
+          len: true,
+          project: true,
+          taskUpdates: {
+            where: and(...noteConds),
+            orderBy: desc(taskUpdate.createdAt),
+            limit: searchArgs.select.updates.take,
+            columns: { body: true },
+          },
+        },
+      })) as unknown as (RawTaskWith & {
+        taskUpdates?: Array<{ body: string }> | null;
+      })[];
+      return raw.map((row) => ({
+        id: row.id,
+        description: row.description,
+        permalink: row.permalink,
+        content: row.content,
+        outcome: row.outcome,
+        isDone: row.isDone,
+        status: row.status,
+        createdAt: row.createdAt,
+        lens: row.len
+          ? { id: row.len.id, name: row.len.name, color: row.len.color }
+          : null,
+        project: row.project ? { name: row.project.name } : null,
+        updates: (row.taskUpdates ?? []).map((u) => ({ body: u.body })),
+      }));
+    }
+    // S9 — the compact palette-index read (project name + lens pill only).
+    if (
+      "select" in args &&
+      args.select &&
+      "lens" in args.select &&
+      "permalink" in args.select &&
+      !("updatedAt" in args.select) &&
+      !("outcome" in args.select)
+    ) {
+      const indexArgs = args as {
+        where: TaskWhereInput;
+        orderBy?: TaskOrderByInput;
+        select: TaskIndexSelect;
+      };
+      const raw = (await db.query.task.findMany({
+        where: taskWhereToSql(indexArgs.where),
+        orderBy: orderByCond(indexArgs.orderBy ?? {}, TASK_ORDER_COLUMNS),
+        with: { len: true, project: true },
+      })) as unknown as RawTaskWith[];
+      return raw.map((row) => ({
+        id: row.id,
+        description: row.description,
+        permalink: row.permalink,
+        status: row.status,
+        isDone: row.isDone,
+        project: row.project ? { name: row.project.name } : null,
+        lens: {
+          name: row.len?.name ?? "",
+          color: row.len?.color ?? null,
+        },
+      }));
+    }
+    // S8 — the Logbook's projected reads (select carries the project ref):
+    // relational fetch for the ref, then prune to the exact select shape.
+    if (
+      "select" in args &&
+      args.select &&
+      "project" in args.select &&
+      typeof args.select.project === "object"
+    ) {
+      // SAFETY: the narrowed select is one of the two S8 shapes; the loose
+      // member of the union (no orderBy) can't carry a project-relation select.
+      const logbookArgs = args as {
+        where: TaskWhereInput;
+        orderBy?: TaskOrderByInput;
+        select: TaskLogbookSelect | TaskWontDoSelect;
+      };
+      const select = logbookArgs.select;
+      const raw = (await db.query.task.findMany({
+        where: taskWhereToSql(logbookArgs.where),
+        orderBy: orderByCond(logbookArgs.orderBy ?? {}, TASK_ORDER_COLUMNS),
+        with: { project: true },
+      })) as unknown as RawTaskWith[];
+      if ("outcome" in select) {
+        const logbookRows: TaskLogbookRow[] = raw.map((row) => ({
+          id: row.id,
+          description: row.description,
+          completedAt: row.completedAt,
+          size: row.size,
+          outcome: row.outcome,
+          project: row.project
+            ? { id: row.project.id, name: row.project.name }
+            : null,
+        }));
+        return logbookRows;
+      }
+      const wontDoRows: TaskWontDoRow[] = raw.map((row) => ({
+        id: row.id,
+        description: row.description,
+        updatedAt: row.updatedAt,
+        size: row.size,
+        project: row.project
+          ? { id: row.project.id, name: row.project.name }
+          : null,
+      }));
+      return wontDoRows;
+    }
     // Select-only fetch (S5 deleteProject's task list): plain rows, full shape.
     if (!("include" in args) || !args.include) {
       return await db
@@ -1060,25 +1321,165 @@ function createTaskSessionDelegate(db: DomainDb): TaskSessionDelegate {
 }
 
 function createLensDelegate(db: DomainDb): LensDelegate {
+  // Scalar fetch used by both overloads: full rows (supserset return, as the
+  // F4b delegates do — no core reads a Lens field the row doesn't carry).
+  const scalarFindMany = async (
+    where: LensWhereInput | undefined,
+    orderBy: LensOrderByInput | undefined,
+  ): Promise<Lens[]> => {
+    return await db
+      .select()
+      .from(lens)
+      .where(lensWhereToSql(where ?? {}))
+      .orderBy(...orderByCond(orderBy ?? {}, LENS_ORDER_COLUMNS));
+  };
+
+  // S7/S11 — the summary include's `_count` + relation probes, translated to
+  // grouped count queries + per-lens relation fetches (the
+  // taskCountByProject precedent; settings-scale row counts).
+  const summaryFindMany = async (
+    where: LensWhereInput | undefined,
+    orderBy: LensOrderByInput | undefined,
+  ): Promise<LensSummaryRow[]> => {
+    const rows = await scalarFindMany(where, orderBy);
+    const ids = rows.map((r) => r.id);
+    if (ids.length === 0) return [];
+    const [openGoals, openProjects, openTasks, anyGoals, allProjects, anyTasks] =
+      await Promise.all([
+        db
+          .select({ lensId: goal.lensId, value: count() })
+          .from(goal)
+          .where(and(inArray(goal.lensId, ids), eq(goal.isDone, false)))
+          .groupBy(goal.lensId),
+        db
+          .select({ lensId: project.lensId, value: count() })
+          .from(project)
+          .where(and(inArray(project.lensId, ids), eq(project.isDone, false)))
+          .groupBy(project.lensId),
+        db
+          .select({ lensId: task.lensId, value: count() })
+          .from(task)
+          .where(and(inArray(task.lensId, ids), eq(task.isDone, false)))
+          .groupBy(task.lensId),
+        // take: 1 probes (no where — done rows count for hasAnyContent).
+        db.select({ id: goal.id, lensId: goal.lensId }).from(goal).where(inArray(goal.lensId, ids)),
+        // blockingProjects: every project of the lens, createdAt order.
+        db
+          .select({ id: project.id, name: project.name, lensId: project.lensId, createdAt: project.createdAt })
+          .from(project)
+          .where(inArray(project.lensId, ids)),
+        db.select({ id: task.id, lensId: task.lensId }).from(task).where(inArray(task.lensId, ids)),
+      ]);
+    const countOf = (mapped: { lensId: string | null; value: number }[]) => {
+      const map = new Map(mapped.map((r) => [r.lensId ?? "", Number(r.value)]));
+      return (lensId: string) => map.get(lensId) ?? 0;
+    };
+    const goalCount = countOf(openGoals);
+    const projectCount = countOf(openProjects);
+    const taskCount = countOf(openTasks);
+    const firstGoalLens = new Set(anyGoals.map((r) => r.lensId));
+    const firstTaskLens = new Set(anyTasks.map((r) => r.lensId));
+    const projectsByLens = new Map<string, { id: string; name: string; createdAt: Date }[]>();
+    for (const row of allProjects) {
+      const list = projectsByLens.get(row.lensId) ?? [];
+      list.push({ id: row.id, name: row.name, createdAt: row.createdAt });
+      projectsByLens.set(row.lensId, list);
+    }
+    for (const list of projectsByLens.values()) {
+      // The include orders blocking projects by createdAt asc.
+      list.sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0));
+    }
+    return rows.map((row) => ({
+      ...row,
+      _count: {
+        goals: goalCount(row.id),
+        projects: projectCount(row.id),
+        tasks: taskCount(row.id),
+      },
+      goals: firstGoalLens.has(row.id) ? [{ id: anyGoals.find((g) => g.lensId === row.id)!.id }] : [],
+      projects: (projectsByLens.get(row.id) ?? []).map((p) => ({ id: p.id, name: p.name })),
+      tasks: firstTaskLens.has(row.id) ? [{ id: anyTasks.find((t) => t.lensId === row.id)!.id }] : [],
+    }));
+  };
+
+  // SAFETY: the impls below handle the delegate's full union of arg shapes;
+  // the overload surface (seam.ts) pairs each shape with its exact row type.
   return {
-    findFirst: async (args: LensFindFirstArgs): Promise<Lens | null> => {
+    findFirst: (async (args: LensFindFirstArgs): Promise<Lens | LensSummaryRow | null> => {
+      if ("include" in args && args.include) {
+        const rows = await summaryFindMany(args.where, undefined);
+        return rows[0] ?? null;
+      }
       const rows = await db
         .select()
         .from(lens)
         .where(lensWhereToSql(args.where))
         .limit(1);
       return rows[0] ?? null;
-    },
-    findMany: async (args: LensFindManyArgs): Promise<Lens[]> => {
-      // Full rows: every core read only selects Lens fields the row already
-      // carries, so the superset return satisfies the slices (no pruning).
-      return await db
-        .select()
+    }) as LensDelegate["findFirst"],
+    findMany: (async (args: LensFindManyArgs): Promise<Lens[] | LensSummaryRow[]> => {
+      if ("include" in args && args.include) {
+        return await summaryFindMany(args.where, args.orderBy);
+      }
+      return await scalarFindMany(args.where, args.orderBy);
+    }) as LensDelegate["findMany"],
+    count: async (args: LensCountArgs): Promise<number> => {
+      const rows = await db
+        .select({ value: count() })
         .from(lens)
-        .where(lensWhereToSql(args.where ?? {}))
-        .orderBy(...orderByCond(args.orderBy ?? {}, LENS_ORDER_COLUMNS));
+        .where(lensWhereToSql(args.where));
+      return rows[0]?.value ?? 0;
     },
-  };
+    create: async (args: LensCreateArgs): Promise<LensCreated> => {
+      const rows = await db
+        .insert(lens)
+        .values({
+          id: mintId(),
+          name: args.data.name,
+          isDefault: args.data.isDefault,
+          isIncluded: args.data.isIncluded,
+          color: args.data.color,
+          purpose: args.data.purpose,
+          userId: args.data.userId,
+        })
+        .returning();
+      const row = rows[0];
+      assertFound(row, "Lens");
+      return {
+        id: row.id,
+        name: row.name,
+        isDefault: row.isDefault,
+        isIncluded: row.isIncluded,
+        color: row.color,
+        purpose: row.purpose,
+      };
+    },
+    update: async (args: LensUpdateArgs): Promise<LensCreated> => {
+      const rows = await db
+        .update(lens)
+        .set(args.data)
+        .where(eq(lens.id, args.where.id))
+        .returning();
+      const row = rows[0];
+      assertFound(row, "Lens");
+      return {
+        id: row.id,
+        name: row.name,
+        isDefault: row.isDefault,
+        isIncluded: row.isIncluded,
+        color: row.color,
+        purpose: row.purpose,
+      };
+    },
+    delete: async (args: LensDeleteArgs): Promise<{ id: string }> => {
+      const rows = await db
+        .delete(lens)
+        .where(eq(lens.id, args.where.id))
+        .returning({ id: lens.id });
+      if (!rows[0]) throw new Error("Lens not found.");
+      return { id: rows[0].id };
+    },
+  } as unknown as LensDelegate;
 }
 
 // ================================================================
@@ -1090,6 +1491,7 @@ function createLensDelegate(db: DomainDb): LensDelegate {
  *  the same include; Drizzle's inferred result type for a dynamically-built
  *  `with` is not precise enough to use directly. */
 type RawProjectWith = Project & {
+  len?: Lens | null;
   goal?: Goal | null;
   tasks?: (Task & { taskAttachments?: TaskAttachment[] | null })[] | null;
   resources?: (Resource & { resourceAttachments?: ResourceAttachment[] | null })[] | null;
@@ -1401,6 +1803,57 @@ function createProjectDelegate(db: DomainDb): ProjectDelegate {
       return rows[0] ?? null;
     }) as ProjectDelegate["findFirst"],
     findMany: (async (args: ProjectFindManyArgs) => {
+      // S9 — the search's bounded passes + the compact palette-index read
+      // (select carries the lens pill): relational fetch + prune. Placed
+      // before the S8 goal-ref branch (the search select also carries goal).
+      if (args.select && "lens" in args.select) {
+        const raw = (await db.query.project.findMany({
+          where: projectWhereToSql(args.where),
+          orderBy: orderByCond(args.orderBy ?? {}, PROJECT_ORDER_COLUMNS),
+          ...(args.take !== undefined ? { limit: args.take } : {}),
+          with: { len: true, goal: true },
+        })) as unknown as RawProjectWith[];
+        if ("createdAt" in args.select) {
+          // SAFETY: the lens-carrying select with createdAt is the search one.
+          const searchRows: ProjectSearchRow[] = raw.map((row) => ({
+            id: row.id,
+            name: row.name,
+            permalink: row.permalink,
+            description: row.description,
+            isDone: row.isDone,
+            createdAt: row.createdAt,
+            lens: row.len
+              ? { id: row.len.id, name: row.len.name, color: row.len.color }
+              : null,
+            goal: row.goal ? { name: row.goal.name } : null,
+          }));
+          return searchRows;
+        }
+        const indexRows: ProjectIndexRow[] = raw.map((row) => ({
+          id: row.id,
+          name: row.name,
+          permalink: row.permalink,
+          isDone: row.isDone,
+          lens: { name: row.len?.name ?? "", color: row.len?.color ?? null },
+        }));
+        return indexRows;
+      }
+      // S8 — the Logbook's projected done-projects read (select carries the
+      // goal ref): relational fetch + prune to the exact select shape.
+      if (args.select && "goal" in args.select) {
+        const raw = (await db.query.project.findMany({
+          where: projectWhereToSql(args.where),
+          orderBy: orderByCond(args.orderBy ?? {}, PROJECT_ORDER_COLUMNS),
+          with: { goal: true },
+        })) as unknown as RawProjectWith[];
+        const logbookRows: ProjectLogbookRow[] = raw.map((row) => ({
+          id: row.id,
+          name: row.name,
+          completedAt: row.completedAt,
+          goal: row.goal ? { id: row.goal.id, name: row.goal.name } : null,
+        }));
+        return logbookRows;
+      }
       if (args.include) {
         const raw = (await db.query.project.findMany({
           where: projectWhereToSql(args.where),
@@ -1530,20 +1983,72 @@ function createGoalDelegate(db: DomainDb): GoalDelegate {
         .limit(1);
       return rows[0] ?? null;
     }) as GoalDelegate["findFirst"],
-    findMany: (async (args: GoalFindManyArgs) => {
-      if (args.include) {
+    findMany: (async (
+      args: GoalFindManyArgs | {
+        where: GoalWhereInput;
+        orderBy?: GoalOrderByInput;
+        select: GoalLogbookSelect;
+        take?: number;
+      },
+    ) => {
+      // S9 — the search's bounded passes + the compact palette-index read
+      // (select carries the lens pill): relational fetch + prune.
+      if ("select" in args && args.select && "lens" in args.select) {
         const raw = (await db.query.goal.findMany({
           where: goalWhereToSql(args.where),
           orderBy: orderByCond(args.orderBy ?? {}, GOAL_ORDER_COLUMNS),
-          with: goalListWith(args.include),
+          ...(args.take !== undefined ? { limit: args.take } : {}),
+          with: { len: true },
+        })) as unknown as (Goal & { len?: Lens | null })[];
+        if ("createdAt" in args.select) {
+          // SAFETY: the lens-carrying select with createdAt is the search one.
+          const searchRows: GoalSearchRow[] = raw.map((row) => ({
+            id: row.id,
+            name: row.name,
+            permalink: row.permalink,
+            description: row.description,
+            isDone: row.isDone,
+            createdAt: row.createdAt,
+            lens: row.len
+              ? { id: row.len.id, name: row.len.name, color: row.len.color }
+              : null,
+          }));
+          return searchRows;
+        }
+        const indexRows: GoalIndexRow[] = raw.map((row) => ({
+          id: row.id,
+          name: row.name,
+          permalink: row.permalink,
+          isDone: row.isDone,
+          lens: { name: row.len?.name ?? "", color: row.len?.color ?? null },
+        }));
+        return indexRows;
+      }
+      // S8 — the Logbook's projected done-goals read (scalar select, prune).
+      if ("select" in args && args.select) {
+        const rows = await db
+          .select({ id: goal.id, name: goal.name, completedAt: goal.completedAt })
+          .from(goal)
+          .where(goalWhereToSql(args.where))
+          .orderBy(...orderByCond(args.orderBy ?? {}, GOAL_ORDER_COLUMNS));
+        const logbookRows: GoalLogbookRow[] = rows;
+        return logbookRows;
+      }
+      // SAFETY: past the select branch the args are the plain list shape.
+      const listArgs = args as GoalFindManyArgs;
+      if (listArgs.include) {
+        const raw = (await db.query.goal.findMany({
+          where: goalWhereToSql(listArgs.where),
+          orderBy: orderByCond(listArgs.orderBy ?? {}, GOAL_ORDER_COLUMNS),
+          with: goalListWith(listArgs.include),
         })) as unknown as RawGoalWith[];
-        return raw.map((row) => assembleGoalListRow(row, args.include as GoalListInclude));
+        return raw.map((row) => assembleGoalListRow(row, listArgs.include as GoalListInclude));
       }
       return await db
         .select()
         .from(goal)
-        .where(goalWhereToSql(args.where))
-        .orderBy(...orderByCond(args.orderBy ?? {}, GOAL_ORDER_COLUMNS));
+        .where(goalWhereToSql(listArgs.where))
+        .orderBy(...orderByCond(listArgs.orderBy ?? {}, GOAL_ORDER_COLUMNS));
     }) as GoalDelegate["findMany"],
     create: async (args: GoalCreateArgs): Promise<Goal> => {
       const rows = await db
@@ -1591,6 +2096,11 @@ function inboxItemWhereToSql(where: InboxItemWhereInput): SQL | undefined {
   if (where.id !== undefined) parts.push(eq(inboxItem.id, where.id));
   if (where.userId !== undefined) parts.push(eq(inboxItem.userId, where.userId));
   if (where.status !== undefined) parts.push(enumCond(inboxItem.status, where.status));
+  // S9 — the search's text probes (share title, body, content, source link).
+  if (where.text !== undefined) parts.push(stringCond(inboxItem.text, where.text));
+  if (where.title !== undefined) parts.push(nullableStringCond(inboxItem.title, where.title));
+  if (where.content !== undefined) parts.push(nullableStringCond(inboxItem.content, where.content));
+  if (where.sourceUrl !== undefined) parts.push(nullableStringCond(inboxItem.sourceUrl, where.sourceUrl));
   if (where.AND !== undefined) {
     const inner = where.AND.map((w: InboxItemWhereInput) => inboxItemWhereToSql(w)).filter((c: SQL | undefined): c is SQL => c !== undefined);
     if (inner.length > 0) parts.push(combine(inner));
@@ -1614,6 +2124,7 @@ const INBOX_ITEM_ORDER_COLUMNS: Record<string, Column> = {
   id: inboxItem.id,
   createdAt: inboxItem.createdAt,
   status: inboxItem.status,
+  archivedAt: inboxItem.archivedAt,
 };
 
 /** Prune a full InboxItem row to the capture create's select shape. */
@@ -1715,7 +2226,63 @@ function createInboxItemDelegate(db: DomainDb): InboxItemDelegate {
       return pruneInboxItemCreate(row, args.select ?? {});
     },
     findUnique: findUniqueImpl as InboxItemDelegate["findUnique"],
-    findMany: async (args: InboxItemFindManyArgs): Promise<InboxItemListRow[]> => {
+    findMany: async (
+      args: InboxItemFindManyArgs | {
+        where: InboxItemWhereInput;
+        orderBy?: InboxItemOrderByInput;
+        select: InboxItemLogbookSelect;
+      },
+    ): Promise<
+      InboxItemListRow[] | InboxItemLogbookRow[] | InboxItemSearchRow[] | InboxItemIndexRow[]
+    > => {
+      // S9 — the search's bounded passes (scalar select, no attachments).
+      // The discriminator is `status` WITHOUT `archivedAt`: the S3 list
+      // select carries sourceUrl but no status, the S8 logbook select has
+      // archivedAt without status, the S9 index select has both.
+      if (args.select && "status" in args.select && !("archivedAt" in args.select)) {
+        const rows = await db
+          .select({
+            id: inboxItem.id,
+            text: inboxItem.text,
+            title: inboxItem.title,
+            content: inboxItem.content,
+            sourceUrl: inboxItem.sourceUrl,
+            status: inboxItem.status,
+            createdAt: inboxItem.createdAt,
+          })
+          .from(inboxItem)
+          .where(inboxItemWhereToSql(args.where))
+          .orderBy(...orderByCond(args.orderBy ?? {}, INBOX_ITEM_ORDER_COLUMNS))
+          // SAFETY: the search passes always carry take (one sentinel row
+          // beyond the public cap).
+          .limit((args as { take: number }).take);
+        return rows as InboxItemSearchRow[];
+      }
+      // S9 — the compact palette-index read (includes archivedAt + status).
+      if (args.select && "status" in args.select && "archivedAt" in args.select) {
+        const rows = await db
+          .select({
+            id: inboxItem.id,
+            title: inboxItem.title,
+            text: inboxItem.text,
+            status: inboxItem.status,
+            createdAt: inboxItem.createdAt,
+            archivedAt: inboxItem.archivedAt,
+          })
+          .from(inboxItem)
+          .where(inboxItemWhereToSql(args.where))
+          .orderBy(...orderByCond(args.orderBy ?? {}, INBOX_ITEM_ORDER_COLUMNS));
+        return rows as InboxItemIndexRow[];
+      }
+      // S8 — the Logbook's archived-notes read: scalar select only (no
+      // attachment join — the projected shape reaches API payloads).
+      if (args.select && "archivedAt" in args.select) {
+        return await db
+          .select({ id: inboxItem.id, text: inboxItem.text, archivedAt: inboxItem.archivedAt })
+          .from(inboxItem)
+          .where(inboxItemWhereToSql(args.where))
+          .orderBy(...orderByCond(args.orderBy ?? {}, INBOX_ITEM_ORDER_COLUMNS));
+      }
       const raw = (await db.query.inboxItem.findMany({
         where: inboxItemWhereToSql(args.where),
         orderBy: orderByCond(args.orderBy ?? {}, INBOX_ITEM_ORDER_COLUMNS),
@@ -1813,23 +2380,55 @@ function createTagDelegate(db: DomainDb): TagDelegate {
   };
 }
 
+/** S9 — the resource search/CRUD where → SQL translation (contains probes,
+ *  id/ownership scoping, AND/OR composition). */
+export function resourceWhereToSql(where: ResourceWhereInput): SQL | undefined {
+  const parts: SQL[] = [];
+  if (where.id !== undefined) parts.push(eq(resource.id, where.id));
+  if (where.projectId !== undefined) parts.push(eq(resource.projectId, where.projectId));
+  if (where.userId !== undefined) parts.push(eq(resource.userId, where.userId));
+  if (where.title !== undefined) parts.push(stringCond(resource.title, where.title));
+  if (where.notes !== undefined) parts.push(nullableStringCond(resource.notes, where.notes));
+  if (where.url !== undefined) parts.push(nullableStringCond(resource.url, where.url));
+  if (where.AND !== undefined) {
+    const inner = where.AND.map(resourceWhereToSql).filter((c): c is SQL => c !== undefined);
+    if (inner.length > 0) parts.push(combine(inner));
+  }
+  if (where.OR !== undefined) {
+    const inner = where.OR.map(resourceWhereToSql).filter((c): c is SQL => c !== undefined);
+    if (inner.length > 0) {
+      const anyOf = or(...inner);
+      if (anyOf) parts.push(anyOf);
+    }
+  }
+  if (where.NOT !== undefined) {
+    const members = Array.isArray(where.NOT) ? where.NOT : [where.NOT];
+    const inner = members.map(resourceWhereToSql).filter((c): c is SQL => c !== undefined);
+    if (inner.length > 0) parts.push(not(combine(inner)));
+  }
+  return parts.length === 0 ? undefined : combine(parts);
+}
+
 function createResourceDelegate(db: DomainDb): ResourceDelegate {
   return {
     deleteMany: async (args: {
       where: ResourceWhereInput;
     }): Promise<BatchPayload> => {
+      // SAFETY: the S5 purge caller always scopes by project + user (the
+      // search surface's optional fields are read-only probes).
+      const where = args.where as { projectId: string; userId: string };
       const rows = await db
         .delete(resource)
         .where(
           and(
-            eq(resource.projectId, args.where.projectId),
-            eq(resource.userId, args.where.userId),
+            eq(resource.projectId, where.projectId),
+            eq(resource.userId, where.userId),
           ),
         )
         .returning({ id: resource.id });
       return { count: rows.length };
     },
-    create: async (args: ResourceCreateArgs): Promise<{ id: string }> => {
+    create: async (args: ResourceCreateArgs): Promise<ResourceCreatedRow> => {
       const { attachments, ...scalars } = args.data;
       const rows = await db
         .insert(resource)
@@ -1856,6 +2455,112 @@ function createResourceDelegate(db: DomainDb): ResourceDelegate {
           })),
         );
       }
+      return {
+        id: row.id,
+        title: row.title,
+        url: row.url,
+        notes: row.notes,
+        projectId: row.projectId,
+      };
+    },
+    // S9 — the CRUD cores' tenancy-scoped guard read (+ its project's lens).
+    findFirst: (async (args: ResourceFindFirstArgs): Promise<ResourceWithLens | null> => {
+      const raw = await db.query.resource.findFirst({
+        where: and(
+          eq(resource.id, args.where.id),
+          eq(resource.userId, args.where.userId),
+        ),
+        with: { project: true },
+      });
+      if (!raw) return null;
+      return {
+        id: raw.id,
+        userId: raw.userId,
+        projectId: raw.projectId,
+        title: raw.title,
+        url: raw.url,
+        notes: raw.notes,
+        createdAt: raw.createdAt,
+        project: { lensId: raw.project.lensId },
+      };
+    }) as ResourceDelegate["findFirst"],
+    // S9 — the search's bounded passes + the compact palette-index read.
+    findMany: (async (
+      args:
+        | { where: ResourceWhereInput; orderBy?: { createdAt?: SortOrder }; take: number; select: ResourceSearchSelect }
+        | { where: ResourceWhereInput; orderBy?: { createdAt?: SortOrder }; select: ResourceIndexSelect },
+    ) => {
+      const order = [desc(resource.createdAt)];
+      if (args.select && "project" in args.select) {
+        const raw = (await db.query.resource.findMany({
+          where: resourceWhereToSql(args.where),
+          orderBy: order,
+          ...("take" in args ? { limit: args.take } : {}),
+          with: { project: { with: { len: true } } },
+        })) as unknown as (Resource & {
+          project: Project & { len?: Lens | null };
+        })[];
+        if ("notes" in args.select) {
+          // SAFETY: the project-carrying select with notes is the search one.
+          const searchRows: ResourceSearchRow[] = raw.map((row) => ({
+            id: row.id,
+            title: row.title,
+            notes: row.notes,
+            url: row.url,
+            createdAt: row.createdAt,
+            project: {
+              name: row.project.name,
+              permalink: row.project.permalink,
+              isDone: row.project.isDone,
+              lens: {
+                id: row.project.len?.id ?? "",
+                name: row.project.len?.name ?? "",
+                color: row.project.len?.color ?? null,
+              },
+            },
+          }));
+          return searchRows;
+        }
+        const indexRows: ResourceIndexRow[] = raw.map((row) => ({
+          id: row.id,
+          title: row.title,
+          project: {
+            name: row.project.name,
+            permalink: row.project.permalink,
+            lens: {
+              name: row.project.len?.name ?? "",
+              color: row.project.len?.color ?? null,
+            },
+          },
+        }));
+        return indexRows;
+      }
+      // SAFETY: the resource findMany surface is search/index only.
+      return [] as ResourceSearchRow[];
+    }) as ResourceDelegate["findMany"],
+    update: async (args: ResourceUpdateArgs): Promise<ResourceUpdatedRow> => {
+      const rows = await db
+        .update(resource)
+        .set(args.data)
+        .where(eq(resource.id, args.where.id))
+        .returning();
+      const row = rows[0];
+      assertFound(row, "Resource");
+      return {
+        id: row.id,
+        title: row.title,
+        url: row.url,
+        notes: row.notes,
+        projectId: row.projectId,
+      };
+    },
+    delete: async (args: ResourceDeleteArgs): Promise<{ id: string }> => {
+      const rows = await db
+        .delete(resource)
+        .where(eq(resource.id, args.where.id))
+        .returning({ id: resource.id });
+      const row = rows[0];
+      assertFound(row, "Resource");
       return { id: row.id };
     },
   };

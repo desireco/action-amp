@@ -54,6 +54,15 @@ import {
   updateGoalCore,
 } from "../goals/lifecycleCore.js";
 import { createInboxItemCore, getInboxItemsCore, triageInboxItemCore } from "../inbox/operationsCore.js";
+import { getLogbookData } from "../logbook/operationsCore.js";
+import { getLensCore, getLensesCore } from "../lenses/operationsCore.js";
+import { createLensCore, deleteLensCore, updateLensCore } from "../lenses/lifecycleCore.js";
+// S9 — sitewide search + the project resource CRUD.
+import {
+  getCommandPaletteIndexData,
+  searchSiteData,
+} from "../search/operationsCore.js";
+import { createResourceCore } from "../resources/operationsCore.js";
 import type { Entities } from "./seam.js";
 
 function expectEntities<F>(
@@ -108,4 +117,18 @@ export function seamLocks(entities: Entities): void {
   expectEntities(createInboxItemCore, entities);
   expectEntities(getInboxItemsCore, entities);
   expectEntities(triageInboxItemCore, entities);
+  // S8 — the Logbook's five projected reads.
+  expectEntities(getLogbookData, entities);
+  // S7/S11 — the lens reads + CRUD (the write guard is guard-only, no
+  // entities; deleteLensCore's third arg is the injected LensTxRunner).
+  expectEntities(getLensesCore, entities);
+  expectEntities(getLensCore, entities);
+  expectEntities(createLensCore, entities);
+  expectEntities(updateLensCore, entities);
+  expectEntities(deleteLensCore, entities);
+  // S9 — the search reads (loose slice, mirrors the webapp core) + the
+  // resource CRUD core.
+  expectEntities(searchSiteData, entities);
+  expectEntities(getCommandPaletteIndexData, entities);
+  expectEntities(createResourceCore, entities);
 }

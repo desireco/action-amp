@@ -16,6 +16,11 @@ import { tasksProcedures } from "./procedures/tasks.js";
 import { projectsProcedures } from "./procedures/projects.js";
 import { goalsProcedures } from "./procedures/goals.js";
 import { inboxProcedures } from "./procedures/inbox.js";
+import { logbookProcedures } from "./procedures/logbook.js";
+import { lensesProcedures } from "./procedures/lenses.js";
+import { prefsProcedures } from "./procedures/prefs.js";
+import { searchProcedures } from "./procedures/search.js"; // S9 (temporary gate wiring)
+import { resourcesProcedures } from "./procedures/resources.js"; // S9 (temporary gate wiring)
 
 export type { ApiContext } from "./context.js";
 export { requireUser } from "./context.js";
@@ -30,5 +35,10 @@ export const router = {
   projects: projectsProcedures,
   goals: goalsProcedures,
   inbox: inboxProcedures,
+  logbook: logbookProcedures,
+  lenses: lensesProcedures,
+  prefs: prefsProcedures,
+  search: searchProcedures, // S9 (temporary gate wiring)
+  resources: resourcesProcedures, // S9 (temporary gate wiring)
   // Next surfaces compose here, one line each (inbox, projects, goals, …):
 };
