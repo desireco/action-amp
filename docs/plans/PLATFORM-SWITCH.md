@@ -57,8 +57,13 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | **S2+S3 Capture/Triage** | ✅ `325aec9` | reviewed pass-with-fixes — parser byte-verbatim (66/66), wizard keymap faithful |
 | **S5+S6 Projects/Goals** | ✅ `63e9bc7` | reviewed pass-with-fixes — deleteGoal corrected (webapp bug not ported), 402 copy byte-exact |
 | Wave-1 integration | ✅ `ffc9fff` | fragment composition, seam extensions, deterministic e2e seeds; 21 passed + 1 skipped (S8's), twice |
-| Wave 2 (S7 lenses, S8 logbook, S9 search+resources) | ▶ next | P0 notes ready; S9 closes S5's deferred resources section |
-| Remaining S/V goals | ☐ | S10–S18 per goal-set order; P0 notes ready for every slice |
+| **S7+S11 Lenses/Settings** | ✅ `1f68b8e` | reviewed pass — 2 webapp bugs fixed (409s were 500s; lens cap never fired) |
+| **S8 Logbook** | ✅ `d1242a3` | reviewed approve — lens-gate gap closed (documented deviation) |
+| **S9 Search+Resources** | ✅ `0fd817e` | reviewed pass-with-fixes — real fuse.js swapped in at integration |
+| Wave-2 integration | ✅ `c3da0d3` | LensSwitcher/palette/capture shell mounts, theme fallback, fixme un-skipped; 38 e2e passed twice, zero skipped |
+| Wave 3 (S10 auth issuance, S12 push/PWA, S13 onboarding, S14 emails+cron, S15 public) | ▶ running | — |
+| Wave 4 (S16 billing, S17 admin, S18 CLI conformance) | ☐ next | P0 notes ready (S18 is byte-exact conformance) |
+| V-series (V1 parity run → V2 rehearsal → V3 kit → V4 WITH JAKE) | ☐ | V1 needs a fresh prod pg_dump restored locally |
 | Remaining S/V goals | ☐ | P0 notes ready for every slice; port order per goal set |
 
 Blockers: none. Jake gates still open: V2 rehearsal attendance, V4 switch-day
