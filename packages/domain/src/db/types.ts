@@ -12,11 +12,19 @@
 import type { InferSelectModel } from "drizzle-orm";
 import {
   goal,
+  inboxAttachment,
+  inboxItem,
+  inboxItemStatus,
   lens,
+  listItem,
   manualAccessGrant,
   plan,
   priority,
   project,
+  projectAttachment,
+  projectType,
+  resource,
+  resourceAttachment,
   size,
   tag,
   task,
@@ -36,6 +44,8 @@ export type TaskStatus = (typeof taskStatus.enumValues)[number];
 export type TaskUpdateKind = (typeof taskUpdateKind.enumValues)[number];
 export type Plan = (typeof plan.enumValues)[number];
 export type ManualAccessGrant = (typeof manualAccessGrant.enumValues)[number];
+export type ProjectType = (typeof projectType.enumValues)[number];
+export type InboxItemStatus = (typeof inboxItemStatus.enumValues)[number];
 
 // ---- Row types (Prisma model equivalents) ----
 
@@ -47,4 +57,10 @@ export type TaskUpdate = InferSelectModel<typeof taskUpdate>;
 export type TaskAttachment = InferSelectModel<typeof taskAttachment>;
 export type Project = InferSelectModel<typeof project>;
 export type Goal = InferSelectModel<typeof goal>;
+export type Resource = InferSelectModel<typeof resource>;
+export type ListItem = InferSelectModel<typeof listItem>;
+export type InboxItem = InferSelectModel<typeof inboxItem>;
+export type InboxAttachment = InferSelectModel<typeof inboxAttachment>;
+export type ProjectAttachment = InferSelectModel<typeof projectAttachment>;
+export type ResourceAttachment = InferSelectModel<typeof resourceAttachment>;
 export type User = InferSelectModel<typeof user>;

@@ -13,6 +13,9 @@ import { implement } from "@orpc/server";
 import { contractRouter } from "@actionamp/contract";
 import type { ApiContext } from "./context.js";
 import { tasksProcedures } from "./procedures/tasks.js";
+import { projectsProcedures } from "./procedures/projects.js";
+import { goalsProcedures } from "./procedures/goals.js";
+import { inboxProcedures } from "./procedures/inbox.js";
 
 export type { ApiContext } from "./context.js";
 export { requireUser } from "./context.js";
@@ -24,5 +27,8 @@ void _typed;
 /** The mounted router — index.ts serves it at /rpc. */
 export const router = {
   tasks: tasksProcedures,
+  projects: projectsProcedures,
+  goals: goalsProcedures,
+  inbox: inboxProcedures,
   // Next surfaces compose here, one line each (inbox, projects, goals, …):
 };

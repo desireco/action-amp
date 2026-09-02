@@ -16,6 +16,8 @@
  *  duration fields are omitted until a port needs them. */
 export interface TemporalDurationLike {
   days?: number;
+  weeks?: number;
+  months?: number;
   hours?: number;
   minutes?: number;
 }
@@ -31,6 +33,13 @@ export interface TemporalTimeLike {
   minutes?: number;
 }
 
+/** Calendar-field partial for `PlainDate.with` (S2 capture parser: year rolls). */
+export interface TemporalPlainDateLike {
+  year?: number;
+  month?: number;
+  day?: number;
+}
+
 export interface TemporalInstant {
   epochMilliseconds: number;
   add(duration: TemporalDurationLike | TemporalDuration): TemporalInstant;
@@ -44,8 +53,15 @@ export interface TemporalZonedDateTime {
 
 export interface TemporalPlainDate {
   dayOfWeek: number;
+  /** Calendar-field reads (S2 capture parser: month-day + M/D tokens). */
+  readonly year: number;
+  readonly month: number;
+  readonly day: number;
   add(duration: TemporalDurationLike): TemporalPlainDate;
   subtract(duration: TemporalDurationLike): TemporalPlainDate;
+  /** Calendar-field overwrite (S2 capture parser: past month/day rolls to
+   *  next year) — returns a new PlainDate, `this` untouched. */
+  with(duration: TemporalPlainDateLike): TemporalPlainDate;
   toZonedDateTime(
     timeZone: string | { timeZone: string; plainTime?: TemporalPlainTime | TemporalTimeLike },
   ): TemporalZonedDateTime;
@@ -71,7 +87,13 @@ export interface TemporalNamespace {
     fromEpochMilliseconds(epochMilliseconds: number): TemporalInstant;
     compare(a: TemporalInstant, b: TemporalInstant): -1 | 0 | 1;
   };
-  PlainDate: { from(value: string): TemporalPlainDate };
+  PlainDate: {
+    from(value: string): TemporalPlainDate;
+    /** Calendar-fields object form (S2 capture parser: month-day tokens). */
+    from(value: { year: number; month: number; day: number }): TemporalPlainDate;
+    /** Chronological ordering of two calendar dates (past-date roll logic). */
+    compare(a: TemporalPlainDate, b: TemporalPlainDate): -1 | 0 | 1;
+  };
   PlainTime: { from(value: string): TemporalPlainTime };
   Duration: { from(value: TemporalDurationLike): TemporalDuration };
 }

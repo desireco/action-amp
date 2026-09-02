@@ -31,6 +31,29 @@ import {
   updateTaskStatusCore,
 } from "../tasks/operationsCore.js";
 import { resolveAccessibleLenses, resolveLens } from "../billing/entitlements.js";
+import {
+  createProjectCore,
+  createTaskCore,
+  getProjectData,
+  getProjectsData,
+} from "../projects/operationsCore.js";
+import {
+  archiveProjectCore,
+  deleteProjectCore,
+  moveProjectCore,
+  setProjectDoneCore,
+  updateProjectCore,
+  updateTaskParentCore,
+} from "../projects/lifecycleCore.js";
+import { assertLensAllowed, assertStandardProject } from "../projects/guards.js";
+import { createGoalCore, getGoalData, getGoalsData } from "../goals/operationsCore.js";
+import {
+  deleteGoalCore,
+  reorderGoalProjectsCore,
+  setGoalDoneCore,
+  updateGoalCore,
+} from "../goals/lifecycleCore.js";
+import { createInboxItemCore, getInboxItemsCore, triageInboxItemCore } from "../inbox/operationsCore.js";
 import type { Entities } from "./seam.js";
 
 function expectEntities<F>(
@@ -59,5 +82,30 @@ export function seamLocks(entities: Entities): void {
   expectEntities(completeFocusSessionCore, entities);
   expectEntities(pauseTaskCore, entities);
   expectEntities(resolveLens, entities);
+  // S5 — projects
+  expectEntities(getProjectsData, entities);
+  expectEntities(getProjectData, entities);
+  expectEntities(createProjectCore, entities);
+  expectEntities(createTaskCore, entities);
+  expectEntities(setProjectDoneCore, entities);
+  expectEntities(archiveProjectCore, entities);
+  expectEntities(moveProjectCore, entities);
+  expectEntities(updateProjectCore, entities);
+  expectEntities(deleteProjectCore, entities);
+  expectEntities(updateTaskParentCore, entities);
+  expectEntities(assertLensAllowed, entities);
+  expectEntities(assertStandardProject, entities);
+  // S6 — goals
+  expectEntities(getGoalsData, entities);
+  expectEntities(getGoalData, entities);
+  expectEntities(createGoalCore, entities);
+  expectEntities(setGoalDoneCore, entities);
+  expectEntities(updateGoalCore, entities);
+  expectEntities(deleteGoalCore, entities);
+  expectEntities(reorderGoalProjectsCore, entities);
   expectEntities(resolveAccessibleLenses, entities);
+  // S2+S3 — capture, the inbox list, and the triage orchestrator.
+  expectEntities(createInboxItemCore, entities);
+  expectEntities(getInboxItemsCore, entities);
+  expectEntities(triageInboxItemCore, entities);
 }

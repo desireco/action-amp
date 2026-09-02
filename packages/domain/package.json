@@ -9,6 +9,10 @@
     ".": "./src/index.ts",
     "./db": "./src/db/index.ts",
     "./tasks": "./src/tasks/index.ts",
+    "./inbox": "./src/inbox/index.ts",
+    "./simpleLists": "./src/simpleLists/index.ts",
+    "./projects": "./src/projects/index.ts",
+    "./goals": "./src/goals/index.ts",
     "./billing": "./src/billing/index.ts",
     "./shared/time": "./src/shared/time/temporal.ts",
     "./shared/permalinks": "./src/shared/permalinks.ts"

@@ -65,4 +65,29 @@ export default async function globalSetup() {
         `Restart it:\n  ${API_START}`,
     );
   }
+
+  // Re-seed the per-spec fixture users. Several specs complete/promote their
+  // seeded rows, so a second suite run against stale rows fails — the seeds
+  // are RESET-semantics (wipe + recreate per fixture user), making every run
+  // deterministic. Idempotent + localhost-only by construction.
+  const { spawnSync } = await import("node:child_process");
+  const apiDir = new URL("../../api/", import.meta.url).pathname;
+  for (const seed of ["seed-s4.ts", "seed-inbox.ts", "seed-projects.ts"]) {
+    const proc = spawnSync(
+      "bun",
+      ["src/" + seed],
+      {
+        cwd: apiDir,
+        env: {
+          ...process.env,
+          DATABASE_URL:
+            process.env.E2E_DATABASE_URL ?? "postgresql://jake@localhost:5432/actionamp_dev",
+        },
+        encoding: "utf-8",
+      },
+    );
+    if (proc.status !== 0) {
+      throw new Error(`[e2e] seed ${seed} failed:\n` + (proc.stderr ?? "").slice(0, 500));
+    }
+  }
 }
