@@ -112,11 +112,20 @@ export async function updateGoalCore(
  * The seam's delegates throw on constraint violations; Prisma surfaced them
  * as `P2002`, postgres as `23505` (unique_violation). Recognize both so the
  * op-layer behavior (webapp parity) holds against the real client and mocks.
+ *
+ * postgres.js wraps driver errors: the top-level `Error` carries
+ * `query`/`params`/`cause`, and the actual Postgres error (with
+ * `code: "23505"`) sits on `.cause` — so the check walks the cause chain
+ * (depth-bounded) instead of testing only the surface error.
  */
 export function isUniqueViolation(e: unknown): boolean {
-  if (e && typeof e === "object" && "code" in e) {
-    const code = (e as { code: unknown }).code;
-    return code === "P2002" || code === "23505";
+  let cursor: unknown = e;
+  for (let depth = 0; cursor !== null && typeof cursor === "object" && depth < 5; depth += 1) {
+    const candidate = cursor as { code?: unknown; cause?: unknown };
+    if (candidate.code === "P2002" || candidate.code === "23505") {
+      return true;
+    }
+    cursor = candidate.cause;
   }
   return false;
 }

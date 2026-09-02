@@ -1,0 +1,274 @@
+/*
+ * S7 — lens switcher styles (chip + popover), ported from
+ * webapp/src/components/ui/LensPopover.css (LensChip + LensPopover sections;
+ * class names byte-identical). The popover anchors below its trigger; the
+ * backdrop is transparent + full-screen so outside-clicks close without
+ * obscuring the page.
+ */
+
+/* ============================================================
+   LensChip — the compact always-visible trigger
+   ============================================================ */
+.aa-lens-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--aa-surface-muted);
+  border: 1px solid transparent;
+  border-radius: var(--aa-radius-md);
+  padding: 8px 12px;
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-active-lens-text);
+  cursor: pointer;
+  transition: border-color 0.12s var(--aa-ease-out), background 0.12s var(--aa-ease-out);
+}
+.aa-lens-chip:hover {
+  border-color: var(--aa-border-strong);
+}
+.aa-lens-chip:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+.aa-lens-chip.is-open {
+  border-color: var(--aa-border-strong);
+  background: var(--aa-surface-muted-2);
+}
+
+.aa-lens-chip__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-active-lens);
+  flex: none;
+  box-shadow: var(--aa-ring-halo);
+}
+.aa-lens-chip[data-lens-color="indigo"]  .aa-lens-chip__dot { background: var(--aa-lens-indigo); }
+.aa-lens-chip[data-lens-color="emerald"] .aa-lens-chip__dot { background: var(--aa-lens-emerald); }
+.aa-lens-chip[data-lens-color="slate"]   .aa-lens-chip__dot { background: var(--aa-lens-slate); }
+.aa-lens-chip[data-lens-color="cyan"]    .aa-lens-chip__dot { background: var(--aa-lens-cyan); }
+.aa-lens-chip[data-lens-color="coral"]   .aa-lens-chip__dot { background: var(--aa-lens-coral); }
+.aa-lens-chip[data-lens-color="honey"]   .aa-lens-chip__dot { background: var(--aa-lens-honey); }
+.aa-lens-chip[data-lens-color="lime"]    .aa-lens-chip__dot { background: var(--aa-lens-lime); }
+.aa-lens-chip[data-lens-color="magenta"] .aa-lens-chip__dot { background: var(--aa-lens-magenta); }
+
+.aa-lens-chip__name {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aa-lens-chip__kbd {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text-4);
+  padding: 1px 5px;
+  border-radius: var(--aa-radius-xs);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+}
+
+.aa-lens-chip__caret {
+  color: var(--aa-text-4);
+  font-size: var(--aa-text-xs);
+}
+
+/* ============================================================
+   LensPopover — the dropdown opened by the chip / ⌘L
+   ============================================================ */
+.aa-lens-popover {
+  position: absolute;
+  /* Sit below the chip, aligned to the trigger's edges. */
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 90;
+}
+.aa-lens-popover__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  /* transparent — the page stays visible behind the popover panel */
+}
+.aa-lens-popover__panel {
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  box-shadow: var(--aa-shadow-md);
+  overflow: hidden;
+  animation: aa-lens-popover-drop 0.18s var(--aa-ease-out) both;
+}
+@keyframes aa-lens-popover-drop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.aa-lens-popover__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  border-bottom: 1px solid var(--aa-border);
+}
+.aa-lens-popover__kbd {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--aa-text-4);
+}
+
+.aa-lens-popover__filter {
+  padding: 8px;
+  border-bottom: 1px solid var(--aa-border);
+}
+.aa-lens-popover__filter input {
+  width: 100%;
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  padding: 6px 10px;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-bg-soft);
+  color: var(--aa-text);
+}
+.aa-lens-popover__filter input:focus {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 1px;
+}
+
+.aa-lens-popover__list {
+  padding: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+  outline: none;
+}
+
+.aa-lens-popover__empty {
+  padding: 16px;
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-4);
+  text-align: center;
+}
+
+.aa-lens-popover__opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: var(--aa-radius-sm);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.aa-lens-popover__opt:hover,
+.aa-lens-popover__opt.is-highlight {
+  background: var(--aa-surface-muted);
+}
+.aa-lens-popover__opt.is-active {
+  background: var(--aa-active-lens-soft);
+}
+
+.aa-lens-popover__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--aa-radius-full);
+  margin-top: 5px;
+  flex: none;
+}
+.aa-lens-popover__opt[data-lens-color="indigo"]  .aa-lens-popover__dot { background: var(--aa-lens-indigo); }
+.aa-lens-popover__opt[data-lens-color="emerald"] .aa-lens-popover__dot { background: var(--aa-lens-emerald); }
+.aa-lens-popover__opt[data-lens-color="slate"]   .aa-lens-popover__dot { background: var(--aa-lens-slate); }
+.aa-lens-popover__opt[data-lens-color="cyan"]    .aa-lens-popover__dot { background: var(--aa-lens-cyan); }
+.aa-lens-popover__opt[data-lens-color="coral"]   .aa-lens-popover__dot { background: var(--aa-lens-coral); }
+.aa-lens-popover__opt[data-lens-color="honey"]   .aa-lens-popover__dot { background: var(--aa-lens-honey); }
+.aa-lens-popover__opt[data-lens-color="lime"]    .aa-lens-popover__dot { background: var(--aa-lens-lime); }
+.aa-lens-popover__opt[data-lens-color="magenta"] .aa-lens-popover__dot { background: var(--aa-lens-magenta); }
+
+.aa-lens-popover__main {
+  flex: 1;
+  min-width: 0;
+}
+.aa-lens-popover__name {
+  display: block;
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+}
+.aa-lens-popover__purpose {
+  display: block;
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aa-lens-popover__pro {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  background: var(--aa-surface-muted-2);
+  padding: 1px 6px;
+  border-radius: var(--aa-radius-xs);
+  margin-top: 3px;
+  flex: none;
+}
+
+.aa-lens-popover__add {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 8px);
+  margin: 0 4px;
+  padding: 9px 10px;
+  border: none;
+  border-top: 1px solid var(--aa-border);
+  background: transparent;
+  border-radius: var(--aa-radius-sm);
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-3);
+  cursor: pointer;
+}
+.aa-lens-popover__add:hover {
+  color: var(--aa-teal-cta);
+  background: var(--aa-teal-soft);
+}
+.aa-lens-popover__plus {
+  font-size: var(--aa-text-base);
+  line-height: 1;
+  width: 10px;
+  text-align: center;
+}
+.aa-lens-popover__pro-tag {
+  margin-left: auto;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-lens-popover__panel {
+    animation: none;
+  }
+}
