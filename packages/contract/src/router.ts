@@ -20,6 +20,8 @@ import { resourcesContract } from "./resources.js"; // S9 (temporary gate wiring
 import { notificationsContract } from "./notifications.js"; // S12 (temporary gate wiring)
 import { onboardingContract } from "./onboarding.js"; // S13 (temporary gate wiring)
 import { publicContract } from "./public.js"; // S15 (temporary gate wiring)
+import { billingContract } from "./billing.js"; // S16 (temporary gate wiring)
+import { adminContract } from "./admin.js"; // S17 (temporary gate wiring)
 
 export const contractRouter = {
   tasks: tasksContract,
@@ -34,5 +36,7 @@ export const contractRouter = {
   notifications: notificationsContract, // S12 (temporary gate wiring)
   onboarding: onboardingContract, // S13 (temporary gate wiring)
   public: publicContract, // S15 (temporary gate wiring)
+  billing: billingContract, // S16 (temporary gate wiring)
+  admin: adminContract, // S17 (temporary gate wiring)
   // Next surfaces nest here, one line each (inbox, projects, goals, …):
 };

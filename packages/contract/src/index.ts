@@ -146,4 +146,38 @@ export {
   Founding100StatusSchema,
 } from "./public.js";
 export type { Founding100Status } from "./public.js";
+// S16 (billing) fragment — additive exports of the slice's own schemas only;
+// the router composition line lives in docs/plans/slices/s16-wiring.md.
+export {
+  billingContract,
+  BillingPaymentSchema,
+  BillingStatusSchema,
+  CheckoutPriceKeySchema,
+} from "./billing.js";
+export type { BillingStatus, CheckoutPriceKey } from "./billing.js";
+// S17 (admin) fragment — additive exports of the slice's own schemas only;
+// the router composition line lives in docs/plans/slices/s17-wiring.md §1.
+export {
+  adminContract,
+  ActivityStatsSchema,
+  ActivityWeekSchema,
+  AdminFunnelStepSchema,
+  AdminStatsSchema,
+  AdminUserRowSchema,
+  FEEDBACK_STATUSES,
+  FeedbackRowSchema,
+  FeedbackStatusSchema,
+  FunnelStatsSchema,
+  FunnelRangeSchema,
+} from "./admin.js";
+export type {
+  ActivityStats,
+  ActivityWeek,
+  AdminStats,
+  AdminUserRow,
+  FeedbackRow,
+  FeedbackStatus,
+  FunnelRange,
+  FunnelStats,
+} from "./admin.js";
 export { contractRouter } from "./router.js";

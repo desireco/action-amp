@@ -74,6 +74,33 @@ import {
   deletePushSubscriptionCore,
   savePushSubscriptionCore,
 } from "../notifications/operationsCore.js";
+// S16 — the billing lifecycle cores (webhook handlers + status read).
+import {
+  handleCheckoutCompletedCore,
+  handleInvoiceFailedCore,
+  handleInvoicePaidCore,
+  handleSubscriptionDeletedCore,
+  handleSubscriptionUpdatedCore,
+} from "../billing/webhookCore.js";
+import { getBillingStatusCore } from "../billing/checkoutCore.js";
+// S17 — the admin dashboard cores + the feedback triage cores.
+import {
+  getActivityStatsCore,
+  getAdminStatsCore,
+  getAdminUsersCore,
+  getRecentFeedbackCore,
+  getFunnelStatsCore,
+  deleteAdminUserCore,
+  deleteAdminUsersCore,
+  grantAdminUserAccessCore,
+  removeAdminUserAccessCore,
+} from "../admin/index.js";
+import {
+  deleteFeedbackCore,
+  listFeedbackCore,
+  showFeedbackCore,
+  updateFeedbackStatusCore,
+} from "../feedback/index.js";
 import type { Entities } from "./seam.js";
 
 function expectEntities<F>(
@@ -150,4 +177,27 @@ export function seamLocks(entities: Entities): void {
   // entities object).
   expectEntities(savePushSubscriptionCore, entities);
   expectEntities(deletePushSubscriptionCore, entities);
+  // S16 — the billing lifecycle cores (User + Payment delegates ride the
+  // same entities object).
+  expectEntities(getBillingStatusCore, entities);
+  expectEntities(handleCheckoutCompletedCore, entities);
+  expectEntities(handleInvoicePaidCore, entities);
+  expectEntities(handleInvoiceFailedCore, entities);
+  expectEntities(handleSubscriptionUpdatedCore, entities);
+  expectEntities(handleSubscriptionDeletedCore, entities);
+  // S17 — the admin/feedback surface (global reads; the isAdmin gate lives
+  // in the API layer).
+  expectEntities(getAdminStatsCore, entities);
+  expectEntities(getActivityStatsCore, entities);
+  expectEntities(getAdminUsersCore, entities);
+  expectEntities(grantAdminUserAccessCore, entities);
+  expectEntities(removeAdminUserAccessCore, entities);
+  expectEntities(deleteAdminUserCore, entities);
+  expectEntities(deleteAdminUsersCore, entities);
+  expectEntities(getFunnelStatsCore, entities);
+  expectEntities(getRecentFeedbackCore, entities);
+  expectEntities(listFeedbackCore, entities);
+  expectEntities(showFeedbackCore, entities);
+  expectEntities(updateFeedbackStatusCore, entities);
+  expectEntities(deleteFeedbackCore, entities);
 }

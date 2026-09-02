@@ -25,12 +25,21 @@ import postgres from "postgres";
 import * as schemaTables from "./schema/index.js";
 import * as schemaRelations from "./schema/relations.js";
 import {
+  adminUserAction,
+  analyticsEvent,
+  analyticsSession,
+  auth,
+  authIdentity,
+  feedback,
   goal,
   inboxAttachment,
   inboxItem,
   lens,
   listItem,
   listItemAttachment,
+  loginEvent,
+  magicLoginChallenge,
+  payment,
   project,
   projectAttachment,
   pushSubscription,
@@ -44,6 +53,32 @@ import {
   tagToTask,
   user,
 } from "./schema/index.js";
+// S17 — the admin/feedback seam types + rows the new delegates speak.
+import type {
+  AdminUserActionDelegate,
+  AdminUserActionCreateArgs,
+  AdminUserFindManyArgs,
+  AdminUserFindRow,
+  AnalyticsEventDelegate,
+  AnalyticsEventWhereInput,
+  AnalyticsSessionStatsArgs,
+  AnalyticsSessionStatsDelegate,
+  AnalyticsSessionWithEvents,
+  FeedbackDelegate,
+  FeedbackFindFirstArgs,
+  FeedbackFindManyArgs,
+  FeedbackGroupByArgs,
+  FeedbackRow,
+  FeedbackSelect,
+  FeedbackStatusCountRow,
+  FeedbackUpdateArgs,
+  FeedbackWhereInput,
+  LoginEventDelegate,
+  MagicLoginChallengeDelegate,
+  UserAdminFindUniqueArgs,
+  UserAdminGuardRow,
+  UserIdCountRow,
+} from "./seam.js";
 import type {
   BatchPayload,
   Entities,
@@ -186,9 +221,11 @@ import type {
   UpdatesChronoInclude,
 } from "./seam.js";
 import type {
+  Feedback,
   Goal,
   InboxItem,
   Lens,
+  Payment,
   Project,
   ProjectAttachment,
   Resource,
@@ -199,6 +236,7 @@ import type {
   TaskSession,
   TaskUpdate,
   User,
+  AdminUserAction,
 } from "./types.js";
 // S12 — push-subscription delegate arg shapes (type-only; the notifications
 // cores import shared/time only, no cycle).
@@ -206,6 +244,15 @@ import type {
   PushSubscriptionDeleteArgs,
   PushSubscriptionUpsertArgs,
 } from "../notifications/operationsCore.js";
+// S16 — the Payment delegate's arg shapes + the User delegate widening.
+import type {
+  PaymentCreateArgs,
+  PaymentDelegate,
+  PaymentFindFirstArgs,
+  PaymentFindManyArgs,
+  PaymentWhereInput,
+  UserFindFirstArgs,
+} from "./seam.js";
 
 /** The schema config drizzle() expects: tables AND Relations entries in one
  *  map (drizzle-orm 0.45 builds the relational-query config from exactly
@@ -237,7 +284,22 @@ export function createEntities(db: DomainDb): Entities {
     Resource: createResourceDelegate(db),
     ListItem: createListItemDelegate(db),
     User: createUserDelegate(db), // S13/S15 — onboarding writes + founder count
+    Payment: createPaymentDelegate(db), // S16 — payment audit trail
+    // S17 — the admin/feedback global read + triage surface (isAdmin gate
+    // lives in the API layer, never here).
+    Feedback: createFeedbackDelegate(db),
+    AnalyticsEvent: createAnalyticsEventDelegate(db),
+    AnalyticsSession: createAnalyticsSessionStatsDelegate(db),
+    LoginEvent: createLoginEventDelegate(db),
+    AdminUserAction: createAdminUserActionDelegate(db),
+    MagicLoginChallenge: createMagicLoginChallengeDelegate(db),
     PushSubscription: createPushSubscriptionDelegate(db), // S12 — push save/prune
+    // S17 — the interactive transaction (Prisma `$transaction` shape): the
+    // callback sees the FULL entities surface over the transaction handle.
+    $transaction: async <T>(fn: (tx: Entities) => Promise<T>): Promise<T> =>
+      db.transaction(async (txDb) =>
+        fn(createEntities(txDb as unknown as DomainDb)),
+      ),
   };
 }
 
@@ -498,7 +560,7 @@ function taskWhereToSql(where: TaskWhereInput): SQL | undefined {
   const parts: SQL[] = [];
   if (where.id !== undefined) parts.push(stringCond(task.id, where.id));
   if (where.permalink !== undefined) parts.push(eq(task.permalink, where.permalink));
-  if (where.userId !== undefined) parts.push(eq(task.userId, where.userId));
+  if (where.userId !== undefined) parts.push(stringCond(task.userId, where.userId));
   if (where.lensId !== undefined) parts.push(nullableStringCond(task.lensId, where.lensId));
   if (where.projectId !== undefined) parts.push(nullableStringCond(task.projectId, where.projectId));
   if (where.goalId !== undefined) parts.push(nullableStringCond(task.goalId, where.goalId));
@@ -615,7 +677,7 @@ export function projectWhereToSql(where: ProjectWhereInput): SQL | undefined {
   const parts: SQL[] = [];
   if (where.id !== undefined) parts.push(stringCond(project.id, where.id));
   if (where.permalink !== undefined) parts.push(eq(project.permalink, where.permalink));
-  if (where.userId !== undefined) parts.push(eq(project.userId, where.userId));
+  if (where.userId !== undefined) parts.push(stringCond(project.userId, where.userId));
   if (where.lensId !== undefined) parts.push(eq(project.lensId, where.lensId));
   if (where.goalId !== undefined) parts.push(nullableStringCond(project.goalId, where.goalId));
   if (where.name !== undefined) parts.push(stringCond(project.name, where.name));
@@ -649,7 +711,7 @@ export function goalWhereToSql(where: GoalWhereInput): SQL | undefined {
   const parts: SQL[] = [];
   if (where.id !== undefined) parts.push(eq(goal.id, where.id));
   if (where.permalink !== undefined) parts.push(eq(goal.permalink, where.permalink));
-  if (where.userId !== undefined) parts.push(eq(goal.userId, where.userId));
+  if (where.userId !== undefined) parts.push(stringCond(goal.userId, where.userId));
   if (where.lensId !== undefined) parts.push(eq(goal.lensId, where.lensId));
   if (where.name !== undefined) parts.push(stringCond(goal.name, where.name));
   if (where.isDone !== undefined) parts.push(boolCond(goal.isDone, where.isDone));
@@ -1241,11 +1303,12 @@ function createTaskDelegate(db: DomainDb): TaskDelegate {
     return { count: rows.length };
   };
 
-  const countImpl = async (args: { where: TaskWhereInput }): Promise<number> => {
+  const countImpl = async (args?: { where: TaskWhereInput }): Promise<number> => {
+    // S17 — args optional: the stats cores call `Task.count()` for the total.
     const rows = await db
       .select({ value: count() })
       .from(task)
-      .where(taskWhereToSql(args.where));
+      .where(taskWhereToSql(args?.where ?? {}));
     return rows[0]?.value ?? 0;
   };
 
@@ -1258,6 +1321,23 @@ function createTaskDelegate(db: DomainDb): TaskDelegate {
     update: updateImpl,
     updateMany: updateManyImpl,
     count: countImpl,
+    // S17 — the admin directory's per-user 7d aggregates (created7d reads
+    // createdAt; finished reads completedAt — the where decides).
+    groupBy: async (args: {
+      by: ["userId"];
+      where?: TaskWhereInput;
+      _count: { _all: true };
+    }): Promise<UserIdCountRow[]> => {
+      const rows = await db
+        .select({ userId: task.userId, value: count() })
+        .from(task)
+        .where(taskWhereToSql(args.where ?? {}))
+        .groupBy(task.userId);
+      return rows.map((row) => ({
+        userId: row.userId,
+        _count: { _all: Number(row.value) },
+      }));
+    },
     create: createImpl,
     deleteMany: deleteManyImpl,
   } as unknown as TaskDelegate;
@@ -1963,6 +2043,22 @@ function createProjectDelegate(db: DomainDb): ProjectDelegate {
         .where(projectWhereToSql(args.where));
       return rows[0]?.value ?? 0;
     },
+    // S17 — the admin directory's per-user 7d aggregates.
+    groupBy: async (args: {
+      by: ["userId"];
+      where?: ProjectWhereInput;
+      _count: { _all: true };
+    }): Promise<UserIdCountRow[]> => {
+      const rows = await db
+        .select({ userId: project.userId, value: count() })
+        .from(project)
+        .where(projectWhereToSql(args.where ?? {}))
+        .groupBy(project.userId);
+      return rows.map((row) => ({
+        userId: row.userId,
+        _count: { _all: Number(row.value) },
+      }));
+    },
     delete: async (args: ProjectDeleteArgs): Promise<Project> => {
       const rows = await db
         .delete(project)
@@ -2093,6 +2189,22 @@ function createGoalDelegate(db: DomainDb): GoalDelegate {
         .from(goal)
         .where(goalWhereToSql(args.where));
       return rows[0]?.value ?? 0;
+    },
+    // S17 — the admin directory's per-user 7d aggregates.
+    groupBy: async (args: {
+      by: ["userId"];
+      where?: GoalWhereInput;
+      _count: { _all: true };
+    }): Promise<UserIdCountRow[]> => {
+      const rows = await db
+        .select({ userId: goal.userId, value: count() })
+        .from(goal)
+        .where(goalWhereToSql(args.where ?? {}))
+        .groupBy(goal.userId);
+      return rows.map((row) => ({
+        userId: row.userId,
+        _count: { _all: Number(row.value) },
+      }));
     },
     delete: async (args: { where: { id: string } }): Promise<Goal> => {
       const rows = await db.delete(goal).where(eq(goal.id, args.where.id)).returning();
@@ -2672,6 +2784,35 @@ function userWhereToSql(where: UserWhereInput): SQL {
         : enumCond(user.manualAccessGrant, where.manualAccessGrant),
     );
   }
+  // S16 — the webhook's findUserByCustomer lookup.
+  if (where.stripeCustomerId !== undefined) {
+    parts.push(eq(user.stripeCustomerId, where.stripeCustomerId));
+  }
+  // S17 — the admin directory + stats window filters.
+  if (where.isAdmin !== undefined) parts.push(boolCond(user.isAdmin, where.isAdmin));
+  if (where.fullName !== undefined) parts.push(stringCond(user.fullName, where.fullName));
+  if (where.createdAt !== undefined) parts.push(dateCond(user.createdAt, where.createdAt));
+  if (where.lastActiveAt !== undefined) parts.push(dateCond(user.lastActiveAt, where.lastActiveAt));
+  if (where.auth?.identities?.some) {
+    const some = where.auth.identities.some;
+    const inner: SQL[] = [];
+    if (some.providerName !== undefined) {
+      inner.push(eq(authIdentity.providerName, some.providerName));
+    }
+    if (some.providerUserId !== undefined) {
+      inner.push(
+        typeof some.providerUserId === "string"
+          ? eq(authIdentity.providerUserId, some.providerUserId)
+          : containsCond(authIdentity.providerUserId, some.providerUserId),
+      );
+    }
+    // SAFETY: raw identifiers because the probe correlates against the outer
+    // "User" row (the plain-select builder never aliases its root table);
+    // every VALUE stays a bound parameter (the taskWhereToSql precedent).
+    parts.push(
+      sql`EXISTS (SELECT 1 FROM "AuthIdentity" INNER JOIN "Auth" ON "AuthIdentity"."authId" = "Auth"."id" WHERE "Auth"."userId" = "User"."id"${inner.length > 0 ? sql` AND ${combine(inner)}` : sql``})`,
+    );
+  }
   if (where.AND !== undefined) {
     const inner = where.AND.map(userWhereToSql);
     if (inner.length > 0) parts.push(combine(inner));
@@ -2692,17 +2833,147 @@ function userWhereToSql(where: UserWhereInput): SQL {
 }
 
 function createUserDelegate(db: DomainDb): UserDelegate {
+  // S17 — the admin guard read: its select carries `auth`, assembling the
+  // first email identity beside the grant/billing fields.
+  const findUniqueImpl = async (
+    args: UserFindUniqueArgs | UserAdminFindUniqueArgs,
+  ): Promise<User | UserAdminGuardRow | null> => {
+    const rows = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, args.where.id))
+      .limit(1);
+    const row = rows[0];
+    if (!row) return null;
+    if ("auth" in (args.select ?? {})) {
+      const identities = await db
+        .select({ providerUserId: authIdentity.providerUserId })
+        .from(authIdentity)
+        .innerJoin(auth, eq(auth.id, authIdentity.authId))
+        .where(and(eq(auth.userId, row.id), eq(authIdentity.providerName, "email")))
+        .limit(1);
+      const adminRow: UserAdminGuardRow = {
+        id: row.id,
+        isAdmin: row.isAdmin,
+        manualAccessGrant: row.manualAccessGrant,
+        stripeCustomerId: row.stripeCustomerId,
+        auth: { identities },
+      };
+      return adminRow;
+    }
+    return row;
+  };
+
+  // S17 — the admin directory page: filter → order → Prisma-cursor tuple →
+  // page fetch → a second query attaches the page's email identities.
+  const findManyImpl = async (
+    args: AdminUserFindManyArgs,
+  ): Promise<AdminUserFindRow[]> => {
+    let whereSql = userWhereToSql(args.where);
+    if (args.cursor?.id) {
+      const cursorRows = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, args.cursor.id))
+        .limit(1);
+      const cursorRow = cursorRows[0];
+      // Prisma validates the cursor row; a missing one throws, which the
+      // core translates to "Stale or invalid user cursor."
+      assertFound(cursorRow, "User");
+      const order = args.orderBy?.[0] ?? {};
+      const sortCol =
+        order.createdAt !== undefined
+          ? user.createdAt
+          : order.lastLoginAt !== undefined
+            ? user.lastLoginAt
+            : user.lastActiveAt;
+      const descending =
+        (order.createdAt ?? order.lastLoginAt ?? order.lastActiveAt) === "desc";
+      const cursorValue =
+        sortCol === user.createdAt
+          ? cursorRow.createdAt
+          : sortCol === user.lastLoginAt
+            ? cursorRow.lastLoginAt
+            : cursorRow.lastActiveAt;
+      // Postgres null ordering (NULLS LAST asc / NULLS FIRST desc) decides
+      // where rows "after" a null-valued cursor live.
+      const tupleCond =
+        cursorValue === null
+          ? descending
+            ? and(isNull(sortCol), lt(user.id, args.cursor.id))
+            : or(
+                isNotNull(sortCol),
+                and(isNull(sortCol), gt(user.id, args.cursor.id)),
+              )
+          : descending
+            ? or(
+                lt(sortCol, cursorValue),
+                and(eq(sortCol, cursorValue), lt(user.id, args.cursor.id)),
+              )
+            : or(
+                gt(sortCol, cursorValue),
+                and(eq(sortCol, cursorValue), gt(user.id, args.cursor.id)),
+              );
+      whereSql = and(whereSql, tupleCond)!;
+      // The cursor row itself is excluded (Prisma's skip: 1 pairing).
+      if (args.skip === undefined) {
+        args = { ...args, skip: 1 };
+      }
+    }
+    const rows = await db
+      .select()
+      .from(user)
+      .where(whereSql)
+      .orderBy(
+        ...orderByCond(args.orderBy ?? [], {
+          createdAt: user.createdAt,
+          lastLoginAt: user.lastLoginAt,
+          lastActiveAt: user.lastActiveAt,
+          id: user.id,
+        }),
+      )
+      .limit(args.take ?? 25);
+    const ids = rows.map((r) => r.id);
+    if (ids.length === 0) return [];
+    // The `auth.identities` projection: one bounded identities query for the
+    // page (never per-row — the getProjectsData _count precedent).
+    const identityRows = await db
+      .select({
+        userId: auth.userId,
+        providerUserId: authIdentity.providerUserId,
+      })
+      .from(authIdentity)
+      .innerJoin(auth, eq(auth.id, authIdentity.authId))
+      .where(and(eq(authIdentity.providerName, "email"), inArray(auth.userId, ids)));
+    const byUser = new Map<string, string[]>();
+    for (const row of identityRows) {
+      if (row.userId === null) continue; // Auth.userId is nullable-typed only
+      const list = byUser.get(row.userId) ?? [];
+      list.push(row.providerUserId);
+      byUser.set(row.userId, list);
+    }
+    return rows.map((row) => ({
+      ...row,
+      auth: byUser.has(row.id) ? { identities: (byUser.get(row.id) ?? []).map((providerUserId) => ({ providerUserId })) } : null,
+    }));
+  };
+
   return {
     // By-PK guard read (the sample-task seed's stage probe); full row — the
-    // advisory-select precedent (Task/Lens findFirst).
-    findUnique: async (args: UserFindUniqueArgs): Promise<User | null> => {
+    // advisory-select precedent (Task/Lens findFirst). S17: branches to the
+    // admin guard shape when the select carries `auth`.
+    findUnique: findUniqueImpl,
+    // S16 — the webhook's customer-id lookup (full row; advisory select).
+    findFirst: async (args: UserFindFirstArgs): Promise<User | null> => {
       const rows = await db
         .select()
         .from(user)
-        .where(eq(user.id, args.where.id))
+        .where(userWhereToSql(args.where))
         .limit(1);
       return rows[0] ?? null;
     },
+    // S17 — the admin directory page read.
+    findMany: findManyImpl,
     update: async (args: UserUpdateArgs): Promise<User> => {
       const rows = await db
         .update(user)
@@ -2713,11 +2984,89 @@ function createUserDelegate(db: DomainDb): UserDelegate {
       assertFound(row, "User");
       return row;
     },
-    count: async (args: UserCountArgs): Promise<number> => {
+    count: async (args?: UserCountArgs): Promise<number> => {
       const rows = await db
         .select({ value: count() })
         .from(user)
-        .where(userWhereToSql(args.where));
+        .where(userWhereToSql(args?.where ?? {}));
+      return rows[0]?.value ?? 0;
+    },
+    // S17 — the delete flow's final write (Payment rows survive via SetNull).
+    delete: async (args: { where: { id: string } }): Promise<User> => {
+      const rows = await db.delete(user).where(eq(user.id, args.where.id)).returning();
+      const row = rows[0];
+      assertFound(row, "User");
+      return row;
+    },
+  } as unknown as UserDelegate;
+}
+
+// ================================================================
+// S16 — Payment delegate: the webhook's audit rows (idempotency lookups on
+// the unique stripe ids + creates) and the Billing tab's last-50 history.
+// ================================================================
+
+function paymentWhereToSql(where: PaymentWhereInput): SQL {
+  const parts: SQL[] = [];
+  if (where.userId !== undefined) parts.push(eq(payment.userId, where.userId));
+  if (where.stripeCheckoutSessionId !== undefined) {
+    parts.push(eq(payment.stripeCheckoutSessionId, where.stripeCheckoutSessionId));
+  }
+  if (where.stripeInvoiceId !== undefined) {
+    parts.push(eq(payment.stripeInvoiceId, where.stripeInvoiceId));
+  }
+  // S17 — the admin stats' confirmed-payment counts.
+  if (where.status !== undefined) parts.push(enumCond(payment.status, where.status));
+  if (where.paidAt !== undefined) parts.push(dateCond(payment.paidAt, where.paidAt));
+  return combine(parts);
+}
+
+function createPaymentDelegate(db: DomainDb): PaymentDelegate {
+  return {
+    findFirst: async (args: PaymentFindFirstArgs): Promise<Payment | null> => {
+      const rows = await db
+        .select()
+        .from(payment)
+        .where(paymentWhereToSql(args.where))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+    findMany: async (args: PaymentFindManyArgs): Promise<Payment[]> => {
+      const order = args.orderBy?.createdAt === "asc" ? asc : desc;
+      const base = db
+        .select()
+        .from(payment)
+        .where(paymentWhereToSql(args.where))
+        .orderBy(order(payment.createdAt));
+      return args.take !== undefined ? await base.limit(args.take) : await base;
+    },
+    create: async (args: PaymentCreateArgs): Promise<Payment> => {
+      const rows = await db
+        .insert(payment)
+        .values({
+          id: mintId(),
+          userId: args.data.userId,
+          amount: args.data.amount,
+          currency: args.data.currency,
+          plan: args.data.plan,
+          description: args.data.description,
+          status: args.data.status,
+          paidAt: args.data.paidAt,
+          stripePaymentIntentId: args.data.stripePaymentIntentId ?? null,
+          stripeInvoiceId: args.data.stripeInvoiceId ?? null,
+          stripeCheckoutSessionId: args.data.stripeCheckoutSessionId ?? null,
+        })
+        .returning();
+      const row = rows[0];
+      assertFound(row, "Payment");
+      return row;
+    },
+    // S17 — the admin stats' SUCCEEDED-payment counts.
+    count: async (args?: { where?: PaymentWhereInput }): Promise<number> => {
+      const rows = await db
+        .select({ value: count() })
+        .from(payment)
+        .where(paymentWhereToSql(args?.where ?? {}));
       return rows[0]?.value ?? 0;
     },
   };
@@ -2753,6 +3102,300 @@ function createPushSubscriptionDelegate(db: DomainDb): PushSubscriptionDelegate 
     delete: async (args: PushSubscriptionDeleteArgs): Promise<unknown> => {
       await db.delete(pushSubscription).where(eq(pushSubscription.id, args.where.id));
       return {};
+    },
+  };
+}
+
+// ================================================================
+// S17 — the admin/feedback global read + triage surface. GLOBAL by design
+// (the only cross-user aggregates in the app); the admin boundary is the API
+// layer's `isAdmin` gate, never the seam.
+// ================================================================
+
+function feedbackWhereToSql(where: FeedbackWhereInput): SQL | undefined {
+  const parts: SQL[] = [];
+  if (where.id !== undefined) parts.push(stringCond(feedback.id, where.id));
+  if (where.shortId !== undefined) parts.push(stringCond(feedback.shortId, where.shortId));
+  if (where.userId !== undefined) parts.push(eq(feedback.userId, where.userId));
+  if (where.status !== undefined) parts.push(enumCond(feedback.status, where.status));
+  if (where.deletedAt !== undefined) parts.push(dateCond(feedback.deletedAt, where.deletedAt));
+  if (where.createdAt !== undefined) parts.push(dateCond(feedback.createdAt, where.createdAt));
+  if (where.AND !== undefined) {
+    const inner = where.AND.map(feedbackWhereToSql).filter((c): c is SQL => c !== undefined);
+    if (inner.length > 0) parts.push(combine(inner));
+  }
+  if (where.OR !== undefined) {
+    const inner = where.OR.map(feedbackWhereToSql).filter((c): c is SQL => c !== undefined);
+    if (inner.length > 0) {
+      const anyOf = or(...inner);
+      if (anyOf) parts.push(anyOf);
+    }
+  }
+  if (where.NOT !== undefined) {
+    const members = Array.isArray(where.NOT) ? where.NOT : [where.NOT];
+    const inner = members.map(feedbackWhereToSql).filter((c): c is SQL => c !== undefined);
+    if (inner.length > 0) parts.push(not(combine(inner)));
+  }
+  return parts.length === 0 ? undefined : combine(parts);
+}
+
+/** Prune a full Feedback row to the select (Prisma's projection semantics). */
+function pruneFeedbackRow(row: Feedback, select?: FeedbackSelect): FeedbackRow {
+  if (!select) return row as FeedbackRow;
+  const pruned: Record<string, unknown> = {};
+  for (const key of Object.keys(select) as (keyof FeedbackSelect)[]) {
+    if (select[key] === true) pruned[key] = (row as unknown as Record<string, unknown>)[key];
+  }
+  return pruned as unknown as FeedbackRow;
+}
+
+function createFeedbackDelegate(db: DomainDb): FeedbackDelegate {
+  return {
+    count: async (args?: { where?: FeedbackWhereInput }): Promise<number> => {
+      const rows = await db
+        .select({ value: count() })
+        .from(feedback)
+        .where(feedbackWhereToSql(args?.where ?? {}));
+      return rows[0]?.value ?? 0;
+    },
+    findFirst: async (args: FeedbackFindFirstArgs): Promise<FeedbackRow | null> => {
+      const rows = await db
+        .select()
+        .from(feedback)
+        .where(feedbackWhereToSql(args.where))
+        .orderBy(...orderByCond(args.orderBy ?? {}, { createdAt: feedback.createdAt }))
+        .limit(1);
+      return rows[0] ? pruneFeedbackRow(rows[0], args.select) : null;
+    },
+    findMany: async (args: FeedbackFindManyArgs): Promise<FeedbackRow[]> => {
+      let whereSql = feedbackWhereToSql(args.where ?? {});
+      if (args.cursor?.id) {
+        // Prisma cursor semantics on the `[createdAt desc, id desc]` order:
+        // rows strictly AFTER the cursor row in that order (skip: 1 paired).
+        const cursorRows = await db
+          .select()
+          .from(feedback)
+          .where(eq(feedback.id, args.cursor.id))
+          .limit(1);
+        const cursorRow = cursorRows[0];
+        assertFound(cursorRow, "Feedback");
+        whereSql = and(
+          whereSql,
+          or(
+            lt(feedback.createdAt, cursorRow.createdAt),
+            and(eq(feedback.createdAt, cursorRow.createdAt), lt(feedback.id, args.cursor.id)),
+          ),
+        )!;
+      }
+      const rows = await db
+        .select()
+        .from(feedback)
+        .where(whereSql)
+        .orderBy(
+          ...orderByCond(args.orderBy ?? { createdAt: "desc" }, {
+            createdAt: feedback.createdAt,
+            id: feedback.id,
+          }),
+        )
+        .limit(args.take ?? 50);
+      return rows.map((row) => pruneFeedbackRow(row, args.select));
+    },
+    update: async (args: FeedbackUpdateArgs): Promise<FeedbackRow> => {
+      // Client-side default below the seam: Feedback.updatedAt re-stamps on
+      // every update (the webapp relied on Prisma's @updatedAt).
+      const rows = await db
+        .update(feedback)
+        .set({ ...args.data, updatedAt: new Date() })
+        .where(eq(feedback.id, args.where.id))
+        .returning();
+      const row = rows[0];
+      assertFound(row, "Feedback");
+      return pruneFeedbackRow(row, args.select);
+    },
+    groupBy: async (args: FeedbackGroupByArgs): Promise<FeedbackStatusCountRow[]> => {
+      const rows = await db
+        .select({ status: feedback.status, value: count() })
+        .from(feedback)
+        .where(feedbackWhereToSql(args.where ?? {}))
+        .groupBy(feedback.status);
+      return rows.map((row) => ({
+        status: row.status,
+        _count: { _all: Number(row.value) },
+      }));
+    },
+  };
+}
+
+function analyticsEventWhereToSql(where: AnalyticsEventWhereInput): SQL | undefined {
+  const parts: SQL[] = [];
+  if (where.name !== undefined) parts.push(enumCond(analyticsEvent.name, where.name));
+  if (where.occurredAt !== undefined) parts.push(dateCond(analyticsEvent.occurredAt, where.occurredAt));
+  if (where.userId !== undefined) {
+    parts.push(
+      where.userId === null
+        ? isNull(analyticsEvent.userId)
+        : nullableStringCond(analyticsEvent.userId, where.userId),
+    );
+  }
+  if (where.AND !== undefined) {
+    const inner = where.AND.map(analyticsEventWhereToSql).filter((c): c is SQL => c !== undefined);
+    if (inner.length > 0) parts.push(combine(inner));
+  }
+  if (where.OR !== undefined) {
+    const inner = where.OR.map(analyticsEventWhereToSql).filter((c): c is SQL => c !== undefined);
+    if (inner.length > 0) {
+      const anyOf = or(...inner);
+      if (anyOf) parts.push(anyOf);
+    }
+  }
+  if (where.NOT !== undefined) {
+    const members = Array.isArray(where.NOT) ? where.NOT : [where.NOT];
+    const inner = members.map(analyticsEventWhereToSql).filter((c): c is SQL => c !== undefined);
+    if (inner.length > 0) parts.push(not(combine(inner)));
+  }
+  return parts.length === 0 ? undefined : combine(parts);
+}
+
+function createAnalyticsEventDelegate(db: DomainDb): AnalyticsEventDelegate {
+  return {
+    count: async (args?: { where?: AnalyticsEventWhereInput }): Promise<number> => {
+      const rows = await db
+        .select({ value: count() })
+        .from(analyticsEvent)
+        .where(analyticsEventWhereToSql(args?.where ?? {}));
+      return rows[0]?.value ?? 0;
+    },
+    // S17 — the admin directory's appOpens7d aggregate.
+    groupBy: async (args: {
+      by: ["userId"];
+      where?: AnalyticsEventWhereInput;
+      _count: { _all: true };
+    }): Promise<UserIdCountRow[]> => {
+      const rows = await db
+        .select({ userId: analyticsEvent.userId, value: count() })
+        .from(analyticsEvent)
+        .where(analyticsEventWhereToSql(args.where ?? {}))
+        .groupBy(analyticsEvent.userId);
+      return rows
+        .filter((row): row is { userId: string; value: number } => row.userId !== null)
+        .map((row) => ({ userId: row.userId, _count: { _all: Number(row.value) } }));
+    },
+  };
+}
+
+/**
+ * The admin session read (device counts + funnel): a two-pass query — the
+ * matching session ids, then the sessions + their (filtered) events —
+ * assembled into the `AnalyticsSessionWithEvents` shape. Avoids guessing the
+ * relational builder's root alias for the `events.some` probe (the
+ * taskWhereToSql EXISTS note).
+ */
+function createAnalyticsSessionStatsDelegate(db: DomainDb): AnalyticsSessionStatsDelegate {
+  return {
+    findMany: async (args: AnalyticsSessionStatsArgs): Promise<AnalyticsSessionWithEvents[]> => {
+      const eventFilter = args.where?.events?.some;
+      const eventWhere = eventFilter ? analyticsEventWhereToSql(eventFilter) : undefined;
+      let sessionWhere = args.where?.firstSeenAt !== undefined ? dateCond(analyticsSession.firstSeenAt, args.where.firstSeenAt) : undefined;
+      if (eventFilter) {
+        const ids = await db
+          .selectDistinct({ sessionId: analyticsEvent.sessionId })
+          .from(analyticsEvent)
+          .where(eventWhere);
+        sessionWhere = and(
+          sessionWhere,
+          ids.length > 0 ? inArray(analyticsSession.id, ids.map((r) => r.sessionId)) : sql`false`,
+        );
+      }
+      const sessions = await db
+        .select()
+        .from(analyticsSession)
+        .where(sessionWhere);
+      if (sessions.length === 0) return [];
+      const events = await db
+        .select({
+          sessionId: analyticsEvent.sessionId,
+          name: analyticsEvent.name,
+          userId: analyticsEvent.userId,
+          occurredAt: analyticsEvent.occurredAt,
+        })
+        .from(analyticsEvent)
+        .where(eventWhere ? and(inArray(analyticsEvent.sessionId, sessions.map((s) => s.id)), eventWhere) : inArray(analyticsEvent.sessionId, sessions.map((s) => s.id)));
+      const bySession = new Map<string, AnalyticsSessionWithEvents["events"]>();
+      for (const event of events) {
+        const list = bySession.get(event.sessionId) ?? [];
+        list.push({ name: event.name, userId: event.userId, occurredAt: event.occurredAt });
+        bySession.set(event.sessionId, list);
+      }
+      // SAFETY: the returned session rows are supersets of both select shapes
+      // (device + funnel); each caller only reads fields its select carried.
+      return sessions.map((session) => ({
+        id: session.id,
+        deviceClass: session.deviceClass,
+        referrerHost: session.referrerHost,
+        utmSource: session.utmSource,
+        utmMedium: session.utmMedium,
+        utmCampaign: session.utmCampaign,
+        events: bySession.get(session.id) ?? [],
+      })) as unknown as AnalyticsSessionWithEvents[];
+    },
+  };
+}
+
+function createLoginEventDelegate(db: DomainDb): LoginEventDelegate {
+  return {
+    groupBy: async (args): Promise<UserIdCountRow[]> => {
+      const parts: SQL[] = [];
+      const where = args.where ?? {};
+      if (where.userId !== undefined) {
+        parts.push(
+          typeof where.userId === "string"
+            ? eq(loginEvent.userId, where.userId)
+            : inArray(loginEvent.userId, where.userId.in),
+        );
+      }
+      if (where.createdAt !== undefined) parts.push(dateCond(loginEvent.createdAt, where.createdAt));
+      const rows = await db
+        .select({ userId: loginEvent.userId, value: count() })
+        .from(loginEvent)
+        .where(combine(parts))
+        .groupBy(loginEvent.userId);
+      return rows.map((row) => ({
+        userId: row.userId,
+        _count: { _all: Number(row.value) },
+      }));
+    },
+  };
+}
+
+function createAdminUserActionDelegate(db: DomainDb): AdminUserActionDelegate {
+  return {
+    create: async (args: AdminUserActionCreateArgs): Promise<AdminUserAction> => {
+      const rows = await db
+        .insert(adminUserAction)
+        .values({
+          id: mintId(),
+          actorUserId: args.data.actorUserId,
+          targetUserId: args.data.targetUserId ?? null,
+          action: args.data.action,
+          previousGrant: args.data.previousGrant ?? null,
+          nextGrant: args.data.nextGrant ?? null,
+        })
+        .returning();
+      const row = rows[0];
+      assertFound(row, "AdminUserAction");
+      return row;
+    },
+  };
+}
+
+function createMagicLoginChallengeDelegate(db: DomainDb): MagicLoginChallengeDelegate {
+  return {
+    deleteMany: async (args): Promise<BatchPayload> => {
+      const rows = await db
+        .delete(magicLoginChallenge)
+        .where(eq(magicLoginChallenge.email, args.where.email))
+        .returning({ id: magicLoginChallenge.id });
+      return { count: rows.length };
     },
   };
 }

@@ -15,6 +15,10 @@
 //   (e.g. `TaskSession.findFirst`), the seam keeps that widened return type;
 //   the implementation still prunes the runtime payload to the select.
 import type {
+  AdminUserAction,
+  AdminUserActionType,
+  AnalyticsEventName,
+  FeedbackStatus,
   Goal,
   InboxItem,
   InboxItemStatus,
@@ -22,6 +26,8 @@ import type {
   ListItem,
   ManualAccessGrant,
   OnboardingStage,
+  Payment,
+  PaymentStatus,
   Plan,
   Priority,
   Project,
@@ -115,7 +121,8 @@ export interface DateTimeNullableFilter {
 export interface TaskWhereInput {
   id?: string | StringFilter;
   permalink?: string;
-  userId?: string;
+  /** S17 — the admin directory's per-user aggregates pass `{ in: ids }`. */
+  userId?: string | StringFilter;
   lensId?: string | StringNullableFilter;
   projectId?: string | StringNullableFilter;
   goalId?: string | StringNullableFilter;
@@ -167,11 +174,30 @@ export interface LensWhereInput {
 }
 
 /** User filters — the billing status count (`FOUNDER_MEMBERSHIP_WHERE`) plus
- *  the S13 onboarding core's by-PK reads. */
+ *  the S13 onboarding core's by-PK reads. S16 adds the Stripe-customer lookup
+ *  the webhook handlers resolve users by. S17 adds the admin directory's
+ *  window/access/search filters. */
 export interface UserWhereInput {
   id?: string;
   plan?: Plan | EnumFilter<Plan>;
   manualAccessGrant?: ManualAccessGrant | null | EnumNullableFilter<ManualAccessGrant>;
+  /** S16 — the webhook's `findUserByCustomer` filter. */
+  stripeCustomerId?: string;
+  // S17 — the admin directory + stats windows.
+  isAdmin?: boolean | BoolFilter;
+  fullName?: string | StringFilter;
+  createdAt?: Date | DateTimeFilter;
+  lastActiveAt?: Date | null | DateTimeNullableFilter;
+  /** S17 — the directory's email-identity search probe
+   *  (`auth.identities.some` — compiled to an EXISTS by the client). */
+  auth?: {
+    identities: {
+      some: {
+        providerName?: string;
+        providerUserId?: string | StringFilter;
+      };
+    };
+  };
   AND?: UserWhereInput[];
   OR?: UserWhereInput[];
   NOT?: UserWhereInput | UserWhereInput[];
@@ -185,11 +211,20 @@ export interface UserWhereInput {
 // auth context, not this delegate.
 // ----------------------------------------------------------------
 
-/** User patch — the three fields the onboarding cores write. */
+/** User patch — the three fields the onboarding cores write, plus the billing
+ *  fields S16's webhook cores write (plan / planRenewsAt are mutated by the
+ *  webhook ONLY; `undefined` = untouched, `null` on planRenewsAt = lifetime).
+ *  S17 — the admin grant writes (`manualAccessGrant`/`manualGrantAt`). */
 export interface UserUpdateInput {
   preferredName?: string;
   hasSeenOnboarding?: boolean;
   onboardingStage?: OnboardingStage;
+  plan?: Plan;
+  planRenewsAt?: Date | null;
+  stripeCustomerId?: string | null;
+  // S17 — manual access grants (the admin mutation cores).
+  manualAccessGrant?: ManualAccessGrant | null;
+  manualGrantAt?: Date | null;
 }
 
 export interface UserFindUniqueArgs {
@@ -211,13 +246,167 @@ export interface UserUpdateArgs {
 }
 
 export interface UserCountArgs {
+  /** S17 — optional: the stats cores also count with NO filter
+   *  (`User.count()` — the total-signups read). */
+  where?: UserWhereInput;
+}
+
+/** S16 — the webhook's customer-id lookup (`findUserByCustomer`). */
+export interface UserFindFirstArgs {
   where: UserWhereInput;
+  select?: {
+    plan?: true;
+    stripeCustomerId?: true;
+  };
+}
+
+/** S17 — the admin mutation cores' guard read: the grant/billing fields plus
+ *  the first email identity (the delete flow lowercases it to purge
+ *  magic-login challenges). The client assembles `auth.identities`. */
+export interface UserAdminFindUniqueArgs {
+  where: { id: string };
+  select: {
+    id?: true;
+    isAdmin?: true;
+    manualAccessGrant?: true;
+    stripeCustomerId?: true;
+    auth?: {
+      select: {
+        identities: {
+          where?: { providerName: string };
+          select: { providerUserId: true };
+          take?: number;
+        };
+      };
+    };
+  };
+}
+
+/** The S17 admin guard-read row (what `UserAdminFindUniqueArgs` produces). */
+export interface UserAdminGuardRow {
+  id: string;
+  isAdmin: boolean;
+  manualAccessGrant: ManualAccessGrant | null;
+  stripeCustomerId: string | null;
+  auth?: { identities: Array<{ providerUserId: string }> } | null;
+}
+
+/** S17 — the admin directory page query (`getAdminUsersCore`): the full
+ *  filter where + the `userSelect` projection + Prisma cursor paging. */
+export interface AdminUserFindManyArgs {
+  where: UserWhereInput;
+  select?: {
+    id?: true;
+    fullName?: true;
+    firstName?: true;
+    createdAt?: true;
+    lastLoginAt?: true;
+    lastActiveAt?: true;
+    plan?: true;
+    planRenewsAt?: true;
+    isAdmin?: true;
+    manualAccessGrant?: true;
+    manualGrantAt?: true;
+    auth?: {
+      select: {
+        identities: {
+          where?: { providerName: string };
+          select: { providerUserId: true };
+          take?: number;
+        };
+      };
+    };
+  };
+  take?: number;
+  orderBy?: Array<{
+    createdAt?: SortOrder;
+    lastLoginAt?: SortOrder;
+    lastActiveAt?: SortOrder;
+    id?: SortOrder;
+  }>;
+  cursor?: { id: string };
+  skip?: number;
+}
+
+/** The directory page row: user scalars + the email-identity projection the
+ *  core reads (`auth.identities[0].providerUserId`). */
+export interface AdminUserFindRow extends User {
+  auth?: { identities: Array<{ providerUserId: string }> } | null;
+}
+
+/** S17 — the per-user activity aggregates (the directory's 7d/30d columns):
+ *  one `groupBy userId` per model, `_count._all` carried per user. */
+export interface UserIdCountRow {
+  userId: string;
+  _count: { _all: number };
 }
 
 export interface UserDelegate {
   findUnique(args: UserFindUniqueArgs): Promise<User | null>;
+  // S17 — the admin guard read (its select carries `auth`, so it can only
+  // mean this shape; placed after the plain overload).
+  findUnique(args: UserAdminFindUniqueArgs): Promise<UserAdminGuardRow | null>;
+  findFirst(args: UserFindFirstArgs): Promise<User | null>;
+  // S17 — the admin directory page read.
+  findMany(args: AdminUserFindManyArgs): Promise<AdminUserFindRow[]>;
   update(args: UserUpdateArgs): Promise<User>;
-  count(args: UserCountArgs): Promise<number>;
+  count(args?: UserCountArgs): Promise<number>;
+  // S17 — the delete flow's final write (Payments survive via SetNull).
+  delete(args: { where: { id: string } }): Promise<User>;
+}
+
+// ----------------------------------------------------------------
+// S16 — the Payment delegate: the webhook's audit rows (the idempotency
+// lookups + creates) and the Billing tab's history read. Arg shapes live with
+// the billing cores that speak them; the where-filter mirrors exactly what
+// the cores pass.
+// ----------------------------------------------------------------
+
+export interface PaymentWhereInput {
+  userId?: string;
+  stripeCheckoutSessionId?: string;
+  stripeInvoiceId?: string;
+  // S17 — the admin stats' confirmed-payment counts filter on these two.
+  status?: PaymentStatus | EnumFilter<PaymentStatus>;
+  paidAt?: Date | null | DateTimeNullableFilter;
+}
+
+export interface PaymentFindFirstArgs {
+  where: PaymentWhereInput;
+}
+
+export interface PaymentFindManyArgs {
+  where: PaymentWhereInput;
+  orderBy?: { createdAt: "desc" | "asc" };
+  take?: number;
+}
+
+/** The create data the webhook cores write (all scalar columns; the row id is
+ *  minted client-side below the seam, like every delegate create). */
+export interface PaymentCreateData {
+  userId: string;
+  amount: number;
+  currency?: string;
+  plan: Plan;
+  description: string;
+  status?: PaymentStatus;
+  paidAt?: Date | null;
+  stripePaymentIntentId?: string | null;
+  stripeInvoiceId?: string | null;
+  stripeCheckoutSessionId?: string | null;
+}
+
+export interface PaymentCreateArgs {
+  data: PaymentCreateData;
+}
+
+export interface PaymentDelegate {
+  findFirst(args: PaymentFindFirstArgs): Promise<Payment | null>;
+  findMany(args: PaymentFindManyArgs): Promise<Payment[]>;
+  create(args: PaymentCreateArgs): Promise<Payment>;
+  // S17 — the admin stats' SUCCEEDED-payment counts (args optional: the
+  // stats cores call `Payment.count({ where })` only when the delegate exists).
+  count(args?: { where?: PaymentWhereInput }): Promise<number>;
 }
 
 // ----------------------------------------------------------------
@@ -236,12 +425,15 @@ export interface PushSubscriptionDelegate {
 export interface ProjectWhereInput {
   id?: string | StringFilter;
   permalink?: string;
-  userId?: string;
+  /** S17 — the admin directory's per-user aggregates pass `{ in: ids }`. */
+  userId?: string | StringFilter;
   lensId?: string;
   goalId?: string | StringNullableFilter;
   name?: string | StringFilter;
   isDone?: boolean | BoolFilter;
   archivedAt?: Date | null | DateTimeNullableFilter;
+  /** S17 — the admin directory's per-user created7d aggregate. */
+  createdAt?: Date | DateTimeFilter;
   type?: ProjectType | EnumFilter<ProjectType>;
   dueDate?: Date | null | DateTimeNullableFilter;
   /** S8 — the Logbook's done-projects read filters completedAt: { not: null }. */
@@ -259,10 +451,13 @@ export interface ProjectWhereInput {
 export interface GoalWhereInput {
   id?: string;
   permalink?: string;
-  userId?: string;
+  /** S17 — the admin directory's per-user aggregates pass `{ in: ids }`. */
+  userId?: string | StringFilter;
   lensId?: string;
   name?: string | StringFilter;
   isDone?: boolean | BoolFilter;
+  /** S17 — the admin directory's per-user created7d aggregate. */
+  createdAt?: Date | DateTimeFilter;
   completedAt?: Date | null | DateTimeNullableFilter;
   /** S9 — the search's description probe (name + description AND-tokens). */
   description?: string | StringNullableFilter;
@@ -1200,7 +1395,8 @@ export interface TaskUpdateManyArgs {
 }
 
 export interface TaskCountArgs {
-  where: TaskWhereInput;
+  /** S17 — optional: the stats cores also call `Task.count()` (total). */
+  where?: TaskWhereInput;
 }
 
 export interface TaskSessionFindFirstArgs {
@@ -1423,7 +1619,13 @@ export interface TaskDelegate {
     select: { id: true; projectId: true; goalId: true };
   }): Promise<{ id: string; projectId: string | null; goalId: string | null }>;
   updateMany(args: TaskUpdateManyArgs): Promise<BatchPayload>;
-  count(args: TaskCountArgs): Promise<number>;
+  count(args?: TaskCountArgs): Promise<number>;
+  // S17 — the admin directory's per-user 7d activity aggregates.
+  groupBy(args: {
+    by: ["userId"];
+    where?: TaskWhereInput;
+    _count: { _all: true };
+  }): Promise<UserIdCountRow[]>;
   create(args: TaskCreateArgs): Promise<Task>;
   create(args: TaskCreateIdArgs): Promise<{ id: string }>;
   deleteMany(args: TaskDeleteManyArgs): Promise<BatchPayload>;
@@ -1576,6 +1778,12 @@ export interface ProjectDelegate {
     data: ProjectUpdateInput;
   }): Promise<BatchPayload>;
   count(args: ProjectCountArgs): Promise<number>;
+  // S17 — the admin directory's per-user 7d activity aggregates.
+  groupBy(args: {
+    by: ["userId"];
+    where?: ProjectWhereInput;
+    _count: { _all: true };
+  }): Promise<UserIdCountRow[]>;
   delete(args: ProjectDeleteArgs): Promise<Project>;
 }
 
@@ -1654,6 +1862,12 @@ export interface GoalDelegate {
   create(args: GoalCreateArgs): Promise<Goal>;
   update(args: GoalUpdateArgs): Promise<Goal>;
   count(args: GoalCountArgs): Promise<number>;
+  // S17 — the admin directory's per-user 7d activity aggregates.
+  groupBy(args: {
+    by: ["userId"];
+    where?: GoalWhereInput;
+    _count: { _all: true };
+  }): Promise<UserIdCountRow[]>;
   delete(args: GoalDeleteArgs): Promise<Goal>;
 }
 
@@ -2034,6 +2248,240 @@ export interface ResourceDeleteArgs {
   where: { id: string };
 }
 
+// ----------------------------------------------------------------
+// S17 — the admin dashboard + feedback-triage read/aggregate surface. These
+// delegates are GLOBAL by design (the only cross-user queries in the app);
+// the admin boundary is the API layer's `isAdmin` gate, never the seam.
+// ----------------------------------------------------------------
+
+/** Feedback filters — the triage reads scope by `deletedAt: null`, resolve
+ *  shortId/UUID prefixes (startsWith), and narrow by status. */
+export interface FeedbackWhereInput {
+  id?: string | StringFilter;
+  shortId?: string | StringFilter;
+  userId?: string;
+  status?: FeedbackStatus | EnumFilter<FeedbackStatus>;
+  deletedAt?: Date | null | DateTimeNullableFilter;
+  createdAt?: Date | DateTimeFilter;
+  AND?: FeedbackWhereInput[];
+  OR?: FeedbackWhereInput[];
+  NOT?: FeedbackWhereInput | FeedbackWhereInput[];
+}
+
+/** The FEEDBACK_SELECT projection — the 19 fields the admin-cli prints and
+ *  the dashboard table renders. ONE definition: re-exported from the
+ *  feedback + admin cores (the seam delegates also reference it). */
+export interface FeedbackSelect {
+  id?: true;
+  shortId?: true;
+  createdAt?: true;
+  updatedAt?: true;
+  deletedAt?: true;
+  message?: true;
+  status?: true;
+  userId?: true;
+  userName?: true;
+  userEmail?: true;
+  route?: true;
+  section?: true;
+  lensId?: true;
+  lensName?: true;
+  lensColor?: true;
+  userAgent?: true;
+  viewport?: true;
+  timezone?: true;
+}
+
+export interface FeedbackRow {
+  id: string;
+  shortId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  message: string;
+  status: FeedbackStatus;
+  userId: string;
+  userName: string | null;
+  userEmail: string | null;
+  route: string | null;
+  section: string | null;
+  lensId: string | null;
+  lensName: string | null;
+  lensColor: string | null;
+  userAgent: string | null;
+  viewport: string | null;
+  timezone: string | null;
+}
+
+export interface FeedbackFindFirstArgs {
+  where: FeedbackWhereInput;
+  orderBy?: { createdAt?: SortOrder };
+  select?: FeedbackSelect;
+}
+
+/** The list/recent reads. `cursor`+`skip` carry the recent-feedback paging
+ *  (always the `[createdAt desc, id desc]` order — the only cursor caller). */
+export interface FeedbackFindManyArgs {
+  where?: FeedbackWhereInput;
+  orderBy?:
+    | { createdAt?: SortOrder }
+    | Array<{ createdAt?: SortOrder } | { id?: SortOrder }>;
+  take?: number;
+  skip?: number;
+  cursor?: { id: string };
+  select?: FeedbackSelect;
+}
+
+/** Status change + soft delete (the two triage writes). `updatedAt` is
+ *  re-stamped by the client, below the core. */
+export interface FeedbackUpdateArgs {
+  where: { id: string };
+  data: { status?: FeedbackStatus; deletedAt?: Date | null };
+  select?: FeedbackSelect;
+}
+
+/** The byStatus zero-fill source (getAdminStatsCore). */
+export interface FeedbackGroupByArgs {
+  by: ["status"];
+  where?: FeedbackWhereInput;
+  _count: { _all: true };
+}
+
+export interface FeedbackStatusCountRow {
+  status: string;
+  _count: { _all: number };
+}
+
+export interface FeedbackDelegate {
+  count(args?: { where?: FeedbackWhereInput }): Promise<number>;
+  findFirst(args: FeedbackFindFirstArgs): Promise<FeedbackRow | null>;
+  findMany(args: FeedbackFindManyArgs): Promise<FeedbackRow[]>;
+  update(args: FeedbackUpdateArgs): Promise<FeedbackRow>;
+  groupBy(args: FeedbackGroupByArgs): Promise<FeedbackStatusCountRow[]>;
+}
+
+/** AnalyticsEvent filters — the activity/capture/triage counts. */
+export interface AnalyticsEventWhereInput {
+  name?: AnalyticsEventName | EnumFilter<AnalyticsEventName>;
+  occurredAt?: Date | DateTimeFilter;
+  userId?: string | StringNullableFilter | null;
+  AND?: AnalyticsEventWhereInput[];
+  OR?: AnalyticsEventWhereInput[];
+  NOT?: AnalyticsEventWhereInput | AnalyticsEventWhereInput[];
+}
+
+export interface AnalyticsEventCountArgs {
+  where?: AnalyticsEventWhereInput;
+}
+
+/** The per-user aggregate the admin directory reads (7d app opens). */
+export interface AnalyticsEventGroupByArgs {
+  by: ["userId"];
+  where?: AnalyticsEventWhereInput;
+  _count: { _all: true };
+}
+
+export interface AnalyticsEventDelegate {
+  count(args?: AnalyticsEventCountArgs): Promise<number>;
+  groupBy(args: AnalyticsEventGroupByArgs): Promise<UserIdCountRow[]>;
+}
+
+/** The nested `events.some` probe + the projected event rows both admin
+ *  session reads carry. */
+export interface AnalyticsSessionEventFilter {
+  name?: AnalyticsEventName | EnumFilter<AnalyticsEventName>;
+  occurredAt?: Date | DateTimeFilter;
+  userId?: string | StringNullableFilter | null;
+}
+
+export interface AnalyticsSessionWhereInput {
+  firstSeenAt?: Date | DateTimeFilter;
+  userId?: string;
+  events?: { some: AnalyticsSessionEventFilter };
+}
+
+export interface AnalyticsSessionStatsSelect {
+  deviceClass?: true;
+  id?: true;
+  referrerHost?: true;
+  utmSource?: true;
+  utmMedium?: true;
+  utmCampaign?: true;
+  events: {
+    where?: AnalyticsSessionEventFilter;
+    select: { name?: true; userId?: true; occurredAt?: true };
+  };
+}
+
+/** A session row + its (projected) events — what the device-count select and
+ *  the funnel core read (the webapp `AnalyticsSessionWithEvents`). The client
+ *  returns the session scalars both shapes select; a shape never reads a
+ *  field its own select omitted (the advisory-select precedent). */
+export interface AnalyticsSessionWithEvents {
+  id: string;
+  deviceClass: string | null;
+  referrerHost: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  events: Array<{
+    name: AnalyticsEventName;
+    userId: string | null;
+    occurredAt: Date;
+  }>;
+}
+
+export interface AnalyticsSessionStatsArgs {
+  where?: AnalyticsSessionWhereInput;
+  select: AnalyticsSessionStatsSelect;
+}
+
+export interface AnalyticsSessionStatsDelegate {
+  findMany(args: AnalyticsSessionStatsArgs): Promise<AnalyticsSessionWithEvents[]>;
+}
+
+/** LoginEvent — the directory's logins7d aggregate. */
+export interface LoginEventWhereInput {
+  userId?: string | { in: string[] };
+  createdAt?: Date | DateTimeFilter;
+}
+
+export interface LoginEventGroupByArgs {
+  by: ["userId"];
+  where?: LoginEventWhereInput;
+  _count: { _all: true };
+}
+
+export interface LoginEventDelegate {
+  groupBy(args: LoginEventGroupByArgs): Promise<UserIdCountRow[]>;
+}
+
+/** The audit row the grant/remove/delete cores write. */
+export interface AdminUserActionCreateInput {
+  actorUserId: string;
+  targetUserId?: string | null;
+  action: AdminUserActionType;
+  previousGrant?: ManualAccessGrant | null;
+  nextGrant?: ManualAccessGrant | null;
+}
+
+export interface AdminUserActionCreateArgs {
+  data: AdminUserActionCreateInput;
+}
+
+export interface AdminUserActionDelegate {
+  create(args: AdminUserActionCreateArgs): Promise<AdminUserAction>;
+}
+
+/** The delete flow's magic-login purge (`deleteMany({ where: { email } })`). */
+export interface MagicLoginChallengeDeleteManyArgs {
+  where: { email: string };
+}
+
+export interface MagicLoginChallengeDelegate {
+  deleteMany(args: MagicLoginChallengeDeleteManyArgs): Promise<BatchPayload>;
+}
+
 /** The entities object a core receives: the Prisma-delegate slice, built over
  *  Drizzle by `createEntities` (`./client.ts`) or faked by F4c mocks. */
 export interface Entities {
@@ -2049,6 +2497,20 @@ export interface Entities {
   ListItem: ListItemDelegate;
   /** S13/S15 — onboarding writes + the Founding-100 membership count. */
   User: UserDelegate;
+  /** S16 — the payment audit trail (webhook idempotency + Billing history). */
+  Payment: PaymentDelegate;
+  // S17 — the admin/feedback global read + triage surface (see the S17
+  // section above): the boundary is the API layer's isAdmin gate.
+  Feedback: FeedbackDelegate;
+  AnalyticsEvent: AnalyticsEventDelegate;
+  AnalyticsSession: AnalyticsSessionStatsDelegate;
+  LoginEvent: LoginEventDelegate;
+  AdminUserAction: AdminUserActionDelegate;
+  MagicLoginChallenge: MagicLoginChallengeDelegate;
+  /** S17 — the interactive transaction the admin mutation cores call
+   *  (Prisma `$transaction(async (db) => …)` shape). Optional: the cores
+   *  degrade with "Admin transaction support is unavailable." when omitted. */
+  $transaction?: <T>(fn: (tx: Entities) => Promise<T>) => Promise<T>;
   /** S12 — push subscriptions (save upsert + dead-endpoint prune). */
   PushSubscription: PushSubscriptionDelegate;
 }

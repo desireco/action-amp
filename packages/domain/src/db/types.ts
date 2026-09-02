@@ -11,14 +11,25 @@
 // them (`@db.Date` arrives as UTC-midnight `Date`, like Prisma).
 import type { InferSelectModel } from "drizzle-orm";
 import {
+  adminUserAction,
+  adminUserActionType,
+  analyticsEvent,
+  analyticsEventName,
+  analyticsSession,
+  feedback,
+  feedbackStatus,
   goal,
   inboxAttachment,
   inboxItem,
   inboxItemStatus,
   lens,
   listItem,
+  loginEvent,
+  magicLoginChallenge,
   manualAccessGrant,
   onboardingStage,
+  payment,
+  paymentStatus,
   plan,
   priority,
   project,
@@ -49,6 +60,12 @@ export type ManualAccessGrant = (typeof manualAccessGrant.enumValues)[number];
 export type OnboardingStage = (typeof onboardingStage.enumValues)[number];
 export type ProjectType = (typeof projectType.enumValues)[number];
 export type InboxItemStatus = (typeof inboxItemStatus.enumValues)[number];
+/** S16 — the payment audit trail's status (`Payment.status`). */
+export type PaymentStatus = (typeof paymentStatus.enumValues)[number];
+// S17 — the admin/feedback surface enums.
+export type FeedbackStatus = (typeof feedbackStatus.enumValues)[number];
+export type AnalyticsEventName = (typeof analyticsEventName.enumValues)[number];
+export type AdminUserActionType = (typeof adminUserActionType.enumValues)[number];
 
 // ---- Row types (Prisma model equivalents) ----
 
@@ -67,3 +84,12 @@ export type InboxAttachment = InferSelectModel<typeof inboxAttachment>;
 export type ProjectAttachment = InferSelectModel<typeof projectAttachment>;
 export type ResourceAttachment = InferSelectModel<typeof resourceAttachment>;
 export type User = InferSelectModel<typeof user>;
+/** S16 — one recorded payment (the webhook's audit row / the Billing tab history). */
+export type Payment = InferSelectModel<typeof payment>;
+// S17 — the admin/feedback row types (Prisma model equivalents).
+export type Feedback = InferSelectModel<typeof feedback>;
+export type AnalyticsSession = InferSelectModel<typeof analyticsSession>;
+export type AnalyticsEvent = InferSelectModel<typeof analyticsEvent>;
+export type LoginEvent = InferSelectModel<typeof loginEvent>;
+export type MagicLoginChallenge = InferSelectModel<typeof magicLoginChallenge>;
+export type AdminUserAction = InferSelectModel<typeof adminUserAction>;

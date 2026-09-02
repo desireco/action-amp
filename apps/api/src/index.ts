@@ -162,6 +162,23 @@ app.use("/rpc/*", async (c, next) => {
 import { createPublicRest } from "./procedures/public.js";
 app.route("/", createPublicRest({ db, entities }));
 
+// S17 slice wiring — the /api/cli/feedback/* + /api/cli/admin/* PAT routes
+// (REST mounts, the admin-cli's exact paths; see docs/plans/slices/s17-wiring.md §3).
+import { createCliRest } from "./cli-routes.js";
+app.route("/", createCliRest({ db, entities }));
+
+// S18 slice wiring — the 27 non-admin /api/cli/* routes + /api/pat/* (the
+// conformance suite's own launcher uses this same composition; see
+// docs/plans/slices/s18-wiring.md).
+import { createCliRoutes } from "./cli/routes.js";
+app.route("/", createCliRoutes({ db, entities }));
+
+// S16 slice wiring — the Stripe webhook: POST /webhooks/stripe (raw-body
+// signature verification; the ONLY writer of User.plan/planRenewsAt). See
+// docs/plans/slices/s16-wiring.md §1.
+import { createStripeWebhookRoute } from "./webhooks-stripe.js";
+app.route("/", createStripeWebhookRoute({ db, entities }));
+
 // --- dev login (F10c) -----------------------------------------------------------
 // The devEmail= equivalent: mints a real session for an email and stamps the
 // wasp_session cookie — how Playwright/e2e and curl log in without any
