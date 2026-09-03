@@ -1,0 +1,221 @@
+@import "../../tokens.css";
+
+/* PropertyChips — the app's one property editor.
+   A row of chips, one per property. Each chip IS the editor: click → anchored
+   popover with that property's options; pick → onChange. Picker-backed fields
+   (project/goal/parent) open a bottom sheet. */
+
+.aa-prop-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  position: relative;
+}
+
+/* Wrapper holding a chip button + its popover as SIBLINGS (invalid HTML to
+   nest <button> inside <button>). The popover anchors to this slot. */
+.aa-prop-chip-slot {
+  position: relative;
+  display: inline-flex;
+}
+
+.aa-prop-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: var(--aa-radius-full);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  cursor: pointer;
+  line-height: 1.3;
+  position: relative;
+  transition:
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    transform var(--aa-dur-fast) var(--aa-ease-out);
+}
+.aa-prop-chip:hover {
+  transform: translateY(-1px);
+}
+.aa-prop-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--aa-focus-ring);
+}
+
+/* Variant tints — color carries meaning (the four-accent system). */
+.aa-prop-chip--when,
+.aa-prop-chip--today,
+.aa-prop-chip--due {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+.aa-prop-chip--when:hover,
+.aa-prop-chip--today:hover,
+.aa-prop-chip--due:hover {
+  background: var(--aa-teal-soft-strong);
+}
+
+.aa-prop-chip--normal {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text-3);
+}
+.aa-prop-chip--normal:hover {
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-2);
+}
+.aa-prop-chip--important {
+  background: var(--aa-amber-soft);
+  color: var(--aa-amber-text);
+}
+.aa-prop-chip--important:hover {
+  background: var(--aa-amber-soft-strong);
+}
+
+.aa-prop-chip--size,
+.aa-prop-chip--kind {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text-3);
+}
+.aa-prop-chip--size:hover,
+.aa-prop-chip--kind:hover {
+  background: var(--aa-surface-muted-2);
+  color: var(--aa-text-2);
+}
+
+.aa-prop-chip--project,
+.aa-prop-chip--goal,
+.aa-prop-chip--parent {
+  background: var(--aa-violet-soft);
+  color: var(--aa-violet-text);
+}
+.aa-prop-chip--project:hover,
+.aa-prop-chip--goal:hover,
+.aa-prop-chip--parent:hover {
+  background: var(--aa-violet-soft);
+  filter: brightness(0.97);
+}
+
+/* The chev inside a chip — signals "opens something". */
+.aa-prop-chip-chev {
+  width: 11px;
+  height: 11px;
+  opacity: 0.6;
+  transition: transform var(--aa-dur-base) var(--aa-ease-out);
+}
+.aa-prop-chip.is-open {
+  transform: translateY(0);
+}
+.aa-prop-chip.is-open .aa-prop-chip-chev {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+/* Plus chip — add a property that isn't set yet. Quiet, dashed. */
+.aa-prop-chip--add {
+  background: transparent;
+  color: var(--aa-text-4);
+  border: 1px dashed var(--aa-border-strong);
+}
+.aa-prop-chip--add:hover {
+  color: var(--aa-teal-cta);
+  border-color: var(--aa-teal-cta);
+  background: var(--aa-teal-soft);
+  transform: translateY(-1px);
+}
+
+/* Done-task / read-only state — static chips (no hover, no chev, no editor). */
+.aa-prop-chip--static {
+  cursor: default;
+}
+.aa-prop-chip--static:hover {
+  transform: none;
+}
+
+/* ---- Popover — anchored under the chip slot. One property at a time. ---- */
+.aa-prop-chip-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  box-shadow: var(--aa-shadow-md);
+  padding: 6px;
+  min-width: 200px;
+  z-index: 20;
+  animation: aa-prop-popover-in var(--aa-dur-base) var(--aa-ease-out) both;
+}
+@keyframes aa-prop-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.aa-prop-chip-popover__title {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  padding: 6px 10px 4px;
+}
+
+.aa-prop-chip-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--aa-radius-sm);
+  font-family: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-2);
+  cursor: pointer;
+  transition: background var(--aa-dur-fast) var(--aa-ease-out);
+}
+.aa-prop-chip-opt:hover {
+  background: var(--aa-surface-muted);
+}
+.aa-prop-chip-opt.active {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+.aa-prop-chip-opt-hint {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-regular);
+  color: var(--aa-text-4);
+  margin-left: var(--aa-space-sm);
+}
+.aa-prop-chip-check {
+  opacity: 0;
+  color: var(--aa-teal-cta);
+  flex-shrink: 0;
+}
+.aa-prop-chip-opt.active .aa-prop-chip-check {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-prop-chip,
+  .aa-prop-chip-chev,
+  .aa-prop-chip-popover {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  .aa-prop-chip:hover,
+  .aa-prop-chip.is-open {
+    transform: none !important;
+  }
+}

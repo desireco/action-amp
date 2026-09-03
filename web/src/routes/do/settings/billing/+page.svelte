@@ -10,7 +10,7 @@
   // redirect. The webhook is the source of truth (BILLING-INTEGRATION.md).
   import { onMount } from "svelte";
   import { page } from "$app/state";
-  import Chip from "../../../../lib/components/Chip.svelte";
+  import Chip from "../../../../lib/components/ui/Chip.svelte";
   import { billing } from "../../../../lib/stores/billing.svelte";
   import "../../../../lib/styles/billing.css";
 

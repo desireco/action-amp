@@ -2,8 +2,8 @@
   // Someday — parked: lens-scoped status=SOMEDAY, flat muted list. No
   // "→ Upcoming" affordance — the single promote path is the When chip.
   import TaskRow from "../../../lib/components/TaskRow.svelte";
-  import ListEmpty from "../../../lib/components/ListEmpty.svelte";
-  import CompletionCircle from "../../../lib/components/CompletionCircle.svelte";
+  import ListEmpty from "../../../lib/components/ui/ListEmpty.svelte";
+  import CompletionCircle from "../../../lib/components/ui/CompletionCircle.svelte";
   import RowEditor from "../../../lib/components/RowEditor.svelte";
   import { untrack } from "svelte";
   import { lists } from "../../../lib/stores/lists.svelte";
@@ -56,7 +56,7 @@
       text="Someday is for things you want to keep but stop nagging about. Send a task here from triage or by changing its status."
     >
       {#snippet icon()}
-        <CompletionCircle size={40} />
+        <CompletionCircle size="lg" />
       {/snippet}
     </ListEmpty>
   {:else}

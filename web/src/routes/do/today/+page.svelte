@@ -2,12 +2,14 @@
   // Today — the global committed-for-today list (across all accessible
   // lenses), capped: the first todayCap rows group by Goal; the overflow
   // renders muted under the amber "Over capacity" banner with a "Do" button
-  // (the picked-task path). Done-today groups the same way.
+  // (the picked-task path). Layout ported from webapp TodayPage.css +
+  // ListShell.css: a centered 840px column; the commitment header is a
+  // lens-tinted surface card; groups render as surface cards.
   import TaskRow from "../../../lib/components/TaskRow.svelte";
-  import GroupedList from "../../../lib/components/GroupedList.svelte";
-  import CountLinkButton from "../../../lib/components/CountLinkButton.svelte";
-  import ListEmpty from "../../../lib/components/ListEmpty.svelte";
-  import CompletionCircle from "../../../lib/components/CompletionCircle.svelte";
+  import GroupedList from "../../../lib/components/ui/GroupedList.svelte";
+  import CountLinkButton from "../../../lib/components/ui/CountLinkButton.svelte";
+  import ListEmpty from "../../../lib/components/ui/ListEmpty.svelte";
+  import CompletionCircle from "../../../lib/components/ui/CompletionCircle.svelte";
   import RowEditor from "../../../lib/components/RowEditor.svelte";
   import { lists } from "../../../lib/stores/lists.svelte";
   import { feedback } from "../../../lib/stores/feedback.svelte";
@@ -59,7 +61,7 @@
 <section class="aa-today" aria-label="Today">
   <header class="aa-today__hero">
     <div class="aa-today__hero-copy">
-      <div class="aa-eyebrow">Today</div>
+      <div class="aa-list-header__eyebrow">Today</div>
       <h1 class="aa-today__title">{isLoading ? "—" : `${tasks.length} of ${todayCap} committed`}</h1>
       <p class="aa-today__subtitle">
         {committedCount >= todayCap
@@ -95,7 +97,7 @@
       text="Pull one in from Upcoming, or triage something from the Inbox."
     >
       {#snippet icon()}
-        <CompletionCircle size={40} />
+        <CompletionCircle size="md" />
       {/snippet}
       {#snippet action()}
         {#if upcomingCount > 0}
@@ -201,133 +203,266 @@
      of the overlay; the showForTask trigger stays here). -->
 
 <style>
+  /* ---- Column: webapp TodayPage.css `.aa-today` — 840px centered. ---- */
   .aa-today {
-    padding: 1.5rem 1rem 3rem;
-    max-width: 44rem;
+    width: min(100%, 840px);
     margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
   }
-  .aa-eyebrow {
-    font-size: var(--aa-text-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--aa-text-muted, oklch(0.5 0.01 240));
-  }
+
+  /* ---- Commitment header — a lens-tinted surface card (`.aa-today__hero`). */
   .aa-today__hero {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
+    gap: var(--aa-space-md);
+    padding: var(--aa-space-xl);
+    margin-bottom: var(--aa-space-lg);
+    background:
+      linear-gradient(135deg, var(--aa-active-lens-soft), transparent 58%),
+      var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-xl);
+    box-shadow: var(--aa-shadow-sm);
   }
-  .aa-today__title {
-    font-size: var(--aa-text-xl);
-    font-weight: var(--aa-weight-semibold);
-    margin: 0.2rem 0 0;
+
+  .aa-today__hero-copy {
+    min-width: 0;
   }
-  .aa-today__subtitle {
-    margin: 0.15rem 0 0;
-    color: var(--aa-text-muted, oklch(0.5 0.01 240));
+
+  /* Eyebrow — ListShell.css `.aa-list-header__eyebrow`. */
+  .aa-list-header__eyebrow {
     font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--aa-text-4);
+    margin-bottom: var(--aa-space-xs);
   }
+
+  .aa-today__title {
+    font-size: var(--aa-text-2xl);
+    font-weight: var(--aa-weight-bold);
+    letter-spacing: 0;
+    color: var(--aa-text);
+    margin: 0;
+  }
+
+  .aa-today__subtitle {
+    max-width: 28rem;
+    margin: var(--aa-space-xs) 0 0;
+    color: var(--aa-text-3);
+    font-size: var(--aa-text-base);
+    line-height: var(--aa-leading-snug);
+  }
+
+  /* The cap meter — five dashes, filled left to right. */
   .aa-today__meter {
-    display: flex;
-    gap: 0.3rem;
-    margin-top: 0.7rem;
+    display: grid;
+    grid-template-columns: repeat(5, 24px);
+    justify-content: start;
+    gap: var(--aa-space-xs);
+    margin-top: var(--aa-space-md);
   }
+
   .aa-today__meter-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    border: 1.5px solid var(--aa-teal);
-    display: inline-block;
+    width: 24px;
+    height: 6px;
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-surface-muted-2);
   }
+
   .aa-today__meter-dot--filled {
     background: var(--aa-teal);
+    box-shadow: 0 0 0 1px var(--aa-teal-soft-strong);
   }
+
   .aa-today__hero-links {
     display: flex;
-    gap: 0.5rem;
+    align-items: center;
+    gap: var(--aa-space-sm);
   }
+
+  /* ---- Groups render as surface cards (TodayPage.css). The GroupedList
+     internals are child-component markup, so these reach in via :global. ---- */
+  .aa-today :global(.aa-today__list .aa-grouped__group) {
+    padding: var(--aa-space-lg);
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-xl);
+    box-shadow: var(--aa-shadow-sm);
+  }
+
+  .aa-today :global(.aa-today__list .aa-grouped__heading) {
+    margin-bottom: var(--aa-space-md);
+  }
+
+  .aa-today :global(.aa-today__list .aa-grouped__list) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--aa-space-sm);
+  }
+
+  .aa-today :global(.aa-today__list .aa-task-row__title.aa-task-row__title) {
+    font-size: var(--aa-text-md);
+    font-weight: var(--aa-weight-semibold);
+  }
+
+  /* The empty state belongs to Today's committed-work column — it follows the
+     same 840px measure instead of the narrower shared empty-state default. */
+  .aa-today :global(.aa-list-empty.aa-list-empty) {
+    width: 100%;
+    max-width: none;
+  }
+
+  /* ---- Over-capacity banner (amber = the one human nudge). ---- */
   .aa-today__overflow-banner {
     display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
+    align-items: center;
+    gap: var(--aa-space-sm);
+    flex-wrap: wrap;
+    padding: var(--aa-space-md);
+    margin-bottom: var(--aa-space-xl);
     background: var(--aa-amber-soft);
-    border-radius: 10px;
-    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--aa-amber-soft-strong);
+    border-radius: var(--aa-radius-sm);
     font-size: var(--aa-text-sm);
-    color: var(--aa-text);
+    color: var(--aa-amber-text);
+    line-height: var(--aa-leading-normal);
   }
+
   .aa-today__overflow-chip {
     background: var(--aa-amber);
-    color: white;
-    border-radius: 999px;
+    color: var(--aa-surface);
+    border-radius: var(--aa-radius-full);
     padding: 0.1rem 0.55rem;
     font-size: var(--aa-text-xs);
     font-weight: var(--aa-weight-semibold);
     flex: none;
   }
+
   .aa-today__overflow {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
+    margin-top: var(--aa-space-xl);
+    padding-top: var(--aa-space-xl);
+    border-top: 1px solid var(--aa-border);
   }
+
+  /* ---- "Done today" — a plain divider, lighter than a card. ---- */
   .aa-today__done-section {
-    border-top: 1px solid var(--aa-border, oklch(0.92 0.004 240));
-    padding-top: 1rem;
+    margin-top: var(--aa-space-xl);
+    padding-top: var(--aa-space-md);
+    border-top: 1px solid var(--aa-border);
   }
+
   .aa-today__done-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--aa-space-sm);
+    width: 100%;
+    margin-bottom: var(--aa-space-sm);
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--aa-text-4);
   }
+
   .aa-today__done-title {
     display: flex;
-    gap: 0.5rem;
     align-items: baseline;
-    font-weight: var(--aa-weight-semibold);
+    gap: var(--aa-space-sm);
   }
+
   .aa-today__done-count {
-    color: var(--aa-teal-cta);
-    font-size: var(--aa-text-sm);
+    font-family: var(--aa-font-mono);
+    font-size: var(--aa-text-xs);
+    font-weight: var(--aa-weight-medium);
+    color: var(--aa-text-4);
   }
+
+  /* ---- Loading skeleton. ---- */
+  .aa-today__loading {
+    padding: var(--aa-space-md);
+  }
+
   .aa-skeleton {
-    border-radius: 8px;
-    background: var(--aa-surface-muted, oklch(0.96 0.005 240));
+    border-radius: var(--aa-radius-sm);
+    background: var(--aa-surface-muted);
   }
+
   .aa-skeleton--heading {
-    height: 0.7rem;
-    width: 8rem;
+    height: 0.8rem;
+    width: 7rem;
   }
+
   .aa-skeleton--row {
-    height: 2.2rem;
-    margin-top: 0.5rem;
+    height: 2.5rem;
+    margin-top: var(--aa-space-md);
   }
+
+  /* ---- Buttons — webapp Button.css (ghost/secondary, sm). ---- */
   .aa-btn {
-    border-radius: 8px;
-    padding: 0.35rem 0.8rem;
-    font-size: var(--aa-text-sm);
-    cursor: pointer;
-    border: 1px solid transparent;
-    text-decoration: none;
-    color: var(--aa-text);
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--aa-font);
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-semibold);
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    border-radius: var(--aa-radius-sm);
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background 0.15s var(--aa-ease-out),
+      border-color 0.15s var(--aa-ease-out),
+      color 0.15s var(--aa-ease-out);
   }
+
   .aa-btn--ghost {
-    background: none;
-    color: var(--aa-text-muted, oklch(0.5 0.01 240));
+    background: transparent;
+    color: var(--aa-text-2);
   }
+
   .aa-btn--ghost:hover {
+    background: var(--aa-surface-muted);
     color: var(--aa-text);
   }
+
   .aa-btn--secondary {
-    background: transparent;
-    border-color: var(--aa-border-strong, oklch(0.85 0.006 240));
+    background: var(--aa-surface);
+    color: var(--aa-text-2);
+    border-color: var(--aa-border-strong);
+  }
+
+  .aa-btn--secondary:hover {
+    background: var(--aa-surface-muted);
+    border-color: var(--aa-border-strong);
+    color: var(--aa-text);
+  }
+
+  @media (max-width: 720px) {
+    .aa-today__hero {
+      align-items: stretch;
+      flex-direction: column;
+      padding: var(--aa-space-lg);
+      margin-bottom: var(--aa-space-xl);
+    }
+
+    .aa-today__hero-links {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .aa-today__title {
+      font-size: var(--aa-text-xl);
+    }
+
+    .aa-today :global(.aa-today__list .aa-grouped__group),
+    .aa-today__done-section {
+      padding: var(--aa-space-md);
+    }
   }
 </style>

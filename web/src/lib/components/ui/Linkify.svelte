@@ -2,9 +2,11 @@
   /**
    * Linkify — ported from webapp/src/components/ui/Linkify.tsx (S3): bare
    * URLs in captured text render as real links (new tab, hardened). Segment
-   * logic lives in lib/format/linkify.ts; styles from styles/Linkify.css.
+   * logic lives in lib/format/linkify.ts; styles in Linkify.css (colocated,
+   * verbatim with the legacy app's).
    */
-  import { linkifySegments } from "../format/linkify";
+  import { linkifySegments } from "../../format/linkify";
+  import "./Linkify.css";
 
   let { text }: { text: string } = $props();
 

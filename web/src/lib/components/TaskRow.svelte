@@ -4,7 +4,7 @@
   // action slot on the right, and the expanded `below` slot hosts the
   // TaskRowEditor. No completion control — completing happens in focus.
   import type { Snippet } from "svelte";
-  import Chip from "./Chip.svelte";
+  import Chip from "./ui/Chip.svelte";
   import { formatDueChip } from "../taskView";
   import type { TaskListRowDto } from "../dto";
 

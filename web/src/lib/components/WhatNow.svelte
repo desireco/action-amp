@@ -3,6 +3,11 @@
   // list. Now/Next state machine: Start → focus; Pause / Defer / Done exit
   // Now. `pickedToken` (/do/today/:permalink or ?task=) puts a chosen
   // alternative on the stage; alternatives render only while deciding.
+  //
+  // Composition (webapp NextPage.tsx + NextPage.css): a centered ritual —
+  // "See Today →" as a centered link at the top, the 520px NextCard, then the
+  // alternatives rail; the whole group vertically centers in the main area
+  // while the card is on stage. The empty state keeps a centered 620px column.
   import { untrack } from "svelte";
   import { goto } from "$app/navigation";
   import WhatNowCard from "./WhatNowCard.svelte";
@@ -99,9 +104,7 @@
   }
 </script>
 
-<div class="aa-wn">
-  <a href="/do/today" class="aa-wn-today-link">See Today →</a>
-
+<div class="aa-wn-page" class:centered={!loading && !!task}>
   {#if loading}
     <div class="aa-wn-veil" aria-hidden="true"></div>
     <div class="aa-wn">
@@ -109,6 +112,8 @@
       <h1 class="aa-wn-empty">…</h1>
     </div>
   {:else if task}
+    <a href="/do/today" class="aa-wn-today-link">See Today →</a>
+
     <WhatNowCard
       task={cardFor(task as WhatNowTask)}
       cardState={isNow ? "now" : "next"}
@@ -149,6 +154,8 @@
     {/if}
   {:else}
     <div class="aa-wn">
+      <a href="/do/today" class="aa-wn-today-link">See Today →</a>
+
       <div class="aa-wn-eyebrow">What now</div>
       <h1 class="aa-wn-empty">
         {pickedToken ? "That task isn't available." : "Nothing on the table."}
@@ -173,66 +180,104 @@
 </div>
 
 <style>
-  .aa-wn {
+  /* Page root — fills the shell's screen-container so the card group can
+     vertically center (webapp: .aa-app-main:has(.aa-wn-card) centers). */
+  .aa-wn-page {
     position: relative;
+    flex: 1;
     display: flex;
     flex-direction: column;
     padding: 1.25rem 1rem 2.5rem;
-    min-height: 60dvh;
   }
+  /* Card on stage → the ritual centers in the viewport. `safe` keeps the
+     top reachable when the card + alternatives outrun the viewport. */
+  .aa-wn-page.centered {
+    justify-content: center;
+    justify-content: safe center;
+  }
+
+  /* "See Today" link — top of the Do chooser, a centered block in the flow
+     (NextPage.css). The page-level path from the focus card to the Today
+     list; teal (system/state) carries it. */
   .aa-wn-today-link {
-    position: absolute;
-    top: 1.25rem;
-    right: 1rem;
-    font-size: var(--aa-text-sm);
-    color: var(--aa-text-muted, oklch(0.5 0.01 240));
+    display: block;
+    text-align: center;
+    margin-bottom: var(--aa-space-lg);
+    font-size: var(--aa-text-base);
+    font-weight: var(--aa-weight-semibold);
+    color: var(--aa-teal-cta);
     text-decoration: none;
   }
-  .aa-wn-today-link:hover {
-    color: var(--aa-teal-cta);
+
+  /* Empty state — the same centered column the card composes into
+     (NextPage.css `.aa-wn`: 620px, margin auto). */
+  .aa-wn {
+    max-width: 620px;
+    margin: 0 auto;
   }
+
   .aa-wn-eyebrow {
-    font-size: var(--aa-text-xs);
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-semibold);
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--aa-text-muted, oklch(0.5 0.01 240));
-    margin-top: 3rem;
+    color: var(--aa-text-4);
+    margin-bottom: var(--aa-space-md);
   }
+
   .aa-wn-empty {
     font-size: var(--aa-text-2xl);
-    font-weight: var(--aa-weight-semibold);
-    margin: 0.5rem auto 0;
-    text-align: center;
-    max-width: 30rem;
+    font-weight: var(--aa-weight-bold);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--aa-text);
+    margin: 0 0 var(--aa-space-md);
   }
+
   .aa-wn-empty-sub {
-    text-align: center;
-    color: var(--aa-text-muted, oklch(0.5 0.01 240));
-    max-width: 30rem;
-    margin: 0.6rem auto 0;
-    line-height: var(--aa-leading-relaxed);
+    font-size: var(--aa-text-lg);
+    line-height: var(--aa-leading-normal);
+    color: var(--aa-text-3);
+    margin: 0;
+    max-width: 480px;
   }
+
+  /* Inline kbd hint inside the empty state copy */
   .aa-wn-kbd {
     font-family: var(--aa-font-mono);
     font-size: var(--aa-text-sm);
-    border: 1px solid var(--aa-border, oklch(0.9 0.005 240));
-    border-radius: 5px;
-    padding: 0 0.3rem;
+    font-weight: var(--aa-weight-semibold);
+    background: var(--aa-surface-muted-2);
+    color: var(--aa-text-4);
+    padding: 2px 6px;
+    border-radius: var(--aa-radius-xs, 4px);
+    border: 1px solid var(--aa-border);
+    white-space: nowrap;
   }
+
+  /* Other-lens pointers under the empty state (do-empty-lens-hints). One calm
+   * line per lens with actionable work. Teal only on interaction — resting
+   * state is quiet. */
   .aa-wn-lens-hints {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    align-items: center;
-    margin-top: 1.5rem;
+    align-items: flex-start;
+    gap: var(--aa-space-xs);
+    margin-top: var(--aa-space-lg);
   }
+
   .aa-wn-lens-hint {
-    font-size: var(--aa-text-sm);
-    color: var(--aa-teal-cta);
+    font-size: var(--aa-text-md);
+    line-height: var(--aa-leading-normal);
+    color: var(--aa-text-3);
+    text-align: left;
   }
+
   .aa-wn-card__context-lens {
-    color: var(--aa-teal-cta);
+    font-weight: var(--aa-weight-semibold);
+    color: var(--aa-active-lens-text);
   }
+
   .aa-wn-veil {
     position: absolute;
     inset: 0;

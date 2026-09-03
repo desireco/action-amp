@@ -3,7 +3,7 @@
   // (webapp simpleLists port): add form, Open / "Checked N" sections,
   // clear-checked confirm, and the n/j/k/space/e/Delete/Esc keyset.
   // Completion stays inside the list — never feeds Today, focus, or Review.
-  import ConfirmDialog from "./ConfirmDialog.svelte";
+  import ConfirmDialog from "./ui/ConfirmDialog.svelte";
   import { simpleListStore } from "../stores/simpleList.svelte";
 
   let { projectId }: { projectId: string } = $props();

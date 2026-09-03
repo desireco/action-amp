@@ -4,7 +4,7 @@
   // lens" (no silent cascade). Empty lens: "Deleting it removes only the lens
   // itself." Confirm label carries the lens name; blocking errors render
   // inline; the server's 409 strings surface verbatim.
-  import ConfirmDialog from "../ConfirmDialog.svelte";
+  import ConfirmDialog from "../ui/ConfirmDialog.svelte";
   import { lenses, operationErrorMessage, type LensSummary } from "../../stores/lenses.svelte";
 
   let {

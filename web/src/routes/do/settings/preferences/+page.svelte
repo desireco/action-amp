@@ -8,7 +8,7 @@
   //
   // No settings-specific keyboard shortcuts (s11 notes §4) — mouse/tap only.
   import { onMount } from "svelte";
-  import Chip from "../../../../lib/components/Chip.svelte";
+  import Chip from "../../../../lib/components/ui/Chip.svelte";
   import Field from "../../../../lib/components/settings/Field.svelte";
   import { prefs, systemTimeZone, FOCUS_SESSION_OPTIONS, TODAY_CAP_DEFAULT, TODAY_CAP_MIN, TODAY_CAP_MAX, FOCUS_SESSION_DEFAULT, type FocusSessionMinutes } from "../../../../lib/stores/prefs.svelte";
   import { enablePushSubscription } from "../../../../lib/push";

@@ -2,7 +2,7 @@
   /**
    * FeedbackDialog — the "Leave feedback" overlay, ported 1:1 from
    * webapp/src/app/FeedbackDialog.tsx (the .aa-feedback styles ship from
-   * styles/Overlays.css, which this component owns the import for).
+   * ui/Overlays.css, which this component owns the import for).
    *
    *   Enter        → newline (multi-line box)
    *   ⌘/Ctrl+Enter → submit
@@ -11,8 +11,8 @@
    * Submit failures keep the dialog open with an error line — never lose a
    * half-written report.
    */
-  import "../styles/Overlays.css";
-  import "../styles/Button.css";
+  import "../components/ui/Overlays.css";
+  import "../components/ui/Button.css";
   import { feedback } from "../stores/feedback.svelte";
 
   const MAX_LENGTH = 4000;

@@ -3,9 +3,9 @@
   // UPCOMING tasks by weekday; overdue lands in the Today bucket; TODAY
   // commits without a date count too (the status arm of the pool).
   import TaskRow from "../../../lib/components/TaskRow.svelte";
-  import GroupedList from "../../../lib/components/GroupedList.svelte";
-  import ListEmpty from "../../../lib/components/ListEmpty.svelte";
-  import CompletionCircle from "../../../lib/components/CompletionCircle.svelte";
+  import GroupedList from "../../../lib/components/ui/GroupedList.svelte";
+  import ListEmpty from "../../../lib/components/ui/ListEmpty.svelte";
+  import CompletionCircle from "../../../lib/components/ui/CompletionCircle.svelte";
   import RowEditor from "../../../lib/components/RowEditor.svelte";
   import { lists } from "../../../lib/stores/lists.svelte";
   import { bucketWeekTasks, startOfWeekKey, dayKey, currentPlainDate, plainDateFromValue } from "../../../lib/taskView";
@@ -62,7 +62,7 @@
       text="Give an Upcoming task a day from its detail page when you are ready."
     >
       {#snippet icon()}
-        <CompletionCircle size={40} />
+        <CompletionCircle size="lg" />
       {/snippet}
       {#snippet action()}
         <a href="/do/upcoming" class="aa-btn aa-btn--secondary">See upcoming</a>

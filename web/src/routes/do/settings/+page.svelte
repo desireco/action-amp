@@ -2,8 +2,10 @@
   // Account — who you are, and how to leave. Ported from
   // webapp/src/app/SettingsPage.tsx. Minimal on purpose.
   import { onMount } from "svelte";
-  import ConfirmDialog from "../../../lib/components/ConfirmDialog.svelte";
+  import { goto } from "$app/navigation";
+  import ConfirmDialog from "../../../lib/components/ui/ConfirmDialog.svelte";
   import Field from "../../../lib/components/settings/Field.svelte";
+  import { logout } from "../../../lib/auth";
   import { prefs } from "../../../lib/stores/prefs.svelte";
   import { APP_VERSION } from "../../../lib/version";
 
@@ -46,14 +48,13 @@
     }
   }
 
-  function logOut() {
-    // S10 owns the session-logout route (the webapp called wasp logout() and
-    // navigated home). Until it composes, the confirm dialog completes by
-    // returning to the home page — see docs/plans/slices/s7-s11-wiring.md.
+  async function logOut() {
+    // The real session end (webapp logout() parity): the API deletes the
+    // Session row and clears the httpOnly cookie; landing on /login matches
+    // the webapp, which drops logged-out users on the login screen.
     confirmLogout = false;
-    void (async () => {
-      window.location.assign("/");
-    })();
+    await logout();
+    await goto("/login", { replaceState: true });
   }
 </script>
 
@@ -141,7 +142,7 @@
 {#if confirmLogout}
   <ConfirmDialog
     title="Log out?"
-    message="You'll be signed out and return to the home page."
+    message="You'll be signed out and return to the login page."
     confirmLabel="Log out"
     cancelLabel="Stay"
     danger

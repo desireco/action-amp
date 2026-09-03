@@ -1,6 +1,9 @@
 <script lang="ts">
   // BottomSheet — mobile-first overlay anchored to the bottom edge (overlay
-  // pattern #03). Esc / backdrop click dismiss.
+  // pattern #03). Esc / backdrop click dismiss. Ported from webapp
+  // ui/BottomSheet; the shell classes (.aa-overlay, .aa-bottom-sheet*) live
+  // in Overlays.css — verbatim with the legacy app's.
+  import "./Overlays.css";
   import type { Snippet } from "svelte";
 
   let {
@@ -40,36 +43,3 @@
     <div class="aa-bottom-sheet__body">{@render children()}</div>
   </div>
 </div>
-
-<style>
-  .aa-overlay {
-    position: fixed;
-    inset: 0;
-    background: oklch(0.2 0.01 240 / 0.4);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    z-index: 60;
-  }
-  .aa-bottom-sheet {
-    width: 100%;
-    max-width: 34rem;
-    max-height: 80dvh;
-    overflow-y: auto;
-    background: var(--aa-surface, white);
-    border-radius: 16px 16px 0 0;
-    padding: 0.5rem 1.25rem 1.25rem;
-  }
-  .aa-bottom-sheet__grabber {
-    width: 2.5rem;
-    height: 4px;
-    border-radius: 999px;
-    background: var(--aa-border-strong, oklch(0.85 0.006 240));
-    margin: 0.25rem auto 0.75rem;
-  }
-  .aa-bottom-sheet__title {
-    font-size: var(--aa-text-md);
-    font-weight: var(--aa-weight-semibold);
-    margin: 0 0 0.75rem;
-  }
-</style>

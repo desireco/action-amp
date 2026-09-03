@@ -15,8 +15,8 @@
    */
   import { page } from "$app/stores";
   import { client } from "../../api";
-  import BottomSheet from "../BottomSheet.svelte";
-  import ConfirmDialog from "../ConfirmDialog.svelte";
+  import BottomSheet from "../ui/BottomSheet.svelte";
+  import ConfirmDialog from "../ui/ConfirmDialog.svelte";
   import { projects, messageFromError, type ProjectResourceRef } from "../../stores/projects.svelte";
   import "../../styles/resources.css";
 

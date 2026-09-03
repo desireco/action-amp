@@ -20,7 +20,7 @@
    * key-cap (⌃ rotated 180° — reads as a roof), teal = system/state, per the
    * two-accent rule.
    */
-  import "../styles/ProGate.css";
+  import "./ProGate.css"; // colocated; verbatim with webapp's ProGate.css
 
   let {
     feature,

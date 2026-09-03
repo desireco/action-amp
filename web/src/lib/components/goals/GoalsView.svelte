@@ -11,6 +11,8 @@
   import { lenses } from "../../stores/lenses.svelte";
   import { type GateMessage } from "../../stores/projects.svelte";
   import ProgressCard from "../projects/ProgressCard.svelte";
+  import ListEmpty from "../ui/ListEmpty.svelte";
+  import Icon from "../ui/Icon.svelte";
 
   let creating = $state(false);
   let submitting = $state(false);
@@ -74,6 +76,10 @@
       </p>
     </div>
     <button type="button" class="aa-create-control" onclick={() => (creating = !creating)}>
+      <span class="aa-create-control__mark" aria-hidden="true">
+        <Icon name="star" size={15} />
+        <span class="aa-create-control__plus"></span>
+      </span>
       {creating ? "Close" : "New goal"}
     </button>
   </header>
@@ -119,13 +125,10 @@
   {/if}
 
   {#if showEmptyState}
-    <div class="aa-list-empty">
-      <h2>No goals yet.</h2>
-      <p>
-        Goals are active outcomes — what your projects and tasks roll up to.
-        Create one, or link a project/task to a goal during triage.
-      </p>
-    </div>
+    <ListEmpty
+      title="No goals yet."
+      text="Goals are active outcomes — what your projects and tasks roll up to. Create one, or link a project/task to a goal during triage."
+    />
   {/if}
 
   {#if goals.goals.length > 0}
@@ -140,8 +143,7 @@
           meta={[`${g.projectCount} project${g.projectCount === 1 ? "" : "s"}`]}
           focusLabel={g.nextProject ? "Focus" : null}
           focusValue={g.nextProject?.name ?? null}
-          focusTone="muted"
-          kind="STANDARD"
+          focusTone="amber"
         />
       {/each}
     </div>

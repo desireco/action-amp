@@ -12,14 +12,14 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import "../../styles/Button.css";
-  import "../../styles/Overlays.css";
+  import "../ui/Button.css";
+  import "../ui/Overlays.css";
   import "../../styles/projects.css";
   import "../../styles/goals.css";
   import { goals } from "../../stores/goals.svelte";
   import { formatRelativeDue } from "../../stores/projects.svelte";
-  import ConfirmDialog from "../ConfirmDialog.svelte";
-  import Chip from "../Chip.svelte";
+  import ConfirmDialog from "../ui/ConfirmDialog.svelte";
+  import Chip from "../ui/Chip.svelte";
 
   const permalink = $derived($page.params.permalink ?? "");
 

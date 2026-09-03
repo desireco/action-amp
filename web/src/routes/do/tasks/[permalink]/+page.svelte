@@ -6,8 +6,8 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { client } from "../../../../lib/api";
-  import ConfirmDialog from "../../../../lib/components/ConfirmDialog.svelte";
-  import PropertyChips from "../../../../lib/components/PropertyChips.svelte";
+  import ConfirmDialog from "../../../../lib/components/ui/ConfirmDialog.svelte";
+  import PropertyChips from "../../../../lib/components/ui/PropertyChips.svelte";
   import {
     taskPropertyFields,
     cycle,

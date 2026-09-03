@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { DEV_EMAIL, apiPost, loginAs } from "./helpers";
+import { DEV_EMAIL, apiPost, activeLensId, loginAs } from "./helpers";
 
 const API_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "api");
 
@@ -203,6 +203,61 @@ test.describe("auth — passwordless login (S10)", () => {
     // A fresh dev-login user is FREE with no grant.
     expect(body.user?.plan).toBe("FREE");
     expect(body.user?.entitled).toBe(false);
+  });
+});
+
+test.describe("auth — logout (the real UI)", () => {
+  test("footer confirm → /login; the app stays logged out and the session stops answering", async ({
+    page,
+  }) => {
+    // Login through the app as the seeded fixture user.
+    await page.goto(`/login?devEmail=${encodeURIComponent(DEV_EMAIL)}`);
+    await page.waitForURL(/\/do/, { timeout: 15_000 });
+
+    // Control content: capture + triage a TODAY task so "no data visible"
+    // below is a real assertion, not an empty account.
+    const title = `Logout probe ${Date.now()}`;
+    const capture = await apiPost<{ id: string }>(page, "/rpc/inbox/create", {
+      text: title,
+    });
+    await apiPost(page, "/rpc/inbox/triage", {
+      inboxItemId: capture.id,
+      decision: "task-today",
+      lensId: await activeLensId(page),
+    });
+    await page.goto("/do/today");
+    await expect(page.getByText(title).first()).toBeVisible({ timeout: 15_000 });
+
+    // The REAL UI path: the shell footer's Log out → the confirm dialog.
+    await page.locator(".aa-app-logout").click();
+    const dialog = page.getByRole("dialog", { name: "Log out?" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Log out" }).click();
+
+    // The webapp lands logged-out users on the login screen.
+    await page.waitForURL(/\/login$/, { timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();
+
+    // The cookie is gone from the jar (the API's Max-Age=0 clearing stamp).
+    const cookie = (await page.context().cookies()).find(
+      (c) => c.name === "wasp_session",
+    );
+    expect(cookie).toBeUndefined();
+
+    // Navigating back into the app keeps you logged out: the screens render
+    // (no redirect) but the data calls 401 → the task is gone from Today.
+    await page.goto("/do/today");
+    await expect(page.getByText(title)).toHaveCount(0);
+
+    // The wire agrees: the deleted session no longer answers RPC.
+    const res = await page.request.post("/rpc/tasks/list", {
+      headers: {
+        "content-type": "application/json",
+        "x-requested-with": "actionamp-e2e",
+      },
+      data: { json: {} },
+    });
+    expect(res.status()).toBe(401);
   });
 });
 

@@ -3,7 +3,7 @@
   // TaskRowEditor port, chips-only reshape). Every pick saves immediately
   // via updateTaskDetails; an Edit ghost button opens the detail page.
   // Done rows render nothing.
-  import PropertyChips from "./PropertyChips.svelte";
+  import PropertyChips from "./ui/PropertyChips.svelte";
   import {
     taskPropertyFields,
     chipPickToTaskPatch,

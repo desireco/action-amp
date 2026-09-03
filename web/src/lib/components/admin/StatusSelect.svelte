@@ -7,8 +7,8 @@
   with a confirm dialog (destructive, even though the row stays in the DB).
 -->
 <script lang="ts">
-  import Chip from "../Chip.svelte";
-  import ConfirmDialog from "../ConfirmDialog.svelte";
+  import Chip from "../ui/Chip.svelte";
+  import ConfirmDialog from "../ui/ConfirmDialog.svelte";
   import {
     FEEDBACK_STATUSES,
     type FeedbackStatus,

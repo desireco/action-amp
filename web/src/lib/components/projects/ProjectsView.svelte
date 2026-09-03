@@ -15,6 +15,8 @@
   } from "../../stores/projects.svelte";
   import { lenses } from "../../stores/lenses.svelte";
   import ProgressCard from "./ProgressCard.svelte";
+  import ListEmpty from "../ui/ListEmpty.svelte";
+  import Icon from "../ui/Icon.svelte";
 
   let creating = $state(false);
   let submitting = $state(false);
@@ -70,7 +72,7 @@
         ? "Check items off directly"
         : (p.nextAction?.description ?? "No next action"),
       focusTone: (isList || !p.nextAction ? "muted" : "amber") as "muted" | "amber",
-      kind: p.type,
+      variant: "project" as const,
     };
   }
 
@@ -122,6 +124,10 @@
       </p>
     </div>
     <button type="button" class="aa-create-control" onclick={() => (creating = !creating)}>
+      <span class="aa-create-control__mark" aria-hidden="true">
+        <Icon name="projects" size={15} />
+        <span class="aa-create-control__plus"></span>
+      </span>
       {creating ? "Close" : "New project"}
     </button>
   </header>
@@ -183,13 +189,10 @@
   {/if}
 
   {#if isEmpty && !creating}
-    <div class="aa-list-empty">
-      <h2>No projects yet.</h2>
-      <p>
-        Projects are outcomes that need more than one step. Create one here, or
-        promote a big task during triage.
-      </p>
-    </div>
+    <ListEmpty
+      title="No projects yet."
+      text="Projects are outcomes that need more than one step. Create one here, or promote a big task during triage."
+    />
   {/if}
 
   {#if active.length > 0}

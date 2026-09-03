@@ -7,7 +7,7 @@
 <script lang="ts">
   import { page as pageStore } from "$app/state";
   import { goto } from "$app/navigation";
-  import ConfirmDialog from "../../../../lib/components/ConfirmDialog.svelte";
+  import ConfirmDialog from "../../../../lib/components/ui/ConfirmDialog.svelte";
   import Table from "../../../../lib/components/admin/Table.svelte";
   import type { TableColumn } from "../../../../lib/components/admin/table.js";
   import {

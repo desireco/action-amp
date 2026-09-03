@@ -17,8 +17,8 @@
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
   import TriageCard from "../../../../lib/components/TriageCard.svelte";
-  import PropertyChips from "../../../../lib/components/PropertyChips.svelte";
-  import Icon from "../../../../lib/components/Icon.svelte";
+  import PropertyChips from "../../../../lib/components/ui/PropertyChips.svelte";
+  import Icon from "../../../../lib/components/ui/Icon.svelte";
   import { client } from "../../../../lib/api";
   import { inbox } from "../../../../lib/stores/inbox.svelte";
   import {
@@ -47,8 +47,8 @@
 
   import "../../../../lib/styles/TriagePage.css";
   import "../../../../lib/styles/TriageCard.css";
-  import "../../../../lib/styles/Chip.css";
-  import "../../../../lib/styles/Overlays.css";
+  import "../../../../lib/components/ui/Chip.css";
+  import "../../../../lib/components/ui/Overlays.css";
 
   /** Debounce for writing an in-triage capture edit back to the InboxItem. */
   const TEXT_SAVE_DEBOUNCE_MS = 600;

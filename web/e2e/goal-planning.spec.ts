@@ -90,9 +90,9 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
     timeout: 10_000,
   });
   // "Focus:" points at the first non-done project.
-  await expect(page.getByText(/Focus:/)).toContainText(/Couch to 5k|Bridge to 10k/);
+  await expect(page.locator(".aa-goal__next")).toContainText(/Couch to 5k|Bridge to 10k/);
   const focusedName = (
-    await page.getByText(/Focus:/).textContent()
+    await page.locator(".aa-goal__next").textContent()
   )?.replace(/.*Focus:\s*/, "").trim();
   expect(focusedName).toBeTruthy();
 
@@ -114,7 +114,7 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
   const otherName = focusedName?.startsWith("Couch")
     ? `Bridge to 10k ${suffix}`
     : `Couch to 5k ${suffix}`;
-  await expect(page.getByText(/Focus:/)).toContainText(otherName, { timeout: 10_000 });
+  await expect(page.locator(".aa-goal__next")).toContainText(otherName, { timeout: 10_000 });
 
   // ---- 5. Complete the goal; it leaves the active list ----
   await page.getByRole("button", { name: /^complete$/i }).click();

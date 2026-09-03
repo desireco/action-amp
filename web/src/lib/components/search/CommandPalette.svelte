@@ -21,7 +21,7 @@
   import { capture } from "../../stores/capture.svelte";
   import { PALETTE_COMMANDS } from "./paletteRegistry";
   import { matchPaletteEntries, type SearchablePaletteEntry } from "./paletteMatching";
-  import ProGate from "../ProGate.svelte";
+  import ProGate from "../ui/ProGate.svelte";
   import "../../styles/CommandPalette.css";
   import type {
     CommandIndexItem,

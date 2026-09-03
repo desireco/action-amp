@@ -15,13 +15,13 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import "../../styles/Button.css";
-  import "../../styles/Overlays.css";
+  import "../ui/Button.css";
+  import "../ui/Overlays.css";
   import "../../styles/projects.css";
-  import ConfirmDialog from "../ConfirmDialog.svelte";
-  import ListEmpty from "../ListEmpty.svelte";
-  import PickerSheet from "../PickerSheet.svelte";
-  import BottomSheet from "../BottomSheet.svelte";
+  import ConfirmDialog from "../ui/ConfirmDialog.svelte";
+  import ListEmpty from "../ui/ListEmpty.svelte";
+  import PickerSheet from "../ui/PickerSheet.svelte";
+  import BottomSheet from "../ui/BottomSheet.svelte";
   // S9 — the Resources section (webapp ProjectDetailPage parity; closes S5's
   // deferral — see s5-s6-wiring.md §3.3 and docs/plans/slices/s9-wiring.md).
   import ResourceSection from "./ResourceSection.svelte";

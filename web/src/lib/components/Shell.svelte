@@ -25,15 +25,15 @@
   import "../styles/NavItem.css";
   import LensSwitcher from "./LensSwitcher.svelte";
   import CaptureFab from "./CaptureFab.svelte";
-  import ConfirmDialog from "./ConfirmDialog.svelte";
+  import ConfirmDialog from "./ui/ConfirmDialog.svelte";
   import FeedbackDialog from "./FeedbackDialog.svelte";
-  import ProGate from "./ProGate.svelte";
+  import ProGate from "./ui/ProGate.svelte";
   import { lenses } from "../stores/lenses.svelte";
   import { prefs } from "../stores/prefs.svelte";
   import { capture } from "../stores/capture.svelte";
   import { search } from "../stores/search.svelte";
   import { feedback } from "../stores/feedback.svelte";
-  import { fetchAuthUser, type AuthUser } from "../auth";
+  import { fetchAuthUser, logout, type AuthUser } from "../auth";
   import { applyTheme, preferredTheme } from "../theme";
 
   let { children } = $props();
@@ -233,11 +233,13 @@
     };
   });
 
-  function logOut() {
-    // No session-endpoint yet (the settings page's convention): the confirm
-    // completes by returning to the home page until the auth slice lands it.
+  async function logOut() {
+    // The real session end (webapp logout() parity): the API deletes the
+    // Session row and clears the httpOnly cookie; landing on /login matches
+    // the webapp, which drops logged-out users on the login screen.
     confirmLogout = false;
-    window.location.assign("/");
+    await logout();
+    await goto("/login", { replaceState: true });
   }
 
   // NavItem args — the aa-nav-item link model (NavItem.tsx parity; the
@@ -594,7 +596,7 @@
   {#if confirmLogout}
     <ConfirmDialog
       title="Log out?"
-      message="You'll be signed out and return to the home page."
+      message="You'll be signed out and return to the login page."
       confirmLabel="Log out"
       cancelLabel="Stay"
       danger

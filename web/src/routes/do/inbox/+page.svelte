@@ -8,15 +8,15 @@
    */
   import { onMount } from "svelte";
   import { page } from "$app/state";
-  import Chip from "../../../lib/components/Chip.svelte";
-  import Icon from "../../../lib/components/Icon.svelte";
-  import Linkify from "../../../lib/components/Linkify.svelte";
+  import Chip from "../../../lib/components/ui/Chip.svelte";
+  import Icon from "../../../lib/components/ui/Icon.svelte";
+  import Linkify from "../../../lib/components/ui/Linkify.svelte";
   import { capture } from "../../../lib/stores/capture.svelte";
   import { inbox, type InboxItem } from "../../../lib/stores/inbox.svelte";
   import { formatAgo, formatRelativeDay, formatSnoozedUntil } from "../../../lib/format/dates";
 
-  import "../../../lib/styles/Chip.css";
-  import "../../../lib/styles/Linkify.css";
+  import "../../../lib/components/ui/Chip.css";
+  import "../../../lib/components/ui/Linkify.css";
   import "../../../lib/styles/InboxPage.css";
 
   onMount(() => {

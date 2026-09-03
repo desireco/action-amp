@@ -7,7 +7,7 @@
 <script lang="ts">
   import { page as pageStore } from "$app/state";
   import { goto } from "$app/navigation";
-  import Chip from "../../../../lib/components/Chip.svelte";
+  import Chip from "../../../../lib/components/ui/Chip.svelte";
   import Table from "../../../../lib/components/admin/Table.svelte";
   import type { TableColumn } from "../../../../lib/components/admin/table.js";
   import StatusSelect from "../../../../lib/components/admin/StatusSelect.svelte";

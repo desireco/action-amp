@@ -4,6 +4,9 @@ node_modules/
 build/
 dist/
 
+# Storybook
+storybook-static/
+
 # Playwright (e2e)
 test-results/
 playwright-report/

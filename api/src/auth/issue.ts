@@ -99,6 +99,26 @@ export function sessionCookieHeader(
 }
 
 /**
+ * The `Set-Cookie` header that CLEARS the session cookie — the logout twin of
+ * sessionCookieHeader(): identical attribute serialization, `Max-Age=0` and an
+ * empty value instead of a token. Secure stays prod-only so the dev (http)
+ * browser accepts the clearing stamp too. Wasp's logout parity: the cookie is
+ * always cleared, whether or not a live session rode the request.
+ */
+export function clearSessionCookieHeader(options: { secure?: boolean } = {}): string {
+  const secure = options.secure ?? process.env.NODE_ENV === "production";
+  const parts = [
+    `${SESSION_COOKIE_NAME}=`,
+    "HttpOnly",
+    "Path=/",
+    "Max-Age=0",
+    "SameSite=Lax",
+  ];
+  if (secure) parts.push("Secure");
+  return parts.join("; ");
+}
+
+/**
  * Lucia's scrypt password hash (`salt:key` hex) — the format
  * `@wasp.sh/lib-auth/node`'s hashPassword writes (lucia/dist/crypto.js:
  * salt = 16 random bytes hex; N=16384, r=16, p=1, dkLen=64; password

@@ -44,7 +44,11 @@ import {
   resolveMagicEnv,
   verifyMagicLoginCore,
 } from "./auth/magic.js";
-import { drizzleSessionIssuePort, sessionCookieHeader } from "./auth/issue.js";
+import {
+  clearSessionCookieHeader,
+  drizzleSessionIssuePort,
+  sessionCookieHeader,
+} from "./auth/issue.js";
 import { sendMagicLoginEmail } from "./email.js";
 // S12 — share target + the daily-reminder job (docs/plans/slices/s12-s14-wiring.md).
 import { createShareRoute } from "./share.js";
@@ -244,10 +248,11 @@ app.delete("/api/dev/pat", async (c) => {
 // (sessionCookie.ts parity) and an oRPC procedure cannot Set-Cookie through
 // the RPCHandler response path — see docs/plans/slices/s10-wiring.md §2.
 //
-// All four ride resolveActingUser first so the transport rules stay uniform
+// All five ride resolveActingUser first so the transport rules stay uniform
 // with /rpc (Bearer/cookie precedence; the CSRF header requirement on
 // cookie-authed mutations; exact PAT error bodies). Magic-login ops ignore the
-// resolved user — they are anonymous by design (Wasp `auth: false`).
+// resolved user — they are anonymous by design (Wasp `auth: false`); logout is
+// anonymous-tolerant (idempotent — see its route comment).
 
 /** AuthHttpError → the webapp's exact {error} body + status. */
 function authError(c: { json: (body: unknown, status: number) => Response }, err: unknown) {
@@ -444,6 +449,44 @@ app.post("/api/auth/mint-cli-token", async (c) => {
   } catch (err) {
     return authError(c, err);
   }
+});
+
+// Logout — the fifth /api/auth/* twin (webapp auth logout() parity): deletes
+// the Session row that rode the request and clears the `wasp_session` cookie.
+// NOT dev-gated (logout must work in production), and rides resolveActingUser
+// like every twin so the transport rules stay uniform (the CSRF header on
+// cookie-authed mutations). Idempotent by contract: no cookie, an unknown
+// token, or an already-deleted row all still answer 200 with the clearing
+// Set-Cookie — the client lands signed out either way.
+app.post("/api/auth/logout", async (c) => {
+  const resolution = await resolveActingUser(
+    { sessionPort, patPort },
+    {
+      method: c.req.method,
+      authorization: c.req.header("authorization"),
+      cookie: c.req.header("cookie"),
+      requestedWith: c.req.header("x-requested-with"),
+      actionAmpApi: c.req.header("x-actionamp-api"),
+    },
+  );
+  if (resolution.kind === "reject") {
+    return c.json(resolution.body, resolution.status);
+  }
+  // The token that rode the request (Bearer-session precedence, then the
+  // cookie — the SPA only ever sends the cookie). Exact-id delete: Session.id
+  // IS the token (issue.ts contract). A PAT-authed call deletes nothing (its
+  // bearer is an aa_ token, not a session id) and just clears the cookie.
+  const token = requestSessionToken(
+    c.req.header("authorization"),
+    c.req.header("cookie"),
+  );
+  if (token) {
+    await sessionPort.deleteSession(token);
+  }
+  // The clearing stamp mirrors the login path's serialization exactly
+  // (sessionCookieHeader attributes with Max-Age=0 + empty value).
+  c.header("Set-Cookie", clearSessionCookieHeader());
+  return c.json({ ok: true });
 });
 
 // --- S12 share target (POST /api/share) ----------------------------------------

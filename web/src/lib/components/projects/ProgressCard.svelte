@@ -1,27 +1,27 @@
 <script lang="ts">
   /**
    * ProgressCard — the record card both planning lists render (webapp
-   * ProgressCard parity): title → detail link, violet progress read,
-   * meta line, and a Focus/Status slot (amber when a next action exists).
+   * ui/ProgressCard verbatim port): meta chip → centered title → description
+   * → progress bar + teal pct → Focus/Status chip (amber when a next action
+   * exists). The whole card is the link. `variant="project"` applies the
+   * page-level overrides webapp ProjectsPage.css makes (`.aa-project-card`).
    */
-  import type { ProjectType } from "../../stores/projects.svelte";
-
   interface Props {
     href: string;
     title: string;
     description?: string | null;
     /** Progress percentage (0 when total is 0 — never fabricated). */
     progress?: number;
-    /** e.g. "1/3 done" or "2/5 checked"; null hides the progress band. */
+    /** e.g. "1/3 done"; null/undefined falls back to "{progress}%". */
     progressLabel?: string | null;
-    /** Meta fragments (plain strings; joined with " · "). */
+    /** Meta chip fragments (plain strings; joined with " · "). */
     meta?: string[];
-    /** Chips appended after the meta line (label + teal tone). */
+    /** Teal fragment appended to the meta chip (relative due date). */
     dueLabel?: string | null;
     focusLabel?: string | null;
     focusValue?: string | null;
     focusTone?: "muted" | "amber";
-    kind?: ProjectType;
+    variant?: "goal" | "project";
     muted?: boolean;
   }
 
@@ -35,189 +35,210 @@
     dueLabel = null,
     focusLabel = null,
     focusValue = null,
-    focusTone = "muted",
-    kind = "STANDARD",
+    focusTone = "amber",
+    variant = "goal",
     muted = false,
   }: Props = $props();
 </script>
 
 <!-- The whole card is the link (the crumb id IS the destination route). -->
-<a class="card" class:muted href={href}>
-  <div class="head">
-    <h3 class="title">{title}</h3>
-    {#if progressLabel !== null}
-      <span class="pct" data-kind={kind}>{progress}%</span>
-    {/if}
-  </div>
-  {#if description}
-    <p class="desc">{description}</p>
-  {/if}
-  {#if progressLabel !== null}
-    <div class="track" role="presentation">
-      <div class="fill" data-kind={kind} style:width="{progress}%"></div>
-    </div>
-    <span class="progress-label">{progressLabel}</span>
-  {/if}
-  {#if meta.length > 0}
-    <p class="meta">
+<a class="aa-progress-card" class:project={variant === "project"} class:muted href={href}>
+  {#if meta.length > 0 || dueLabel}
+    <div class="aa-progress-card__meta">
       {#each meta as fragment, i (fragment)}
-        {#if i > 0}<span class="dot" aria-hidden="true">·</span>{/if}
+        {#if i > 0}<span class="aa-progress-card__dot" aria-hidden="true">·</span>{/if}
         <span>{fragment}</span>
       {/each}
       {#if dueLabel}
-        <span class="dot" aria-hidden="true">·</span>
-        <span class="due">{dueLabel}</span>
+        {#if meta.length > 0}<span class="aa-progress-card__dot" aria-hidden="true">·</span>{/if}
+        <span class="aa-progress-card__due">{dueLabel}</span>
       {/if}
-    </p>
-  {:else if dueLabel}
-    <p class="meta"><span class="due">{dueLabel}</span></p>
-  {/if}
-  {#if focusLabel && focusValue}
-    <div class="focus">
-      <span class="focus-label" data-tone={focusTone}>{focusLabel}</span>
-      <span class="focus-value" data-tone={focusTone}>{focusValue}</span>
     </div>
+  {/if}
+  <span class="aa-progress-card__title">{title}</span>
+  {#if description}
+    <p class="aa-progress-card__desc">{description}</p>
+  {/if}
+  <div class="aa-progress-card__progress">
+    <div class="aa-progress-card__bar">
+      <div class="aa-progress-card__fill" style:width="{progress}%"></div>
+    </div>
+    <span class="aa-progress-card__pct">{progressLabel ?? `${progress}%`}</span>
+  </div>
+  {#if focusLabel && focusValue}
+    <p class="aa-progress-card__focus aa-progress-card__focus--{focusTone}">
+      {focusLabel}: <span>{focusValue}</span>
+    </p>
   {/if}
 </a>
 
 <style>
-  .card {
+  /* Ported from webapp/src/components/ui/ProgressCard.css. */
+  .aa-progress-card {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    min-height: 180px;
-    padding: 22px 20px;
+    align-items: center;
+    gap: var(--aa-space-md);
+    min-height: 330px;
+    padding: 38px 34px;
     background: var(--aa-surface);
     border: 1px solid var(--aa-border);
-    border-radius: var(--aa-radius-lg);
-    box-shadow: var(--aa-shadow-sm);
+    border-radius: var(--aa-radius-2xl);
+    box-shadow: var(--aa-hero-shadow);
+    text-align: center;
+    color: inherit;
     text-decoration: none;
-    color: var(--aa-text);
     transition:
-      border-color var(--aa-dur-base) var(--aa-ease-out),
-      box-shadow var(--aa-dur-base) var(--aa-ease-out);
+      border-color 0.12s var(--aa-ease-out),
+      box-shadow 0.12s var(--aa-ease-out),
+      transform 0.12s var(--aa-ease-out);
   }
 
-  .card:hover {
+  .aa-progress-card:hover {
     border-color: var(--aa-border-strong);
-    box-shadow: var(--aa-shadow-md);
+    box-shadow:
+      0 4px 12px oklch(0.2 0.02 230 / 0.06),
+      0 48px 112px var(--aa-teal-tint-shadow);
+    text-decoration: none;
+    transform: translateY(-1px);
   }
 
-  .card.muted {
+  .aa-progress-card.muted {
     opacity: 0.82;
   }
 
-  .head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--aa-space-sm);
+  /* ProjectsPage.css `.aa-project-card` overrides. */
+  .aa-progress-card.project {
+    min-height: 260px;
+    padding: 30px 28px;
   }
 
-  .title {
+  .aa-progress-card__title {
+    display: block;
+    font-size: var(--aa-text-xl);
+    font-weight: var(--aa-weight-bold);
+    line-height: 1.12;
+    color: var(--aa-text);
     margin: 0;
+    transition: color var(--aa-dur-base) var(--aa-ease-out);
+  }
+
+  .aa-progress-card:hover .aa-progress-card__title {
+    color: var(--aa-teal-cta);
+  }
+
+  .aa-progress-card.project .aa-progress-card__title {
     font-size: var(--aa-text-lg);
-    font-weight: var(--aa-weight-semibold);
-    line-height: var(--aa-leading-tight);
   }
 
-  .pct {
-    min-width: 48px;
-    text-align: right;
-    font-size: var(--aa-text-sm);
+  .aa-progress-card__desc {
+    max-width: 28ch;
+    font-size: var(--aa-text-md);
     color: var(--aa-text-3);
-    font-feature-settings: "tnum" 1;
-  }
-
-  .desc {
     margin: 0;
-    font-size: var(--aa-text-base);
-    color: var(--aa-text-2);
-    line-height: var(--aa-leading-snug);
-    display: -webkit-box;
-    line-clamp: 2;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    line-height: var(--aa-leading-normal);
   }
 
-  .track {
-    height: 5px;
-    margin-top: 4px;
+  .aa-progress-card.project .aa-progress-card__desc {
+    font-size: var(--aa-text-base);
+  }
+
+  .aa-progress-card__progress {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--aa-space-md);
+    margin-top: auto;
+  }
+
+  .aa-progress-card__bar {
+    flex: 1;
+    height: 8px;
     background: var(--aa-surface-muted-2);
     border-radius: var(--aa-radius-full);
     overflow: hidden;
   }
 
-  .fill {
+  .aa-progress-card__fill {
     height: 100%;
+    background: var(--aa-teal);
     border-radius: var(--aa-radius-full);
     transition: width 0.3s var(--aa-ease-out-quart);
   }
 
-  /* Violet = project/goal identity; teal = standard project progress. */
-  .fill[data-kind="SIMPLE_LIST"],
-  .pct[data-kind="SIMPLE_LIST"] {
-    background: var(--aa-violet);
-  }
-  .fill[data-kind="STANDARD"] {
-    background: var(--aa-teal);
-  }
-
-  .progress-label {
-    font-size: var(--aa-text-xs);
-    color: var(--aa-text-3);
-    font-feature-settings: "tnum" 1;
+  .aa-progress-card__pct {
+    min-width: 44px;
+    text-align: left;
+    font-size: var(--aa-text-base);
+    font-weight: var(--aa-weight-bold);
+    color: var(--aa-teal-cta);
+    white-space: nowrap;
   }
 
-  .meta {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 2px 0 0;
+  .aa-progress-card.project .aa-progress-card__pct {
+    min-width: 70px;
     font-size: var(--aa-text-sm);
-    color: var(--aa-text-3);
   }
 
-  .dot {
+  .aa-progress-card__meta {
+    order: -1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--aa-space-xs);
+    padding: 5px 12px;
+    background: var(--aa-surface-muted);
+    border-radius: var(--aa-radius-full);
+    color: var(--aa-text-3);
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-semibold);
+  }
+
+  .aa-progress-card__dot {
     opacity: 0.6;
   }
 
-  .due {
+  .aa-progress-card__due {
     color: var(--aa-teal-cta);
-    font-size: var(--aa-text-xs);
   }
 
-  .focus {
-    display: flex;
-    align-items: baseline;
-    gap: var(--aa-space-sm);
-    margin-top: auto;
-    padding-top: var(--aa-space-sm);
-    min-width: 0;
-  }
-
-  .focus-label {
-    flex: none;
-    font-size: var(--aa-text-xs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--aa-text-4);
-    font-weight: var(--aa-weight-medium);
-  }
-
-  .focus-value {
+  .aa-progress-card__focus {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    padding: 5px 10px;
+    border-radius: var(--aa-radius-sm);
     font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-semibold);
     color: var(--aa-text-3);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
-  /* Amber = rare human emphasis — the one next action. */
-  .focus-value[data-tone="amber"],
-  .focus-label[data-tone="amber"] {
+  .aa-progress-card__focus--amber {
+    background: var(--aa-amber-soft);
+  }
+
+  .aa-progress-card__focus--amber span {
     color: var(--aa-amber-text);
+  }
+
+  .aa-progress-card__focus--muted {
+    background: var(--aa-surface-muted);
+  }
+
+  .aa-progress-card__focus--muted span {
+    color: var(--aa-text-3);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aa-progress-card,
+    .aa-progress-card__fill {
+      transition-duration: 0.01ms !important;
+    }
+
+    .aa-progress-card:hover {
+      transform: none !important;
+    }
   }
 </style>

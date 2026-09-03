@@ -97,6 +97,28 @@ export async function fetchAuthUser(): Promise<AuthUser | null> {
   return body.user ?? null;
 }
 
+/**
+ * End the session — POST /api/auth/logout. The API deletes the Session row
+ * and answers with a `Set-Cookie` clearing `wasp_session` (Max-Age=0, the
+ * login stamp's attributes). Idempotent: no/unknown session still answers
+ * 200. Deliberately does not throw — the caller navigates to /login either
+ * way (webapp parity: logout always lands you on the login screen; a failed
+ * POST leaves the httpOnly cookie to expire server-side, which the client
+ * could not clear itself).
+ */
+export async function logout(): Promise<void> {
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: AUTH_HEADERS,
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error(`Logout failed: HTTP ${res.status}`);
+  } catch {
+    // Navigation proceeds regardless — see the doc comment.
+  }
+}
+
 /** Mint a CLI PAT (the /cli/login consent flow). FREE plans throw a 402. */
 export async function mintCliToken(input: {
   label: string;

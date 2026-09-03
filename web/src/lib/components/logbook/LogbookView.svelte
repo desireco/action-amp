@@ -10,9 +10,9 @@
    * global nav / palette (S9); Restore/Reopen are pointer-only.
    */
   import { page } from "$app/stores";
-  import GroupedList from "../GroupedList.svelte";
-  import ListEmpty from "../ListEmpty.svelte";
-  import Chip from "../Chip.svelte";
+  import GroupedList from "../ui/GroupedList.svelte";
+  import ListEmpty from "../ui/ListEmpty.svelte";
+  import Chip from "../ui/Chip.svelte";
   import BrandMark from "./BrandMark.svelte";
   import Markdown from "./Markdown.svelte";
   import { logbook, groupLogbook, type LogItem } from "../../stores/logbook.svelte";

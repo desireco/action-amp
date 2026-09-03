@@ -13,7 +13,9 @@
     "test": "bun run --filter '*' test",
     "test:e2e": "bash scripts/test-e2e.sh",
     "lint": "oxlint api web packages scripts && bash scripts/check-design-tokens.sh",
-    "typecheck": "bun run --filter '*' typecheck"
+    "typecheck": "bun run --filter '*' typecheck",
+    "storybook": "cd web && bun run storybook",
+    "storybook:build": "cd web && bun run build-storybook"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

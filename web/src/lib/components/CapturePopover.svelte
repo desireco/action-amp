@@ -2,7 +2,7 @@
   /**
    * CapturePopover — the universal quick-capture input (⌘K). Ported from
    * webapp/src/components/ui/CapturePopover.tsx (S2; styles ship from
-   * styles/Overlays.css). Image intake (⌘V / drop) is S12's PWA slice — the
+   * ui/Overlays.css). Image intake (⌘V / drop) is S12's PWA slice — the
    * text-only contract is the ⌘K surface's.
    *
    *   Enter       → capture + close
@@ -15,8 +15,8 @@
   // The overlay styles ship with the component (webapp's ui/Overlays.css
   // classes): the popover mounts from +layout.svelte on every page, so it
   // cannot rely on a per-page import.
-  import "../styles/Overlays.css";
-  import Chip from "./Chip.svelte";
+  import "../components/ui/Overlays.css";
+  import Chip from "./ui/Chip.svelte";
   import { capture } from "../stores/capture.svelte";
   import { inbox } from "../stores/inbox.svelte";
   import { parseCapture, type ParsedCapture } from "../capture/parse";

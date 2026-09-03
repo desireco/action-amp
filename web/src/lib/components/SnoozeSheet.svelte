@@ -1,8 +1,8 @@
 <script lang="ts">
   // SnoozeSheet — the "Not now" flow: 5 presets; the parent runs the
   // mutation and closes (webapp ui/SnoozeSheet port).
-  import BottomSheet from "./BottomSheet.svelte";
-  import Chip from "./Chip.svelte";
+  import BottomSheet from "./ui/BottomSheet.svelte";
+  import Chip from "./ui/Chip.svelte";
   import type { SnoozePreset } from "../dto";
 
   const PRESETS: { preset: SnoozePreset; label: string; hint: string }[] = [

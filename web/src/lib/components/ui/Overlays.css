@@ -1,4 +1,4 @@
-@import "../tokens.css";
+@import "../../tokens.css";
 
 /* ============================================================
    Shared overlay shell — backdrop + card motion.
@@ -1674,6 +1674,11 @@
 .aa-bottom-sheet {
   width: 100%;
   max-width: 480px;
+  /* Scroll guard the legacy web stack carried and webapp doesn't (its sheets
+     are short): anchored to the bottom edge, a tall sheet would otherwise
+     overflow above the viewport with no way to reach the top rows. */
+  max-height: 80dvh;
+  overflow-y: auto;
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
   border-bottom: none;

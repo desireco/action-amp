@@ -12,61 +12,126 @@
 .aa-goals {
   width: min(100%, 980px);
   margin: 0 auto;
-  padding: var(--aa-space-2xl) var(--aa-space-lg);
 }
 
 .aa-goals {
   width: min(100%, 760px);
 }
 
+/* List header — webapp ListShell.css `.aa-list-header` (the eyebrow + big
+ * title + subtitle pattern the planning pages share). */
 .aa-list-header {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: var(--aa-space-lg);
+  gap: var(--aa-space-md);
   margin-bottom: var(--aa-space-xl);
 }
 
 .aa-list-header__eyebrow {
-  font-size: var(--aa-text-xs);
-  letter-spacing: 0.08em;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--aa-text-3);
+  color: var(--aa-text-4);
+  margin-bottom: var(--aa-space-xs);
 }
 
 .aa-list-header__title {
-  margin: 4px 0 0;
   font-size: var(--aa-text-xl);
-  font-weight: var(--aa-weight-semibold);
-  line-height: var(--aa-leading-tight);
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: -0.015em;
   color: var(--aa-text);
+  margin: 0;
 }
 
 .aa-list-header__description {
-  margin: 6px 0 0;
-  font-size: var(--aa-text-sm);
+  max-width: 48ch;
+  margin: var(--aa-space-xs) 0 0;
   color: var(--aa-text-3);
+  font-size: var(--aa-text-base);
+  line-height: var(--aa-leading-snug);
 }
 
+/* Create control — webapp RecordCreateButton: the teal-tinted create
+ * affordance (secondary button + icon mark with the plus badge). */
 .aa-create-control {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  min-height: 44px;
   font-family: inherit;
-  font-size: var(--aa-text-sm);
-  font-weight: var(--aa-weight-medium);
-  color: var(--aa-text-2);
-  background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
+  font-size: var(--aa-text-base);
+  font-weight: var(--aa-weight-semibold);
+  padding: 9px 16px 9px 12px;
+  color: var(--aa-teal-cta);
+  background:
+    linear-gradient(var(--aa-surface), var(--aa-surface)) padding-box,
+    linear-gradient(135deg, var(--aa-teal-soft-strong), var(--aa-border-strong)) border-box;
+  border: 1px solid transparent;
   border-radius: var(--aa-radius-sm);
-  padding: 0.4rem 0.9rem;
+  box-shadow:
+    0 1px 2px oklch(0.2 0.02 230 / 0.06),
+    0 8px 22px oklch(0.72 0.12 220 / 0.12);
   cursor: pointer;
   transition:
-    color var(--aa-dur-base) var(--aa-ease-out),
-    border-color var(--aa-dur-base) var(--aa-ease-out);
+    color 0.15s var(--aa-ease-out),
+    box-shadow 0.15s var(--aa-ease-out);
 }
 
 .aa-create-control:hover {
-  color: var(--aa-text);
-  border-color: var(--aa-border-strong);
+  color: var(--aa-teal-cta-hover);
+  box-shadow:
+    0 2px 4px oklch(0.2 0.02 230 / 0.07),
+    0 12px 28px oklch(0.72 0.12 220 / 0.16);
+}
+
+.aa-create-control__mark {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+}
+
+.aa-create-control__plus {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 13px;
+  height: 13px;
+  color: var(--aa-surface);
+  background: var(--aa-teal-cta);
+  border: 2px solid var(--aa-surface);
+  border-radius: var(--aa-radius-full);
+  box-sizing: content-box;
+}
+
+/* The plus glyph — two hairline bars, no text metrics. */
+.aa-create-control__plus::before,
+.aa-create-control__plus::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  background: var(--aa-surface);
+  border-radius: var(--aa-radius-full);
+}
+
+.aa-create-control__plus::before {
+  width: 7px;
+  height: 1.5px;
+}
+
+.aa-create-control__plus::after {
+  width: 1.5px;
+  height: 7px;
 }
 
 .aa-create-control:focus-visible,
@@ -78,10 +143,12 @@
   box-shadow: var(--aa-focus-ring);
 }
 
+/* Card grid — webapp RecordCardGrid.css. */
 .aa-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--aa-space-md);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--aa-space-lg);
+  margin-top: var(--aa-space-xl);
 }
 
 .aa-projects__completed {

@@ -8,8 +8,8 @@
    * without it and nothing here requires attachments.
    */
   import type { Snippet } from "svelte";
-  import Chip from "./Chip.svelte";
-  import Linkify from "./Linkify.svelte";
+  import Chip from "./ui/Chip.svelte";
+  import Linkify from "./ui/Linkify.svelte";
   import type { TriageChip, TriageExit } from "../triage/flow";
 
   let {
