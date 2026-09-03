@@ -40,10 +40,16 @@
       accident — port implements the checked-in spec)
 - [ ] **initializeTimeZone bootstrap** (small contract gap: the daily rollover
       runs UTC until a reminder save stamps the user's zone) — recommended
-- [ ] **Deploy `action-amp-next` to Railway** (warm, staging domain) — needs
-      Jake's go (new billable service); deploy via CLI from the Dockerfile
+- [x] **Deployed `action-amp-next` to Railway** (2026-09-03) — warm at
+      https://action-amp-next-production.up.railway.app (production DB, real
+      Resend path, NODE_ENV=production: dev-login off, magic codes real).
+      Jake's magic-code login on this URL = the full end-to-end check
 - [ ] **Stripe test-mode dry run**: hosted checkout with a test card → webhook →
-      plan flip (needs the Railway staging domain from the step above)
+      plan flip (can run against the staging domain now)
+- [ ] **Push notification live test**: subscribe in the browser with the prod
+      VAPID keys, trigger the daily reminder path (staging domain works — VAPID
+      keys are origin-agnostic for subscription, but the browser permission
+      prompt needs HTTPS: the staging domain qualifies)
 - [ ] **Push notification live test**: subscribe in the browser with the prod
       VAPID keys, trigger the daily reminder path
 - [ ] **V2 rehearsal**: walk CHECKLIST.md end-to-end, time every step, decide
