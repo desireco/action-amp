@@ -753,3 +753,40 @@
     justify-content: flex-end;
   }
 }
+
+/* ---- Auth veil (signed-out / resolving on an app route) --------------------
+   The webapp's "Welcome back." veil: nothing of the shell ever renders for a
+   signed-out visitor — they see this, then either the app (authed) or the
+   login page (redirect). */
+.auth-veil {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--aa-bg);
+}
+
+.auth-veil__mark {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--aa-radius-md, 10px);
+  background: var(--aa-primary);
+  color: var(--aa-primary-contrast, #fff);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  animation: auth-veil-pulse 1.2s ease-in-out infinite;
+}
+
+.auth-veil__text {
+  font-size: var(--aa-text-lg, 18px);
+  font-weight: 700;
+  color: var(--aa-text);
+}
+
+@keyframes auth-veil-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}

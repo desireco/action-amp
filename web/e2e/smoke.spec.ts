@@ -23,17 +23,13 @@ import { DEV_EMAIL, SEED_TASK_DESCRIPTIONS, apiPost, loginAs, type TaskDto } fro
  */
 
 test.describe("shell smoke", () => {
-  test("unauthenticated visit renders the What Now home, no crash", async ({ page }) => {
+  test("unauthenticated visit is redirected to the login screen", async ({ page }) => {
+    // Webapp App.tsx gate parity: a signed-out visitor on an app route never
+    // sees the shell (that invalid state surfaced 401-derived errors) — they
+    // go to /login, where the devEmail autologin path signs them in.
     await page.goto("/");
-
-    // The What Now chrome is up without a session: the eyebrow + the
-    // caught-up empty state (the signed-out visitor has no lens, so the
-    // chooser degrades to its empty branch — the data plane answered 401,
-    // the screen shows a state, never a blank page or spinner limbo).
-    const screen = page.locator(".aa-wn");
-    await expect(screen.getByText("What now")).toBeVisible();
-    await expect(screen.getByRole("heading", { name: "Nothing on the table." })).toBeVisible();
-    await expect(screen.getByRole("link", { name: "See Today →" })).toBeVisible();
+    await page.waitForURL(/\/login/, { timeout: 10_000 });
+    await expect(page).toHaveURL(/\/login/);
   });
 
   test("dev login renders What Now + the seeded tasks (data path via the RPC wire)", async ({

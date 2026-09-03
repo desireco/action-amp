@@ -49,14 +49,30 @@
   // data load, and the footer identity. The stored lens hydrates FIRST so no
   // screen's first load races the shell's resolution; loadAppData then runs
   // the account + appData reads in parallel and self-heals a stale id.
+  // Auth resolution: nothing of the shell renders until the session is
+  // known, and a signed-out visitor on an app route never sees the chrome —
+  // they go to /login (webapp App.tsx gate parity). This is what keeps the
+  // "logged-in but everything says not authenticated" invalid state
+  // impossible.
+  let authChecked = $state(false);
+
   let booted = false;
   $effect(() => {
     if (booted) return;
     booted = true;
     applyTheme(preferredTheme());
     lenses.hydrateStoredLens();
-    void lenses.loadAppData();
-    void fetchAuthUser().then((u) => (user = u));
+    void (async () => {
+      const u = await fetchAuthUser();
+      user = u;
+      if (!u) {
+        void goto("/login", { replaceState: true });
+        authChecked = true;
+        return;
+      }
+      await lenses.loadAppData();
+      authChecked = true;
+    })();
   });
 
   const path = $derived(page.url.pathname);
@@ -392,6 +408,12 @@
   </a>
 {/snippet}
 
+{#if !authChecked || !user}
+  <div class="auth-veil" role="status" aria-live="polite">
+    <div class="auth-veil__mark" aria-hidden="true">✓</div>
+    <p class="auth-veil__text">Checking your session…</p>
+  </div>
+{:else}
 <div class="aa-app" class:is-in-settings={inSettings} class:is-in-focus={inFocus}>
   <!-- ============================ SIDEBAR ============================ -->
   <aside class="aa-app-side">
@@ -593,6 +615,7 @@
   {#if feedback.open}
     <FeedbackDialog />
   {/if}
+
   {#if confirmLogout}
     <ConfirmDialog
       title="Log out?"
@@ -605,3 +628,4 @@
     />
   {/if}
 </div>
+{/if}
