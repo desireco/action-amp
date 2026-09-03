@@ -13,7 +13,7 @@
  */
 import { client } from "../api";
 import type { AppData } from "../dto";
-import type { Account } from "./prefs.svelte";
+import { prefs, type Account } from "./prefs.svelte";
 
 /** Pro's soft lens cap (webapp billing/config PRO_LIMITS.lenses). */
 export const LENS_PRO_LIMIT = 8;
@@ -103,6 +103,22 @@ export function gateFromError(err: unknown): GateMessage | null {
   return null;
 }
 
+/**
+ * The entitlement-aware no-preference default (the webapp AppShell chain):
+ * an entitled user lands on the first-created lens (the seeded Work lens);
+ * a FREE user on the included one (Me — a locked lens would 402 every
+ * scoped query). The shared helper is what every screen-side fallback uses
+ * too, so a pre-shell-load snap always agrees with the shell's own choice.
+ */
+export function entitlementDefaultLensId(
+  list: { id: string; isIncluded?: boolean }[],
+  account: Account | null,
+): string | null {
+  if (list.length === 0) return null;
+  if (account?.entitled ?? true) return list[0].id;
+  return (list.find((l) => l.isIncluded) ?? list[0]).id;
+}
+
 class LensesStore {
   /** App-shell mirror: the bootstrap payload (lenses + counts). */
   appData = $state<AppData | null>(null);
@@ -138,22 +154,87 @@ class LensesStore {
     return account?.entitled ?? true;
   }
 
-  /** Bootstrap: load appData, restore the stored lens, self-heal stale ids. */
+  /** Request token: a newer load/switch supersedes an in-flight one, so a
+   *  slow response can never land stale counts over a fresh lens. */
+  #loadSeq = 0;
+
+  /**
+   * Bootstrap: load appData, restore the stored lens, self-heal stale ids.
+   * The Account read and the appData read run in PARALLEL — the choice only
+   * needs the entitlement flag when there is no stored id, and serializing
+   * the two doubled the time to activeLensId (screen first-loads raced it).
+   *
+   * The read is scoped to the active lens (webapp parity — AppShell passed
+   * `{ lensId: rawId }` so switching re-read re-scopes the sidebar's
+   * Upcoming/Someday pills; the server's no-id fallback is lenses[0], which
+   * is not the lens a FREE user — or a switch — lands on).
+   */
   async loadAppData(): Promise<void> {
+    const seq = ++this.#loadSeq;
     try {
-      this.appData = await client.tasks.appData({});
+      const accountReady = prefs.account ? Promise.resolve() : prefs.loadAccount();
+      const requested = this.activeLensId ?? undefined;
+      let appData: AppData;
+      try {
+        appData = await Promise.all([
+          accountReady,
+          client.tasks.appData({ lensId: requested }),
+        ]).then(([, data]) => data);
+      } catch {
+        // A stored id the account can no longer use (a lapsed plan's locked
+        // lens → 402) must not take the bootstrap down — retry unscoped and
+        // let the entitlement clamp below re-point the lens.
+        appData = await client.tasks.appData({});
+      }
+      if (seq !== this.#loadSeq) return;
+      this.appData = appData;
       const stored = typeof localStorage !== "undefined" ? localStorage.getItem("aa-lens-id") : null;
-      const valid = stored && this.appData.lenses.some((l) => l.id === stored);
-      this.activeLensId = valid
-        ? stored
-        : (this.appData.lenses.find((l) => l.isIncluded)?.id ??
-          this.appData.lenses[0]?.id ??
-          null);
+      const storedLens = stored
+        ? appData.lenses.find((l) => l.id === stored)
+        : undefined;
+      // Entitlement clamp (webapp AppShell parity): a stored id pointing at a
+      // lens the account can't use (a bypass attempt, or stale from a lapsed
+      // plan) falls back to the default so scoped queries don't 402.
+      const usable =
+        storedLens && (this.entitled(prefs.account) || storedLens.isIncluded);
+      this.activeLensId = usable ? storedLens.id : this.defaultLensId();
       if (this.activeLensId !== stored) this.persistActive();
+      // Counts re-scope: the fetch above assumed `requested`; when the lens
+      // actually resolved differs (first boot, stale id, the FREE default),
+      // re-read once scoped to it so the sidebar pills follow the lens.
+      if (seq !== this.#loadSeq) return;
+      if (this.activeLensId && this.activeLensId !== requested) {
+        this.appData = await client.tasks.appData({ lensId: this.activeLensId });
+        if (seq !== this.#loadSeq) return;
+      }
       this.mirrorLensColor();
+      // A stale error (a pre-login 401 from an earlier boot) must never
+      // outlive a successful load.
+      this.error = null;
     } catch (e) {
+      if (seq !== this.#loadSeq) return;
       this.error = e instanceof Error ? e.message : String(e);
     }
+  }
+
+  /**
+   * Early hydration: a stored id becomes active BEFORE appData lands, so on
+   * repeat visits no screen can race the shell's choice. loadAppData still
+   * validates the id and self-heals a stale one.
+   */
+  hydrateStoredLens(): void {
+    if (this.activeLensId) return;
+    const stored =
+      typeof localStorage !== "undefined" ? localStorage.getItem("aa-lens-id") : null;
+    if (stored) this.activeLensId = stored;
+  }
+
+  /**
+   * The no-preference default — delegates to entitlementDefaultLensId (the
+   * webapp AppShell resolution chain, branch on ENTITLEMENT, never the name).
+   */
+  private defaultLensId(): string | null {
+    return entitlementDefaultLensId(this.lenses, prefs.account);
   }
 
   private persistActive() {

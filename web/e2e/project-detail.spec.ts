@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { apiPost, loginAs, DEV_EMAIL } from "./helpers";
+import { apiPost, loginAs, DEV_EMAIL, activeLensId } from "./helpers";
 
 /**
  * Project detail page — /do/projects/:permalink (S5 port of
@@ -24,10 +24,13 @@ function uniqueName(base: string): string {
 }
 
 async function createProject(page: import("@playwright/test").Page, name: string) {
+  // Explicit lens: the shell's entitlement-aware active lens (the server's
+  // no-lens fallback is the primary/included lens, which an entitled dev
+  // user is not looking at — AppShell parity).
   return apiPost<{ id: string; permalink: string; name: string }>(
     page,
     "/rpc/projects/create",
-    { name },
+    { name, lensId: await activeLensId(page) },
   );
 }
 

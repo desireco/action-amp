@@ -32,6 +32,12 @@ class FeedbackStore {
     this.open = true;
   }
 
+  /** Open for general feedback (the shell's loudspeaker — AppShell parity). */
+  show(): void {
+    this.target = null;
+    this.open = true;
+  }
+
   hide(): void {
     this.open = false;
     this.target = null;

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { DEV_EMAIL, apiPost, loginAs } from "./helpers";
+import { DEV_EMAIL, apiPost, loginAs, activeLensId } from "./helpers";
 
 /**
  * Logbook — /do/logbook (S8 port of webapp/e2e/logbook.spec.ts).
@@ -25,19 +25,14 @@ interface InboxItemDto {
   id: string;
 }
 
-interface LensDto {
-  id: string;
-}
-
 async function createUpcomingTask(page: Page, text: string): Promise<void> {
   const capture = await apiPost<InboxItemDto>(page, "/rpc/inbox/create", {
     text,
   });
-  const appData = await apiPost<{ lenses: LensDto[] }>(page, "/rpc/tasks/appData", {});
-  // FREE default: the included lens (webapp lensContext parity) — the
-  // fixture users carry a locked Work lens created by onboarding.
-  const lensId = (appData.lenses.find((l) => l.isIncluded) ?? appData.lenses[0])?.id;
-  if (!lensId) throw new Error("No lens for the dev user — run seed.ts.");
+  // The shell's entitlement-aware active lens (AppShell parity): the dev
+  // fixture user is PRO, so the UI opens on the seeded default (Work), not
+  // the included lens.
+  const lensId = await activeLensId(page);
   const result = await apiPost<{ kind: string }>(page, "/rpc/inbox/triage", {
     inboxItemId: capture.id,
     decision: "upcoming",

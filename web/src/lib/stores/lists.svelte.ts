@@ -8,7 +8,8 @@
  */
 import { client } from "../api";
 import type { TaskLensListRowDto, TaskListRowDto, AppData, TaskStatus } from "../dto";
-import { lenses } from "./lenses.svelte";
+import { lenses, entitlementDefaultLensId } from "./lenses.svelte";
+import { prefs } from "./prefs.svelte";
 
 /** Today-cap fallback while appData is loading (matches the server default). */
 export const TODAY_CAP_DEFAULT = 5;
@@ -30,12 +31,13 @@ class ListsStore {
   }
 
   /** The lens the lens-scoped lists render: the shell's active lens, falling
-   *  back to the first accessible one while the switcher hasn't chosen. */
+   *  back to the entitlement-aware default. The fallback is the SHELL's rule
+   *  (not included-first) so a read before the shell resolves never scopes
+   *  to the other lens. */
   get scopedLensId(): string | null {
     if (lenses.activeLensId) return lenses.activeLensId;
-    // FREE default: the included lens, never a locked one (webapp parity).
     const list = this.appData?.lenses ?? [];
-    return list.find((l) => l.isIncluded)?.id ?? list[0]?.id ?? null;
+    return entitlementDefaultLensId(list, prefs.account);
   }
 
   get showLensPill(): boolean {

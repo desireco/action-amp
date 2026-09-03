@@ -37,6 +37,10 @@
     onNewLens,
     newLensProLocked = false,
     ariaLabel = "Lens",
+    // Bindable so the shell's ⌘L chord can toggle the popover (webapp
+    // AppShell parity — lensPopoverOpen lives in the shell there). Unbound
+    // callers keep the old fully-internal behavior.
+    open = $bindable(false),
   }: {
     options: LensSwitchOption[];
     /** id of the currently-active lens */
@@ -50,9 +54,10 @@
     /** Whether the "+ New lens" row should show a Pro tag (FREE user) */
     newLensProLocked?: boolean;
     ariaLabel?: string;
+    /** Two-way bound open state (⌘L toggles from the shell). */
+    open?: boolean;
   } = $props();
 
-  let open = $state(false);
   let highlight = $state(0);
   let filter = $state("");
   let filterOpen = $state(false);

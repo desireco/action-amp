@@ -9,7 +9,6 @@
    * scrolls the row into view and highlights it. No page keyset — reached via
    * global nav / palette (S9); Restore/Reopen are pointer-only.
    */
-  import { onMount } from "svelte";
   import { page } from "$app/stores";
   import GroupedList from "../GroupedList.svelte";
   import ListEmpty from "../ListEmpty.svelte";
@@ -17,12 +16,16 @@
   import BrandMark from "./BrandMark.svelte";
   import Markdown from "./Markdown.svelte";
   import { logbook, groupLogbook, type LogItem } from "../../stores/logbook.svelte";
+  import { lenses } from "../../stores/lenses.svelte";
   import "../../styles/logbook.css";
 
   const groups = $derived(logbook.data ? groupLogbook(logbook.data) : []);
   const targetItemId = $derived($page.url.searchParams.get("item") ?? "");
 
-  onMount(() => {
+  // Lens-scoped read (AppShell parity): re-runs when the switcher moves —
+  // tracked read of the shell's active lens keys the effect.
+  $effect(() => {
+    void lenses.activeLensId;
     void logbook.load();
   });
 

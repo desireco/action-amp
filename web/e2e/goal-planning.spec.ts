@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { apiPost, loginAs, DEV_EMAIL } from "./helpers";
+import { apiPost, loginAs, DEV_EMAIL, activeLensId } from "./helpers";
 
 /**
  * Goal planning — the full lifecycle + sequence flow (S6 port of
@@ -27,10 +27,13 @@ function run(): string {
 }
 
 async function createProject(page: Page, name: string) {
+  // Explicit lens: the shell's entitlement-aware active lens (the server's
+  // no-lens fallback is the primary/included lens, which an entitled dev
+  // user is not looking at — AppShell parity).
   return apiPost<{ id: string; permalink: string; name: string }>(
     page,
     "/rpc/projects/create",
-    { name },
+    { name, lensId: await activeLensId(page) },
   );
 }
 
@@ -126,7 +129,13 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
 test("completed goals appear in the Logbook and reopen from there", async ({ page }) => {
   await loginAs(page);
   const name = `Logbook reopen ${run()}`;
-  const created = await apiPost<{ id: string }>(page, "/rpc/goals/create", { name });
+  // Explicit lens: the shell's entitlement-aware active lens (the server's
+  // no-lens fallback is the primary/included lens, which an entitled dev
+  // user is not looking at — AppShell parity).
+  const created = await apiPost<{ id: string }>(page, "/rpc/goals/create", {
+    name,
+    lensId: await activeLensId(page),
+  });
   expect(created.id).toBeTruthy();
   await apiPost(page, "/rpc/goals/setDone", { id: created.id, isDone: true });
 

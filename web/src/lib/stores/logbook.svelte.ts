@@ -9,6 +9,7 @@
  */
 
 import { client } from "../api";
+import { lenses } from "./lenses.svelte";
 import { messageFromError } from "./projects.svelte";
 
 /** Client slice for the logbook procedure (see goals.svelte.ts note — the
@@ -125,18 +126,27 @@ class LogbookStore {
   busy = $state(false);
   loaded = $state(false);
 
+  /** Request token: last load wins (a lens switch mid-flight supersedes the
+   *  older read instead of racing it or being dropped by a busy guard — the
+   *  response is lens-scoped now, so a stale landing is visible wrong data). */
+  #seq = 0;
+
   async load() {
-    if (this.busy) return;
+    const seq = ++this.#seq;
     this.busy = true;
-    this.error = null;
     try {
-      // No lensId — the server resolves the primary lens (S5/S6 convention).
-      this.data = await rpc.data({});
+      // Lens-scoped (AppShell parity): the active lens, never the server's
+      // primary-lens stopgap — the shell's active lens decides the context.
+      const data = await rpc.data({ lensId: lenses.activeLensId ?? undefined });
+      if (seq !== this.#seq) return;
+      this.data = data;
       this.loaded = true;
+      this.error = null;
     } catch (e) {
+      if (seq !== this.#seq) return;
       this.error = messageFromError(e);
     } finally {
-      this.busy = false;
+      if (seq === this.#seq) this.busy = false;
     }
   }
 

@@ -8,7 +8,8 @@
  * and WhatNow.svelte's load effect re-runs off it.
  */
 import { client } from "../api";
-import { lenses } from "./lenses.svelte";
+import { lenses, entitlementDefaultLensId } from "./lenses.svelte";
+import { prefs } from "./prefs.svelte";
 import type {
   AppData,
   FocusedTask,
@@ -36,13 +37,14 @@ class WhatNowStore {
   loading = $state(false);
   error = $state<string | null>(null);
 
-  /** Active lens id: the switcher's choice, else the first accessible one. */
+  /** Active lens id: the switcher's choice, else the entitlement-aware
+   *  default. The fallback is the SHELL's rule (not included-first) so a
+   *  read before the shell resolves never scopes to the other lens. */
   get lensId(): string | null {
     const list = this.appData?.lenses ?? [];
     const id = lenses.activeLensId;
     if (id && list.some((l) => l.id === id)) return id;
-    // FREE default: the included lens, never a locked one (webapp parity).
-    return list.find((l) => l.isIncluded)?.id ?? list[0]?.id ?? null;
+    return entitlementDefaultLensId(list, prefs.account);
   }
 
   get lens() {

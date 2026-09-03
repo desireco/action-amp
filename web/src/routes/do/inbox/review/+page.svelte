@@ -21,7 +21,11 @@
   import Icon from "../../../../lib/components/Icon.svelte";
   import { client } from "../../../../lib/api";
   import { inbox } from "../../../../lib/stores/inbox.svelte";
-  import { lenses as lensStore } from "../../../../lib/stores/lenses.svelte";
+  import {
+    lenses as lensStore,
+    entitlementDefaultLensId,
+  } from "../../../../lib/stores/lenses.svelte";
+  import { prefs } from "../../../../lib/stores/prefs.svelte";
   import {
     OUTCOME_EXIT,
     buildDispatchPayload,
@@ -147,7 +151,10 @@
     if (lensStore.activeLensId && lenses.some((l) => l.id === lensStore.activeLensId)) {
       return lensStore.activeLensId;
     }
-    return lenses.find((l) => l.isIncluded)?.id ?? lenses[0]?.id ?? null;
+    // Mirror the shell's entitlement-aware default (NOT included-first): the
+    // wizard snaps chosenLensId per item, so the pre-shell-load fallback must
+    // agree with where the shell will land.
+    return entitlementDefaultLensId(lenses, prefs.account);
   });
   const scopedLensId = $derived(chosenLensId ?? defaultLensId);
   const scopedProjects = $derived(

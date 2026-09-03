@@ -11,7 +11,6 @@
   import Chip from "../../../lib/components/Chip.svelte";
   import Icon from "../../../lib/components/Icon.svelte";
   import Linkify from "../../../lib/components/Linkify.svelte";
-  import CaptureFab from "../../../lib/components/CaptureFab.svelte";
   import { capture } from "../../../lib/stores/capture.svelte";
   import { inbox, type InboxItem } from "../../../lib/stores/inbox.svelte";
   import { formatAgo, formatRelativeDay, formatSnoozedUntil } from "../../../lib/format/dates";
@@ -214,4 +213,4 @@
   </section>
 </div>
 
-<CaptureFab />
+<!-- The capture FAB is the Shell's now (AppShell parity — one pervasive FAB). -->

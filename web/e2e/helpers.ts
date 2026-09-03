@@ -67,7 +67,7 @@ export async function loginAs(page: Page, email: string = DEV_EMAIL): Promise<vo
 /**
  * POST one oRPC procedure from the browser context — the same origin + cookie
  * jar the SPA uses, plus the `x-requested-with` header the API's CSRF guard
- * requires on cookie-authed mutations (every oRPC call is a POST on the wire,
+ * requires on cookie-authed POSTs (every oRPC call is a POST on the wire,
  * reads included). Unwraps the `{"json": …}` envelope RPCLink speaks.
  */
 export async function apiPost<T>(page: Page, path: string, input: unknown = undefined): Promise<T> {
@@ -85,4 +85,23 @@ export async function apiPost<T>(page: Page, path: string, input: unknown = unde
   }
   const body = (await res.json()) as { json?: T };
   return body.json as T;
+}
+
+/**
+ * The active lens id the app shell resolves (AppShell parity): an entitled
+ * user lands on their first-created lens (the seeded default, Work); a FREE
+ * user on the included one (Me). Spec setup that creates content WITHOUT an
+ * explicit lens lands in the server's primary lens (the included one) — pass
+ * this id instead, so the content lands where the UI is actually looking.
+ */
+export async function activeLensId(page: Page): Promise<string> {
+  const [appData, account] = await Promise.all([
+    apiPost<{ lenses: { id: string; isIncluded: boolean }[] }>(page, "/rpc/tasks/appData", {}),
+    apiPost<{ entitled: boolean } | null>(page, "/rpc/prefs/getAccount", {}),
+  ]);
+  const lenses = appData.lenses;
+  if (lenses.length === 0) throw new Error("No lenses for the user — run the seeds.");
+  return (account?.entitled ?? true)
+    ? lenses[0].id
+    : (lenses.find((l) => l.isIncluded) ?? lenses[0]).id;
 }

@@ -1,0 +1,755 @@
+
+/* The webapp ran every stylesheet under a global border-box reset; this
+   stack has none, so the reset is scoped to the shell — without it the
+   sidebar's height:100dvh + padding overflow the viewport and push the user
+   footer below the fold. */
+.aa-app,
+.aa-app *,
+.aa-app *::before,
+.aa-app *::after {
+  box-sizing: border-box;
+}
+
+.aa-app {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--aa-bg);
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.aa-app-side {
+  display: flex;
+  flex-direction: column;
+  padding: var(--aa-space-lg) var(--aa-space-md);
+  border-right: 1px solid var(--aa-border);
+  /* Sidebar carries the active lens's identity tint, so the nav column itself
+     reads as "in" the active context (indigo atmosphere for Work, emerald for
+     Me). Fades down so it stays calm. Reinforced by the lens switch fill and
+     the active nav rail — three coordinated signals, no side-stripe needed. */
+  background: linear-gradient(
+    180deg,
+    var(--aa-active-lens-soft-strong) 0%,
+    var(--aa-bg-soft) 65%
+  );
+  height: 100vh;
+  height: 100dvh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+
+/* ---- Brand ---- */
+.aa-app-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  font-weight: var(--aa-weight-bold);
+  font-size: var(--aa-text-base);
+  color: var(--aa-text);
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+  margin-bottom: var(--aa-space-md);
+  text-decoration: none;
+}
+
+.aa-app-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--aa-radius-sm);
+  background: linear-gradient(135deg, var(--aa-teal), var(--aa-teal-bright));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px var(--aa-teal-tint-shadow);
+  color: var(--aa-surface);
+  flex-shrink: 0;
+}
+
+.aa-app-brand-name {
+  letter-spacing: -0.01em;
+}
+
+/* ---- Lens switch ---- */
+.aa-app-lens {
+  width: 100%;
+  flex: none;
+  position: absolute;
+  top: 72px;
+  left: var(--aa-space-md);
+  right: var(--aa-space-md);
+  width: auto;
+  z-index: 1;
+}
+
+.aa-app-lens::before {
+  content: "CURRENT LENS";
+  display: block;
+  margin: 0 0 5px 2px;
+  color: var(--aa-text-3);
+  font-size: 10px;
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+/* Make room for the persistent context header before universal navigation. */
+.aa-app-nav {
+  margin-top: 54px;
+}
+
+/* ---- Nav sections ---- */
+.aa-app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-app-nav:last-of-type {
+  margin-bottom: var(--aa-space-lg);
+}
+
+/* ---- User footer ---- */
+.aa-app-user {
+  margin-top: auto;
+  padding-top: var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+}
+
+.aa-app-user-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  padding: 6px var(--aa-space-sm);
+  border-radius: var(--aa-radius-sm);
+  text-decoration: none;
+  color: var(--aa-text-2);
+  transition:
+    background 0.12s var(--aa-ease-out),
+    color 0.12s var(--aa-ease-out);
+}
+
+.aa-app-user-btn:hover {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text);
+}
+
+.aa-app-user-btn.active {
+  background: var(--aa-teal-soft);
+  color: var(--aa-teal-cta);
+  font-weight: var(--aa-weight-semibold);
+}
+
+.aa-app-user-btn:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-app-user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-teal-cta);
+  color: var(--aa-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  flex-shrink: 0;
+}
+
+.aa-app-user-name {
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aa-app-admin-link {
+  align-self: flex-start;
+  padding: 2px var(--aa-space-sm);
+  color: var(--aa-text-3);
+  font-size: var(--aa-text-sm);
+  text-decoration: none;
+}
+.aa-app-admin-link:hover,
+.aa-app-admin-link.active {
+  color: var(--aa-teal-cta);
+}
+.aa-app-admin-link:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-app-logout {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-4);
+  padding: 2px var(--aa-space-sm);
+  border-radius: var(--aa-radius-xs);
+  cursor: pointer;
+  transition: color 0.12s var(--aa-ease-out);
+}
+
+.aa-app-logout:hover {
+  color: var(--aa-rose);
+}
+
+/* ============================================================
+   MAIN WRAPPER
+   ============================================================ */
+.aa-app-mainwrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Floating shell utilities */
+.aa-app-utility-cluster {
+  position: fixed;
+  top: max(var(--aa-space-lg), env(safe-area-inset-top));
+  right: max(var(--aa-space-lg), env(safe-area-inset-right));
+  z-index: 28;
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+}
+
+/* Mobile-only avatar → Settings link. Lives in the utility cluster so the
+   desktop sidebar footer (display:none at ≤768px) doesn't strand Settings and
+   Log out on mobile. Desktop never shows it. See AppShell.tsx. */
+.aa-app-mobile-avatar {
+  display: none;
+}
+
+.aa-app-utility-btn {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  color: var(--aa-text-3);
+  box-shadow: var(--aa-shadow-sm);
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-xl);
+  font-weight: var(--aa-weight-bold);
+  cursor: pointer;
+  transition:
+    background 0.15s var(--aa-ease-out),
+    border-color 0.15s var(--aa-ease-out),
+    color 0.15s var(--aa-ease-out);
+}
+
+.aa-app-utility-btn:hover {
+  background: var(--aa-surface-muted);
+  border-color: var(--aa-border-strong);
+  color: var(--aa-text);
+}
+
+.aa-app-utility-btn:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-app-utility-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.aa-app-search-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.aa-app-search-btn {
+  position: relative;
+}
+
+.aa-app-search-pro {
+  position: absolute;
+  right: -3px;
+  bottom: -5px;
+  color: var(--aa-text-4);
+  font-size: 8px;
+  font-weight: var(--aa-weight-bold);
+  letter-spacing: 0.02em;
+}
+
+.aa-app.is-in-focus .aa-app-search-btn {
+  display: none;
+}
+
+/* ---- Page content ---- */
+.aa-app-main {
+  flex: 1;
+  padding: var(--aa-space-3xl) var(--aa-space-4xl);
+}
+
+/* Work-lens gate surface — center the ProGate panel in the main area so the
+ * "this is a Pro feature" message reads as a deliberate state, not a glitch. */
+.aa-app-gate {
+  margin: var(--aa-space-3xl) auto;
+}
+
+.aa-app-capture-fab {
+  position: fixed;
+  right: max(var(--aa-space-xl), env(safe-area-inset-right));
+  bottom: max(var(--aa-space-xl), env(safe-area-inset-bottom));
+  z-index: 28;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px 0 13px;
+  border: none;
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-teal-cta);
+  color: var(--aa-surface);
+  box-shadow: var(--aa-shadow-md);
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-bold);
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--aa-ease-out),
+    box-shadow 0.15s var(--aa-ease-out),
+    background 0.15s var(--aa-ease-out);
+}
+
+.aa-app-capture-fab:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--aa-shadow-lg);
+  background: var(--aa-teal);
+}
+
+.aa-app-capture-fab:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Image drag in progress over the FAB — it's a drop target (opens capture
+ * with the files attached). Teal = system state; ring, not a color swap. */
+.aa-app-capture-fab.is-dragover {
+  background: var(--aa-teal-bright);
+  box-shadow: var(--aa-shadow-lg), var(--aa-focus-ring);
+}
+
+.aa-app-capture-fab:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 3px;
+}
+
+.aa-app-capture-fab svg {
+  flex: none;
+}
+
+.aa-app-capture-fab kbd {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  padding: 2px 5px;
+  border-radius: var(--aa-radius-xs);
+  background: rgba(255, 255, 255, 0.18);
+  color: currentColor;
+}
+
+.aa-mobile-dock {
+  display: none;
+}
+
+/* ============================================================
+   RESPONSIVE — narrow desktop / large tablet first, then mobile
+   ============================================================ */
+/* Between 769px and 1100px the desktop chrome (220px sidebar + 4xl gutters)
+   crushed page content to roughly half the window — task lists read as a
+   narrow column with dead space either side. Tighten the gutters and trim
+   the sidebar instead of jumping straight to the mobile layout at these
+   widths; lists keep a readable, near-full width. */
+@media (max-width: 1100px) {
+  .aa-app {
+    grid-template-columns: 180px 1fr;
+  }
+  .aa-app-main {
+    padding: var(--aa-space-2xl) var(--aa-space-lg);
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — mobile top brand + thumb-zone bottom nav
+   ============================================================ */
+@media (max-width: 768px) {
+  .aa-app {
+    grid-template-columns: 1fr;
+    padding-bottom: 136px;
+  }
+  .aa-app-side {
+    position: relative;
+    height: auto;
+    padding: var(--aa-space-sm) var(--aa-space-md);
+    border-right: none;
+    border-bottom: 1px solid var(--aa-border);
+    overflow: hidden;
+  }
+  .aa-app-brand {
+    margin-bottom: 0;
+    padding: var(--aa-space-xs) 0;
+  }
+  .aa-app-side > .aa-app-nav,
+  .aa-app-side > .aa-focus-nav,
+  .aa-app-side > .aa-app-user {
+    display: none;
+  }
+  .aa-app-lens {
+    display: none;
+  }
+  .aa-app-main {
+    padding: var(--aa-space-xl) var(--aa-space-lg);
+  }
+  .aa-app-utility-cluster {
+    position: absolute;
+    top: max(var(--aa-space-sm), env(safe-area-inset-top));
+    right: max(var(--aa-space-md), env(safe-area-inset-right));
+    gap: 6px;
+  }
+  /* Keyboard shortcuts have no surface on touch — hide the cheatsheet trigger. */
+  .aa-app-shortcuts-btn {
+    display: none;
+  }
+  .aa-app-mobile-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--aa-radius-sm);
+    background: var(--aa-teal-cta);
+    color: var(--aa-surface);
+    border: 1px solid var(--aa-teal-cta);
+    box-shadow: var(--aa-shadow-sm);
+    font-family: var(--aa-font);
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-bold);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background 0.15s var(--aa-ease-out),
+      border-color 0.15s var(--aa-ease-out);
+  }
+  .aa-app-mobile-avatar svg {
+    width: 16px;
+    height: 16px;
+  }
+  .aa-app-mobile-avatar.active {
+    background: var(--aa-teal-soft);
+    color: var(--aa-teal-cta);
+    border-color: var(--aa-teal);
+  }
+  .aa-app-mobile-avatar:focus-visible {
+    outline: 2px solid var(--aa-teal);
+    outline-offset: 2px;
+  }
+  .aa-app-utility-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--aa-radius-sm);
+    box-shadow: none;
+  }
+  .aa-app-utility-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  .aa-mobile-dock {
+    position: fixed;
+    left: max(var(--aa-space-sm), env(safe-area-inset-left));
+    right: max(var(--aa-space-sm), env(safe-area-inset-right));
+    bottom: max(var(--aa-space-sm), env(safe-area-inset-bottom));
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: var(--aa-space-xs);
+    padding: var(--aa-space-xs);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-lg);
+    background: linear-gradient(
+      180deg,
+      var(--aa-surface) 0%,
+      var(--aa-bg-soft) 100%
+    );
+    box-shadow: var(--aa-shadow-lg);
+  }
+  .aa-mobile-dock__row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+  }
+  .aa-mobile-dock__row.is-simple-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .aa-mobile-lens-menu {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: calc(100% + var(--aa-space-xs));
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--aa-space-xs);
+    padding: var(--aa-space-xs);
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-md);
+    background: var(--aa-surface);
+    box-shadow: var(--aa-shadow-md);
+  }
+  .aa-mobile-lens-menu__item {
+    min-width: 0;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: none;
+    border-radius: var(--aa-radius-sm);
+    background: transparent;
+    color: var(--aa-text-2);
+    font: inherit;
+    font-size: var(--aa-text-sm);
+    font-weight: var(--aa-weight-bold);
+    cursor: pointer;
+  }
+  .aa-mobile-lens-menu__item.active {
+    background: var(--aa-active-lens-soft);
+    color: var(--aa-active-lens-text);
+  }
+  .aa-mobile-lens-menu__item[data-lens-color="indigo"].active {
+    background: var(--aa-lens-indigo-soft);
+    color: var(--aa-lens-indigo-text);
+  }
+  .aa-mobile-lens-menu__item[data-lens-color="emerald"].active {
+    background: var(--aa-lens-emerald-soft);
+    color: var(--aa-lens-emerald-text);
+  }
+  .aa-mobile-lens-menu__dot,
+  .aa-mobile-dock__lens-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-active-lens);
+    flex: none;
+  }
+  .aa-mobile-lens-menu__item[data-lens-color="indigo"]
+    .aa-mobile-lens-menu__dot {
+    background: var(--aa-lens-indigo);
+  }
+  .aa-mobile-lens-menu__item[data-lens-color="emerald"]
+    .aa-mobile-lens-menu__dot {
+    background: var(--aa-lens-emerald);
+  }
+  .aa-mobile-lens-menu__count {
+    min-width: 15px;
+    height: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-surface-muted-2);
+    color: var(--aa-text-3);
+    font-size: var(--aa-text-xs);
+    line-height: 1;
+  }
+  .aa-mobile-dock__item {
+    position: relative;
+    min-width: 0;
+    min-height: 48px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: var(--aa-radius-sm);
+    color: var(--aa-text-3);
+    background: transparent;
+    border: none;
+    text-decoration: none;
+    font-family: var(--aa-font);
+    font-size: var(--aa-text-xs);
+    font-weight: var(--aa-weight-bold);
+    line-height: 1;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .aa-mobile-dock__item svg {
+    width: 17px;
+    height: 17px;
+  }
+  .aa-mobile-dock__item.active {
+    background: var(--aa-active-lens-soft);
+    color: var(--aa-active-lens-text);
+  }
+  .aa-mobile-dock__item.active::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 4px;
+    height: 2px;
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-active-lens);
+  }
+  .aa-app-capture-fab {
+    right: max(calc(var(--aa-space-sm) + 10px), env(safe-area-inset-right));
+    bottom: calc(max(var(--aa-space-sm), env(safe-area-inset-bottom)) + 72px);
+    width: 46px;
+    min-height: 46px;
+    padding: 0;
+    border-radius: var(--aa-radius-md);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .aa-app-capture-fab span,
+  .aa-app-capture-fab kbd {
+    display: none;
+  }
+  .aa-mobile-dock__item:active {
+    transform: translateY(1px) scale(0.98);
+  }
+  .aa-app-capture-fab.is-hidden-while-lens-open {
+    display: none;
+  }
+  /* Settings + Focus: both step out of the thumb-zone chrome. Hide the bottom
+     dock, drop the bottom padding it reserved, and reset the FAB's dock-
+     clearing offset (it normally sits `+72px` to clear the dock; with no dock
+     it returns to its base offset). Settings exits via SettingsLayout's top
+     back-link; Focus is a full-screen modal where the dock was overlapping the
+     keyboard-rail hints. Desktop is unaffected — the dock is already
+     display:none above 768px. */
+  .aa-app.is-in-settings,
+  .aa-app.is-in-focus {
+    padding-bottom: 0;
+  }
+  .aa-app.is-in-settings .aa-mobile-dock,
+  .aa-app.is-in-focus .aa-mobile-dock {
+    display: none;
+  }
+  .aa-app.is-in-settings .aa-app-capture-fab,
+  .aa-app.is-in-focus .aa-app-capture-fab {
+    bottom: max(var(--aa-space-xl), env(safe-area-inset-bottom));
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aa-app * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ---- Focus nav: Do + always-open Plan/Review groups ----
+   The expanding-section switch is gone; both groups render their items
+   directly under a static uppercase label. */
+.aa-focus-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--aa-space-md);
+  flex: 1;
+}
+
+.aa-focus-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--aa-space-sm);
+}
+
+.aa-focus-label {
+  padding: 7px 12px;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-bold);
+  color: var(--aa-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.aa-focus-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: var(--aa-space-sm);
+}
+
+/* ============================================================
+   Update banner — surfaces when a new build is deployed
+   ============================================================
+   Token-driven so dark mode comes for free. Sits at the top of
+   .aa-app-mainwrap, above page content, non-blocking (no scroll lock).
+   Mirrors the calm teal-soft recipe used by TodayPage's overflow banner.
+   Sticky so it stays visible while scrolling; z-20 keeps it above page
+   content but below the floating utility cluster (z-28) — the narrow
+   max-width keeps it clear of that cluster's top-right corner. */
+.aa-app-update-banner {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--aa-space-md);
+  margin: var(--aa-space-md) auto 0;
+  max-width: 520px;
+  padding: var(--aa-space-sm) var(--aa-space-md);
+  background: var(--aa-teal-soft);
+  border: 1px solid var(--aa-teal-soft-strong);
+  border-radius: var(--aa-radius-sm);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text);
+  box-shadow: var(--aa-shadow-sm);
+  animation: aa-update-banner-in var(--aa-dur-base) var(--aa-ease-out-quart);
+}
+
+.aa-app-update-banner__copy {
+  flex: 1;
+}
+
+.aa-app-update-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+}
+
+@keyframes aa-update-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .aa-app-update-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--aa-space-sm);
+  }
+  .aa-app-update-banner__actions {
+    justify-content: flex-end;
+  }
+}

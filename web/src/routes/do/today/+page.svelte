@@ -9,7 +9,6 @@
   import ListEmpty from "../../../lib/components/ListEmpty.svelte";
   import CompletionCircle from "../../../lib/components/CompletionCircle.svelte";
   import RowEditor from "../../../lib/components/RowEditor.svelte";
-  import FeedbackDialog from "../../../lib/components/FeedbackDialog.svelte";
   import { lists } from "../../../lib/stores/lists.svelte";
   import { feedback } from "../../../lib/stores/feedback.svelte";
   import type { TaskLensListRowDto } from "../../../lib/dto";
@@ -198,9 +197,8 @@
   {/if}
 </section>
 
-{#if feedback.open}
-  <FeedbackDialog />
-{/if}
+<!-- The feedback dialog is the Shell's now (AppShell parity — one global mount
+     of the overlay; the showForTask trigger stays here). -->
 
 <style>
   .aa-today {

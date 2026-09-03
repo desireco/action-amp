@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { DEV_EMAIL, apiPost, loginAs } from "./helpers";
+import { DEV_EMAIL, apiPost, loginAs, activeLensId } from "./helpers";
 
 /**
  * Triage dispatch — ported from webapp/e2e/triage-dispatch.spec.ts (S3).
@@ -159,7 +159,13 @@ test("triage: a captured thought becomes a Task on the Upcoming bench", async ({
   // status UPCOMING, pinning "never auto-Today".
   await page.goto("/do/upcoming");
   await expect(page.getByText(text).first()).toBeVisible({ timeout: 10_000 });
-  const tasks = await apiPost<TaskDto[]>(page, "/rpc/tasks/list");
+  // Lens-scoped read: /rpc/tasks/list is the legacy primary-lens stopgap,
+  // which is not the lens the shell opened (AppShell parity).
+  const tasks = await apiPost<TaskDto[]>(page, "/rpc/tasks/byLens", {
+    lensId: await activeLensId(page),
+    status: "UPCOMING",
+    isDone: false,
+  });
   const landed = tasks.find((t) => t.description === text);
   expect(landed?.status).toBe("UPCOMING");
 });
