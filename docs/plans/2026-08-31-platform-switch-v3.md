@@ -163,7 +163,16 @@ months.
 1. Wasp stays **stopped-but-startable for 2–4 weeks** as the rollback; then
    delete the service, `webapp/`, and Prisma.
 2. **Schema handover:** first Drizzle migration happens only now; Drizzle
-   becomes the source of truth.
+   becomes the source of truth. Concretely: strip the Wasp-era transitional
+   guards from `packages/domain/drizzle.config.ts` (the "never run db:push
+   against actionamp_dev" comment + read-only-introspection framing), retire
+   `db:introspect` (`drizzle-kit pull`), and add the real verbs — `db:push`
+   for dev, `db:generate`/`db:migrate` for prod. Optional once push is legal:
+   a dev-loop auto-push watcher in `scripts/dev.sh` (hash
+   `packages/domain/src/db/schema/**`, skip unchanged, run `drizzle-kit push`
+   on change; auto-accept destructive prompts with a loud warning; hard-exit
+   unless `DATABASE_URL` is localhost) — typebase-inspired, discussed
+   2026-09-02.
 3. Update the doc cascade (`AGENTS.md`, `docs/ROADMAP.md` §Shipped, feature
    catalog, this plan's outcome).
 4. Optional, separate project: **Neon** — pooled `DATABASE_URL` swap in a
