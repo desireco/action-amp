@@ -71,6 +71,7 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | Wave-4 integration | ✅ | 75/75 e2e twice (billing spec live on test-mode Stripe env); api 209/209; domain 454/454 |
 | **BUILD COMPLETE — all S-goals landed** | ✅ | every slice P0→P5 with cross-review; suite: 454 domain + 209 api + 75 e2e |
 | Pre-signoff review pass | ✅ `4295e4c` | 4 reviewers over all layers; injection/parity/determinism fixes; lens switching re-scopes all screens; feedback dialog ported; 75/75 ×3 |
+| **AppShell port (the look)** | ✅ `0c5f58d` | sidebar at parity (lens switch + nav groups + footer + FAB + chords), entitlement-aware defaults, logged-in-401 root-caused + hardened; reviewer found+fixed 3 bugs (counts re-scope, entitlement clamp, logbook stale-load). Open Jake call: FREE gate copy ('another Lens' vs 'the Work lens') |
 | V3 switch kit | ✅ 658edd2 | runbook + rollback one-pager + announcement + safe-by-default scripts; reviewed pass. Jake fills {{…}} placeholders at V2 |
 | V1 parity run | ✅ `2ba2ec1` | prod dump pulled from Railway (pg_dump via the public TCP proxy; 5 users/83 tasks/33 sessions) → restored locally as `actionamp_v1`; domain 454/454 · api 209/209 · e2e 75/75 **twice consecutively**; one fixture-overfitted growth-retention assertion relaxed (data-driven value, envelope still pinned) |
 | V2 rehearsal → V3 switch kit | ☐ after V1 | runbook dry run + flip/verify scripts, announcement draft, rollback one-pager |
