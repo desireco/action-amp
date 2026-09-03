@@ -106,6 +106,18 @@ running; env is read from api/.env + webapp/.env.server) · `lint` ·
 `typecheck` · `build`. Env for the API lives in `api/.env` (gitignored; copy
 the shape from webapp/.env.server — local DB + test-mode Stripe keys).
 
+### Design system (governed)
+
+- **Single source of truth:** `web/src/lib/tokens.css` owns every color, type
+  size, spacing, and radius (`--aa-*`). The rules live in
+  `docs/DESIGN-SYSTEM.md` + `DESIGN.md`; the visible catalog is Storybook
+  (`npm run storybook`).
+- **All UI primitives** live in `web/src/lib/components/ui/` with a story —
+  screens consume primitives, never hand-rolled duplicates. To add or change a
+  UI element: token (if new) → primitive → story → consume.
+- **Enforced:** `npm run lint` runs `scripts/check-design-tokens.sh` — raw hex
+  colors, bare font sizes, and untokenized radii fail the build. If a value is
+  genuinely new, add it to tokens.css first (docs/DESIGN-SYSTEM.md decides).
 Auth for local checks: `web` has no login page dependency for seeded flows —
 `POST /api/dev/login?email=…` (dev-only) or the devEmail route on :5174.
 
