@@ -1,12 +1,6 @@
-# web (SvelteKit)
-node_modules/
-.svelte-kit/
-build/
-dist/
-
-# Storybook
-storybook-static/
-
-# Playwright (e2e)
-test-results/
-playwright-report/
+node_modules
+.svelte-kit
+build
+test-results
+storybook-static
+playwright-report
