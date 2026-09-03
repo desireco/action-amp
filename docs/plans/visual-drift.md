@@ -13,6 +13,12 @@ places where the port deviates from what the reference renders, but the
 reference rendering itself looks like an accident; confirm with Jake before
 "fixing" the port to match.
 
+> **Redo pass (2026-09-02, later):** every light+dark pair re-checked against
+> the actual PNGs (Read tool, no shell image handling) and every file/line
+> reference re-verified in the tree. All findings below are image-verified;
+> three corrections from the earlier draft are folded in (Today card height
+> matches, palette offset direction, counts).
+
 ## Systemic
 
 ### P1 — Page columns shrink-wrap to content (someday, week, settings)
@@ -40,7 +46,9 @@ reference rendering itself looks like an accident; confirm with Jake before
 
 ### Today
 No structural drift. Hero card, pills, dashes, empty state, Capture FAB and
-dark tokens all match. Port empty-state card is slightly taller (P3, below).
+dark tokens all match. Empty-state card height matches too (the earlier
+draft's "slightly taller" claim did not survive re-measurement — both cards
+are ~355–360px tall).
 
 ### Upcoming
 The 840px column + lens-tinted hero card + surface group cards landed in the
@@ -154,7 +162,7 @@ No drift. Day groups, chips, 760px column match.
 ## Overlays (state shots)
 Capture popover and command palette match (same commands, kbd hints,
 selection tint, scrim). Cosmetic only:
-- **P3 —** Capture popover ~512px wide vs 480px; palette sits ~2px lower.
+- **P3 —** Capture popover ~512px wide vs 480px; palette sits ~4px higher.
   `web/src/lib/components/CapturePopover.svelte`, `search/CommandPalette.svelte`.
 
 ## Re-shot pairs
@@ -170,7 +178,7 @@ selection tint, scrim). Cosmetic only:
 | --- | --- | --- |
 | P1 (structural/broken) | 8 | shrink-wrapped columns (someday/week/settings), week hero card, week group cards, admin double-sidebar, Inbox badge, Projects/Goals pills, "?" button, Review cadence links |
 | P2 (spacing/scale) | 6 | TaskRow radio alignment, TaskRow dot color, TaskRow separators, week title scale, projects/goals header [decision], admin dark mode [decision] |
-| P3 (cosmetic) | 6 | admin stat-label tint, someday eyebrow, preferences hub width, lenses hub width, capture/palette dims, today empty-card height |
+| P3 (cosmetic) | 5 | admin stat-label tint, someday eyebrow, preferences hub width, lenses hub width, capture/palette dims |
 
 Biggest wins first: the `.screen-container` shrink-wrap fix (one wrapper,
 three surfaces), the week hero/group cards port, and the sidebar counts +
