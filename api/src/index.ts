@@ -9,6 +9,7 @@
  * resolution) and WHAT (method + path + outcome).
  */
 import { Hono } from "hono";
+import { serveStatic } from "hono/bun";
 import { logEvent, logRequest } from "./logger.js";
 import { RPCHandler } from "@orpc/server/fetch";
 import { eq } from "drizzle-orm";
@@ -61,6 +62,12 @@ import { cliAccessViolation, isEntitled } from "@actionamp/domain/billing";
 // first query (e.g. /ready) opens the socket. Closed on shutdown, below.
 const db = createDb(databaseUrl());
 const entities = createEntities(db);
+
+// Single-service production deploy: when WEB_DIST_DIR points at the built
+// web app, the API serves the SPA at "/" (one origin, one domain to flip).
+import { existsSync } from "node:fs";
+const webDist = process.env.WEB_DIST_DIR ?? "";
+const servingSpa = Boolean(webDist) && existsSync(webDist);
 
 type AppEnv = { Variables: { reqId: string; actingEmail: string | null } };
 
@@ -156,7 +163,7 @@ app.use("/rpc/*", async (c, next) => {
 // POST /api/analytics/event (FunnelTracker ingest). See
 // docs/plans/slices/s13-s15-wiring.md §2.
 import { createPublicRest } from "./procedures/public.js";
-app.route("/", createPublicRest({ db, entities }));
+app.route("/", createPublicRest({ db, entities, serveSpaRedirect: servingSpa }));
 
 // S17 slice wiring — the /api/cli/feedback/* + /api/cli/admin/* PAT routes
 // (REST mounts, the admin-cli's exact paths; see docs/plans/slices/s17-wiring.md §3).
@@ -174,6 +181,27 @@ app.route("/", createCliRoutes({ db, entities }));
 // docs/plans/slices/s16-wiring.md §1.
 import { createStripeWebhookRoute } from "./webhooks-stripe.js";
 app.route("/", createStripeWebhookRoute({ db, entities }));
+
+// --- production single-service mount (the built web SPA) ---------------------
+// WEB_DIST_DIR is set only in the deployed image: the API then serves the
+// SvelteKit static build on the same origin — /rpc and /api stay same-origin
+// (the app's client calls them relatively), no CORS surface, one domain to
+// flip on switch day. Registered LAST so API routes always win.
+if (servingSpa) {
+  // Assets first (immutable), then the SPA fallback for client-side routes.
+  app.use("/_app/*", serveStatic({ root: webDist }));
+  app.use("/static/*", serveStatic({ root: webDist }));
+  app.get("/manifest.json", serveStatic({ root: webDist }));
+  app.get("/service-worker.js", serveStatic({ root: webDist }));
+  app.get("/version.json", serveStatic({ root: webDist }));
+  app.get("*", serveStatic({
+    root: webDist,
+    rewriteRequestPath: () => "/index.html",
+  }));
+  logEvent("info", `serving the web app from ${webDist}`);
+} else if (webDist) {
+  logEvent("warn", `WEB_DIST_DIR=${webDist} does not exist — serving API only`);
+}
 
 // --- dev login (F10c) -----------------------------------------------------------
 // The devEmail= equivalent: mints a real session for an email and stamps the

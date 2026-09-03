@@ -102,6 +102,9 @@ function isLocalHost(hostname: string): boolean {
 export function createPublicRest(deps: {
   db: DomainDb;
   entities: Entities;
+  /** True when the API serves the built SPA at "/" (single-service deploy) —
+   *  the RedirectToMarketing redirect is then skipped: "/" IS the app. */
+  serveSpaRedirect?: boolean;
 }): Hono {
   const rest = new Hono();
 
@@ -131,12 +134,16 @@ export function createPublicRest(deps: {
 
   // The app-host root: same semantics as webapp RedirectToMarketing
   // (client-side there because Wasp served an SPA; a 302 here — wiring doc).
-  rest.get("/", (c) => {
-    const target = isLocalHost(new URL(c.req.url).hostname)
-      ? "/login"
-      : "https://actionamp.com";
-    return c.redirect(target, 302);
-  });
+  // SKIPPED when the API serves the built SPA (single-service deploy): "/"
+  // is the app home, not a redirect.
+  if (!deps.serveSpaRedirect) {
+    rest.get("/", (c) => {
+      const target = isLocalHost(new URL(c.req.url).hostname)
+        ? "/login"
+        : "https://actionamp.com";
+      return c.redirect(target, 302);
+    });
+  }
 
   // The FunnelTracker ingest (public, no PII, never returns event data).
   // CORS per the webapp analyticsMiddleware: the two product origins, on

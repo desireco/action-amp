@@ -1,0 +1,17 @@
+node_modules
+*/node_modules
+*/*/node_modules
+web/node_modules
+web/.svelte-kit
+web/build
+apps
+webapp
+archive
+site
+spikes
+docs
+crashes_report.md
+design-qa.md
+deploy.sh
+publish.sh
+.tmp
