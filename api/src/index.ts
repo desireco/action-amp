@@ -182,27 +182,6 @@ app.route("/", createCliRoutes({ db, entities }));
 import { createStripeWebhookRoute } from "./webhooks-stripe.js";
 app.route("/", createStripeWebhookRoute({ db, entities }));
 
-// --- production single-service mount (the built web SPA) ---------------------
-// WEB_DIST_DIR is set only in the deployed image: the API then serves the
-// SvelteKit static build on the same origin — /rpc and /api stay same-origin
-// (the app's client calls them relatively), no CORS surface, one domain to
-// flip on switch day. Registered LAST so API routes always win.
-if (servingSpa) {
-  // Assets first (immutable), then the SPA fallback for client-side routes.
-  app.use("/_app/*", serveStatic({ root: webDist }));
-  app.use("/static/*", serveStatic({ root: webDist }));
-  app.get("/manifest.json", serveStatic({ root: webDist }));
-  app.get("/service-worker.js", serveStatic({ root: webDist }));
-  app.get("/version.json", serveStatic({ root: webDist }));
-  app.get("*", serveStatic({
-    root: webDist,
-    rewriteRequestPath: () => "/index.html",
-  }));
-  logEvent("info", `serving the web app from ${webDist}`);
-} else if (webDist) {
-  logEvent("warn", `WEB_DIST_DIR=${webDist} does not exist — serving API only`);
-}
-
 // --- dev login (F10c) -----------------------------------------------------------
 // The devEmail= equivalent: mints a real session for an email and stamps the
 // wasp_session cookie — how Playwright/e2e and curl log in without any
@@ -524,6 +503,35 @@ app.post("/api/auth/logout", async (c) => {
 // header — it's a top-level form navigation from the installed PWA (the
 // primary path is the service-worker interception; see src/share.ts).
 app.post("/api/share", createShareRoute({ db, entities }));
+
+// --- production single-service mount (the built web SPA) ---------------------
+// WEB_DIST_DIR is set only in the deployed image: the API then serves the
+// SvelteKit static build on the same origin — /rpc and /api stay same-origin
+// (the app's client calls them relatively), no CORS surface, one domain to
+// flip on switch day.
+//
+// MUST be registered LAST — after every app-level route above. Hono matches
+// in registration order, so a catch-all mounted before /api/auth/me (a GET)
+// swallows it and the SPA's index.html comes back instead of the user JSON
+// (found on the real deployed image at the 2026-09-06 domain switch: every
+// user looked signed out). POST-only routes never notice; GETs do. The e2e
+// suite runs the API without WEB_DIST_DIR, so only the deployed image (or a
+// local run with WEB_DIST_DIR set) exercises this ordering.
+if (servingSpa) {
+  // Assets first (immutable), then the SPA fallback for client-side routes.
+  app.use("/_app/*", serveStatic({ root: webDist }));
+  app.use("/static/*", serveStatic({ root: webDist }));
+  app.get("/manifest.json", serveStatic({ root: webDist }));
+  app.get("/service-worker.js", serveStatic({ root: webDist }));
+  app.get("/version.json", serveStatic({ root: webDist }));
+  app.get("*", serveStatic({
+    root: webDist,
+    rewriteRequestPath: () => "/index.html",
+  }));
+  logEvent("info", `serving the web app from ${webDist}`);
+} else if (webDist) {
+  logEvent("warn", `WEB_DIST_DIR=${webDist} does not exist — serving API only`);
+}
 
 // --- 404 fallback ---------------------------------------------------------------
 
