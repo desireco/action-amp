@@ -80,12 +80,12 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | V1 parity run | ✅ `2ba2ec1` | prod dump pulled from Railway (pg_dump via the public TCP proxy; 5 users/83 tasks/33 sessions) → restored locally as `actionamp_v1`; domain 454/454 · api 209/209 · e2e 75/75 **twice consecutively**; one fixture-overfitted growth-retention assertion relaxed (data-driven value, envelope still pinned) |
 | V2 rehearsal → V3 switch kit | ⚠️ skipped | 2026-09-06: Jake directed going straight to the flip (V4) — warm-check + verify scripts ran live instead of in rehearsal |
 | **V4 switch day — EXECUTED** | ✅ 2026-09-06 | domains `api.`+`app.actionamp.com` flipped to `action-amp-next` (remove/re-add per domain, Railway edge routed by Host before DNS caught up). Pre-flip backup `backup-2026-09-06-1154.dump` (restore-verified: 5 users/83 tasks). Warm-check ALL PASS. **Live bug found+fixed**: SPA catch-all mounted before `GET /api/auth/me` → every user looked signed out (`ba0c6cd`, redeployed, verify-switch ALL PASS). Stripe webhook URL unchanged (same domain+path). Old Wasp services left running on railway.app URLs = rollback posture. Open items remaining: 48h watch (re-run verify-switch.sh at T+24h/T+48h, skim logs), optional Cloudflare CNAME alignment, V5 deletion decision. **Confirmed by Jake same day**: manual login on app.actionamp.com works; a real `invoice.paid` webhook was delivered + handled (200) on the new stack |
-| V5 cleanup · V6 Neon (optional) | ☐ | after V4 + 2–4 wks; Jake approves deletion (gates #5). Also pending: Cloudflare token lacks Zone→DNS perms (wrangler has no DNS cmds; use the API with a DNS-edit token or dashboard) |
+| V5 cleanup | ✅ 2026-09-06 | Jake approved early ("remove old app, fully"): `action-amp-server` + `action-amp-client` deleted from Railway — project holds `Postgres` + `action-amp-next` only. `webapp/` renamed `old-webapp/` (reference only; scripts retargeted). Rollback = redeploy from `old-webapp/` + re-attach domains; data safety net: `backup-2026-09-06-1154.dump`. V6 Neon (optional): still open |
 | Remaining S/V goals | ☐ | P0 notes ready for every slice; port order per goal set |
 
-Blockers: none. Jake gates still open: V5 deletion approval
-(Stripe test event + the manual login list from CHECKLIST §7 are the open
-V4 items; V2 was superseded by the live run.) Spike gate and F7 are done.
+Blockers: none. All Jake gates closed (V5 executed 2026-09-06 at his
+ direction). Open hygiene: Cloudflare CNAME alignment (token needs Zone→DNS
+ Edit; wrangler has no DNS cmds) and the 48h log watch.
 
 State marks: ☐ not started · ▶ in progress (add agent + worktree) · ✅ done
 (add commit).

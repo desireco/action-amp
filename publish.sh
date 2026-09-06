@@ -5,7 +5,7 @@
 # Usage:
 #   ./publish.sh              # default: site only (the safe, frequent one)
 #   ./publish.sh site         # the marketing site (Astro → Cloudflare Pages)
-#   ./publish.sh app          # the webapp (Wasp → Railway)
+#   ./publish.sh app          # the old webapp (Wasp — RETIRED 2026-09-06)
 #   ./publish.sh cli          # the CLI (tsc build to dist/)
 #   ./publish.sh site app cli # all three, in order
 #   ./publish.sh all          # same as above
@@ -32,7 +32,7 @@ publish_site() {
 
 publish_app() {
   gray "→ Publishing app (Wasp → Railway)..."
-  cd webapp
+  cd old-webapp
   npm run deploy
   cd "$SCRIPT_DIR"
   green "✓ App deployed to api.actionamp.com"

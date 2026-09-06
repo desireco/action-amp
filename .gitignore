@@ -4,10 +4,10 @@ aa-old/
 # wasp / node
 node_modules/
 dist/
-webapp/node_modules/
-webapp/.wasp/
-webapp/.env*
-webapp/build/
+old-webapp/node_modules/
+old-webapp/.wasp/
+old-webapp/.env*
+old-webapp/build/
 cli/node_modules/
 cli/dist/
 admin-cli/node_modules/

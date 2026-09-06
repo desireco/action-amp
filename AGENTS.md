@@ -1,5 +1,13 @@
 # AGENTS.md — ActionAmp
 
+> **Platform switch landed 2026-09-06**: `api/` + `web/` (+ `packages/`) are
+> the LIVE app, deployed as Railway service `action-amp-next` behind
+> `app.actionamp.com` / `api.actionamp.com`. The former `webapp/` (Wasp) is
+> retired in place as `old-webapp/` — reference only, its Railway services are
+> deleted. Read [`docs/plans/PLATFORM-SWITCH.md`](docs/plans/PLATFORM-SWITCH.md)
+> for the switch record. Path references below that still say `webapp/` mean
+> `old-webapp/`.
+
 > Agent-facing index. **Read this before any non-trivial work.** It tells you
 > which doc to read for which task, and which doc wins when two disagree.
 > For the human-facing overview + full table of contents, see [`README.md`](README.md).

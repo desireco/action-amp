@@ -1,5 +1,9 @@
 # ActionAmp
 
+> **2026-09-06 — platform switch landed.** The app now runs on the new stack
+> (`api/` + `web/`, Railway service `action-amp-next`) at `app.actionamp.com`.
+> The old Wasp `webapp/` is retired as `old-webapp/` (reference only).
+
 > A focus app whose thesis is: **stop optimizing capture, start optimizing the
 > decision.** Every other todo app opens to a list. ActionAmp opens to *one task*
 > — the next thing that matters — and hides the rest.
