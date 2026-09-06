@@ -84,8 +84,9 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | Remaining S/V goals | ☐ | P0 notes ready for every slice; port order per goal set |
 
 Blockers: none. All Jake gates closed (V5 executed 2026-09-06 at his
- direction). Open hygiene: Cloudflare CNAME alignment (token needs Zone→DNS
- Edit; wrangler has no DNS cmds) and the 48h log watch.
+ direction). Cloudflare CNAMEs aligned to the new targets same day (api→
+unolp2h9, app→fmqkbjlu up.railway.app; token in .env, never tracked).
+Remaining: 48h log watch only.
 
 State marks: ☐ not started · ▶ in progress (add agent + worktree) · ✅ done
 (add commit).
