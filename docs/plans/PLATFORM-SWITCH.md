@@ -78,13 +78,14 @@ Order is fixed; within a stage, goals parallelize per the goal set.
 | **AppShell port (the look)** | ✅ `0c5f58d` | sidebar at parity (lens switch + nav groups + footer + FAB + chords), entitlement-aware defaults, logged-in-401 root-caused + hardened; reviewer found+fixed 3 bugs (counts re-scope, entitlement clamp, logbook stale-load). Open Jake call: FREE gate copy ('another Lens' vs 'the Work lens') |
 | V3 switch kit | ✅ 658edd2 | runbook + rollback one-pager + announcement + safe-by-default scripts; reviewed pass. Jake fills {{…}} placeholders at V2 |
 | V1 parity run | ✅ `2ba2ec1` | prod dump pulled from Railway (pg_dump via the public TCP proxy; 5 users/83 tasks/33 sessions) → restored locally as `actionamp_v1`; domain 454/454 · api 209/209 · e2e 75/75 **twice consecutively**; one fixture-overfitted growth-retention assertion relaxed (data-driven value, envelope still pinned) |
-| V2 rehearsal → V3 switch kit | ☐ after V1 | runbook dry run + flip/verify scripts, announcement draft, rollback one-pager |
-| V4 switch day | ☐ | WITH JAKE (quiet hour) — gate #4. V3 kit ready (658edd2) |
-| V5 cleanup · V6 Neon (optional) | ☐ | after V4 + 2–4 wks; Jake approves deletion (gates #5) |
+| V2 rehearsal → V3 switch kit | ⚠️ skipped | 2026-09-06: Jake directed going straight to the flip (V4) — warm-check + verify scripts ran live instead of in rehearsal |
+| **V4 switch day — EXECUTED** | ✅ 2026-09-06 | domains `api.`+`app.actionamp.com` flipped to `action-amp-next` (remove/re-add per domain, Railway edge routed by Host before DNS caught up). Pre-flip backup `backup-2026-09-06-1154.dump` (restore-verified: 5 users/83 tasks). Warm-check ALL PASS. **Live bug found+fixed**: SPA catch-all mounted before `GET /api/auth/me` → every user looked signed out (`ba0c6cd`, redeployed, verify-switch ALL PASS). Stripe webhook URL unchanged (same domain+path). Old Wasp services left running on railway.app URLs = rollback posture. Open: Jake's manual login/UI checks, Stripe test event, Cloudflare CNAMEs → new targets (api→`unolp2h9`, app→`fmqkbjlu` up.railway.app — works without, aligned targets preferred) |
+| V5 cleanup · V6 Neon (optional) | ☐ | after V4 + 2–4 wks; Jake approves deletion (gates #5). Also pending: Cloudflare token lacks Zone→DNS perms (wrangler has no DNS cmds; use the API with a DNS-edit token or dashboard) |
 | Remaining S/V goals | ☐ | P0 notes ready for every slice; port order per goal set |
 
-Blockers: none. Jake gates still open: V2 rehearsal attendance, V4 switch-day
-presence, V5 deletion approval. (Spike gate and F7 framework gate are done.)
+Blockers: none. Jake gates still open: V5 deletion approval
+(Stripe test event + the manual login list from CHECKLIST §7 are the open
+V4 items; V2 was superseded by the live run.) Spike gate and F7 are done.
 
 State marks: ☐ not started · ▶ in progress (add agent + worktree) · ✅ done
 (add commit).
