@@ -73,6 +73,10 @@ test("admin can change a feedback status without leaving the feedback page", asy
   const currentStatus = (await statusButton.textContent())?.trim();
   const nextStatus = currentStatus === "closed" ? "open" : "closed";
   await statusButton.click();
+  await expect(page.locator(".aa-status-select__backdrop")).toHaveCSS(
+    "background-color",
+    "rgba(0, 0, 0, 0)",
+  );
   await page.getByRole("option", { name: nextStatus }).click();
 
   await expect(page).toHaveURL(/\/do\/admin\/feedback/);

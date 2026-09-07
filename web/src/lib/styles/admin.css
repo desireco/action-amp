@@ -355,6 +355,10 @@ a.aa-admin-tile__label:hover { text-decoration: underline; }
   position: fixed;
   inset: 0;
   z-index: 20;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  appearance: none;
 }
 
 .aa-status-select__panel {
