@@ -77,6 +77,11 @@ test("admin can change a feedback status without leaving the feedback page", asy
     "background-color",
     "rgba(0, 0, 0, 0)",
   );
+  expect(
+    await page
+      .locator(".aa-status-select__panel")
+      .evaluate((panel) => panel.parentElement?.parentElement === document.body),
+  ).toBe(true);
   await page.getByRole("option", { name: nextStatus }).click();
 
   await expect(page).toHaveURL(/\/do\/admin\/feedback/);

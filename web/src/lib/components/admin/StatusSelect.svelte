@@ -7,6 +7,7 @@
   with a confirm dialog (destructive, even though the row stays in the DB).
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import Chip from "../ui/Chip.svelte";
   import ConfirmDialog from "../ui/ConfirmDialog.svelte";
   import {
@@ -37,10 +38,54 @@
   let open = $state(false);
   let saving = $state(false);
   let confirmDelete = $state(false);
+  let trigger = $state<HTMLButtonElement>();
+  let panel = $state<HTMLUListElement>();
+  let panelPosition = $state({ top: -9999, left: -9999 });
+  let positioned = $state(false);
+
+  /** Render the floating layer outside scrolling/clipping ancestors. */
+  function portal(node: HTMLElement) {
+    document.body.append(node);
+    return { destroy: () => node.remove() };
+  }
+
+  function positionPanel() {
+    if (!trigger || !panel) return;
+    const triggerRect = trigger.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const gap = 4;
+    const viewportPadding = 8;
+    const below = window.innerHeight - triggerRect.bottom;
+    panelPosition = {
+      top:
+        below >= panelRect.height + gap + viewportPadding
+          ? triggerRect.bottom + gap
+          : Math.max(viewportPadding, triggerRect.top - panelRect.height - gap),
+      left: Math.min(
+        Math.max(viewportPadding, triggerRect.left),
+        window.innerWidth - panelRect.width - viewportPadding,
+      ),
+    };
+    positioned = true;
+  }
+
+  async function toggle() {
+    if (saving) return;
+    open = !open;
+    positioned = false;
+    if (open) {
+      await tick();
+      positionPanel();
+    }
+  }
 
   // Escape closes without changing (only while the panel is open).
   function onWindowKey(e: KeyboardEvent) {
     if (open && e.key === "Escape") open = false;
+  }
+
+  function onWindowScrollOrResize() {
+    if (open) positionPanel();
   }
 
   async function choose(next: FeedbackStatus) {
@@ -76,7 +121,11 @@
   const display = $derived(STATUS_DISPLAY[status]);
 </script>
 
-<svelte:window onkeydown={onWindowKey} />
+<svelte:window
+  onkeydown={onWindowKey}
+  onscroll={onWindowScrollOrResize}
+  onresize={onWindowScrollOrResize}
+/>
 
 <div class="aa-status-select">
   {#if saving}
@@ -89,7 +138,8 @@
       class="aa-status-select__trigger"
       aria-haspopup="listbox"
       aria-expanded={open}
-      onclick={() => (open = !open)}
+      onclick={toggle}
+      bind:this={trigger}
     >
       <Chip variant={display.variant} small>{display.label}</Chip>
       <svg class="aa-status-select__caret" width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -99,14 +149,23 @@
   {/if}
 
   {#if open}
-    <button
-      type="button"
-      class="aa-status-select__backdrop"
-      aria-label="Close"
-      onclick={() => (open = false)}
-      tabindex="-1"
-    ></button>
-    <ul class="aa-status-select__panel" role="listbox" aria-label="Feedback status">
+    <div class="aa-status-select__layer" use:portal>
+      <button
+        type="button"
+        class="aa-status-select__backdrop"
+        aria-label="Close"
+        onclick={() => (open = false)}
+        tabindex="-1"
+      ></button>
+      <ul
+        class="aa-status-select__panel"
+        role="listbox"
+        aria-label="Feedback status"
+        bind:this={panel}
+        style:top="{panelPosition.top}px"
+        style:left="{panelPosition.left}px"
+        style:visibility={positioned ? "visible" : "hidden"}
+      >
       {#each FEEDBACK_STATUSES as s (s)}
         {@const d = STATUS_DISPLAY[s]}
         {@const current = s === status}
@@ -139,7 +198,8 @@
           </button>
         </li>
       {/if}
-    </ul>
+      </ul>
+    </div>
   {/if}
 
   {#if confirmDelete}

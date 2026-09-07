@@ -362,7 +362,7 @@ a.aa-admin-tile__label:hover { text-decoration: underline; }
 }
 
 .aa-status-select__panel {
-  position: absolute;
+  position: fixed;
   z-index: 21;
   top: calc(100% + 4px);
   left: 0;
