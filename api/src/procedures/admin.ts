@@ -76,6 +76,16 @@ function toBadRequest(err: unknown): never {
   throw err as Error;
 }
 
+/** Feedback cores report validation and missing-row failures as ordinary
+ * Errors. Keep those expected action failures in the declared 400 channel
+ * instead of turning an unchanged/deleted row into a route-level 500. */
+function feedbackToBadRequest(err: unknown): never {
+  if (err instanceof Error && !(err instanceof ORPCError)) {
+    throw new ORPCError("BAD_REQUEST", { message: err.message });
+  }
+  throw err as Error;
+}
+
 /** Date-bearing core rows → the contract's ISO-string wire shapes. */
 function toFeedbackDto(row: FeedbackRow): FeedbackRowDto {
   return {
@@ -239,7 +249,7 @@ const updateFeedbackStatus = ORPC.updateFeedbackStatus.handler(
       });
       return toFeedbackDto(row);
     } catch (err) {
-      toBadRequest(err);
+      feedbackToBadRequest(err);
     }
   },
 );
@@ -251,7 +261,7 @@ const deleteFeedback = ORPC.deleteFeedback.handler(
       const row = await deleteFeedbackCore(context.entities, { id: input.id });
       return toFeedbackDto(row);
     } catch (err) {
-      toBadRequest(err);
+      feedbackToBadRequest(err);
     }
   },
 );

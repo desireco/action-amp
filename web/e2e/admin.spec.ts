@@ -55,6 +55,62 @@ test("admin overview renders live stats tiles", async ({ page }) => {
   await expect(page).toHaveURL(/range=all/);
 });
 
+test("admin can change a feedback status without leaving the feedback page", async ({ page }) => {
+  await loginAs(page, ADMIN_EMAIL);
+  await page.goto("/do/admin/feedback?status=all");
+  await expect(page.getByRole("heading", { name: "Feedback" })).toBeVisible();
+
+  const row = page
+    .locator(".aa-table tbody tr")
+    .filter({
+      has: page.getByRole("button", {
+        name: /open|in progress|resolved|closed/,
+      }),
+    })
+    .first();
+  await expect(row).toBeVisible({ timeout: 15_000 });
+  const statusButton = row.getByRole("button", { name: /open|in progress|resolved|closed/ });
+  const currentStatus = (await statusButton.textContent())?.trim();
+  const nextStatus = currentStatus === "closed" ? "open" : "closed";
+  await statusButton.click();
+  await page.getByRole("option", { name: nextStatus }).click();
+
+  await expect(page).toHaveURL(/\/do\/admin\/feedback/);
+  await expect(page.getByRole("heading", { name: "Feedback" })).toBeVisible();
+  await expect(row.getByRole("button", { name: nextStatus })).toBeVisible();
+});
+
+test("admin feedback remains usable when a status update fails", async ({ page }) => {
+  await loginAs(page, ADMIN_EMAIL);
+  await page.goto("/do/admin/feedback?status=all");
+  await expect(page.getByRole("heading", { name: "Feedback" })).toBeVisible();
+
+  const row = page
+    .locator(".aa-table tbody tr")
+    .filter({ has: page.getByRole("button", { name: /open|in progress|resolved|closed/ }) })
+    .first();
+  const statusButton = row.getByRole("button", { name: /open|in progress|resolved|closed/ });
+  await expect(statusButton).toBeVisible({ timeout: 15_000 });
+  const currentStatus = (await statusButton.textContent())?.trim();
+  const nextStatus = currentStatus === "closed" ? "open" : "closed";
+
+  await page.route("**/rpc/**", async (route) => {
+    await route.fulfill({
+      status: 500,
+      contentType: "application/json",
+      body: JSON.stringify({ message: "Temporary server error" }),
+    });
+  });
+
+  await statusButton.click();
+  await page.getByRole("option", { name: nextStatus }).click();
+
+  await expect(page.getByRole("heading", { name: "Feedback" })).toBeVisible();
+  await expect(
+    page.getByText(/could not update feedback status|internal server error/i),
+  ).toBeVisible();
+});
+
 test("admin can grant and revoke a manual access grant (roundtrip)", async ({ page }) => {
   await loginAs(page, ADMIN_EMAIL);
   // Unfiltered view: a grant changes the row's access, which would drop it

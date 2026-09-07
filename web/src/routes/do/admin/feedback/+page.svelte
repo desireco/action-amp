@@ -11,6 +11,7 @@
   import StatusSelect from "../../../../lib/components/admin/StatusSelect.svelte";
   import {
     admin,
+    errorMessage,
     type FeedbackRow,
     type FeedbackStatus,
   } from "../../../../lib/stores/admin.svelte";
@@ -89,17 +90,31 @@
   }
 
   async function updateStatus(id: string, status: FeedbackStatus) {
-    await admin.updateFeedbackStatus(id, status);
-    // The open view drops resolved/closed rows instead of re-styling them.
-    items =
-      filter === "open" && (status === "RESOLVED" || status === "CLOSED")
-        ? items.filter((item) => item.id !== id)
-        : items.map((item) => (item.id === id ? { ...item, status } : item));
+    error = null;
+    try {
+      await admin.updateFeedbackStatus(id, status);
+      // The open view drops resolved/closed rows instead of re-styling them.
+      items =
+        filter === "open" && (status === "RESOLVED" || status === "CLOSED")
+          ? items.filter((item) => item.id !== id)
+          : items.map((item) =>
+              item.id === id ? { ...item, status } : item,
+            );
+    } catch (err) {
+      // A failed mutation must leave the table mounted and the original row
+      // intact; otherwise an async event rejection can take down the route.
+      error = errorMessage(err, "Could not update feedback status.");
+    }
   }
 
   async function remove(id: string) {
-    await admin.deleteFeedback(id);
-    items = items.filter((item) => item.id !== id);
+    error = null;
+    try {
+      await admin.deleteFeedback(id);
+      items = items.filter((item) => item.id !== id);
+    } catch (err) {
+      error = errorMessage(err, "Could not delete feedback.");
+    }
   }
 
   function relativeTime(iso: string) {
