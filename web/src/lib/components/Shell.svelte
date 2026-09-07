@@ -393,6 +393,19 @@
     />
   </svg>
 {/snippet}
+{#snippet overviewIcon()}
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3" />
+    <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3" />
+    <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3" />
+    <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3" />
+  </svg>
+{/snippet}
+{#snippet funnelIcon()}
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M2.5 3.5h11L9.5 8v4l-3 1V8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+  </svg>
+{/snippet}
 
 {#snippet navItem(p: NavItemArgs)}
   <a
@@ -495,6 +508,19 @@
           {@render navItem({ icon: logbookIcon, label: "Logbook", active: isActive("/do/logbook"), to: "/do/logbook" })}
         </div>
       </div>
+
+      {#if user?.isAdmin}
+        <div class="aa-focus-group aa-admin-nav-group">
+          <div class="aa-focus-label" aria-hidden="true">Admin</div>
+          <div class="aa-focus-items">
+            {@render navItem({ icon: overviewIcon, label: "Overview", active: isActive("/do/admin/overview"), to: "/do/admin/overview" })}
+            {@render navItem({ icon: clockIcon, label: "Activity", active: isActive("/do/admin/activity"), to: "/do/admin/activity" })}
+            {@render navItem({ icon: userIcon, label: "Users", active: isActive("/do/admin/users"), to: "/do/admin/users" })}
+            {@render navItem({ icon: funnelIcon, label: "Funnel", active: isActive("/do/admin/funnel"), to: "/do/admin/funnel" })}
+            {@render navItem({ icon: loudspeakerIcon, label: "Feedback", active: isActive("/do/admin/feedback"), to: "/do/admin/feedback" })}
+          </div>
+        </div>
+      {/if}
     </nav>
 
     <!-- User footer -->
@@ -518,15 +544,6 @@
         </span>
         <span class="aa-app-user-name">{user?.fullName ?? ""}</span>
       </a>
-      {#if user?.isAdmin}
-        <a
-          href="/do/admin/overview"
-          class="aa-app-admin-link"
-          class:active={path.startsWith("/do/admin")}
-        >
-          Admin
-        </a>
-      {/if}
       <button type="button" class="aa-app-logout" onclick={() => (confirmLogout = true)}>
         Log out
       </button>

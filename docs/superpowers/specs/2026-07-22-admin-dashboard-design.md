@@ -24,8 +24,10 @@ picker (windows are fixed: today / 7d / 30d).
 - **Activity data:** add `createdAt` + `lastActiveAt` to `User`. Backfill
   `createdAt` from `Auth`/`AuthIdentity`; leave `lastActiveAt` null for existing
   users. Track `lastActiveAt` going forward via throttled global middleware.
-- **Access path:** a new **Settings tab** at `/do/settings/admin`, rendered only
-  when `user.isAdmin`. Reuses `SettingsLayout`. No top-level `/admin` route.
+- **Access path:** an admin-only **Admin** group in the main sidebar, directly
+  below Review. It links to `/do/admin/overview`, `/activity`, `/users`,
+  `/funnel`, and `/feedback`; those routes remain rendered inside the shared app
+  shell, with no separate admin rail or top-level `/admin` route.
 - **"Suggestions":** the existing **Feedback** feature (the shell feedback button
   → `Feedback` model). The recent-feedback list shows submissions regardless of
   status, newest first.
