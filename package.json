@@ -15,7 +15,8 @@
     "lint": "oxlint api web packages scripts && bash scripts/check-design-tokens.sh",
     "typecheck": "bun run --filter '*' typecheck",
     "storybook": "cd web && bun run storybook",
-    "storybook:build": "cd web && bun run build-storybook"
+    "storybook:build": "cd web && bun run build-storybook",
+    "site": "cd site && npm run dev"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
