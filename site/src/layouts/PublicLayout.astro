@@ -5,7 +5,7 @@
 // Link destinations under the subdomain split:
 //   - marketing routes (/, /about, /privacy, /terms, /roadmap) → relative
 //   - app routes (/founding-100, /login, /signup) → absolute to the app subdomain
-// The app origin comes from PUBLIC_APP_URL (dev: localhost:4000, prod: app.actionamp.com).
+// The app origin comes from PUBLIC_APP_URL (dev: localhost:5174, prod: app.actionamp.com).
 import SiteNav from "../components/SiteNav.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import StatCounter from "../components/StatCounter.astro";
@@ -46,7 +46,7 @@ const {
   tags,
 } = Astro.props;
 
-const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:5174";
 const siteUrl = Astro.site ?? "https://actionamp.com";
 const canonical = new URL(Astro.url.pathname, siteUrl);
 // Social crawlers need absolute URLs for og:image / twitter:image.

@@ -62,7 +62,7 @@ src/
 
 ## Env
 
-- `PUBLIC_APP_URL` — the Wasp client origin (dev: `http://localhost:4000`,
+- `PUBLIC_APP_URL` — the app origin (dev: `http://localhost:5174`,
   prod: `https://app.actionamp.com`). Used by `PublicLayout.astro` for
   app-side links (e.g. the Founding 100 footer link). Prod override happens in
   the Cloudflare Pages dashboard, not this repo.
