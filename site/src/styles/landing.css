@@ -484,18 +484,15 @@
   color: var(--aa-border-strong);
 }
 
-/* Commitment proof */
+/* Commitment proof — plain section, no card. The outer wrapper already
+   carries the 56px gutters, so the inner caps at the 1068px content width
+   the nav, footer, and other sections align to. */
 .aa-commitment {
   padding: 0 56px 112px;
 }
 .aa-commitment-inner {
   max-width: 1068px;
   margin: 0 auto;
-  padding: 56px;
-  border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-lg);
-  background: linear-gradient(135deg, var(--aa-surface) 0%, var(--aa-bg) 100%);
-  box-shadow: var(--aa-shadow-sm);
 }
 .aa-commitment .aa-display {
   margin-top: 14px;
@@ -857,9 +854,6 @@
 
   .aa-commitment {
     padding: 0 22px 72px;
-  }
-  .aa-commitment-inner {
-    padding: 32px 22px;
   }
   .aa-commitment .aa-lede {
     margin-top: 16px;
