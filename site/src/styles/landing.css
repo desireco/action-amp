@@ -159,6 +159,7 @@
   flex-wrap: wrap;
   font-size: 13px;
   color: var(--aa-text-4);
+  margin-top: 28px;
 }
 .aa-hero-meta span {
   display: inline-flex;
@@ -168,10 +169,10 @@
 .aa-hero-meta svg {
   color: var(--aa-teal-cta);
 }
-/* Primary sign-up CTA. Uses the design-system .aa-btn--primary--lg; this just
-   adds spacing and a subtle hover lift so it reads as the page's main action. */
+/* Primary sign-up CTA. Sits directly beneath the supporting copy (feature
+   labels follow below). Uses the design-system .aa-btn--primary--lg; this
+   adds a subtle hover lift so it reads as the page's main action. */
 .aa-hero-cta {
-  margin-top: 32px;
   align-self: flex-start;
 }
 .aa-hero-cta:hover {
@@ -427,19 +428,10 @@
   margin-top: 32px;
 }
 
-/* Problem */
-.aa-problem {
-  padding-top: 160px;
-  padding-bottom: 120px;
-}
-.aa-problem .aa-display {
-  max-width: 18ch;
-}
-
 /* How */
 .aa-how {
-  padding-top: 64px;
-  padding-bottom: 160px;
+  padding-top: 112px;
+  padding-bottom: 112px;
 }
 .aa-flow {
   margin-top: 56px;
@@ -494,7 +486,7 @@
 
 /* Commitment proof */
 .aa-commitment {
-  padding: 0 56px 160px;
+  padding: 0 56px 112px;
 }
 .aa-commitment-inner {
   max-width: 1068px;
@@ -512,41 +504,27 @@
   margin-top: 22px;
   max-width: 52ch;
 }
-.aa-commitment-states {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  margin-top: 48px;
+/* The daily-rollover fact, stated quietly under the promise. */
+.aa-commitment-note {
+  margin: 26px 0 0;
+  padding-top: 22px;
   border-top: 1px solid var(--aa-border);
-}
-.aa-commitment-state {
-  min-height: 118px;
-  padding: 24px 28px 0;
-}
-.aa-commitment-state:first-child {
-  padding-left: 0;
-}
-.aa-commitment-state + .aa-commitment-state {
-  border-left: 1px solid var(--aa-border);
-}
-.aa-commitment-kicker {
-  display: block;
-  color: var(--aa-teal-cta);
-  font-family: var(--aa-font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.aa-commitment-state p {
-  margin-top: 10px;
   color: var(--aa-text-3);
   font-size: 15px;
-  line-height: 1.55;
+}
+.aa-commitment-note::before {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 1.5px;
+  background: var(--aa-teal);
+  vertical-align: middle;
+  margin-right: 10px;
 }
 
-/* Soul */
+/* Soul — the promise, directly below the hero. */
 .aa-soul {
-  padding: 180px 56px;
+  padding: 128px 56px;
   text-align: center;
   background:
     radial-gradient(
@@ -555,8 +533,6 @@
       transparent 70%
     ),
     var(--aa-bg);
-  /* Same offset as .aa-section for the #soul anchor. */
-  scroll-margin-top: 80px;
 }
 .aa-soul-statement {
   font-size: 64px;
@@ -580,93 +556,10 @@
   line-height: 1.55;
 }
 
-/* Guides — one quiet editorial doorway between the product thesis and the
-   offer. The two-column split is structural: core idea on the left, only two
-   related paths plus library link on the right. */
-.aa-guides-teaser {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 96px 56px;
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(250px, .65fr);
-  gap: 80px;
-  border-top: 1px solid var(--aa-border);
-}
-.aa-guides-teaser h2 {
-  margin: 0 0 18px;
-  max-width: 18ch;
-  color: var(--aa-text);
-  font-size: clamp(30px, 3.5vw, 44px);
-  line-height: 1.08;
-  letter-spacing: -.035em;
-}
-.aa-guides-teaser > div > p:not(.aa-eyebrow) {
-  max-width: 48ch;
-  margin: 0 0 20px;
-  color: var(--aa-text-3);
-  font-size: var(--aa-text-md);
-  line-height: 1.6;
-}
-.aa-guides-teaser > div > a,
-.aa-guides-teaser-links a {
-  color: var(--aa-teal-cta);
-  font-weight: 650;
-  text-decoration: none;
-}
-.aa-guides-teaser-links {
-  display: flex;
-  flex-direction: column;
-  align-self: end;
-  border-top: 1px solid var(--aa-border);
-}
-.aa-guides-teaser-links a {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--aa-space-md);
-  padding: 15px 0;
-  border-bottom: 1px solid var(--aa-border);
-  color: var(--aa-text-2);
-  font-size: var(--aa-text-sm);
-}
-.aa-guides-teaser-links a:hover { color: var(--aa-teal-cta); text-decoration: none; }
-
-/* Method */
-.aa-method {
-  padding-top: 120px;
-  padding-bottom: 120px;
-}
-.aa-method .aa-display {
-  font-size: 44px;
-  max-width: 24ch;
-}
-.aa-badges {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 32px;
-}
-.aa-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--aa-surface);
-  border: 1px solid var(--aa-border);
-  padding: 9px 16px;
-  border-radius: var(--aa-radius-full);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--aa-text-2);
-  box-shadow: var(--aa-shadow-sm);
-}
-.aa-badge .aa-b {
-  color: var(--aa-teal-cta);
-  font-weight: 700;
-}
-
 /* FAQ */
 .aa-faq-section {
   padding-top: 64px;
-  padding-bottom: 120px;
+  padding-bottom: 112px;
   max-width: 760px;
 }
 .aa-faq-list {
@@ -727,7 +620,7 @@
 
 /* Final */
 .aa-final {
-  padding: 160px 56px 120px;
+  padding: 120px 56px 96px;
   text-align: center;
   background: linear-gradient(180deg, var(--aa-bg) 0%, var(--aa-bg-soft) 100%);
 }
@@ -833,9 +726,11 @@
     font-size: 11px;
   }
   .aa-hero-cta {
-    margin-top: 20px;
     padding: 11px 20px;
     min-height: 44px;
+  }
+  .aa-hero-meta {
+    margin-top: 18px;
   }
   .aa-chaos {
     display: none;
@@ -918,13 +813,9 @@
   .aa-lede {
     font-size: 16px;
   }
-  .aa-problem {
-    padding-top: 88px;
-    padding-bottom: 72px;
-  }
   .aa-how {
-    padding-top: 32px;
-    padding-bottom: 88px;
+    padding-top: 80px;
+    padding-bottom: 72px;
   }
   .aa-flow {
     grid-template-columns: 1fr;
@@ -965,7 +856,7 @@
   }
 
   .aa-commitment {
-    padding: 0 22px 88px;
+    padding: 0 22px 72px;
   }
   .aa-commitment-inner {
     padding: 32px 22px;
@@ -973,35 +864,19 @@
   .aa-commitment .aa-lede {
     margin-top: 16px;
   }
-  .aa-commitment-states {
-    grid-template-columns: 1fr;
-    margin-top: 28px;
-  }
-  .aa-commitment-state {
-    min-height: 0;
-    padding: 18px 0;
-  }
-  .aa-commitment-state + .aa-commitment-state {
-    border-top: 1px solid var(--aa-border);
-    border-left: 0;
+  .aa-commitment-note {
+    margin-top: 22px;
+    padding-top: 18px;
   }
 
   .aa-soul {
-    padding: 96px 22px;
+    padding: 80px 22px;
   }
   .aa-soul-statement {
     font-size: 36px;
   }
   .aa-soul-sub {
     font-size: 16px;
-  }
-
-  .aa-method {
-    padding-top: 72px;
-    padding-bottom: 72px;
-  }
-  .aa-method .aa-display {
-    font-size: 30px;
   }
 
   .aa-faq-section {
@@ -1017,7 +892,7 @@
   }
 
   .aa-final {
-    padding: 96px 22px 72px;
+    padding: 88px 22px 72px;
   }
   .aa-final-mark {
     width: 56px;
@@ -1032,17 +907,7 @@
     min-height: 44px;
   }
 
-  /* Guides teaser: the desktop two-column grid (250px-min right column +
-     80px gap + 56px gutters) cannot fit a phone — the left column collapsed
-     to 0px and the links column pushed the page 11px sideways. Stack it. */
-  .aa-guides-teaser {
-    grid-template-columns: 1fr;
-    gap: 40px;
-    padding: 64px 22px;
-  }
-  .aa-guides-teaser-links {
-    align-self: auto;
-  }
+  /* Guides teaser / founding teaser removed — see git history. */
 }
 
 /* ============================================================
@@ -1056,122 +921,5 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-}
-
-/* ============================================================
-   FOUNDING 100 TEASER
-   Surfaces the live spots-remaining count between the soul and method
-   sections. Hidden by default; a script reveals it once the count lands.
-   One calm amber accent (eyebrow) per the human-emphasis rule.
-   ============================================================ */
-.aa-founding-teaser {
-  padding: 0 56px;
-  max-width: 1180px;
-  margin: 0 auto 80px;
-}
-.aa-founding-teaser[hidden] {
-  display: none;
-}
-.aa-founding-teaser-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 32px;
-  padding: 36px 40px;
-  background:
-    radial-gradient(
-      ellipse 60% 80% at 90% 50%,
-      var(--aa-amber-soft) 0%,
-      transparent 70%
-    ),
-    var(--aa-surface);
-  border: 1px solid var(--aa-border);
-  border-radius: var(--aa-radius-2xl);
-  box-shadow: var(--aa-shadow-sm);
-}
-.aa-founding-teaser-eyebrow {
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--aa-amber-text);
-  background: var(--aa-amber-soft);
-  padding: 4px 10px;
-  border-radius: var(--aa-radius-full);
-  margin-bottom: 12px;
-}
-.aa-founding-teaser-text h2 {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--aa-text);
-  margin-bottom: 8px;
-}
-.aa-founding-teaser-text p {
-  font-size: 15px;
-  color: var(--aa-text-3);
-  line-height: 1.55;
-  max-width: 48ch;
-}
-.aa-founding-teaser-text b {
-  color: var(--aa-text-2);
-  font-weight: 600;
-}
-.aa-founding-teaser-pricing {
-  display: inline-block;
-  margin-top: 12px;
-  color: var(--aa-teal-cta);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-}
-.aa-founding-teaser-pricing:hover {
-  color: var(--aa-teal-cta-hover);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.aa-founding-teaser-count {
-  color: var(--aa-amber-text);
-  font-weight: 600;
-}
-.aa-founding-teaser-cta {
-  flex-shrink: 0;
-  font-size: 15px;
-}
-.aa-founding-teaser-cta:hover {
-  text-decoration: none;
-  transform: translateY(-1px);
-}
-.aa-founding-teaser-roadmap {
-  display: block;
-  margin: 12px auto 0;
-  text-align: center;
-  font-size: 14px;
-  color: var(--aa-text-muted, #6b7280);
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-.aa-founding-teaser-roadmap:hover {
-  color: var(--aa-teal, #0ea5e9);
-}
-
-@media (max-width: 768px) {
-  .aa-founding-teaser {
-    padding: 0 22px;
-    margin: 0 auto 56px;
-  }
-  .aa-founding-teaser-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 28px 24px;
-    gap: 20px;
-  }
-  .aa-founding-teaser-text h2 {
-    font-size: 22px;
-  }
-  .aa-founding-teaser-cta {
-    width: 100%;
   }
 }

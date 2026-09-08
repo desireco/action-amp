@@ -100,10 +100,14 @@ body {
   color: var(--aa-teal-cta);
   border-bottom-color: var(--aa-teal);
 }
-/* Right-aligned auth link. Brand uses margin-right:auto, so this sits at the
-   far right. Survives mobile (the section anchors in .aa-nav-links don't). */
+/* Right-aligned auth area: quiet Log in link + the primary "Start free"
+   action. Brand uses margin-right:auto, so this sits at the far right.
+   Survives mobile (the section anchors in .aa-nav-links don't). */
 .aa-nav-auth {
   margin-left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 .aa-nav-link-auth {
   font-size: 14px;
@@ -112,6 +116,15 @@ body {
 }
 .aa-nav-link-auth:hover {
   color: var(--aa-teal-cta);
+  text-decoration: none;
+}
+/* Compact design-system primary button; the page CTAs stay larger. */
+.aa-nav-cta {
+  font-size: 13.5px;
+  padding: 8px 16px;
+  border-radius: var(--aa-radius-md);
+}
+.aa-nav-cta:hover {
   text-decoration: none;
 }
 /* Burger toggle — hidden everywhere except mobile nav with JS running
@@ -272,12 +285,19 @@ body {
   }
   .aa-nav-auth {
     margin-left: 0;
+    gap: 10px;
   }
   .aa-brand,
   .aa-nav-link-auth {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
+  }
+  /* Keep brand + Log in + Start free + burger on one 360px row. */
+  .aa-nav-cta {
+    font-size: 13px;
+    padding: 7px 12px;
+    min-height: 36px;
   }
   .aa-brand-name {
     font-size: 15px;

@@ -1,15 +1,17 @@
 ---
 // SiteNav — the single shared site header.
 //
-// Sticky site navigation, used on every public page. The route map
-// stays identical across the landing and content surfaces so a visitor never
-// has to relearn navigation. Current route gets a quiet teal marker.
+// Sticky site navigation, used on every public page. Kept deliberately
+// short (How it works, Pricing, About); Guides, Blog, and Roadmap stay
+// reachable from the footer and in-page links. Current route gets a quiet
+// teal marker. Signup is the primary action: "Start free" sits next to
+// Log in at the far right.
 //
 // Mobile (≤768px): the links collapse into a burger menu that opens a
-// full-width dropdown panel under the bar (links + Log in). The toggle and
-// panel are progressive enhancement — without JS the nav keeps the previous
-// wrapped, horizontally scrollable links row, so every destination stays
-// reachable.
+// full-width dropdown panel under the bar. Log in + Start free stay in the
+// top bar. The toggle and panel are progressive enhancement — without JS
+// the nav keeps the previous wrapped, horizontally scrollable links row,
+// so every destination stays reachable.
 //
 // Styles live in styles/site-chrome.css (imported by both index.astro and
 // PublicLayout.astro).
@@ -23,11 +25,8 @@ const { appUrl } = Astro.props;
 const currentPath = Astro.url.pathname.replace(/\/+$/, "") || "/";
 const links = [
   { label: "How it works", href: "/#how", active: currentPath === "/" },
-  { label: "Guides", href: "/guides", active: currentPath === "/guides" || currentPath.startsWith("/guides/") },
-  { label: "Blog", href: "/blog", active: currentPath === "/blog" || currentPath.startsWith("/blog/") },
   { label: "Pricing", href: "/pricing", active: currentPath === "/pricing" },
   { label: "About", href: "/about", active: currentPath === "/about" },
-  { label: "Roadmap", href: "/roadmap", active: currentPath === "/roadmap" },
 ];
 ---
 
@@ -45,6 +44,7 @@ const links = [
   </div>
   <div class="aa-nav-auth">
     <a class="aa-nav-link aa-nav-link-auth" href={`${appUrl}/login`}>Log in</a>
+    <a class="aa-btn aa-btn--primary aa-nav-cta" href={`${appUrl}/signup`}>Start free</a>
   </div>
   <button class="aa-nav-toggle" type="button" aria-expanded="false" aria-controls="aa-nav-menu" aria-label="Open menu" hidden>
     <svg class="aa-nav-toggle-icon aa-nav-toggle-icon--burger" viewBox="0 0 20 20" width="20" height="20" fill="none" aria-hidden="true">

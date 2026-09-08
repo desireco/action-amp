@@ -5,7 +5,7 @@
 // Two interactive bits are tiny inline <script>s at the bottom:
 //   1. Hero "Next card" — click completion → fill → cycle to next task.
 //   2. FAQ accordion — click toggles .open.
-// All app links (/signup, /login, /founding-100) are absolute via appUrl.
+// All app links (/signup, /login) are absolute via appUrl.
 import "../styles/landing.css";
 import "../styles/site-chrome.css";
 import SiteNav from "../components/SiteNav.astro";
@@ -14,7 +14,6 @@ import StatCounter from "../components/StatCounter.astro";
 import FunnelTracker from "../components/FunnelTracker.astro";
 
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:4000";
-const apiUrl = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3001";
 
 // Hero demo tasks — the card can focus, switch recommendations, or complete.
 const HERO_TASKS = [
@@ -25,11 +24,14 @@ const HERO_TASKS = [
   { title: "Draft the Q3 launch plan", why: "Why this: important and oldest in your queue", meta: "Large · Upcoming" },
 ];
 
+// Answers verified against the implementation + pricing (2026-09):
+// ranking per docs/features/next-what-now.md (getTopTask: Today > Upcoming,
+// priority, size, oldest); free plan per docs/PRICING.md §4–5 + /pricing.
 const FAQ_ITEMS = [
-  { q: "Is this just another todo app?", a: 'No. The list is demoted. "What do I do next?" is the home screen. ActionAmp optimizes the decision, not the capture.' },
-  { q: "Do I need to know GTD?", a: "No. The methodology is there if you want it, invisible if you don't. Most users capture, triage, and do." },
-  { q: "Will it keep reminding me?", a: "No stream of task alerts. If it helps, set one daily reminder for Today." },
-  { q: "Is ActionAmp available now?", a: "Yes. ActionAmp is live in early access. Start free today." },
+  { q: "How does ActionAmp choose my next task?", a: "Tasks you committed to today come first, then priority, size, and due dates. Every suggestion shows a short why, so you can trust it or overrule it." },
+  { q: "Can I choose a different task?", a: "Yes. Other ranked candidates wait just below the suggestion. Picking one hides nothing — the original recommendation stays available." },
+  { q: "What is included for free?", a: "The full focus loop: unlimited capture and tasks, the suggested next task, Today, and planning views — plus 3 projects and 1 goal. No credit card, no time limit." },
+  { q: "Where can I use ActionAmp?", a: "In the browser, on any device. On Android and Chrome you can install it as an app and share things straight into your inbox." },
 ];
 ---
 
@@ -43,11 +45,11 @@ const FAQ_ITEMS = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0EA5E9" />
     <title>ActionAmp — One task. The next one that matters.</title>
-    <meta name="description" content="Almost every app opens to your list. ActionAmp opens to the one task that matters next." />
+    <meta name="description" content="ActionAmp suggests what to do next and tells you why. Capture everything, focus on one task at a time, and keep your whole plan close by." />
     <link rel="canonical" href="https://actionamp.com/" />
     <link rel="alternate" type="application/rss+xml" title="ActionAmp — Blog" href="/rss.xml" />
     <meta property="og:title" content="ActionAmp — One task. The next one that matters." />
-    <meta property="og:description" content="Almost every app opens to your list. ActionAmp opens to the one task that matters next." />
+    <meta property="og:description" content="ActionAmp suggests what to do next and tells you why. Capture everything, focus on one task at a time, and keep your whole plan close by." />
     <meta property="og:url" content="https://actionamp.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ActionAmp" />
@@ -96,6 +98,9 @@ const FAQ_ITEMS = [
               tells you what made it the next choice, and keeps your plan one
               click away.
             </p>
+            <a href={`${appUrl}/signup`} class="aa-btn aa-btn--primary aa-btn--lg aa-hero-cta">
+              Start free
+            </a>
             <div class="aa-hero-meta">
               <span>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -117,9 +122,6 @@ const FAQ_ITEMS = [
                 GTD-compatible
               </span>
             </div>
-            <a href={`${appUrl}/signup`} class="aa-btn aa-btn--primary aa-btn--lg aa-hero-cta">
-              Make an account
-            </a>
           </div>
 
           <div class="aa-wn-wrap">
@@ -139,7 +141,7 @@ const FAQ_ITEMS = [
                     <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </button>
-                <span>Start on it</span>
+                <span>Try completing this task</span>
               </div>
               <div class="aa-wn-title" id="aa-wn-title">{HERO_TASKS[0].title}</div>
               <div class="aa-wn-meta" id="aa-wn-meta">{HERO_TASKS[0].meta}</div>
@@ -153,36 +155,28 @@ const FAQ_ITEMS = [
         </div>
       </section>
 
-      <section class="aa-section aa-problem">
-        <div class="aa-eyebrow">The expectation</div>
-        <h2 class="aa-display">
-          <span class="aa-light">Your app should</span> support your focus.
+      {/* ── The promise, stated once, one screen below the hero. Absorbs the
+          old "Your app should support your focus" problem section. ── */}
+      <section class="aa-soul" id="promise">
+        <h2 class="aa-soul-statement">
+          Open. One task. <b>Done.</b>
         </h2>
-        <p class="aa-lede">
-          Most apps optimize <b>capture</b>, writing things down. Few optimize
-          the <b>decision</b>: of all this, what do I do right now?
-        </p>
-        <p class="aa-lede">
-          The list grows faster than you can work it. You don't fail to capture.
-          You fail to <b>pick</b>. A list that doesn't help you pick isn't
-          helping you focus, it's nagging.
-        </p>
-        <p class="aa-lede aa-lede-punch">
-          So ActionAmp brings one clear next task forward. You can always choose
-          another.
+        <p class="aa-soul-sub">
+          Open ActionAmp to a suggested next task. Start working, choose
+          another, or look at your plan. When you finish, move on to the next.
         </p>
       </section>
 
       <section class="aa-section aa-how" id="how">
         <div class="aa-eyebrow">How it works</div>
         <h2 class="aa-display">
-          <span class="aa-light">Three moves,</span> not three hundred features.
+          <span class="aa-light">From thought</span> to action.
         </h2>
         <div class="aa-flow">
           <div class="aa-flow-step">
             <div class="aa-flow-num">01</div>
             <h3>Capture</h3>
-            <p>Get it out of your head. No sorting required.</p>
+            <p>Put tasks and ideas in your inbox before you forget.</p>
           </div>
           <div class="aa-flow-arrow">
             <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
@@ -192,7 +186,7 @@ const FAQ_ITEMS = [
           <div class="aa-flow-step">
             <div class="aa-flow-num">02</div>
             <h3>Triage</h3>
-            <p>Give it a home when you are ready.</p>
+            <p>Decide what needs action, where it belongs, and when it matters.</p>
           </div>
           <div class="aa-flow-arrow">
             <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
@@ -202,7 +196,7 @@ const FAQ_ITEMS = [
           <div class="aa-flow-step">
             <div class="aa-flow-num">03</div>
             <h3>Focus</h3>
-            <p>See one clear next task when it is time to act.</p>
+            <p>Work on one suggested task at a time.</p>
           </div>
         </div>
       </section>
@@ -214,103 +208,18 @@ const FAQ_ITEMS = [
             Today is a promise. <span class="aa-light">Not a backlog.</span>
           </h2>
           <p class="aa-lede">
-            Your whole plan has a place. Only the work you mean to do today has
-            to compete for your attention.
+            Choose a small set of commitments for today. Keep future work in
+            your plan without putting it all in front of you.
           </p>
-          <div class="aa-commitment-states">
-            <div class="aa-commitment-state">
-              <span class="aa-commitment-kicker">Today</span>
-              <p>Keep a deliberately small set of commitments.</p>
-            </div>
-            <div class="aa-commitment-state">
-              <span class="aa-commitment-kicker">Upcoming</span>
-              <p>The rest waits safely on the bench.</p>
-            </div>
-            <div class="aa-commitment-state">
-              <span class="aa-commitment-kicker">Tomorrow</span>
-              <p>Start clean. Recommit on purpose.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="aa-soul" id="soul">
-        <h2 class="aa-soul-statement">
-          Open. One task. <b>Done.</b>
-        </h2>
-        <p class="aa-soul-sub">
-          Almost every app opens to your full todo list. ActionAmp opens to one
-          task, the next thing that matters, and hides the rest. You can always
-          see it. You don't have to.
-        </p>
-      </section>
-
-      <section class="aa-guides-teaser" aria-labelledby="guides-teaser-title">
-        <div>
-          <p class="aa-eyebrow">Practical guides</p>
-          <h2 id="guides-teaser-title">Lists are necessary.<br /><span class="aa-light">Living inside them is not.</span></h2>
-          <p>Keep commitments accounted for. Keep your working surface small. Start with the guide that explains the distinction.</p>
-          <a href="/guides/task-lists-are-necessary">Read the guide <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="aa-guides-teaser-links">
-          <a href="/guides/choose-next-task">How to choose your next task <span aria-hidden="true">→</span></a>
-          <a href="/guides/notebook-and-actionamp">How to use a notebook and ActionAmp together <span aria-hidden="true">→</span></a>
-          <a href="/guides">See all guides <span aria-hidden="true">→</span></a>
-        </div>
-      </section>
-
-      {/* Founding 100 teaser — surfaces the live spots-remaining count from the
-          public /founding-100/status endpoint and links into the app. Hidden by
-          default; the script below reveals it once the count lands. If the
-          fetch fails, it stays hidden (the page still works). */}
-      <section class="aa-founding-teaser" id="aa-founding-teaser" hidden>
-        <div class="aa-founding-teaser-inner">
-          <div class="aa-founding-teaser-text">
-            <span class="aa-founding-teaser-eyebrow">Founding 100</span>
-            <h2>Lifetime Pro for $99 once.</h2>
-            <p>
-              Regular Pro is <b>$79.50/year</b>. Founding costs $19.50 more than
-              your first year, with no renewal bill. Capped at 100 memberships,
-              with two reserved for launch partners.
-              <span class="aa-founding-teaser-count" id="aa-founding-count"></span>
-            </p>
-            <a href="/pricing" class="aa-founding-teaser-pricing">Compare Free, Pro, and Founding →</a>
-          </div>
-          <a href={`${appUrl}/founding-100`} class="aa-btn aa-btn--primary aa-btn--lg aa-founding-teaser-cta">
-            <span id="aa-founding-cta-label">See Founding membership</span>
-          </a>
-        </div>
-        <a href="/roadmap" class="aa-founding-teaser-roadmap">See how we're doing →</a>
-      </section>
-
-      <section class="aa-section aa-method" id="method">
-        <div class="aa-eyebrow">Methodology</div>
-        <h2 class="aa-display">
-          GTD-compatible. <span class="aa-light">Built for action.</span>
-        </h2>
-        <p class="aa-lede">
-          If you know <b>Getting Things Done</b>, you're home: inbox, triage,
-          projects, someday. If you don't, none of that matters, the app still
-          works.
-        </p>
-        <p class="aa-lede">
-          We also borrowed from <b>PARA</b>, with one deliberate change: we took
-          its <b>Areas</b> and called them <b>Goals</b>. Not the same, but
-          similar. Areas are passive buckets ("Health", "Finance"). Goals are
-          active outcomes ("Run a 10k", "Get finances under control"). For an
-          app about action, the active framing fits.
-        </p>
-        <div class="aa-badges">
-          <span class="aa-badge"><span class="aa-b">/</span>Inbox → triage</span>
-          <span class="aa-badge"><span class="aa-b">/</span>Goals over areas</span>
-          <span class="aa-badge"><span class="aa-b">/</span>Projects & tasks</span>
-          <span class="aa-badge"><span class="aa-b">/</span>Priority + size</span>
+          <p class="aa-commitment-note">
+            Each morning Today starts empty. You choose again.
+          </p>
         </div>
       </section>
 
       <section class="aa-section aa-faq-section" id="faq">
         <div class="aa-eyebrow">FAQ</div>
-        <h2 class="aa-display aa-display-sm">Questions people ask.</h2>
+        <h2 class="aa-display aa-display-sm">Practical questions.</h2>
         <div class="aa-faq-list">
           {FAQ_ITEMS.map((item, index) => (
             <div class="aa-faq-item">
@@ -347,10 +256,10 @@ const FAQ_ITEMS = [
           Do the <b>next thing</b>.<br />
           Not all the things.
         </h2>
-        <p>Free to start. Yours to keep.</p>
+        <p>Free plan: unlimited tasks and capture, 3 projects, no credit card.</p>
         <div class="aa-final-cta">
           <a href={`${appUrl}/signup`} class="aa-btn aa-btn--primary aa-btn--lg aa-final-cta-btn">
-            Make an account
+            Start free
           </a>
           <span class="aa-final-login">
             Already use it? <a href={`${appUrl}/login`}>Log in</a>
@@ -361,7 +270,7 @@ const FAQ_ITEMS = [
       <SiteFooter appUrl={appUrl} />
     </div>
 
-    <script is:inline define:vars={{ HERO_TASKS, apiUrl }}>
+    <script is:inline define:vars={{ HERO_TASKS }}>
       // Hero card — Start focus previews working; Switch task changes the
       // recommendation; only the completion ring marks a task done.
       (function () {
@@ -444,35 +353,6 @@ const FAQ_ITEMS = [
         });
       });
 
-      // Founding 100 teaser — fetch the live spots-remaining count from the
-      // public status endpoint. Reveals the teaser only on success; on failure
-      // it stays hidden so the page still reads cleanly.
-      (function () {
-        var teaser = document.getElementById("aa-founding-teaser");
-        var countEl = document.getElementById("aa-founding-count");
-        var ctaLabel = document.getElementById("aa-founding-cta-label");
-        if (!teaser || !countEl || !ctaLabel) return;
-
-        fetch(apiUrl + "/founding-100/status")
-          .then(function (r) {
-            if (!r.ok) throw new Error("status " + r.status);
-            return r.json();
-          })
-          .then(function (data) {
-            if (data.isFull) {
-              countEl.textContent = " All public memberships have been claimed.";
-              ctaLabel.textContent = "Join the waitlist";
-            } else if (typeof data.remaining === "number") {
-              countEl.textContent = " " + data.remaining + " public memberships left.";
-            }
-            teaser.hidden = false;
-          })
-          .catch(function () {
-            // Network/API unavailable — leave the teaser hidden. No console
-            // noise: this is expected on the static preview or local dev when
-            // the Wasp server isn't running.
-          });
-      })();
     </script>
   </body>
 </html>
