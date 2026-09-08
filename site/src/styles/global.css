@@ -77,11 +77,12 @@
   padding: 64px 56px;
   width: 100%;
 }
-/* Wide variant — surfaces that need a larger canvas (the blog index). Drops
-   the reading-width cap so child grids (two-lane archive, featured zone) can
-   use the full content width. Article pages keep the 720px cap. */
+/* Wide variant — surfaces that need a larger canvas (blog/guides index,
+   pricing, roadmap). Same 1180px box as the landing sections, footer, and
+   nav alignment, so every page's content edges line up. Article pages keep
+   the 720px reading cap. */
 .aa-pub-main--wide {
-  max-width: 1200px;
+  max-width: 1180px;
   padding: 0;
 }
 

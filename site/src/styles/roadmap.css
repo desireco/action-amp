@@ -6,10 +6,10 @@
 @import "./tokens.css";
 
 .aa-roadmap {
-  /* fullWidth PublicLayout shell unlocks up to 1200px (matches the blog index
-     and the landing's 1180px section width). The --wide variant strips the
-     shell's horizontal padding, so it's re-added here. */
-  max-width: 1200px;
+  /* fullWidth PublicLayout shell + 1180px box (matches the blog index, the
+     pricing page, and the landing's section width). The --wide variant strips
+     the shell's horizontal padding, so it's re-added here. */
+  max-width: 1180px;
   margin: 0 auto;
   padding: 64px 56px;
 }

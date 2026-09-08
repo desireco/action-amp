@@ -1,4 +1,4 @@
-.aa-guides { max-width: 1120px; margin: 0 auto; padding: 0 var(--aa-space-2xl) var(--aa-space-4xl); }
+.aa-guides { max-width: 1180px; margin: 0 auto; padding: 0 var(--aa-space-2xl) var(--aa-space-4xl); }
 .aa-guides-hero { max-width: 760px; padding: var(--aa-space-4xl) 0 var(--aa-space-3xl); }
 .aa-guides-kicker, .aa-guides-shelf-label, .aa-guides-feature-label, .aa-guide-eyebrow, .aa-guide-actionamp-label { margin: 0; color: var(--aa-teal-cta); font-size: var(--aa-text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .09em; }
 .aa-guides h1 { margin: var(--aa-space-sm) 0 var(--aa-space-lg); font-size: clamp(38px, 5.2vw, 58px); line-height: 1.06; letter-spacing: -.045em; }

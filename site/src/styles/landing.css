@@ -556,11 +556,11 @@
   line-height: 1.55;
 }
 
-/* FAQ */
+/* FAQ — full section width like every other landing section; only the
+   answer text caps at reading measure so long lines don't run the box. */
 .aa-faq-section {
   padding-top: 64px;
   padding-bottom: 112px;
-  max-width: 760px;
 }
 .aa-faq-list {
   margin-top: 40px;
@@ -608,6 +608,7 @@
   line-height: 1.6;
   margin-top: 0;
   max-height: 0;
+  max-width: 65ch;
   overflow: hidden;
   transition:
     max-height 0.25s ease,
@@ -617,7 +618,6 @@
   max-height: 200px;
   margin-top: 12px;
 }
-
 /* Final */
 .aa-final {
   padding: 120px 56px 96px;

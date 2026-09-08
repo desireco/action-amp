@@ -13,7 +13,7 @@
    HERO
    ============================================================ */
 .aa-blog-hero {
-  max-width: 1200px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: var(--aa-space-3xl) var(--aa-space-2xl) var(--aa-space-2xl);
   border-bottom: 1px solid var(--aa-border);
@@ -98,7 +98,7 @@
    FEATURED ZONE
    ============================================================ */
 .aa-blog-featured {
-  max-width: 1200px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: var(--aa-space-2xl) var(--aa-space-2xl) var(--aa-space-md);
 }
@@ -313,7 +313,7 @@
 .aa-blog-lanes {
   display: grid;
   grid-template-columns: 1fr;
-  max-width: 1200px;
+  max-width: 1180px;
   margin: 0 auto;
 }
 .aa-blog-lane {
