@@ -23,6 +23,9 @@
   // protocol lives in the SW itself: install → wait → (banner's SKIP_WAITING)
   // → activate; the reload side rides controllerchange below.
   import { registerServiceWorker } from "../lib/push";
+  // Better Stack error tracking — app surface only; the flow/marketing pages
+  // stay out of telemetry (lib/telemetry.ts, /betterstack.js tag).
+  import { initBetterStackErrorTracking } from "../lib/telemetry";
   let { children }: { children: Snippet } = $props();
 
   // The app shell's territory: "/" + every app section (/today, /inbox,
@@ -49,6 +52,12 @@
           navigator.serviceWorker.removeEventListener("controllerchange", onChange);
       }
     }
+  });
+
+  // Telemetry follows the shell: entering an app route injects the Better
+  // Stack tag once (idempotent); a direct hit on a flow page never loads it.
+  $effect(() => {
+    if (inApp) initBetterStackErrorTracking();
   });
 </script>
 
