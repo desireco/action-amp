@@ -25,6 +25,7 @@ export type Task = {
   projectId?: string | null;
   goalId?: string | null;
   lensId?: string;
+  lens?: { id: string; name: string; color?: string | null } | null;
   project?: { id: string; name: string; permalink?: string } | null;
   goal?: { id: string; name: string; permalink?: string } | null;
   attachments?: { id: string; filename: string; mimeType: string }[];

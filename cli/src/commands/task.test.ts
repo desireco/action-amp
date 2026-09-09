@@ -211,4 +211,75 @@ describe("task commands", () => {
       });
     });
   });
+
+  describe("task sweep", () => {
+    it("default is a dry run: lists what would move, no apply in the body", async () => {
+      requestMock.mockResolvedValue({
+        dryRun: true,
+        tasks: [
+          {
+            ...TASK,
+            status: "UPCOMING",
+            lens: { id: "l1", name: "Work", color: "indigo" },
+          },
+        ],
+      });
+      const { stdout } = await runCommand(["sweep"]);
+      expect(stdout).toContain("1 task would move to Someday");
+      expect(stdout).toContain("Ship the auth refactor");
+      expect(stdout).toContain("Work");
+      expect(stdout).toContain("Run again with --apply");
+      expect(requestMock).toHaveBeenCalledWith("/api/cli/task/sweep", {
+        method: "POST",
+        body: { olderThanDays: 30 },
+      });
+    });
+
+    it("--apply sends apply and reports the move", async () => {
+      requestMock.mockResolvedValue({
+        dryRun: false,
+        tasks: [TASK],
+      });
+      const { stdout } = await runCommand([
+        "sweep",
+        "--older-than",
+        "14",
+        "--apply",
+      ]);
+      expect(stdout).toContain("1 task moved to Someday");
+      expect(stdout).not.toContain("--apply");
+      expect(requestMock).toHaveBeenCalledWith("/api/cli/task/sweep", {
+        method: "POST",
+        body: { olderThanDays: 14, apply: true },
+      });
+    });
+
+    it("empty result → calm empty state", async () => {
+      requestMock.mockResolvedValue({ dryRun: true, tasks: [] });
+      const { stdout } = await runCommand(["sweep"]);
+      expect(stdout).toContain("Nothing stale enough to sweep.");
+    });
+
+    it("--older-than validation rejects non-numbers", async () => {
+      // fail() calls process.exit — stub it to throw, the admin-cli pattern.
+      let code: number | null = null;
+      const origExit = process.exit.bind(process);
+      process.exit = ((c?: number) => {
+        code = c ?? 0;
+        throw new Error(`__exit_${code}`);
+      }) as typeof process.exit;
+      try {
+        await runCommand(["sweep", "--older-than", "soon", "--json"]);
+      } catch {
+        // commander errors + fail()'s process.exit
+      }
+      process.exit = origExit;
+      const parsed = JSON.parse(stdoutBuf);
+      expect(parsed.error).toBe(
+        "--older-than must be a whole number between 1 and 365.",
+      );
+      expect(code).toBe(1);
+      expect(requestMock).not.toHaveBeenCalled();
+    });
+  });
 });

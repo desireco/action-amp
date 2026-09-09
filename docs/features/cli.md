@@ -48,7 +48,11 @@ list). The ids surface in text output so agents can chain without `--json`:
 `task show`, `project show`, `resource list`, and `inbox list` each print
 `image <filename> — <id>` lines for items carrying media; the `--json`
 shapes carry the full `attachments` metadata arrays.
-- **Tasks:** `task (show|start|pause|done|snooze|move)`.
+- **Tasks:** `task (show|start|pause|done|snooze|move|sweep)`. `sweep` is
+  the bulk "old things" demotion: Upcoming tasks untouched for
+  `--older-than` days (default 30) park in Someday — dry run by default,
+  `--apply` writes, `--lens-id` scopes (default: all accessible lenses).
+  Future snoozes are skipped; Today commitments are never swept.
 - **Planning:** `project (list|show|create|add-task)` (list/show carry
   resources), `goal (list|show|create)`, `resource (list|add|update|delete)`.
 - **Lenses:** `lens (list|show|switch|current)` — `switch` stores the active

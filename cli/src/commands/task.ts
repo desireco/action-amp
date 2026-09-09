@@ -1,13 +1,17 @@
 /**
- * task — the decision-loop verbs (start/pause/done/snooze/move/show).
+ * task — the decision-loop verbs (start/pause/done/snooze/move/sweep/show).
  *
  * Each takes an id-or-permalink as the first arg. `done` is the headline — it
  * marks the top task complete and (in a future slice) prints the next one.
  */
 import { Command } from "commander";
+import chalk from "chalk";
 import { request } from "../api.js";
-import { emit, formatAttachmentLine, formatTask, type OutputCtx } from "../output.js";
+import { readConfig } from "../config.js";
+import { emit, fail, formatAttachmentLine, formatTask, type OutputCtx } from "../output.js";
 import type { Task, TaskMutationResult } from "../types.js";
+
+type SweepResult = { dryRun: boolean; tasks: Task[] };
 
 export function makeTaskCommand(): Command {
   const task = new Command("task");
@@ -150,6 +154,61 @@ export function makeTaskCommand(): Command {
         ctx,
       );
     });
+
+  task
+    .command("sweep")
+    .description(
+      "push stale upcoming tasks to someday (dry run unless --apply)",
+    )
+    .option("--older-than <days>", "days untouched before a task counts as stale", "30")
+    .option("--lens-id <id>", "sweep a single lens (default: all accessible)")
+    .option("--apply", "move the tasks (default shows what would move)")
+    .option("--json", "emit JSON output")
+    .action(
+      async (opts: {
+        olderThan: string;
+        lensId?: string;
+        apply?: boolean;
+        json?: boolean;
+      }) => {
+        const ctx: OutputCtx = { json: opts.json ?? false };
+        const days = Number(opts.olderThan);
+        if (!Number.isInteger(days) || days < 1 || days > 365) {
+          fail("--older-than must be a whole number between 1 and 365.", ctx);
+        }
+        const body: Record<string, unknown> = { olderThanDays: days };
+        const lensId = opts.lensId ?? readConfig()?.lensId;
+        if (lensId) body.lensId = lensId;
+        if (opts.apply) body.apply = true;
+        const result = await request<SweepResult>("/api/cli/task/sweep", {
+          method: "POST",
+          body,
+        });
+        emit(
+          result,
+          () => {
+            if (result.tasks.length === 0) {
+              process.stdout.write("Nothing stale enough to sweep.\n");
+              return;
+            }
+            const verb = result.dryRun ? "would move" : "moved";
+            process.stdout.write(
+              `${result.tasks.length} task${result.tasks.length === 1 ? "" : "s"} ${verb} to Someday:\n`,
+            );
+            result.tasks.forEach((t) => {
+              const lens = t.lens?.name
+                ? ` ${chalk.gray("·")} ${chalk.gray("lens")} ${t.lens.name}`
+                : "";
+              process.stdout.write(`  ${formatTask(t)}${lens}\n`);
+            });
+            if (result.dryRun) {
+              process.stdout.write("Run again with --apply to move them.\n");
+            }
+          },
+          ctx,
+        );
+      },
+    );
 
   return task;
 }

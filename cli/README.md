@@ -38,6 +38,7 @@ npm run build && ./dist/index.js     # built
 | `task done <id> [--outcome <text>]`                                    | Mark a task done                                                                                                             |
 | `task snooze <id> [--preset <p>]`                                      | Snooze (presets: `1h\|3h\|tomorrow\|weekend\|someday`)                                                                       |
 | `task move <id> --to <list>`                                           | Move (today, upcoming, someday)                                                                                              |
+| `task sweep [--older-than <days>] [--lens-id <id>] [--apply]`         | Push stale Upcoming tasks (untouched N days, default 30) to Someday — dry run by default; `--apply` moves                                                  |
 | `inbox list`                                                           | Show unprocessed inbox items                                                                                                 |
 | `inbox triage <id> --decision <d>`                                     | Triage an inbox item                                                                                                         |
 | `inbox download <attachmentId> [path]`                                 | Download a captured image by attachment id (alias of `attachment download`)                                                  |
@@ -86,6 +87,7 @@ capture      → { ok: true, kind: "inbox-item" | "list-item", id, text, created
 today        → { tasks: [...] }
 task done    → { id, isDone, completedAt, ... }
 task snooze  → { id, status, dueDate }
+task sweep   → { dryRun: boolean, tasks: [...] }
 inbox list   → { items: [...] }
 inbox download → { ok: true, path, bytes, mimeType, filename }
 lens list    → { lenses: [{ id, name, kind, color, purpose, counts }] }

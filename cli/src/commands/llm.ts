@@ -50,6 +50,7 @@ actionamp task start <id>                     # start a task (sets it as focused
 actionamp task pause <id>                     # pause the focused task
 actionamp task snooze <id> [--preset <p>]     # snooze (1h|3h|tomorrow|weekend|someday)
 actionamp task move <id> --to <list>          # move (today|upcoming|someday)
+actionamp task sweep [--older-than 30] [--apply]  # push stale Upcoming tasks (untouched N days) to someday — dry run by default
 actionamp capture "<text>"                    # quick-capture to inbox
 actionamp capture "<text>" --source-url <url> --file <image> [--file <image> ...]
                                                 # capture shared reference/images
@@ -75,6 +76,7 @@ task start   → { id, startedAt }
 task pause   → { id, startedAt: null }
 task snooze  → { id, status, snoozedUntil }
 task move    → { task: {...} }
+task sweep   → { dryRun: boolean, tasks: [...] }
 inbox list   → { items: [...] }
 resource list → { projectId, resources: [...] }
 resource add/update → { resource: {...} }
@@ -148,6 +150,12 @@ NL parsing extracts: \`#project\`, \`@date\`, \`!priority\`, \`#tags\`, \`[[lens
    Decisions: \`task-today\`, \`upcoming\`, \`someday\`, \`project\`,
    \`resource\`, \`list-item\`, \`archive\`, \`delete\`. Use \`list-item\`
    only with a Simple-list Lens; it creates a flat checklist row without task metadata.
+
+### Clear the bench
+1. \`actionamp task sweep\` — dry run: Upcoming tasks untouched for 30+ days.
+2. \`actionamp task sweep --apply\` — park them in Someday.
+Tune with \`--older-than <days>\`; scope with \`--lens-id\`. Tasks snoozed into
+the future are skipped, and Today commitments are never swept.
 
 ## Rules for agents
 
