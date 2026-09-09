@@ -31,13 +31,13 @@ describe("fetchApi", () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, { ok: true }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await fetchApi("http://localhost:3001", "aa_token", "/api/cli/now", {
+    await fetchApi("http://localhost:8080", "aa_token", "/api/cli/now", {
       method: "POST",
       body: { text: "hello" },
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:3001/api/cli/now",
+      "http://localhost:8080/api/cli/now",
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({
@@ -54,7 +54,7 @@ describe("fetchApi", () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, { ok: true }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await fetchApi("http://localhost:3001", "aa_token", "/api/cli/now");
+    await fetchApi("http://localhost:8080", "aa_token", "/api/cli/now");
 
     const call = fetchMock.mock.calls[0][1] as RequestInit;
     expect(call.headers).not.toHaveProperty("Content-Type");
@@ -66,7 +66,7 @@ describe("fetchApi", () => {
 describe("request — error handling", () => {
   beforeEach(() => {
     mkdirSync(TMP_HOME, { recursive: true });
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001" });
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080" });
   });
 
   afterEach(() => {

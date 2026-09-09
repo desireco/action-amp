@@ -70,7 +70,7 @@ The stored config is **separate** from the user CLI's
 (`~/.config/actionamp-admin/`, not `~/.config/actionamp/`), so an admin + a
 user session can coexist, and revoking one never affects the other.
 
-`--dev` targets `localhost:3001` (API) + `localhost:4000` (web). Default is
+`--dev` targets `localhost:8080` (API) + `localhost:5174` (web). Default is
 `api.actionamp.com` + `app.actionamp.com`. The server choice is remembered at
 login time — subsequent commands don't need `--dev`.
 
@@ -78,7 +78,7 @@ login time — subsequent commands don't need `--dev`.
 
 `~/.config/actionamp-admin/config.json`:
 ```json
-{ "token": "aa_…", "apiUrl": "http://localhost:3001" }
+{ "token": "aa_…", "apiUrl": "http://localhost:8080" }
 ```
 
 Override origins with env vars: `ACTIONAMP_API_URL`, `ACTIONAMP_WEB_URL`.

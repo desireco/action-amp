@@ -65,7 +65,7 @@ async function run(cmd: Command, args: string[]) {
 
 beforeEach(() => {
   mkdirSync(join(getConfigPath(), ".."), { recursive: true });
-  writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001" });
+  writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080" });
   requestMock.mockReset();
 });
 afterEach(() => {
@@ -110,7 +110,7 @@ describe("lens list", () => {
   it("marks the active lens (matches config.lensId)", async () => {
     writeConfig({
       token: "aa_test",
-      apiUrl: "http://localhost:3001",
+      apiUrl: "http://localhost:8080",
       lensId: "l2",
     });
     requestMock.mockResolvedValue({ lenses: [LENS_ME, LENS_WORK] });
@@ -178,7 +178,7 @@ describe("lens show", () => {
   it("marks the lens as active when it matches config.lensId", async () => {
     writeConfig({
       token: "aa_test",
-      apiUrl: "http://localhost:3001",
+      apiUrl: "http://localhost:8080",
       lensId: "l2",
     });
     requestMock.mockResolvedValue({ lens: LENS_WORK });
@@ -248,7 +248,7 @@ describe("lens current", () => {
   it("active lens set → fetches it by id and prints name", async () => {
     writeConfig({
       token: "aa_test",
-      apiUrl: "http://localhost:3001",
+      apiUrl: "http://localhost:8080",
       lensId: "l2",
     });
     requestMock.mockResolvedValue({ lens: LENS_WORK });
@@ -263,7 +263,7 @@ describe("lens current", () => {
   it("active lens id no longer resolves → 'was deleted'", async () => {
     writeConfig({
       token: "aa_test",
-      apiUrl: "http://localhost:3001",
+      apiUrl: "http://localhost:8080",
       lensId: "stale",
     });
     requestMock.mockResolvedValue({ lens: null });

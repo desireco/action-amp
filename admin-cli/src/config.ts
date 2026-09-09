@@ -5,7 +5,7 @@
  * user CLI's ~/.config/actionamp/config.json. The two CLIs never share tokens:
  * an admin token + a user token can coexist on the same machine, and revoking
  * one never affects the other.
- *   { "token": "aa_...", "apiUrl": "http://localhost:3001" }
+ *   { "token": "aa_...", "apiUrl": "http://localhost:8080" }
  *
  * The token is a PAT minted via the same OAuth browser flow the user CLI uses
  * (see commands/login.ts) — but the admin CLI only stores it after verifying
@@ -23,18 +23,19 @@ const CONFIG_DIR = join(homedir(), ".config", "actionamp-admin");
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 
 export const PROD_API_URL = "https://api.actionamp.com";
-export const DEV_API_URL = "http://localhost:3001";
+export const DEV_API_URL = "http://localhost:8080";
 export const PROD_WEB_URL = "https://app.actionamp.com";
-export const DEV_WEB_URL = "http://localhost:4000";
+export const DEV_WEB_URL = "http://localhost:5174";
 
 export type Config = { token: string; apiUrl: string };
 
 /**
  * Resolve the API + web origins from --dev flag or env overrides.
  *
- * Same two-origin split as the user CLI: the web client (where /cli/login
- * lives, Vite on :4000 in dev / app.actionamp.com in prod) and the API (where
- * /api/cli/* live, on :3001 in dev / api.actionamp.com in prod).
+ * Same two origins as the user CLI: the web client (where /cli/login lives —
+ * SvelteKit on :5174 in dev / app.actionamp.com in prod) and the API (where
+ * /api/cli/* live — Hono on :8080 in dev / api.actionamp.com in prod).
+ * `npm run app` at the repo root starts both.
  */
 export function resolveUrls(dev: boolean): { apiUrl: string; webUrl: string } {
   const apiUrl = (process.env.ACTIONAMP_API_URL ?? (dev ? DEV_API_URL : PROD_API_URL)).replace(/\/$/, "");

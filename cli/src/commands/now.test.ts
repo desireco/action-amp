@@ -85,7 +85,7 @@ const FULL_CONTEXT = {
 describe("now command", () => {
   beforeEach(() => {
     mkdirSync(join(getConfigPath(), ".."), { recursive: true });
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001" });
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080" });
     requestMock.mockReset();
   });
   afterEach(() => {

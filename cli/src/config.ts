@@ -2,7 +2,7 @@
  * Config — read/write the CLI's stored credentials + active lens.
  *
  * Lives at ~/.config/actionamp/config.json (mode 0600):
- *   { "token": "aa_...", "apiUrl": "http://localhost:3001", "lensId"?: "<uuid>" }
+ *   { "token": "aa_...", "apiUrl": "http://localhost:8080", "lensId"?: "<uuid>" }
  *
  * The token is a PAT minted via the OAuth browser flow (see commands/login.ts).
  * apiUrl is set at login time — `--dev` writes localhost, default writes prod.
@@ -23,19 +23,19 @@ const CONFIG_DIR = join(homedir(), ".config", "actionamp");
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 
 export const PROD_API_URL = "https://api.actionamp.com";
-export const DEV_API_URL = "http://localhost:3001";
+export const DEV_API_URL = "http://localhost:8080";
 export const PROD_WEB_URL = "https://app.actionamp.com";
-export const DEV_WEB_URL = "http://localhost:4000";
+export const DEV_WEB_URL = "http://localhost:5174";
 
 export type Config = { token: string; apiUrl: string; lensId?: string };
 
 /**
  * Resolve the API + web origins from --dev flag or env overrides.
  *
- * Two origins matter because Wasp splits them: the web client (where the
- * /cli/login page lives, served by Vite on :4000 in dev / app.actionamp.com in
- * prod) and the API (where /api/cli/* + /api/pat/* live, on :3001 in dev /
- * api.actionamp.com in prod).
+ * Two origins matter: the web client (where the /cli/login page lives —
+ * SvelteKit on :5174 in dev / app.actionamp.com in prod) and the API (where
+ * /api/cli/* + /api/pat/* live — Hono on :8080 in dev / api.actionamp.com in
+ * prod). `npm run app` at the repo root starts both.
  */
 export function resolveUrls(dev: boolean): { apiUrl: string; webUrl: string } {
   const apiUrl = (process.env.ACTIONAMP_API_URL ?? (dev ? DEV_API_URL : PROD_API_URL)).replace(/\/$/, "");

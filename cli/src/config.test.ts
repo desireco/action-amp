@@ -33,9 +33,9 @@ describe("config", () => {
   });
 
   it("writeConfig + readConfig round-trips", () => {
-    writeConfig({ token: "aa_test123", apiUrl: "http://localhost:3001" });
+    writeConfig({ token: "aa_test123", apiUrl: "http://localhost:8080" });
     const cfg = readConfig();
-    expect(cfg).toEqual({ token: "aa_test123", apiUrl: "http://localhost:3001" });
+    expect(cfg).toEqual({ token: "aa_test123", apiUrl: "http://localhost:8080" });
   });
 
   it("readConfig returns null on corrupt JSON (not a crash)", () => {
@@ -48,7 +48,7 @@ describe("config", () => {
   it("readConfig returns null when token field is missing", () => {
     const path = getConfigPath();
     mkdirSync(join(path, ".."), { recursive: true });
-    writeFileSync(path, JSON.stringify({ apiUrl: "http://localhost:3001" }), {
+    writeFileSync(path, JSON.stringify({ apiUrl: "http://localhost:8080" }), {
       mode: 0o600,
     });
     expect(readConfig()).toBeNull();
@@ -62,7 +62,7 @@ describe("config", () => {
   });
 
   it("deleteConfig removes the file", () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001" });
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080" });
     expect(existsSync(getConfigPath())).toBe(true);
     deleteConfig();
     expect(existsSync(getConfigPath())).toBe(false);
@@ -74,7 +74,7 @@ describe("config", () => {
 
   it("writeConfig creates the directory if it doesn't exist", () => {
     expect(existsSync(join(getConfigPath(), ".."))).toBe(false);
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001" });
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080" });
     expect(existsSync(getConfigPath())).toBe(true);
   });
 });
@@ -82,8 +82,8 @@ describe("config", () => {
 describe("resolveUrls", () => {
   it("dev=true → localhost URLs", () => {
     const { apiUrl, webUrl } = resolveUrls(true);
-    expect(apiUrl).toBe("http://localhost:3001");
-    expect(webUrl).toBe("http://localhost:4000");
+    expect(apiUrl).toBe("http://localhost:8080");
+    expect(webUrl).toBe("http://localhost:5174");
   });
 
   it("dev=false → prod URLs", () => {
@@ -107,9 +107,9 @@ describe("resolveUrls", () => {
   });
 
   it("trailing slash stripped", () => {
-    process.env.ACTIONAMP_API_URL = "http://localhost:3001/";
+    process.env.ACTIONAMP_API_URL = "http://localhost:8080/";
     const { apiUrl } = resolveUrls(false);
-    expect(apiUrl).toBe("http://localhost:3001");
+    expect(apiUrl).toBe("http://localhost:8080");
     delete process.env.ACTIONAMP_API_URL;
   });
 });

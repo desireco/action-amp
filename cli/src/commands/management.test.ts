@@ -61,7 +61,7 @@ async function run(cmd: { parseAsync: (a: string[], o: unknown) => Promise<void>
 
 beforeEach(() => {
   mkdirSync(join(getConfigPath(), ".."), { recursive: true });
-  writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001" });
+  writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080" });
   requestMock.mockReset();
 });
 afterEach(() => {
@@ -294,7 +294,7 @@ describe("logbook", () => {
 
 describe("active-lens fallback", () => {
   it("project list uses config.lensId when no flag is passed", async () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080", lensId: "from-cfg" });
     requestMock.mockResolvedValue({ projects: [] });
     await run(makeProjectCommand(), ["list"]);
     expect(requestMock).toHaveBeenCalledWith(
@@ -304,7 +304,7 @@ describe("active-lens fallback", () => {
   });
 
   it("project list: flag overrides config.lensId", async () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080", lensId: "from-cfg" });
     requestMock.mockResolvedValue({ projects: [] });
     await run(makeProjectCommand(), ["list", "--lens-id", "from-flag"]);
     expect(requestMock).toHaveBeenCalledWith(
@@ -320,7 +320,7 @@ describe("active-lens fallback", () => {
   });
 
   it("goal list uses config.lensId when no flag is passed", async () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080", lensId: "from-cfg" });
     requestMock.mockResolvedValue({ goals: [] });
     await run(makeGoalCommand(), ["list"]);
     expect(requestMock).toHaveBeenCalledWith(
@@ -330,7 +330,7 @@ describe("active-lens fallback", () => {
   });
 
   it("goal create uses config.lensId when no flag is passed", async () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080", lensId: "from-cfg" });
     requestMock.mockResolvedValue({ goal: { id: "g1", name: "G", isDone: false } });
     await run(makeGoalCommand(), ["create", "G"]);
     expect(requestMock).toHaveBeenCalledWith("/api/cli/goal/create", {
@@ -340,7 +340,7 @@ describe("active-lens fallback", () => {
   });
 
   it("logbook uses config.lensId when no flag is passed", async () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080", lensId: "from-cfg" });
     requestMock.mockResolvedValue({ tasks: [], projects: [], goals: [], archived: [] });
     await run(makeLogbookCommand(), []);
     expect(requestMock).toHaveBeenCalledWith(
@@ -356,7 +356,7 @@ describe("active-lens fallback", () => {
   });
 
   it("inbox triage uses config.lensId when no flag is passed", async () => {
-    writeConfig({ token: "aa_test", apiUrl: "http://localhost:3001", lensId: "from-cfg" });
+    writeConfig({ token: "aa_test", apiUrl: "http://localhost:8080", lensId: "from-cfg" });
     requestMock.mockResolvedValue({ kind: "task", id: "t1" });
     await run(makeInboxCommand(), ["triage", "i1", "--decision", "task-today"]);
     expect(requestMock).toHaveBeenCalledWith("/api/cli/inbox/triage", {

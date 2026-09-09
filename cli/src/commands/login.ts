@@ -28,7 +28,7 @@ export function makeLoginCommand(): Command {
   const cmd = new Command("login");
   cmd
     .description("authenticate via browser (the default; --dev targets localhost)")
-    .option("--dev", "use the local dev server (localhost:3001 / :4000)")
+    .option("--dev", "use the local dev server (localhost:8080 / :5174)")
     .option("--json", "emit JSON output")
     .action(async (opts: { dev?: boolean; json?: boolean }) => {
       const ctx: OutputCtx = { json: opts.json ?? false };

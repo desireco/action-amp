@@ -132,26 +132,27 @@ callback (same pattern as `gh auth login`):
 4. CLI validates the `state` nonce, stores the token in
    `~/.config/actionamp/config.json`.
 
-`--dev` targets `localhost:3001` (API) + `localhost:4000` (web). Default is
-`api.actionamp.com` + `app.actionamp.com`. The server choice is remembered at
-login time — `now`/`capture`/etc. don't need `--dev`.
+`--dev` targets `localhost:8080` (API) + `localhost:5174` (web) — what
+`npm run app` serves at the repo root. Default is `api.actionamp.com` +
+`app.actionamp.com`. The server choice is remembered at login time —
+`now`/`capture`/etc. don't need `--dev`.
 
 ## Config
 
 `~/.config/actionamp/config.json`:
 
 ```json
-{ "token": "aa_…", "apiUrl": "http://localhost:3001" }
+{ "token": "aa_…", "apiUrl": "http://localhost:8080" }
 ```
 
 Override origins with env vars: `ACTIONAMP_API_URL`, `ACTIONAMP_WEB_URL`.
 
 ## Architecture
 
-- **CLI package** (`cli/`): standalone, ESM, TypeScript 5.7, `commander` +
-  `chalk`. No dependency on the webapp's build — talks to the API via HTTP.
-- **Backend routes** (`webapp/src/auth/patRoutes.ts`): `/api/cli/*` routes,
-  each behind `patRouteMiddleware` (Bearer PAT auth). Delegate to pure cores.
+- **CLI package** (`cli/`): standalone, ESM, TypeScript, `commander` +
+  `chalk`. No dependency on the API's build — talks to it via HTTP.
+- **Backend routes** (`api/src/cli/routes.ts`): `/api/cli/*` routes, each
+  behind Bearer PAT auth. Delegate to pure cores in `packages/domain`.
 - **Pure cores** (`webapp/src/*/operationsCore.ts`): the shared logic between
   the Wasp operations (browser) and the CLI routes. No duplicated logic.
 - **OAuth page** (`webapp/src/auth/CliLoginPage.tsx`): the browser half of
