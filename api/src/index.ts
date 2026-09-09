@@ -532,6 +532,8 @@ if (servingSpa) {
   app.get("/manifest.json", serveStatic({ root: webDist }));
   app.get("/service-worker.js", serveStatic({ root: webDist }));
   app.get("/version.json", serveStatic({ root: webDist }));
+  // Better Stack's frontend tag (web/static/betterstack.js → build root).
+  app.get("/betterstack.js", serveStatic({ root: webDist }));
   app.get("*", serveStatic({
     root: webDist,
     rewriteRequestPath: () => "/index.html",
