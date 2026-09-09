@@ -1,26 +1,30 @@
 <script lang="ts">
-  // /cli/login — the OAuth-style authorization page for the CLI (the
-  // CliLoginPage port). Reached when a user runs `actionamp login`: the CLI
-  // has spun up a localhost callback server and opened the browser here with
-  // ?callback=…&state=….
+  // /cli/login — the authorization page for the CLI (the CliLoginPage
+  // port). Reached when a user runs `actionamp login`: the CLI has opened
+  // the browser here with ?state=<one-time nonce>.
   //
-  // Explicit consent is the CSRF gate: a malicious site can embed a
-  // `callback=` pointing at its own server, but it cannot get the user to
-  // click Confirm on this real ActionAmp page without their action. Only
-  // http://localhost:<port> callbacks are accepted — rejecting anything else
-  // closes the "exfiltrate to a remote server via a crafted callback=" link.
-  // Missing/malformed params refuse to render the confirm UI entirely (never
-  // silently default — the CLI always supplies both).
+  // Explicit consent is the CSRF gate: a malicious site can craft a link,
+  // but it cannot get the user to click Confirm on this real ActionAmp page
+  // without their action. Current CLIs pass state only — the page files the
+  // minted token server-side under the nonce and the CLI polls it back; no
+  // localhost involved. The `callback` param is the LEGACY handoff (CLIs
+  // ≤0.1.0): a localhost URL the page redirects to with the token — only
+  // http://localhost:<port> is accepted, closing the exfiltration vector.
+  // A missing/malformed state refuses to render the confirm UI entirely.
   import { onMount } from "svelte";
   import { fetchAuthUser, mintCliToken, type AuthUser } from "../../../lib/auth";
   import "../../../lib/styles/auth.css";
 
-  /** Read + validate the callback/state query params. */
-  function readParams(): { callback: URL; state: string } | null {
+  /**
+   * Read + validate the query params: `state` (the CLI login's one-time
+   * nonce) required; `callback` optional legacy, localhost-only when present.
+   */
+  function readParams(): { callback: URL | null; state: string } | null {
     const params = new URLSearchParams(window.location.search);
-    const callbackRaw = params.get("callback");
     const state = params.get("state");
-    if (!callbackRaw || !state) return null;
+    const callbackRaw = params.get("callback");
+    if (!state) return null;
+    if (!callbackRaw) return { callback: null, state };
     try {
       const callback = new URL(callbackRaw);
       if (callback.protocol !== "http:" || callback.hostname !== "localhost")
@@ -47,7 +51,7 @@
   let error = $state<string | null>(null);
 
   // Params are browser-only (window.location) — read after mount (SPA, ssr off).
-  let params = $state<{ callback: URL; state: string } | null>(null);
+  let params = $state<{ callback: URL | null; state: string } | null>(null);
 
   onMount(async () => {
     params = readParams();
@@ -71,14 +75,18 @@
     error = null;
     try {
       // state rides along so the server files the token under the login's
-      // nonce — the CLI's poll channel when the browser blocks the
-      // localhost redirect (local-network protection).
+      // nonce — the CLI polls it back from /api/auth/cli-login-challenge.
       const issued = await mintCliToken({ label: autoLabel(), state: params.state });
-      const target = new URL(params.callback);
-      target.searchParams.set("token", issued.token);
-      target.searchParams.set("state", params.state);
       status = "done";
-      window.location.href = target.toString();
+      if (params.callback) {
+        // Legacy CLIs (≤0.1.0): deliver via the localhost redirect.
+        const target = new URL(params.callback);
+        target.searchParams.set("token", issued.token);
+        target.searchParams.set("state", params.state);
+        window.location.href = target.toString();
+      }
+      // Current CLIs pick the token up by polling — the done state below
+      // tells the user to return to the terminal.
     } catch (err) {
       status = "idle";
       error =

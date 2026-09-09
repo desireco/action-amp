@@ -125,16 +125,14 @@ The CLI is not a trusted token-issuer — only the authed browser can mint — s
 the CLI asks the browser to do it, then receives the result via a localhost
 callback (same pattern as `gh auth login`):
 
-1. CLI spins up a one-shot HTTP server on a random port.
-2. CLI opens the browser to `/cli/login?callback=…&state=<nonce>`.
-3. The page (session-authed, explicit confirm) mints an `ApiKey` via the
-   `mintCliToken` action, redirects to the callback.
-4. The token arrives over whichever channel lands first:
-   the localhost callback (instant), or the server-side challenge — the
-   page files the minted token under the login's state nonce and the CLI
-   polls `GET /api/auth/cli-login-challenge?state=…` for it (the fallback for
-   browsers that block public-site → localhost navigations).
-5. CLI validates the token against `/api/cli/whoami`, stores it in
+1. CLI opens the browser to `/cli/login?state=<one-time nonce>`.
+2. The page (session-authed, explicit confirm) mints an `ApiKey` via the
+   `mintCliToken` action and files it server-side under that nonce.
+3. The CLI polls `GET /api/auth/cli-login-challenge?state=…` and picks the
+   token up (single-use, 10-minute window) — no localhost listener, nothing
+   local to run. (CLIs ≤0.1.0 passed a localhost `callback` param instead;
+   the page still honors that legacy handoff.)
+4. CLI validates the token against `/api/cli/whoami`, stores it in
    `~/.config/actionamp/config.json`.
 
 `--dev` targets `localhost:8080` (API) + `localhost:5174` (web) — what
