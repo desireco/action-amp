@@ -1,8 +1,11 @@
 {
   "name": "actionamp",
   "version": "0.1.0",
-  "private": true,
   "description": "ActionAmp terminal client",
+  "license": "UNLICENSED",
+  "repository": { "type": "git", "url": "github:desireco/action-amp", "directory": "cli" },
+  "engines": { "node": ">=18" },
+  "files": ["dist"],
   "type": "module",
   "bin": {
     "actionamp": "./dist/index.js"
@@ -10,6 +13,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
