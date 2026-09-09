@@ -16,6 +16,7 @@ import {
   completeFocusSessionCore,
   getOtherLensCountsData,
   updateTaskStatusCore,
+  sweepStaleToSomedayCore,
 } from "./operationsCore.js";
 import { mockContext, type MockContext } from "../test/mockContext.js";
 
@@ -873,5 +874,130 @@ describe("updateTaskStatusCore", () => {
         data: expect.objectContaining({ status: "UPCOMING", scheduledDate: date }),
       }),
     );
+  });
+});
+
+// ----------------------------------------------------------------
+// sweepStaleToSomedayCore — the "old things" demotion
+// ----------------------------------------------------------------
+describe("sweepStaleToSomedayCore", () => {
+  const SWEEP_NOW = new Date("2026-09-09T12:00:00Z");
+
+  function asSweep(m: MockContext) {
+    const spies = { Task: m.entities.Task };
+    // SAFETY: EntitySpy vi.fn()s satisfy the delegate slice at runtime.
+    return spies as Parameters<typeof sweepStaleToSomedayCore>[0];
+  }
+
+  function sweepRow(id: string, overrides: Record<string, unknown> = {}) {
+    return {
+      id,
+      permalink: id,
+      userId: "user-1",
+      lensId: "lens-1",
+      description: `Task ${id}`,
+      status: "UPCOMING" as string,
+      priority: "NORMAL" as string,
+      size: "M" as string,
+      isDone: false,
+      completedAt: null,
+      startedAt: null,
+      createdAt: new Date("2026-07-01T00:00:00Z"),
+      updatedAt: new Date("2026-08-01T00:00:00Z"),
+      scheduledDate: null,
+      snoozedUntil: null,
+      order: 0,
+      tags: [],
+      project: null,
+      goal: null,
+      lens: { id: "lens-1", name: "Work", color: "indigo" },
+      ...overrides,
+    };
+  }
+
+  it("queries only stale, un-snoozed UPCOMING rows in the lens set", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([]);
+
+    await sweepStaleToSomedayCore(asSweep(m), {
+      userId: "user-1",
+      lensIds: ["lens-1", "lens-2"],
+      olderThanDays: 30,
+      now: SWEEP_NOW,
+    });
+
+    const where = m.entities.Task.findMany.mock.calls[0][0].where;
+    expect(where).toEqual({
+      userId: "user-1",
+      lensId: { in: ["lens-1", "lens-2"] },
+      status: "UPCOMING",
+      isDone: false,
+      // 2026-09-09 minus 30 days, at that day's UTC midnight
+      updatedAt: { lte: new Date("2026-08-10T00:00:00.000Z") },
+      OR: [{ snoozedUntil: null }, { snoozedUntil: { lte: SWEEP_NOW } }],
+    });
+  });
+
+  it("dry run returns candidates without writing", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([sweepRow("t1"), sweepRow("t2")]);
+
+    const result = await sweepStaleToSomedayCore(asSweep(m), {
+      userId: "user-1",
+      lensIds: ["lens-1"],
+      dryRun: true,
+      now: SWEEP_NOW,
+    });
+
+    expect(result.dryRun).toBe(true);
+    expect(result.tasks.map((t) => t.id)).toEqual(["t1", "t2"]);
+    expect(m.entities.Task.update).not.toHaveBeenCalled();
+  });
+
+  it("apply parks every candidate: SOMEDAY, date and snooze dropped", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([
+      sweepRow("t1", { scheduledDate: new Date("2026-08-16T00:00:00Z") }),
+    ]);
+    m.entities.Task.update.mockImplementation(
+      async (args: { data: Record<string, unknown> }) => ({
+        ...sweepRow("t1"),
+        ...args.data,
+        updatedAt: SWEEP_NOW,
+      }),
+    );
+
+    const result = await sweepStaleToSomedayCore(asSweep(m), {
+      userId: "user-1",
+      lensIds: ["lens-1"],
+      now: SWEEP_NOW,
+    });
+
+    expect(result.dryRun).toBe(false);
+    expect(m.entities.Task.update).toHaveBeenCalledWith({
+      where: { id: "t1" },
+      data: { status: "SOMEDAY", scheduledDate: null, snoozedUntil: null },
+    });
+    // The returned row reflects the post-sweep state AND keeps relations.
+    expect(result.tasks[0]).toMatchObject({
+      id: "t1",
+      status: "SOMEDAY",
+      scheduledDate: null,
+      snoozedUntil: null,
+      lens: { name: "Work" },
+    });
+  });
+
+  it("empty lens set short-circuits without querying", async () => {
+    const m = mockContext();
+
+    const result = await sweepStaleToSomedayCore(asSweep(m), {
+      userId: "user-1",
+      lensIds: [],
+      now: SWEEP_NOW,
+    });
+
+    expect(result).toEqual({ dryRun: false, tasks: [] });
+    expect(m.entities.Task.findMany).not.toHaveBeenCalled();
   });
 });

@@ -174,6 +174,18 @@ interface TaskDetailEntities {
   };
 }
 
+/** The sweep's find (lens-list include) + the per-row park write. */
+interface SweepEntities {
+  Task: {
+    findMany(args: {
+      where: TaskWhereInput;
+      orderBy?: TaskOrderByInput;
+      include: TaskLensListInclude;
+    }): Promise<TaskLensListRow[]>;
+    update(args: TaskUpdateArgs): Promise<Task>;
+  };
+}
+
 /** Done-today rows: list row + lens + tags. */
 interface DoneTodayEntities {
   Task: {
@@ -983,4 +995,89 @@ export async function pauseTaskCore(
     data: { startedAt: null },
     select: { id: true, startedAt: true },
   });
+}
+
+// ----------------------------------------------------------------
+// Sweep: push stale Upcoming tasks to Someday (the "old things" demotion)
+// ----------------------------------------------------------------
+// The bench collects rows nobody has touched for weeks — July's
+// question-tasks, resurfaced snooze clusters — and they crowd the chooser.
+// `task sweep` demotes them in one move. "Touched" is `updatedAt`: every
+// snooze/move/edit re-stamps it, so a deliberate future snooze both resets
+// the clock AND is skipped by the due-guard below while it runs. TODAY rows
+// are commitments and are never swept; SOMEDAY is already there.
+export interface SweepToSomedayResult {
+  dryRun: boolean;
+  tasks: TaskLensListResult;
+}
+
+export async function sweepStaleToSomedayCore(
+  entities: SweepEntities,
+  {
+    userId,
+    lensIds,
+    olderThanDays = 30,
+    dryRun = false,
+    now = instantToDate(systemClock.instant()),
+    timeZone = "UTC",
+  }: {
+    userId: string;
+    lensIds: string[];
+    olderThanDays?: number;
+    dryRun?: boolean;
+    now?: Date;
+    timeZone?: string;
+  },
+): Promise<SweepToSomedayResult> {
+  // Empty lens set (a brand-new account mid-onboarding) → nothing to sweep.
+  if (lensIds.length === 0) {
+    return { dryRun, tasks: [] };
+  }
+  // Day-granular staleness in the user's calendar (snoozeTarget's convention):
+  // "untouched for 30 days" means updated before the midnight that opened
+  // the day 30 days back.
+  const today = instantToPlainDate(instantFrom(now), timeZone);
+  const cutoff = instantToDate(
+    today
+      .subtract({ days: olderThanDays })
+      .toZonedDateTime({
+        timeZone,
+        plainTime: Temporal.PlainTime.from("00:00"),
+      })
+      .toInstant(),
+  );
+  const candidates = await entities.Task.findMany({
+    where: {
+      userId,
+      lensId: { in: lensIds },
+      status: "UPCOMING",
+      isDone: false,
+      updatedAt: { lte: cutoff },
+      OR: [{ snoozedUntil: null }, { snoozedUntil: { lte: now } }],
+    },
+    orderBy: [{ order: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
+    include: {
+      tags: true,
+      project: { select: { id: true, name: true } },
+      goal: { select: { id: true, name: true } },
+      lens: { select: { id: true, name: true, color: true } },
+    },
+  });
+  if (dryRun || candidates.length === 0) {
+    return { dryRun, tasks: candidates };
+  }
+  // The same patch updateTaskStatusCore applies when parking: SOMEDAY drops
+  // the schedule and the snooze ("a parked row carries no deadline").
+  // `update` returns the fresh scalars; the relations ride along from the row
+  // just read (the write carries no include).
+  const tasks = await Promise.all(
+    candidates.map(async (candidate) => {
+      const updated = await entities.Task.update({
+        where: { id: candidate.id },
+        data: { status: "SOMEDAY", scheduledDate: null, snoozedUntil: null },
+      });
+      return { ...candidate, ...updated } as TaskLensListRow;
+    }),
+  );
+  return { dryRun, tasks };
 }
