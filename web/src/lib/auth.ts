@@ -119,9 +119,15 @@ export async function logout(): Promise<void> {
   }
 }
 
-/** Mint a CLI PAT (the /cli/login consent flow). FREE plans throw a 402. */
+/**
+ * Mint a CLI PAT (the /cli/login consent flow). FREE plans throw a 402.
+ * `state` — the CLI login's nonce — additionally files the token under it
+ * server-side so the CLI can poll for it (the localhost redirect stays the
+ * instant path; the poll is the fallback when browsers block loopback).
+ */
 export async function mintCliToken(input: {
   label: string;
+  state?: string;
 }): Promise<{ token: string; label: string }> {
   const res = await fetch("/api/auth/mint-cli-token", {
     method: "POST",

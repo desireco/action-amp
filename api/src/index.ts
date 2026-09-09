@@ -179,6 +179,17 @@ app.route("/", createCliRest({ db, entities }));
 import { createCliRoutes } from "./cli/routes.js";
 app.route("/", createCliRoutes({ db, entities }));
 
+// CLI login poll channel — the localhost-callback fallback (browsers block
+// public→loopback navigations; see login-challenge.ts). The /cli/login page
+// files each minted token under the login's state; the CLI polls for it.
+import {
+  createChallengeStore,
+  createLoginChallengeRoute,
+  isChallengeState,
+} from "./cli/login-challenge.js";
+const loginChallenges = createChallengeStore();
+app.route("/", createLoginChallengeRoute(loginChallenges));
+
 // S16 slice wiring — the Stripe webhook: POST /webhooks/stripe (raw-body
 // signature verification; the ONLY writer of User.plan/planRenewsAt). See
 // docs/plans/slices/s16-wiring.md §1.
@@ -439,7 +450,10 @@ app.post("/api/auth/mint-cli-token", async (c) => {
         402,
       );
     }
-    const body = (await c.req.json().catch(() => ({}))) as { label?: unknown };
+    const body = (await c.req.json().catch(() => ({}))) as {
+      label?: unknown;
+      state?: unknown;
+    };
     const label =
       typeof body?.label === "string" ? body.label.trim().slice(0, 80) : "CLI";
     const plaintext = generatePat();
@@ -449,6 +463,12 @@ app.post("/api/auth/mint-cli-token", async (c) => {
       label,
       userId: resolution.user.id,
     });
+    // The poll channel: when the page passes the login's state nonce, the
+    // token is also filed under it — the CLI retrieves it by polling (the
+    // localhost redirect stays the instant path; this is the fallback).
+    if (isChallengeState(body?.state)) {
+      loginChallenges.put(body.state, plaintext);
+    }
     // Sliding-cookie parity (see /api/auth/me) + plaintext shown exactly once.
     const ridingToken = requestSessionToken(
       c.req.header("authorization"),

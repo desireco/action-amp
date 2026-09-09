@@ -45,8 +45,31 @@ async function login(ctx: OutputCtx, dev: boolean): Promise<void> {
   // flow and intercept the token.
   const state = randomBytes(16).toString("hex");
 
+  // First-wins handoff: the localhost callback (instant path) or the
+  // server-side challenge poll (the fallback — browsers increasingly block
+  // public-site → loopback navigations). The /cli/login page files the
+  // minted token under this login's state nonce; we poll for it.
+  let settled = false;
+  let pollTimer: ReturnType<typeof setInterval> | undefined;
+  const cleanup = () => {
+    if (pollTimer) clearInterval(pollTimer);
+  };
+
   // Spin up a one-shot HTTP server on a random high port.
-  const token: string = await new Promise((resolve, reject) => {
+  const token: string = await new Promise<string>((resolve, reject) => {
+    const finish = (value: string) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(value);
+    };
+    const fail = (err: Error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(err);
+    };
+
     const server = createServer((req, res) => {
       const url = new URL(req.url ?? "", "http://localhost");
       const tokenParam = url.searchParams.get("token");
@@ -76,10 +99,10 @@ async function login(ctx: OutputCtx, dev: boolean): Promise<void> {
 
       sendHtml(200, "Authorized. You can close this tab and return to the terminal.");
       server.close();
-      resolve(tokenParam);
+      finish(tokenParam);
     });
 
-    server.on("error", (err) => reject(err));
+    server.on("error", (err) => fail(err));
 
     // Dual-stack bind, deliberately not host-pinned: `localhost` resolves to
     // ::1 first on many systems, and the callback URL must say `localhost`
@@ -103,9 +126,29 @@ async function login(ctx: OutputCtx, dev: boolean): Promise<void> {
       openBrowser(loginUrl.toString());
     });
 
+    // The poll channel — completes the login even when the browser refuses
+    // to navigate to the localhost callback. The state is hex, URL-safe.
+    pollTimer = setInterval(() => {
+      void fetch(`${apiUrl}/api/auth/cli-login-challenge?state=${state}`)
+        .then(async (res) => {
+          if (!res.ok) return;
+          const body = (await res.json().catch(() => null)) as {
+            status?: string;
+            token?: string;
+          } | null;
+          if (body?.status === "complete" && typeof body.token === "string") {
+            server.close();
+            finish(body.token);
+          }
+        })
+        .catch(() => {
+          // Transient network error — keep polling until the window ends.
+        });
+    }, 2000);
+
     setTimeout(() => {
       server.close();
-      reject(
+      fail(
         new Error(
           "Login timed out after 10 minutes. Re-run `actionamp login` — browser tabs from an earlier attempt point at a port that is now closed.",
         ),

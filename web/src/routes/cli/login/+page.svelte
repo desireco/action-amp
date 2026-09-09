@@ -70,7 +70,10 @@
     status = "working";
     error = null;
     try {
-      const issued = await mintCliToken({ label: autoLabel() });
+      // state rides along so the server files the token under the login's
+      // nonce — the CLI's poll channel when the browser blocks the
+      // localhost redirect (local-network protection).
+      const issued = await mintCliToken({ label: autoLabel(), state: params.state });
       const target = new URL(params.callback);
       target.searchParams.set("token", issued.token);
       target.searchParams.set("state", params.state);
