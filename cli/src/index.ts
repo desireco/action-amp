@@ -39,6 +39,13 @@ import { makeLogoutCommand } from "./commands/logout.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// `actionamp | head` (or any early-closing pipe) must not die with an EPIPE
+// stack trace — exit quietly instead, the conventional CLI guard.
+process.stdout.on("error", (err: NodeJS.ErrnoException) => {
+  if (err.code === "EPIPE") process.exit(0);
+  throw err;
+});
+
 // Read version from package.json (works both in dev via tsx and in dist/ after build)
 function readVersion(): string {
   try {
