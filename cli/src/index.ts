@@ -3,11 +3,12 @@
  * actionamp — the terminal client for ActionAmp.
  *
  * Usage:
- *   actionamp login [--dev]     authenticate via browser
- *   actionamp now               your top task
- *   actionamp capture "<text>"  quick-capture to inbox
- *   actionamp whoami            show the logged-in account
- *   actionamp logout            clear saved token
+ *   actionamp                 login status + command help
+ *   actionamp login [--dev]   authenticate via browser
+ *   actionamp now             your top task
+ *   actionamp capture "<text>" quick-capture to inbox
+ *   actionamp whoami          show the logged-in account
+ *   actionamp logout          clear saved token
  *
  * Every command supports --json for scripting. See cli/README.md.
  */
@@ -15,8 +16,10 @@ import { Command } from "commander";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { ApiError } from "./api.js";
+import { ApiError, fetchApi } from "./api.js";
+import { readConfig } from "./config.js";
 import { fail, type OutputCtx } from "./output.js";
+import type { Whoami } from "./types.js";
 import { makeLoginCommand } from "./commands/login.js";
 import { makeNowCommand } from "./commands/now.js";
 import { makeCaptureCommand } from "./commands/capture.js";
@@ -68,6 +71,47 @@ program.addCommand(makeLogbookCommand());
 program.addCommand(makeReviewCommand());
 program.addCommand(makeLlmCommand());
 program.addCommand(makeLogoutCommand());
+
+// Bare `actionamp` — the status view: who you are (or that you're not
+// logged in), then the command reference. The whoami check is guarded by a
+// 3-second deadline so an unreachable API can't stall the status line.
+program.action(async () => {
+  const cfg = readConfig();
+  if (!cfg) {
+    process.stdout.write("Not logged in. Run: actionamp login\n\n");
+  } else {
+    try {
+      const { status, body } = await Promise.race([
+        fetchApi<Whoami>(cfg.apiUrl, cfg.token, "/api/cli/whoami"),
+        new Promise<{ status: number; body: Whoami }>((resolve) =>
+          setTimeout(
+            () => resolve({ status: 0, body: {} as Whoami }),
+            3_000,
+          ),
+        ),
+      ]);
+      const who = (body ?? {}) as Whoami;
+      if (status === 200 && who.user) {
+        process.stdout.write(
+          `Logged in as ${who.user.email ?? who.user.fullName ?? "unknown"} (plan: ${who.user.plan ?? "?"}).\n\n`,
+        );
+      } else if (status === 401) {
+        process.stdout.write("Saved token was rejected. Run: actionamp login\n\n");
+      } else if (status === 402) {
+        process.stdout.write("CLI access is a Pro feature. Upgrade from Settings → Billing.\n\n");
+      } else {
+        process.stdout.write(
+          `Logged in (token saved for ${cfg.apiUrl}) — could not verify right now.\n\n`,
+        );
+      }
+    } catch {
+      process.stdout.write(
+        `Logged in (token saved for ${cfg.apiUrl}) — could not verify right now.\n\n`,
+      );
+    }
+  }
+  program.outputHelp();
+});
 
 // Global error handler — catches ApiError + network failures, prints a calm
 // message instead of a stack trace. --json mode emits {error} to stdout.
